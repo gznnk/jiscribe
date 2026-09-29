@@ -1,6 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 
-import type { ObjectFactoryRegistry } from "../../../plugin/ObjectFactoryRegistry";
+import type { ObjectFactoryRegistry } from "../../../registries/ObjectFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectType } from "../types/ObjectType";
 

@@ -15,13 +15,17 @@ import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
 import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
+import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
+import {
+	isMixedSelectionValue,
+	selectionValueOr,
+} from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "alignment";
 
@@ -69,16 +73,20 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	);
 
 	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
-	const textAlign = slot?.textAlign ?? "left";
-	const verticalAlign = slot?.verticalAlign ?? "middle";
+	const textStyle = readSelectionTextStyle(
+		canvasState,
+		objectTextStyleDefaults,
+	);
+	const isTextAlignMixed = isMixedSelectionValue(textStyle.textAlign);
+	const textAlign = selectionValueOr(textStyle.textAlign, undefined) ?? "left";
+	const isVerticalAlignMixed = isMixedSelectionValue(textStyle.verticalAlign);
+	const verticalAlign =
+		selectionValueOr(textStyle.verticalAlign, undefined) ?? "middle";
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuTextAlignment}
 			>
@@ -95,9 +103,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 							{horizontalAlignments.map(({ value, Icon, messageKey }) => (
 								<ObjectMenuButton
 									key={value}
-									isActive={textAlign === value}
-									data-kind="menu"
-									data-id="object-menu"
+									isActive={!isTextAlignMixed && textAlign === value}
 									data-part={setPart("textAlign", value)}
 									title={messages[messageKey]}
 								>
@@ -110,9 +116,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 								{verticalAlignments.map(({ value, Icon, messageKey }) => (
 									<ObjectMenuButton
 										key={value}
-										isActive={verticalAlign === value}
-										data-kind="menu"
-										data-id="object-menu"
+										isActive={!isVerticalAlignMixed && verticalAlign === value}
 										data-part={setPart("verticalAlign", value)}
 										title={messages[messageKey]}
 									>

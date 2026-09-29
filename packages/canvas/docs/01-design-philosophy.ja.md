@@ -82,7 +82,7 @@ execute: (state: CanvasControllerState, registries: ICanvasRegistries) =>
 > doc を渡す契約に依存するため、host 側で parser を必ず通すこと。
 >
 > **CSS インジェクション**（stroke / fill / fontColor / fontFamily / fontWeight）も同じ
-> 方針で境界に寄せる。doc 経路は `validateDocUtils` の `isCssSafeValue`、クリップボード経路は
+> 方針で境界に寄せる。doc 経路は `validateStyleFields` / `validateTextFields` の `isCssSafeValue`、クリップボード経路は
 > state 検証（`validateStateUtils`）で弾く。presentation（emotion styled）側の
 > sink 防御は重複のため設けない。
 >

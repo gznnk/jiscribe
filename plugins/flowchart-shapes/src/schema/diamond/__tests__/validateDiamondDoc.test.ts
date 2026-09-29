@@ -61,6 +61,7 @@ describe("validateDiamondDoc", () => {
 	});
 
 	it("ignores unknown keys, including the removed textType", () => {
+		// The name is the parser registry's to report, not a validator's.
 		const errors = validateDiamondDoc(
 			{ ...validDiamond, textType: "markdown" },
 			"root",

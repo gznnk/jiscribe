@@ -24,4 +24,5 @@ export * from "./convertTransformedRectToFrame";
 export * from "./convertEllipseToFrame";
 export * from "./convertFrameToEllipse";
 export * from "./convertTransformedEllipseToFrame";
+export * from "./convertTransformedFrameToEllipse";
 export * from "./convertPointsToTransformedFrame";

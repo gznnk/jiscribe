@@ -8,7 +8,7 @@ import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { RadiusStyleDoc } from "../base/RadiusStyleDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
-import type { TextStyleDoc } from "../base/TextStyleDoc";
+import type { SourceTextStyleDoc, TextStyleDoc } from "../base/TextStyleDoc";
 import type { TransformDoc } from "../base/TransformDoc";
 
 /**
@@ -29,13 +29,30 @@ type GeometryDocByType = {
 type GeometryDoc<T extends ObjectFeatures> = GeometryDocByType[T["geometry"]];
 
 /**
+ * The doc-side text fields each TextType contributes, `none` standing for a
+ * type declaring none. A lookup for the same reason GeometryDocByType is one: a
+ * value added to TextType and not here makes the indexed access
+ * below fail to compile, where a chain would have let it fall through to the
+ * no-text case. `slots` contributes nothing, a keyed doc's slot set being closed
+ * and spelled out by the type itself through `P` (see the record shape).
+ */
+type TextDocByType = {
+	none: object;
+	body: TextStyleDoc;
+	source: SourceTextStyleDoc;
+	slots: object;
+};
+
+/** Text fields of a doc, picked by the type's declared text feature. */
+type TextDoc<T extends ObjectFeatures> =
+	TextDocByType[T["text"] extends undefined ? "none" : NonNullable<T["text"]>];
+
+/**
  * Generic type creator for object document types.
  * Conditionally includes feature interfaces based on provided features.
  * Automatically applies branding to prevent structural type compatibility.
  *
- * `text: "body"` mixes in the root TextStyleDoc form; `text: "slots"` mixes in
- * nothing, because a keyed doc's slot set is closed and the type spells it out
- * itself through `P` (see the record shape).
+ * The text fields follow the declared TextType (see {@link TextDocByType}).
  *
  * @template T - ObjectFeatures configuration
  * @template S - Unique symbol for branding (prevents direct assignment between types)
@@ -67,7 +84,7 @@ export type CreateObjectType<
 		(T["transform"] extends true ? TransformDoc : object) &
 		(T["stroke"] extends true ? StrokeStyleDoc : object) &
 		(T["fill"] extends true ? FillStyleDoc : object) &
-		(T["text"] extends "body" ? TextStyleDoc : object) &
+		TextDoc<T> &
 		(T["radius"] extends true ? RadiusStyleDoc : object) &
 		(T["arrow"] extends true ? ArrowStyleDoc : object) &
 		Brand<S> &

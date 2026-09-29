@@ -1,4 +1,9 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type {
+	ViewOpenMode,
+	ViewPaddingDoc,
+	ViewScrollMode,
+} from "@jiscribe/doc/model/canvas/ViewDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { Viewport } from "../../rendering/Viewport";
@@ -221,9 +226,38 @@ export type TransformPropertyUpdateAction = {
 
 /**
  * The document's own settings the properties sidebar states, as opposed to the
- * selection's. Only the surface color so far; the Canvas section grows here.
+ * selection's, each with the value it takes. The `view.*` entries name one part
+ * of the display declaration (`CanvasDoc.view`) apiece, and padding one side
+ * apiece, so each field of the Canvas section is its own property — and its own
+ * undo coalescing run.
  */
-export type DocumentProperty = "background";
+export type DocumentPropertyValueMap = {
+	/** A literal CSS color, or null to drop the field so the host theme decides again. */
+	background: string | null;
+	/** How the view is framed on open, or null to leave it to the host. */
+	"view.open": ViewOpenMode | null;
+	/** Whether panning is walled in, or null for the endless board. */
+	"view.scroll": ViewScrollMode | null;
+} & {
+	/** World px of 0 or more; 0 drops the side, as the headless `setView` op does. */
+	[Side in keyof ViewPaddingDoc as `view.padding.${Side}`]-?: number;
+};
+
+/** Names a setting of {@link DocumentPropertyValueMap}. */
+export type DocumentProperty = keyof DocumentPropertyValueMap;
+
+/**
+ * One document setting paired with a value of the type it takes, as a union
+ * discriminated by `property` so a switch on it narrows `value` too.
+ */
+export type DocumentPropertyUpdate<
+	P extends DocumentProperty = DocumentProperty,
+> = {
+	[Property in P]: {
+		property: Property;
+		value: DocumentPropertyValueMap[Property];
+	};
+}[P];
 
 /**
  * Document property update action - states a setting of the document itself,
@@ -231,16 +265,14 @@ export type DocumentProperty = "background";
  *
  * The third property route beside {@link StylePropertyUpdateAction} and
  * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
- * selection: it mirrors the headless `setBackground` op, down to `null` meaning
- * "drop the field and follow the host theme again" rather than "paint it white".
+ * selection: it mirrors the headless `setBackground` / `setView` ops, down to
+ * `null` meaning "drop the field and let the host decide" rather than "set it to
+ * some default".
  */
-export type DocumentPropertyUpdateAction = {
+export type DocumentPropertyUpdateAction = DocumentPropertyUpdate & {
 	type: "DOCUMENT_PROPERTY_UPDATE";
-	property: DocumentProperty;
-	/** A literal CSS color, or null to clear the setting so the theme decides again. */
-	value: string | null;
 	/**
-	 * true: recorded in history (a swatch, blur/Enter) — also when the color is
+	 * true: recorded in history (a swatch, blur/Enter) — also when the value is
 	 * already set, since a preview may have put it there; false: preview only
 	 */
 	commit: boolean;

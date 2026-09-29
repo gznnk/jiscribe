@@ -21,6 +21,12 @@ describe("renderMarkdown - sanitizing (html:false + DOMPurify)", () => {
 		expect(html).toContain("&lt;img");
 	});
 
+	it("drops a markdown image, so a host renders nothing that fetches a URL", () => {
+		const html = renderMarkdown("![tracker](https://example.com/pixel.png)");
+		expect(html).not.toContain("<img");
+		expect(html).not.toContain("example.com");
+	});
+
 	it("escapes HTML inside a code fence", () => {
 		const html = renderMarkdown("```\nplain <b>bold</b>\n```");
 		expect(html).toContain("&lt;b&gt;");

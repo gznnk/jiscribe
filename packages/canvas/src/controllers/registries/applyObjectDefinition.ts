@@ -1,7 +1,7 @@
 import { ConnectorExtraStyleProperties } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { hasInsetTextRegionType } from "../../plugin/hasInsetTextRegionType";
@@ -121,6 +121,7 @@ import {
 } from "../ui/menu/PropertyPanel/items/ConnectorLabelItems";
 import { ConnectorResetRouteItem } from "../ui/menu/PropertyPanel/items/ConnectorResetRouteItem";
 import { ConnectorRoutingItem } from "../ui/menu/PropertyPanel/items/ConnectorRoutingItem";
+import { PROPERTY_PANEL_SECTIONS } from "../ui/menu/PropertyPanel/propertyPanelSections";
 import { appendPropertyPanelItems } from "../ui/menu/PropertyPanel/utils/appendPropertyPanelItems";
 import { createDefaultPropertyPanel } from "../ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
 import { derivePropertyPanel } from "../ui/menu/PropertyPanel/utils/derivePropertyPanel";
@@ -205,7 +206,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		// controls with it.
 		propertyPanel: appendPropertyPanelItems(
 			createDefaultPropertyPanel(builtinObjectDocDefinitions.text.features),
-			{ id: "text", label: "Text" },
+			PROPERTY_PANEL_SECTIONS.text,
 			{ type: "textLayout" },
 		),
 		stencils: TextStencils,
@@ -334,7 +335,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 				createDefaultPropertyPanel(
 					builtinObjectDocDefinitions.connector.features,
 				),
-				{ id: "line", label: "Line" },
+				PROPERTY_PANEL_SECTIONS.line,
 				{
 					type: "custom",
 					id: "connector-routing",

@@ -15,6 +15,7 @@ export const validateContainerHeaderFields: ObjectDocValidateFn = (o, path) => [
 				{
 					path: `${path}.headerFill`,
 					message: "must be a safe CSS color value",
+					severity: "error" as const,
 					beyondSchema: true,
 				},
 			]),

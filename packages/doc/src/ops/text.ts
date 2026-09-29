@@ -9,6 +9,9 @@ import {
 	requireSlotId,
 } from "./utils/textFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import type { InlineTextStyle } from "../model/objects/types/text/InlineTextStyle";
+import { TEXT_INLINE_STYLE_KEYS } from "../model/objects/types/text/InlineTextStyle";
+import type { RichText } from "../model/objects/types/text/RichText";
 import {
 	isRichText,
 	joinRichTextLines,
@@ -16,13 +19,11 @@ import {
 	richTextToPlain,
 	splitRichTextLines,
 	styleRichTextRange,
-	TEXT_INLINE_STYLE_KEYS,
-} from "../model/objects/types/RichText";
-import type {
-	InlineTextStyle,
-	RichText,
-} from "../model/objects/types/RichText";
-import { isTextRows } from "../model/objects/types/TextSlot";
+} from "../model/objects/types/text/RichText";
+import { isTextRows } from "../model/objects/types/text/TextSlot";
+import type { TextType } from "../model/objects/types/text/TextType";
+import { isSingleBodyText } from "../model/objects/types/text/TextType";
+import { pickDefined } from "../model/objects/utils/pickDefined";
 
 /**
  * The new text for a body that may be styled per range: the characters the
@@ -66,6 +67,12 @@ type TextWrite =
 			object: ObjectRecord;
 			/** The text to write. */
 			text: string;
+			/**
+			 * Whether the body may keep the styling of the characters the rewrite
+			 * left in place; false for a source body, which is a plain string
+			 * (SourceTextStyleDoc).
+			 */
+			keepsRunStyle: boolean;
 	  }
 	| {
 			kind: "slot";
@@ -88,11 +95,16 @@ const planTextWrite = (
 		return { kind: "connectorLabel", connector: object, text };
 	}
 
-	const textFeature = definitions.get(object.type)?.features.text;
-	if (textFeature === "body") {
-		return { kind: "body", object, text };
+	const textType = definitions.get(object.type)?.features.text;
+	if (isSingleBodyText(textType)) {
+		return {
+			kind: "body",
+			object,
+			text,
+			keepsRunStyle: textType === "body",
+		};
 	}
-	if (textFeature !== "slots") {
+	if (textType !== "slots") {
 		throw new DocOperationError(
 			`${id} ("${object.type}") holds no text that can be set`,
 		);
@@ -120,7 +132,9 @@ const applyTextWrite = (write: TextWrite): void => {
 		return;
 	}
 	if (write.kind === "body") {
-		write.object.text = rewriteBody(write.object.text, write.text);
+		write.object.text = write.keepsRunStyle
+			? rewriteBody(write.object.text, write.text)
+			: write.text;
 		return;
 	}
 	const { slot } = write;
@@ -144,7 +158,8 @@ const applyTextWrite = (write: TextWrite): void => {
  * @param id - Id of the object to retext; must exist in the root tree
  * @param text - The new text. Newlines are kept for a single body and split into one row
  *   each for a slot that holds rows. Styling applied to parts of the old text survives on
- *   the characters the rewrite kept (see {@link rewriteBody})
+ *   the characters the rewrite kept (see {@link rewriteBody}); a `text: "source"` body
+ *   carries none, so it takes the characters as they are
  * @param slot - Which slot to write, for a slotted type only. `undefined` is allowed when
  *   the object has exactly one slot; the slot must already exist, since its content shape
  *   (one string or a list of rows) is not inferable for a slot that is absent
@@ -236,11 +251,11 @@ export const getText = (
 		return readConnectorLabelText(object);
 	}
 
-	const textFeature = definitions.get(object.type)?.features.text;
-	if (textFeature === "body") {
+	const textType = definitions.get(object.type)?.features.text;
+	if (isSingleBodyText(textType)) {
 		return readTextField(object);
 	}
-	if (textFeature !== "slots") {
+	if (textType !== "slots") {
 		throw new DocOperationError(
 			`${id} ("${object.type}") holds no text that can be read`,
 		);
@@ -289,16 +304,8 @@ const findOccurrences = (plain: string, match: string): number[] => {
 };
 
 /** The styling fields the params actually ask for, `match` / `occurrence` / `slot` left out. */
-const requestedStyle = (params: InlineTextStyleParams): InlineTextStyle => {
-	const style: Record<string, unknown> = {};
-	for (const key of TEXT_INLINE_STYLE_KEYS) {
-		const value = params[key];
-		if (value !== undefined) {
-			style[key] = value;
-		}
-	}
-	return style;
-};
+const requestedStyle = (params: InlineTextStyleParams): InlineTextStyle =>
+	pickDefined(params, TEXT_INLINE_STYLE_KEYS);
 
 /** Styles every requested occurrence, last one first so the earlier offsets still hold. */
 const styleOccurrences = (
@@ -346,13 +353,18 @@ const planTextStyle = (
 		);
 	}
 
-	const textFeature = definitions.get(object.type)?.features.text;
+	const definition = definitions.get(object.type);
 	const target: ObjectRecord = resolveTextTarget(
 		object,
 		id,
-		textFeature,
+		definition?.features.text,
 		params.slot,
 	);
+	if (definition?.features.text === "source") {
+		throw new DocOperationError(
+			`${id} ("${object.type}") holds its text as a plain string that takes no styling on part of it, so use setStyle to style the whole of it`,
+		);
+	}
 	const content = target.text;
 	if (isTextRows(content)) {
 		throw new DocOperationError(
@@ -417,10 +429,10 @@ const applyTextStyle = (write: TextStyleWrite): void => {
  * @param params - The stretch to style and the styling to give it
  * @param definitions - Type table `features.text` is read from
  * @throws {@link DocOperationError} when the id is missing, when the type holds no
- *   text a stretch can be styled in (a connector label and a slot of rows are both
- *   styled as a whole, through `setStyle`), when `slot` is absent or unknown on a
- *   slotted type, when `match` does not occur in the text, or when `occurrence` is
- *   past the last one
+ *   text a stretch can be styled in (a connector label, a slot of rows and a
+ *   `text: "source"` body are all styled as a whole, through `setStyle`), when
+ *   `slot` is absent or unknown on a slotted type, when `match` does not occur in
+ *   the text, or when `occurrence` is past the last one
  */
 export const setInlineTextStyle = (
 	doc: CanvasDoc,
@@ -477,13 +489,13 @@ export const setInlineTextStyles = (
 const resolveTextTarget = (
 	object: ObjectRecord,
 	id: string,
-	textFeature: "body" | "slots" | undefined,
+	textType: TextType | undefined,
 	slot: string | undefined,
 ): ObjectRecord => {
-	if (textFeature === "body") {
+	if (isSingleBodyText(textType)) {
 		return object;
 	}
-	if (textFeature !== "slots") {
+	if (textType !== "slots") {
 		throw new DocOperationError(
 			`${id} ("${object.type}") holds no text that can be styled`,
 		);

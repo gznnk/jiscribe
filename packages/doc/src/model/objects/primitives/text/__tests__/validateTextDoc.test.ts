@@ -64,7 +64,11 @@ describe("validateTextDoc", () => {
 		);
 
 		expect(errors).toEqual([
-			{ path: "root.width", message: 'is required when textLayout is "block"' },
+			{
+				path: "root.width",
+				message: 'is required when textLayout is "block"',
+				severity: "error",
+			},
 		]);
 	});
 
@@ -83,17 +87,25 @@ describe("validateTextDoc", () => {
 				{ ...validText, textLayout: "block", width: "320" },
 				"root",
 			),
-		).toEqual([{ path: "root.width", message: "must be a number" }]);
+		).toEqual([
+			{ path: "root.width", message: "must be a number", severity: "error" },
+		]);
 		expect(
 			validateTextDoc({ ...validText, textLayout: "block", width: -1 }, "root"),
-		).toEqual([{ path: "root.width", message: "must be >= 0" }]);
+		).toEqual([
+			{ path: "root.width", message: "must be >= 0", severity: "error" },
+		]);
 	});
 
 	it("is an error when the layout mode is not one of the two", () => {
 		expect(
 			validateTextDoc({ ...validText, textLayout: "flow" }, "root"),
 		).toEqual([
-			{ path: "root.textLayout", message: "must be one of: label, block" },
+			{
+				path: "root.textLayout",
+				message: "must be one of: label, block",
+				severity: "error",
+			},
 		]);
 	});
 
@@ -113,6 +125,7 @@ describe("validateTextDoc", () => {
 				path: "root.width",
 				message:
 					'is stored by textLayout "block" alone; set that layout with it, or drop the width',
+				severity: "error",
 			},
 		];
 		expect(validateTextDoc({ ...validText, width: 300 }, "root")).toEqual(

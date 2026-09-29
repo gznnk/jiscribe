@@ -1,5 +1,5 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
 import { TEXT_BLOCK_WIDTH_SLACK } from "@jiscribe/doc/text/block/textBlockWidthSlack";
 import {
 	TEXT_BOX_PADDING_X,

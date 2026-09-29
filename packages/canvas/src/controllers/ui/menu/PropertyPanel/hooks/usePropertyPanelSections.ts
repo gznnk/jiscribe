@@ -6,33 +6,28 @@ import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
+import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type {
-	PropertyPanelItem,
 	PropertyPanelSection,
 	PropertyPanelSelection,
 } from "../PropertyPanelTypes";
-
-/** The one section whose rows a selected text slot can receive. */
-const TEXT_SECTION_ID = "text";
-
-/**
- * Identity of a row for the multi-type merge: the discriminator for a built-in
- * kind, the declared id for a plugin's own row.
- */
-const itemKey = (item: PropertyPanelItem): string =>
-	item.type === "custom" ? item.id : item.type;
+import {
+	ensurePropertyPanelItems,
+	propertyPanelItemKey,
+} from "../utils/appendPropertyPanelItems";
 
 /**
  * Narrows the sections down to the rows a selected text slot can receive: the
- * text section's built-in rows. Custom rows go with the other sections, since a
- * plugin row has no way to say it is slot-aware. A section left empty is dropped
- * so no accordion header survives on its own.
+ * text section's built-in rows, the one section a slot can take anything from.
+ * Custom rows go with the other sections, since a plugin row has no way to say
+ * it is slot-aware. A section left empty is dropped so no accordion header
+ * survives on its own.
  */
 const filterTextSlotSections = (
 	sections: PropertyPanelSection[],
 ): PropertyPanelSection[] =>
 	sections
-		.filter((section) => section.id === TEXT_SECTION_ID)
+		.filter((section) => section.id === PROPERTY_PANEL_SECTIONS.text.id)
 		.map((section) => ({
 			...section,
 			items: section.items.filter((item) => item.type !== "custom"),
@@ -92,8 +87,22 @@ const collectSelectionSections = (
 
 	return mergeSectionsByKey(
 		[...selectedTypes].map((type) => propertyPanelRegistry.getSections(type)),
-		itemKey,
+		propertyPanelItemKey,
 	);
+};
+
+/**
+ * Whether the selection holds an aspect-ratio lock of its own, rather than
+ * reaching the one on each selected object: a multi-selection and a group both
+ * carry `lockAspectRatio` on the box drawn around their members, so the row
+ * belongs to them whatever those members are.
+ */
+const holdsOwnAspectRatioLock = (state: CanvasControllerState): boolean => {
+	const { selectedIds, objects, multiSelectGroup } = state;
+	if (multiSelectGroup) {
+		return true;
+	}
+	return selectedIds.length === 1 && objects[selectedIds[0]]?.type === "group";
 };
 
 /**
@@ -124,6 +133,11 @@ const filterShownSections = (
  * offered there has to be something a stretch of the text being edited can take,
  * and reshaping the shape mid-edit is not it.
  *
+ * A multi-selection and a group are given the aspect-ratio lock whatever they
+ * hold: the lock is theirs rather than their members', and the merge would drop
+ * the row as soon as one selected type lacks it (a `point` shape has no size to
+ * hold in proportion, so the default panel gives it none).
+ *
  * @param state - The current canvas controller state; the selection, the objects it names and the text focus are read
  * @param propertyPanelRegistry - Per-canvas PropertyPanelRegistry, asked once per concrete type in the selection
  * @returns The sections in display order; empty when nothing is selected, the selected types share nothing, or every section turned the selection down
@@ -137,7 +151,16 @@ export const getPropertyPanelSections = (
 		resolveSelectedTextSlot(state) === null &&
 		state.textEditState?.kind !== "shape"
 	) {
-		return filterShownSections(sections, state);
+		// This path alone: the branch below hands a selected slot the text section
+		// and nothing else, and the box the lock governs is not the slot's.
+		return filterShownSections(
+			holdsOwnAspectRatioLock(state)
+				? ensurePropertyPanelItems(sections, PROPERTY_PANEL_SECTIONS.layout, {
+						type: "lockAspectRatio",
+					})
+				: sections,
+			state,
+		);
 	}
 	return filterShownSections(filterTextSlotSections(sections), state);
 };

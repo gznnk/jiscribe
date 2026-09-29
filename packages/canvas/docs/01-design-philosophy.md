@@ -100,7 +100,7 @@ internals can be written cheaply on the assumption that "only valid state ever a
 >
 > **CSS injection** (stroke / fill / fontColor / fontFamily / fontWeight) is handled at the
 > boundary under the same policy. The doc path is rejected by `isCssSafeValue` in
-> `validateDocUtils`, and the clipboard path by state validation (`validateStateUtils`).
+> `validateStyleFields` / `validateTextFields`, and the clipboard path by state validation (`validateStateUtils`).
 > No sink-side defense is added on the presentation (emotion styled) side, as it would be
 > redundant.
 >

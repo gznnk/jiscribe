@@ -1,5 +1,6 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { roundDocPoints } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 import type { Point } from "@jiscribe/geometry";
 
@@ -9,7 +10,7 @@ import type { ObjectState } from "./ObjectState";
 import type { TextDocFields } from "./TextSlotsMapper";
 import { mapTextDocToState, mapTextStateToDoc } from "./TextSlotsMapper";
 import type { TextStyleState } from "./TextStyleState";
-import { collectStyleKeys, pick } from "../utils/stylePassthrough";
+import { pick } from "../utils/stylePassthrough";
 
 /**
  * Generates a Doc↔State mapper from `features` for Poly-family objects
@@ -20,7 +21,7 @@ import { collectStyleKeys, pick } from "../utils/stylePassthrough";
  * conversion is needed — `points` is passed through directly. Everything else (stroke / fill …)
  * also shares names, so this mapper passes it through by **explicitly picking via an allow-list**;
  * the one exception is the text group, which mapText* rebuilds because its styling sits flat on a
- * `"body"` Doc but inside each slot in the State (only for types with features.text).
+ * root-form Doc but inside each slot in the State (only for types with features.text).
  *
  * The picked keys are the style groups enabled in `features` (`collectStyleKeys`, bound to their
  * types via `exhaustiveKeysOf` — adding a field to e.g. StrokeStyleDoc is a compile error until the

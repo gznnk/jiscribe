@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
-import { appendPropertyPanelItems } from "../appendPropertyPanelItems";
+import {
+	appendPropertyPanelItems,
+	ensurePropertyPanelItems,
+} from "../appendPropertyPanelItems";
 
 /** Two sections, so a test can tell the one appended to from the one left alone. */
 const sectionsOfLayoutAndText = (): PropertyPanelSection[] => [
@@ -109,5 +112,93 @@ describe("appendPropertyPanelItems", () => {
 		expect(sections).toEqual([
 			{ id: "text", label: "Text", items: [{ type: "textVerticalBasis" }] },
 		]);
+	});
+});
+
+describe("ensurePropertyPanelItems", () => {
+	it("appends a row the section does not carry yet", () => {
+		const sections = ensurePropertyPanelItems(
+			sectionsOfLayoutAndText(),
+			{ id: "layout", label: "Layout" },
+			{ type: "lockAspectRatio" },
+		);
+
+		expect(sections[0].items).toEqual([
+			{ type: "position" },
+			{ type: "lockAspectRatio" },
+		]);
+	});
+
+	it("leaves a row the section already carries where it is", () => {
+		const sections = ensurePropertyPanelItems(
+			[
+				{
+					id: "layout",
+					label: "Layout",
+					items: [{ type: "lockAspectRatio" }, { type: "position" }],
+				},
+			],
+			{ id: "layout", label: "Layout" },
+			{ type: "lockAspectRatio" },
+		);
+
+		expect(sections[0].items).toEqual([
+			{ type: "lockAspectRatio" },
+			{ type: "position" },
+		]);
+	});
+
+	it("appends only the rows that are missing", () => {
+		const sections = ensurePropertyPanelItems(
+			sectionsOfLayoutAndText(),
+			{ id: "layout", label: "Layout" },
+			{ type: "position" },
+			{ type: "size" },
+		);
+
+		expect(sections[0].items).toEqual([{ type: "position" }, { type: "size" }]);
+	});
+
+	it("matches a custom row by its id", () => {
+		const Row = (): null => null;
+		const sections = ensurePropertyPanelItems(
+			[
+				{
+					id: "layout",
+					label: "Layout",
+					items: [{ type: "custom", id: "span", component: Row }],
+				},
+			],
+			{ id: "layout", label: "Layout" },
+			{ type: "custom", id: "span", component: Row },
+		);
+
+		expect(sections[0].items).toHaveLength(1);
+	});
+
+	it("creates the section at the end when none carries the id", () => {
+		const sections = ensurePropertyPanelItems(
+			sectionsOfLayoutAndText(),
+			{ id: "fill", label: "Fill" },
+			{ type: "fill" },
+		);
+
+		expect(sections.at(-1)).toEqual({
+			id: "fill",
+			label: "Fill",
+			items: [{ type: "fill" }],
+		});
+	});
+
+	it("does not touch the sections it is given", () => {
+		const input = sectionsOfLayoutAndText();
+
+		ensurePropertyPanelItems(
+			input,
+			{ id: "layout", label: "Layout" },
+			{ type: "lockAspectRatio" },
+		);
+
+		expect(input).toEqual(sectionsOfLayoutAndText());
 	});
 });

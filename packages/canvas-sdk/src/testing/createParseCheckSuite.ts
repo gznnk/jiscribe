@@ -90,8 +90,9 @@ const buildEveryTypeDoc = (types: readonly string[]): ParseCheckDoc => ({
 /**
  * Registers the parse-check suite every shape plugin needs: the sample doc parses
  * through a parser wired with the plugin, and — the counterpart that gives the
- * suite its point — a host that forgets to wire the plugin gets no error, it
- * silently loses those objects (unknown types parse to a warning and are dropped).
+ * suite its point — a host that forgets to wire the plugin gets no error, only a
+ * warning per object: it keeps them as opaque objects it writes back unread, so
+ * nothing draws them.
  *
  * @param params Suite declaration; see {@link ParseCheckSuiteParams}. `describe` /
  *   `it` are registered when this is called, so call it at the top level of a test
@@ -131,17 +132,18 @@ export function createParseCheckSuite(params: ParseCheckSuiteParams): void {
 			}
 		});
 
-		it("drops the objects with a warning when the plugin is not wired", () => {
+		it("keeps the objects as they are, with a warning, when the plugin is not wired", () => {
 			expect(pluginEntries.length).toBeGreaterThan(0);
 			const result = createCanvasParser().parse(JSON.stringify(sampleDoc));
 			expect(result.kind).toBe("ok");
 			if (result.kind !== "ok") {
 				return;
 			}
-			const ids = result.doc.root.map((object) => object.id);
 			const warningPaths = result.warnings.map((warning) => warning.path);
 			for (const entry of pluginEntries) {
-				expect(ids).not.toContain(entry.id);
+				expect(result.doc.root[entry.index]).toEqual(
+					sampleDoc.root[entry.index],
+				);
 				expect(warningPaths).toContain(`root[${entry.index}].type`);
 			}
 		});

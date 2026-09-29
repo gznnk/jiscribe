@@ -1,5 +1,6 @@
 import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { describe, it, expect } from "vitest";
 
 import {
@@ -36,6 +37,30 @@ describe("ObjectMapperRegistry", () => {
 
 		expect(state.features).toBe(RectFeatures);
 		expect(state.features).toBe(registry.getFeatures("rect"));
+	});
+
+	it("hasType answers for a registered type and for one never registered", () => {
+		const registry = createObjectMapperRegistry();
+		registry.register(
+			"rect",
+			{ toState: rectToState, toDoc: rectToDoc },
+			RectFeatures,
+		);
+
+		expect(registry.hasType("rect")).toBe(true);
+		expect(registry.hasType("no-such-type" as ObjectType)).toBe(false);
+	});
+
+	it("hasType goes back to false after clear", () => {
+		const registry = createObjectMapperRegistry();
+		registry.register(
+			"rect",
+			{ toState: rectToState, toDoc: rectToDoc },
+			RectFeatures,
+		);
+		registry.clear();
+
+		expect(registry.hasType("rect")).toBe(false);
 	});
 
 	it("features do not leak into toDoc (allow-list pick)", () => {

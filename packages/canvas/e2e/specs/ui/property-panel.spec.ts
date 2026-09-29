@@ -1,3 +1,6 @@
+import type * as CanvasModule from "@jiscribe/canvas";
+import { extractCanvasSourceFromSvgText } from "@jiscribe/doc/svg-source";
+
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
@@ -58,6 +61,36 @@ function expectSameBox(actual: ScreenBox, expected: ScreenBox, hint: string) {
 			`${hint}: ${key} ${actual[key]} vs ${expected[key]}`,
 		).toBeLessThanOrEqual(1);
 	}
+}
+
+/** The global mountPluginHarness publishes the default page's handle on. */
+type HarnessWindow = { __canvasHandle?: CanvasModule.CanvasHandle | null };
+
+/**
+ * The `view` of the document as the canvas would write it, read back out of the
+ * `.jis` source an SVG export embeds — the same state-to-document conversion a
+ * save goes through. null when the document declares no view.
+ */
+async function writtenView(
+	canvas: CanvasDriver,
+): Promise<CanvasModule.ViewDoc | null> {
+	const svgText = await canvas.page.evaluate(() => {
+		const handle = (window as unknown as HarnessWindow).__canvasHandle;
+		if (!handle) {
+			throw new Error(
+				"__canvasHandle is undefined (harness hook not installed)",
+			);
+		}
+		return handle.export.toSvgString();
+	});
+	if (svgText === null) {
+		throw new Error("the canvas is not mounted");
+	}
+	const sourceText = extractCanvasSourceFromSvgText(svgText);
+	if (sourceText === null) {
+		throw new Error("the export embeds no source");
+	}
+	return (JSON.parse(sourceText) as CanvasModule.CanvasDoc).view ?? null;
 }
 
 test.describe("Properties sidebar", () => {
@@ -143,6 +176,72 @@ test.describe("Properties sidebar", () => {
 		await expect.poll(() => canvas.canvasSurfaceColor()).toBe(before);
 	});
 
+	test("declares the view from the canvas section, one undo step per edit", async ({
+		canvas,
+	}) => {
+		await canvas.openPropertyPanel();
+		expect(await writtenView(canvas)).toBeNull();
+
+		const paddingTop = canvas.page.locator(
+			selectors.propertyPanelField("padding-top"),
+		);
+		await expect(paddingTop).toHaveValue("0");
+		await paddingTop.fill("40");
+		await paddingTop.press("Enter");
+		await expect
+			.poll(() => writtenView(canvas))
+			.toEqual({ padding: { top: 40 } });
+
+		const fitWidth = canvas.page.locator(
+			selectors.propertyPanelDocumentSet("view.open", "fit-width"),
+		);
+		await fitWidth.click();
+		await expect(fitWidth).toHaveAttribute("aria-pressed", "true");
+
+		const scrollBox = canvas.page.locator(
+			selectors.propertyPanelDocumentSet("view.scroll", "content"),
+		);
+		await scrollBox.click();
+		await expect(
+			canvas.page.locator(
+				selectors.propertyPanelDocumentSet("view.scroll", ""),
+			),
+			"the box now drops the declaration on the next press",
+		).toHaveAttribute("aria-checked", "true");
+		await expect
+			.poll(() => writtenView(canvas))
+			.toEqual({
+				padding: { top: 40 },
+				open: "fit-width",
+				scroll: "content",
+			});
+
+		// "None" drops the framing rather than writing a mode of its own.
+		await canvas.page
+			.locator(selectors.propertyPanelDocumentSet("view.open", ""))
+			.click();
+		await expect
+			.poll(() => writtenView(canvas))
+			.toEqual({ padding: { top: 40 }, scroll: "content" });
+
+		await canvas.undo();
+		await expect
+			.poll(() => writtenView(canvas))
+			.toEqual({
+				padding: { top: 40 },
+				open: "fit-width",
+				scroll: "content",
+			});
+		await canvas.undo();
+		await expect
+			.poll(() => writtenView(canvas))
+			.toEqual({ padding: { top: 40 }, open: "fit-width" });
+		await canvas.undo();
+		await canvas.undo();
+		await expect.poll(() => writtenView(canvas)).toBeNull();
+		await expect(paddingTop).toHaveValue("0");
+	});
+
 	test("stands in for the floating menu while open", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 120, y: 150 }, { x: 240, y: 240 });
 		const objectMenu = canvas.page.locator(selectors.objectMenu);
@@ -169,9 +268,7 @@ test.describe("Properties sidebar", () => {
 
 		// The same command the toolbar toggle fires, reached from the menu; the
 		// menu withdraws once the sidebar stands in for it
-		await canvas.page.click(
-			`${selectors.objectMenu} ${selectors.objectMenuCommand("togglePropertyPanel")}`,
-		);
+		await canvas.page.click(selectors.objectMenuCommand("togglePropertyPanel"));
 		await expect(canvas.page.locator(selectors.propertyPanel)).toBeVisible();
 		await expect(objectMenu).toHaveCount(0);
 		await expect(

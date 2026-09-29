@@ -3,19 +3,21 @@ import { calcPolyBoundingBox, type Point, type Rect } from "@jiscribe/geometry";
 import { type ObjectRecord, readChildren } from "./objectAccess";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
-import { isRichText } from "../../model/objects/types/RichText";
-import { resolveTextSlotStyle } from "../../model/objects/types/TextSlot";
-import { isTextVerticalBasis } from "../../model/objects/types/TextVerticalBasis";
+import { isRichText } from "../../model/objects/types/text/RichText";
+import {
+	resolveTextSlotStyle,
+	BODY_TEXT_SLOT_ID,
+} from "../../model/objects/types/text/TextSlot";
+import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
-import { extractTextSlotStyleDefaults } from "../../plugin/ObjectTextStyleDefaultsRegistry";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
+import { extractTextSlotStyleDefaults } from "../../registries/ObjectTextStyleDefaultsRegistry";
 import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import type { TextMeasurement } from "../../text/measure/TextMeasurement";
 import { adoptTextMeasurement } from "../../text/measure/textMeasurementSlot";
 import { calcTextObjectFrameSize } from "../../text/object/calcTextObjectFrameSize";
 import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
-import { BODY_TEXT_SLOT_ID } from "../../text/style/textSlotId";
 import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
 import { DocOperationError } from "../errors";
 
@@ -45,8 +47,8 @@ const readPoints = (value: unknown): Point[] =>
  * resolved into whatever the object states itself, and the shared last resort
  * for whatever neither sets. A separate resolution from the canvas's
  * `resolveTextObjectFont` because that one reads a state's slot and this one
- * reads the flat fields a `text: "body"` doc spells its styling out in; the two
- * fill in the same fallbacks and must keep doing so.
+ * reads the flat fields a root-form doc (`text: "body"` / `"source"`) spells its
+ * styling out in; the two fill in the same fallbacks and must keep doing so.
  */
 const resolveBodyFont = (
 	object: ObjectRecord,
@@ -298,7 +300,9 @@ export const requireObjectBounds = (
 		throw new DocOperationError(
 			isConnectorObject(object)
 				? `${object.id} is a connector: it follows the objects it joins, so move or resize those instead`
-				: `${object.id} ("${object.type}") has no position that can be changed`,
+				: definitions.has(object.type)
+					? `${object.id} ("${object.type}") has no position that can be changed`
+					: `${object.id} is "${object.type}", a type this build does not know: it is kept as it is, so it cannot be moved or resized — only restacked, grouped or deleted`,
 		);
 	}
 	return bounds;

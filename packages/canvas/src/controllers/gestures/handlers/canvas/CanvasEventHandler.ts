@@ -10,6 +10,8 @@ import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { ZOOM } from "../../../utils/zoom";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
+import { applyAxisLock } from "../utils/axisLock";
+import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
@@ -197,8 +199,21 @@ export const CanvasEventHandler: GestureHandler = {
 					return nextState;
 				}
 
-				let endX = event.last.x;
-				let endY = event.last.y;
+				// Shift constrains a polyline to horizontal / vertical. No origin snap:
+				// landing back on the start point would leave a zero-length line that
+				// is not placed.
+				const axisLock = applyAxisLock(
+					{ x: currentPreview.startX, y: currentPreview.startY },
+					event.last,
+					{
+						shift: event.mods.shift && drawingObjectType === "polyline",
+						zoom: nextState.viewport.zoom,
+						originSnap: false,
+					},
+				);
+				const { lockedAxis } = axisLock;
+				let endX = axisLock.point.x;
+				let endY = axisLock.point.y;
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 				const snapCandidates =
@@ -207,8 +222,8 @@ export const CanvasEventHandler: GestureHandler = {
 					const result = findSnap(
 						snapCandidates,
 						SNAP_THRESHOLD_PX / nextState.viewport.zoom,
-						[endX],
-						[endY],
+						lockedAxis === "x" ? [] : [endX],
+						lockedAxis === "y" ? [] : [endY],
 					);
 					endX += result.delta.x;
 					endY += result.delta.y;
@@ -238,6 +253,7 @@ export const CanvasEventHandler: GestureHandler = {
 						},
 					},
 					snapFeedback,
+					axisLockFeedback: axisLock.feedback,
 				};
 				return nextState;
 			}
@@ -319,6 +335,9 @@ export const CanvasEventHandler: GestureHandler = {
 		// Left-button drag for area selection
 		if (event.button === 0) {
 			if (event.type === "dragStart") {
+				// An additive marquee keeps what was selected and adds to it; a plain one
+				// replaces the selection.
+				const isAdditive = isAdditiveSelectionMod(event.mods);
 				nextState = {
 					...nextState,
 					areaSelection: {
@@ -327,13 +346,18 @@ export const CanvasEventHandler: GestureHandler = {
 						endX: event.last.x,
 						endY: event.last.y,
 						hitIds: [],
+						baseIds: isAdditive ? nextState.selectedIds : [],
 					},
-					selectedIds: [],
+					selectedIds: isAdditive ? nextState.selectedIds : [],
+					// Object and connector selection are exclusive, and a marquee only ever
+					// picks up objects — so these go even for an additive marquee.
 					selectedConnectorId: null,
 					selectedVertex: null,
-					// Cleared here too (not only on "pressed"): the early-out below keeps the
-					// previous multiSelectGroup as-is while the hit set stays empty.
-					multiSelectGroup: null,
+					// A plain marquee clears it here too (not only on "pressed"): the
+					// early-out below keeps the previous multiSelectGroup as-is while the
+					// hit set stays empty. An additive one keeps the base's group until the
+					// first hit rebuilds it.
+					multiSelectGroup: isAdditive ? nextState.multiSelectGroup : null,
 					edgeScrollEnabled: true,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
@@ -375,7 +399,13 @@ export const CanvasEventHandler: GestureHandler = {
 					return nextState;
 				}
 
-				const selectedIds = autoSelectParentGroups(nextState, hitIds);
+				// Base first, then whatever the marquee newly encloses. baseIds is empty for
+				// a plain marquee, which leaves this as the hit set itself.
+				const unionIds = [
+					...area.baseIds,
+					...hitIds.filter((hitId) => !area.baseIds.includes(hitId)),
+				];
+				const selectedIds = autoSelectParentGroups(nextState, unionIds);
 
 				let multiSelectGroup = null;
 				if (selectedIds.length > 1) {
@@ -417,17 +447,25 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 			nextState = {
 				...nextState,
-				selectedIds: [],
-				selectedConnectorId: null,
-				selectedVertex: null,
 				// Close the context menu if it is open
 				contextMenuPosition: null,
 				// Reset the ObjectMenu expansion
 				objectMenuOpenId: null,
 				stencilLibraryOpenCategory: null,
-				// Reset the multi-select group
-				multiSelectGroup: null,
 			};
+			// An additive modifier means this press opens an additive marquee, so the
+			// selection it builds on has to survive the press. Touch carries no
+			// modifiers, so its tap always clears.
+			if (isTouch || !isAdditiveSelectionMod(event.mods)) {
+				nextState = {
+					...nextState,
+					selectedIds: [],
+					selectedConnectorId: null,
+					selectedVertex: null,
+					// Reset the multi-select group
+					multiSelectGroup: null,
+				};
+			}
 		}
 
 		return nextState;

@@ -4,6 +4,7 @@ import { memo } from "react";
 import {
 	PropertyColorAutoLabel,
 	PropertyColorMixedSwatch,
+	PropertyColorMixedSwatchSegment,
 	PropertyColorSwatch,
 	PropertyDropdownTriggerLabel,
 	PropertyMixedLabel,
@@ -12,6 +13,7 @@ import { PropertyDropdownField } from "./PropertyDropdownField";
 import type { AutoColorRole } from "../../../../../rendering/objects/utils/resolveAutoColor";
 import { resolveAutoColor } from "../../../../../rendering/objects/utils/resolveAutoColor";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
+import { calcMixedColorSegments } from "../../../utils/calcMixedColorSegments";
 import { ObjectMenuColorPickerGrid } from "../../ObjectMenu/common/ObjectMenuColorPickerGrid";
 import type { StylePropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 
@@ -19,11 +21,14 @@ type PropertyColorFieldProps = {
 	/** The color the selection is drawn with, already resolved through its type's defaults. */
 	value: string;
 	/**
-	 * Whether the selection carries several colors. The swatch is then hatched and
-	 * the word for that stands in for `value`, which is only one of them; picking
-	 * a swatch from the panel writes to the whole selection either way.
+	 * The colors of a selection that disagrees, as the objects state them
+	 * (`auto` included; resolved here by `role`) — a SelectionValue's `values`
+	 * (selectionMixedValues). The swatch is then split between the first three
+	 * (MAX_MIXED_COLOR_SEGMENTS) and the word for mixed stands in for `value`,
+	 * which is only one of them; picking a swatch from the panel writes to the
+	 * whole selection either way. Omitted states `value` alone.
 	 */
-	isMixed?: boolean;
+	mixedValues?: readonly string[];
 	/** Property a swatch writes to (`fill`, `stroke`, `fontColor`, `background`). */
 	property: string;
 	/** Which theme color `auto` follows: the shape's ink, its face, or the canvas surface. */
@@ -54,13 +59,13 @@ type PropertyColorFieldProps = {
  * `auto` shows the color it currently resolves to beside the word rather than
  * the sentinel, so the swatch never disagrees with the shape.
  *
- * A selection carrying several colors keeps its swatch — hatched, and beside the
- * word for it — rather than falling back to the bare word: the row is still read
- * as a color row at a glance.
+ * A selection carrying several colors keeps its swatch — split between them,
+ * beside the word for it — rather than falling back to the bare word: the row
+ * is still read as a color row at a glance.
  */
 const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	value,
-	isMixed = false,
+	mixedValues,
 	property,
 	role,
 	writesThroughCallback = false,
@@ -70,6 +75,9 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const isAuto = isAutoColor(value);
+	const isMixed = mixedValues !== undefined;
+	const resolveSwatchColor = (color: string): string =>
+		color === "transparent" ? color : resolveAutoColor(color, role);
 
 	return (
 		<PropertyDropdownField
@@ -77,13 +85,17 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 			preview={
 				<>
 					{isMixed ? (
-						<PropertyColorMixedSwatch />
+						<PropertyColorMixedSwatch>
+							{calcMixedColorSegments(mixedValues).map((segment) => (
+								<PropertyColorMixedSwatchSegment
+									key={segment.start}
+									swatchColor={resolveSwatchColor(segment.color)}
+									widthFraction={segment.end - segment.start}
+								/>
+							))}
+						</PropertyColorMixedSwatch>
 					) : (
-						<PropertyColorSwatch
-							swatchColor={
-								value === "transparent" ? value : resolveAutoColor(value, role)
-							}
-						/>
+						<PropertyColorSwatch swatchColor={resolveSwatchColor(value)} />
 					)}
 					<PropertyDropdownTriggerLabel>
 						{isMixed ? (

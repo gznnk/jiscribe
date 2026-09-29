@@ -2,6 +2,7 @@ import { constants as bufferConstants } from "node:buffer";
 
 import { resolveDocImageMimeType, splitDocRelativePath } from "@jiscribe/doc";
 
+import { describeErrorDetail } from "./describeErrorDetail";
 import type { ImageRequestId, ImageResolvedMessage } from "../types/messages";
 
 /**
@@ -64,8 +65,8 @@ export async function resolveDocImageContent(
 	let bytes: Uint8Array;
 	try {
 		bytes = await readImageFile(segments);
-	} catch (err) {
-		const detail = err instanceof Error ? `: ${err.message}` : "";
+	} catch (error) {
+		const detail = describeErrorDetail(error);
 		return { ok: false, error: `Could not read image "${src}"${detail}` };
 	}
 	if (bytes.length > MAX_ENCODABLE_IMAGE_BYTES) {
@@ -77,11 +78,11 @@ export async function resolveDocImageContent(
 	let base64: string;
 	try {
 		base64 = Buffer.from(bytes).toString("base64");
-	} catch (err) {
+	} catch (error) {
 		// The size check above covers the length the encoder refuses; this catches
 		// what is left (an allocation that fails on the way there), because the
 		// caller voids this Promise and the Webview waits for the answer forever
-		const detail = err instanceof Error ? `: ${err.message}` : "";
+		const detail = describeErrorDetail(error);
 		return { ok: false, error: `Could not encode image "${src}"${detail}` };
 	}
 	return { ok: true, base64, mimeType };

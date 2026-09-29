@@ -37,7 +37,7 @@ and sociable behavior tests are placed right next to the files they target
 - The default environment is `environment: "node"`: without going through the DOM, a test verifies input state → output state directly.
   Only tests that need DOM APIs (rendering a React hook or component to check it, and the like)
   switch to jsdom with `// @vitest-environment jsdom` at the top of the file
-  (e.g. `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`, `controllers/__tests__/CanvasThumbnail.test.tsx`).
+  (e.g. `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`, `controllers/ui/menu/ObjectMenu/common/ObjectMenuColorPickerGrid/__tests__/ObjectMenuColorPickerGrid.test.tsx`).
   jsdom is an in-process simulated DOM, so these stay in the unit layer
 - Run: `pnpm --filter @jiscribe/canvas test` (`vitest run`).
   `test:coverage` / `test:ui` are also provided (for what coverage excludes, see `coverage.exclude` in `vitest.config.ts`)
@@ -100,7 +100,8 @@ Every suite is laid out the same way and runs on the shared kit described below.
 - **canvas's harness registers no shipped plugin.** It mounts `e2e/plugins/specShapesPlugin.tsx`,
   a test-only stand-in supplying the traits core no longer owns itself, one type per trait
   (e.g. `tile`: drag-drawn, in a category flyout; `pin`: click-placed; `card`: `<g>`-rooted,
-  with a text slot; `panel`: declares its own creation defaults. The full set is
+  with a text slot; `panel`: declares its own creation defaults; `memo`: holds a
+  source-language body (`features.text: "source"`). The full set is
   `specShapesPlugin` in that file). Core specs that used a shipped shape as their subject
   drive these instead
 - **A plugin's harness mounts that plugin alone.** Passing under a solo load is itself the

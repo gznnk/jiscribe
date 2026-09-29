@@ -7,7 +7,7 @@
 		"dev:harness": "vite e2e/harness --configLoader runner",
 		"build": "tsc -b && vite build",
 		"deploy": "pnpm run build && pnpm dlx wrangler pages deploy dist --project-name=jiscribe-examples --branch=main",
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"preview": "vite preview",
 		"test:e2e": "playwright test",
 		"typecheck": "tsc --noEmit"

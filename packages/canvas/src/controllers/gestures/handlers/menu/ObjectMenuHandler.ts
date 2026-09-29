@@ -1,3 +1,4 @@
+import { applyStylePropertyPart } from "./utils/applyStylePropertyPart";
 import { parseMenuPart } from "./utils/menuParts";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type {
@@ -8,29 +9,22 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler that processes ObjectMenu item interactions.
- * Handles events with targetKind "menu" and targetId "object-menu" — which the
- * controls of the properties sidebar declare as well (see PropertyPanelHandler),
- * so a property write from either surface lands here.
- *
- * Property updates from the ObjectMenu take two paths:
- * (1) This handler: via the gesture system (set: / slider:). Most property changes go through here.
- * (2) The STYLE_PROPERTY_UPDATE case in canvasReducer: via React onChange (number-input, and a
- *     slider driven from the keyboard, which produces no gesture). Does not go through here.
- * Logic needed by both paths (such as clearing selectedVertex) must be added to each of them.
+ * Handles events with targetKind "menu" and targetId "object-menu": the menu's
+ * container carries the pair, and the items inside it carry only a data-part.
  *
  * Events handled:
- * - click / doubleClick: menu item activation (equivalent; see the comment at the branch),
- *   or a commit of the slider value the native track click already produced
- * - pressed / dragStart / drag: real-time slider update (no history recording; pressed and
- *   dragStart cover the native value changes made before the drag slop is crossed)
+ * - click / doubleClick: menu item activation (equivalent; see
+ *   applyStylePropertyPart), or a commit of the slider value the native track
+ *   click already produced
+ * - pressed / dragStart / drag: real-time slider update (no history recording)
  * - dragEnd: commit the slider's final value + record history
  *
  * targetPart formats (absent = the menu chrome itself, e.g. bar / panel background;
  * built and parsed by utils/menuParts.ts):
  * - `toggle:{sectionId}` → toggle a section open/closed
- * - `set:{property}:{value}` → update a property of the selected object
+ * - `set:{property}:{value}` / `slider:{property}` → write a style property of
+ *   the selection (applyStylePropertyPart, shared with PropertyPanelHandler)
  * - `command:{commandId}` → execute a command
- * - `slider:{property}` → property update via slider
  */
 export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -51,104 +45,32 @@ export const ObjectMenuHandler: GestureHandler = {
 
 		const part = parseMenuPart(event.targetPart);
 
-		// Slider interaction: pressed / dragStart / drag / dragEnd / click
-		if (part?.kind === "slider") {
-			// Do nothing if there is no input value
-			if (event.inputValue === undefined) {
-				console.warn("[ObjectMenuHandler] No input value found");
-				return state;
-			}
-
-			const { property } = part;
-			if (!property) {
-				console.warn("[ObjectMenuHandler] No property found in targetPart");
-				return state;
-			}
-
-			// pressed / dragStart / drag: real-time update (no history recording, menu
-			// stays open). pressed and dragStart must apply too: the browser writes the
-			// value natively from the moment of the pointerdown (the thumb jumps to the
-			// press point, then steps under the drag slop), and the first drag only fires
-			// on the pointermove after the slop is crossed — without applying here the
-			// canvas lags those first steps for as long as the pointer is held.
-			if (
-				event.type === "pressed" ||
-				event.type === "dragStart" ||
-				event.type === "drag"
-			) {
-				const newState = registries.styleProperty.apply(
-					nextState,
-					property,
-					event.inputValue,
-				);
-				return { ...newState, selectedVertex: null };
-			}
-
-			// dragEnd: commit the final value (history recording is delegated to handleGesture).
-			// click / doubleClick: a press on the track jumps the thumb natively and lifts
-			// without ever crossing the drag threshold, so no drag/dragEnd pair fires and the
-			// value the browser already wrote would otherwise never reach the doc (#248).
-			// Since pointerup emits exactly one of dragEnd / click / doubleClick, this cannot
-			// commit twice.
-			if (
-				event.type === "dragEnd" ||
-				event.type === "click" ||
-				event.type === "doubleClick"
-			) {
-				const newState = registries.styleProperty.apply(
-					state,
-					property,
-					event.inputValue,
-				);
-				return {
-					...newState,
-					selectedVertex: null,
-					commitVersion: state.commitVersion + 1,
-				};
-			}
-
-			return state;
+		const styledState = applyStylePropertyPart(
+			nextState,
+			event,
+			part,
+			registries,
+		);
+		if (styledState !== null) {
+			return styledState;
 		}
 
-		// Menu item activation. doubleClick activates like click (the ToolbarHandler
-		// pattern): the recognizer pairs any two rapid same-position clicks without
-		// comparing targets, so the second press of a toggle whose data-part changes
-		// with the value (set:fontWeight:bold → set:fontWeight:normal) arrives as
-		// doubleClick and must still fire. Each pointerup emits exactly one of
-		// click / doubleClick, so this cannot run an action twice.
-		if (
-			(event.type === "click" || event.type === "doubleClick") &&
-			event.targetPart
-		) {
-			// toggle button: toggle a section open/closed
-			if (part?.kind === "toggle") {
-				const sectionId = part.id;
-				return {
-					...state,
-					objectMenuOpenId:
-						state.objectMenuOpenId === sectionId ? null : sectionId,
-				};
-			}
+		// doubleClick activates like click, for the reason given in applyStylePropertyPart
+		if (event.type !== "click" && event.type !== "doubleClick") {
+			return nextState;
+		}
 
-			// Property update: set:{property}:{value}
-			if (part?.kind === "set") {
-				const newState = registries.styleProperty.apply(
-					state,
-					part.property,
-					part.value,
-				);
-				// History recording is delegated to handleGesture, so only update commitVersion
-				return {
-					...newState,
-					selectedVertex: null,
-					commitVersion: state.commitVersion + 1,
-				};
-			}
+		if (part?.kind === "toggle") {
+			const sectionId = part.id;
+			return {
+				...nextState,
+				objectMenuOpenId:
+					nextState.objectMenuOpenId === sectionId ? null : sectionId,
+			};
+		}
 
-			// Command button: command:{commandId}
-			if (part?.kind === "command") {
-				return handleCommand(state, part.commandId, registries);
-			}
+		if (part?.kind === "command") {
+			return handleCommand(nextState, part.commandId, registries);
 		}
 
 		return nextState;

@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { CONNECTOR_HIT_STROKE_WIDTH } from "./connectorHitArea";
+import { LINE_HIT_STROKE_WIDTH } from "../../utils/hitStrokeWidth";
 import type { StrokePaintProps } from "../../utils/shapePaint";
 import { strokePaint } from "../../utils/shapePaint";
 
@@ -18,7 +18,7 @@ export const ConnectorHitArea = styled.polyline<{
 	cursor: pointer;
 	fill: none;
 	stroke: transparent;
-	stroke-width: ${CONNECTOR_HIT_STROKE_WIDTH};
+	stroke-width: ${LINE_HIT_STROKE_WIDTH};
 	stroke-linecap: round;
 	stroke-linejoin: round;
 `;

@@ -9,7 +9,9 @@ import { join } from "node:path";
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
+import { readSessionToken } from "./hostSessionToken";
 import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
+import { REVISION_HEADER, SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";
 
 /**
  * Named as the headless browser. Nothing is there, so the launch fails the same
@@ -70,7 +72,7 @@ describe("open_canvas", () => {
 
 		expect(result.isError).toBe(false);
 		expect(result.text).toMatch(
-			/^created and opened new\.jis\.json — viewer: http:\/\/localhost:\d+$/,
+			/^created and opened new\.jis\.json — viewer: http:\/\/127\.0\.0\.1:\d+$/,
 		);
 		expect(await readFile(path, "utf8")).toContain('"version": 1');
 	});
@@ -97,16 +99,29 @@ describe("open_canvas", () => {
 
 		expect(result.text).toMatch(/^created and opened second\.jis\.json/);
 		const viewerUrl = /viewer: (\S+)$/.exec(result.text)?.[1];
-		const response = await fetch(
-			`${viewerUrl}/api/file?path=written.jis.json`,
-			{
+		// The write goes the way the viewer's own does: the token this host handed
+		// out, and the file it is showing
+		const token = await readSessionToken(String(viewerUrl));
+		const writeFileThrough = async (revision: string): Promise<Response> =>
+			await fetch(`${viewerUrl}/api/file?path=second.jis.json`, {
 				method: "PUT",
+				headers: {
+					[SESSION_TOKEN_HEADER]: token,
+					[REVISION_HEADER]: revision,
+				},
 				body: emptyDocText,
-			},
+			});
+		// The revision is the host's to give out, so it is taken from the refusal
+		// rather than worked out here (the viewer takes it off the frame it opened
+		// the canvas with)
+		const refused = await writeFileThrough("not-the-revision-it-holds");
+		expect(refused.status).toBe(412);
+		const response = await writeFileThrough(
+			String(((await refused.json()) as { revision: string }).revision),
 		);
 		expect(response.status).toBe(200);
 		expect(
-			await readFile(join(otherWorkspaceRoot, "written.jis.json"), "utf8"),
+			await readFile(join(otherWorkspaceRoot, "second.jis.json"), "utf8"),
 		).toBe(emptyDocText);
 	});
 

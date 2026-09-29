@@ -13,9 +13,11 @@ export const ObjectMenuSliderWrapper = styled.div`
 `;
 
 /**
- * Styled range input element for the menu slider.
+ * Styled range input element for the menu slider. `isMixed` draws the thumb
+ * hollow: the selection is on no single value, so the thumb only marks where
+ * one of its values sits.
  */
-export const ObjectMenuSliderInput = styled.input`
+export const ObjectMenuSliderInput = styled.input<{ isMixed?: boolean }>`
 	flex: 1;
 	height: 2px;
 	-webkit-appearance: none;
@@ -85,6 +87,24 @@ export const ObjectMenuSliderInput = styled.input`
 		transform: scale(1.05);
 		box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
 	}
+
+	/* Last, so it outranks the hover rule above at the same specificity. */
+	${({ isMixed }) =>
+		isMixed
+			? `
+		&::-webkit-slider-thumb,
+		&:hover::-webkit-slider-thumb {
+			background-color: ${theme.surface};
+			border: 1.5px solid ${theme.foregroundMuted};
+		}
+
+		&::-moz-range-thumb,
+		&:hover::-moz-range-thumb {
+			background-color: ${theme.surface};
+			border: 1.5px solid ${theme.foregroundMuted};
+		}
+	`
+			: ""}
 `;
 
 /**
@@ -99,12 +119,20 @@ export const ObjectMenuSliderFooter = styled.div`
 
 /**
  * Label for the menu slider.
+ *
+ * The dropdown panel has no width of its own: as an absolutely positioned box
+ * anchored with `left: 50%` it has almost no available width, so it settles at
+ * its min-content width. A breakable label contributes only its longest
+ * unbreakable run to that minimum, and Japanese breaks between any two
+ * characters ("フォントサイズ"), so the label wrapped instead of widening the
+ * panel. `nowrap` puts the whole label into the minimum.
  */
 export const ObjectMenuSliderLabel = styled.label`
 	font-size: 12px;
 	font-weight: 600;
 	color: ${theme.foreground};
 	user-select: none;
+	white-space: nowrap;
 `;
 
 /**

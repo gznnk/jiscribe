@@ -382,11 +382,18 @@ export class CanvasDriver {
 	/**
 	 * Pick a tool, drag to draw a shape, and return the new shape's data-id. The shape is
 	 * auto-selected right after drawing and the ObjectMenu appears.
+	 *
+	 * @param options.shift - Hold Shift through the drag, for verifying the polyline axis lock
+	 * @param options.inspect - Runs with the button still down, like dragInspecting
 	 */
 	async drawShape(
 		tool: ToolTitle,
 		from: { x: number; y: number },
 		to: { x: number; y: number },
+		{
+			shift = false,
+			inspect,
+		}: { shift?: boolean; inspect?: () => Promise<void> } = {},
 	): Promise<string> {
 		const before = await this.captureObjects();
 		const beforeIds = new Set(before.map((obj) => obj.id));
@@ -407,7 +414,13 @@ export class CanvasDriver {
 			)
 			.toBe("crosshair");
 
-		await this.drag(from, to);
+		if (shift || inspect) {
+			await this.dragInspecting(from, to, inspect ?? (async () => {}), {
+				shift,
+			});
+		} else {
+			await this.drag(from, to);
+		}
 
 		// Wait for the new object to appear; if it does not, the operation had no effect.
 		await expect
@@ -642,6 +655,19 @@ export class CanvasDriver {
 		await this.page.keyboard.down("Control");
 		await this.page.mouse.click(screen.x, screen.y);
 		await this.page.keyboard.up("Control");
+		await this.waitForGestureBatch();
+	}
+
+	/**
+	 * Shift-click a content coordinate to add to or toggle the selection. Shift is
+	 * additive alongside Ctrl/Meta; it only locks an axis once a drag starts.
+	 */
+	async shiftClickAt(point: { x: number; y: number }) {
+		await this.measureOrigin();
+		const screen = this.toScreen(point);
+		await this.page.keyboard.down("Shift");
+		await this.page.mouse.click(screen.x, screen.y);
+		await this.page.keyboard.up("Shift");
 		await this.waitForGestureBatch();
 	}
 
@@ -1057,7 +1083,7 @@ export class CanvasDriver {
 		value: string,
 	) {
 		const italicButton = this.page.locator(
-			'[data-id="object-menu"][data-part^="set:fontStyle:"]',
+			`${selectors.objectMenu} [data-part^="set:fontStyle:"]`,
 		);
 		if ((await italicButton.count()) === 0) {
 			await this.openObjectMenu("text-format");
@@ -1327,12 +1353,17 @@ export class CanvasDriver {
 		await this.pressCommand("Control+Minus");
 	}
 
-	/** Open the ObjectMenu z-order section and run an arrange command. */
+	/**
+	 * Run a stacking-order command from the properties sidebar's Arrange section.
+	 * The sidebar is opened and closed around the click, so the canvas is back at
+	 * its full width when this returns and measured screen points still hold.
+	 */
 	async arrange(
 		commandId: "bringToFront" | "bringForward" | "sendBackward" | "sendToBack",
 	) {
-		await this.openObjectMenu("stack-order");
-		await this.page.click(selectors.objectMenuCommand(commandId));
+		await this.openPropertyPanel();
+		await this.page.click(selectors.propertyPanelCommand(commandId));
+		await this.closePropertyPanel();
 	}
 
 	/** DOM-order index among shapes, excluding connectors; later elements are in front in SVG. */
@@ -1383,6 +1414,31 @@ export class CanvasDriver {
 	/** Locator for a shape by data-id. */
 	objectById(id: string) {
 		return this.page.locator(`[data-id="${id}"]`).first();
+	}
+
+	/**
+	 * A connector's drawn vertices, parsed from the `points` attribute of the
+	 * element carrying its data-id. Content coordinates, which equal world
+	 * coordinates at zoom 1.
+	 *
+	 * @param id - The connector's data-id
+	 * @returns The vertices in drawing order, so the first is the source end and
+	 *   the last the target end
+	 * @throws When the element carries no `points` attribute, which means the id
+	 *   is not a connector (or a polyline)
+	 */
+	async connectorPoints(id: string): Promise<Array<{ x: number; y: number }>> {
+		const attr = await this.objectById(id).getAttribute("points");
+		if (!attr) {
+			throw new Error(`${id} has no points attribute`);
+		}
+		return attr
+			.trim()
+			.split(/\s+/)
+			.map((pair) => {
+				const [x, y] = pair.split(",").map(Number);
+				return { x, y };
+			});
 	}
 
 	/**

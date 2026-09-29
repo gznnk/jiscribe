@@ -1,12 +1,13 @@
 import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { calcNonZeroSign, degreesToRadians } from "@jiscribe/geometry";
-import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
+import type { Point, Rect } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import {
 	calcConnectPoint,
 	calcExtraConnectPoint,
 	calcOutwardVector,
+	type AnchorFrame,
 } from "../../../../connectors/calcConnectPoint";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
@@ -26,9 +27,10 @@ type ConnectionAnchorsProps = {
 	 */
 	objectId: string;
 	/**
-	 * The frame (bounding box) to show connection anchors for.
+	 * The shape to show connection anchors for: its frame, and the features that
+	 * place the dots on an ellipse's arc when no outline polygon is given.
 	 */
-	frame: TransformedFrame;
+	frame: AnchorFrame;
 	/**
 	 * The shape's local outline polygon (from ObjectOutlineRegistry). When present,
 	 * the anchor dots sit on the true edge instead of the bounding box.

@@ -1,6 +1,6 @@
-import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectFactoryRegistry } from "@jiscribe/doc/registries/ObjectFactoryRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
@@ -99,8 +99,8 @@ export interface ICanvasRegistries {
 		get(commandId: string): CommandLike | undefined;
 	};
 	/**
-	 * Styleable-property update dispatch, used by the object-menu gesture handler
-	 * and the reducer's STYLE_PROPERTY_UPDATE. Inline shape for the same acyclicity
+	 * Styleable-property update dispatch, used by the menus' gesture route
+	 * (applyStylePropertyPart) and the reducer's STYLE_PROPERTY_UPDATE. Inline shape for the same acyclicity
 	 * reason as `command` (the concrete class is `StylePropertyRegistry`).
 	 */
 	styleProperty: {

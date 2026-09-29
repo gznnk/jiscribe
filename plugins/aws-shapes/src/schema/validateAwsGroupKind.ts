@@ -22,6 +22,7 @@ export const validateAwsGroupKind: ObjectDocValidateFn = (value, path) => {
 		{
 			path: `${path}.kind`,
 			message: `must be one of: ${AWS_GROUP_KINDS.join(", ")}`,
+			severity: "error",
 		},
 	];
 };

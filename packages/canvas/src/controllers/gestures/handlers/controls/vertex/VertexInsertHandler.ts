@@ -9,6 +9,7 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { excludeCenterCandidates } from "../../utils/snap/excludeCenterCandidates";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -118,13 +119,18 @@ export class VertexInsertHandler extends ControlStrategy {
 			edgeScrollEnabled: true,
 		};
 
-		// Update the drag's start snapshot so the drag event can reference the state including the new vertex
+		// Update the drag's start snapshot so the drag event can reference the state including the new vertex.
+		// The object's own center moves with the new vertex, so it is dropped from this drag's candidates.
 		if (state.activeDrag) {
+			const startSnapshot = state.activeDrag.startSnapshot;
 			nextState.activeDrag = {
 				...state.activeDrag,
 				startSnapshot: {
-					...state.activeDrag.startSnapshot,
+					...startSnapshot,
 					objects: updatedObjects,
+					snapCandidates:
+						startSnapshot.snapCandidates &&
+						excludeCenterCandidates(startSnapshot.snapCandidates, objectId),
 				},
 			};
 		}

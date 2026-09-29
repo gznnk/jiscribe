@@ -34,12 +34,12 @@ export type {
 	ViewPaddingDoc,
 	ResolvedViewPadding,
 } from "./model/canvas/ViewDoc";
-export {
-	isViewOpenMode,
-	isViewScrollMode,
-	resolveViewPadding,
-} from "./model/canvas/ViewDoc";
+export { isViewOpenMode, isViewScrollMode } from "./model/canvas/ViewDoc";
+export { resolveViewPadding } from "./model/canvas/resolveViewPadding";
 export type { ObjectDoc } from "./model/objects/base/ObjectDoc";
+// An object of a type the reader does not know, which the parser, the doc-ops and
+// the canvas all keep in place and write back as it was.
+export type { OpaqueObjectDoc } from "./model/objects/base/OpaqueObjectDoc";
 export type { ObjectType } from "./model/objects/types/ObjectType";
 export type { ObjectFeatures } from "./model/objects/types/ObjectFeatures";
 export type { CreateObjectType } from "./model/objects/types/CreateObjectType";
@@ -65,6 +65,14 @@ export { OPACITY_MAX, OPACITY_MIN } from "./model/objects/utils/opacity";
 export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
+export type { ArrowType } from "./model/objects/types/ArrowType";
+export { ArrowTypes } from "./model/objects/types/ArrowType";
+export type { ConnectPointId } from "./model/objects/types/EndpointRef";
+export { ConnectPointIds } from "./model/objects/types/EndpointRef";
+export type { ConnectorRouting } from "./model/objects/types/ConnectorRouting";
+export { ConnectorRoutings } from "./model/objects/types/ConnectorRouting";
+export type { TextLayout } from "./model/objects/types/text/TextLayout";
+export { TextLayouts } from "./model/objects/types/text/TextLayout";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";
 // A text slot is the unit of text in both layers, so a type that spells out its
 // own slots (features.text: "slots") declares them with this in its Doc and reuses
@@ -73,30 +81,37 @@ export type {
 	TextSlot,
 	TextSlotContent,
 	TextSlotStyle,
-} from "./model/objects/types/TextSlot";
+} from "./model/objects/types/text/TextSlot";
 export {
 	isTextRows,
 	isTextSlot,
 	resolveTextSlotStyle,
 	TEXT_BLOCK_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
-} from "./model/objects/types/TextSlot";
+} from "./model/objects/types/text/TextSlot";
 // What a single-body doc carries on the object itself rather than in its slot:
 // where the one body is placed against the shape. The schema generator lists
 // these beside the slot's own keys.
 export { TEXT_BODY_KEYS } from "./model/objects/base/TextStyleDoc";
-export type { TextVerticalBasis } from "./model/objects/types/TextVerticalBasis";
+// The narrower of the two single-body doc forms, for a type that renders its text
+// from a source language of its own (features.text: "source").
+export type { SourceTextStyleDoc } from "./model/objects/base/TextStyleDoc";
+export type { TextVerticalBasis } from "./model/objects/types/text/TextVerticalBasis";
 export {
 	isTextVerticalBasis,
 	TextVerticalBases,
-} from "./model/objects/types/TextVerticalBasis";
+} from "./model/objects/types/text/TextVerticalBasis";
+// The typography a body of text is drawn with: what a slot sets for all of it,
+// and what a run of it may carry on its own.
+export type { TextBaseStyle } from "./model/objects/types/text/TextBaseStyle";
+export { TEXT_BASE_STYLE_KEYS } from "./model/objects/types/text/TextBaseStyle";
+export type { TextEmphasisStyle } from "./model/objects/types/text/TextEmphasisStyle";
+export { TEXT_EMPHASIS_STYLE_KEYS } from "./model/objects/types/text/TextEmphasisStyle";
+export type { InlineTextStyle } from "./model/objects/types/text/InlineTextStyle";
+export { TEXT_INLINE_STYLE_KEYS } from "./model/objects/types/text/InlineTextStyle";
 // One body of a slot's text: the plain string it is until part of it is styled on
 // its own, and the runs it is written as once it is.
-export type {
-	InlineTextStyle,
-	RichText,
-	TextRun,
-} from "./model/objects/types/RichText";
+export type { RichText, TextRun } from "./model/objects/types/text/RichText";
 export {
 	isRichText,
 	isTextRun,
@@ -105,8 +120,17 @@ export {
 	richTextToPlain,
 	sliceRichText,
 	styleRichTextRange,
-	TEXT_INLINE_STYLE_KEYS,
-} from "./model/objects/types/RichText";
+} from "./model/objects/types/text/RichText";
+// Which of those a type's text actually accepts, whether the emphasis half is
+// among them, and whether it holds one body at all: the questions every side
+// asking about `features.text` goes through, so what a shape may be styled with
+// cannot drift from what its doc may hold.
+export type { TextType } from "./model/objects/types/text/TextType";
+export {
+	acceptsTextEmphasisStyle,
+	isSingleBodyText,
+	textStyleKeysOf,
+} from "./model/objects/types/text/TextType";
 export type {
 	ExtraStylePropertyDescriptor,
 	StyleValueType,
@@ -130,18 +154,22 @@ export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";
 export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
-export type { ObjectTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
+export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
 // The stroke / fill defaults a type declares through its creation defaults, and
 // what one shape's style resolves to once type and last resort are folded in.
-export { extractShapeStyleDefaults } from "./plugin/ObjectShapeStyleDefaultsRegistry";
+export { extractShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
 export type {
 	ObjectShapeStyleDefaults,
 	ResolvedShapeStyle,
 	ShapeStyleGroup,
-} from "./plugin/ObjectShapeStyleDefaultsRegistry";
+} from "./registries/ObjectShapeStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
-export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidatorRegistry";
+export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";
+export {
+	isSemanticError,
+	isSemanticWarning,
+} from "./model/types/SemanticDiagnostic";
 export type { CanvasParser, CanvasParseResult } from "./parse";
 export { createCanvasParser } from "./parse";
 export { builtinObjectDocDefinitions } from "./plugin/builtinObjectDocDefinitions";

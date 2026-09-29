@@ -6,7 +6,7 @@ import { selectors } from "../../support/selectors";
  * have no value to type — the aspect-ratio lock, the height that follows the
  * text, the width the text wraps in.
  *
- * Each writes through the gesture system like the floating menu's own toggles,
+ * Each writes through the gesture system like the floating menu's own buttons,
  * so a press lands one history entry, and the `data-part` it carries names the
  * state the *next* press moves to (`set:lockAspectRatio:false` while it is
  * locked). What they set is read off the shape rather than off the row: the

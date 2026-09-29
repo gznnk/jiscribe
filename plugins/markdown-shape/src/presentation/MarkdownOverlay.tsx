@@ -19,15 +19,12 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 	fontColor,
 	fontSize,
 	fontFamily,
-	fontWeight,
-	fontStyle,
-	textDecoration,
 	isEditing,
 }) => {
 	const bodyRef = useRef<HTMLDivElement>(null);
 
-	// The source is Markdown, whose own syntax carries the styling, so a body
-	// styled per range is flattened to its characters rather than drawn as runs.
+	// The body arrives as the string a source text is (SourceTextStyleDoc); the
+	// overlay's prop type is the wider RichText every type shares.
 	const source = text === undefined ? "" : richTextToPlain(text);
 
 	// XSS sanitization is guaranteed by DOMPurify inside @jiscribe/markdown's
@@ -64,9 +61,6 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 			fontColor={fontColor}
 			fontSize={fontSize}
 			fontFamily={fontFamily}
-			fontWeight={fontWeight}
-			fontStyle={fontStyle}
-			textDecoration={textDecoration}
 		>
 			<MarkdownBody ref={bodyRef} />
 		</TextOverlayFrame>

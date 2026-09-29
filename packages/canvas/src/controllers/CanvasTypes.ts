@@ -1,6 +1,6 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorLabelPlacement";
@@ -99,13 +99,21 @@ export type ConnectorDraft =
 // ---------------------------------------------------------------------------
 
 export type SnapEdge =
-	"left" | "right" | "top" | "bottom" | "hCenter" | "vCenter";
+	| "left"
+	| "right"
+	| "top"
+	| "bottom"
+	| "hCenter"
+	| "vCenter"
+	/** A single polyline / polygon vertex; its perpendicular range is that point */
+	| "vertex";
 
 /**
  * A snap candidate point.
  *
- * For an x candidate (left/right/hCenter) `coordinate` is the X coordinate and
- * perpendicularMin/Max are the object's top/bottom; for a y candidate they swap.
+ * For an x candidate (left/right/hCenter/vertex) `coordinate` is the X coordinate and
+ * perpendicularMin/Max are the object's top/bottom (a vertex's own Y for "vertex");
+ * for a y candidate they swap.
  */
 export type SnapCandidate = {
 	objectId: string;
@@ -118,9 +126,9 @@ export type SnapCandidate = {
 };
 
 export type SnapCandidates = {
-	/** left/right/hCenter candidates, sorted ascending by coordinate */
+	/** left/right/hCenter/vertex candidates, sorted ascending by coordinate */
 	x: SnapCandidate[];
-	/** top/bottom/vCenter candidates, sorted ascending by coordinate */
+	/** top/bottom/vCenter/vertex candidates, sorted ascending by coordinate */
 	y: SnapCandidate[];
 };
 
@@ -159,7 +167,7 @@ export type AxisLockFeedback = {
  */
 export type DocSnapshotSource = Pick<
 	CanvasState,
-	"objects" | "rootIds" | "background" | "view"
+	"objects" | "rootIds" | "background" | "view" | "opaqueObjects"
 >;
 
 /**
@@ -534,6 +542,12 @@ export type CanvasControllerState = CanvasState & {
 		 * folding and multiSelectGroup rebuilding (#219).
 		 */
 		hitIds: string[];
+		/**
+		 * Selection the marquee started from, kept only when an additive modifier was
+		 * held at dragStart; every frame selects these plus the current hit set. Empty
+		 * for a plain marquee, which replaces the selection.
+		 */
+		baseIds: string[];
 	} | null;
 
 	/** null means all ObjectMenu sections are collapsed */
@@ -643,16 +657,18 @@ export type CanvasControllerState = CanvasState & {
 	internalClipboard: ClipboardData | null;
 
 	/**
-	 * Previous Duplicate, for move-aware offset calculation: on the next Duplicate, if
-	 * selectedIds still equals newIds, an unmoved selection reuses `offset` and a moved one
-	 * adopts the delta as the new offset.
+	 * Previous Duplicate or Paste (both write it), for move-aware offset calculation: on the
+	 * next Duplicate or Paste, if selectedIds still equals newIds, an unmoved selection reuses
+	 * `offset` and a moved one adopts the delta as the new offset.
 	 */
 	lastDuplicate: {
 		newIds: string[];
-		/** Selection center X immediately after the duplicate */
+		/** Selection center X immediately after the duplicate/paste */
 		cx: number;
-		/** Selection center Y immediately after the duplicate */
+		/** Selection center Y immediately after the duplicate/paste */
 		cy: number;
+		/** The step to repeat, not necessarily the delta applied: a paste that had to
+		 * re-center on the view records the plain offset so the walk restarts there */
 		offset: { x: number; y: number };
 	} | null;
 };

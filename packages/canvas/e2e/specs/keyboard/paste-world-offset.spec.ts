@@ -5,10 +5,13 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * Guards that the paste offset (+20,+20) is in world coordinates and does not
  * depend on viewport panning.
  *
- * handlePaste applies PASTE_OFFSET in world coordinates. Were it based on screen
+ * handlePaste applies the offset in world coordinates. Were it based on screen
  * coordinates by mistake, a paste after panning would put the clone off by the
  * pan amount. Copy, pan, then paste, and check that the clone lands at the
  * source's world center +20,+20, which is the e,f of the matrix.
+ *
+ * The pan here keeps that spot in sight; a pan that takes it off screen puts the
+ * paste in the middle of the view instead (clipboard.spec covers that).
  */
 
 /** Transform strings of every shape. */

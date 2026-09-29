@@ -1,7 +1,7 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { TEXT_BOX_PADDING_X, TEXT_BOX_PADDING_Y } from "./textBoxPadding";
-import type { RichText } from "../../model/objects/types/RichText";
+import type { RichText } from "../../model/objects/types/text/RichText";
 import { layoutVisualLines } from "../layout/layoutVisualLines";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";
 

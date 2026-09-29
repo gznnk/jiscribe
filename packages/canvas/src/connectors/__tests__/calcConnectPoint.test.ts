@@ -10,6 +10,7 @@ import {
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
 	calcExtraConnectPointDirection,
+	type AnchorFrame,
 } from "../calcConnectPoint";
 
 const baseFrame: TransformedFrame = {
@@ -33,6 +34,22 @@ const homePlate: Point[] = [
 
 // The rectangular band above the tip, as ObjectAnchorRegionRegistry would report it.
 const bodyBand: Rect = { x: -50, y: -50, width: 100, height: 70 };
+
+// An ellipse as its state arrives (features stamped): rx 50 / ry 30, no outline
+// polygon registered.
+const ellipseFrame: AnchorFrame = {
+	...baseFrame,
+	height: 60,
+	features: { type: "ellipse", geometry: "ellipse" },
+};
+
+// The ellipse's own bounding box as a polygon, to stand in for a registered outline.
+const ellipseBox: Point[] = [
+	{ x: -50, y: -30 },
+	{ x: 50, y: -30 },
+	{ x: 50, y: 30 },
+	{ x: -50, y: 30 },
+];
 
 describe("calcConnectPoint", () => {
 	describe("with an outline", () => {
@@ -106,6 +123,30 @@ describe("calcConnectPoint", () => {
 				x: 0,
 				y: -50,
 			});
+		});
+	});
+
+	describe("on an ellipse", () => {
+		it("resolves the edge midpoints to the arc's extremes, the same points the box gives", () => {
+			const topCenter = calcConnectPoint(ellipseFrame, "topCenter");
+			expect(topCenter.x).toBeCloseTo(0);
+			expect(topCenter.y).toBeCloseTo(-30);
+			const rightCenter = calcConnectPoint(ellipseFrame, "rightCenter");
+			expect(rightCenter.x).toBeCloseTo(50);
+			expect(rightCenter.y).toBeCloseTo(0);
+		});
+
+		it("lands on the arc when an anchor region moves the ray off the center", () => {
+			// The ray starts at local x = 30, where the arc sits at y = -24 and the
+			// box's top edge at -30.
+			const point = calcConnectPoint(ellipseFrame, "topCenter", null, {
+				x: 10,
+				y: -30,
+				width: 40,
+				height: 60,
+			});
+			expect(point.x).toBeCloseTo(30);
+			expect(point.y).toBeCloseTo(-24);
 		});
 	});
 
@@ -295,6 +336,58 @@ describe("calcEdgeAnchorPoint", () => {
 				{ x: 0, y: 0 },
 			]),
 		).toEqual({ x: -25, y: -50 });
+	});
+
+	describe("on an ellipse", () => {
+		it("lands on the arc, not on the bounding box", () => {
+			// t 0.8 starts the ray at local x = 30, where the arc sits at y = -24.
+			const point = calcEdgeAnchorPoint(ellipseFrame, {
+				kind: "edge",
+				side: "top",
+				t: 0.8,
+			});
+			expect(point.x).toBeCloseTo(30);
+			expect(point.y).toBeCloseTo(-24);
+		});
+
+		it("reproduces the matching edge midpoint at t 0.5", () => {
+			const point = calcEdgeAnchorPoint(ellipseFrame, {
+				kind: "edge",
+				side: "left",
+				t: 0.5,
+			});
+			expect(point.x).toBeCloseTo(-50);
+			expect(point.y).toBeCloseTo(0);
+		});
+
+		it("carries the shape's rotation and flip", () => {
+			// Local (30, -24) flips to (-30, -24) and rotates 90° to (24, -30).
+			const point = calcEdgeAnchorPoint(
+				{ ...ellipseFrame, rotation: 90, scaleX: -1 },
+				{ kind: "edge", side: "top", t: 0.8 },
+			);
+			expect(point.x).toBeCloseTo(24);
+			expect(point.y).toBeCloseTo(-30);
+		});
+
+		it("lets a registered outline polygon take precedence over the geometry", () => {
+			expect(
+				calcEdgeAnchorPoint(
+					ellipseFrame,
+					{ kind: "edge", side: "top", t: 0.8 },
+					ellipseBox,
+				),
+			).toEqual({ x: 30, y: -30 });
+		});
+
+		it("reads a bare frame as a rectangle", () => {
+			expect(
+				calcEdgeAnchorPoint(
+					{ ...baseFrame, height: 60 },
+					{ kind: "edge", side: "top", t: 0.8 },
+				),
+			).toEqual({ x: 30, y: -30 });
+		});
 	});
 });
 

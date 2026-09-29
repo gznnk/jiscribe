@@ -16,26 +16,23 @@ import {
 	ArrowTypeButton,
 } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadMenuStyled";
 import {
+	readSelectionArrowType,
+	UNSET_ARROW_TYPE,
+} from "../../utils/readSelectionArrowType";
+import type { SelectionValue } from "../../utils/SelectionValue";
+import {
+	isMixedSelectionValue,
+	selectionValueOr,
+} from "../../utils/SelectionValue";
+import {
 	PropertyIconButton,
 	PropertyMixedLabel,
 } from "../common/PropertyControlsStyled";
 import { PropertyDropdownField } from "../common/PropertyDropdownField";
 import { PropertyRow } from "../common/PropertyRow";
-import { readSelectionArrowType } from "../utils/readSelectionArrowType";
-import type { SelectionValue } from "../utils/SelectionValue";
-import {
-	isMixedSelectionValue,
-	selectionValueOr,
-} from "../utils/SelectionValue";
-
-/** The mark an end nobody set carries, and so the one an empty grid lights. */
-const UNSET_ARROW_TYPE: ArrowType = "None";
 
 /** Size the swap icon is drawn at, leaving the button's border a margin of its own. */
 const SWAP_ICON_SIZE = 16;
-
-/** En dash standing in for a value the selection disagrees on, where the word for it has no room. */
-const MIXED_DASH = "–";
 
 /**
  * One end of the arrow: a trigger showing the mark that end carries, opening
@@ -57,7 +54,11 @@ const ArrowEndField: React.FC<{
 		<PropertyDropdownField
 			title={title}
 			isMixed={isMixed}
-			mixedPreview={<PropertyMixedLabel>{MIXED_DASH}</PropertyMixedLabel>}
+			mixedPreview={
+				<PropertyMixedLabel>
+					{messages.propertyPanelMixedPlaceholder}
+				</PropertyMixedLabel>
+			}
 			preview={
 				<ArrowHeadIconPreview arrowType={current} direction={direction} />
 			}
@@ -67,8 +68,6 @@ const ArrowEndField: React.FC<{
 					<ArrowTypeButton
 						key={type}
 						isActive={!isMixed && current === type}
-						data-kind="menu"
-						data-id="object-menu"
 						data-part={setPart(property, type)}
 						title={messages.arrowTypeNames[type] ?? type}
 					>
@@ -104,8 +103,6 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 			/>
 			<PropertyIconButton
 				type="button"
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={commandPart("swapArrows")}
 				title={messages.menuSwapArrows}
 				aria-label={messages.menuSwapArrows}

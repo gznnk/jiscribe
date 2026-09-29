@@ -39,7 +39,8 @@ import {
  *   unreferenced (free) or not found
  * @param outline - The shape's local outline polygon (from ObjectOutlineRegistry).
  *   When present, a connectPoint or edge anchor snaps onto the true edge; omitted =
- *   bounding-box edge (rect/ellipse behavior). Not consulted for extra points
+ *   the edge the shape's geometry draws (the box for a rect, the arc for an
+ *   ellipse). Not consulted for extra points
  * @param anchorRegion - The shape's local anchor region (from
  *   ObjectAnchorRegionRegistry). Centers the edge anchors on that band, and
  *   spreads an edge anchor's ratio over it, instead of the bounding box;

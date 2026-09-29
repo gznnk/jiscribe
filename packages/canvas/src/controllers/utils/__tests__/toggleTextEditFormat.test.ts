@@ -1,7 +1,7 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import { richTextToPlain } from "@jiscribe/doc/model/objects/types/RichText";
-import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { richTextToPlain } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, expect, it } from "vitest";
 
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
@@ -147,6 +147,27 @@ describe("toggleTextEditFormat", () => {
 	it("leaves the state untouched when there is no open shape editor", () => {
 		const idle = makeState();
 		expect(toggleTextEditFormat(idle, "bold", textStyleDefaults)).toBe(idle);
+	});
+
+	it("leaves a source-language body untouched, its syntax carrying the emphasis", () => {
+		const state = makeState({
+			objects: {
+				r1: {
+					id: "r1",
+					type: "markdown",
+					features: { type: "markdown", geometry: "rect", text: "source" },
+					text: { body: { text: "# Title" } },
+				} as unknown,
+			} as CanvasControllerState["objects"],
+			textEditState: {
+				kind: "shape",
+				objectId: "r1",
+				slotId: "body",
+				text: "# Title",
+				selection: { start: 0, end: 2 },
+			},
+		});
+		expect(toggleTextEditFormat(state, "bold", textStyleDefaults)).toBe(state);
 	});
 });
 

@@ -3,9 +3,9 @@ import {
 	calcOutlinePointTowardForPolygon,
 	calcOutlinePointTowardForRotatedEllipse,
 	calcOutlinePointTowardForRotatedFrame,
+	convertTransformedFrameToEllipse,
 	isTransformedFrame,
 	type Point,
-	type TransformedEllipse,
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
@@ -17,18 +17,11 @@ type OutlineSnapper = (frame: TransformedFrame, toward: Point) => Point | null;
 const snapToFrameOutline: OutlineSnapper = (frame, toward) =>
 	calcOutlinePointTowardForRotatedFrame(frame, toward);
 
-const snapToEllipseOutline: OutlineSnapper = (frame, toward) => {
-	const ellipse: TransformedEllipse = {
-		cx: frame.cx,
-		cy: frame.cy,
-		rx: frame.width / 2,
-		ry: frame.height / 2,
-		rotation: frame.rotation,
-		scaleX: frame.scaleX,
-		scaleY: frame.scaleY,
-	};
-	return calcOutlinePointTowardForRotatedEllipse(ellipse, toward);
-};
+const snapToEllipseOutline: OutlineSnapper = (frame, toward) =>
+	calcOutlinePointTowardForRotatedEllipse(
+		convertTransformedFrameToEllipse(frame),
+		toward,
+	);
 
 /**
  * The outline each geometry's box implies, one entry per GeometryType so that a
@@ -36,7 +29,8 @@ const snapToEllipseOutline: OutlineSnapper = (frame, toward) => {
  * whose box is no outline to snap to: `none` has no box at all, and `poly` is
  * only ever adjusted through the real polygon its registry supplies.
  * `point` shares the frame calculation — its box is derived from the content
- * rather than stored, but the drawn extent is the same rectangle.
+ * rather than stored, but the drawn extent is the same rectangle. The
+ * counterpart of `calcConnectPoint`'s table for an edge-anchored endpoint.
  */
 const outlineSnapperByGeometry: Record<GeometryType, OutlineSnapper | null> = {
 	none: null,

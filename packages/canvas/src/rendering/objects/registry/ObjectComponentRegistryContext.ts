@@ -16,7 +16,7 @@ import {
  *
  * The default is a fresh empty registry, so rendering without a Provider yields
  * nothing rather than reaching for a module-level singleton (there is none — #165).
- * `Canvas` and `CanvasThumbnail` always provide the canvas's own registry.
+ * `Canvas` always provides the canvas's own registry.
  */
 export const ObjectComponentRegistryContext =
 	createContext<ObjectComponentRegistry>(createObjectComponentRegistry());

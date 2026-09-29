@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	calcAppOpenCommandCount,
 	calcBrowserOpenCommands,
 	calcBrowserOpenPreference,
+	toWslPath,
 } from "../host/browserOpenCommands";
 
 const URL = "http://localhost:5190";
@@ -240,5 +242,63 @@ describe("calcBrowserOpenPreference", () => {
 			browserCommand:
 				"/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
 		});
+	});
+});
+
+describe("toWslPath", () => {
+	it("puts a Windows path under /mnt with the drive letter lowercased", () => {
+		expect(
+			toWslPath("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"),
+		).toBe("/mnt/c/Program Files/Google/Chrome/Application/chrome.exe");
+		expect(toWslPath("D:\\tools\\msedge.exe")).toBe("/mnt/d/tools/msedge.exe");
+	});
+
+	it("leaves the spaces and parentheses of the install paths alone", () => {
+		// The path goes to spawn as an argument, not through a shell, so nothing in
+		// it is escaped
+		expect(
+			toWslPath(
+				"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+			),
+		).toBe("/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe");
+	});
+
+	it("is what the Windows-side candidates of a linux launch are named by", () => {
+		// The one list of installations is written the Windows way; WSL reaches the
+		// same four through this
+		const commands = calcBrowserOpenCommands(URL, "linux", "app");
+		const windowsSideCommands = commands
+			.map(([command]) => command)
+			.filter((command) => command.endsWith(".exe"));
+
+		expect(windowsSideCommands).toEqual([
+			toWslPath("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"),
+			toWslPath(
+				"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+			),
+			toWslPath(
+				"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+			),
+			toWslPath("C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"),
+			// The tab fallback's PowerShell, which is not one of the installations
+			"powershell.exe",
+		]);
+	});
+});
+
+describe("calcAppOpenCommandCount", () => {
+	it("counts the candidates ahead of the tab fallback", () => {
+		for (const platform of ["linux", "win32", "darwin"] as const) {
+			const appCommands = calcBrowserOpenCommands(URL, platform, "app");
+			const tabCommands = calcBrowserOpenCommands(URL, platform, "tab");
+
+			expect(calcAppOpenCommandCount(URL, platform)).toBe(
+				appCommands.length - tabCommands.length,
+			);
+		}
+	});
+
+	it("counts the one candidate a named executable leaves", () => {
+		expect(calcAppOpenCommandCount(URL, "linux", "msedge.exe")).toBe(1);
 	});
 });

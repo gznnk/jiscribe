@@ -1,6 +1,6 @@
 {
 	"MarkdownDoc": {
-		"description": "A card whose text is Markdown source, rendered as HTML on the canvas. Use it for notes, specs, summaries, and any block of prose that needs headings, lists, tables, code fences, or math ($...$ inline, $$...$$ block) — a rect CANNOT do this, its text is always plain. Same rect-based geometry (x/y/width/height) as RectDoc. Write the body as ordinary Markdown in `text`, using \"\\n\" for line breaks. Defaults suit a document: 300x200, left/top aligned, and a theme-following fill so the card reads as a page. Image export flattens the rendering to plain text, so do not rely on it for exported diagrams.",
+		"description": "A card whose text is Markdown source, rendered as HTML on the canvas. Use it for notes, specs, summaries, and any block of prose that needs headings, lists, tables, code fences, or math ($...$ inline, $$...$$ block) — a rect CANNOT do this, its text is always plain. Same rect-based geometry (x/y/width/height) as RectDoc. Write the body as ordinary Markdown in `text` (a plain string, never runs), using \"\\n\" for line breaks; emphasis is the Markdown's own (`**bold**`), so the card has NO fontWeight / fontStyle / textDecoration and its typography sets the whole document's ground. Defaults suit a document: 300x200, left/top aligned, and a theme-following fill so the card reads as a page. Image export flattens the rendering to plain text, so do not rely on it for exported diagrams.",
 		"type": "object",
 		"required": ["id", "type", "x", "y", "width", "height"],
 		"additionalProperties": false,
@@ -95,15 +95,6 @@
 			},
 			"fontFamily": {
 				"$ref": "#/$defs/TextStyle/properties/fontFamily"
-			},
-			"fontWeight": {
-				"$ref": "#/$defs/TextStyle/properties/fontWeight"
-			},
-			"fontStyle": {
-				"$ref": "#/$defs/TextStyle/properties/fontStyle"
-			},
-			"textDecoration": {
-				"$ref": "#/$defs/TextStyle/properties/textDecoration"
 			},
 			"textVerticalBasis": {
 				"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"

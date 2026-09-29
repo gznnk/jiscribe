@@ -1,8 +1,11 @@
-import type { Point } from "@jiscribe/geometry";
+import { calcPolyKeyPoints } from "@jiscribe/geometry";
+import type { FrameKeyPoints, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
+import { calcSnapCandidates } from "../../../utils/snap/calcSnapCandidates";
 import { VertexInsertHandler } from "../VertexInsertHandler";
 
 const handler = new VertexInsertHandler();
@@ -101,5 +104,65 @@ describe("VertexInsertHandler - handleDragEnd", () => {
 		expect(next.edgeScrollEnabled).toBe(false);
 		// The frozen input state must be left untouched
 		expect(pointsOf(frozen)[1]).toEqual({ x: 50, y: 0 });
+	});
+});
+
+describe("VertexInsertHandler - snapping against the edited poly", () => {
+	// bbox (0,0)-(100,60), center (50,30)
+	const polyPoints: Point[] = [
+		{ x: 0, y: 0 },
+		{ x: 30, y: 20 },
+		{ x: 100, y: 60 },
+	];
+	// A rect spanning (200,100)-(300,200), center (250,150)
+	const rectKeyPoints = calcPolyKeyPoints([
+		{ x: 200, y: 100 },
+		{ x: 300, y: 200 },
+	]) as FrameKeyPoints;
+
+	/** Inserts a vertex on segment 1 and drags it, with candidates built the way handleGesture builds them. */
+	const dragInsertedVertexTo = (last: Point): Point => {
+		const base = makeState(polyPoints);
+		const baseDrag = base.activeDrag as NonNullable<
+			CanvasControllerState["activeDrag"]
+		>;
+		const objects = {
+			...base.objects,
+			"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
+		};
+		const snapCandidates = calcSnapCandidates(objects, {
+			"poly-1": calcPolyKeyPoints(polyPoints) as FrameKeyPoints,
+			"rect-1": rectKeyPoints,
+		});
+		const state = {
+			...base,
+			objects,
+			activeDrag: {
+				...baseDrag,
+				startSnapshot: { ...baseDrag.startSnapshot, objects, snapCandidates },
+			},
+		} as CanvasControllerState;
+
+		const afterStart = handler.handle(
+			state,
+			makeEvent("dragStart", { x: 65, y: 40 }, 1),
+		);
+		const next = handler.handle(afterStart, makeEvent("drag", last, 1));
+		return pointsOf(next)[2];
+	};
+
+	it("does not snap to its own bbox center", () => {
+		expect(dragInsertedVertexTo({ x: 52, y: 33 })).toEqual({ x: 52, y: 33 });
+	});
+
+	it("snaps to another vertex of the same poly", () => {
+		expect(dragInsertedVertexTo({ x: 33, y: 23 })).toEqual({ x: 30, y: 20 });
+	});
+
+	it("still snaps to another object's center", () => {
+		expect(dragInsertedVertexTo({ x: 247, y: 153 })).toEqual({
+			x: 250,
+			y: 150,
+		});
 	});
 });

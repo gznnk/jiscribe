@@ -1,4 +1,4 @@
-import type { RichText } from "../../../../model/objects/types/RichText";
+import type { RichText } from "../../../../model/objects/types/text/RichText";
 import type { ObjectDocTextRegionCalculator } from "../../../../plugin/ObjectDocTextRegion";
 import {
 	calcFullBoxTextRegion,

@@ -79,3 +79,49 @@ export const twoConnectedRects = (): CanvasDoc => {
 	docOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
 	return doc;
 };
+
+/**
+ * An object of a type no built-in definition supplies, as a newer build or an unshipped
+ * plugin would have written it. `children` is part of what it holds, not objects of the doc.
+ */
+export const unknownObjectFields = (
+	id: string,
+): Record<string, unknown> & { id: string; type: string } => ({
+	id,
+	type: "hexagram",
+	x: 500,
+	y: 40,
+	width: 80,
+	height: 60,
+	spikes: 6,
+	children: [{ id: `${id}-inner`, type: "hexagram-point" }],
+});
+
+/**
+ * Parse `doc` as a host would load it, so the unknown-type objects in it arrive as the
+ * parser keeps them, failing the test when it does not parse.
+ *
+ * @param doc - Serialized and parsed; the result shares nothing with it
+ */
+export const parseDoc = (doc: CanvasDoc): CanvasDoc => {
+	const result = createCanvasParser().parse(JSON.stringify(doc));
+	expect(result.kind).toBe("ok");
+	return (result as { doc: CanvasDoc }).doc;
+};
+
+/**
+ * {@link twoConnectedRects} with `hexagram-1` — an unknown type — between the two rects and a
+ * second connector from `rect-1` to it, as a loaded file would hold it.
+ */
+export const docWithUnknownObject = (): CanvasDoc => {
+	const doc = twoConnectedRects();
+	doc.root.splice(1, 0, unknownObjectFields("hexagram-1"));
+	doc.root.push({
+		id: "connector-2",
+		type: "connector",
+		points: [],
+		source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+		target: { owner: { id: "hexagram-1" }, anchor: { kind: "center" } },
+	} as ObjectDoc);
+	return parseDoc(doc);
+};

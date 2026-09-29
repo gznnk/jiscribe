@@ -10,7 +10,7 @@ const features = (extra: Partial<ObjectFeatures>): ObjectFeatures => ({
 });
 
 describe("createDefaultMenu", () => {
-	it("rect-like (all flags + radius) -> style(radius:true) / text / transform", () => {
+	it("rect-like (all flags + radius) -> style(radius:true) / text", () => {
 		const sections = createDefaultMenu(
 			features({
 				transform: true,
@@ -31,9 +31,12 @@ describe("createDefaultMenu", () => {
 			},
 			{
 				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
 			},
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
 		]);
 	});
 
@@ -50,13 +53,11 @@ describe("createDefaultMenu", () => {
 		]);
 	});
 
-	it("group-like (transform only) -> transform", () => {
+	it("group-like (transform only) -> no sections", () => {
 		const sections = createDefaultMenu(
 			features({ geometry: "none", transform: true }),
 		);
-		expect(sections).toEqual([
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
-		]);
+		expect(sections).toEqual([]);
 	});
 
 	it("text-like (point geometry) -> text only, with the vertical row dropped", () => {
@@ -72,9 +73,23 @@ describe("createDefaultMenu", () => {
 			{
 				id: "text",
 				items: [
-					{ type: "fontStyle" },
+					{ type: "font" },
+					{ type: "textFormat" },
 					{ type: "textAlignment", vertical: false },
 				],
+			},
+		]);
+	});
+
+	it("source-like -> the text section without the format item", () => {
+		const sections = createDefaultMenu(
+			features({ type: "markdown", transform: true, text: "source" }),
+		);
+		expect(sections).toEqual([
+			{
+				id: "text",
+				// The family, size and color stay offered.
+				items: [{ type: "font" }, { type: "textAlignment" }],
 			},
 		]);
 	});

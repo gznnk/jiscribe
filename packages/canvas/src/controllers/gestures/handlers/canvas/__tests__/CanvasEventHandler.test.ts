@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	SnapCandidates,
+	SnapEdge,
+} from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { CanvasEventHandler } from "../CanvasEventHandler";
@@ -253,13 +257,21 @@ describe("CanvasEventHandler", () => {
 				endX: 0,
 				endY: 0,
 				hitIds: [],
+				baseIds: [],
 			});
 			expect(nextState.multiSelectGroup).toBeNull();
 		});
 
 		it("a changed hit set recomputes the selection and stores the new hitIds", () => {
 			const state = makeMarqueeState({
-				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 5,
+					endY: 5,
+					hitIds: [],
+					baseIds: [],
+				},
 			} as Partial<CanvasControllerState>);
 			const nextState = CanvasEventHandler.handle(
 				state,
@@ -271,9 +283,83 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.areaSelection?.hitIds).toEqual(["a", "b"]);
 		});
 
+		it("an additive dragStart keeps the selection and records it as baseIds", () => {
+			const state = makeMarqueeState({
+				selectedIds: ["b"],
+				multiSelectGroup: { id: "kept" },
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({
+					type: "dragStart",
+					start: { x: 0, y: 0 },
+					last: { x: 0, y: 0 },
+					mods: { shift: true, alt: false, ctrl: false, meta: false },
+				}),
+				registries,
+			);
+			expect(nextState.areaSelection?.baseIds).toEqual(["b"]);
+			expect(nextState.selectedIds).toEqual(["b"]);
+			expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
+			// A marquee only picks up objects, so the connector channel still goes
+			expect(nextState.selectedConnectorId).toBeNull();
+		});
+
+		it("an additive drag selects the base plus the newly enclosed ids", () => {
+			const state = makeMarqueeState({
+				selectedIds: ["b"],
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 0,
+					endY: 0,
+					hitIds: [],
+					baseIds: ["b"],
+				},
+			} as Partial<CanvasControllerState>);
+			// The marquee (0,0)-(25,25) encloses a alone; b comes from the base.
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 25, y: 25 } }),
+				registries,
+			);
+			expect(nextState.selectedIds).toEqual(["b", "a"]);
+			expect(nextState.areaSelection?.hitIds).toEqual(["a"]);
+			expect(nextState.multiSelectGroup).not.toBeNull();
+		});
+
+		it("an additive drag falls back to the base when the hit set empties", () => {
+			const state = makeMarqueeState({
+				selectedIds: ["b", "a"],
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 25,
+					endY: 25,
+					hitIds: ["a"],
+					baseIds: ["b"],
+				},
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 5, y: 5 } }),
+				registries,
+			);
+			expect(nextState.selectedIds).toEqual(["b"]);
+			expect(nextState.areaSelection?.hitIds).toEqual([]);
+			expect(nextState.multiSelectGroup).toBeNull();
+		});
+
 		it("an identical hit set early-outs, keeping selectedIds / multiSelectGroup by reference", () => {
 			const state = makeMarqueeState({
-				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 5,
+					endY: 5,
+					hitIds: [],
+					baseIds: [],
+				},
 			} as Partial<CanvasControllerState>);
 			const firstFrame = CanvasEventHandler.handle(
 				state,
@@ -293,6 +379,130 @@ describe("CanvasEventHandler", () => {
 			expect(secondFrame.areaSelection?.endX).toBe(55);
 			expect(secondFrame.areaSelection?.endY).toBe(55);
 		});
+	});
+
+	describe("draw mode: Shift axis lock", () => {
+		const makeDrawState = (
+			objectType: string,
+			snapCandidates: SnapCandidates | null = null,
+		): CanvasControllerState =>
+			makeState({
+				textEditState: null,
+				shapeDrawing: {
+					preset: { objectType },
+					preview: { startX: 100, startY: 100, endX: 100, endY: 100 },
+				},
+				activeDrag: { startSnapshot: { snapCandidates }, kind: "other" },
+			} as unknown as Partial<CanvasControllerState>);
+
+		const makeDrawDrag = (last: { x: number; y: number }, shift: boolean) =>
+			makeEvent({
+				type: "drag",
+				last,
+				mods: { shift, alt: false, ctrl: false, meta: false },
+			});
+
+		const previewEnd = (state: CanvasControllerState) => ({
+			x: state.shapeDrawing?.preview?.endX,
+			y: state.shapeDrawing?.preview?.endY,
+		});
+
+		it("a horizontal-dominant polyline drag locks Y to the start point", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeDrawState("polyline"),
+				makeDrawDrag({ x: 180, y: 130 }, true),
+				registries,
+			);
+			expect(previewEnd(nextState)).toEqual({ x: 180, y: 100 });
+			expect(nextState.axisLockFeedback).toEqual({ y: 100 });
+		});
+
+		it("a vertical-dominant polyline drag locks X to the start point", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeDrawState("polyline"),
+				makeDrawDrag({ x: 120, y: 20 }, true),
+				registries,
+			);
+			expect(previewEnd(nextState)).toEqual({ x: 100, y: 20 });
+			expect(nextState.axisLockFeedback).toEqual({ x: 100 });
+		});
+
+		it("a tiny free-axis move does not snap back to the start point", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeDrawState("polyline"),
+				makeDrawDrag({ x: 103, y: 101 }, true),
+				registries,
+			);
+			expect(previewEnd(nextState)).toEqual({ x: 103, y: 100 });
+			expect(nextState.axisLockFeedback).toEqual({ y: 100 });
+		});
+
+		it("without Shift, a polyline drag stays diagonal", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeDrawState("polyline"),
+				makeDrawDrag({ x: 180, y: 130 }, false),
+				registries,
+			);
+			expect(previewEnd(nextState)).toEqual({ x: 180, y: 130 });
+			expect(nextState.axisLockFeedback).toBeNull();
+		});
+
+		it("Shift does not constrain a rect drag", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeDrawState("rect"),
+				makeDrawDrag({ x: 180, y: 130 }, true),
+				registries,
+			);
+			expect(previewEnd(nextState)).toEqual({ x: 180, y: 130 });
+			expect(nextState.axisLockFeedback).toBeNull();
+		});
+
+		it("alignment snap applies only on the free axis", () => {
+			const candidate = (coordinate: number, edge: SnapEdge) => ({
+				objectId: "b",
+				coordinate,
+				edge,
+				perpendicularMin: 0,
+				perpendicularMax: 200,
+			});
+			// Both candidates are within the snap threshold of the raw cursor
+			const snapCandidates: SnapCandidates = {
+				x: [candidate(182, "left")],
+				y: [candidate(132, "top")],
+			};
+			const nextState = CanvasEventHandler.handle(
+				makeDrawState("polyline", snapCandidates),
+				makeDrawDrag({ x: 180, y: 130 }, true),
+				registries,
+			);
+			expect(previewEnd(nextState)).toEqual({ x: 182, y: 100 });
+			expect(nextState.snapFeedback?.x).toHaveLength(1);
+			expect(nextState.snapFeedback?.y).toHaveLength(0);
+		});
+	});
+
+	it("a press with an additive modifier keeps the selection but still closes menus", () => {
+		const state = makeState({
+			textEditState: null,
+			multiSelectGroup: { id: "kept" },
+			contextMenuPosition: { clientX: 10, clientY: 10 },
+			objectMenuOpenId: "a",
+			stencilLibraryOpenCategory: "flowchart",
+		} as Partial<CanvasControllerState>);
+		const nextState = CanvasEventHandler.handle(
+			state,
+			makeEvent({
+				type: "pressed",
+				button: 0,
+				mods: { shift: true, alt: false, ctrl: false, meta: false },
+			}),
+			registries,
+		);
+		expect(nextState.selectedIds).toEqual(["a"]);
+		expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
+		expect(nextState.contextMenuPosition).toBeNull();
+		expect(nextState.objectMenuOpenId).toBeNull();
+		expect(nextState.stencilLibraryOpenCategory).toBeNull();
 	});
 
 	it("a background press closes an open StencilLibrary category flyout", () => {

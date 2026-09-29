@@ -1,9 +1,9 @@
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
-import type { ObjectDocValidateFn } from "./ObjectDocValidatorRegistry";
-import type { ObjectTextSlotStyleDefaults } from "./ObjectTextStyleDefaultsRegistry";
+import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { ObjectFactory } from "../model/objects/types/ObjectFactory";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
+import type { ObjectTextSlotStyleDefaults } from "../registries/ObjectTextStyleDefaultsRegistry";
 
 /**
  * Headless (UI-independent) description of a single object type: everything the
@@ -51,8 +51,8 @@ export type ObjectDocDefinition = {
 	 * leave the type's `height` out and have it follow the text
 	 * ({@link import("./supportsAutoHeight").supportsAutoHeight}), so a
 	 * `geometry: "rect"` type's declaration decides the shape of its schema too.
-	 * Every type with `features.text: "body"` should
-	 * declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
+	 * Every type holding a single body (`features.text: "body"` / `"source"`)
+	 * should declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
 	 * for a plain box,
 	 * {@link import("./ObjectDocTextRegion").calcOutsideBoxTextRegion} for a label
 	 * drawn outside the outline.

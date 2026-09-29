@@ -1,6 +1,6 @@
-import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/RichText";
-import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/RichText";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import { isBoldFontWeight } from "./isBoldFontWeight";
 import {
@@ -51,8 +51,9 @@ const toggledStyle = (
  *   styling is read against the slot resolved through it, so a slot that sets
  *   nothing still toggles against what its type draws it with (a body already
  *   bold by type default turns normal on the first press, not bold again)
- * @returns A new state, or `state` itself when nothing applies (see
- *   {@link resolveTextEditSelection})
+ * @returns A new state, or `state` itself when nothing applies — no selected
+ *   stretch, or a body whose syntax carries the emphasis itself
+ *   (`features.text: "source"`); see {@link resolveTextEditSelection}
  */
 export const toggleTextEditFormat = (
 	state: CanvasControllerState,

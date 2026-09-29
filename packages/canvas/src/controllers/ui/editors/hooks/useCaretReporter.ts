@@ -2,8 +2,11 @@ import type { BoundingBox } from "@jiscribe/geometry";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef } from "react";
 
-import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
+import type { CaretTarget } from "../utils/measureCaretInSurface";
+import { measureCaretInSurface } from "../utils/measureCaretInSurface";
+import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 import { readCaretLocalRect } from "../utils/readCaretLocalRect";
+import { scrollSurfaceToCaret } from "../utils/scrollSurfaceToCaret";
 
 /**
  * Lifts a caret measured inside the wrapper into world coordinates.
@@ -31,9 +34,9 @@ type UseCaretReporterParams<TSurface extends HTMLElement> = {
 };
 
 type CaretReporter<TSurface extends HTMLElement> = {
-	/** Ref for the surface being edited; it is focused on mount */
+	/** Pass as the `ref` prop of the element being edited; React fills it in on mount, before the effects here read it, and the hook then focuses that element */
 	surfaceRef: RefObject<TSurface | null>;
-	/** Ref for the wrapper the caret is measured against */
+	/** Pass as the `ref` prop of the wrapper the caret is measured against (the surface's offsetParent); filled in by React the same way */
 	wrapperRef: RefObject<HTMLDivElement | null>;
 	/** Reports the caret where it is now; the caller drives it from `useLayoutEffect` for every render, and from the events for the caret moves that render nothing */
 	reportCaret: () => void;
@@ -42,6 +45,13 @@ type CaretReporter<TSurface extends HTMLElement> = {
 /**
  * Focuses the surface an in-place editor overlays the canvas with, and turns its
  * caret into a world box for the caller to report.
+ *
+ * Revealing the caret is two moves, made here in order: the surface is scrolled
+ * so the caret is inside its clip, then the caret's box is reported for the
+ * camera to pan to. The first is not left to the browser because its own reveal
+ * runs after the input event a report rides on, and never runs for a selection
+ * set from script (the caret put at the end when editing starts), so a body
+ * taller than a fixed-size region would be reported as if it were not clipped.
  *
  * Running `reportCaret` is left to the caller because it has to be measured
  * against a laid-out box: the caller's `useLayoutEffect(reportCaret)` belongs
@@ -90,11 +100,15 @@ export const useCaretReporter = <TSurface extends HTMLElement>({
 		if (!target) {
 			return;
 		}
-		const caret = readCaretLocalRect(surface, target);
+		const caret = measureCaretInSurface(surface, target);
 		if (!caret) {
 			return;
 		}
-		const caretWorldBox = calcCaretWorldBox(caret, wrapper);
+		scrollSurfaceToCaret(surface, caret);
+		const caretWorldBox = calcCaretWorldBox(
+			readCaretLocalRect(surface, caret),
+			wrapper,
+		);
 		if (caretWorldBox) {
 			onCaretMove(caretWorldBox);
 		}

@@ -18,15 +18,23 @@ describe("filterTextSlotMenuSections", () => {
 			},
 			{
 				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
 			},
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
+			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
 		expect(filterTextSlotMenuSections(sections)).toEqual([
 			{
 				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
 			},
 		]);
 	});
@@ -37,13 +45,13 @@ describe("filterTextSlotMenuSections", () => {
 				id: "text",
 				items: [
 					{ type: "custom", id: "plugin-item", component: CustomItemComponent },
-					{ type: "fontStyle" },
+					{ type: "font" },
 				],
 			},
 		];
 
 		expect(filterTextSlotMenuSections(sections)).toEqual([
-			{ id: "text", items: [{ type: "fontStyle" }] },
+			{ id: "text", items: [{ type: "font" }] },
 		]);
 	});
 

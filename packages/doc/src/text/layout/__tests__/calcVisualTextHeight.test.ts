@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { RichText } from "../../../model/objects/types/RichText";
+import type { RichText } from "../../../model/objects/types/text/RichText";
 import { calcVisualLineCount } from "../calcVisualLineCount";
 import { calcVisualTextHeight } from "../calcVisualTextHeight";
 import { layoutVisualLines } from "../layoutVisualLines";

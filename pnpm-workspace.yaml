@@ -16,7 +16,7 @@ catalog:
   "@types/react": ^19.2.18
   "@types/react-dom": ^19.2.4
   "@vitejs/plugin-react-swc": ^4.3.3
-  "@vitest/coverage-v8": ^4.1.10
+  "@vitest/coverage-v8": ^4.1.11
   dompurify: 3.4.13
   esbuild: ^0.28.2
   jsdom: ^30.0.1
@@ -27,7 +27,17 @@ catalog:
   rimraf: ^6.1.3
   typescript: ~5.9.3
   vite: ^7.3.6
-  vitest: ^4.1.10
+  vitest: ^4.1.11
+
+# @vscode/test-cli 0.0.15 が連れてくる mocha 11 は、脆弱性の残る diff 7 と
+# serialize-javascript 6 に上限付きで依存している。mocha 12 は両方を上げているが
+# ESM 専用になり、test-cli の runner.cjs が require できず VSCode 1.85.0
+# （Node 18）の e2e が ERR_REQUIRE_ESM で落ちるため、葉の 2 つだけを上げる。
+# どちらも CJS の入口を保っているので mocha 11 から読める。
+# 両ルートで同じ内容を保つ。
+overrides:
+  diff: ^8.0.3
+  serialize-javascript: ^7.0.5
 
 # pnpm 11 の allowBuilds（旧 ignoredBuiltDependencies）。列挙外のビルドスクリプトが
 # 現れると strictDepBuilds 既定 ON で install が落ちる。

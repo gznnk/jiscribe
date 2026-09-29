@@ -1,4 +1,4 @@
-import type { Rect } from "@jiscribe/geometry";
+import { isRect, type Rect } from "@jiscribe/geometry";
 
 import {
 	type ObjectRecord,
@@ -43,7 +43,47 @@ export type ObjectSummary = {
 	parentId: string | null;
 	/** Its text as plain characters, or null for a type that holds none. */
 	text: string | null;
+	/**
+	 * Present when the type is not one this instance knows. Such an object is kept in the
+	 * document exactly as written (`OpaqueObjectDoc`): it can be restacked, grouped and
+	 * deleted, but nothing inside it is read or edited, so `text` is null and `bounds` is
+	 * read from `x` / `y` / `width` / `height` alone, null unless all four are numbers.
+	 */
+	unknownType?: true;
 };
+
+/**
+ * The box an opaque object states in the frame fields most types share, or null unless all
+ * four are finite numbers with a size of at least 0 ({@link isRect}). Nothing guarantees the
+ * fields mean on its type what they mean on a known one, so only the summary reports this.
+ */
+const readOpaqueObjectBounds = (object: ObjectRecord): Rect | null =>
+	isRect(object)
+		? { x: object.x, y: object.y, width: object.width, height: object.height }
+		: null;
+
+/** What {@link listObjects} reports about one object. */
+const summarizeObject = (
+	object: ObjectRecord,
+	parentId: string | null,
+	definitions: DocDefinitions,
+): ObjectSummary =>
+	definitions.has(object.type)
+		? {
+				id: object.id,
+				type: object.type,
+				bounds: getObjectBounds(object, definitions),
+				parentId,
+				text: readObjectText(object, definitions),
+			}
+		: {
+				id: object.id,
+				type: object.type,
+				bounds: readOpaqueObjectBounds(object),
+				parentId,
+				text: null,
+				unknownType: true,
+			};
 
 /** One summary per object, each group followed straight away by what it holds. */
 const summarizeObjects = (
@@ -52,13 +92,7 @@ const summarizeObjects = (
 	definitions: DocDefinitions,
 ): ObjectSummary[] =>
 	siblings.flatMap((object) => [
-		{
-			id: object.id,
-			type: object.type,
-			bounds: getObjectBounds(object, definitions),
-			parentId,
-			text: readObjectText(object, definitions),
-		},
+		summarizeObject(object, parentId, definitions),
 		...summarizeObjects(readChildren(object), object.id, definitions),
 	]);
 

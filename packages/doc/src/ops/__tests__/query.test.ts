@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
 	docOps,
+	docWithUnknownObject,
 	emptyDoc,
 	readObject,
 	twoConnectedRects,
 	twoRects,
+	unknownObjectFields,
 } from "./support/docFixtures";
 import { cardDefinition } from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
@@ -226,6 +228,71 @@ describe("findObjects", () => {
 		expect(() => docOps.findObjects(doc, { inGroup: "rect-1" })).toThrow(
 			DocOperationError,
 		);
+	});
+});
+
+describe("an object of a type this instance does not know", () => {
+	it("is listed in its place, flagged, with the box its frame fields state", () => {
+		const doc = docWithUnknownObject();
+
+		expect(docOps.listObjects(doc).map(({ id }) => id)).toEqual([
+			"rect-1",
+			"hexagram-1",
+			"rect-2",
+			"connector-1",
+			"connector-2",
+		]);
+		expect(
+			docOps.listObjects(doc).find(({ id }) => id === "hexagram-1"),
+		).toEqual({
+			id: "hexagram-1",
+			type: "hexagram",
+			bounds: { x: 500, y: 40, width: 80, height: 60 },
+			parentId: null,
+			text: null,
+			unknownType: true,
+		});
+	});
+
+	it("reports no box when its frame fields are not all numbers, and nothing it holds", () => {
+		const doc = emptyDoc();
+		const unmeasurableObject = {
+			...unknownObjectFields("hexagram-1"),
+			width: "wide",
+		};
+		doc.root.push(unmeasurableObject);
+
+		expect(docOps.listObjects(doc)).toEqual([
+			{
+				id: "hexagram-1",
+				type: "hexagram",
+				bounds: null,
+				parentId: null,
+				text: null,
+				unknownType: true,
+			},
+		]);
+	});
+
+	it("is found by its type and read back as written", () => {
+		const doc = docWithUnknownObject();
+
+		expect(
+			docOps.findObjects(doc, { type: "hexagram" }).map(({ id }) => id),
+		).toEqual(["hexagram-1"]);
+		expect(docOps.getObject(doc, "hexagram-1")).toEqual(
+			unknownObjectFields("hexagram-1"),
+		);
+	});
+
+	it("names a group holding it as its parent", () => {
+		const doc = docWithUnknownObject();
+		const groupId = docOps.groupObjects(doc, ["rect-1", "hexagram-1"]);
+
+		expect(docOps.getParentGroup(doc, "hexagram-1")).toBe(groupId);
+		expect(
+			docOps.listObjects(doc).find(({ id }) => id === "hexagram-1")?.parentId,
+		).toBe(groupId);
 	});
 });
 

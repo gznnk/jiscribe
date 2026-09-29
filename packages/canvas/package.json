@@ -14,7 +14,7 @@
 		"./testing/harness": "./e2e/testing-harness.ts"
 	},
 	"scripts": {
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"dev:harness": "vite e2e/harness",
 		"generate:fonts": "node build/generateFontsCss.ts",
 		"check:fonts": "node build/generateFontsCss.ts --check",
@@ -57,7 +57,7 @@
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react-swc": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
-		"@vitest/ui": "^4.1.10",
+		"@vitest/ui": "^4.1.11",
 		"jsdom": "catalog:",
 		"madge": "catalog:",
 		"rimraf": "catalog:",

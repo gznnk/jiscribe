@@ -18,6 +18,11 @@ export type CanvasFileContent = {
  */
 export type TempCanvasWorkspace = {
 	/**
+	 * The directory itself, for naming a file that is not to be written — the tools
+	 * create a canvas file they are pointed at, and that is a path only this gives.
+	 */
+	dirPath: string;
+	/**
 	 * Writes a `.jis.json` and returns its absolute path (the tools refuse a
 	 * relative one).
 	 */
@@ -40,6 +45,7 @@ export type TempCanvasWorkspace = {
 export async function createTempCanvasWorkspace(): Promise<TempCanvasWorkspace> {
 	const dir = await mkdtemp(join(tmpdir(), "jiscribe-mcp-"));
 	return {
+		dirPath: dir,
 		writeDoc: async (fileName, doc) => {
 			const path = join(dir, fileName);
 			await writeFile(path, `${JSON.stringify(doc, null, "\t")}\n`, "utf8");

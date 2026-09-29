@@ -12,12 +12,19 @@ import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { describe, expect, it } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
+import type { Diagnostic } from "../Diagnostic";
 import { nodeTextMeasurement } from "../measure/nodeTextMeasurer";
 import { validateDoc } from "../validateDoc";
 
 /** A shipped shape with no `height`, as a one-object document's text. */
 const docText = (object: Record<string, unknown>): string =>
 	JSON.stringify({ version: 1, root: [object] });
+
+/** Whether the field the refusal names is the height: the parser names it by path. */
+const namesHeight = (diagnostics: readonly Diagnostic[]): boolean =>
+	diagnostics.some(
+		(diagnostic) => diagnostic.path?.endsWith(".height") === true,
+	);
 
 /** The font a body with no styling of its own is drawn with. */
 const bodyFont = (fontSize: number): TextMeasureFont => ({
@@ -63,12 +70,7 @@ describe("a document that states no height", () => {
 				docText({ id: "a", type, x: 0, y: 0, width: 200, text: "Label" }),
 			);
 			expect(result.ok, type).toBe(false);
-			expect(
-				result.diagnostics.some((diagnostic) =>
-					/height/.test(diagnostic.message),
-				),
-				type,
-			).toBe(true);
+			expect(namesHeight(result.diagnostics), type).toBe(true);
 		}
 	});
 
@@ -81,12 +83,7 @@ describe("a document that states no height", () => {
 				docText({ id: "a", type, x: 0, y: 0, width: 200, text: "Label" }),
 			);
 			expect(result.ok, type).toBe(false);
-			expect(
-				result.diagnostics.some((diagnostic) =>
-					/height/.test(diagnostic.message),
-				),
-				type,
-			).toBe(true);
+			expect(namesHeight(result.diagnostics), type).toBe(true);
 		}
 	});
 

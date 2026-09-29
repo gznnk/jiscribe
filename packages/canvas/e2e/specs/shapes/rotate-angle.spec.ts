@@ -21,8 +21,8 @@ import { test, expect } from "../../fixtures";
  *   newRotation = angle(center -> cursor) - angle(center -> top right corner), rounded to whole degrees.
  * Putting the cursor N degrees off the direction of the top right corner gives
  * the shape an absolute angle of N degrees. Only the angle matters, so the
- * distance to the cursor is free. There is no angle snapping, so any angle can
- * be aimed at.
+ * distance to the cursor is free. Without Shift there is no angle snapping, so
+ * any angle can be aimed at (Shift snaps to 15 degree steps; rotate-snap.spec).
  *
  * From createSvgTransform, a=cos(t), b=sin(t), c=-sin(t), d=cos(t) when unflipped,
  * so the angle recovered from the render matrix is atan2(b, a).

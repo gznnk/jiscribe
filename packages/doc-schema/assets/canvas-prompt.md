@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.10.0+351cb9ee -->
+<!-- jiscribe guide 0.11.0+1e02488e -->
 
 # Drawing on a Jiscribe canvas
 
@@ -54,6 +54,8 @@ order to form the text.
   them.
 - The same applies inside a `record`: a band's text and each row of a compartment
   take either form.
+- `markdown` is the exception: its text is Markdown source, so it is always a
+  plain string and its emphasis is written in the syntax (`**bold**`).
 
 ## Three shapes that carry structured content
 
@@ -108,7 +110,10 @@ Its text holds **Markdown source** and is rendered as HTML — headings, lists,
 tables, code fences, links, and math (`$...$` inline, `$$...$$` block). Every
 other shape draws text as plain text, so reach for `markdown` whenever the
 content needs structure (notes, specs, summaries), and keep `rect` for one-line
-labels. Defaults suit a document: 300x200, `textAlign` `"left"`, `verticalAlign`
+labels. Its own typography is the ground the whole document is drawn on
+(`fontSize` / `fontColor` / `fontFamily` and the alignment); it has **no**
+`fontWeight` / `fontStyle` / `textDecoration`, those being what the Markdown
+writes. Defaults suit a document: 300x200, `textAlign` `"left"`, `verticalAlign`
 `"top"`, `fill` `"auto"`. Content taller than the height is clipped, so leave
 headroom. Image export flattens it to plain text.
 
@@ -205,7 +210,7 @@ rather than a `rect` with a label on it.
 | `queue`                 | job queue, message queue                                           |
 | `lock`                  | authentication, protected resource                                 |
 | `shield`                | security boundary, trust zone                                      |
-| `lucideIcon`            | decorative Lucide icon (no text, not connectable)                  |
+| `lucideIcon`            | Lucide icon (line-art pictogram, no text of its own)               |
 | `callout`               | annotation bubble                                                  |
 | `note`                  | comment box, UML note                                              |
 | `brace`                 | group marker, grouping annotation                                  |

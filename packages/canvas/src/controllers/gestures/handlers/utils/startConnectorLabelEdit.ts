@@ -4,7 +4,7 @@ import {
 	calcConnectorLabelPlacement,
 	type ConnectorLabelPlacement,
 } from "../../../../connectors/label/calcConnectorLabelPlacement";
-import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../rendering/objects/connector/Connector/connectorHitArea";
+import { LINE_HIT_STROKE_WIDTH } from "../../../../rendering/objects/utils/hitStrokeWidth";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
@@ -55,7 +55,7 @@ const calcPendingLabelPlacement = (
 				placement,
 				Math.max(
 					SNAP_THRESHOLD_PX / state.viewport.zoom,
-					CONNECTOR_HIT_STROKE_WIDTH / 2,
+					LINE_HIT_STROKE_WIDTH / 2,
 				),
 			)
 		: null;

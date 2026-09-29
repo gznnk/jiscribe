@@ -34,8 +34,6 @@ const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={setPart("label.fontWeight", isBold ? "normal" : "bold")}
 				title={messages.menuLabelBold}
 			>

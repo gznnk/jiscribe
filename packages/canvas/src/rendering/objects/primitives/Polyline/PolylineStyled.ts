@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 
+import { LINE_HIT_STROKE_WIDTH } from "../../utils/hitStrokeWidth";
 import type { StrokePaintProps } from "../../utils/shapePaint";
 import { strokePaint } from "../../utils/shapePaint";
 
@@ -19,7 +20,7 @@ export const PolylineHitArea = styled.polyline`
 	cursor: grab;
 	fill: none;
 	stroke: transparent;
-	stroke-width: 12;
+	stroke-width: ${LINE_HIT_STROKE_WIDTH};
 	stroke-linecap: round;
 	stroke-linejoin: round;
 `;

@@ -3,10 +3,11 @@ import type { HoveredElement } from "../GestureRecognizerTypes";
 
 /**
  * Returns a memoized getter over getHoveredElements. document.elementsFromPoint
- * is a full hit test that forces a layout flush, yet most gesture consumers never
- * read the hover state (during drags only connection-anchor handling does), so the
- * Gesture carries this lazy getter instead of an eagerly computed array (#123).
- * The result is memoized so repeated reads within one gesture event hit-test once.
+ * is a full hit test that forces a layout flush, yet almost no gesture consumer
+ * reads the hover state — a connector's double click is the one that does, to tell
+ * a press on its label box from one on its line — so the Gesture carries this lazy
+ * getter instead of an eagerly computed array (#123). The result is memoized so
+ * repeated reads within one gesture event hit-test once.
  */
 export const createGetHovered = (
 	x: number,
@@ -24,10 +25,11 @@ export const createGetHovered = (
  * origin). Passing rootElement excludes elements outside the canvas.
  *
  * The exclusion matches the origin element's full identity (id AND part), not
- * the id alone: a control whose data-id is its owner entity's UUID (e.g. a
- * connection anchor, data-part="anchor:<pos>") must not blind the hover
- * detection to the entity itself — otherwise dropping a self-loop connector
- * onto its own shape would never find the shape.
+ * the id alone: several controls share their owner entity's UUID as data-id, so
+ * excluding by id would blind the hover detection to every one of its siblings.
+ * A connector's vertex-insert handle and its label box are such a pair — telling
+ * them apart is what the double click reads this for
+ * (ConnectorVertexInsertHandler).
  */
 export const getHoveredElements = (
 	x: number,
@@ -58,10 +60,9 @@ export const getHoveredElements = (
 		}
 
 		// Do not add the drag origin element itself to hovered. The exclusion is
-		// checked before seenIds.add so that an excluded control (e.g. a connection
-		// anchor whose data-id is its owner entity's UUID) does not consume the id
-		// slot — otherwise a lower element sharing that id (the entity body) would be
-		// silently deduped away, blinding hover detection to the entity itself.
+		// checked before seenIds.add so that an excluded control (one whose data-id is
+		// its owner entity's UUID) does not consume the id slot — otherwise a lower
+		// element sharing that id would be silently deduped away.
 		if (exclude && item.id === exclude.id && item.part === exclude.part) {
 			continue;
 		}

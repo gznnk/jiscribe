@@ -1,6 +1,6 @@
 {
 	"name": "jiscribe-mcp",
-	"version": "0.10.0",
+	"version": "0.11.0",
 	"description": "An MCP server that gives an AI the Jiscribe canvas tool set, with a local viewer a person can edit alongside it.",
 	"keywords": [
 		"mcp",
@@ -27,7 +27,8 @@
 	"files": [
 		"dist",
 		"!dist/**/*.map",
-		"CHANGELOG.md"
+		"CHANGELOG.md",
+		"LICENSE"
 	],
 	"bin": {
 		"jiscribe-mcp": "dist/index.mjs"
@@ -36,13 +37,14 @@
 		"build": "tsc --noEmit && vite build && node build.mjs",
 		"prepublishOnly": "node verifyDist.mjs",
 		"watch": "node build.mjs --watch",
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
+		"test:e2e": "playwright test",
 		"dev:viewer": "vite"
 	},
 	"comments": {
-		"devDependencies": "実行時の依存は無い。esbuild が external 無しで dist/index.mjs へ全部バンドルするため、ここに並ぶものは全てビルド時にしか要らない。@jiscribe/doc-schema と @fontsource/* だけは事情が違い、コードから import されない。doc-tools が実行時に node の解決規則で読むもので（validateDoc の require.resolve と fontSourcePackages の resolveFontSourceDir）、build.mjs が必要なファイルだけ dist/node_modules へ写して配布物に載せる。外すとビルドは通り、diagnose_canvas が落ち、日本語の計測だけが黙って推定へ落ちる。"
+		"devDependencies": "実行時の依存は無い。esbuild が external 無しで dist/index.mjs へ全部バンドルするため、ここに並ぶものは全てビルド時にしか要らない。@jiscribe/doc-schema と @fontsource/* だけは事情が違い、コードから import されない。実行時に node の解決規則で読むもので（read_drawing_guide が返すガイド 2 枚と、doc-tools の fontSourcePackages が読むフォント）、build.mjs が必要なファイルだけ dist/node_modules へ写して配布物に載せる。外すとビルドは通り、read_drawing_guide が error を返し、日本語の計測だけが黙って推定へ落ちる。"
 	},
 	"devDependencies": {
 		"@fontsource/caveat": "5.3.0",
@@ -59,6 +61,7 @@
 		"@jiscribe/doc-tools": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"@modelcontextprotocol/sdk": "^1.30.0",
+		"@playwright/test": "^1.62.1",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

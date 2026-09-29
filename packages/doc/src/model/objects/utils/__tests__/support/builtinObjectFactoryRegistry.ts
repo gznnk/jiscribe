@@ -3,7 +3,7 @@ import type { ObjectDocDefinition } from "../../../../../plugin/ObjectDocDefinit
 import {
 	createObjectFactoryRegistry,
 	type ObjectFactoryRegistry,
-} from "../../../../../plugin/ObjectFactoryRegistry";
+} from "../../../../../registries/ObjectFactoryRegistry";
 import type { ObjectType } from "../../../types/ObjectType";
 
 const definitions: Readonly<Partial<Record<string, ObjectDocDefinition>>> =

@@ -9,6 +9,20 @@ import { getEffectiveSelectedIds } from "../../../../utils/getEffectiveSelectedI
 import { DashedLineIcon } from "../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../icons/SolidLineIcon";
+import {
+	DEFAULT_CORNER_RADIUS,
+	readSelectionCornerRadius,
+} from "../../utils/readSelectionCornerRadius";
+import {
+	readSelectionShapeStyle,
+	UNDECLARED_STROKE_DASH,
+} from "../../utils/readSelectionShapeStyle";
+import {
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "../../utils/SelectionValue";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
@@ -19,22 +33,9 @@ import {
 	toOpacityPercent,
 	toOpacityValue,
 } from "../utils/opacityPercent";
-import {
-	DEFAULT_CORNER_RADIUS,
-	readSelectionCornerRadius,
-} from "../utils/readSelectionCornerRadius";
-import { readSelectionShapeStyle } from "../utils/readSelectionShapeStyle";
-import {
-	isMixedSelectionValue,
-	selectionValueOr,
-	selectionValueOrFirst,
-} from "../utils/SelectionValue";
 
 const MIN_STROKE_WIDTH = 0;
 const MAX_STROKE_WIDTH = 100;
-
-/** The dash an unset stroke is drawn with, and so the one the row lights. */
-const DEFAULT_STROKE_DASH_TYPE = "solid";
 
 const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
@@ -57,7 +58,7 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 		<PropertyRow label={messages.propertyPanelRowColor}>
 			<PropertyColorField
 				value={selectionValueOr(fill, SHAPE_STYLE_FALLBACK.fill)}
-				isMixed={isMixedSelectionValue(fill)}
+				mixedValues={selectionMixedValues(fill)}
 				// Not mixed means every object of the selection was read, the
 				// descendants of a selected group included.
 				currentColorIsShared={!isMixedSelectionValue(fill)}
@@ -131,7 +132,7 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 		<PropertyRow label={messages.propertyPanelRowColor}>
 			<PropertyColorField
 				value={selectionValueOr(stroke, SHAPE_STYLE_FALLBACK.stroke)}
-				isMixed={isMixedSelectionValue(stroke)}
+				mixedValues={selectionMixedValues(stroke)}
 				// Not mixed means every object of the selection was read, the
 				// descendants of a selected group included.
 				currentColorIsShared={!isMixedSelectionValue(stroke)}
@@ -199,7 +200,7 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 		objectShapeStyleDefaults,
 		"stroke",
 	);
-	const dashType = selectionValueOr(strokeDashType, DEFAULT_STROKE_DASH_TYPE);
+	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowType}>

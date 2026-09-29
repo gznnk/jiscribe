@@ -54,8 +54,16 @@ jobs:
           restore-keys: |
             vscode-test-${{ runner.os }}-
 
+      # The MCP headless spec has the host launch Playwright's Chromium itself, with
+      # no --no-sandbox (a user's machine is not a container). Ubuntu 24.04 confines
+      # unprivileged user namespaces to binaries with an AppArmor profile, which that
+      # Chromium lacks, so its sandbox cannot start and the page never connects back.
+      - name: Allow unprivileged user namespaces for Chromium's sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       # Every suite: canvas (core), each plugin's own, canvas-examples' coexistence
-      # spec, and the VSCode extension's, which drives a real VSCode instead of a
+      # spec, the MCP server's, which drives the real viewer against the real host,
+      # and the VSCode extension's, which drives a real VSCode instead of a
       # browser. Sequential on purpose — each starts its own harness dev server, and
       # the timing-sensitive specs (inertial pan) go flaky when suites compete for CPU.
       #
@@ -85,4 +93,6 @@ jobs:
             plugins/*/test-results/
             apps/canvas-examples/playwright-report/
             apps/canvas-examples/test-results/
+            apps/mcp/playwright-report/
+            apps/mcp/test-results/
           retention-days: 7

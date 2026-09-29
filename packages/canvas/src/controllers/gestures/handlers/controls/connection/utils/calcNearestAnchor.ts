@@ -23,6 +23,7 @@ import {
 	calcExtraConnectPoint,
 } from "../../../../../../connectors/calcConnectPoint";
 import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
 /**
  * How near the cursor has to be to a named anchor — the center, an edge midpoint
@@ -254,7 +255,9 @@ const isCursorInsideFrame = (
  *
  * Objects without a frame have no anchors to choose between and return center.
  *
- * @param obj - The shape being connected to; anything but a frame yields center
+ * @param obj - The shape being connected to; anything but a frame yields center.
+ *   Its `features.geometry`, when stamped, is what lands an edge position on an
+ *   ellipse's arc rather than on its box
  * @param cursorX - Cursor position in world coordinates
  * @param cursorY - Cursor position in world coordinates
  * @param exclude - Anchors to keep the result off, used on a self-loop so the two
@@ -265,7 +268,11 @@ const isCursorInsideFrame = (
  * @returns The winning anchor spec, ready to store on an endpoint
  */
 export function calcNearestAnchor(
-	obj: { cx?: number; cy?: number; [key: string]: unknown },
+	obj: Pick<ObjectState, "features"> & {
+		cx?: number;
+		cy?: number;
+		[key: string]: unknown;
+	},
 	cursorX: number,
 	cursorY: number,
 	exclude?: AnchorExclusion,

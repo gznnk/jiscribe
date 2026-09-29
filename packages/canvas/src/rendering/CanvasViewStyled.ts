@@ -13,7 +13,7 @@ export const Svg = styled.svg`
 	/* Hosts may set font-synthesis: none (Vite template default), which makes
 	   fontStyle: italic a no-op for fonts without an italic face — every major
 	   Japanese font. Re-allow synthesis for canvas content so the italic and
-	   bold toggles always render, on any host and for CanvasThumbnail too. */
+	   bold toggles always render, on any host. */
 	font-synthesis: weight style;
 	* {
 		outline: none;

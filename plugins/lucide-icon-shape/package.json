@@ -10,7 +10,7 @@
 		"./doc": "./src/doc.ts"
 	},
 	"scripts": {
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"dev:harness": "vite e2e/harness --configLoader runner",
 		"generate:icons": "node scripts/generateIconData.mjs",
 		"test": "vitest run",

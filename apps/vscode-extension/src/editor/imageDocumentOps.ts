@@ -38,9 +38,20 @@ export interface ImageDocState {
 	needsImageReconcile: boolean;
 	/** Guards against overlapping reconcile writes when multiple renders fire. */
 	reconcileInFlight: boolean;
+	/**
+	 * Bytes of an own write whose watcher event has not been seen yet, recorded
+	 * before the write lands so an event racing the save is still recognized as
+	 * ours; null once that event arrived (or the disk state was adopted), so the
+	 * same bytes reappearing later count as an external change
+	 * ({@link classifyExternalChange}).
+	 */
+	lastOwnWrite: Uint8Array | null;
 }
 
-/** Effects the ops delegate to the host (webview round-trip + fs), injectable for tests. */
+/**
+ * Effects the ops delegate to the host (webview round-trip, fs, and the editor
+ * state only VSCode knows), injectable for tests.
+ */
 export interface ImageDocSeams {
 	/**
 	 * Render the current canvas via the live webview; null when unavailable (no
@@ -51,6 +62,8 @@ export interface ImageDocSeams {
 	readFile(): Promise<Uint8Array>;
 	/** Write bytes to the document file. */
 	writeFile(bytes: Uint8Array): Promise<void>;
+	/** Whether the document has unsaved edits (VSCode's dirty flag, read off the tab). */
+	isDirty(): boolean;
 	/** True when the in-progress save was cancelled (save only; optional). */
 	isCancelled?(): boolean;
 }
@@ -223,12 +236,17 @@ export async function saveImageDocument(
  * so the canvas is mounted and can export. No-op unless a reconcile is pending;
  * the source on disk is already current, so this only refreshes the image bytes
  * (no dirty state is introduced).
+ *
+ * Never writes while the document has unsaved edits: those edits are not on disk,
+ * and a render of them would put the saved file behind a state the user can still
+ * undo or discard. The flag is left set, so a later "rendered" on a clean document
+ * still repairs the image.
  */
 export async function reconcileImageDocument(
 	doc: ImageDocState,
 	seams: ImageDocSeams,
 ): Promise<void> {
-	if (!doc.needsImageReconcile || doc.reconcileInFlight) {
+	if (!doc.needsImageReconcile || doc.reconcileInFlight || seams.isDirty()) {
 		return;
 	}
 	doc.reconcileInFlight = true;
@@ -243,12 +261,17 @@ export async function reconcileImageDocument(
 		if (data === null) {
 			return;
 		}
-		// An edit/undo changed the source mid-render, so the file is now dirty and
-		// its render will be written by the normal save flow. Writing here would push
-		// unsaved edits to disk; skip and clear the flag (the save path owns
-		// reconciliation from now on).
+		// An edit landed while the render was in flight. The source comparison below
+		// catches the ones that changed it, but dirty-ness is the contract VSCode
+		// exposes, so re-read it too and keep the flag for a later clean render.
+		if (seams.isDirty()) {
+			return;
+		}
+		// The source moved under the render while the document stayed clean: the
+		// disk was adopted meanwhile (which cleared the flag itself), so what was
+		// rendered no longer matches the file. Leave the flag as it is for whatever
+		// signal comes next rather than write a picture of the previous source.
 		if (doc.sourceText !== sourceAtStart) {
-			doc.needsImageReconcile = false;
 			return;
 		}
 		const bytes = decodeRenderResult(data);
@@ -274,6 +297,9 @@ export function adoptDiskBytes(doc: ImageDocState, bytes: Uint8Array): void {
 	doc.sourceText = readSourceFromImageFile(doc.kind, bytes);
 	// Disk image and source are now consistent, so drop any pending reconcile (#179).
 	doc.needsImageReconcile = false;
+	// Whatever we wrote last is history: the file has moved on to these bytes, and
+	// our old ones coming back would be someone else putting them there.
+	doc.lastOwnWrite = null;
 }
 
 /** Revert File: roll back the state to the file's on-disk contents. */
@@ -299,26 +325,33 @@ const areBytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
 	a.length === b.length && a.every((byte, i) => byte === b[i]);
 
 /**
- * Classify a file-watcher event by comparing the disk bytes with what the
- * editor believes is on disk.
+ * Classify a file-watcher event by comparing the disk bytes with what the editor
+ * believes is on disk: `doc.savedBytes` (the file as the editor last read or
+ * wrote it) and `doc.lastOwnWrite` (a write whose event may still be on its way).
  *
- * @param doc - document state; savedBytes is one of the "our own write" baselines
+ * The lastOwnWrite match is consumed here, because one write produces one echo
+ * and bytes kept as "ours" forever would swallow a real external change back to
+ * them (write Z, another tool replaces it, then restores Z). A writer that makes
+ * the watcher fire twice for one write is still covered: by the time a second
+ * event is read the write has resolved, so its bytes equal savedBytes — and
+ * events close enough together for that to be untrue are coalesced into one by
+ * the caller's debounce.
+ *
+ * @param doc - document state, read and (on a consumed lastOwnWrite) updated
  * @param diskBytes - the file's bytes read after the watcher fired
- * @param lastOwnWrite - bytes of the editor's most recent write, recorded before
- *   the write lands so a watcher event racing adoptSavedBytes still matches;
- *   null when this editor has not written yet
- * @param isDirty - whether the document has unsaved edits (VSCode's dirty flag)
+ * @param isDirty - whether the document has unsaved edits (VSCode's dirty flag),
+ *   which decides between adopting silently and asking the user
  */
 export function classifyExternalChange(
 	doc: ImageDocState,
 	diskBytes: Uint8Array,
-	lastOwnWrite: Uint8Array | null,
 	isDirty: boolean,
 ): ExternalChangeKind {
-	if (
-		areBytesEqual(diskBytes, doc.savedBytes) ||
-		(lastOwnWrite !== null && areBytesEqual(diskBytes, lastOwnWrite))
-	) {
+	if (areBytesEqual(diskBytes, doc.savedBytes)) {
+		return "own-echo";
+	}
+	if (doc.lastOwnWrite !== null && areBytesEqual(diskBytes, doc.lastOwnWrite)) {
+		doc.lastOwnWrite = null;
 		return "own-echo";
 	}
 	return isDirty ? "conflict" : "adopt";

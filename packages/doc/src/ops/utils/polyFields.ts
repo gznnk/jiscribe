@@ -1,5 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 
+import { isSemanticError } from "../../model/types/SemanticDiagnostic";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
 
@@ -55,7 +56,10 @@ export const requirePolyPoints = (
 	const copied = points.map(({ x, y }) => ({ x, y }));
 	const pointDiagnostics = definition
 		.validateDoc({ points: copied }, subjectName)
-		.filter((diagnostic) => diagnostic.path.endsWith(".points"));
+		.filter(
+			(diagnostic) =>
+				isSemanticError(diagnostic) && diagnostic.path.endsWith(".points"),
+		);
 	if (pointDiagnostics.length > 0) {
 		throw new DocOperationError(
 			`${subjectName}: ${pointDiagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,

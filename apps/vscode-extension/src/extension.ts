@@ -28,23 +28,7 @@ export function activate(
 
 	// Custom editor that shows the Canvas UI (Webview) for canvas files.
 	const provider = new JiscribeEditorProvider(context, bridgeRegistry);
-	const registration = vscode.window.registerCustomEditorProvider(
-		"jiscribe.editor", // must match contributes.customEditors[].viewType
-		provider,
-		{
-			webviewOptions: {
-				// false: discard the hidden tab's Webview context (~1MB of evaluated
-				// JS + React/SVG tree) and rebuild on re-show (#138). No state is lost:
-				// the document is re-sent when the rebuilt Webview re-emits "ready", and
-				// the viewport is saved/restored via getState/setState
-				// (src/webview/index.tsx). Trade-off: a brief "Loading canvas..." reload.
-				retainContextWhenHidden: false,
-			},
-			supportsMultipleEditorsPerDocument: false,
-		},
-	);
-
-	context.subscriptions.push(registration);
+	context.subscriptions.push(registerCanvasEditor("jiscribe.editor", provider));
 
 	// Custom editor that opens source-embedded images (.jis.png / .jis.svg,
 	// analogous to draw.io's .drawio.png / .drawio.svg) in the Canvas UI.
@@ -52,18 +36,9 @@ export function activate(
 		context,
 		bridgeRegistry,
 	);
-	const imageRegistration = vscode.window.registerCustomEditorProvider(
-		"jiscribe.imageEditor", // must match contributes.customEditors[].viewType
-		imageProvider,
-		{
-			webviewOptions: {
-				// Discard the hidden tab's Webview, same as the text side (#138).
-				retainContextWhenHidden: false,
-			},
-			supportsMultipleEditorsPerDocument: false,
-		},
+	context.subscriptions.push(
+		registerCanvasEditor("jiscribe.imageEditor", imageProvider),
 	);
-	context.subscriptions.push(imageRegistration);
 
 	registerSetupAiCommand(context);
 
@@ -74,6 +49,33 @@ export function activate(
 		return { webviewBridge: bridgeRegistry };
 	}
 	return undefined;
+}
+
+/**
+ * Register one of the canvas custom editors, with the Webview options both of
+ * them use.
+ *
+ * @param viewType - the editor's id, which has to match one of
+ *   contributes.customEditors[].viewType in package.json
+ * @param provider - the provider VSCode calls to open a document in it
+ * @returns the registration, to be released on deactivation
+ */
+function registerCanvasEditor(
+	viewType: string,
+	provider:
+		vscode.CustomTextEditorProvider | vscode.CustomReadonlyEditorProvider,
+): vscode.Disposable {
+	return vscode.window.registerCustomEditorProvider(viewType, provider, {
+		webviewOptions: {
+			// false: discard the hidden tab's Webview context (~1MB of evaluated
+			// JS + React/SVG tree) and rebuild on re-show (#138). No state is lost:
+			// the document is re-sent when the rebuilt Webview re-emits "ready", and
+			// the viewport is saved/restored via getState/setState
+			// (src/webview/index.tsx). Trade-off: a brief "Loading canvas..." reload.
+			retainContextWhenHidden: false,
+		},
+		supportsMultipleEditorsPerDocument: false,
+	});
 }
 
 /**

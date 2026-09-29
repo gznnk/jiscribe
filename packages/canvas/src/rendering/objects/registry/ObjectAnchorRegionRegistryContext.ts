@@ -12,8 +12,8 @@ import {
  * reason as ObjectTextRegionRegistryContext).
  *
  * The default is a fresh empty registry, so rendering without a Provider falls
- * back to bounding-box anchor regions. `Canvas` and `CanvasThumbnail` always
- * provide the canvas's own registry.
+ * back to bounding-box anchor regions. `Canvas` always provides the canvas's
+ * own registry.
  */
 export const ObjectAnchorRegionRegistryContext =
 	createContext<ObjectAnchorRegionRegistry>(createObjectAnchorRegionRegistry());

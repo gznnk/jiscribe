@@ -10,16 +10,25 @@ import type { GroupState } from "../../states/objects/primitives/group/GroupStat
  * by level starting from the front (root side), yielding the exact z-order on
  * the canvas.
  *
- * @param ids - The object IDs to sort
+ * @param ids - The object IDs to sort; fewer than two are returned as they are,
+ *   since nothing else in here is cheap enough to pay for a no-op (see below)
  * @param objects - Map of all objects on the canvas
  * @param rootIds - The canvas's list of root IDs
- * @returns The object IDs sorted by z-order
+ * @returns A new array of the object IDs sorted by z-order, back to front
  */
 export function sortObjectIdsByZOrder(
 	ids: string[],
 	objects: Record<string, ObjectState>,
 	rootIds: string[],
 ): string[] {
+	// Ahead of the root index, which costs O(rootIds) whatever the caller asked
+	// to sort. Sorting fewer than two ids is the identity, and it is the ordinary
+	// case for several callers: a single selection brought to front or sent to
+	// back, and a hit test that lands on one shape.
+	if (ids.length < 2) {
+		return [...ids];
+	}
+
 	const rootIndexMap = new Map(rootIds.map((id, i) => [id, i]));
 	// To make indexOf over childIds O(1), build and cache a Map on demand during comparison
 	const childIndexCache = new Map<string, Map<string, number>>();

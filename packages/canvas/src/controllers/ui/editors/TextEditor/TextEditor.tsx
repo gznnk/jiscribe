@@ -1,7 +1,7 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
-import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import type { BoundingBox } from "@jiscribe/geometry";
@@ -13,6 +13,7 @@ import {
 import type React from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
+import { TEXT_EDITOR_FOCUS_SCOPE_SELECTOR } from "./TextEditorFocusScope";
 import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
@@ -28,7 +29,8 @@ import {
 	renderEditableRichText,
 	setEditableSelection,
 } from "../utils/editableTextDom";
-import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
+import type { CaretTarget } from "../utils/measureCaretInSurface";
+import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
 /** Keys that toggle a format while held with the platform's command modifier. */
 const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
@@ -52,12 +54,10 @@ const FORMAT_INPUT_TYPES: Record<string, TextEditFormat | undefined> = {
 type TextSelection = { start: number; end: number };
 
 /**
- * The ObjectMenu, matched on the id its own gesture handling is addressed by. It
- * holds the only controls allowed to take the focus off an open editor — the ones
- * that need it themselves, the font-size input and its slider (keepTextEditorFocus
- * prevents the press for every other one).
+ * The controls inside a focus scope that take the focus themselves, since they
+ * are typed into; a press on any other one leaves it on the editor.
  */
-const OBJECT_MENU_SELECTOR = '[data-id="object-menu"]';
+const FOCUS_TAKING_CONTROL_SELECTOR = "input, textarea, select";
 
 type TextEditorProps = {
 	objectId: string;
@@ -283,23 +283,38 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	useLayoutEffect(reportCaret);
 	useLayoutEffect(reportSelection);
 
-	// A menu control keeps the focus until it is done with it: the font-size input
-	// until Enter blurs it, its slider until the dropdown that holds it closes.
-	// Focus then lands nowhere, leaving the open session without a caret, so it is
-	// taken back here — with the stretch the styling landed on selected again, so
-	// the next value styles the same characters and the user sees which.
+	// The menus that style the text being edited are focus scopes
+	// (TextEditorFocusScope). A press on one of their controls is kept from taking
+	// the focus: the selection it styles lives in this editor, and a blur would
+	// also drop the caret the user types back into. Both events are prevented
+	// (see PropertyNumberField's keepFocus for why).
+	// The fields that are typed into do take the focus, until Enter blurs them or
+	// the dropdown that holds them closes. Focus then lands nowhere, leaving the
+	// open session without a caret, so it is taken back here — with the stretch
+	// the styling landed on selected again, so the next value styles the same
+	// characters and the user sees which.
 	useEffect(() => {
 		const surface = surfaceRef.current;
 		if (!surface) {
 			return;
 		}
 		const ownerDocument = surface.ownerDocument;
+		const handlePress = (event: Event) => {
+			const pressed = event.target;
+			if (
+				pressed instanceof Element &&
+				pressed.closest(TEXT_EDITOR_FOCUS_SCOPE_SELECTOR) !== null &&
+				pressed.closest(FOCUS_TAKING_CONTROL_SELECTOR) === null
+			) {
+				event.preventDefault();
+			}
+		};
 		const handleFocusOut = (event: FocusEvent) => {
 			const from = event.target;
 			if (
 				event.relatedTarget !== null ||
 				!(from instanceof HTMLElement) ||
-				from.closest(OBJECT_MENU_SELECTOR) === null
+				from.closest(TEXT_EDITOR_FOCUS_SCOPE_SELECTOR) === null
 			) {
 				return;
 			}
@@ -333,8 +348,12 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				surface.focus({ preventScroll: true });
 			});
 		};
+		ownerDocument.addEventListener("pointerdown", handlePress, true);
+		ownerDocument.addEventListener("mousedown", handlePress, true);
 		ownerDocument.addEventListener("focusout", handleFocusOut);
 		return () => {
+			ownerDocument.removeEventListener("pointerdown", handlePress, true);
+			ownerDocument.removeEventListener("mousedown", handlePress, true);
 			ownerDocument.removeEventListener("focusout", handleFocusOut);
 			if (refocusFrame.current !== null) {
 				cancelAnimationFrame(refocusFrame.current);

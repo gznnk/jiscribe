@@ -1,7 +1,7 @@
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { TextVerticalBasis } from "../../../model/objects/types/TextVerticalBasis";
+import type { TextVerticalBasis } from "../../../model/objects/types/text/TextVerticalBasis";
 import type { ObjectDocTextRegionCalculator } from "../../../plugin/ObjectDocTextRegion";
 import {
 	calcFullBoxTextRegion,

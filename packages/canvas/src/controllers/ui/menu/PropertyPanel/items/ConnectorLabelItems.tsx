@@ -25,6 +25,7 @@ import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
+import { UNDECLARED_STROKE_DASH } from "../../utils/readSelectionShapeStyle";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyDropdownTriggerLabel } from "../common/PropertyControlsStyled";
 import { PropertyDropdownField } from "../common/PropertyDropdownField";
@@ -39,9 +40,6 @@ const MAX_FONT_SIZE = 999;
 
 const MIN_BORDER_WIDTH = 0;
 const MAX_BORDER_WIDTH = 12;
-
-/** The dash an unset label border is drawn with, and so the one the row lights. */
-const DEFAULT_STROKE_DASH_TYPE = "solid";
 
 /** The face the label's text is drawn in, picked from the shipped set. */
 const ConnectorLabelFontFamilyItemComponent: React.FC<
@@ -295,7 +293,7 @@ const ConnectorLabelBorderTypeItemComponent: React.FC<
 		return null;
 	}
 
-	const dashType = label.strokeDashType ?? DEFAULT_STROKE_DASH_TYPE;
+	const dashType = label.strokeDashType ?? UNDECLARED_STROKE_DASH;
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowType}>

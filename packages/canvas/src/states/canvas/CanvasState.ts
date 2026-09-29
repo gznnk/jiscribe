@@ -1,5 +1,6 @@
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 
+import type { OpaqueObjectPlacement } from "./OpaqueObjectPlacement";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 /**
@@ -36,4 +37,13 @@ export type CanvasState = {
 	 * CanvasDoc.view).
 	 */
 	view?: ViewDoc;
+
+	/**
+	 * Objects of the document this canvas does not understand, in document order
+	 * (doc content, round-tripped through save/history). They are neither drawn
+	 * nor editable, and nothing reading `objects` / `rootIds` sees them; they go
+	 * back into place when the state becomes a document (`canvasToDoc`).
+	 * Undefined or empty when the document holds none.
+	 */
+	opaqueObjects?: readonly OpaqueObjectPlacement[];
 };

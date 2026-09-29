@@ -32,8 +32,14 @@ export { BelowLabelHitArea } from "./presentation/BelowLabelHitArea";
 // box itself. Everything but where the box goes is already decided here.
 export { calcLabelBoxSize } from "./presentation/calcLabelBoxSize";
 
-// Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.
-export { formatPolygonPoints } from "./presentation/formatPolygonPoints";
+// For a frame shape that passes its interior through (container, awsGroup): the
+// width of the invisible strip that makes its border grabbable, since the
+// painted border alone is too thin to aim at.
+export { FRAME_BORDER_HIT_STROKE_WIDTH } from "./presentation/frameBorderHitStrokeWidth";
+
+// Outline helpers for drawing frame-based plugin shapes and their connector
+// outline. The `points` string they are drawn with is `formatPolygonPoints`, in
+// the unstable surface re-exported above.
 export {
 	centeredPolygonOutline,
 	OUTLINE_CURVE_SEGMENTS,

@@ -1,6 +1,7 @@
 import type { ChildProcess } from "node:child_process";
 
 import {
+	calcAppOpenCommandCount,
 	calcBrowserOpenCommands,
 	calcBrowserOpenPreference,
 } from "./browserOpenCommands";
@@ -116,22 +117,34 @@ export function openBrowser(
 	const mode = options.mode ?? preference.mode;
 	// A headless launch gets a profile of its own. Left on the user's, it contends
 	// with the browser they already have open (see headlessProfile)
-	const profile =
-		mode === "headless" ? createHeadlessProfile(process.platform) : null;
-	const keepProfileWith =
-		profile === null ? null : createProfileKeeper(profile);
-	const commands = calcBrowserOpenCommands(
-		url,
-		process.platform,
-		mode,
-		options.browserCommand ?? preference.browserCommand,
-		profile?.paths,
-	);
+	let profile: HeadlessProfile | null = null;
 	const reportFailure = (reason: string): void => {
 		profile?.remove();
 		console.error(`Failed to open browser: ${reason}`);
 		options.onFailure?.(reason);
 	};
+	if (mode === "headless") {
+		try {
+			profile = createHeadlessProfile(process.platform);
+		} catch (error) {
+			// Making the directory is the one step here that can fail outright, and
+			// a failure reaches the caller the way every other one does
+			reportFailure(
+				`no throwaway profile directory could be made for a headless browser (${String(error)})`,
+			);
+			return;
+		}
+	}
+	const attachProfileLifetime =
+		profile === null ? null : createProfileKeeper(profile);
+	const browserCommand = options.browserCommand ?? preference.browserCommand;
+	const commands = calcBrowserOpenCommands(
+		url,
+		process.platform,
+		mode,
+		browserCommand,
+		profile?.paths,
+	);
 	if (commands.length === 0) {
 		reportFailure(
 			`no Chromium executable was left to run headless (name one with JISCRIBE_MCP_BROWSER)${describeWindowsExclusion(profile)}`,
@@ -142,10 +155,9 @@ export function openBrowser(
 	// window that looks different, so where it dropped is left on the record
 	const appCommandCount =
 		mode === "app"
-			? commands.length -
-				calcBrowserOpenCommands(url, process.platform, "tab").length
+			? calcAppOpenCommandCount(url, process.platform, browserCommand)
 			: 0;
-	spawnFirstAvailable(commands, 0, {
+	spawnFirstAvailable(commands, {
 		onAdvance: (nextIndex) => {
 			if (nextIndex === appCommandCount && appCommandCount > 0) {
 				console.error(
@@ -155,7 +167,7 @@ export function openBrowser(
 		},
 		onSpawn: (child) => {
 			options.onSpawn?.(child);
-			keepProfileWith?.(child);
+			attachProfileLifetime?.(child);
 		},
 		onExhausted: (lastReason) => {
 			reportFailure(

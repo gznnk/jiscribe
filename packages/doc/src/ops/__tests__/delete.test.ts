@@ -4,10 +4,13 @@ import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import { DocOperationError } from "../errors";
 import {
 	docOps,
+	docWithUnknownObject,
 	emptyDoc,
 	expectValid,
+	readObject,
 	rootIds,
 	twoConnectedRects,
+	unknownObjectFields,
 } from "./support/docFixtures";
 
 describe("deleteObjects", () => {
@@ -76,6 +79,55 @@ describe("groups emptied by a cascade", () => {
 
 		expect(docOps.deleteObjects(doc, ["rect-1"]).cascadedIds).toEqual([]);
 		expect(rootIds(doc)).toEqual(["group-2"]);
+		expectValid(doc);
+	});
+});
+
+describe("an object of a type this instance does not know", () => {
+	it("is deleted by its id, taking the connectors attached to it", () => {
+		const doc = docWithUnknownObject();
+
+		const result = docOps.deleteObjects(doc, ["hexagram-1"]);
+
+		expect(result.cascadedIds).toEqual(["connector-2"]);
+		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "connector-1"]);
+		expectValid(doc);
+	});
+
+	it("stays where it is when something else is deleted", () => {
+		const doc = docWithUnknownObject();
+
+		docOps.deleteObjects(doc, ["rect-2"]);
+
+		expect(rootIds(doc)).toEqual(["rect-1", "hexagram-1", "connector-2"]);
+		expect(doc.root[1]).toEqual(unknownObjectFields("hexagram-1"));
+		expectValid(doc);
+	});
+
+	it("is not taken for an emptied group when its own children array is empty", () => {
+		const doc = docWithUnknownObject();
+		const emptiedObject = {
+			...unknownObjectFields("hexagram-1"),
+			children: [],
+		};
+		doc.root[1] = emptiedObject;
+
+		expect(docOps.deleteObjects(doc, ["rect-2"]).cascadedIds).toEqual([
+			"connector-1",
+		]);
+		expect(rootIds(doc)).toContain("hexagram-1");
+	});
+
+	it("takes the connectors attached to what it holds when it goes", () => {
+		const doc = docWithUnknownObject();
+		const connector = readObject(doc, "connector-2") as {
+			target: { owner: { id: string } };
+		};
+		connector.target.owner.id = "hexagram-1-inner";
+
+		expect(docOps.deleteObjects(doc, ["hexagram-1"]).cascadedIds).toEqual([
+			"connector-2",
+		]);
 		expectValid(doc);
 	});
 });

@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 
+import { describeErrorDetail } from "./describeErrorDetail";
+import { uriFileName } from "./uriFileName";
+
 /** Fallback file name in `jiscribe-YYYYMMDD-HHmmss` form (no extension). */
 const buildTimestampedName = (): string => {
 	const now = new Date();
@@ -33,8 +36,7 @@ const buildDefaultUri = (
 				)
 			: undefined;
 	}
-	const documentFileName =
-		documentUri.path.split("/").pop() ?? documentUri.path;
+	const documentFileName = uriFileName(documentUri);
 	// Handles *.jis / *.jiscribe / *.jis.json / *.jiscribe.json / *.jis.svg /
 	// *.jis.png (see package.json's filenamePattern). Strips the full `.jiscribe`
 	// too (foo.jiscribe.json → foo.jis.png). The second alternative covers the
@@ -79,16 +81,16 @@ export const saveExportedImage = async (
 			destination,
 			new Uint8Array(Buffer.from(base64, "base64")),
 		);
-	} catch (err) {
-		console.error("[Jiscribe] Failed to save exported image:", err);
-		const detail = err instanceof Error ? `: ${err.message}` : "";
+	} catch (error) {
+		console.error("[Jiscribe] Failed to save exported image:", error);
+		const detail = describeErrorDetail(error);
 		vscode.window.showErrorMessage(
 			`Jiscribe: Failed to save exported image${detail}`,
 		);
 		return;
 	}
 
-	const savedFileName = destination.path.split("/").pop() ?? destination.path;
+	const savedFileName = uriFileName(destination);
 	const revealAction = "Reveal in Explorer";
 	const selected = await vscode.window.showInformationMessage(
 		`Jiscribe: Exported "${savedFileName}"`,
@@ -102,11 +104,11 @@ export const saveExportedImage = async (
 			// opened (e.g. a remote environment).
 			try {
 				await vscode.commands.executeCommand("revealInExplorer", destination);
-			} catch (err) {
+			} catch (error) {
 				// The fallback can also fail (e.g. a destination outside the
 				// workspace). The save itself succeeded, so per contract we just
 				// notify instead of rejecting.
-				console.error("[Jiscribe] Failed to reveal exported image:", err);
+				console.error("[Jiscribe] Failed to reveal exported image:", error);
 				vscode.window.showWarningMessage(
 					`Jiscribe: Could not reveal "${savedFileName}" in Explorer`,
 				);

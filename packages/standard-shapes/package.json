@@ -10,7 +10,7 @@
 		"./doc": "./src/doc.ts"
 	},
 	"scripts": {
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {

@@ -1,3 +1,4 @@
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
@@ -13,6 +14,15 @@ import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
+import {
+	readSelectionShapeStyle,
+	UNDECLARED_STROKE_DASH,
+} from "../../../utils/readSelectionShapeStyle";
+import {
+	isMixedSelectionValue,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -21,7 +31,6 @@ import {
 	ObjectMenuButton,
 } from "../../ObjectMenuStyled";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
-import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "line-style";
 
@@ -43,12 +52,14 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { strokeWidth, strokeDashType } = getSelectedShapeStyle(
+	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
 		getEffectiveSelectedIds(canvasState),
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
 	);
+	const isDashMixed = isMixedSelectionValue(strokeDashType);
+	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -58,8 +69,6 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLineStyle}
 			>
@@ -74,27 +83,21 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 					<LineStyleMenuWrapper>
 						<LineStyleSection>
 							<ObjectMenuButton
-								isActive={!strokeDashType || strokeDashType === "solid"}
-								data-kind="menu"
-								data-id="object-menu"
+								isActive={!isDashMixed && dashType === "solid"}
 								data-part={setPart("strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
 								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
-								isActive={strokeDashType === "dashed"}
-								data-kind="menu"
-								data-id="object-menu"
+								isActive={!isDashMixed && dashType === "dashed"}
 								data-part={setPart("strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
 								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
-								isActive={strokeDashType === "dotted"}
-								data-kind="menu"
-								data-id="object-menu"
+								isActive={!isDashMixed && dashType === "dotted"}
 								data-part={setPart("strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>
@@ -104,7 +107,11 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 
 						<ObjectMenuSlider
 							label={messages.menuLineWidth}
-							value={strokeWidth}
+							value={selectionValueOrFirst(
+								strokeWidth,
+								SHAPE_STYLE_FALLBACK.strokeWidth,
+							)}
+							isMixed={isMixedSelectionValue(strokeWidth)}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}
 							sliderMax={SLIDER_MAX_STROKE_WIDTH}

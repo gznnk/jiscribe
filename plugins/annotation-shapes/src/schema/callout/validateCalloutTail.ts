@@ -10,7 +10,9 @@ export const validateCalloutTail: ObjectDocValidateFn = (o, path) => {
 		return [];
 	}
 	if (!isObject(o.tail)) {
-		return [{ path: `${path}.tail`, message: "must be an object" }];
+		return [
+			{ path: `${path}.tail`, message: "must be an object", severity: "error" },
+		];
 	}
 	const tail = o.tail as Record<string, unknown>;
 	const errors: SemanticDiagnostic[] = [];
@@ -18,12 +20,14 @@ export const validateCalloutTail: ObjectDocValidateFn = (o, path) => {
 		errors.push({
 			path: `${path}.tail.side`,
 			message: `must be one of ${CALLOUT_TAIL_SIDES.map((side) => `"${side}"`).join(" | ")}`,
+			severity: "error",
 		});
 	}
 	if (!isNumber(tail.position) || tail.position < 0 || tail.position > 1) {
 		errors.push({
 			path: `${path}.tail.position`,
 			message: "must be a number between 0 and 1",
+			severity: "error",
 		});
 	}
 	return errors;

@@ -1,6 +1,6 @@
-import { createObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
-import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { createObjectFactoryRegistry } from "@jiscribe/doc/registries/ObjectFactoryRegistry";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import {
 	BUILTIN_OBJECT_DEFINITIONS,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 import {
 	docOps,
@@ -8,6 +9,7 @@ import {
 	readObject,
 	twoConnectedRects,
 } from "./support/docFixtures";
+import { sourceBodyDefinition } from "./support/pluginFixtures";
 
 describe("setStyle", () => {
 	it("colours a shape and reports nothing ignored", () => {
@@ -190,5 +192,50 @@ describe("setStyle: values the document could not hold", () => {
 		const result = docOps.setStyle(doc, ["ellipse-1"], { rx: 4 });
 
 		expect(result.ignored).toEqual([{ id: "ellipse-1", properties: ["rx"] }]);
+	});
+});
+
+describe("setStyle on a source-text type", () => {
+	const sourceOps = createDocOps({
+		plugins: [
+			{ id: "source-plugin", objects: { "source-card": sourceBodyDefinition } },
+		],
+	});
+
+	it("writes the ground typography and reports the emphasis as ignored", () => {
+		const doc = emptyDoc();
+		sourceOps.addObject(doc, "source-card", { x: 0, y: 0, text: "# title" });
+
+		const result = sourceOps.setStyle(doc, ["source-card-1"], {
+			textAlign: "left",
+			verticalAlign: "top",
+			fontColor: "#0d47a1",
+			fontSize: 14,
+			fontFamily: "Noto Sans JP",
+			fontWeight: "bold",
+			fontStyle: "italic",
+			textDecoration: "underline",
+		});
+
+		expect(result).toEqual({
+			styledIds: ["source-card-1"],
+			ignored: [
+				{
+					id: "source-card-1",
+					properties: ["fontWeight", "fontStyle", "textDecoration"],
+				},
+			],
+		});
+		const card = readObject(doc, "source-card-1");
+		expect(card).toMatchObject({
+			textAlign: "left",
+			verticalAlign: "top",
+			fontColor: "#0d47a1",
+			fontSize: 14,
+			fontFamily: "Noto Sans JP",
+		});
+		expect(card).not.toHaveProperty("fontWeight");
+		expect(card).not.toHaveProperty("fontStyle");
+		expect(card).not.toHaveProperty("textDecoration");
 	});
 });

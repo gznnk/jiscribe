@@ -51,6 +51,8 @@ describe("validateEllipseDoc", () => {
 	});
 
 	it("ignores unknown keys, including the removed textType", () => {
+		// A name the type does not hold is the registry's to report, not the
+		// validator's (ObjectDocValidatorRegistry).
 		const errors = validateEllipseDoc(
 			{ ...validEllipse, textType: "markdown" },
 			"root",

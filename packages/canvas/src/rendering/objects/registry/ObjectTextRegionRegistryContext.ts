@@ -11,8 +11,8 @@ import {
  * controllers-layer bundle for the same reason as ObjectComponentRegistryContext).
  *
  * The default is a fresh empty registry, so rendering without a Provider falls
- * back to full-bbox text regions. `Canvas` and `CanvasThumbnail` always provide
- * the canvas's own registry.
+ * back to full-bbox text regions. `Canvas` always provides the canvas's own
+ * registry.
  */
 export const ObjectTextRegionRegistryContext =
 	createContext<ObjectTextRegionRegistry>(createObjectTextRegionRegistry());

@@ -2,6 +2,7 @@ import {
 	collectObjectIds,
 	dropEmptyGroups,
 	type ObjectRecord,
+	readChildren,
 	requireObjects,
 	visitObjects,
 } from "./utils/objectAccess";
@@ -28,9 +29,7 @@ const removeByIds = (siblings: ObjectDoc[], ids: ReadonlySet<string>): void => {
 			siblings.splice(index, 1);
 			continue;
 		}
-		if (Array.isArray(object.children)) {
-			removeByIds(object.children as ObjectDoc[], ids);
-		}
+		removeByIds(readChildren(object), ids);
 	}
 };
 

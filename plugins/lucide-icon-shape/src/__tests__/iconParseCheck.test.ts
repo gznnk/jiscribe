@@ -6,8 +6,8 @@ import { lucideIconDocPlugin } from "../doc";
 // parse-time structure/semantic validation (it no longer lives in the core
 // built-in definitions). The headless `lucideIconDocPlugin` carries no React deps.
 //
-// No connector touches the icon: it is not connectable, so an endpoint on it is
-// rejected by the core semantic pass, which is the behaviour the shape wants.
+// One connector ends on the icon: the core semantic pass reads `connectable` off
+// the plugin's features, so an endpoint naming the icon has to survive it.
 createParseCheckSuite({
 	name: "icon shape",
 	plugin: lucideIconDocPlugin,
@@ -46,6 +46,16 @@ createParseCheckSuite({
 				type: "connector",
 				source: { owner: { id: "task-1" }, anchor: { kind: "center" } },
 				target: { owner: { id: "task-2" }, anchor: { kind: "center" } },
+				points: [],
+			},
+			{
+				id: "c-2",
+				type: "connector",
+				source: { owner: { id: "lock-1" }, anchor: { kind: "center" } },
+				target: {
+					owner: { id: "task-1" },
+					anchor: { kind: "connectPoint", id: "leftCenter" },
+				},
 				points: [],
 			},
 		],

@@ -14,7 +14,7 @@ packages/canvas/
 │   │   ├── main.tsx       # loads specShapesPlugin into mountPluginHarness (no shipped plugin)
 │   │   └── vite.config.ts # createPluginHarnessViteConfig call
 │   ├── plugins/           # test-only plugins this package registers in its own harness
-│   │   └── specShapesPlugin.tsx  # e.g. tile (drag-drawn) / pin (click-placed) / card (<g>-rooted, text, connectable) / panel (declares its creation defaults)
+│   │   └── specShapesPlugin.tsx  # e.g. tile (drag-drawn) / pin (click-placed) / card (<g>-rooted, text, connectable) / panel (declares its creation defaults) / memo (source-language body)
 │   ├── kit/               # the shared implementation behind the testing entries
 │   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
 │   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
@@ -90,14 +90,14 @@ How to pick between the attributes:
 | `context-menu-callback:{id}`    | callback items of the context menu       | items such as paste that do not go through gestures                                                                                                                                       |
 | `snap-guide:x` / `snap-guide:y` | snap guide lines (vertical / horizontal) | decoration with `pointerEvents: none`. Present only during a drag. The aligned coordinate is held in the line's `x1` (x axis) / `y1` (y axis)                                             |
 
-| data-kind     | Meaning                                | data-id / data-part                                                                                                                                                                                                                                                                                                                                               |
-| ------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas`      | the canvas itself (DIV)                | id: `canvas`                                                                                                                                                                                                                                                                                                                                                      |
-| `object`      | a shape (rect / ellipse / polyline …)  | id: UUID. **1 object = 1 element** (what `captureObjects` counts). Shapes with sections (record) carry part: `name` / `rows` on their section elements                                                                                                                                                                                                            |
-| `connector`   | a connector (polyline + arrow + label) | id: UUID. The label box is part: `label` (dragging it moves position / offset)                                                                                                                                                                                                                                                                                    |
-| `control`     | handles shown while selected           | see the table below                                                                                                                                                                                                                                                                                                                                               |
-| `menu`        | UI menus in general                    | id: `toolbar` / `object-menu` / `context-menu` / `stencil-library` / `stencil-library-panel` / `stencil-category`. Buttons use part (see the table below). The toolbar's own buttons carry **only** part and take kind / id from the bar element, so select them as a descendant: `[data-id="toolbar"] [data-part="command:zoomIn"]` (`selectors.toolbarCommand`) |
-| `text-editor` | the surface while editing text         | id: `textarea`                                                                                                                                                                                                                                                                                                                                                    |
+| data-kind     | Meaning                                | data-id / data-part                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas`      | the canvas itself (DIV)                | id: `canvas`                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `object`      | a shape (rect / ellipse / polyline …)  | id: UUID. **1 object = 1 element** (what `captureObjects` counts). Shapes with sections (record) carry part: `name` / `rows` on their section elements                                                                                                                                                                                                                                                                                                                     |
+| `connector`   | a connector (polyline + arrow + label) | id: UUID. The label box is part: `label` (dragging it moves position / offset)                                                                                                                                                                                                                                                                                                                                                                                             |
+| `control`     | handles shown while selected           | see the table below                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `menu`        | UI menus in general                    | id: `toolbar` / `object-menu` / `property-panel` / `context-menu` / `stencil-library` / `stencil-library-panel` / `stencil-category`. Buttons use part (see the table below). The toolbar's and the properties sidebar's own controls, and every ObjectMenu item (core's and a plugin's alike), carry **only** part and take kind / id from the container, so select them as a descendant: `[data-id="toolbar"] [data-part="command:zoomIn"]` (`selectors.toolbarCommand`) |
+| `text-editor` | the surface while editing text         | id: `textarea`                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 For the three-axis grammar of kind / id / part, see
 `packages/canvas/docs/04-gesture-system.md`.
@@ -108,7 +108,8 @@ for the button that shuts it.
 
 Toolbar buttons can also be identified by the `title` attribute, as in
 `[data-id="toolbar"] button[title="Rectangle"]` (Rectangle / Ellipse / Polyline /
-Polygon / Text from core, plus Pin / Card from `e2e/plugins/specShapesPlugin` —
+Polygon / Text from core, plus Pin / Card / Memo from
+`e2e/plugins/specShapesPlugin` —
 the harness pins all of them). No shipped plugin is mounted here; a spec that
 needs one belongs in that plugin's own suite.
 
@@ -129,15 +130,15 @@ elements. The sidebar's copy is `selectors.stencilLibraryPanelItem`.
 
 ### data-part of object-menu (data-id="object-menu")
 
-| data-part                                        | What it opens                                                                            |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `toggle:bg-color`                                | background color (property: `fill`)                                                      |
-| `toggle:stroke-color`                            | border color (`stroke`)                                                                  |
-| `toggle:line-color`                              | line color (`stroke`, for lines and connectors)                                          |
-| `toggle:font-color`                              | font color (`fontColor`)                                                                 |
-| `toggle:line-style` / `border-style`             | line type and width (and corner radius)                                                  |
-| `toggle:font-size` / `alignment` / `stack-order` | font size / alignment / stacking order                                                   |
-| `set:<property>:<value>`                         | immediate-apply buttons (for example `set:strokeDashType:dashed`, preset color swatches) |
+| data-part                            | What it opens                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `toggle:bg-color`                    | background color (property: `fill`)                                                      |
+| `toggle:stroke-color`                | border color (`stroke`)                                                                  |
+| `toggle:line-color`                  | line color (`stroke`, for lines and connectors)                                          |
+| `toggle:font-color`                  | font color (`fontColor`)                                                                 |
+| `toggle:line-style` / `border-style` | line type and width (and corner radius)                                                  |
+| `toggle:font-size` / `alignment`     | font size / alignment                                                                    |
+| `set:<property>:<value>`             | immediate-apply buttons (for example `set:strokeDashType:dashed`, preset color swatches) |
 
 The color picker has a **text input for a CSS color** (`input[placeholder="CSS color"]`)
 where any hex value or `transparent` can be typed and **confirmed with Enter**. Use it for

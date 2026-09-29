@@ -1,12 +1,12 @@
 import { DocOperationError } from "./errors";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import { mergeViewDoc, type ViewParams } from "../model/canvas/mergeViewDoc";
 import {
 	isViewOpenMode,
 	isViewScrollMode,
+	VIEW_PADDING_KEYS,
 	type ViewDoc,
-	type ViewOpenMode,
 	type ViewPaddingDoc,
-	type ViewScrollMode,
 } from "../model/canvas/ViewDoc";
 
 /**
@@ -38,64 +38,25 @@ export const setBackground = (doc: CanvasDoc, color: string | null): void => {
 };
 
 /**
- * Every side of {@link ViewPaddingDoc}, written as a map so that a side added to the
- * type fails to compile until it is entered here. A plain array would leave a new side
- * silently unread — never validated, never stored.
- */
-const PADDING_SIDE_MARKERS: Readonly<Record<keyof ViewPaddingDoc, true>> = {
-	top: true,
-	right: true,
-	bottom: true,
-	left: true,
-};
-
-/** The sides {@link setView} reads, in the order messages list them. */
-const PADDING_SIDES = Object.keys(
-	PADDING_SIDE_MARKERS,
-) as (keyof ViewPaddingDoc)[];
-
-/**
  * What {@link setView} writes. A field left out keeps whatever the document
  * already declares; a field given as null drops that declaration.
  */
-export type SetViewParams = {
-	/** Empty space kept outside the content, or null to declare none. */
-	padding?: ViewPaddingDoc | null;
-	/** How the view is framed on open, or null to leave it to the host. */
-	open?: ViewOpenMode | null;
-	/** Whether panning is walled in at the padded content, or null for the endless board. */
-	scroll?: ViewScrollMode | null;
-};
+export type SetViewParams = ViewParams;
 
 /**
- * Reads back the sides worth storing, dropping the ones that are zero.
+ * Refuses a padding side no host can lay out.
  *
- * A side of 0 is what an omitted side already means, so writing it would only make
- * the declaration longer without changing what any host does with it.
- *
- * @param padding - The requested padding; every side optional
- * @returns The sides to store, or null when none of them says anything
  * @throws {@link DocOperationError} for a side that is negative or not finite
  */
-const takeMeaningfulPadding = (
-	padding: ViewPaddingDoc,
-): ViewPaddingDoc | null => {
-	const stored: ViewPaddingDoc = {};
-	for (const side of PADDING_SIDES) {
+const assertValidPadding = (padding: ViewPaddingDoc): void => {
+	for (const side of VIEW_PADDING_KEYS) {
 		const value = padding[side];
-		if (value === undefined) {
-			continue;
-		}
-		if (!Number.isFinite(value) || value < 0) {
+		if (value !== undefined && (!Number.isFinite(value) || value < 0)) {
 			throw new DocOperationError(
 				`view padding ${side} must be a number of 0 or more, but got ${String(value)}`,
 			);
 		}
-		if (value > 0) {
-			stored[side] = value;
-		}
 	}
-	return Object.keys(stored).length === 0 ? null : stored;
 };
 
 /**
@@ -143,34 +104,12 @@ export const setView = (
 			`view scroll must be "content" or "infinite", but got ${String(params.scroll)}`,
 		);
 	}
-
-	// Validate before writing anything, so a throw partway through leaves the doc as it was.
-	const nextView: ViewDoc = { ...doc.view };
-	if (params.padding !== undefined) {
-		const stored =
-			params.padding === null ? null : takeMeaningfulPadding(params.padding);
-		if (stored === null) {
-			delete nextView.padding;
-		} else {
-			nextView.padding = stored;
-		}
-	}
-	if (params.open !== undefined) {
-		if (params.open === null) {
-			delete nextView.open;
-		} else {
-			nextView.open = params.open;
-		}
-	}
-	if (params.scroll !== undefined) {
-		if (params.scroll === null) {
-			delete nextView.scroll;
-		} else {
-			nextView.scroll = params.scroll;
-		}
+	if (params.padding != null) {
+		assertValidPadding(params.padding);
 	}
 
-	if (Object.keys(nextView).length === 0) {
+	const nextView = mergeViewDoc(doc.view, params);
+	if (nextView === undefined) {
 		delete doc.view;
 		return null;
 	}

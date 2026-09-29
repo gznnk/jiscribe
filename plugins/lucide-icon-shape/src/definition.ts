@@ -12,8 +12,7 @@ import { IconStencils } from "./stencil/IconStencils";
 
 /**
  * The menu adds the icon picker to what features would derive on their own: `stroke`
- * without `fill` yields the line color and line style the icon is drawn with, and
- * `transform` yields the aspect-ratio lock that keeps a resized box square. The picker
+ * without `fill` yields the line color and line style the icon is drawn with. The picker
  * writes `icon`, which the doc declares as an extra style property.
  */
 export const lucideIconDefinition: ObjectTypeDefinition<IconDoc, IconState> =
@@ -33,6 +32,5 @@ export const lucideIconDefinition: ObjectTypeDefinition<IconDoc, IconState> =
 				items: [{ type: "custom", id: "icon", component: IconPickerMenu }],
 			},
 			{ id: "line", items: [{ type: "lineColor" }, { type: "lineStyle" }] },
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
 		],
 	});

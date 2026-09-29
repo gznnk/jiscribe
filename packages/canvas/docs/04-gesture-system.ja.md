@@ -11,6 +11,10 @@
 ビューポート要素（`Viewport`）で受け取り（`controllers/Canvas.tsx`）、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
+ビューポートの外の wheel はジェスチャーにならないが、Ctrl 押下のものだけはルートで
+打ち消す（`useBlockBrowserZoom`）。ツールバーやサイドバーの上では、そのままだと
+ブラウザがページ全体をズームしてしまうため。トラックパッドのピンチも同じイベントで届く。
+
 ジェスチャーの種類の正本は `GestureType`（`controllers/gestures/recognizer/GestureRecognizerTypes.ts`）。
 押下・ドラッグの開始／途中／終了・click / doubleClick のほか、wheel・pinch・longPress・慣性スクロールなどがある。
 
@@ -185,7 +189,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 ### 新しいインタラクティブ要素を追加するとき
 
 1. ブラウザ標準の操作で完結する要素 → `data-gesture="none"`
-2. ジェスチャー経由で値を伝えつつネイティブのポインタ挙動も必要 → `data-gesture="native-pointer"` + `data-kind` / `data-id`
+2. ジェスチャー経由で値を伝えつつネイティブのポインタ挙動も必要 → `data-gesture="native-pointer"` + `data-part`（`data-kind` / `data-id` は、それを収める部品の容器が持つ）
 3. スクロール可能で内部スクロールを優先したい → `data-gesture="native-wheel"`
 
 ## ホストページとジェスチャーを分け合う（`gestureHandling`）

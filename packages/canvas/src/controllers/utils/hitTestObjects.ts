@@ -97,8 +97,18 @@ const isPointOnFrame = (
 	return Math.abs(local.x) <= halfWidth && Math.abs(local.y) <= halfHeight;
 };
 
-/** Whether the point falls on the object as drawn. Groups are never hit directly. */
-const isPointOnObject = (
+/**
+ * Whether the point falls on the object as drawn. Groups are never hit directly.
+ *
+ * @param point - World point to test
+ * @param object - The candidate; a group or a `geometry: "none"` type always misses
+ * @param objects - The full object map, needed to walk a connector's endpoint owners
+ * @param registries - Silhouette and route lookups (see {@link HitTestRegistries})
+ * @param tolerance - Extra reach (world px) for line-like shapes; ignored by
+ *   area-bearing ones
+ * @returns True when the point is on the drawn shape
+ */
+export const isPointOnObject = (
 	point: Point,
 	object: ObjectState,
 	objects: Record<string, ObjectState>,

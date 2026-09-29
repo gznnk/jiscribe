@@ -1,7 +1,7 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectFactoryRegistry } from "@jiscribe/doc/registries/ObjectFactoryRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
@@ -99,9 +99,8 @@ export type CanvasRegistries = {
  * commands, and plugins a `<Canvas>` operates against.
  *
  * All fields are optional; omitting them reproduces the full built-in set.
- * Restricting `objectTypes` is the caller's contract to only pass docs whose
- * object types remain enabled — otherwise `canvasToState` throws "Mapper not
- * found" (see docs/01-design-philosophy.md principle 4).
+ * An object of a type `objectTypes` leaves out is held as an opaque object:
+ * kept in place and written back on save, but not drawn (see `canvasToState`).
  */
 export type CanvasCapabilities = {
 	/** Enabled object types. Default: all registered types. */

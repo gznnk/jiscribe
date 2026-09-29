@@ -16,7 +16,7 @@ import { runRenderCommand } from "./renderCommand";
 
 const USAGE = `usage: jiscribe <command> [options]
 
-  validate <files...>   check against the official JSON schema and the canvas parser
+  validate <files...>   read the document with the canvas parser and report what it found
                         [--json]
   diagnose <files...>   validate, then report text that overflows the shape holding it
                         [--json]

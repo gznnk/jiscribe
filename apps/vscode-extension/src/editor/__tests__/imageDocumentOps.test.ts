@@ -70,9 +70,13 @@ const makeDoc = (
 	sourceText,
 	needsImageReconcile: false,
 	reconcileInFlight: false,
+	lastOwnWrite: null,
 });
 
-/** Fake seams capturing writes; render defaults to "webview unavailable" (null). */
+/**
+ * Fake seams capturing writes; render defaults to "webview unavailable" (null)
+ * and the document to clean, the state a reconcile is allowed to write in.
+ */
 const makeSeams = (
 	over: Partial<ImageDocSeams> = {},
 ): { seams: ImageDocSeams; writes: Uint8Array[] } => {
@@ -85,6 +89,7 @@ const makeSeams = (
 			vi.fn(async (bytes: Uint8Array) => {
 				writes.push(bytes);
 			}),
+		isDirty: over.isDirty ?? ((): boolean => false),
 		isCancelled: over.isCancelled,
 	};
 	return { seams, writes };
@@ -225,22 +230,58 @@ describe("reconcileImageDocument", () => {
 		expect(doc.needsImageReconcile).toBe(true);
 	});
 
-	it("does not write unsaved edits when the source changes mid-render", async () => {
+	it("writes nothing when the source moves under a render on a clean document", async () => {
 		const doc = makeDoc("svg", svgBytes(svgWithSource("NEW")), "NEW");
 		doc.needsImageReconcile = true;
-		// Simulate an edit landing while the render is in flight.
+		// The disk is adopted while the render is in flight: the source changes and
+		// the adoption clears the flag itself (see adoptDiskBytes).
 		const { seams, writes } = makeSeams({
 			render: async () => {
-				doc.sourceText = "EDITED";
-				return svgRenderResult(svgWithSource("EDITED"));
+				doc.sourceText = "ADOPTED";
+				doc.needsImageReconcile = false;
+				return svgRenderResult(svgWithSource("NEW"));
 			},
 		});
 
 		await reconcileImageDocument(doc, seams);
 
 		expect(writes).toHaveLength(0);
-		// Ownership passes to the normal save flow, so the flag is cleared.
+		// Left as the adoption set it: the reconcile owns no flag it did not act on.
 		expect(doc.needsImageReconcile).toBe(false);
+	});
+
+	it("writes nothing and keeps the flag when the document has unsaved edits", async () => {
+		// An undo after a fallback save leaves the older source in the editor while
+		// the newer one is saved on disk; rendering it here would overwrite the save.
+		const doc = makeDoc("svg", svgBytes(svgWithSource("SAVED")), "UNDONE");
+		doc.needsImageReconcile = true;
+		const render = vi.fn(async () => svgRenderResult(svgWithSource("UNDONE")));
+		const { seams, writes } = makeSeams({ render, isDirty: () => true });
+
+		await reconcileImageDocument(doc, seams);
+
+		expect(render).not.toHaveBeenCalled();
+		expect(writes).toHaveLength(0);
+		// Still pending, so a later render on a clean document repairs the image.
+		expect(doc.needsImageReconcile).toBe(true);
+	});
+
+	it("writes nothing and keeps the flag when the document goes dirty mid-render", async () => {
+		const doc = makeDoc("svg", svgBytes(svgWithSource("NEW")), "NEW");
+		doc.needsImageReconcile = true;
+		let dirty = false;
+		const { seams, writes } = makeSeams({
+			render: async () => {
+				dirty = true;
+				return svgRenderResult(svgWithSource("NEW", "re-rendered"));
+			},
+			isDirty: () => dirty,
+		});
+
+		await reconcileImageDocument(doc, seams);
+
+		expect(writes).toHaveLength(0);
+		expect(doc.needsImageReconcile).toBe(true);
 	});
 
 	it("guards against overlapping reconcile writes (reconcileInFlight)", async () => {
@@ -344,12 +385,7 @@ describe("classifyExternalChange", () => {
 	it("recognizes the saved bytes as our own echo", () => {
 		const doc = makeDoc("svg", saved, "SAVED");
 		expect(
-			classifyExternalChange(
-				doc,
-				svgBytes(svgWithSource("SAVED")),
-				null,
-				false,
-			),
+			classifyExternalChange(doc, svgBytes(svgWithSource("SAVED")), false),
 		).toBe("own-echo");
 	});
 
@@ -358,21 +394,50 @@ describe("classifyExternalChange", () => {
 		// savedBytes; the pre-recorded write bytes must still match.
 		const doc = makeDoc("svg", saved, "NEW");
 		const inFlight = svgBytes(svgWithSource("NEW", "re-rendered"));
-		expect(classifyExternalChange(doc, inFlight, inFlight, true)).toBe(
-			"own-echo",
-		);
+		doc.lastOwnWrite = inFlight;
+		expect(classifyExternalChange(doc, inFlight, true)).toBe("own-echo");
+	});
+
+	it("still recognizes the echo of a consumed write via savedBytes", () => {
+		// One write can surface as two watcher events (change + create). The first
+		// arrives before adoptSavedBytes and consumes lastOwnWrite; by the second the
+		// write has resolved, so the same bytes are savedBytes.
+		const doc = makeDoc("svg", saved, "WRITTEN");
+		const written = svgBytes(svgWithSource("WRITTEN", "re-rendered"));
+		doc.lastOwnWrite = written;
+
+		expect(classifyExternalChange(doc, written, false)).toBe("own-echo");
+		expect(doc.lastOwnWrite).toBeNull();
+
+		doc.savedBytes = written;
+		expect(classifyExternalChange(doc, written, false)).toBe("own-echo");
+	});
+
+	it("adopts bytes we once wrote when an external tool puts them back", () => {
+		// git stash replaces the file, then git stash pop restores what we saved.
+		// Remembering our write forever would ignore the restore and leave the
+		// editor showing the stashed state.
+		const doc = makeDoc("svg", saved, "SAVED");
+		doc.lastOwnWrite = saved;
+		const stashed = svgBytes(svgWithSource("STASHED"));
+
+		expect(classifyExternalChange(doc, stashed, false)).toBe("adopt");
+		adoptDiskBytes(doc, stashed);
+
+		expect(classifyExternalChange(doc, saved, false)).toBe("adopt");
 	});
 
 	it("adopts an external change while the document is clean", () => {
 		const doc = makeDoc("svg", saved, "SAVED");
 		const external = svgBytes(svgWithSource("EXTERNAL"));
-		expect(classifyExternalChange(doc, external, null, false)).toBe("adopt");
+		expect(classifyExternalChange(doc, external, false)).toBe("adopt");
 	});
 
 	it("reports a conflict for an external change while the document is dirty", () => {
 		const doc = makeDoc("svg", saved, "UNSAVED");
+		doc.lastOwnWrite = saved;
 		const external = svgBytes(svgWithSource("EXTERNAL"));
-		expect(classifyExternalChange(doc, external, saved, true)).toBe("conflict");
+		expect(classifyExternalChange(doc, external, true)).toBe("conflict");
 	});
 });
 
@@ -382,6 +447,7 @@ describe("adoptDiskBytes", () => {
 	it("takes over the disk state and drops a pending reconcile", () => {
 		const doc = makeDoc("svg", svgBytes(svgWithSource("OURS")), "OURS");
 		doc.needsImageReconcile = true;
+		doc.lastOwnWrite = svgBytes(svgWithSource("OURS"));
 		const external = svgWithSource("EXTERNAL");
 
 		adoptDiskBytes(doc, svgBytes(external));
@@ -389,6 +455,7 @@ describe("adoptDiskBytes", () => {
 		expect(doc.sourceText).toBe("EXTERNAL");
 		expect(decodeUtf8(doc.savedBytes)).toBe(external);
 		expect(doc.needsImageReconcile).toBe(false);
+		expect(doc.lastOwnWrite).toBeNull();
 	});
 
 	it("accepts a file without an embedded source as uneditable", () => {

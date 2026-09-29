@@ -125,8 +125,8 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
 - **Neutral tokens**: `theme` (`theme/themeTokens.ts`) references neutral `--jiscribe-*` CSS custom
   properties, each with the dark preset value as its fallback (`var(--jiscribe-foreground, #cccccc)`).
   emotion styles can stay static module-level constants because the theme resolves at CSS time.
-- **Injection**: the host passes a `CanvasTheme` (`theme/CanvasTheme.ts`) via the Canvas / CanvasThumbnail
-  `theme` prop. The Canvas root injects `theme.tokens` as `--jiscribe-*` custom properties
+- **Injection**: the host passes a `CanvasTheme` (`theme/CanvasTheme.ts`) via the Canvas `theme`
+  prop. The Canvas root injects `theme.tokens` as `--jiscribe-*` custom properties
   (`theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
 - **Two delivery paths**: CSS-consumed tokens flow through the custom properties; JS-consumed values
   (e.g. handle dimensions, for zoom-adjusted geometry, and `colorScheme` below) flow through `CanvasThemeContext`
@@ -147,12 +147,9 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     its `forceRemeasure` flag — the one pass the slots cannot ask for. That covers the arrivals
     nobody waited for; the mounted document's own faces are covered by the preload gate below, which
     dispatches its own re-measure as it settles. Neither hook is reached directly: `useDocFonts`
-    (`controllers/hooks/useDocFonts.ts`) is the entry point Canvas and CanvasThumbnail take, with
-    those two behind it — it folds them into one counter and one `onFacesChanged` callback and
-    reports whether the content is still held back.
-    `CanvasThumbnail` has no reducer to dispatch through, so it takes both signals as a memo key on
-    `canvasToState` instead. A pass that moves no box returns the same state reference, so the
-    two events overlapping costs nothing. A dispatch only reaches boxes that live in the state, so
+    (`controllers/hooks/useDocFonts.ts`) is the entry point Canvas takes, with the two behind
+    it — it folds them into one counter and one `onFacesChanged` callback and reports whether
+    the content is still held back. A dispatch only reaches boxes that live in the state, so
     the render layer is handed a counter as `FontsLoadedNonceContext` as well — this one plus the
     gate's settling, since neither says anything but "measure again". The sites
     that measure while they render (a record's bands, a connector's label box, a text object's hit

@@ -3,6 +3,7 @@ import { applyExtraProps, declaresExtraKey } from "./utils/extraFields";
 import { requireObject, type ObjectRecord } from "./utils/objectAccess";
 import type { DocDefinitions } from "./utils/objectGeometry";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import { isSemanticError } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 
 /**
@@ -94,7 +95,9 @@ export const setExtraProps = (
 		delete candidate[key];
 	}
 
-	const diagnostics = definition.validateDoc(candidate, id);
+	const diagnostics = definition
+		.validateDoc(candidate, id)
+		.filter(isSemanticError);
 	if (diagnostics.length > 0) {
 		throw new DocOperationError(
 			`cannot set extra props on "${id}": ${diagnostics

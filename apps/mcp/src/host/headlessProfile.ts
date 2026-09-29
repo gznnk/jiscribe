@@ -12,11 +12,26 @@
 // (probeWindowsTempDir). Nothing is guessed when the answer does not come: the
 // candidates that would have needed it are left out of the launch, and the
 // reason is carried through to what the caller is told.
+//
+// The directory is made here rather than left to Chromium, and made with a name
+// nobody can work out in advance (mkdtemp): a name that could be guessed is one
+// another user of a shared /tmp can put a directory or a link at first. Each one
+// says in an `owner.json` which process it belongs to, which is what lets a later
+// run tell a profile still in use from one a killed process left behind.
 
 import { spawnSync } from "node:child_process";
-import { readdirSync, rmSync } from "node:fs";
+import {
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	statSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+
+import { isErrnoWithCode } from "../nodeErrors";
 
 /** Where a headless Chromium is told to keep its profile, in the forms it can need */
 export type HeadlessProfilePaths = {
@@ -59,18 +74,18 @@ const PROBE_TIMEOUT_MS = 5_000;
 /** A path rooted on a drive letter, which is what an answer from Windows looks like */
 const WINDOWS_PATH_PATTERN = /^[A-Za-z]:\\/;
 
+/** The name every profile directory starts with, whichever process made it */
+const PROFILE_NAME_PREFIX = "jiscribe-mcp-headless-";
+
+/** The file naming the process a profile belongs to, written as it is created */
+const OWNER_FILE_NAME = "owner.json";
+
 /**
- * The name every profile of this process starts with. The pid is in it because
- * no two live processes share one: a directory found under this prefix belongs
- * to a process that is gone, and is ours to sweep away
+ * How long a profile with no readable owner is left alone. A directory being made
+ * right now by another process looks exactly like one whose owner file was lost,
+ * so nothing is taken away until no browser could still be starting into it
  */
-const profileNamePrefix = `jiscribe-mcp-headless-${process.pid}-`;
-
-/** How many profiles this process has named, so that two launches never collide */
-let profileCount = 0;
-
-/** The profiles handed out and not yet removed, which the sweep has to leave alone */
-const liveProfileNames = new Set<string>();
+const ORPHAN_SWEEP_AGE_MS = 24 * 60 * 60 * 1_000;
 
 /**
  * Picks the Windows path out of what `cmd.exe /c echo %TEMP%` printed.
@@ -112,7 +127,7 @@ export const probeWindowsTempDir = (): WindowsTempOutcome => {
 	if (echoed.error !== undefined) {
 		// No cmd.exe at all is the ordinary state of a machine that is not WSL, and
 		// reads as a broken probe unless it is said plainly
-		if ("code" in echoed.error && echoed.error.code === "ENOENT") {
+		if (isErrnoWithCode(echoed.error, "ENOENT")) {
 			return {
 				ok: false,
 				reason:
@@ -186,8 +201,69 @@ const removeQuietly = (target: string): void => {
 };
 
 /**
- * Removes the profiles left by an earlier process that carried this pid, which is
- * what a server killed outright leaves behind.
+ * Whether a process is there to be signalled.
+ *
+ * @param pid The pid read out of an owner file, which is whatever was written
+ *   there rather than something known to be a pid at all
+ * @returns Whether it names a live process. A pid that is not a positive whole
+ *   number names none (and is never signalled: 0 and the negatives stand for
+ *   whole process groups)
+ */
+const isProcessAlive = (pid: number): boolean => {
+	if (!Number.isInteger(pid) || pid <= 0) {
+		return false;
+	}
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch (error) {
+		// Only "no such process" says it is gone; EPERM is a process this user is
+		// not allowed to signal, which is a process all the same
+		return !isErrnoWithCode(error, "ESRCH");
+	}
+};
+
+/**
+ * Reads which process a profile directory belongs to.
+ *
+ * @param profileDir The directory to ask about
+ * @returns The pid its owner file names, or null when there is no such file, it
+ *   cannot be read, or it holds anything but a pid
+ */
+const readOwnerPid = (profileDir: string): number | null => {
+	let owner: unknown;
+	try {
+		owner = JSON.parse(
+			readFileSync(path.join(profileDir, OWNER_FILE_NAME), "utf8"),
+		);
+	} catch {
+		return null;
+	}
+	if (typeof owner !== "object" || owner === null) {
+		return null;
+	}
+	const pid = (owner as { pid?: unknown }).pid;
+	return typeof pid === "number" ? pid : null;
+};
+
+/**
+ * Whether nothing has touched a directory for a while.
+ *
+ * @param target The directory to look at
+ * @param ageMs How old it has to be to count. A directory that cannot be stat'd
+ *   counts as young, so nothing is removed on the strength of a failed look
+ */
+const isOlderThan = (target: string, ageMs: number): boolean => {
+	try {
+		return Date.now() - statSync(target).mtimeMs > ageMs;
+	} catch {
+		return false;
+	}
+};
+
+/**
+ * Removes the profiles left behind by processes that are gone, which is what a
+ * server killed outright leaves.
  *
  * @param parents The directories profiles are made in, in the order they are read
  */
@@ -200,26 +276,58 @@ const sweepLeftovers = (parents: readonly string[]): void => {
 			continue;
 		}
 		for (const name of names) {
-			if (name.startsWith(profileNamePrefix) && !liveProfileNames.has(name)) {
-				removeQuietly(path.join(parent, name));
+			if (!name.startsWith(PROFILE_NAME_PREFIX)) {
+				continue;
+			}
+			const target = path.join(parent, name);
+			const ownerPid = readOwnerPid(target);
+			if (ownerPid !== null) {
+				if (!isProcessAlive(ownerPid)) {
+					removeQuietly(target);
+				}
+				continue;
+			}
+			// With nobody to ask, age is all there is to go on
+			if (isOlderThan(target, ORPHAN_SWEEP_AGE_MS)) {
+				removeQuietly(target);
 			}
 		}
 	}
 };
 
 /**
- * Names a profile directory for one headless launch. Nothing is created here:
- * Chromium makes the directory it is given, and only the candidate that actually
- * starts ever makes one.
+ * Makes one profile directory and puts this process's name on it.
+ *
+ * @param parent The directory to make it in, as this process sees it
+ * @returns The directory, whose name mkdtemp made unguessable and which POSIX
+ *   gives to its owner alone (0700)
+ * @throws Whatever stopped the directory from being made or written to
+ */
+const createProfileDir = (parent: string): string => {
+	const profileDir = mkdtempSync(path.join(parent, PROFILE_NAME_PREFIX));
+	writeFileSync(
+		path.join(profileDir, OWNER_FILE_NAME),
+		`${JSON.stringify({ pid: process.pid })}\n`,
+		"utf8",
+	);
+	return profileDir;
+};
+
+/**
+ * Makes the profile directory for one headless launch, one per side that may run
+ * the browser.
  *
  * @param platform The value of `process.platform`. Anything but win32 / darwin is
  *   treated as Linux, which is where WSL puts a Windows-side .exe among the
  *   candidates and so is the only case that asks Windows anything
  * @param resolveWindowsTemp Where the Windows-side profile goes. Only tests pass
  *   it; the default asks Windows once per process and keeps the answer
- * @returns The paths to name, and the removal that takes the profile away. Call
+ * @returns The paths to name, and the removal that takes the profiles away. Call
  *   `remove` once the browser is gone; until then the directory holds a running
  *   Chromium's state
+ * @throws Whatever stopped the profile on this side from being made. A
+ *   Windows-side one that cannot be made is carried as a reason instead, the same
+ *   way a Windows that could not be asked is
  */
 export const createHeadlessProfile = (
 	platform: NodeJS.Platform,
@@ -237,19 +345,37 @@ export const createHeadlessProfile = (
 		...(windowsTemp.ok ? [windowsTemp.dir.wslPath] : []),
 	];
 	sweepLeftovers(parents);
-	profileCount += 1;
-	const name = `${profileNamePrefix}${profileCount}`;
-	liveProfileNames.add(name);
-	const targets = parents.map((parent) => path.join(parent, name));
+	const nativePath = createProfileDir(tmpdir());
+	const targets = [nativePath];
+
+	/**
+	 * Makes the profile a Windows-side browser would run on, where Windows itself
+	 * said to put it. It is a directory of its own, since each side makes one where
+	 * that side can reach it, and Windows is given the name this one ended up with
+	 */
+	const createWindowsProfile = (): WindowsProfileOutcome => {
+		if (!windowsTemp.ok) {
+			return { ok: false, reason: windowsTemp.reason };
+		}
+		try {
+			const windowsSideDir = createProfileDir(windowsTemp.dir.wslPath);
+			targets.push(windowsSideDir);
+			return {
+				ok: true,
+				path: `${windowsTemp.dir.windowsPath}\\${path.basename(windowsSideDir)}`,
+			};
+		} catch (error) {
+			return {
+				ok: false,
+				reason: `no profile directory could be made under ${windowsTemp.dir.windowsPath} (${String(error)})`,
+			};
+		}
+	};
+	const windows = createWindowsProfile();
+
 	return {
-		paths: {
-			nativePath: path.join(tmpdir(), name),
-			windows: windowsTemp.ok
-				? { ok: true, path: `${windowsTemp.dir.windowsPath}\\${name}` }
-				: { ok: false, reason: windowsTemp.reason },
-		},
+		paths: { nativePath, windows },
 		remove: () => {
-			liveProfileNames.delete(name);
 			for (const target of targets) {
 				removeQuietly(target);
 			}

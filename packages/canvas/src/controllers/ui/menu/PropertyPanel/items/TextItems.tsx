@@ -1,4 +1,5 @@
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
@@ -28,6 +29,14 @@ import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
+import { readSelectionTextStyle } from "../../utils/readSelectionTextStyle";
+import { readSelectionTextVerticalBasis } from "../../utils/readSelectionTextVerticalBasis";
+import {
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "../../utils/SelectionValue";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyDropdownTriggerLabel } from "../common/PropertyControlsStyled";
@@ -35,20 +44,10 @@ import { PropertyDropdownField } from "../common/PropertyDropdownField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
 import { PropertySegmentedControl } from "../common/PropertySegmentedControl";
-import { readSelectionTextStyle } from "../utils/readSelectionTextStyle";
-import { readSelectionTextVerticalBasis } from "../utils/readSelectionTextVerticalBasis";
 import { resolveFontFamilyLabel } from "../utils/resolveFontFamilyLabel";
-import {
-	isMixedSelectionValue,
-	selectionValueOr,
-	selectionValueOrFirst,
-} from "../utils/SelectionValue";
 
-const DEFAULT_FONT_SIZE = 14;
 const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
-
-const DEFAULT_FONT_COLOR = "#333333";
 
 /** The face the selected text is drawn in, picked from the shipped set. */
 const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({
@@ -64,12 +63,13 @@ const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({
 	// An unset family draws in the default one, so that is the entry to mark active.
 	const fontFamily =
 		selectionValueOr(textStyle.fontFamily, undefined) ?? DEFAULT_FONT_FAMILY;
+	const isMixed = isMixedSelectionValue(textStyle.fontFamily);
 
 	return (
 		<PropertyRow label={messages.menuFontFamily}>
 			<PropertyDropdownField
 				title={messages.menuFontFamily}
-				isMixed={isMixedSelectionValue(textStyle.fontFamily)}
+				isMixed={isMixed}
 				preview={
 					<PropertyDropdownTriggerLabel style={{ fontFamily }}>
 						{resolveFontFamilyLabel(fontFamily, messages)}
@@ -77,7 +77,7 @@ const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({
 				}
 			>
 				<ObjectMenuFontFamilyList
-					activeFontFamily={fontFamily}
+					activeFontFamily={isMixed ? undefined : fontFamily}
 					property="fontFamily"
 				/>
 			</PropertyDropdownField>
@@ -102,7 +102,10 @@ const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyPanelRowSize}>
 			<PropertyNumberField
-				value={selectionValueOrFirst(fontSize, undefined) ?? DEFAULT_FONT_SIZE}
+				value={
+					selectionValueOrFirst(fontSize, undefined) ??
+					TEXT_STYLE_FALLBACK.fontSize
+				}
 				isMixed={isMixedSelectionValue(fontSize)}
 				min={MIN_FONT_SIZE}
 				max={MAX_FONT_SIZE}
@@ -133,8 +136,13 @@ const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
 			<PropertyColorField
-				value={selectionValueOr(fontColor, undefined) ?? DEFAULT_FONT_COLOR}
-				isMixed={isMixedSelectionValue(fontColor)}
+				value={
+					selectionValueOr(fontColor, undefined) ??
+					TEXT_STYLE_FALLBACK.fontColor
+				}
+				mixedValues={selectionMixedValues(fontColor)?.map(
+					(mixedColor) => mixedColor ?? TEXT_STYLE_FALLBACK.fontColor,
+				)}
 				property="fontColor"
 				role="ink"
 				title={messages.menuFontColor}

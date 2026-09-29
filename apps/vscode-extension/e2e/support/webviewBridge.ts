@@ -90,6 +90,23 @@ export function updateMessages(
 }
 
 /**
+ * The document version carried by the newest recorded `update`, which is what the
+ * real Webview quotes as its next commit's `baseVersion`.
+ *
+ * @param recorder - a recorder from {@link recordMessagesToWebview}; recording
+ *   has to have started before the editor opened, or the version the Webview
+ *   actually holds may already have been missed
+ * @returns undefined when no `update` has been recorded, or when the newest one
+ *   carried no version (the image editor stamps none)
+ */
+export function latestUpdateVersion(
+	recorder: WebviewMessageRecorder,
+): number | undefined {
+	const updates = updateMessages(recorder);
+	return updates[updates.length - 1]?.version;
+}
+
+/**
  * Post a message to a document's editor as if its Webview had sent it.
  *
  * @param bridge - from {@link connectWebviewBridge}

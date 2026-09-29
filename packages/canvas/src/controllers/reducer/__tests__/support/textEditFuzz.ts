@@ -1,15 +1,15 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import type {
-	InlineTextStyle,
-	RichText,
-} from "@jiscribe/doc/model/objects/types/RichText";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
 import {
 	isSameInlineTextStyle,
-	normalizeRichText,
 	pickDefinedInlineTextStyle,
+} from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import {
+	normalizeRichText,
 	remapRichText,
 	richTextToPlain,
-} from "@jiscribe/doc/model/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { createTestState } from "./createTestState";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";

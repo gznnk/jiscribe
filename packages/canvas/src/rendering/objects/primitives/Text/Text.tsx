@@ -1,5 +1,5 @@
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { TEXT_BOX_PADDING_X } from "@jiscribe/doc/text/block/textBoxPadding";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type React from "react";
 import { memo, useMemo } from "react";
 

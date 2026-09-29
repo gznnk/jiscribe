@@ -39,7 +39,7 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
 - 既定の環境は `environment: "node"` で、DOM を介さず入力 state → 出力 state を直接検証する。
   DOM API が要るテスト（React の hook・コンポーネントを描いて確かめるものなど）だけは、
   ファイル先頭の `// @vitest-environment jsdom` で jsdom に切り替える
-  （例: `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`・`controllers/__tests__/CanvasThumbnail.test.tsx`）。
+  （例: `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`・`controllers/ui/menu/ObjectMenu/common/ObjectMenuColorPickerGrid/__tests__/ObjectMenuColorPickerGrid.test.tsx`）。
   jsdom はインプロセスの模擬 DOM なので、これもユニット層に入る
 - 実行: `pnpm --filter @jiscribe/canvas test`（`vitest run`）。
   `test:coverage` / `test:ui` も用意（カバレッジの除外対象は `vitest.config.ts` の `coverage.exclude` 参照）
@@ -103,7 +103,8 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
   `e2e/plugins/specShapesPlugin.tsx` だけで、これはコアが自前では持たなくなった性質を
   供給するテスト専用の代役である。型ごとに性質を受け持つ（例: `tile` = カテゴリフライアウトに
   出るドラッグ描画型、`pin` = クリック配置型、`card` = `<g>` ルートでテキストスロットを持つ型、
-  `panel` = 作成時の既定値を自前で宣言する型。一覧は同ファイルの `specShapesPlugin`）。
+  `panel` = 作成時の既定値を自前で宣言する型、`memo` = 本文をソース言語で持つ型
+  （`features.text: "source"`）。一覧は同ファイルの `specShapesPlugin`）。
   出荷図形を題材にしていたコアの spec はこちらを叩く
 - **プラグインのハーネスはそのプラグインだけを載せる。**単独ロードで通ること自体が、
   他プラグインへの暗黙依存が無いことの検証になる

@@ -226,9 +226,6 @@ test.describe("record: selecting one text slot", () => {
 		const backgroundColorToggle = canvas.page.locator(
 			selectors.objectMenuToggle("bg-color"),
 		);
-		const stackOrderToggle = canvas.page.locator(
-			selectors.objectMenuToggle("stack-order"),
-		);
 		const fontSizeToggle = canvas.page.locator(
 			selectors.objectMenuToggle("font-size"),
 		);
@@ -238,7 +235,6 @@ test.describe("record: selecting one text slot", () => {
 
 		await canvas.selectAt(ATTRIBUTES_SPOT);
 		await expect(backgroundColorToggle).toBeVisible();
-		await expect(stackOrderToggle).toBeVisible();
 
 		const objectMenu = canvas.page.locator(selectors.objectMenu);
 		const fullMenuBox = await objectMenu.boundingBox();
@@ -252,7 +248,6 @@ test.describe("record: selecting one text slot", () => {
 			.toBe(2);
 
 		await expect(backgroundColorToggle).toHaveCount(0);
-		await expect(stackOrderToggle).toHaveCount(0);
 		await expect(fontSizeToggle).toBeVisible();
 		await expect(alignmentToggle).toBeVisible();
 

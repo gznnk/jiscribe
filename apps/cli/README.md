@@ -13,7 +13,7 @@ node engine/apps/cli/dist/index.mjs --help
 ## Commands
 
 ```
-jiscribe validate <files...>   schema + parser; exit 1 on any error
+jiscribe validate <files...>   read it with the canvas parser; exit 1 on any error
 jiscribe diagnose <files...>   validate, then report text overflowing its shape
 jiscribe measure  <text>       how a string lays out in a given box
 jiscribe render   <file>       draw the document to a .png or .svg

@@ -129,8 +129,6 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuIcon}
 			>
@@ -148,8 +146,6 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							value={query}
 							placeholder={messages.searchPlaceholder}
 							aria-label={messages.searchPlaceholder}
-							data-kind="menu"
-							data-id="object-menu"
 							data-testid="icon-picker-search"
 							// Leaves right-click to the browser, so the field gets the
 							// native copy / paste menu instead of the canvas's own.
@@ -166,8 +162,6 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									key={name}
 									type="button"
 									selected={name === currentIcon}
-									data-kind="menu"
-									data-id="object-menu"
 									data-part={setPart("icon", name)}
 									title={name}
 								>

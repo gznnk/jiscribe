@@ -1,3 +1,5 @@
+import { exhaustiveKeysOf } from "../objects/utils/exhaustiveKeys";
+
 /**
  * How the view is framed when a document is opened.
  *
@@ -61,25 +63,19 @@ export type ViewPaddingDoc = {
 	left?: number;
 };
 
-/** {@link ViewPaddingDoc} with every side filled in, as {@link resolveViewPadding} returns it. */
-export type ResolvedViewPadding = Required<ViewPaddingDoc>;
-
 /**
- * Fills in the sides a {@link ViewPaddingDoc} left out, each with 0.
- *
- * @param padding - The declared padding, or undefined for "no padding at all";
- *   both produce a fully-zero result
- * @returns A fresh object with all four sides present, so callers can destructure
- *   without repeating the defaults
+ * The four sides of {@link ViewPaddingDoc}, each checked on its own so a
+ * diagnostic names the side it is about (`validateViewDoc`).
  */
-export const resolveViewPadding = (
-	padding?: ViewPaddingDoc,
-): ResolvedViewPadding => ({
-	top: padding?.top ?? 0,
-	right: padding?.right ?? 0,
-	bottom: padding?.bottom ?? 0,
-	left: padding?.left ?? 0,
-});
+export const VIEW_PADDING_KEYS = exhaustiveKeysOf<ViewPaddingDoc>()([
+	"top",
+	"right",
+	"bottom",
+	"left",
+] as const);
+
+/** {@link ViewPaddingDoc} with every side filled in, as `resolveViewPadding` returns it. */
+export type ResolvedViewPadding = Required<ViewPaddingDoc>;
 
 /**
  * The document's display declaration: how much empty space belongs around the
@@ -115,3 +111,14 @@ export type ViewDoc = {
 	 */
 	scroll?: ViewScrollMode;
 };
+
+/**
+ * Field names {@link ViewDoc} carries, built from the type so a field added to it
+ * reaches the accepted-name set the parser checks `view` against
+ * (`checkStructure`) or fails to compile.
+ */
+export const VIEW_DOC_KEYS = exhaustiveKeysOf<ViewDoc>()([
+	"padding",
+	"open",
+	"scroll",
+] as const);

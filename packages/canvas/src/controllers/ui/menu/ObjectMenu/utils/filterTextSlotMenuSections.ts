@@ -2,7 +2,8 @@ import type { BuiltinItemKey, ObjectMenuSection } from "../ObjectMenuTypes";
 
 /** Builtin item types whose update lands on the selected slot rather than the whole object. */
 const TEXT_SLOT_ITEM_KEYS: ReadonlySet<BuiltinItemKey> = new Set([
-	"fontStyle",
+	"font",
+	"textFormat",
 	"textAlignment",
 ]);
 

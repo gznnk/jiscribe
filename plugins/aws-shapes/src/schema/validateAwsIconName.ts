@@ -22,7 +22,12 @@ export const validateAwsIconName: ObjectDocValidateFn = (value, path) => {
 	const iconPath = `${path}.icon`;
 	if (typeof value.icon !== "string") {
 		return [
-			{ path: iconPath, message: "must be a string", beyondSchema: true },
+			{
+				path: iconPath,
+				message: "must be a string",
+				severity: "error",
+				beyondSchema: true,
+			},
 		];
 	}
 	if (isKnownAwsIconName(value.icon)) {
@@ -43,6 +48,7 @@ const buildUnknownIconDiagnostic = (
 			suggestions.length === 0
 				? `unknown AWS icon "${icon}" (see the icon list in the AI reference)`
 				: `unknown AWS icon "${icon}" — did you mean ${quoted}?`,
+		severity: "error",
 		beyondSchema: true,
 	};
 };

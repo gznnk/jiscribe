@@ -10,7 +10,7 @@ import { isGroupState } from "../../states/objects/primitives/group/GroupState";
  * content (every object except groups).
  *
  * The single source of the "whole content extent": shared by
- * `calcFitViewport` (zoom-to-fit / thumbnail) and the image-export viewBox.
+ * `calcFitViewport` (zoom-to-fit) and the image-export viewBox.
  * Returns `null` when there is no extent (no objects / all degenerate).
  *
  * @param objects - The object map; groups are skipped because the loop already

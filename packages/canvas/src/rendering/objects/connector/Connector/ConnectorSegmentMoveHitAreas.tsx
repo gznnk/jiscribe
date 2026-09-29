@@ -1,13 +1,13 @@
 import { calcEuclideanDistance, type Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { CONNECTOR_HIT_STROKE_WIDTH } from "./connectorHitArea";
 import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connector/isConnectorSegmentFreelyMovable";
+import { LINE_HIT_STROKE_WIDTH } from "../../utils/hitStrokeWidth";
 
 // Bands of two segments overlap around the vertex they share, so a segment shorter than the band
 // width sits entirely inside that overlap and cannot be aimed at. Below this length a segment gets
 // no band; the vertex handles are what is actually under the pointer there.
-const MIN_SEGMENT_LENGTH = CONNECTOR_HIT_STROKE_WIDTH;
+const MIN_SEGMENT_LENGTH = LINE_HIT_STROKE_WIDTH;
 
 type ConnectorSegmentMoveHitAreasProps = {
 	/** The connector's object ID, used to address the gesture at this connector. */
@@ -91,7 +91,7 @@ const ConnectorSegmentMoveHitAreasComponent: React.FC<
 					data-part={`segment-move:${segmentIndex}`}
 					style={{
 						stroke: "transparent",
-						strokeWidth: CONNECTOR_HIT_STROKE_WIDTH,
+						strokeWidth: LINE_HIT_STROKE_WIDTH,
 						pointerEvents: disablePointerEvents ? "none" : "stroke",
 						// The segment goes wherever the cursor does, so the cursor says so.
 						cursor: "move",

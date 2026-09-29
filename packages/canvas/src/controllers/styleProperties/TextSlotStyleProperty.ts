@@ -1,11 +1,10 @@
 import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
-import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/RichText";
-import {
-	clearInlineStyleFromRuns,
-	TEXT_INLINE_STYLE_KEYS,
-} from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import { TEXT_INLINE_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import { clearInlineStyleFromRuns } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType";
 
 import {
 	coerceStyleValue,
@@ -22,16 +21,19 @@ import {
 
 /**
  * A text styling property (fontSize, textAlign, …), supported by every object
- * that holds text whatever shape its doc uses (`features.text`).
+ * whose text type accepts that very field (`textStyleKeysOf`) — so a selection
+ * mixing types takes the property only on the objects that can hold it.
  *
  * Text styling is stored per slot, so the write targets whichever slots the
  * selection addresses: the one slot selected below the object when there is
  * one, otherwise **every** slot of the object. The menus read their current
- * value through the same rule (getSelectedOrFirstTextSlot).
+ * value through the same rule (readSelectionTextStyle).
  *
  * The exception is an open editor with a stretch of its text selected: the
  * property then lands on those characters only (styleTextEditSelection), which is
- * what makes the text menus style a selection rather than the whole slot.
+ * what makes the text menus style a selection rather than the whole slot. A
+ * source-language body has no per-character styling to land on, so a stretch of
+ * one takes the write over the whole slot (resolveTextEditSelection).
  */
 export class TextSlotStyleProperty extends SelectionStyleProperty {
 	constructor(readonly valueType: StyleValueType) {
@@ -97,9 +99,11 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 	/**
 	 * Writes the property onto the characters the open editor has selected.
 	 *
-	 * @returns The new state, or null when this write is not a per-range one: no
-	 *   selected stretch of text, or a property that places the whole block
-	 *   (the alignment) and so has nowhere smaller to apply
+	 * @returns The new state, or null when this write is not a per-range one: a
+	 *   property that places the whole block (the alignment) and so has nowhere
+	 *   smaller to apply, or no stretch to style at all — an editor that is closed
+	 *   or has nothing selected, and a source-language body, whose characters
+	 *   carry no styling of their own (resolveTextEditSelection)
 	 */
 	private applyToTextEditSelection(
 		state: CanvasControllerState,
@@ -119,8 +123,15 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		return styleTextEditSelection(state, { [property]: coerced });
 	}
 
-	protected resolveValueType(obj: ObjectState): StyleValueType | undefined {
-		return obj.features?.text !== undefined ? this.valueType : undefined;
+	protected resolveValueType(
+		obj: ObjectState,
+		property: string,
+	): StyleValueType | undefined {
+		return (textStyleKeysOf(obj.features?.text) as readonly string[]).includes(
+			property,
+		)
+			? this.valueType
+			: undefined;
 	}
 
 	protected writeValue(

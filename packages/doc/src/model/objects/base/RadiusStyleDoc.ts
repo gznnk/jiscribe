@@ -3,7 +3,7 @@ import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 /**
  * Smallest admissible corner radius — the `minimum` the JSON schema states for
  * `rx`. Read by both boundaries that check the field: the doc validator
- * (validateDocUtils) and the paste guard (validateStateUtils).
+ * (validateStyleFields) and the paste guard (validateStateUtils).
  */
 export const CORNER_RADIUS_MIN = 0;
 

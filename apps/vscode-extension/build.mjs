@@ -21,11 +21,8 @@ const isWatch = process.argv.includes("--watch");
 // The extension's main process runs on the Node.js bundled with VSCode.
 // src/extension.ts is bundled into the single file dist/extension.js.
 const extensionConfig = {
-	// Bundle entry point
 	entryPoints: [join(__dirname, "src", "extension.ts")],
-	// Pull imported files and libraries into one file
 	bundle: true,
-	// Output path
 	outfile: join(__dirname, "dist", "extension.js"),
 	// Modules left out of the bundle and resolved with require() at runtime.
 	// vscode: provided by the host, so it must not be bundled
@@ -84,10 +81,8 @@ const woff2OnlyPlugin = {
 // src/webview/index.tsx is bundled into dist/webview.js
 // (imported CSS is emitted separately as dist/webview.css, fonts into dist/fonts/).
 const webviewConfig = {
-	// Bundle entry point (the root React component)
 	entryPoints: [join(__dirname, "src", "webview", "index.tsx")],
 	bundle: true,
-	// Output path
 	outfile: join(__dirname, "dist", "webview.js"),
 	// Emit an IIFE, so the bundle loads into the webview without polluting globals
 	format: "iife",

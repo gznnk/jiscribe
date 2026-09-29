@@ -9,10 +9,18 @@ import {
 	ObjectMenuSliderNumberInput,
 } from "./ObjectMenuSliderStyled";
 import { sliderPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {
+	/** The value the selection is on; while `isMixed`, one the selection carries (selectionValueOrFirst), which places the thumb. */
 	value: number;
+	/**
+	 * Whether the selection carries several values. The number input is then
+	 * drawn empty behind a dash and the thumb hollow, `value` being only one
+	 * object's number; typing or dragging still writes to the whole selection.
+	 */
+	isMixed?: boolean;
 	/** Lower bound of the valid range (number input clamp). */
 	min?: number;
 	/** Upper bound of the valid range (number input clamp). */
@@ -37,7 +45,9 @@ const clamp = (value: number, lower: number, upper: number): number =>
 /**
  * ObjectMenuSlider component.
  * A UI control for adjusting values using a slider.
- * Uses CanvasEvent system (data-kind/data-id) for property updates.
+ * Pointer changes write through the gesture system: the track carries only a
+ * `slider:` data-part, so the press resolves to the menu or sidebar that
+ * contains it.
  *
  * The slider track (`sliderMin`..`sliderMax`, stepped by `step`) covers the
  * common range for quick, coarse adjustment. The number input accepts the full
@@ -46,6 +56,7 @@ const clamp = (value: number, lower: number, upper: number): number =>
  */
 const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	value,
+	isMixed = false,
 	min = 1,
 	max = 100,
 	sliderMin,
@@ -55,19 +66,23 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	property,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const trackMin = sliderMin ?? min;
 	const trackMax = sliderMax ?? max;
+	// What the input agrees with the selection on: empty while the selection
+	// disagrees, so no one object's number is shown as the selection's.
+	const agreedText = isMixed ? "" : String(value);
 
 	const [sliderValue, setSliderValue] = useState(
 		clamp(value, trackMin, trackMax),
 	);
-	const [inputValue, setInputValue] = useState(String(value));
+	const [inputValue, setInputValue] = useState(agreedText);
 	// ref used so useEffect can read the latest inputValue after render
 	const inputValueRef = useRef(inputValue);
 	inputValueRef.current = inputValue;
 	// whether the user has made a valid edit that has not yet been committed
 	const pendingCommit = useRef(false);
-	// Pointer changes on the track are written by the gesture path (ObjectMenuHandler),
+	// Pointer changes on the track are written by the gesture path (applyStylePropertyPart),
 	// which is the sole writer for them; dispatching from onChange too would fire on
 	// every drag frame. Keyboard changes have no gesture of their own, so they are the
 	// only ones this component forwards, gated by this flag.
@@ -137,10 +152,10 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				onPropertyUpdate?.(property, String(committedValue), true);
 				pendingCommit.current = false;
 			} else if (Number.isNaN(parsedValue)) {
-				setInputValue(String(value));
+				setInputValue(agreedText);
 			}
 		},
-		[min, max, trackMin, trackMax, property, value, onPropertyUpdate],
+		[min, max, trackMin, trackMax, property, agreedText, onPropertyUpdate],
 	);
 
 	const handleNumberInputBlur = useCallback(() => {
@@ -161,12 +176,12 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	// change (e.g. slider drag). A commit:false preview also updates `value`, but in that case it
 	// matches inputValue and is skipped.
 	useEffect(() => {
-		if (String(value) !== inputValueRef.current) {
+		if (agreedText !== inputValueRef.current) {
 			setSliderValue(clamp(value, trackMin, trackMax));
-			setInputValue(String(value));
+			setInputValue(agreedText);
 			pendingCommit.current = false;
 		}
-	}, [value, trackMin, trackMax]);
+	}, [agreedText, value, trackMin, trackMax]);
 
 	return (
 		<ObjectMenuSliderWrapper>
@@ -177,6 +192,9 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 					min={min}
 					max={max}
 					value={inputValue}
+					placeholder={
+						isMixed ? messages.propertyPanelMixedPlaceholder : undefined
+					}
 					onChange={handleNumberInputChange}
 					onBlur={handleNumberInputBlur}
 					onKeyDown={handleNumberInputKeyDown}
@@ -190,13 +208,12 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				max={trackMax}
 				step={step}
 				value={sliderValue}
+				isMixed={isMixed}
 				onChange={handleSliderChange}
 				onKeyDown={handleSliderKeyDown}
 				onKeyUp={commitKeyboardEdit}
 				onBlur={commitKeyboardEdit}
 				onPointerUp={handleSliderPointerUp}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={sliderPart(property)}
 				data-gesture="native-pointer"
 			/>

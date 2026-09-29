@@ -1,17 +1,17 @@
 import { isObject } from "@jiscribe/basic-validators";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import {
 	joinRichTextLines,
 	normalizeRichText,
 	remapRichText,
 	richTextToPlain,
 	splitRichTextLines,
-} from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import {
 	isTextRows,
 	isTextSlot,
-} from "@jiscribe/doc/model/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
 /**
  * A shape's text in its normal form: slot id → slot. These keys ARE the set of
@@ -23,8 +23,8 @@ import {
  *
  * Because that order carries meaning, an **integer-like slot id ("0", "1", …) is
  * not allowed**: JS enumerates such own keys first and in ascending numeric
- * order, which would move the slot regardless of where its type wrote it.
- * mapTextDocToState drops one rather than let it reorder the map.
+ * order, which would move the slot regardless of where its type wrote it. The
+ * parser rejects such an id (isIntegerLikeTextSlotId), so no mapper has to.
  *
  * Text styling lives per slot and only there: there is no shape-wide typography
  * to fall back to, so every reader takes it off the slot it is drawing.

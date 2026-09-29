@@ -4,7 +4,8 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 /**
  * Guards the core behavior of the container ("frame") shape:
  * - frame / boundary / zone can be created from the container flyout and render as a composite <g>
- * - the body passes clicks through, so only the header band selects it (pass-through)
+ * - the body passes clicks through, so only the header band and the border strip select it
+ * - a connector can still be dropped into that click-through interior
  * - the boundary preset gets a dashed border
  * - the plugin's own properties-sidebar rows state the header color and the header height
  *
@@ -103,6 +104,63 @@ test.describe("container palette / behavior", () => {
 		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 	});
 
+	test("selects on the border strip, wider than the painted stroke", async ({
+		canvas,
+	}) => {
+		// Bottom edge at content y=440; the strip reaches 6px either side of it.
+		await createFromFlyout(
+			canvas,
+			"frame",
+			{ x: 300, y: 220 },
+			{ x: 560, y: 440 },
+		);
+		await canvas.clickAt({ x: 430, y: 350 });
+		await expect(canvas.page.locator(selectors.control)).toHaveCount(0);
+
+		// 4px inside the edge: off the painted stroke, on the strip.
+		await canvas.clickAt({ x: 430, y: 436 });
+		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
+
+		// 20px inside: past the strip, back to pass-through.
+		await canvas.clickAt({ x: 430, y: 420 });
+		await expect(canvas.page.locator(selectors.control)).toHaveCount(0);
+	});
+
+	test("takes a connector dropped in the click-through interior", async ({
+		canvas,
+	}) => {
+		// The interior passes pointer events through, so the drop target cannot come
+		// from the DOM — resolving it geometrically is what makes the middle of a
+		// container connectable at all.
+		await createFromFlyout(
+			canvas,
+			"frame",
+			{ x: 300, y: 220 },
+			{ x: 560, y: 440 },
+		);
+		await canvas.deselect();
+
+		// A source to the right of the container, so the attached end lands on the
+		// container's right edge (x = 560).
+		await canvas.drawShape("Rectangle", { x: 700, y: 280 }, { x: 800, y: 360 });
+		await canvas.deselect();
+		await canvas.selectAt({ x: 750, y: 320 });
+
+		// Deeper than CENTER_ANCHOR_DEPTH_PX from every edge, so the drop reads as
+		// "connect to this shape" and resolves to its center anchor.
+		const connectorId = await canvas.createConnector("leftCenter", {
+			x: 430,
+			y: 330,
+		});
+
+		const points = await canvas.connectorPoints(connectorId);
+		const end = points[points.length - 1];
+		// Attached, not free: the end is pulled back to the edge facing the source
+		// instead of staying where the pointer was released (x = 430).
+		expect(end.x).toBeGreaterThan(540);
+		expect(end.x).toBeLessThan(580);
+	});
+
 	test("renders the boundary preset with a dashed border", async ({
 		canvas,
 	}) => {
@@ -137,14 +195,17 @@ test.describe("container palette / behavior", () => {
 		);
 		// The border and the divider must share a stroke-width. Colors are applied
 		// through emotion CSS, so attribute selectors cannot reach them and the
-		// border rect is identified by its computed fill:none instead.
+		// border rect is identified by its computed fill:none instead — shared with
+		// the hit strip, which is told apart by taking pointer events.
 		const widths = await canvas.page.evaluate((id) => {
 			const group = document.querySelector(`[data-id="${id}"]`);
 			if (!group) {
 				return null;
 			}
 			const outline = [...group.querySelectorAll("rect")].find(
-				(rect) => getComputedStyle(rect).fill === "none",
+				(rect) =>
+					getComputedStyle(rect).fill === "none" &&
+					getComputedStyle(rect).pointerEvents === "none",
 			);
 			const divider = group.querySelector("line");
 			return {

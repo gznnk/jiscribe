@@ -1,5 +1,5 @@
 import { DEFAULT_MIN_DRAW_SIZE } from "./calcDrawBounds";
-import type { ObjectFactoryRegistry } from "../../../plugin/ObjectFactoryRegistry";
+import type { ObjectFactoryRegistry } from "../../../registries/ObjectFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectType } from "../types/ObjectType";
 

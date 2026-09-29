@@ -3,6 +3,7 @@ import { createDefaultPropertyPanel } from "./createDefaultPropertyPanel";
 import { hasInsetTextRegionType } from "../../../../../plugin/hasInsetTextRegionType";
 import type { AnyObjectTypeDefinition } from "../../../../../plugin/ObjectTypeDefinition";
 import { supportsAutoHeightType } from "../../../../../plugin/supportsAutoHeightType";
+import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type { PropertyPanelSection } from "../PropertyPanelTypes";
 
 /**
@@ -32,7 +33,7 @@ export const derivePropertyPanel = (
 	if (supportsAutoHeightType(definition)) {
 		sections = appendPropertyPanelItems(
 			sections,
-			{ id: "layout", label: "Layout" },
+			PROPERTY_PANEL_SECTIONS.layout,
 			{ type: "autoHeight" },
 		);
 	}
@@ -41,7 +42,7 @@ export const derivePropertyPanel = (
 	if (hasInsetTextRegionType(definition)) {
 		sections = appendPropertyPanelItems(
 			sections,
-			{ id: "text", label: "Text" },
+			PROPERTY_PANEL_SECTIONS.text,
 			{ type: "textVerticalBasis" },
 		);
 	}

@@ -12,13 +12,13 @@ a dispatch function.
 ## Flow: two entry routes converge on one registry
 
 ```
-ObjectMenu item / slider, sidebar swatch ── gesture (set:/slider:) ─→ ObjectMenuHandler   ┐
-ObjectMenu number input, sidebar callback ── STYLE_PROPERTY_UPDATE ──→ canvasReducer      ┼─→ registries.styleProperty.apply(state, property, value)
-                                                                                          ┘        │
-                                                                             StylePropertyRegistry │
-                                                                    handlers.get(property) ?? extraFallback
-                                                                                                   │
-                                                                          handler.apply(...) ⇒ new state
+ObjectMenu item / slider, sidebar swatch ── gesture (set:/slider:) ─→ applyStylePropertyPart ┐
+ObjectMenu number input, sidebar callback ── STYLE_PROPERTY_UPDATE ──→ canvasReducer         ┼─→ registries.styleProperty.apply(state, property, value)
+                                                                                             ┘        │
+                                                                                StylePropertyRegistry │
+                                                                       handlers.get(property) ?? extraFallback
+                                                                                                      │
+                                                                             handler.apply(...) ⇒ new state
 ```
 
 The slider straddles both: pointer interaction (drag and track click) rides the
@@ -41,13 +41,13 @@ dispatch surface uniform.
 
 Main classes (the full set is in `controllers/styleProperties/`):
 
-| Class                       | Role                                                                                                                                                                                                                                                        |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SelectionStyleProperty`    | Abstract base with the shared pipeline: connector branch / selection loop / group-descendant recursion → per-object gate & type resolution → coercion → write                                                                                               |
-| `FeatureGatedStyleProperty` | Standard system property. Applies to objects whose `ObjectFeatures` flag `gate` is on; `(gate, valueType)` constructor args are the whole declaration                                                                                                       |
-| `TextSlotStyleProperty`     | Text styling (fontSize / textAlign, …). Applies to objects that hold text (`features.text`) and writes per slot: the selected slot when there is one, otherwise every slot, and only the selected characters while an editor has a stretch of text selected |
-| `ExtraStyleProperty`        | Fallback for unregistered names: an object supports the property iff its type declares it (fail-closed)                                                                                                                                                     |
-| `LockAspectRatioProperty`   | Special routing: with a multi-selection writes to the `multiSelectGroup` itself, and never recurses into descendants                                                                                                                                        |
+| Class                       | Role                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SelectionStyleProperty`    | Abstract base with the shared pipeline: connector branch / selection loop / group-descendant recursion → per-object gate & type resolution → coercion → write                                                                                                                                                                                                                     |
+| `FeatureGatedStyleProperty` | Standard system property. Applies to objects whose `ObjectFeatures` flag `gate` is on; `(gate, valueType)` constructor args are the whole declaration                                                                                                                                                                                                                             |
+| `TextSlotStyleProperty`     | Text styling (fontSize / textAlign, …). Applies to objects whose text type accepts that very field (`textStyleKeysOf`) and writes per slot: the selected slot when there is one, otherwise every slot, and only the selected characters while an editor has a stretch of text selected — a `"source"` body has no per-character styling, so a stretch of one takes the whole slot |
+| `ExtraStyleProperty`        | Fallback for unregistered names: an object supports the property iff its type declares it (fail-closed)                                                                                                                                                                                                                                                                           |
+| `LockAspectRatioProperty`   | Special routing: with a multi-selection writes to the `multiSelectGroup` itself, and never recurses into descendants                                                                                                                                                                                                                                                              |
 
 Special behavior lives in the special property's own class — the shared base and the
 registry know nothing about individual properties.

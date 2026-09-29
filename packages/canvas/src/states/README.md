@@ -18,6 +18,7 @@ For the core design principles (Type Composition, Branded Types, ObjectFeatures)
 | Directory        | Description                                                                                                               |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `canvas/`        | Defines the runtime state of the whole canvas (`CanvasState`) and its conversion to/from Doc (`CanvasMapper`).            |
+| `canvas/utils/`  | Helpers the whole-canvas conversion leans on (`collectOpaqueDocs`, `restoreOpaqueObjects`).                               |
 | `objects/`       | Individual object State definitions and Doc⇔State mappers (`XxxMapper`). Structurally symmetric with the doc `model/`.    |
 | `objects/types/` | Utilities that compose State types (`CreateObjectState`). Enums are reused from `@jiscribe/doc`'s `model/objects/types/`. |
 | `objects/utils/` | Runtime helpers that assist State validation (`validateStateUtils`, etc.).                                                |

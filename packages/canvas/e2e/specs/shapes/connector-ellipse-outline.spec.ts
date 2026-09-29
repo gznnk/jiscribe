@@ -2,18 +2,21 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * Checks the outline snapping of a center anchor on an ellipse at the geometry level.
+ * Checks the outline snapping of a center anchor and of an edge anchor on an ellipse at the
+ * geometry level.
  *
- * Outline snapping branches on the shape geometry (adjustToOutline): a rectangle snaps to an
- * AABB edge through calcOutlinePointTowardForRotatedFrame, an ellipse to the curved boundary
- * through calcOutlinePointTowardForRotatedEllipse (see connector-center-anchor-outline.spec for
- * the rectangle case).
+ * Outline snapping branches on the shape geometry: a rectangle snaps to an AABB edge, an
+ * ellipse to the curved boundary — through calcOutlinePointTowardForRotatedEllipse for a center
+ * anchor (adjustToOutline) and calcOutlinePointAlongLocalRayForRotatedEllipse for an edge anchor
+ * (calcEdgeAnchorPoint). See connector-center-anchor-outline.spec for the rectangle case and
+ * connector-edge-anchor.spec for the edge anchor itself.
  *
- * Connects a rectangular source to the center of an elliptical target and guards that the end
- * point
+ * Connects a rectangular source to an elliptical target, once at its center and once at a free
+ * position on its edge, and guards that the end point
  *   - satisfies the ellipse equation ((x-cx)/rx)^2 + ((y-cy)/ry)^2 = 1, i.e. lies on the curve
  *   - lies inside the AABB rather than on its perimeter, since the layout is diagonal
- *   - lies on the ray from the center toward the source (direction-dependent)
+ *   - lies on the ray from the center toward the source (center anchor) or where the connector
+ *     was dropped (edge anchor)
  * This does not depend on the coordinate offset (expectations come from the drawn shapes).
  */
 
@@ -141,5 +144,57 @@ test.describe("connector ellipse outline snapping", () => {
 
 		// Pushed out to the outline, not stuck at the center.
 		expect(distance(endpoint, c)).toBeGreaterThan(20);
+	});
+
+	test("places an endpoint dropped on the ellipse's edge on the curved boundary, where it was dropped", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 200, y: 150 }, { x: 360, y: 250 });
+		await canvas.deselect();
+		const ellipseId = await canvas.drawShape(
+			"Ellipse",
+			{ x: 700, y: 400 },
+			{ x: 900, y: 520 },
+		);
+		await canvas.deselect();
+
+		const box = await worldAABB(canvas, ellipseId);
+		const c = center(box);
+		const rx = (box.maxX - box.minX) / 2;
+		const ry = (box.maxY - box.minY) / 2;
+
+		// Drop just inside the arc at 45° up-right of the center: clear of the named anchors
+		// (the nearest, topCenter and rightCenter, are over 50px away), and shallow enough under
+		// the drawn edge to read as an edge position rather than the center. On the AABB the
+		// same spot is well inside the top edge, which is what distinguishes the two.
+		const dropPoint = {
+			x: c.x + rx * Math.SQRT1_2 * 0.97,
+			y: c.y - ry * Math.SQRT1_2 * 0.97,
+		};
+		await canvas.selectAt({ x: 280, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", dropPoint);
+		await canvas.deselect();
+
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		const endpoint = points[points.length - 1];
+
+		const ellipseValue =
+			((endpoint.x - c.x) / rx) ** 2 + ((endpoint.y - c.y) / ry) ** 2;
+		expect(
+			Math.abs(ellipseValue - 1),
+			`the end point ${JSON.stringify(endpoint)} lies on the ellipse boundary (=1): measured ${ellipseValue.toFixed(3)}`,
+		).toBeLessThanOrEqual(0.05);
+
+		// On the arc, not pushed out to the AABB's top edge above it.
+		const insideMargin = 5;
+		expect(endpoint.y).toBeGreaterThan(box.minY + insideMargin);
+
+		// Lands where it was dropped, not at an edge midpoint.
+		expect(
+			distance(endpoint, dropPoint),
+			"the end point stays by the drop point",
+		).toBeLessThanOrEqual(5);
 	});
 });

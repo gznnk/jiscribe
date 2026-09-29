@@ -1,5 +1,5 @@
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import type { ReactNode } from "react";
 
 import type { ObjectAnchorRegionRegistry } from "./ObjectAnchorRegionRegistry";
@@ -33,8 +33,8 @@ type RenderingRegistriesProviderProps = {
 };
 
 /**
- * Bundles the rendering-layer registry contexts so consumers (`Canvas`,
- * `CanvasThumbnail`) provide them in one node instead of a nested stack. Takes
+ * Bundles the rendering-layer registry contexts so `Canvas` can provide them
+ * in one node instead of a nested stack. Takes
  * the registries individually rather than the controllers-layer
  * `CanvasRegistries` bundle (docs/02-architecture.md layering).
  */

@@ -1,6 +1,6 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { applyLabelPlacement } from "./applyLabelPlacement";
 import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";

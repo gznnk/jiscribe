@@ -1,8 +1,9 @@
 /**
  * Shapes that exist only so the core e2e specs have something to drive: a
  * drag-drawn `tile` listed in a category flyout, a click-placed `pin` pinned on
- * the bar, a `card` that roots its render in a `<g>` and carries a text slot, and
- * a `panel` that declares creation defaults of its own.
+ * the bar, a `card` that roots its render in a `<g>` and carries a text slot, a
+ * `panel` that declares creation defaults of its own, and a `memo` whose body is
+ * written in a source language (`features.text: "source"`).
  * Core supplies none of those traits itself any more — every categorized shape
  * moved to a plugin, and sticky, the last click-placed and last `<g>`-rooted one,
  * to `@jiscribe/plugin-sticky-shape` — so the specs covering the StencilLibrary
@@ -372,6 +373,62 @@ const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
 	],
 };
 
+const MemoFeatures = {
+	type: "memo",
+	geometry: "rect",
+	transform: true,
+	stroke: false,
+	fill: true,
+	text: "source",
+} as const satisfies ObjectFeatures;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const MemoDocBrand: unique symbol;
+type MemoDoc = CreateObjectType<typeof MemoFeatures, typeof MemoDocBrand>;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const MemoStateBrand: unique symbol;
+type MemoState = CreateObjectState<typeof MemoFeatures, typeof MemoStateBrand>;
+
+const MEMO_DOC_DEFAULTS: Omit<MemoDoc, "id"> = {
+	type: "memo",
+	x: 0,
+	y: 0,
+	width: 200,
+	height: 150,
+	// Concrete rather than AUTO_COLOR, for the same reason the card's is: the
+	// specs press the shape at its center, which only hits a painted face.
+	fill: "#cbd5e1",
+	text: "",
+	textAlign: "center",
+	verticalAlign: "middle",
+	fontColor: "#000000",
+	fontSize: 14,
+	fontFamily: DEFAULT_FONT_FAMILY,
+} as const as MemoDoc;
+
+/**
+ * Click-placed shape whose body is source text: the stand-in for a type that
+ * renders its own syntax (the markdown card). Its body is drawn by the shared
+ * text overlay all the same — what the specs drive is the styling side, where
+ * `"source"` differs: a plain string only, and no emphasis typography.
+ */
+const memoDefinition: ObjectTypeDefinition<MemoDoc, MemoState> = {
+	features: MemoFeatures,
+	defaults: MEMO_DOC_DEFAULTS,
+	validateDoc: createFrameDocValidator(MemoFeatures),
+	factory: createFrameObjectFactory(MEMO_DOC_DEFAULTS, {
+		supportsBounds: false,
+	}),
+	mapper: createFrameMapper<MemoDoc, MemoState>(MemoFeatures),
+	stateValidator: createFrameStateValidator(MemoFeatures),
+	behavior: createFrameBehavior<MemoState>(),
+	component: createFrameObject<MemoState>(drawSpecShapeBox),
+	stencils: [
+		{ id: "memo", objectType: "memo", label: "Memo", icon: SpecShapeIcon },
+	],
+};
+
 /**
  * The test-only plugin the core e2e harness registers. Registration only makes
  * the stencils exist; `specShapesStencilCategory` and pinned `pin` / `card` entries
@@ -384,6 +441,7 @@ export const specShapesPlugin: CanvasPlugin = {
 		pin: pinDefinition,
 		card: cardDefinition,
 		panel: panelDefinition,
+		memo: memoDefinition,
 	},
 };
 

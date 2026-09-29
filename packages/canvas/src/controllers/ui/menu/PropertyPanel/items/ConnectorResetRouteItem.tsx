@@ -34,8 +34,6 @@ const ConnectorResetRouteItemComponent: React.FC<PropertyPanelItemProps> = ({
 					!hasSelectedConnectorShapedRoute(selectedConnectorId, objects)
 				}
 				title={label}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={commandPart(ResetConnectorRouteCommand.id)}
 			>
 				{label}

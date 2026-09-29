@@ -11,9 +11,6 @@ vitest.config.ts
 **/node_modules/**
 **/*.map
 tsconfig.json
-# Internal documentation and development test files
-icon-source.png
-docs/**
 .gitignore
 **/*.jis.json
 *.vsix
@@ -21,3 +18,4 @@ docs/**
 .jiscribe/**
 .claude/**
 .cursor/**
+.github/**

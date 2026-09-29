@@ -1,31 +1,3 @@
-import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
-import { FILL_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
-import { RADIUS_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
-import { STROKE_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
-import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
-
-/**
- * Collects the pass-through keys for the style groups enabled in `features`.
- * stroke / fill / radius / arrow share the same field names between Doc and State, so
- * they are direction-independent. geometry and transform are excluded here since the
- * converters (convert* / mapTransform*) rebuild them, and so is the whole text group:
- * Doc and State disagree on where its styling sits (flat on the Doc, inside each slot
- * in the State), so mapText* rebuilds it too.
- *
- * Because each key array is an exhaustive constant (`exhaustiveKeysOf`), adding a field
- * to any style Doc forces the constant to be updated (compile error), and once updated the
- * new field flows through every mapper that reuses these keys. This is what keeps
- * allow-list pass-through in sync across the Frame and Poly mapper families.
- */
-export const collectStyleKeys = (
-	features: ObjectFeatures,
-): readonly string[] => [
-	...(features.stroke ? STROKE_STYLE_KEYS : []),
-	...(features.fill ? FILL_STYLE_KEYS : []),
-	...(features.radius ? RADIUS_STYLE_KEYS : []),
-	...(features.arrow ? ARROW_STYLE_KEYS : []),
-];
-
 /** Extracts only the keys that `src` owns and that are included in the allow-list `keys`. */
 export const pick = (
 	src: Record<string, unknown>,

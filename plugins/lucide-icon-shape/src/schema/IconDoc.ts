@@ -20,10 +20,11 @@ export const DEFAULT_ICON_NAME = "star";
  * backed by another set can be added beside it without either having to give up the
  * obvious name.
  *
- * Decoration rather than a node: it carries no text and cannot be a connector
- * endpoint, so an arrow attaches to the shape the icon sits beside instead of to the
- * icon. A diagram that wants a picture to *be* a node reaches for a labelled
- * pictogram (`server`, `package`, `database`) instead.
+ * It carries no text but is a connector endpoint, so an arrow can reach the icon
+ * itself. The endpoint attaches to the box, not to the drawn silhouette (no outline
+ * calculator is registered), so a connector meets the frame the icon is centred in.
+ * A diagram that wants a *labelled* picture reaches for a labelled pictogram
+ * (`server`, `package`, `database`) instead.
  *
  * Adopts rect geometry (x/y/width/height) so it reuses Frame-based transforms; the
  * drawing is scaled uniformly and centred, so a non-square box leaves margin rather
@@ -34,6 +35,7 @@ export const IconFeatures = {
 	geometry: "rect",
 	transform: true,
 	stroke: true,
+	connectable: true,
 } as const satisfies ObjectFeatures;
 
 /** Icon-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyRegistry). */

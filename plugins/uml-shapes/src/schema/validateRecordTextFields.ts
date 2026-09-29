@@ -26,7 +26,13 @@ const validateBandText = (
 	// list of runs without this — the mistake is writing a compartment's rows into
 	// a band, so say that rather than pointing at the first entry.
 	if (Array.isArray(content) && content.every(isString)) {
-		return [{ path, message: "must be one body of text, not rows" }];
+		return [
+			{
+				path,
+				message: "must be one body of text, not rows",
+				severity: "error",
+			},
+		];
 	}
 	return validateRichTextContent(content, path);
 };
@@ -37,7 +43,7 @@ const validateBandText = (
  */
 const validateRows = (content: unknown, path: string): SemanticDiagnostic[] => {
 	if (!Array.isArray(content)) {
-		return [{ path, message: "must be an array of rows" }];
+		return [{ path, message: "must be an array of rows", severity: "error" }];
 	}
 	return content.flatMap((row, index) => {
 		const rowPath = `${path}[${index}]`;
@@ -50,6 +56,7 @@ const validateRows = (content: unknown, path: string): SemanticDiagnostic[] => {
 				{
 					path: rowPath,
 					message: "must not contain a newline: use one array entry per row",
+					severity: "error",
 					// The JSON schema cannot express this rule, so the VSCode
 					// extension shows it only when the validator flags it itself.
 					beyondSchema: true,
@@ -77,6 +84,7 @@ const validateSlot = (
 				path,
 				message:
 					'must be an object with a "text" field (a slot carries its own styling)',
+				severity: "error",
 			},
 		];
 	}
@@ -108,6 +116,7 @@ const validateRecordText: ObjectDocValidateFn = (o, path) => {
 			{
 				path: textPath,
 				message: `must be an object holding the ${RECORD_SLOT_ID_LIST} slots (a record does not take a plain string)`,
+				severity: "error",
 			},
 		];
 	}
@@ -117,6 +126,7 @@ const validateRecordText: ObjectDocValidateFn = (o, path) => {
 		...unknownKeys.map((key) => ({
 			path: `${textPath}.${key}`,
 			message: `is not a slot of a record: use ${RECORD_SLOT_ID_LIST}`,
+			severity: "error" as const,
 		})),
 		...RECORD_SLOT_IDS.filter((slotId) => slotId in text).flatMap((slotId) =>
 			validateSlot(text[slotId], slotId, `${textPath}.${slotId}`),
@@ -128,11 +138,16 @@ const validateRecordText: ObjectDocValidateFn = (o, path) => {
  * Reports text styling written at the root. A record styles each slot on its own,
  * so a shape-wide value would be silently dropped by the mapper — the shapes that
  * do take one are the ones whose text is a single body.
+ *
+ * The parser's registry reports these names too, as ones the type does not hold;
+ * this raises them to an error and says where the value belongs instead, rather
+ * than letting a whole shape's typography go quietly on the next save.
  */
 const validateNoRootTextStyle: ObjectDocValidateFn = (o, path) =>
 	TEXT_SLOT_STYLE_KEYS.filter((key) => key in o).map((key) => ({
 		path: `${path}.${key}`,
 		message: `is not a field of a record: set it on one of ${RECORD_SLOT_ID_LIST} under "text" instead`,
+		severity: "error" as const,
 	}));
 
 /**

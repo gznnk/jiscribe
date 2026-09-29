@@ -13,6 +13,7 @@ import {
 	STROKE_WIDTH_MIN,
 	supportsAutoHeight,
 	TEXT_BODY_KEYS,
+	TEXT_EMPHASIS_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
@@ -508,6 +509,15 @@ function buildShapeDef(
 			`The $def for geometry "${features.geometry}" of type "${type}" cannot be generated mechanically (move it into a template)`,
 		);
 	}
+	// The shared TextStyle def is the `"body"` vocabulary: `text` as rich text and
+	// the emphasis fields with it. A source body takes neither (textStyleKeysOf),
+	// so assembling one from those refs would publish eight fields the doc
+	// validator rejects.
+	if (features.text === "source") {
+		throw new Error(
+			`The $def for the source text of type "${type}" cannot be generated mechanically (move it into a template)`,
+		);
+	}
 
 	const autoHeight = supportsAutoHeight(definition);
 
@@ -617,8 +627,8 @@ function buildShapeDef(
 /**
  * Fail generation when a handwritten $def disagrees with the parser about whether
  * the type may leave `height` out. Nothing derives a template, so the two would
- * otherwise drift apart silently — one validator of `validateDoc` accepting a
- * document the other rejects.
+ * otherwise drift apart silently — an editor marking a document the parser opens,
+ * or taking one it refuses.
  */
 function assertTemplateHeightRequirement(
 	type: string,
@@ -634,6 +644,46 @@ function assertTemplateHeightRequirement(
 	if (requiresHeight === supportsAutoHeight(definition)) {
 		throw new Error(
 			`The handwritten $def "${defName}" ${requiresHeight ? "requires" : "does not require"} height, but type "${type}" ${requiresHeight ? "sizes itself from its text" : "has no text region to size itself from"} (templates/handwrittenDefs.json)`,
+		);
+	}
+}
+
+/**
+ * Fail generation when a handwritten $def disagrees with the type's definition
+ * about what its text may hold. The ops write runs into a text that takes them,
+ * so a template holding `text` to a plain string has to be matched by a type that
+ * takes none (`features.text: "source"`), and the other way round. A source
+ * type additionally carries no emphasis typography, the syntax of its language
+ * being what sets that, so a template offering those fields would complete a
+ * document the doc validator rejects.
+ */
+function assertTemplateTextShape(
+	type: string,
+	defName: string,
+	definition: ObjectDocDefinition,
+): void {
+	const properties = handwrittenDefs[defName].properties as
+		Record<string, JsonSchemaNode> | undefined;
+	const textProperty = properties?.text;
+	if (textProperty === undefined) {
+		return;
+	}
+	const isPlainStringText = textProperty.type === "string";
+	const takesNoRuns = definition.features.text === "source";
+	if (isPlainStringText !== takesNoRuns) {
+		throw new Error(
+			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${takesNoRuns ? "refuses" : "takes"} text runs (templates/handwrittenDefs.json, features.text)`,
+		);
+	}
+	if (definition.features.text !== "source") {
+		return;
+	}
+	const offeredEmphasisKeys = TEXT_EMPHASIS_STYLE_KEYS.filter(
+		(key) => properties?.[key] !== undefined,
+	);
+	if (offeredEmphasisKeys.length > 0) {
+		throw new Error(
+			`The handwritten $def "${defName}" offers ${offeredEmphasisKeys.join(", ")}, but type "${type}" writes its body in a source language whose own syntax carries the emphasis (templates/handwrittenDefs.json, features.text "source")`,
 		);
 	}
 }
@@ -674,6 +724,7 @@ export function generateSchema(
 		if (TEMPLATE_DEF_TYPES.has(type)) {
 			defs[defName] = handwrittenDefs[defName];
 			assertTemplateHeightRequirement(type, defName, manifest.get(type)!);
+			assertTemplateTextShape(type, defName, manifest.get(type)!);
 			continue;
 		}
 		defs[defName] = buildShapeDef(type, manifest.get(type)!);

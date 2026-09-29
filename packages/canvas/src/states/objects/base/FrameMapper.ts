@@ -1,6 +1,7 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import type { TransformDoc } from "@jiscribe/doc/model/objects/base/TransformDoc";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import {
 	roundDocEllipse,
 	roundDocRect,
@@ -24,14 +25,14 @@ import {
 	mapTransformStateToDoc,
 } from "./TransformMapper";
 import type { TransformState } from "./TransformState";
-import { collectStyleKeys, pick } from "../utils/stylePassthrough";
+import { pick } from "../utils/stylePassthrough";
 
 /**
  * Generates a Doc↔State mapper from `features` for Frame-family objects
  * (shapes with geometry: "rect" | "ellipse" + transform).
  *
  * The differences between Doc and State are the geometry, the transform, and the text
- * group (whose styling sits flat on a `"body"` Doc but inside each slot in the State).
+ * group (whose styling sits flat on a root-form Doc but inside each slot in the State).
  * Everything else (stroke / fill / radius / svgText …) shares the same names and types, so
  * this mapper converts only those three and passes the rest through by **explicitly picking
  * them via an allow-list**.

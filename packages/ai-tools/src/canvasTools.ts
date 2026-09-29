@@ -8,19 +8,24 @@
 // of truth: `z.toJSONSchema(z.object(inputSchema))` derives the JSON Schema, and
 // there is no way back.
 
-import { OPACITY_MAX, OPACITY_MIN } from "@jiscribe/doc";
+import {
+	ArrowTypes,
+	ConnectorRoutings,
+	ConnectPointIds,
+	OPACITY_MAX,
+	OPACITY_MIN,
+	TextLayouts,
+} from "@jiscribe/doc";
+import type { AnchorHandleId } from "@jiscribe/doc";
 import { z } from "zod";
 
 import type { CanvasApiRef } from "./canvasApiRef";
 import { MAX_DESCRIBE_CHARS, MAX_SVG_CHARS } from "./canvasOps";
 import type {
 	AiAlignEdge,
-	AiArrowType,
 	AiCanvasOp,
 	AiDistributeAxis,
 	AiHeightMode,
-	AiRouting,
-	AiTextLayout,
 	AiZOrderPlacement,
 } from "./canvasOps";
 import type { AiCanvasCapabilities } from "./capabilities";
@@ -87,13 +92,11 @@ const defineCanvasTool = <Shape extends z.ZodRawShape>(
 	drives: options.drives,
 });
 
+/** The named anchors of AnchorHandleId; its edge anchors (`{ side, t }`) are not offered to the AI */
 const ANCHOR_HANDLE_IDS = [
 	"center",
-	"topCenter",
-	"rightCenter",
-	"bottomCenter",
-	"leftCenter",
-] as const;
+	...ConnectPointIds,
+] as const satisfies readonly AnchorHandleId[];
 
 const ALIGN_EDGES = [
 	"left",
@@ -116,38 +119,10 @@ const Z_ORDER_PLACEMENTS = [
 	"backward",
 ] as const satisfies readonly AiZOrderPlacement[];
 
-const ROUTINGS = [
-	"straight",
-	"orthogonal",
-] as const satisfies readonly AiRouting[];
-
 const HEIGHT_MODES = [
 	"auto",
 	"fixed",
 ] as const satisfies readonly AiHeightMode[];
-
-const TEXT_LAYOUTS = [
-	"label",
-	"block",
-] as const satisfies readonly AiTextLayout[];
-
-const ARROW_TYPES = [
-	"FilledTriangle",
-	"ConcaveTriangle",
-	"OpenArrow",
-	"HollowTriangle",
-	"FilledDiamond",
-	"HollowDiamond",
-	"Circle",
-	"HollowCircle",
-	"Cross",
-	"CrowFootMany",
-	"CrowFootOneMany",
-	"CrowFootZeroMany",
-	"CrowFootOne",
-	"CrowFootZeroOne",
-	"None",
-] as const satisfies readonly AiArrowType[];
 
 /**
  * The shared style vocabulary; add_object and set_style speak the same one.
@@ -194,13 +169,13 @@ const styleSchema = {
 			"Opacity of the outline, 0 (invisible) to 1 (opaque, the default); it multiplies the alpha the stroke color already carries. On a connector this fades the line itself.",
 		),
 	startArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe(
 			"Arrowhead at the start of the line. Only for polyline and connector; no other type takes it. A connector's arrowheads can also be set as it is drawn, by connect.",
 		),
 	endArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe(
 			"Arrowhead at the end of the line, the one that carries the direction (FilledTriangle for a flow). Only for polyline and connector.",
@@ -346,11 +321,11 @@ const connectorDrawSchema = {
 		.optional()
 		.describe("Anchor on the target (default center)."),
 	startArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe("Arrowhead at the source end."),
 	endArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe("Arrowhead at the target end (use FilledTriangle for a flow)."),
 	label: z
@@ -360,7 +335,7 @@ const connectorDrawSchema = {
 			'Text drawn on the line, e.g. "yes" / "no". Sits on the line itself, so never place a separate text shape next to a connector.',
 		),
 	routing: z
-		.enum(ROUTINGS)
+		.enum(ConnectorRoutings)
 		.optional()
 		.describe(
 			"Line shape; omitted derives it from the anchors (center ends give a straight line).",
@@ -407,14 +382,14 @@ const connectorChangeSchema = {
 		.optional()
 		.describe("Move the target end to this anchor."),
 	startArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe('Arrowhead at the source end; "None" removes it.'),
 	endArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe('Arrowhead at the target end; "None" removes it.'),
-	routing: z.enum(ROUTINGS).optional().describe("Line shape."),
+	routing: z.enum(ConnectorRoutings).optional().describe("Line shape."),
 	points: z
 		.array(pointSchema)
 		.optional()
@@ -730,7 +705,7 @@ export const createCanvasToolDescriptors = (
 				].join(" "),
 			),
 		textLayout: z
-			.enum(TEXT_LAYOUTS)
+			.enum(TextLayouts)
 			.optional()
 			.describe(
 				[
@@ -743,7 +718,7 @@ export const createCanvasToolDescriptors = (
 			.string()
 			.optional()
 			.describe(
-				"Label text inside the object. Only for shapes with a single text body: record keeps its title and rows in keyed text slots and rejects a plain string, so use set_text there.",
+				"Label text inside the object. Only for shapes with a single text body: record keeps its title and rows in keyed text slots and rejects a plain string, so use set_text there, and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.",
 			),
 		points: z
 			.array(pointSchema)
@@ -1263,7 +1238,7 @@ export const createCanvasToolDescriptors = (
 			"This is the only tool that reaches inside a text. set_style is the other side of that line: it styles the whole object, so its fontColor / fontSize reach every character, and applying it afterwards overrides what you set here.",
 			"The stretch is named by the characters themselves (match), never by an offset; occurrence picks which one when the text holds several, and omitting it decorates every occurrence.",
 			"Only typography a run of characters carries on its own is settable: fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration. textAlign and verticalAlign place the whole body and belong to set_style.",
-			"Fails when match does not occur in the text, and on text that can only be styled as a whole (a connector label, a slot holding rows) — use set_style there.",
+			"Fails when match does not occur in the text, and on text that can only be styled as a whole (a connector label, a slot holding rows, a markdown body, whose source is plain text) — use set_style there.",
 		].join(" "),
 		{
 			id: z.string().describe("id of the object whose text is decorated."),

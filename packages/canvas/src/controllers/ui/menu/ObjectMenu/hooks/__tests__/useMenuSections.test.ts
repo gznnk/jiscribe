@@ -28,7 +28,11 @@ const RECORD_SECTIONS: ObjectMenuSection[] = [
 	},
 	{
 		id: "text",
-		items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+		items: [
+			{ type: "font" },
+			{ type: "textFormat" },
+			{ type: "textAlignment" },
+		],
 	},
 	{
 		id: "record-extras",
@@ -61,7 +65,11 @@ describe("getMenuSections", () => {
 		expect(getMenuSections(state, registry)).toEqual([
 			{
 				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
 			},
 		]);
 	});

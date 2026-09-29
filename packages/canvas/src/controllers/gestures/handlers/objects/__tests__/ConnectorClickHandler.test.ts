@@ -2,7 +2,7 @@ import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/Conne
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../../rendering/objects/connector/Connector/connectorHitArea";
+import { LINE_HIT_STROKE_WIDTH } from "../../../../../rendering/objects/utils/hitStrokeWidth";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import { outlinedPlugin } from "../../../../__tests__/support/outlinedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
@@ -193,7 +193,7 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 		} as CanvasControllerState;
 		const next = dblclickAt(zoomed, {
 			x: 150,
-			y: CONNECTOR_HIT_STROKE_WIDTH / 2 - 0.5,
+			y: LINE_HIT_STROKE_WIDTH / 2 - 0.5,
 		});
 		expect(pendingPlacement(next)).toEqual({ position: 0.75, offset: 0 });
 	});

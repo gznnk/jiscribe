@@ -34,19 +34,19 @@ describe("validateBracketDoc", () => {
 	});
 
 	/**
-	 * The bracket declares no tipPosition. Parse-time validation reports nothing
-	 * for a field a type does not declare, so the stray value survives the parse
-	 * and is dropped by the mapper instead (BracketMapper.test.ts). Only the
-	 * published JSON Schema, being additionalProperties:false, calls it out.
+	 * The bracket declares no tipPosition, so a validator has nothing to check
+	 * here. The name is reported by the parser's registry instead, which answers
+	 * by taking the field out of the document it hands back, and the published
+	 * JSON Schema refuses it outright (additionalProperties:false).
 	 */
-	it("stays silent about a tipPosition it does not declare", () => {
-		expect(
-			validateBracketDoc({ ...baseDoc, tipPosition: 0.25 }, "root[0]"),
-		).toEqual([]);
-		expect(
-			validateBracketDoc({ ...baseDoc, tipPosition: 1.5 }, "root[0]"),
-		).toEqual([]);
-	});
+	it.each([0.25, 1.5])(
+		"stays silent about a tipPosition of %s, which it does not declare",
+		(tipPosition) => {
+			expect(
+				validateBracketDoc({ ...baseDoc, tipPosition }, "root[0]"),
+			).toEqual([]);
+		},
+	);
 });
 
 describe("BracketObjectFactory", () => {

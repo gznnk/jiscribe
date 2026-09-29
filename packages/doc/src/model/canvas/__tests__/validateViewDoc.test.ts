@@ -4,7 +4,7 @@ import { validateViewDoc } from "../validateViewDoc";
 import {
 	isViewOpenMode,
 	isViewScrollMode,
-	resolveViewPadding,
+	VIEW_PADDING_KEYS,
 } from "../ViewDoc";
 
 const paths = (view: unknown) =>
@@ -52,6 +52,15 @@ describe("validateViewDoc", () => {
 		]);
 	});
 
+	it("checks each side VIEW_PADDING_KEYS declares, in that order", () => {
+		const padding = Object.fromEntries(
+			VIEW_PADDING_KEYS.map((side) => [side, -1]),
+		);
+		expect(paths({ padding })).toEqual(
+			VIEW_PADDING_KEYS.map((side) => `view.padding.${side}`),
+		);
+	});
+
 	it("rejects an open mode outside the known set", () => {
 		expect(paths({ open: "fit-height" })).toEqual(["view.open"]);
 	});
@@ -86,25 +95,5 @@ describe("isViewScrollMode", () => {
 		expect(isViewScrollMode("")).toBe(false);
 		expect(isViewScrollMode(undefined)).toBe(false);
 		expect(isViewScrollMode(1)).toBe(false);
-	});
-});
-
-describe("resolveViewPadding", () => {
-	it("fills every missing side with 0", () => {
-		expect(resolveViewPadding({ top: 48 })).toEqual({
-			top: 48,
-			right: 0,
-			bottom: 0,
-			left: 0,
-		});
-	});
-
-	it("treats an absent padding as zero on every side", () => {
-		expect(resolveViewPadding()).toEqual({
-			top: 0,
-			right: 0,
-			bottom: 0,
-			left: 0,
-		});
 	});
 });

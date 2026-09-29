@@ -68,7 +68,7 @@ CanvasMapper は形状タイプごとの Mapper を、引数で受け取る `Obj
 `width` / `height` は必須なので、ファイルに手が届かない環境でも文書のレイアウトは
 成り立つ。
 
-ファイルを読むのはホストの仕事で、`<Canvas>` / `<CanvasThumbnail>` の
+ファイルを読むのはホストの仕事で、`<Canvas>` の
 `resolveImage` prop がその口。`meta.reference` を `onOpenReference` へ渡すのと
 同じく、`src` を無加工で渡して `Blob` を受け取る。キャンバスはパスを解決も検証も
 しない——ホストが共有する唯一の読み方は `splitDocRelativePath`（`@jiscribe/doc`）。
@@ -87,6 +87,11 @@ URL と、同じバイト列の `data:` URI の 2 つで、後者が書き出し
 
 - **単一本文の図形（rect / ellipse / diamond / sticky など）** … `text` / `textAlign` / `fontColor` … を
   **トップ階層にフラット**で持つ（`features.text: "body"` が `TextStyleDoc` を合成する）。
+- **ソース言語の図形** … `features.text: "source"` を宣言し、同じフラットな群を、その本文が持てる
+  ぶんだけ狭めて持つ（`SourceTextStyleDoc`）。`text` はプレーンな string のみで run 形式を取らず、
+  装飾のタイポグラフィ（`fontWeight` / `fontStyle` / `textDecoration`）を持たない——それを決めるのは
+  図形自身の構文だから。どのフィールドを受け付けるかの正本は `textStyleKeysOf`、root 形式の単一本文か
+  の判定は `isSingleBodyText`。
 - **複数スロットの図形（uml-shapes の record など）** … `features.text: "slots"` を宣言し、`text` を
   **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
   `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。
@@ -95,8 +100,10 @@ URL と、同じバイト列の `data:` URI の 2 つで、後者が書き出し
   `@jiscribe/doc` の `ConnectorDoc.ts` の `ConnectorLabel`。背景 `fill`・枠線 `stroke` などは図形と
   同じ語彙を借りるが、`label` の中にネストする点が異なる。
 
-State 側は図形のどちらの形も **keyed スロット一形**に正規化される（`"body"` 型は mapper が単一
-`body` スロットへ展開し、保存時に畳み戻す。`TextSlotsMapper` 参照）。描画・編集・スタイリングの
+State 側は図形のどの形も **keyed スロット一形**に正規化される（root 形式の型は mapper が単一
+`body` スロットへ展開し、保存時に畳み戻す。`TextSlotsMapper` 参照。移すのはその text type が
+受け付けるフィールドだけなので、`"source"` のスロットは装飾のフィールドを持たず、内容は
+プレーンな string で書き戻る）。描画・編集・スタイリングの
 consumer はこの正規形だけを読むので、doc の形による分岐を持たない。
 
 この差は層の都合ではなく、**役割（ロール）の違い**を映したもの。図形の `text` は「その図形の
@@ -130,36 +137,87 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 （`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を
 再実装せずに再利用するための割り切り。専用アクションを増やす案は、この commit 機微を二重持ちすることになるため
 採らない。ただしスタイルレジストリの管轄外のものは兄弟アクションを通る。枠そのものの数値（位置・サイズ・回転）は
-`TRANSFORM_PROPERTY_UPDATE`、doc 自身の設定（キャンバス面の `background` など）は `DOCUMENT_PROPERTY_UPDATE`、
+`TRANSFORM_PROPERTY_UPDATE`、doc 自身の設定（キャンバス面の `background` と表示の宣言 `view`）は `DOCUMENT_PROPERTY_UPDATE`、
 オブジェクトの `meta` は `META_PROPERTY_UPDATE`。どれも commit 機微は二重に持たず、コミット末尾
 （`controllers/reducer/canvasReducer.ts` の `commitPropertyUpdate`）を共有する。`DOCUMENT_PROPERTY_UPDATE` は
-対象が選択ではなく doc である点が違い、`null` はヘッドレスの `setBackground` と同じく「フィールドを消してテーマに従う」を意味する。
+対象が選択ではなく doc である点が違い、`null` はヘッドレスの `setBackground` / `setView` と同じく「フィールドを消してホストに任せる」を意味する。
 
 ## parser の二段検証（境界での防御）
 
 外部から渡る JSON 文字列は、`createCanvasParser` が返すパーサー（`@jiscribe/doc` の `parse/`）が
-**例外を投げずに判別可能なユニオン**（`CanvasParseResult`。定義は `parse/parseWithRegistry.ts`）で
+**例外を投げずに判別可能なユニオン**（`CanvasParseResult`。定義は `parse/createCanvasParser.ts`）で
 結果を返す。これにより拡張側・Webview 側が同一ロジックを共有し、エラーの取りこぼしを防ぐ。
 
 失敗は段ごとに別の `kind` で返る（JSON の構文エラー・構造エラー・意味エラー・検証中の予期しない例外）。
-成功（`ok`）は doc に加えて、取り除いた内容を報告する `warnings` を持つ。
+成功（`ok`）は doc に加えて、取り除いた内容と読まずに残した内容を報告する `warnings` を持つ。
 
-検証は 2 段階で、その手前に未知の内容を取り除く段がある。構造が成立していなければ意味検証へ進まない。
+検証は 2 段階で、その手前に、形式が今は書かない旧形式を書き換える段と、未知の内容を取り除く段がある。
+構造が成立していなければ意味検証へ進まない。
+1 つの doc がパーサーを通るとき、どの段が何を見て、見つけたものをどうするか:
 
-1. **未知の内容の除去 `stripUnknownContent`** — 未登録の型のオブジェクト（それで空になった group や、
-   消えた図形を指すコネクターも連鎖して）と、列挙型フィールドの未知の値を取り除く。これはエラーにせず
+| 段                                                                                    | 見るもの                                                                                                                                                                                            | 結果                                                                                                      |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `migrateDoc`                                                                          | 形式が昔書いていた旧形式: run の列として書かれた source の本文・空の run の列                                                                                                                       | 今の形式へ書き換える。どちらも warning                                                                    |
+| `stripUnknownContent`                                                                 | 列挙型フィールドに書かれた既知の集合の外の文字列（オブジェクトと `view` の `open` / `scroll`）・未登録の型のオブジェクト・未知の anchor kind に繋ぐコネクター                                       | 値は削除、オブジェクトは不透明として保持（id が無ければ連鎖して削除）、コネクターは削除。いずれも warning |
+| `checkStructure`                                                                      | 文書の骨格: `version`・旧トップレベルの `connectors`・`$schema`・`background`・`view`・`root` 各要素の `id` / `type` / `meta`・group の `children`。ルート・`view`・`view.padding` の骨格に無い名前 | error。未知の名前は `unknownKeyPath` を持つ warning                                                       |
+| `registry.validate`（型の `validateDoc`）                                             | 型が持つフィールドの値                                                                                                                                                                              | error                                                                                                     |
+| `validateDocKeys`（レジストリが `features` + `extraKeys` から組み立てた名前に照らす） | 型が持たないフィールド名（オブジェクト直下と、doc が形を決める器の中: テキストの run とスロット・poly の頂点・コネクターの端点・アンカー・label）・キー順が保てないスロット id                      | 未知の名前は `unknownKeyPath` を持つ warning、整数風のスロット id は error                                |
+| `checkSemantics`                                                                      | 文書全体でしか答えられないもの: id の一意性・コネクターの端点・自己ループのアンカー                                                                                                                 | error                                                                                                     |
+| 未知キーの削除                                                                        | その warning が持つ位置                                                                                                                                                                             | `ok.doc` からフィールドを削除し、次の保存で消える                                                         |
+
+削除が走るのは最後、2 つの error の関門を通った後だけ（開けない文書に保存すべき内容は無い）。
+
+1. **旧形式の移行 `migrateDoc`** — 形式が今は書かないフィールドを書き換える。対象は run の列として書かれた
+   `"source"` の本文（その平文として読む）と、空の run の列（空のテキストとして読む。本文ならフィールド自体を
+   落とし、スロットの 1 行なら `""` にする）。版で切り分けず毎回走る — 形式は手がかりになる世代を持たないので、
+   各移行は旧形式を形だけで見分け、そうでなければ何もしない。移行済みの文書を移行しても何も変わらないのは
+   これによる。書き換えはすべて `warnings` で報告し、`ok.doc` は移行後の doc なので、今の形式が書かれるのは
+   次の保存のとき。未登録の型のオブジェクトには触れない。新しい移行が従う規律は `packages/doc/README.ja.md` にある。
+2. **未知の内容の除去 `stripUnknownContent`** — 列挙型フィールドの未知の値を取り除く。対象は既知の集合の外の
+   文字列（新しいビルド向けに書かれた文書が持つもの）だけで、別の型の値（`textAlign: 1`）は破損なので
+   バリデータに任せて error にする。文書ルートの `view` の `open` / `scroll` も同じ扱い。端点の anchor が
+   既知の集合の外の kind を名指すコネクターは、anchor だけを落とせないのでコネクターごと取り除く。除去はエラーにせず
    `ok` の `warnings` として報告し、文書の残りは読み込む。`ok.doc` は除去後の doc なので、それを保存すると
-   除去が確定する。
-2. **構造検証 `validateStructure`** — 各ノードの型・必須フィールドを検証。型別の検証は
+   除去が確定する。未登録の型のオブジェクトは取り除かず、**不透明オブジェクト**（`OpaqueObjectDoc`）として
+   中身に触れずその位置に残し、同じく `warnings` で報告する。参照先として扱えるよう id は要り、id の無い
+   ものだけは取り除く（それで空になった group や、その中の図形を指すコネクターも連鎖して）。
+3. **構造検証 `checkStructure`** — 各ノードの型・必須フィールドを検証。型別の検証は
    パーサーが構築した doc バリデータのレジストリに委譲し、`group` の `children` 再帰だけは構造ルールとしてここで処理する。
-3. **意味検証 `validateSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
+   この段は、その型が持たないフィールドが書かれていればそれも報告する（`validateDocKeys`。綴り間違い、`markdown` カードに
+   残った `fontWeight` のような、その図形が取らないスタイル）。持てる名前は型の定義（`features` と `extraKeys`）から
+   読むので、登録された型すべてが対象になり、`validateDoc` は許可リストを持たない。これはエラーではなく **warning**
+   （`SemanticDiagnostic.severity`）で、文書は読み込まれ、パーサーが `ok.doc` からそのフィールドを取り除く。
+   消えるのは次の保存のときになる。キー名はファイルが持ちうる任意の文字列なので、warning は取り除く位置を
+   `unknownKeyPath` として構造で持つ。同じ検査は doc 自身が形を決める器の中にも届く — テキストの run と
+   スロット・poly の頂点・コネクターの端点・アンカー・label — し、`checkStructure` は文書の骨格
+   （ルート・`view`・`view.padding`）に同じ検査を当てる。対象外は、開いた record である `meta` と、型が
+   `extraKeys` で宣言する入れ子のオブジェクト（callout の `tail`）。後者は Mapper が値を丸ごと通すので、
+   中の何も失われない。不透明オブジェクトの中身もこの判断の対象外。文書のどこかにエラーが
+   1 つでもあれば結果は `structure-error` でエラーだけを返す（開けない文書に保存すべき内容は無い）。
+4. **意味検証 `checkSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
    - **ID の一意性**: root ツリー（コネクター含む）を通じて ID が重複しないこと。
      `CanvasDoc` はネストしたツリーなので「親子の循環」は構造的に起こり得ず、循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
-   - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（型の `features.connectable` が決める。例: group や connector は不可）。
+   - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（型の `features.connectable` が決める。例: group や connector は不可）。不透明オブジェクトとその `children` の中の id は、型を判断できないので実在だけを見る。
    - **自己ループの端**: source と target が同一オブジェクトを指す自己ループは許可されるが、どちらかの端が `center` アンカーだと意味エラーになる（両端を connectPoint に固定する）。自己ループは `points` が空の間は専用の直交ルートで矩形ループとして描画され、頂点を置けばその経路に置き換わる（`resolveConnectorPoints` / `routeSelfLoop` を参照）。
 
 検証に使う doc バリデータのレジストリは parse 時にだけ必要なため、パーサーが渡された定義集合から自前で構築する。
 グローバルを書き換えないので、プラグイン構成の異なるパーサーが同一プロセスに同居できる。
+
+### 不透明オブジェクトの往復
+
+知らない型のオブジェクト（出荷していないプラグインの図形、新しい版の図形）は、どの編集経路を通っても
+消えずに元の位置へ書き戻る。何を「知らない」とするかは読み手ごとに決まる（パーサーは自分のレジストリ、
+DocOps は自分の定義集合、キャンバスは自分の mapper）。
+
+- **キャンバス**: `canvasToState` はマッパーの無い型を `objects` に入れず、`CanvasState.opaqueObjects` に
+  読み込み時の位置（コンテナと、その前に描かれていた既知の兄弟）と一緒に置く。子が全て不透明な group と、
+  端が `objects` に無い図形に付いたコネクターも同じく丸ごと脇へ置く。描画・当たり判定・選択・編集はどれも
+  `objects` しか見ないので、これらは描かれず触れない。`canvasToDoc` が元の位置へ戻す。前にあった兄弟が
+  消えていれば更に前の兄弟の後ろへ、コンテナの group ごと消えていれば group があった位置へ落ちる。
+  端の図形が消えた不透明なコネクターだけは、図形の削除がコネクターを連れていくのと同じく書き戻さない。
+- **DocOps**: 不透明オブジェクトの中へは降りない（`children` を持っていても group としては扱わない）。
+  削除・並べ替え・グループ化はできるが、移動・リサイズ・スタイルなど中身に触る操作は対象外になる。
+  `listObjects` は `unknownType: true` を付けて列挙する。
 
 ### headless なパッケージ
 

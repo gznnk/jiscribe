@@ -42,72 +42,79 @@ export type SpawnFirstAvailableOptions = {
  * `start`). A browser that did open either does not exit until the window is
  * closed, or hands over to an existing process and leaves with 0.
  *
- * @param commands The candidates, in the order they are tried. Must not be empty
- * @param index Which of them to try. Callers start at 0; the fallback recurses
+ * @param commands The candidates, in the order they are tried. Must not be empty:
+ *   there is nothing to report the failure of otherwise
  * @param options The callbacks, and whether the child is the browser itself
  */
 export const spawnFirstAvailable = (
 	commands: readonly BrowserOpenCommand[],
-	index: number,
 	options: SpawnFirstAvailableOptions,
 ): void => {
-	const [command, ...args] = commands[index];
-	// Latches this candidate: once it has advanced, or turned out to be the one,
-	// nothing it reports afterwards starts another browser
-	let isSettled = false;
-	const fallBack = (reason: string): void => {
-		if (isSettled) {
-			return;
-		}
-		isSettled = true;
-		if (index + 1 < commands.length) {
-			options.onAdvance(index + 1);
-			spawnFirstAvailable(commands, index + 1, options);
-			return;
-		}
-		options.onExhausted(reason);
-	};
-	try {
-		const child = spawn(command, args, { stdio: "ignore" });
-		options.onSpawn(child);
-		child.on("error", (error) => {
-			fallBack(String(error));
-		});
-		child.on("spawn", () => {
+	/**
+	 * Tries one candidate, and hands over to the one after it on failure.
+	 *
+	 * @param index Which candidate to try, counting from the head of the list
+	 */
+	const spawnFrom = (index: number): void => {
+		const [command, ...args] = commands[index];
+		// Latches this candidate: once it has advanced, or turned out to be the one,
+		// nothing it reports afterwards starts another browser
+		let isSettled = false;
+		const fallBack = (reason: string): void => {
+			if (isSettled) {
+				return;
+			}
+			isSettled = true;
+			if (index + 1 < commands.length) {
+				options.onAdvance(index + 1);
+				spawnFrom(index + 1);
+				return;
+			}
+			options.onExhausted(reason);
+		};
+		try {
+			const child = spawn(command, args, { stdio: "ignore" });
+			options.onSpawn(child);
+			child.on("error", (error) => {
+				fallBack(String(error));
+			});
+			child.on("spawn", () => {
+				if (!options.isChildTheBrowser) {
+					return;
+				}
+				// An executable that is not there never gets here: it reports error
+				// instead. So the browser is up, and once it has stayed up it is the one
+				// that stuck. The timer is unref'd, so the three seconds never hold a
+				// process open that is otherwise finished
+				setTimeout(() => {
+					isSettled = true;
+				}, options.launchFailureWindowMs ?? LAUNCH_FAILURE_WINDOW_MS).unref();
+			});
+			child.on("exit", (code) => {
+				// code is null when it died on a signal, and when it never launched at
+				// all. The latter arrives separately as error, so nothing is decided here
+				if (code === 0) {
+					isSettled = true;
+					return;
+				}
+				// A child this process killed is on its way out, not a launch that
+				// failed. Windows has no signals, so a kill surfaces as an exit code
+				if (child.killed) {
+					isSettled = true;
+					return;
+				}
+				if (code !== null) {
+					fallBack(`${command} exited with ${code}`);
+				}
+			});
 			if (!options.isChildTheBrowser) {
-				return;
+				// A launcher is left to outlive this process; the browser itself is not,
+				// since it is this process that has to be able to close it again
+				child.unref();
 			}
-			// An executable that is not there never gets here: it reports error
-			// instead. So the browser is up, and once it has stayed up it is the one
-			// that stuck. The timer is unref'd, so the three seconds never hold a
-			// process open that is otherwise finished
-			setTimeout(() => {
-				isSettled = true;
-			}, options.launchFailureWindowMs ?? LAUNCH_FAILURE_WINDOW_MS).unref();
-		});
-		child.on("exit", (code) => {
-			// code is null when it died on a signal, and when it never launched at
-			// all. The latter arrives separately as error, so nothing is decided here
-			if (code === 0) {
-				isSettled = true;
-				return;
-			}
-			// A child this process killed is on its way out, not a launch that
-			// failed. Windows has no signals, so a kill surfaces as an exit code
-			if (child.killed) {
-				isSettled = true;
-				return;
-			}
-			if (code !== null) {
-				fallBack(`${command} exited with ${code}`);
-			}
-		});
-		if (!options.isChildTheBrowser) {
-			// A launcher is left to outlive this process; the browser itself is not,
-			// since it is this process that has to be able to close it again
-			child.unref();
+		} catch (error) {
+			fallBack(String(error));
 		}
-	} catch (error) {
-		fallBack(String(error));
-	}
+	};
+	spawnFrom(0);
 };

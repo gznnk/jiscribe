@@ -3,8 +3,9 @@ import { type DocDefinitions, isConnectorObject } from "./objectGeometry";
 import {
 	isRichText,
 	richTextToPlain,
-} from "../../model/objects/types/RichText";
-import { isTextRows } from "../../model/objects/types/TextSlot";
+} from "../../model/objects/types/text/RichText";
+import { isTextRows } from "../../model/objects/types/text/TextSlot";
+import { isSingleBodyText } from "../../model/objects/types/text/TextType";
 import { DocOperationError } from "../errors";
 
 /** Slot objects of a `text: "slots"` doc, keyed by slot id. */
@@ -80,11 +81,11 @@ export const readObjectText = (
 	if (isConnectorObject(object)) {
 		return readConnectorLabelText(object);
 	}
-	const textFeature = definitions.get(object.type)?.features.text;
-	if (textFeature === "body") {
+	const textType = definitions.get(object.type)?.features.text;
+	if (isSingleBodyText(textType)) {
 		return readTextField(object);
 	}
-	if (textFeature !== "slots") {
+	if (textType !== "slots") {
 		return null;
 	}
 	const slots = readSlots(object);

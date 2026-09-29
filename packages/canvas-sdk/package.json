@@ -15,7 +15,7 @@
 		"./testing/harness": "./src/testing-harness.ts"
 	},
 	"scripts": {
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	},

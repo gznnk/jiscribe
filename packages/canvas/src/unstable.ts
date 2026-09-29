@@ -81,6 +81,8 @@ export {
 } from "./rendering/objects/utils/calcTextRegion";
 export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform";
 
+export { formatPolygonPoints } from "./rendering/objects/utils/formatPolygonPoints";
+
 export { resolveAutoColor } from "./rendering/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./rendering/objects/utils/resolveAutoColor";
 
@@ -152,10 +154,10 @@ export { ObjectMenuSlider } from "./controllers/ui/menu/ObjectMenu/common/Object
 export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 
-export { getFirstSelectedWithProp } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithProp";
-export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithStyleGroup";
-export { getFirstSelectedPropValue } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedPropValue";
-export { getSelectedShapeStyle } from "./controllers/ui/menu/ObjectMenu/utils/getSelectedShapeStyle";
+export { getFirstSelectedWithProp } from "./controllers/ui/menu/utils/getFirstSelectedWithProp";
+export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/utils/getFirstSelectedWithStyleGroup";
+export { getFirstSelectedPropValue } from "./controllers/ui/menu/utils/getFirstSelectedPropValue";
+export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedShapeStyle";
 
 // ---------------------------------------------------------------------------
 // Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)

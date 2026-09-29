@@ -7,10 +7,9 @@ export type BuiltinItemKey =
 	| "backgroundColor"
 	| "borderColor"
 	| "borderStyle"
-	| "fontStyle"
+	| "font"
+	| "textFormat"
 	| "textAlignment"
-	| "aspectRatio"
-	| "stackOrder"
 	| "group"
 	| "openReference";
 

@@ -126,14 +126,14 @@ describe("diagnose_canvas", () => {
 		);
 	});
 
-	it("returns valid: false and the missing property for a schema violation", async () => {
+	it("returns valid: false and names the field for a document that will not open", async () => {
 		const path = await workspace.writeDoc("incomplete.jis.json", {
 			version: 1,
 			root: [{ id: "r", type: "rect", x: 0, y: 0 }],
 		});
 		const result = await client.callTool("diagnose_canvas", { path });
 		expect(result.text).toMatch(/^valid: false\n/);
-		expect(result.text).toContain("must have required property 'width'");
+		expect(result.text).toContain("- error root[0].width: must be a number");
 	});
 
 	it("returns a syntax error when the file is broken as JSON", async () => {

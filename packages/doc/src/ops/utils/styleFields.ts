@@ -17,24 +17,28 @@ import {
 	type StrokeStyleDoc,
 } from "../../model/objects/base/StrokeStyleDoc";
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
-import type { InlineTextStyle } from "../../model/objects/types/RichText";
+import type { InlineTextStyle } from "../../model/objects/types/text/InlineTextStyle";
+import { TEXT_INLINE_STYLE_KEYS } from "../../model/objects/types/text/InlineTextStyle";
 import {
 	clearInlineStyleFromRuns,
 	isStyledRichText,
-	TEXT_INLINE_STYLE_KEYS,
-} from "../../model/objects/types/RichText";
+} from "../../model/objects/types/text/RichText";
 import {
 	isTextRows,
 	TEXT_SLOT_STYLE_KEYS,
 	type TextSlot,
-} from "../../model/objects/types/TextSlot";
+} from "../../model/objects/types/text/TextSlot";
+import {
+	isSingleBodyText,
+	textStyleKeysOf,
+} from "../../model/objects/types/text/TextType";
 import {
 	validateArrowFields,
 	validateFillStyleFields,
 	validateRadiusStyleFields,
 	validateStrokeStyleFields,
-	validateTextSlotStyleFields,
-} from "../../model/objects/utils/validateDocUtils";
+} from "../../model/objects/validators/validateStyleFields";
+import { validateTextSlotStyleFields } from "../../model/objects/validators/validateTextFields";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
 
@@ -98,7 +102,7 @@ export const applicableStyleKeys = (
 	definition: ObjectDocDefinition | undefined,
 ): string[] => [
 	...shapeStyleKeys(definition?.features),
-	...(definition?.features.text !== undefined ? TEXT_SLOT_STYLE_KEYS : []),
+	...textStyleKeysOf(definition?.features.text),
 ];
 
 /** Copy the requested subset of `keys` onto `target`, returning the keys written. */
@@ -245,8 +249,8 @@ export const applyStyle = (
 			appliedKeys.add(key),
 		);
 
-		if (features?.text === "body") {
-			const written = applyKeys(object, style, TEXT_SLOT_STYLE_KEYS);
+		if (isSingleBodyText(features?.text)) {
+			const written = applyKeys(object, style, textStyleKeysOf(features?.text));
 			written.forEach((key) => appliedKeys.add(key));
 			dropAppliedRunStyle(object, written);
 		} else if (features?.text === "slots") {

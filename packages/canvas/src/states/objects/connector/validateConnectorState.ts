@@ -8,8 +8,8 @@ import { STROKE_WIDTH_MIN } from "@jiscribe/doc/model/objects/base/StrokeStyleDo
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { isConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
-import { FONT_SIZE_MIN } from "@jiscribe/doc/model/objects/types/RichText";
 import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
+import { FONT_SIZE_MIN } from "@jiscribe/doc/model/objects/types/text/TextBaseStyle";
 
 import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 import { createPolyStateValidator } from "../utils/createPolyStateValidator";

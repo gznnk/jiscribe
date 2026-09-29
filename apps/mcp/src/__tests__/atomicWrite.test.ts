@@ -12,7 +12,11 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { writeFileAtomically } from "../atomicWrite";
+import {
+	prepareAtomicWrite,
+	readFileSnapshot,
+	writeFileAtomically,
+} from "../atomicWrite";
 
 let dir: string;
 
@@ -62,6 +66,22 @@ describe("writeFileAtomically", () => {
 		expect((await stat(target)).mode & 0o777).toBe(0o600);
 	});
 
+	// Root may write to anything, so there is nothing to refuse
+	it.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+		"refuses a file that may not be written to",
+		async () => {
+			const target = join(dir, "read-only.jis.json");
+			await writeFile(target, "old", "utf8");
+			await chmod(target, 0o444);
+
+			await expect(writeFileAtomically(target, "new")).rejects.toMatchObject({
+				code: "EACCES",
+			});
+			expect(await readFile(target, "utf8")).toBe("old");
+			expect(await readdir(dir)).toEqual(["read-only.jis.json"]);
+		},
+	);
+
 	it("leaves the original alone when the write fails", async () => {
 		// The parent does not exist, so it fails from the creation of the
 		// temporary file onward
@@ -109,5 +129,100 @@ describe("writeFileAtomically", () => {
 			shortContents.length,
 			longContents.length,
 		]);
+	});
+});
+
+describe("prepareAtomicWrite", () => {
+	it("leaves the destination alone until it is committed", async () => {
+		const target = join(dir, "pending.jis.json");
+		await writeFile(target, "old", "utf8");
+
+		const prepared = await prepareAtomicWrite(target, "new");
+		expect(await readFile(target, "utf8")).toBe("old");
+		await prepared.commit();
+
+		expect(await readFile(target, "utf8")).toBe("new");
+		expect(await readdir(dir)).toEqual(["pending.jis.json"]);
+	});
+
+	it("lands when the file is still what the snapshot saw", async () => {
+		const target = join(dir, "unchanged.jis.json");
+		await writeFile(target, "old", "utf8");
+		const snapshot = await readFileSnapshot(target);
+
+		const prepared = await prepareAtomicWrite(target, "new");
+
+		expect(await prepared.commitIfUnchanged(snapshot.identity)).toBe(true);
+		expect(await readFile(target, "utf8")).toBe("new");
+		expect(await readdir(dir)).toEqual(["unchanged.jis.json"]);
+	});
+
+	it("keeps a write made in place after the snapshot, and writes nothing", async () => {
+		const target = join(dir, "rewritten.jis.json");
+		await writeFile(target, "old", "utf8");
+		const prepared = await prepareAtomicWrite(target, "new");
+		const snapshot = await readFileSnapshot(target);
+		// Another process writing the file directly, as a plain editor save does
+		await writeFile(target, "someone else's", "utf8");
+
+		expect(await prepared.commitIfUnchanged(snapshot.identity)).toBe(false);
+		expect(await readFile(target, "utf8")).toBe("someone else's");
+		expect(await readdir(dir)).toEqual(["rewritten.jis.json"]);
+	});
+
+	it("keeps a file put in place by a rename after the snapshot", async () => {
+		const target = join(dir, "replaced.jis.json");
+		await writeFile(target, "old", "utf8");
+		const prepared = await prepareAtomicWrite(target, "new");
+		const snapshot = await readFileSnapshot(target);
+		// Same length as what was there, so only the inode tells it apart
+		await writeFileAtomically(target, "odd");
+
+		expect(await prepared.commitIfUnchanged(snapshot.identity)).toBe(false);
+		expect(await readFile(target, "utf8")).toBe("odd");
+		expect(await readdir(dir)).toEqual(["replaced.jis.json"]);
+	});
+
+	it("keeps a file created after it was found missing", async () => {
+		const target = join(dir, "created.jis.json");
+		const prepared = await prepareAtomicWrite(target, "new");
+		await writeFile(target, "someone else's", "utf8");
+
+		expect(await prepared.commitIfUnchanged(null)).toBe(false);
+		expect(await readFile(target, "utf8")).toBe("someone else's");
+		expect(await readdir(dir)).toEqual(["created.jis.json"]);
+	});
+
+	it("does not bring back a file removed after the snapshot", async () => {
+		const target = join(dir, "removed.jis.json");
+		await writeFile(target, "old", "utf8");
+		const prepared = await prepareAtomicWrite(target, "new");
+		const snapshot = await readFileSnapshot(target);
+		await rm(target);
+
+		expect(await prepared.commitIfUnchanged(snapshot.identity)).toBe(false);
+		expect(await readdir(dir)).toEqual([]);
+	});
+
+	it("removes the temporary file when aborted, and only then", async () => {
+		const target = join(dir, "aborted.jis.json");
+		await writeFile(target, "old", "utf8");
+
+		const prepared = await prepareAtomicWrite(target, "new");
+		expect(await readdir(dir)).toHaveLength(2);
+		await prepared.abort();
+
+		expect(await readFile(target, "utf8")).toBe("old");
+		expect(await readdir(dir)).toEqual(["aborted.jis.json"]);
+	});
+
+	it("does nothing when aborted after it was committed", async () => {
+		const target = join(dir, "settled.jis.json");
+
+		const prepared = await prepareAtomicWrite(target, "new");
+		await prepared.commit();
+		await prepared.abort();
+
+		expect(await readFile(target, "utf8")).toBe("new");
 	});
 });

@@ -140,8 +140,8 @@ describe("ObjectMenuColorPickerGrid", () => {
 				/>,
 			);
 
-			// The floating menu shows the first selected object's color, so a pick
-			// of it is no proof that the rest carry it.
+			// Without currentColorIsShared the shown color may be one target's
+			// alone, so a pick of it is no proof that the rest carry it.
 			click(pick(GREEN));
 
 			expect(onPropertyUpdate.mock.calls).toEqual([["fill", GREEN, true]]);

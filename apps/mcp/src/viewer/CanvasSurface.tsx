@@ -1,4 +1,4 @@
-import { Canvas, lightCanvasTheme } from "@jiscribe/canvas";
+import { Canvas } from "@jiscribe/canvas";
 import type {
 	CanvasConfig,
 	CanvasDoc,
@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { plugins } from "./canvasPlugins";
 import { FileLabel } from "./FileLabel";
+import { viewerTheme } from "./viewerTheme";
 
 // A module-scope constant, so that Canvas is not rebuilt on every re-render
 const initialConfig: CanvasConfig = { plugins };
@@ -94,7 +95,7 @@ export function CanvasSurface({
 							<FileLabel
 								relPath={relPath}
 								isConnected={isConnected}
-								tokens={lightCanvasTheme.tokens}
+								tokens={viewerTheme.tokens}
 							/>
 						),
 					},
@@ -115,7 +116,7 @@ export function CanvasSurface({
 				onCommit={onCommit}
 				onOpenReference={onOpenReference}
 				resolveImage={resolveImage}
-				theme={lightCanvasTheme}
+				theme={viewerTheme}
 				initialConfig={initialConfig}
 				stencilLibrary={{ sections: stencilLibrarySections }}
 				toolbar={{ sections: toolbarSections }}

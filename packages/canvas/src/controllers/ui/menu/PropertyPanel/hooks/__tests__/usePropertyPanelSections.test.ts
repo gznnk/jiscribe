@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createPropertyPanelRegistry } from "../../PropertyPanelRegistry";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
@@ -28,6 +29,20 @@ const ELLIPSE_SECTIONS: PropertyPanelSection[] = [
 	},
 	{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
 	{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
+];
+
+/** A type whose own declaration already carries the aspect-ratio lock. */
+const BOX_SECTIONS: PropertyPanelSection[] = [
+	{
+		id: "layout",
+		label: "Layout",
+		items: [
+			{ type: "position" },
+			{ type: "size" },
+			{ type: "lockAspectRatio" },
+		],
+	},
+	{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
 ];
 
 const LINE_SECTIONS: PropertyPanelSection[] = [
@@ -92,6 +107,7 @@ registry.register("connector", LINE_SECTIONS);
 registry.register("container", CONTAINER_SECTIONS);
 registry.register("badge", BADGE_SECTIONS);
 registry.register("gauge", GAUGE_SECTIONS);
+registry.register("box", BOX_SECTIONS);
 
 /** A shape holding one named text slot, so a slot selection can resolve against it. */
 const shape = (id: string, type: string): ObjectState =>
@@ -105,6 +121,10 @@ const shape = (id: string, type: string): ObjectState =>
 const group = (id: string, childIds: string[]): ObjectState =>
 	({ id, type: "group", childIds }) as unknown as ObjectState;
 
+/** The box a multi-selection is held in; the panel only reads that it is there. */
+const multiSelectGroupOf = (childIds: string[]): GroupState =>
+	({ id: "multi-select", type: "group", childIds }) as unknown as GroupState;
+
 const stateOf = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
@@ -113,6 +133,7 @@ const stateOf = (
 		selectedIds: [],
 		selectedConnectorId: null,
 		selectedTextSlot: null,
+		multiSelectGroup: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -276,6 +297,106 @@ describe("getPropertyPanelSections", () => {
 		expect(
 			getPropertyPanelSections(state, registry).map((section) => section.id),
 		).toEqual(["fill"]);
+	});
+
+	it("offers the aspect-ratio lock to a multi-selection no selected type carries it", () => {
+		const state = stateOf({
+			objects: {
+				"r-1": shape("r-1", "rect"),
+				"e-1": shape("e-1", "ellipse"),
+			},
+			selectedIds: ["r-1", "e-1"],
+			multiSelectGroup: multiSelectGroupOf(["r-1", "e-1"]),
+		});
+
+		expect(getPropertyPanelSections(state, registry)[0]).toEqual({
+			id: "layout",
+			label: "Layout",
+			items: [
+				{ type: "position" },
+				{ type: "size" },
+				{ type: "lockAspectRatio" },
+			],
+		});
+	});
+
+	it("offers the aspect-ratio lock to a selected group", () => {
+		const state = stateOf({
+			objects: {
+				"g-1": group("g-1", ["r-1", "e-1"]),
+				"r-1": shape("r-1", "rect"),
+				"e-1": shape("e-1", "ellipse"),
+			},
+			selectedIds: ["g-1"],
+		});
+
+		expect(getPropertyPanelSections(state, registry)[0].items).toContainEqual({
+			type: "lockAspectRatio",
+		});
+	});
+
+	it("builds the layout section when the selected types shared nothing", () => {
+		const state = stateOf({
+			objects: {
+				"r-1": shape("r-1", "rect"),
+				"c-1": shape("c-1", "connector"),
+			},
+			selectedIds: ["r-1", "c-1"],
+			multiSelectGroup: multiSelectGroupOf(["r-1", "c-1"]),
+		});
+
+		expect(getPropertyPanelSections(state, registry)).toEqual([
+			{
+				id: "layout",
+				label: "Layout",
+				items: [{ type: "lockAspectRatio" }],
+			},
+		]);
+	});
+
+	it("leaves the aspect-ratio lock where it is when the selected types carry it", () => {
+		const state = stateOf({
+			objects: {
+				"b-1": shape("b-1", "box"),
+				"b-2": shape("b-2", "box"),
+			},
+			selectedIds: ["b-1", "b-2"],
+			multiSelectGroup: multiSelectGroupOf(["b-1", "b-2"]),
+		});
+
+		expect(getPropertyPanelSections(state, registry)[0].items).toEqual([
+			{ type: "position" },
+			{ type: "size" },
+			{ type: "lockAspectRatio" },
+		]);
+	});
+
+	it("does not add the aspect-ratio lock to a selection of one shape", () => {
+		const state = stateOf({
+			objects: { "r-1": shape("r-1", "rect") },
+			selectedIds: ["r-1"],
+		});
+
+		expect(getPropertyPanelSections(state, registry)).toEqual(RECT_SECTIONS);
+	});
+
+	// A slot resolves for a selection of one alone (resolveSelectedTextSlot), so the
+	// multi-selection box is put beside one to reach the narrowing at all.
+	it("keeps the aspect-ratio lock out of a selected slot's sections", () => {
+		const state = stateOf({
+			objects: { "r-1": shape("r-1", "rect") },
+			selectedIds: ["r-1"],
+			multiSelectGroup: multiSelectGroupOf(["r-1"]),
+			selectedTextSlot: { objectId: "r-1", slotId: "body" },
+		});
+
+		expect(getPropertyPanelSections(state, registry)).toEqual([
+			{
+				id: "text",
+				label: "Text",
+				items: [{ type: "fontSize" }, { type: "textAlign" }],
+			},
+		]);
 	});
 
 	it("keeps only the text section while a shape's text is being edited", () => {

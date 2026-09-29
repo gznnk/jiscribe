@@ -1,0 +1,15 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "note",
+			"type": "rect",
+			"x": 40,
+			"y": 40,
+			"width": 200,
+			"height": 80,
+			"text": [],
+			"zzUnknown": 1
+		}
+	]
+}

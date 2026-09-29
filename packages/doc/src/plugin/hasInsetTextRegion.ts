@@ -1,7 +1,8 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
-import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "../model/objects/types/text/TextSlot";
+import { isSingleBodyText } from "../model/objects/types/text/TextType";
 
 /**
  * What {@link hasInsetTextRegion} reads off a type: the region declaration that
@@ -44,7 +45,7 @@ export const holdsBodyInsideBox = (
 	definition: InsetTextRegionDeclaration,
 ): boolean => {
 	const { features, textRegion } = definition;
-	if (features.text !== "body" || textRegion === undefined) {
+	if (!isSingleBodyText(features.text) || textRegion === undefined) {
 		return false;
 	}
 	return INSET_TEXT_REGION_PROBE_BOXES.every((box) => {
@@ -81,7 +82,7 @@ export const hasInsetTextRegion = (
 	const { features, textRegion } = definition;
 	// Only a single body is placed against the shape itself; named slots carry no
 	// shape-wide basis to switch (TextStyleDoc).
-	if (features.text !== "body" || textRegion === undefined) {
+	if (!isSingleBodyText(features.text) || textRegion === undefined) {
 		return false;
 	}
 	return INSET_TEXT_REGION_PROBE_BOXES.every((box) => {

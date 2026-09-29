@@ -178,9 +178,12 @@ describe("createCanvasRegistries", () => {
 				},
 				{
 					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+					items: [
+						{ type: "font" },
+						{ type: "textFormat" },
+						{ type: "textAlignment" },
+					],
 				},
-				{ id: "transform", items: [{ type: "aspectRatio" }] },
 			]);
 			// The box holds its text and nothing denies it, so the type may leave
 			// `height` out and gets the switch (supportsAutoHeightType) — in the
@@ -233,7 +236,7 @@ describe("createCanvasRegistries", () => {
 				registries.objectMenu
 					.getSections("capped")
 					.map((section) => section.id),
-			).toEqual(["style", "text", "transform"]);
+			).toEqual(["style", "text"]);
 			expect(
 				registries.propertyPanel
 					.getSections("capped")

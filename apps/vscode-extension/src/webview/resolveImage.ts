@@ -49,7 +49,8 @@ const base64ToBlob = (base64: string, mimeType: string): Blob => {
  * resolveImage round trip identified by a request id, and the matching
  * imageResolved settles it. Nothing is cached here, but the canvas asks once per
  * `src` per mount, so an image edited on disk shows its new contents only once the
- * document is reopened.
+ * page is rebuilt: on reopening the document, or when its tab is hidden and shown
+ * again (#138 discards the hidden Webview).
  *
  * The ids carry a nonce drawn for this resolver, which is built once per page: a
  * bare counter would restart on the page VSCode builds after hiding the tab (#138)

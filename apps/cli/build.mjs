@@ -42,7 +42,7 @@ await esbuild.build({
 	// playwright-core is external for a different reason: it is only reached by the
 	// render command's dynamic import, and bundling it would make every other
 	// command pay for a browser driver it never uses. Both are resolved from
-	// node_modules beside dist/, as are the font packages and the schema.
+	// node_modules beside dist/, as are the font packages.
 	external: ["fontkit", "playwright-core"],
 	banner: { js: "#!/usr/bin/env node" },
 });
