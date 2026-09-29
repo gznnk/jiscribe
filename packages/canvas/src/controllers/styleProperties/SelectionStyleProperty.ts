@@ -6,7 +6,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 import { resolveObjectPartSelection } from "../selection/resolveObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
+import { resolveSelectedTextSlotIds } from "../selection/resolveSelectedTextSlotIds";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
 
@@ -92,6 +92,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				path,
 				value,
 				objectPartSelection,
+				objectPart,
 			);
 			if (updated === null) {
 				return state;
@@ -121,6 +122,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				path,
 				value,
 				objectPartSelection,
+				objectPart,
 			);
 			if (updated === null) {
 				continue;
@@ -145,6 +147,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 						path,
 						value,
 						objectPartSelection,
+						objectPart,
 					);
 					if (updated === null) {
 						continue;
@@ -170,11 +173,11 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 	 * @param obj - The object to write into; returned unchanged copies only
 	 * @param path - The property split on "." ("label.fill" → ["label", "fill"])
 	 * @param value - The value already coerced to the declared type
-	 * @param selectedSlotIds - The text slots selected on this very object, in the
-	 *   type's own order and never empty; undefined when none are (this object is
-	 *   not their owner, nothing is selected one level below the object, or what is
-	 *   selected there is a kind of part other than a text slot). Only slot-storage
-	 *   handlers read it.
+	 * @param selectedSlotIds - The text slots the selection names on this very
+	 *   object, in the type's own order (resolveSelectedTextSlotIds); undefined
+	 *   when it names none — this object is not the owner of what is picked,
+	 *   nothing is picked one level below the object, or what is picked there is a
+	 *   kind that covers no slot. Only slot-storage handlers read it.
 	 */
 	protected writeValue(
 		obj: ObjectState,
@@ -196,6 +199,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		path: readonly string[],
 		value: string,
 		objectPartSelection: ObjectPartSelection | null,
+		objectPart: ObjectPartRegistry,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -209,12 +213,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			obj,
 			path,
 			coerced,
-			// Only a slot selection names something a style can be stored on; parts
-			// of any other kind leave the write at the object level.
-			objectPartSelection?.objectId === obj.id &&
-				objectPartSelection.kind === TEXT_SLOT_PART_KIND
-				? objectPartSelection.partIds
-				: undefined,
+			resolveSelectedTextSlotIds(obj, objectPartSelection, objectPart),
 		);
 	}
 }

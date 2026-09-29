@@ -13,6 +13,7 @@ import {
 	setPart,
 	togglePart,
 	useCanvasLocale,
+	useObjectPartRegistry,
 	useSubmenuPosition,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
@@ -29,7 +30,8 @@ const SECTION_ID = "table-cell-color";
 
 /**
  * Cell background menu (table only). Sets `cellFill` on the cells picked below
- * the table, or on every cell when the table alone is selected — the targets the
+ * the table — a picked row or column being its own cells (tableTrackParts) — or
+ * on every cell when the table alone is selected. Those are the targets the
  * write itself takes, which is why the swatch can be read off them
  * (readSelectionSlotField): cells that disagree draw the button's circle split
  * between their colors and highlight no swatch in the grid.
@@ -52,12 +54,14 @@ const TableCellColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(tableMessagesByLocale, locale);
+	const objectPart = useObjectPartRegistry();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
 	const cellFill = readSelectionSlotField(
 		selectedIds,
 		objects,
 		objectPartSelection,
+		objectPart,
 		TABLE_CELL_FILL_FIELD,
 	);
 	const isMixed = isMixedSelectionValue(cellFill);

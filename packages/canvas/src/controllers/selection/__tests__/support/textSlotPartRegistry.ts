@@ -40,3 +40,45 @@ export const createTextSlotPartRegistry = (
 	registerTextSlotParts(registry, ...types);
 	return registry;
 };
+
+/**
+ * The kind standing for a group of slots in these fixtures, as a table's row
+ * does over the cells of that row (plugins/table-shape).
+ */
+export const SLOT_GROUP_PART_KIND = "row";
+
+/**
+ * The kind naming something other than text, which covers no slot at all — a
+ * callout's tail, a vertex.
+ */
+export const NON_SLOT_PART_KIND = "tail";
+
+/**
+ * Declares both of those beside the slot part, on one type. The group kind's ids
+ * are row indices and it covers every slot whose id names that row, the cells
+ * being keyed `r<row>c<column>` as a table keys them.
+ *
+ * @param registry - The registry to write in place; the type's parts are
+ *   replaced, all three going in the one `register` call it takes
+ * @param type - The object type to declare them for, which has to be one whose
+ *   fixtures hold slots keyed that way
+ */
+export const registerSlotGroupParts = (
+	registry: ObjectPartRegistry,
+	type: ObjectType,
+): void => {
+	registry.register(type, [
+		createTextSlotPartDefinition(undefined),
+		{
+			kind: SLOT_GROUP_PART_KIND,
+			has: () => true,
+			textSlotIds: (object, partIds) =>
+				Object.keys(
+					(object as unknown as { text: Record<string, unknown> }).text,
+				).filter((slotId) =>
+					partIds.some((rowIndex) => slotId.startsWith(`r${rowIndex}c`)),
+				),
+		},
+		{ kind: NON_SLOT_PART_KIND, has: () => true },
+	]);
+};

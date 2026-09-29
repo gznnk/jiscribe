@@ -9,6 +9,7 @@ import {
 } from "../grid/tableTrack";
 import type { TableAxis } from "../grid/tableTrack";
 import { calcTableLayout } from "../layout/calcTableLayout";
+import { tableCellSlotId } from "../schema/TableDoc";
 import type { TableState } from "../state/TableState";
 
 /** The band one track covers, in the table's local coordinates. */
@@ -45,6 +46,11 @@ const calcTrackRegion = (
  * `list` is declared so a range of tracks is expressible at all — core builds one
  * from the order this returns — even though a grip writes a single index today.
  *
+ * What the two kinds do share is the cells: a style stored on a cell (the
+ * background, the typography) lands on the cells of the picked tracks, which is
+ * what `textSlotIds` states. Without it a track would name no slot at all and
+ * such a write would fall back to the whole grid.
+ *
  * @param axis - Which direction the tracks run in; also the `kind` the definition registers under, the two being the same word (see TableAxis)
  * @returns A definition to put in the type's `ObjectTypeDefinition.parts`
  */
@@ -62,6 +68,28 @@ export const createTableTrackPartDefinition = (
 		Array.from({ length: countTableTracks(object, axis) }, (_unused, index) =>
 			tableTrackPartId(index),
 		),
+
+	textSlotIds: (object, partIds) => {
+		const crossCount = countTableTracks(
+			object,
+			axis === "row" ? "column" : "row",
+		);
+		const cellIds: string[] = [];
+		for (const partId of partIds) {
+			const index = parseTableTrackPartId(partId);
+			if (index === null) {
+				continue;
+			}
+			for (let cross = 0; cross < crossCount; cross++) {
+				cellIds.push(
+					axis === "row"
+						? tableCellSlotId(index, cross)
+						: tableCellSlotId(cross, index),
+				);
+			}
+		}
+		return cellIds;
+	},
 
 	region: (object, partId) => {
 		const index = parseTableTrackPartId(partId);

@@ -91,6 +91,32 @@ describe("createTableTrackPartDefinition", () => {
 		expect(rowPart.region?.(table, "9")).toBeNull();
 	});
 
+	it("covers the cells of a track, in the order the grid keys them", () => {
+		const table = makeTable();
+
+		expect(rowPart.textSlotIds?.(table, ["1"])).toEqual([
+			"r1c0",
+			"r1c1",
+			"r1c2",
+		]);
+		expect(columnPart.textSlotIds?.(table, ["2"])).toEqual(["r0c2", "r1c2"]);
+	});
+
+	it("covers the cells of every track named, taken together", () => {
+		const table = makeTable();
+
+		expect(columnPart.textSlotIds?.(table, ["0", "1"])).toEqual([
+			"r0c0",
+			"r1c0",
+			"r0c1",
+			"r1c1",
+		]);
+	});
+
+	it("covers nothing for a part id that is not an index", () => {
+		expect(rowPart.textSlotIds?.(makeTable(), ["x"])).toEqual([]);
+	});
+
 	it("deletes the named tracks", () => {
 		const deleted = rowPart.delete?.(makeTable(), ["0"]) as TableState;
 

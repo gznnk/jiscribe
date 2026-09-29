@@ -10,9 +10,10 @@ import type { TextSlots } from "../../states/objects/types/TextSlots";
  * slots the pick would change.
  *
  * @param slots - The object's slots as its state holds them; an empty map yields an empty list
- * @param selectedSlotIds - The picked slot ids in the type's own order, as
- *   SelectionStyleProperty.writeValue is handed them; undefined when nothing is
- *   picked below the object
+ * @param selectedSlotIds - The slot ids the part selection names, in the type's
+ *   own order, as resolveSelectedTextSlotIds gives them (the picked slots, or the
+ *   slots a picked row stands for); undefined when nothing picked below the
+ *   object names a slot
  * @returns The ids to write, in the order they were given (picked) or keyed
  *   (every slot). A picked id the object has since lost is dropped, and a
  *   selection left with none of them falls back to every slot — the reading of

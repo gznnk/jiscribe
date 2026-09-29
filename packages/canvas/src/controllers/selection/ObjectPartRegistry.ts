@@ -33,6 +33,27 @@ export type ObjectPartDefinition<TState extends ObjectState = ObjectState> = {
 	list?: (object: TState) => readonly string[];
 
 	/**
+	 * The text slots the named parts cover, for a kind that stands for a group of
+	 * slots without being one itself — a table's row over the cells of that row.
+	 * It is what lets a slot-level write (a cell's background, the typography)
+	 * land on exactly the slots the pick stands for, and what the menus read the
+	 * shown value back off (resolveSelectedTextSlotIds).
+	 *
+	 * Omitted entirely means the kind covers no slot, which leaves a slot-level
+	 * write where it was: on every slot of the object, the reading of nothing
+	 * being picked below it (resolveAddressedTextSlotIds). That is right for a
+	 * kind that names something other than text — a vertex, a callout's tail.
+	 * Never declared for `"textSlot"`, whose ids are slot ids already.
+	 *
+	 * Every id is guaranteed to have passed `has`, and the slots come back in the
+	 * order the write and the read then walk them in — the type's own.
+	 */
+	textSlotIds?: (
+		object: TState,
+		partIds: readonly string[],
+	) => readonly string[];
+
+	/**
 	 * Removes the named parts and returns the changed object, or null to refuse
 	 * this one deletion while keeping the state as it stands (a polyline already
 	 * at its vertex floor). Every id is guaranteed to have passed `has`.

@@ -3,6 +3,12 @@ import { describe, it, expect } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
+import {
+	createTextSlotPartRegistry,
+	NON_SLOT_PART_KIND,
+	registerSlotGroupParts,
+	SLOT_GROUP_PART_KIND,
+} from "../../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { readSelectionSlotField } from "../readSelectionSlotField";
@@ -27,6 +33,20 @@ const cells = (...fills: (string | undefined)[]): TextSlots =>
 		]),
 	) as TextSlots;
 
+/** The cells of a two-row grid, row-major, as `r<row>c<column>`. */
+const grid = (
+	rowCount: number,
+	...fills: (string | undefined)[]
+): TextSlots => {
+	const columnCount = fills.length / rowCount;
+	return Object.fromEntries(
+		fills.map((fill, index) => [
+			`r${Math.floor(index / columnCount)}c${index % columnCount}`,
+			{ text: "", ...(fill === undefined ? {} : { fill }) },
+		]),
+	) as TextSlots;
+};
+
 const slotsPicked = (
 	objectId: string,
 	...partIds: string[]
@@ -36,10 +56,20 @@ const slotsPicked = (
 	partIds,
 });
 
+/**
+ * The registry a canvas holding the fixture types would carry: cells on both,
+ * plus the table's two other kinds — one standing for a group of cells (a row),
+ * one covering none.
+ */
+const objectPart = createTextSlotPartRegistry("table", "group");
+registerSlotGroupParts(objectPart, "table");
+
 describe("readSelectionSlotField", () => {
 	it("reads every slot of the object while none is picked", () => {
 		const t1 = table("t1", cells("#eef", "#eef"));
-		expect(readSelectionSlotField(["t1"], { t1 }, null, "fill")).toEqual({
+		expect(
+			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+		).toEqual({
 			kind: "single",
 			value: "#eef",
 		});
@@ -52,6 +82,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t1", "r0c1", "r0c2"),
+				objectPart,
 				"fill",
 			),
 		).toEqual({ kind: "single", value: "#fee" });
@@ -64,6 +95,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t1", "r0c0", "r0c1", "r0c2"),
+				objectPart,
 				"fill",
 			),
 		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
@@ -73,7 +105,9 @@ describe("readSelectionSlotField", () => {
 		// Not `mixed` and not `none`: those slots are drawn alike, so a swatch over
 		// them states the one thing they say — that they carry no value.
 		const t1 = table("t1", cells(undefined, undefined));
-		expect(readSelectionSlotField(["t1"], { t1 }, null, "fill")).toEqual({
+		expect(
+			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+		).toEqual({
 			kind: "single",
 			value: undefined,
 		});
@@ -81,26 +115,74 @@ describe("readSelectionSlotField", () => {
 
 	it("reads an unset slot against a filled one as mixed", () => {
 		const t1 = table("t1", cells("#eef", undefined));
-		expect(readSelectionSlotField(["t1"], { t1 }, null, "fill")).toEqual({
+		expect(
+			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+		).toEqual({
 			kind: "mixed",
 			values: ["#eef", undefined],
 		});
 	});
 
-	it("ignores a part selection naming another object, and one of another kind", () => {
+	it("ignores a part selection naming another object, and one of a kind covering no slot", () => {
 		const t1 = table("t1", cells("#eef", "#fee"));
 		const everySlot = { kind: "mixed", values: ["#eef", "#fee"] };
 		expect(
-			readSelectionSlotField(["t1"], { t1 }, slotsPicked("t2", "r0c0"), "fill"),
+			readSelectionSlotField(
+				["t1"],
+				{ t1 },
+				slotsPicked("t2", "r0c0"),
+				objectPart,
+				"fill",
+			),
 		).toEqual(everySlot);
 		expect(
 			readSelectionSlotField(
 				["t1"],
 				{ t1 },
-				{ objectId: "t1", kind: "row", partIds: ["0"] },
+				{ objectId: "t1", kind: NON_SLOT_PART_KIND, partIds: ["tip"] },
+				objectPart,
 				"fill",
 			),
 		).toEqual(everySlot);
+		// A kind the type does not declare at all reads the same way.
+		expect(
+			readSelectionSlotField(
+				["t1"],
+				{ t1 },
+				{ objectId: "t1", kind: "column", partIds: ["0"] },
+				objectPart,
+				"fill",
+			),
+		).toEqual(everySlot);
+	});
+
+	it("reads the slots a picked kind of the type's own covers, and nothing else", () => {
+		// Two rows disagreeing with each other, each row agreeing with itself.
+		const t1 = table("t1", grid(2, "#eef", "#eef", "#fee", "#fee"));
+		expect(
+			readSelectionSlotField(
+				["t1"],
+				{ t1 },
+				{ objectId: "t1", kind: SLOT_GROUP_PART_KIND, partIds: ["1"] },
+				objectPart,
+				"fill",
+			),
+		).toEqual({ kind: "single", value: "#fee" });
+	});
+
+	it("reads a picked kind whose slots disagree as mixed over those slots alone", () => {
+		// The whole table is mixed too, so only the values tell the two readings
+		// apart: the second row's color is not among them.
+		const t1 = table("t1", grid(2, "#eef", "#fee", "#aaf", "#aaf"));
+		expect(
+			readSelectionSlotField(
+				["t1"],
+				{ t1 },
+				{ objectId: "t1", kind: SLOT_GROUP_PART_KIND, partIds: ["0"] },
+				objectPart,
+				"fill",
+			),
+		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
 	});
 
 	it("drops a picked id the object no longer has, and falls back to every slot when none is left", () => {
@@ -110,11 +192,18 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t1", "r0c1", "r9c9"),
+				objectPart,
 				"fill",
 			),
 		).toEqual({ kind: "single", value: "#fee" });
 		expect(
-			readSelectionSlotField(["t1"], { t1 }, slotsPicked("t1", "r9c9"), "fill"),
+			readSelectionSlotField(
+				["t1"],
+				{ t1 },
+				slotsPicked("t1", "r9c9"),
+				objectPart,
+				"fill",
+			),
 		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
 	});
 
@@ -127,6 +216,7 @@ describe("readSelectionSlotField", () => {
 				["g1"],
 				{ g1: g1 as unknown as ObjectState, t1, t2 },
 				null,
+				objectPart,
 				"fill",
 			),
 		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
@@ -134,10 +224,12 @@ describe("readSelectionSlotField", () => {
 
 	it("reads none when nothing selected holds text", () => {
 		const bare = { id: "b1", type: "rect" } as unknown as ObjectState;
-		expect(readSelectionSlotField(["b1"], { b1: bare }, null, "fill")).toEqual({
+		expect(
+			readSelectionSlotField(["b1"], { b1: bare }, null, objectPart, "fill"),
+		).toEqual({
 			kind: "none",
 		});
-		expect(readSelectionSlotField([], {}, null, "fill")).toEqual({
+		expect(readSelectionSlotField([], {}, null, objectPart, "fill")).toEqual({
 			kind: "none",
 		});
 	});
@@ -146,7 +238,9 @@ describe("readSelectionSlotField", () => {
 		const t1 = table("t1", {
 			r0c0: { text: "", fill: 3 },
 		} as unknown as TextSlots);
-		expect(readSelectionSlotField(["t1"], { t1 }, null, "fill")).toEqual({
+		expect(
+			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+		).toEqual({
 			kind: "single",
 			value: undefined,
 		});

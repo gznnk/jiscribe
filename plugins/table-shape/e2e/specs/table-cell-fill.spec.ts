@@ -1,15 +1,17 @@
 import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-import { cellCenter, cellFillColor } from "../support/tableDom";
+import { cellCenter, cellFillColor, clickTrackGrip } from "../support/tableDom";
 
 /**
- * Setting a cell's background from the ObjectMenu, in a real browser. Three
+ * Setting a cell's background from the ObjectMenu, in a real browser. Four
  * things only a browser can say: that the item is on the menu at all while a
  * cell is picked (it is a custom item, which the slot narrowing drops unless it
  * declares itself slot-aware), that the paint lands on the picked cells and
- * nowhere else, and that a range whose cells disagree draws itself as such
- * rather than as one of their colors.
+ * nowhere else, that a row or column picked by its grip is the cells of that
+ * track and not the whole grid (tableTrackParts declares which cells it covers),
+ * and that a pick whose cells disagree draws itself as such rather than as one
+ * of their colors.
  */
 
 /** The section the cell-background button opens (TableCellColorMenu). */
@@ -159,6 +161,72 @@ test.describe("table cell fill", () => {
 		await expect
 			.poll(() => swatchSliceCount(canvas), {
 				message: "cells that agree are one circle again",
+			})
+			.toBe(0);
+	});
+
+	test("paints the cells of a row picked by its grip, and no others", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await clickTrackGrip(canvas, "rowGrip", 1);
+		await pickCellColor(canvas, RED);
+
+		const red = await canvas.normalizeColor(RED);
+		await expect
+			.poll(() => cellFillColor(canvas, id, "r1c0"), {
+				message: "the picked row takes the color",
+			})
+			.toBe(red);
+		expect(await cellFillColor(canvas, id, "r1c1")).toBe(red);
+		expect(await cellFillColor(canvas, id, "r0c0")).toBe(UNPAINTED);
+		expect(await cellFillColor(canvas, id, "r0c1")).toBe(UNPAINTED);
+	});
+
+	test("paints the cells of a column picked by its grip, and no others", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await clickTrackGrip(canvas, "columnGrip", 0);
+		await pickCellColor(canvas, RED);
+
+		const red = await canvas.normalizeColor(RED);
+		await expect
+			.poll(() => cellFillColor(canvas, id, "r0c0"), {
+				message: "the picked column takes the color",
+			})
+			.toBe(red);
+		expect(await cellFillColor(canvas, id, "r1c0")).toBe(red);
+		expect(await cellFillColor(canvas, id, "r0c1")).toBe(UNPAINTED);
+		expect(await cellFillColor(canvas, id, "r1c1")).toBe(UNPAINTED);
+	});
+
+	test("draws the swatch off the picked row rather than off the table", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await clickCell(canvas, id, "r0c0");
+		await pickCellColor(canvas, RED);
+		await expect
+			.poll(() => cellFillColor(canvas, id, "r0c0"), {
+				message: "one cell of the first row is painted before a row is picked",
+			})
+			.toBe(await canvas.normalizeColor(RED));
+
+		// The first row holds the painted cell and an unpainted one.
+		await clickTrackGrip(canvas, "rowGrip", 0);
+		await expect
+			.poll(() => swatchSliceCount(canvas), {
+				message: "the swatch is split between what that row's cells say",
+			})
+			.toBeGreaterThan(1);
+
+		// The second row agrees with itself, where the table as a whole does not —
+		// so a swatch drawn off the table would still be split here.
+		await clickTrackGrip(canvas, "rowGrip", 1);
+		await expect
+			.poll(() => swatchSliceCount(canvas), {
+				message: "a row whose cells agree is one circle",
 			})
 			.toBe(0);
 	});

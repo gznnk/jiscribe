@@ -7,7 +7,12 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTextSlotPartRegistry } from "../../../../selection/__tests__/support/textSlotPartRegistry";
+import {
+	createTextSlotPartRegistry,
+	NON_SLOT_PART_KIND,
+	registerSlotGroupParts,
+	SLOT_GROUP_PART_KIND,
+} from "../../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { getSelectedOrFirstTextSlot } from "../getSelectedOrFirstTextSlot";
@@ -39,6 +44,14 @@ const makeState = (
 
 /** Every fixture here wears the rect type with features.text: "slots". */
 const objectPart = createTextSlotPartRegistry("rect");
+
+/**
+ * The same, plus two kinds of the type's own: one standing for a group of slots
+ * the way a table's row does over its cells, and one naming something other than
+ * text, which covers no slot at all.
+ */
+const objectPartWithTracks = createTextSlotPartRegistry();
+registerSlotGroupParts(objectPartWithTracks, "rect");
 
 describe("getSelectedOrFirstTextSlot", () => {
 	it("returns undefined when nothing is selected", () => {
@@ -226,6 +239,57 @@ describe("getSelectedOrFirstTextSlot", () => {
 				objectPart,
 			)?.fontSize,
 		).toBe(16);
+	});
+
+	describe("a picked kind that stands for a group of slots (a table's row)", () => {
+		const grid = rect("r1", {
+			r0c0: { text: "a", fontSize: 11 },
+			r0c1: { text: "b", fontSize: 11 },
+			r1c0: { text: "c", fontSize: 24 },
+			r1c1: { text: "d", fontSize: 30 },
+		});
+		const rowPicked = (...partIds: string[]): CanvasControllerState =>
+			makeState(
+				["r1"],
+				{ r1: grid },
+				{ objectId: "r1", kind: SLOT_GROUP_PART_KIND, partIds },
+			);
+
+		it("reads what the slots that kind covers agree on", () => {
+			expect(
+				getSelectedOrFirstTextSlot(
+					rowPicked("0"),
+					textStyleDefaults,
+					objectPartWithTracks,
+				)?.fontSize,
+			).toBe(11);
+		});
+
+		it("leaves a field those slots disagree on unset, without looking at the rest", () => {
+			// The first row agrees on 11, so a read of the whole object would not be
+			// unset — the second row's own disagreement is what has to show.
+			expect(
+				getSelectedOrFirstTextSlot(
+					rowPicked("1"),
+					textStyleDefaults,
+					objectPartWithTracks,
+				)?.fontSize,
+			).toBeUndefined();
+		});
+
+		it("falls back to the first slot for a picked kind that covers none", () => {
+			expect(
+				getSelectedOrFirstTextSlot(
+					makeState(
+						["r1"],
+						{ r1: grid },
+						{ objectId: "r1", kind: NON_SLOT_PART_KIND, partIds: ["tip"] },
+					),
+					textStyleDefaults,
+					objectPartWithTracks,
+				)?.fontSize,
+			).toBe(11);
+		});
 	});
 });
 

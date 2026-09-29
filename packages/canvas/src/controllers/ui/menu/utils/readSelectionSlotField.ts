@@ -5,8 +5,9 @@ import type { SelectionValue } from "./SelectionValue";
 import { combineSelectionValues } from "./SelectionValue";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
+import type { ObjectPartRegistry } from "../../../selection/ObjectPartRegistry";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import { resolveSelectedTextSlotIds } from "../../../selection/resolveSelectedTextSlotIds";
 import { resolveAddressedTextSlotIds } from "../../../styleProperties/addressedTextSlots";
 
 /**
@@ -15,17 +16,20 @@ import { resolveAddressedTextSlotIds } from "../../../styleProperties/addressedT
  * `textSlotField` (a table cell's `fill`).
  *
  * The slots read are the ones a write of that property would land on
- * (resolveAddressedTextSlotIds): those picked one level below the object, else
- * every slot of every selected object. A menu item therefore states the value
- * of exactly the slots its pick would change, and one whose slots disagree
- * reads `mixed` — the rule a range of characters and a range of slots are
- * already read by (readRichTextRangeStyle / foldSharedTextSlotStyle).
+ * (resolveSelectedTextSlotIds / resolveAddressedTextSlotIds): those the parts
+ * picked one level below the object name, else every slot of every selected
+ * object. A menu item therefore states the value of exactly the slots its pick
+ * would change, and one whose slots disagree reads `mixed` — the rule a range of
+ * characters and a range of slots are already read by (readRichTextRangeStyle /
+ * foldSharedTextSlotStyle).
  *
  * @param selectedIds - The selection, in the order the values are folded in; a selected group is walked down into (collectSelectionObjects)
  * @param objects - Every object of the canvas, keyed by id; ids not in it are skipped
  * @param objectPartSelection - The parts picked below the object, already checked
- *   against the selection (resolveObjectPartSelection); one of a kind other than
- *   `"textSlot"` addresses no slot and so reads every slot, as null does
+ *   against the selection (resolveObjectPartSelection); one of a kind that covers
+ *   no slot names none and so reads every slot, as null does
+ * @param objectPart - Per-canvas ObjectPartRegistry, which holds a non-slot
+ *   kind's own reading of the slots it covers (a table's row over its cells)
  * @param field - Name of the field on the slot, which is the declaration's
  *   `textSlotField` and not the property name the menu writes under
  * @returns `single` (the value every addressed slot states, `undefined` where
@@ -37,6 +41,7 @@ export const readSelectionSlotField = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
 	objectPartSelection: ObjectPartSelection | null,
+	objectPart: ObjectPartRegistry,
 	field: string,
 ): SelectionValue<string | undefined> => {
 	const values: (string | undefined)[] = [];
@@ -45,11 +50,11 @@ export const readSelectionSlotField = (
 			continue;
 		}
 		const { text } = object;
-		const selectedSlotIds =
-			objectPartSelection?.objectId === object.id &&
-			objectPartSelection.kind === TEXT_SLOT_PART_KIND
-				? objectPartSelection.partIds
-				: undefined;
+		const selectedSlotIds = resolveSelectedTextSlotIds(
+			object,
+			objectPartSelection,
+			objectPart,
+		);
 		for (const slotId of resolveAddressedTextSlotIds(text, selectedSlotIds)) {
 			const held = (text[slotId] as Record<string, unknown>)[field];
 			values.push(isString(held) ? held : undefined);

@@ -15,7 +15,7 @@ import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ObjectPartRegistry } from "../../../selection/ObjectPartRegistry";
 import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import { resolveSelectedTextSlotIds } from "../../../selection/resolveSelectedTextSlotIds";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -57,12 +57,13 @@ const foldSharedTextSlotStyle = (slots: readonly TextSlot[]): TextSlot => {
 };
 
 /**
- * The one slot a text style is read from: the slot selected one level below the
- * object when there is one — or, for several of them, what they all agree on
+ * The one slot a text style is read from: the slot the parts picked one level
+ * below the object name (resolveSelectedTextSlotIds, so a table's row is read as
+ * the cells of that row) — or, for several of them, what they all agree on
  * (foldSharedTextSlotStyle) — otherwise the first slot of the first selected
  * object that holds text (descendants of a selected group included). The
- * counterpart to the write side, which targets that same slot and falls back to
- * every slot of every selected object (TextSlotStyleProperty). The menus read
+ * counterpart to the write side, which targets those same slots and falls back
+ * to every slot of every selected object (TextSlotStyleProperty). The menus read
  * through readSelectionTextStyle, which hands the picked-slot and editing cases
  * here and folds every object's first slot itself otherwise.
  *
@@ -105,13 +106,13 @@ export const getSelectedOrFirstTextSlot = (
 	}
 
 	const objectPartSelection = resolveObjectPartSelection(state, objectPart);
-	if (
-		objectPartSelection !== null &&
-		objectPartSelection.kind === TEXT_SLOT_PART_KIND
-	) {
+	if (objectPartSelection !== null) {
 		const target = state.objects[objectPartSelection.objectId];
 		if (isTextStyleState(target)) {
-			const selectedSlots = objectPartSelection.partIds
+			const selectedSlotIds =
+				resolveSelectedTextSlotIds(target, objectPartSelection, objectPart) ??
+				[];
+			const selectedSlots = selectedSlotIds
 				.map((slotId) =>
 					withTypeStyleDefaults(
 						textStyleDefaults,

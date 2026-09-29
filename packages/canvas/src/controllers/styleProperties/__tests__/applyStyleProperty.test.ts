@@ -13,7 +13,12 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
-import { createTextSlotPartRegistry } from "../../selection/__tests__/support/textSlotPartRegistry";
+import {
+	createTextSlotPartRegistry,
+	NON_SLOT_PART_KIND,
+	registerSlotGroupParts,
+	SLOT_GROUP_PART_KIND,
+} from "../../selection/__tests__/support/textSlotPartRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
 
@@ -71,6 +76,10 @@ const objectPartRegistry = createTextSlotPartRegistry(
 	"group",
 	SLOT_EXTRA_SHAPE_TYPE,
 );
+
+// The slot-storing fixture also declares the two kinds a table has beside its
+// cells: one standing for a group of slots (a row), one covering none (a tail).
+registerSlotGroupParts(objectPartRegistry, SLOT_EXTRA_SHAPE_TYPE);
 
 const applyStyleProperty = (
 	state: CanvasControllerState,
@@ -1257,6 +1266,99 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const r1 = rectObj("r1");
 			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
 			expect(applyStyleProperty(state, "cellFill", "#fee")).toBe(state);
+		});
+	});
+
+	describe("a picked kind that stands for a group of slots (a table's row)", () => {
+		/** A 2x2 grid, so a row is a proper subset of the slots. */
+		const gridShapeObj = (id: string): ObjectState =>
+			({
+				id,
+				type: SLOT_EXTRA_SHAPE_TYPE,
+				features: SlotExtraShapeFeatures,
+				stroke: "#000000",
+				strokeWidth: 1,
+				cx: 0,
+				cy: 0,
+				width: 100,
+				height: 100,
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+				text: {
+					r0c0: { text: "a" },
+					r0c1: { text: "b" },
+					r1c0: { text: "c" },
+					r1c1: { text: "d" },
+				},
+			}) as unknown as ObjectState;
+
+		const cellsOf = (
+			state: CanvasControllerState,
+			id: string,
+		): Record<string, Record<string, unknown>> =>
+			(
+				state.objects[id] as unknown as {
+					text: Record<string, Record<string, unknown>>;
+				}
+			).text;
+
+		const stateWithPart = (kind: string, partIds: string[]) => {
+			const s1 = gridShapeObj("s1");
+			return makeState({
+				selectedIds: ["s1"],
+				objects: { s1 },
+				objectPartSelection: { objectId: "s1", kind, partIds },
+			});
+		};
+
+		it("writes a slot-stored extra on the slots that kind covers alone", () => {
+			const result = applyStyleProperty(
+				stateWithPart(SLOT_GROUP_PART_KIND, ["1"]),
+				"cellFill",
+				"#fee",
+			);
+			expect(cellsOf(result, "s1")).toEqual({
+				r0c0: { text: "a" },
+				r0c1: { text: "b" },
+				r1c0: { text: "c", fill: "#fee" },
+				r1c1: { text: "d", fill: "#fee" },
+			});
+		});
+
+		it("writes the typography on those same slots", () => {
+			const result = applyStyleProperty(
+				stateWithPart(SLOT_GROUP_PART_KIND, ["0"]),
+				"fontSize",
+				"24",
+			);
+			const cells = cellsOf(result, "s1");
+			expect(cells.r0c0.fontSize).toBe(24);
+			expect(cells.r0c1.fontSize).toBe(24);
+			expect(cells.r1c0.fontSize).toBeUndefined();
+			expect(cells.r1c1.fontSize).toBeUndefined();
+		});
+
+		it("covers every slot the picked parts name, taken together", () => {
+			const result = applyStyleProperty(
+				stateWithPart(SLOT_GROUP_PART_KIND, ["0", "1"]),
+				"cellFill",
+				"#fee",
+			);
+			for (const cell of Object.values(cellsOf(result, "s1"))) {
+				expect(cell.fill).toBe("#fee");
+			}
+		});
+
+		it("falls back to every slot for a picked kind that covers none", () => {
+			const result = applyStyleProperty(
+				stateWithPart(NON_SLOT_PART_KIND, ["tip"]),
+				"cellFill",
+				"#fee",
+			);
+			for (const cell of Object.values(cellsOf(result, "s1"))) {
+				expect(cell.fill).toBe("#fee");
+			}
 		});
 	});
 });

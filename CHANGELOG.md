@@ -197,6 +197,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **Styling a table row or column picked by its grip lands on that row or
+  column.** It used to be written to every cell of the table, because a picked
+  track could not say which cells it stood for — and the swatch it was read back
+  from showed the first cell alone, so the two did not even agree. For plugin
+  authors: `ObjectPartDefinition.textSlotIds` is how a kind that stands for a
+  group of slots names them, and a kind declaring none keeps landing on the whole
+  object as before.
 - **The reported box of a rotated shape whose size is measured no longer misses
   it.** `get_object_bounds`, and with it alignment, distribution and overlap
   checks, read a `text`'s stored coordinate as the box's plain top-left corner —
