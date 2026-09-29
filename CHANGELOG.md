@@ -197,6 +197,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **A group's frame no longer goes stale when a shape inside it is edited by a
+  command or a control.** Whether a group kept its box depended on _how_ an edit
+  was made rather than on what it did — removing a table's row with the Delete
+  key settled the group, the same removal from the right-click menu did not — so
+  the group's outline, its handles and the width and height it reports could be
+  left at the size it used to be. It heals on reload either way; what it cost in
+  the meantime was typing a size into a stale group, which scaled its children by
+  the wrong ratio.
 - **Styling a table row or column picked by its grip lands on that row or
   column.** It used to be written to every cell of the table, because a picked
   track could not say which cells it stood for — and the swatch it was read back
