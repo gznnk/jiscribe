@@ -24,6 +24,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A plugin's own strings follow the host's language.** A type's commands, its
+  rows on the context menu and the strings it draws itself were English whatever
+  the canvas was set to, because a plugin had no way to hand its dictionary over.
+  `CanvasPlugin.messages` is that channel, and a host outranks it — the same
+  order a stencil's label already resolved in. The `table`'s six grid commands
+  and its Cell Color button ship English and Japanese.
 - **A table cell's background can be set from the floating menu.** Cell Color
   paints the picked cells, or every cell when none is picked, and shows the
   colours split when they disagree. **No fill** takes a cell back to letting what

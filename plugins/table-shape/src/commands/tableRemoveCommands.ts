@@ -3,12 +3,13 @@ import type { Command } from "@jiscribe/canvas-sdk";
 import { resolveTableTrackSelection } from "./resolveTableTrackSelection";
 import { removeTableTracks } from "../grid/removeTableTracks";
 import type { TableAxis } from "../grid/tableTrack";
+import { tableCommandLabel } from "../messages/tableMessages";
+import type { TableCommandId } from "../messages/tableMessages";
 
-/** One command's id and menu label, per axis. */
+/** One command's id, per axis. The wording lives in the dictionary. */
 type TableRemoveCommandSpec = {
 	axis: TableAxis;
-	id: string;
-	label: string;
+	id: TableCommandId;
 };
 
 /**
@@ -22,8 +23,8 @@ type TableRemoveCommandSpec = {
  * the nudges.
  */
 const TABLE_REMOVE_COMMAND_SPECS: readonly TableRemoveCommandSpec[] = [
-	{ axis: "row", id: "table.deleteRow", label: "Delete Row" },
-	{ axis: "column", id: "table.deleteColumn", label: "Delete Column" },
+	{ axis: "row", id: "table.deleteRow" },
+	{ axis: "column", id: "table.deleteColumn" },
 ];
 
 /**
@@ -39,7 +40,7 @@ const TABLE_REMOVE_COMMAND_SPECS: readonly TableRemoveCommandSpec[] = [
  */
 const createTableRemoveCommand = (spec: TableRemoveCommandSpec): Command => ({
 	id: spec.id,
-	label: spec.label,
+	label: tableCommandLabel(spec.id),
 	category: "edit",
 
 	canExecute: (state) => {

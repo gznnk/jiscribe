@@ -5,13 +5,14 @@ import type { TableInsertSide } from "./resolveTableInsertTarget";
 import { insertTableTrack } from "../grid/insertTableTrack";
 import { remapTablePartSelectionForInsert } from "../grid/remapTablePartSelectionForInsert";
 import type { TableAxis } from "../grid/tableTrack";
+import type { TableCommandId } from "../messages/tableMessages";
+import { tableCommandLabel } from "../messages/tableMessages";
 
-/** One command's id, menu label and key, per axis and side. */
+/** One command's id and key, per axis and side. The wording lives in the dictionary. */
 type TableInsertCommandSpec = {
 	axis: TableAxis;
 	side: TableInsertSide;
-	id: string;
-	label: string;
+	id: TableCommandId;
 	/** The arrow the new track appears in the direction of. */
 	arrowCode: string;
 };
@@ -33,28 +34,24 @@ const TABLE_INSERT_COMMAND_SPECS: readonly TableInsertCommandSpec[] = [
 		axis: "row",
 		side: "before",
 		id: "table.insertRowAbove",
-		label: "Insert Row Above",
 		arrowCode: "ArrowUp",
 	},
 	{
 		axis: "row",
 		side: "after",
 		id: "table.insertRowBelow",
-		label: "Insert Row Below",
 		arrowCode: "ArrowDown",
 	},
 	{
 		axis: "column",
 		side: "before",
 		id: "table.insertColumnLeft",
-		label: "Insert Column Left",
 		arrowCode: "ArrowLeft",
 	},
 	{
 		axis: "column",
 		side: "after",
 		id: "table.insertColumnRight",
-		label: "Insert Column Right",
 		arrowCode: "ArrowRight",
 	},
 ];
@@ -78,7 +75,7 @@ const toKeyBinding = (spec: TableInsertCommandSpec): KeyBinding => ({
  */
 const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
 	id: spec.id,
-	label: spec.label,
+	label: tableCommandLabel(spec.id),
 	category: "edit",
 	shortcuts: { default: [toKeyBinding(spec)] },
 

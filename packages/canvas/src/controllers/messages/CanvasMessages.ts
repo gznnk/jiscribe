@@ -4,6 +4,7 @@ import {
 	resolveLocaleMessages,
 	type LocaleMessages,
 } from "./resolveLocaleMessages";
+import type { ResolvedPluginMessages } from "./resolvePluginMessages";
 import type { Command } from "../commands/CommandTypes";
 
 /** English defaults. Hosts override parts of this via the `messages` prop of Canvas. */
@@ -160,6 +161,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	stencilCategoryLabels: {},
 	colorNames: {},
 	arrowTypeNames: {},
+	pluginStrings: {},
 };
 
 /** Built-in dictionaries the canvas resolves from `locale` on its own. */
@@ -168,24 +170,54 @@ const builtinCanvasMessagesByLocale: LocaleMessages<CanvasMessages> = {
 	ja: jaCanvasMessages,
 };
 
+/** What `resolvePluginMessages` yields when no plugin contributes messages. */
+const NO_PLUGIN_MESSAGES: ResolvedPluginMessages = {
+	commandLabels: {},
+	pluginStrings: {},
+};
+
 /**
- * Resolves the effective messages for a locale, then applies host overrides.
- * Flat keys: English defaults ← built-in locale dictionary ← overrides. Record
- * fields are merged key by key (built-in locale record ← overrides record).
+ * Resolves the effective messages for a locale, then layers the plugins' own
+ * strings and the host's overrides on top.
+ *
+ * Flat keys: English defaults ← built-in locale dictionary ← overrides; plugins
+ * cannot reach them. Record fields are merged key by key, built-in locale record
+ * ← plugin record ← overrides record, so a host has the last word over a plugin
+ * exactly as it has over a built-in.
+ *
+ * @param locale - BCP-47-ish tag picking the built-in and the plugin dictionaries
+ * (`"ja-JP"` falls back to `"ja"`, then to `"en"`).
+ * @param overrides - The host's own strings, any subset; a record field passed
+ * here is merged into the resolved one, not substituted for it.
+ * @param pluginMessagesByLocale - The plugins' contributions as
+ * `resolvePluginMessages` built them, resolved for the same locale. Omit when
+ * there are none.
  */
 export const resolveCanvasMessages = (
 	locale: string,
 	overrides?: Partial<CanvasMessages>,
+	pluginMessagesByLocale?: LocaleMessages<ResolvedPluginMessages>,
 ): CanvasMessages => {
 	const localized = resolveLocaleMessages(
 		builtinCanvasMessagesByLocale,
 		locale,
 	);
+	const contributed = pluginMessagesByLocale
+		? resolveLocaleMessages(pluginMessagesByLocale, locale)
+		: NO_PLUGIN_MESSAGES;
 	return {
 		...defaultCanvasMessages,
 		...localized,
 		...overrides,
-		commandLabels: { ...localized.commandLabels, ...overrides?.commandLabels },
+		commandLabels: {
+			...localized.commandLabels,
+			...contributed.commandLabels,
+			...overrides?.commandLabels,
+		},
+		pluginStrings: {
+			...contributed.pluginStrings,
+			...overrides?.pluginStrings,
+		},
 		stencilLabels: {
 			...localized.stencilLabels,
 			...overrides?.stencilLabels,

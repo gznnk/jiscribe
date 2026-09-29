@@ -7,19 +7,17 @@ import {
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
 	readSelectionSlotField,
-	resolveLocaleMessages,
 	selectionMixedValues,
 	selectionValueOr,
 	setPart,
 	togglePart,
-	useCanvasLocale,
 	useObjectPartRegistry,
 	useSubmenuPosition,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
 import { NoFillButton, NoFillRow } from "./TableCellColorMenuStyled";
-import { tableMessagesByLocale } from "../messages/tableMessages";
+import { useTableStrings } from "../messages/useTableStrings";
 import { resolveCellPaint } from "../presentation/resolveCellPaint";
 import {
 	TABLE_CELL_FILL_FIELD,
@@ -52,8 +50,7 @@ const TableCellColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	openSectionId,
 	onPropertyUpdate,
 }) => {
-	const locale = useCanvasLocale();
-	const messages = resolveLocaleMessages(tableMessagesByLocale, locale);
+	const strings = useTableStrings();
 	const objectPart = useObjectPartRegistry();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
@@ -77,12 +74,12 @@ const TableCellColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-part={togglePart(SECTION_ID)}
-				title={messages.menuCellColor}
+				title={strings.menuCellColor}
 			>
 				<ColorPreviewIcon
 					color={resolveCellPaint(sharedFill)}
 					mixedColors={selectionMixedValues(cellFill)?.map(resolveCellPaint)}
-					title={messages.menuCellColor}
+					title={strings.menuCellColor}
 				/>
 			</ObjectMenuButton>
 			{isOpen && (
@@ -110,9 +107,9 @@ const TableCellColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							// record a history entry that changes nothing, dropping the redo
 							// stack with it (the grid drops a no-change pick the same way).
 							data-gesture={isNoFill ? "none" : undefined}
-							title={messages.cellColorNone}
+							title={strings.cellColorNone}
 						>
-							{messages.cellColorNone}
+							{strings.cellColorNone}
 						</NoFillButton>
 					</NoFillRow>
 				</ObjectMenuDropdownPanel>

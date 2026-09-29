@@ -251,4 +251,8 @@ export const jaCanvasMessages: CanvasMessages = {
 		CrowFootZeroOne: "鳥足（0 または 1）",
 		None: "なし",
 	},
+
+	// プラグインの ja 文字列は各プラグインの CanvasPlugin.messages にある。
+	// record はホスト上書き用に残す
+	pluginStrings: {},
 };

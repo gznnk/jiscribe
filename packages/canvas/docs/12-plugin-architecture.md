@@ -20,7 +20,31 @@ The type is `CanvasPlugin` (`packages/canvas/src/plugin/CanvasPlugin.ts`), and i
 substance is `objects`: keyed by `ObjectType`, with the type's definition as the
 value. `commands` is the second contribution: an array of `Command`, registered
 after the built-in set in plugin declaration order and narrowed by the same
-`config.commands` list.
+`config.commands` list. `messages` is the third: the plugin's own wording, per
+locale.
+
+## Strings: a plugin ships defaults, the host has the last word
+
+A `Command` carries one `label`, in English. That is the whole of what a
+contributed command could say until `CanvasPlugin.messages` existed, so a plugin's
+menu rows stayed English while the built-in block around them localized.
+
+`messages` is a `LocaleMessages<PluginMessages>` with two slots: `commandLabels`,
+keyed by the ids of the plugin's own commands, and `strings`, keyed however the
+plugin likes, for what the plugin draws itself. The canvas resolves it for its
+`locale` — per dictionary, so a plugin shipping no `ja` falls back to its own
+English rather than dragging the canvas back with it — and folds the result into
+`CanvasMessages` between the built-in dictionary and the host's `messages` prop.
+The host therefore overrides a plugin exactly as it overrides a built-in: a
+command by `commandLabels[id]`, a plugin's own string by
+`pluginStrings["<plugin id>.<key>"]`.
+
+The two halves of the namespace are what stop a plugin taking something that is
+not its own. Strings are stored under the plugin's `id`, so they cannot reach a
+built-in key and two plugins cannot land on each other's; command ids are global
+already, so the merge refuses a `commandLabels` key naming a command the plugin
+does not contribute. A plugin reads its strings back with `usePluginStrings`,
+which applies the host's overrides for it.
 
 A host wires it in through `initialConfig`:
 
@@ -91,6 +115,10 @@ with no config gives the default configuration: every built-in type and nothing 
   enable/disable is a non-goal: a document can contain objects of a type that was
   just unregistered, and there is no coherent answer for what should happen to them.
 - **Merge order** is `presetDefinitions` → `plugins` in declaration order.
+- **A duplicate plugin id among message contributors throws at construction**, as
+  does a `commandLabels` key naming a command the plugin does not contribute. The
+  id is the namespace the strings live in, so two plugins sharing one would
+  overwrite each other's wording without anything to show for it.
 - **A duplicate type, or a duplicate command id, throws at construction.** Not
   last-wins — an accidental collision between two plugins fails loudly instead of
   silently changing which shape renders or which command a menu entry runs.
