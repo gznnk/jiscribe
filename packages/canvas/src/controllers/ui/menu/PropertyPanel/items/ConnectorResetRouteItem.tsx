@@ -1,9 +1,9 @@
 import { memo } from "react";
 
+import { resolveCommandLabel } from "../../../../commands/CommandUtils";
 import { ResetConnectorRouteCommand } from "../../../../commands/connector/ResetConnectorRouteCommand";
 import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
-import { resolveCommandLabel } from "../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { hasSelectedConnectorShapedRoute } from "../../../../utils/hasSelectedConnectorShapedRoute";
 import { PropertyCommandButton } from "../common/PropertyControlsStyled";

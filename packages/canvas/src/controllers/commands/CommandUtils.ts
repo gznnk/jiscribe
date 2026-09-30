@@ -1,4 +1,6 @@
-import type { KeyBinding, PlatformKeyBindings } from "./CommandTypes";
+import type { Command, KeyBinding, PlatformKeyBindings } from "./CommandTypes";
+import type { CanvasMessages } from "../messages/CanvasMessagesTypes";
+import { resolveLocalizedLabel } from "../messages/resolveLocaleMessages";
 
 // Type definitions for the User-Agent Client Hints API (experimental API)
 interface NavigatorUAData {
@@ -162,3 +164,15 @@ export const formatShortcutTokens = (binding: KeyBinding): string[] => {
 
 	return tokens;
 };
+
+/**
+ * Display label of a command: the host override (`messages.commandLabels[id]`)
+ * first, then the label the command itself carries, resolved for `locale`.
+ */
+export const resolveCommandLabel = (
+	command: Pick<Command, "id" | "label">,
+	messages: CanvasMessages,
+	locale: string,
+): string =>
+	messages.commandLabels[command.id] ??
+	resolveLocalizedLabel(command.label, locale);

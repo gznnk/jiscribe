@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { resolveCommandLabel } from "../../commands/CommandUtils";
 import { ToggleStencilLibraryCommand } from "../../commands/view/ToggleStencilLibraryCommand";
-import {
-	defaultCanvasMessages,
-	resolveCommandLabel,
-} from "../../messages/CanvasMessages";
+import { defaultCanvasMessages } from "../../messages/CanvasMessages";
 import { ALL_COMMANDS } from "../initializeCommands";
 
 /**

@@ -12,9 +12,9 @@ import type { Command } from "../../../commands/CommandTypes";
 import {
 	formatShortcutTokens,
 	getPlatformShortcuts,
+	resolveCommandLabel,
 } from "../../../commands/CommandUtils";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { resolveCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import type {
 	CanvasMessages,

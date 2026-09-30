@@ -2,10 +2,8 @@ import type { CanvasMessages } from "./CanvasMessagesTypes";
 import { jaCanvasMessages } from "./jaCanvasMessages";
 import {
 	resolveLocaleMessages,
-	resolveLocalizedLabel,
 	type LocaleMessages,
 } from "./resolveLocaleMessages";
-import type { Command } from "../commands/CommandTypes";
 
 /** English defaults. Hosts override parts of this via the `messages` prop of Canvas. */
 export const defaultCanvasMessages: CanvasMessages = {
@@ -213,15 +211,3 @@ export const resolveCanvasMessages = (
 		},
 	};
 };
-
-/**
- * Display label of a command: the host override (`messages.commandLabels[id]`)
- * first, then the label the command itself carries, resolved for `locale`.
- */
-export const resolveCommandLabel = (
-	command: Pick<Command, "id" | "label">,
-	messages: CanvasMessages,
-	locale: string,
-): string =>
-	messages.commandLabels[command.id] ??
-	resolveLocalizedLabel(command.label, locale);
