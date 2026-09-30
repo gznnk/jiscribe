@@ -221,13 +221,18 @@ type CanvasProps = {
 	};
 	/**
 	 * Active locale (default `"en"`). Selects the built-in dictionary (en / ja)
-	 * and is exposed to plugins via `useCanvasLocale`. Resolution is exact →
-	 * language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
+	 * and each command's own label dictionary, and is exposed to plugins via
+	 * `useCanvasLocale` so they can resolve theirs. Resolution is exact →
+	 * language subtag (`"ja-JP"` → `"ja"`) → `"en"`, per dictionary, so a plugin
+	 * that ships no `ja` falls back to its own English rather than dragging the
+	 * canvas back to English.
 	 */
 	locale?: string;
 	/**
 	 * Partial overrides on top of the locale-resolved dictionary (tooltips,
 	 * menus, toasts). Tweaks individual strings; `locale` picks the language.
+	 * They outrank a contributed command's own label as well as the built-ins,
+	 * named by command id under `commandLabels`.
 	 */
 	messages?: Partial<CanvasMessages>;
 

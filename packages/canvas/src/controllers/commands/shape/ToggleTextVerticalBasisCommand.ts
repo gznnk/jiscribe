@@ -19,7 +19,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const ToggleTextVerticalBasisCommand: ExecutableCommand = {
 	id: "toggleTextVerticalBasis",
-	label: "Text Vertical Basis",
+	label: { en: "Text Vertical Basis", ja: "テキストを高さ全体に合わせる" },
 	category: "arrange",
 
 	canExecute: (state, registries) =>

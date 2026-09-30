@@ -12,7 +12,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const GroupCommand: ExecutableCommand = {
 	id: "group",
-	label: "Group",
+	label: { en: "Group", ja: "グループ化" },
 	category: "arrange",
 	shortcuts: {
 		mac: [{ code: "KeyG", meta: true }],

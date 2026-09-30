@@ -27,7 +27,7 @@ const canEditText = (
 
 export const StartTextEditCommand: ExecutableCommand = {
 	id: "start-text-edit",
-	label: "Start Text Editing",
+	label: { en: "Start Text Editing", ja: "テキスト編集を開始" },
 	category: "edit",
 	shortcuts: {
 		default: [{ code: "Enter" }],

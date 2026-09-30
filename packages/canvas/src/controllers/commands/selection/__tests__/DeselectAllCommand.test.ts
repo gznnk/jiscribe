@@ -137,7 +137,8 @@ describe("DeselectAllCommand", () => {
 	});
 
 	it("keeps Escape out of its bindings, so it cannot shadow EscapeSelectionCommand", () => {
-		// findByShortcut returns the first match only, so the two must not both claim Escape.
+		// Sharing a binding is only resolvable by canExecute, and these two share
+		// isSelectionClearable verbatim — so the two must not both claim Escape.
 		const bindings = Object.values(DeselectAllCommand.shortcuts ?? {}).flat();
 		expect(bindings.some((binding) => binding.code === "Escape")).toBe(false);
 	});

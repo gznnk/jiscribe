@@ -4,7 +4,7 @@ import { useToolbarCommandState } from "./ToolbarCommandStateContext";
 import { ToolbarIconButton } from "./ToolbarStyled";
 import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { getCommandLabel } from "../../../messages/CanvasMessages";
+import { resolveCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import {
 	resolveLocalizedLabel,
@@ -51,7 +51,7 @@ export const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
 
 	const resolvedLabel =
 		label === undefined
-			? getCommandLabel(messages, resolved.command)
+			? resolveCommandLabel(resolved.command, messages, locale)
 			: resolveLocalizedLabel(label, locale);
 
 	return (

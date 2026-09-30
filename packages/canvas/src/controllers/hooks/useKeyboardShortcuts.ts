@@ -68,29 +68,35 @@ export const useKeyboardShortcuts = ({
 				return;
 			}
 
-			const command = commandRegistry.findByShortcut(event);
-			if (!command) {
-				return;
-			}
+			// A binding may be claimed by several commands that are available in
+			// different contexts, so the keystroke is offered to each in
+			// registration order instead of stopping at the first.
+			const matched = commandRegistry.findAllByShortcut(event);
 
 			// Callback-executed commands (undo/redo when externally owned, paste)
 			// are delegated without checking canExecute (see callbacks JSDoc).
-			const callback = callbacksRef.current?.[command.id];
+			const callbacks = callbacksRef.current;
+			const callback = matched
+				.map((command) => callbacks?.[command.id])
+				.find((entry) => entry !== undefined);
 			if (callback) {
 				event.preventDefault();
 				event.stopPropagation();
 				callback();
 				return;
 			}
-			// A binding the command cannot execute right now is left to the browser,
-			// so Tab keeps moving focus (and arrows keep scrolling) while the
-			// matching command is unavailable.
-			if (!command.canExecute(canvasStateRef.current, registries)) {
+			// A binding no matching command can execute right now is left to the
+			// browser, so Tab keeps moving focus (and arrows keep scrolling) while
+			// every command claiming it is unavailable.
+			const executable = matched.find((command) =>
+				command.canExecute(canvasStateRef.current, registries),
+			);
+			if (!executable) {
 				return;
 			}
 			event.preventDefault();
 			event.stopPropagation();
-			dispatch({ type: "COMMAND", commandId: command.id });
+			dispatch({ type: "COMMAND", commandId: executable.id });
 		};
 
 		// Scoped to the container: keydown reaches here only while focus is inside

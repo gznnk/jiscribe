@@ -1,4 +1,5 @@
 import type { CanvasRegistries } from "./CanvasRegistries";
+import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import { BringForwardCommand } from "../commands/arrange/BringForwardCommand";
 import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
 import { moveCommands } from "../commands/arrange/MoveCommands";
@@ -105,15 +106,24 @@ export const ALL_COMMANDS: Command[] = [
  * @param registries Target bundle to populate.
  * @param commandIds When provided, only commands whose id is included are
  * registered (enables per-canvas command restriction). Defaults to all.
+ * @param plugins Command-contributing plugins, appended after `ALL_COMMANDS` in
+ * declaration order. They go in before the `commandIds` filter, so a host still
+ * narrows the built-in and the contributed set with one list. A contributed id
+ * that is already taken throws (`CommandRegistry.register`).
  */
 export const initializeCommands = (
 	registries: CanvasRegistries,
 	commandIds?: readonly string[],
+	plugins?: readonly CanvasPlugin[],
 ): void => {
 	registries.command.clear();
+	const contributed = (plugins ?? []).flatMap(
+		(plugin) => plugin.commands ?? [],
+	);
+	const all = [...ALL_COMMANDS, ...contributed];
 	const enabled = commandIds ? new Set(commandIds) : undefined;
 	const commands = enabled
-		? ALL_COMMANDS.filter((command) => enabled.has(command.id))
-		: ALL_COMMANDS;
+		? all.filter((command) => enabled.has(command.id))
+		: all;
 	registries.command.registerAll(commands);
 };

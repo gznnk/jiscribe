@@ -5,7 +5,7 @@ const PADDING_PX = 48;
 
 export const ZoomToSelectionCommand: ExecutableCommand = {
 	id: "zoomToSelection",
-	label: "Zoom to Selection",
+	label: { en: "Zoom to Selection", ja: "選択範囲にズーム" },
 	category: "view",
 	shortcuts: {
 		mac: [{ code: "Digit2", meta: true }],

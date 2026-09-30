@@ -68,7 +68,7 @@ export const isSelectionTextBlock = (
  */
 export const ToggleTextLayoutCommand: ExecutableCommand = {
 	id: "toggleTextLayout",
-	label: "Wrap Text in Fixed Width",
+	label: { en: "Wrap Text in Fixed Width", ja: "幅を固定して折り返す" },
 	category: "arrange",
 
 	canExecute: (state) => collectTextLayoutIds(state).length > 0,

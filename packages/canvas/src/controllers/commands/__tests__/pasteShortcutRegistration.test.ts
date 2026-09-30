@@ -41,31 +41,31 @@ const keyEvent = (init: {
  * the hand-written Ctrl+V matcher formerly in useClipboardPaste (issue #113).
  */
 describe("paste shortcut registration", () => {
-	it("matches Ctrl+V on Windows via findByShortcut", () => {
+	it("matches Ctrl+V on Windows via findAllByShortcut", () => {
 		stubPlatform("win");
 		const registries = createTestRegistries();
-		const command = registries.command.findByShortcut(
+		const commands = registries.command.findAllByShortcut(
 			keyEvent({ code: "KeyV", ctrlKey: true }),
 		);
-		expect(command?.id).toBe("paste");
+		expect(commands.map((command) => command.id)).toEqual(["paste"]);
 	});
 
-	it("matches Cmd+V on Mac via findByShortcut", () => {
+	it("matches Cmd+V on Mac via findAllByShortcut", () => {
 		stubPlatform("mac");
 		const registries = createTestRegistries();
-		const command = registries.command.findByShortcut(
+		const commands = registries.command.findAllByShortcut(
 			keyEvent({ code: "KeyV", metaKey: true }),
 		);
-		expect(command?.id).toBe("paste");
+		expect(commands.map((command) => command.id)).toEqual(["paste"]);
 	});
 
 	it("does not match Ctrl+Shift+V", () => {
 		stubPlatform("win");
 		const registries = createTestRegistries();
-		const command = registries.command.findByShortcut(
+		const commands = registries.command.findAllByShortcut(
 			keyEvent({ code: "KeyV", ctrlKey: true, shiftKey: true }),
 		);
-		expect(command).toBeUndefined();
+		expect(commands).toEqual([]);
 	});
 
 	it("is a no-op when dispatched as a COMMAND action (execute-less guard)", () => {

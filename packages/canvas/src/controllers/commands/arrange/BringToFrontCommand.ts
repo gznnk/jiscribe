@@ -6,7 +6,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const BringToFrontCommand: ExecutableCommand = {
 	id: "bringToFront",
-	label: "Bring to Front",
+	label: { en: "Bring to Front", ja: "最前面へ移動" },
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "}", meta: true }],

@@ -4,7 +4,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const SelectAllCommand: ExecutableCommand = {
 	id: "selectAll",
-	label: "Select All",
+	label: { en: "Select All", ja: "すべて選択" },
 	category: "selection",
 	shortcuts: {
 		mac: [{ code: "KeyA", meta: true }],

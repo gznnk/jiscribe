@@ -5,7 +5,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const UngroupCommand: ExecutableCommand = {
 	id: "ungroup",
-	label: "Ungroup",
+	label: { en: "Ungroup", ja: "グループ解除" },
 	category: "arrange",
 	shortcuts: {
 		mac: [{ code: "KeyG", meta: true, shift: true }],

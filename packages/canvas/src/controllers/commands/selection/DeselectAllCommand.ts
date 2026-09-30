@@ -6,7 +6,7 @@ import {
 
 export const DeselectAllCommand: ExecutableCommand = {
 	id: "deselectAll",
-	label: "Deselect All",
+	label: { en: "Deselect All", ja: "選択を解除" },
 	category: "selection",
 	shortcuts: {
 		mac: [{ code: "KeyA", meta: true, shift: true }],

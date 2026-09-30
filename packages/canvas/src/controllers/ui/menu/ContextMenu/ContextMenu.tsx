@@ -15,7 +15,8 @@ import {
 } from "../../../commands/CommandUtils";
 import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../hooks/useCommandState";
-import { getCommandLabel } from "../../../messages/CanvasMessages";
+import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
+import { resolveCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 /**
@@ -48,6 +49,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
 	const resolveCommand = useCommandState(canvasState);
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
@@ -106,7 +108,9 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 
 				return (
 					<MenuItem key={command.id} disabled={!enabled} {...executionProps}>
-						<MenuItemLabel>{getCommandLabel(messages, command)}</MenuItemLabel>
+						<MenuItemLabel>
+							{resolveCommandLabel(command, messages, locale)}
+						</MenuItemLabel>
 						{firstShortcut && (
 							<MenuItemShortcut>
 								{formatShortcut(firstShortcut)}

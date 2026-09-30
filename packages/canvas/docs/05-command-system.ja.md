@@ -38,16 +38,17 @@ Command パターンで一元管理するしくみ。
 
 ### 主要コンポーネント
 
-- `CommandRegistry`（`commands/CommandRegistry.ts`）… キャンバスごとに 1 つあり、レジストリ束の `registries.command` として引く。ID で引く `get`、キーイベントから引く `findByShortcut` など
+- `CommandRegistry`（`commands/CommandRegistry.ts`）… キャンバスごとに 1 つあり、レジストリ束の `registries.command` として引く。ID で引く `get`、キーイベントに一致するコマンドを全て返す `findAllByShortcut` など
 - `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` で引いたコマンドが `execute` を持たないとき、または `canExecute` が偽のときは state をそのまま返し、それ以外は `execute` を呼ぶ
-- `useKeyboardShortcuts`（`hooks/`）… keydown を `findByShortcut` で解決して dispatch（入力フィールド上では無効化）。`callbacks` に実行を渡されたコマンドはそちらを呼ぶ
+- `useKeyboardShortcuts`（`hooks/`）… keydown を `findAllByShortcut` で解決し、`canExecute` が通った最初の 1 つを dispatch（どれも通らなければキーはブラウザへ渡す。入力フィールド上では無効化）。`callbacks` に実行を渡されたコマンドはそちらを呼ぶ
 - `CommandUtils`… プラットフォーム判定・`getPlatformShortcuts` / `formatShortcut`（`⌘A` ↔ `Ctrl+A`）
 - 登録は `registries/`（`initializeCommands`）でまとめて行う
 
 ## カテゴリと収録コマンド
 
 コマンドは目的別にディレクトリ分割されている（`controllers/commands/` 配下。例: `selection/`・`arrange/`・`view/`）。
-キャンバスに登録されるコマンドの一覧は `ALL_COMMANDS`（`controllers/registries/initializeCommands.ts`）が正本。
+組み込みコマンドの一覧は `ALL_COMMANDS`（`controllers/registries/initializeCommands.ts`）が正本。
+キャンバスはまずそれを、続いて各プラグイン自前のもの（`CanvasPlugin.commands`）を宣言順に登録するので、登録される集合は両者の和になる。
 `createCanvasRegistries` は既定でそのすべてを登録し、設定で有効なコマンドを絞った場合はその部分集合だけを登録する。
 
 `Command.category` は UI 上のグルーピングに使う分類で、取りうる値は `CommandTypes.ts` にある。

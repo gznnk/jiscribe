@@ -15,6 +15,35 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A command carries its own wording, in every locale it ships.**
+  `Command.label` takes `string | LocaleMessages<string>`, exactly as
+  `Stencil.label` already did, and a host override by id still outranks it. The
+  built-in commands' Japanese moves out of the `ja` dictionary onto the commands
+  themselves, leaving `CanvasMessages.commandLabels` as the host-override slot
+  `stencilLabels` has been for a while — so a label and its translations are one
+  declaration instead of two places that had to be kept in step. Resolution is
+  per declaration (exact → language subtag → `en`), so a command shipping no
+  `ja` falls back to its own English rather than dragging the canvas back with
+  it. This is what makes a contributed command nameable in the host's language:
+  a plugin declares the same field, and what it draws itself it localizes as the
+  other shipped plugins do (`useCanvasLocale` + `resolveLocaleMessages` over its
+  own dictionary).
+- **For plugin authors: a plugin may contribute commands.**
+  `CanvasPlugin.commands` is registered after `ALL_COMMANDS` in declaration
+  order, and the host's own `config.commands` narrowing is applied over the
+  result, so one list still narrows the whole set. The types a command is
+  written against (`Command`, and the `CanvasControllerState` /
+  `ICanvasRegistries` it reads) are exported from the unstable surface, which
+  `canvas-sdk` re-exports whole: a command is a state transition over the
+  canvas's working state rather than a settled contract, so it is not on the
+  stable surface. Two commands may now share a keyboard shortcut as long as
+  their `canExecute` disagree — the lookup answers with every match in
+  registration order and the caller takes the first that can run, instead of
+  taking the first match alone and passing the key to the browser when that one
+  refused. No pair of built-in commands shares a binding today, so nothing
+  shipped changes; a swept test holds that (`initializeCommands.exclusivity`).
+  `CommandRegistry.register` now throws on a duplicate id rather than silently
+  letting the later one win.
 - For plugin authors: a shape may now declare `geometry: "point"` and let
   `createFrameMapper` map it — the doc stores the position alone and the box is
   re-derived from the content (`contentResizer`). `@jiscribe/geometry` gained

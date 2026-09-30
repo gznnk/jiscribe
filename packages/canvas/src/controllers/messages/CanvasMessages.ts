@@ -2,6 +2,7 @@ import type { CanvasMessages } from "./CanvasMessagesTypes";
 import { jaCanvasMessages } from "./jaCanvasMessages";
 import {
 	resolveLocaleMessages,
+	resolveLocalizedLabel,
 	type LocaleMessages,
 } from "./resolveLocaleMessages";
 import type { Command } from "../commands/CommandTypes";
@@ -169,9 +170,17 @@ const builtinCanvasMessagesByLocale: LocaleMessages<CanvasMessages> = {
 };
 
 /**
- * Resolves the effective messages for a locale, then applies host overrides.
+ * Resolves the effective messages for a locale, then layers the host's
+ * overrides on top.
+ *
  * Flat keys: English defaults ← built-in locale dictionary ← overrides. Record
- * fields are merged key by key (built-in locale record ← overrides record).
+ * fields are merged key by key, built-in locale record ← overrides record, so an
+ * entry the host leaves out keeps the built-in wording.
+ *
+ * @param locale - BCP-47-ish tag picking the built-in dictionary (`"ja-JP"`
+ * falls back to `"ja"`, then to `"en"`).
+ * @param overrides - The host's own strings, any subset; a record field passed
+ * here is merged into the resolved one, not substituted for it.
  */
 export const resolveCanvasMessages = (
 	locale: string,
@@ -185,7 +194,10 @@ export const resolveCanvasMessages = (
 		...defaultCanvasMessages,
 		...localized,
 		...overrides,
-		commandLabels: { ...localized.commandLabels, ...overrides?.commandLabels },
+		commandLabels: {
+			...localized.commandLabels,
+			...overrides?.commandLabels,
+		},
 		stencilLabels: {
 			...localized.stencilLabels,
 			...overrides?.stencilLabels,
@@ -202,8 +214,14 @@ export const resolveCanvasMessages = (
 	};
 };
 
-/** Resolves a command's display label: override by id, else the command's English label. */
-export const getCommandLabel = (
-	messages: CanvasMessages,
+/**
+ * Display label of a command: the host override (`messages.commandLabels[id]`)
+ * first, then the label the command itself carries, resolved for `locale`.
+ */
+export const resolveCommandLabel = (
 	command: Pick<Command, "id" | "label">,
-): string => messages.commandLabels[command.id] ?? command.label;
+	messages: CanvasMessages,
+	locale: string,
+): string =>
+	messages.commandLabels[command.id] ??
+	resolveLocalizedLabel(command.label, locale);

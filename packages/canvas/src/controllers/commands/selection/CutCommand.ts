@@ -8,7 +8,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const CutCommand: ExecutableCommand = {
 	id: "cut",
-	label: "Cut",
+	label: { en: "Cut", ja: "切り取り" },
 	category: "edit",
 	shortcuts: {
 		mac: [{ code: "KeyX", meta: true }],
