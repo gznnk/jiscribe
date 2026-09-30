@@ -100,10 +100,20 @@ export const createFrameMapper = <
 
 	return {
 		toState: (doc) => {
-			// A rect doc stating no height is one whose height follows its text
-			// (supportsAutoHeight). The frame is built at height 0 so the box's top
-			// edge lands exactly where the doc's `y` put it, and the derivation pass
-			// grows it from there (resizeAutoHeightStateToContent).
+			// A rect doc stating no height is one whose height follows its text.
+			//
+			// `supportsAutoHeight` is the actual verdict, and it reads two things a
+			// mapper cannot see: the type's `textRegion` (a label drawn outside the
+			// outline has no height to derive) and its `autoHeight: false` denial.
+			// Only `features` is in hand here, so `geometry === "rect"` stands in for
+			// the whole test. It holds because the parser has already applied the real
+			// verdict: `height` is required for every type it refuses
+			// (validateGeometryFields), so an absent height cannot reach this line
+			// unless the type genuinely derives one.
+			//
+			// The frame is built at height 0 so the box's top edge lands exactly where
+			// the doc's `y` put it, and the derivation pass grows it from there
+			// (resizeAutoHeightStateToContent).
 			const rect = doc as unknown as Rect;
 			const autoHeight =
 				features.geometry === "rect" && rect.height === undefined;
