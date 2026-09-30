@@ -241,7 +241,7 @@ describe("toggleTextEditFormat against the type's own defaults", () => {
 	/** A registry standing in for a type whose bodies are bold unless said otherwise. */
 	const boldByDefault = createObjectTextStyleDefaultsRegistry();
 	boldByDefault.register("rect", {
-		[BODY_TEXT_SLOT_ID]: { fontWeight: "bold" },
+		bySlot: { [BODY_TEXT_SLOT_ID]: { fontWeight: "bold" } },
 	});
 
 	const selected = (): CanvasControllerState =>

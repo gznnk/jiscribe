@@ -52,9 +52,9 @@ export type TextSlot<TContent extends TextSlotContent = TextSlotContent> =
 
 /**
  * The style half of a text slot: everything it carries but the content. The
- * shape one slot's text-style defaults take (ObjectTextSlotStyleDefaults keys
- * them by slot id), and what the draw / edit / measure sides resolve a slot into
- * before reading a field off it (see resolveTextSlotStyle).
+ * shape one slot's text-style defaults take (ObjectTextSlotStyleDefaults holds
+ * one per slot or one for every slot), and what the draw / edit / measure sides
+ * resolve a slot into before reading a field off it (see resolveTextSlotStyle).
  */
 export type TextSlotStyle = Omit<TextSlot, "text">;
 
@@ -170,27 +170,6 @@ export const isTextSlot = (value: unknown): value is TextSlot => {
  * "connectorLabel").
  */
 export const BODY_TEXT_SLOT_ID = "body";
-
-/**
- * The slot id no shape may name, reserved for the text-style defaults a type
- * declares for every slot at once (ObjectTextStyleDefaultsRegistry). A type whose
- * slot set is not fixed — a table's cells are one per row x column — has no list
- * of ids to key its defaults by, so it declares them under this one instead;
- * a slot actually named this would be read as that declaration.
- */
-export const RESERVED_TEXT_SLOT_ID = "*";
-
-/**
- * Whether a slot id is the one {@link RESERVED_TEXT_SLOT_ID} holds back. Checked
- * beside {@link isIntegerLikeTextSlotId} wherever a written slot id is admitted,
- * so the reservation is a rule the parser keeps rather than a convention a type
- * author is trusted to know.
- *
- * @param slotId - The key a document wrote under `text`; any string
- * @returns True only for the reserved id itself
- */
-export const isReservedTextSlotId = (slotId: string): boolean =>
-	slotId === RESERVED_TEXT_SLOT_ID;
 
 /**
  * Whether a slot id would be re-sorted by the JS engine. Own keys that are

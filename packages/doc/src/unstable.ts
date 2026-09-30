@@ -98,9 +98,6 @@ export { BODY_TEXT_SLOT_ID } from "./model/objects/types/text/TextSlot";
 // that resolves a slot's styling itself: the registry the canvas fills is a
 // rendering-side thing, and this is the reading that fills it.
 export { extractTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
-// The reserved slot id a "slots" type with a variable slot set declares its
-// shared defaults under, for the same headless consumer.
-export { EVERY_TEXT_SLOT_ID } from "./registries/ObjectTextStyleDefaultsRegistry";
 
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side

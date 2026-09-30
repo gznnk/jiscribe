@@ -8,17 +8,22 @@ import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import {
 	createObjectTextStyleDefaultsRegistry,
 	extractTextSlotStyleDefaults,
-	EVERY_TEXT_SLOT_ID,
 } from "../ObjectTextStyleDefaultsRegistry";
 
 const slotsFeatures = { ...TextFeatures, text: "slots" } as const;
 const sourceFeatures = { ...TextFeatures, text: "source" } as const;
 const textlessFeatures = { ...TextFeatures, text: undefined } as const;
 
-/** A two-slot type's declaration, the shape a `"slots"` type registers. */
+/** A two-slot type's declaration, the shape a `"slots"` type with named slots registers. */
 const SLOT_STYLE_DEFAULTS = {
-	name: { textAlign: "center", fontWeight: "bold", fontFamily: "Noto Sans JP" },
-	rows: { textAlign: "left" },
+	bySlot: {
+		name: {
+			textAlign: "center",
+			fontWeight: "bold",
+			fontFamily: "Noto Sans JP",
+		},
+		rows: { textAlign: "left" },
+	},
 } as const;
 
 describe("extractTextSlotStyleDefaults", () => {
@@ -26,12 +31,14 @@ describe("extractTextSlotStyleDefaults", () => {
 		expect(
 			extractTextSlotStyleDefaults(TextFeatures, TEXT_DOC_DEFAULTS),
 		).toEqual({
-			[BODY_TEXT_SLOT_ID]: {
-				textAlign: "left",
-				verticalAlign: "top",
-				fontColor: TEXT_DOC_DEFAULTS.fontColor,
-				fontSize: 16,
-				fontWeight: "normal",
+			bySlot: {
+				[BODY_TEXT_SLOT_ID]: {
+					textAlign: "left",
+					verticalAlign: "top",
+					fontColor: TEXT_DOC_DEFAULTS.fontColor,
+					fontSize: 16,
+					fontWeight: "normal",
+				},
 			},
 		});
 	});
@@ -42,7 +49,9 @@ describe("extractTextSlotStyleDefaults", () => {
 			TEXT_DOC_DEFAULTS,
 		);
 		expect(TEXT_DOC_DEFAULTS.fontFamily).not.toBeUndefined();
-		expect(defaults?.[BODY_TEXT_SLOT_ID]).not.toHaveProperty("fontFamily");
+		expect(defaults?.bySlot?.[BODY_TEXT_SLOT_ID]).not.toHaveProperty(
+			"fontFamily",
+		);
 	});
 
 	it("takes a slots type's defaults from its own per-slot declaration", () => {
@@ -53,18 +62,19 @@ describe("extractTextSlotStyleDefaults", () => {
 				SLOT_STYLE_DEFAULTS,
 			),
 		).toEqual({
-			name: { textAlign: "center", fontWeight: "bold" },
-			rows: { textAlign: "left" },
+			bySlot: {
+				name: { textAlign: "center", fontWeight: "bold" },
+				rows: { textAlign: "left" },
+			},
 		});
 	});
 
 	it("drops a slot whose declaration sets no style field", () => {
 		expect(
 			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
-				name: { textAlign: "center" },
-				rows: {},
+				bySlot: { name: { textAlign: "center" }, rows: {} },
 			}),
-		).toEqual({ name: { textAlign: "center" } });
+		).toEqual({ bySlot: { name: { textAlign: "center" } } });
 	});
 
 	it("returns undefined for a slots type that declares no per-slot defaults", () => {
@@ -99,11 +109,15 @@ describe("extractTextSlotStyleDefaults", () => {
 describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 	const registry = createObjectTextStyleDefaultsRegistry();
 	registry.register("text", {
-		[BODY_TEXT_SLOT_ID]: { textAlign: "left", verticalAlign: "top" },
+		bySlot: {
+			[BODY_TEXT_SLOT_ID]: { textAlign: "left", verticalAlign: "top" },
+		},
 	});
 	registry.register("record", {
-		name: { textAlign: "center", fontWeight: "bold" },
-		attributes: { textAlign: "left" },
+		bySlot: {
+			name: { textAlign: "center", fontWeight: "bold" },
+			attributes: { textAlign: "left" },
+		},
 	});
 
 	it("fills a registered slot's defaults into what the slot leaves unset", () => {
@@ -182,23 +196,56 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 	});
 });
 
-describe("ObjectTextStyleDefaultsRegistry.get with EVERY_TEXT_SLOT_ID", () => {
+describe("ObjectTextStyleDefaultsRegistry.get on an everySlot declaration", () => {
 	const registry = createObjectTextStyleDefaultsRegistry();
 	registry.register("table", {
-		[EVERY_TEXT_SLOT_ID]: { fontColor: "auto" },
-		r0c0: { fontWeight: "bold" },
+		bySlot: { r0c0: { fontWeight: "bold" } },
+		everySlot: { fontColor: "auto" },
 	});
 
-	it("resolves an arbitrary slot id to the reserved key's defaults", () => {
+	it("answers a slot id the type never named with the everySlot defaults", () => {
 		expect(registry.get("table", "r3c7")).toEqual({ fontColor: "auto" });
 	});
 
-	it("lets a slot's own declaration win over the reserved key's", () => {
+	it("lets a slot's own entry win over everySlot", () => {
 		expect(registry.get("table", "r0c0")).toEqual({ fontWeight: "bold" });
 	});
 
-	it("yields undefined when neither the slot nor the reserved key is declared", () => {
+	it("yields undefined for a type declaring neither", () => {
 		expect(registry.get("rect", "r0c0")).toBeUndefined();
+	});
+});
+
+describe("extractTextSlotStyleDefaults on an everySlot declaration", () => {
+	it("keeps both kinds, each narrowed to the style fields", () => {
+		expect(
+			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
+				bySlot: { r0c0: { fontWeight: "bold" } },
+				everySlot: { fontColor: "auto", fontFamily: "Noto Sans JP" },
+			}),
+		).toEqual({
+			bySlot: { r0c0: { fontWeight: "bold" } },
+			// The family is left out of defaults, as it is for a named slot.
+			everySlot: { fontColor: "auto" },
+		});
+	});
+
+	it("drops everySlot when its declaration sets no style field", () => {
+		expect(
+			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
+				bySlot: { r0c0: { fontWeight: "bold" } },
+				everySlot: {},
+			}),
+		).toEqual({ bySlot: { r0c0: { fontWeight: "bold" } } });
+	});
+
+	it("returns undefined when a slots type declares both empty", () => {
+		expect(
+			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
+				bySlot: {},
+				everySlot: {},
+			}),
+		).toBeUndefined();
 	});
 });
 
@@ -227,11 +274,13 @@ describe("extractTextSlotStyleDefaults for a source type", () => {
 		expect(
 			extractTextSlotStyleDefaults(sourceFeatures, TEXT_DOC_DEFAULTS),
 		).toEqual({
-			[BODY_TEXT_SLOT_ID]: {
-				textAlign: "left",
-				verticalAlign: "top",
-				fontColor: TEXT_DOC_DEFAULTS.fontColor,
-				fontSize: 16,
+			bySlot: {
+				[BODY_TEXT_SLOT_ID]: {
+					textAlign: "left",
+					verticalAlign: "top",
+					fontColor: TEXT_DOC_DEFAULTS.fontColor,
+					fontSize: 16,
+				},
 			},
 		});
 		// The body form reads the same defaults and does take the weight.

@@ -155,9 +155,6 @@ export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
-// The reserved slot id a "slots" type with a variable slot set (e.g. a table's
-// cells) declares its shared defaults under.
-export { EVERY_TEXT_SLOT_ID } from "./registries/ObjectTextStyleDefaultsRegistry";
 // The stroke / fill defaults a type declares through its creation defaults, and
 // what one shape's style resolves to once type and last resort are folded in.
 export { extractShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
