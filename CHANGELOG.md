@@ -15,6 +15,19 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A command carries its own wording, in every locale it ships.**
+  `Command.label` takes `string | LocaleMessages<string>`, exactly as
+  `Stencil.label` already did, and a host override by id still outranks it. The
+  built-in commands' Japanese moves out of the `ja` dictionary onto the commands
+  themselves, leaving `CanvasMessages.commandLabels` as the host-override slot
+  `stencilLabels` has been for a while — so a label and its translations are one
+  declaration instead of two places that had to be kept in step. Resolution is
+  per declaration (exact → language subtag → `en`), so a command shipping no
+  `ja` falls back to its own English rather than dragging the canvas back with
+  it. This is what makes a contributed command nameable in the host's language:
+  a plugin declares the same field, and what it draws itself it localizes as the
+  other shipped plugins do (`useCanvasLocale` + `resolveLocaleMessages` over its
+  own dictionary).
 - **For plugin authors: a plugin may contribute commands.**
   `CanvasPlugin.commands` is registered after `ALL_COMMANDS` in declaration
   order, and the host's own `config.commands` narrowing is applied over the

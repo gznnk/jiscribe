@@ -5,7 +5,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const BringForwardCommand: ExecutableCommand = {
 	id: "bringForward",
-	label: "Bring Forward",
+	label: { en: "Bring Forward", ja: "前面へ移動" },
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "]", meta: true }],

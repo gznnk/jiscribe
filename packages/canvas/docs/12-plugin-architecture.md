@@ -22,6 +22,26 @@ value. `commands` is the second contribution: an array of `Command`, registered
 after the built-in set in plugin declaration order and narrowed by the same
 `config.commands` list.
 
+## Strings: a declaration carries its own wording
+
+A `Command`'s `label` is either a plain string or a `LocaleMessages<string>`, a
+dictionary keyed by locale tag with `en` required. A contributed command names
+itself in every language it ships, on the declaration and nowhere else;
+`Stencil.label` and a stencil category's label are declared the same way. The
+canvas resolves it for its `locale` — exact → language subtag (`"ja-JP"` →
+`"ja"`) → `"en"`, per declaration, so a command shipping no `ja` falls back to
+its own English rather than dragging the canvas back with it.
+
+The host still has the last word: `messages.commandLabels[id]` outranks any
+command's own label, core's and a plugin's alike (`resolveCommandLabel`).
+
+What a plugin draws itself — its menu titles, its field labels — never reaches
+the canvas at all. The plugin owns a `LocaleMessages` of its own and resolves it
+with `useCanvasLocale` + `resolveLocaleMessages`, so there is no shared
+namespace to collide in and no core key within reach.
+`plugins/container-shapes/src/messages/containerMessages.ts` is the worked
+example.
+
 A host wires it in through `initialConfig`:
 
 ```tsx
@@ -258,8 +278,10 @@ the body color in the Fill section, and its `header-height` row states the
 `headerHeight` extra style property from a `PropertyNumberField` under the size in
 the Layout section; both take their wording from the plugin's own dictionary.
 
-**i18n.** A plugin owns its dictionary and resolves it through `useCanvasLocale` /
-`resolveLocaleMessages`. Plugin vocabulary is never added to the core message keys.
+**i18n.** A contributed command declares its own `label` per locale. Everything
+the plugin draws itself comes from a dictionary the plugin owns, resolved
+through `useCanvasLocale` / `resolveLocaleMessages`. Plugin vocabulary is never
+added to the core message keys.
 
 **`selectionControls`.** A plain declaration (`SelectionControlDefinition`: a
 `Component` that draws the handles, paired with a `handle` that interprets the

@@ -8,7 +8,7 @@ import type { Command } from "../CommandTypes";
  */
 export const PasteCommand: Command = {
 	id: "paste",
-	label: "Paste",
+	label: { en: "Paste", ja: "貼り付け" },
 	category: "edit",
 	shortcuts: {
 		mac: [{ code: "KeyV", meta: true }],

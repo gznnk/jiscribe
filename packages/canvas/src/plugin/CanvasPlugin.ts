@@ -14,6 +14,12 @@ import type { Command } from "../controllers/commands/CommandTypes";
  * so the same `plugins` array feeds both `<Canvas>` and `createCanvasParser`.
  */
 export type CanvasPlugin = {
+	/**
+	 * Stable identifier of the plugin, naming it in the error a conflicting
+	 * object-type contribution raises (`createCanvasRegistries`). A command
+	 * conflict is raised by `CommandRegistry` before the plugin is in hand, so it
+	 * names the id alone.
+	 */
 	id: string;
 
 	/** Object-type contributions. A type already registered (built-in or another plugin) throws at construction time. */

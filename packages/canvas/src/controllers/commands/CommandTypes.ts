@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { LocaleMessages } from "../messages/resolveLocaleMessages";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**
@@ -48,8 +49,11 @@ export type PlatformKeyBindings = {
 export type Command = {
 	/** Unique identifier of the command */
 	id: string;
-	/** Label shown in the menu */
-	label: string;
+	/**
+	 * Label shown in the menu: a plain string or a per-locale dictionary.
+	 * Resolved via `messages.commandLabels[id]` (host override) → this label.
+	 */
+	label: string | LocaleMessages<string>;
 	/** Category of the command */
 	category?: "edit" | "view" | "arrange" | "selection";
 

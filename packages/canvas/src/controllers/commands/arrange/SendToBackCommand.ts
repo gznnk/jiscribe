@@ -6,7 +6,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const SendToBackCommand: ExecutableCommand = {
 	id: "sendToBack",
-	label: "Send to Back",
+	label: { en: "Send to Back", ja: "最背面へ移動" },
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "{", meta: true }],

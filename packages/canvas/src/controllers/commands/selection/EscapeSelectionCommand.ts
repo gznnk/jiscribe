@@ -7,7 +7,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const EscapeSelectionCommand: ExecutableCommand = {
 	id: "escapeSelection",
-	label: "Escape Selection",
+	label: { en: "Escape Selection", ja: "選択を1段戻す" },
 	category: "selection",
 	shortcuts: {
 		default: [{ code: "Escape" }],

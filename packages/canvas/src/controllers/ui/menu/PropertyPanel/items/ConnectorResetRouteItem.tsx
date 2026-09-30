@@ -2,7 +2,8 @@ import { memo } from "react";
 
 import { ResetConnectorRouteCommand } from "../../../../commands/connector/ResetConnectorRouteCommand";
 import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
-import { getCommandLabel } from "../../../../messages/CanvasMessages";
+import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
+import { resolveCommandLabel } from "../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { hasSelectedConnectorShapedRoute } from "../../../../utils/hasSelectedConnectorShapedRoute";
 import { PropertyCommandButton } from "../common/PropertyControlsStyled";
@@ -24,7 +25,12 @@ const ConnectorResetRouteItemComponent: React.FC<PropertyPanelItemProps> = ({
 	selectedConnectorId,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getCommandLabel(messages, ResetConnectorRouteCommand);
+	const locale = useCanvasLocale();
+	const label = resolveCommandLabel(
+		ResetConnectorRouteCommand,
+		messages,
+		locale,
+	);
 
 	return (
 		<PropertyRow>

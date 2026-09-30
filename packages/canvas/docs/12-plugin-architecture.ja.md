@@ -21,6 +21,24 @@
 もう 1 つのコントリビューションが `commands` で、`Command` の配列を組み込みの後に
 プラグインの宣言順で登録し、絞り込みは `config.commands` の同じ 1 本のリストで効く。
 
+## 文言は宣言が自分で持つ
+
+`Command` の `label` はただの文字列か `LocaleMessages<string>`（ロケールタグをキーに
+取り、`en` が必須の辞書）のどちらかである。プラグインが足したコマンドも、自分が
+出荷する言語ぶんの名前を宣言の上だけで名乗る。`Stencil.label` とステンシル
+カテゴリのラベルも同じ書き方である。キャンバスはこれを `locale` で解決し
+（完全一致 → 言語サブタグ（`"ja-JP"` → `"ja"`）→ `"en"`）、解決は宣言ごとなので、
+`ja` を持たないコマンドは自分の英語に落ちるだけでキャンバス全体を英語へは引き戻さない。
+
+最終決定権はホストにある。`messages.commandLabels[id]` は、組み込みでもプラグインでも
+コマンド自身の `label` より強い（`resolveCommandLabel`）。
+
+プラグインが自分で描く文字列（メニューの見出し・フィールドのラベル）は、そもそも
+キャンバスへ渡さない。プラグインが自分の `LocaleMessages` を持ち、`useCanvasLocale` /
+`resolveLocaleMessages` で解決する。共有する名前空間が無いので衝突しようがなく、
+core のキーにも届かない。実例は
+`plugins/container-shapes/src/messages/containerMessages.ts`。
+
 ホストは `initialConfig` から配線する。
 
 ```tsx
@@ -237,7 +255,8 @@ CodeMirror の `EditorView`）。
 extra スタイルプロパティ `headerHeight` を書き、Layout セクションのサイズの下に
 並ぶ。文言はどちらもプラグイン自身の辞書から取る。
 
-**i18n。**プラグインは自分の辞書を持ち、`useCanvasLocale` /
+**i18n。**プラグインが足したコマンドは自分の `label` をロケール別に宣言する。
+プラグインが自分で描く文字列はプラグインが持つ辞書から取り、`useCanvasLocale` /
 `resolveLocaleMessages` で解決する。core の文言キーにプラグインの語彙は足さない。
 
 **`selectionControls`。**プレーンな宣言（`SelectionControlDefinition`。ハンドルを

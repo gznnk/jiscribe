@@ -13,7 +13,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const CopyCommand: ExecutableCommand = {
 	id: "copy",
-	label: "Copy",
+	label: { en: "Copy", ja: "コピー" },
 	category: "edit",
 	shortcuts: {
 		mac: [{ code: "KeyC", meta: true }],

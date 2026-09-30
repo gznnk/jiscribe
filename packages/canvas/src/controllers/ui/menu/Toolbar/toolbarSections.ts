@@ -44,8 +44,8 @@ export type ToolbarItem =
 			icon: ComponentType<StencilIconProps>;
 			/**
 			 * Overrides the command's own label on this button (tooltip and
-			 * aria-label). Omit to take `messages.commandLabels[commandId]` and fall
-			 * back to the command's English `label`.
+			 * aria-label). Omit to take what `resolveCommandLabel` yields: the host
+			 * override by id, else the command's own label for the locale.
 			 */
 			label?: string | LocaleMessages<string>;
 	  }

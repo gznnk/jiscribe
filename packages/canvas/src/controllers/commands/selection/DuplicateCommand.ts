@@ -14,7 +14,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const DuplicateCommand: ExecutableCommand = {
 	id: "duplicate",
-	label: "Duplicate",
+	label: { en: "Duplicate", ja: "複製" },
 	category: "edit",
 	shortcuts: {
 		mac: [{ code: "KeyD", meta: true }],

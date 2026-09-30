@@ -124,7 +124,7 @@ const applyConnectorRouting = (
 
 export const SetRoutingStraightCommand: ExecutableCommand = {
 	id: "setRoutingStraight",
-	label: "Straight Routing",
+	label: { en: "Straight Routing", ja: "直線経路" },
 	category: "edit",
 	canExecute: canSetStraight,
 	execute: (state, registries) =>
@@ -133,7 +133,7 @@ export const SetRoutingStraightCommand: ExecutableCommand = {
 
 export const SetRoutingOrthogonalCommand: ExecutableCommand = {
 	id: "setRoutingOrthogonal",
-	label: "Orthogonal Routing",
+	label: { en: "Orthogonal Routing", ja: "直角経路" },
 	category: "edit",
 	canExecute: isConnectorSelected,
 	execute: (state, registries) =>
