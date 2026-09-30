@@ -148,7 +148,6 @@ export {
 export { defineObject } from "./plugin";
 export type {
 	CanvasPlugin,
-	PluginMessages,
 	ObjectTypeDefinition,
 	AnyObjectTypeDefinition,
 	ObjectDocDefinition,

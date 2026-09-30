@@ -1,49 +1,36 @@
 import { describe, expect, it } from "vitest";
 
 import { tablePlugin } from "../../plugin";
-import { tableMessagesByLocale, TABLE_PLUGIN_ID } from "../tableMessages";
+import { tableMessagesByLocale } from "../tableMessages";
 
 /**
- * The dictionary is keyed by command id and the canvas refuses a key naming a
- * command the plugin does not contribute, so the two lists have to agree — and a
- * command left out of `ja` would silently draw English rather than fail.
+ * A command whose `label` is a plain string, or a dictionary missing the locale,
+ * silently draws English rather than failing — so the locales each of the six
+ * ships are what has to be pinned. The same goes for the plugin's own strings,
+ * where a key left out of one locale reads as `undefined`.
  */
 describe("table messages", () => {
-	const contributedIds = (tablePlugin.commands ?? []).map(
-		(command) => command.id,
-	);
+	const contributedCommands = tablePlugin.commands ?? [];
 
-	it("is wired into the plugin under the id its strings are namespaced by", () => {
-		expect(tablePlugin.id).toBe(TABLE_PLUGIN_ID);
-		expect(tablePlugin.messages).toBe(tableMessagesByLocale);
-	});
+	/** The locales the plugin's own dictionary ships, which the commands match. */
+	const localeTags = Object.keys(tableMessagesByLocale);
 
-	it("labels every contributed command in every locale it ships", () => {
-		expect(contributedIds).toHaveLength(6);
-		for (const [locale, messages] of Object.entries(tableMessagesByLocale)) {
+	it("gives every contributed command a label in every locale", () => {
+		expect(contributedCommands).toHaveLength(6);
+		for (const command of contributedCommands) {
 			expect(
-				Object.keys(messages.commandLabels ?? {}).sort(),
-				`commandLabels of ${locale}`,
-			).toEqual([...contributedIds].sort());
+				Object.keys(command.label).sort(),
+				`label of ${command.id}`,
+			).toEqual([...localeTags].sort());
 		}
 	});
 
-	it("gives a command its English label, which is what a third locale lands on", () => {
-		const insertRowAbove = (tablePlugin.commands ?? []).find(
-			(command) => command.id === "table.insertRowAbove",
-		);
-		expect(insertRowAbove?.label).toBe("Insert Row Above");
-	});
-
 	it("ships the same string keys in every locale", () => {
-		const englishKeys = Object.keys(
-			tableMessagesByLocale.en.strings ?? {},
-		).sort();
-		for (const [locale, messages] of Object.entries(tableMessagesByLocale)) {
-			expect(
-				Object.keys(messages.strings ?? {}).sort(),
-				`strings of ${locale}`,
-			).toEqual(englishKeys);
+		const englishKeys = Object.keys(tableMessagesByLocale.en).sort();
+		for (const [locale, strings] of Object.entries(tableMessagesByLocale)) {
+			expect(Object.keys(strings).sort(), `strings of ${locale}`).toEqual(
+				englishKeys,
+			);
 		}
 	});
 });

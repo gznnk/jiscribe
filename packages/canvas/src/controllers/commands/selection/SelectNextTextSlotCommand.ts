@@ -6,7 +6,7 @@ import {
 
 export const SelectNextTextSlotCommand: ExecutableCommand = {
 	id: "selectNextTextSlot",
-	label: "Select Next Text Slot",
+	label: { en: "Select Next Text Slot", ja: "次のテキストスロットを選択" },
 	category: "selection",
 	shortcuts: {
 		default: [{ code: "Tab" }],

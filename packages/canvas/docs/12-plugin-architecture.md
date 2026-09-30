@@ -20,31 +20,27 @@ The type is `CanvasPlugin` (`packages/canvas/src/plugin/CanvasPlugin.ts`), and i
 substance is `objects`: keyed by `ObjectType`, with the type's definition as the
 value. `commands` is the second contribution: an array of `Command`, registered
 after the built-in set in plugin declaration order and narrowed by the same
-`config.commands` list. `messages` is the third: the plugin's own wording, per
-locale.
+`config.commands` list.
 
-## Strings: a plugin ships defaults, the host has the last word
+## Strings: a declaration carries its own wording
 
-A `Command` carries one `label`, in English. That is the whole of what a
-contributed command could say until `CanvasPlugin.messages` existed, so a plugin's
-menu rows stayed English while the built-in block around them localized.
+A `Command`'s `label` is either a plain string or a `LocaleMessages<string>`, a
+dictionary keyed by locale tag with `en` required. A contributed command names
+itself in every language it ships, on the declaration and nowhere else;
+`Stencil.label` and a stencil category's label are declared the same way. The
+canvas resolves it for its `locale` — exact → language subtag (`"ja-JP"` →
+`"ja"`) → `"en"`, per declaration, so a command shipping no `ja` falls back to
+its own English rather than dragging the canvas back with it.
 
-`messages` is a `LocaleMessages<PluginMessages>` with two slots: `commandLabels`,
-keyed by the ids of the plugin's own commands, and `strings`, keyed however the
-plugin likes, for what the plugin draws itself. The canvas resolves it for its
-`locale` — per dictionary, so a plugin shipping no `ja` falls back to its own
-English rather than dragging the canvas back with it — and folds the result into
-`CanvasMessages` between the built-in dictionary and the host's `messages` prop.
-The host therefore overrides a plugin exactly as it overrides a built-in: a
-command by `commandLabels[id]`, a plugin's own string by
-`pluginStrings["<plugin id>.<key>"]`.
+The host still has the last word: `messages.commandLabels[id]` outranks any
+command's own label, core's and a plugin's alike (`resolveCommandLabel`).
 
-The two halves of the namespace are what stop a plugin taking something that is
-not its own. Strings are stored under the plugin's `id`, so they cannot reach a
-built-in key and two plugins cannot land on each other's; command ids are global
-already, so the merge refuses a `commandLabels` key naming a command the plugin
-does not contribute. A plugin reads its strings back with `usePluginStrings`,
-which applies the host's overrides for it.
+What a plugin draws itself — its menu titles, its field labels — never reaches
+the canvas at all. The plugin owns a `LocaleMessages` of its own and resolves it
+with `useCanvasLocale` + `resolveLocaleMessages`, so there is no shared
+namespace to collide in and no core key within reach.
+`plugins/container-shapes/src/messages/containerMessages.ts` is the worked
+example.
 
 A host wires it in through `initialConfig`:
 
@@ -115,10 +111,6 @@ with no config gives the default configuration: every built-in type and nothing 
   enable/disable is a non-goal: a document can contain objects of a type that was
   just unregistered, and there is no coherent answer for what should happen to them.
 - **Merge order** is `presetDefinitions` → `plugins` in declaration order.
-- **A duplicate plugin id among message contributors throws at construction**, as
-  does a `commandLabels` key naming a command the plugin does not contribute. The
-  id is the namespace the strings live in, so two plugins sharing one would
-  overwrite each other's wording without anything to show for it.
 - **A duplicate type, or a duplicate command id, throws at construction.** Not
   last-wins — an accidental collision between two plugins fails loudly instead of
   silently changing which shape renders or which command a menu entry runs.
@@ -304,8 +296,10 @@ the body color in the Fill section, and its `header-height` row states the
 `headerHeight` extra style property from a `PropertyNumberField` under the size in
 the Layout section; both take their wording from the plugin's own dictionary.
 
-**i18n.** A plugin owns its dictionary and resolves it through `useCanvasLocale` /
-`resolveLocaleMessages`. Plugin vocabulary is never added to the core message keys.
+**i18n.** A contributed command declares its own `label` per locale. Everything
+the plugin draws itself comes from a dictionary the plugin owns, resolved
+through `useCanvasLocale` / `resolveLocaleMessages`. Plugin vocabulary is never
+added to the core message keys.
 
 **`selectionControls`.** A plain declaration (`SelectionControlDefinition`: a
 `Component` that draws the handles, paired with a `handle` that interprets the

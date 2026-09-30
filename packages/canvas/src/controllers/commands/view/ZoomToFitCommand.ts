@@ -5,7 +5,7 @@ const PADDING_PX = 48;
 
 export const ZoomToFitCommand: ExecutableCommand = {
 	id: "zoomToFit",
-	label: "Zoom to Fit",
+	label: { en: "Zoom to Fit", ja: "全体を表示" },
 	category: "view",
 	shortcuts: {
 		mac: [{ code: "Digit0", meta: true }],

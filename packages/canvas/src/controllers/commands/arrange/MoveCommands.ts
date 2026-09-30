@@ -24,12 +24,12 @@ const ARROW_CODE: Record<NudgeDirection, string> = {
 	right: "ArrowRight",
 };
 
-/** Display label per direction (for the shortcuts list) */
-const DIRECTION_LABEL: Record<NudgeDirection, string> = {
-	up: "Move Up",
-	down: "Move Down",
-	left: "Move Left",
-	right: "Move Right",
+/** Display label per direction, in every locale the canvas ships (for the shortcuts list) */
+const DIRECTION_LABEL: Record<NudgeDirection, { en: string; ja: string }> = {
+	up: { en: "Move Up", ja: "上へ移動" },
+	down: { en: "Move Down", ja: "下へ移動" },
+	left: { en: "Move Left", ja: "左へ移動" },
+	right: { en: "Move Right", ja: "右へ移動" },
 };
 
 /** Builds a move vector from a direction and distance (screen coordinates: down is +y) */
@@ -55,10 +55,17 @@ const createMoveCommand = (
 	step: number,
 ): ExecutableCommand => {
 	const isLarge = step === NUDGE_STEP_LARGE;
+	// e.g. "Move Up" / "Move Up (10px)" (larger move when Shift is held). The
+	// suffix reads the same in every locale, so it is appended rather than
+	// spelled out per entry.
+	const distanceSuffix = isLarge ? ` (${NUDGE_STEP_LARGE}px)` : "";
+	const directionLabel = DIRECTION_LABEL[direction];
 	return {
 		id: `move-${direction}${isLarge ? "-large" : ""}`,
-		// e.g. "Move Up" / "Move Up (10px)" (larger move when Shift is held)
-		label: `${DIRECTION_LABEL[direction]}${isLarge ? ` (${NUDGE_STEP_LARGE}px)` : ""}`,
+		label: {
+			en: `${directionLabel.en}${distanceSuffix}`,
+			ja: `${directionLabel.ja}${distanceSuffix}`,
+		},
 		category: "arrange",
 		shortcuts: {
 			default: [{ code: ARROW_CODE[direction], shift: isLarge }],

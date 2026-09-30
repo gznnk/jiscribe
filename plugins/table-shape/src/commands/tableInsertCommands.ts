@@ -1,18 +1,23 @@
-import type { Command, KeyBinding } from "@jiscribe/canvas-sdk";
+import type { Command, KeyBinding, LocaleMessages } from "@jiscribe/canvas-sdk";
 
 import { resolveTableInsertTarget } from "./resolveTableInsertTarget";
 import type { TableInsertSide } from "./resolveTableInsertTarget";
 import { insertTableTrack } from "../grid/insertTableTrack";
 import { remapTablePartSelectionForInsert } from "../grid/remapTablePartSelectionForInsert";
 import type { TableAxis } from "../grid/tableTrack";
-import type { TableCommandId } from "../messages/tableMessages";
-import { tableCommandLabel } from "../messages/tableMessages";
 
-/** One command's id and key, per axis and side. The wording lives in the dictionary. */
+/** One command's id, wording and key, per axis and side. */
 type TableInsertCommandSpec = {
 	axis: TableAxis;
 	side: TableInsertSide;
-	id: TableCommandId;
+	id: string;
+	/**
+	 * Menu wording, per locale. It names the track and the side it appears on
+	 * rather than the act on the selection ("Insert Row Above", not "Insert
+	 * Above"), because the right-click menu is the one place these are read
+	 * without a grip or a cell in view to say which axis is meant.
+	 */
+	label: LocaleMessages<string>;
 	/** The arrow the new track appears in the direction of. */
 	arrowCode: string;
 };
@@ -34,24 +39,28 @@ const TABLE_INSERT_COMMAND_SPECS: readonly TableInsertCommandSpec[] = [
 		axis: "row",
 		side: "before",
 		id: "table.insertRowAbove",
+		label: { en: "Insert Row Above", ja: "上に行を挿入" },
 		arrowCode: "ArrowUp",
 	},
 	{
 		axis: "row",
 		side: "after",
 		id: "table.insertRowBelow",
+		label: { en: "Insert Row Below", ja: "下に行を挿入" },
 		arrowCode: "ArrowDown",
 	},
 	{
 		axis: "column",
 		side: "before",
 		id: "table.insertColumnLeft",
+		label: { en: "Insert Column Left", ja: "左に列を挿入" },
 		arrowCode: "ArrowLeft",
 	},
 	{
 		axis: "column",
 		side: "after",
 		id: "table.insertColumnRight",
+		label: { en: "Insert Column Right", ja: "右に列を挿入" },
 		arrowCode: "ArrowRight",
 	},
 ];
@@ -75,7 +84,7 @@ const toKeyBinding = (spec: TableInsertCommandSpec): KeyBinding => ({
  */
 const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
 	id: spec.id,
-	label: tableCommandLabel(spec.id),
+	label: spec.label,
 	category: "edit",
 	shortcuts: { default: [toKeyBinding(spec)] },
 

@@ -10,7 +10,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const ToggleStencilLibraryCommand: ExecutableCommand = {
 	id: "toggleStencilLibrary",
-	label: "Shape Library",
+	label: { en: "Shape Library", ja: "図形ライブラリ" },
 	category: "view",
 
 	canExecute: () => true,

@@ -243,11 +243,4 @@ export type CanvasMessages = CanvasMessageStrings & {
 	colorNames: Record<string, string>;
 	/** Overrides keyed by arrow type (e.g. `FilledTriangle`, `None`) */
 	arrowTypeNames: Record<string, string>;
-	/**
-	 * The strings plugins contribute through `CanvasPlugin.messages`, keyed
-	 * `<plugin id>.<key>` (e.g. `table-shape.menuCellColor`). A host writes the
-	 * same key to overrule one; the plugin id in front is what keeps two plugins
-	 * apart and what stops any of them reaching a built-in key above.
-	 */
-	pluginStrings: Record<string, string>;
 };

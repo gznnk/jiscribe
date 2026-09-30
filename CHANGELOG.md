@@ -24,12 +24,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- **A plugin's own strings follow the host's language.** A type's commands, its
-  rows on the context menu and the strings it draws itself were English whatever
-  the canvas was set to, because a plugin had no way to hand its dictionary over.
-  `CanvasPlugin.messages` is that channel, and a host outranks it — the same
-  order a stencil's label already resolved in. The `table`'s six grid commands
-  and its Cell Color button ship English and Japanese.
+- **A command carries its own wording, in every locale it ships.** `Command.label`
+  takes `string | LocaleMessages<string>`, exactly as `Stencil.label` already
+  did, and a host override by id still outranks it. The built-in commands'
+  Japanese moves out of the `ja` dictionary onto the commands themselves, leaving
+  `CanvasMessages.commandLabels` as the host-override slot `stencilLabels` has
+  been for a while — so the label and its translations are one declaration
+  instead of two places that had to be kept in step. A plugin's commands follow
+  the host's language by declaring the same field, and what a plugin draws itself
+  it localizes as the other shipped plugins do (`useCanvasLocale` +
+  `resolveLocaleMessages` over its own dictionary). The `table`'s six grid
+  commands and its Cell Color button ship English and Japanese.
 - **A table cell's background can be set from the floating menu or the property
   sidebar.** Cell Color paints the picked cells, or every cell when none is
   picked, and shows the colours split when they disagree. **No fill** takes a
@@ -58,19 +63,19 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   outside the top and left edges picks a whole column or row; clicking a cell
   picks it, and Shift widens the pick to the block of cells between the two —
   the rectangle they stand at opposite corners of, as a spreadsheet does it, not
-  the run of the cell order between them. Delete clears the picked cells'
-  text, or removes the picked row or column — never the last one left. Rows and
-  columns are inserted from the right-click menu or with Shift+Alt+arrow, and the
-  cells keep their contents as the grid renumbers around the insertion.
+  the run of the cell order between them. Delete clears the picked cells' text,
+  or removes the picked row or column — never the last one left. Rows and columns
+  are inserted from the right-click menu or with Shift+Alt+arrow, and the cells
+  keep their contents as the grid renumbers around the insertion.
 - For plugin authors: a type declares what parts of itself can be selected
   (`ObjectTypeDefinition.parts`), and core carries one selection below the object
   level for every type — a range of them, not one. A `text: "slots"` type gets its
   slots as parts without declaring anything, and declaring them itself replaces
   that default, which is how a type says what Delete does to them and what a
   Shift-extended range between two of them covers (`ObjectPartDefinition.range`,
-  omitted by every kind whose parts lie in one line). A selection
-  control can now take a click and answer with a selection rather than only with
-  its own object, a type may contribute commands (`CanvasPlugin.commands`) and
+  omitted by every kind whose parts lie in one line). A selection control can now
+  take a click and answer with a selection rather than only with its own object,
+  a type may contribute commands (`CanvasPlugin.commands`) and
   rows on the context menu (`ObjectTypeDefinition.contextMenu`), and two commands
   may share a keyboard shortcut as long as their `canExecute` disagree.
 - **A table can be resized by its left and right edges**, the width change spread

@@ -7,7 +7,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const ShortcutHelpCommand: ExecutableCommand = {
 	id: "shortcutHelp",
-	label: "Keyboard Shortcuts",
+	label: { en: "Keyboard Shortcuts", ja: "キーボードショートカット" },
 	category: "view",
 	shortcuts: {
 		// Shift is implied by the character, so key-based bindings do not name it

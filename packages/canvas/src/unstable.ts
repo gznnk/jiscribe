@@ -251,11 +251,6 @@ export {
 	resolveLocalizedLabel,
 } from "./controllers/messages/resolveLocaleMessages";
 export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessages";
-// The two ends of `CanvasPlugin.messages`: what a plugin declares, and the hook
-// reading it back for the canvas's locale with the host's overrides applied. The
-// type is on the stable entry too, since CanvasPlugin names it.
-export type { PluginMessages } from "./controllers/messages/PluginMessagesTypes";
-export { usePluginStrings } from "./controllers/messages/usePluginStrings";
 
 // Re-exported as `canvasThemeCssVars` because `theme` alone is too generic a name.
 // The value is the `--jiscribe-*` CSS variables plus a dark-theme fallback

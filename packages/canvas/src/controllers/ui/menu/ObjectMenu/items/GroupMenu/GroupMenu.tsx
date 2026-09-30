@@ -3,7 +3,8 @@
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../../../hooks/useCommandState";
-import { getCommandLabel } from "../../../../../messages/CanvasMessages";
+import { useCanvasLocale } from "../../../../../messages/CanvasLocaleContext";
+import { resolveCommandLabel } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { GroupIcon } from "../../../../icons/GroupIcon";
 import {
@@ -17,6 +18,7 @@ type GroupMenuProps = {
 
 const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
 	const resolveCommand = useCommandState(canvasState);
 	// Determine if the single selected item is a group (→ show ungroup)
 	const singleSelected =
@@ -40,7 +42,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 				disabled={!enabled}
 				data-part={commandPart(commandId)}
 			>
-				<GroupIcon title={getCommandLabel(messages, command)} />
+				<GroupIcon title={resolveCommandLabel(command, messages, locale)} />
 			</ObjectMenuButton>
 		</ObjectMenuItemPositioner>
 	);

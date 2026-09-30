@@ -13,7 +13,8 @@ import {
 	formatShortcutTokens,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
-import { getCommandLabel } from "../../../messages/CanvasMessages";
+import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
+import { resolveCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import type {
 	CanvasMessages,
@@ -55,6 +56,7 @@ type CategoryGroup = {
  */
 const buildGroups = (
 	messages: CanvasMessages,
+	locale: string,
 	commandRegistry: CommandRegistry,
 ): CategoryGroup[] => {
 	const allCommands = commandRegistry.getAll();
@@ -73,7 +75,7 @@ const buildGroups = (
 			}
 			entries.push({
 				id: command.id,
-				label: getCommandLabel(messages, command),
+				label: resolveCommandLabel(command, messages, locale),
 				tokens: formatShortcutTokens(binding),
 			});
 		}
@@ -94,10 +96,11 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 	onClose,
 }) => {
 	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
 	const { command: commandRegistry } = useCanvasRegistries();
 	const groups = useMemo(
-		() => buildGroups(messages, commandRegistry),
-		[messages, commandRegistry],
+		() => buildGroups(messages, locale, commandRegistry),
+		[messages, locale, commandRegistry],
 	);
 
 	return (

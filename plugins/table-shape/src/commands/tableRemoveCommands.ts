@@ -1,15 +1,19 @@
-import type { Command } from "@jiscribe/canvas-sdk";
+import type { Command, LocaleMessages } from "@jiscribe/canvas-sdk";
 
 import { resolveTableTrackSelection } from "./resolveTableTrackSelection";
 import { removeTableTracks } from "../grid/removeTableTracks";
 import type { TableAxis } from "../grid/tableTrack";
-import { tableCommandLabel } from "../messages/tableMessages";
-import type { TableCommandId } from "../messages/tableMessages";
 
-/** One command's id, per axis. The wording lives in the dictionary. */
+/** One command's id and wording, per axis. */
 type TableRemoveCommandSpec = {
 	axis: TableAxis;
-	id: TableCommandId;
+	id: string;
+	/**
+	 * Menu wording, per locale. It names the track it takes ("Delete Row", not
+	 * "Delete") for the same reason the insertions name theirs: the right-click
+	 * menu is read without a grip or a cell in view to say which axis is meant.
+	 */
+	label: LocaleMessages<string>;
 };
 
 /**
@@ -23,8 +27,16 @@ type TableRemoveCommandSpec = {
  * the nudges.
  */
 const TABLE_REMOVE_COMMAND_SPECS: readonly TableRemoveCommandSpec[] = [
-	{ axis: "row", id: "table.deleteRow" },
-	{ axis: "column", id: "table.deleteColumn" },
+	{
+		axis: "row",
+		id: "table.deleteRow",
+		label: { en: "Delete Row", ja: "行を削除" },
+	},
+	{
+		axis: "column",
+		id: "table.deleteColumn",
+		label: { en: "Delete Column", ja: "列を削除" },
+	},
 ];
 
 /**
@@ -40,7 +52,7 @@ const TABLE_REMOVE_COMMAND_SPECS: readonly TableRemoveCommandSpec[] = [
  */
 const createTableRemoveCommand = (spec: TableRemoveCommandSpec): Command => ({
 	id: spec.id,
-	label: tableCommandLabel(spec.id),
+	label: spec.label,
 	category: "edit",
 
 	canExecute: (state) => {

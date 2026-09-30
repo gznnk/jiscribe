@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 
 import {
 	defaultCanvasMessages,
-	getCommandLabel,
 	resolveCanvasMessages,
+	resolveCommandLabel,
 } from "../CanvasMessages";
 import { jaCanvasMessages } from "../jaCanvasMessages";
 import {
@@ -17,9 +17,9 @@ describe("resolveCanvasMessages", () => {
 	});
 
 	it("exact locale match -> the built-in dictionary for that locale", () => {
-		const merged = resolveCanvasMessages("ja");
-		expect(merged.toolbarZoomIn).toBe(jaCanvasMessages.toolbarZoomIn);
-		expect(merged.commandLabels.undo).toBe(jaCanvasMessages.commandLabels.undo);
+		expect(resolveCanvasMessages("ja").toolbarZoomIn).toBe(
+			jaCanvasMessages.toolbarZoomIn,
+		);
 	});
 
 	it("language subtag fallback -> ja-JP resolves to the ja dictionary", () => {
@@ -45,14 +45,14 @@ describe("resolveCanvasMessages", () => {
 
 	it("record override merges per key over the locale record", () => {
 		const merged = resolveCanvasMessages("ja", {
-			commandLabels: { undo: "Custom undo", newId: "New" },
+			colorNames: { Red: "朱", Chartreuse: "黄緑" },
 		});
-		// overridden id wins
-		expect(merged.commandLabels.undo).toBe("Custom undo");
-		// added id is present
-		expect(merged.commandLabels.newId).toBe("New");
-		// non-overridden id keeps the ja value
-		expect(merged.commandLabels.redo).toBe(jaCanvasMessages.commandLabels.redo);
+		// overridden key wins
+		expect(merged.colorNames.Red).toBe("朱");
+		// added key is present
+		expect(merged.colorNames.Chartreuse).toBe("黄緑");
+		// non-overridden key keeps the ja value
+		expect(merged.colorNames.Blue).toBe(jaCanvasMessages.colorNames.Blue);
 	});
 
 	it("does not mutate the defaults", () => {
@@ -99,24 +99,42 @@ describe("resolveLocalizedLabel", () => {
 	});
 });
 
-describe("getCommandLabel", () => {
-	const command = { id: "undo", label: "Undo" };
+describe("resolveCommandLabel", () => {
+	const command = { id: "undo", label: { en: "Undo", ja: "元に戻す" } };
 
-	it("no override -> the command's English label", () => {
-		expect(getCommandLabel(defaultCanvasMessages, command)).toBe("Undo");
+	it("no override -> the command's own label for the locale", () => {
+		expect(resolveCommandLabel(command, defaultCanvasMessages, "ja")).toBe(
+			"元に戻す",
+		);
 	});
 
-	it("override present -> the override wins", () => {
-		const merged = resolveCanvasMessages("en", {
+	it("a locale the command does not ship -> its English", () => {
+		expect(resolveCommandLabel(command, defaultCanvasMessages, "de")).toBe(
+			"Undo",
+		);
+	});
+
+	it("a plain label is locale-agnostic", () => {
+		expect(
+			resolveCommandLabel(
+				{ id: "vendor.act", label: "Act" },
+				defaultCanvasMessages,
+				"ja",
+			),
+		).toBe("Act");
+	});
+
+	it("override present -> the override wins over every locale", () => {
+		const merged = resolveCanvasMessages("ja", {
 			commandLabels: { undo: "Custom undo" },
 		});
-		expect(getCommandLabel(merged, command)).toBe("Custom undo");
+		expect(resolveCommandLabel(command, merged, "ja")).toBe("Custom undo");
 	});
 
-	it("override for another id -> falls back to the command's label", () => {
-		const merged = resolveCanvasMessages("en", {
+	it("override for another id -> falls back to the command's own label", () => {
+		const merged = resolveCanvasMessages("ja", {
 			commandLabels: { redo: "Custom redo" },
 		});
-		expect(getCommandLabel(merged, command)).toBe("Undo");
+		expect(resolveCommandLabel(command, merged, "ja")).toBe("元に戻す");
 	});
 });

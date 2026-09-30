@@ -76,14 +76,10 @@ export type { TableStripPlacement } from "./controls";
 export { TableIcon } from "./stencil/TableIcon";
 export { TableStencils } from "./stencil/TableStencils";
 
-// The wording the plugin contributes, and the id it is namespaced under: a host
-// overriding one of these strings names it `<TABLE_PLUGIN_ID>.<key>` under
-// `messages.pluginStrings`.
-export {
-	TABLE_PLUGIN_ID,
-	tableMessagesByLocale,
-} from "./messages/tableMessages";
-export type { TableCommandId, TableStrings } from "./messages/tableMessages";
+// The plugin's own wording, resolved against the canvas locale with
+// resolveLocaleMessages (see useTableStrings).
+export { tableMessagesByLocale } from "./messages/tableMessages";
+export type { TableStrings } from "./messages/tableMessages";
 
 export { tableDefinition } from "./definition";
 export { tableDocDefinition, tableDocPlugin } from "./doc";

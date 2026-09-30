@@ -4,11 +4,12 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 import { cellCenter } from "../support/tableDom";
 
 /**
- * The wording the table contributes through `CanvasPlugin.messages`, read off a
- * real page because that is where the two halves meet: the canvas resolves the
- * dictionary for its locale, and the rows and buttons that draw it belong to
- * core, not to this plugin. A unit test can say the dictionary is well formed; it
- * cannot say the right-click menu ends up in Japanese.
+ * The table's wording read off a real page, because that is where the two halves
+ * meet: the plugin declares it (per-locale labels on its commands, its own
+ * dictionary for what it draws itself) and core resolves it against the canvas
+ * locale in rows and buttons this plugin does not own. A unit test can say the
+ * declarations are well formed; it cannot say the right-click menu ends up in
+ * Japanese.
  */
 
 /** The section the cell-background button opens (TableCellColorMenu). */
@@ -60,7 +61,7 @@ test.describe("table localization", () => {
 		);
 	});
 
-	test("a locale neither side ships falls back to the commands' English", async ({
+	test("a locale no dictionary ships falls back to the commands' English", async ({
 		canvas,
 	}) => {
 		await canvas.goto("?locale=de");
@@ -82,25 +83,22 @@ test.describe("table localization", () => {
 		await expect(cellColorToggle(canvas)).toHaveAttribute("title", "セルの色");
 	});
 
-	test("a host's own wording outranks the plugin's, for a command and for a string alike", async ({
+	test("a host's own wording outranks the label the command carries", async ({
 		canvas,
 	}) => {
 		await canvas.goto(
 			`?locale=ja&${hostMessagesQuery({
 				commandLabels: { "table.insertRowAbove": "行を上に足す" },
-				pluginStrings: { "table-shape.menuCellColor": "セル背景" },
 			})}`,
 		);
 		const id = await canvas.placeShape(TABLE_TOOL_JA);
-
-		await expect(cellColorToggle(canvas)).toHaveAttribute("title", "セル背景");
 
 		await canvas.openContextMenu(await cellCenter(canvas, id, "r0c0"));
 
 		await expect(contextMenuLabel(canvas, "table.insertRowAbove")).toHaveText(
 			"行を上に足す",
 		);
-		// Only the named row moves; the rest keep what the plugin contributed.
+		// Only the named row moves; the rest keep the label their command carries.
 		await expect(contextMenuLabel(canvas, "table.insertRowBelow")).toHaveText(
 			"下に行を挿入",
 		);

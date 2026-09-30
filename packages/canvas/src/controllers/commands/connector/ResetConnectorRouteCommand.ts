@@ -43,7 +43,7 @@ const resetConnectorRoute = (
 
 export const ResetConnectorRouteCommand: ExecutableCommand = {
 	id: "resetConnectorRoute",
-	label: "Reset Route",
+	label: { en: "Reset Route", ja: "経路を自動に戻す" },
 	category: "edit",
 	canExecute: (state) =>
 		hasSelectedConnectorShapedRoute(state.selectedConnectorId, state.objects),

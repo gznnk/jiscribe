@@ -1,12 +1,14 @@
-import { usePluginStrings } from "@jiscribe/canvas-sdk";
+import { resolveLocaleMessages, useCanvasLocale } from "@jiscribe/canvas-sdk";
 
-import { TABLE_PLUGIN_ID, tableMessagesByLocale } from "./tableMessages";
+import { tableMessagesByLocale } from "./tableMessages";
 import type { TableStrings } from "./tableMessages";
 
 /**
- * The table's own strings for the canvas's locale, with the host's overrides
- * applied. Kept apart from the dictionary so the commands, which are plain state
- * transitions, can take their English labels from it without pulling React in.
+ * The table's own strings for the canvas's locale. Both surfaces that draw them
+ * (the ObjectMenu section and the sidebar row) read them through here, so the two
+ * cannot resolve the dictionary differently.
  */
-export const useTableStrings = (): TableStrings =>
-	usePluginStrings(TABLE_PLUGIN_ID, tableMessagesByLocale);
+export const useTableStrings = (): TableStrings => {
+	const locale = useCanvasLocale();
+	return resolveLocaleMessages(tableMessagesByLocale, locale);
+};

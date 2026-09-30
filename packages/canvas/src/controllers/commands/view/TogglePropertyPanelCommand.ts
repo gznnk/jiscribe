@@ -12,7 +12,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const TogglePropertyPanelCommand: ExecutableCommand = {
 	id: "togglePropertyPanel",
-	label: "Properties",
+	label: { en: "Properties", ja: "プロパティ" },
 	category: "view",
 
 	canExecute: () => true,

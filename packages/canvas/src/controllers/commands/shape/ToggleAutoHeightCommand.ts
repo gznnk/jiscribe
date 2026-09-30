@@ -67,7 +67,7 @@ export const isSelectionAutoHeight = (
  */
 export const ToggleAutoHeightCommand: ExecutableCommand = {
 	id: "toggleAutoHeight",
-	label: "Auto Height",
+	label: { en: "Auto Height", ja: "高さをテキストに合わせる" },
 	category: "arrange",
 
 	canExecute: (state, registries) =>

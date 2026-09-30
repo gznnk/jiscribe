@@ -35,7 +35,7 @@ const clearObjectPartSelection = (
  */
 export const DeleteCommand: ExecutableCommand = {
 	id: "delete",
-	label: "Delete",
+	label: { en: "Delete", ja: "削除" },
 	category: "edit",
 	shortcuts: {
 		default: [{ code: "Delete" }, { code: "Backspace" }],

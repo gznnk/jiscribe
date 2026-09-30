@@ -55,7 +55,6 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
-import { resolvePluginMessages } from "./messages/resolvePluginMessages";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
@@ -223,17 +222,18 @@ type CanvasProps = {
 	};
 	/**
 	 * Active locale (default `"en"`). Selects the built-in dictionary (en / ja)
-	 * and each plugin's own (`CanvasPlugin.messages`), and is exposed to plugins
-	 * via `useCanvasLocale`. Resolution is exact → language subtag (`"ja-JP"` →
-	 * `"ja"`) → `"en"`, per dictionary, so a plugin that ships no `ja` falls back
-	 * to its own English rather than dragging the canvas back to English.
+	 * and each command's own label dictionary, and is exposed to plugins via
+	 * `useCanvasLocale` so they can resolve theirs. Resolution is exact →
+	 * language subtag (`"ja-JP"` → `"ja"`) → `"en"`, per dictionary, so a plugin
+	 * that ships no `ja` falls back to its own English rather than dragging the
+	 * canvas back to English.
 	 */
 	locale?: string;
 	/**
 	 * Partial overrides on top of the locale-resolved dictionary (tooltips,
 	 * menus, toasts). Tweaks individual strings; `locale` picks the language.
-	 * They outrank what the plugins contribute as well as the built-ins — a
-	 * plugin's string is named `<plugin id>.<key>` under `pluginStrings`.
+	 * They outrank a contributed command's own label as well as the built-ins,
+	 * named by command id under `commandLabels`.
 	 */
 	messages?: Partial<CanvasMessages>;
 
@@ -352,16 +352,9 @@ const CanvasComponent = ({
 	initialConfig,
 	ref,
 }: CanvasProps) => {
-	// Folded once, like the registries: the plugin set is part of a canvas's
-	// identity, and the collisions it refuses are wiring mistakes that should be
-	// raised at mount rather than on whichever render changes the locale.
-	const [pluginMessages] = useState(() =>
-		resolvePluginMessages(initialConfig?.plugins),
-	);
-
 	const mergedMessages = useMemo(
-		() => resolveCanvasMessages(locale, messages, pluginMessages),
-		[locale, messages, pluginMessages],
+		() => resolveCanvasMessages(locale, messages),
+		[locale, messages],
 	);
 
 	const themeCssVars = useMemo(
