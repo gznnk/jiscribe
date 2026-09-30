@@ -7,7 +7,7 @@ import {
 import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import {
 	calcFrameCenterFromTopLeft,
-	calcFrameTopLeft,
+	calcFrameKeyPoint,
 } from "@jiscribe/geometry";
 
 import { resolveTextObjectFont } from "./resolveTextObjectFont";
@@ -73,7 +73,7 @@ export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
  * turn the object into a label on the next save.
  */
 export const textToDoc: StateToDocMapper<TextState, TextDoc> = (state) => {
-	const drawnTopLeft = calcFrameTopLeft(state);
+	const drawnTopLeft = calcFrameKeyPoint(state, "topLeft");
 
 	return rebrand<TextDoc>({
 		...ObjectMapper.toDoc(state),

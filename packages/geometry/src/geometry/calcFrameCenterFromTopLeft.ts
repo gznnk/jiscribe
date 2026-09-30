@@ -5,11 +5,11 @@ import type { Point } from "../types/Point";
 import type { Transform } from "../types/Transform";
 
 /**
- * The inverse of {@link calcFrameTopLeft}: the center a box of `size` needs for its
- * own transformed top-left corner to land on `topLeft`. Pinning that corner while the
- * size changes is what makes a box grow away from it instead of dragging its content
- * sideways, and it is how a `geometry: "point"` document's stored corner is read back
- * as the center a frame is built from.
+ * The inverse of `calcFrameKeyPoint(frame, "topLeft")`: the center a box of `size`
+ * needs for its own transformed top-left corner to land on `topLeft`. Pinning that
+ * corner while the size changes is what makes a box grow away from it instead of
+ * dragging its content sideways, and it is how a `geometry: "point"` document's
+ * stored corner is read back as the center a frame is built from.
  *
  * @param topLeft - The corner to pin the box on, in world coordinates
  * @param size - The box's size in local px, before the transform; a zero size answers `topLeft` itself
