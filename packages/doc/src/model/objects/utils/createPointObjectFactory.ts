@@ -1,3 +1,7 @@
+import type { Dimensions } from "@jiscribe/geometry";
+
+import { calcPointDocDrawnTopLeft } from "./pointDocDrawnTopLeft";
+import { roundDocCoordinate } from "./roundDocNumbers";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
 
@@ -7,6 +11,11 @@ import type { ObjectFactory } from "../types/ObjectFactory";
  * only, and the box is materialized in the states layer from the content.
  */
 type PointDefaults = Omit<ObjectDoc, "id"> & Record<string, unknown>;
+
+/** The box a point-geometry doc of these fields draws, measured from its content. */
+export type PointObjectSizeResolver = (
+	doc: Readonly<Record<string, unknown>>,
+) => Dimensions;
 
 /**
  * Drops the box fields a point-geometry doc has no place for. Callers that size
@@ -29,17 +38,19 @@ const omitDimensionOverrides = (
 
 /**
  * Builds an `ObjectFactory` for point-geometry shapes — those whose doc stores a
- * position and nothing else, the box being derived from the content by the
- * states layer (the type's `contentResizer`) once the object enters a canvas.
+ * position and nothing else, the box being derived from the content (the type's
+ * `contentResizer` re-derives it in the states layer as the content changes).
  *
  * No `createDocFromBounds` is produced: a shape that does not own its box cannot
  * be drag-drawn, so it is click-placed like the other bounds-less shapes.
  *
  * @param defaults - The type's DOC_DEFAULTS; every field of the created doc but `id` and the position comes from here and `overrides`, in that order
- * @returns A factory whose `createDoc` stores `position` verbatim as the box's drawn top-left — not its center, the way the frame family reads it, since no box is known at this layer — and whose `calcDimensions` reports zero. Both drop `width` / `height` from `overrides`, this geometry having nowhere to keep them
+ * @param measureSize - Measures the box the doc about to be written draws, from the merged defaults and overrides; it is what makes the placement center-based, as every other geometry's is
+ * @returns A factory reading `position` as the box's center like the frame family, and storing the drawn top-left corner that center puts the measured box at (see GeometryType). Both methods drop `width` / `height` from `overrides`, this geometry having nowhere to keep them
  */
 export const createPointObjectFactory = <TDefaults extends PointDefaults>(
 	defaults: TDefaults,
+	measureSize: PointObjectSizeResolver,
 ): ObjectFactory => {
 	const mergeDefaults = (overrides?: Record<string, unknown>): TDefaults =>
 		({
@@ -49,26 +60,30 @@ export const createPointObjectFactory = <TDefaults extends PointDefaults>(
 
 	return {
 		createDoc(position, overrides) {
+			const merged = mergeDefaults(overrides);
+			const drawnTopLeft = calcPointDocDrawnTopLeft(
+				position,
+				measureSize(merged),
+				merged,
+			);
 			// Cloned because defaults and overrides are module-level constants: a nested
 			// value shared between two created objects (a record's text slots) would let
 			// an in-place edit of one rewrite the other (same rule as
 			// createFrameObjectFactory).
 			return structuredClone({
-				...mergeDefaults(overrides),
+				...merged,
 				id: crypto.randomUUID(),
-				x: position.x,
-				y: position.y,
+				// Rounded because the corner comes out of an affine transform, whose float
+				// tail would otherwise be persisted and make the placement's round trip
+				// inexact.
+				x: roundDocCoordinate(drawnTopLeft.x),
+				y: roundDocCoordinate(drawnTopLeft.y),
 			});
 		},
 
-		/**
-		 * Zero half-extents: the doc holds no box, so this layer has nothing to
-		 * report. Callers use it for the drag ghost's snap bounds and for the size
-		 * a programmatic placement offsets by, and both degrade to the position
-		 * itself — the box only exists once the states layer materializes it.
-		 */
-		calcDimensions() {
-			return { halfWidth: 0, halfHeight: 0 };
+		calcDimensions(overrides) {
+			const size = measureSize(mergeDefaults(overrides));
+			return { halfWidth: size.width / 2, halfHeight: size.height / 2 };
 		},
 	};
 };

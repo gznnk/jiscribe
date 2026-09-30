@@ -13,8 +13,10 @@
 export { createFrameObjectFactory } from "./model/objects/utils/createFrameObjectFactory";
 
 // The point-geometry counterpart: a doc storing a drawn top-left position only, the
-// box being derived from the content by the type's `contentResizer` in the state layer.
+// box being measured from the content — by the factory to place the shape, and by the
+// type's `contentResizer` to keep it sized in the state layer.
 export { createPointObjectFactory } from "./model/objects/utils/createPointObjectFactory";
+export type { PointObjectSizeResolver } from "./model/objects/utils/createPointObjectFactory";
 
 // The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
 // cannot use createFrameObjectFactory (center origin, vertex lists).
@@ -114,6 +116,12 @@ export { calcTextContentBox } from "./text/block/calcTextContentBox";
 // The one place the two vertical bases are told apart, shared so that the
 // overlay, the editor, image export and the fit checks place a body alike.
 export { applyTextVerticalBasis } from "./text/block/applyTextVerticalBasis";
+// The box a text takes when the width is given and the height follows from the
+// lines it wraps into — the one place the text padding is added to those lines. A
+// shape sizing a text box from its own content (a table row's height) takes the
+// box from here instead of restating the padding around calcVisualTextHeight,
+// which puts the same rule in two places.
+export { calcWrappedTextBlockSize } from "./text/block/calcWrappedTextBlockSize";
 export { calcVisualLineCount } from "./text/layout/calcVisualLineCount";
 export { calcVisualTextHeight } from "./text/layout/calcVisualTextHeight";
 export { layoutVisualLines } from "./text/layout/layoutVisualLines";

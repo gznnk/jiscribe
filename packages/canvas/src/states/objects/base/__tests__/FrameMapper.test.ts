@@ -7,6 +7,8 @@ import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDo
 import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import type { CreateObjectType } from "@jiscribe/doc/model/objects/types/CreateObjectType";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { Dimensions, Transform } from "@jiscribe/geometry";
+import { calcFrameCenterFromTopLeft } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ConnectorState } from "../../connector/ConnectorState";
@@ -50,6 +52,31 @@ const { toState: noStrokeToState } = createFrameMapper<
 	NoStrokeDoc,
 	NoStrokeState
 >(NoStrokeFeatures);
+
+/**
+ * A point-geometry type, declared here because no built-in one maps through this
+ * factory: `text` is the only shipped point type and it has a mapper of its own,
+ * which measures its box as it maps. A plugin's is grown by its
+ * ObjectContentResizer instead, and that is the case this covers.
+ */
+const PointFeatures = {
+	type: "pointFixture",
+	geometry: "point",
+	transform: true,
+	stroke: true,
+	fill: false,
+	connectable: true,
+} as const satisfies ObjectFeatures;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const PointBrand: unique symbol;
+type PointDoc = CreateObjectType<typeof PointFeatures, typeof PointBrand>;
+type PointState = CreateObjectState<typeof PointFeatures, typeof PointBrand>;
+
+const { toState: pointToState, toDoc: pointToDoc } = createFrameMapper<
+	PointDoc,
+	PointState
+>(PointFeatures);
 
 /**
  * Regression test for the pass-through approach.
@@ -184,6 +211,76 @@ describe("FrameMapper allow-list: does not carry keys other than the ones to pic
 		expect(state.fill).toBe("#ffff00");
 		expect("stroke" in state).toBe(false);
 		expect("strokeWidth" in state).toBe(false);
+	});
+});
+
+/**
+ * The point-geometry contract: the doc carries a position alone, and that position
+ * is where the derived box has its top-left corner drawn (GeometryType). The box
+ * itself never reaches the doc, and growing it must not move the position — which
+ * is what lets a type derive its size from its content without the document
+ * drifting on every save.
+ */
+describe("FrameMapper point geometry: the doc carries the drawn top-left corner alone", () => {
+	const pointDoc = (
+		transform: Record<string, unknown> = {},
+	): Parameters<typeof pointToState>[0] =>
+		({
+			id: "point-1",
+			type: PointFeatures.type,
+			x: 120,
+			y: 80,
+			...transform,
+		}) as unknown as PointDoc;
+
+	/** The box a content resizer would grow, pinned on the corner it started from. */
+	const growBox = (
+		state: ReturnType<typeof pointToState>,
+		size: Dimensions,
+	): ReturnType<typeof pointToState> => {
+		const center = calcFrameCenterFromTopLeft(
+			{ x: 120, y: 80 },
+			size,
+			state as unknown as Transform,
+		);
+		return {
+			...state,
+			cx: center.x,
+			cy: center.y,
+			width: size.width,
+			height: size.height,
+		};
+	};
+
+	it("starts the frame empty on the doc's own coordinate", () => {
+		expect(pointToState(pointDoc())).toMatchObject({
+			cx: 120,
+			cy: 80,
+			width: 0,
+			height: 0,
+		});
+	});
+
+	it("writes back the grown box's top-left corner and neither size field", () => {
+		const doc = pointDoc();
+		const grown = growBox(pointToState(doc), { width: 200, height: 90 });
+
+		const roundTripped = pointToDoc(grown) as Record<string, unknown>;
+
+		expect(roundTripped.x).toBe(120);
+		expect(roundTripped.y).toBe(80);
+		expect("width" in roundTripped).toBe(false);
+		expect("height" in roundTripped).toBe(false);
+		// The box did grow: its center moved by half the width, the doc coordinate not
+		// at all.
+		expect((grown as unknown as { cx: number }).cx).toBe(220);
+	});
+
+	it("keeps the corner where it was under rotation and flip", () => {
+		const doc = pointDoc({ rotation: 30, flipX: true });
+		const grown = growBox(pointToState(doc), { width: 200, height: 90 });
+
+		expect(pointToDoc(grown)).toEqual(doc);
 	});
 });
 

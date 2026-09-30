@@ -13,6 +13,42 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Added
+
+- For plugin authors: a shape may now declare `geometry: "point"` and let
+  `createFrameMapper` map it — the doc stores the position alone and the box is
+  re-derived from the content (`contentResizer`). `@jiscribe/geometry` gained
+  `calcFrameCenterFromTopLeft`, the inverse of
+  `calcFrameKeyPoint(frame, "topLeft")`, for the corner such a box is grown from
+  and rebuilt around, and `@jiscribe/doc` exports `calcWrappedTextBlockSize` so a
+  shape measuring its own text box does not restate the padding rule. A slot may
+  carry fields of its type's own: every shared write copies a slot whole, which
+  is now stated on `TextSlots` and held by a test.
+- **For plugin authors, a breaking change:**
+  `ObjectDocDefinition.textSlotStyleDefaults` is now
+  `{ bySlot?, everySlot? }` rather than one map keyed by slot id. A type whose
+  slot set is not fixed — a table's cells are one per row × column, so there is
+  no list of ids — declares `everySlot`, which every slot without an entry of its
+  own falls back to; a type that names its slots declares `bySlot` as before,
+  wrapped in that field. The two are separate because one map keyed by slot id
+  had to reserve an id for "every slot", which then could not be the name of a
+  real slot in any document of the type.
+
+### Changed
+
+- **A shape placed from the toolbar or the shape library lands centered on the
+  cursor, whatever its geometry.** `text` used to land with its top-left there
+  instead: a shape whose size is measured rather than stored reported no size to
+  offset a center by, so it was placed by the corner and, dragged out of the
+  library, snapped to nothing. Both follow from the size now being measured at
+  placement time. What a document holds is unchanged — a `text`'s `x` / `y` is
+  still the top-left of the drawn box — and so is `add_object`, whose `x` / `y`
+  still name that corner. **For plugin authors**, `createPointObjectFactory`
+  takes the measurement as its second argument, `calcDimensions` answers with the
+  real half-size, `createDoc` reads its `position` as the center for every
+  geometry, and `calcPointDocDrawnTopLeft` / `calcPointDocCenter` read that
+  conversion off a document's own transform fields.
+
 ### Fixed
 
 - **Resizing or moving a multi-selection inside a group no longer costs one pass

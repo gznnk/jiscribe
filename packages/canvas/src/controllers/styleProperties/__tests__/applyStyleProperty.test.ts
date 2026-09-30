@@ -837,6 +837,62 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			});
 		});
 
+		describe("on slots carrying their type's own fields", () => {
+			// A table cell is a slot with `fill` on it, which survives a write only
+			// because the write copies the slot instead of rebuilding it from the fields
+			// TextSlot names (TextSlots). Narrowed to those, a style change would clear
+			// every cell's background colour with nothing reporting it.
+			const cellRect = (
+				id: string,
+				content: Record<string, unknown> = { text: "id" },
+			) =>
+				({
+					...rectObj(id),
+					features: { ...RectFeatures, text: "slots" },
+					text: {
+						"0_0": { ...content, fill: "#eef" },
+						"0_1": { text: "name", fill: "#fee" },
+					},
+				}) as unknown as ObjectState;
+
+			it("keeps them when a whole-slot property is written", () => {
+				const r1 = cellRect("r1");
+				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				const result = applyStyleProperty(state, "textAlign", "center");
+				expect(slotsOf(result, "r1")).toEqual({
+					"0_0": { text: "id", fill: "#eef", textAlign: "center" },
+					"0_1": { text: "name", fill: "#fee", textAlign: "center" },
+				});
+			});
+
+			it("keeps them when an inline property strips the slot's runs", () => {
+				const r1 = cellRect("r1", {
+					text: [{ text: "id", fontWeight: "bold" }],
+				});
+				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				const result = applyStyleProperty(state, "fontWeight", "normal");
+				expect(slotsOf(result, "r1")["0_0"]).toEqual({
+					text: "id",
+					fill: "#eef",
+					fontWeight: "normal",
+				});
+			});
+
+			it("keeps them when the write lands on the selected slot alone", () => {
+				const r1 = cellRect("r1");
+				const state = makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					selectedTextSlot: { objectId: "r1", slotId: "0_1" },
+				});
+				const result = applyStyleProperty(state, "fontSize", "24");
+				expect(slotsOf(result, "r1")).toEqual({
+					"0_0": { text: "id", fill: "#eef" },
+					"0_1": { text: "name", fill: "#fee", fontSize: 24 },
+				});
+			});
+		});
+
 		describe("on a body written in a source language", () => {
 			/** A shape whose body is source text (features.text = "source"). */
 			const sourceRect = (id: string, style: Record<string, unknown> = {}) =>

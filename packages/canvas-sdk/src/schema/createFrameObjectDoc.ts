@@ -76,9 +76,10 @@ type FrameObjectDocCommonParams = {
 	validateExtra?: ObjectDocValidateFn;
 
 	/**
-	 * Draw-time text-style defaults keyed by slot id, for a `text: "slots"` shape
-	 * (see `ObjectDocDefinition.textSlotStyleDefaults`). A `"body"` shape omits it:
-	 * its single slot's defaults are read off {@link defaults}.
+	 * Draw-time text-style defaults of a `text: "slots"` shape — `bySlot` for the
+	 * slots it names, `everySlot` for a shape whose slot set is not fixed (see
+	 * `ObjectDocDefinition.textSlotStyleDefaults`). A `"body"` shape omits it: its
+	 * single slot's defaults are read off {@link defaults}.
 	 */
 	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
 };

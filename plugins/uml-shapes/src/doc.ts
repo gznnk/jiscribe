@@ -42,7 +42,7 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	validateExtra: validateRecordTextFields,
 	// Resolved per read, so a document keeps whichever of these it wrote itself
 	// and nothing more (ObjectTextStyleDefaultsRegistry).
-	textSlotStyleDefaults: RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
+	textSlotStyleDefaults: { bySlot: RECORD_SLOT_STYLE_DEFAULTS_BY_ID },
 });
 
 export const umlPackageDocDefinition: ObjectDocDefinition =

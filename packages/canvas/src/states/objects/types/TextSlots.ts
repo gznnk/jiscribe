@@ -28,6 +28,13 @@ import {
  *
  * Text styling lives per slot and only there: there is no shape-wide typography
  * to fall back to, so every reader takes it off the slot it is drawing.
+ *
+ * A type may load its own fields onto a slot beyond `TextSlot`'s (a table cell
+ * carries `fill`). This is a contract, not an accident: every shared function
+ * that rewrites a slot (`writeRichTextSlot`, `writeTextSlot`, `blankTextSlots`,
+ * `TextSlotStyleProperty`'s `writeSlotValue`) copies it with `{ ...slot }`
+ * rather than rebuilding it field by field, so such fields survive. Do not
+ * narrow a write to the fields `TextSlot` names.
  */
 export type TextSlots = Record<string, TextSlot>;
 

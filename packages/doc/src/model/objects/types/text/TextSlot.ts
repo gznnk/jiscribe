@@ -52,9 +52,9 @@ export type TextSlot<TContent extends TextSlotContent = TextSlotContent> =
 
 /**
  * The style half of a text slot: everything it carries but the content. The
- * shape one slot's text-style defaults take (ObjectTextSlotStyleDefaults keys
- * them by slot id), and what the draw / edit / measure sides resolve a slot into
- * before reading a field off it (see resolveTextSlotStyle).
+ * shape one slot's text-style defaults take (ObjectTextSlotStyleDefaults holds
+ * one per slot or one for every slot), and what the draw / edit / measure sides
+ * resolve a slot into before reading a field off it (see resolveTextSlotStyle).
  */
 export type TextSlotStyle = Omit<TextSlot, "text">;
 
