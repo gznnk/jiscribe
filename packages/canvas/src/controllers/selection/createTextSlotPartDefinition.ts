@@ -39,7 +39,8 @@ export const createTextSlotPartDefinition = (
 	},
 
 	// The key order is the order the type stacks its slots in, which is what Tab
-	// and a shift-extended range both walk (see the mappers).
+	// walks and what a shift-extended range falls back to (see the mappers, and
+	// ObjectPartDefinition.range for a type whose slots do not lie in one line).
 	list: (object) => Object.keys(readSlots(object) ?? {}),
 
 	region: (object, partId) => {

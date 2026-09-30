@@ -25,6 +25,7 @@ import { TableRowGripControl } from "./controls/TableRowGripControl";
 import { TableRowInsertControl } from "./controls/TableRowInsertControl";
 import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
+import { collectTableCellRange } from "./grid/collectTableCellRange";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
 import { TableCellColorMenu } from "./menu/TableCellColorMenu";
 import { TableCellColorRow } from "./menu/TableCellColorRow";
@@ -126,18 +127,21 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
  * that steps into a shape writes it, Tab walks it, the text style menu reads it.
  * A `"cell"` kind would be a second name for the same thing, selected by nobody.
  *
- * What is declared here is the one thing core cannot derive — what Delete means
- * over a cell range — so `createTextSlotPartDefinition` is spread for the rest
- * and only `delete` added (a declared `"textSlot"` replaces the derived one).
- * Emptying is not removing, which is why rows and cells are separate kinds at
- * all: Delete over a row grip takes the row, where the very same cells picked as
- * cells keep their places and lose their text.
+ * What is declared here is the two things core cannot derive — what Delete means
+ * over a cell range, and what the range between two cells is — so
+ * `createTextSlotPartDefinition` is spread for the rest and only those added (a
+ * declared `"textSlot"` replaces the derived one). Emptying is not removing,
+ * which is why rows and cells are separate kinds at all: Delete over a row grip
+ * takes the row, where the very same cells picked as cells keep their places and
+ * lose their text. And a grid's run between two cells is the rectangle they
+ * corner, not the slice of the slot order between them (collectTableCellRange).
  */
 const TABLE_PARTS: ObjectPartDefinition<TableState>[] = [
 	createTableTrackPartDefinition(TABLE_ROW_PART_KIND),
 	createTableTrackPartDefinition(TABLE_COLUMN_PART_KIND),
 	{
 		...createTextSlotPartDefinition(calcTableTextRegion),
+		range: collectTableCellRange,
 		delete: clearTableCells,
 	},
 ];

@@ -56,7 +56,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   in history and saved. A click that changes nothing still records nothing.
 - **A table's rows and columns can be selected, added and removed.** A grip
   outside the top and left edges picks a whole column or row; clicking a cell
-  picks it, and Shift widens the pick to a range. Delete clears the picked cells'
+  picks it, and Shift widens the pick to the block of cells between the two —
+  the rectangle they stand at opposite corners of, as a spreadsheet does it, not
+  the run of the cell order between them. Delete clears the picked cells'
   text, or removes the picked row or column — never the last one left. Rows and
   columns are inserted from the right-click menu or with Shift+Alt+arrow, and the
   cells keep their contents as the grid renumbers around the insertion.
@@ -64,7 +66,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   (`ObjectTypeDefinition.parts`), and core carries one selection below the object
   level for every type — a range of them, not one. A `text: "slots"` type gets its
   slots as parts without declaring anything, and declaring them itself replaces
-  that default, which is how a type says what Delete does to them. A selection
+  that default, which is how a type says what Delete does to them and what a
+  Shift-extended range between two of them covers (`ObjectPartDefinition.range`,
+  omitted by every kind whose parts lie in one line). A selection
   control can now take a click and answer with a selection rather than only with
   its own object, a type may contribute commands (`CanvasPlugin.commands`) and
   rows on the context menu (`ObjectTypeDefinition.contextMenu`), and two commands

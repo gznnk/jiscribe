@@ -1,9 +1,10 @@
 /**
  * The run of parts between two ids, in the order the type lists its parts
- * (ObjectPartDefinition.list). Which of the two comes first in that
- * order does not matter: the run is read from the lower index to the higher, so
- * an extension that reaches backwards yields the same list order as one
- * reaching forwards.
+ * (ObjectPartDefinition.list) — the default for a kind declaring no `range` of
+ * its own, which is every kind whose parts lie in one line. Which of the two
+ * comes first in that order does not matter: the run is read from the lower index
+ * to the higher, so an extension that reaches backwards yields the same list
+ * order as one reaching forwards.
  *
  * @param orderedPartIds - Every part the object currently holds, in the type's
  *   own order; ids outside it make the range undecidable

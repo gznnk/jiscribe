@@ -271,3 +271,53 @@ export async function tableOutlineRect(
 		return { x: box.x, y: box.y, width: box.width, height: box.height };
 	}, objectId);
 }
+
+/**
+ * Which cells the selection overlay has boxes over, identified by matching each
+ * box against the cell it sits on. The overlay's rects carry no `data-part` of
+ * their own, so identity has to come from the drawing: a cell's box and the
+ * outline over it share a centre.
+ *
+ * @param canvas - The driver for the page under test
+ * @param objectId - The table's object id; its cells are the only ones matched against
+ * @returns The cell ids in the order the overlay draws them, which is the order
+ *   the part selection holds them in; empty when only the table itself is
+ *   outlined. Throws when an outline sits over no cell of this table, that being
+ *   a selection this reader cannot report rather than one it may drop
+ */
+export async function selectedCellIds(
+	canvas: CanvasDriver,
+	objectId: string,
+): Promise<string[]> {
+	return canvas.page.evaluate((id) => {
+		const cells = [
+			...document.querySelectorAll(
+				`[data-kind="object"][data-id="${id}"] [data-part^="r"]`,
+			),
+		].map((cell) => ({
+			cellId: cell.getAttribute("data-part") ?? "",
+			box: cell.getBoundingClientRect(),
+		}));
+		// The object's own outline comes first, the sub-parts after (SelectionOverlay).
+		return [
+			...document.querySelectorAll('[data-layer="selection-overlay"] rect'),
+		]
+			.slice(1)
+			.map((outline) => {
+				const box = outline.getBoundingClientRect();
+				const x = box.x + box.width / 2;
+				const y = box.y + box.height / 2;
+				const found = cells.find(
+					(cell) =>
+						x >= cell.box.x &&
+						x <= cell.box.x + cell.box.width &&
+						y >= cell.box.y &&
+						y <= cell.box.y + cell.box.height,
+				);
+				if (found === undefined) {
+					throw new Error(`a selection outline sits over no cell of ${id}`);
+				}
+				return found.cellId;
+			});
+	}, objectId);
+}

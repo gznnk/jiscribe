@@ -100,9 +100,10 @@ function handleObjectClick(
  * first slot by fallback, it steps back up to the object level by clearing the slot.
  *
  * With an additive modifier held the click extends the live selection instead of
- * replacing it: the run from its anchor to the clicked slot, in the order the
- * type lists its slots. A plain click leaves one slot selected, and that slot is
- * the anchor the next extension runs from.
+ * replacing it, over the run from its anchor to the clicked slot as the type
+ * reads that run (ObjectPartDefinition.range, the order it lists its slots by
+ * default). A plain click leaves one slot selected, and that slot is the anchor
+ * the next extension runs from.
  */
 function handleTextSlotClick(
 	canvasState: CanvasControllerState,
@@ -159,8 +160,8 @@ function handleTextSlotClick(
 }
 
 /**
- * The slot selection a modifier-held click widens the live one to: every slot
- * between its anchor and the clicked slot. Null when there is nothing to extend
+ * The slot selection a modifier-held click widens the live one to: the slots the
+ * type reads between its anchor and the clicked slot. Null when there is nothing to extend
  * from — no live slot selection on this very object — which leaves the caller to
  * treat the click as a plain one.
  */
@@ -185,18 +186,22 @@ function extendTextSlotSelection(
 		targetObject.type,
 		TEXT_SLOT_PART_KIND,
 	);
-	if (part?.list === undefined) {
+	const anchorPartId = currentSlot.anchorPartId ?? currentSlot.partIds[0];
+	// What the run between two parts means is the type's to say: a grid's is the
+	// rectangle its two corners span, not the slice of the slot order between them.
+	const partIds =
+		part?.range !== undefined
+			? part.range(targetObject, anchorPartId, slotId)
+			: part?.list !== undefined
+				? collectObjectPartRange(part.list(targetObject), anchorPartId, slotId)
+				: null;
+	if (partIds === null) {
 		return null;
 	}
-	const anchorPartId = currentSlot.anchorPartId ?? currentSlot.partIds[0];
 	return {
 		objectId: targetObject.id,
 		kind: TEXT_SLOT_PART_KIND,
-		partIds: collectObjectPartRange(
-			part.list(targetObject),
-			anchorPartId,
-			slotId,
-		),
+		partIds,
 		anchorPartId,
 	};
 }

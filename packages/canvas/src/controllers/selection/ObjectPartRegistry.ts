@@ -33,6 +33,24 @@ export type ObjectPartDefinition<TState extends ObjectState = ObjectState> = {
 	list?: (object: TState) => readonly string[];
 
 	/**
+	 * The parts a range from `anchorPartId` to `focusPartId` covers, for a kind
+	 * whose parts are not laid out in one line — a table's cells, where the run is
+	 * the rectangle the two corners span rather than the slice of `list` between
+	 * them. Omitted = the linear default (collectObjectPartRange over `list`),
+	 * which is what a sequence of vertices or of tracks wants.
+	 *
+	 * Every returned id must be a part the object currently holds, given in the
+	 * type's own order — the order the writes and reads that follow walk them in.
+	 * An empty list is not an answer: a range covers at least the focus, which is
+	 * what an undecidable anchor collapses to.
+	 */
+	range?: (
+		object: TState,
+		anchorPartId: string,
+		focusPartId: string,
+	) => readonly string[];
+
+	/**
 	 * The text slots the named parts cover, for a kind that stands for a group of
 	 * slots without being one itself — a table's row over the cells of that row.
 	 * It is what lets a slot-level write (a cell's background, the typography)

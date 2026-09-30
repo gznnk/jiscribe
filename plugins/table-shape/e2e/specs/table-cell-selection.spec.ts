@@ -1,15 +1,22 @@
 import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-import { cellRect, selectionOutlines } from "../support/tableDom";
+import {
+	cellCount,
+	cellRect,
+	clickInsertBadge,
+	selectedCellIds,
+	selectionOutlines,
+} from "../support/tableDom";
 
 /**
  * Selecting cells of a table, in a real browser. The table declares no part kind
  * of its own for them: its cells *are* the text slots core registers for every
- * slot-bearing type, so clicking one, widening the run and outlining every cell of
- * it all come from the shared machinery. What this spec answers is that the table
- * actually rides it — that the boxes the overlay draws are the cell rects the grid
- * lays out, which only a browser can say.
+ * slot-bearing type, so clicking one and outlining it both come from the shared
+ * machinery, and only what a range of them means is the table's own
+ * (collectTableCellRange). What this spec answers is that the table actually
+ * rides it — that the boxes the overlay draws are the cell rects the grid lays
+ * out, which only a browser can say.
  */
 
 /** The content coordinate at the middle of one cell. */
@@ -61,20 +68,29 @@ test.describe("table cell selection", () => {
 		expect(outlines[1].y).toBeCloseTo(outlines[0].y, 6);
 	});
 
-	test("widens to the run of cells between the anchor and a Shift-clicked one", async ({
+	test("widens to the rectangle between the anchor and a Shift-clicked cell", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
+		// A third column, so the rectangle and the row-major run stop coinciding:
+		// on the 2x2 a table is placed as, they are the same four cells.
+		await clickInsertBadge(canvas, "columnInsert", 2);
+		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
+
 		await clickCell(canvas, id, "r0c0");
 		await shiftClickCell(canvas, id, "r0c1");
+		expect(await selectedCellIds(canvas, id)).toEqual(["r0c0", "r0c1"]);
 
-		// One box per cell of the run, on top of the table's own.
-		expect(await selectionOutlines(canvas)).toHaveLength(3);
-
-		// The run is taken in the order the type lists its cells, which is row by
-		// row — so reaching the far corner takes in the whole 2x2 grid.
+		// Reaching the cell below takes in the block the two ends stand at opposite
+		// corners of, in the order the type lists its cells — and not r0c2, which
+		// the slot order puts between the two ends but the rectangle never reaches.
 		await shiftClickCell(canvas, id, "r1c1");
-		expect(await selectionOutlines(canvas)).toHaveLength(5);
+		expect(await selectedCellIds(canvas, id)).toEqual([
+			"r0c0",
+			"r0c1",
+			"r1c0",
+			"r1c1",
+		]);
 	});
 
 	test("collapses back to one cell on a plain click", async ({ canvas }) => {

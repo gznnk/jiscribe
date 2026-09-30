@@ -719,3 +719,38 @@ describe("ObjectEventHandler - snap during edge scroll", () => {
 		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
 	});
 });
+
+/**
+ * A slot definition deciding its own ranges, as a table's cells do. It declares no
+ * `list`, which is the case core must not bail out of: a kind whose parts are not
+ * in one line has nothing to slice anyway.
+ */
+const rangeRegistries = createTestRegistries();
+rangeRegistries.objectPart.register("record", [
+	{
+		kind: TEXT_SLOT_PART_KIND,
+		has: () => true,
+		range: (_object, anchorPartId, focusPartId) => [focusPartId, anchorPartId],
+	},
+]);
+
+describe("ObjectEventHandler - a type's own slot range", () => {
+	it("takes the run from the definition instead of slicing the slot order", () => {
+		const next = ObjectEventHandler.handle(
+			makeSlotState(["rec-1"], {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["name"],
+			}),
+			makeSlotClickEvent("rec-1", "rows", { shift: true }),
+			rangeRegistries,
+		);
+		// The linear default would have given the slot order, ["name", "rows"].
+		expect(next.objectPartSelection).toEqual({
+			objectId: "rec-1",
+			kind: TEXT_SLOT_PART_KIND,
+			partIds: ["rows", "name"],
+			anchorPartId: "name",
+		});
+	});
+});
