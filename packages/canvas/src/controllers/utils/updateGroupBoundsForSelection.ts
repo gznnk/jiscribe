@@ -1,4 +1,4 @@
-import { updateGroupBoundsFromRoot } from "./updateGroupBoundsFromRoot";
+import { updateGroupBoundsFromRoots } from "./updateGroupBoundsFromRoot";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -12,18 +12,14 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * property panel's `TRANSFORM_PROPERTY_UPDATE`, which have to leave the same
  * bounds behind.
  *
+ * The batch call is what keeps a multi-selection to one copy of the objects map
+ * (issue #160); ids naming nothing, and ids whose topmost ancestor is not a
+ * group, are dropped by `findRootGroupId` rather than filtered here.
+ *
  * @param state - The state holding the already-transformed objects; its `selectedIds` name what moved
  * @returns `state` itself when nothing selected is a group or lives in one
  */
 export const updateGroupBoundsForSelection = (
 	state: CanvasControllerState,
-): CanvasControllerState => {
-	let nextState = state;
-	for (const selectedId of nextState.selectedIds) {
-		const object = nextState.objects[selectedId];
-		if (object && (object.type === "group" || object.parentId)) {
-			nextState = updateGroupBoundsFromRoot(nextState, selectedId);
-		}
-	}
-	return nextState;
-};
+): CanvasControllerState =>
+	updateGroupBoundsFromRoots(state, state.selectedIds);
