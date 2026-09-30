@@ -148,6 +148,10 @@ export {
 // types, and the doc-ops refuse to switch any other.
 export { supportsAutoHeight } from "./plugin/supportsAutoHeight";
 export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
+// The rule a point-geometry type is held to: it has to declare the box its doc
+// does not store. Read by the plugin testing kit and by the headless diagnostics.
+export { isMissingPointSize } from "./plugin/isMissingPointSize";
+export type { PointSizeDeclaration } from "./plugin/isMissingPointSize";
 // Whether the same declaration gives up part of the box's height, which is what
 // decides whether switching `textVerticalBasis` moves the type's body at all.
 export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";

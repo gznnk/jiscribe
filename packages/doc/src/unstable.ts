@@ -18,6 +18,10 @@ export { createFrameObjectFactory } from "./model/objects/utils/createFrameObjec
 export { createPointObjectFactory } from "./model/objects/utils/createPointObjectFactory";
 export type { PointObjectSizeResolver } from "./model/objects/utils/createPointObjectFactory";
 
+// What a point-geometry type declares itself with, so its `pointSize` and its
+// `factory` are built from the one resolver.
+export { declarePointGeometry } from "./plugin/declarePointGeometry";
+
 // The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
 // cannot use createFrameObjectFactory (center origin, vertex lists).
 export {

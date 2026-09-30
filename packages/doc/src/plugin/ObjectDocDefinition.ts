@@ -3,6 +3,7 @@ import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { ObjectFactory } from "../model/objects/types/ObjectFactory";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
+import type { PointObjectSizeResolver } from "../model/objects/utils/createPointObjectFactory";
 import type { ObjectTextSlotStyleDefaults } from "../registries/ObjectTextStyleDefaultsRegistry";
 
 /**
@@ -36,6 +37,28 @@ export type ObjectDocDefinition = {
 	 * no fields of its own.
 	 */
 	extraKeys?: readonly string[];
+
+	/**
+	 * The box a `geometry: "point"` doc of this type draws, measured from what the
+	 * doc holds: such a doc stores the corner it is drawn from and no size at all,
+	 * so this is the single declaration of that box. Declare it with the type's
+	 * factory through {@link import("./declarePointGeometry").declarePointGeometry},
+	 * which builds both from this one resolver, so where a new one is placed and
+	 * where the doc-ops measure, align and distribute the saved one can never
+	 * disagree.
+	 *
+	 * The doc it is handed may state only what the file states — the ops measure a
+	 * loaded doc, the factory a doc with the type's defaults merged in — so a
+	 * measurement that leans on one of those defaults (the font a `text` falls
+	 * back to, a cell's typography) resolves it itself.
+	 *
+	 * Every `geometry: "point"` type has to declare one; omitting it leaves the type
+	 * with no box at all, which is checked rather than guessed at
+	 * ({@link import("./isMissingPointSize").isMissingPointSize}) — a plugin's own
+	 * parse-check suite fails on it, and `diagnoseDoc` reports it against a document
+	 * already holding one.
+	 */
+	pointSize?: PointObjectSizeResolver;
 
 	/**
 	 * Where the type lays its text out, given a doc of it: the rectangle the

@@ -15,6 +15,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- For plugin authors: a `geometry: "point"` type declares the box its document
+  does not store as `ObjectDocDefinition.pointSize`, and the doc-side ops measure
+  it by that instead of by the rule the `text` shape happens to follow. A type
+  declares it with its factory through `declarePointGeometry`, which builds both
+  from the one resolver, so where a new shape is placed and where a saved one is
+  measured, aligned and distributed cannot drift apart. A type registering one
+  and declaring no size now fails its own parse-check suite
+  (`@jiscribe/canvas-sdk/testing`) and is reported by `diagnoseDoc`, rather than
+  quietly having no box at all.
 - **A command carries its own wording, in every locale it ships.**
   `Command.label` takes `string | LocaleMessages<string>`, exactly as
   `Stencil.label` already did, and a host override by id still outranks it. The
@@ -80,6 +89,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **The reported box of a rotated shape whose size is measured no longer misses
+  it.** `get_object_bounds`, and with it alignment, distribution and overlap
+  checks, read a `text`'s stored coordinate as the box's plain top-left corner —
+  but for a shape storing no size that coordinate is the corner as it is _drawn_,
+  turned with the shape. A rotated or flipped text therefore reported a box
+  beside the one it occupies, a quarter turn putting it a whole box away. An
+  upright one is unchanged, as is the rule that these ops work on the
+  untransformed box.
 - **Resizing or moving a multi-selection inside a group no longer costs one pass
   over the whole drawing per selected object.** Settling the groups a transform
   invalidated copied the object map once for every selected id instead of once
