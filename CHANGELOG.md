@@ -13,6 +13,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Fixed
+
+- **Resizing or moving a multi-selection inside a group no longer costs one pass
+  over the whole drawing per selected object.** Settling the groups a transform
+  invalidated copied the object map once for every selected id instead of once
+  for the selection, and copied it through a spread that pays a proxy trap per
+  object when the map is still the working copy a drag leaves behind. Both are
+  now one copy of the map, whatever the selection holds. The bounds that come out
+  are the same; what changes is the time the property sidebar's width and height
+  fields take to answer a keystroke while several objects are selected.
+
 ## [0.11.0] - 2026-09-29
 
 ### Security
