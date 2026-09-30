@@ -1,8 +1,5 @@
-import {
-	resolveViewPadding,
-	type ViewDoc,
-	type ViewOpenMode,
-} from "@jiscribe/doc/model/canvas/ViewDoc";
+import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
+import type { ViewDoc, ViewOpenMode } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { Dimensions } from "@jiscribe/geometry";
 import { type Dispatch, type RefObject, useLayoutEffect, useRef } from "react";
 

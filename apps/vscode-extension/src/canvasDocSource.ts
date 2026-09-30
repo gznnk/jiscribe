@@ -21,16 +21,12 @@ export const EMPTY_CANVAS_DOC_JSON = JSON.stringify(
  *
  * @param fileText - the file's current text; blank (empty or whitespace only)
  *   yields EMPTY_CANVAS_DOC_JSON
- * @returns re-indented JSON when the text parses, otherwise fileText unchanged
- *   so the Webview reports the syntax error itself
+ * @returns fileText itself otherwise; the Webview parses it anyway, so it is
+ *   neither validated nor re-indented here
  */
 export function toWebviewDocSource(fileText: string): string {
 	if (fileText.trim() === "") {
 		return EMPTY_CANVAS_DOC_JSON;
 	}
-	try {
-		return JSON.stringify(JSON.parse(fileText), null, 2);
-	} catch {
-		return fileText;
-	}
+	return fileText;
 }

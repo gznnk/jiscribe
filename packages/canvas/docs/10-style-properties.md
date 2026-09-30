@@ -12,13 +12,13 @@ a dispatch function.
 ## Flow: two entry routes converge on one registry
 
 ```
-ObjectMenu item / slider, sidebar swatch ── gesture (set:/slider:) ─→ ObjectMenuHandler   ┐
-ObjectMenu number input, sidebar callback ── STYLE_PROPERTY_UPDATE ──→ canvasReducer      ┼─→ registries.styleProperty.apply(state, property, value)
-                                                                                          ┘        │
-                                                                             StylePropertyRegistry │
-                                                                    handlers.get(property) ?? extraFallback
-                                                                                                   │
-                                                                          handler.apply(...) ⇒ new state
+ObjectMenu item / slider, sidebar swatch ── gesture (set:/slider:) ─→ applyStylePropertyPart ┐
+ObjectMenu number input, sidebar callback ── STYLE_PROPERTY_UPDATE ──→ canvasReducer         ┼─→ registries.styleProperty.apply(state, property, value)
+                                                                                             ┘        │
+                                                                                StylePropertyRegistry │
+                                                                       handlers.get(property) ?? extraFallback
+                                                                                                      │
+                                                                             handler.apply(...) ⇒ new state
 ```
 
 The slider straddles both: pointer interaction (drag and track click) rides the

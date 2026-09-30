@@ -5,6 +5,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
+import type { CanvasDoc } from "@jiscribe/doc";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -40,6 +41,28 @@ describe("saveCanvasFile", () => {
 		expect(await readFile(targetPath, "utf8")).toBe(
 			'{\n\t"version": 1,\n\t"root": []\n}\n',
 		);
+	});
+
+	it("is refused, leaving the file as it was, when the edit makes the document invalid", async () => {
+		const loaded = await loadCanvasFile(targetPath);
+		const rect = {
+			type: "rect",
+			id: "dup-1",
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+		};
+		const invalidDoc = {
+			...loaded.doc,
+			root: [rect, { ...rect, x: 20 }],
+		} as unknown as CanvasDoc;
+
+		await expect(
+			saveCanvasFile(targetPath, invalidDoc, loaded),
+		).rejects.toThrow(/refused to write[\s\S]*valid: false/);
+
+		expect(await readFile(targetPath, "utf8")).toBe(loaded.text);
 	});
 
 	it("is refused, keeping the other write, when the file changed after it was loaded", async () => {

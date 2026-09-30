@@ -6,9 +6,9 @@ import { memo } from "react";
 
 import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
 import { dedupePoints } from "./utils/dedupePoints";
-import { toPointsAttr } from "./utils/toPointsAttr";
 import { Arrow, getArrowLineInset } from "../../arrows";
 import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
+import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
@@ -58,7 +58,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	const end = polyPoints[lastIdx];
 
 	// The hit area keeps its full length up to the endpoints for easier clicking.
-	const hitAreaPointsAttr = toPointsAttr(polyPoints);
+	const hitAreaPointsAttr = formatPolygonPoints(polyPoints);
 
 	// For hollow arrows, terminate the line at the arrow base so it does not pass through the hollow part.
 	const insetPoints = insetPolylineEnds(
@@ -66,7 +66,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 		getArrowLineInset(startArrow) * resolvedStrokeWidth,
 		getArrowLineInset(endArrow) * resolvedStrokeWidth,
 	);
-	const linePointsAttr = toPointsAttr(insetPoints);
+	const linePointsAttr = formatPolygonPoints(insetPoints);
 
 	// Orient arrows toward the point adjacent to the endpoint (following the end segment even for polylines).
 	const startAngleRadians = calcVectorAngleRad(

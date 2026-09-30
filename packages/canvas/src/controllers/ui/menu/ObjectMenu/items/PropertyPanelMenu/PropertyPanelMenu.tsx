@@ -21,8 +21,6 @@ const PropertyPanelMenuComponent: React.FC = () => {
 	return (
 		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={commandPart("togglePropertyPanel")}
 				aria-label={title}
 				title={title}

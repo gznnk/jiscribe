@@ -383,6 +383,10 @@ describe("handleGesture - scroll limit declared by the document", () => {
 		// The carried-over measurement still describes the wider document.
 		expect(undone.scrollLimit.rect).toMatchObject({ right: 310 });
 
+		// The undo pans to reveal rect-2, stopping at the narrowed wall rather than
+		// taking its whole margin.
+		expect(undone.viewport.minX).toBe(10);
+
 		expect(scroll(undone, wheel(9999, 0)).viewport.minX).toBe(10);
 	});
 

@@ -3,7 +3,12 @@ import { memo, useState } from "react";
 import { usePropertyPanelSections } from "./hooks/usePropertyPanelSections";
 import { ArrowHeadsItem } from "./items/ArrowHeadsItem";
 import type { BuiltinItemProps } from "./items/BuiltinItemProps";
-import { BackgroundItem } from "./items/CanvasItems";
+import {
+	BackgroundItem,
+	ViewOpenItem,
+	ViewPaddingItem,
+	ViewScrollItem,
+} from "./items/CanvasItems";
 import {
 	AutoHeightItem,
 	LockAspectRatioItem,
@@ -61,6 +66,7 @@ import {
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
+import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
 import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
@@ -181,12 +187,13 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * both of which belong to the selection rather than to any of its types.
  *
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
- * handled by PropertyPanelHandler: its chrome carries only a data-part, and the
- * close button routes through the command system like the toolbar's own toggle.
- * The controls inside declare themselves as object-menu targets instead, so a
- * press writes through the same `set:` / `command:` grammar the floating menu
- * uses and lands one history entry (ObjectMenuHandler); the fields that take
- * typing opt out of gestures entirely.
+ * handled by PropertyPanelHandler: everything inside it — its chrome, the
+ * controls of every section, and the dropdowns portalled into it — carries only
+ * a data-part. The close button routes through the command system like the
+ * toolbar's own toggle; a selection's controls write through the same `set:` /
+ * `slider:` / `command:` grammar the floating menu uses and land one history
+ * entry; the Canvas section's buttons write the document through `doc:` parts.
+ * The fields that take typing opt out of gestures entirely.
  *
  * Open and collapse state are reducer state, so this component is render-only.
  */
@@ -215,6 +222,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 			aria-label={messages.propertyPanelTitle}
 			data-kind="menu"
 			data-id="property-panel"
+			{...TEXT_EDITOR_FOCUS_SCOPE_PROPS}
 		>
 			<PropertyPanelHeader>
 				<PropertyPanelTitle>{messages.propertyPanelTitle}</PropertyPanelTitle>
@@ -245,6 +253,12 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								background={canvasState.background}
 								onDocumentUpdate={onDocumentUpdate}
 							/>
+							<ViewPaddingItem
+								view={canvasState.view}
+								onDocumentUpdate={onDocumentUpdate}
+							/>
+							<ViewOpenItem view={canvasState.view} />
+							<ViewScrollItem view={canvasState.view} />
 						</PropertyPanelAccordion>
 					)}
 					{!showsCanvasSection &&

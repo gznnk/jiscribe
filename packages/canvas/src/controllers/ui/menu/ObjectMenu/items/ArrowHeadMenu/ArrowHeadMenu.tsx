@@ -73,8 +73,6 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<ObjectMenuItemPositioner ref={startRef}>
 				<ObjectMenuButton
 					isActive={isStartOpen}
-					data-kind="menu"
-					data-id="object-menu"
 					data-part={togglePart(SECTION_ID_START)}
 					title={messages.menuStartArrow}
 				>
@@ -95,8 +93,6 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`start-${type}`}
 									isActive={!isStartMixed && currentStart === type}
-									data-kind="menu"
-									data-id="object-menu"
 									data-part={setPart("startArrow", type)}
 									title={messages.arrowTypeNames[type] ?? type}
 								>
@@ -110,8 +106,6 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 
 			{/* Swap Button */}
 			<ObjectMenuButton
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={commandPart("swapArrows")}
 				title={messages.menuSwapArrows}
 			>
@@ -122,8 +116,6 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<ObjectMenuItemPositioner ref={endRef}>
 				<ObjectMenuButton
 					isActive={isEndOpen}
-					data-kind="menu"
-					data-id="object-menu"
 					data-part={togglePart(SECTION_ID_END)}
 					title={messages.menuEndArrow}
 				>
@@ -144,8 +136,6 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`end-${type}`}
 									isActive={!isEndMixed && currentEnd === type}
-									data-kind="menu"
-									data-id="object-menu"
 									data-part={setPart("endArrow", type)}
 									title={messages.arrowTypeNames[type] ?? type}
 								>

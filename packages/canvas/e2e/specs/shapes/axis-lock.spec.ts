@@ -26,6 +26,8 @@ const readVertices = async (
  * - Vertex drag: locks the same way, taking the dragged vertex as the origin.
  * - Origin snap: near the start position it snaps back to the original position
  *   and both axis guides (a cross) appear.
+ * - Polyline drawing: the end point locks the same way, taking the drag start as
+ *   the origin. There is no origin snap (a zero-length line is not placed).
  *
  * The axis lock guides live in the DOM only during the drag, so they are checked
  * before release (inside the dragInspecting callback). Final positions are
@@ -219,6 +221,73 @@ test.describe("Shift axis lock", () => {
 			await expect
 				.poll(async () => (await readVertices(canvas, id))[0])
 				.toEqual({ x: start.x, y: start.y });
+		});
+	});
+
+	test.describe("drawing", () => {
+		test("a Shift polyline draw that is mostly horizontal ends level with the start", async ({
+			canvas,
+		}) => {
+			const id = await canvas.drawShape(
+				"Polyline",
+				{ x: 400, y: 400 },
+				{ x: 700, y: 440 },
+				{
+					shift: true,
+					inspect: async () => {
+						await expect(canvas.axisLockGuides("y")).toHaveCount(1);
+						await expect(canvas.axisLockGuides("x")).toHaveCount(0);
+						expect(await canvas.axisLockGuideCoordinates("y")).toEqual([400]);
+					},
+				},
+			);
+
+			const [start, end] = await readVertices(canvas, id);
+			expect(end.y).toBe(start.y);
+			expect(end.x - start.x).toBe(300);
+			await expect(canvas.axisLockGuides("y")).toHaveCount(0);
+		});
+
+		test("a Shift polyline draw that is mostly vertical ends plumb with the start", async ({
+			canvas,
+		}) => {
+			const id = await canvas.drawShape(
+				"Polyline",
+				{ x: 400, y: 200 },
+				{ x: 430, y: 450 },
+				{
+					shift: true,
+					inspect: async () => {
+						await expect(canvas.axisLockGuides("x")).toHaveCount(1);
+						await expect(canvas.axisLockGuides("y")).toHaveCount(0);
+						expect(await canvas.axisLockGuideCoordinates("x")).toEqual([400]);
+					},
+				},
+			);
+
+			const [start, end] = await readVertices(canvas, id);
+			expect(end.x).toBe(start.x);
+			expect(end.y - start.y).toBe(250);
+		});
+
+		test("Shift does not constrain a rectangle draw", async ({ canvas }) => {
+			const id = await canvas.drawShape(
+				"Rectangle",
+				{ x: 400, y: 200 },
+				{ x: 600, y: 320 },
+				{
+					shift: true,
+					inspect: async () => {
+						await expect(canvas.axisLockGuides("x")).toHaveCount(0);
+						await expect(canvas.axisLockGuides("y")).toHaveCount(0);
+					},
+				},
+			);
+
+			// The stroke inflates both sides equally, so the difference keeps the
+			// dragged 200 x 120 proportion.
+			const box = await canvas.objectById(id).boundingBox();
+			expect((box?.width ?? 0) - (box?.height ?? 0)).toBeCloseTo(80, 0);
 		});
 	});
 });

@@ -1,9 +1,11 @@
+import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
 import { twoRectsDoc } from "./support/fixtures";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import type { DocumentPropertyUpdate } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
 const canvasReducer = createCanvasReducer(createTestRegistries());
@@ -17,6 +19,18 @@ const update = (
 		type: "DOCUMENT_PROPERTY_UPDATE",
 		property: "background",
 		value,
+		commit: options.commit ?? true,
+		coalesceHistory: options.coalesceHistory,
+	});
+
+const updateDocument = (
+	state: CanvasControllerState,
+	documentUpdate: DocumentPropertyUpdate,
+	options: { commit?: boolean; coalesceHistory?: boolean } = {},
+): CanvasControllerState =>
+	canvasReducer(state, {
+		type: "DOCUMENT_PROPERTY_UPDATE",
+		...documentUpdate,
 		commit: options.commit ?? true,
 		coalesceHistory: options.coalesceHistory,
 	});
@@ -124,5 +138,112 @@ describe("canvasReducer / DOCUMENT_PROPERTY_UPDATE", () => {
 		state = canvasReducer(state, { type: "COMMAND", commandId: "undo" });
 
 		expect(state.background).toBeUndefined();
+	});
+});
+
+describe("canvasReducer / DOCUMENT_PROPERTY_UPDATE (view)", () => {
+	const viewState = (view?: ViewDoc): CanvasControllerState =>
+		createTestState({ ...twoRectsDoc, ...(view ? { view } : {}) });
+
+	it("states one padding side, keeping the sides already declared", () => {
+		const state = updateDocument(viewState({ padding: { top: 40 } }), {
+			property: "view.padding.left",
+			value: 16,
+		});
+
+		expect(state.view).toEqual({ padding: { top: 40, left: 16 } });
+	});
+
+	it("drops a side set to 0, and the view once nothing is left", () => {
+		const state = updateDocument(viewState({ padding: { top: 40 } }), {
+			property: "view.padding.top",
+			value: 0,
+		});
+
+		expect(state.view).toBeUndefined();
+		expect(state.history.past).toHaveLength(1);
+	});
+
+	it("states the open and scroll modes, and drops them on null", () => {
+		let state = updateDocument(viewState(), {
+			property: "view.open",
+			value: "fit-width",
+		});
+		state = updateDocument(state, {
+			property: "view.scroll",
+			value: "content",
+		});
+		expect(state.view).toEqual({ open: "fit-width", scroll: "content" });
+
+		state = updateDocument(state, { property: "view.open", value: null });
+		expect(state.view).toEqual({ scroll: "content" });
+	});
+
+	it("previews without recording history, and leaves an unchanged preview untouched", () => {
+		const before = viewState({ padding: { top: 40 } });
+
+		const previewed = updateDocument(
+			before,
+			{ property: "view.padding.top", value: 64 },
+			{ commit: false },
+		);
+		expect(previewed.view).toEqual({ padding: { top: 64 } });
+		expect(previewed.history.past).toHaveLength(0);
+		expect(previewed.commitVersion).toBe(before.commitVersion);
+
+		expect(
+			updateDocument(
+				before,
+				{ property: "view.padding.top", value: 40 },
+				{ commit: false },
+			),
+		).toBe(before);
+	});
+
+	it("refuses a negative or non-finite side, even on commit", () => {
+		const before = viewState({ padding: { top: 40 } });
+
+		expect(
+			updateDocument(before, { property: "view.padding.top", value: -1 }),
+		).toBe(before);
+		expect(
+			updateDocument(before, {
+				property: "view.padding.top",
+				value: Number.NaN,
+			}),
+		).toBe(before);
+	});
+
+	it("coalesces a burst on one side, but not across sides", () => {
+		let state = updateDocument(
+			viewState(),
+			{ property: "view.padding.top", value: 1 },
+			{ coalesceHistory: true },
+		);
+		state = updateDocument(
+			state,
+			{ property: "view.padding.top", value: 2 },
+			{ coalesceHistory: true },
+		);
+		expect(state.history.past).toHaveLength(1);
+
+		state = updateDocument(
+			state,
+			{ property: "view.padding.right", value: 3 },
+			{ coalesceHistory: true },
+		);
+		expect(state.history.past).toHaveLength(2);
+		expect(state.view).toEqual({ padding: { top: 2, right: 3 } });
+	});
+
+	it("undoes a stated view back to none at all", () => {
+		let state = updateDocument(viewState(), {
+			property: "view.scroll",
+			value: "content",
+		});
+
+		state = canvasReducer(state, { type: "COMMAND", commandId: "undo" });
+
+		expect(state.view).toBeUndefined();
 	});
 });

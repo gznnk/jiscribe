@@ -37,8 +37,9 @@ export { calcLabelBoxSize } from "./presentation/calcLabelBoxSize";
 // painted border alone is too thin to aim at.
 export { FRAME_BORDER_HIT_STROKE_WIDTH } from "./presentation/frameBorderHitStrokeWidth";
 
-// Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.
-export { formatPolygonPoints } from "./presentation/formatPolygonPoints";
+// Outline helpers for drawing frame-based plugin shapes and their connector
+// outline. The `points` string they are drawn with is `formatPolygonPoints`, in
+// the unstable surface re-exported above.
 export {
 	centeredPolygonOutline,
 	OUTLINE_CURVE_SEGMENTS,

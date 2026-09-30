@@ -60,8 +60,6 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuFontSize}
 			>

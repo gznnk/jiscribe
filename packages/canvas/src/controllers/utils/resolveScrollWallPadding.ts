@@ -1,8 +1,8 @@
+import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
 import type {
 	ResolvedViewPadding,
 	ViewDoc,
 } from "@jiscribe/doc/model/canvas/ViewDoc";
-import { resolveViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 
 import type { ScrollBoundsConfig } from "../CanvasTypes";
 

@@ -38,8 +38,18 @@ const CSS_COLOR_INPUT = 'input[placeholder="CSS color"]';
 const STENCIL_LIBRARY_PANEL =
 	'[data-kind="menu"][data-id="stencil-library-panel"]';
 
-/** Shared by the properties sidebar selectors below, which all scope into it. */
+/**
+ * Shared by the properties sidebar selectors below, which all scope into it. The
+ * panel root is the only element of the sidebar carrying data-kind / data-id.
+ */
 const PROPERTY_PANEL = '[data-kind="menu"][data-id="property-panel"]';
+
+/**
+ * Shared by the ObjectMenu-scoped selectors below. The container is the only
+ * element of the menu carrying data-kind / data-id; its items carry data-part
+ * alone and are found through the nearest [data-kind] ancestor at gesture time.
+ */
+const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
 
 /**
  * Shared by the toolbar-scoped selectors below. Scoping them matters because while
@@ -140,11 +150,17 @@ export const selectors = {
 
 	/**
 	 * A property-writing control inside the sidebar (a swatch, a segment, a
-	 * checkbox). The controls declare themselves as object-menu targets, so this
-	 * differs from `objectMenuSet` only in being scoped to the panel.
+	 * checkbox). Differs from `objectMenuSet` only in being scoped to the panel.
 	 */
 	propertyPanelSet: (property: string, value: string) =>
 		`${PROPERTY_PANEL} [data-part="set:${property}:${value}"]`,
+
+	/**
+	 * A button of the Canvas section writing one of the document's own settings
+	 * (`doc:` part). An empty `value` is the button that drops the setting.
+	 */
+	propertyPanelDocumentSet: (property: string, value: string) =>
+		`${PROPERTY_PANEL} [data-part="doc:${property}:${value}"]`,
 
 	/** A command button inside the sidebar (the Arrange section's stacking-order buttons). */
 	propertyPanelCommand: (commandId: string) =>
@@ -231,8 +247,8 @@ export const selectors = {
 	/** Connector creation anchor, drawn 20px outside the edge midpoint. */
 	createAnchor: (anchorId: AnchorId) => `[data-part="anchor:${anchorId}"]`,
 
-	/** The floating ObjectMenu container itself, not the buttons inside (they carry the same data attributes). */
-	objectMenu: 'div[data-kind="menu"][data-id="object-menu"]:not([data-part])',
+	/** The floating ObjectMenu container itself, not the buttons inside. */
+	objectMenu: OBJECT_MENU,
 
 	/** Toggle button that opens an ObjectMenu dropdown. */
 	objectMenuToggle: (sectionId: string) => `[data-part="toggle:${sectionId}"]`,
@@ -246,12 +262,11 @@ export const selectors = {
 	 * `objectMenuSet`, whose value would be the font stack — quotes and commas an
 	 * attribute selector cannot carry.
 	 */
-	objectMenuFont: (fontId: string) =>
-		`[data-id="object-menu"][data-font="${fontId}"]`,
+	objectMenuFont: (fontId: string) => `${OBJECT_MENU} [data-font="${fontId}"]`,
 
 	/** ObjectMenu command button, such as bringToFront for z-order. */
 	objectMenuCommand: (commandId: string) =>
-		`[data-part="command:${commandId}"][data-id="object-menu"]`,
+		`${OBJECT_MENU} [data-part="command:${commandId}"]`,
 
 	/** ObjectMenu slider; a range input whose value changes by dragging. */
 	objectMenuSlider: (property: string) => `[data-part="slider:${property}"]`,

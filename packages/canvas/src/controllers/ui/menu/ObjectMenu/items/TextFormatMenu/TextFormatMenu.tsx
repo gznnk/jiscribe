@@ -114,8 +114,6 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		<ObjectMenuButton
 			key={button.id}
 			isActive={button.isActive}
-			data-kind="menu"
-			data-id="object-menu"
 			data-part={button.part}
 			title={button.label}
 		>
@@ -134,8 +132,6 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuTextFormat}
 			>

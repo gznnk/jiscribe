@@ -1,4 +1,5 @@
 import { test, expect } from "../../fixtures";
+import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
  * Undo / redo history integrity.
@@ -12,6 +13,42 @@ import { test, expect } from "../../fixtures";
  * Stack order and entry granularity break easily under refactors without crashing, so
  * they are verified through invariants (shape count, transform, color).
  */
+
+/** Screen box of the canvas area itself. */
+async function canvasArea(canvas: CanvasDriver) {
+	const box = await canvas.page.locator('[data-kind="canvas"]').boundingBox();
+	if (!box) {
+		throw new Error("the canvas area has no box on screen");
+	}
+	return box;
+}
+
+/** Whether the object is drawn wholly inside the canvas area. */
+async function isInsideCanvasArea(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<boolean> {
+	const objectBox = await canvas.objectById(id).boundingBox();
+	if (!objectBox) {
+		throw new Error(`object ${id} has no box on screen`);
+	}
+	const area = await canvasArea(canvas);
+	return (
+		objectBox.x >= area.x &&
+		objectBox.y >= area.y &&
+		objectBox.x + objectBox.width <= area.x + area.width &&
+		objectBox.y + objectBox.height <= area.y + area.height
+	);
+}
+
+/** The viewBox's width and height, which change with the zoom and not with a pan. */
+async function viewBoxSize(canvas: CanvasDriver): Promise<string> {
+	const viewBox = await canvas.getViewBox();
+	if (!viewBox) {
+		throw new Error("the canvas svg carries no viewBox");
+	}
+	return viewBox.trim().split(/\s+/).slice(2).join(" ");
+}
 test.describe("undo / redo history integrity", () => {
 	test("removes a drawn shape on undo and brings back the same id and position on redo", async ({
 		canvas,
@@ -160,5 +197,39 @@ test.describe("undo / redo history integrity", () => {
 				message: "the last redo restores B's move as well",
 			})
 			.toBe("matrix(1, 0, 0, 1, 700, 300)");
+	});
+	test("pans back to a move undone off screen, keeping the zoom", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Rectangle",
+			{ x: 400, y: 200 },
+			{ x: 600, y: 320 },
+		);
+		await canvas.drag({ x: 500, y: 260 }, { x: 560, y: 300 });
+		await expect
+			.poll(() => canvas.objectById(id).getAttribute("transform"))
+			.toBe("matrix(1, 0, 0, 1, 560, 300)");
+
+		// Scroll far enough right that the shape leaves the canvas area.
+		const area = await canvasArea(canvas);
+		await canvas.wheel({ x: 500, y: 260 }, { deltaX: area.width * 2 });
+		await expect
+			.poll(() => isInsideCanvasArea(canvas, id), {
+				message: "the scroll takes the shape off screen",
+			})
+			.toBe(false);
+		const sizeBefore = await viewBoxSize(canvas);
+
+		await canvas.undo();
+		await expect
+			.poll(() => canvas.objectById(id).getAttribute("transform"))
+			.toBe("matrix(1, 0, 0, 1, 500, 260)");
+		await expect
+			.poll(() => isInsideCanvasArea(canvas, id), {
+				message: "undo pans the camera back to the restored shape",
+			})
+			.toBe(true);
+		expect(await viewBoxSize(canvas)).toBe(sizeBefore);
 	});
 });

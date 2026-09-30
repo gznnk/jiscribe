@@ -13,15 +13,6 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
-### Security
-
-- **Markdown no longer fetches the images it names.** `![alt](url)` in a
-  `markdown` card became an `<img>` that the host requested, which was enough to
-  tell the URL's owner that the file had been opened. `@jiscribe/markdown` now
-  drops `<img>` when it sanitizes, so the same holds in every host that draws
-  the card. Use the `image` shape to draw a picture; its `src` is read from
-  beside the document.
-
 ### Added
 
 - For plugin authors: a shape may now declare `geometry: "point"` and let
@@ -36,29 +27,6 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   slot cannot be written under it and read as that declaration. A slot may carry
   fields of its type's own: every shared write copies a slot whole, which is now
   stated on `TextSlots` and held by a test.
-- **Shift snaps the rotation handle to 15° steps.** Without Shift a rotation
-  is still rounded to the whole degree and does not snap.
-- **Shift adds to the selection as Ctrl and Cmd do**, and holding any of the
-  three while dragging over the background adds what the marquee encloses to
-  what was already selected instead of replacing it.
-- **A `lucideIcon` can be a connector's endpoint.** The connector meets the
-  icon's box rather than the drawing inside it.
-- **The floating menu shows a mixed value as mixed.** It used to show the first
-  selected object's value, so a red and a blue shape read as red. A colour
-  swatch is now split between the colours (up to three), a slider's field is
-  left empty, and no button of a set is pressed — the way the property sidebar
-  already did.
-- For plugin authors: `features.text: "source"`, for a shape whose body is
-  source text it draws itself (as `markdown` now is). Such a body is a plain
-  string, never runs, and carries no `fontWeight` / `fontStyle` /
-  `textDecoration`; the canvas offers neither the emphasis controls nor
-  Ctrl+B / I / U on it. `@jiscribe/doc` exports `TextType`, `textStyleKeysOf`,
-  `isSingleBodyText` and `acceptsTextEmphasisStyle` to ask which styling a type
-  takes, `OpaqueObjectDoc` for an object of a type the reader does not know,
-  and `isSemanticError` / `isSemanticWarning`. `@jiscribe/canvas-sdk` exports
-  `FRAME_BORDER_HIT_STROKE_WIDTH`, and `@jiscribe/geometry`
-  `calcOutlinePointAlongLocalRayForRotatedEllipse` and
-  `convertTransformedFrameToEllipse`.
 
 ### Changed
 
@@ -74,6 +42,53 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   real half-size, `createDoc` reads its `position` as the center for every
   geometry, and `calcPointDocDrawnTopLeft` / `calcPointDocCenter` read that
   conversion off a document's own transform fields.
+
+## [0.11.0] - 2026-09-29
+
+### Security
+
+- **Markdown no longer fetches the images it names.** `![alt](url)` in a
+  `markdown` card became an `<img>` that the host requested, which was enough to
+  tell the URL's owner that the file had been opened. `@jiscribe/markdown` now
+  drops `<img>` when it sanitizes, so the same holds in every host that draws
+  the card. Use the `image` shape to draw a picture; its `src` is read from
+  beside the document.
+
+### Added
+
+- **Shift snaps the rotation handle to 15° steps.** Without Shift a rotation
+  is still rounded to the whole degree and does not snap.
+- **Shift keeps a polyline being drawn horizontal or vertical**, whichever way
+  the drag has gone further from where it started. Other shapes draw as before.
+- **Shift adds to the selection as Ctrl and Cmd do**, and holding any of the
+  three while dragging over the background adds what the marquee encloses to
+  what was already selected instead of replacing it.
+- **A `lucideIcon` can be a connector's endpoint.** The connector meets the
+  icon's box rather than the drawing inside it.
+- **The floating menu shows a mixed value as mixed.** It used to show the first
+  selected object's value, so a red and a blue shape read as red. A colour
+  swatch is now split between the colours (up to three), a slider's field is
+  left empty, and no button of a set is pressed — the way the property sidebar
+  already did.
+- **The property sidebar's Canvas section sets the document's `view`**: the
+  padding on each side, how the view is framed on open, and whether scrolling
+  stops at the content.
+- For plugin authors: `features.text: "source"`, for a shape whose body is
+  source text it draws itself (as `markdown` now is). Such a body is a plain
+  string, never runs, and carries no `fontWeight` / `fontStyle` /
+  `textDecoration`; the canvas offers neither the emphasis controls nor
+  Ctrl+B / I / U on it. `@jiscribe/doc` exports `TextType`, `textStyleKeysOf`,
+  `isSingleBodyText` and `acceptsTextEmphasisStyle` to ask which styling a type
+  takes, `OpaqueObjectDoc` for an object of a type the reader does not know,
+  `ArrowTypes`, `ConnectPointIds`, `ConnectorRoutings` and `TextLayouts` for
+  the values those properties take, and `isSemanticError` /
+  `isSemanticWarning`. `@jiscribe/canvas-sdk` exports
+  `FRAME_BORDER_HIT_STROKE_WIDTH`, and `@jiscribe/geometry`
+  `calcOutlinePointAlongLocalRayForRotatedEllipse` and
+  `convertTransformedFrameToEllipse`.
+
+### Changed
+
 - **A property a shape does not have is reported, and dropped on save.** A
   misspelling, or a style a type does not take, used to be read without a word
   and then left out of what the canvas wrote back, so the value sat in the file
@@ -102,7 +117,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   breaking change** to the file format: the JSON schema refuses the three keys,
   the parser reports them as unknown properties and drops them on save.
   Overflow diagnosis no longer measures a `markdown` card, since its body is not
-  laid out by the shared typesetting it measures.
+  laid out by the shared typesetting it measures; it names the cards it left
+  unchecked in one warning instead, so the silence is not read as a fit.
 - **`jiscribe validate` checks with the canvas parser alone.** It no longer runs
   the JSON schema: the parser, the thing that opens the file, reports
   everything the schema did, so a finding is no longer reported twice in two
@@ -112,12 +128,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   warnings, and a file carrying only warnings passes with exit code 0;
   `render` and `preview` draw such a file instead of refusing it. `text: []`
   is no longer refused (see above).
+- **Undo, redo and reverting show what they changed.** When the change was
+  off screen the view used to stay where it was, so nothing seemed to happen.
+  The view now pans just far enough to show the objects the step changed, or
+  where removed ones were, and centres on them when they do not fit. The zoom
+  is never changed, the view never pans past where scrolling stops, and the
+  camera is still not part of the history.
 - **Pasting lands where you are looking.** A paste whose usual place, beside the
   original, is off screen goes to the middle of the view; pasting again while
   the copy is still selected steps on from it, as Duplicate does.
 - **Stacking order and the aspect-ratio lock left the floating menu.** Both are
   in the property sidebar (the lock now also for a multi-selection and a
   group), and stacking order stays on the context menu and Ctrl/Cmd+`[` `]`.
+- **An unlocked aspect ratio is no longer written.** Once a shape's lock had
+  been turned off, every save wrote `"lockAspectRatio": false`, although false
+  is the default; it is now left out, as an upright `rotation` and an unset
+  flip already were.
 - **For plugin authors**, three breaking changes to the canvas API:
   - The menu item `{ type: "fontStyle" }` is split into `{ type: "font" }`
     (family, size, colour) and `{ type: "textFormat" }` (bold, italic,
@@ -130,6 +156,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **A polyline's or polygon's vertex no longer snaps to its own outline.**
+  Dragging a vertex (or one just inserted) pulled it onto the edges and centre
+  of the shape's box as it was when the drag began. Other shapes now snap to a
+  polyline's or polygon's vertices and centre instead of its box edges, and a
+  vertex being dragged snaps to the other vertices of its own shape but not to
+  its centre.
+- **Styling text from the property sidebar keeps the text being edited.** A
+  press on a sidebar control took the focus off an open text editor, so the
+  caret and the highlighted stretch disappeared and what was typed next went
+  nowhere. The sidebar now keeps the focus on the editor as the floating menu
+  does, and hands it back once a typed field such as the font size is done.
 - **An object of a type this build does not know survives an edit.** A shape
   from a plugin the host lacks, or from a newer version, was dropped on load, so
   the next save removed it from the file. It is now kept as written, in its
@@ -283,7 +320,8 @@ The first release in this repository.
 Earlier versions were released before this repository was public and are not
 recorded here.
 
-[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/gznnk/jiscribe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gznnk/jiscribe/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/gznnk/jiscribe/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/gznnk/jiscribe/releases/tag/v0.8.0

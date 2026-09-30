@@ -1,3 +1,5 @@
+import type { DocumentProperty } from "../../../../reducer/CanvasActions";
+
 /**
  * The `data-part` grammar of the menu targets (`targetKind: "menu"`): what the
  * toolbar, the context menu, the ObjectMenu, the properties sidebar and the
@@ -11,6 +13,8 @@
  *   (StylePropertyRegistry); the value may itself contain `:`
  * - `slider:{property}` — a slider bound to a style property, whose value rides
  *   on the event (`inputValue`) rather than in the part
+ * - `doc:{property}:{value}` — write one of the document's own settings
+ *   (`DocumentProperty`); an empty value means null, i.e. drop the setting
  *
  * Writers build the strings with the functions below rather than spelling the
  * prefixes, and readers take them apart with {@link parseMenuPart}, so the
@@ -22,6 +26,7 @@ const COMMAND_PREFIX = "command:";
 const TOGGLE_PREFIX = "toggle:";
 const SET_PREFIX = "set:";
 const SLIDER_PREFIX = "slider:";
+const DOCUMENT_PREFIX = "doc:";
 
 /**
  * The part of a button that runs a command.
@@ -55,18 +60,33 @@ export const setPart = (property: string, value: string): string =>
 export const sliderPart = (property: string): string =>
 	`${SLIDER_PREFIX}${property}`;
 
+/**
+ * The part of a button that writes one of the document's own settings.
+ *
+ * @param property - The document setting (`background`, `view.open`, …); its name holds no `:`
+ * @param value - The value as text, or null to drop the setting — spelled as an
+ *   empty value, so no setting can be written as the empty string through a part.
+ *   `:` inside it is preserved. Whether the text is a value the setting takes is
+ *   checked when the press lands, not here
+ */
+export const documentPart = (
+	property: DocumentProperty,
+	value: string | null,
+): string => `${DOCUMENT_PREFIX}${property}:${value ?? ""}`;
+
 /** A menu part taken apart; `kind` says which grammar it followed. */
 export type MenuPart =
 	| { kind: "command"; commandId: string }
 	| { kind: "toggle"; id: string }
 	| { kind: "set"; property: string; value: string }
-	| { kind: "slider"; property: string };
+	| { kind: "slider"; property: string }
+	| { kind: "doc"; property: string; value: string | null };
 
 /**
  * Reads a menu target's part back into its pieces.
  *
  * @param part - `event.targetPart`; undefined (a press on the target's body) and any string outside the grammar give null
- * @returns The pieces, or null. A `set:` with no second separator is null too: there is no value to write
+ * @returns The pieces, or null. A `set:` or `doc:` with no second separator is null too: there is no value to write
  */
 export const parseMenuPart = (part: string | undefined): MenuPart | null => {
 	if (part === undefined) {
@@ -88,6 +108,19 @@ export const parseMenuPart = (part: string | undefined): MenuPart | null => {
 			kind: "set",
 			property: rest.slice(0, separatorIndex),
 			value: rest.slice(separatorIndex + 1),
+		};
+	}
+	if (part.startsWith(DOCUMENT_PREFIX)) {
+		const rest = part.slice(DOCUMENT_PREFIX.length);
+		const separatorIndex = rest.indexOf(":");
+		if (separatorIndex === -1) {
+			return null;
+		}
+		const value = rest.slice(separatorIndex + 1);
+		return {
+			kind: "doc",
+			property: rest.slice(0, separatorIndex),
+			value: value === "" ? null : value,
 		};
 	}
 	if (part.startsWith(SLIDER_PREFIX)) {

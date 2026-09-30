@@ -6,6 +6,7 @@ import { PolylineElement, PolylineHitArea } from "./PolylineStyled";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import { Arrow, getArrowLineInset } from "../../arrows";
 import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
+import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
@@ -23,7 +24,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	startArrow,
 	endArrow,
 }) => {
-	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
+	const pointsAttr = formatPolygonPoints(points);
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		type,
 		{ stroke, strokeWidth, strokeDashType, strokeOpacity },
@@ -41,7 +42,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 		getArrowLineInset(startArrow) * resolvedStrokeWidth,
 		getArrowLineInset(endArrow) * resolvedStrokeWidth,
 	);
-	const linePointsAttr = linePoints.map((p) => `${p.x},${p.y}`).join(" ");
+	const linePointsAttr = formatPolygonPoints(linePoints);
 
 	// Calculate angle at the start of the polyline (pointing from second point to first)
 	let startAngleRadians = 0;

@@ -60,7 +60,8 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   「文字を箱の下へ吊る」一式
 - `calcLabelBoxSize` — 上記のラベル箱の採寸だけを取り出したもの。箱の下以外へ
   ラベルを吊る図形（グループマーカー等）が置き場所だけ自前で決めるときに使う
-- `centeredPolygonOutline` / `OUTLINE_CURVE_SEGMENTS` / `formatPolygonPoints`
+- `centeredPolygonOutline` / `OUTLINE_CURVE_SEGMENTS`（点列を `points` 属性へ書くのは
+  canvas の unstable 面が持つ `formatPolygonPoints`。この sdk からも import できる）
 
 ### stencil 部材
 

@@ -53,8 +53,6 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
@@ -78,8 +76,6 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									selected={
 										preset.value.toLowerCase() === currentColor.toLowerCase()
 									}
-									data-kind="menu"
-									data-id="object-menu"
 									data-part={setPart("fill", preset.value)}
 									title={messages.colorNames[preset.name] ?? preset.name}
 								/>

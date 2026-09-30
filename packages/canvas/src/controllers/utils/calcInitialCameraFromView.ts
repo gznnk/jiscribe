@@ -1,8 +1,8 @@
+import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
 import type {
 	ViewOpenMode,
 	ViewPaddingDoc,
 } from "@jiscribe/doc/model/canvas/ViewDoc";
-import { resolveViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { BoundingBox, Dimensions } from "@jiscribe/geometry";

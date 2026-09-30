@@ -12,9 +12,10 @@ type PropertyCheckboxProps = {
 	/** Whether the selection is already in the state the box stands for. */
 	isOn: boolean;
 	/**
-	 * The `data-part` the press carries, in the grammar ObjectMenuHandler
-	 * resolves: `set:{property}:{value}` for a flag written outright,
-	 * `command:{commandId}` for a flag the canvas computes the next state of.
+	 * The `data-part` the press carries into the sidebar (PropertyPanelHandler):
+	 * `set:{property}:{value}` for a flag written outright, `command:{commandId}`
+	 * for a flag the canvas computes the next state of, or
+	 * `doc:{property}:{value}` for a document setting.
 	 */
 	part: string;
 	/**
@@ -35,7 +36,8 @@ type PropertyCheckboxProps = {
  * row's full width from the section's left edge.
  *
  * Writes through the gesture system like the ObjectMenu's own toggles, so the
- * press lands one history entry.
+ * press lands one history entry. Carries only a data-part: the press resolves to
+ * the sidebar that contains it.
  */
 const PropertyCheckboxComponent: React.FC<PropertyCheckboxProps> = ({
 	isOn,
@@ -48,8 +50,6 @@ const PropertyCheckboxComponent: React.FC<PropertyCheckboxProps> = ({
 		role="checkbox"
 		aria-checked={isOn}
 		title={title}
-		data-kind="menu"
-		data-id="object-menu"
 		data-part={part}
 	>
 		<PropertyCheckboxBox isOn={isOn} aria-hidden="true">

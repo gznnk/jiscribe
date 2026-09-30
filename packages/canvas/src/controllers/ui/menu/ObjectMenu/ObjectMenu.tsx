@@ -30,6 +30,7 @@ import type {
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
+import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
@@ -173,21 +174,6 @@ const buildSystemSections = (
  * Floating menu displayed below the selected object.
  * Placed inside ScrollSyncedOverlay and follows canvas scrolling.
  */
-/**
- * Keeps the press from taking the focus off an open text editor: the selection
- * the text items style lives in that editor, and a blur would also drop the
- * caret the user types back into. The controls that need the focus themselves —
- * the font-size input, the sliders — keep the default, and the editor takes the
- * focus back when they are done with it (TextEditor).
- */
-const keepTextEditorFocus = (event: React.PointerEvent<HTMLElement>): void => {
-	if (
-		(event.target as HTMLElement).closest("input, textarea, select") === null
-	) {
-		event.preventDefault();
-	}
-};
-
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
@@ -258,11 +244,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				ref={menuRef}
 				data-kind="menu"
 				data-id="object-menu"
-				// Only while an editor is open, so a press outside one keeps behaving
-				// exactly as it did (a menu button taking the focus on click included).
-				onPointerDown={
-					canvasState.textEditState === null ? undefined : keepTextEditorFocus
-				}
+				{...TEXT_EDITOR_FOCUS_SCOPE_PROPS}
 				onPointerEnter={handlePointerEnter}
 				onPointerLeave={handlePointerLeave}
 			>

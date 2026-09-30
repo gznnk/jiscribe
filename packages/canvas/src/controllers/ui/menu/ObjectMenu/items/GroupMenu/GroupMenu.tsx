@@ -38,8 +38,6 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 			<ObjectMenuButton
 				isActive={isGroup}
 				disabled={!enabled}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={commandPart(commandId)}
 			>
 				<GroupIcon title={getCommandLabel(messages, command)} />

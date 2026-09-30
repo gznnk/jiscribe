@@ -72,7 +72,7 @@ test.describe("styling a source-language body", () => {
 		// is the absence of the `set:` parts themselves.
 		await expect(
 			canvas.page.locator(
-				'[data-id="object-menu"][data-part^="set:fontWeight:"]',
+				`${selectors.objectMenu} [data-part^="set:fontWeight:"]`,
 			),
 		).toHaveCount(0);
 		await expect(

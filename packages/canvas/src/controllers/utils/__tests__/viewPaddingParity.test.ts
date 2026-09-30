@@ -1,6 +1,6 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
-import { resolveViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 import { convertRectToBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";

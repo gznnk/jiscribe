@@ -118,10 +118,10 @@ a pragmatic compromise to reuse the shared UI (`ObjectMenuColorPickerGrid` / `Ob
 subtleties (live preview + a single history entry) without reimplementing them. Adding a dedicated
 action is rejected because it would duplicate these commit subtleties. What the style registry does not own takes a
 sibling action instead: the frame's own numbers (position / size / rotation) take `TRANSFORM_PROPERTY_UPDATE`, the
-document's own settings (such as the canvas surface `background`) take `DOCUMENT_PROPERTY_UPDATE`, and an object's
+document's own settings (the canvas surface `background` and the display declaration `view`) take `DOCUMENT_PROPERTY_UPDATE`, and an object's
 `meta` takes `META_PROPERTY_UPDATE`. None of them keeps a second copy of the commit subtleties; they share the commit tail
 (`commitPropertyUpdate` in `controllers/reducer/canvasReducer.ts`). `DOCUMENT_PROPERTY_UPDATE` differs in that its target
-is the doc rather than a selection, and `null` clears the field the way the headless `setBackground` op does, handing the surface back to the theme.
+is the doc rather than a selection, and `null` clears the field the way the headless `setBackground` / `setView` ops do, handing the decision back to the host.
 
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 

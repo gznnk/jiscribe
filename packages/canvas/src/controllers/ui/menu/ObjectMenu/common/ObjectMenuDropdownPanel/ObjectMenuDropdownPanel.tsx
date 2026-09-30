@@ -15,13 +15,12 @@ type ObjectMenuDropdownPanelProps = ComponentPropsWithoutRef<
 /**
  * Dropdown panel. Displayed center-aligned below or above the button.
  *
- * Declares the panel itself as an object-menu target so that clicking the
- * panel's padding, the gaps between buttons, or the border area does not let
- * the gesture ancestor lookup (closest("[data-kind]")) climb up to the Viewport
- * (data-kind="canvas") and fire deselection / menu close. ObjectMenuHandler does
- * nothing for unknown actionIds, so a background click is a no-op and the menu
- * and selection are retained. Inner buttons have their own data-kind, so closest
- * picks up the button first and they behave as before.
+ * Must be rendered inside a menu target — the ObjectMenu, or the properties
+ * sidebar it is portalled into — which a press on the panel's padding, the gaps
+ * between buttons, or the border area resolves to; the panel itself carries only
+ * `data-part="panel"`, which neither handler acts on, so the press leaves the
+ * menu and the selection alone. The buttons inside carry their own data-part and
+ * are read first.
  */
 export const ObjectMenuDropdownPanel = forwardRef<
 	HTMLDivElement,
@@ -29,8 +28,6 @@ export const ObjectMenuDropdownPanel = forwardRef<
 >(({ placement = "down", offsetX = 0, style, ...props }, ref) => (
 	<ObjectMenuDropdownPanelRoot
 		ref={ref}
-		data-kind="menu"
-		data-id="object-menu"
 		data-part="panel"
 		style={{
 			...(placement === "up" ? { bottom: 40 } : { top: 40 }),
