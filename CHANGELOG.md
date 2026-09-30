@@ -15,17 +15,35 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- **A command carries its own wording, in every locale it ships.** `Command.label`
-  takes `string | LocaleMessages<string>`, exactly as `Stencil.label` already
-  did, and a host override by id still outranks it. The built-in commands'
-  Japanese moves out of the `ja` dictionary onto the commands themselves, leaving
-  `CanvasMessages.commandLabels` as the host-override slot `stencilLabels` has
-  been for a while — so the label and its translations are one declaration
-  instead of two places that had to be kept in step. A plugin's commands follow
-  the host's language by declaring the same field, and what a plugin draws itself
-  it localizes as the other shipped plugins do (`useCanvasLocale` +
-  `resolveLocaleMessages` over its own dictionary). The `table`'s six grid
-  commands and its Cell Color button ship English and Japanese.
+- **A command carries its own wording, in every locale it ships.**
+  `Command.label` takes `string | LocaleMessages<string>`, exactly as
+  `Stencil.label` already did, and a host override by id still outranks it. The
+  built-in commands' Japanese moves out of the `ja` dictionary onto the commands
+  themselves, leaving `CanvasMessages.commandLabels` as the host-override slot
+  `stencilLabels` has been for a while — so a label and its translations are one
+  declaration instead of two places that had to be kept in step. Resolution is
+  per declaration (exact → language subtag → `en`), so a command shipping no
+  `ja` falls back to its own English rather than dragging the canvas back with
+  it. This is what makes a contributed command nameable in the host's language:
+  a plugin declares the same field, and what it draws itself it localizes as the
+  other shipped plugins do (`useCanvasLocale` + `resolveLocaleMessages` over its
+  own dictionary).
+- **For plugin authors: a plugin may contribute commands.**
+  `CanvasPlugin.commands` is registered after `ALL_COMMANDS` in declaration
+  order, and the host's own `config.commands` narrowing is applied over the
+  result, so one list still narrows the whole set. The types a command is
+  written against (`Command`, and the `CanvasControllerState` /
+  `ICanvasRegistries` it reads) are exported from the unstable surface, which
+  `canvas-sdk` re-exports whole: a command is a state transition over the
+  canvas's working state rather than a settled contract, so it is not on the
+  stable surface. Two commands may now share a keyboard shortcut as long as
+  their `canExecute` disagree — the lookup answers with every match in
+  registration order and the caller takes the first that can run, instead of
+  taking the first match alone and passing the key to the browser when that one
+  refused. No pair of built-in commands shares a binding today, so nothing
+  shipped changes; a swept test holds that (`initializeCommands.exclusivity`).
+  `CommandRegistry.register` now throws on a duplicate id rather than silently
+  letting the later one win.
 - **A table cell's background can be set from the floating menu or the property
   sidebar.** Cell Color paints the picked cells, or every cell when none is
   picked, and shows the colours split when they disagree. **No fill** takes a
@@ -57,7 +75,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the run of the cell order between them. Delete clears the picked cells' text,
   or removes the picked row or column — never the last one left. Rows and columns
   are inserted from the right-click menu or with Shift+Alt+arrow, and the cells
-  keep their contents as the grid renumbers around the insertion.
+  keep their contents as the grid renumbers around the insertion. The six grid
+  commands are named in English and Japanese, as the Cell Color button is.
 - For plugin authors: a type declares what parts of itself can be selected
   (`ObjectTypeDefinition.parts`), and core carries one selection below the object
   level for every type — a range of them, not one. A `text: "slots"` type gets its
@@ -66,9 +85,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Shift-extended range between two of them covers (`ObjectPartDefinition.range`,
   omitted by every kind whose parts lie in one line). A selection control can now
   take a click and answer with a selection rather than only with its own object,
-  a type may contribute commands (`CanvasPlugin.commands`) and
-  rows on the context menu (`ObjectTypeDefinition.contextMenu`), and two commands
-  may share a keyboard shortcut as long as their `canExecute` disagree.
+  and a type may add rows to the context menu
+  (`ObjectTypeDefinition.contextMenu`).
 - **A table can be resized by its left and right edges**, the width change spread
   over every column in the proportions it holds. A column never goes under its
   minimum, and a table dragged narrower than its columns can be simply stops.
@@ -134,6 +152,29 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **A group's frame no longer goes stale when a shape inside it is edited by a
+  command or a control.** Whether a group kept its box depended on _how_ an edit
+  was made rather than on what it did — removing a table's row with the Delete
+  key settled the group, the same removal from the right-click menu did not — so
+  the group's outline, its handles and the width and height it reports could be
+  left at the size it used to be. It heals on reload either way; what it cost in
+  the meantime was typing a size into a stale group, which scaled its children by
+  the wrong ratio.
+- **Styling a table row or column picked by its grip lands on that row or
+  column.** It used to be written to every cell of the table, because a picked
+  track could not say which cells it stood for — and the swatch it was read back
+  from showed the first cell alone, so the two did not even agree. For plugin
+  authors: `ObjectPartDefinition.textSlotIds` is how a kind that stands for a
+  group of slots names them, and a kind declaring none keeps landing on the whole
+  object as before.
+- **The reported box of a rotated shape whose size is measured no longer misses
+  it.** `get_object_bounds`, and with it alignment, distribution and overlap
+  checks, read a `text`'s stored coordinate as the box's plain top-left corner —
+  but for a shape storing no size that coordinate is the corner as it is _drawn_,
+  turned with the shape. A rotated or flipped text therefore reported a box
+  beside the one it occupies, a quarter turn putting it a whole box away. An
+  upright one is unchanged, as is the rule that these ops work on the
+  untransformed box.
 - **Resizing or moving a multi-selection inside a group no longer costs one pass
   over the whole drawing per selected object.** Settling the groups a transform
   invalidated copied the object map once for every selected id instead of once
@@ -256,29 +297,6 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
-- **A group's frame no longer goes stale when a shape inside it is edited by a
-  command or a control.** Whether a group kept its box depended on _how_ an edit
-  was made rather than on what it did — removing a table's row with the Delete
-  key settled the group, the same removal from the right-click menu did not — so
-  the group's outline, its handles and the width and height it reports could be
-  left at the size it used to be. It heals on reload either way; what it cost in
-  the meantime was typing a size into a stale group, which scaled its children by
-  the wrong ratio.
-- **Styling a table row or column picked by its grip lands on that row or
-  column.** It used to be written to every cell of the table, because a picked
-  track could not say which cells it stood for — and the swatch it was read back
-  from showed the first cell alone, so the two did not even agree. For plugin
-  authors: `ObjectPartDefinition.textSlotIds` is how a kind that stands for a
-  group of slots names them, and a kind declaring none keeps landing on the whole
-  object as before.
-- **The reported box of a rotated shape whose size is measured no longer misses
-  it.** `get_object_bounds`, and with it alignment, distribution and overlap
-  checks, read a `text`'s stored coordinate as the box's plain top-left corner —
-  but for a shape storing no size that coordinate is the corner as it is _drawn_,
-  turned with the shape. A rotated or flipped text therefore reported a box
-  beside the one it occupies, a quarter turn putting it a whole box away. An
-  upright one is unchanged, as is the rule that these ops work on the
-  untransformed box.
 - **A polyline's or polygon's vertex no longer snaps to its own outline.**
   Dragging a vertex (or one just inserted) pulled it onto the edges and centre
   of the shape's box as it was when the drag began. Other shapes now snap to a
