@@ -121,9 +121,11 @@ export type ObjectDocDefinition = {
 	defaults?: Omit<ObjectDoc, "id"> & Readonly<Record<string, unknown>>;
 
 	/**
-	 * Draw-time text-style defaults of a `features.text: "slots"` type, keyed by
-	 * slot id: what each slot's typography falls back to where the document sets
-	 * none (ObjectTextStyleDefaultsRegistry). Declared here because a keyed type's
+	 * Draw-time text-style defaults of a `features.text: "slots"` type: what each
+	 * slot's typography falls back to where the document sets none
+	 * (ObjectTextStyleDefaultsRegistry). Declared as `bySlot` for the slots the
+	 * type names, or as `everySlot` by a type whose slot set is not fixed (see
+	 * {@link ObjectTextSlotStyleDefaults}). Declared here because a keyed type's
 	 * styling has no flat doc field for {@link defaults} to carry it in; a
 	 * `"body"` type needs none, its single slot's defaults being read off
 	 * {@link defaults} instead.

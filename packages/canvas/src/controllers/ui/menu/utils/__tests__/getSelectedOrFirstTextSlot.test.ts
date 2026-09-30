@@ -358,7 +358,9 @@ describe("getSelectedOrFirstTextSlot with the type's own defaults", () => {
 	/** A registry standing in for a type whose bodies are left/top unless said otherwise. */
 	const leftTop = createObjectTextStyleDefaultsRegistry();
 	leftTop.register("rect", {
-		[BODY_TEXT_SLOT_ID]: { textAlign: "left", verticalAlign: "top" },
+		bySlot: {
+			[BODY_TEXT_SLOT_ID]: { textAlign: "left", verticalAlign: "top" },
+		},
 	});
 
 	it("reports the type's default for a field the slot leaves unset", () => {

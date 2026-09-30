@@ -21,10 +21,6 @@ export const TextFeatures = {
 	geometry: "point",
 	transform: true,
 	text: "body",
-	stroke: false,
-	fill: false,
-	radius: false,
-	arrow: false,
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

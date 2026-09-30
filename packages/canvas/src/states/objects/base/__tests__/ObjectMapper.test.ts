@@ -51,7 +51,7 @@ describe("ObjectMapper", () => {
 
 			expect(state.id).toBe("object-3");
 			expect(state.type).toBe("polygon");
-			expect(state.meta).toBeUndefined();
+			expect("meta" in state).toBe(false);
 		});
 
 		it("should handle meta with only name", () => {
@@ -164,7 +164,7 @@ describe("ObjectMapper", () => {
 
 			expect(doc.id).toBe("object-3");
 			expect(doc.type).toBe("polygon");
-			expect(doc.meta).toBeUndefined();
+			expect("meta" in doc).toBe(false);
 		});
 
 		it("should handle meta with only description", () => {

@@ -5,7 +5,6 @@
 import {
 	createFrameDocValidator,
 	createPointObjectFactory,
-	EVERY_TEXT_SLOT_ID,
 	type PointObjectSizeResolver,
 } from "@jiscribe/canvas-sdk/doc";
 import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
@@ -45,9 +44,9 @@ const measureTableSize: PointObjectSizeResolver = (doc) =>
  * or height can make a cell overflow — there is nothing for the headless overflow
  * check to measure.
  *
- * The cell defaults are declared under `EVERY_TEXT_SLOT_ID` rather than per slot:
- * a table's slots are its cells, as many as the grid is wide and tall, so there
- * is no fixed set of ids to key them by.
+ * The cell defaults are declared as `everySlot` rather than per slot: a table's
+ * slots are its cells, as many as the grid is wide and tall, so there is no fixed
+ * set of ids to key them by.
  */
 export const tableDocDefinition: ObjectDocDefinition = {
 	features: TableFeatures,
@@ -63,7 +62,7 @@ export const tableDocDefinition: ObjectDocDefinition = {
 		'A grid of cells. `x` / `y` are the top-left of the grid; its width is the column widths summed and its height the resolved row heights summed, so neither is stored. A row\'s `height` is a lower bound: the row is drawn as tall as its tallest cell\'s text needs, never clipping it. `cells` is dense — exactly one row per entry of "rows" and one cell per entry of "columns" — and a cell carrying nothing but text may be written as that text alone. Each cell holds its own typography and its own `fill`; there are no shape-wide text fields.',
 	summary: "grid of cells (table)",
 	defaults: TABLE_DOC_DEFAULTS,
-	textSlotStyleDefaults: { [EVERY_TEXT_SLOT_ID]: TABLE_CELL_STYLE_DEFAULTS },
+	textSlotStyleDefaults: { everySlot: TABLE_CELL_STYLE_DEFAULTS },
 };
 
 /**

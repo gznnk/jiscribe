@@ -1,3 +1,4 @@
+import { copyObjectsRecord } from "./cowObjects";
 import { updateGroupBounds } from "./updateGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
@@ -25,12 +26,13 @@ export function updateGroupBoundsFromRoot(
  * clone the whole objects map once per group (issue #160).
  *
  * @param state - Current canvas controller state with updated object positions
- * @param groupIds - IDs of the groups whose root subtrees should be updated
+ * @param groupIds - IDs of the groups whose root subtrees should be updated;
+ *   read only, so a caller may hand over its own `selectedIds`
  * @returns Updated canvas controller state with recalculated group bounds
  */
 export function updateGroupBoundsFromRoots(
 	state: CanvasControllerState,
-	groupIds: string[],
+	groupIds: readonly string[],
 ): CanvasControllerState {
 	const rootGroupIds = new Set<string>();
 	for (const groupId of groupIds) {
@@ -43,7 +45,10 @@ export function updateGroupBoundsFromRoots(
 		return state;
 	}
 
-	const updatedObjects = { ...state.objects };
+	// Copied through copyObjectsRecord rather than spread: a vertex drag and a
+	// transform both reach here with the map still held as a copy-on-write view,
+	// and spreading one pays a Proxy trap per key for the identical result.
+	const updatedObjects = copyObjectsRecord(state.objects);
 	for (const rootGroupId of rootGroupIds) {
 		updateGroupsFromRoot(updatedObjects, rootGroupId);
 	}

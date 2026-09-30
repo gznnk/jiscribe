@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.10.0+72f45af1 -->
+<!-- jiscribe guide 0.11.0+72f45af1 -->
 
 # Jiscribe AI Authoring Guide
 

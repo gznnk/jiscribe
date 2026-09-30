@@ -13,15 +13,6 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
-### Security
-
-- **Markdown no longer fetches the images it names.** `![alt](url)` in a
-  `markdown` card became an `<img>` that the host requested, which was enough to
-  tell the URL's owner that the file had been opened. `@jiscribe/markdown` now
-  drops `<img>` when it sanitizes, so the same holds in every host that draws
-  the card. Use the `image` shape to draw a picture; its `src` is read from
-  beside the document.
-
 ### Added
 
 - **A command carries its own wording, in every locale it ships.** `Command.label`
@@ -109,15 +100,62 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   nothing but text may be written as that text alone.
 - For plugin authors: a shape may now declare `geometry: "point"` and let
   `createFrameMapper` map it — the doc stores the position alone and the box is
-  re-derived from the content (`contentResizer`), as the `table` does.
-  `@jiscribe/geometry` gained `calcFrameKeyPoint` / `calcFrameCenterFromTopLeft`
-  for the corner such a box is grown from and rebuilt around, `@jiscribe/doc`
-  exports `calcWrappedTextBlockSize` so a shape measuring its own text box does
-  not restate the padding rule, and a type whose slot set is not fixed declares
-  its text-style defaults under `EVERY_TEXT_SLOT_ID` — the id `"*"`, which the
-  parser now holds back so that a slot cannot be written under it and read as
-  that declaration. A slot may carry fields of its type's own: every shared write
-  copies a slot whole, which is now stated on `TextSlots` and held by a test.
+  re-derived from the content (`contentResizer`). `@jiscribe/geometry` gained
+  `calcFrameCenterFromTopLeft`, the inverse of
+  `calcFrameKeyPoint(frame, "topLeft")`, for the corner such a box is grown from
+  and rebuilt around, and `@jiscribe/doc` exports `calcWrappedTextBlockSize` so a
+  shape measuring its own text box does not restate the padding rule. A slot may
+  carry fields of its type's own: every shared write copies a slot whole, which
+  is now stated on `TextSlots` and held by a test.
+- **For plugin authors, a breaking change:**
+  `ObjectDocDefinition.textSlotStyleDefaults` is now
+  `{ bySlot?, everySlot? }` rather than one map keyed by slot id. A type whose
+  slot set is not fixed — a table's cells are one per row × column, so there is
+  no list of ids — declares `everySlot`, which every slot without an entry of its
+  own falls back to; a type that names its slots declares `bySlot` as before,
+  wrapped in that field. The two are separate because one map keyed by slot id
+  had to reserve an id for "every slot", which then could not be the name of a
+  real slot in any document of the type.
+
+### Changed
+
+- **A shape placed from the toolbar or the shape library lands centered on the
+  cursor, whatever its geometry.** `text` used to land with its top-left there
+  instead: a shape whose size is measured rather than stored reported no size to
+  offset a center by, so it was placed by the corner and, dragged out of the
+  library, snapped to nothing. Both follow from the size now being measured at
+  placement time. What a document holds is unchanged — a `text`'s `x` / `y` is
+  still the top-left of the drawn box — and so is `add_object`, whose `x` / `y`
+  still name that corner. **For plugin authors**, `createPointObjectFactory`
+  takes the measurement as its second argument, `calcDimensions` answers with the
+  real half-size, `createDoc` reads its `position` as the center for every
+  geometry, and `calcPointDocDrawnTopLeft` / `calcPointDocCenter` read that
+  conversion off a document's own transform fields.
+
+### Fixed
+
+- **Resizing or moving a multi-selection inside a group no longer costs one pass
+  over the whole drawing per selected object.** Settling the groups a transform
+  invalidated copied the object map once for every selected id instead of once
+  for the selection, and copied it through a spread that pays a proxy trap per
+  object when the map is still the working copy a drag leaves behind. Both are
+  now one copy of the map, whatever the selection holds. The bounds that come out
+  are the same; what changes is the time the property sidebar's width and height
+  fields take to answer a keystroke while several objects are selected.
+
+## [0.11.0] - 2026-09-29
+
+### Security
+
+- **Markdown no longer fetches the images it names.** `![alt](url)` in a
+  `markdown` card became an `<img>` that the host requested, which was enough to
+  tell the URL's owner that the file had been opened. `@jiscribe/markdown` now
+  drops `<img>` when it sanitizes, so the same holds in every host that draws
+  the card. Use the `image` shape to draw a picture; its `src` is read from
+  beside the document.
+
+### Added
+
 - **Shift snaps the rotation handle to 15° steps.** Without Shift a rotation
   is still rounded to the whole degree and does not snap.
 - **Shift keeps a polyline being drawn horizontal or vertical**, whichever way
@@ -142,25 +180,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Ctrl+B / I / U on it. `@jiscribe/doc` exports `TextType`, `textStyleKeysOf`,
   `isSingleBodyText` and `acceptsTextEmphasisStyle` to ask which styling a type
   takes, `OpaqueObjectDoc` for an object of a type the reader does not know,
-  and `isSemanticError` / `isSemanticWarning`. `@jiscribe/canvas-sdk` exports
+  `ArrowTypes`, `ConnectPointIds`, `ConnectorRoutings` and `TextLayouts` for
+  the values those properties take, and `isSemanticError` /
+  `isSemanticWarning`. `@jiscribe/canvas-sdk` exports
   `FRAME_BORDER_HIT_STROKE_WIDTH`, and `@jiscribe/geometry`
   `calcOutlinePointAlongLocalRayForRotatedEllipse` and
   `convertTransformedFrameToEllipse`.
 
 ### Changed
 
-- **A shape placed from the toolbar or the shape library lands centered on the
-  cursor, whatever its geometry.** `text` used to land with its top-left there
-  instead: a shape whose size is measured rather than stored reported no size to
-  offset a center by, so it was placed by the corner and, dragged out of the
-  library, snapped to nothing. Both follow from the size now being measured at
-  placement time. What a document holds is unchanged — a `text`'s `x` / `y` is
-  still the top-left of the drawn box — and so is `add_object`, whose `x` / `y`
-  still name that corner. **For plugin authors**, `createPointObjectFactory`
-  takes the measurement as its second argument, `calcDimensions` answers with the
-  real half-size, `createDoc` reads its `position` as the center for every
-  geometry, and `calcPointDocDrawnTopLeft` / `calcPointDocCenter` read that
-  conversion off a document's own transform fields.
 - **A property a shape does not have is reported, and dropped on save.** A
   misspelling, or a style a type does not take, used to be read without a word
   and then left out of what the canvas wrote back, so the value sat in the file
@@ -200,12 +228,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   warnings, and a file carrying only warnings passes with exit code 0;
   `render` and `preview` draw such a file instead of refusing it. `text: []`
   is no longer refused (see above).
+- **Undo, redo and reverting show what they changed.** When the change was
+  off screen the view used to stay where it was, so nothing seemed to happen.
+  The view now pans just far enough to show the objects the step changed, or
+  where removed ones were, and centres on them when they do not fit. The zoom
+  is never changed, the view never pans past where scrolling stops, and the
+  camera is still not part of the history.
 - **Pasting lands where you are looking.** A paste whose usual place, beside the
   original, is off screen goes to the middle of the view; pasting again while
   the copy is still selected steps on from it, as Duplicate does.
 - **Stacking order and the aspect-ratio lock left the floating menu.** Both are
   in the property sidebar (the lock now also for a multi-selection and a
   group), and stacking order stays on the context menu and Ctrl/Cmd+`[` `]`.
+- **An unlocked aspect ratio is no longer written.** Once a shape's lock had
+  been turned off, every save wrote `"lockAspectRatio": false`, although false
+  is the default; it is now left out, as an upright `rotation` and an unset
+  flip already were.
 - **For plugin authors**, three breaking changes to the canvas API:
   - The menu item `{ type: "fontStyle" }` is split into `{ type: "font" }`
     (family, size, colour) and `{ type: "textFormat" }` (bold, italic,
@@ -405,7 +443,8 @@ The first release in this repository.
 Earlier versions were released before this repository was public and are not
 recorded here.
 
-[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/gznnk/jiscribe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gznnk/jiscribe/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/gznnk/jiscribe/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/gznnk/jiscribe/releases/tag/v0.8.0

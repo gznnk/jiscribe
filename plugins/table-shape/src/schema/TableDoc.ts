@@ -143,7 +143,7 @@ export const TABLE_CELL_FONT_SIZE = 14;
 /**
  * What every cell's omitted typography resolves to. One value for all of them
  * rather than a map keyed by cell id, the cells being as many as the grid is
- * wide and tall (see the `EVERY_TEXT_SLOT_ID` entry in the doc definition).
+ * wide and tall (see the `everySlot` entry in the doc definition).
  *
  * `fontColor` is `AUTO_COLOR` so cell text follows the theme; left unset it
  * would resolve to the shared fallback's literal black and stay black on a dark

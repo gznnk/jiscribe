@@ -13,7 +13,7 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
-## [Unreleased]
+## [0.11.0] - 2026-09-29
 
 ### Security
 
@@ -239,6 +239,9 @@ build knows: the object is kept as it is but not drawn.`
 - A `HEAD` request is answered as `GET` is, without the body, wherever `GET`
   is served (the viewer page, its fonts, an image, the session token); it
   used to be a 404.
+- **Ctrl+S (Cmd+S) in the viewer no longer opens the browser's Save Page
+  dialog.** It writes out a pending edit at once and briefly shows that
+  changes are saved automatically.
 
 ### Changed
 

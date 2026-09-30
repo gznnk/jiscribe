@@ -4,6 +4,7 @@ import { memo } from "react";
 import { PolygonElement } from "./PolygonStyled";
 import type { PolygonState } from "../../../../states/objects/primitives/polygon/PolygonState";
 import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
+import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
@@ -20,7 +21,7 @@ const PolygonComponent: React.FC<PolygonProps> = ({
 	strokeDashType,
 	strokeOpacity,
 }) => {
-	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
+	const pointsAttr = formatPolygonPoints(points);
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		type,
 		{ stroke, strokeWidth, strokeDashType, strokeOpacity, fill, fillOpacity },

@@ -49,9 +49,8 @@ const resolveBodyFont = (
 ): TextMeasureFont =>
 	resolveDocBodyFont(
 		object,
-		extractTextSlotStyleDefaults(definition.features, definition.defaults)?.[
-			BODY_TEXT_SLOT_ID
-		],
+		extractTextSlotStyleDefaults(definition.features, definition.defaults)
+			?.bySlot?.[BODY_TEXT_SLOT_ID],
 	);
 
 /**

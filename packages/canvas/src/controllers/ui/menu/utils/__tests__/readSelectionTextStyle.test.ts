@@ -148,7 +148,7 @@ describe("readSelectionTextStyle", () => {
 
 	it("a size stated outright and the same size coming from the type's defaults → one value", () => {
 		const defaults = createObjectTextStyleDefaultsRegistry();
-		defaults.register("plain", { body: { fontSize: 14 } });
+		defaults.register("plain", { bySlot: { body: { fontSize: 14 } } });
 		const objects = {
 			stated: rect("stated", { body: { text: "hi", fontSize: 14 } }),
 			// Writes nothing, so its type's default is what it draws
