@@ -26,8 +26,9 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		 * this one deletion while keeping the state as it stands (a polyline already
 		 * at its vertex floor). Every id is guaranteed to have passed `has`.
 		 *
-		 * Omitted entirely means the kind is never deletable, which is what lets
-		 * Delete fall through to whatever it means for the object as a whole.
+		 * Omitted entirely means the kind is never deletable. A selected part of it
+		 * still claims the Delete key as the innermost selection, so the key is simply
+		 * not executable then — it does not pass up to the object the part sits in.
 		 */
 		delete?: (object: TState, partIds: readonly string[]) => TState | null;
 	};
