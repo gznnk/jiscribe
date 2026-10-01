@@ -138,7 +138,7 @@ export type {
 export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
 // The box declaration a doc definition carries, for the types whose geometry does
 // not settle their box: a plugin author annotating one needs the shape of it.
-export type { ObjectDocBoundsResolver } from "./plugin/ObjectDocBounds";
+export type { ObjectDocBoundsCalculator } from "./plugin/ObjectDocBounds";
 // The text-region declaration a doc definition carries, and the two answers most
 // types give: the whole box, and "the box does not hold the text at all".
 export type { ObjectDocTextRegionCalculator } from "./plugin/ObjectDocTextRegion";

@@ -13,7 +13,7 @@ import type { ObjectFactory } from "../types/ObjectFactory";
 type PointDefaults = Omit<ObjectDoc, "id"> & Record<string, unknown>;
 
 /** The box a point-geometry doc of these fields draws, measured from its content. */
-export type PointObjectSizeResolver = (
+export type PointObjectSizeCalculator = (
 	doc: Readonly<Record<string, unknown>>,
 ) => Dimensions;
 
@@ -50,7 +50,7 @@ const omitDimensionOverrides = (
  */
 export const createPointObjectFactory = <TDefaults extends PointDefaults>(
 	defaults: TDefaults,
-	measureSize: PointObjectSizeResolver,
+	measureSize: PointObjectSizeCalculator,
 ): ObjectFactory => {
 	const mergeDefaults = (overrides?: Record<string, unknown>): TDefaults =>
 		({

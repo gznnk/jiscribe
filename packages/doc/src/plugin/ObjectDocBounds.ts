@@ -20,6 +20,6 @@ import type { Rect } from "@jiscribe/geometry";
  * @param doc - The object as the document holds it, as a plain record: a field that is absent or not of its declared type is read as its own default, never assumed present
  * @returns The box in world coordinates, or null for a doc there is no box to measure from, which leaves the object out of every op working off one
  */
-export type ObjectDocBoundsResolver = (
+export type ObjectDocBoundsCalculator = (
 	doc: Readonly<Record<string, unknown>>,
 ) => Rect | null;

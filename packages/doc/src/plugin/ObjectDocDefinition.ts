@@ -1,4 +1,4 @@
-import type { ObjectDocBoundsResolver } from "./ObjectDocBounds";
+import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
@@ -41,7 +41,7 @@ export type ObjectDocDefinition = {
 	/**
 	 * The box this type's doc implies, where the geometry does not settle it on its
 	 * own — a `geometry: "point"` type, whose doc stores the corner it is drawn from
-	 * and no size (see {@link ObjectDocBoundsResolver}). A declaration outranks the
+	 * and no size (see {@link ObjectDocBoundsCalculator}). A declaration outranks the
 	 * geometry's own rule whatever that geometry is; every type but a point one
 	 * leaves it out and is measured from the fields it stores.
 	 *
@@ -58,7 +58,7 @@ export type ObjectDocDefinition = {
 	 * parse-check suite fails on it, and `diagnoseDoc` reports it against a document
 	 * already holding one.
 	 */
-	bounds?: ObjectDocBoundsResolver;
+	bounds?: ObjectDocBoundsCalculator;
 
 	/**
 	 * Where the type lays its text out, given a doc of it: the rectangle the
