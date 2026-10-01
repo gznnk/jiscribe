@@ -26,8 +26,9 @@ const makeRect = (id: string, parentId?: string): ObjectState =>
 const makePolyline = (
 	id: string,
 	points: { x: number; y: number }[],
+	parentId?: string,
 ): PolylineState =>
-	({ id, type: "polyline", points }) as unknown as PolylineState;
+	({ id, type: "polyline", points, parentId }) as unknown as PolylineState;
 
 const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({
@@ -49,6 +50,7 @@ const makeState = (params: {
 	rootIds: string[];
 	selectedVertex?: CanvasControllerState["selectedVertex"];
 	selectedConnectorId?: string | null;
+	lastDuplicate?: CanvasControllerState["lastDuplicate"];
 }): CanvasControllerState =>
 	({
 		selectedVertex: null,
@@ -176,6 +178,60 @@ describe("DeleteCommand", () => {
 			const next = DeleteCommand.execute(state, registries);
 			expect(next.selectedVertex).toBeNull();
 			expect(next.objects["p"]).toBe(polyline);
+		});
+
+		it("commits the edit, forgets the last duplicate, and leaves other objects as they were", () => {
+			const other = makeRect("r");
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					p: makePolyline("p", [
+						{ x: 0, y: 0 },
+						{ x: 10, y: 0 },
+						{ x: 20, y: 0 },
+					]),
+					r: other,
+				},
+				rootIds: ["p", "r"],
+				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				lastDuplicate: {
+					newIds: ["p"],
+					cx: 0,
+					cy: 0,
+					offset: { x: 10, y: 10 },
+				},
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.commitVersion).toBe(1);
+			// A deletion is not something a duplicate can be offset from any more.
+			expect(next.lastDuplicate).toBeNull();
+			expect(next.objects["r"]).toBe(other);
+		});
+
+		it("propagates the deletion to the bounds of the group the polyline sits in", () => {
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					g: makeGroup("g", ["p"]),
+					p: makePolyline(
+						"p",
+						[
+							{ x: 0, y: 0 },
+							{ x: 10, y: 10 },
+							{ x: 20, y: 20 },
+						],
+						"g",
+					),
+				},
+				rootIds: ["g"],
+				selectedVertex: { objectId: "p", vertexIndex: 2 },
+			});
+			const next = DeleteCommand.execute(state, registries);
+			const group = next.objects["g"] as GroupState;
+			expect(group.cx).toBe(5);
+			expect(group.cy).toBe(5);
+			expect(group.width).toBe(10);
+			expect(group.height).toBe(10);
 		});
 	});
 

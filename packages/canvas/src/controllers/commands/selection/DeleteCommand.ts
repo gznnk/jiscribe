@@ -1,12 +1,10 @@
-﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+﻿import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { VERTEX_PART_KIND } from "../../selection/createVertexPartKindDefinition";
-import type { ObjectPartTarget } from "../../selection/deleteObjectParts";
-import {
-	canDeleteObjectParts,
-	deleteObjectParts,
-} from "../../selection/deleteObjectParts";
+import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
+import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
@@ -20,7 +18,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  * selection's own question, answered here on read the way
  * resolveObjectPartSelection will once the field is folded into the part
  * channel; whether the vertex can be deleted is a separate one
- * (canDeleteObjectParts).
+ * (resolveDeletableParts).
  */
 const resolveSelectedVertex = (
 	state: CanvasControllerState,
@@ -71,7 +69,10 @@ export const DeleteCommand: ExecutableCommand = {
 		// it; a kind registering none has said Delete is not about its parts, so
 		// the key means what it means for the selected objects.
 		const target = resolveSelectedVertex(state, registries);
-		if (target !== null && canDeleteObjectParts(state, target, registries)) {
+		if (
+			target !== null &&
+			resolveDeletableParts(state, target, registries) !== null
+		) {
 			return true;
 		}
 		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
@@ -80,14 +81,18 @@ export const DeleteCommand: ExecutableCommand = {
 	execute: (state, registries) => {
 		const target = resolveSelectedVertex(state, registries);
 		if (target !== null) {
-			const afterParts = deleteObjectParts(
-				state,
-				target,
-				registries,
-				clearSelectedVertex,
-			);
-			if (afterParts !== null) {
-				return afterParts;
+			const deletable = resolveDeletableParts(state, target, registries);
+			if (deletable !== null) {
+				const deletedObject = deletable.part.delete(
+					deletable.object,
+					target.partIds,
+				);
+				if (deletedObject === null) {
+					// The type refused this one deletion (a polyline at its vertex floor):
+					// the key stays claimed, yet nothing changes.
+					return state;
+				}
+				return commitVertexDeletion(state, deletedObject);
 			}
 		}
 		// Either no vertex is selected, the field names nothing, or the kind
@@ -95,6 +100,32 @@ export const DeleteCommand: ExecutableCommand = {
 		// dropped along with them.
 		return deleteSelectedObjects(clearSelectedVertex(state), registries);
 	},
+};
+
+/**
+ * Commits the object the part definition gave back as one command edit (plain
+ * spread of the objects map, no copy-on-write view), the counterpart of
+ * `deleteSelectedObjects` for the part branch.
+ */
+const commitVertexDeletion = (
+	state: CanvasControllerState,
+	deletedObject: ObjectState,
+): CanvasControllerState => {
+	const nextState: CanvasControllerState = {
+		...state,
+		objects: {
+			...state.objects,
+			[deletedObject.id]: deletedObject,
+		},
+		selectedVertex: null,
+		// A deletion is not something a duplicate can be offset from any more.
+		lastDuplicate: null,
+		commitVersion: state.commitVersion + 1,
+	};
+
+	return deletedObject.parentId
+		? updateGroupBoundsFromRoot(nextState, deletedObject.parentId)
+		: nextState;
 };
 
 /**
