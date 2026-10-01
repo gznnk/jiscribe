@@ -508,4 +508,31 @@ describe("place: a point-geometry shape", () => {
 		// The text sits to the right of the rect, so the union has to reach past it
 		expect(combined?.width).toBeGreaterThan(300);
 	});
+
+	// It reports a box and is placed by one, but nothing can write that box back:
+	// scaleObject has no case for the geometry, so the op used to report success
+	// and change nothing at all.
+	it("refuses a resize instead of silently keeping its size", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", { x: 100, y: 200, text: "hello" });
+
+		expect(() => docOps.resizeObject(doc, id, { width: 300 })).toThrow(
+			DocOperationError,
+		);
+		expect(() => docOps.resizeObject(doc, id, { width: 300 })).toThrow(
+			/no size of its own to set/,
+		);
+	});
+
+	it("rejects a batch it is named in, leaving every other id untouched", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });
+		const textId = docOps.addObject(doc, "text", { x: 300, y: 0, text: "hi" });
+
+		expect(() =>
+			docOps.resizeObjects(doc, ["rect-1", textId], { width: 200 }),
+		).toThrow(/ids\[1\]/);
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ width: 100 });
+	});
 });

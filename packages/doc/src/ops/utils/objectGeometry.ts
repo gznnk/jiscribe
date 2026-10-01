@@ -279,6 +279,33 @@ export const requireObjectBounds = (
 };
 
 /**
+ * Refuses an object whose size is not the document's to set: a `geometry: "point"`
+ * shape, whose box is measured from its own content every time it is read, so there
+ * is no extent for a scale to write — and {@link scaleObject} accordingly has no
+ * case for one. Every other geometry keeps its box in fields a scale rewrites.
+ *
+ * Separate from {@link requireObjectBounds} because such a shape does have a box:
+ * it reports one, aligns and distributes by it, and is moved by its corner. Only
+ * setting the box is refused, which is why the check sits with the op that sets it
+ * rather than with the measurement.
+ *
+ * @param object - Object a resize is about to be planned for
+ * @param definitions - Type table `features.geometry` is read from
+ * @throws {@link DocOperationError} for a point-geometry object, pointing at the fields its content is laid out in instead
+ */
+export const requireResizableObject = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): void => {
+	if (geometryOf(object, definitions) !== "point") {
+		return;
+	}
+	throw new DocOperationError(
+		`${object.id} ("${object.type}") has no size of its own to set: its box is measured from its content, so change the fields that content is laid out in — a block text's own width, say — rather than the box`,
+	);
+};
+
+/**
  * Shift an object by a delta, mutating it in place. A group moves with its children,
  * since the group itself stores no frame.
  *
@@ -327,6 +354,11 @@ export const translateObject = (
  * A shape that states no `height` keeps stating none when `scaleY` is exactly 1, and
  * has the height it was drawn at written in otherwise: the scale is the caller stating
  * a height, and only a width-only change leaves the height to the text.
+ *
+ * A `geometry: "point"` shape has no case here: its box is its content's, so there is
+ * no extent to scale. One named directly is refused before this runs
+ * ({@link requireResizableObject}); one reached through a group is left exactly as it
+ * is, neither scaled nor moved.
  *
  * @param object - Mutated in place
  * @param origin - World point that keeps its coordinates; the bounding box's top-left

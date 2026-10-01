@@ -11,6 +11,7 @@ import {
 import {
 	type DocDefinitions,
 	requireObjectBounds,
+	requireResizableObject,
 	scaleObject,
 	translateObject,
 } from "./utils/objectGeometry";
@@ -156,8 +157,9 @@ export type ResizeObjectParams = {
  *   greater than 0
  * @param definitions - Type table `features.geometry` is read from
  * @throws {@link DocOperationError} when the id is missing, names a connector or another
- *   object with no size of its own, has a zero extent on an axis being resized, or when a
- *   requested extent is not greater than 0
+ *   object with no size of its own to set — a `geometry: "point"` shape measured from its
+ *   content — has a zero extent on an axis being resized, or when a requested extent is
+ *   not greater than 0
  */
 /** An object cleared for resizing, with the box and target extents the scaling uses. */
 type ResizePlan = {
@@ -173,6 +175,7 @@ const planResize = (
 	params: ResizeObjectParams,
 	definitions: DocDefinitions,
 ): ResizePlan => {
+	requireResizableObject(object, definitions);
 	const bounds = requireObjectBounds(object, definitions);
 	const width = params.width ?? bounds.width;
 	const height = params.height ?? bounds.height;
@@ -235,8 +238,9 @@ export const resizeObject = (
  * @param definitions - Type table `features.geometry` is read from
  * @throws {@link DocOperationError} before touching the doc: for a missing id, naming every
  *   missing one at once; for a size failure — a connector or other object with no size of
- *   its own, a zero extent on an axis being resized, or a requested extent not greater than
- *   0 — identified as `ids[i] (id)`
+ *   its own to set, a zero extent on an axis being resized, or a requested extent not
+ *   greater than 0 — identified as `ids[i] (id)`. One such id rejects the whole batch, so
+ *   a selection holding a `geometry: "point"` shape resizes nothing until that id is left out
  */
 export const resizeObjects = (
 	doc: CanvasDoc,
