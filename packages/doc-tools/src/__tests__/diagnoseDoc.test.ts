@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import type { CanvasDoc, ObjectDocDefinition } from "@jiscribe/doc";
-import { isMissingPointSize } from "@jiscribe/doc";
+import { isMissingBounds } from "@jiscribe/doc";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -297,7 +297,7 @@ describe("diagnoseDoc", () => {
 		expect(diagnostics[0].message).toMatch(/rect declares no text region/);
 	});
 
-	describe("a point-geometry type that declares no size", () => {
+	describe("a point-geometry type that declares no box", () => {
 		/** A document holding one text, the shipped type whose doc stores no size. */
 		const textDoc = (): CanvasDoc =>
 			parseDoc(
@@ -316,7 +316,7 @@ describe("diagnoseDoc", () => {
 			) as ObjectDocDefinition;
 			vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation(
 				(type) =>
-					type === "text" ? { ...text, pointSize: undefined } : undefined,
+					type === "text" ? { ...text, bounds: undefined } : undefined,
 			);
 
 			const diagnostics = diagnoseDoc(textDoc());
@@ -329,9 +329,9 @@ describe("diagnoseDoc", () => {
 			expect(diagnostics[0].message).toMatch(/text stores no size/);
 		});
 
-		it("is not in the shipped set: every point type declares its own size", () => {
+		it("is not in the shipped set: every point type declares its own box", () => {
 			const undeclared = [...standardObjectDocDefinitions]
-				.filter(([, definition]) => isMissingPointSize(definition))
+				.filter(([, definition]) => isMissingBounds(definition))
 				.map(([type]) => type);
 
 			expect(undeclared).toEqual([]);

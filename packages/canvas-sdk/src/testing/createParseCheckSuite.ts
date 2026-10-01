@@ -3,7 +3,7 @@ import type {
 	CanvasParseResult,
 	SemanticDiagnostic,
 } from "@jiscribe/doc";
-import { createCanvasParser, isMissingPointSize } from "@jiscribe/doc";
+import { createCanvasParser, isMissingBounds } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 /** A doc as it is written in a test, before `JSON.stringify` hands it to the parser. */
@@ -148,7 +148,7 @@ export function createParseCheckSuite(params: ParseCheckSuiteParams): void {
 			}
 		});
 
-		it("declares a size for every point-geometry type it registers", () => {
+		it("declares a box for every point-geometry type it registers", () => {
 			// A point-geometry doc stores no size, so a type that declares none has no
 			// box at all and its objects are silently left out of every op working off
 			// one. Checked here because the author's own suite is where it can still
@@ -156,7 +156,7 @@ export function createParseCheckSuite(params: ParseCheckSuiteParams): void {
 			const undeclared = Object.entries(plugin.objects ?? {})
 				.filter(
 					([, definition]) =>
-						definition !== undefined && isMissingPointSize(definition),
+						definition !== undefined && isMissingBounds(definition),
 				)
 				.map(([type]) => type);
 

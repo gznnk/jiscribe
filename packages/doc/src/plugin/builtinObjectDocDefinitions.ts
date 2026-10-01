@@ -1,4 +1,3 @@
-import { declarePointGeometry } from "./declarePointGeometry";
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
 import { calcFullBoxTextRegion } from "./ObjectDocTextRegion";
 import {
@@ -47,13 +46,13 @@ import {
 	SvgFeatures,
 } from "../model/objects/primitives/svg/SvgDoc";
 import { validateSvgDoc } from "../model/objects/primitives/svg/validateSvgDoc";
-import { measureTextSize } from "../model/objects/primitives/text/measureTextSize";
+import { calcTextDocBounds } from "../model/objects/primitives/text/calcTextDocBounds";
 import {
 	TEXT_DOC_DEFAULTS,
 	TEXT_EXTRA_KEYS,
 	TextFeatures,
 } from "../model/objects/primitives/text/TextDoc";
-import { createTextObjectFactory } from "../model/objects/primitives/text/TextObjectFactory";
+import { TextObjectFactory } from "../model/objects/primitives/text/TextObjectFactory";
 import { validateTextDoc } from "../model/objects/primitives/text/validateTextDoc";
 
 /**
@@ -73,10 +72,10 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
  * registers the same calculator, so the two cannot drift. The types carrying no
  * text at all (group / polygon / polyline / connector / svg / image) leave it out.
  *
- * `pointSize` is declared by every `geometry: "point"` type — text alone among the
- * built-ins — a doc of one storing no size for anything to read instead. It arrives
- * with that type's `factory` from {@link declarePointGeometry}, the two being built
- * from the one resolver.
+ * `bounds` is declared by every `geometry: "point"` type — text alone among the
+ * built-ins — a doc of one storing no size for anything to read instead. It is
+ * built on the same measurement that type's `factory` places by, so a new shape
+ * lands on the box a saved one is measured by.
  *
  * `description` / `summary` / `defaults` feed the generated JSON schema and AI docs
  * (`pnpm generate:schema`); types whose schema `$def` is a handwritten template
@@ -107,7 +106,8 @@ export const builtinObjectDocDefinitions = {
 	text: {
 		features: TextFeatures,
 		validateDoc: validateTextDoc,
-		...declarePointGeometry(measureTextSize, createTextObjectFactory),
+		factory: TextObjectFactory,
+		bounds: calcTextDocBounds,
 		// The box comes from the text either way — measured whole in the label
 		// layout, wrapped in the stored width in the block one — so nothing can
 		// overflow it; the declaration says where the text sits in the box it

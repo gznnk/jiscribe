@@ -1,9 +1,9 @@
+import type { ObjectDocBoundsResolver } from "./ObjectDocBounds";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { ObjectFactory } from "../model/objects/types/ObjectFactory";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
-import type { PointObjectSizeResolver } from "../model/objects/utils/createPointObjectFactory";
 import type { ObjectTextSlotStyleDefaults } from "../registries/ObjectTextStyleDefaultsRegistry";
 
 /**
@@ -39,26 +39,26 @@ export type ObjectDocDefinition = {
 	extraKeys?: readonly string[];
 
 	/**
-	 * The box a `geometry: "point"` doc of this type draws, measured from what the
-	 * doc holds: such a doc stores the corner it is drawn from and no size at all,
-	 * so this is the single declaration of that box. Declare it with the type's
-	 * factory through {@link import("./declarePointGeometry").declarePointGeometry},
-	 * which builds both from this one resolver, so where a new one is placed and
-	 * where the doc-ops measure, align and distribute the saved one can never
-	 * disagree.
+	 * The box this type's doc implies, where the geometry does not settle it on its
+	 * own — a `geometry: "point"` type, whose doc stores the corner it is drawn from
+	 * and no size (see {@link ObjectDocBoundsResolver}). A declaration outranks the
+	 * geometry's own rule whatever that geometry is; every type but a point one
+	 * leaves it out and is measured from the fields it stores.
 	 *
-	 * The doc it is handed may state only what the file states — the ops measure a
-	 * loaded doc, the factory a doc with the type's defaults merged in — so a
-	 * measurement that leans on one of those defaults (the font a `text` falls
-	 * back to, a cell's typography) resolves it itself.
+	 * A point type measuring its own box is why nothing shared has to: the
+	 * conversion from the stored corner to the box is one call
+	 * (`calcPointDocCenter`), and what differs — the measurement — is the type's
+	 * alone. Hand that same measurement to the type's factory
+	 * (`createPointObjectFactory`), so where a new shape is placed and where a saved
+	 * one is measured, aligned and distributed cannot disagree.
 	 *
 	 * Every `geometry: "point"` type has to declare one; omitting it leaves the type
 	 * with no box at all, which is checked rather than guessed at
-	 * ({@link import("./isMissingPointSize").isMissingPointSize}) — a plugin's own
+	 * ({@link import("./isMissingBounds").isMissingBounds}) — a plugin's own
 	 * parse-check suite fails on it, and `diagnoseDoc` reports it against a document
 	 * already holding one.
 	 */
-	pointSize?: PointObjectSizeResolver;
+	bounds?: ObjectDocBoundsResolver;
 
 	/**
 	 * Where the type lays its text out, given a doc of it: the rectangle the

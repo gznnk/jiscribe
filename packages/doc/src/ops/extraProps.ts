@@ -18,7 +18,7 @@ const IDENTITY_KEYS: ReadonlySet<string> = new Set(["id", "type"]);
  * The names the write itself empties of meaning, which it therefore takes with it: the
  * block layout is the one configuration a type stores a `width` for (TextLayoutDoc), so
  * leaving that layout leaves the width behind. Creation already drops it the same way
- * (createTextObjectFactory); without it here the document keeps a number nothing
+ * (TextObjectFactory.createDoc); without it here the document keeps a number nothing
  * reads, waiting to come back the next time the layout is switched.
  *
  * Keyed on the names the type declares rather than on the type itself: a `width` reached

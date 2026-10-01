@@ -6,9 +6,9 @@ import type { PointObjectSizeResolver } from "../../utils/createPointObjectFacto
 
 /**
  * The box a text draws, which is the whole of its size. The type's one measurement:
- * what the factory places a new text by (createTextObjectFactory) and what the doc-ops
- * measure a saved one by (`ObjectDocDefinition.pointSize`), so the two cannot
- * disagree about where a text ends.
+ * what the factory places a new text by (TextObjectFactory) and what the type's
+ * `bounds` measures a saved one by (calcTextDocBounds), so the two cannot disagree
+ * about where a text ends.
  *
  * TEXT_DOC_DEFAULTS stand in for the font fields the doc leaves unset: the factory's
  * doc has them merged in already, while a loaded doc states only what its file

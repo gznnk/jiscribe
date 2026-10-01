@@ -15,13 +15,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- For plugin authors: a `geometry: "point"` type declares the box its document
-  does not store as `ObjectDocDefinition.pointSize`, and the doc-side ops measure
-  it by that instead of by the rule the `text` shape happens to follow. A type
-  declares it with its factory through `declarePointGeometry`, which builds both
-  from the one resolver, so where a new shape is placed and where a saved one is
-  measured, aligned and distributed cannot drift apart. A type registering one
-  and declaring no size now fails its own parse-check suite
+- For plugin authors: a type whose geometry does not settle its box declares it as
+  `ObjectDocDefinition.bounds`, and the doc-side ops measure it by that declaration
+  instead of by the rule the `text` shape happens to follow. Today that means every
+  `geometry: "point"` type, whose document stores the corner it is drawn from and
+  no size; hand the same measurement to the type's factory and where a new shape is
+  placed cannot drift from where a saved one is measured, aligned and distributed. A
+  point type declaring no box now fails its own parse-check suite
   (`@jiscribe/canvas-sdk/testing`) and is reported by `diagnoseDoc`, rather than
   quietly having no box at all.
 - **A command carries its own wording, in every locale it ships.**

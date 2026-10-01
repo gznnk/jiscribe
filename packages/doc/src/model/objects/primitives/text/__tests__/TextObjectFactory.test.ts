@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { measureTextSize } from "../measureTextSize";
-import { createTextObjectFactory } from "../TextObjectFactory";
-
-const TextObjectFactory = createTextObjectFactory(measureTextSize);
+import { TextObjectFactory } from "../TextObjectFactory";
 
 /** The box the factory measures for these overrides, as a whole size. */
 const boxOf = (

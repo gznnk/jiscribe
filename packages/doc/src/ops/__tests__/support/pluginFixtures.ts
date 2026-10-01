@@ -1,3 +1,5 @@
+import type { Rect } from "@jiscribe/geometry";
+
 import { createFrameObjectFactory } from "../../../model/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
 import { calcFullBoxTextRegion } from "../../../plugin/ObjectDocTextRegion";
@@ -168,7 +170,7 @@ export const sourceBodyDefinition: ObjectDocDefinition = {
 };
 
 /**
- * A `geometry: "point"` shape declaring no `pointSize`, which is the gap the
+ * A `geometry: "point"` shape declaring no `bounds`, which is the gap the
  * declaration exists to close: such a doc states no size of its own, so nothing
  * else answers how big it is. No shipped type is in this state, so the case is
  * staged here.
@@ -181,4 +183,28 @@ export const unsizedPointDefinition: ObjectDocDefinition = {
 		connectable: true,
 	},
 	validateDoc: () => [],
+};
+
+/** The box {@link declaredBoundsDefinition} answers with, whatever its doc states. */
+export const DECLARED_BADGE_BOUNDS: Rect = {
+	x: -7,
+	y: -8,
+	width: 33,
+	height: 44,
+};
+
+/**
+ * A `geometry: "rect"` shape declaring a box that shares no edge with the one its
+ * `x` / `y` / `width` / `height` imply: nothing but the declaration winning can
+ * produce it, which is what pins the order of the two branches.
+ */
+export const declaredBoundsDefinition: ObjectDocDefinition = {
+	features: {
+		type: "badge",
+		geometry: "rect",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+	bounds: () => DECLARED_BADGE_BOUNDS,
 };
