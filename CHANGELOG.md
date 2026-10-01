@@ -53,9 +53,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   shipped changes; a swept test holds that (`initializeCommands.exclusivity`).
   `CommandRegistry.register` now throws on a duplicate id rather than silently
   letting the later one win.
-- For plugin authors: a shape may now declare `geometry: "point"` and let
-  `createFrameMapper` map it — the doc stores the position alone and the box is
-  re-derived from the content (`contentResizer`). `@jiscribe/geometry` gained
+- For plugin authors: a shape may now declare `geometry: "point"` — the doc
+  stores the position alone, and the box is measured from the content. Such a
+  type writes its own mapper, measuring the box as it maps (`TextMapper` is the
+  worked example), and declares a `contentResizer` for re-deriving it after an
+  edit; `createFrameMapper` takes a rect or an ellipse only, and refuses a point
+  type at compile time. `@jiscribe/geometry` gained
   `calcFrameCenterFromTopLeft`, the inverse of
   `calcFrameKeyPoint(frame, "topLeft")`, for the corner such a box is grown from
   and rebuilt around, and `@jiscribe/doc` exports `calcWrappedTextBlockSize` so a
