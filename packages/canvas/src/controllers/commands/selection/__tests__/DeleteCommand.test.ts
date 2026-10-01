@@ -147,10 +147,9 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.execute(state, registries)).toBe(state);
 		});
 
-		it("drops a vertex selection its type cannot delete and goes on to the object", () => {
-			// canExecute answers true for this state through selectedIds, so the key
-			// has to reach object deletion rather than be swallowed over a cleared
-			// highlight.
+		it("ignores a vertex selection on a type with no vertex kind and goes on to the object", () => {
+			// A rect has no vertices, so the field names nothing: it is no selection,
+			// and the key belongs to the selected objects.
 			const state = makeState({
 				selectedIds: ["r"],
 				objects: { r: makeRect("r") },
@@ -205,7 +204,7 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
 
-		it("is not executable when the vertex-selection target has no deletable vertices", () => {
+		it("is not executable when a vertex field names a type with no vertex kind and nothing else is selected", () => {
 			const state = makeState({
 				selectedIds: [],
 				objects: { r: makeRect("r") },
@@ -213,6 +212,26 @@ describe("DeleteCommand", () => {
 				selectedVertex: { objectId: "r", vertexIndex: 0 },
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(false);
+		});
+
+		it("is not executable while a selected vertex's kind registers no deletion, even with the object selected", () => {
+			// The innermost selection claims the key: a part that cannot be deleted
+			// disables Delete rather than passing it up to the object it sits in.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["n"],
+				objects: { n: pin },
+				rootIds: ["n"],
+				selectedVertex: { objectId: "n", vertexIndex: 0 },
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(false);
+			// Reached directly all the same, the key does nothing.
+			expect(DeleteCommand.execute(state, pinRegistries)).toBe(state);
 		});
 
 		it("is executable when there is a connector selection", () => {

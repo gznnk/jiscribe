@@ -12,23 +12,49 @@ import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { ExecutableCommand } from "../CommandTypes";
 
-/** Reads the legacy single-vertex field as the deletion target the registry takes. */
-const toVertexPartTarget = (
-	selectedVertex: NonNullable<CanvasControllerState["selectedVertex"]>,
-): ObjectPartTarget => ({
-	objectId: selectedVertex.objectId,
-	kind: VERTEX_PART_KIND,
-	partIds: [String(selectedVertex.vertexIndex)],
-});
+/**
+ * The legacy single-vertex field read as the deletion target the registry takes,
+ * or null while it names nothing: no vertex selected, the object gone, or an
+ * index the object has outgrown (an undo can leave one behind) — a selection
+ * that is no selection, which the key then passes over. Validity is the
+ * selection's own question, answered here on read the way
+ * resolveObjectPartSelection will once the field is folded into the part
+ * channel; whether the vertex can be deleted is a separate one
+ * (canDeleteObjectParts).
+ */
+const resolveSelectedVertex = (
+	state: CanvasControllerState,
+	registries: ICanvasRegistries,
+): ObjectPartTarget | null => {
+	const { selectedVertex } = state;
+	if (selectedVertex === null) {
+		return null;
+	}
+	const object = state.objects[selectedVertex.objectId];
+	const partId = String(selectedVertex.vertexIndex);
+	const vertexKind = object
+		? registries.objectPartKind.get(object.type, VERTEX_PART_KIND)
+		: undefined;
+	if (!object || !vertexKind?.has(object, partId)) {
+		return null;
+	}
+	return {
+		objectId: selectedVertex.objectId,
+		kind: VERTEX_PART_KIND,
+		partIds: [partId],
+	};
+};
 
 const clearSelectedVertex = (
 	state: CanvasControllerState,
 ): CanvasControllerState => ({ ...state, selectedVertex: null });
 
 /**
- * Command that deletes the current selection. Prioritizes vertex deletion when a
- * vertex is selected; otherwise removes selected objects (with group descendants)
- * and the selected connector, then cleans up connectors and groups.
+ * Command that deletes the current selection. A selected vertex claims the key
+ * as the innermost selection: it is deleted where its type allows, and where the
+ * type registers no deletion the key is simply not executable rather than
+ * passed up to the object. Otherwise the selected objects (a group with its
+ * descendants) and the selected connector are removed.
  */
 export const DeleteCommand: ExecutableCommand = {
 	id: "delete",
@@ -39,39 +65,25 @@ export const DeleteCommand: ExecutableCommand = {
 	},
 
 	canExecute: (state, registries) => {
-		// A vertex selection only claims the key where its type registers a
-		// deletion for it; otherwise the key belongs to whatever else is selected.
-		if (
-			state.selectedVertex !== null &&
-			canDeleteObjectParts(
-				state,
-				toVertexPartTarget(state.selectedVertex),
-				registries,
-			)
-		) {
-			return true;
+		const target = resolveSelectedVertex(state, registries);
+		if (target !== null) {
+			return canDeleteObjectParts(state, target, registries);
 		}
 		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
 	},
 
 	execute: (state, registries) => {
-		// A vertex selection is tried first. Where its type has no deletion for it,
-		// or the index has gone stale, the selection is dropped and the key goes on
-		// to whatever else is selected — the answer canExecute already gave for
-		// that state, which must not be a key swallowed over a cleared highlight.
-		if (state.selectedVertex !== null) {
-			const afterParts = deleteObjectParts(
-				state,
-				toVertexPartTarget(state.selectedVertex),
-				registries,
-				clearSelectedVertex,
+		const target = resolveSelectedVertex(state, registries);
+		if (target !== null) {
+			// null only for a kind registering no deletion, which canExecute
+			// already refused; reached directly, the key does nothing.
+			return (
+				deleteObjectParts(state, target, registries, clearSelectedVertex) ??
+				state
 			);
-			if (afterParts !== null) {
-				return afterParts;
-			}
-			return deleteSelectedObjects(clearSelectedVertex(state), registries);
 		}
-		return deleteSelectedObjects(state, registries);
+		// A vertex field naming nothing is dropped along with the objects it rode on.
+		return deleteSelectedObjects(clearSelectedVertex(state), registries);
 	},
 };
 
