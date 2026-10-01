@@ -115,6 +115,40 @@ describe("openBrowser", () => {
 
 	// A shell script stands in for the browser, so only where one can be run
 	it.skipIf(process.platform === "win32")(
+		"passes on why a headless browser killed itself, without its stack trace",
+		async () => {
+			// A Chromium that cannot set up its sandbox says so on stderr and dies on a
+			// signal. Reported as a page that never connected back, twenty seconds
+			// later, that left the reader to guess at it
+			workDir = mkdtempSync(join(tmpdir(), "jiscribe-mcp-browser-"));
+			const scriptPath = join(workDir, "dying-browser.sh");
+			writeFileSync(
+				scriptPath,
+				[
+					"#!/bin/sh",
+					"echo '[1:1:0101/000000.000000:FATAL:zygote_host_impl_linux.cc(128)] No usable sandbox!' >&2",
+					"echo '#0 0x55e0f9a0e2c2 base::debug::CollectStackTrace()' >&2",
+					"echo '#1 0x55e0f99f58d3 base::debug::StackTrace::StackTrace()' >&2",
+					"kill -TRAP $$",
+				].join("\n"),
+				{ encoding: "utf8", mode: 0o755 },
+			);
+
+			const reason = await new Promise<string>((resolve) => {
+				openBrowser("http://localhost:1/", {
+					mode: "headless",
+					browserCommand: scriptPath,
+					onFailure: resolve,
+				});
+			});
+
+			expect(reason).toContain("SIGTRAP");
+			expect(reason).toContain("No usable sandbox!");
+			expect(reason).not.toContain("CollectStackTrace");
+		},
+	);
+
+	it.skipIf(process.platform === "win32")(
 		"runs a headless browser on a profile of its own and takes it away again",
 		async () => {
 			// Left on the user's own profile, the launch contends with the browser

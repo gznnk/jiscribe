@@ -13,6 +13,21 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
+## [Unreleased]
+
+### Fixed
+
+- **A headless Chromium that dies as it starts is reported at once, with what
+  it said.** `open_canvas` with `headless: true` read a browser's death on a
+  signal (how a Chromium that cannot set up its sandbox goes down) as nothing
+  at all, so it waited the full twenty seconds for a page that was never
+  coming, tried no other Chromium, and then said only that the page never
+  connected back — with the browser's own stderr thrown away. Now a browser
+  gone within the launch window drops to the next candidate whether it left
+  with a code or on a signal, and the `error:` names the signal and carries the
+  first lines the browser wrote, minus its stack trace (`No usable sandbox!`
+  arrives as such). (#49)
+
 ## [0.11.0] - 2026-09-29
 
 ### Security
