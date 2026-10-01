@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import type { ObjectPartTarget } from "../deleteObjectParts";
 import { canDeleteObjectParts, deleteObjectParts } from "../deleteObjectParts";
-import { createObjectPartRegistry } from "../ObjectPartRegistry";
 import type { ObjectPartDefinition } from "../ObjectPartRegistry";
-import type { ObjectPartSelection } from "../ObjectPartSelection";
+import { createObjectPartRegistry } from "../ObjectPartRegistry";
 
 /** A shape carrying a list of parts addressed by their index, as a poly does. */
 type ListState = ObjectState & { items: string[] };
@@ -22,7 +22,7 @@ const makeState = (objects: Record<string, ObjectState>) =>
 		commitVersion: 7,
 	}) as unknown as CanvasControllerState;
 
-const selectionOf = (partIds: string[]): ObjectPartSelection => ({
+const targetOf = (partIds: string[]): ObjectPartTarget => ({
 	objectId: "a",
 	kind: "item",
 	partIds,
@@ -61,11 +61,7 @@ describe("canDeleteObjectParts", () => {
 		const state = makeState({ a: makeList("a", ["x", "y", "z"]) });
 
 		expect(
-			canDeleteObjectParts(
-				state,
-				selectionOf(["0"]),
-				registriesWith(itemPart(2)),
-			),
+			canDeleteObjectParts(state, targetOf(["0"]), registriesWith(itemPart(2))),
 		).toBe(true);
 	});
 
@@ -77,15 +73,15 @@ describe("canDeleteObjectParts", () => {
 		};
 
 		expect(
-			canDeleteObjectParts(state, selectionOf(["0"]), registriesWith(readOnly)),
+			canDeleteObjectParts(state, targetOf(["0"]), registriesWith(readOnly)),
 		).toBe(false);
 	});
 
-	it("is false when the object the selection names is gone", () => {
+	it("is false when the object the target names is gone", () => {
 		expect(
 			canDeleteObjectParts(
 				makeState({}),
-				selectionOf(["0"]),
+				targetOf(["0"]),
 				registriesWith(itemPart(2)),
 			),
 		).toBe(false);
@@ -98,7 +94,7 @@ describe("deleteObjectParts", () => {
 
 		const next = deleteObjectParts(
 			state,
-			selectionOf(["1"]),
+			targetOf(["1"]),
 			registriesWith(itemPart(2)),
 			clearSelection,
 		);
@@ -115,7 +111,7 @@ describe("deleteObjectParts", () => {
 
 		const next = deleteObjectParts(
 			state,
-			selectionOf(["0", "2"]),
+			targetOf(["0", "2"]),
 			registriesWith(itemPart(1)),
 			clearSelection,
 		);
@@ -128,7 +124,7 @@ describe("deleteObjectParts", () => {
 
 		const next = deleteObjectParts(
 			state,
-			selectionOf(["0"]),
+			targetOf(["0"]),
 			registriesWith(itemPart(2)),
 			clearSelection,
 		);
@@ -148,31 +144,31 @@ describe("deleteObjectParts", () => {
 		expect(
 			deleteObjectParts(
 				state,
-				selectionOf(["0"]),
+				targetOf(["0"]),
 				registriesWith(readOnly),
 				clearSelection,
 			),
 		).toBeNull();
 	});
 
-	it("answers null for a selection the object has outgrown", () => {
+	it("answers null for a target the object has outgrown", () => {
 		const state = makeState({ a: makeList("a", ["x", "y"]) });
 
 		expect(
 			deleteObjectParts(
 				state,
-				selectionOf(["5"]),
+				targetOf(["5"]),
 				registriesWith(itemPart(1)),
 				clearSelection,
 			),
 		).toBeNull();
 	});
 
-	it("answers null when the object the selection names is gone", () => {
+	it("answers null when the object the target names is gone", () => {
 		expect(
 			deleteObjectParts(
 				makeState({}),
-				selectionOf(["0"]),
+				targetOf(["0"]),
 				registriesWith(itemPart(1)),
 				clearSelection,
 			),
@@ -185,7 +181,7 @@ describe("deleteObjectParts", () => {
 
 		const next = deleteObjectParts(
 			state,
-			selectionOf(["0"]),
+			targetOf(["0"]),
 			registriesWith(itemPart(1)),
 			clearSelection,
 		);

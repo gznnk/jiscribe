@@ -214,7 +214,6 @@ export type {
 	SelectionControlEvent,
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
-export type { ObjectPartSelection } from "./controllers/selection/ObjectPartSelection";
 export type { ObjectPartDefinition } from "./controllers/selection/ObjectPartRegistry";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-body shape (`features.text: "body"` / `"source"`)

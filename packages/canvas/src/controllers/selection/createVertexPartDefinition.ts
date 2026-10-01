@@ -6,6 +6,9 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 /** The part-id namespace of the vertices a poly-geometry type stores in `points`. */
 export const VERTEX_PART_KIND = "vertex";
 
+/** A vertex id as the handles spell it: a non-negative integer with no sign, padding or exponent. */
+const CANONICAL_INDEX = /^(0|[1-9]\d*)$/;
+
 /**
  * The `vertex` part definition for a type whose state carries a `points` array,
  * with part ids spelled as the decimal index into it ("0", "1", …) — the same
@@ -21,12 +24,11 @@ export const createVertexPartDefinition = <TState extends ObjectState & Poly>(
 ): ObjectPartDefinition<TState> => ({
 	kind: VERTEX_PART_KIND,
 
-	has: (object, partId) => {
-		const index = Number(partId);
-		return (
-			Number.isInteger(index) && index >= 0 && index < object.points.length
-		);
-	},
+	// Only the canonical decimal spelling names a vertex: `has` is the gate an
+	// untrusted id passes before `delete` parses it, and Number() alone would let
+	// "" (→ 0), " 1 " or "1e0" through as vertices of their own.
+	has: (object, partId) =>
+		CANONICAL_INDEX.test(partId) && Number(partId) < object.points.length,
 
 	delete: (object, partIds) => {
 		const removedIndices = new Set(partIds.map(Number));

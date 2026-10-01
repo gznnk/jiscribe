@@ -147,7 +147,10 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.execute(state, registries)).toBe(state);
 		});
 
-		it("clears only selectedVertex when the vertex-selection target is not a polyline", () => {
+		it("drops a vertex selection its type cannot delete and goes on to the object", () => {
+			// canExecute answers true for this state through selectedIds, so the key
+			// has to reach object deletion rather than be swallowed over a cleared
+			// highlight.
 			const state = makeState({
 				selectedIds: ["r"],
 				objects: { r: makeRect("r") },
@@ -156,8 +159,24 @@ describe("DeleteCommand", () => {
 			});
 			const next = DeleteCommand.execute(state, registries);
 			expect(next.selectedVertex).toBeNull();
-			// does not fall through to object deletion
-			expect(next.objects["r"]).toBeDefined();
+			expect(next.objects["r"]).toBeUndefined();
+			expect(next.selectedIds).toEqual([]);
+		});
+
+		it("drops a stale vertex index the same way, with nothing else to delete", () => {
+			const polyline = makePolyline("p", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+			]);
+			const state = makeState({
+				selectedIds: [],
+				objects: { p: polyline },
+				rootIds: ["p"],
+				selectedVertex: { objectId: "p", vertexIndex: 7 },
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.selectedVertex).toBeNull();
+			expect(next.objects["p"]).toBe(polyline);
 		});
 	});
 

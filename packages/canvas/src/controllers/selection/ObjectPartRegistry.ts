@@ -1,12 +1,13 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { Rect } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
- * What an object type tells core about one namespace of its sub-parts (see
- * {@link ObjectPartSelection}). A type declares these through
- * `ObjectTypeDefinition.parts`, one entry per `kind`.
+ * What an object type tells core about one namespace of its sub-parts — the
+ * vertices of a polyline, the cells of a table. Core knows nothing of what an
+ * id means: it carries the id around and hands it back to the type through this
+ * definition. A type declares these through `ObjectTypeDefinition.parts`, one
+ * entry per `kind`.
  */
 export type ObjectPartDefinition<TState extends ObjectState = ObjectState> = {
 	/** The part-id namespace this entry answers for: "textSlot", "vertex", "cell". */
@@ -18,19 +19,6 @@ export type ObjectPartDefinition<TState extends ObjectState = ObjectState> = {
 	 * index left over from an undo, a removed row).
 	 */
 	has: (object: TState, partId: string) => boolean;
-
-	/**
-	 * The part's box in the object's local coordinates, for the overlay that
-	 * draws a selected part; null for a part that occupies no area. Omitted = the
-	 * kind is never outlined.
-	 */
-	region?: (object: TState, partId: string) => Rect | null;
-
-	/**
-	 * Every part id the object currently holds, in the order Tab walks them.
-	 * Omitted = the kind cannot be cycled through.
-	 */
-	list?: (object: TState) => readonly string[];
 
 	/**
 	 * Removes the named parts and returns the changed object, or null to refuse
@@ -46,7 +34,7 @@ export type ObjectPartDefinition<TState extends ObjectState = ObjectState> = {
 /**
  * Per-type registry of sub-part definitions, keyed by `(type, kind)`.
  * Types that register nothing have no sub-parts, and every part-aware seam
- * (selection, overlay, delete) is inert for them.
+ * (so far: delete) is inert for them.
  */
 export class ObjectPartRegistry {
 	private readonly entries = new Map<
