@@ -6,6 +6,8 @@ import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
 import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
+import { calcPointDocDrawnTopLeft } from "../../model/objects/utils/pointDocDrawnTopLeft";
+import { roundDocCoordinate } from "../../model/objects/utils/roundDocNumbers";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
 import { extractTextSlotStyleDefaults } from "../../registries/ObjectTextStyleDefaultsRegistry";
@@ -281,13 +283,15 @@ export const requireObjectBounds = (
 /**
  * Refuses an object whose size is not the document's to set: a `geometry: "point"`
  * shape, whose box is measured from its own content every time it is read, so there
- * is no extent for a scale to write — and {@link scaleObject} accordingly has no
- * case for one. Every other geometry keeps its box in fields a scale rewrites.
+ * is no extent for a resize to write. Every other geometry keeps its box in fields a
+ * resize rewrites.
  *
  * Separate from {@link requireObjectBounds} because such a shape does have a box:
- * it reports one, aligns and distributes by it, and is moved by its corner. Only
- * setting the box is refused, which is why the check sits with the op that sets it
- * rather than with the measurement.
+ * it reports one, aligns and distributes by it, and is moved by it. Only stating a
+ * size for it is refused, which is why the check sits with the op that states one
+ * rather than with the measurement — and why a group scale, which states a layout
+ * rather than any one shape's size, goes through and moves such a shape
+ * ({@link scaleObject}).
  *
  * @param object - Object a resize is about to be planned for
  * @param definitions - Type table `features.geometry` is read from
@@ -355,10 +359,11 @@ export const translateObject = (
  * has the height it was drawn at written in otherwise: the scale is the caller stating
  * a height, and only a width-only change leaves the height to the text.
  *
- * A `geometry: "point"` shape has no case here: its box is its content's, so there is
- * no extent to scale. One named directly is refused before this runs
- * ({@link requireResizableObject}); one reached through a group is left exactly as it
- * is, neither scaled nor moved.
+ * A `geometry: "point"` shape has only its position scaled: its box is its content's,
+ * so there is no extent to write. One named directly never reaches here, a resize
+ * being a caller stating a size it has no field for
+ * ({@link requireResizableObject}); one inside a group does, a group scale being a
+ * change to the layout rather than to any one shape's size.
  *
  * @param object - Mutated in place
  * @param origin - World point that keeps its coordinates; the bounding box's top-left
@@ -412,6 +417,33 @@ export const scaleObject = (
 		case "poly":
 			object.points = readPoints(object.points).map(scalePoint);
 			break;
+		case "point": {
+			// Its box is its content's, so only where the box sits scales. The centre is
+			// what moves, not the stored corner: every other geometry's centre lands on
+			// `scalePoint(centre)` — the corner moves and the size scales with it — so a
+			// label centred under an icon stays centred under it only if this one does
+			// the same. Scaling the corner instead would leave the label at the icon's
+			// old centre, half the icon's growth to its left.
+			const bounds = getObjectBounds(object, definitions);
+			if (bounds === null) {
+				break;
+			}
+			const size = { width: bounds.width, height: bounds.height };
+			const drawnTopLeft = calcPointDocDrawnTopLeft(
+				scalePoint({
+					x: bounds.x + size.width / 2,
+					y: bounds.y + size.height / 2,
+				}),
+				size,
+				object,
+			);
+			// Rounded, unlike the corner the rect case writes: that one comes off a
+			// multiply, this one off an affine transform, whose float tail the doc would
+			// otherwise keep (same rule as createPointObjectFactory).
+			object.x = roundDocCoordinate(drawnTopLeft.x);
+			object.y = roundDocCoordinate(drawnTopLeft.y);
+			break;
+		}
 		case "none":
 			for (const child of readChildren(object)) {
 				scaleObject(child, origin, scaleX, scaleY, definitions);
