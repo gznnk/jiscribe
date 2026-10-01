@@ -26,8 +26,9 @@ const makeRect = (id: string, parentId?: string): ObjectState =>
 const makePolyline = (
 	id: string,
 	points: { x: number; y: number }[],
+	parentId?: string,
 ): PolylineState =>
-	({ id, type: "polyline", points }) as unknown as PolylineState;
+	({ id, type: "polyline", points, parentId }) as unknown as PolylineState;
 
 const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({
@@ -49,6 +50,7 @@ const makeState = (params: {
 	rootIds: string[];
 	selectedVertex?: CanvasControllerState["selectedVertex"];
 	selectedConnectorId?: string | null;
+	lastDuplicate?: CanvasControllerState["lastDuplicate"];
 }): CanvasControllerState =>
 	({
 		selectedVertex: null,
@@ -147,7 +149,9 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.execute(state, registries)).toBe(state);
 		});
 
-		it("clears only selectedVertex when the vertex-selection target is not a polyline", () => {
+		it("ignores a vertex selection on a type with no vertex kind and goes on to the object", () => {
+			// A rect has no vertices, so the field names nothing: it is no selection,
+			// and the key belongs to the selected objects.
 			const state = makeState({
 				selectedIds: ["r"],
 				objects: { r: makeRect("r") },
@@ -156,8 +160,78 @@ describe("DeleteCommand", () => {
 			});
 			const next = DeleteCommand.execute(state, registries);
 			expect(next.selectedVertex).toBeNull();
-			// does not fall through to object deletion
-			expect(next.objects["r"]).toBeDefined();
+			expect(next.objects["r"]).toBeUndefined();
+			expect(next.selectedIds).toEqual([]);
+		});
+
+		it("drops a stale vertex index the same way, with nothing else to delete", () => {
+			const polyline = makePolyline("p", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+			]);
+			const state = makeState({
+				selectedIds: [],
+				objects: { p: polyline },
+				rootIds: ["p"],
+				selectedVertex: { objectId: "p", vertexIndex: 7 },
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.selectedVertex).toBeNull();
+			expect(next.objects["p"]).toBe(polyline);
+		});
+
+		it("commits the edit, forgets the last duplicate, and leaves other objects as they were", () => {
+			const other = makeRect("r");
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					p: makePolyline("p", [
+						{ x: 0, y: 0 },
+						{ x: 10, y: 0 },
+						{ x: 20, y: 0 },
+					]),
+					r: other,
+				},
+				rootIds: ["p", "r"],
+				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				lastDuplicate: {
+					newIds: ["p"],
+					cx: 0,
+					cy: 0,
+					offset: { x: 10, y: 10 },
+				},
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.commitVersion).toBe(1);
+			// A deletion is not something a duplicate can be offset from any more.
+			expect(next.lastDuplicate).toBeNull();
+			expect(next.objects["r"]).toBe(other);
+		});
+
+		it("propagates the deletion to the bounds of the group the polyline sits in", () => {
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					g: makeGroup("g", ["p"]),
+					p: makePolyline(
+						"p",
+						[
+							{ x: 0, y: 0 },
+							{ x: 10, y: 10 },
+							{ x: 20, y: 20 },
+						],
+						"g",
+					),
+				},
+				rootIds: ["g"],
+				selectedVertex: { objectId: "p", vertexIndex: 2 },
+			});
+			const next = DeleteCommand.execute(state, registries);
+			const group = next.objects["g"] as GroupState;
+			expect(group.cx).toBe(5);
+			expect(group.cy).toBe(5);
+			expect(group.width).toBe(10);
+			expect(group.height).toBe(10);
 		});
 	});
 
@@ -172,13 +246,68 @@ describe("DeleteCommand", () => {
 		});
 
 		it("is executable when there is a vertex selection", () => {
+			const poly = makePolyline("p", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+				{ x: 20, y: 0 },
+			]);
 			const state = makeState({
 				selectedIds: [],
-				objects: {},
-				rootIds: [],
+				objects: { p: poly },
+				rootIds: ["p"],
 				selectedVertex: { objectId: "p", vertexIndex: 0 },
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
+		});
+
+		it("is not executable when a vertex field names a type with no vertex kind and nothing else is selected", () => {
+			const state = makeState({
+				selectedIds: [],
+				objects: { r: makeRect("r") },
+				rootIds: ["r"],
+				selectedVertex: { objectId: "r", vertexIndex: 0 },
+			});
+			expect(DeleteCommand.canExecute(state, registries)).toBe(false);
+		});
+
+		it("lets the key mean object deletion while the selected vertex's kind registers none", () => {
+			// Omitting `delete` is the kind saying Delete is not about its parts, so
+			// the object the vertex sits in is what goes.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["n"],
+				objects: { n: pin },
+				rootIds: ["n"],
+				selectedVertex: { objectId: "n", vertexIndex: 0 },
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
+			const next = DeleteCommand.execute(state, pinRegistries);
+			expect(next.objects["n"]).toBeUndefined();
+			expect(next.selectedVertex).toBeNull();
+		});
+
+		it("holds the key over a picked part whose kind declares a deletion that refuses", () => {
+			// `delete: () => null` is how a kind keeps Delete from reaching the object
+			// while one of its parts is picked: executable, yet nothing is removed.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true, delete: () => null },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["n"],
+				objects: { n: pin },
+				rootIds: ["n"],
+				selectedVertex: { objectId: "n", vertexIndex: 0 },
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
+			expect(DeleteCommand.execute(state, pinRegistries)).toBe(state);
 		});
 
 		it("is executable when there is a connector selection", () => {

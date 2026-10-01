@@ -12,6 +12,7 @@ import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperReg
 import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
@@ -65,6 +66,12 @@ export interface ICanvasRegistries {
 	 */
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
+	/**
+	 * Per-type sub-part definitions, needed by the commands that act on a part
+	 * selection rather than the whole object: Delete asks this registry whether
+	 * the selected parts can be removed before claiming the key.
+	 */
+	objectPartKind: ObjectPartKindRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	stencil: StencilRegistry;
 	/**

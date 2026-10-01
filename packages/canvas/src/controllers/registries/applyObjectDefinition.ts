@@ -23,6 +23,7 @@ import {
 	connectorToDoc,
 	connectorToState,
 } from "../../states/objects/connector/ConnectorMapper";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isValidConnectorState } from "../../states/objects/connector/validateConnectorState";
 import {
 	ellipseToDoc,
@@ -45,11 +46,13 @@ import {
 	polygonToDoc,
 	polygonToState,
 } from "../../states/objects/primitives/polygon/PolygonMapper";
+import type { PolygonState } from "../../states/objects/primitives/polygon/PolygonState";
 import { isValidPolygonState } from "../../states/objects/primitives/polygon/validatePolygonState";
 import {
 	polylineToDoc,
 	polylineToState,
 } from "../../states/objects/primitives/polyline/PolylineMapper";
+import type { PolylineState } from "../../states/objects/primitives/polyline/PolylineState";
 import { isValidPolylineState } from "../../states/objects/primitives/polyline/validatePolylineState";
 import {
 	rectToDoc,
@@ -97,6 +100,7 @@ import {
 	rotateByGroup as textRotateByGroup,
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
+import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
@@ -234,6 +238,9 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			transformByGroup: polygonTransformByGroup,
 			rotateByGroup: polygonRotateByGroup,
 		},
+		// A closed outline needs three corners; the third-to-last vertex is where
+		// deletion stops.
+		partKinds: [createVertexPartKindDefinition<PolygonState>(3)],
 		stencils: PolygonStencils,
 	}),
 
@@ -247,6 +254,8 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			transformByGroup: polylineTransformByGroup,
 			rotateByGroup: polylineRotateByGroup,
 		},
+		// An open line needs the two ends it runs between.
+		partKinds: [createVertexPartKindDefinition<PolylineState>(2)],
 		stencils: PolylineStencils,
 	}),
 
@@ -260,6 +269,10 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			transformByGroup: connectorTransformByGroup,
 			rotateByGroup: connectorRotateByGroup,
 		},
+		// `points` holds the waypoints between the two endpoints, not the whole
+		// route, so the floor is the polyline's rather than one of its own: a
+		// connector with two waypoints keeps both.
+		partKinds: [createVertexPartKindDefinition<ConnectorState>(2)],
 		extraStyleProperties: ConnectorExtraStyleProperties,
 		menu: [
 			{
@@ -527,6 +540,9 @@ export const applyObjectDefinition = (
 	registries.propertyPanel.register(type, derivePropertyPanel(definition));
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
+	}
+	if (definition.partKinds) {
+		registries.objectPartKind.register(type, definition.partKinds);
 	}
 	if (definition.extraStyleProperties) {
 		registries.styleProperty.registerExtras(
