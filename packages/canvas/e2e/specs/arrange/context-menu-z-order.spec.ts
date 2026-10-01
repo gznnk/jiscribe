@@ -9,10 +9,11 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * (ObjectMenu's arrange is tested separately.) The result is guarded in DOM order
  * (later elements are in front).
  *
- * Note: right click does not change the selection; it opens the menu for the current
- * selection. Right-clicking a shape immediately after left-clicking it would be
- * coalesced by the click recognizer into consecutive clicks, so the target is
- * right-clicked while still auto-selected from drawing (no selectAt in between).
+ * Note: a right click selects the shape it lands on, and keeps the selection when
+ * that shape is already in it (context-menu-selection covers both). Here the target
+ * is right-clicked while still auto-selected from drawing, because right-clicking a
+ * shape immediately after left-clicking it would be coalesced by the click
+ * recognizer into consecutive clicks (no selectAt in between).
  */
 
 const TARGET_CENTER = { x: 570, y: 250 };

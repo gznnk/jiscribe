@@ -213,7 +213,8 @@ describe("CanvasEventHandler", () => {
 				clientY: 240,
 			});
 			expect(nextState.textEditState).toBeNull();
-			// Selection stays, mirroring the right-button click
+			// Pressed on the background, so the selection stays — as it does for a
+			// right click there (see "context menu selection" below).
 			expect(nextState.selectedIds).toEqual(["a"]);
 		});
 	});
@@ -503,6 +504,155 @@ describe("CanvasEventHandler", () => {
 		expect(nextState.contextMenuPosition).toBeNull();
 		expect(nextState.objectMenuOpenId).toBeNull();
 		expect(nextState.stencilLibraryOpenCategory).toBeNull();
+	});
+
+	// A context-menu gesture selects what it landed on, so the menu acts on the
+	// pointed-at shape instead of on whatever was selected before. The decision
+	// itself comes from determineSelection, the same function the left click uses.
+	describe("context menu selection (right click / long press)", () => {
+		const makeTwoRectState = (
+			overrides: Partial<CanvasControllerState> = {},
+		): CanvasControllerState =>
+			makeState({
+				objects: { a: makeTextRect("a", ""), b: makeTextRect("b", "") },
+				rootIds: ["a", "b"],
+				selectedIds: ["b"],
+				textEditState: null,
+				...overrides,
+			} as Partial<CanvasControllerState>);
+
+		const makeRightClickEvent = (
+			overrides: Record<string, unknown> = {},
+		): CanvasEvent =>
+			makeEvent({
+				type: "click",
+				button: 2,
+				targetKind: "object",
+				targetId: "a",
+				clientLast: { x: 120, y: 80 },
+				...overrides,
+			});
+
+		it("selects an unselected shape and opens the menu", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeTwoRectState(),
+				makeRightClickEvent(),
+				registries,
+			);
+
+			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.contextMenuPosition).toEqual({
+				clientX: 120,
+				clientY: 80,
+			});
+		});
+
+		it("keeps a multi-selection that already contains the shape", () => {
+			const state = makeTwoRectState({
+				selectedIds: ["a", "b"],
+				multiSelectGroup: { id: "multi" },
+			} as Partial<CanvasControllerState>);
+
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeRightClickEvent(),
+				registries,
+			);
+
+			// By reference: determineSelection reports no change, so nothing rebuilds
+			// the selection or its multiSelectGroup.
+			expect(nextState.selectedIds).toBe(state.selectedIds);
+			expect(nextState.multiSelectGroup).toBe(state.multiSelectGroup);
+			expect(nextState.contextMenuPosition).not.toBeNull();
+		});
+
+		it("keeps the selection when the background is right-clicked", () => {
+			const state = makeTwoRectState();
+
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeRightClickEvent({ targetKind: "canvas", targetId: "canvas" }),
+				registries,
+			);
+
+			expect(nextState.selectedIds).toBe(state.selectedIds);
+			expect(nextState.contextMenuPosition).not.toBeNull();
+		});
+
+		it("selects the group when one of its children is right-clicked", () => {
+			const child = makeTextRect("child", "");
+			const state = makeTwoRectState({
+				objects: {
+					group: {
+						id: "group",
+						type: "group",
+						childIds: ["child", "sibling"],
+					},
+					child: { ...child, parentId: "group" },
+					sibling: { ...makeTextRect("sibling", ""), parentId: "group" },
+				},
+				rootIds: ["group"],
+				selectedIds: [],
+			} as unknown as Partial<CanvasControllerState>);
+
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeRightClickEvent({ targetId: "child" }),
+				registries,
+			);
+
+			expect(nextState.selectedIds).toEqual(["group"]);
+		});
+
+		it("replaces the selection even with an additive modifier held", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeTwoRectState(),
+				makeRightClickEvent({
+					mods: { shift: false, alt: false, ctrl: true, meta: false },
+				}),
+				registries,
+			);
+
+			expect(nextState.selectedIds).toEqual(["a"]);
+		});
+
+		it("selects a connector, clearing the shape selection", () => {
+			const state = makeTwoRectState({
+				objects: {
+					a: makeTextRect("a", ""),
+					line: { id: "line", type: "connector" },
+				},
+				rootIds: ["a", "line"],
+				selectedIds: ["a"],
+			} as unknown as Partial<CanvasControllerState>);
+
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeRightClickEvent({ targetKind: "connector", targetId: "line" }),
+				registries,
+			);
+
+			expect(nextState.selectedConnectorId).toBe("line");
+			expect(nextState.selectedIds).toEqual([]);
+		});
+
+		it("selects an unselected shape on a touch long press too", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeTwoRectState(),
+				makeRightClickEvent({
+					type: "longPress",
+					button: 0,
+					pointerType: "touch",
+				}),
+				registries,
+			);
+
+			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.contextMenuPosition).toEqual({
+				clientX: 120,
+				clientY: 80,
+			});
+		});
 	});
 
 	it("a background press closes an open StencilLibrary category flyout", () => {

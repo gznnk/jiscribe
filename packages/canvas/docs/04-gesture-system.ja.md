@@ -44,7 +44,10 @@
 - **タッチの長押し**: ドラッグ許容量内で `LONG_PRESS_DURATION_MS`（500ms）保持すると `longPress` が
   発火し、ジェスチャーを消費する（離しても click は出ない）。着地点を問わず CanvasEventHandler に
   ルーティングされ（per-target ハンドラは中/右ボタン同様 `isPerTargetInteraction` で拒否）、
-  右クリック相当としてコンテキストメニューを開く。
+  右クリック相当としてコンテキストメニューを開く。どちらも開く前に着地した図形
+  （またはコネクター）を選択する。判定は左クリックと同じ `determineSelection` なので、
+  メニューは指した対象に効く。既に選択に含まれる対象なら選択はそのまま保たれ、
+  背景では何も変わらない（`selectContextMenuTarget`）。
 - **慣性スクロール**: 中／右ボタンのパンを動かしたまま離すと、view が滑り続ける。recognizer は
   生のポインタ座標を `enqueue` で記録し（`feed` は1フレーム1移動しか見ないのでフリックの計測には粗い）、
   `FLING_VELOCITY_WINDOW_MS` 分の区間から離した瞬間の速度を求め（`calcFlingVelocity`）、

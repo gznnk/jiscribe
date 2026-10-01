@@ -1,3 +1,4 @@
+import { applyConnectorSelection } from "./utils/applyConnectorSelection";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type {
@@ -70,23 +71,8 @@ export const ConnectorClickHandler: GestureHandler = {
 		}
 
 		// A click selects the connector (clearing shape selection to enforce exclusivity)
-		// No change if the same connector is already selected
-		if (
-			event.type === "click" &&
-			connectorId &&
-			nextState.selectedConnectorId !== connectorId
-		) {
-			nextState = {
-				...nextState,
-				selectedConnectorId: connectorId,
-				selectedIds: [],
-				// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-				selectedVertex: null,
-				multiSelectGroup: null,
-				// Close the submenu / category flyout on selection change
-				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
-			};
+		if (event.type === "click" && connectorId) {
+			nextState = applyConnectorSelection(nextState, connectorId);
 		}
 
 		return nextState;
