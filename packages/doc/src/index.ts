@@ -136,6 +136,9 @@ export type {
 	StyleValueType,
 } from "./model/objects/types/ExtraStyleProperty";
 export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
+// The box declaration a doc definition carries, for the types whose geometry does
+// not settle their box: a plugin author annotating one needs the shape of it.
+export type { ObjectDocBoundsCalculator } from "./plugin/ObjectDocBounds";
 // The text-region declaration a doc definition carries, and the two answers most
 // types give: the whole box, and "the box does not hold the text at all".
 export type { ObjectDocTextRegionCalculator } from "./plugin/ObjectDocTextRegion";
@@ -148,6 +151,11 @@ export {
 // types, and the doc-ops refuse to switch any other.
 export { supportsAutoHeight } from "./plugin/supportsAutoHeight";
 export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
+// The rule a point-geometry type is held to: it has to declare as `bounds` the
+// box its doc does not store. Read by the plugin testing kit and by the headless
+// diagnostics.
+export { isMissingBounds } from "./plugin/isMissingBounds";
+export type { BoundsDeclaration } from "./plugin/isMissingBounds";
 // Whether the same declaration gives up part of the box's height, which is what
 // decides whether switching `textVerticalBasis` moves the type's body at all.
 export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";

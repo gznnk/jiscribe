@@ -3,7 +3,7 @@ import type {
 	CanvasParseResult,
 	SemanticDiagnostic,
 } from "@jiscribe/doc";
-import { createCanvasParser } from "@jiscribe/doc";
+import { createCanvasParser, isMissingBounds } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 /** A doc as it is written in a test, before `JSON.stringify` hands it to the parser. */
@@ -146,6 +146,21 @@ export function createParseCheckSuite(params: ParseCheckSuiteParams): void {
 				);
 				expect(warningPaths).toContain(`root[${entry.index}].type`);
 			}
+		});
+
+		it("declares a box for every point-geometry type it registers", () => {
+			// A point-geometry doc stores no size, so a type that declares none has no
+			// box at all and its objects are silently left out of every op working off
+			// one. Checked here because the author's own suite is where it can still
+			// be a build failure rather than a diagnostic on someone's document.
+			const undeclared = Object.entries(plugin.objects ?? {})
+				.filter(
+					([, definition]) =>
+						definition !== undefined && isMissingBounds(definition),
+				)
+				.map(([type]) => type);
+
+			expect(undeclared).toEqual([]);
 		});
 
 		if (checkEveryRegisteredType) {

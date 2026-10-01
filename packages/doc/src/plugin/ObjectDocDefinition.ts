@@ -1,3 +1,4 @@
+import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
@@ -36,6 +37,28 @@ export type ObjectDocDefinition = {
 	 * no fields of its own.
 	 */
 	extraKeys?: readonly string[];
+
+	/**
+	 * The box this type's doc implies, where the geometry does not settle it on its
+	 * own — a `geometry: "point"` type, whose doc stores the corner it is drawn from
+	 * and no size (see {@link ObjectDocBoundsCalculator}). A declaration outranks the
+	 * geometry's own rule whatever that geometry is; every type but a point one
+	 * leaves it out and is measured from the fields it stores.
+	 *
+	 * A point type measuring its own box is why nothing shared has to: the
+	 * conversion from the stored corner to the box is one call
+	 * (`calcPointDocCenter`), and what differs — the measurement — is the type's
+	 * alone. Hand that same measurement to the type's factory
+	 * (`createPointObjectFactory`), so where a new shape is placed and where a saved
+	 * one is measured, aligned and distributed cannot disagree.
+	 *
+	 * Every `geometry: "point"` type has to declare one; omitting it leaves the type
+	 * with no box at all, which is checked rather than guessed at
+	 * ({@link import("./isMissingBounds").isMissingBounds}) — a plugin's own
+	 * parse-check suite fails on it, and `diagnoseDoc` reports it against a document
+	 * already holding one.
+	 */
+	bounds?: ObjectDocBoundsCalculator;
 
 	/**
 	 * Where the type lays its text out, given a doc of it: the rectangle the
