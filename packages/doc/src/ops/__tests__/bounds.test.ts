@@ -2,7 +2,11 @@ import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { docOps, emptyDoc } from "./support/docFixtures";
-import { unsizedPointDefinition } from "./support/pluginFixtures";
+import {
+	DECLARED_BADGE_BOUNDS,
+	declaredBoundsDefinition,
+	unsizedPointDefinition,
+} from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import { createDocOps } from "../createDocOps";
@@ -116,7 +120,7 @@ describe("bounds of a point-geometry shape", () => {
 		expect(flipped?.y).toBeCloseTo(200, 6);
 	});
 
-	it("has no box for a type that declares no size, nothing else stating one", () => {
+	it("has no box for a type that declares none, nothing else stating one", () => {
 		const pinDocOps = createDocOps({
 			plugins: [{ id: "pin-plugin", objects: { pin: unsizedPointDefinition } }],
 		});
@@ -124,6 +128,29 @@ describe("bounds of a point-geometry shape", () => {
 		doc.root.push({ id: "pin-1", type: "pin", x: 10, y: 20 } as ObjectDoc);
 
 		expect(pinDocOps.getObjectBounds(doc, "pin-1")).toBeNull();
+	});
+});
+
+describe("bounds of a type declaring its own box", () => {
+	it("is measured by the declaration rather than by its geometry", () => {
+		const badgeDocOps = createDocOps({
+			plugins: [
+				{ id: "badge-plugin", objects: { badge: declaredBoundsDefinition } },
+			],
+		});
+		const doc = emptyDoc();
+		doc.root.push({
+			id: "badge-1",
+			type: "badge",
+			x: 10,
+			y: 20,
+			width: 100,
+			height: 50,
+		} as unknown as ObjectDoc);
+
+		expect(badgeDocOps.getObjectBounds(doc, "badge-1")).toEqual(
+			DECLARED_BADGE_BOUNDS,
+		);
 	});
 });
 

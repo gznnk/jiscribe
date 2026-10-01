@@ -27,6 +27,9 @@ const resolveFactory = (overrides?: Record<string, unknown>): ObjectFactory =>
  * box measured from the text, and no size of its own: the box is measured again
  * wherever the doc is read (canvasToState and the reducer's size reconcile), which is
  * what lets the text grow away from that corner.
+ *
+ * The measurement is the one the type declares its box by (calcTextDocBounds), so a
+ * new text is placed at the box a saved one is reported, aligned and distributed by.
  */
 export const TextObjectFactory: ObjectFactory = {
 	createDoc: (position, overrides) =>

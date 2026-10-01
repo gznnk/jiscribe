@@ -2,9 +2,9 @@ import type { ComponentType } from "react";
 
 import { useToolbarCommandState } from "./ToolbarCommandStateContext";
 import { ToolbarIconButton } from "./ToolbarStyled";
+import { resolveCommandLabel } from "../../../commands/CommandUtils";
 import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { resolveCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import {
 	resolveLocalizedLabel,

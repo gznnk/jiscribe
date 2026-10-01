@@ -15,6 +15,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- For plugin authors: a type whose geometry does not settle its box declares it as
+  `ObjectDocDefinition.bounds`, and the doc-side ops measure it by that declaration
+  instead of by the rule the `text` shape happens to follow. Today that means every
+  `geometry: "point"` type, whose document stores the corner it is drawn from and
+  no size; hand the same measurement to the type's factory and where a new shape is
+  placed cannot drift from where a saved one is measured, aligned and distributed. A
+  point type declaring no box now fails its own parse-check suite
+  (`@jiscribe/canvas-sdk/testing`) and is reported by `diagnoseDoc`, rather than
+  quietly having no box at all.
 - **A command carries its own wording, in every locale it ships.**
   `Command.label` takes `string | LocaleMessages<string>`, exactly as
   `Stencil.label` already did, and a host override by id still outranks it. The
@@ -101,13 +110,6 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   dragging a boundary up stops at the text of the row above it, while dragging it
   down past the text of the row below grows the table rather than clipping that
   text.
-- For plugin authors: a `geometry: "point"` type declares the box its document
-  does not store as `ObjectDocDefinition.pointSize`, and the doc-side ops measure
-  it by that instead of by the rule the `text` shape happens to follow. It is the
-  same measurement the type's factory places a new shape by, so placement and
-  measurement cannot drift. A type registering one and declaring no size now
-  fails its own parse-check suite (`@jiscribe/canvas-sdk/testing`) and is reported
-  by `diagnoseDoc`, rather than quietly having no box at all.
 - **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
   it takes the same rich text, the same typography and the same in-place editing
   every other shape's text does, and carries a `fill` besides. A table stores no
@@ -116,9 +118,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   than a box the text is clipped to. Cells are written as a dense grid — one row
   per entry of `rows`, one cell per entry of `columns` — and a cell carrying
   nothing but text may be written as that text alone.
-- For plugin authors: a shape may now declare `geometry: "point"` and let
-  `createFrameMapper` map it — the doc stores the position alone and the box is
-  re-derived from the content (`contentResizer`). `@jiscribe/geometry` gained
+- For plugin authors: a shape may now declare `geometry: "point"` — the doc
+  stores the position alone, and the box is measured from the content. Such a
+  type writes its own mapper, measuring the box as it maps (`TextMapper` is the
+  worked example), and declares a `contentResizer` for re-deriving it after an
+  edit; `createFrameMapper` takes a rect or an ellipse only, and refuses a point
+  type at compile time. `@jiscribe/geometry` gained
   `calcFrameCenterFromTopLeft`, the inverse of
   `calcFrameKeyPoint(frame, "topLeft")`, for the corner such a box is grown from
   and rebuilt around, and `@jiscribe/doc` exports `calcWrappedTextBlockSize` so a

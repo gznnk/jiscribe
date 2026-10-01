@@ -1,10 +1,10 @@
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { resolveCommandLabel } from "../../../../commands/CommandUtils";
 import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../../hooks/useCommandState";
 import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
-import { resolveCommandLabel } from "../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import {
 	PropertyCommandButton,

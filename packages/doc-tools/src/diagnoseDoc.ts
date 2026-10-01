@@ -6,7 +6,7 @@ import type {
 	TextSlotStyle,
 } from "@jiscribe/doc";
 import {
-	isMissingPointSize,
+	isMissingBounds,
 	isTextVerticalBasis,
 	richTextToPlain,
 	supportsAutoHeight,
@@ -463,26 +463,26 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 };
 
 /**
- * The finding about an object of a `geometry: "point"` type that declares no size,
+ * The finding about an object of a `geometry: "point"` type that declares no box,
  * empty for every other object. Such a doc holds the corner it is drawn from and
  * nothing else, so the declaration is the only statement of its box
- * (`ObjectDocDefinition.pointSize`): without one the object has no box at all, and
+ * (`ObjectDocDefinition.bounds`): without one the object has no box at all, and
  * every op working off one — reporting bounds, aligning, distributing, finding
  * overlaps — passes it over.
  *
  * A warning rather than an error, and reported the same way a missing text region
  * is: the document is sound, and the gap is in the shape set.
  */
-const diagnoseObjectPointSize = (object: ObjectDoc): Diagnostic[] => {
+const diagnoseObjectBounds = (object: ObjectDoc): Diagnostic[] => {
 	const definition = standardObjectDocDefinitions.get(object.type);
-	if (definition === undefined || !isMissingPointSize(definition)) {
+	if (definition === undefined || !isMissingBounds(definition)) {
 		return [];
 	}
 	return [
 		{
 			severity: "warning",
 			objectId: object.id,
-			message: `${object.type} stores no size and declares none to measure one by, so it has no box: it is left out of bounds, alignment, distribution and overlap checks (ObjectDocDefinition.pointSize)`,
+			message: `${object.type} stores no size and declares no box of its own, so it has no box at all: it is left out of bounds, alignment, distribution and overlap checks (ObjectDocDefinition.bounds)`,
 		},
 	];
 };
@@ -584,7 +584,7 @@ const diagnoseConnectorLabelLineStarts = (
  * declares no region is reported as a warning rather than passed over silently —
  * nothing measures it, and that is a gap in the shape set rather than a fact
  * about the document. A `geometry: "point"` object whose type declares no size is
- * reported for the same reason ({@link diagnoseObjectPointSize}): nothing can
+ * reported for the same reason ({@link diagnoseObjectBounds}): nothing can
  * measure a box the type never stated. A type whose body is source its own
  * renderer lays out (`features.text: "source"`, Markdown) is not measured
  * either, and the objects of it holding text are named in one document-wide
@@ -599,7 +599,7 @@ export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	return [
 		...objects.flatMap((object) => [
 			...diagnoseObjectText(object),
-			...diagnoseObjectPointSize(object),
+			...diagnoseObjectBounds(object),
 			...diagnoseConnectorLabel(object, objectsById),
 			...diagnoseConnectorLabelLineStarts(object),
 		]),

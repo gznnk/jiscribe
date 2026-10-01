@@ -46,7 +46,7 @@ import {
 	SvgFeatures,
 } from "../model/objects/primitives/svg/SvgDoc";
 import { validateSvgDoc } from "../model/objects/primitives/svg/validateSvgDoc";
-import { measureTextSize } from "../model/objects/primitives/text/measureTextSize";
+import { calcTextDocBounds } from "../model/objects/primitives/text/calcTextDocBounds";
 import {
 	TEXT_DOC_DEFAULTS,
 	TEXT_EXTRA_KEYS,
@@ -72,8 +72,10 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
  * registers the same calculator, so the two cannot drift. The types carrying no
  * text at all (group / polygon / polyline / connector / svg / image) leave it out.
  *
- * `pointSize` is declared by every `geometry: "point"` type — text alone among the
- * built-ins — a doc of one storing no size for anything to read instead.
+ * `bounds` is declared by every `geometry: "point"` type — text alone among the
+ * built-ins — a doc of one storing no size for anything to read instead. It is
+ * built on the same measurement that type's `factory` places by, so a new shape
+ * lands on the box a saved one is measured by.
  *
  * `description` / `summary` / `defaults` feed the generated JSON schema and AI docs
  * (`pnpm generate:schema`); types whose schema `$def` is a handwritten template
@@ -105,9 +107,7 @@ export const builtinObjectDocDefinitions = {
 		features: TextFeatures,
 		validateDoc: validateTextDoc,
 		factory: TextObjectFactory,
-		// The same measurement the factory places a new text by, which is what keeps
-		// the doc-side box the one the text is drawn at.
-		pointSize: measureTextSize,
+		bounds: calcTextDocBounds,
 		// The box comes from the text either way — measured whole in the label
 		// layout, wrapped in the stored width in the block one — so nothing can
 		// overflow it; the declaration says where the text sits in the box it

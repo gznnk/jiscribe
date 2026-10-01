@@ -6,7 +6,6 @@ import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
 import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
-import { calcPointDocCenter } from "../../model/objects/utils/pointDocDrawnTopLeft";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
 import { extractTextSlotStyleDefaults } from "../../registries/ObjectTextStyleDefaultsRegistry";
@@ -172,30 +171,14 @@ export const unionBounds = (boxes: readonly Rect[]): Rect | null => {
 };
 
 /**
- * Axis-aligned bounding box of an object in world coordinates, in the same top-left
- * form `addObject` takes. Rotation is ignored: the doc's `rotation` turns the shape
- * around its own centre, and every placement op here works on the untransformed box.
- *
- * A shape that states no `height` is measured at the height its text needs
- * ({@link readObjectHeight}), so it is placed, aligned and distributed by the box it is
- * actually drawn at rather than by a flat one. A `geometry: "point"` shape, which
- * states no size at all, is measured whole by the size its type declares
- * (`ObjectDocDefinition.pointSize`).
- *
- * @param object - Any doc object; a group is measured from its children, which is where
- *   its frame comes from (see GroupDoc)
- * @param definitions - Type table `features.geometry`, a stated-no-height shape's
- *   `textRegion` and a point shape's `pointSize` are read from
- * @returns The box, or null for a connector, an empty group, a type this instance does
- *   not know, and a point type declaring no size
+ * The box a type's geometry settles on its own, from the fields the doc stores.
+ * What a type declaring no `bounds` is measured by; a `geometry: "point"` doc
+ * stores no size, so there is nothing here to measure one from.
  */
-export const getObjectBounds = (
+const calcDefaultObjectBounds = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
 ): Rect | null => {
-	if (isConnectorObject(object)) {
-		return null;
-	}
 	switch (geometryOf(object, definitions)) {
 		case "rect":
 			return {
@@ -225,34 +208,8 @@ export const getObjectBounds = (
 						height: box.bottom - box.top,
 					};
 		}
-		case "point": {
-			// A point shape stores where it is drawn from and nothing about its size, so
-			// the box is measured from the content every time — through the type's own
-			// declaration, the same measurement its factory places a new one by, so the
-			// two agree on where it ends. A type this instance does not know, or one
-			// declaring no size, has nothing to measure with; it falls through to null
-			// the way an unknown geometry does.
-			const pointSize = definitions.get(object.type)?.pointSize;
-			if (pointSize === undefined) {
-				return null;
-			}
-			const size = pointSize(object);
-			// What the doc stores is the corner the shape is *drawn* from — the box's
-			// top-left with the object's rotation and flips applied (see GeometryType) —
-			// so the untransformed box this helper answers with is the one centred on the
-			// same centre, not the one hanging off that corner.
-			const center = calcPointDocCenter(
-				{ x: readNumber(object.x), y: readNumber(object.y) },
-				size,
-				object,
-			);
-			return {
-				x: center.x - size.width / 2,
-				y: center.y - size.height / 2,
-				width: size.width,
-				height: size.height,
-			};
-		}
+		case "point":
+			return null;
 		case "none":
 			return unionBounds(
 				readChildren(object).flatMap((child) => {
@@ -263,6 +220,37 @@ export const getObjectBounds = (
 		default:
 			return null;
 	}
+};
+
+/**
+ * Axis-aligned bounding box of an object in world coordinates, in the same top-left
+ * form `addObject` takes. Rotation is ignored: the doc's `rotation` turns the shape
+ * around its own centre, and every placement op here works on the untransformed box.
+ *
+ * A type declaring a box of its own (`ObjectDocDefinition.bounds`) is measured by
+ * that declaration; every other type is measured from the fields its geometry
+ * stores. A shape that states no `height` is measured at the height its text needs
+ * ({@link readObjectHeight}), so it is placed, aligned and distributed by the box it is
+ * actually drawn at rather than by a flat one.
+ *
+ * @param object - Any doc object; a group is measured from its children, which is where
+ *   its frame comes from (see GroupDoc)
+ * @param definitions - Type table the box declaration, `features.geometry` and a
+ *   stated-no-height shape's `textRegion` are read from
+ * @returns The box, or null for a connector, an empty group, a type this instance does
+ *   not know, and a `geometry: "point"` type declaring no box
+ */
+export const getObjectBounds = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): Rect | null => {
+	if (isConnectorObject(object)) {
+		return null;
+	}
+	const declaredBounds = definitions.get(object.type)?.bounds;
+	return declaredBounds === undefined
+		? calcDefaultObjectBounds(object, definitions)
+		: declaredBounds(object);
 };
 
 /**

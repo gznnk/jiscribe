@@ -6,7 +6,7 @@
  * - 'poly': Shape defined by points array (polyline/polygon)
  * - 'point': Doc carries a position only (x, y); the size is derived from the
  *   content, through the measurement the type declares
- *   (ObjectDocDefinition.pointSize), and is stored on the state alone. The doc
+ *   (ObjectDocDefinition.bounds), and is stored on the state alone. The doc
  *   coordinate is where that derived box has its top-left corner drawn — the
  *   local (-w/2, -h/2) corner with the object's rotation and flips applied — so
  *   growing content leaves the anchor, and the stored coordinate, where they
