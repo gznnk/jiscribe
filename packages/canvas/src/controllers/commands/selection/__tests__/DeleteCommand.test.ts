@@ -214,9 +214,9 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.canExecute(state, registries)).toBe(false);
 		});
 
-		it("is not executable while a selected vertex's kind registers no deletion, even with the object selected", () => {
-			// The innermost selection claims the key: a part that cannot be deleted
-			// disables Delete rather than passing it up to the object it sits in.
+		it("lets the key mean object deletion while the selected vertex's kind registers none", () => {
+			// Omitting `delete` is the kind saying Delete is not about its parts, so
+			// the object the vertex sits in is what goes.
 			const pinRegistries = createTestRegistries();
 			pinRegistries.objectPartKind.register("pin", [
 				{ kind: "vertex", has: () => true },
@@ -229,8 +229,28 @@ describe("DeleteCommand", () => {
 				selectedVertex: { objectId: "n", vertexIndex: 0 },
 			});
 
-			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(false);
-			// Reached directly all the same, the key does nothing.
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
+			const next = DeleteCommand.execute(state, pinRegistries);
+			expect(next.objects["n"]).toBeUndefined();
+			expect(next.selectedVertex).toBeNull();
+		});
+
+		it("holds the key over a picked part whose kind declares a deletion that refuses", () => {
+			// `delete: () => null` is how a kind keeps Delete from reaching the object
+			// while one of its parts is picked: executable, yet nothing is removed.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true, delete: () => null },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["n"],
+				objects: { n: pin },
+				rootIds: ["n"],
+				selectedVertex: { objectId: "n", vertexIndex: 0 },
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
 			expect(DeleteCommand.execute(state, pinRegistries)).toBe(state);
 		});
 
