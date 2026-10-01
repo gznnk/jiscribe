@@ -4,6 +4,7 @@ import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
+import { selectContextMenuTarget } from "./utils/selectContextMenuTarget";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
@@ -24,8 +25,9 @@ import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
  * Middle- and right-button interactions are also treated as canvas-level
  * behavior so grab-scroll and context menus work consistently above objects
  * and controls. Middle button pans only; right button pans and opens the
- * context menu. On touch, a one-finger background drag pans as well (area
- * selection stays mouse-only for now).
+ * context menu — selecting the shape it landed on first, so the menu acts on
+ * what was pointed at (selectContextMenuTarget). On touch, a one-finger
+ * background drag pans as well (area selection stays mouse-only for now).
  */
 export const CanvasEventHandler: GestureHandler = {
 	supports(event): boolean {
@@ -105,7 +107,9 @@ export const CanvasEventHandler: GestureHandler = {
 		// path does.
 		if (event.type === "longPress") {
 			return {
-				...commitTextEditIfNeeded(nextState),
+				// Selecting first: the menu has to act on what was pressed
+				// (see selectContextMenuTarget).
+				...selectContextMenuTarget(commitTextEditIfNeeded(nextState), event),
 				contextMenuPosition: {
 					clientX: event.clientLast.x,
 					clientY: event.clientLast.y,
@@ -123,7 +127,9 @@ export const CanvasEventHandler: GestureHandler = {
 		if (event.button === 1 || event.button === 2) {
 			if (event.button === 2 && event.type === "click") {
 				nextState = {
-					...nextState,
+					// Selecting first: the menu has to act on what was clicked
+					// (see selectContextMenuTarget).
+					...selectContextMenuTarget(nextState, event),
 					contextMenuPosition: {
 						clientX: event.clientLast.x,
 						clientY: event.clientLast.y,

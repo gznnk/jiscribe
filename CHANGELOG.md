@@ -152,6 +152,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **A right click selects the shape it lands on, and then opens the context
+  menu.** The menu used to act on whatever was selected at the time, so a right
+  click on another shape ran the command on the one still selected elsewhere —
+  the shape under the cursor was not even what the menu described. Right-clicking
+  a shape already in the selection keeps the whole selection, so a multi-selection
+  can still be acted on from one of its members, and a right click on the
+  background, a control handle or a menu changes nothing. The touch long press
+  mirrors it, and the decision is the left click's own `determineSelection`, which
+  is what makes a group member resolve to the group exactly as it does on a left
+  click.
 - **A shape placed from the toolbar or the shape library lands centered on the
   cursor, whatever its geometry.** `text` used to land with its top-left there
   instead: a shape whose size is measured rather than stored reported no size to

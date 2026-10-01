@@ -47,7 +47,11 @@ Key points:
 - **Touch long press**: A touch press held for `LONG_PRESS_DURATION_MS` (500ms) within the touch drag slop
   fires `longPress` and consumes the gesture (the lift fires no click). It routes to CanvasEventHandler
   wherever it lands — per-target handlers reject it via `isPerTargetInteraction`, like middle/right
-  buttons — and opens the context menu, mirroring the right-button click.
+  buttons — and opens the context menu, mirroring the right-button click. Both
+  select the shape (or connector) they landed on before opening the menu, through
+  the same `determineSelection` the left click uses, so the menu acts on what was
+  pointed at; a target already in the selection keeps the whole selection, and the
+  background changes nothing (`selectContextMenuTarget`).
 - **Inertial scrolling**: A middle-/right-button pan released while still moving leaves a fling behind. The
   recognizer records raw pointer samples in `enqueue` (`feed` sees at most one move per frame, too coarse
   to measure a flick), estimates the release velocity over `FLING_VELOCITY_WINDOW_MS` (`calcFlingVelocity`),
