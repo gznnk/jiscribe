@@ -56,6 +56,17 @@ export { createFrameBehavior } from "./controllers/behaviors/base/FrameControlle
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";
 
+// The state-side parts a `geometry: "point"` type's own mapper is assembled from,
+// that family being refused by createFrameMapper above (its doc holds no box to
+// convert, so it measures its own in `toState` — TextMapper is the worked
+// example): the id / type / meta conversion every type shares, and the two
+// directions of the transform group.
+export { ObjectMapper } from "./states/objects/base/ObjectMapper";
+export {
+	mapTransformDocToState,
+	mapTransformStateToDoc,
+} from "./states/objects/base/TransformMapper";
+
 export { createFrameStateValidator } from "./states/objects/utils/createFrameStateValidator";
 export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 

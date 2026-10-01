@@ -24,6 +24,19 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   point type declaring no box now fails its own parse-check suite
   (`@jiscribe/canvas-sdk/testing`) and is reported by `diagnoseDoc`, rather than
   quietly having no box at all.
+- **For plugin authors: the parts a hand-written mapper is assembled from are on
+  the unstable surface.** A `geometry: "point"` type is refused by
+  `createFrameMapper` — its doc holds no box to convert — so it writes its own
+  mapper and measures the box there, which until now meant rebuilding by hand
+  what the shared mapper already knew. `ObjectMapper` and
+  `mapTransformDocToState` / `mapTransformStateToDoc` (through
+  `@jiscribe/canvas-sdk`) are the conversions such a mapper shares with every
+  other type, and `collectStyleKeys` / `roundDocCoordinate` (through
+  `@jiscribe/canvas-sdk/doc`) the two rules it must not restate: which fields
+  belong to which style group, which the parser builds the names it accepts
+  from, and the rounding a coordinate written back to a doc goes through.
+  `calcPointDocCenter` and `numberOverride` come with them, being what such a
+  type's `ObjectDocDefinition.bounds` turns the stored corner into a box with.
 - **A command carries its own wording, in every locale it ships.**
   `Command.label` takes `string | LocaleMessages<string>`, exactly as
   `Stencil.label` already did, and a host override by id still outranks it. The

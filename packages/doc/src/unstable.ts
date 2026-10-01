@@ -18,6 +18,21 @@ export { createFrameObjectFactory } from "./model/objects/utils/createFrameObjec
 export { createPointObjectFactory } from "./model/objects/utils/createPointObjectFactory";
 export type { PointObjectSizeCalculator } from "./model/objects/utils/createPointObjectFactory";
 
+// What such a type turns its stored corner into a box with, in its
+// `ObjectDocDefinition.bounds`: the center the corner puts the measured box at,
+// and the guard that reads a coordinate the document left out — or wrote as
+// something else — as the origin instead of carrying NaN into the box.
+export { calcPointDocCenter } from "./model/objects/utils/pointDocDrawnTopLeft";
+export { numberOverride } from "./model/objects/utils/numberOverride";
+
+// The doc-side parts a point type's own mapper is assembled from, that family
+// being refused by the shared one (createFrameMapper) and having to measure its
+// box itself: the field names of the style groups its features enable, which is
+// the single answer to which names pass between doc and state untouched, and the
+// rounding a coordinate written back to a doc goes through.
+export { collectStyleKeys } from "./model/objects/utils/collectStyleKeys";
+export { roundDocCoordinate } from "./model/objects/utils/roundDocNumbers";
+
 // The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
 // cannot use createFrameObjectFactory (center origin, vertex lists).
 export {
