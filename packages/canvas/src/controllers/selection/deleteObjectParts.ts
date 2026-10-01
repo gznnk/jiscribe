@@ -22,8 +22,9 @@ type PartRegistries = Pick<ICanvasRegistries, "objectPartKind">;
 
 /**
  * Whether the target's object type registers a deletion for that kind of part.
- * Commands ask before reporting themselves executable: a type with no `delete`
- * would otherwise swallow the key and do nothing.
+ * Commands ask before claiming the key for a picked part: a kind with no
+ * `delete` has said Delete is not about its parts, so the key is left to mean
+ * what it means for the selected objects.
  *
  * @param state - The state the target is resolved against
  * @param target - The parts to delete; only `objectId` and `kind` are read
