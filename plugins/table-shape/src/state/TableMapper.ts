@@ -1,9 +1,18 @@
 import type { ObjectMapperType } from "@jiscribe/canvas";
-import { createFrameMapper } from "@jiscribe/canvas-sdk";
+import {
+	mapTransformDocToState,
+	mapTransformStateToDoc,
+	ObjectMapper,
+} from "@jiscribe/canvas-sdk";
+import { collectStyleKeys, roundDocCoordinate } from "@jiscribe/canvas-sdk/doc";
 import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc";
+import {
+	calcFrameCenterFromTopLeft,
+	calcFrameKeyPoint,
+} from "@jiscribe/geometry";
 
-import { resizeTableStateToContent } from "./resizeTableStateToContent";
 import type { TableState } from "./TableState";
+import { calcTableFrameSize } from "../layout/calcTableFrameSize";
 import { mapCellsToSlots } from "../schema/mapCellsToSlots";
 import { tableCellSlotId, TableFeatures } from "../schema/TableDoc";
 import type {
@@ -15,12 +24,32 @@ import type {
 } from "../schema/TableDoc";
 
 /**
- * The Frame-family mapper, which maps every box-shaped state whatever its doc
- * spells the box as — here a position alone, the grid answering for the size
- * (TableFeatures). It carries the id, the meta, the transform and the stroke
- * group; the grid is put on top of it below.
+ * The fields that read the same on a doc and on a state, so the mapper carries
+ * them across untouched: the style groups the features enable, which for a table
+ * is the stroke group alone (`collectStyleKeys`).
+ *
+ * The grid's own three fields (TABLE_EXTRA_KEYS) are deliberately not here. All
+ * three are converted rather than carried: the two tracks are cloned, and `cells`
+ * changes form entirely on the way to `text`.
  */
-const frameMapper = createFrameMapper<TableDoc, TableState>(TableFeatures);
+const TABLE_PASSTHROUGH_KEYS = collectStyleKeys(TableFeatures);
+
+/**
+ * The passthrough fields `src` owns. An allow-list rather than a copy, for the
+ * reason the shared mapper picks by one: nothing a runtime state carries on its
+ * own (id / parentId / minWidth) can then leak into the document.
+ */
+const pickPassthrough = (
+	src: Readonly<Record<string, unknown>>,
+): Record<string, unknown> => {
+	const picked: Record<string, unknown> = {};
+	for (const key of TABLE_PASSTHROUGH_KEYS) {
+		if (Object.prototype.hasOwnProperty.call(src, key)) {
+			picked[key] = src[key];
+		}
+	}
+	return picked;
+};
 
 /**
  * Whether a cell carries nothing but its text, and so may be written back as that
@@ -58,39 +87,75 @@ const cloneRows = (rows: readonly TableRowDoc[]): TableRowDoc[] =>
 	rows.map((row) => ({ ...row }));
 
 /**
- * TableDoc -> TableState: the grid moved into the keyed slot map the text machinery
- * reads, and the box derived from that grid.
+ * TableDoc -> TableState: the grid moved into the keyed slot map the text
+ * machinery reads, and the box measured from that grid.
  *
- * The box is derived here rather than left to the type's `contentResizer` alone: a
- * state of zero size reaching a caller that never runs the resizer (doc ops, a
- * headless measurement) would be read as a table with no extent at all.
+ * Written out rather than built from `createFrameMapper`, which refuses a
+ * `geometry: "point"` type: the doc holds the corner the table is drawn from and
+ * nothing about its size, so the box is measured here — by the same layout the
+ * content resizer keeps it at (calcTableFrameSize) — instead of a placeholder
+ * being handed out for the resizer to grow. A state that never reaches the
+ * derivation pass (doc ops, a headless measurement) would otherwise read as a
+ * table with no extent at all.
  */
 export const tableToState: ObjectMapperType<TableDoc, TableState>["toState"] = (
 	doc,
 ) => {
-	const state = frameMapper.toState(doc);
-	return resizeTableStateToContent({
-		...state,
-		columns: cloneColumns(doc.columns),
-		rows: cloneRows(doc.rows),
-		text: mapCellsToSlots(doc.cells, doc.rows.length, doc.columns.length),
+	const columns = cloneColumns(doc.columns);
+	const rows = cloneRows(doc.rows);
+	const text = mapCellsToSlots(doc.cells, doc.rows.length, doc.columns.length);
+	const transform = mapTransformDocToState(doc);
+	const size = calcTableFrameSize({
+		columns,
+		rows,
+		text,
+		strokeWidth: doc.strokeWidth,
 	});
+	// The doc's (x, y) is the drawn top-left, so the center is that corner plus the
+	// transformed half-diagonal. Left unrounded: rounding both directions would
+	// round the coordinate twice on a doc round trip.
+	const center = calcFrameCenterFromTopLeft(
+		{ x: doc.x, y: doc.y },
+		size,
+		transform,
+	);
+
+	return {
+		...ObjectMapper.toState(doc),
+		...pickPassthrough(doc),
+		...transform,
+		type: "table",
+		cx: center.x,
+		cy: center.y,
+		width: size.width,
+		height: size.height,
+		columns,
+		rows,
+		text,
+	} as TableState;
 };
 
 /**
  * TableState -> TableDoc: the slot map folded back into the grid, and the derived
- * box dropped in favour of the corner it was grown from.
+ * box dropped in favour of the corner it was measured around. The keyed slot map
+ * is never written: a table spells its cells out as `cells` instead.
  */
 export const tableToDoc: ObjectMapperType<TableDoc, TableState>["toDoc"] = (
 	state,
 ) => {
-	const doc: Record<string, unknown> = { ...frameMapper.toDoc(state) };
-	// The one key the shared mapper writes that a table doc has no place for: the
-	// keyed slot map, which a table spells out as `cells` instead. The box it
-	// leaves out by itself, a point geometry storing none.
-	delete doc.text;
+	const drawnTopLeft = calcFrameKeyPoint(state, "topLeft");
+
 	return {
-		...doc,
+		...ObjectMapper.toDoc(state),
+		...pickPassthrough(state),
+		...mapTransformStateToDoc(state),
+		type: "table",
+		// Rounded because the transform makes the round trip exact only to a float
+		// epsilon, and two callers read the doc as an exact value: the mapper
+		// round-trip test compares docs with toEqual, and isSameCanvasDocContent
+		// stringifies the doc to decide whether the file is dirty.
+		x: roundDocCoordinate(drawnTopLeft.x),
+		y: roundDocCoordinate(drawnTopLeft.y),
 		columns: cloneColumns(state.columns),
 		rows: cloneRows(state.rows),
 		cells: mapSlotsToCells(state),

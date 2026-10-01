@@ -141,16 +141,4 @@ describe("resizeTableStateToContent", () => {
 		// the drag reads no outside write and re-measures nothing.
 		expect(resizeTableStateToContent(resized)).toBe(resized);
 	});
-
-	it("reads a box of no size as one not yet derived, not as a width to distribute", () => {
-		// What the mapper hands over on load: a point geometry's frame starts empty
-		// on the doc's own coordinate (createFrameMapper).
-		const loaded = makeTable({ width: 0, height: 0, cx: 380, cy: 375 });
-		const derived = resizeTableStateToContent(loaded);
-
-		expect(derived.columns).toBe(loaded.columns);
-		expect(derived.width).toBe(240);
-		expect(leftEdgeOf(derived)).toBe(380);
-		expect(derived.cy - derived.height / 2).toBe(375);
-	});
 });

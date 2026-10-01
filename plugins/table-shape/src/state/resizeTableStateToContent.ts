@@ -45,10 +45,10 @@ import { distributeTableWidthToColumns } from "../layout/distributeTableWidthToC
  */
 export const resizeTableStateToContent = (state: TableState): TableState => {
 	const gridSize = calcTableFrameSize(state);
-	// A point geometry's frame starts at zero size and is grown from there
-	// (createFrameMapper), so a zero width is a box not yet derived rather than a
-	// width written over the grid.
-	if (state.width > 0 && gridSize.width !== state.width) {
+	// Every table state is handed over with the box its own grid answers for
+	// (TableMapper measures it rather than leaving it to this pass), so a width the
+	// columns do not sum to can only have been written from outside.
+	if (gridSize.width !== state.width) {
 		const columns = distributeTableWidthToColumns(state.columns, state.width);
 		if (columns !== null) {
 			const widened = { ...state, columns };
