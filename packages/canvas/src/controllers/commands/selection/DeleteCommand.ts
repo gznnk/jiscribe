@@ -1,7 +1,7 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
-import { VERTEX_PART_KIND } from "../../selection/createVertexPartDefinition";
+import { VERTEX_PART_KIND } from "../../selection/createVertexPartKindDefinition";
 import type { ObjectPartTarget } from "../../selection/deleteObjectParts";
 import {
 	canDeleteObjectParts,

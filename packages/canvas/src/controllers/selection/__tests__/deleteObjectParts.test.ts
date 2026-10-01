@@ -4,8 +4,8 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ObjectPartTarget } from "../deleteObjectParts";
 import { canDeleteObjectParts, deleteObjectParts } from "../deleteObjectParts";
-import type { ObjectPartDefinition } from "../ObjectPartRegistry";
-import { createObjectPartRegistry } from "../ObjectPartRegistry";
+import type { ObjectPartKindDefinition } from "../ObjectPartKindRegistry";
+import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 
 /** A shape carrying a list of parts addressed by their index, as a poly does. */
 type ListState = ObjectState & { items: string[] };
@@ -29,7 +29,7 @@ const targetOf = (partIds: string[]): ObjectPartTarget => ({
 });
 
 /** Removes the named indices, refusing to leave fewer than `floor` behind. */
-const itemPart = (floor: number): ObjectPartDefinition<ListState> => ({
+const itemPart = (floor: number): ObjectPartKindDefinition<ListState> => ({
 	kind: "item",
 	has: (object, partId) => Number(partId) < object.items.length,
 	delete: (object, partIds) => {
@@ -44,12 +44,12 @@ const itemPart = (floor: number): ObjectPartDefinition<ListState> => ({
 	},
 });
 
-const registriesWith = (part?: ObjectPartDefinition<ListState>) => {
-	const objectPart = createObjectPartRegistry();
+const registriesWith = (part?: ObjectPartKindDefinition<ListState>) => {
+	const objectPartKind = createObjectPartKindRegistry();
 	if (part !== undefined) {
-		objectPart.register<ListState>("polyline", [part]);
+		objectPartKind.register<ListState>("polyline", [part]);
 	}
-	return { objectPart };
+	return { objectPartKind };
 };
 
 /** The one field this seam's caller owns until a single part channel exists. */
@@ -67,7 +67,7 @@ describe("canDeleteObjectParts", () => {
 
 	it("is false for a kind whose definition declares no deletion", () => {
 		const state = makeState({ a: makeList("a", ["x", "y"]) });
-		const readOnly: ObjectPartDefinition<ListState> = {
+		const readOnly: ObjectPartKindDefinition<ListState> = {
 			kind: "item",
 			has: () => true,
 		};
@@ -136,7 +136,7 @@ describe("deleteObjectParts", () => {
 
 	it("answers null — never a refusal — when the kind registers no deletion", () => {
 		const state = makeState({ a: makeList("a", ["x", "y"]) });
-		const readOnly: ObjectPartDefinition<ListState> = {
+		const readOnly: ObjectPartKindDefinition<ListState> = {
 			kind: "item",
 			has: () => true,
 		};

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
-import { createVertexPartDefinition } from "../createVertexPartDefinition";
+import { createVertexPartKindDefinition } from "../createVertexPartKindDefinition";
 
 const polyline = {
 	id: "p",
@@ -13,8 +13,8 @@ const polyline = {
 	],
 } as unknown as PolylineState;
 
-describe("createVertexPartDefinition", () => {
-	const vertex = createVertexPartDefinition<PolylineState>(2);
+describe("createVertexPartKindDefinition", () => {
+	const vertex = createVertexPartKindDefinition<PolylineState>(2);
 
 	it("names a vertex by its decimal index, and nothing past the last one", () => {
 		expect(vertex.has(polyline, "0")).toBe(true);

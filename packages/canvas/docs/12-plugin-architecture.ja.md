@@ -265,7 +265,7 @@ extra スタイルプロパティ `headerHeight` を書き、Layout セクショ
 COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わりする。
 
 **`parts`。**その型がオブジェクトを分割する部分 id の名前空間（`kind`）ごとに
-`ObjectPartDefinition` を 1 つ宣言し、`has`（その id がまだそのオブジェクトの部分を
+`ObjectPartKindDefinition` を 1 つ宣言し、`has`（その id がまだそのオブジェクトの部分を
 指すか）と `delete` を述べる。core は部分 id を不透明な文字列として運び、型へ渡し
 返すだけなので、`"3"` や `"cell:2,1"` の意味を知っているのは型だけである。省略すれば
 そのオブジェクトは不可分で、Delete は全体の削除へ落ちる。組み込みの `vertex` が

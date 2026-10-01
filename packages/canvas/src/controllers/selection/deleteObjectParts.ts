@@ -18,7 +18,7 @@ export type ObjectPartTarget = {
 };
 
 /** The registry slice the part-deletion seam reads. */
-type PartRegistries = Pick<ICanvasRegistries, "objectPart">;
+type PartRegistries = Pick<ICanvasRegistries, "objectPartKind">;
 
 /**
  * Whether the target's object type registers a deletion for that kind of part.
@@ -27,7 +27,7 @@ type PartRegistries = Pick<ICanvasRegistries, "objectPart">;
  *
  * @param state - The state the target is resolved against
  * @param target - The parts to delete; only `objectId` and `kind` are read
- * @param registries - The bundle holding `objectPart`
+ * @param registries - The bundle holding `objectPartKind`
  * @returns False when the object is gone or its type declares no such deletion
  */
 export const canDeleteObjectParts = (
@@ -40,7 +40,8 @@ export const canDeleteObjectParts = (
 		return false;
 	}
 	return (
-		registries.objectPart.get(object.type, target.kind)?.delete !== undefined
+		registries.objectPartKind.get(object.type, target.kind)?.delete !==
+		undefined
 	);
 };
 
@@ -51,7 +52,7 @@ export const canDeleteObjectParts = (
  *
  * @param state - The state to build the next one from
  * @param target - The parts to delete, in the type's own part-id namespace
- * @param registries - The bundle holding `objectPart`
+ * @param registries - The bundle holding `objectPartKind`
  * @param clearPartSelection - Blanks the state field this target was read from;
  *   core keeps no single part-selection channel yet, so the field is the
  *   caller's to name
@@ -71,7 +72,7 @@ export const deleteObjectParts = (
 		return null;
 	}
 
-	const part = registries.objectPart.get(object.type, target.kind);
+	const part = registries.objectPartKind.get(object.type, target.kind);
 	if (!part?.delete) {
 		return null;
 	}

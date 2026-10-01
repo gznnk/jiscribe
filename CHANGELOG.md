@@ -16,15 +16,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 ### Added
 
 - **For plugin authors: a type declares the sub-parts of its own objects.**
-  `ObjectTypeDefinition.parts` takes one entry per part-id namespace (`kind`),
+  `ObjectTypeDefinition.partKinds` takes one entry per part-id namespace (`kind`),
   each stating `has` — whether an id still names a part of that object — and
   `delete`. Core never learns what an id means: it carries the string around and
   hands it back to the type, so a kind it has no definition for simply has no
   parts. The first consumer is vertex deletion, which polyline, polygon and
   connector now go through: what the user sees is unchanged, including stopping
   at each type's vertex floor (two for an open line, three for a closed
-  outline), which each type now states where it declares its parts instead of
-  the delete command inferring it from the type id.
+  outline), which each type now states where it declares its part kinds instead
+  of the delete command inferring it from the type id.
 - For plugin authors: a type whose geometry does not settle its box declares it as
   `ObjectDocDefinition.bounds`, and the doc-side ops measure it by that declaration
   instead of by the rule the `text` shape happens to follow. Today that means every

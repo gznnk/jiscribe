@@ -100,7 +100,7 @@ import {
 	rotateByGroup as textRotateByGroup,
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
-import { createVertexPartDefinition } from "../selection/createVertexPartDefinition";
+import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
@@ -240,7 +240,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		},
 		// A closed outline needs three corners; the third-to-last vertex is where
 		// deletion stops.
-		parts: [createVertexPartDefinition<PolygonState>(3)],
+		partKinds: [createVertexPartKindDefinition<PolygonState>(3)],
 		stencils: PolygonStencils,
 	}),
 
@@ -255,7 +255,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			rotateByGroup: polylineRotateByGroup,
 		},
 		// An open line needs the two ends it runs between.
-		parts: [createVertexPartDefinition<PolylineState>(2)],
+		partKinds: [createVertexPartKindDefinition<PolylineState>(2)],
 		stencils: PolylineStencils,
 	}),
 
@@ -272,7 +272,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		// `points` holds the waypoints between the two endpoints, not the whole
 		// route, so the floor is the polyline's rather than one of its own: a
 		// connector with two waypoints keeps both.
-		parts: [createVertexPartDefinition<ConnectorState>(2)],
+		partKinds: [createVertexPartKindDefinition<ConnectorState>(2)],
 		extraStyleProperties: ConnectorExtraStyleProperties,
 		menu: [
 			{
@@ -541,8 +541,8 @@ export const applyObjectDefinition = (
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
-	if (definition.parts) {
-		registries.objectPart.register(type, definition.parts);
+	if (definition.partKinds) {
+		registries.objectPartKind.register(type, definition.partKinds);
 	}
 	if (definition.extraStyleProperties) {
 		registries.styleProperty.registerExtras(

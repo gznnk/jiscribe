@@ -290,7 +290,7 @@ gesture-start snapshot) and the cursor, and nothing else; part derivation, snaps
 guarding, copy-on-write write-back and edge-scroll release are handled by an
 internal adapter.
 
-**`parts`.** One `ObjectPartDefinition` per part-id namespace (`kind`) the type
+**`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
 divides its objects into, stating `has` — whether an id still names a part of
 that object — and `delete`. Core treats a part id as an opaque string and hands
 it back to the type, so only the type knows what `"3"` or `"cell:2,1"` means;

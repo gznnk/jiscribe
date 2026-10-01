@@ -4,7 +4,7 @@ import type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefiniti
 import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
-import type { ObjectPartDefinition } from "../controllers/selection/ObjectPartRegistry";
+import type { ObjectPartKindDefinition } from "../controllers/selection/ObjectPartKindRegistry";
 import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
@@ -142,10 +142,10 @@ export type ObjectTypeDefinition<
 
 	/**
 	 * The sub-parts of an object of this type that core may select and act on —
-	 * one entry per part-id namespace (see ObjectPartRegistry). Omitted = the
+	 * one entry per part-id namespace (see ObjectPartKindRegistry). Omitted = the
 	 * object is indivisible, and every part-aware seam is inert for it.
 	 */
-	parts?: ObjectPartDefinition<TState>[];
+	partKinds?: ObjectPartKindDefinition<TState>[];
 
 	/**
 	 * Which handles the transform frame offers on a single selection. Omitted =

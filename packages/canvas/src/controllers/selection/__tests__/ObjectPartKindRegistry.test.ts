@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { ObjectPartDefinition } from "../ObjectPartRegistry";
-import { createObjectPartRegistry } from "../ObjectPartRegistry";
+import type { ObjectPartKindDefinition } from "../ObjectPartKindRegistry";
+import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 
-const partOf = (kind: string): ObjectPartDefinition => ({
+const partOf = (kind: string): ObjectPartKindDefinition => ({
 	kind,
 	has: () => true,
 });
 
-describe("ObjectPartRegistry", () => {
+describe("ObjectPartKindRegistry", () => {
 	it("hands back the definition registered for a type and kind", () => {
-		const registry = createObjectPartRegistry();
+		const registry = createObjectPartKindRegistry();
 		const vertex = partOf("vertex");
 
 		registry.register("polyline", [vertex]);
@@ -20,7 +20,7 @@ describe("ObjectPartRegistry", () => {
 	});
 
 	it("answers undefined for a type or a kind nobody registered", () => {
-		const registry = createObjectPartRegistry();
+		const registry = createObjectPartKindRegistry();
 		registry.register("polyline", [partOf("vertex")]);
 
 		expect(registry.get("polyline", "textSlot")).toBeUndefined();
@@ -28,7 +28,7 @@ describe("ObjectPartRegistry", () => {
 	});
 
 	it("keeps every kind a type declares apart", () => {
-		const registry = createObjectPartRegistry();
+		const registry = createObjectPartKindRegistry();
 		const vertex = partOf("vertex");
 		const slot = partOf("textSlot");
 
@@ -39,7 +39,7 @@ describe("ObjectPartRegistry", () => {
 	});
 
 	it("throws on a repeated kind rather than letting the second shadow the first", () => {
-		const registry = createObjectPartRegistry();
+		const registry = createObjectPartKindRegistry();
 
 		expect(() =>
 			registry.register("polyline", [partOf("vertex"), partOf("vertex")]),
@@ -49,7 +49,7 @@ describe("ObjectPartRegistry", () => {
 	// Registration is per type rather than additive, the way a definition is
 	// applied whole (applyObjectDefinition).
 	it("replaces everything a type had registered before", () => {
-		const registry = createObjectPartRegistry();
+		const registry = createObjectPartKindRegistry();
 		registry.register("polyline", [partOf("vertex")]);
 
 		registry.register("polyline", [partOf("textSlot")]);
@@ -59,7 +59,7 @@ describe("ObjectPartRegistry", () => {
 	});
 
 	it("forgets every type on clear", () => {
-		const registry = createObjectPartRegistry();
+		const registry = createObjectPartKindRegistry();
 		registry.register("polyline", [partOf("vertex")]);
 
 		registry.clear();
@@ -69,8 +69,8 @@ describe("ObjectPartRegistry", () => {
 
 	it("takes a definition narrowed to the type's own state", () => {
 		type PointyState = ObjectState & { points: { x: number; y: number }[] };
-		const registry = createObjectPartRegistry();
-		const pointy: ObjectPartDefinition<PointyState> = {
+		const registry = createObjectPartKindRegistry();
+		const pointy: ObjectPartKindDefinition<PointyState> = {
 			kind: "vertex",
 			has: (object, partId) => Number(partId) < object.points.length,
 		};

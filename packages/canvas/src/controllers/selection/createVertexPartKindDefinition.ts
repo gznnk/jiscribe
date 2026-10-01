@@ -1,6 +1,6 @@
 import type { Poly } from "@jiscribe/doc/model/objects/types/Poly";
 
-import type { ObjectPartDefinition } from "./ObjectPartRegistry";
+import type { ObjectPartKindDefinition } from "./ObjectPartKindRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /** The part-id namespace of the vertices a poly-geometry type stores in `points`. */
@@ -17,11 +17,13 @@ const CANONICAL_INDEX = /^(0|[1-9]\d*)$/;
  * @param minVertexCount - How few vertices the type still draws as itself; a
  *   deletion that would leave fewer is refused rather than applied. An open
  *   line needs 2, a closed outline 3.
- * @returns A definition to put in the type's `ObjectTypeDefinition.parts`
+ * @returns A definition to put in the type's `ObjectTypeDefinition.partKinds`
  */
-export const createVertexPartDefinition = <TState extends ObjectState & Poly>(
+export const createVertexPartKindDefinition = <
+	TState extends ObjectState & Poly,
+>(
 	minVertexCount: number,
-): ObjectPartDefinition<TState> => ({
+): ObjectPartKindDefinition<TState> => ({
 	kind: VERTEX_PART_KIND,
 
 	// Only the canonical decimal spelling names a vertex: `has` is the gate an

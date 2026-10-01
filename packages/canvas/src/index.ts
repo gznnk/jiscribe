@@ -214,7 +214,7 @@ export type {
 	SelectionControlEvent,
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
-export type { ObjectPartDefinition } from "./controllers/selection/ObjectPartRegistry";
+export type { ObjectPartKindDefinition } from "./controllers/selection/ObjectPartKindRegistry";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-body shape (`features.text: "body"` / `"source"`)
 // holds, i.e. the key its `state.text` carries. A shape with several slots names
