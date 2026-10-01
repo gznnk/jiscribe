@@ -148,32 +148,6 @@ test.describe("a grouped table's parent bounds", () => {
 		await expectGroupOutlineToEndAtTable(canvas, tableId);
 	});
 
-	test("follow a row removed from the right-click menu", async ({ canvas }) => {
-		const tableId = await groupTableWithRectAbove(canvas);
-		await enterTable(canvas, tableId);
-
-		await clickTrackGrip(canvas, "rowGrip", 1);
-		await canvas.openContextMenu(await cellCenter(canvas, tableId, "r0c0"));
-		await canvas.clickContextMenuCommand("table.deleteRow");
-		await expect.poll(async () => cellCount(canvas, tableId)).toBe(2);
-
-		await expectGroupOutlineToEndAtTable(canvas, tableId);
-	});
-
-	test("follow a row inserted from the right-click menu", async ({
-		canvas,
-	}) => {
-		const tableId = await groupTableWithRectAbove(canvas);
-		await enterTable(canvas, tableId);
-
-		await clickTrackGrip(canvas, "rowGrip", 1);
-		await canvas.openContextMenu(await cellCenter(canvas, tableId, "r0c0"));
-		await canvas.clickContextMenuCommand("table.insertRowBelow");
-		await expect.poll(async () => cellCount(canvas, tableId)).toBe(6);
-
-		await expectGroupOutlineToEndAtTable(canvas, tableId);
-	});
-
 	test("follow a row inserted from a + badge", async ({ canvas }) => {
 		const tableId = await groupTableWithRectAbove(canvas);
 		await enterTable(canvas, tableId);

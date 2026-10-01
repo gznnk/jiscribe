@@ -70,60 +70,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			expect(nextState.contextMenuPosition).toEqual({
 				clientX: CLICK_CLIENT_POS.x,
 				clientY: CLICK_CLIENT_POS.y,
-				// The press is recorded with what it landed on, though it is not
-				// routed there: the menu has no other way to know what it is over.
-				target: { kind: "menu", id: "toolbar", part: "command:zoomIn" },
 			});
-		});
-	});
-
-	describe("what the press landed on", () => {
-		/** A right-click carrying no target at all, the way the background reports one. */
-		const rightClickOnBackground = (): Gesture =>
-			({
-				type: "click",
-				button: 2,
-				last: { x: 50, y: 50 },
-				clientLast: CLICK_CLIENT_POS,
-				mods: { shift: false, alt: false, ctrl: false, meta: false },
-			}) as unknown as Gesture;
-
-		it("records the object a right-click opened the menu over", () => {
-			const nextState = handleGesture(
-				baseState(),
-				clickOn(2, "object", "a", "body"),
-				registries,
-			);
-
-			expect(nextState.contextMenuPosition?.target).toEqual({
-				kind: "object",
-				id: "a",
-				part: "body",
-			});
-		});
-
-		it("leaves the sub-area out where the press named none", () => {
-			const nextState = handleGesture(
-				baseState(),
-				clickOn(2, "object", "a"),
-				registries,
-			);
-
-			expect(nextState.contextMenuPosition?.target).toEqual({
-				kind: "object",
-				id: "a",
-			});
-		});
-
-		it("records no target for a press on the background", () => {
-			const nextState = handleGesture(
-				baseState(),
-				rightClickOnBackground(),
-				registries,
-			);
-
-			expect(nextState.contextMenuPosition).not.toBeNull();
-			expect(nextState.contextMenuPosition?.target).toBeNull();
 		});
 	});
 
@@ -167,7 +114,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 				...base,
 				objects: { ...base.objects, a: rect },
 				rootIds: [...base.rootIds, "a"],
-				contextMenuPosition: { clientX: 100, clientY: 100, target: null },
+				contextMenuPosition: { clientX: 100, clientY: 100 },
 			};
 		};
 
@@ -192,11 +139,6 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			expect(nextState.contextMenuPosition).toEqual({
 				clientX: CLICK_CLIENT_POS.x,
 				clientY: CLICK_CLIENT_POS.y,
-				target: {
-					kind: "menu",
-					id: "context-menu",
-					part: "command:selectAll",
-				},
 			});
 		});
 	});

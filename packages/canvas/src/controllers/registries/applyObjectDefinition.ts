@@ -539,9 +539,6 @@ export const applyObjectDefinition = (
 		type,
 		definition.menu ?? createDefaultMenu(definition.features),
 	);
-	if (definition.contextMenu) {
-		registries.contextMenu.register(type, definition.contextMenu);
-	}
 	registries.propertyPanel.register(type, derivePropertyPanel(definition));
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);

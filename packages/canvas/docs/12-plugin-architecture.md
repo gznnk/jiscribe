@@ -233,19 +233,6 @@ load.
 `features`; a declared array replaces it entirely; `[]` means no menu. The
 derivation rules are defined by `createDefaultMenu` and its unit tests.
 
-**`contextMenu`.** Rows a type adds to the canvas context menu
-(`ContextMenuContribution`: a `placement` of `"before"` or `"after"`, and the
-`items`). Unlike `menu` and `propertyPanel` there is no derived default and no
-way to replace anything: the built-in block is always drawn, and a contribution
-is spliced in front of or behind it as a whole, separators the type states
-included. Whose rows are drawn is decided by the press that opened the menu, not
-by the selection: the type owning the object the target's id names, which covers
-a press on the object itself and on the controls drawn over it. Every other
-press — the background, a menu, a control of the canvas's own — gets the
-built-in block alone. An item names a command by id, core's or one the plugin
-registered through `CanvasPlugin.commands`; an id nothing registers draws no row
-at all, so a stale name goes missing rather than dead.
-
 **`propertyPanel`.** The properties sidebar's sections, with the same three
 meanings: omitted derives them from `features`; a declared array replaces them
 entirely; `[]` means no sections. The derivation rules are defined by
@@ -328,8 +315,7 @@ Honest limits, so you do not design against something that is not there.
 What _is_ fully available: adding shape types with their own doc schema, validation,
 rendering, stencils, menus, properties-sidebar sections, style properties,
 outline/snap behaviour, type-specific
-selection controls, shared SVG defs, commands of their own, rows of their own
-on the context menu, and their own i18n —
+selection controls, shared SVG defs, commands of their own, and their own i18n —
 all from an external package. A command is written against `Command` from
 `@jiscribe/canvas-sdk`, which carries the controller state and the registry
 bundle it is handed; those live on the unstable surface because a command reads

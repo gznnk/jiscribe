@@ -12,7 +12,6 @@ import {
 	PROPERTY_PANEL_SECTIONS,
 } from "@jiscribe/canvas-sdk";
 
-import { TABLE_CONTEXT_MENU } from "./commands/tableContextMenu";
 import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
 import { createTableInsertHandler } from "./controls/handleTableInsert";
 import { handleTableRowBoundary } from "./controls/handleTableRowBoundary";
@@ -181,8 +180,8 @@ const TABLE_PROPERTY_PANEL = appendPropertyPanelItems(
  * its rules and the text items for its cells, and nothing else the features would
  * offer. With no cell picked, a text edit from the menu writes into every cell at
  * once (TextSlotStyleProperty); clicking one first narrows it to that cell.
- * Reshaping the grid is in neither section: it belongs to the keys, the grips, the
- * `+` badges and the right-click rows ({@link TABLE_CONTEXT_MENU}).
+ * Reshaping the grid is in neither section: it belongs to the keys, the grips and
+ * the `+` badges.
  *
  * The cell background is the one item this shape draws itself. It sits with the
  * stroke items, being the other half of how a table looks, and is the only custom
@@ -202,7 +201,6 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	behavior: createFrameBehavior<TableState>(),
 	selectionControls: TABLE_SELECTION_CONTROLS,
 	parts: TABLE_PARTS,
-	contextMenu: TABLE_CONTEXT_MENU,
 	transformHandles: TABLE_TRANSFORM_HANDLES,
 	stencils: TableStencils,
 	extraStyleProperties: TABLE_EXTRA_STYLE_PROPERTIES,

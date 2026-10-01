@@ -4,14 +4,11 @@ import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
-import type { PressTarget, SnapFeedback } from "../../../CanvasTypes";
+import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { ZOOM } from "../../../utils/zoom";
-import type {
-	CanvasEvent,
-	GestureHandler,
-} from "../../registry/GestureHandlerTypes";
+import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { applyAxisLock } from "../utils/axisLock";
 import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
@@ -21,25 +18,6 @@ import {
 	findSnap,
 } from "../utils/snap/findSnap";
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
-
-/**
- * What a press landed on, in the form the context menu records it. The gesture
- * layer resolves this for every event, right button and long press included
- * (getGestureTarget), and only an id-less press — the background — answers null.
- *
- * @param event - The press being recorded; its `targetKind` / `targetId` / `targetPart` are read
- * @returns The target, or null where the press carried no id to name one
- */
-const readGestureTarget = (event: CanvasEvent): PressTarget | null => {
-	if (event.targetKind === undefined || event.targetId === undefined) {
-		return null;
-	}
-	return {
-		kind: event.targetKind,
-		id: event.targetId,
-		...(event.targetPart !== undefined ? { part: event.targetPart } : {}),
-	};
-};
 
 /**
  * Handles events that occur on the canvas.
@@ -131,7 +109,6 @@ export const CanvasEventHandler: GestureHandler = {
 				contextMenuPosition: {
 					clientX: event.clientLast.x,
 					clientY: event.clientLast.y,
-					target: readGestureTarget(event),
 				},
 				// A new context menu supersedes any open ObjectMenu / category flyout.
 				objectMenuOpenId: null,
@@ -150,7 +127,6 @@ export const CanvasEventHandler: GestureHandler = {
 					contextMenuPosition: {
 						clientX: event.clientLast.x,
 						clientY: event.clientLast.y,
-						target: readGestureTarget(event),
 					},
 					// A new context menu supersedes any open ObjectMenu / category flyout.
 					objectMenuOpenId: null,

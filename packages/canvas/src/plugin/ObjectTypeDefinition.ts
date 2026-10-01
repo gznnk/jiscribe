@@ -8,7 +8,6 @@ import type { ObjectPartDefinition } from "../controllers/selection/ObjectPartRe
 import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
-import type { ContextMenuContribution } from "../controllers/ui/menu/ContextMenu/ContextMenuTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
@@ -180,16 +179,6 @@ export type ObjectTypeDefinition<
 	 * (return null and the emptied section collapses).
 	 */
 	menu?: ObjectMenuSection[];
-
-	/**
-	 * Rows this type adds to the canvas context menu, when the press that opened
-	 * it landed on one of its objects or on a control drawn over one
-	 * (resolveContextMenuItems). Omitted = the built-in rows alone, which is also
-	 * what every other press gets. Static per type; there is no per-instance
-	 * visibility, an item's own `canExecute` being what decides whether its row
-	 * is live.
-	 */
-	contextMenu?: ContextMenuContribution;
 
 	/**
 	 * Properties-sidebar sections for this type. Omitted = derived from features

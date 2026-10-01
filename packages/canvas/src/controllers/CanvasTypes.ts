@@ -410,21 +410,6 @@ export type CanvasInitialSidebars = {
  * Pure state only: the per-canvas registry bundle is a dependency rather than data, so it is
  * passed to the reducer/handler/command tree as an explicit `registries` argument (#165).
  */
-/**
- * What a press landed on, as the gesture layer resolved it (getGestureTarget).
- * Written by `CanvasEventHandler` onto `contextMenuPosition` and read by the
- * context menu to find whose rows to draw, so it is declared once here rather
- * than spelled out at each end.
- */
-export type PressTarget = {
-	/** Gesture target kind, e.g. "object" / "connector" / "control" / "menu". */
-	kind: string;
-	/** Id the pressed element carries, which is the object's for a shape and for the controls drawn on it. */
-	id: string;
-	/** Sub-part within the target, when the press named one (e.g. a text slot id). */
-	part?: string;
-};
-
 export type CanvasControllerState = CanvasState & {
 	/**
 	 * Where the canvas is looked at from: width/height as useContainerResize
@@ -508,18 +493,7 @@ export type CanvasControllerState = CanvasState & {
 	historyCoalesce: HistoryCoalesce;
 
 	/** Client coordinates; null when no context menu should be displayed */
-	contextMenuPosition: {
-		clientX: number;
-		clientY: number;
-		/**
-		 * What the press landed on; null for the background. Recorded rather than
-		 * routed:
-		 * the right button and the long press stay canvas-level on purpose
-		 * (isPerTargetInteraction), so this is the menu's only way to know what it
-		 * was opened over.
-		 */
-		target: PressTarget | null;
-	} | null;
+	contextMenuPosition: { clientX: number; clientY: number } | null;
 
 	/**
 	 * Modal currently open; null when none is. Deliberately left out of UiStateReset:

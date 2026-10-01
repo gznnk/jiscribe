@@ -211,8 +211,6 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.contextMenuPosition).toEqual({
 				clientX: 320,
 				clientY: 240,
-				// A long press records what it landed on, as the right button does.
-				target: { kind: "canvas", id: "canvas" },
 			});
 			expect(nextState.textEditState).toBeNull();
 			// Selection stays, mirroring the right-button click

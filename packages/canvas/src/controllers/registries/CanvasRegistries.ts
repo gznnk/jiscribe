@@ -30,7 +30,6 @@ import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegi
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
-import type { ContextMenuRegistry } from "../ui/menu/ContextMenu/ContextMenuRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { PropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
@@ -95,11 +94,6 @@ export type CanvasRegistries = {
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
-	/**
-	 * Per-type context-menu contributions, read by the menu after it has resolved
-	 * which object the press landed on. Only the types declaring one are in it.
-	 */
-	contextMenu: ContextMenuRegistry;
 	propertyPanel: PropertyPanelRegistry;
 	stencil: StencilRegistry;
 	objectFactory: ObjectFactoryRegistry;

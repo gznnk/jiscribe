@@ -33,7 +33,6 @@ export { createTableTrackPartDefinition } from "./parts/tableTrackParts";
 
 export { TABLE_INSERT_COMMANDS } from "./commands/tableInsertCommands";
 export { TABLE_REMOVE_COMMANDS } from "./commands/tableRemoveCommands";
-export { TABLE_CONTEXT_MENU } from "./commands/tableContextMenu";
 export { resolveTableInsertTarget } from "./commands/resolveTableInsertTarget";
 export type {
 	TableInsertSide,

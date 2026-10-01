@@ -96,9 +96,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the rectangle they stand at opposite corners of, as a spreadsheet does it, not
   the run of the cell order between them. Delete clears the picked cells' text,
   or removes the picked row or column — never the last one left. Rows and columns
-  are inserted from the right-click menu or with Shift+Alt+arrow, and the cells
-  keep their contents as the grid renumbers around the insertion. The six grid
-  commands are named in English and Japanese, as the Cell Color button is.
+  are inserted with Shift+Alt+arrow, and the cells keep their contents as the
+  grid renumbers around the insertion.
 - For plugin authors: a type declares what parts of itself can be selected
   (`ObjectTypeDefinition.parts`), and core carries one selection below the object
   level for every type — a range of them, not one. A `text: "slots"` type gets its
@@ -106,9 +105,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   that default, which is how a type says what Delete does to them and what a
   Shift-extended range between two of them covers (`ObjectPartDefinition.range`,
   omitted by every kind whose parts lie in one line). A selection control can now
-  take a click and answer with a selection rather than only with its own object,
-  and a type may add rows to the context menu
-  (`ObjectTypeDefinition.contextMenu`).
+  take a click and answer with a selection rather than only with its own object.
 - **A table can be resized by its left and right edges**, the width change spread
   over every column in the proportions it holds. A column never goes under its
   minimum, and a table dragged narrower than its columns can be simply stops.
@@ -195,9 +192,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **A group's frame no longer goes stale when a shape inside it is edited by a
   command or a control.** Whether a group kept its box depended on _how_ an edit
   was made rather than on what it did — removing a table's row with the Delete
-  key settled the group, the same removal from the right-click menu did not — so
-  the group's outline, its handles and the width and height it reports could be
-  left at the size it used to be. It heals on reload either way; what it cost in
+  key settled the group, inserting one from a `+` badge did not — so the
+  group's outline, its handles and the width and height it reports could be left
+  at the size it used to be. It heals on reload either way; what it cost in
   the meantime was typing a size into a stale group, which scaled its children by
   the wrong ratio.
 - **Styling a table row or column picked by its grip lands on that row or
