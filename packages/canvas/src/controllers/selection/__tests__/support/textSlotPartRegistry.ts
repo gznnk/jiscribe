@@ -1,24 +1,24 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
-import { createTextSlotPartDefinition } from "../../createTextSlotPartDefinition";
-import { createObjectPartRegistry } from "../../ObjectPartRegistry";
-import type { ObjectPartRegistry } from "../../ObjectPartRegistry";
+import { createTextSlotPartKindDefinition } from "../../createTextSlotPartKindDefinition";
+import { createObjectPartKindRegistry } from "../../ObjectPartKindRegistry";
+import type { ObjectPartKindRegistry } from "../../ObjectPartKindRegistry";
 
 /**
  * Declares the slot part for more types on a registry that already exists — the
  * bundle a test built with `createTestRegistries`, which knows the built-in
  * types alone and so has never seen a plugin's slotted shape.
  *
- * @param registry - The bundle's own ObjectPartRegistry, written in place
+ * @param registry - The bundle's own ObjectPartKindRegistry, written in place
  * @param types - The object types to declare slots for, as applyObjectDefinition
  *   would for a `features.text === "slots"` definition
  */
 export const registerTextSlotParts = (
-	registry: ObjectPartRegistry,
+	registry: ObjectPartKindRegistry,
 	...types: ObjectType[]
 ): void => {
 	for (const type of types) {
-		registry.register(type, [createTextSlotPartDefinition(undefined)]);
+		registry.register(type, [createTextSlotPartKindDefinition(undefined)]);
 	}
 };
 
@@ -35,8 +35,8 @@ export const registerTextSlotParts = (
  */
 export const createTextSlotPartRegistry = (
 	...types: ObjectType[]
-): ObjectPartRegistry => {
-	const registry = createObjectPartRegistry();
+): ObjectPartKindRegistry => {
+	const registry = createObjectPartKindRegistry();
 	registerTextSlotParts(registry, ...types);
 	return registry;
 };
@@ -64,11 +64,11 @@ export const NON_SLOT_PART_KIND = "tail";
  *   fixtures hold slots keyed that way
  */
 export const registerSlotGroupParts = (
-	registry: ObjectPartRegistry,
+	registry: ObjectPartKindRegistry,
 	type: ObjectType,
 ): void => {
 	registry.register(type, [
-		createTextSlotPartDefinition(undefined),
+		createTextSlotPartKindDefinition(undefined),
 		{
 			kind: SLOT_GROUP_PART_KIND,
 			has: () => true,

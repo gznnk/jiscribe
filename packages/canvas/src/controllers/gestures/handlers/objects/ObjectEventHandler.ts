@@ -58,7 +58,7 @@ import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
  *
  * With an additive modifier held the click extends the live selection instead of
  * replacing it, over the run from its anchor to the clicked slot as the type
- * reads that run (ObjectPartDefinition.range, the order it lists its slots by
+ * reads that run (ObjectPartKindDefinition.range, the order it lists its slots by
  * default). A plain click leaves one slot selected, and that slot is the anchor
  * the next extension runs from.
  */
@@ -130,7 +130,7 @@ function extendTextSlotSelection(
 ): ObjectPartSelection | null {
 	const currentSlot = resolveObjectPartSelection(
 		canvasState,
-		registries.objectPart,
+		registries.objectPartKind,
 	);
 	if (
 		currentSlot === null ||
@@ -139,7 +139,7 @@ function extendTextSlotSelection(
 	) {
 		return null;
 	}
-	const part = registries.objectPart.get(
+	const part = registries.objectPartKind.get(
 		targetObject.type,
 		TEXT_SLOT_PART_KIND,
 	);
@@ -486,8 +486,8 @@ export const ObjectEventHandler: GestureHandler = {
 			const extendsPartSelection =
 				isSoleSelection &&
 				isAdditiveSelectionMod(event.mods) &&
-				resolveObjectPartSelection(nextState, registries.objectPart)?.kind ===
-					TEXT_SLOT_PART_KIND;
+				resolveObjectPartSelection(nextState, registries.objectPartKind)
+					?.kind === TEXT_SLOT_PART_KIND;
 			if (extendsPartSelection) {
 				return handleTextSlotClick(
 					nextState,

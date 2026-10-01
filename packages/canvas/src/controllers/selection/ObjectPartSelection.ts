@@ -3,7 +3,12 @@
  * text slots of a record, the cells of a table. The object type owns the
  * part-id namespace (`kind`) and the meaning of each id; core only carries the
  * triple around and hands it back to the type through
- * {@link ObjectPartDefinition}.
+ * {@link ObjectPartKindDefinition}.
+ *
+ * Not to be confused with a deletion request
+ * ({@link import("./resolveDeletableParts").ObjectPartTarget}): this is what is
+ * picked, that is what an operation is asked for, and turning the one into the
+ * other is the command's business.
  */
 export type ObjectPartSelection = {
 	/** The object the parts belong to; every part id is resolved against it alone. */

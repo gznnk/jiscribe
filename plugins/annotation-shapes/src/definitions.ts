@@ -182,7 +182,7 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 		geometryKey: calloutGeometryKey,
 		isExtraStateValid: (state) =>
 			state.tail === undefined || isCalloutTail(state.tail),
-		parts: [CALLOUT_TAIL_PART_DEFINITION],
+		partKinds: [CALLOUT_TAIL_PART_DEFINITION],
 		selectionControls: [
 			{
 				name: "tailTip",

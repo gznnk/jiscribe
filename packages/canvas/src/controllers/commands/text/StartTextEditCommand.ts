@@ -90,8 +90,8 @@ export const StartTextEditCommand: ExecutableCommand = {
 		// below the object decides; resolveObjectPartSelection validates it against
 		// this very single selection, so a stale one falls back to the first slot.
 		const slotId =
-			resolveObjectPartSelection(state, registries.objectPart)?.partIds[0] ??
-			getFirstTextSlotId(targetObject.text);
+			resolveObjectPartSelection(state, registries.objectPartKind)
+				?.partIds[0] ?? getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;
 		}

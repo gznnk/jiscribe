@@ -57,11 +57,11 @@ const makeState = (
 
 const registry = createObjectMenuRegistry();
 registry.register("record", RECORD_SECTIONS);
-const objectPart = createTextSlotPartRegistry("record");
+const objectPartKind = createTextSlotPartRegistry("record");
 
 describe("getMenuSections", () => {
 	it("returns every registered section while no slot is selected", () => {
-		expect(getMenuSections(makeState(null), registry, objectPart)).toEqual(
+		expect(getMenuSections(makeState(null), registry, objectPartKind)).toEqual(
 			RECORD_SECTIONS,
 		);
 	});
@@ -72,7 +72,7 @@ describe("getMenuSections", () => {
 			kind: TEXT_SLOT_PART_KIND,
 			partIds: ["name"],
 		});
-		expect(getMenuSections(state, registry, objectPart)).toEqual([
+		expect(getMenuSections(state, registry, objectPartKind)).toEqual([
 			{
 				id: "text",
 				items: [
@@ -90,7 +90,7 @@ describe("getMenuSections", () => {
 			kind: TEXT_SLOT_PART_KIND,
 			partIds: ["operations"],
 		});
-		expect(getMenuSections(state, registry, objectPart)).toEqual(
+		expect(getMenuSections(state, registry, objectPartKind)).toEqual(
 			RECORD_SECTIONS,
 		);
 	});

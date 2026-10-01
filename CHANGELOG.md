@@ -15,6 +15,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **For plugin authors: a type declares the sub-parts of its own objects.**
+  `ObjectTypeDefinition.partKinds` takes one entry per part-id namespace (`kind`),
+  each stating `has` — whether an id still names a part of that object — and
+  `delete`. Core never learns what an id means: it carries the string around and
+  hands it back to the type, so a kind it has no definition for simply has no
+  parts. The first consumer is vertex deletion, which polyline, polygon and
+  connector now go through: what the user sees is unchanged, including stopping
+  at each type's vertex floor (two for an open line, three for a closed
+  outline), which each type now states where it declares its part kinds instead
+  of the delete command inferring it from the type id.
 - For plugin authors: a type whose geometry does not settle its box declares it as
   `ObjectDocDefinition.bounds`, and the doc-side ops measure it by that declaration
   instead of by the rule the `text` shape happens to follow. Today that means every
@@ -99,11 +109,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   are inserted with Shift+Alt+arrow, and the cells keep their contents as the
   grid renumbers around the insertion.
 - For plugin authors: a type declares what parts of itself can be selected
-  (`ObjectTypeDefinition.parts`), and core carries one selection below the object
+  (`ObjectTypeDefinition.partKinds`), and core carries one selection below the object
   level for every type — a range of them, not one. A `text: "slots"` type gets its
   slots as parts without declaring anything, and declaring them itself replaces
   that default, which is how a type says what Delete does to them and what a
-  Shift-extended range between two of them covers (`ObjectPartDefinition.range`,
+  Shift-extended range between two of them covers (`ObjectPartKindDefinition.range`,
   omitted by every kind whose parts lie in one line). A selection control can now
   take a click and answer with a selection rather than only with its own object.
 - **A table can be resized by its left and right edges**, the width change spread
@@ -211,7 +221,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   column.** It used to be written to every cell of the table, because a picked
   track could not say which cells it stood for — and the swatch it was read back
   from showed the first cell alone, so the two did not even agree. For plugin
-  authors: `ObjectPartDefinition.textSlotIds` is how a kind that stands for a
+  authors: `ObjectPartKindDefinition.textSlotIds` is how a kind that stands for a
   group of slots names them, and a kind declaring none keeps landing on the whole
   object as before.
 - **The reported box of a rotated shape whose size is measured no longer misses

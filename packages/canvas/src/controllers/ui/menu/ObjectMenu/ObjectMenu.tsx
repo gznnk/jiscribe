@@ -183,7 +183,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	onPropertyUpdate,
 	onOpenReference,
 }) => {
-	const { objectPart } = useCanvasRegistries();
+	const { objectPartKind } = useCanvasRegistries();
 	const menuRef = useRef<HTMLDivElement>(null);
 	// Reported to the positioning hook, which holds the menu still while it is
 	// under the pointer — the flat format buttons resize an auto-sized text on
@@ -205,7 +205,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// into the picked parts reads the same value the write will be matched against.
 	const objectPartSelection = resolveObjectPartSelection(
 		canvasState,
-		objectPart,
+		objectPartKind,
 	);
 	// None of the system sections acts on a text slot, so they all go while one is
 	// selected — and likewise while an editor is open, where the menu is there to

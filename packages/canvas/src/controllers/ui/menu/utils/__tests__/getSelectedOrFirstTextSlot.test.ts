@@ -43,7 +43,7 @@ const makeState = (
 	}) as unknown as CanvasControllerState;
 
 /** Every fixture here wears the rect type with features.text: "slots". */
-const objectPart = createTextSlotPartRegistry("rect");
+const objectPartKind = createTextSlotPartRegistry("rect");
 
 /**
  * The same, plus two kinds of the type's own: one standing for a group of slots
@@ -59,7 +59,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState([], {}),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});
@@ -70,7 +70,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});
@@ -81,7 +81,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			),
 		).toEqual({
 			text: "hello",
@@ -98,7 +98,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			)?.fontWeight,
 		).toBe("bold");
 	});
@@ -110,7 +110,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1", "r2"], { r1: textless, r2: withText }),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			),
 		).toEqual({ text: "hello", fontSize: 20 });
 	});
@@ -122,7 +122,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["g1"], { g1: g, r1: r }),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			),
 		).toEqual({ text: "hello", fontSize: 20 });
 	});
@@ -133,7 +133,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});
@@ -151,7 +151,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
 				),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			)?.fontSize,
 		).toBe(11);
 	});
@@ -173,7 +173,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 				},
 			),
 			textStyleDefaults,
-			objectPart,
+			objectPartKind,
 		);
 		expect(style?.fontSize).toBe(16);
 		// The two disagree, so the field reads as unset (the "mixed" convention).
@@ -200,7 +200,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 					},
 				),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			)?.fontSize,
 		).toBe(11);
 	});
@@ -220,7 +220,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
 				),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			)?.fontSize,
 		).toBe(16);
 		// The slot itself is gone from the object
@@ -236,7 +236,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 					},
 				),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			)?.fontSize,
 		).toBe(16);
 	});
@@ -337,7 +337,7 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 				// The draft the editor holds is what the offsets address.
 				editingState(r, [{ text: "he", fontSize: 30 }, { text: "llo" }]),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			)?.fontSize,
 		).toBe(30);
 	});
@@ -348,7 +348,7 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 			getSelectedOrFirstTextSlot(
 				editingState(r, "# Title"),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			),
 		).toEqual({ text: "# Title", fontSize: 20 });
 	});
@@ -369,7 +369,7 @@ describe("getSelectedOrFirstTextSlot with the type's own defaults", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				leftTop,
-				objectPart,
+				objectPartKind,
 			),
 		).toEqual({ text: "hello", textAlign: "left", verticalAlign: "top" });
 	});
@@ -380,7 +380,7 @@ describe("getSelectedOrFirstTextSlot with the type's own defaults", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				leftTop,
-				objectPart,
+				objectPartKind,
 			)?.textAlign,
 		).toBe("right");
 	});

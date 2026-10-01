@@ -5,7 +5,7 @@ import type { SelectionValue } from "./SelectionValue";
 import { combineSelectionValues } from "./SelectionValue";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
-import type { ObjectPartRegistry } from "../../../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { resolveSelectedTextSlotIds } from "../../../selection/resolveSelectedTextSlotIds";
 import { resolveAddressedTextSlotIds } from "../../../styleProperties/addressedTextSlots";
@@ -28,7 +28,7 @@ import { resolveAddressedTextSlotIds } from "../../../styleProperties/addressedT
  * @param objectPartSelection - The parts picked below the object, already checked
  *   against the selection (resolveObjectPartSelection); one of a kind that covers
  *   no slot names none and so reads every slot, as null does
- * @param objectPart - Per-canvas ObjectPartRegistry, which holds a non-slot
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which holds a non-slot
  *   kind's own reading of the slots it covers (a table's row over its cells)
  * @param field - Name of the field on the slot, which is the declaration's
  *   `textSlotField` and not the property name the menu writes under
@@ -41,7 +41,7 @@ export const readSelectionSlotField = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
 	objectPartSelection: ObjectPartSelection | null,
-	objectPart: ObjectPartRegistry,
+	objectPartKind: ObjectPartKindRegistry,
 	field: string,
 ): SelectionValue<string | undefined> => {
 	const values: (string | undefined)[] = [];
@@ -53,7 +53,7 @@ export const readSelectionSlotField = (
 		const selectedSlotIds = resolveSelectedTextSlotIds(
 			object,
 			objectPartSelection,
-			objectPart,
+			objectPartKind,
 		);
 		for (const slotId of resolveAddressedTextSlotIds(text, selectedSlotIds)) {
 			const held = (text[slotId] as Record<string, unknown>)[field];

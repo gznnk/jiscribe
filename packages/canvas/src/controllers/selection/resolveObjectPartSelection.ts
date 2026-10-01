@@ -1,4 +1,4 @@
-import type { ObjectPartRegistry } from "./ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "./ObjectPartSelection";
 import type { CanvasControllerState } from "../CanvasTypes";
 
@@ -17,7 +17,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * left with nothing resolves to null.
  *
  * @param state - The current canvas controller state
- * @param objectPart - Per-canvas ObjectPartRegistry; the definition registered
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry; the definition registered
  *   for `(object type, kind)` decides which ids still exist
  * @returns `state.objectPartSelection` itself (same reference, so memoized readers keep
  *   bailing out) when its object is the sole selection, registers the kind and still
@@ -26,7 +26,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  */
 export const resolveObjectPartSelection = (
 	state: CanvasControllerState,
-	objectPart: ObjectPartRegistry,
+	objectPartKind: ObjectPartKindRegistry,
 ): ObjectPartSelection | null => {
 	const { objectPartSelection, selectedIds } = state;
 	if (objectPartSelection === null) {
@@ -43,7 +43,7 @@ export const resolveObjectPartSelection = (
 	if (target === undefined) {
 		return null;
 	}
-	const part = objectPart.get(target.type, objectPartSelection.kind);
+	const part = objectPartKind.get(target.type, objectPartSelection.kind);
 	if (part === undefined) {
 		return null;
 	}

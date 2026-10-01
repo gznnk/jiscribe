@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isObjectPartOutlined } from "../isObjectPartOutlined";
-import type { ObjectPartDefinition } from "../ObjectPartRegistry";
-import { createObjectPartRegistry } from "../ObjectPartRegistry";
+import type { ObjectPartKindDefinition } from "../ObjectPartKindRegistry";
+import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../ObjectPartSelection";
 
 const REGION: Rect = { x: 0, y: 0, width: 10, height: 10 };
@@ -19,20 +19,20 @@ const selectionOf = (kind: string): ObjectPartSelection => ({
 	partIds: ["p"],
 });
 
-const registryWith = (...parts: ObjectPartDefinition[]) => {
-	const registry = createObjectPartRegistry();
+const registryWith = (...parts: ObjectPartKindDefinition[]) => {
+	const registry = createObjectPartKindRegistry();
 	registry.register("record", parts);
 	return registry;
 };
 
-const outlined: ObjectPartDefinition = {
+const outlined: ObjectPartKindDefinition = {
 	kind: "textSlot",
 	has: () => true,
 	region: () => REGION,
 };
 
 /** A part the shape is grabbed by rather than an area of it — a callout's tail tip. */
-const pointLike: ObjectPartDefinition = {
+const pointLike: ObjectPartKindDefinition = {
 	kind: "tail",
 	has: () => true,
 };

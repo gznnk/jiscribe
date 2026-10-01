@@ -24,7 +24,7 @@ const EXPECTED_OUTPUT: Record<StyleValueType, string | number | boolean> = {
 // The registry under test is taken from the real bundle wiring, so these tests
 // also guard that createCanvasRegistries registers the system handlers and
 // every ObjectTypeDefinition.extraStyleProperties declaration.
-const { styleProperty: registry, objectPart: objectPartRegistry } =
+const { styleProperty: registry, objectPartKind: objectPartKindRegistry } =
 	createTestRegistries();
 
 /** Every shape-declared extra property wired via BUILTIN_OBJECT_DEFINITIONS. */
@@ -89,7 +89,7 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 				state,
 				property,
 				validValue,
-				objectPartRegistry,
+				objectPartKindRegistry,
 			);
 			expect(readAtPath(result.objects["o1"], [property])).toBe(expected);
 		});
@@ -99,7 +99,7 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 			const o1 = { id: "o1", type: "rect", features } as ObjectState;
 			const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
 			expect(
-				registry.apply(state, property, validValue, objectPartRegistry),
+				registry.apply(state, property, validValue, objectPartKindRegistry),
 			).toBe(state);
 		});
 
@@ -112,9 +112,9 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 				} as ObjectFeatures;
 				const o1 = { id: "o1", type: "rect", features } as ObjectState;
 				const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
-				expect(registry.apply(state, property, "abc", objectPartRegistry)).toBe(
-					state,
-				);
+				expect(
+					registry.apply(state, property, "abc", objectPartKindRegistry),
+				).toBe(state);
 			});
 		}
 	}
@@ -142,7 +142,7 @@ describe("shape-declared extra properties (registry-driven)", () => {
 				state,
 				property,
 				validValue,
-				objectPartRegistry,
+				objectPartKindRegistry,
 			);
 			expect(readAtPath(result.objects["o1"], path)).toBe(expected);
 		});
@@ -156,7 +156,7 @@ describe("shape-declared extra properties (registry-driven)", () => {
 			} as unknown as ObjectState;
 			const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
 			expect(
-				registry.apply(state, property, validValue, objectPartRegistry),
+				registry.apply(state, property, validValue, objectPartKindRegistry),
 			).toBe(state);
 		});
 
@@ -169,7 +169,7 @@ describe("shape-declared extra properties (registry-driven)", () => {
 				} as unknown as ObjectState;
 				const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
 				expect(
-					registry.apply(state, property, validValue, objectPartRegistry),
+					registry.apply(state, property, validValue, objectPartKindRegistry),
 				).toBe(state);
 			});
 		}

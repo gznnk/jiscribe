@@ -10,7 +10,7 @@ import { SELECTION_OUTLINE_WIDTH } from "../selectionOutline";
 type ObjectPartOutlineProps = {
 	/** The object the part belongs to; only its transform is read here. */
 	object: ObjectState;
-	/** The part's box in the object's local coordinates (ObjectPartDefinition.region). */
+	/** The part's box in the object's local coordinates (ObjectPartKindDefinition.region). */
 	region: Rect;
 };
 

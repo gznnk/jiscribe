@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createTextSlotPartRegistry } from "./support/textSlotPartRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { createObjectPartRegistry } from "../ObjectPartRegistry";
+import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../ObjectPartSelection";
 import { resolveObjectPartSelection } from "../resolveObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
@@ -18,7 +18,7 @@ const slotShape = (id: string): ObjectState =>
 	}) as unknown as ObjectState;
 
 /** The registry a canvas holds once "record" has been applied (applyObjectDefinition). */
-const objectPart = createTextSlotPartRegistry("record");
+const objectPartKind = createTextSlotPartRegistry("record");
 
 const makeState = (
 	objects: Record<string, ObjectState>,
@@ -46,7 +46,7 @@ describe("resolveObjectPartSelection", () => {
 			["rec-1"],
 			objectPartSelection,
 		);
-		expect(resolveObjectPartSelection(state, objectPart)).toBe(
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBe(
 			objectPartSelection,
 		);
 	});
@@ -63,14 +63,14 @@ describe("resolveObjectPartSelection", () => {
 			["rec-1"],
 			objectPartSelection,
 		);
-		expect(resolveObjectPartSelection(state, objectPart)).toBe(
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBe(
 			objectPartSelection,
 		);
 	});
 
 	it("returns null when nothing is slot-selected", () => {
 		const state = makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], null);
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null once the selection covers more than the slot's object", () => {
@@ -82,11 +82,11 @@ describe("resolveObjectPartSelection", () => {
 		expect(
 			resolveObjectPartSelection(
 				makeState(objects, ["rec-1", "rec-2"], slot),
-				objectPart,
+				objectPartKind,
 			),
 		).toBeNull();
 		expect(
-			resolveObjectPartSelection(makeState(objects, [], slot), objectPart),
+			resolveObjectPartSelection(makeState(objects, [], slot), objectPartKind),
 		).toBeNull();
 	});
 
@@ -96,12 +96,12 @@ describe("resolveObjectPartSelection", () => {
 			"rec-2": slotShape("rec-2"),
 		};
 		const state = makeState(objects, ["rec-2"], textSlot("rec-1", "name"));
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null when the object is gone", () => {
 		const state = makeState({}, ["rec-1"], textSlot("rec-1", "name"));
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null for a shape whose type registers no part of that kind", () => {
@@ -116,7 +116,7 @@ describe("resolveObjectPartSelection", () => {
 			["rect-1"],
 			textSlot("rect-1", "body"),
 		);
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null for a kind the type does not declare, whatever its ids", () => {
@@ -125,7 +125,7 @@ describe("resolveObjectPartSelection", () => {
 			kind: "vertex",
 			partIds: ["0"],
 		});
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null when the slot no longer exists on the object", () => {
@@ -134,7 +134,7 @@ describe("resolveObjectPartSelection", () => {
 			["rec-1"],
 			textSlot("rec-1", "operations"),
 		);
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null for a slot id that only names an Object.prototype member", () => {
@@ -143,7 +143,7 @@ describe("resolveObjectPartSelection", () => {
 			["rec-1"],
 			textSlot("rec-1", "toString"),
 		);
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null when the object's text is not the keyed normal form", () => {
@@ -158,7 +158,7 @@ describe("resolveObjectPartSelection", () => {
 			["rec-1"],
 			textSlot("rec-1", "name"),
 		);
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("drops the parts that are gone and keeps the rest of the range", () => {
@@ -168,7 +168,7 @@ describe("resolveObjectPartSelection", () => {
 			partIds: ["name", "operations", "rows"],
 			anchorPartId: "name",
 		});
-		expect(resolveObjectPartSelection(state, objectPart)).toEqual({
+		expect(resolveObjectPartSelection(state, objectPartKind)).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			partIds: ["name", "rows"],
@@ -183,7 +183,7 @@ describe("resolveObjectPartSelection", () => {
 			partIds: ["name", "operations"],
 			anchorPartId: "operations",
 		});
-		expect(resolveObjectPartSelection(state, objectPart)).toEqual({
+		expect(resolveObjectPartSelection(state, objectPartKind)).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			partIds: ["name"],
@@ -198,7 +198,7 @@ describe("resolveObjectPartSelection", () => {
 			partIds: ["operations", "footer"],
 			anchorPartId: "operations",
 		});
-		expect(resolveObjectPartSelection(state, objectPart)).toBeNull();
+		expect(resolveObjectPartSelection(state, objectPartKind)).toBeNull();
 	});
 
 	it("returns null when the canvas registers no part for the type at all", () => {
@@ -208,7 +208,7 @@ describe("resolveObjectPartSelection", () => {
 			textSlot("rec-1", "name"),
 		);
 		expect(
-			resolveObjectPartSelection(state, createObjectPartRegistry()),
+			resolveObjectPartSelection(state, createObjectPartKindRegistry()),
 		).toBeNull();
 	});
 });

@@ -1,11 +1,11 @@
-import type { ObjectPartRegistry } from "./ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "./ObjectPartSelection";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
  * Whether the selected parts are drawn with a box around them — that is, whether
  * their type declares a `region` for the selected kind
- * ({@link import("./ObjectPartRegistry").ObjectPartDefinition}).
+ * ({@link import("./ObjectPartKindRegistry").ObjectPartKindDefinition}).
  *
  * What the transform handles are hidden on: they act on the whole object, so a box
  * drawn inside it competes with them for the eye. A kind that outlines nothing —
@@ -19,7 +19,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  */
 export const isObjectPartOutlined = (
 	objects: Readonly<Record<string, ObjectState>>,
-	registry: ObjectPartRegistry,
+	registry: ObjectPartKindRegistry,
 	selection: ObjectPartSelection | null,
 ): boolean => {
 	if (selection === null) {

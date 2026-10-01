@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { createTextSlotPartDefinition } from "../createTextSlotPartDefinition";
-import { createObjectPartRegistry } from "../ObjectPartRegistry";
+import { createTextSlotPartKindDefinition } from "../createTextSlotPartKindDefinition";
+import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 import { resolveSelectedTextSlotIds } from "../resolveSelectedTextSlotIds";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
 
@@ -24,9 +24,9 @@ const grid = (id: string): ObjectState =>
  * The two kinds a table declares beside its cells: a row, standing for the cells
  * of that row (tableTrackParts), and one naming something other than text.
  */
-const objectPart = createObjectPartRegistry();
-objectPart.register("table", [
-	createTextSlotPartDefinition(undefined),
+const objectPartKind = createObjectPartKindRegistry();
+objectPartKind.register("table", [
+	createTextSlotPartKindDefinition(undefined),
 	{
 		kind: "row",
 		has: () => true,
@@ -43,7 +43,7 @@ objectPart.register("table", [
 describe("resolveSelectedTextSlotIds", () => {
 	it("names nothing when nothing is picked", () => {
 		expect(
-			resolveSelectedTextSlotIds(grid("t1"), null, objectPart),
+			resolveSelectedTextSlotIds(grid("t1"), null, objectPartKind),
 		).toBeUndefined();
 	});
 
@@ -52,7 +52,7 @@ describe("resolveSelectedTextSlotIds", () => {
 			resolveSelectedTextSlotIds(
 				grid("t2"),
 				{ objectId: "t1", kind: TEXT_SLOT_PART_KIND, partIds: ["r0c0"] },
-				objectPart,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});
@@ -63,7 +63,7 @@ describe("resolveSelectedTextSlotIds", () => {
 			resolveSelectedTextSlotIds(
 				grid("t1"),
 				{ objectId: "t1", kind: TEXT_SLOT_PART_KIND, partIds },
-				objectPart,
+				objectPartKind,
 			),
 		).toBe(partIds);
 	});
@@ -73,7 +73,7 @@ describe("resolveSelectedTextSlotIds", () => {
 			resolveSelectedTextSlotIds(
 				grid("t1"),
 				{ objectId: "t1", kind: "row", partIds: ["1"] },
-				objectPart,
+				objectPartKind,
 			),
 		).toEqual(["r1c0", "r1c1"]);
 	});
@@ -83,14 +83,14 @@ describe("resolveSelectedTextSlotIds", () => {
 			resolveSelectedTextSlotIds(
 				grid("t1"),
 				{ objectId: "t1", kind: "tail", partIds: ["tip"] },
-				objectPart,
+				objectPartKind,
 			),
 		).toBeUndefined();
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
 				{ objectId: "t1", kind: "column", partIds: ["0"] },
-				objectPart,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});
@@ -101,7 +101,7 @@ describe("resolveSelectedTextSlotIds", () => {
 			resolveSelectedTextSlotIds(
 				bare,
 				{ objectId: "b1", kind: "row", partIds: ["0"] },
-				objectPart,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});

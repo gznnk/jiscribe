@@ -55,14 +55,14 @@ const editingState = (
 	}) as unknown as CanvasControllerState;
 
 /** The fixtures wear the rect type, or a second one standing in for a mixed selection. */
-const objectPart = createTextSlotPartRegistry("rect", "record");
+const objectPartKind = createTextSlotPartRegistry("rect", "record");
 
 describe("readSelectionTextStyle", () => {
 	it("nothing selected → every field is none", () => {
 		const style = readSelectionTextStyle(
 			makeState([], {}),
 			textStyleDefaults,
-			objectPart,
+			objectPartKind,
 		);
 		expect(style.fontSize).toEqual({ kind: "none" });
 		expect(style.textAlign).toEqual({ kind: "none" });
@@ -74,7 +74,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["a"], objects),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "none" });
 	});
@@ -85,7 +85,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["a"], objects),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
@@ -99,7 +99,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["a", "b"], objects),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
@@ -112,7 +112,7 @@ describe("readSelectionTextStyle", () => {
 		const style = readSelectionTextStyle(
 			makeState(["a", "b"], objects),
 			textStyleDefaults,
-			objectPart,
+			objectPartKind,
 		);
 		expect(style.fontSize).toEqual({ kind: "mixed", values: [20, 12] });
 		expect(style.textAlign).toEqual({ kind: "single", value: "center" });
@@ -127,7 +127,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["a", "b"], objects),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontWeight,
 		).toEqual({ kind: "single", value: undefined });
 	});
@@ -141,7 +141,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["a", "b"], objects),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontWeight,
 		).toEqual({ kind: "mixed", values: ["bold", undefined] });
 	});
@@ -158,7 +158,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["stated", "defaulted"], objects),
 				defaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 14 });
 	});
@@ -173,7 +173,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["g"], objects),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "mixed", values: [20, 12] });
 	});
@@ -193,7 +193,7 @@ describe("readSelectionTextStyle", () => {
 					partIds: ["rows"],
 				}),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 12 });
 	});
@@ -209,7 +209,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["a"], objects),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
@@ -228,7 +228,7 @@ describe("readSelectionTextStyle while a stretch of text is edited", () => {
 			readSelectionTextStyle(
 				editingState(a, [{ text: "hi", fontSize: 30 }, { text: "!" }]),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 30 });
 	});
@@ -244,7 +244,7 @@ describe("readSelectionTextStyle while a stretch of text is edited", () => {
 			readSelectionTextStyle(
 				editingState(a, "# Title"),
 				textStyleDefaults,
-				objectPart,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});

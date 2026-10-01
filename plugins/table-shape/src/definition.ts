@@ -1,6 +1,6 @@
-import { createTextSlotPartDefinition } from "@jiscribe/canvas";
+import { createTextSlotPartKindDefinition } from "@jiscribe/canvas";
 import type {
-	ObjectPartDefinition,
+	ObjectPartKindDefinition,
 	ObjectTypeDefinition,
 	ObjectTransformHandles,
 	SelectionControlDefinition,
@@ -128,18 +128,18 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
  *
  * What is declared here is the two things core cannot derive — what Delete means
  * over a cell range, and what the range between two cells is — so
- * `createTextSlotPartDefinition` is spread for the rest and only those added (a
+ * `createTextSlotPartKindDefinition` is spread for the rest and only those added (a
  * declared `"textSlot"` replaces the derived one). Emptying is not removing,
  * which is why rows and cells are separate kinds at all: Delete over a row grip
  * takes the row, where the very same cells picked as cells keep their places and
  * lose their text. And a grid's run between two cells is the rectangle they
  * corner, not the slice of the slot order between them (collectTableCellRange).
  */
-const TABLE_PARTS: ObjectPartDefinition<TableState>[] = [
+const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 	createTableTrackPartDefinition(TABLE_ROW_PART_KIND),
 	createTableTrackPartDefinition(TABLE_COLUMN_PART_KIND),
 	{
-		...createTextSlotPartDefinition(calcTableTextRegion),
+		...createTextSlotPartKindDefinition(calcTableTextRegion),
 		range: collectTableCellRange,
 		delete: clearTableCells,
 	},
@@ -200,7 +200,7 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	textRegion: calcTableTextRegion,
 	behavior: createFrameBehavior<TableState>(),
 	selectionControls: TABLE_SELECTION_CONTROLS,
-	parts: TABLE_PARTS,
+	partKinds: TABLE_PARTS,
 	transformHandles: TABLE_TRANSFORM_HANDLES,
 	stencils: TableStencils,
 	extraStyleProperties: TABLE_EXTRA_STYLE_PROPERTIES,

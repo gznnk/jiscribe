@@ -8,7 +8,7 @@ import { combineSelectionValues } from "./SelectionValue";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { ObjectPartRegistry } from "../../../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
 import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
@@ -34,16 +34,16 @@ export type SelectionTextStyle = {
 const collectSelectionTextStyles = (
 	state: CanvasControllerState,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
-	objectPart: ObjectPartRegistry,
+	objectPartKind: ObjectPartKindRegistry,
 ): TextSlotStyle[] => {
 	if (
 		resolveTextEditSelection(state) !== null ||
-		resolveObjectPartSelection(state, objectPart) !== null
+		resolveObjectPartSelection(state, objectPartKind) !== null
 	) {
 		const slot = getSelectedOrFirstTextSlot(
 			state,
 			textStyleDefaults,
-			objectPart,
+			objectPartKind,
 		);
 		return slot === undefined ? [] : [slot];
 	}
@@ -88,18 +88,18 @@ const readSlotStyleField = <Key extends keyof TextSlotStyle>(
  *
  * @param state - The current canvas controller state; the selection, the objects it names, and any open editor or picked slot are read
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, consulted per object by its own type
- * @param objectPart - Per-canvas ObjectPartRegistry, which decides whether the selection addresses slots inside one object
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which decides whether the selection addresses slots inside one object
  * @returns Every field of TextSlotStyle; each is `none` when nothing selected holds text
  */
 export const readSelectionTextStyle = (
 	state: CanvasControllerState,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
-	objectPart: ObjectPartRegistry,
+	objectPartKind: ObjectPartKindRegistry,
 ): SelectionTextStyle => {
 	const styles = collectSelectionTextStyles(
 		state,
 		textStyleDefaults,
-		objectPart,
+		objectPartKind,
 	);
 	return {
 		fontColor: readSlotStyleField(styles, "fontColor"),

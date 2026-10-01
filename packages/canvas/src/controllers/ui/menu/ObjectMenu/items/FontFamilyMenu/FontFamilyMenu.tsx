@@ -45,11 +45,11 @@ const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPartKind } = useCanvasRegistries();
 	const textStyle = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
-		objectPart,
+		objectPartKind,
 	);
 	// An unset family draws in the default one, so that is the entry to mark
 	// active; a selection drawn in several marks none.

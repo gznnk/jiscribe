@@ -25,7 +25,7 @@ const collectKeptIndices = (
  * **A removal that would empty an axis is refused.** A table of no rows draws
  * nothing and has no cell left to click back into, so the last row — and the last
  * column — cannot be taken away; the caller is told so rather than handed a
- * degenerate grid. Refusing is what `ObjectPartDefinition.delete` spells as null,
+ * degenerate grid. Refusing is what `ObjectPartKindDefinition.delete` spells as null,
  * which leaves the selection standing and the keystroke spent.
  *
  * @param state - The table to remove from; left untouched

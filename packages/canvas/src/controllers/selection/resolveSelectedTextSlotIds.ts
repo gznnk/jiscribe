@@ -1,4 +1,4 @@
-import type { ObjectPartRegistry } from "./ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "./ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "./textSlotPartKind";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -6,7 +6,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 /**
  * The text slots a part selection names on one object: the picked slots
  * themselves, or the slots a kind of another sort stands for
- * (`ObjectPartDefinition.textSlotIds`) — a table's row over the cells of that
+ * (`ObjectPartKindDefinition.textSlotIds`) — a table's row over the cells of that
  * row.
  *
  * The one rule behind both halves of a slot-stored property, the write
@@ -21,7 +21,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * @param objectPartSelection - The parts picked one level below the object,
  *   already checked against the selection (resolveObjectPartSelection); null
  *   when none are
- * @param objectPart - Per-canvas ObjectPartRegistry, holding the kind's own
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, holding the kind's own
  *   reading of which slots it covers
  * @returns The slot ids in the type's own order, or undefined when the selection
  *   names no slot of this object — nothing picked, a pick on another object, or
@@ -32,7 +32,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 export const resolveSelectedTextSlotIds = (
 	object: ObjectState,
 	objectPartSelection: ObjectPartSelection | null,
-	objectPart: ObjectPartRegistry,
+	objectPartKind: ObjectPartKindRegistry,
 ): readonly string[] | undefined => {
 	if (
 		objectPartSelection === null ||
@@ -43,7 +43,7 @@ export const resolveSelectedTextSlotIds = (
 	if (objectPartSelection.kind === TEXT_SLOT_PART_KIND) {
 		return objectPartSelection.partIds;
 	}
-	return objectPart
+	return objectPartKind
 		.get(object.type, objectPartSelection.kind)
 		?.textSlotIds?.(object, objectPartSelection.partIds);
 };

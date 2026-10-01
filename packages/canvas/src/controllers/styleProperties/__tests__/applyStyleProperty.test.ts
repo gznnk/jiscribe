@@ -71,7 +71,7 @@ styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
 // The slot-selection fixtures wear the rect type (with features.text: "slots"),
 // and one synthetic group that holds slots of its own.
-const objectPartRegistry = createTextSlotPartRegistry(
+const objectPartKindRegistry = createTextSlotPartRegistry(
 	"rect",
 	"group",
 	SLOT_EXTRA_SHAPE_TYPE,
@@ -79,14 +79,14 @@ const objectPartRegistry = createTextSlotPartRegistry(
 
 // The slot-storing fixture also declares the two kinds a table has beside its
 // cells: one standing for a group of slots (a row), one covering none (a tail).
-registerSlotGroupParts(objectPartRegistry, SLOT_EXTRA_SHAPE_TYPE);
+registerSlotGroupParts(objectPartKindRegistry, SLOT_EXTRA_SHAPE_TYPE);
 
 const applyStyleProperty = (
 	state: CanvasControllerState,
 	property: string,
 	value: string,
 ): CanvasControllerState =>
-	styleRegistry.apply(state, property, value, objectPartRegistry);
+	styleRegistry.apply(state, property, value, objectPartKindRegistry);
 
 type MinState = Pick<
 	CanvasControllerState,

@@ -1,6 +1,6 @@
 /**
  * The run of parts between two ids, in the order the type lists its parts
- * (ObjectPartDefinition.list) — the default for a kind declaring no `range` of
+ * (ObjectPartKindDefinition.list) — the default for a kind declaring no `range` of
  * its own, which is every kind whose parts lie in one line. Which of the two
  * comes first in that order does not matter: the run is read from the lower index
  * to the higher, so an extension that reaches backwards yields the same list

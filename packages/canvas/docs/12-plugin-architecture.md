@@ -298,6 +298,14 @@ to the drag pair), and the object it answers with is committed whichever kind
 carried it — a click that inserts something is recorded and saved exactly as the
 end of a drag is.
 
+**`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
+divides its objects into, stating `has` — whether an id still names a part of
+that object — and `delete`. Core treats a part id as an opaque string and hands
+it back to the type, so only the type knows what `"3"` or `"cell:2,1"` means;
+omitted means the object is indivisible and Delete falls through to it as a
+whole. The built-in `vertex` kind is the worked example: polyline, polygon and
+connector each declare it with the vertex floor below which deletion is refused.
+
 ## What is not extensible yet
 
 Honest limits, so you do not design against something that is not there.

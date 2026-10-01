@@ -144,7 +144,7 @@ registry.register("box", BOX_SECTIONS);
 registry.register("table", TABLE_SECTIONS);
 
 /** Every fixture shape spells its text out as slots, whatever type it wears. */
-const objectPart = createTextSlotPartRegistry(
+const objectPartKind = createTextSlotPartRegistry(
 	"rect",
 	"ellipse",
 	"connector",
@@ -185,9 +185,9 @@ const stateOf = (
 
 describe("getPropertyPanelSections", () => {
 	it("offers nothing while nothing is selected", () => {
-		expect(getPropertyPanelSections(stateOf({}), registry, objectPart)).toEqual(
-			[],
-		);
+		expect(
+			getPropertyPanelSections(stateOf({}), registry, objectPartKind),
+		).toEqual([]);
 	});
 
 	it("returns the selected type's sections untouched", () => {
@@ -196,7 +196,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual(
 			RECT_SECTIONS,
 		);
 	});
@@ -207,7 +207,7 @@ describe("getPropertyPanelSections", () => {
 			selectedConnectorId: "c-1",
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual(
 			LINE_SECTIONS,
 		);
 	});
@@ -221,7 +221,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1", "e-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual([
 			{
 				id: "layout",
 				label: "Layout",
@@ -241,7 +241,9 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1", "c-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([]);
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual(
+			[],
+		);
 	});
 
 	it("expands a selected group into the types it holds", () => {
@@ -255,7 +257,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, objectPart).map(
+			getPropertyPanelSections(state, registry, objectPartKind).map(
 				(section) => section.id,
 			),
 		).toEqual(["layout", "fill", "text"]);
@@ -272,7 +274,7 @@ describe("getPropertyPanelSections", () => {
 			},
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual([
 			{
 				id: "text",
 				label: "Text",
@@ -287,7 +289,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["k-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual(
 			CONTAINER_SECTIONS,
 		);
 	});
@@ -301,7 +303,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["k-1", "k-2"],
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual(
 			CONTAINER_SECTIONS,
 		);
 	});
@@ -315,7 +317,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["k-1", "b-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual([
 			{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
 		]);
 	});
@@ -331,7 +333,7 @@ describe("getPropertyPanelSections", () => {
 			},
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual([
 			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
 		]);
 	});
@@ -349,7 +351,7 @@ describe("getPropertyPanelSections", () => {
 
 		// The Fill section survives on the strength of that one row, where the
 		// text section's plain custom row goes and its built-in stays.
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual([
 			{
 				id: "fill",
 				label: "Fill",
@@ -373,7 +375,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, objectPart).map(
+			getPropertyPanelSections(state, registry, objectPartKind).map(
 				(section) => section.id,
 			),
 		).toEqual(["fill", "gauge"]);
@@ -389,7 +391,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, objectPart).map(
+			getPropertyPanelSections(state, registry, objectPartKind).map(
 				(section) => section.id,
 			),
 		).toEqual(["fill"]);
@@ -405,7 +407,9 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["r-1", "e-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)[0]).toEqual({
+		expect(
+			getPropertyPanelSections(state, registry, objectPartKind)[0],
+		).toEqual({
 			id: "layout",
 			label: "Layout",
 			items: [
@@ -427,7 +431,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, objectPart)[0].items,
+			getPropertyPanelSections(state, registry, objectPartKind)[0].items,
 		).toContainEqual({
 			type: "lockAspectRatio",
 		});
@@ -443,7 +447,7 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["r-1", "c-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual([
 			{
 				id: "layout",
 				label: "Layout",
@@ -463,7 +467,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, objectPart)[0].items,
+			getPropertyPanelSections(state, registry, objectPartKind)[0].items,
 		).toEqual([
 			{ type: "position" },
 			{ type: "size" },
@@ -477,7 +481,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual(
 			RECT_SECTIONS,
 		);
 	});
@@ -496,7 +500,7 @@ describe("getPropertyPanelSections", () => {
 			},
 		});
 
-		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPartKind)).toEqual([
 			{
 				id: "text",
 				label: "Text",
@@ -513,7 +517,7 @@ describe("getPropertyPanelSections", () => {
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(
-			getPropertyPanelSections(state, registry, objectPart).map(
+			getPropertyPanelSections(state, registry, objectPartKind).map(
 				(section) => section.id,
 			),
 		).toEqual(["text"]);

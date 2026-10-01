@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 
 /**
  * Update strategy for one styleable property (registered in stylePropertyRegistry).
@@ -14,7 +14,7 @@ export interface StylePropertyHandler {
 	 * @param state - The state to write into
 	 * @param property - The property name, dot-separated for a nested one ("label.fill")
 	 * @param value - The menu's raw string, coerced to the declared type by the handler
-	 * @param objectPart - Per-canvas ObjectPartRegistry, which decides whether the
+	 * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which decides whether the
 	 *   selection addresses parts of one object rather than the objects as wholes;
 	 *   a handler storing nothing per part may leave the parameter out
 	 */
@@ -22,6 +22,6 @@ export interface StylePropertyHandler {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
-		objectPart: ObjectPartRegistry,
+		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState;
 }

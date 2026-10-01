@@ -192,8 +192,8 @@ export { readSelectionSlotField } from "./controllers/ui/menu/utils/readSelectio
 
 // The registry that read takes alongside the picked parts, so a kind of the
 // type's own (a table's row) is read as the slots it covers rather than as none.
-export { useObjectPartRegistry } from "./controllers/registries/CanvasRegistriesContext";
-export type { ObjectPartRegistry } from "./controllers/selection/ObjectPartRegistry";
+export { useObjectPartKindRegistry } from "./controllers/registries/CanvasRegistriesContext";
+export type { ObjectPartKindRegistry } from "./controllers/selection/ObjectPartKindRegistry";
 
 // ---------------------------------------------------------------------------
 // Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)

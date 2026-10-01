@@ -67,7 +67,7 @@ describe("GroupCommand", () => {
 			next,
 			"lockAspectRatio",
 			"false",
-			registries.objectPart,
+			registries.objectPartKind,
 		);
 		expect((unlocked.objects[groupId] as GroupState).lockAspectRatio).toBe(
 			false,

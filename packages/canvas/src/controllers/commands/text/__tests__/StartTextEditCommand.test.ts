@@ -14,7 +14,7 @@ import { StartTextEditCommand } from "../StartTextEditCommand";
 const registries = createTestRegistries();
 // "record" stands in for a plugin's slotted shape, which the built-in-only
 // test bundle has never been told about.
-registerTextSlotParts(registries.objectPart, "record");
+registerTextSlotParts(registries.objectPartKind, "record");
 
 const rect = {
 	id: "rect-1",

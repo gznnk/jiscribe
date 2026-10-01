@@ -2,7 +2,7 @@ import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { createTextSlotPartDefinition } from "../createTextSlotPartDefinition";
+import { createTextSlotPartKindDefinition } from "../createTextSlotPartKindDefinition";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
 
 /** A record-like shape placed at the origin, 200x100, with two slots. */
@@ -29,8 +29,8 @@ const stackedRegion = (state: { height: number }, slotId: string): Rect => ({
 	height: state.height / 2,
 });
 
-describe("createTextSlotPartDefinition", () => {
-	const part = createTextSlotPartDefinition(stackedRegion);
+describe("createTextSlotPartKindDefinition", () => {
+	const part = createTextSlotPartKindDefinition(stackedRegion);
 
 	it("declares the text-slot namespace", () => {
 		expect(part.kind).toBe(TEXT_SLOT_PART_KIND);
@@ -70,7 +70,7 @@ describe("createTextSlotPartDefinition", () => {
 	});
 
 	it("gives the whole box to every slot of a type that registers no calculator", () => {
-		const plain = createTextSlotPartDefinition(undefined);
+		const plain = createTextSlotPartKindDefinition(undefined);
 		expect(plain.region?.(slotShape(), "rows")).toEqual({
 			x: -100,
 			y: -50,

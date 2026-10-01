@@ -1,6 +1,6 @@
 import { isTransformedFrame } from "@jiscribe/geometry";
 
-import type { ObjectPartDefinition } from "./ObjectPartRegistry";
+import type { ObjectPartKindDefinition } from "./ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "./textSlotPartKind";
 import type { ObjectTextRegionCalculator } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../rendering/objects/utils/calcTextRegion";
@@ -26,9 +26,9 @@ const readSlots = (object: ObjectState): TextSlots | undefined =>
  *   the renderer and the text editor place the body in
  * @returns A definition to register under {@link TEXT_SLOT_PART_KIND}
  */
-export const createTextSlotPartDefinition = (
+export const createTextSlotPartKindDefinition = (
 	textRegion: ObjectTextRegionCalculator | undefined,
-): ObjectPartDefinition => ({
+): ObjectPartKindDefinition => ({
 	kind: TEXT_SLOT_PART_KIND,
 
 	has: (object, partId) => {
@@ -40,7 +40,7 @@ export const createTextSlotPartDefinition = (
 
 	// The key order is the order the type stacks its slots in, which is what Tab
 	// walks and what a shift-extended range falls back to (see the mappers, and
-	// ObjectPartDefinition.range for a type whose slots do not lie in one line).
+	// ObjectPartKindDefinition.range for a type whose slots do not lie in one line).
 	list: (object) => Object.keys(readSlots(object) ?? {}),
 
 	region: (object, partId) => {

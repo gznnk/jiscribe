@@ -1,4 +1,4 @@
-import type { ObjectPartDefinition } from "@jiscribe/canvas";
+import type { ObjectPartKindDefinition } from "@jiscribe/canvas";
 import type { Rect } from "@jiscribe/geometry";
 
 import { removeTableTracks } from "../grid/removeTableTracks";
@@ -56,7 +56,7 @@ const calcTrackRegion = (
  */
 export const createTableTrackPartDefinition = (
 	axis: TableAxis,
-): ObjectPartDefinition<TableState> => ({
+): ObjectPartKindDefinition<TableState> => ({
 	kind: axis,
 
 	has: (object, partId) => {

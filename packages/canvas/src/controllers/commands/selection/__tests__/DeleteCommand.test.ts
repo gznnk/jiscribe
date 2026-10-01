@@ -26,8 +26,9 @@ const makeRect = (id: string, parentId?: string): ObjectState =>
 const makePolyline = (
 	id: string,
 	points: { x: number; y: number }[],
+	parentId?: string,
 ): PolylineState =>
-	({ id, type: "polyline", points }) as unknown as PolylineState;
+	({ id, type: "polyline", points, parentId }) as unknown as PolylineState;
 
 const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({
@@ -48,7 +49,9 @@ const makeState = (params: {
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 	selectedVertex?: CanvasControllerState["selectedVertex"];
+	objectPartSelection?: CanvasControllerState["objectPartSelection"];
 	selectedConnectorId?: string | null;
+	lastDuplicate?: CanvasControllerState["lastDuplicate"];
 }): CanvasControllerState =>
 	({
 		selectedVertex: null,
@@ -148,7 +151,9 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.execute(state, registries)).toBe(state);
 		});
 
-		it("clears only selectedVertex when the vertex-selection target is not a polyline", () => {
+		it("ignores a vertex selection on a type with no vertex kind and goes on to the object", () => {
+			// A rect has no vertices, so the field names nothing: it is no selection,
+			// and the key belongs to the selected objects.
 			const state = makeState({
 				selectedIds: ["r"],
 				objects: { r: makeRect("r") },
@@ -157,8 +162,197 @@ describe("DeleteCommand", () => {
 			});
 			const next = DeleteCommand.execute(state, registries);
 			expect(next.selectedVertex).toBeNull();
-			// does not fall through to object deletion
-			expect(next.objects["r"]).toBeDefined();
+			expect(next.objects["r"]).toBeUndefined();
+			expect(next.selectedIds).toEqual([]);
+		});
+
+		it("drops a stale vertex index the same way, with nothing else to delete", () => {
+			const polyline = makePolyline("p", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+			]);
+			const state = makeState({
+				selectedIds: [],
+				objects: { p: polyline },
+				rootIds: ["p"],
+				selectedVertex: { objectId: "p", vertexIndex: 7 },
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.selectedVertex).toBeNull();
+			expect(next.objects["p"]).toBe(polyline);
+		});
+
+		it("commits the edit, forgets the last duplicate, and leaves other objects as they were", () => {
+			const other = makeRect("r");
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					p: makePolyline("p", [
+						{ x: 0, y: 0 },
+						{ x: 10, y: 0 },
+						{ x: 20, y: 0 },
+					]),
+					r: other,
+				},
+				rootIds: ["p", "r"],
+				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				lastDuplicate: {
+					newIds: ["p"],
+					cx: 0,
+					cy: 0,
+					offset: { x: 10, y: 10 },
+				},
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.commitVersion).toBe(1);
+			// A deletion is not something a duplicate can be offset from any more.
+			expect(next.lastDuplicate).toBeNull();
+			expect(next.objects["r"]).toBe(other);
+		});
+
+		it("propagates the deletion to the bounds of the group the polyline sits in", () => {
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					g: makeGroup("g", ["p"]),
+					p: makePolyline(
+						"p",
+						[
+							{ x: 0, y: 0 },
+							{ x: 10, y: 10 },
+							{ x: 20, y: 20 },
+						],
+						"g",
+					),
+				},
+				rootIds: ["g"],
+				selectedVertex: { objectId: "p", vertexIndex: 2 },
+			});
+			const next = DeleteCommand.execute(state, registries);
+			const group = next.objects["g"] as GroupState;
+			expect(group.cx).toBe(5);
+			expect(group.cy).toBe(5);
+			expect(group.width).toBe(10);
+			expect(group.height).toBe(10);
+		});
+	});
+
+	describe("part-selection deletion", () => {
+		/** A shape carrying a list of parts addressed by their index, as a table's tracks are. */
+		type TrackState = ObjectState & { items: string[] };
+
+		const makeTracked = (items: string[]): TrackState =>
+			({ id: "n", type: "pin", items }) as unknown as TrackState;
+
+		/** Registers the `track` kind on the `pin` type, optionally without a deletion. */
+		const trackedRegistries = (
+			remove?: (
+				object: TrackState,
+				partIds: readonly string[],
+			) => TrackState | null,
+		) => {
+			const bundle = createTestRegistries();
+			bundle.objectPartKind.register<TrackState>("pin", [
+				{
+					kind: "track",
+					has: (object, partId) => Number(partId) < object.items.length,
+					delete: remove,
+				},
+			]);
+			return bundle;
+		};
+
+		const trackedState = (
+			items: string[],
+			partIds: string[],
+		): CanvasControllerState =>
+			makeState({
+				selectedIds: ["n"],
+				objects: { n: makeTracked(items) },
+				rootIds: ["n"],
+				objectPartSelection: { objectId: "n", kind: "track", partIds },
+			});
+
+		const removeTracks = (
+			object: TrackState,
+			partIds: readonly string[],
+		): TrackState => {
+			const removed = new Set(partIds.map(Number));
+			return {
+				...object,
+				items: object.items.filter((_, index) => !removed.has(index)),
+			};
+		};
+
+		it("removes the parts the channel names and blanks the channel", () => {
+			const bundle = trackedRegistries(removeTracks);
+			const state = trackedState(["a", "b", "c"], ["1"]);
+
+			const next = DeleteCommand.execute(state, bundle);
+
+			expect((next.objects["n"] as TrackState).items).toEqual(["a", "c"]);
+			expect(next.objectPartSelection).toBeNull();
+			expect(next.commitVersion).toBe(1);
+			expect(DeleteCommand.canExecute(state, bundle)).toBe(true);
+		});
+
+		it("lets the key reach the object while the picked kind registers no deletion", () => {
+			// This is what keeps Delete over a text slot deleting the shape the slot
+			// belongs to.
+			const state = trackedState(["a", "b"], ["0"]);
+
+			const next = DeleteCommand.execute(state, trackedRegistries());
+
+			expect(next.objects["n"]).toBeUndefined();
+			expect(next.selectedIds).toEqual([]);
+		});
+
+		it("holds the key over a picked part whose kind declares a deletion that refuses", () => {
+			const bundle = trackedRegistries(() => null);
+			const state = trackedState(["a", "b"], ["0"]);
+
+			expect(DeleteCommand.canExecute(state, bundle)).toBe(true);
+			expect(DeleteCommand.execute(state, bundle)).toBe(state);
+		});
+
+		it("ignores ids the object has outgrown and goes on to the object", () => {
+			const state = trackedState(["a", "b"], ["7"]);
+
+			const next = DeleteCommand.execute(
+				state,
+				trackedRegistries(removeTracks),
+			);
+
+			expect(next.objects["n"]).toBeUndefined();
+		});
+
+		it("deletes the selected vertex ahead of a part selection on the same object", () => {
+			const bundle = createTestRegistries();
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					p: makePolyline("p", [
+						{ x: 0, y: 0 },
+						{ x: 10, y: 0 },
+						{ x: 20, y: 0 },
+					]),
+				},
+				rootIds: ["p"],
+				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				objectPartSelection: {
+					objectId: "p",
+					kind: "vertex",
+					partIds: ["0", "2"],
+				},
+			});
+
+			const next = DeleteCommand.execute(state, bundle);
+
+			expect((next.objects["p"] as PolylineState).points).toEqual([
+				{ x: 0, y: 0 },
+				{ x: 20, y: 0 },
+			]);
+			expect(next.objectPartSelection).toBeNull();
 		});
 	});
 
@@ -187,7 +381,7 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
 
-		it("is not executable when the vertex-selection target has no deletable vertices", () => {
+		it("is not executable when a vertex field names a type with no vertex kind and nothing else is selected", () => {
 			const state = makeState({
 				selectedIds: [],
 				objects: { r: makeRect("r") },
@@ -195,6 +389,46 @@ describe("DeleteCommand", () => {
 				selectedVertex: { objectId: "r", vertexIndex: 0 },
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(false);
+		});
+
+		it("lets the key mean object deletion while the selected vertex's kind registers none", () => {
+			// Omitting `delete` is the kind saying Delete is not about its parts, so
+			// the object the vertex sits in is what goes.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["n"],
+				objects: { n: pin },
+				rootIds: ["n"],
+				selectedVertex: { objectId: "n", vertexIndex: 0 },
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
+			const next = DeleteCommand.execute(state, pinRegistries);
+			expect(next.objects["n"]).toBeUndefined();
+			expect(next.selectedVertex).toBeNull();
+		});
+
+		it("holds the key over a picked part whose kind declares a deletion that refuses", () => {
+			// `delete: () => null` is how a kind keeps Delete from reaching the object
+			// while one of its parts is picked: executable, yet nothing is removed.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true, delete: () => null },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["n"],
+				objects: { n: pin },
+				rootIds: ["n"],
+				selectedVertex: { objectId: "n", vertexIndex: 0 },
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
+			expect(DeleteCommand.execute(state, pinRegistries)).toBe(state);
 		});
 
 		it("is executable when there is a connector selection", () => {

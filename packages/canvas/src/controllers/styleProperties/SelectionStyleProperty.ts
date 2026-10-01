@@ -3,7 +3,7 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 import { resolveObjectPartSelection } from "../selection/resolveObjectPartSelection";
 import { resolveSelectedTextSlotIds } from "../selection/resolveSelectedTextSlotIds";
@@ -72,13 +72,16 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
-		objectPart: ObjectPartRegistry,
+		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
 		const { selectedIds, selectedConnectorId, objects } = state;
 		const path = property.split(".");
 		// Resolved once: the raw state.objectPartSelection may be stale, and every
 		// object visited below has to be matched against the same resolved value.
-		const objectPartSelection = resolveObjectPartSelection(state, objectPart);
+		const objectPartSelection = resolveObjectPartSelection(
+			state,
+			objectPartKind,
+		);
 
 		// Connector selected (selectedIds is empty)
 		if (selectedIds.length === 0 && selectedConnectorId !== null) {
@@ -92,7 +95,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				path,
 				value,
 				objectPartSelection,
-				objectPart,
+				objectPartKind,
 			);
 			if (updated === null) {
 				return state;
@@ -122,7 +125,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				path,
 				value,
 				objectPartSelection,
-				objectPart,
+				objectPartKind,
 			);
 			if (updated === null) {
 				continue;
@@ -147,7 +150,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 						path,
 						value,
 						objectPartSelection,
-						objectPart,
+						objectPartKind,
 					);
 					if (updated === null) {
 						continue;
@@ -199,7 +202,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		path: readonly string[],
 		value: string,
 		objectPartSelection: ObjectPartSelection | null,
-		objectPart: ObjectPartRegistry,
+		objectPartKind: ObjectPartKindRegistry,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -213,7 +216,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			obj,
 			path,
 			coerced,
-			resolveSelectedTextSlotIds(obj, objectPartSelection, objectPart),
+			resolveSelectedTextSlotIds(obj, objectPartSelection, objectPartKind),
 		);
 	}
 }

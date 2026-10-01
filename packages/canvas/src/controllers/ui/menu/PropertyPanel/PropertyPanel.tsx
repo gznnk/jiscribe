@@ -208,20 +208,20 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
-	const { objectPart } = useCanvasRegistries();
+	const { objectPartKind } = useCanvasRegistries();
 	const sections = usePropertyPanelSections(canvasState);
 	const { collapsedSectionIds } = canvasState.propertyPanel;
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
 	const showsArrangeSection =
 		!showsCanvasSection && isArrangeableSelection(canvasState);
 	const showsMetaSection =
-		!showsCanvasSection && isMetaSectionShown(canvasState, objectPart);
+		!showsCanvasSection && isMetaSectionShown(canvasState, objectPartKind);
 	// Resolved once and handed to every custom row, as the ObjectMenu does for its
 	// own items: a row that writes into the picked parts reads the value of
 	// exactly what the write will land on.
 	const objectPartSelection = resolveObjectPartSelection(
 		canvasState,
-		objectPart,
+		objectPartKind,
 	);
 	// State rather than a ref, so the fields re-render once the host element exists.
 	const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);

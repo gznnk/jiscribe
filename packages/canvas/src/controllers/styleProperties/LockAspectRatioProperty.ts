@@ -3,7 +3,7 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import { SelectionStyleProperty } from "./SelectionStyleProperty";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 
 /**
  * lockAspectRatio is transform-gated but routes differently from standard
@@ -23,7 +23,7 @@ export class LockAspectRatioProperty extends SelectionStyleProperty {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
-		objectPart: ObjectPartRegistry,
+		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
 		const { selectedIds, multiSelectGroup } = state;
 		if (selectedIds.length > 0 && multiSelectGroup) {
@@ -35,6 +35,6 @@ export class LockAspectRatioProperty extends SelectionStyleProperty {
 				},
 			};
 		}
-		return super.apply(state, property, value, objectPart);
+		return super.apply(state, property, value, objectPartKind);
 	}
 }

@@ -1,4 +1,4 @@
-import type { ObjectPartDefinition } from "@jiscribe/canvas";
+import type { ObjectPartKindDefinition } from "@jiscribe/canvas";
 
 import type { CalloutState } from "../state/callout/CalloutState";
 
@@ -22,7 +22,7 @@ export const CALLOUT_TAIL_PART_ID = "tip";
  * `delete` either: a callout without a tail is a different shape, not a callout
  * missing a part.
  */
-export const CALLOUT_TAIL_PART_DEFINITION: ObjectPartDefinition<CalloutState> =
+export const CALLOUT_TAIL_PART_DEFINITION: ObjectPartKindDefinition<CalloutState> =
 	{
 		kind: CALLOUT_TAIL_PART_KIND,
 		has: (_object, partId) => partId === CALLOUT_TAIL_PART_ID,

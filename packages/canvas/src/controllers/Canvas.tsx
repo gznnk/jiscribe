@@ -705,11 +705,11 @@ const CanvasComponent = ({
 
 	const objectPartSelection = resolveObjectPartSelection(
 		state,
-		registries.objectPart,
+		registries.objectPartKind,
 	);
 	const objectPartOutlined = isObjectPartOutlined(
 		state.objects,
-		registries.objectPart,
+		registries.objectPartKind,
 		objectPartSelection,
 	);
 

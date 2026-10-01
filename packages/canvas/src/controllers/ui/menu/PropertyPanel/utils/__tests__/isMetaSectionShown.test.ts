@@ -28,12 +28,15 @@ const makeState = (
 	}) as unknown as CanvasControllerState;
 
 /** The only slotted fixture here wears the "card" type. */
-const objectPart = createTextSlotPartRegistry("card");
+const objectPartKind = createTextSlotPartRegistry("card");
 
 describe("isMetaSectionShown", () => {
 	it("shows the section for a single selected object", () => {
 		expect(
-			isMetaSectionShown(makeState({ selectedIds: ["rect-1"] }), objectPart),
+			isMetaSectionShown(
+				makeState({ selectedIds: ["rect-1"] }),
+				objectPartKind,
+			),
 		).toBe(true);
 	});
 
@@ -41,7 +44,7 @@ describe("isMetaSectionShown", () => {
 		expect(
 			isMetaSectionShown(
 				makeState({ selectedConnectorId: "conn-1" }),
-				objectPart,
+				objectPartKind,
 			),
 		).toBe(true);
 	});
@@ -50,13 +53,13 @@ describe("isMetaSectionShown", () => {
 		expect(
 			isMetaSectionShown(
 				makeState({ selectedIds: ["rect-1", "rect-2"] }),
-				objectPart,
+				objectPartKind,
 			),
 		).toBe(false);
 	});
 
 	it("hides it while nothing is selected", () => {
-		expect(isMetaSectionShown(makeState({}), objectPart)).toBe(false);
+		expect(isMetaSectionShown(makeState({}), objectPartKind)).toBe(false);
 	});
 
 	it("hides it while a text slot is selected", () => {
@@ -70,7 +73,7 @@ describe("isMetaSectionShown", () => {
 			objects: { "card-1": slottedShape("card-1") },
 		});
 
-		expect(isMetaSectionShown(state, objectPart)).toBe(false);
+		expect(isMetaSectionShown(state, objectPartKind)).toBe(false);
 	});
 
 	it("hides it while a shape's text is being edited", () => {
@@ -84,6 +87,6 @@ describe("isMetaSectionShown", () => {
 			},
 		});
 
-		expect(isMetaSectionShown(state, objectPart)).toBe(false);
+		expect(isMetaSectionShown(state, objectPartKind)).toBe(false);
 	});
 });

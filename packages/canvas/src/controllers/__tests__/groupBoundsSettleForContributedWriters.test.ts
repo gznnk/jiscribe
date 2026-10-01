@@ -18,7 +18,7 @@ import type { SelectionControlDefinition } from "../ui/controls/SelectionControl
  * Both write a box they derived themselves, which is what makes them worth a
  * test of their own: the content-resizer pass settles the ancestors only for the
  * boxes it moved, so an already-derived one used to leave the group behind. The
- * act being the same one Delete already settled through `deleteObjectParts` is
+ * act being the same one Delete already settled through its own part branch is
  * how the split showed up (a table's row removed by key vs. by the right-click
  * menu).
  */

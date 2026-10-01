@@ -129,7 +129,7 @@ describe("the vertical basis a body is placed against", () => {
 				state,
 				"textVerticalBasis",
 				value,
-				registries.objectPart,
+				registries.objectPartKind,
 			);
 
 		it("places every switchable body on the box named, and leaves the rest alone", () => {

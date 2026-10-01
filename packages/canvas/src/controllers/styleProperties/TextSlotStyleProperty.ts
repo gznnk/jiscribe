@@ -15,7 +15,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import {
 	resolveTextEditSelection,
 	styleTextEditSelection,
@@ -46,14 +46,14 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
-		objectPart: ObjectPartRegistry,
+		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
 		const ranged = this.applyToTextEditSelection(state, property, value);
 		if (ranged !== null) {
 			return ranged;
 		}
 		return this.clearAppliedInlineStyleFromDraft(
-			super.apply(state, property, value, objectPart),
+			super.apply(state, property, value, objectPartKind),
 			state,
 			property,
 		);

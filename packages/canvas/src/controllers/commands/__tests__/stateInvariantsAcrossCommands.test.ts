@@ -53,7 +53,7 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 	// stale (resolveObjectPartSelection's contract), so only the resolved value is pinned.
 	const resolvedPartSelection = resolveObjectPartSelection(
 		state,
-		registries.objectPart,
+		registries.objectPartKind,
 	);
 	if (resolvedPartSelection !== null) {
 		const { objectId, partIds } = resolvedPartSelection;

@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import type { ObjectPartRegistry } from "../../../../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../../../../selection/ObjectPartKindRegistry";
 import { resolveObjectPartSelection } from "../../../../selection/resolveObjectPartSelection";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
 
@@ -14,15 +14,15 @@ import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
  * own note is not that.
  *
  * @param state - The selection channels, the selected text slot and the open text edit are read
- * @param objectPart - Per-canvas ObjectPartRegistry, which decides whether the selection addresses parts inside one object
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which decides whether the selection addresses parts inside one object
  * @returns True while a single object, or a connector, is selected and no text is being addressed
  */
 export const isMetaSectionShown = (
 	state: CanvasControllerState,
-	objectPart: ObjectPartRegistry,
+	objectPartKind: ObjectPartKindRegistry,
 ): boolean => {
 	if (
-		resolveObjectPartSelection(state, objectPart) !== null ||
+		resolveObjectPartSelection(state, objectPartKind) !== null ||
 		state.textEditState?.kind === "shape"
 	) {
 		return false;

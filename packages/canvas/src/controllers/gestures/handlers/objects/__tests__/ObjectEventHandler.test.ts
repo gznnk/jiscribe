@@ -14,7 +14,7 @@ import { ObjectEventHandler } from "../ObjectEventHandler";
 const registries = createTestRegistries();
 // "record" stands in for a plugin's slotted shape, which the built-in-only test
 // bundle has never been told about.
-registerTextSlotParts(registries.objectPart, "record");
+registerTextSlotParts(registries.objectPartKind, "record");
 
 const SIZE = 10;
 
@@ -726,7 +726,7 @@ describe("ObjectEventHandler - snap during edge scroll", () => {
  * in one line has nothing to slice anyway.
  */
 const rangeRegistries = createTestRegistries();
-rangeRegistries.objectPart.register("record", [
+rangeRegistries.objectPartKind.register("record", [
 	{
 		kind: TEXT_SLOT_PART_KIND,
 		has: () => true,

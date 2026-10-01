@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { defaultCanvasRegistries } from "./createCanvasRegistries";
-import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 
 /**
  * Context that distributes the per-canvas registry bundle to descendant
@@ -32,6 +32,6 @@ export function useCanvasRegistries(): CanvasRegistries {
  * of the bundle a plugin's own component has a use for, the rest of the canvas
  * state reaching it as props (ObjectMenuItemProps).
  */
-export function useObjectPartRegistry(): ObjectPartRegistry {
-	return useCanvasRegistries().objectPart;
+export function useObjectPartKindRegistry(): ObjectPartKindRegistry {
+	return useCanvasRegistries().objectPartKind;
 }

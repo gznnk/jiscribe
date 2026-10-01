@@ -28,7 +28,7 @@ type SelectionOverlayProps = {
  * While parts of an object are selected, the outline of the object holding them turns
  * dashed: the solid boxes are the parts being operated on, the dashed one the selection
  * they sit inside. Every selected part is outlined, each from the box its own type
- * answers with (ObjectPartDefinition.region).
+ * answers with (ObjectPartKindDefinition.region).
  */
 const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	selectedIds,
@@ -36,7 +36,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	multiSelectGroup,
 	objectPartSelection = null,
 }) => {
-	const { objectPart } = useCanvasRegistries();
+	const { objectPartKind } = useCanvasRegistries();
 
 	if (selectedIds.length === 0) {
 		return null;
@@ -57,7 +57,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 		: undefined;
 	const partRegion =
 		objectPartSelection && partOwner
-			? objectPart.get(partOwner.type, objectPartSelection.kind)?.region
+			? objectPartKind.get(partOwner.type, objectPartSelection.kind)?.region
 			: undefined;
 
 	return (

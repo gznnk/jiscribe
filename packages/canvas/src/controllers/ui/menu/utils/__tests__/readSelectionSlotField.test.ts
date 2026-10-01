@@ -61,14 +61,14 @@ const slotsPicked = (
  * plus the table's two other kinds — one standing for a group of cells (a row),
  * one covering none.
  */
-const objectPart = createTextSlotPartRegistry("table", "group");
-registerSlotGroupParts(objectPart, "table");
+const objectPartKind = createTextSlotPartRegistry("table", "group");
+registerSlotGroupParts(objectPartKind, "table");
 
 describe("readSelectionSlotField", () => {
 	it("reads every slot of the object while none is picked", () => {
 		const t1 = table("t1", cells("#eef", "#eef"));
 		expect(
-			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+			readSelectionSlotField(["t1"], { t1 }, null, objectPartKind, "fill"),
 		).toEqual({
 			kind: "single",
 			value: "#eef",
@@ -82,7 +82,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t1", "r0c1", "r0c2"),
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual({ kind: "single", value: "#fee" });
@@ -95,7 +95,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t1", "r0c0", "r0c1", "r0c2"),
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
@@ -106,7 +106,7 @@ describe("readSelectionSlotField", () => {
 		// them states the one thing they say — that they carry no value.
 		const t1 = table("t1", cells(undefined, undefined));
 		expect(
-			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+			readSelectionSlotField(["t1"], { t1 }, null, objectPartKind, "fill"),
 		).toEqual({
 			kind: "single",
 			value: undefined,
@@ -116,7 +116,7 @@ describe("readSelectionSlotField", () => {
 	it("reads an unset slot against a filled one as mixed", () => {
 		const t1 = table("t1", cells("#eef", undefined));
 		expect(
-			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+			readSelectionSlotField(["t1"], { t1 }, null, objectPartKind, "fill"),
 		).toEqual({
 			kind: "mixed",
 			values: ["#eef", undefined],
@@ -131,7 +131,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t2", "r0c0"),
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual(everySlot);
@@ -140,7 +140,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				{ objectId: "t1", kind: NON_SLOT_PART_KIND, partIds: ["tip"] },
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual(everySlot);
@@ -150,7 +150,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				{ objectId: "t1", kind: "column", partIds: ["0"] },
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual(everySlot);
@@ -164,7 +164,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				{ objectId: "t1", kind: SLOT_GROUP_PART_KIND, partIds: ["1"] },
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual({ kind: "single", value: "#fee" });
@@ -179,7 +179,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				{ objectId: "t1", kind: SLOT_GROUP_PART_KIND, partIds: ["0"] },
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
@@ -192,7 +192,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t1", "r0c1", "r9c9"),
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual({ kind: "single", value: "#fee" });
@@ -201,7 +201,7 @@ describe("readSelectionSlotField", () => {
 				["t1"],
 				{ t1 },
 				slotsPicked("t1", "r9c9"),
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
@@ -216,7 +216,7 @@ describe("readSelectionSlotField", () => {
 				["g1"],
 				{ g1: g1 as unknown as ObjectState, t1, t2 },
 				null,
-				objectPart,
+				objectPartKind,
 				"fill",
 			),
 		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
@@ -225,11 +225,19 @@ describe("readSelectionSlotField", () => {
 	it("reads none when nothing selected holds text", () => {
 		const bare = { id: "b1", type: "rect" } as unknown as ObjectState;
 		expect(
-			readSelectionSlotField(["b1"], { b1: bare }, null, objectPart, "fill"),
+			readSelectionSlotField(
+				["b1"],
+				{ b1: bare },
+				null,
+				objectPartKind,
+				"fill",
+			),
 		).toEqual({
 			kind: "none",
 		});
-		expect(readSelectionSlotField([], {}, null, objectPart, "fill")).toEqual({
+		expect(
+			readSelectionSlotField([], {}, null, objectPartKind, "fill"),
+		).toEqual({
 			kind: "none",
 		});
 	});
@@ -239,7 +247,7 @@ describe("readSelectionSlotField", () => {
 			r0c0: { text: "", fill: 3 },
 		} as unknown as TextSlots);
 		expect(
-			readSelectionSlotField(["t1"], { t1 }, null, objectPart, "fill"),
+			readSelectionSlotField(["t1"], { t1 }, null, objectPartKind, "fill"),
 		).toEqual({
 			kind: "single",
 			value: undefined,

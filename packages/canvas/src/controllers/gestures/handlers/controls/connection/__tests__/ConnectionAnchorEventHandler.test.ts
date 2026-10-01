@@ -406,7 +406,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selected,
 				"strokeDashType",
 				"dashed",
-				registries.objectPart,
+				registries.objectPartKind,
 			);
 			expect(
 				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
@@ -416,7 +416,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selected,
 				"stroke",
 				"#ff0000",
-				registries.objectPart,
+				registries.objectPartKind,
 			);
 			expect((colored.objects[connectorId] as ConnectorState).stroke).toBe(
 				"#ff0000",
@@ -426,7 +426,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selected,
 				"strokeWidth",
 				"7",
-				registries.objectPart,
+				registries.objectPartKind,
 			);
 			expect((widened.objects[connectorId] as ConnectorState).strokeWidth).toBe(
 				7,

@@ -2,7 +2,7 @@ import type { ObjectMenuItemProps } from "@jiscribe/canvas";
 import type { SelectionValue } from "@jiscribe/canvas-sdk";
 import {
 	readSelectionSlotField,
-	useObjectPartRegistry,
+	useObjectPartKindRegistry,
 } from "@jiscribe/canvas-sdk";
 
 import { TABLE_CELL_FILL_FIELD } from "../schema/TableDoc";
@@ -36,12 +36,12 @@ export type TableCellFillSource = Pick<
 export const useTableCellFill = (
 	source: TableCellFillSource,
 ): SelectionValue<string | undefined> => {
-	const objectPart = useObjectPartRegistry();
+	const objectPartKind = useObjectPartKindRegistry();
 	return readSelectionSlotField(
 		source.selectedIds,
 		source.objects,
 		source.objectPartSelection,
-		objectPart,
+		objectPartKind,
 		TABLE_CELL_FILL_FIELD,
 	);
 };
