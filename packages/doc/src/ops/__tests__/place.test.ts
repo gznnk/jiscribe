@@ -524,6 +524,36 @@ describe("place: a point-geometry shape", () => {
 		);
 	});
 
+	// A group scale states a layout rather than any one shape's size, so it does
+	// reach such a shape — and has to move it, or the shape sits at the old centre
+	// while everything around it spreads out.
+	it("keeps its size but follows the layout when its group is scaled", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 100 });
+		const textId = docOps.addObject(doc, "text", {
+			x: 200,
+			y: 0,
+			text: "hi",
+		});
+		const before = docOps.getObjectBounds(doc, textId);
+		const groupId = docOps.groupObjects(doc, ["rect-1", textId]);
+		const groupBefore = docOps.getObjectBounds(doc, groupId);
+
+		docOps.resizeObject(doc, groupId, { width: groupBefore!.width * 2 });
+
+		const after = docOps.getObjectBounds(doc, textId);
+		// The box is the text's own either way: only where it sits changed.
+		expect(after?.width).toBeCloseTo(before!.width, 6);
+		expect(after?.height).toBeCloseTo(before!.height, 6);
+		// Its centre lands where every other geometry's would — scaled about the
+		// group's left edge, which is the rect's own x of 0.
+		expect(after!.x + after!.width / 2).toBeCloseTo(
+			(before!.x + before!.width / 2) * 2,
+			6,
+		);
+		expectValid(doc);
+	});
+
 	it("rejects a batch it is named in, leaving every other id untouched", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });

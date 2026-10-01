@@ -170,6 +170,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **A shape whose size is measured no longer stays put when the group around it
+  is resized.** Scaling a group scales the gaps inside it, and every shape that
+  stores a box moved with them — but a `text`, whose box is its own content,
+  carried no extent for the scale to write and so was left at the coordinate it
+  started from. A label centred under an icon ended up beside it, by half of
+  however much the icon grew. Its box is still the text's own; what follows the
+  layout now is where that box sits, its centre landing where any other
+  geometry's would. A `text` named in a resize of its own is still refused —
+  that is a caller stating a size, which this geometry has no field for, while a
+  group scale states the layout instead.
+
 - **`resize_object` no longer reports success on a shape whose size it cannot
   set.** A `geometry: "point"` shape — a `text` — is measured from its own
   content every time it is read, so there is no extent for a resize to write;
