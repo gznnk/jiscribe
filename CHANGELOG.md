@@ -92,6 +92,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **`resize_object` no longer reports success on a shape whose size it cannot
+  set.** A `geometry: "point"` shape — a `text` — is measured from its own
+  content every time it is read, so there is no extent for a resize to write;
+  the op planned the change, found no case for the geometry and wrote nothing,
+  answering as though it had. It now refuses the id and says what to change
+  instead: the fields the content is laid out in, a block text's own width among
+  them. `resize_objects` rejects the whole batch the way it already does for a
+  connector, naming the offender as `ids[i] (id)` and leaving every other id
+  untouched, so a selection holding a text resizes nothing until that id is left
+  out. Reporting the box, aligning and distributing by it, and moving the shape
+  are unchanged — only setting the box is refused.
 - **The reported box of a rotated shape whose size is measured no longer misses
   it.** `get_object_bounds`, and with it alignment, distribution and overlap
   checks, read a `text`'s stored coordinate as the box's plain top-left corner —
