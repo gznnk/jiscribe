@@ -1,8 +1,9 @@
+import type { Dimensions } from "@jiscribe/geometry";
+
 import { TEXT_DOC_DEFAULTS } from "./TextDoc";
 import { calcTextObjectFrameSize } from "../../../../text/object/calcTextObjectFrameSize";
 import { resolveDocBodyFont } from "../../../../text/object/resolveDocBodyFont";
 import { isRichText } from "../../types/text/RichText";
-import type { PointObjectSizeCalculator } from "../../utils/createPointObjectFactory";
 
 /**
  * The box a text draws, which is the whole of its size. The type's one measurement:
@@ -19,7 +20,9 @@ import type { PointObjectSizeCalculator } from "../../utils/createPointObjectFac
  * @param doc - Any text doc, or the merged defaults a factory is about to write; `text`, `textLayout` and `width` are read for the content and the wrap, the four font fields for the measurement
  * @returns The size in local px; a doc holding no text measures as the empty string, which still has a line's height
  */
-export const measureTextSize: PointObjectSizeCalculator = (doc) =>
+export const measureTextSize = (
+	doc: Readonly<Record<string, unknown>>,
+): Dimensions =>
 	calcTextObjectFrameSize(
 		isRichText(doc.text) ? doc.text : "",
 		resolveDocBodyFont(doc, TEXT_DOC_DEFAULTS),
