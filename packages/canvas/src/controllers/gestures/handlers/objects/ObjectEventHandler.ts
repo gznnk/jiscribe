@@ -9,6 +9,7 @@ import type {
 	TransformedFrame,
 } from "@jiscribe/geometry";
 
+import { applyObjectSelection } from "./utils/applyObjectSelection";
 import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
@@ -31,7 +32,6 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import type { Mods } from "../../registry/ObjectBehaviorTypes";
 import { ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
@@ -41,49 +41,6 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
-
-/**
- * Handles a click on an object.
- * Applies hierarchical selection logic and updates the selection state.
- */
-function handleObjectClick(
-	canvasState: CanvasControllerState,
-	targetObject: ObjectState,
-	mods: Mods,
-): CanvasControllerState {
-	// Determine the new selection via hierarchical selection logic
-	const selectedIds = determineSelection(targetObject, canvasState, mods);
-
-	// Return the current state if there is no change
-	if (selectedIds === null) {
-		return canvasState;
-	}
-
-	// For multi-selection, create a multiSelectGroup
-	let multiSelectGroup = null;
-	if (1 < selectedIds.length) {
-		multiSelectGroup = createMultiSelectGroup(
-			selectedIds,
-			canvasState.objects,
-			canvasState.multiSelectGroup,
-		);
-	}
-
-	return {
-		...canvasState,
-		selectedIds,
-		multiSelectGroup,
-		// Clear the connector selection to guarantee mutual exclusion
-		selectedConnectorId: null,
-		// Clear the vertex selection
-		selectedVertex: null,
-		// Clear the text slot selection
-		selectedTextSlot: null,
-		// Close the submenu on selection change
-		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
-	};
-}
 
 /**
  * Selects the text slot a click landed in, one level below the object selection.
@@ -449,10 +406,14 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the click event
 		if (event.type === "click") {
-			const afterClick = handleObjectClick(nextState, targetObject, event.mods);
+			const afterClick = applyObjectSelection(
+				nextState,
+				targetObject,
+				event.mods,
+			);
 			// A click that leaves the selection as it was, on the object that is already
 			// the whole selection, addresses a text slot inside it instead. Any modifier
-			// belongs to selection editing, so it is left to handleObjectClick alone.
+			// belongs to selection editing, so it is left to applyObjectSelection alone.
 			const addressesTextSlot =
 				afterClick === nextState &&
 				!event.mods.ctrl &&
