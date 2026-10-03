@@ -66,7 +66,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 
 		expect(next.selectedConnectorId).toBeNull();
 		expect(next.selectedVertex).toBeNull();
-		expect(next.selectedTextSlot).toBeNull();
+		expect(next.objectPartSelection).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 	});
 

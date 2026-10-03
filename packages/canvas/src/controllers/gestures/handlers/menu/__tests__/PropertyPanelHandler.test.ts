@@ -195,7 +195,7 @@ describe("PropertyPanelHandler", () => {
 				selectedIds: ["rect-1"],
 				selectedConnectorId: null,
 				selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
-				selectedTextSlot: null,
+				objectPartSelection: null,
 				multiSelectGroup: null,
 				textEditState: null,
 				commitVersion: 5,

@@ -42,7 +42,7 @@ export const clearAllSelection = (
 	selectedConnectorId: null,
 	// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
 	selectedVertex: null,
-	selectedTextSlot: null,
+	objectPartSelection: null,
 	multiSelectGroup: null,
 	areaSelection: null,
 	objectMenuOpenId: null,

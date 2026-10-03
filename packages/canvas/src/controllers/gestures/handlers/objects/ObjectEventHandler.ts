@@ -24,6 +24,7 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
@@ -74,21 +75,32 @@ function handleTextSlotClick(
 	// A slot change moves what the menu acts on, so it closes the open submenu just
 	// as an object selection change does. Re-clicking the same slot changes nothing
 	// and returns the state untouched, leaving the submenu as it was.
-	const currentSlot = canvasState.selectedTextSlot;
+	const currentPartSelection = canvasState.objectPartSelection;
 	if (slotId === null) {
-		return currentSlot === null
+		return currentPartSelection === null
 			? canvasState
-			: { ...canvasState, selectedTextSlot: null, objectMenuOpenId: null };
+			: { ...canvasState, objectPartSelection: null, objectMenuOpenId: null };
 	}
+	// A click picks the one slot it landed on, so the range it writes is collapsed
+	// and it is the whole selection: anything already picked is replaced. Only a
+	// slot selection can already be that very slot — a part of another kind sharing
+	// the id is still replaced.
 	if (
-		currentSlot?.objectId === targetObject.id &&
-		currentSlot.slotId === slotId
+		currentPartSelection?.objectId === targetObject.id &&
+		currentPartSelection.kind === TEXT_SLOT_PART_KIND &&
+		currentPartSelection.ranges.length === 1 &&
+		currentPartSelection.ranges[0].anchorId === slotId &&
+		currentPartSelection.ranges[0].focusId === slotId
 	) {
 		return canvasState;
 	}
 	return {
 		...canvasState,
-		selectedTextSlot: { objectId: targetObject.id, slotId },
+		objectPartSelection: {
+			objectId: targetObject.id,
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: slotId, focusId: slotId }],
+		},
 		objectMenuOpenId: null,
 	};
 }
@@ -322,8 +334,8 @@ function handleObjectDragStart(
 		selectedConnectorId: null,
 		// Clear the vertex selection
 		selectedVertex: null,
-		// Clear the text slot selection
-		selectedTextSlot: null,
+		// Clear the sub-object part selection
+		objectPartSelection: null,
 		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,

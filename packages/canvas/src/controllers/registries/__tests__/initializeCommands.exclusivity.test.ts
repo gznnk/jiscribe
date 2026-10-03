@@ -5,6 +5,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Command, KeyBinding } from "../../commands/CommandTypes";
 import { getPlatformShortcuts } from "../../commands/CommandUtils";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
+import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { ZOOM } from "../../utils/zoom";
 import { createTestRegistries } from "../createCanvasRegistries";
 
@@ -98,7 +99,11 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 		state: buildState(emptyDoc, {
 			objects: slotObjects,
 			selectedIds: ["rec-1"],
-			selectedTextSlot: { objectId: "rec-1", slotId: "name" },
+			objectPartSelection: {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "name", focusId: "name" }],
+			},
 		}),
 	},
 	{
