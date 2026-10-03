@@ -155,6 +155,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **Delete on a connector's last waypoints does something again.** A connector's
+  `points` holds only the waypoints between its endpoints, yet its vertex floor
+  was the polyline's two, so with one or two waypoints left the key was claimed
+  and refused: nothing moved, and the connector did not go either. The floor is
+  now none, so a picked waypoint is always removed — down to the straight route
+  the connector started as.
 - **A shape whose size is measured no longer stays put when the group around it
   is resized.** Scaling a group scales the gaps inside it, and every shape that
   stores a box moved with them — but a `text`, whose box is its own content,

@@ -15,9 +15,9 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * fill (#0d99ff), the same commit point polyline-vertex.spec waits for. Delete is
  * pressed only after that.
  *
- * Vertex-count note: a connector's `points` holds the waypoints alone, and its
- * part definition refuses a deletion that would leave fewer than two of them, so
- * the routes here are bent three times to have one to spare.
+ * Waypoint note: a connector's `points` holds the waypoints alone, the endpoints
+ * not among them, so the route is bent once and that one waypoint is deleted —
+ * down to none, which a floor borrowed from the polyline used to refuse.
  */
 
 type Vec = { x: number; y: number };
@@ -132,11 +132,11 @@ async function insertWaypoint(
 
 /**
  * Joins two rectangles placed diagonally apart, rightCenter to leftCenter, switches the
- * routing to straight and bends it three times, leaving the route
- * [source, w0, w1, w2, target]. Both rectangles stay owned by their endpoint, so deleting
- * one of them is what frees that end.
+ * routing to straight and bends it once, leaving the route [source, w0, target].
+ * Both rectangles stay owned by their endpoint, so deleting one of them is what
+ * frees that end.
  */
-async function buildConnectorWithWaypoints(canvas: CanvasDriver): Promise<{
+async function buildConnectorWithWaypoint(canvas: CanvasDriver): Promise<{
 	connectorId: string;
 	sourceRectId: string;
 }> {
@@ -160,8 +160,6 @@ async function buildConnectorWithWaypoints(canvas: CanvasDriver): Promise<{
 	await switchToStraightRouting(canvas, connectorId);
 
 	await insertWaypoint(canvas, connectorId, 0, { x: 560, y: 420 });
-	await insertWaypoint(canvas, connectorId, 1, { x: 690, y: 560 });
-	await insertWaypoint(canvas, connectorId, 2, { x: 790, y: 640 });
 
 	return { connectorId, sourceRectId };
 }
@@ -191,11 +189,11 @@ test.describe("deleting a picked connector waypoint", () => {
 	test("removes the waypoint alone and keeps the connector, and undo puts it back", async ({
 		canvas,
 	}) => {
-		const { connectorId } = await buildConnectorWithWaypoints(canvas);
+		const { connectorId } = await buildConnectorWithWaypoint(canvas);
 		const before = await readPoints(canvas, connectorId);
-		expect(before).toHaveLength(5);
+		expect(before).toHaveLength(3);
 
-		await pickWaypoint(canvas, connectorId, 1);
+		await pickWaypoint(canvas, connectorId, 0);
 		await canvas.deleteSelection();
 
 		await expect
@@ -221,10 +219,10 @@ test.describe("deleting a picked connector waypoint", () => {
 		canvas,
 	}) => {
 		const { connectorId, sourceRectId } =
-			await buildConnectorWithWaypoints(canvas);
+			await buildConnectorWithWaypoint(canvas);
 		const before = await readPoints(canvas, connectorId);
 
-		await pickWaypoint(canvas, connectorId, 1);
+		await pickWaypoint(canvas, connectorId, 0);
 
 		// Moving the selection to the source rectangle clears the pick, since the
 		// connector is no longer the sole selection.
