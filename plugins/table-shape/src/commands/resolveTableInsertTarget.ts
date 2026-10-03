@@ -1,4 +1,7 @@
-import type { CanvasControllerState } from "@jiscribe/canvas-sdk";
+import type {
+	CanvasControllerState,
+	ObjectPartKindRegistry,
+} from "@jiscribe/canvas-sdk";
 
 import { resolveTableTrackSelection } from "./resolveTableTrackSelection";
 import type { TableAxis } from "../grid/tableTrack";
@@ -28,14 +31,16 @@ export type TableInsertTarget = {
  * @param state - The canvas to read; the sole selected object, the part selection standing on it and whether a text edit is open are all consulted
  * @param axis - The direction the new track would run in
  * @param side - Which end of the referenced span it lands on: `"before"` at the lowest referenced index, `"after"` one past the highest
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, handed straight to resolveTableTrackSelection
  * @returns The table and the insertion point, or null when the selection is not one table's, names no track along `axis`, or a cell is being edited
  */
 export const resolveTableInsertTarget = (
 	state: CanvasControllerState,
 	axis: TableAxis,
 	side: TableInsertSide,
+	objectPartKind: ObjectPartKindRegistry,
 ): TableInsertTarget | null => {
-	const selected = resolveTableTrackSelection(state, axis);
+	const selected = resolveTableTrackSelection(state, axis, objectPartKind);
 	if (selected === null) {
 		return null;
 	}

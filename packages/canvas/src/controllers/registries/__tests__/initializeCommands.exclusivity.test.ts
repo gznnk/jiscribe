@@ -102,7 +102,7 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 			objectPartSelection: {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["name"],
+				ranges: [{ anchorId: "name", focusId: "name" }],
 			},
 		}),
 	},

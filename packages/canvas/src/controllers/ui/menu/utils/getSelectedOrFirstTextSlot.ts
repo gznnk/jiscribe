@@ -14,7 +14,6 @@ import { isTextStyleState } from "../../../../states/objects/base/TextStyleState
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
-import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { resolveSelectedTextSlotIds } from "../../../selection/resolveSelectedTextSlotIds";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
@@ -79,9 +78,9 @@ const foldSharedTextSlotStyle = (slots: readonly TextSlot[]): TextSlot => {
  * draws even where the author set nothing — and a toggle reads its direction off
  * the same value.
  *
- * @param state - The current canvas controller state; a stale `objectPartSelection`
- *   is neutralized here (resolveObjectPartSelection), so the raw value never reaches
- *   what the menus display
+ * @param state - The current canvas controller state; its `objectPartSelection`
+ *   is read as it stands, the reducer having already dropped a stale one
+ *   (reconcileObjectPartSelection)
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, keyed by
  *   the type of whichever object the slot was found on
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which decides whether the
@@ -105,7 +104,7 @@ export const getSelectedOrFirstTextSlot = (
 		};
 	}
 
-	const objectPartSelection = resolveObjectPartSelection(state, objectPartKind);
+	const { objectPartSelection } = state;
 	if (objectPartSelection !== null) {
 		const target = state.objects[objectPartSelection.objectId];
 		if (isTextStyleState(target)) {

@@ -64,7 +64,6 @@ import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
 import { isObjectPartOutlined } from "./selection/isObjectPartOutlined";
-import { resolveObjectPartSelection } from "./selection/resolveObjectPartSelection";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
 import { SelectionControlsLayer } from "./ui/controls/SelectionControlsLayer";
@@ -703,10 +702,7 @@ const CanvasComponent = ({
 	);
 	const { minX, minY, zoom } = drawnViewport;
 
-	const objectPartSelection = resolveObjectPartSelection(
-		state,
-		registries.objectPartKind,
-	);
+	const { objectPartSelection } = state;
 	const objectPartOutlined = isObjectPartOutlined(
 		state.objects,
 		registries.objectPartKind,

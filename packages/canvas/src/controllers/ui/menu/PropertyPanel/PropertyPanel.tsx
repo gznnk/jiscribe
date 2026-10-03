@@ -65,8 +65,6 @@ import {
 } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
-import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
@@ -208,21 +206,17 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
-	const { objectPartKind } = useCanvasRegistries();
 	const sections = usePropertyPanelSections(canvasState);
 	const { collapsedSectionIds } = canvasState.propertyPanel;
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
 	const showsArrangeSection =
 		!showsCanvasSection && isArrangeableSelection(canvasState);
 	const showsMetaSection =
-		!showsCanvasSection && isMetaSectionShown(canvasState, objectPartKind);
-	// Resolved once and handed to every custom row, as the ObjectMenu does for its
-	// own items: a row that writes into the picked parts reads the value of
-	// exactly what the write will land on.
-	const objectPartSelection = resolveObjectPartSelection(
-		canvasState,
-		objectPartKind,
-	);
+		!showsCanvasSection && isMetaSectionShown(canvasState);
+	// Handed to every custom row, as the ObjectMenu does for its own items: a row
+	// that writes into the picked parts reads the value of exactly what the write
+	// will land on.
+	const { objectPartSelection } = canvasState;
 	// State rather than a ref, so the fields re-render once the host element exists.
 	const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
 

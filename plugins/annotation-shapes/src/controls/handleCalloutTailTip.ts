@@ -38,7 +38,9 @@ export const handleCalloutTailTip = (
 		return {
 			selection: {
 				kind: CALLOUT_TAIL_PART_KIND,
-				partIds: [CALLOUT_TAIL_PART_ID],
+				ranges: [
+					{ anchorId: CALLOUT_TAIL_PART_ID, focusId: CALLOUT_TAIL_PART_ID },
+				],
 			},
 		};
 	}

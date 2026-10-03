@@ -1,6 +1,12 @@
-import { TEXT_SLOT_PART_KIND } from "@jiscribe/canvas";
-import type { ObjectPartSelection } from "@jiscribe/canvas";
-import type { CanvasControllerState } from "@jiscribe/canvas-sdk";
+import { collectObjectPartIds, TEXT_SLOT_PART_KIND } from "@jiscribe/canvas";
+import type {
+	ObjectPartKindDefinition,
+	ObjectPartSelection,
+} from "@jiscribe/canvas";
+import type {
+	CanvasControllerState,
+	ObjectPartKindRegistry,
+} from "@jiscribe/canvas-sdk";
 
 import { countTableTracks, parseTableTrackPartId } from "../grid/tableTrack";
 import type { TableAxis } from "../grid/tableTrack";
@@ -29,22 +35,23 @@ export type TableTrackSelection = {
 const collectReferencedTracks = (
 	table: TableState,
 	selection: ObjectPartSelection,
+	part: ObjectPartKindDefinition,
 	axis: TableAxis,
 ): number[] => {
+	if (selection.kind !== axis && selection.kind !== TEXT_SLOT_PART_KIND) {
+		return [];
+	}
 	const count = countTableTracks(table, axis);
+	// The selection stores the ends of its ranges, so the kind is asked what they
+	// cover before the ids are read as positions.
+	const partIds = collectObjectPartIds(selection, part, table);
 	const referenced =
 		selection.kind === axis
-			? selection.partIds.map(parseTableTrackPartId)
-			: selection.kind === TEXT_SLOT_PART_KIND
-				? selection.partIds.map((partId) => {
-						const cell = parseTableCellSlotId(partId);
-						return cell === null
-							? null
-							: axis === "row"
-								? cell.row
-								: cell.column;
-					})
-				: [];
+			? partIds.map(parseTableTrackPartId)
+			: partIds.map((partId) => {
+					const cell = parseTableCellSlotId(partId);
+					return cell === null ? null : axis === "row" ? cell.row : cell.column;
+				});
 	return referenced.filter(
 		(index): index is number => index !== null && index >= 0 && index < count,
 	);
@@ -61,11 +68,13 @@ const collectReferencedTracks = (
  *
  * @param state - The canvas to read; the sole selected object, the part selection standing on it and whether a text edit is open are all consulted
  * @param axis - The direction the referenced tracks run in
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, asked what the picked ranges cover under the selection's own kind; a kind the table declares none for names no track
  * @returns The table and at least one track index, or null when the selection is not one table's, names no track along `axis`, or a cell is being edited
  */
 export const resolveTableTrackSelection = (
 	state: CanvasControllerState,
 	axis: TableAxis,
+	objectPartKind: ObjectPartKindRegistry,
 ): TableTrackSelection | null => {
 	if (state.textEditState !== null || state.selectedIds.length !== 1) {
 		return null;
@@ -80,7 +89,12 @@ export const resolveTableTrackSelection = (
 		return null;
 	}
 
+	const part = objectPartKind.get(object.type, selection.kind);
+	if (part === undefined) {
+		return null;
+	}
+
 	const table = object as TableState;
-	const indices = collectReferencedTracks(table, selection, axis);
+	const indices = collectReferencedTracks(table, selection, part, axis);
 	return indices.length === 0 ? null : { objectId, table, indices };
 };

@@ -1,4 +1,4 @@
-import { TEXT_SLOT_PART_KIND } from "@jiscribe/canvas";
+import { TEXT_SLOT_PART_KIND , createCanvasRegistries } from "@jiscribe/canvas";
 import type {
 	CanvasControllerState,
 	ICanvasRegistries,
@@ -9,6 +9,7 @@ import {
 } from "@jiscribe/canvas-sdk/doc";
 import { describe, expect, it } from "vitest";
 
+import { tablePlugin } from "../../plugin";
 import { tableCellSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
@@ -75,8 +76,14 @@ const canvasWith = (
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
-/** The registries parameter every command takes and none of these reads. */
-const NO_REGISTRIES = undefined as unknown as ICanvasRegistries;
+/**
+ * The registry bundle the commands are handed, built the way a canvas builds it
+ * — the table's own part kinds included, since that is what says which parts a
+ * picked range covers.
+ */
+const registries = createCanvasRegistries({
+	plugins: [tablePlugin],
+}) as unknown as ICanvasRegistries;
 
 const commandById = (id: string) => {
 	const command = TABLE_REMOVE_COMMANDS.find((entry) => entry.id === id);
@@ -86,10 +93,11 @@ const commandById = (id: string) => {
 	return command;
 };
 
+/** A pick of whole tracks, one collapsed range each — what a grip writes. */
 const trackSelection = (kind: string, partIds: string[]) => ({
 	objectId: TABLE.id,
 	kind,
-	partIds,
+	ranges: partIds.map((partId) => ({ anchorId: partId, focusId: partId })),
 });
 
 /** The text of every cell, read back as `[row][column]`. */
@@ -111,7 +119,7 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 
 	it("takes the track a grip selected and renumbers the grid behind it", () => {
 		const state = canvasWith(TABLE, trackSelection("row", ["1"]));
-		const next = commandById("table.deleteRow").execute?.(state, NO_REGISTRIES);
+		const next = commandById("table.deleteRow").execute?.(state, registries);
 
 		expect(readGrid(next?.objects[TABLE.id] as TableState)).toEqual([
 			["r0c0", "r0c1", "r0c2"],
@@ -126,10 +134,7 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 			trackSelection(TEXT_SLOT_PART_KIND, ["r1c2"]),
 		);
 
-		const rowGone = commandById("table.deleteRow").execute?.(
-			state,
-			NO_REGISTRIES,
-		);
+		const rowGone = commandById("table.deleteRow").execute?.(state, registries);
 		expect(readGrid(rowGone?.objects[TABLE.id] as TableState)).toEqual([
 			["r0c0", "r0c1", "r0c2"],
 			["r2c0", "r2c1", "r2c2"],
@@ -137,7 +142,7 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 
 		const columnGone = commandById("table.deleteColumn").execute?.(
 			state,
-			NO_REGISTRIES,
+			registries,
 		);
 		expect(readGrid(columnGone?.objects[TABLE.id] as TableState)).toEqual([
 			["r0c0", "r0c1"],
@@ -151,7 +156,7 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 			TABLE,
 			trackSelection(TEXT_SLOT_PART_KIND, ["r0c0", "r1c0"]),
 		);
-		const next = commandById("table.deleteRow").execute?.(state, NO_REGISTRIES);
+		const next = commandById("table.deleteRow").execute?.(state, registries);
 
 		expect(readGrid(next?.objects[TABLE.id] as TableState)).toEqual([
 			["r2c0", "r2c1", "r2c2"],
@@ -160,7 +165,7 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 
 	it("drops the part selection, the parts it pointed at being gone", () => {
 		const state = canvasWith(TABLE, trackSelection("row", ["1"]));
-		const next = commandById("table.deleteRow").execute?.(state, NO_REGISTRIES);
+		const next = commandById("table.deleteRow").execute?.(state, registries);
 
 		expect(next?.objectPartSelection).toBeNull();
 		expect(next?.selectedIds).toEqual([TABLE.id]);
@@ -169,18 +174,15 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 	it("is unavailable without a part selection naming a track of its axis", () => {
 		const canDeleteRow = commandById("table.deleteRow").canExecute;
 
-		expect(canDeleteRow(canvasWith(TABLE, null), NO_REGISTRIES)).toBe(false);
+		expect(canDeleteRow(canvasWith(TABLE, null), registries)).toBe(false);
 		expect(
 			canDeleteRow(
 				canvasWith(TABLE, trackSelection("column", ["0"])),
-				NO_REGISTRIES,
+				registries,
 			),
 		).toBe(false);
 		expect(
-			canDeleteRow(
-				canvasWith(TABLE, trackSelection("row", ["0"])),
-				NO_REGISTRIES,
-			),
+			canDeleteRow(canvasWith(TABLE, trackSelection("row", ["0"])), registries),
 		).toBe(true);
 	});
 
@@ -188,16 +190,16 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 		const onlyRow = canvasWith(SMALLEST, trackSelection("row", ["0"]));
 		const onlyColumn = canvasWith(SMALLEST, trackSelection("column", ["0"]));
 
+		expect(commandById("table.deleteRow").canExecute(onlyRow, registries)).toBe(
+			false,
+		);
 		expect(
-			commandById("table.deleteRow").canExecute(onlyRow, NO_REGISTRIES),
-		).toBe(false);
-		expect(
-			commandById("table.deleteColumn").canExecute(onlyColumn, NO_REGISTRIES),
+			commandById("table.deleteColumn").canExecute(onlyColumn, registries),
 		).toBe(false);
 		// And the refusal leaves the canvas alone rather than half-applying.
-		expect(
-			commandById("table.deleteRow").execute?.(onlyRow, NO_REGISTRIES),
-		).toBe(onlyRow);
+		expect(commandById("table.deleteRow").execute?.(onlyRow, registries)).toBe(
+			onlyRow,
+		);
 	});
 
 	it("is unavailable while a cell is being edited, Delete being the caret's", () => {
@@ -214,9 +216,9 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 			} as unknown as Partial<CanvasControllerState>,
 		);
 
-		expect(
-			commandById("table.deleteRow").canExecute(editing, NO_REGISTRIES),
-		).toBe(false);
+		expect(commandById("table.deleteRow").canExecute(editing, registries)).toBe(
+			false,
+		);
 	});
 
 	it("carries no shortcut, Delete over a grip already being one", () => {

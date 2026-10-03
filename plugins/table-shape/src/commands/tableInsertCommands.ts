@@ -88,11 +88,21 @@ const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
 	category: "edit",
 	shortcuts: { default: [toKeyBinding(spec)] },
 
-	canExecute: (state) =>
-		resolveTableInsertTarget(state, spec.axis, spec.side) !== null,
+	canExecute: (state, registries) =>
+		resolveTableInsertTarget(
+			state,
+			spec.axis,
+			spec.side,
+			registries.objectPartKind,
+		) !== null,
 
-	execute: (state) => {
-		const target = resolveTableInsertTarget(state, spec.axis, spec.side);
+	execute: (state, registries) => {
+		const target = resolveTableInsertTarget(
+			state,
+			spec.axis,
+			spec.side,
+			registries.objectPartKind,
+		);
 		if (target === null) {
 			return state;
 		}

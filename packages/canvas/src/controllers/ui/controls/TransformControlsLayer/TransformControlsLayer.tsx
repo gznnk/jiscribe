@@ -16,8 +16,9 @@ type TransformControlsLayerProps = {
 	isTextEditing: boolean;
 	/**
 	 * Whether a part selected inside the object is drawn with a box around it
-	 * (isObjectPartOutlined); already validated by resolveObjectPartSelection,
-	 * since a stale flag would keep the handles hidden
+	 * (isObjectPartOutlined); a stale flag would keep the handles hidden, which is
+	 * why the reducer reconciles the selection it is read from
+	 * (reconcileObjectPartSelection)
 	 */
 	isObjectPartOutlined: boolean;
 	/** Kind of the drag in progress; null when none is */

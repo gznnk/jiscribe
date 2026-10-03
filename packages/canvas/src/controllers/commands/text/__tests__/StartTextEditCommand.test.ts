@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
-import { registerTextSlotParts } from "../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
@@ -12,9 +11,6 @@ import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { StartTextEditCommand } from "../StartTextEditCommand";
 
 const registries = createTestRegistries();
-// "record" stands in for a plugin's slotted shape, which the built-in-only
-// test bundle has never been told about.
-registerTextSlotParts(registries.objectPartKind, "record");
 
 const rect = {
 	id: "rect-1",
@@ -140,7 +136,7 @@ describe("StartTextEditCommand", () => {
 			const state = stateWithSlotSelection({
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["rows"],
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			});
 			expect(
 				StartTextEditCommand.execute(state, registries).textEditState,
@@ -163,24 +159,13 @@ describe("StartTextEditCommand", () => {
 				...stateWithSlotSelection({
 					objectId: "rec-1",
 					kind: TEXT_SLOT_PART_KIND,
-					partIds: ["rows"],
+					ranges: [{ anchorId: "rows", focusId: "rows" }],
 				}),
 				objectMenuOpenId: "alignment",
 			});
 			expect(
 				StartTextEditCommand.execute(state, registries).objectMenuOpenId,
 			).toBeNull();
-		});
-
-		it("edits the first slot when the slot selection is stale", () => {
-			const state = stateWithSlotSelection({
-				objectId: "rec-1",
-				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["operations"],
-			});
-			expect(
-				StartTextEditCommand.execute(state, registries).textEditState,
-			).toMatchObject({ objectId: "rec-1", slotId: "name" });
 		});
 	});
 

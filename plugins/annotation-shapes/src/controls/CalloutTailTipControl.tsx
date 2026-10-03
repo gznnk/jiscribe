@@ -45,9 +45,13 @@ const CalloutTailTipControlComponent: React.FC<
 		cy,
 	);
 
+	// The kind holds the one part, so no range of it can cover anything else and
+	// either end of any range names the tip.
 	const isTipSelected =
 		selectedParts?.kind === CALLOUT_TAIL_PART_KIND &&
-		selectedParts.partIds.includes(CALLOUT_TAIL_PART_ID);
+		selectedParts.ranges.some(
+			(range) => range.anchorId === CALLOUT_TAIL_PART_ID,
+		);
 
 	return (
 		<SelectionControlPill

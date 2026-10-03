@@ -16,7 +16,7 @@ const objects: Readonly<Record<string, ObjectState>> = {
 const selectionOf = (kind: string): ObjectPartSelection => ({
 	objectId: "a",
 	kind,
-	partIds: ["p"],
+	ranges: [{ anchorId: "p", focusId: "p" }],
 });
 
 const registryWith = (...parts: ObjectPartKindDefinition[]) => {

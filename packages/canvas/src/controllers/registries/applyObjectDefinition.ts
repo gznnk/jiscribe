@@ -547,20 +547,18 @@ export const applyObjectDefinition = (
 	// declaring anything: the ids are the keys of its `text` and the boxes come
 	// from the very calculator it draws them with, so there is nothing per type to
 	// say. Declaring `"textSlot"` itself replaces that default rather than
-	// colliding with it — the rule `menu` and `propertyPanel` already follow —
-	// which is how a type says what Delete does to its slots
-	// (ObjectPartKindDefinition.delete); spread `createTextSlotPartKindDefinition`
-	// to keep the rest.
+	// colliding with it (the rule `menu` and `propertyPanel` already follow), which
+	// is how a type says what Delete does to its slots.
 	const declaredPartKinds = definition.partKinds ?? [];
 	const partKinds =
 		definition.features.text === "slots" &&
-		!declaredPartKinds.some((partKind) => partKind.kind === TEXT_SLOT_PART_KIND)
+		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
 			? [
 					...declaredPartKinds,
 					createTextSlotPartKindDefinition(definition.textRegion),
 				]
-			: definition.partKinds;
-	if (partKinds) {
+			: declaredPartKinds;
+	if (partKinds.length > 0) {
 		registries.objectPartKind.register(type, partKinds);
 	}
 	if (definition.extraStyleProperties) {

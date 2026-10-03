@@ -45,8 +45,12 @@ export const createTableInsertHandler =
 		if (at === null || at > countTableTracks(context.object, axis)) {
 			return null;
 		}
+		const partId = tableTrackPartId(at);
 		return {
 			object: insertTableTrack(context.object, axis, at),
-			selection: { kind: axis, partIds: [tableTrackPartId(at)] },
+			selection: {
+				kind: axis,
+				ranges: [{ anchorId: partId, focusId: partId }],
+			},
 		};
 	};

@@ -31,8 +31,9 @@ const baseState = (
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
+/** Every range a Tab step writes is collapsed, so one id names the whole selection. */
 const selectedSlotId = (state: CanvasControllerState): string | undefined =>
-	state.objectPartSelection?.partIds[0];
+	state.objectPartSelection?.ranges[0].anchorId;
 
 /** The registry a canvas holds once "record" has been applied. */
 const objectPartKind = createTextSlotPartRegistry("record");
@@ -100,7 +101,7 @@ describe("selectAdjacentTextSlot", () => {
 			objectPartSelection: {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["operations"],
+				ranges: [{ anchorId: "operations", focusId: "operations" }],
 			},
 		});
 		expect(
@@ -111,7 +112,7 @@ describe("selectAdjacentTextSlot", () => {
 			objectPartSelection: {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["name"],
+				ranges: [{ anchorId: "name", focusId: "name" }],
 			},
 		});
 		expect(
@@ -120,27 +121,33 @@ describe("selectAdjacentTextSlot", () => {
 	});
 
 	it("collapses a range and steps off the end it is travelling towards", () => {
-		const rangeOf = (...partIds: string[]) =>
+		const rangeOf = (anchorId: string, focusId: string) =>
 			baseState({
 				objectPartSelection: {
 					objectId: "rec-1",
 					kind: TEXT_SLOT_PART_KIND,
-					partIds,
-					anchorPartId: partIds[0],
+					ranges: [{ anchorId, focusId }],
 				},
 			});
 		// Forward leaves from the last of the range, backward from the first.
 		expect(
-			selectAdjacentTextSlot(rangeOf("name", "attributes"), 1, objectPartKind)
-				.objectPartSelection?.partIds,
-		).toEqual(["operations"]);
+			selectedSlotId(
+				selectAdjacentTextSlot(
+					rangeOf("name", "attributes"),
+					1,
+					objectPartKind,
+				),
+			),
+		).toBe("operations");
 		expect(
-			selectAdjacentTextSlot(
-				rangeOf("attributes", "operations"),
-				-1,
-				objectPartKind,
-			).objectPartSelection?.partIds,
-		).toEqual(["name"]);
+			selectedSlotId(
+				selectAdjacentTextSlot(
+					rangeOf("operations", "attributes"),
+					-1,
+					objectPartKind,
+				),
+			),
+		).toBe("name");
 	});
 
 	it("treats a stale slot selection as none selected", () => {
@@ -149,7 +156,7 @@ describe("selectAdjacentTextSlot", () => {
 			objectPartSelection: {
 				objectId: "other",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["operations"],
+				ranges: [{ anchorId: "operations", focusId: "operations" }],
 			},
 		});
 		expect(

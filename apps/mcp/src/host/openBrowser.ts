@@ -52,26 +52,54 @@ const describeWindowsExclusion = (profile: HeadlessProfile | null): string => {
 	return `; the Windows-side browsers were left out of the attempt, because ${profile.paths.windows.reason}`;
 };
 
+/** How many lines of a dead browser's stderr are passed on with the failure */
+const STDERR_REPORT_LINES = 8;
+
+/**
+ * Picks out of a dead browser's stderr the lines that say why. Chromium follows
+ * its FATAL line with a stack trace, one frame per line, which explains nothing
+ * to whoever reads the failure; the lines around it are what is kept.
+ *
+ * @param stderr What the browser wrote before it died, as spawn captured it
+ * @returns The clause to append to the reason, or "" when nothing was written
+ */
+const describeBrowserStderr = (stderr: string): string => {
+	const lines = stderr
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter((line) => line !== "" && !/^#\d+ 0x/.test(line));
+	if (lines.length === 0) {
+		return "";
+	}
+	const kept = lines.slice(0, STDERR_REPORT_LINES);
+	const dropped = lines.length - kept.length;
+	const tail = dropped > 0 ? ` … (${dropped} more lines)` : "";
+	return `; it wrote to stderr: ${kept.join(" | ")}${tail}`;
+};
+
 /**
  * Words the failure of every headless candidate so it reads as "no Chromium",
  * not as the last path tried being the one that is missing.
  *
  * @param commands The candidates that were tried, in order. Never empty
  * @param lastReason The failure of the last of them, as spawn reported it
+ * @param lastStderr What the last of them wrote to stderr, or "" for nothing
  * @param profile The profile the launch was given, so that candidates left out for
  *   want of one are accounted for too
  */
 const describeHeadlessExhaustion = (
 	commands: readonly BrowserOpenCommand[],
 	lastReason: string,
+	lastStderr: string,
 	profile: HeadlessProfile | null,
 ): string => {
 	const hint = "name an executable with JISCRIBE_MCP_BROWSER";
 	const exclusion = describeWindowsExclusion(profile);
+	const stderr = describeBrowserStderr(lastStderr);
 	if (commands.length === 1) {
-		return `the Chromium named for headless mode, ${commands[0][0]}, could not be started (${lastReason}); ${hint}${exclusion}`;
+		return `the Chromium named for headless mode, ${commands[0][0]}, could not be started (${lastReason}${stderr}); ${hint}${exclusion}`;
 	}
-	return `none of the ${commands.length} Chromium candidates for headless mode could be started, so none seems to be installed (the last one tried failed with: ${lastReason}); ${hint}${exclusion}`;
+	return `none of the ${commands.length} Chromium candidates for headless mode could be started, so none seems to be installed (the last one tried failed with: ${lastReason}${stderr}); ${hint}${exclusion}`;
 };
 
 /**
@@ -169,10 +197,15 @@ export function openBrowser(
 			options.onSpawn?.(child);
 			attachProfileLifetime?.(child);
 		},
-		onExhausted: (lastReason) => {
+		onExhausted: (lastReason, lastStderr) => {
 			reportFailure(
 				mode === "headless"
-					? describeHeadlessExhaustion(commands, lastReason, profile)
+					? describeHeadlessExhaustion(
+							commands,
+							lastReason,
+							lastStderr,
+							profile,
+						)
 					: lastReason,
 			);
 		},

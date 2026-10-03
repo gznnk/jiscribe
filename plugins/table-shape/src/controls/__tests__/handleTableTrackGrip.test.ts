@@ -60,10 +60,10 @@ const handleColumnGrip = createTableTrackGripHandler("column");
 describe("createTableTrackGripHandler", () => {
 	it("selects the whole track the grip stands for, as its own kind", () => {
 		expect(handleRowGrip(context, clickOn("1"))).toEqual({
-			selection: { kind: "row", partIds: ["1"] },
+			selection: { kind: "row", ranges: [{ anchorId: "1", focusId: "1" }] },
 		});
 		expect(handleColumnGrip(context, clickOn("2"))).toEqual({
-			selection: { kind: "column", partIds: ["2"] },
+			selection: { kind: "column", ranges: [{ anchorId: "2", focusId: "2" }] },
 		});
 	});
 

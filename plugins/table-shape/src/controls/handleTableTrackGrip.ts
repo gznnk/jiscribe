@@ -42,5 +42,11 @@ export const createTableTrackGripHandler =
 		if (index === null || index >= countTableTracks(context.object, axis)) {
 			return null;
 		}
-		return { selection: { kind: axis, partIds: [tableTrackPartId(index)] } };
+		const partId = tableTrackPartId(index);
+		return {
+			selection: {
+				kind: axis,
+				ranges: [{ anchorId: partId, focusId: partId }],
+			},
+		};
 	};

@@ -25,9 +25,9 @@ import { resolveAddressedTextSlotIds } from "../../../styleProperties/addressedT
  *
  * @param selectedIds - The selection, in the order the values are folded in; a selected group is walked down into (collectSelectionObjects)
  * @param objects - Every object of the canvas, keyed by id; ids not in it are skipped
- * @param objectPartSelection - The parts picked below the object, already checked
- *   against the selection (resolveObjectPartSelection); one of a kind that covers
- *   no slot names none and so reads every slot, as null does
+ * @param objectPartSelection - The parts picked below the object, taken as it
+ *   stands (reconcileObjectPartSelection); one of a kind that covers no slot
+ *   names none and so reads every slot, as null does
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which holds a non-slot
  *   kind's own reading of the slots it covers (a table's row over its cells)
  * @param field - Name of the field on the slot, which is the declaration's

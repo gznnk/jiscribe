@@ -47,13 +47,14 @@ const grid = (
 	) as TextSlots;
 };
 
+/** Slots picked one at a time, so each range is collapsed on its own slot. */
 const slotsPicked = (
 	objectId: string,
 	...partIds: string[]
 ): ObjectPartSelection => ({
 	objectId,
 	kind: TEXT_SLOT_PART_KIND,
-	partIds,
+	ranges: partIds.map((partId) => ({ anchorId: partId, focusId: partId })),
 });
 
 /**
@@ -139,7 +140,11 @@ describe("readSelectionSlotField", () => {
 			readSelectionSlotField(
 				["t1"],
 				{ t1 },
-				{ objectId: "t1", kind: NON_SLOT_PART_KIND, partIds: ["tip"] },
+				{
+					objectId: "t1",
+					kind: NON_SLOT_PART_KIND,
+					ranges: [{ anchorId: "tip", focusId: "tip" }],
+				},
 				objectPartKind,
 				"fill",
 			),
@@ -149,7 +154,11 @@ describe("readSelectionSlotField", () => {
 			readSelectionSlotField(
 				["t1"],
 				{ t1 },
-				{ objectId: "t1", kind: "column", partIds: ["0"] },
+				{
+					objectId: "t1",
+					kind: "column",
+					ranges: [{ anchorId: "0", focusId: "0" }],
+				},
 				objectPartKind,
 				"fill",
 			),
@@ -163,7 +172,11 @@ describe("readSelectionSlotField", () => {
 			readSelectionSlotField(
 				["t1"],
 				{ t1 },
-				{ objectId: "t1", kind: SLOT_GROUP_PART_KIND, partIds: ["1"] },
+				{
+					objectId: "t1",
+					kind: SLOT_GROUP_PART_KIND,
+					ranges: [{ anchorId: "1", focusId: "1" }],
+				},
 				objectPartKind,
 				"fill",
 			),
@@ -178,29 +191,11 @@ describe("readSelectionSlotField", () => {
 			readSelectionSlotField(
 				["t1"],
 				{ t1 },
-				{ objectId: "t1", kind: SLOT_GROUP_PART_KIND, partIds: ["0"] },
-				objectPartKind,
-				"fill",
-			),
-		).toEqual({ kind: "mixed", values: ["#eef", "#fee"] });
-	});
-
-	it("drops a picked id the object no longer has, and falls back to every slot when none is left", () => {
-		const t1 = table("t1", cells("#eef", "#fee"));
-		expect(
-			readSelectionSlotField(
-				["t1"],
-				{ t1 },
-				slotsPicked("t1", "r0c1", "r9c9"),
-				objectPartKind,
-				"fill",
-			),
-		).toEqual({ kind: "single", value: "#fee" });
-		expect(
-			readSelectionSlotField(
-				["t1"],
-				{ t1 },
-				slotsPicked("t1", "r9c9"),
+				{
+					objectId: "t1",
+					kind: SLOT_GROUP_PART_KIND,
+					ranges: [{ anchorId: "0", focusId: "0" }],
+				},
 				objectPartKind,
 				"fill",
 			),

@@ -29,8 +29,9 @@ export type TableCellFillSource = Pick<
  * which is exactly where the write goes (readSelectionSlotField).
  *
  * @param source - The selection the control was drawn for; `objectPartSelection`
- *   must already be the resolved one both surfaces hand their custom items, not
- *   the raw controller field
+ *   is the one both surfaces hand their custom items, which is
+ *   `state.objectPartSelection` as the reducer left it
+ *   (reconcileObjectPartSelection)
  * @returns The folded value, ready for `selectionValueOr` / `selectionMixedValues`
  */
 export const useTableCellFill = (

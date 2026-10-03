@@ -2,8 +2,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { collectObjectPartIds } from "../../../selection/collectObjectPartIds";
 import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
-import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 
 /**
@@ -43,8 +43,9 @@ export const getTextSlotCycleTarget = (
  * collapses, leaving the slot next to the end the step travels towards — the
  * last of the range going forwards, the first of it going back.
  *
- * @param state - The current canvas controller state; a stale `objectPartSelection`
- *   counts as no slot selected (resolveObjectPartSelection)
+ * @param state - The current canvas controller state; its `objectPartSelection`
+ *   names the slot the step starts from, and is live rather than stale because the
+ *   reducer reconciles it (reconcileObjectPartSelection)
  * @param step - 1 for the next slot, -1 for the previous; with no slot selected
  *   yet these enter at the first and the last slot respectively
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which answers both the slot
@@ -68,15 +69,20 @@ export const selectAdjacentTextSlot = (
 		return state;
 	}
 
-	const currentSlot = resolveObjectPartSelection(state, objectPartKind);
-	const currentPartIds =
-		currentSlot?.kind === TEXT_SLOT_PART_KIND ? currentSlot.partIds : undefined;
+	const { objectPartSelection } = state;
+	const currentSlotIds =
+		part !== undefined &&
+		objectPartSelection !== null &&
+		objectPartSelection.kind === TEXT_SLOT_PART_KIND &&
+		objectPartSelection.objectId === target.id
+			? collectObjectPartIds(objectPartSelection, part, target)
+			: undefined;
 	const currentSlotId =
-		currentPartIds === undefined
+		currentSlotIds === undefined
 			? undefined
 			: step === 1
-				? currentPartIds[currentPartIds.length - 1]
-				: currentPartIds[0];
+				? currentSlotIds[currentSlotIds.length - 1]
+				: currentSlotIds[0];
 	const currentIndex =
 		currentSlotId === undefined ? -1 : slotIds.indexOf(currentSlotId);
 	const nextIndex =
@@ -91,7 +97,7 @@ export const selectAdjacentTextSlot = (
 		objectPartSelection: {
 			objectId: target.id,
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: [slotIds[nextIndex]],
+			ranges: [{ anchorId: slotIds[nextIndex], focusId: slotIds[nextIndex] }],
 		},
 		objectMenuOpenId: null,
 	};

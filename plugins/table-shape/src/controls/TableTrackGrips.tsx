@@ -1,4 +1,6 @@
+import { collectObjectPartIds } from "@jiscribe/canvas";
 import type { ObjectPartSelection } from "@jiscribe/canvas";
+import { useObjectPartKindRegistry } from "@jiscribe/canvas-sdk";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
@@ -26,7 +28,7 @@ type TableTrackGripsProps = {
 	zoom: number;
 	/** The control's `data-part`; each grip appends its own track index to it. */
 	part: string;
-	/** The sub-object selection standing on this table, or null; a grip draws itself selected only for its own kind. */
+	/** The part selection standing on this table, or null; a grip draws itself selected only for its own kind. */
 	selectedParts: ObjectPartSelection | null;
 	/** Which tracks to draw grips for — also the part kind a click on one writes. */
 	axis: TableAxis;
@@ -50,9 +52,21 @@ const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 	selectedParts,
 	axis,
 }) => {
+	const objectPartKind = useObjectPartKindRegistry();
 	const { id, cx, cy, rotation, scaleX, scaleY } = object;
 	const { columnXs, rowYs } = calcTableLayout(object);
 	const radians = degreesToRadians(rotation);
+
+	// The selection stores the ends of its ranges, so a grip asks the kind whether
+	// its own track falls inside one of them.
+	const trackPart =
+		selectedParts?.kind === axis
+			? objectPartKind.get(object.type, axis)
+			: undefined;
+	const selectedTrackIds =
+		selectedParts && trackPart
+			? collectObjectPartIds(selectedParts, trackPart, object)
+			: [];
 
 	const edges = axis === "row" ? rowYs : columnXs;
 	// The coordinate the whole strip of grips sits at: clear of the edge the
@@ -84,10 +98,7 @@ const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 						zoom={zoom}
 						objectId={id}
 						part={`${part}:${tableTrackPartId(index)}`}
-						selected={
-							selectedParts?.kind === axis &&
-							selectedParts.partIds.includes(tableTrackPartId(index))
-						}
+						selected={selectedTrackIds.includes(tableTrackPartId(index))}
 					/>
 				);
 			})}

@@ -51,28 +51,56 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t2"),
-				{ objectId: "t1", kind: TEXT_SLOT_PART_KIND, partIds: ["r0c0"] },
+				{
+					objectId: "t1",
+					kind: TEXT_SLOT_PART_KIND,
+					ranges: [{ anchorId: "r0c0", focusId: "r0c0" }],
+				},
 				objectPartKind,
 			),
 		).toBeUndefined();
 	});
 
-	it("hands picked slots back as they are, without asking the type", () => {
-		const partIds = ["r0c1", "r1c0"];
+	it("hands picked slots back as they are, the slot kind declaring the identity", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{ objectId: "t1", kind: TEXT_SLOT_PART_KIND, partIds },
+				{
+					objectId: "t1",
+					kind: TEXT_SLOT_PART_KIND,
+					ranges: [
+						{ anchorId: "r0c1", focusId: "r0c1" },
+						{ anchorId: "r1c0", focusId: "r1c0" },
+					],
+				},
 				objectPartKind,
 			),
-		).toBe(partIds);
+		).toEqual(["r0c1", "r1c0"]);
+	});
+
+	it("covers every slot a range spans, in the type's own order", () => {
+		expect(
+			resolveSelectedTextSlotIds(
+				grid("t1"),
+				{
+					objectId: "t1",
+					kind: TEXT_SLOT_PART_KIND,
+					ranges: [{ anchorId: "r1c0", focusId: "r0c1" }],
+				},
+				objectPartKind,
+			),
+		).toEqual(["r0c1", "r1c0"]);
 	});
 
 	it("asks the kind which slots it covers", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{ objectId: "t1", kind: "row", partIds: ["1"] },
+				{
+					objectId: "t1",
+					kind: "row",
+					ranges: [{ anchorId: "1", focusId: "1" }],
+				},
 				objectPartKind,
 			),
 		).toEqual(["r1c0", "r1c1"]);
@@ -82,14 +110,22 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{ objectId: "t1", kind: "tail", partIds: ["tip"] },
+				{
+					objectId: "t1",
+					kind: "tail",
+					ranges: [{ anchorId: "tip", focusId: "tip" }],
+				},
 				objectPartKind,
 			),
 		).toBeUndefined();
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{ objectId: "t1", kind: "column", partIds: ["0"] },
+				{
+					objectId: "t1",
+					kind: "column",
+					ranges: [{ anchorId: "0", focusId: "0" }],
+				},
 				objectPartKind,
 			),
 		).toBeUndefined();
@@ -100,7 +136,11 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				bare,
-				{ objectId: "b1", kind: "row", partIds: ["0"] },
+				{
+					objectId: "b1",
+					kind: "row",
+					ranges: [{ anchorId: "0", focusId: "0" }],
+				},
 				objectPartKind,
 			),
 		).toBeUndefined();

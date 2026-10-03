@@ -15,6 +15,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **For plugin authors: picking a text slot is one case of a general part
+  selection.** What was a slot-only field is now `objectPartSelection`, a
+  channel over the part kinds a type declares: the object it addresses, the
+  `kind` the ids belong to, and a list of ranges, each a fixed `anchorId` and a
+  moving `focusId` — the model a DOM `Selection` keeps, so a gesture can grow the
+  active range (Shift over a shape's slots does) or add another without the
+  stored form changing again. A
+  type that spells its text out as slots takes part with no declaration of its
+  own: the `"textSlot"` kind is registered for it, its part ids being the keys of
+  its own `text`. The reducer reconciles the channel after every action that
+  rewrites the selection or the objects, through the kind's own `has`, so a
+  selection the state no longer backs is already gone by the time anything reads
+  it — the readers take `state.objectPartSelection` as it stands, and each kind
+  answers for its own ids. What lies between the ends of a range is the kind's to
+  say, so a reader that wants the parts themselves asks for them
+  (`collectObjectPartIds`) rather than reading a stored list.
 - **For plugin authors: a type declares the sub-parts of its own objects.**
   `ObjectTypeDefinition.partKinds` takes one entry per part-id namespace (`kind`),
   each stating `has` — whether an id still names a part of that object — and
@@ -86,7 +102,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `textSlotField`, which stores the property on the selected slots rather than on
   the object; a `custom` item declaring `slotAware` survives the narrowing that
   happens while a slot is picked — on the property sidebar as well as the
-  floating menu, where such a row now receives the resolved
+  floating menu, where such a row now receives the live
   `objectPartSelection`; and `createDefaultPropertyPanel` /
   `appendPropertyPanelItems` / `PROPERTY_PANEL_SECTIONS` let a type add a row to
   the built-in panel instead of restating it.

@@ -148,7 +148,11 @@ describe("getSelectedOrFirstTextSlot", () => {
 				makeState(
 					["r1"],
 					{ r1: r },
-					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
+					{
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
+					},
 				),
 				textStyleDefaults,
 				objectPartKind,
@@ -168,8 +172,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 				{
 					objectId: "r1",
 					kind: TEXT_SLOT_PART_KIND,
-					partIds: ["name", "rows"],
-					anchorPartId: "name",
+					ranges: [{ anchorId: "name", focusId: "rows" }],
 				},
 			),
 			textStyleDefaults,
@@ -182,65 +185,6 @@ describe("getSelectedOrFirstTextSlot", () => {
 		expect(style?.text).toBe("");
 	});
 
-	it("reads a range down to the parts that still exist", () => {
-		const r = rect("r1", {
-			name: { text: "User", fontSize: 16 },
-			rows: { text: ["id"], fontSize: 11 },
-		});
-		expect(
-			getSelectedOrFirstTextSlot(
-				makeState(
-					["r1"],
-					{ r1: r },
-					{
-						objectId: "r1",
-						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["rows", "operations"],
-						anchorPartId: "rows",
-					},
-				),
-				textStyleDefaults,
-				objectPartKind,
-			)?.fontSize,
-		).toBe(11);
-	});
-
-	it("falls back to the first slot when the slot selection is stale", () => {
-		const r1 = rect("r1", {
-			name: { text: "User", fontSize: 16 },
-			rows: { text: ["id"], fontSize: 11 },
-		});
-		const r2 = rect("r2", { body: { text: "other", fontSize: 30 } });
-		// The slot's object is no longer the sole selection
-		expect(
-			getSelectedOrFirstTextSlot(
-				makeState(
-					["r1", "r2"],
-					{ r1, r2 },
-					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
-				),
-				textStyleDefaults,
-				objectPartKind,
-			)?.fontSize,
-		).toBe(16);
-		// The slot itself is gone from the object
-		expect(
-			getSelectedOrFirstTextSlot(
-				makeState(
-					["r1"],
-					{ r1 },
-					{
-						objectId: "r1",
-						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["operations"],
-					},
-				),
-				textStyleDefaults,
-				objectPartKind,
-			)?.fontSize,
-		).toBe(16);
-	});
-
 	describe("a picked kind that stands for a group of slots (a table's row)", () => {
 		const grid = rect("r1", {
 			r0c0: { text: "a", fontSize: 11 },
@@ -248,11 +192,18 @@ describe("getSelectedOrFirstTextSlot", () => {
 			r1c0: { text: "c", fontSize: 24 },
 			r1c1: { text: "d", fontSize: 30 },
 		});
-		const rowPicked = (...partIds: string[]): CanvasControllerState =>
+		const rowPicked = (...rowIds: string[]): CanvasControllerState =>
 			makeState(
 				["r1"],
 				{ r1: grid },
-				{ objectId: "r1", kind: SLOT_GROUP_PART_KIND, partIds },
+				{
+					objectId: "r1",
+					kind: SLOT_GROUP_PART_KIND,
+					ranges: rowIds.map((rowId) => ({
+						anchorId: rowId,
+						focusId: rowId,
+					})),
+				},
 			);
 
 		it("reads what the slots that kind covers agree on", () => {
@@ -283,7 +234,11 @@ describe("getSelectedOrFirstTextSlot", () => {
 					makeState(
 						["r1"],
 						{ r1: grid },
-						{ objectId: "r1", kind: NON_SLOT_PART_KIND, partIds: ["tip"] },
+						{
+							objectId: "r1",
+							kind: NON_SLOT_PART_KIND,
+							ranges: [{ anchorId: "tip", focusId: "tip" }],
+						},
 					),
 					textStyleDefaults,
 					objectPartWithTracks,

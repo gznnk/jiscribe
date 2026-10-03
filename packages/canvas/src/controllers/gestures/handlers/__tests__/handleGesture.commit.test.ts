@@ -182,13 +182,18 @@ describe("handleGesture - commit", () => {
 
 	it("does not commit a click that only moved the part selection", () => {
 		const registries = registriesWithControl(() => ({
-			selection: { kind: "textSlot", partIds: ["body"] },
+			selection: {
+				kind: "textSlot",
+				ranges: [{ anchorId: "body", focusId: "body" }],
+			},
 		}));
 		const state = stateWithSelectedRect(registries);
 
 		const next = handleGesture(state, controlGesture("click"), registries);
 
-		expect(next.objectPartSelection?.partIds).toEqual(["body"]);
+		expect(next.objectPartSelection?.ranges).toEqual([
+			{ anchorId: "body", focusId: "body" },
+		]);
 		expect(next.commitVersion).toBe(state.commitVersion);
 	});
 

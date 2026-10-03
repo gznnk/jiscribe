@@ -9,7 +9,6 @@ import { isTextStyleState } from "../../../../states/objects/base/TextStyleState
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
-import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -28,8 +27,8 @@ export type SelectionTextStyle = {
  * The styling of every slot the rows state, one entry per object that holds
  * text. Slots picked below the object, or a stretch of text being edited,
  * narrow the whole thing to that one target — both require a single selection
- * (resolveObjectPartSelection / resolveTextEditSelection), so nothing is hidden by
- * following the menus there.
+ * (reconcileObjectPartSelection / resolveTextEditSelection), so nothing is hidden
+ * by following the menus there.
  */
 const collectSelectionTextStyles = (
 	state: CanvasControllerState,
@@ -38,7 +37,7 @@ const collectSelectionTextStyles = (
 ): TextSlotStyle[] => {
 	if (
 		resolveTextEditSelection(state) !== null ||
-		resolveObjectPartSelection(state, objectPartKind) !== null
+		state.objectPartSelection !== null
 	) {
 		const slot = getSelectedOrFirstTextSlot(
 			state,

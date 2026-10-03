@@ -5,7 +5,6 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
-import { resolveObjectPartSelection } from "../../selection/resolveObjectPartSelection";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
 import type { ExecutableCommand } from "../CommandTypes";
 
@@ -52,7 +51,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return canEditText(state.objects[state.selectedIds[0]]);
 	},
 
-	execute(state, registries) {
+	execute(state) {
 		// When a connector is selected, start editing its label (label.text).
 		if (state.selectedConnectorId && state.selectedIds.length === 0) {
 			const connector = state.objects[state.selectedConnectorId];
@@ -86,12 +85,13 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return state;
 		}
 
-		// Enter carries no pointer position, so the slot already selected one level
-		// below the object decides; resolveObjectPartSelection validates it against
-		// this very single selection, so a stale one falls back to the first slot.
+		// Enter carries no pointer position, so the part already selected one level
+		// below the object decides, falling back to the first slot when there is
+		// none. The editor opens on one slot: the anchor of the first range, which
+		// is the slot a plain click left there.
 		const slotId =
-			resolveObjectPartSelection(state, registries.objectPartKind)
-				?.partIds[0] ?? getFirstTextSlotId(targetObject.text);
+			state.objectPartSelection?.ranges[0].anchorId ??
+			getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;
 		}

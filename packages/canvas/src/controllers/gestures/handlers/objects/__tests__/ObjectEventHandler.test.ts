@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
-import { registerTextSlotParts } from "../../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -12,9 +11,6 @@ import type { Mods } from "../../../registry/ObjectBehaviorTypes";
 import { ObjectEventHandler } from "../ObjectEventHandler";
 
 const registries = createTestRegistries();
-// "record" stands in for a plugin's slotted shape, which the built-in-only test
-// bundle has never been told about.
-registerTextSlotParts(registries.objectPartKind, "record");
 
 const SIZE = 10;
 
@@ -288,7 +284,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.objectPartSelection).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["rows"],
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
 		});
 		expect(next.selectedIds).toEqual(["rec-1"]);
 	});
@@ -298,7 +294,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["rows"],
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
 			makeSlotClickEvent("rec-1", "name"),
 			registries,
@@ -306,7 +302,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.objectPartSelection).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["name"],
+			ranges: [{ anchorId: "name", focusId: "name" }],
 		});
 	});
 
@@ -314,7 +310,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		const state = makeSlotState(["rec-1"], {
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["rows"],
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
 		});
 		expect(
 			ObjectEventHandler.handle(
@@ -329,7 +325,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		const selected = makeSlotState(["rec-1"], {
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["rows"],
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
 		});
 		expect(
 			ObjectEventHandler.handle(
@@ -362,7 +358,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["rows"],
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
 			makeSlotClickEvent("rect-2"),
 			registries,
@@ -387,7 +383,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["name"],
+				ranges: [{ anchorId: "name", focusId: "name" }],
 			}),
 			makeSlotClickEvent("rec-1", "rows", { shift: true }),
 			registries,
@@ -396,17 +392,16 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.objectPartSelection).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["name", "rows"],
-			anchorPartId: "name",
+			ranges: [{ anchorId: "name", focusId: "rows" }],
 		});
 	});
 
-	it("runs the extension in the type's slot order, whichever way it reaches", () => {
+	it("extends backwards as readily as forwards, the anchor staying where it is", () => {
 		const next = ObjectEventHandler.handle(
 			makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["rows"],
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
 			makeSlotClickEvent("rec-1", "name", { meta: true }),
 			registries,
@@ -414,8 +409,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.objectPartSelection).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["name", "rows"],
-			anchorPartId: "rows",
+			ranges: [{ anchorId: "rows", focusId: "name" }],
 		});
 	});
 
@@ -424,7 +418,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["name"],
+				ranges: [{ anchorId: "name", focusId: "name" }],
 			}),
 			makeSlotClickEvent("rec-1", "rows", { shift: true }),
 			registries,
@@ -437,8 +431,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(narrowed.objectPartSelection).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["name"],
-			anchorPartId: "name",
+			ranges: [{ anchorId: "name", focusId: "name" }],
 		});
 	});
 
@@ -447,8 +440,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["name", "rows"],
-				anchorPartId: "name",
+				ranges: [{ anchorId: "name", focusId: "rows" }],
 			}),
 			makeSlotClickEvent("rec-1", "rows"),
 			registries,
@@ -456,7 +448,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.objectPartSelection).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["rows"],
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
 		});
 	});
 
@@ -465,7 +457,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			...makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["rows"],
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
 			objectMenuOpenId: "alignment",
 		} as CanvasControllerState;
@@ -490,7 +482,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			...makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["rows"],
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
 			objectMenuOpenId: "alignment",
 		} as CanvasControllerState;
@@ -717,40 +709,5 @@ describe("ObjectEventHandler - snap during edge scroll", () => {
 			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
-	});
-});
-
-/**
- * A slot definition deciding its own ranges, as a table's cells do. It declares no
- * `list`, which is the case core must not bail out of: a kind whose parts are not
- * in one line has nothing to slice anyway.
- */
-const rangeRegistries = createTestRegistries();
-rangeRegistries.objectPartKind.register("record", [
-	{
-		kind: TEXT_SLOT_PART_KIND,
-		has: () => true,
-		range: (_object, anchorPartId, focusPartId) => [focusPartId, anchorPartId],
-	},
-]);
-
-describe("ObjectEventHandler - a type's own slot range", () => {
-	it("takes the run from the definition instead of slicing the slot order", () => {
-		const next = ObjectEventHandler.handle(
-			makeSlotState(["rec-1"], {
-				objectId: "rec-1",
-				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["name"],
-			}),
-			makeSlotClickEvent("rec-1", "rows", { shift: true }),
-			rangeRegistries,
-		);
-		// The linear default would have given the slot order, ["name", "rows"].
-		expect(next.objectPartSelection).toEqual({
-			objectId: "rec-1",
-			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["rows", "name"],
-			anchorPartId: "name",
-		});
 	});
 });

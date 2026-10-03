@@ -5,7 +5,6 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
-import { resolveObjectPartSelection } from "../selection/resolveObjectPartSelection";
 import { resolveSelectedTextSlotIds } from "../selection/resolveSelectedTextSlotIds";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
@@ -74,14 +73,9 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		value: string,
 		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
-		const { selectedIds, selectedConnectorId, objects } = state;
+		const { selectedIds, selectedConnectorId, objects, objectPartSelection } =
+			state;
 		const path = property.split(".");
-		// Resolved once: the raw state.objectPartSelection may be stale, and every
-		// object visited below has to be matched against the same resolved value.
-		const objectPartSelection = resolveObjectPartSelection(
-			state,
-			objectPartKind,
-		);
 
 		// Connector selected (selectedIds is empty)
 		if (selectedIds.length === 0 && selectedConnectorId !== null) {

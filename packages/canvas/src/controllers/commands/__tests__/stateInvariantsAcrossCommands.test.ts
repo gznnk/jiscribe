@@ -12,7 +12,7 @@ import type { ConnectorState } from "../../../states/objects/connector/Connector
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { resolveObjectPartSelection } from "../../selection/resolveObjectPartSelection";
+import { reconcileObjectPartSelection } from "../../selection/reconcileObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 
 const registries = createTestRegistries();
@@ -48,16 +48,18 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 		);
 	}
 
-	// A slot selection, once it survives the resolver, must name a live slot of the
-	// sole selected object. The raw objectPartSelection is deliberately allowed to go
-	// stale (resolveObjectPartSelection's contract), so only the resolved value is pinned.
-	const resolvedPartSelection = resolveObjectPartSelection(
+	// A slot selection the reducer's reconciliation keeps must name a live slot of
+	// the sole selected object. A command alone may leave a stale one behind — the
+	// reducer clears it after the command runs (reconcileObjectPartSelection) — so
+	// the invariant is pinned on the reconciled state, not the raw one. What this
+	// catches is a command turning a stale selection into a live one.
+	const { objectPartSelection } = reconcileObjectPartSelection(
 		state,
 		registries.objectPartKind,
 	);
-	if (resolvedPartSelection !== null) {
-		const { objectId, partIds } = resolvedPartSelection;
-		const slotId = partIds[0];
+	if (objectPartSelection !== null) {
+		const { objectId, ranges } = objectPartSelection;
+		const slotId = ranges[0].anchorId;
 		if (state.selectedIds.length !== 1 || state.selectedIds[0] !== objectId) {
 			violations.push(
 				`objectPartSelection resolves to ${objectId} which is not the sole selection`,
@@ -183,7 +185,7 @@ describe("every command preserves structural invariants", () => {
 					objectPartSelection: {
 						objectId: "rect-1",
 						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["no-such-slot"],
+						ranges: [{ anchorId: "no-such-slot", focusId: "no-such-slot" }],
 					},
 				}),
 		},

@@ -4,6 +4,7 @@ import { memo } from "react";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { collectObjectPartIds } from "../../../selection/collectObjectPartIds";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 import { ObjectPartOutline } from "../ObjectPartOutline";
@@ -14,9 +15,9 @@ type SelectionOverlayProps = {
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
 	/**
-	 * Part selection already validated by resolveObjectPartSelection; a raw
-	 * state.objectPartSelection must not be passed, as a stale one would draw a box
-	 * around a slot that is no longer selected
+	 * Part selection to outline, `state.objectPartSelection` as it stands: the
+	 * reducer has already dropped one that would draw a box around a part no longer
+	 * selected (reconcileObjectPartSelection)
 	 */
 	objectPartSelection?: ObjectPartSelection | null;
 };
@@ -55,10 +56,14 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	const partOwner = objectPartSelection
 		? objects[objectPartSelection.objectId]
 		: undefined;
-	const partRegion =
+	const part =
 		objectPartSelection && partOwner
-			? objectPartKind.get(partOwner.type, objectPartSelection.kind)?.region
+			? objectPartKind.get(partOwner.type, objectPartSelection.kind)
 			: undefined;
+	const outlinedPartIds =
+		objectPartSelection && partOwner && part?.region
+			? collectObjectPartIds(objectPartSelection, part, partOwner)
+			: [];
 
 	return (
 		<g data-layer="selection-overlay">
@@ -87,9 +92,9 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 					<Outline key="multi-select-group" frame={multiSelectGroup} />
 				)}
 			{partOwner &&
-				partRegion &&
-				objectPartSelection?.partIds.map((partId) => {
-					const region = partRegion(partOwner, partId);
+				part?.region &&
+				outlinedPartIds.map((partId) => {
+					const region = part.region?.(partOwner, partId) ?? null;
 					return region === null ? null : (
 						<ObjectPartOutline
 							key={partId}

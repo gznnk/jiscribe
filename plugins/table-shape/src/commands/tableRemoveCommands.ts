@@ -55,16 +55,24 @@ const createTableRemoveCommand = (spec: TableRemoveCommandSpec): Command => ({
 	label: spec.label,
 	category: "edit",
 
-	canExecute: (state) => {
-		const selected = resolveTableTrackSelection(state, spec.axis);
+	canExecute: (state, registries) => {
+		const selected = resolveTableTrackSelection(
+			state,
+			spec.axis,
+			registries.objectPartKind,
+		);
 		return (
 			selected !== null &&
 			removeTableTracks(selected.table, spec.axis, selected.indices) !== null
 		);
 	},
 
-	execute: (state) => {
-		const selected = resolveTableTrackSelection(state, spec.axis);
+	execute: (state, registries) => {
+		const selected = resolveTableTrackSelection(
+			state,
+			spec.axis,
+			registries.objectPartKind,
+		);
 		if (selected === null) {
 			return state;
 		}

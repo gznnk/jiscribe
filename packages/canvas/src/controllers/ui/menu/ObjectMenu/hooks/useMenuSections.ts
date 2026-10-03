@@ -2,8 +2,6 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import type { ObjectPartKindRegistry } from "../../../../selection/ObjectPartKindRegistry";
-import { resolveObjectPartSelection } from "../../../../selection/resolveObjectPartSelection";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
@@ -112,11 +110,10 @@ const collectSelectionSections = (
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
-	objectPartKind: ObjectPartKindRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
 	if (
-		resolveObjectPartSelection(state, objectPartKind) === null &&
+		state.objectPartSelection === null &&
 		state.textEditState?.kind !== "shape"
 	) {
 		return sections;
@@ -138,10 +135,10 @@ export const useMenuSections = (
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
-	const { objectMenu, objectPartKind } = useCanvasRegistries();
+	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
-		() => (enabled ? getMenuSections(state, objectMenu, objectPartKind) : []),
+		() => (enabled ? getMenuSections(state, objectMenu) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
 			enabled,

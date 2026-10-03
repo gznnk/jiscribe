@@ -1,4 +1,4 @@
-import { TEXT_SLOT_PART_KIND } from "@jiscribe/canvas";
+import { createCanvasRegistries, TEXT_SLOT_PART_KIND } from "@jiscribe/canvas";
 import type {
 	CanvasControllerState,
 	ICanvasRegistries,
@@ -9,6 +9,7 @@ import {
 } from "@jiscribe/canvas-sdk/doc";
 import { describe, expect, it } from "vitest";
 
+import { tablePlugin } from "../../plugin";
 import { tableCellSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
@@ -66,8 +67,14 @@ const canvasWith = (
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
-/** The registries parameter every command takes and none of these reads. */
-const NO_REGISTRIES = undefined as unknown as ICanvasRegistries;
+/**
+ * The registry bundle the commands are handed, built the way a canvas builds it
+ * — the table's own part kinds included, since that is what says which parts a
+ * picked range covers.
+ */
+const registries = createCanvasRegistries({
+	plugins: [tablePlugin],
+}) as unknown as ICanvasRegistries;
 
 const commandById = (id: string) => {
 	const command = TABLE_INSERT_COMMANDS.find((entry) => entry.id === id);
@@ -77,10 +84,11 @@ const commandById = (id: string) => {
 	return command;
 };
 
+/** A pick of whole cells, one collapsed range each — what a cell click writes. */
 const cellSelection = (partIds: string[]) => ({
 	objectId: TABLE.id,
 	kind: TEXT_SLOT_PART_KIND,
-	partIds,
+	ranges: partIds.map((partId) => ({ anchorId: partId, focusId: partId })),
 });
 
 /** The table the command left behind, or a failure when it changed nothing. */
@@ -88,7 +96,7 @@ const tableAfter = (
 	commandId: string,
 	state: CanvasControllerState,
 ): TableState => {
-	const next = commandById(commandId).execute?.(state, NO_REGISTRIES);
+	const next = commandById(commandId).execute?.(state, registries);
 	if (next === undefined) {
 		throw new Error(`${commandId} has no execute`);
 	}
@@ -156,7 +164,7 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		const row = canvasWith({
 			objectId: TABLE.id,
 			kind: "row",
-			partIds: ["1"],
+			ranges: [{ anchorId: "1", focusId: "1" }],
 		});
 
 		expect(readGrid(tableAfter("table.insertRowBelow", row))).toEqual([
@@ -170,11 +178,13 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		const state = canvasWith(cellSelection(["r1c0"]));
 		const next = commandById("table.insertRowAbove").execute?.(
 			state,
-			NO_REGISTRIES,
+			registries,
 		);
 
 		// The cell that was picked is still the cell that is picked, one row down.
-		expect(next?.objectPartSelection?.partIds).toEqual(["r2c0"]);
+		expect(next?.objectPartSelection?.ranges).toEqual([
+			{ anchorId: "r2c0", focusId: "r2c0" },
+		]);
 		expect(next?.commitVersion).toBe(8);
 	});
 
@@ -182,36 +192,46 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		const state = canvasWith({
 			objectId: TABLE.id,
 			kind: "row",
-			partIds: ["1"],
+			ranges: [{ anchorId: "1", focusId: "1" }],
 		});
 		const next = commandById("table.insertRowAbove").execute?.(
 			state,
-			NO_REGISTRIES,
+			registries,
 		);
 
-		expect(next?.objectPartSelection?.partIds).toEqual(["2"]);
+		expect(next?.objectPartSelection?.ranges).toEqual([
+			{ anchorId: "2", focusId: "2" },
+		]);
 	});
 
 	it("is unavailable without a part selection naming a track of its axis", () => {
 		const canInsertRow = commandById("table.insertRowAbove").canExecute;
 		const canInsertColumn = commandById("table.insertColumnLeft").canExecute;
 
-		expect(
-			canInsertRow(canvasWith(cellSelection(["r0c0"])), NO_REGISTRIES),
-		).toBe(true);
+		expect(canInsertRow(canvasWith(cellSelection(["r0c0"])), registries)).toBe(
+			true,
+		);
 		// The table itself selected names no place to insert at.
-		expect(canInsertRow(canvasWith(null), NO_REGISTRIES)).toBe(false);
+		expect(canInsertRow(canvasWith(null), registries)).toBe(false);
 		// A column tells an inserted row nothing about where it goes.
 		expect(
 			canInsertRow(
-				canvasWith({ objectId: TABLE.id, kind: "column", partIds: ["0"] }),
-				NO_REGISTRIES,
+				canvasWith({
+					objectId: TABLE.id,
+					kind: "column",
+					ranges: [{ anchorId: "0", focusId: "0" }],
+				}),
+				registries,
 			),
 		).toBe(false);
 		expect(
 			canInsertColumn(
-				canvasWith({ objectId: TABLE.id, kind: "column", partIds: ["0"] }),
-				NO_REGISTRIES,
+				canvasWith({
+					objectId: TABLE.id,
+					kind: "column",
+					ranges: [{ anchorId: "0", focusId: "0" }],
+				}),
+				registries,
 			),
 		).toBe(true);
 	});
@@ -222,7 +242,7 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		expect(
 			canInsertRow(
 				canvasWith(cellSelection(["r0c0"]), { selectedIds: [] }),
-				NO_REGISTRIES,
+				registries,
 			),
 		).toBe(false);
 		expect(
@@ -230,9 +250,9 @@ describe("TABLE_INSERT_COMMANDS", () => {
 				canvasWith({
 					objectId: "other",
 					kind: TEXT_SLOT_PART_KIND,
-					partIds: ["r0c0"],
+					ranges: [{ anchorId: "r0c0", focusId: "r0c0" }],
 				}),
-				NO_REGISTRIES,
+				registries,
 			),
 		).toBe(false);
 	});
@@ -248,7 +268,7 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(
-			commandById("table.insertRowAbove").canExecute(editing, NO_REGISTRIES),
+			commandById("table.insertRowAbove").canExecute(editing, registries),
 		).toBe(false);
 	});
 

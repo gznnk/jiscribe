@@ -41,14 +41,14 @@ describe("SelectNextTextSlotCommand", () => {
 		expect(first.objectPartSelection).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["name"],
+			ranges: [{ anchorId: "name", focusId: "name" }],
 		});
 		expect(
 			SelectNextTextSlotCommand.execute(first, registries).objectPartSelection,
 		).toEqual({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["attributes"],
+			ranges: [{ anchorId: "attributes", focusId: "attributes" }],
 		});
 	});
 

@@ -305,6 +305,9 @@ it back to the type, so only the type knows what `"3"` or `"cell:2,1"` means;
 omitted means the object is indivisible and Delete falls through to it as a
 whole. The built-in `vertex` kind is the worked example: polyline, polygon and
 connector each declare it with the vertex floor below which deletion is refused.
+A type whose `features.text` is `"slots"` is given the `"textSlot"` kind without
+declaring anything, its part ids being the keys of its own `text`; declaring
+`"textSlot"` yourself replaces that one rather than colliding with it.
 
 ## What is not extensible yet
 

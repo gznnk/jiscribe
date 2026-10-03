@@ -63,8 +63,8 @@ export type ObjectMenuItemProps = {
 	selectedConnectorId: string | null;
 	/**
 	 * The parts picked one level below the object — a table's cells, a polyline's
-	 * vertices — already checked against the selection
-	 * (resolveObjectPartSelection), or null when none are. Read by an item whose
+	 * vertices — as `state.objectPartSelection` stands
+	 * (reconcileObjectPartSelection), or null when none are. Read by an item whose
 	 * write lands on those parts rather than on the object, so that what it shows
 	 * is the value of exactly what it would change (readSelectionSlotField); such
 	 * an item has to declare itself `slotAware` to be drawn at all while they are

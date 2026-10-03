@@ -98,11 +98,11 @@ describe("createTableInsertHandler", () => {
 	it("leaves the inserted track selected, which no renumbering can stale", () => {
 		expect(handleRowInsert(context, clickOn("1"))?.selection).toEqual({
 			kind: "row",
-			partIds: ["1"],
+			ranges: [{ anchorId: "1", focusId: "1" }],
 		});
 		expect(handleColumnInsert(context, clickOn("2"))?.selection).toEqual({
 			kind: "column",
-			partIds: ["2"],
+			ranges: [{ anchorId: "2", focusId: "2" }],
 		});
 	});
 

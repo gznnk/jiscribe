@@ -1,6 +1,4 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import type { ObjectPartKindRegistry } from "../../../../selection/ObjectPartKindRegistry";
-import { resolveObjectPartSelection } from "../../../../selection/resolveObjectPartSelection";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
 
 /**
@@ -13,16 +11,12 @@ import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
  * text of the stretch being edited (getPropertyPanelSections), and the object's
  * own note is not that.
  *
- * @param state - The selection channels, the selected text slot and the open text edit are read
- * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which decides whether the selection addresses parts inside one object
+ * @param state - The selection channels, the picked part and the open text edit are read
  * @returns True while a single object, or a connector, is selected and no text is being addressed
  */
-export const isMetaSectionShown = (
-	state: CanvasControllerState,
-	objectPartKind: ObjectPartKindRegistry,
-): boolean => {
+export const isMetaSectionShown = (state: CanvasControllerState): boolean => {
 	if (
-		resolveObjectPartSelection(state, objectPartKind) !== null ||
+		state.objectPartSelection !== null ||
 		state.textEditState?.kind === "shape"
 	) {
 		return false;

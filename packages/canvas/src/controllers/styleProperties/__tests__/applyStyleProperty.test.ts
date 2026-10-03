@@ -810,7 +810,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objectPartSelection: {
 						objectId: "r1",
 						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["rows"],
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
 					},
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
@@ -835,33 +835,13 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objectPartSelection: {
 						objectId: "r1",
 						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["name", "rows"],
-						anchorPartId: "name",
+						ranges: [{ anchorId: "name", focusId: "rows" }],
 					},
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1")).toEqual({
 					head: { text: "Head", fontSize: 12 },
 					name: { text: "User", fontSize: 24 },
-					rows: { text: ["id"], fontSize: 24 },
-				});
-			});
-
-			it("writes the slots of a range that still exist and no others", () => {
-				const r1 = slotRect("r1", { fontSize: 12 });
-				const state = makeState({
-					selectedIds: ["r1"],
-					objects: { r1 },
-					objectPartSelection: {
-						objectId: "r1",
-						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["rows", "operations"],
-						anchorPartId: "rows",
-					},
-				});
-				const result = applyStyleProperty(state, "fontSize", "24");
-				expect(slotsOf(result, "r1")).toEqual({
-					name: { text: "User", fontSize: 12 },
 					rows: { text: ["id"], fontSize: 24 },
 				});
 			});
@@ -874,30 +854,12 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objectPartSelection: {
 						objectId: "r1",
 						kind: "vertex",
-						partIds: ["0"],
+						ranges: [{ anchorId: "0", focusId: "0" }],
 					},
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1").name.fontSize).toBe(24);
 				expect(slotsOf(result, "r1").rows.fontSize).toBe(24);
-			});
-
-			it("writes every slot once the selection covers more than the slot's object", () => {
-				const r1 = slotRect("r1");
-				const r2 = bodyRect("r2");
-				const state = makeState({
-					selectedIds: ["r1", "r2"],
-					objects: { r1, r2 },
-					objectPartSelection: {
-						objectId: "r1",
-						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["rows"],
-					},
-				});
-				const result = applyStyleProperty(state, "fontWeight", "bold");
-				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
-				expect(slotsOf(result, "r1").rows.fontWeight).toBe("bold");
-				expect(slotsOf(result, "r2").body.fontWeight).toBe("bold");
 			});
 
 			it("writes every slot when the slot selection names another object", () => {
@@ -908,7 +870,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objectPartSelection: {
 						objectId: "gone",
 						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["rows"],
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
 					},
 				});
 				const result = applyStyleProperty(state, "fontWeight", "bold");
@@ -931,7 +893,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objectPartSelection: {
 						objectId: "g1",
 						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["rows"],
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
 					},
 				});
 				const result = applyStyleProperty(state, "fontWeight", "bold");
@@ -949,7 +911,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objectPartSelection: {
 						objectId: "r1",
 						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["rows"],
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
 					},
 				});
 				const result = applyStyleProperty(state, "text", "Account");
@@ -1009,7 +971,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objectPartSelection: {
 						objectId: "r1",
 						kind: TEXT_SLOT_PART_KIND,
-						partIds: ["0_1"],
+						ranges: [{ anchorId: "0_1", focusId: "0_1" }],
 					},
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
@@ -1236,7 +1198,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objectPartSelection: {
 					objectId: "s1",
 					kind: TEXT_SLOT_PART_KIND,
-					partIds: ["r0c1"],
+					ranges: [{ anchorId: "r0c1", focusId: "r0c1" }],
 				},
 			});
 			const result = applyStyleProperty(state, "cellFill", "#fee");
@@ -1254,7 +1216,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objectPartSelection: {
 					objectId: "s1",
 					kind: TEXT_SLOT_PART_KIND,
-					partIds: ["r0c0"],
+					ranges: [{ anchorId: "r0c0", focusId: "r0c0" }],
 				},
 			});
 			const result = applyStyleProperty(state, "cellFill", "");
@@ -1308,7 +1270,14 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			return makeState({
 				selectedIds: ["s1"],
 				objects: { s1 },
-				objectPartSelection: { objectId: "s1", kind, partIds },
+				objectPartSelection: {
+					objectId: "s1",
+					kind,
+					ranges: partIds.map((partId) => ({
+						anchorId: partId,
+						focusId: partId,
+					})),
+				},
 			});
 		};
 

@@ -24,9 +24,7 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import { collectObjectPartRange } from "../../../selection/collectObjectPartRange";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
-import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
@@ -57,17 +55,15 @@ import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
  * first slot by fallback, it steps back up to the object level by clearing the slot.
  *
  * With an additive modifier held the click extends the live selection instead of
- * replacing it, over the run from its anchor to the clicked slot as the type
- * reads that run (ObjectPartKindDefinition.range, the order it lists its slots by
- * default). A plain click leaves one slot selected, and that slot is the anchor
- * the next extension runs from.
+ * replacing it, moving the active range's focus to the clicked slot and leaving
+ * its anchor where it is. A plain click leaves one collapsed range, and that slot
+ * is the anchor the next extension runs from.
  */
 function handleTextSlotClick(
 	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	targetPart: string | undefined,
 	isExtending: boolean,
-	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	if (
 		targetObject.features?.text !== "slots" ||
@@ -87,21 +83,26 @@ function handleTextSlotClick(
 	// A slot change moves what the menu acts on, so it closes the open submenu just
 	// as an object selection change does. Re-clicking the same slot changes nothing
 	// and returns the state untouched, leaving the submenu as it was.
-	const currentSlot = canvasState.objectPartSelection;
+	const currentPartSelection = canvasState.objectPartSelection;
 	if (slotId === null) {
-		return currentSlot === null
+		return currentPartSelection === null
 			? canvasState
 			: { ...canvasState, objectPartSelection: null, objectMenuOpenId: null };
 	}
-
 	const extended = isExtending
-		? extendTextSlotSelection(canvasState, targetObject, slotId, registries)
+		? extendTextSlotSelection(canvasState, targetObject, slotId)
 		: null;
+	// A plain click picks the one slot it landed on, so the range it writes is
+	// collapsed and it is the whole selection: anything already picked is replaced.
+	// Only a slot selection can already be that very slot — a part of another kind
+	// sharing the id is still replaced.
 	if (
 		extended === null &&
-		currentSlot?.objectId === targetObject.id &&
-		currentSlot.partIds.length === 1 &&
-		currentSlot.partIds[0] === slotId
+		currentPartSelection?.objectId === targetObject.id &&
+		currentPartSelection.kind === TEXT_SLOT_PART_KIND &&
+		currentPartSelection.ranges.length === 1 &&
+		currentPartSelection.ranges[0].anchorId === slotId &&
+		currentPartSelection.ranges[0].focusId === slotId
 	) {
 		return canvasState;
 	}
@@ -110,56 +111,40 @@ function handleTextSlotClick(
 		objectPartSelection: extended ?? {
 			objectId: targetObject.id,
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: [slotId],
+			ranges: [{ anchorId: slotId, focusId: slotId }],
 		},
 		objectMenuOpenId: null,
 	};
 }
 
 /**
- * The slot selection a modifier-held click widens the live one to: the slots the
- * type reads between its anchor and the clicked slot. Null when there is nothing to extend
- * from — no live slot selection on this very object — which leaves the caller to
- * treat the click as a plain one.
+ * The slot selection a modifier-held click widens the live one to: the active
+ * range grown to the clicked slot, its anchor left where it is. Null when there
+ * is nothing to extend from — no live slot selection on this very object — which
+ * leaves the caller to treat the click as a plain one.
+ *
+ * The run between the two ends is not stored: what lies between two of a type's
+ * parts is the type's to say, and a reader asks it when it needs the set
+ * (collectObjectPartIds).
  */
 function extendTextSlotSelection(
 	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	slotId: string,
-	registries: ICanvasRegistries,
 ): ObjectPartSelection | null {
-	const currentSlot = resolveObjectPartSelection(
-		canvasState,
-		registries.objectPartKind,
-	);
+	const currentPartSelection = canvasState.objectPartSelection;
 	if (
-		currentSlot === null ||
-		currentSlot.objectId !== targetObject.id ||
-		currentSlot.kind !== TEXT_SLOT_PART_KIND
+		currentPartSelection === null ||
+		currentPartSelection.objectId !== targetObject.id ||
+		currentPartSelection.kind !== TEXT_SLOT_PART_KIND
 	) {
 		return null;
 	}
-	const part = registries.objectPartKind.get(
-		targetObject.type,
-		TEXT_SLOT_PART_KIND,
-	);
-	const anchorPartId = currentSlot.anchorPartId ?? currentSlot.partIds[0];
-	// What the run between two parts means is the type's to say: a grid's is the
-	// rectangle its two corners span, not the slice of the slot order between them.
-	const partIds =
-		part?.range !== undefined
-			? part.range(targetObject, anchorPartId, slotId)
-			: part?.list !== undefined
-				? collectObjectPartRange(part.list(targetObject), anchorPartId, slotId)
-				: null;
-	if (partIds === null) {
-		return null;
-	}
+	const { ranges } = currentPartSelection;
 	return {
 		objectId: targetObject.id,
 		kind: TEXT_SLOT_PART_KIND,
-		partIds,
-		anchorPartId,
+		ranges: [{ anchorId: ranges[ranges.length - 1].anchorId, focusId: slotId }],
 	};
 }
 
@@ -479,22 +464,20 @@ export const ObjectEventHandler: GestureHandler = {
 			const isSoleSelection =
 				nextState.selectedIds.length === 1 &&
 				nextState.selectedIds[0] === targetObject.id;
-			// An additive modifier over an object that already has a part selected
+			// An additive modifier over an object that already has a slot selected
 			// widens that selection. Left to applyObjectSelection it would instead
 			// deselect the object, which is the one thing the modifier cannot mean
 			// while the pointer is aimed one level below it.
 			const extendsPartSelection =
 				isSoleSelection &&
 				isAdditiveSelectionMod(event.mods) &&
-				resolveObjectPartSelection(nextState, registries.objectPartKind)
-					?.kind === TEXT_SLOT_PART_KIND;
+				nextState.objectPartSelection?.kind === TEXT_SLOT_PART_KIND;
 			if (extendsPartSelection) {
 				return handleTextSlotClick(
 					nextState,
 					targetObject,
 					event.targetPart,
 					true,
-					registries,
 				);
 			}
 			const afterClick = applyObjectSelection(
@@ -520,7 +503,6 @@ export const ObjectEventHandler: GestureHandler = {
 				targetObject,
 				event.targetPart,
 				false,
-				registries,
 			);
 		}
 

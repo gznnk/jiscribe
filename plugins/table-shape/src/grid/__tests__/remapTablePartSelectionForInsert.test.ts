@@ -4,11 +4,16 @@ import { describe, expect, it } from "vitest";
 
 import { remapTablePartSelectionForInsert } from "../remapTablePartSelectionForInsert";
 
-const selectionOf = (
-	kind: string,
-	partIds: string[],
-	anchorPartId?: string,
-): ObjectPartSelection => ({ objectId: "t-1", kind, partIds, anchorPartId });
+/** A selection of collapsed ranges, one per id — what a grip or a cell click writes. */
+const selectionOf = (kind: string, partIds: string[]): ObjectPartSelection => ({
+	objectId: "t-1",
+	kind,
+	ranges: partIds.map((partId) => ({ anchorId: partId, focusId: partId })),
+});
+
+/** The ids of a selection whose ranges are all collapsed. */
+const collapsedIds = (selection: ObjectPartSelection): string[] =>
+	selection.ranges.map((range) => range.anchorId);
 
 describe("remapTablePartSelectionForInsert", () => {
 	it("moves the cells at or past the inserted row down one", () => {
@@ -18,7 +23,7 @@ describe("remapTablePartSelectionForInsert", () => {
 			1,
 		);
 
-		expect(moved.partIds).toEqual(["r0c1", "r2c1", "r3c1"]);
+		expect(collapsedIds(moved)).toEqual(["r0c1", "r2c1", "r3c1"]);
 	});
 
 	it("moves the cells at or past the inserted column right one", () => {
@@ -28,28 +33,33 @@ describe("remapTablePartSelectionForInsert", () => {
 			1,
 		);
 
-		expect(moved.partIds).toEqual(["r1c0", "r1c2", "r1c3"]);
+		expect(collapsedIds(moved)).toEqual(["r1c0", "r1c2", "r1c3"]);
 	});
 
-	it("moves the anchor with the range it anchors", () => {
+	it("moves both ends of a range, the anchor as readily as the focus", () => {
 		const moved = remapTablePartSelectionForInsert(
-			selectionOf(TEXT_SLOT_PART_KIND, ["r1c0", "r2c0"], "r2c0"),
+			{
+				objectId: "t-1",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "r2c0", focusId: "r1c0" }],
+			},
 			"row",
 			0,
 		);
 
-		expect(moved.partIds).toEqual(["r2c0", "r3c0"]);
-		expect(moved.anchorPartId).toBe("r3c0");
+		expect(moved.ranges).toEqual([{ anchorId: "r3c0", focusId: "r2c0" }]);
 	});
 
 	it("moves a track selection of the axis that grew", () => {
 		expect(
-			remapTablePartSelectionForInsert(selectionOf("row", ["1"]), "row", 1)
-				.partIds,
+			collapsedIds(
+				remapTablePartSelectionForInsert(selectionOf("row", ["1"]), "row", 1),
+			),
 		).toEqual(["2"]);
 		expect(
-			remapTablePartSelectionForInsert(selectionOf("row", ["0"]), "row", 1)
-				.partIds,
+			collapsedIds(
+				remapTablePartSelectionForInsert(selectionOf("row", ["0"]), "row", 1),
+			),
 		).toEqual(["0"]);
 	});
 

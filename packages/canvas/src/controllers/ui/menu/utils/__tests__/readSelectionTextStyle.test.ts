@@ -190,7 +190,7 @@ describe("readSelectionTextStyle", () => {
 				makeState(["a"], objects, {
 					objectId: "a",
 					kind: TEXT_SLOT_PART_KIND,
-					partIds: ["rows"],
+					ranges: [{ anchorId: "rows", focusId: "rows" }],
 				}),
 				textStyleDefaults,
 				objectPartKind,

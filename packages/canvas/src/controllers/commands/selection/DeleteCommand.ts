@@ -2,10 +2,10 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
+import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
 import { VERTEX_PART_KIND } from "../../selection/createVertexPartKindDefinition";
 import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
 import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
-import { resolveObjectPartSelection } from "../../selection/resolveObjectPartSelection";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
@@ -16,10 +16,10 @@ import type { ExecutableCommand } from "../CommandTypes";
  * or null while it names nothing: no vertex selected, the object gone, or an
  * index the object has outgrown (an undo can leave one behind) — a selection
  * that is no selection, which the key then passes over. Validity is the
- * selection's own question, answered here on read the way
- * resolveObjectPartSelection will once the field is folded into the part
- * channel; whether the vertex can be deleted is a separate one
- * (resolveDeletableParts).
+ * selection's own question, answered here on read until the field is folded into
+ * the part channel, where the reducer answers it for every kind at once
+ * (reconcileObjectPartSelection); whether the vertex can be deleted is a separate
+ * one (resolveDeletableParts).
  */
 const resolveSelectedVertex = (
 	state: CanvasControllerState,
@@ -58,15 +58,23 @@ const resolveDeletionTargets = (
 	if (vertexTarget !== null) {
 		targets.push(vertexTarget);
 	}
-	// A resolved part selection is a request as it stands: every id has been put
-	// to the kind's `has`, and the anchor a range was dragged from says nothing
-	// about what is to be deleted.
-	const partSelection = resolveObjectPartSelection(
-		state,
-		registries.objectPartKind,
-	);
-	if (partSelection !== null) {
-		targets.push(partSelection);
+	// The part channel names ends, a deletion names parts, so the kind is asked
+	// what the picked ranges cover; the anchor a range was dragged from says
+	// nothing about what is to be deleted.
+	const { objectPartSelection } = state;
+	const partOwner = objectPartSelection
+		? state.objects[objectPartSelection.objectId]
+		: undefined;
+	const part =
+		objectPartSelection && partOwner
+			? registries.objectPartKind.get(partOwner.type, objectPartSelection.kind)
+			: undefined;
+	if (objectPartSelection && partOwner && part) {
+		targets.push({
+			objectId: objectPartSelection.objectId,
+			kind: objectPartSelection.kind,
+			partIds: collectObjectPartIds(objectPartSelection, part, partOwner),
+		});
 	}
 	return targets;
 };

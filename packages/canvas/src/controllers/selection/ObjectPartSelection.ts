@@ -1,26 +1,47 @@
 /**
- * A selection of sub-parts inside one object — the vertices of a polyline, the
- * text slots of a record, the cells of a table. The object type owns the
- * part-id namespace (`kind`) and the meaning of each id; core only carries the
- * triple around and hands it back to the type through
- * {@link ObjectPartKindDefinition}.
+ * A range of parts inside one kind: the fixed end a Shift-extension grows from,
+ * and the end that moves. Collapsed (`anchorId === focusId`) for a single part.
+ */
+export type ObjectPartRange = {
+	/** The end a Shift-extension leaves where it is. */
+	anchorId: string;
+	/** The end a Shift-extension moves. */
+	focusId: string;
+};
+
+/**
+ * The sub-parts addressed one level below the object selection, in a namespace
+ * the object's own type owns (`kind`).
  *
- * Not to be confused with a deletion request
- * ({@link import("./resolveDeletableParts").ObjectPartTarget}): this is what is
- * picked, that is what an operation is asked for, and turning the one into the
- * other is the command's business.
+ * Ranges rather than a set of ids: the set is what a reader derives
+ * (collectObjectPartIds, through the kind, which alone knows what lies between
+ * two of its parts), while the ends are what the gestures need — Shift grows the
+ * last range from its anchor, Ctrl adds a collapsed one. Storing the set would
+ * lose those ends, the way a DOM `Selection` would lose them if it kept the
+ * covered nodes instead of its `Range`s.
+ *
+ * The reducer clears it (reconcileObjectPartSelection) once it stops describing
+ * something real, so every reader takes `state.objectPartSelection` as it stands.
+ * That catches a part that is **gone**, not one that was **renumbered**. Where
+ * the ids are positions (the vertices of a polyline, the rows and columns of a
+ * table), an operation that renumbers them — an insertion, a removal — rewrites
+ * or clears the selection itself; left alone, it would silently go on addressing
+ * the part that took the number over.
  */
 export type ObjectPartSelection = {
-	/** The object the parts belong to; every part id is resolved against it alone. */
+	/**
+	 * The object the parts belong to. The selection is live only while this is the
+	 * sole selected object; the reducer drops the whole selection once it is not,
+	 * rather than every write that moves the selection having to clear it.
+	 */
 	objectId: string;
+
 	/** Part-id namespace owned by the object type: "textSlot", "vertex", "cell". */
 	kind: string;
-	/** Non-empty, in the type's own order. Core neither sorts nor dedups. */
-	partIds: readonly string[];
+
 	/**
-	 * Where a shift-extended range started, and the end it keeps while the other
-	 * end moves; always a member of partIds. Absent means the first of them, which
-	 * is what a selection made one part at a time leaves behind.
+	 * Non-empty. The last range is the active one, the one Shift extends. Core
+	 * neither sorts nor dedups: the order is the one the gestures built up.
 	 */
-	anchorPartId?: string;
+	ranges: readonly ObjectPartRange[];
 };

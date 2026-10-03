@@ -111,7 +111,10 @@ describe("handleCalloutTailTip", () => {
 			clickAt({ x: 190, y: 100 }),
 		);
 		expect(result).toEqual({
-			selection: { kind: "tail", partIds: ["tip"] },
+			selection: {
+				kind: "tail",
+				ranges: [{ anchorId: "tip", focusId: "tip" }],
+			},
 		});
 	});
 });

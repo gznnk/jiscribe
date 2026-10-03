@@ -24,13 +24,17 @@ const readSlots = (object: ObjectState): TextSlots | undefined =>
  *   whole box (the fallback `calcTextRegion` applies). Passing the definition's
  *   calculator rather than looking one up keeps the outlined box the very one
  *   the renderer and the text editor place the body in
- * @returns A definition to register under {@link TEXT_SLOT_PART_KIND}
+ * @returns A definition to register under {@link TEXT_SLOT_PART_KIND}, where it
+ *   replaces the automatic registration when a type puts it in its own
+ *   `ObjectTypeDefinition.partKinds`
  */
 export const createTextSlotPartKindDefinition = (
 	textRegion: ObjectTextRegionCalculator | undefined,
 ): ObjectPartKindDefinition => ({
 	kind: TEXT_SLOT_PART_KIND,
 
+	// hasOwnProperty rather than a lookup: "toString" names an
+	// Object.prototype member on every slot map, and a slot is not that.
 	has: (object, partId) => {
 		const slots = readSlots(object);
 		return (
@@ -54,4 +58,8 @@ export const createTextSlotPartKindDefinition = (
 		}
 		return calcTextRegion(object, partId, textRegion);
 	},
+
+	// The identity: these part ids are slot ids already, which is what spares the
+	// slot rules a special case for this kind (resolveSelectedTextSlotIds).
+	textSlotIds: (_object, partIds) => partIds,
 });

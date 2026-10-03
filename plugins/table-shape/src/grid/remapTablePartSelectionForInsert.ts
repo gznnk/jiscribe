@@ -44,6 +44,9 @@ const remapPartId = (
  * track is never selected — what was picked stays picked, wherever the insertion
  * pushed it.
  *
+ * Both ends of every range move, the anchor as readily as the focus: a range is
+ * the pair, and moving one end alone would widen or narrow what is picked.
+ *
  * @param selection - The live selection, already known to stand on the table being inserted into; a kind the table has no parts for is returned untouched
  * @param axis - The direction the inserted track runs in, which is the coordinate that moves
  * @param at - Where it was inserted, 0-based; parts at or past it move one along
@@ -54,19 +57,14 @@ export const remapTablePartSelectionForInsert = (
 	axis: TableAxis,
 	at: number,
 ): ObjectPartSelection => {
-	const partIds = selection.partIds.map((partId) =>
-		remapPartId(partId, selection.kind, axis, at),
+	const ranges = selection.ranges.map((range) => ({
+		anchorId: remapPartId(range.anchorId, selection.kind, axis, at),
+		focusId: remapPartId(range.focusId, selection.kind, axis, at),
+	}));
+	const isUnmoved = ranges.every(
+		(range, index) =>
+			range.anchorId === selection.ranges[index].anchorId &&
+			range.focusId === selection.ranges[index].focusId,
 	);
-	if (partIds.every((partId, index) => partId === selection.partIds[index])) {
-		return selection;
-	}
-	const { anchorPartId } = selection;
-	return {
-		...selection,
-		partIds,
-		anchorPartId:
-			anchorPartId === undefined
-				? undefined
-				: remapPartId(anchorPartId, selection.kind, axis, at),
-	};
+	return isUnmoved ? selection : { ...selection, ranges };
 };

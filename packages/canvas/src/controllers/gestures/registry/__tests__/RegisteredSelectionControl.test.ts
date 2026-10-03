@@ -281,14 +281,19 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			name: "headerHeight",
 			events: ["click"],
 			Component: () => null,
-			handle: () => ({ selection: { kind: "tail", partIds: ["tip"] } }),
+			handle: () => ({
+				selection: {
+					kind: "tail",
+					ranges: [{ anchorId: "tip", focusId: "tip" }],
+				},
+			}),
 		});
 		const state = makeState(makeObject());
 		const next = strategy.handle(state, makeEvent("click"), undefined as never);
 		expect(next.objectPartSelection).toEqual({
 			objectId: "obj-1",
 			kind: "tail",
-			partIds: ["tip"],
+			ranges: [{ anchorId: "tip", focusId: "tip" }],
 		});
 		// Nothing was written to the objects map.
 		expect(next.objects).toBe(state.objects);
@@ -298,7 +303,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		const selected = {
 			objectId: "obj-1",
 			kind: "tail",
-			partIds: ["tip"],
+			ranges: [{ anchorId: "tip", focusId: "tip" }],
 		};
 		const clearing = createRegisteredSelectionControl("container", {
 			name: "headerHeight",

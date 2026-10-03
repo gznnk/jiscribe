@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { createTextSlotPartRegistry } from "../../../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
 import { createObjectMenuRegistry } from "../../ObjectMenuRegistry";
@@ -57,22 +56,19 @@ const makeState = (
 
 const registry = createObjectMenuRegistry();
 registry.register("record", RECORD_SECTIONS);
-const objectPartKind = createTextSlotPartRegistry("record");
 
 describe("getMenuSections", () => {
 	it("returns every registered section while no slot is selected", () => {
-		expect(getMenuSections(makeState(null), registry, objectPartKind)).toEqual(
-			RECORD_SECTIONS,
-		);
+		expect(getMenuSections(makeState(null), registry)).toEqual(RECORD_SECTIONS);
 	});
 
 	it("keeps only the text items once a slot is selected", () => {
 		const state = makeState({
 			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["name"],
+			ranges: [{ anchorId: "name", focusId: "name" }],
 		});
-		expect(getMenuSections(state, registry, objectPartKind)).toEqual([
+		expect(getMenuSections(state, registry)).toEqual([
 			{
 				id: "text",
 				items: [
@@ -82,16 +78,5 @@ describe("getMenuSections", () => {
 				],
 			},
 		]);
-	});
-
-	it("ignores a slot selection that no longer describes the current selection", () => {
-		const state = makeState({
-			objectId: "rec-1",
-			kind: TEXT_SLOT_PART_KIND,
-			partIds: ["operations"],
-		});
-		expect(getMenuSections(state, registry, objectPartKind)).toEqual(
-			RECORD_SECTIONS,
-		);
 	});
 });

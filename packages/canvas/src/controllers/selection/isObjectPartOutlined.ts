@@ -14,7 +14,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  *
  * @param objects - The canvas's objects, for looking the selection's owner up by id
  * @param registry - The part registry the owner's type declared its kinds in
- * @param selection - The resolved part selection; null answers false, there being no part to outline
+ * @param selection - The live part selection (`state.objectPartSelection`, which the reducer keeps valid); null answers false, there being no part to outline
  * @returns True only when a part is selected and its kind is one the overlay draws a box for
  */
 export const isObjectPartOutlined = (

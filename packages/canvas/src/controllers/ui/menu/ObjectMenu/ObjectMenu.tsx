@@ -29,9 +29,7 @@ import type {
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
-import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
 type ObjectMenuProps = {
@@ -183,7 +181,6 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	onPropertyUpdate,
 	onOpenReference,
 }) => {
-	const { objectPartKind } = useCanvasRegistries();
 	const menuRef = useRef<HTMLDivElement>(null);
 	// Reported to the positioning hook, which holds the menu still while it is
 	// under the pointer — the flat format buttons resize an auto-sized text on
@@ -201,12 +198,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
-	// Resolved once and handed to every custom item as well: an item that writes
-	// into the picked parts reads the same value the write will be matched against.
-	const objectPartSelection = resolveObjectPartSelection(
-		canvasState,
-		objectPartKind,
-	);
+	// Handed to every custom item as well: an item that writes into the picked
+	// parts reads the same value the write will be matched against.
+	const { objectPartSelection } = canvasState;
 	// None of the system sections acts on a text slot, so they all go while one is
 	// selected — and likewise while an editor is open, where the menu is there to
 	// style the text being edited.

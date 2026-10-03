@@ -8,7 +8,6 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { resolveObjectPartSelection } from "../../../../../selection/resolveObjectPartSelection";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
@@ -124,7 +123,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 
 	const isTextFocused =
 		canvasState.textEditState?.kind === "shape" ||
-		resolveObjectPartSelection(canvasState, objectPartKind) !== null;
+		canvasState.objectPartSelection !== null;
 	if (isTextFocused) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}

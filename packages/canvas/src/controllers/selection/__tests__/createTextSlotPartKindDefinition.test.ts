@@ -79,6 +79,13 @@ describe("createTextSlotPartKindDefinition", () => {
 		});
 	});
 
+	it("stands for exactly the slots named, its ids being slot ids already", () => {
+		expect(part.textSlotIds?.(slotShape(), ["rows", "name"])).toEqual([
+			"rows",
+			"name",
+		]);
+	});
+
 	it("has no region for a slot the object lost, nor for an untransformed object", () => {
 		expect(part.region?.(slotShape(), "operations")).toBeNull();
 		const unplaced = {

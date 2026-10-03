@@ -65,7 +65,7 @@ describe("DeselectAllCommand", () => {
 			objectPartSelection: {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
-				partIds: ["rows"],
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			},
 		});
 		const next = DeselectAllCommand.execute(state, registries);

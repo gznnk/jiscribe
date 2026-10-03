@@ -270,7 +270,14 @@ describe("DeleteCommand", () => {
 				selectedIds: ["n"],
 				objects: { n: makeTracked(items) },
 				rootIds: ["n"],
-				objectPartSelection: { objectId: "n", kind: "track", partIds },
+				objectPartSelection: {
+					objectId: "n",
+					kind: "track",
+					ranges: partIds.map((partId) => ({
+						anchorId: partId,
+						focusId: partId,
+					})),
+				},
 			});
 
 		const removeTracks = (
@@ -342,7 +349,10 @@ describe("DeleteCommand", () => {
 				objectPartSelection: {
 					objectId: "p",
 					kind: "vertex",
-					partIds: ["0", "2"],
+					ranges: [
+						{ anchorId: "0", focusId: "0" },
+						{ anchorId: "2", focusId: "2" },
+					],
 				},
 			});
 

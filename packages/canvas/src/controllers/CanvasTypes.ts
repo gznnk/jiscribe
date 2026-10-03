@@ -638,9 +638,10 @@ export type CanvasControllerState = CanvasState & {
 	/**
 	 * Sub-parts addressed one level below the object selection, in a namespace the
 	 * object's own type owns (`kind`) — today only the text slots of a
-	 * `features.text === "slots"` shape. Only valid while that object is the sole
-	 * selection and still holds the parts; a stale value is neutralized on read
-	 * (resolveObjectPartSelection) instead of being cleared at every selection write.
+	 * `features.text === "slots"` shape. Always valid where it is read: every
+	 * reducer branch that rewrites the selection or the objects drops a selection
+	 * the state no longer backs (reconcileObjectPartSelection), instead of every
+	 * selection write clearing it or every reader validating it.
 	 */
 	objectPartSelection: ObjectPartSelection | null;
 
