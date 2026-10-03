@@ -14,6 +14,9 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
  * - Escape steps out one level at a time: the slot first, the object next
  * - Tab walks the slots down the box and wraps around, over three slots as well as two
  * - Enter opens the selected slot for editing
+ * - a Shift-click widens the selection to the run of compartments between the
+ *   anchor and the clicked one, a style change then landing on all of them, and a
+ *   plain click or a Tab collapses it back to one
  *
  * Coordinate note (shared with record.spec): created at 220x80, a title band
  * holding a one-line title is the top 28px (content y=[200,228]) and the row
@@ -143,6 +146,35 @@ async function selectedSlotPart(
 					slotOutline.getAttribute("height"),
 		);
 		return matched?.getAttribute("data-part") ?? undefined;
+	}, id);
+}
+
+/**
+ * The `data-part` of every compartment the selection outlines, in the order the
+ * overlay draws them: the object's own outline comes first and is dropped, the
+ * slots' follow. Empty while only the object is selected.
+ */
+async function selectedSlotParts(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<string[]> {
+	return canvas.page.evaluate((objectId) => {
+		const outlines = [
+			...document.querySelectorAll('[data-layer="selection-overlay"] rect'),
+		];
+		const compartments = [
+			...document.querySelectorAll(
+				`[data-kind="object"][data-id="${objectId}"] [data-part]`,
+			),
+		];
+		return outlines.slice(1).map((outline) => {
+			const matched = compartments.find(
+				(compartment) =>
+					compartment.getAttribute("y") === outline.getAttribute("y") &&
+					compartment.getAttribute("height") === outline.getAttribute("height"),
+			);
+			return matched?.getAttribute("data-part") ?? "";
+		});
 	}, id);
 }
 
@@ -372,6 +404,77 @@ test.describe("record: selecting one text slot", () => {
 				})
 				.toBe(expectedPart);
 		}
+	});
+
+	test("widens the selection to the run of compartments on a Shift-click", async ({
+		canvas,
+	}) => {
+		const id = await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		expect(await selectedSlotParts(canvas, id)).toEqual(["name"]);
+
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+		await expect
+			.poll(() => selectedSlotParts(canvas, id), {
+				message: "both compartments are outlined",
+			})
+			.toEqual(["name", "attributes"]);
+		// The record stays the selection; the modifier did not toggle it off.
+		expect(await canvas.hasAnyControl()).toBe(true);
+	});
+
+	test("applies a font color to every compartment of the range", async ({
+		canvas,
+	}) => {
+		await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+
+		await canvas.setColor("font-color", "#ff0000");
+		await expect
+			.poll(async () => (await textColorByContent(canvas))[NAME_TEXT], {
+				message: "the anchor compartment takes the new font color",
+			})
+			.toBe("rgb(255, 0, 0)");
+		expect((await textColorByContent(canvas))[ATTRIBUTES_TEXT]).toBe(
+			"rgb(255, 0, 0)",
+		);
+	});
+
+	test("collapses the range back to the one compartment a plain click lands in", async ({
+		canvas,
+	}) => {
+		const id = await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+		await expect
+			.poll(() => selectedSlotParts(canvas, id))
+			.toEqual(["name", "attributes"]);
+
+		// A different spot from the Shift-click, so the pair is not read as a double click.
+		await canvas.clickAt(NAME_SPOT);
+		await expect
+			.poll(() => selectedSlotParts(canvas, id), {
+				message: "the plain click leaves only the compartment it landed in",
+			})
+			.toEqual(["name"]);
+	});
+
+	test("collapses the range and steps on with Tab", async ({ canvas }) => {
+		const id = await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+		await expect
+			.poll(() => selectedSlotParts(canvas, id))
+			.toEqual(["name", "attributes"]);
+
+		// Forward from the last of the range, which wraps back to the title band.
+		await canvas.page.keyboard.press("Tab");
+		await expect
+			.poll(() => selectedSlotParts(canvas, id), {
+				message: "Tab leaves one compartment selected",
+			})
+			.toEqual(["name"]);
 	});
 
 	test("opens the selected slot for editing on Enter", async ({ canvas }) => {

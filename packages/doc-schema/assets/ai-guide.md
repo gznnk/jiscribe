@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.11.0+1e02488e -->
+<!-- jiscribe guide 0.11.0+72f45af1 -->
 
 # Jiscribe AI Authoring Guide
 
@@ -238,6 +238,7 @@ rather than a `rect` with a label on it.
 | `group`                 | container of child objects                                         |
 | `container`             | titled region (module, subsystem, boundary)                        |
 | `sticky`                | sticky note (no stroke or `rx`)                                    |
+| `table`                 | grid of cells (table)                                              |
 | `svg`                   | raw SVG escape hatch (opaque box)                                  |
 | `image`                 | picture file (raster or SVG) under the .jis directory (opaque box) |
 | `connector` (in `root`) | edge / arrow between objects                                       |
@@ -439,6 +440,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `group`                 | `children`                                                     |
 | `container`             | `x`,`y`,`width`,`height`                                       |
 | `sticky`                | `x`,`y`,`width`,`height`                                       |
+| `table`                 | `x`,`y` + `columns`,`rows`,`cells` (no `width`/`height`)       |
 | `svg`                   | `x`,`y`,`width`,`height` + `svgText`                           |
 | `image`                 | `x`,`y`,`width`,`height` + `src`                               |
 | `connector` (in `root`) | `source`,`target`,`points:[]`                                  |

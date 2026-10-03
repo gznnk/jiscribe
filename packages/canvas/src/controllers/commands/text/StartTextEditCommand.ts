@@ -87,8 +87,8 @@ export const StartTextEditCommand: ExecutableCommand = {
 
 		// Enter carries no pointer position, so the part already selected one level
 		// below the object decides, falling back to the first slot when there is
-		// none. The editor opens on one slot, and in this version the selection is
-		// always one collapsed range, so the anchor of the first range is that slot.
+		// none. The editor opens on one slot: the anchor of the first range, which
+		// is the slot a plain click left there.
 		const slotId =
 			state.objectPartSelection?.ranges[0].anchorId ??
 			getFirstTextSlotId(targetObject.text);

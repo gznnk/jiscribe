@@ -49,11 +49,13 @@ const makeState = (params: {
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 	selectedVertex?: CanvasControllerState["selectedVertex"];
+	objectPartSelection?: CanvasControllerState["objectPartSelection"];
 	selectedConnectorId?: string | null;
 	lastDuplicate?: CanvasControllerState["lastDuplicate"];
 }): CanvasControllerState =>
 	({
 		selectedVertex: null,
+		objectPartSelection: null,
 		selectedConnectorId: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,
@@ -232,6 +234,135 @@ describe("DeleteCommand", () => {
 			expect(group.cy).toBe(5);
 			expect(group.width).toBe(10);
 			expect(group.height).toBe(10);
+		});
+	});
+
+	describe("part-selection deletion", () => {
+		/** A shape carrying a list of parts addressed by their index, as a table's tracks are. */
+		type TrackState = ObjectState & { items: string[] };
+
+		const makeTracked = (items: string[]): TrackState =>
+			({ id: "n", type: "pin", items }) as unknown as TrackState;
+
+		/** Registers the `track` kind on the `pin` type, optionally without a deletion. */
+		const trackedRegistries = (
+			remove?: (
+				object: TrackState,
+				partIds: readonly string[],
+			) => TrackState | null,
+		) => {
+			const bundle = createTestRegistries();
+			bundle.objectPartKind.register<TrackState>("pin", [
+				{
+					kind: "track",
+					has: (object, partId) => Number(partId) < object.items.length,
+					delete: remove,
+				},
+			]);
+			return bundle;
+		};
+
+		const trackedState = (
+			items: string[],
+			partIds: string[],
+		): CanvasControllerState =>
+			makeState({
+				selectedIds: ["n"],
+				objects: { n: makeTracked(items) },
+				rootIds: ["n"],
+				objectPartSelection: {
+					objectId: "n",
+					kind: "track",
+					ranges: partIds.map((partId) => ({
+						anchorId: partId,
+						focusId: partId,
+					})),
+				},
+			});
+
+		const removeTracks = (
+			object: TrackState,
+			partIds: readonly string[],
+		): TrackState => {
+			const removed = new Set(partIds.map(Number));
+			return {
+				...object,
+				items: object.items.filter((_, index) => !removed.has(index)),
+			};
+		};
+
+		it("removes the parts the channel names and blanks the channel", () => {
+			const bundle = trackedRegistries(removeTracks);
+			const state = trackedState(["a", "b", "c"], ["1"]);
+
+			const next = DeleteCommand.execute(state, bundle);
+
+			expect((next.objects["n"] as TrackState).items).toEqual(["a", "c"]);
+			expect(next.objectPartSelection).toBeNull();
+			expect(next.commitVersion).toBe(1);
+			expect(DeleteCommand.canExecute(state, bundle)).toBe(true);
+		});
+
+		it("lets the key reach the object while the picked kind registers no deletion", () => {
+			// This is what keeps Delete over a text slot deleting the shape the slot
+			// belongs to.
+			const state = trackedState(["a", "b"], ["0"]);
+
+			const next = DeleteCommand.execute(state, trackedRegistries());
+
+			expect(next.objects["n"]).toBeUndefined();
+			expect(next.selectedIds).toEqual([]);
+		});
+
+		it("holds the key over a picked part whose kind declares a deletion that refuses", () => {
+			const bundle = trackedRegistries(() => null);
+			const state = trackedState(["a", "b"], ["0"]);
+
+			expect(DeleteCommand.canExecute(state, bundle)).toBe(true);
+			expect(DeleteCommand.execute(state, bundle)).toBe(state);
+		});
+
+		it("ignores ids the object has outgrown and goes on to the object", () => {
+			const state = trackedState(["a", "b"], ["7"]);
+
+			const next = DeleteCommand.execute(
+				state,
+				trackedRegistries(removeTracks),
+			);
+
+			expect(next.objects["n"]).toBeUndefined();
+		});
+
+		it("deletes the selected vertex ahead of a part selection on the same object", () => {
+			const bundle = createTestRegistries();
+			const state = makeState({
+				selectedIds: ["p"],
+				objects: {
+					p: makePolyline("p", [
+						{ x: 0, y: 0 },
+						{ x: 10, y: 0 },
+						{ x: 20, y: 0 },
+					]),
+				},
+				rootIds: ["p"],
+				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				objectPartSelection: {
+					objectId: "p",
+					kind: "vertex",
+					ranges: [
+						{ anchorId: "0", focusId: "0" },
+						{ anchorId: "2", focusId: "2" },
+					],
+				},
+			});
+
+			const next = DeleteCommand.execute(state, bundle);
+
+			expect((next.objects["p"] as PolylineState).points).toEqual([
+				{ x: 0, y: 0 },
+				{ x: 20, y: 0 },
+			]);
+			expect(next.objectPartSelection).toBeNull();
 		});
 	});
 

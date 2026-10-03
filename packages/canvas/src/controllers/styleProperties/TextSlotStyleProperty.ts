@@ -6,6 +6,7 @@ import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType";
 
+import { resolveAddressedTextSlotIds } from "./addressedTextSlots";
 import {
 	coerceStyleValue,
 	SelectionStyleProperty,
@@ -14,6 +15,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import {
 	resolveTextEditSelection,
 	styleTextEditSelection,
@@ -25,8 +27,8 @@ import {
  * mixing types takes the property only on the objects that can hold it.
  *
  * Text styling is stored per slot, so the write targets whichever slots the
- * selection addresses: the one slot selected below the object when there is
- * one, otherwise **every** slot of the object. The menus read their current
+ * selection addresses: the slots selected below the object when any are,
+ * otherwise **every** slot of the object. The menus read their current
  * value through the same rule (readSelectionTextStyle).
  *
  * The exception is an open editor with a stretch of its text selected: the
@@ -44,13 +46,14 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
+		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
 		const ranged = this.applyToTextEditSelection(state, property, value);
 		if (ranged !== null) {
 			return ranged;
 		}
 		return this.clearAppliedInlineStyleFromDraft(
-			super.apply(state, property, value),
+			super.apply(state, property, value, objectPartKind),
 			state,
 			property,
 		);
@@ -138,30 +141,21 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		obj: ObjectState,
 		path: readonly string[],
 		value: string | number | boolean,
-		selectedSlotId: string | undefined,
+		selectedSlotIds: readonly string[] | undefined,
 	): ObjectState | null {
 		const slots = (obj as ObjectState & TextStyleState).text;
 		if (slots === undefined) {
 			return null;
 		}
 		const property = path[0];
-		const selectedSlot =
-			selectedSlotId === undefined ? undefined : slots[selectedSlotId];
-		if (selectedSlotId !== undefined && selectedSlot !== undefined) {
-			return {
-				...obj,
-				text: {
-					...slots,
-					[selectedSlotId]: this.writeSlotValue(selectedSlot, property, value),
-				},
-			} as ObjectState;
+		const updatedSlots: TextSlots = { ...slots };
+		for (const slotId of resolveAddressedTextSlotIds(slots, selectedSlotIds)) {
+			updatedSlots[slotId] = this.writeSlotValue(
+				slots[slotId],
+				property,
+				value,
+			);
 		}
-		const updatedSlots: TextSlots = Object.fromEntries(
-			Object.entries(slots).map(([slotId, slot]) => [
-				slotId,
-				this.writeSlotValue(slot, property, value),
-			]),
-		);
 		return { ...obj, text: updatedSlots } as ObjectState;
 	}
 

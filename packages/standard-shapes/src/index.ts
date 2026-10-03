@@ -1,4 +1,4 @@
-// The standard shape set as a host mounts it: the nine plugins a `<Canvas>` is
+// The standard shape set as a host mounts it: the ten plugins a `<Canvas>` is
 // configured with, plus the two declarations that make their stencils reachable —
 // the toolbar sections and the shape library sidebar. The headless half lives
 // behind ./doc and pulls in no react.
@@ -43,10 +43,11 @@ import {
 } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
+import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 /**
- * The nine plugins of the standard shape set, in the same order as
+ * The ten plugins of the standard shape set, in the same order as
  * `standardDocPlugins`. Pass to `CanvasConfig.plugins`; a shape whose plugin is
  * missing is simply not drawn, so this array and the one the parser is given
  * have to describe the same set.
@@ -56,6 +57,7 @@ export const standardPlugins: readonly CanvasPlugin[] = [
 	containerPlugin,
 	markdownPlugin,
 	stickyPlugin,
+	tablePlugin,
 	umlPlugin,
 	generalPlugin,
 	annotationPlugin,
@@ -67,7 +69,7 @@ export const standardPlugins: readonly CanvasPlugin[] = [
  * The shape tools of the standard set: the shape library toggle at the far left,
  * then the six presets a diagram is mostly built out of, pinned straight on the
  * bar and ordered area → line → text. Everything else the set ships — the
- * `markdown` preset and the eight plugin categories — is reached through the
+ * `markdown` and `table` presets and the eight plugin categories — is reached through the
  * shape library sidebar instead, so pass `standardStencilLibrarySections`
  * alongside this or those shapes become undrawable by hand.
  *
@@ -122,15 +124,20 @@ export const standardToolbarSections: ToolbarSection[] = [
  * set lives.
  *
  * The `basic` section is composed here rather than taken from core: core pins its
- * primitives on the bar and the `sticky` / `markdown` presets belong with them
- * rather than in a category of their own.
+ * primitives on the bar and the `sticky` / `markdown` / `table` presets belong
+ * with them rather than in a category of their own.
  *
  * Typed mutable for the same reason as {@link standardToolbarToolsSection}.
  */
 export const standardStencilLibrarySections: StencilCategory[] = [
 	{
 		...basicStencilCategory,
-		presetIds: [...basicStencilCategory.presetIds, "sticky", "markdown"],
+		presetIds: [
+			...basicStencilCategory.presetIds,
+			"sticky",
+			"markdown",
+			"table",
+		],
 	},
 	flowchartStencilCategory,
 	umlStencilCategory,

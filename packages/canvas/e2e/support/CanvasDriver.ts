@@ -69,11 +69,18 @@ export class CanvasDriver {
 
 	constructor(readonly page: Page) {}
 
-	async goto() {
-		await this.page.goto("/", { waitUntil: "networkidle" });
-		await expect(
-			this.page.locator(selectors.toolButton("Rectangle")),
-		).toBeVisible();
+	/**
+	 * Open the harness page and wait until it is drawn.
+	 *
+	 * @param query - Query string appended to `/`, leading `?` included, for the
+	 * pages the harness offers behind one (`?multi`, `?locale=ja`). Omit for the
+	 * default page.
+	 */
+	async goto(query = "") {
+		await this.page.goto(`/${query}`, { waitUntil: "networkidle" });
+		// The rect tool by its preset id, not by its title: the title is the stencil
+		// label, which a page opened under another locale draws translated.
+		await expect(this.page.locator(selectors.shapeItem("rect"))).toBeVisible();
 		await this.measureOrigin();
 	}
 

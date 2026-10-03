@@ -47,6 +47,21 @@ type PropertyColorFieldProps = {
 	 * carrying its own — cannot tell.
 	 */
 	currentColorIsShared?: boolean;
+	/**
+	 * Wording for a property the palette has no swatch for — one every target
+	 * leaves unset, rather than set to a color. Drawn in the trigger in place of
+	 * `value`, and it takes the selection off every swatch, `value` then being
+	 * only what the absence is painted as (`transparent` draws the checker).
+	 * Pass it only while the property is unset; omitted states `value` itself,
+	 * which is what a property that is always set does.
+	 */
+	unsetLabel?: string;
+	/**
+	 * Drawn under the palette, inside the same open panel: the choices a color
+	 * grid cannot hold, such as the button that takes the property off again.
+	 * Omitted leaves the panel the palette alone.
+	 */
+	footer?: React.ReactNode;
 	/** title / aria-label of the trigger. */
 	title: string;
 	onPropertyUpdate: StylePropertyUpdater;
@@ -62,6 +77,10 @@ type PropertyColorFieldProps = {
  * A selection carrying several colors keeps its swatch — split between them,
  * beside the word for it — rather than falling back to the bare word: the row
  * is still read as a color row at a glance.
+ *
+ * A property that can be unset states so with `unsetLabel`, and reaches that
+ * state again through a `footer` of its own: the palette is colors, and the
+ * absence of one is not among them.
  */
 const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	value,
@@ -70,12 +89,15 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	role,
 	writesThroughCallback = false,
 	currentColorIsShared = false,
+	unsetLabel,
+	footer,
 	title,
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
 	const isAuto = isAutoColor(value);
 	const isMixed = mixedValues !== undefined;
+	const isUnset = unsetLabel !== undefined;
 	const resolveSwatchColor = (color: string): string =>
 		color === "transparent" ? color : resolveAutoColor(color, role);
 
@@ -102,6 +124,8 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 							<PropertyMixedLabel>
 								{messages.propertyPanelMixed}
 							</PropertyMixedLabel>
+						) : isUnset ? (
+							<PropertyColorAutoLabel>{unsetLabel}</PropertyColorAutoLabel>
 						) : isAuto ? (
 							<PropertyColorAutoLabel>
 								{messages.colorPickerAuto}
@@ -114,12 +138,13 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 			}
 		>
 			<ObjectMenuColorPickerGrid
-				currentColor={isMixed ? "" : value}
+				currentColor={isMixed || isUnset ? "" : value}
 				property={property}
 				writesThroughCallback={writesThroughCallback}
 				currentColorIsShared={currentColorIsShared}
 				onPropertyUpdate={onPropertyUpdate}
 			/>
+			{footer}
 		</PropertyDropdownField>
 	);
 };

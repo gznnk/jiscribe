@@ -1,4 +1,5 @@
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 
 export type BuiltinItemKey =
 	| "arrowHead"
@@ -60,6 +61,16 @@ export type ObjectMenuItemProps = {
 	objects: Record<string, ObjectState>;
 	selectedIds: string[];
 	selectedConnectorId: string | null;
+	/**
+	 * The parts picked one level below the object — a table's cells, a polyline's
+	 * vertices — as `state.objectPartSelection` stands
+	 * (reconcileObjectPartSelection), or null when none are. Read by an item whose
+	 * write lands on those parts rather than on the object, so that what it shows
+	 * is the value of exactly what it would change (readSelectionSlotField); such
+	 * an item has to declare itself `slotAware` to be drawn at all while they are
+	 * picked.
+	 */
+	objectPartSelection: ObjectPartSelection | null;
 	/** ID of the currently open menu section (`toggle:{sectionId}`). */
 	openSectionId: string | null;
 	onPropertyUpdate: StylePropertyUpdater;
@@ -82,6 +93,15 @@ export type CustomItem = {
 	type: "custom";
 	id: string;
 	component: React.ComponentType<ObjectMenuItemProps>;
+	/**
+	 * Whether the item stays on the menu while a text slot is picked below the
+	 * object, or an editor is open on its text. Omitted = it goes, which is the
+	 * only safe reading for an item that acts on the whole object
+	 * (filterTextSlotMenuSections). Declare it on an item that writes what a slot
+	 * itself holds and reads those same slots back — a `textSlotField` property
+	 * (ExtraStylePropertyDescriptor).
+	 */
+	slotAware?: boolean;
 };
 
 export type ObjectMenuItem = BuiltinItem | CustomItem;

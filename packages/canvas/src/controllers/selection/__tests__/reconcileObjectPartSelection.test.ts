@@ -23,7 +23,9 @@ const slotShape = (id: string): ObjectState =>
  * and nothing else does.
  */
 const objectPartKind = createObjectPartKindRegistry();
-objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
+objectPartKind.register("record", [
+	createTextSlotPartKindDefinition(undefined),
+]);
 
 const makeState = (
 	objects: Record<string, ObjectState>,

@@ -7,6 +7,7 @@ import type {
 	MetaProperty,
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 /**
@@ -55,8 +56,7 @@ export type PropertyPanelBuiltinItem = { type: PropertyPanelBuiltinItemKey };
  * through the same public surface (`@jiscribe/canvas/unstable`).
  *
  * The id is what the multi-type merge matches the row by, so two types offering
- * the same row have to spell it the same way. A row that is not slot-aware needs
- * no opt-out: the text-slot narrowing drops every custom row.
+ * the same row have to spell it the same way.
  */
 export type PropertyPanelCustomItem = {
 	type: "custom";
@@ -64,6 +64,16 @@ export type PropertyPanelCustomItem = {
 	id: string;
 	/** Drawn with {@link PropertyPanelItemProps}; return null to leave the row out for this selection. */
 	component: React.ComponentType<PropertyPanelItemProps>;
+	/**
+	 * Whether the row stays in the sidebar while a text slot is picked below the
+	 * object, or an editor is open on its text. Omitted = it goes, which is the
+	 * only safe reading for a row that acts on the whole object
+	 * (filterTextSlotPanelSections). Declare it on a row that writes what a slot
+	 * itself holds and reads those same slots back — a `textSlotField` property
+	 * (ExtraStylePropertyDescriptor). The ObjectMenu's `custom` item declares the
+	 * same thing under the same name, and one predicate reads both.
+	 */
+	slotAware?: boolean;
 };
 
 /**
@@ -183,6 +193,16 @@ export type PropertyPanelItemProps = {
 	objects: Record<string, ObjectState>;
 	selectedIds: string[];
 	selectedConnectorId: string | null;
+	/**
+	 * The parts picked one level below the object — a table's cells, a polyline's
+	 * vertices — as `state.objectPartSelection` stands
+	 * (reconcileObjectPartSelection), or null when none are. Read by a row whose
+	 * write lands on those parts rather than on the object, so that what it shows
+	 * is the value of exactly what it would change (readSelectionSlotField); such
+	 * a row has to declare itself `slotAware` to be drawn at all while they are
+	 * picked.
+	 */
+	objectPartSelection: ObjectPartSelection | null;
 	/** The frame a multi-selection is transformed through; null while one object or nothing is selected. */
 	multiSelectGroup: GroupState | null;
 	onPropertyUpdate: StylePropertyUpdater;

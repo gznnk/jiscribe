@@ -240,6 +240,7 @@ export const createCanvasReducer =
 					state,
 					action.property,
 					action.value,
+					registries.objectPartKind,
 				);
 				// Clear the vertex selection after a property change (so the Delete key acts as object deletion).
 				// This path bypasses handleGesture, so flatten the COW view here

@@ -1,6 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
+	SelectionControlResult,
 } from "@jiscribe/canvas";
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
@@ -43,56 +44,73 @@ const makeEvent = (
 	mods: { shift: false, alt: false, ctrl: false, meta: false },
 });
 
+/** The object the handler put in its result, or null for no change. */
+const objectOf = (
+	result: SelectionControlResult<ContainerState> | null,
+): ContainerState | null => result?.object ?? null;
+
 describe("handleContainerHeaderHeight", () => {
 	it("derives headerHeight from the cursor's distance to the top edge", () => {
-		const next = handleContainerHeaderHeight(
-			makeContext(makeContainer()),
-			makeEvent({ x: 100, y: 60 }),
+		const next = objectOf(
+			handleContainerHeaderHeight(
+				makeContext(makeContainer()),
+				makeEvent({ x: 100, y: 60 }),
+			),
 		);
-		expect(next.headerHeight).toBe(40);
+		expect(next?.headerHeight).toBe(40);
 	});
 
 	it("clamps to the minimum header height", () => {
-		const next = handleContainerHeaderHeight(
-			makeContext(makeContainer()),
-			makeEvent({ x: 100, y: 22 }),
+		const next = objectOf(
+			handleContainerHeaderHeight(
+				makeContext(makeContainer()),
+				makeEvent({ x: 100, y: 22 }),
+			),
 		);
-		expect(next.headerHeight).toBe(16);
+		expect(next?.headerHeight).toBe(16);
 	});
 
 	it("clamps to the container height", () => {
-		const next = handleContainerHeaderHeight(
-			makeContext(makeContainer()),
-			makeEvent({ x: 100, y: 500 }),
+		const next = objectOf(
+			handleContainerHeaderHeight(
+				makeContext(makeContainer()),
+				makeEvent({ x: 100, y: 500 }),
+			),
 		);
-		expect(next.headerHeight).toBe(160);
+		expect(next?.headerHeight).toBe(160);
 	});
 
 	it("never persists below 1 even when the container height is sub-pixel", () => {
 		// height 0.5 -> the height-side clamp would give 0.5, which the doc
 		// validator (min 1) rejects; the persisted value floors at 1
-		const next = handleContainerHeaderHeight(
-			makeContext(makeContainer({ height: 0.5 })),
-			makeEvent({ x: 100, y: 100 }),
+		const next = objectOf(
+			handleContainerHeaderHeight(
+				makeContext(makeContainer({ height: 0.5 })),
+				makeEvent({ x: 100, y: 100 }),
+			),
 		);
-		expect(next.headerHeight).toBe(1);
+		expect(next?.headerHeight).toBe(1);
 	});
 
 	it("maps the cursor through the inverse transform for rotated containers", () => {
 		// rotation=90: local (0, ly) maps to world (cx - ly, cy);
 		// cursor (140, 100) -> ly = -40 -> headerHeight = -40 + 160/2 = 40
-		const next = handleContainerHeaderHeight(
-			makeContext(makeContainer({ rotation: 90 })),
-			makeEvent({ x: 140, y: 100 }),
+		const next = objectOf(
+			handleContainerHeaderHeight(
+				makeContext(makeContainer({ rotation: 90 })),
+				makeEvent({ x: 140, y: 100 }),
+			),
 		);
-		expect(next.headerHeight).toBe(40);
+		expect(next?.headerHeight).toBe(40);
 	});
 
 	it("returns the updated object without mutating the input", () => {
 		const container = makeContainer();
-		const next = handleContainerHeaderHeight(
-			makeContext(container),
-			makeEvent({ x: 100, y: 60 }),
+		const next = objectOf(
+			handleContainerHeaderHeight(
+				makeContext(container),
+				makeEvent({ x: 100, y: 60 }),
+			),
 		);
 		expect(container.headerHeight).toBeUndefined();
 		expect(next).not.toBe(container);

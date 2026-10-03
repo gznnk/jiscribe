@@ -209,12 +209,30 @@ export type {
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 export type {
+	SelectionControlClickEvent,
 	SelectionControlContext,
 	SelectionControlDefinition,
+	SelectionControlDragEvent,
 	SelectionControlEvent,
+	SelectionControlEventType,
 	SelectionControlProps,
+	SelectionControlResult,
 } from "./controllers/ui/controls/SelectionControlTypes";
+export { DEFAULT_SELECTION_CONTROL_EVENTS } from "./controllers/gestures/registry/RegisteredSelectionControl";
+export type {
+	ObjectPartRange,
+	ObjectPartSelection,
+} from "./controllers/selection/ObjectPartSelection";
 export type { ObjectPartKindDefinition } from "./controllers/selection/ObjectPartKindRegistry";
+// A part selection stores the ends of its ranges, so a reader that wants the
+// parts themselves asks the kind what lies between them.
+export { collectObjectPartIds } from "./controllers/selection/collectObjectPartIds";
+// The kind every `text: "slots"` type's slots are selected under, and the
+// definition core registers for them. A type spreads the definition to refine one
+// part of it — what Delete does to its slots, say — its own declaration replacing
+// the default rather than colliding with it (applyObjectDefinition).
+export { TEXT_SLOT_PART_KIND } from "./controllers/selection/textSlotPartKind";
+export { createTextSlotPartKindDefinition } from "./controllers/selection/createTextSlotPartKindDefinition";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-body shape (`features.text: "body"` / `"source"`)
 // holds, i.e. the key its `state.text` carries. A shape with several slots names

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTextSlotPartRegistry } from "../../../../selection/__tests__/support/textSlotPartRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import {
 	getTextSlotCycleTarget,
@@ -33,6 +34,9 @@ const baseState = (
 /** Every range a Tab step writes is collapsed, so one id names the whole selection. */
 const selectedSlotId = (state: CanvasControllerState): string | undefined =>
 	state.objectPartSelection?.ranges[0].anchorId;
+
+/** The registry a canvas holds once "record" has been applied. */
+const objectPartKind = createTextSlotPartRegistry("record");
 
 describe("getTextSlotCycleTarget", () => {
 	it("returns the sole selected object when it spells its text out as slots", () => {
@@ -73,18 +77,18 @@ describe("getTextSlotCycleTarget", () => {
 
 describe("selectAdjacentTextSlot", () => {
 	it("enters at the first slot going forward and the last going backward", () => {
-		expect(selectedSlotId(selectAdjacentTextSlot(baseState({}), 1))).toBe(
-			"name",
-		);
-		expect(selectedSlotId(selectAdjacentTextSlot(baseState({}), -1))).toBe(
-			"operations",
-		);
+		expect(
+			selectedSlotId(selectAdjacentTextSlot(baseState({}), 1, objectPartKind)),
+		).toBe("name");
+		expect(
+			selectedSlotId(selectAdjacentTextSlot(baseState({}), -1, objectPartKind)),
+		).toBe("operations");
 	});
 
 	it("walks the slots in key order", () => {
-		const first = selectAdjacentTextSlot(baseState({}), 1);
-		const second = selectAdjacentTextSlot(first, 1);
-		const third = selectAdjacentTextSlot(second, 1);
+		const first = selectAdjacentTextSlot(baseState({}), 1, objectPartKind);
+		const second = selectAdjacentTextSlot(first, 1, objectPartKind);
+		const third = selectAdjacentTextSlot(second, 1, objectPartKind);
 		expect([first, second, third].map(selectedSlotId)).toEqual([
 			"name",
 			"attributes",
@@ -100,7 +104,9 @@ describe("selectAdjacentTextSlot", () => {
 				ranges: [{ anchorId: "operations", focusId: "operations" }],
 			},
 		});
-		expect(selectedSlotId(selectAdjacentTextSlot(atLast, 1))).toBe("name");
+		expect(
+			selectedSlotId(selectAdjacentTextSlot(atLast, 1, objectPartKind)),
+		).toBe("name");
 
 		const atFirst = baseState({
 			objectPartSelection: {
@@ -109,9 +115,39 @@ describe("selectAdjacentTextSlot", () => {
 				ranges: [{ anchorId: "name", focusId: "name" }],
 			},
 		});
-		expect(selectedSlotId(selectAdjacentTextSlot(atFirst, -1))).toBe(
-			"operations",
-		);
+		expect(
+			selectedSlotId(selectAdjacentTextSlot(atFirst, -1, objectPartKind)),
+		).toBe("operations");
+	});
+
+	it("collapses a range and steps off the end it is travelling towards", () => {
+		const rangeOf = (anchorId: string, focusId: string) =>
+			baseState({
+				objectPartSelection: {
+					objectId: "rec-1",
+					kind: TEXT_SLOT_PART_KIND,
+					ranges: [{ anchorId, focusId }],
+				},
+			});
+		// Forward leaves from the last of the range, backward from the first.
+		expect(
+			selectedSlotId(
+				selectAdjacentTextSlot(
+					rangeOf("name", "attributes"),
+					1,
+					objectPartKind,
+				),
+			),
+		).toBe("operations");
+		expect(
+			selectedSlotId(
+				selectAdjacentTextSlot(
+					rangeOf("operations", "attributes"),
+					-1,
+					objectPartKind,
+				),
+			),
+		).toBe("name");
 	});
 
 	it("treats a stale slot selection as none selected", () => {
@@ -123,17 +159,21 @@ describe("selectAdjacentTextSlot", () => {
 				ranges: [{ anchorId: "operations", focusId: "operations" }],
 			},
 		});
-		expect(selectedSlotId(selectAdjacentTextSlot(state, 1))).toBe("name");
+		expect(
+			selectedSlotId(selectAdjacentTextSlot(state, 1, objectPartKind)),
+		).toBe("name");
 	});
 
 	it("closes an open ObjectMenu submenu, which no longer acts on the slot walked away from", () => {
 		const state = baseState({ objectMenuOpenId: "alignment" });
-		expect(selectAdjacentTextSlot(state, 1).objectMenuOpenId).toBeNull();
+		expect(
+			selectAdjacentTextSlot(state, 1, objectPartKind).objectMenuOpenId,
+		).toBeNull();
 	});
 
 	it("leaves a state whose selection does not qualify untouched", () => {
 		const state = baseState({ selectedIds: [] });
-		expect(selectAdjacentTextSlot(state, 1)).toBe(state);
+		expect(selectAdjacentTextSlot(state, 1, objectPartKind)).toBe(state);
 	});
 
 	it("leaves an object that declares no slot at all untouched", () => {
@@ -142,6 +182,6 @@ describe("selectAdjacentTextSlot", () => {
 				"rec-1": { ...recordObject, text: {} },
 			} as never,
 		});
-		expect(selectAdjacentTextSlot(state, 1)).toBe(state);
+		expect(selectAdjacentTextSlot(state, 1, objectPartKind)).toBe(state);
 	});
 });

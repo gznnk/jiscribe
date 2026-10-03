@@ -367,19 +367,89 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.objectPartSelection).toBeNull();
 	});
 
-	it("edits the selection instead of the slot on a modified click", () => {
+	it("edits the selection on a modified click while no slot is selected", () => {
+		const next = ObjectEventHandler.handle(
+			makeSlotState(["rec-1"], null),
+			makeSlotClickEvent("rec-1", "name", { ctrl: true }),
+			registries,
+		);
+		// Ctrl toggles the record out of the selection; there is no slot to widen.
+		expect(next.selectedIds).toEqual([]);
+		expect(next.objectPartSelection).toBeNull();
+	});
+
+	it("extends the slot selection on a modified click instead of editing the selection", () => {
+		const next = ObjectEventHandler.handle(
+			makeSlotState(["rec-1"], {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "name", focusId: "name" }],
+			}),
+			makeSlotClickEvent("rec-1", "rows", { shift: true }),
+			registries,
+		);
+		expect(next.selectedIds).toEqual(["rec-1"]);
+		expect(next.objectPartSelection).toEqual({
+			objectId: "rec-1",
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "name", focusId: "rows" }],
+		});
+	});
+
+	it("extends backwards as readily as forwards, the anchor staying where it is", () => {
 		const next = ObjectEventHandler.handle(
 			makeSlotState(["rec-1"], {
 				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
-			makeSlotClickEvent("rec-1", "name", { ctrl: true }),
+			makeSlotClickEvent("rec-1", "name", { meta: true }),
 			registries,
 		);
-		// Ctrl toggles the record out of the selection; the slot goes with it.
-		expect(next.selectedIds).toEqual([]);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.objectPartSelection).toEqual({
+			objectId: "rec-1",
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "rows", focusId: "name" }],
+		});
+	});
+
+	it("keeps the anchor still while the other end of the range moves", () => {
+		const widened = ObjectEventHandler.handle(
+			makeSlotState(["rec-1"], {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "name", focusId: "name" }],
+			}),
+			makeSlotClickEvent("rec-1", "rows", { shift: true }),
+			registries,
+		);
+		const narrowed = ObjectEventHandler.handle(
+			widened,
+			makeSlotClickEvent("rec-1", "name", { shift: true }),
+			registries,
+		);
+		expect(narrowed.objectPartSelection).toEqual({
+			objectId: "rec-1",
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "name", focusId: "name" }],
+		});
+	});
+
+	it("resets a range to the one slot a plain click lands in", () => {
+		const next = ObjectEventHandler.handle(
+			makeSlotState(["rec-1"], {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "name", focusId: "rows" }],
+			}),
+			makeSlotClickEvent("rec-1", "rows"),
+			registries,
+		);
+		expect(next.objectPartSelection).toEqual({
+			objectId: "rec-1",
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
+		});
 	});
 
 	it("closes an open ObjectMenu submenu when the slot changes or is dropped", () => {

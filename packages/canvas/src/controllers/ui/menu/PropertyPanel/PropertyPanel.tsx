@@ -213,6 +213,10 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 		!showsCanvasSection && isArrangeableSelection(canvasState);
 	const showsMetaSection =
 		!showsCanvasSection && isMetaSectionShown(canvasState);
+	// Handed to every custom row, as the ObjectMenu does for its own items: a row
+	// that writes into the picked parts reads the value of exactly what the write
+	// will land on.
+	const { objectPartSelection } = canvasState;
 	// State rather than a ref, so the fields re-render once the host element exists.
 	const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
 
@@ -286,6 +290,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 													objects={canvasState.objects}
 													selectedIds={canvasState.selectedIds}
 													selectedConnectorId={canvasState.selectedConnectorId}
+													objectPartSelection={objectPartSelection}
 													multiSelectGroup={canvasState.multiSelectGroup}
 													onPropertyUpdate={onPropertyUpdate}
 													onTransformUpdate={onTransformUpdate}

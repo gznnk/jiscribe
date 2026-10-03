@@ -245,7 +245,8 @@ built-in row kinds and, where none of them fits, rows of the type's own.
 **`propertyPanel` custom rows.** A row a plugin draws itself is
 `{ type: "custom"; id; component }` (`PropertyPanelCustomItem`) among the built-in
 ones, the same shape the ObjectMenu's custom item has. What the component receives
-is `PropertyPanelItemProps` and nothing else: the slice of the selection, plus
+is `PropertyPanelItemProps` and nothing else: the slice of the selection — the
+parts picked below the object included, already resolved — plus
 `onPropertyUpdate` for a style property and `onTransformUpdate` for a number of the
 frame (both types live in
 `packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts`) —
@@ -261,9 +262,13 @@ its label to the right, from the section's left edge). The exports of
   the same row must spell it the same way; a selection mixing types that spell it
   differently drops it, exactly as a built-in kind only one of them offers is
   dropped.
-- Custom rows are dropped while a text slot is selected, since a plugin row has
-  no way to say it is slot-aware — the same rule the ObjectMenu applies to its
-  custom items.
+- A custom row is dropped while a text slot is selected unless it declares
+  `slotAware: true`, which says its write lands on the slot rather than on the
+  object — the same declaration under the same name as the ObjectMenu's custom
+  item, read by the one predicate both surfaces narrow through
+  (`filterTextSlotSections`). Such a row reads the picked slots off
+  `objectPartSelection` (`readSelectionSlotField`), so what it states is the value
+  of exactly what it would change.
 
 **`propertyPanel` section visibility.** A section may carry
 `isShown(selection)`, asked before it is drawn with the slice of the selection
@@ -288,7 +293,10 @@ added to the core message keys.
 gesture) — no base class. `handle` receives the object's own information (current frame plus the
 gesture-start snapshot) and the cursor, and nothing else; part derivation, snapshot
 guarding, copy-on-write write-back and edge-scroll release are handled by an
-internal adapter.
+internal adapter. A control names the gesture kinds it wants (`events`, defaulting
+to the drag pair), and the object it answers with is committed whichever kind
+carried it — a click that inserts something is recorded and saved exactly as the
+end of a drag is.
 
 **`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
 divides its objects into, stating `has` — whether an id still names a part of
@@ -313,7 +321,7 @@ Honest limits, so you do not design against something that is not there.
 | Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |
 | Command shortcuts                | A plugin contributes commands (`CanvasPlugin.commands`) and can claim a binding an existing command also holds, but it cannot rebind or unbind that command's own shortcut                |
 | ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                      |
-| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one cannot say it is text-slot-aware                                                             |
+| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven                                                                                                       |
 
 What _is_ fully available: adding shape types with their own doc schema, validation,
 rendering, stencils, menus, properties-sidebar sections, style properties,

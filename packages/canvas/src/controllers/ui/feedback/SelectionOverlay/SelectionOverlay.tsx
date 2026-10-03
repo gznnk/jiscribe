@@ -3,10 +3,12 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { collectObjectPartIds } from "../../../selection/collectObjectPartIds";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
+import { ObjectPartOutline } from "../ObjectPartOutline";
 import { Outline } from "../Outline";
-import { TextSlotOutline } from "../TextSlotOutline";
 
 type SelectionOverlayProps = {
 	selectedIds: string[];
@@ -14,7 +16,7 @@ type SelectionOverlayProps = {
 	multiSelectGroup?: GroupState | null;
 	/**
 	 * Part selection to outline, `state.objectPartSelection` as it stands: the
-	 * reducer has already dropped one that would draw a box around a slot no longer
+	 * reducer has already dropped one that would draw a box around a part no longer
 	 * selected (reconcileObjectPartSelection)
 	 */
 	objectPartSelection?: ObjectPartSelection | null;
@@ -24,8 +26,10 @@ type SelectionOverlayProps = {
  * Renders selection outlines for all selected objects and their descendants.
  * For multiple selection, also renders an outline for the multiSelectGroup bounding box.
  * Groups now have cached bounding frames, so no calculation is needed.
- * While a text slot is selected, the outline of the object holding it turns dashed: the
- * solid box is the slot being operated on, the dashed one the selection it sits inside.
+ * While parts of an object are selected, the outline of the object holding them turns
+ * dashed: the solid boxes are the parts being operated on, the dashed one the selection
+ * they sit inside. Every selected part is outlined, each from the box its own type
+ * answers with (ObjectPartKindDefinition.region).
  */
 const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	selectedIds,
@@ -33,6 +37,8 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	multiSelectGroup,
 	objectPartSelection = null,
 }) => {
+	const { objectPartKind } = useCanvasRegistries();
+
 	if (selectedIds.length === 0) {
 		return null;
 	}
@@ -44,6 +50,20 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 			uniqueIds.add(desc);
 		}
 	}
+
+	// The type answers for its own parts, so both the object and its definition of
+	// that kind have to be in hand before any of them can be outlined.
+	const partOwner = objectPartSelection
+		? objects[objectPartSelection.objectId]
+		: undefined;
+	const part =
+		objectPartSelection && partOwner
+			? objectPartKind.get(partOwner.type, objectPartSelection.kind)
+			: undefined;
+	const outlinedPartIds =
+		objectPartSelection && partOwner && part?.region
+			? collectObjectPartIds(objectPartSelection, part, partOwner)
+			: [];
 
 	return (
 		<g data-layer="selection-overlay">
@@ -71,14 +91,18 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 				isTransformedFrame(multiSelectGroup) && (
 					<Outline key="multi-select-group" frame={multiSelectGroup} />
 				)}
-			{objectPartSelection && objects[objectPartSelection.objectId] && (
-				<TextSlotOutline
-					object={objects[objectPartSelection.objectId]}
-					// One box, because in this version the selection is always a single
-					// collapsed range (no Shift or Ctrl gesture builds a wider one yet).
-					slotId={objectPartSelection.ranges[0].anchorId}
-				/>
-			)}
+			{partOwner &&
+				part?.region &&
+				outlinedPartIds.map((partId) => {
+					const region = part.region?.(partOwner, partId) ?? null;
+					return region === null ? null : (
+						<ObjectPartOutline
+							key={partId}
+							object={partOwner}
+							region={region}
+						/>
+					);
+				})}
 		</g>
 	);
 };

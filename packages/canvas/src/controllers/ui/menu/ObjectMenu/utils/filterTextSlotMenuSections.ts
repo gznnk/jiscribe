@@ -1,26 +1,25 @@
+import { filterTextSlotSections } from "../../utils/filterTextSlotSections";
 import type { BuiltinItemKey, ObjectMenuSection } from "../ObjectMenuTypes";
 
 /** Builtin item types whose update lands on the selected slot rather than the whole object. */
-const TEXT_SLOT_ITEM_KEYS: ReadonlySet<BuiltinItemKey> = new Set([
+const TEXT_SLOT_ITEM_KEYS = new Set<string>([
 	"font",
 	"textFormat",
 	"textAlignment",
-]);
+] satisfies BuiltinItemKey[]);
 
 /**
- * Narrows menu sections down to the items that operate on a selected text slot.
- * Custom items are dropped along with the other builtins, since a plugin item has no
- * way to say it is slot-aware. Sections left empty are removed so no divider survives
- * on its own.
+ * Narrows menu sections down to the items that operate on a selected text slot,
+ * reading a `custom` item's `slotAware` through the predicate the properties
+ * sidebar is narrowed by as well (filterTextSlotSections); the set above is the
+ * menu's own half of it.
+ *
+ * @param sections - The menu sections in display order; left untouched
+ * @returns The sections a picked slot can receive something from, the emptied ones removed
  */
 export const filterTextSlotMenuSections = (
 	sections: ObjectMenuSection[],
 ): ObjectMenuSection[] =>
-	sections
-		.map((section) => ({
-			id: section.id,
-			items: section.items.filter(
-				(item) => item.type !== "custom" && TEXT_SLOT_ITEM_KEYS.has(item.type),
-			),
-		}))
-		.filter((section) => section.items.length > 0);
+	filterTextSlotSections(sections, (item) =>
+		TEXT_SLOT_ITEM_KEYS.has(item.type),
+	);

@@ -70,6 +70,7 @@ export const CANONICAL_TYPE_ORDER = [
 	"group",
 	"container",
 	"sticky",
+	"table",
 	"svg",
 	"image",
 	"connector",
@@ -86,6 +87,7 @@ export type CanonicalType = (typeof CANONICAL_TYPE_ORDER)[number];
 export const TEMPLATE_DEF_TYPES: ReadonlySet<string> = new Set([
 	"markdown",
 	"record",
+	"table",
 	"polyline",
 	"polygon",
 	"group",

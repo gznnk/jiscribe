@@ -54,8 +54,9 @@ const makeEvent = (
 const markingDefinition = (): SelectionControlDefinition => ({
 	name: "headerHeight",
 	Component: () => null,
-	handle: (context) =>
-		({ ...context.startObject, marked: true }) as unknown as ObjectState,
+	handle: (context) => ({
+		object: { ...context.startObject, marked: true } as unknown as ObjectState,
+	}),
 });
 
 const noChangeDefinition = (): SelectionControlDefinition => ({
@@ -182,7 +183,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		expect(next).toBe(state);
 	});
 
-	it("ignores non-drag events (state unchanged)", () => {
+	it("ignores an event kind the definition did not ask for (state unchanged)", () => {
 		const handle = vi.fn();
 		const { strategy } = createRegisteredSelectionControl("container", {
 			name: "headerHeight",
@@ -202,7 +203,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			Component: () => null,
 			handle: (context: SelectionControlContext, event) => {
 				received = event;
-				return context.startObject;
+				return { object: context.startObject };
 			},
 		});
 		strategy.handle(
@@ -220,7 +221,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			Component: () => null,
 			handle: (context: SelectionControlContext, event) => {
 				received = event;
-				return context.startObject;
+				return { object: context.startObject };
 			},
 		});
 		strategy.handle(
@@ -229,5 +230,103 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			undefined as never,
 		);
 		expect(received?.subPart).toBe("3");
+	});
+
+	it("routes a click to a definition that asked for it", () => {
+		const { strategy } = createRegisteredSelectionControl("container", {
+			...markingDefinition(),
+			events: ["click", "drag", "dragEnd"],
+		});
+		const state = makeState(makeObject());
+		const next = strategy.handle(state, makeEvent("click"), undefined as never);
+		expect(marked(next)).toBe(true);
+	});
+
+	it("gives a click the current frame as its own start object", () => {
+		let received: SelectionControlContext | undefined;
+		const { strategy } = createRegisteredSelectionControl("container", {
+			name: "headerHeight",
+			events: ["click"],
+			Component: () => null,
+			handle: (context: SelectionControlContext) => {
+				received = context;
+				return null;
+			},
+		});
+		// The snapshot holds a different object, so a leaked drag path would show.
+		const state = makeState(makeObject(), makeObject({ id: "stale" }));
+		strategy.handle(state, makeEvent("click"), undefined as never);
+		expect(received?.startObject).toBe(received?.object);
+		expect(received?.object).toBe(state.objects["obj-1"]);
+	});
+
+	it("handles a click with no active drag at all", () => {
+		const handle = vi.fn(() => null);
+		const { strategy } = createRegisteredSelectionControl("container", {
+			name: "headerHeight",
+			events: ["click"],
+			Component: () => null,
+			handle,
+		});
+		strategy.handle(
+			makeStateWithoutSnapshot(makeObject()),
+			makeEvent("click"),
+			undefined as never,
+		);
+		expect(handle).toHaveBeenCalledTimes(1);
+	});
+
+	it("installs a returned part selection under the control's own object id", () => {
+		const { strategy } = createRegisteredSelectionControl("container", {
+			name: "headerHeight",
+			events: ["click"],
+			Component: () => null,
+			handle: () => ({
+				selection: {
+					kind: "tail",
+					ranges: [{ anchorId: "tip", focusId: "tip" }],
+				},
+			}),
+		});
+		const state = makeState(makeObject());
+		const next = strategy.handle(state, makeEvent("click"), undefined as never);
+		expect(next.objectPartSelection).toEqual({
+			objectId: "obj-1",
+			kind: "tail",
+			ranges: [{ anchorId: "tip", focusId: "tip" }],
+		});
+		// Nothing was written to the objects map.
+		expect(next.objects).toBe(state.objects);
+	});
+
+	it("clears the part selection for a null selection and leaves it for an omitted one", () => {
+		const selected = {
+			objectId: "obj-1",
+			kind: "tail",
+			ranges: [{ anchorId: "tip", focusId: "tip" }],
+		};
+		const clearing = createRegisteredSelectionControl("container", {
+			name: "headerHeight",
+			events: ["click"],
+			Component: () => null,
+			handle: () => ({ selection: null }),
+		}).strategy;
+		const cleared = clearing.handle(
+			{ ...makeState(makeObject()), objectPartSelection: selected },
+			makeEvent("click"),
+			undefined as never,
+		);
+		expect(cleared.objectPartSelection).toBeNull();
+
+		const keeping = createRegisteredSelectionControl("container", {
+			...markingDefinition(),
+			events: ["click"],
+		}).strategy;
+		const kept = keeping.handle(
+			{ ...makeState(makeObject()), objectPartSelection: selected },
+			makeEvent("click"),
+			undefined as never,
+		);
+		expect(kept.objectPartSelection).toBe(selected);
 	});
 });

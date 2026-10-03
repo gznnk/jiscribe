@@ -5,6 +5,7 @@ import {
 } from "@jiscribe/canvas-sdk";
 
 import {
+	CALLOUT_TAIL_PART_DEFINITION,
 	CalloutTailTipControl,
 	GroupMarkerTipControl,
 	handleCalloutTailTip,
@@ -181,9 +182,13 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 		geometryKey: calloutGeometryKey,
 		isExtraStateValid: (state) =>
 			state.tail === undefined || isCalloutTail(state.tail),
+		partKinds: [CALLOUT_TAIL_PART_DEFINITION],
 		selectionControls: [
 			{
 				name: "tailTip",
+				// The click is what selects the tip as a part; without it the handle
+				// could only ever be dragged, never chosen.
+				events: ["click", "drag", "dragEnd"],
 				Component: CalloutTailTipControl,
 				handle: handleCalloutTailTip,
 			},

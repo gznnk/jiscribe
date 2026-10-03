@@ -2,6 +2,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { collectObjectPartIds } from "../../../selection/collectObjectPartIds";
+import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 
 /**
@@ -34,14 +36,20 @@ export const getTextSlotCycleTarget = (
 };
 
 /**
- * Moves the slot selection one step along the object's slot order (the key order
- * of `state.text`), wrapping around at either end.
+ * Moves the slot selection one step along the object's own slot order (the
+ * `textSlot` part definition's `list`), wrapping around at either end.
+ *
+ * A step always lands on exactly one slot: a range selected with a modifier
+ * collapses, leaving the slot next to the end the step travels towards — the
+ * last of the range going forwards, the first of it going back.
  *
  * @param state - The current canvas controller state; its `objectPartSelection`
  *   names the slot the step starts from, and is live rather than stale because the
  *   reducer reconciles it (reconcileObjectPartSelection)
  * @param step - 1 for the next slot, -1 for the previous; with no slot selected
  *   yet these enter at the first and the last slot respectively
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which answers both the slot
+ *   order and whether the live selection still names slots of this object
  * @returns A new state with `objectPartSelection` moved and any open ObjectMenu submenu
  *   closed, or the input state when the selection does not qualify or the object
  *   declares no slot at all
@@ -49,22 +57,32 @@ export const getTextSlotCycleTarget = (
 export const selectAdjacentTextSlot = (
 	state: CanvasControllerState,
 	step: 1 | -1,
+	objectPartKind: ObjectPartKindRegistry,
 ): CanvasControllerState => {
 	const target = getTextSlotCycleTarget(state);
 	if (target === null) {
 		return state;
 	}
-	const slotIds = Object.keys(target.text ?? {});
+	const part = objectPartKind.get(target.type, TEXT_SLOT_PART_KIND);
+	const slotIds = part?.list?.(target) ?? [];
 	if (slotIds.length === 0) {
 		return state;
 	}
 
-	// Tab walks one slot at a time, so the step starts from the active range's
-	// moving end — in this version the only end there is, every range being
-	// collapsed — and lands on a collapsed range of its own.
-	const ranges = state.objectPartSelection?.ranges;
+	const { objectPartSelection } = state;
+	const currentSlotIds =
+		part !== undefined &&
+		objectPartSelection !== null &&
+		objectPartSelection.kind === TEXT_SLOT_PART_KIND &&
+		objectPartSelection.objectId === target.id
+			? collectObjectPartIds(objectPartSelection, part, target)
+			: undefined;
 	const currentSlotId =
-		ranges === undefined ? undefined : ranges[ranges.length - 1].focusId;
+		currentSlotIds === undefined
+			? undefined
+			: step === 1
+				? currentSlotIds[currentSlotIds.length - 1]
+				: currentSlotIds[0];
 	const currentIndex =
 		currentSlotId === undefined ? -1 : slotIds.indexOf(currentSlotId);
 	const nextIndex =
