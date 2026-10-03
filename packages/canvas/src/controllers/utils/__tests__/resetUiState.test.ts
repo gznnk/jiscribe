@@ -20,7 +20,6 @@ describe("resetUiState", () => {
 			textEditState: null,
 			connectorDraft: null,
 			selectedConnectorId: null,
-			selectedVertex: null,
 			objectPartSelection: null,
 			snapFeedback: null,
 			axisLockFeedback: null,

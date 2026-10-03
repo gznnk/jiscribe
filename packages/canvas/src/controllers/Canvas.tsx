@@ -22,6 +22,7 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
+import type { ResolveImageBlob } from "../export";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -58,7 +59,7 @@ import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import type { ResolveImageBlob } from "../export";
+import { isTextSlotAddressed } from "./selection/isTextSlotAddressed";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -702,6 +703,12 @@ const CanvasComponent = ({
 	const { minX, minY, zoom } = drawnViewport;
 
 	const { objectPartSelection } = state;
+	// Only a pick standing for text slots narrows the chrome to text; a vertex
+	// leaves it addressing the object as a whole.
+	const isTextSlotSelected = isTextSlotAddressed(
+		state,
+		registries.objectPartKind,
+	);
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
@@ -804,7 +811,7 @@ const CanvasComponent = ({
 									selectedConnectorId={state.selectedConnectorId}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
-									selectedVertex={state.selectedVertex}
+									objectPartSelection={objectPartSelection}
 								/>
 								<TransformControlsLayer
 									selectedIds={state.selectedIds}
@@ -812,7 +819,7 @@ const CanvasComponent = ({
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={objectPartSelection !== null}
+									isTextSlotSelected={isTextSlotSelected}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer
@@ -827,7 +834,7 @@ const CanvasComponent = ({
 									selectedIds={state.selectedIds}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
-									selectedVertex={state.selectedVertex}
+									objectPartSelection={objectPartSelection}
 								/>
 								<SelectionControlsLayer
 									selectedIds={state.selectedIds}

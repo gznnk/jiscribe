@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import { ResetConnectorRouteCommand } from "../ResetConnectorRouteCommand";
 
 const registries = createTestRegistries();
@@ -20,12 +21,12 @@ const makeConnector = (id: string, points: Point[]): ConnectorState =>
 const makeState = (params: {
 	selectedConnectorId: string | null;
 	objects: Record<string, ConnectorState>;
-	selectedVertex?: CanvasControllerState["selectedVertex"];
+	objectPartSelection?: CanvasControllerState["objectPartSelection"];
 }): CanvasControllerState =>
 	({
 		selectedIds: [],
 		commitVersion: 0,
-		selectedVertex: null,
+		objectPartSelection: null,
 		...params,
 	}) as unknown as CanvasControllerState;
 
@@ -39,14 +40,14 @@ describe("ResetConnectorRouteCommand", () => {
 					{ x: 10, y: 40 },
 				]),
 			},
-			selectedVertex: { objectId: "c1", vertexIndex: 0 },
+			objectPartSelection: vertexPartSelection("c1", 0),
 		});
 
 		const next = ResetConnectorRouteCommand.execute(state, registries);
 		const conn = next.objects["c1"] as ConnectorState;
 
 		expect(conn.points).toEqual([]);
-		expect(next.selectedVertex).toBeNull();
+		expect(next.objectPartSelection).toBeNull();
 		expect(next.commitVersion).toBe(1);
 	});
 

@@ -4,7 +4,10 @@ import type { CanvasControllerState } from "../CanvasTypes";
 /**
  * Clears a part selection the state no longer backs: its object is not the sole
  * selection, is gone, its kind is not registered for the object's type, or an end
- * of one of its ranges no longer names a part (`has`). Run by every reducer
+ * of one of its ranges no longer names a part (`has`). The sole selection is read
+ * across both channels — `selectedIds` holding that object alone, or the empty
+ * `selectedIds` and `selectedConnectorId` naming it — since a connector's
+ * waypoints are picked while the connector itself is selected. Run by every reducer
  * branch that rewrites `selectedIds` or `objects` (the way
  * `reconcileObjectContentSizes` is), so `state.objectPartSelection` is valid
  * whenever it is read and no reader validates it again. Returns `state` itself
@@ -29,14 +32,16 @@ export const reconcileObjectPartSelection = (
 	state: CanvasControllerState,
 	objectPartKind: ObjectPartKindRegistry,
 ): CanvasControllerState => {
-	const { objectPartSelection, selectedIds } = state;
+	const { objectPartSelection, selectedIds, selectedConnectorId } = state;
 	if (objectPartSelection === null) {
 		return state;
 	}
-	if (
-		selectedIds.length !== 1 ||
-		selectedIds[0] !== objectPartSelection.objectId
-	) {
+	const isSoleSelection =
+		selectedIds.length === 1
+			? selectedIds[0] === objectPartSelection.objectId
+			: selectedIds.length === 0 &&
+				selectedConnectorId === objectPartSelection.objectId;
+	if (!isSoleSelection) {
 		return { ...state, objectPartSelection: null };
 	}
 

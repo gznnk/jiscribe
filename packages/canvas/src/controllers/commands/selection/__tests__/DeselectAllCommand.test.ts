@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DeselectAllCommand } from "../DeselectAllCommand";
 
@@ -14,7 +15,6 @@ const baseState = (
 		objects: {},
 		selectedIds: [],
 		selectedConnectorId: null,
-		selectedVertex: null,
 		objectPartSelection: null,
 		multiSelectGroup: null,
 		areaSelection: null,
@@ -31,7 +31,7 @@ describe("DeselectAllCommand", () => {
 		const state = baseState({
 			selectedIds: ["a", "b"],
 			selectedConnectorId: "c1",
-			selectedVertex: { objectId: "p1", vertexIndex: 0 },
+			objectPartSelection: vertexPartSelection("p1", 0),
 			multiSelectGroup: { id: "ms" } as never,
 			areaSelection: { x: 0, y: 0 } as never,
 			shapeDrawing: { type: "rect" } as never,
@@ -41,7 +41,7 @@ describe("DeselectAllCommand", () => {
 		const next = DeselectAllCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.selectedConnectorId).toBeNull();
-		expect(next.selectedVertex).toBeNull();
+		expect(next.objectPartSelection).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.areaSelection).toBeNull();
 		expect(next.shapeDrawing).toBeNull();
@@ -99,10 +99,13 @@ describe("DeselectAllCommand", () => {
 			).toBe(true);
 		});
 
-		it("is executable when there is a vertex selection", () => {
+		it("is executable when a vertex is picked on the selected object", () => {
 			expect(
 				DeselectAllCommand.canExecute(
-					baseState({ selectedVertex: { objectId: "p1", vertexIndex: 0 } }),
+					baseState({
+						selectedIds: ["p1"],
+						objectPartSelection: vertexPartSelection("p1", 0),
+					}),
 					registries,
 				),
 			).toBe(true);

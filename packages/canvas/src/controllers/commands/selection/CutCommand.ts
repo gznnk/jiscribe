@@ -19,13 +19,13 @@ export const CutCommand: ExecutableCommand = {
 	canExecute: (state) => state.selectedIds.length > 0,
 
 	execute: (state, registries) => {
-		// Clear selectedVertex before composing.
-		// Otherwise CopyCommand copies the entire polyline while DeleteCommand
-		// deletes only a single vertex, producing an asymmetric result.
+		// Drop the part selection before composing. Otherwise CopyCommand copies the
+		// entire polyline while DeleteCommand deletes only a single vertex, producing
+		// an asymmetric result.
 		const stateWithClipboard = CopyCommand.execute(
 			{
 				...state,
-				selectedVertex: null,
+				objectPartSelection: null,
 			},
 			registries,
 		);

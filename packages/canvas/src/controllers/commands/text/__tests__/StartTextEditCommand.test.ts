@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { registerTextSlotParts } from "../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
@@ -11,6 +12,9 @@ import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { StartTextEditCommand } from "../StartTextEditCommand";
 
 const registries = createTestRegistries();
+// "record" stands in for a plugin's slotted shape, which the built-in bundle
+// knows nothing of.
+registerTextSlotParts(registries.objectPartKind, "record");
 
 const rect = {
 	id: "rect-1",

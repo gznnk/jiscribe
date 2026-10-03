@@ -101,8 +101,6 @@ export const startConnectorLabelEdit = (
 		...state,
 		selectedConnectorId: connectorId,
 		selectedIds: [],
-		// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-		selectedVertex: null,
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,

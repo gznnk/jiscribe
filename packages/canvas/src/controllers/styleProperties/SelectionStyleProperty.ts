@@ -3,7 +3,9 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
+import { resolveSelectedTextSlotIds } from "../selection/resolveSelectedTextSlotIds";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
 
@@ -69,6 +71,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
+		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
 		const { selectedIds, selectedConnectorId, objects, objectPartSelection } =
 			state;
@@ -86,6 +89,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				path,
 				value,
 				objectPartSelection,
+				objectPartKind,
 			);
 			if (updated === null) {
 				return state;
@@ -115,6 +119,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				path,
 				value,
 				objectPartSelection,
+				objectPartKind,
 			);
 			if (updated === null) {
 				continue;
@@ -139,6 +144,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 						path,
 						value,
 						objectPartSelection,
+						objectPartKind,
 					);
 					if (updated === null) {
 						continue;
@@ -164,9 +170,11 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 	 * @param obj - The object to write into; returned unchanged copies only
 	 * @param path - The property split on "." ("label.fill" → ["label", "fill"])
 	 * @param value - The value already coerced to the declared type
-	 * @param selectedSlotId - The text slot selected on this very object, undefined
-	 *   when none is (this object is not the slot's owner, or nothing is selected
-	 *   one level below the object). Only slot-storage handlers read it.
+	 * @param selectedSlotId - The text slot the selection names on this very object
+	 *   (resolveSelectedTextSlotIds), undefined when it names none — this object is
+	 *   not the owner of what is picked, nothing is picked one level below the
+	 *   object, or what is picked there is a kind covering no slot (a vertex). Only
+	 *   slot-storage handlers read it.
 	 */
 	protected writeValue(
 		obj: ObjectState,
@@ -188,6 +196,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		path: readonly string[],
 		value: string,
 		objectPartSelection: ObjectPartSelection | null,
+		objectPartKind: ObjectPartKindRegistry,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -197,15 +206,13 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		if (coerced === null) {
 			return null;
 		}
+		// The write lands on one slot, and in this version the selection is always
+		// one collapsed range, so the first of the slots it names is that slot.
 		return this.writeValue(
 			obj,
 			path,
 			coerced,
-			// The write lands on one slot, and in this version the selection is always
-			// one collapsed range, so that slot is the first range's anchor.
-			objectPartSelection?.objectId === obj.id
-				? objectPartSelection.ranges[0].anchorId
-				: undefined,
+			resolveSelectedTextSlotIds(obj, objectPartSelection, objectPartKind)?.[0],
 		);
 	}
 }

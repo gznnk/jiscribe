@@ -5,8 +5,9 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
  * clear (DeselectAll and EscapeSelection) so their availability cannot drift
  * from {@link clearAllSelection}'s field list.
  *
- * A slot selection is not asked about separately: it only resolves while its
- * object is the sole selection, which `selectedIds` already covers.
+ * A part selection is not asked about separately: it only resolves while its
+ * object is the sole selection, which `selectedIds` / `selectedConnectorId`
+ * already cover.
  *
  * @param state - The current canvas controller state
  * @returns True when something is selected or open; false during an object drag
@@ -19,7 +20,6 @@ export const isSelectionClearable = (state: CanvasControllerState): boolean => {
 	return (
 		state.selectedIds.length > 0 ||
 		state.selectedConnectorId !== null ||
-		state.selectedVertex !== null ||
 		state.areaSelection !== null ||
 		state.shapeDrawing !== null ||
 		state.stencilLibraryOpenCategory !== null
@@ -40,8 +40,6 @@ export const clearAllSelection = (
 	...state,
 	selectedIds: [],
 	selectedConnectorId: null,
-	// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-	selectedVertex: null,
 	objectPartSelection: null,
 	multiSelectGroup: null,
 	areaSelection: null,

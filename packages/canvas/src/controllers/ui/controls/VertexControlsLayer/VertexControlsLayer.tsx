@@ -2,13 +2,21 @@ import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
+import { readSelectedVertexIndex } from "../../../selection/readSelectedVertexIndex";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 type VertexControlsLayerProps = {
 	selectedIds: string[];
 	objects: Record<string, ObjectState>;
 	zoom?: number;
-	selectedVertex: { objectId: string; vertexIndex: number } | null;
+	/**
+	 * Parts picked below the object, `state.objectPartSelection` as it stands: a
+	 * vertex of this very object rings its handle, anything else leaves the
+	 * handles plain (reconcileObjectPartSelection keeps it from naming a vertex
+	 * the object has outgrown)
+	 */
+	objectPartSelection: ObjectPartSelection | null;
 };
 
 /**
@@ -19,7 +27,7 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 	selectedIds,
 	objects,
 	zoom = 1,
-	selectedVertex,
+	objectPartSelection,
 }) => {
 	// Only render for single selection
 	if (selectedIds.length !== 1) {
@@ -41,10 +49,10 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 	) {
 		const points = selectedObject.points as Point[];
 		const isClosed = selectedObject.type === "polygon";
-		const selectedVertexIndex =
-			selectedVertex?.objectId === selectedId
-				? selectedVertex.vertexIndex
-				: null;
+		const selectedVertexIndex = readSelectedVertexIndex(
+			objectPartSelection,
+			selectedId,
+		);
 		return (
 			<>
 				{/* Vertex controls for moving existing vertices */}

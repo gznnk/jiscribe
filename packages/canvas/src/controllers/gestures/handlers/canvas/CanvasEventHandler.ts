@@ -356,9 +356,8 @@ export const CanvasEventHandler: GestureHandler = {
 					},
 					selectedIds: isAdditive ? nextState.selectedIds : [],
 					// Object and connector selection are exclusive, and a marquee only ever
-					// picks up objects — so these go even for an additive marquee.
+					// picks up objects — so this goes even for an additive marquee.
 					selectedConnectorId: null,
-					selectedVertex: null,
 					// A plain marquee clears it here too (not only on "pressed"): the
 					// early-out below keeps the previous multiSelectGroup as-is while the
 					// hit set stays empty. An additive one keeps the base's group until the
@@ -467,7 +466,6 @@ export const CanvasEventHandler: GestureHandler = {
 					...nextState,
 					selectedIds: [],
 					selectedConnectorId: null,
-					selectedVertex: null,
 					// Reset the multi-select group
 					multiSelectGroup: null,
 				};

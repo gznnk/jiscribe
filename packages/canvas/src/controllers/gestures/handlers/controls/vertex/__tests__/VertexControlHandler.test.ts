@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { VERTEX_PART_KIND } from "../../../../../selection/createVertexPartKindDefinition";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "../../../utils/snap/calcSnapCandidates";
 import { VertexControlHandler } from "../VertexControlHandler";
@@ -27,7 +28,7 @@ const makeDragState = (points: Point[]): CanvasControllerState => {
 		objects: { "poly-1": poly },
 		rootIds: ["poly-1"],
 		selectedIds: [],
-		selectedVertex: null,
+		objectPartSelection: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
@@ -230,5 +231,56 @@ describe("VertexControlHandler - snapping against the edited poly", () => {
 		const next = dragVertex0To({ x: 247, y: 153 });
 
 		expect(vertexAt(next, 0)).toEqual({ x: 250, y: 150 });
+	});
+});
+
+describe("VertexControlHandler - picking a vertex", () => {
+	const clickEvent = (vertexIndex: number): CanvasEvent =>
+		({
+			type: "click",
+			targetKind: "control",
+			targetId: "poly-1",
+			targetPart: `vertex:${vertexIndex}`,
+			button: 0,
+			last: { x: 0, y: 0 },
+			mods: { shift: false, alt: false, ctrl: false, meta: false },
+		}) as unknown as CanvasEvent;
+
+	it("a click picks the vertex it landed on, as one collapsed range", () => {
+		const next = handler.handle(
+			makeDragState([
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			]),
+			clickEvent(1),
+		);
+		expect(next.objectPartSelection).toEqual({
+			objectId: "poly-1",
+			kind: VERTEX_PART_KIND,
+			ranges: [{ anchorId: "1", focusId: "1" }],
+		});
+	});
+
+	it("a click on an index the object has outgrown changes nothing", () => {
+		const state = makeDragState([
+			{ x: 0, y: 0 },
+			{ x: 100, y: 0 },
+		]);
+		expect(handler.handle(state, clickEvent(7))).toBe(state);
+	});
+
+	it("a dragStart drops the pick, the vertex being moved rather than addressed", () => {
+		const picked = handler.handle(
+			makeDragState([
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			]),
+			clickEvent(0),
+		);
+		const next = handler.handle(picked, {
+			...makeDragEvent({ x: 0, y: 0 }, false),
+			type: "dragStart",
+		} as CanvasEvent);
+		expect(next.objectPartSelection).toBeNull();
 	});
 });

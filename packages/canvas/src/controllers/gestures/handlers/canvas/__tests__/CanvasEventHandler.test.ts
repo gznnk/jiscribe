@@ -23,7 +23,7 @@ const makeState = (
 		rootIds: ["a"],
 		selectedIds: ["a"],
 		selectedConnectorId: null,
-		selectedVertex: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		shapeDrawing: null,
 		areaSelection: null,

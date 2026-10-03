@@ -30,7 +30,6 @@ export type UiStateReset = Pick<
 	| "textEditState"
 	| "connectorDraft"
 	| "selectedConnectorId"
-	| "selectedVertex"
 	| "objectPartSelection"
 	| "snapFeedback"
 	| "axisLockFeedback"
@@ -67,7 +66,6 @@ export const resetUiState = (): UiStateReset => ({
 	textEditState: null,
 	connectorDraft: null,
 	selectedConnectorId: null,
-	selectedVertex: null,
 	objectPartSelection: null,
 	snapFeedback: null,
 	axisLockFeedback: null,

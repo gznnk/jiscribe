@@ -2,7 +2,7 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
-import { VERTEX_PART_KIND } from "../../selection/createVertexPartKindDefinition";
+import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
 import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
 import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
@@ -11,46 +11,34 @@ import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
- * The legacy single-vertex field read as the deletion target the registry takes,
- * or null while it names nothing: no vertex selected, the object gone, or an
- * index the object has outgrown (an undo can leave one behind) — a selection
- * that is no selection, which the key then passes over. Validity is the
- * selection's own question, answered here on read until the field is folded into
- * the part channel, where the reducer answers it for every kind at once
- * (reconcileObjectPartSelection); whether the vertex can be deleted is a separate
- * one (resolveDeletableParts).
+ * The parts picked one level below the object read as the deletion target the
+ * registry takes, or null while nothing is picked there. Validity is not asked
+ * about: the reducer has already dropped a selection naming something gone
+ * (reconcileObjectPartSelection), so every id here has passed `has`. Whether the
+ * parts can be deleted at all is a separate question (resolveDeletableParts).
  */
-const resolveSelectedVertex = (
+const resolveSelectedParts = (
 	state: CanvasControllerState,
-	registries: ICanvasRegistries,
 ): ObjectPartTarget | null => {
-	const { selectedVertex } = state;
-	if (selectedVertex === null) {
-		return null;
-	}
-	const object = state.objects[selectedVertex.objectId];
-	const partId = String(selectedVertex.vertexIndex);
-	const vertexKind = object
-		? registries.objectPartKind.get(object.type, VERTEX_PART_KIND)
-		: undefined;
-	if (!object || !vertexKind?.has(object, partId)) {
+	const { objectPartSelection } = state;
+	if (objectPartSelection === null) {
 		return null;
 	}
 	return {
-		objectId: selectedVertex.objectId,
-		kind: VERTEX_PART_KIND,
-		partIds: [partId],
+		objectId: objectPartSelection.objectId,
+		kind: objectPartSelection.kind,
+		partIds: collectObjectPartIds(objectPartSelection),
 	};
 };
 
-const clearSelectedVertex = (
+const clearPartSelection = (
 	state: CanvasControllerState,
-): CanvasControllerState => ({ ...state, selectedVertex: null });
+): CanvasControllerState => ({ ...state, objectPartSelection: null });
 
 /**
- * Command that deletes the current selection. A selected vertex is deleted where
- * its type registers a deletion for the kind; where it registers none, or the
- * selection names nothing any more, the key means what it means for the selected
+ * Command that deletes the current selection. Parts picked one level below the
+ * object are deleted where their type registers a deletion for the kind; where it
+ * registers none (a text slot), the key means what it means for the selected
  * objects, which are removed (a group with its descendants) along with the
  * selected connector. A kind that wants the key held while one of its parts is
  * picked, yet nothing removed, declares a deletion that refuses
@@ -65,10 +53,10 @@ export const DeleteCommand: ExecutableCommand = {
 	},
 
 	canExecute: (state, registries) => {
-		// A selected vertex claims the key where its type registers a deletion for
-		// it; a kind registering none has said Delete is not about its parts, so
+		// A picked part claims the key where its type registers a deletion for its
+		// kind; a kind registering none has said Delete is not about its parts, so
 		// the key means what it means for the selected objects.
-		const target = resolveSelectedVertex(state, registries);
+		const target = resolveSelectedParts(state);
 		if (
 			target !== null &&
 			resolveDeletableParts(state, target, registries) !== null
@@ -79,7 +67,7 @@ export const DeleteCommand: ExecutableCommand = {
 	},
 
 	execute: (state, registries) => {
-		const target = resolveSelectedVertex(state, registries);
+		const target = resolveSelectedParts(state);
 		if (target !== null) {
 			const deletable = resolveDeletableParts(state, target, registries);
 			if (deletable !== null) {
@@ -92,13 +80,12 @@ export const DeleteCommand: ExecutableCommand = {
 					// the key stays claimed, yet nothing changes.
 					return state;
 				}
-				return commitVertexDeletion(state, deletedObject);
+				return commitPartDeletion(state, deletedObject);
 			}
 		}
-		// Either no vertex is selected, the field names nothing, or the kind
-		// registers no deletion: the key is the objects', and the vertex field is
-		// dropped along with them.
-		return deleteSelectedObjects(clearSelectedVertex(state), registries);
+		// Either nothing is picked below the object or the kind registers no
+		// deletion: the key is the objects', and the pick goes with them.
+		return deleteSelectedObjects(clearPartSelection(state), registries);
 	},
 };
 
@@ -107,7 +94,7 @@ export const DeleteCommand: ExecutableCommand = {
  * spread of the objects map, no copy-on-write view), the counterpart of
  * `deleteSelectedObjects` for the part branch.
  */
-const commitVertexDeletion = (
+const commitPartDeletion = (
 	state: CanvasControllerState,
 	deletedObject: ObjectState,
 ): CanvasControllerState => {
@@ -117,7 +104,10 @@ const commitVertexDeletion = (
 			...state.objects,
 			[deletedObject.id]: deletedObject,
 		},
-		selectedVertex: null,
+		// Removing a part renumbers the ids of a positional kind (the vertices), so
+		// the pick is dropped rather than left addressing whoever took the number
+		// over (see ObjectPartSelection).
+		objectPartSelection: null,
 		// A deletion is not something a duplicate can be offset from any more.
 		lastDuplicate: null,
 		commitVersion: state.commitVersion + 1,

@@ -5,6 +5,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { VERTEX_PART_KIND } from "../../../../selection/createVertexPartKindDefinition";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -87,7 +88,15 @@ export class VertexControlHandler extends ControlStrategy {
 
 		return {
 			...state,
-			selectedVertex: { objectId, vertexIndex },
+			objectPartSelection: {
+				objectId,
+				kind: VERTEX_PART_KIND,
+				// A click picks the one vertex it landed on, so the range is collapsed
+				// and it is the whole selection: anything already picked is replaced.
+				ranges: [
+					{ anchorId: String(vertexIndex), focusId: String(vertexIndex) },
+				],
+			},
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
 		};
@@ -104,7 +113,7 @@ export class VertexControlHandler extends ControlStrategy {
 	): CanvasControllerState {
 		const nextState: CanvasControllerState = {
 			...state,
-			selectedVertex: null,
+			objectPartSelection: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,

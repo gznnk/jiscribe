@@ -301,6 +301,14 @@ A type whose `features.text` is `"slots"` is given the `"textSlot"` kind without
 declaring anything, its part ids being the keys of its own `text`; declaring
 `"textSlot"` yourself replaces that one rather than colliding with it.
 
+A kind that stands for text slots also states `textSlotIds`, the slots its parts
+cover: `"textSlot"` declares the identity, its part ids being slot ids already;
+a kind standing for a group of slots — a row, a column — expands to them; and a
+kind naming something other than text, such as `vertex`, declares nothing.
+Omitted means the kind covers no slot, which leaves a slot-level write (the
+typography) on the object as a whole, the reading of nothing being picked below
+it.
+
 ## What is not extensible yet
 
 Honest limits, so you do not design against something that is not there.

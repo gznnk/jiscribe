@@ -6,6 +6,8 @@ import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
+import { reconcileObjectPartSelection } from "../../selection/reconcileObjectPartSelection";
 import type { ClipboardData } from "../selection/ClipboardData";
 import { CopyCommand } from "../selection/CopyCommand";
 
@@ -76,10 +78,10 @@ describe("maintains selection mutual exclusivity on paste", () => {
 		expect(after.selectedIds.length).toBeGreaterThan(0);
 	});
 
-	it("pasting while a vertex is selected sets selectedVertex to null", () => {
+	it("pasting while a vertex is selected drops the part selection", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
 			selectedIds: [],
-			selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
+			objectPartSelection: vertexPartSelection("rect-1", 0),
 			rootIds: ["rect-1", "conn-1", "rect-2"],
 		});
 		const clipboard = CopyCommand.execute(
@@ -92,7 +94,12 @@ describe("maintains selection mutual exclusivity on paste", () => {
 		expect(clipboard).not.toBeNull();
 
 		const after = handlePaste(state, clipboard!, registries);
-		expect(after.selectedVertex).toBeNull();
+		// The part selection is the reducer's to drop, which it does for the paste
+		// branch like every other (reconcileObjectPartSelection).
+		expect(
+			reconcileObjectPartSelection(after, registries.objectPartKind)
+				.objectPartSelection,
+		).toBeNull();
 	});
 });
 

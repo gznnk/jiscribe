@@ -136,11 +136,10 @@ export const handlePaste = (
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
 		selectedIds: newObjectIds,
-		// Clear the mutually exclusive connector/vertex selection so the shape selection is non-empty
+		// Clear the mutually exclusive connector selection so the shape selection is non-empty
 		// (same as other selectedIds mutation paths; without clearing, SwapArrows / Delete etc.
-		// would act on the old connector/vertex that is no longer on screen).
+		// would act on the old connector that is no longer on screen).
 		selectedConnectorId: null,
-		selectedVertex: null,
 		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),
 		contextMenuPosition: null,
 		commitVersion: state.commitVersion + 1,

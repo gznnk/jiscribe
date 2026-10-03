@@ -65,6 +65,7 @@ import {
 } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
@@ -206,13 +207,14 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
+	const { objectPartKind } = useCanvasRegistries();
 	const sections = usePropertyPanelSections(canvasState);
 	const { collapsedSectionIds } = canvasState.propertyPanel;
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
 	const showsArrangeSection =
 		!showsCanvasSection && isArrangeableSelection(canvasState);
 	const showsMetaSection =
-		!showsCanvasSection && isMetaSectionShown(canvasState);
+		!showsCanvasSection && isMetaSectionShown(canvasState, objectPartKind);
 	// State rather than a ref, so the fields re-render once the host element exists.
 	const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
 

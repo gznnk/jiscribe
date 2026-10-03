@@ -65,7 +65,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 		const next = canvasReducer(state, setSelection(["rect-1"]));
 
 		expect(next.selectedConnectorId).toBeNull();
-		expect(next.selectedVertex).toBeNull();
+		expect(next.objectPartSelection).toBeNull();
 		expect(next.objectPartSelection).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 	});

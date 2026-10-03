@@ -5,6 +5,7 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import { DeleteCommand } from "../DeleteCommand";
 
 const registries = createTestRegistries();
@@ -48,12 +49,12 @@ const makeState = (params: {
 	selectedIds: string[];
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
-	selectedVertex?: CanvasControllerState["selectedVertex"];
+	objectPartSelection?: CanvasControllerState["objectPartSelection"];
 	selectedConnectorId?: string | null;
 	lastDuplicate?: CanvasControllerState["lastDuplicate"];
 }): CanvasControllerState =>
 	({
-		selectedVertex: null,
+		objectPartSelection: null,
 		selectedConnectorId: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,
@@ -122,7 +123,7 @@ describe("DeleteCommand", () => {
 				selectedIds: ["p"],
 				objects: { p: poly },
 				rootIds: ["p"],
-				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				objectPartSelection: vertexPartSelection("p", 1),
 			});
 			const next = DeleteCommand.execute(state, registries);
 			const updated = next.objects["p"] as PolylineState;
@@ -130,7 +131,7 @@ describe("DeleteCommand", () => {
 				{ x: 0, y: 0 },
 				{ x: 20, y: 0 },
 			]);
-			expect(next.selectedVertex).toBeNull();
+			expect(next.objectPartSelection).toBeNull();
 			// the object itself remains (vertex deletion takes priority)
 			expect(next.objects["p"]).toBeDefined();
 		});
@@ -144,7 +145,7 @@ describe("DeleteCommand", () => {
 				selectedIds: ["p"],
 				objects: { p: poly },
 				rootIds: ["p"],
-				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				objectPartSelection: vertexPartSelection("p", 1),
 			});
 			expect(DeleteCommand.execute(state, registries)).toBe(state);
 		});
@@ -156,10 +157,10 @@ describe("DeleteCommand", () => {
 				selectedIds: ["r"],
 				objects: { r: makeRect("r") },
 				rootIds: ["r"],
-				selectedVertex: { objectId: "r", vertexIndex: 0 },
+				objectPartSelection: vertexPartSelection("r", 0),
 			});
 			const next = DeleteCommand.execute(state, registries);
-			expect(next.selectedVertex).toBeNull();
+			expect(next.objectPartSelection).toBeNull();
 			expect(next.objects["r"]).toBeUndefined();
 			expect(next.selectedIds).toEqual([]);
 		});
@@ -173,10 +174,10 @@ describe("DeleteCommand", () => {
 				selectedIds: [],
 				objects: { p: polyline },
 				rootIds: ["p"],
-				selectedVertex: { objectId: "p", vertexIndex: 7 },
+				objectPartSelection: vertexPartSelection("p", 7),
 			});
 			const next = DeleteCommand.execute(state, registries);
-			expect(next.selectedVertex).toBeNull();
+			expect(next.objectPartSelection).toBeNull();
 			expect(next.objects["p"]).toBe(polyline);
 		});
 
@@ -193,7 +194,7 @@ describe("DeleteCommand", () => {
 					r: other,
 				},
 				rootIds: ["p", "r"],
-				selectedVertex: { objectId: "p", vertexIndex: 1 },
+				objectPartSelection: vertexPartSelection("p", 1),
 				lastDuplicate: {
 					newIds: ["p"],
 					cx: 0,
@@ -224,7 +225,7 @@ describe("DeleteCommand", () => {
 					),
 				},
 				rootIds: ["g"],
-				selectedVertex: { objectId: "p", vertexIndex: 2 },
+				objectPartSelection: vertexPartSelection("p", 2),
 			});
 			const next = DeleteCommand.execute(state, registries);
 			const group = next.objects["g"] as GroupState;
@@ -255,7 +256,7 @@ describe("DeleteCommand", () => {
 				selectedIds: [],
 				objects: { p: poly },
 				rootIds: ["p"],
-				selectedVertex: { objectId: "p", vertexIndex: 0 },
+				objectPartSelection: vertexPartSelection("p", 0),
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
@@ -265,7 +266,7 @@ describe("DeleteCommand", () => {
 				selectedIds: [],
 				objects: { r: makeRect("r") },
 				rootIds: ["r"],
-				selectedVertex: { objectId: "r", vertexIndex: 0 },
+				objectPartSelection: vertexPartSelection("r", 0),
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(false);
 		});
@@ -282,13 +283,13 @@ describe("DeleteCommand", () => {
 				selectedIds: ["n"],
 				objects: { n: pin },
 				rootIds: ["n"],
-				selectedVertex: { objectId: "n", vertexIndex: 0 },
+				objectPartSelection: vertexPartSelection("n", 0),
 			});
 
 			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
 			const next = DeleteCommand.execute(state, pinRegistries);
 			expect(next.objects["n"]).toBeUndefined();
-			expect(next.selectedVertex).toBeNull();
+			expect(next.objectPartSelection).toBeNull();
 		});
 
 		it("holds the key over a picked part whose kind declares a deletion that refuses", () => {
@@ -303,7 +304,7 @@ describe("DeleteCommand", () => {
 				selectedIds: ["n"],
 				objects: { n: pin },
 				rootIds: ["n"],
-				selectedVertex: { objectId: "n", vertexIndex: 0 },
+				objectPartSelection: vertexPartSelection("n", 0),
 			});
 
 			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);

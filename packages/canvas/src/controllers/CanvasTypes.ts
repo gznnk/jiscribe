@@ -629,19 +629,14 @@ export type CanvasControllerState = CanvasState & {
 	/** Managed independently from selectedIds (shapes only), guaranteeing mutual exclusion */
 	selectedConnectorId: string | null;
 
-	/** Only valid when exactly one polyline/polygon is selected */
-	selectedVertex: {
-		objectId: string;
-		vertexIndex: number;
-	} | null;
-
 	/**
 	 * Sub-parts addressed one level below the object selection, in a namespace the
-	 * object's own type owns (`kind`) — today only the text slots of a
-	 * `features.text === "slots"` shape. Always valid where it is read: every
-	 * reducer branch that rewrites the selection or the objects drops a selection
-	 * the state no longer backs (reconcileObjectPartSelection), instead of every
-	 * selection write clearing it or every reader validating it.
+	 * object's own type owns (`kind`) — the text slots of a
+	 * `features.text === "slots"` shape, the vertices of a polyline, a polygon or
+	 * a connector. Always valid where it is read: every reducer branch that
+	 * rewrites the selection or the objects drops a selection the state no longer
+	 * backs (reconcileObjectPartSelection), instead of every selection write
+	 * clearing it or every reader validating it.
 	 */
 	objectPartSelection: ObjectPartSelection | null;
 

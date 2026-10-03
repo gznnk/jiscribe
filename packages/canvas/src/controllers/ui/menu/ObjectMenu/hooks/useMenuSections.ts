@@ -2,6 +2,8 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { isTextSlotAddressed } from "../../../../selection/isTextSlotAddressed";
+import type { ObjectPartKindRegistry } from "../../../../selection/ObjectPartKindRegistry";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
@@ -101,19 +103,26 @@ const collectSelectionSections = (
  *
  * While a text slot is selected the sections are narrowed to the text items, so the
  * menu never offers an action that the slot cannot receive. Doing it here keeps every
- * `features.text === "slots"` type covered without each definition opting in.
+ * `features.text === "slots"` type covered without each definition opting in. A pick
+ * of another sort (a vertex) leaves them alone, the menu still acting on the object.
  *
  * An open text editor narrows them the same way, for the same reason read the other
  * way round: what the menu offers there has to be something a stretch of the text
  * being edited can take, and reshaping or restacking the shape mid-edit is not it.
+ *
+ * @param state - The current canvas controller state
+ * @param objectMenuRegistry - Per-canvas ObjectMenuRegistry, asked once per concrete type in the selection
+ * @param objectPartKind - Per-canvas ObjectPartKindRegistry, read for whether the pick below the object stands for text slots
+ * @returns The sections in display order
  */
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
+	objectPartKind: ObjectPartKindRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
 	if (
-		state.objectPartSelection === null &&
+		!isTextSlotAddressed(state, objectPartKind) &&
 		state.textEditState?.kind !== "shape"
 	) {
 		return sections;
@@ -135,10 +144,10 @@ export const useMenuSections = (
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
-	const { objectMenu } = useCanvasRegistries();
+	const { objectMenu, objectPartKind } = useCanvasRegistries();
 
 	return useMemo(
-		() => (enabled ? getMenuSections(state, objectMenu) : []),
+		() => (enabled ? getMenuSections(state, objectMenu, objectPartKind) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
 			enabled,
@@ -148,6 +157,7 @@ export const useMenuSections = (
 			isEditingShapeText,
 			objects,
 			objectMenu,
+			objectPartKind,
 		],
 	);
 };

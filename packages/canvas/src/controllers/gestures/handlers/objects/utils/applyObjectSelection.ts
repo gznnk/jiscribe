@@ -47,8 +47,6 @@ export function applyObjectSelection(
 		multiSelectGroup,
 		// Clear the connector selection to guarantee mutual exclusion
 		selectedConnectorId: null,
-		// Clear the vertex selection
-		selectedVertex: null,
 		// Clear the sub-object part selection
 		objectPartSelection: null,
 		// Close the submenu on selection change

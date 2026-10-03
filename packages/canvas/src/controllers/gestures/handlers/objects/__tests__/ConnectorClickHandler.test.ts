@@ -7,6 +7,8 @@ import type { ConnectorState } from "../../../../../states/objects/connector/Con
 import { outlinedPlugin } from "../../../../__tests__/support/outlinedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
+import { reconcileObjectPartSelection } from "../../../../selection/reconcileObjectPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 import { ConnectorClickHandler } from "../ConnectorClickHandler";
@@ -33,7 +35,7 @@ const makeState = (labelText: string): CanvasControllerState =>
 		rootIds: ["c1", "c2"],
 		selectedIds: [],
 		selectedConnectorId: null,
-		selectedVertex: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		textEditState: null,
 		commitVersion: 5,
@@ -307,7 +309,7 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 	const staleUiState = (): CanvasControllerState =>
 		({
 			...makeState("Yes"),
-			selectedVertex: { objectId: "c2", vertexIndex: 0 },
+			objectPartSelection: vertexPartSelection("c2", 0),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 		}) as unknown as CanvasControllerState;
@@ -319,7 +321,12 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			registries,
 		);
 		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedVertex).toBeNull();
+		// The part selection is the reducer's to drop, which it does for every
+		// gesture result (reconcileObjectPartSelection).
+		expect(
+			reconcileObjectPartSelection(next, registries.objectPartKind)
+				.objectPartSelection,
+		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
@@ -331,7 +338,10 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			registries,
 		);
 		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedVertex).toBeNull();
+		expect(
+			reconcileObjectPartSelection(next, registries.objectPartKind)
+				.objectPartSelection,
+		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});

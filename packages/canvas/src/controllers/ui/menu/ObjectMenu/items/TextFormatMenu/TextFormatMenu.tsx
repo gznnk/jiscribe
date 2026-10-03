@@ -8,6 +8,7 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { isTextSlotAddressed } from "../../../../../selection/isTextSlotAddressed";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
@@ -54,10 +55,11 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPartKind } = useCanvasRegistries();
 	const textStyle = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPartKind,
 	);
 	// Each button is its own toggle, so mixing is read per field. A field the
 	// selection disagrees about reads as off, so one press brings all of it on.
@@ -122,7 +124,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 
 	const isTextFocused =
 		canvasState.textEditState?.kind === "shape" ||
-		canvasState.objectPartSelection !== null;
+		isTextSlotAddressed(canvasState, objectPartKind);
 	if (isTextFocused) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}

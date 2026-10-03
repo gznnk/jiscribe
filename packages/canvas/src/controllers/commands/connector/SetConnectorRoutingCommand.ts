@@ -117,7 +117,9 @@ const applyConnectorRouting = (
 			...state.objects,
 			[id]: nextConnector,
 		},
-		selectedVertex: null,
+		// Switching the routing rewrites the waypoints, so a picked one is dropped
+		// rather than left addressing whoever took the number over.
+		objectPartSelection: null,
 		commitVersion: state.commitVersion + 1,
 	};
 };

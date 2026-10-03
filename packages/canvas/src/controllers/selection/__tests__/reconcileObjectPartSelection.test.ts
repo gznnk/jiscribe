@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTextSlotPartKindDefinition } from "../createTextSlotPartKindDefinition";
+import { createVertexPartKindDefinition } from "../createVertexPartKindDefinition";
 import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../ObjectPartSelection";
 import { reconcileObjectPartSelection } from "../reconcileObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
+import { vertexPartSelection } from "./support/vertexPartSelection";
 
 /** A record-like shape: multiple text slots, declared via features.text = "slots". */
 const slotShape = (id: string): ObjectState =>
@@ -17,22 +19,36 @@ const slotShape = (id: string): ObjectState =>
 		text: { name: { text: "User" }, rows: { text: ["id: string"] } },
 	}) as unknown as ObjectState;
 
+/** A connector carrying two waypoints, the parts of its `vertex` kind. */
+const connector = (id: string): ObjectState =>
+	({
+		id,
+		type: "connector",
+		points: [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 0 },
+		],
+	}) as unknown as ObjectState;
+
 /**
  * The registry every case here reconciles against: "record" takes part the way
  * applyObjectDefinition makes every `features.text === "slots"` type take part,
- * and nothing else does.
+ * "connector" declares its waypoints, and nothing else takes part at all.
  */
 const objectPartKind = createObjectPartKindRegistry();
 objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
+objectPartKind.register("connector", [createVertexPartKindDefinition(2)]);
 
 const makeState = (
 	objects: Record<string, ObjectState>,
 	selectedIds: string[],
 	objectPartSelection: ObjectPartSelection | null,
+	selectedConnectorId: string | null = null,
 ): CanvasControllerState =>
 	({
 		objects,
 		selectedIds,
+		selectedConnectorId,
 		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 
@@ -159,6 +175,45 @@ describe("reconcileObjectPartSelection", () => {
 				{ anchorId: "name", focusId: "operations" },
 			],
 		});
+		expect(
+			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+		).toBeNull();
+	});
+
+	it("keeps a vertex picked on the connector the connector channel holds", () => {
+		const state = makeState(
+			{ "c-1": connector("c-1") },
+			[],
+			vertexPartSelection("c-1", 1),
+			"c-1",
+		);
+		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
+	});
+
+	it("clears a vertex picked on a connector another object has since replaced", () => {
+		const objects = { "c-1": connector("c-1"), "rec-1": slotShape("rec-1") };
+		const pick = vertexPartSelection("c-1", 1);
+		expect(
+			reconcileObjectPartSelection(
+				makeState(objects, ["rec-1"], pick, null),
+				objectPartKind,
+			).objectPartSelection,
+		).toBeNull();
+		expect(
+			reconcileObjectPartSelection(
+				makeState(objects, [], pick, "c-2"),
+				objectPartKind,
+			).objectPartSelection,
+		).toBeNull();
+	});
+
+	it("clears a vertex the connector has outgrown", () => {
+		const state = makeState(
+			{ "c-1": connector("c-1") },
+			[],
+			vertexPartSelection("c-1", 7),
+			"c-1",
+		);
 		expect(
 			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
 		).toBeNull();

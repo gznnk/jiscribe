@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { applyStylePropertyPart } from "../applyStylePropertyPart";
 import { parseMenuPart } from "../menuParts";
@@ -29,8 +30,7 @@ const makeState = (): CanvasControllerState =>
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],
 		selectedConnectorId: null,
-		selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
-		objectPartSelection: null,
+		objectPartSelection: vertexPartSelection("rect-1", 0),
 		multiSelectGroup: null,
 		textEditState: null,
 		commitVersion: 5,
@@ -71,12 +71,16 @@ describe("applyStylePropertyPart", () => {
 
 	describe("set:", () => {
 		it.each(["click", "doubleClick"] as const)(
-			"a %s writes the value, bumps commitVersion and clears selectedVertex",
+			"a %s writes the value, bumps commitVersion and keeps the part selection",
 			(type) => {
 				const next = apply(makeState(), type, "set:fill:#dc2626");
 				expect(rectOf(next).fill).toBe("#dc2626");
 				expect(next?.commitVersion).toBe(6);
-				expect(next?.selectedVertex).toBeNull();
+				// Styling renumbers nothing, so what is picked below the object stays
+				// picked — the swatch next pressed goes to the same part.
+				expect(next?.objectPartSelection).toEqual(
+					vertexPartSelection("rect-1", 0),
+				);
 			},
 		);
 
@@ -96,7 +100,9 @@ describe("applyStylePropertyPart", () => {
 				const next = apply(makeState(), type, "slider:strokeWidth", "4");
 				expect(rectOf(next).strokeWidth).toBe(4);
 				expect(next?.commitVersion).toBe(5);
-				expect(next?.selectedVertex).toBeNull();
+				expect(next?.objectPartSelection).toEqual(
+					vertexPartSelection("rect-1", 0),
+				);
 			},
 		);
 
@@ -106,7 +112,9 @@ describe("applyStylePropertyPart", () => {
 				const next = apply(makeState(), type, "slider:strokeWidth", "6");
 				expect(rectOf(next).strokeWidth).toBe(6);
 				expect(next?.commitVersion).toBe(6);
-				expect(next?.selectedVertex).toBeNull();
+				expect(next?.objectPartSelection).toEqual(
+					vertexPartSelection("rect-1", 0),
+				);
 			},
 		);
 

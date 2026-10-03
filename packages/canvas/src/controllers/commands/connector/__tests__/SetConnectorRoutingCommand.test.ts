@@ -5,6 +5,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import {
 	SetRoutingOrthogonalCommand,
 	SetRoutingStraightCommand,
@@ -58,12 +59,12 @@ const makeRect = (id: string): ObjectState =>
 const makeState = (params: {
 	selectedConnectorId: string | null;
 	objects: Record<string, ObjectState>;
-	selectedVertex?: CanvasControllerState["selectedVertex"];
+	objectPartSelection?: CanvasControllerState["objectPartSelection"];
 }): CanvasControllerState =>
 	({
 		selectedIds: [],
 		commitVersion: 0,
-		selectedVertex: null,
+		objectPartSelection: null,
 		...params,
 	}) as unknown as CanvasControllerState;
 
@@ -74,7 +75,7 @@ describe("SetConnectorRoutingCommand", () => {
 			const state = makeState({
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", "straight", waypoints) },
-				selectedVertex: { objectId: "c1", vertexIndex: 0 },
+				objectPartSelection: vertexPartSelection("c1", 0),
 			});
 
 			const next = SetRoutingOrthogonalCommand.execute(state, registries);
@@ -82,8 +83,8 @@ describe("SetConnectorRoutingCommand", () => {
 
 			expect(conn.routing).toBe("orthogonal");
 			expect(conn.points).toBe(waypoints);
-			// the per-vertex handles disappear under orthogonal, so the selected vertex is cleared
-			expect(next.selectedVertex).toBeNull();
+			// the per-vertex handles disappear under orthogonal, so the picked vertex is dropped
+			expect(next.objectPartSelection).toBeNull();
 			expect(next.commitVersion).toBe(1);
 		});
 	});

@@ -26,8 +26,9 @@ export const beginConnectorReshape = (
 		...nextState,
 		selectedConnectorId: connectorId,
 		selectedIds: [],
-		// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-		selectedVertex: null,
+		// Reshaping renumbers the connector's waypoints, so a picked one is dropped
+		// rather than left addressing whoever took the number over.
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,

@@ -7,9 +7,13 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTextSlotPartRegistry } from "../../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { getSelectedOrFirstTextSlot } from "../getSelectedOrFirstTextSlot";
+
+// Every type whose fixtures hold slots takes part in slot selection.
+const objectPartKind = createTextSlotPartRegistry("rect", "markdown");
 
 /** The types under test register no defaults, so the resolution is the identity here. */
 const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
@@ -39,7 +43,11 @@ const makeState = (
 describe("getSelectedOrFirstTextSlot", () => {
 	it("returns undefined when nothing is selected", () => {
 		expect(
-			getSelectedOrFirstTextSlot(makeState([], {}), textStyleDefaults),
+			getSelectedOrFirstTextSlot(
+				makeState([], {}),
+				textStyleDefaults,
+				objectPartKind,
+			),
 		).toBeUndefined();
 	});
 
@@ -49,6 +57,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});
@@ -59,6 +68,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPartKind,
 			),
 		).toEqual({
 			text: "hello",
@@ -75,6 +85,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPartKind,
 			)?.fontWeight,
 		).toBe("bold");
 	});
@@ -86,6 +97,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1", "r2"], { r1: textless, r2: withText }),
 				textStyleDefaults,
+				objectPartKind,
 			),
 		).toEqual({ text: "hello", fontSize: 20 });
 	});
@@ -97,6 +109,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["g1"], { g1: g, r1: r }),
 				textStyleDefaults,
+				objectPartKind,
 			),
 		).toEqual({ text: "hello", fontSize: 20 });
 	});
@@ -107,6 +120,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPartKind,
 			),
 		).toBeUndefined();
 	});
@@ -128,6 +142,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 					},
 				),
 				textStyleDefaults,
+				objectPartKind,
 			)?.fontSize,
 		).toBe(11);
 	});
@@ -177,6 +192,7 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 				// The draft the editor holds is what the offsets address.
 				editingState(r, [{ text: "he", fontSize: 30 }, { text: "llo" }]),
 				textStyleDefaults,
+				objectPartKind,
 			)?.fontSize,
 		).toBe(30);
 	});
@@ -184,7 +200,11 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 	it("reads the whole slot of a source-language body", () => {
 		const r = sourceRect({ body: { text: "# Title", fontSize: 20 } });
 		expect(
-			getSelectedOrFirstTextSlot(editingState(r, "# Title"), textStyleDefaults),
+			getSelectedOrFirstTextSlot(
+				editingState(r, "# Title"),
+				textStyleDefaults,
+				objectPartKind,
+			),
 		).toEqual({ text: "# Title", fontSize: 20 });
 	});
 });
@@ -201,15 +221,22 @@ describe("getSelectedOrFirstTextSlot with the type's own defaults", () => {
 	it("reports the type's default for a field the slot leaves unset", () => {
 		const r = rect("r1", { body: { text: "hello" } });
 		expect(
-			getSelectedOrFirstTextSlot(makeState(["r1"], { r1: r }), leftTop),
+			getSelectedOrFirstTextSlot(
+				makeState(["r1"], { r1: r }),
+				leftTop,
+				objectPartKind,
+			),
 		).toEqual({ text: "hello", textAlign: "left", verticalAlign: "top" });
 	});
 
 	it("reports the slot's own value where it has one", () => {
 		const r = rect("r1", { body: { text: "hello", textAlign: "right" } });
 		expect(
-			getSelectedOrFirstTextSlot(makeState(["r1"], { r1: r }), leftTop)
-				?.textAlign,
+			getSelectedOrFirstTextSlot(
+				makeState(["r1"], { r1: r }),
+				leftTop,
+				objectPartKind,
+			)?.textAlign,
 		).toBe("right");
 	});
 });

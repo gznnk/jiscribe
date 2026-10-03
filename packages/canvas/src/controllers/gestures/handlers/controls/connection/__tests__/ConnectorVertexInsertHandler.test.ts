@@ -42,7 +42,7 @@ const makeState = (points: Point[]): CanvasControllerState => {
 		rootIds: ["conn-1"],
 		selectedIds: [],
 		selectedConnectorId: "conn-1",
-		selectedVertex: null,
+		objectPartSelection: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {

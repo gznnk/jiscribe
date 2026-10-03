@@ -85,7 +85,7 @@ export function useObjectMenuPosition(
 	const objectPartSelectionKey =
 		objectPartSelection === null
 			? null
-			: `${objectPartSelection.objectId}:${objectPartSelection.ranges
+			: `${objectPartSelection.objectId}:${objectPartSelection.kind}:${objectPartSelection.ranges
 					.map((range) => `${range.anchorId}-${range.focusId}`)
 					.join(",")}`;
 	const textEditKey =
