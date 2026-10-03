@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { EscapeSelectionCommand } from "../EscapeSelectionCommand";
 
 const registries = createTestRegistries();
@@ -14,7 +15,7 @@ const baseState = (
 		selectedIds: [],
 		selectedConnectorId: null,
 		selectedVertex: null,
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		areaSelection: null,
 		shapeDrawing: null,
@@ -37,7 +38,11 @@ const slotSelectedState = (): CanvasControllerState =>
 			},
 		} as never,
 		selectedIds: ["rec-1"],
-		selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+		objectPartSelection: {
+			objectId: "rec-1",
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
+		},
 	});
 
 describe("EscapeSelectionCommand", () => {
@@ -69,7 +74,7 @@ describe("EscapeSelectionCommand", () => {
 				slotSelectedState(),
 				registries,
 			);
-			expect(next.selectedTextSlot).toBeNull();
+			expect(next.objectPartSelection).toBeNull();
 			expect(next.selectedIds).toEqual(["rec-1"]);
 		});
 
@@ -86,17 +91,6 @@ describe("EscapeSelectionCommand", () => {
 			const state = { ...slotSelectedState(), objectMenuOpenId: "alignment" };
 			const next = EscapeSelectionCommand.execute(state, registries);
 			expect(next.objectMenuOpenId).toBeNull();
-		});
-
-		it("clears everything at once when the slot selection is stale", () => {
-			// The object it names is no longer the selection, so there is no level to step out of.
-			const state = baseState({
-				selectedIds: ["other"],
-				selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
-			});
-			const next = EscapeSelectionCommand.execute(state, registries);
-			expect(next.selectedIds).toEqual([]);
-			expect(next.selectedTextSlot).toBeNull();
 		});
 	});
 

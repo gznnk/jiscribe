@@ -100,7 +100,9 @@ import {
 	rotateByGroup as textRotateByGroup,
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
+import { createTextSlotPartKindDefinition } from "../selection/createTextSlotPartKindDefinition";
 import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
+import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
@@ -541,8 +543,18 @@ export const applyObjectDefinition = (
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
-	if (definition.partKinds) {
-		registries.objectPartKind.register(type, definition.partKinds);
+	// A type spelling its text out as slots takes part in slot selection without
+	// declaring anything: the ids are the keys of its `text`, so there is nothing
+	// per type to say. Declaring `"textSlot"` itself replaces that default rather
+	// than colliding with it (the rule `menu` and `propertyPanel` already follow).
+	const declaredPartKinds = definition.partKinds ?? [];
+	const partKinds =
+		definition.features.text === "slots" &&
+		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
+			? [...declaredPartKinds, createTextSlotPartKindDefinition()]
+			: declaredPartKinds;
+	if (partKinds.length > 0) {
+		registries.objectPartKind.register(type, partKinds);
 	}
 	if (definition.extraStyleProperties) {
 		registries.styleProperty.registerExtras(

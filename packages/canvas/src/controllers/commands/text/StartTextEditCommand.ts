@@ -6,7 +6,6 @@ import {
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
-import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -86,11 +85,12 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return state;
 		}
 
-		// Enter carries no pointer position, so the slot already selected one level
-		// below the object decides; resolveSelectedTextSlot validates it against
-		// this very single selection, so a stale one falls back to the first slot.
+		// Enter carries no pointer position, so the part already selected one level
+		// below the object decides, falling back to the first slot when there is
+		// none. The editor opens on one slot, and in this version the selection is
+		// always one collapsed range, so the anchor of the first range is that slot.
 		const slotId =
-			resolveSelectedTextSlot(state)?.slotId ??
+			state.objectPartSelection?.ranges[0].anchorId ??
 			getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;

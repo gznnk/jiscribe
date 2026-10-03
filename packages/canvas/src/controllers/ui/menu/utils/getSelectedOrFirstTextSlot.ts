@@ -9,7 +9,6 @@ import type { TextStyleState } from "../../../../states/objects/base/TextStyleSt
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -48,9 +47,9 @@ const withTypeStyleDefaults = (
  * draws even where the author set nothing — and a toggle reads its direction off
  * the same value.
  *
- * @param state - The current canvas controller state; a stale `selectedTextSlot`
- *   is neutralized here (resolveSelectedTextSlot), so the raw value never reaches
- *   what the menus display
+ * @param state - The current canvas controller state; its `objectPartSelection` is
+ *   read as it stands, the reducer having already dropped a stale one
+ *   (reconcileObjectPartSelection)
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, keyed by
  *   the type of whichever object the slot was found on
  * @returns The slot, or undefined when nothing selected holds text (the menus then show their defaults)
@@ -71,15 +70,18 @@ export const getSelectedOrFirstTextSlot = (
 		};
 	}
 
-	const selectedTextSlot = resolveSelectedTextSlot(state);
-	if (selectedTextSlot !== null) {
-		const target = state.objects[selectedTextSlot.objectId];
+	const { objectPartSelection } = state;
+	if (objectPartSelection !== null) {
+		const target = state.objects[objectPartSelection.objectId];
 		if (isTextStyleState(target)) {
+			// One slot is read, and in this version the selection is always one
+			// collapsed range, so that slot is the first range's anchor.
+			const slotId = objectPartSelection.ranges[0].anchorId;
 			return withTypeStyleDefaults(
 				textStyleDefaults,
 				target.type,
-				selectedTextSlot.slotId,
-				target.text?.[selectedTextSlot.slotId],
+				slotId,
+				target.text?.[slotId],
 			);
 		}
 	}

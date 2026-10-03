@@ -3,9 +3,9 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
-import { resolveSelectedTextSlot } from "../utils/resolveSelectedTextSlot";
 
 /** Coerces the menu's string value to the declared type. Returns null when a number fails to parse. */
 export const coerceStyleValue = (
@@ -70,11 +70,9 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		value: string,
 	): CanvasControllerState {
-		const { selectedIds, selectedConnectorId, objects } = state;
+		const { selectedIds, selectedConnectorId, objects, objectPartSelection } =
+			state;
 		const path = property.split(".");
-		// Resolved once: the raw state.selectedTextSlot may be stale, and every
-		// object visited below has to be matched against the same resolved value.
-		const selectedTextSlot = resolveSelectedTextSlot(state);
 
 		// Connector selected (selectedIds is empty)
 		if (selectedIds.length === 0 && selectedConnectorId !== null) {
@@ -87,7 +85,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				property,
 				path,
 				value,
-				selectedTextSlot,
+				objectPartSelection,
 			);
 			if (updated === null) {
 				return state;
@@ -116,7 +114,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				property,
 				path,
 				value,
-				selectedTextSlot,
+				objectPartSelection,
 			);
 			if (updated === null) {
 				continue;
@@ -140,7 +138,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 						property,
 						path,
 						value,
-						selectedTextSlot,
+						objectPartSelection,
 					);
 					if (updated === null) {
 						continue;
@@ -189,7 +187,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		path: readonly string[],
 		value: string,
-		selectedTextSlot: CanvasControllerState["selectedTextSlot"],
+		objectPartSelection: ObjectPartSelection | null,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -203,8 +201,10 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			obj,
 			path,
 			coerced,
-			selectedTextSlot?.objectId === obj.id
-				? selectedTextSlot.slotId
+			// The write lands on one slot, and in this version the selection is always
+			// one collapsed range, so that slot is the first range's anchor.
+			objectPartSelection?.objectId === obj.id
+				? objectPartSelection.ranges[0].anchorId
 				: undefined,
 		);
 	}

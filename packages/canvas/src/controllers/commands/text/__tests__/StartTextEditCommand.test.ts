@@ -2,9 +2,10 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { StartTextEditCommand } from "../StartTextEditCommand";
@@ -115,7 +116,7 @@ describe("StartTextEditCommand", () => {
 	describe("a shape with slots", () => {
 		/** A record standing in: no built-in type declares `features.text = "slots"`. */
 		const stateWithSlotSelection = (
-			selectedTextSlot: CanvasControllerState["selectedTextSlot"],
+			objectPartSelection: ObjectPartSelection | null,
 		) =>
 			deepFreezeState({
 				...createInitialControllerState(doc, registries),
@@ -128,13 +129,14 @@ describe("StartTextEditCommand", () => {
 					},
 				} as never,
 				selectedIds: ["rec-1"],
-				selectedTextSlot,
+				objectPartSelection,
 			});
 
 		it("edits the selected slot", () => {
 			const state = stateWithSlotSelection({
 				objectId: "rec-1",
-				slotId: "rows",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			});
 			expect(
 				StartTextEditCommand.execute(state, registries).textEditState,
@@ -154,22 +156,16 @@ describe("StartTextEditCommand", () => {
 
 		it("closes an open ObjectMenu submenu, which the edit session re-lays out", () => {
 			const state = deepFreezeState({
-				...stateWithSlotSelection({ objectId: "rec-1", slotId: "rows" }),
+				...stateWithSlotSelection({
+					objectId: "rec-1",
+					kind: TEXT_SLOT_PART_KIND,
+					ranges: [{ anchorId: "rows", focusId: "rows" }],
+				}),
 				objectMenuOpenId: "alignment",
 			});
 			expect(
 				StartTextEditCommand.execute(state, registries).objectMenuOpenId,
 			).toBeNull();
-		});
-
-		it("edits the first slot when the slot selection is stale", () => {
-			const state = stateWithSlotSelection({
-				objectId: "rec-1",
-				slotId: "operations",
-			});
-			expect(
-				StartTextEditCommand.execute(state, registries).textEditState,
-			).toMatchObject({ objectId: "rec-1", slotId: "name" });
 		});
 	});
 

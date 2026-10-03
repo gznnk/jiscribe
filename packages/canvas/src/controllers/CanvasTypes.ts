@@ -7,6 +7,7 @@ import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorL
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
+import type { ObjectPartSelection } from "./selection/ObjectPartSelection";
 import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connector/ConnectorState";
@@ -635,14 +636,14 @@ export type CanvasControllerState = CanvasState & {
 	} | null;
 
 	/**
-	 * Text slot addressed one level below the object selection. Only valid while that
-	 * object is the sole selection and still holds the slot; a stale value is neutralized
-	 * on read (resolveSelectedTextSlot) instead of being cleared at every selection write.
+	 * Sub-parts addressed one level below the object selection, in a namespace the
+	 * object's own type owns (`kind`) — today only the text slots of a
+	 * `features.text === "slots"` shape. Always valid where it is read: every
+	 * reducer branch that rewrites the selection or the objects drops a selection
+	 * the state no longer backs (reconcileObjectPartSelection), instead of every
+	 * selection write clearing it or every reader validating it.
 	 */
-	selectedTextSlot: {
-		objectId: string;
-		slotId: string;
-	} | null;
+	objectPartSelection: ObjectPartSelection | null;
 
 	/** Non-null only while snapping; cleared on dragEnd */
 	snapFeedback: SnapFeedback | null;

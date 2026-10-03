@@ -13,6 +13,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
+import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
 
 // A synthetic type with a flat (non-nested) extra property, standing in for a
@@ -53,7 +54,7 @@ type MinState = Pick<
 	| "selectedConnectorId"
 	| "objects"
 	| "multiSelectGroup"
-	| "selectedTextSlot"
+	| "objectPartSelection"
 	| "textEditState"
 	| "commitVersion"
 >;
@@ -64,7 +65,7 @@ const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 		selectedConnectorId: null,
 		objects: {},
 		multiSelectGroup: null,
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		textEditState: null,
 		commitVersion: 0,
 		...overrides,
@@ -766,7 +767,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				const state = makeState({
 					selectedIds: ["r1"],
 					objects: { r1 },
-					selectedTextSlot: { objectId: "r1", slotId: "rows" },
+					objectPartSelection: {
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
+					},
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1")).toEqual({
@@ -775,26 +780,16 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				});
 			});
 
-			it("writes every slot once the selection covers more than the slot's object", () => {
-				const r1 = slotRect("r1");
-				const r2 = bodyRect("r2");
-				const state = makeState({
-					selectedIds: ["r1", "r2"],
-					objects: { r1, r2 },
-					selectedTextSlot: { objectId: "r1", slotId: "rows" },
-				});
-				const result = applyStyleProperty(state, "fontWeight", "bold");
-				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
-				expect(slotsOf(result, "r1").rows.fontWeight).toBe("bold");
-				expect(slotsOf(result, "r2").body.fontWeight).toBe("bold");
-			});
-
 			it("writes every slot when the slot selection names another object", () => {
 				const r1 = slotRect("r1");
 				const state = makeState({
 					selectedIds: ["r1"],
 					objects: { r1 },
-					selectedTextSlot: { objectId: "gone", slotId: "rows" },
+					objectPartSelection: {
+						objectId: "gone",
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
+					},
 				});
 				const result = applyStyleProperty(state, "fontWeight", "bold");
 				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
@@ -813,7 +808,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				const state = makeState({
 					selectedIds: ["g1"],
 					objects: { g1, r1 },
-					selectedTextSlot: { objectId: "g1", slotId: "rows" },
+					objectPartSelection: {
+						objectId: "g1",
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
+					},
 				});
 				const result = applyStyleProperty(state, "fontWeight", "bold");
 				expect(slotsOf(result, "g1").name.fontWeight).toBeUndefined();
@@ -827,7 +826,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				const state = makeState({
 					selectedIds: ["r1"],
 					objects: { r1 },
-					selectedTextSlot: { objectId: "r1", slotId: "rows" },
+					objectPartSelection: {
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "rows", focusId: "rows" }],
+					},
 				});
 				const result = applyStyleProperty(state, "text", "Account");
 				expect(slotsOf(result, "r1")).toEqual({
@@ -883,7 +886,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				const state = makeState({
 					selectedIds: ["r1"],
 					objects: { r1 },
-					selectedTextSlot: { objectId: "r1", slotId: "0_1" },
+					objectPartSelection: {
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "0_1", focusId: "0_1" }],
+					},
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1")).toEqual({

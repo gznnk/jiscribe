@@ -49,8 +49,8 @@ export function applyObjectSelection(
 		selectedConnectorId: null,
 		// Clear the vertex selection
 		selectedVertex: null,
-		// Clear the text slot selection
-		selectedTextSlot: null,
+		// Clear the sub-object part selection
+		objectPartSelection: null,
 		// Close the submenu on selection change
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,

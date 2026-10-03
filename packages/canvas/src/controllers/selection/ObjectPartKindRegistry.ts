@@ -7,7 +7,8 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * vertices of a polyline, the cells of a table. Core knows nothing of what an
  * id means: it carries the id around and hands it back to the type through this
  * definition. A type declares these through `ObjectTypeDefinition.partKinds`, one
- * entry per `kind`.
+ * entry per `kind`; a `features.text === "slots"` type is given the `"textSlot"`
+ * kind on top of what it declares (applyObjectDefinition).
  */
 export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 	{
@@ -36,8 +37,9 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 
 /**
  * Per-type registry of sub-part definitions, keyed by `(type, kind)`.
- * Types that register nothing have no sub-parts, and every part-aware seam
- * (so far: delete) is inert for them.
+ * Types that register nothing have no sub-parts: nothing of theirs can be
+ * selected one level below the object (reconcileObjectPartSelection), and
+ * deletion falls through to the object as a whole.
  */
 export class ObjectPartKindRegistry {
 	private readonly entries = new Map<

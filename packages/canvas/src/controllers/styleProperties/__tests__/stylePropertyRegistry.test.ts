@@ -47,7 +47,7 @@ const makeState = (
 		selectedConnectorId: null,
 		objects: {},
 		multiSelectGroup: null,
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 

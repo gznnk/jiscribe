@@ -1,6 +1,5 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
-import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 
 /**
  * Whether the sidebar shows its Meta section — the note the selected object
@@ -12,12 +11,12 @@ import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSl
  * text of the stretch being edited (getPropertyPanelSections), and the object's
  * own note is not that.
  *
- * @param state - The selection channels, the selected text slot and the open text edit are read
+ * @param state - The selection channels, the picked part and the open text edit are read
  * @returns True while a single object, or a connector, is selected and no text is being addressed
  */
 export const isMetaSectionShown = (state: CanvasControllerState): boolean => {
 	if (
-		resolveSelectedTextSlot(state) !== null ||
+		state.objectPartSelection !== null ||
 		state.textEditState?.kind === "shape"
 	) {
 		return false;

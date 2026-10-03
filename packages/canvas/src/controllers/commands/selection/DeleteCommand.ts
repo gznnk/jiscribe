@@ -15,10 +15,10 @@ import type { ExecutableCommand } from "../CommandTypes";
  * or null while it names nothing: no vertex selected, the object gone, or an
  * index the object has outgrown (an undo can leave one behind) — a selection
  * that is no selection, which the key then passes over. Validity is the
- * selection's own question, answered here on read the way
- * resolveObjectPartSelection will once the field is folded into the part
- * channel; whether the vertex can be deleted is a separate one
- * (resolveDeletableParts).
+ * selection's own question, answered here on read until the field is folded into
+ * the part channel, where the reducer answers it for every kind at once
+ * (reconcileObjectPartSelection); whether the vertex can be deleted is a separate
+ * one (resolveDeletableParts).
  */
 const resolveSelectedVertex = (
 	state: CanvasControllerState,

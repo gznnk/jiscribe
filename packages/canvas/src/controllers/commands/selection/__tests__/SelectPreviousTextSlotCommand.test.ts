@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { SelectPreviousTextSlotCommand } from "../SelectPreviousTextSlotCommand";
 
 const registries = createTestRegistries();
@@ -19,7 +20,7 @@ const baseState = (
 			},
 		},
 		selectedIds: ["rec-1"],
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		activeDrag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -36,13 +37,19 @@ describe("SelectPreviousTextSlotCommand", () => {
 			baseState({}),
 			registries,
 		);
-		expect(last.selectedTextSlot).toEqual({
+		expect(last.objectPartSelection).toEqual({
 			objectId: "rec-1",
-			slotId: "attributes",
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "attributes", focusId: "attributes" }],
 		});
 		expect(
-			SelectPreviousTextSlotCommand.execute(last, registries).selectedTextSlot,
-		).toEqual({ objectId: "rec-1", slotId: "name" });
+			SelectPreviousTextSlotCommand.execute(last, registries)
+				.objectPartSelection,
+		).toEqual({
+			objectId: "rec-1",
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "name", focusId: "name" }],
+		});
 	});
 
 	it("is executable for a single selection that spells its text out as slots", () => {

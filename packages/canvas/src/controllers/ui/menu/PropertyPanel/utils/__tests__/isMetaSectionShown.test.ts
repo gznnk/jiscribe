@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
 import { isMetaSectionShown } from "../isMetaSectionShown";
 
 /** A shape whose text lives in named slots, which is what a slot selection needs. */
@@ -19,7 +20,7 @@ const makeState = (
 	({
 		selectedIds: [],
 		selectedConnectorId: null,
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		textEditState: null,
 		objects: {},
 		...overrides,
@@ -51,7 +52,11 @@ describe("isMetaSectionShown", () => {
 	it("hides it while a text slot is selected", () => {
 		const state = makeState({
 			selectedIds: ["card-1"],
-			selectedTextSlot: { objectId: "card-1", slotId: "body" },
+			objectPartSelection: {
+				objectId: "card-1",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "body", focusId: "body" }],
+			},
 			objects: { "card-1": slottedShape("card-1") },
 		});
 
