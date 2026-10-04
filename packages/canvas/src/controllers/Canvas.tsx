@@ -59,11 +59,11 @@ import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import { isTextSlotSelection } from "./selection/textSlotPartKind";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
+import { isObjectPartOutlined } from "./selection/isObjectPartOutlined";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
 import { SelectionControlsLayer } from "./ui/controls/SelectionControlsLayer";
@@ -722,6 +722,12 @@ const CanvasComponent = ({
 	);
 	const { minX, minY, zoom } = drawnViewport;
 
+	const objectPartOutlined = isObjectPartOutlined(
+		state.objects,
+		registries.objectPartKind,
+		state.selection,
+	);
+
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
 	// What the bar's command buttons read to draw themselves disabled. A plain
@@ -825,7 +831,7 @@ const CanvasComponent = ({
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={isTextSlotSelection(state.selection.part)}
+									isObjectPartOutlined={objectPartOutlined}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer
@@ -846,6 +852,7 @@ const CanvasComponent = ({
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
+									objectPartSelection={state.selection.part}
 								/>
 								<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
 								<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />

@@ -15,14 +15,12 @@ export type ObjectPartRange = {
  * selected one (`CanvasSelection.objectIds[0]`), which is why none is named
  * here.
  *
- * Ranges rather than a set of ids: the set is what a reader derives (through the
- * kind, which alone knows what lies between two of its parts), while the ends
- * are what the gestures need — Shift grows the last range from its anchor, Ctrl
- * adds a collapsed one. Storing the set would lose those ends, the way a DOM
- * `Selection` would lose them if it kept the covered nodes instead of its
- * `Range`s. Every range written today is collapsed, and every reader takes the
- * one slot it names (`ranges[0].anchorId`); the readers widen when a gesture
- * first writes a wider range.
+ * Ranges rather than a set of ids: the set is what a reader derives
+ * (collectObjectPartIds, through the kind, which alone knows what lies between
+ * two of its parts), while the ends are what the gestures need — Shift grows the
+ * last range from its anchor, Ctrl adds a collapsed one. Storing the set would
+ * lose those ends, the way a DOM `Selection` would lose them if it kept the
+ * covered nodes instead of its `Range`s.
  *
  * The reducer clears it (reconcileSelection) once it stops describing
  * something real, so every reader takes `state.selection.part` as it stands.

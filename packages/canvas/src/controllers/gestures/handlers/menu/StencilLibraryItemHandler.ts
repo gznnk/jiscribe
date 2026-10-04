@@ -47,8 +47,8 @@ const calcObjectDimensions = (
  * Adds a shape to the state according to the preset and returns a new CanvasControllerState.
  *
  * Adding an object always modifies the doc, so commitVersion is incremented.
- * This ensures history recording and saving happen even via click (center placement).
- * Via dragEnd, handleGesture overwrites with the same value, so there is no double increment.
+ * handleGesture closes out the click and the dragEnd alike and overwrites with
+ * the same value, so there is no double increment either way.
  */
 const addObjectToState = (
 	state: CanvasControllerState,

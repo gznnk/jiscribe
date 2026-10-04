@@ -7,6 +7,26 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * geometry changed — moved, transformed, or re-measured from their own content.
  * Processes groups from bottom-up (children first, then parents) to ensure correct bounds.
  *
+ * **If you are here because a group's frame came out stale, read this.** A
+ * group's box is cached on the group object, never derived on read, so something
+ * has to recompute it after a child's box moves, and there are only two kinds of
+ * caller that do:
+ *
+ * - the writer itself, naming the ids it just touched (this function, or
+ *   `updateGroupBoundsFromRoot` / `updateGroupBoundsForSelection`);
+ * - the two settling passes that diff the map and need no telling
+ *   (`reconcileObjectContentSizes`, `reconcileGroupBounds`).
+ *
+ * The trap is that the first of those passes settles ancestors **only for the
+ * objects its own content resizer moved**. A writer that hands over an object
+ * whose box it already derived leaves the resizer with nothing to do, so it
+ * returns the state by reference and no group is recomputed — which is why
+ * settling used to depend on *how* an edit was made rather than on what it did
+ * (a table's row removed by the Delete key settled; the same removal from the
+ * right-click menu did not). `reconcileGroupBounds` is what closes that, at the
+ * two points where core takes an object back from a writer it handed the state
+ * to.
+ *
  * @param state - Current canvas controller state, already holding the changed objects
  * @param changedIds - IDs of the objects whose geometry changed; ids with no parent contribute nothing
  * @returns Updated canvas controller state with recalculated group bounds

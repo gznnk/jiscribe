@@ -83,6 +83,15 @@ export type CustomItem = {
 	type: "custom";
 	id: string;
 	component: React.ComponentType<ObjectMenuItemProps>;
+	/**
+	 * Whether the item stays on the menu while a text slot is picked below the
+	 * object, or an editor is open on its text. Omitted = it goes, which is the
+	 * only safe reading for an item that acts on the whole object
+	 * (filterTextSlotMenuSections). Declare it on an item that writes what a slot
+	 * itself holds and reads those same slots back — a `textSlotField` property
+	 * (ExtraStylePropertyDescriptor).
+	 */
+	slotAware?: boolean;
 };
 
 export type ObjectMenuItem = BuiltinItem | CustomItem;

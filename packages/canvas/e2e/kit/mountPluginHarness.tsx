@@ -16,6 +16,7 @@ import type {
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
+	CanvasMessages,
 	CanvasParser,
 	CanvasPlugin,
 	ResolveImage,
@@ -71,6 +72,26 @@ export type PluginHarnessParams = {
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
+/**
+ * The host side of localization, taken from the query so one harness page can be
+ * opened as several hosts: `?locale=ja` picks the language, and `?messages=` a
+ * URI-encoded `Partial<CanvasMessages>` standing for a host that overrides
+ * individual strings. Both are what a spec has no other way to vary, the page
+ * being mounted before it runs.
+ */
+function readHostLocalization(query: URLSearchParams): {
+	locale: string | undefined;
+	messages: Partial<CanvasMessages> | undefined;
+} {
+	const messages = query.get("messages");
+	return {
+		locale: query.get("locale") ?? undefined,
+		messages: messages
+			? (JSON.parse(messages) as Partial<CanvasMessages>)
+			: undefined,
+	};
+}
+
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
 	toolbarItems: ToolbarItem[] | undefined;
@@ -81,7 +102,9 @@ type HarnessAppProps = {
 
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
- * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document.
+ * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document,
+ * while ?locale and ?messages vary the host's localization of the default page
+ * (readHostLocalization).
  * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
@@ -177,6 +200,7 @@ function HarnessApp({
 	if (query.has("pageScroll")) {
 		return <PageScrollApp />;
 	}
+	const { locale, messages } = readHostLocalization(query);
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
@@ -185,6 +209,8 @@ function HarnessApp({
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
 				resolveImage={resolveImage}
+				locale={locale}
+				messages={messages}
 				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
 				stencilLibrary={
 					stencilLibrarySections

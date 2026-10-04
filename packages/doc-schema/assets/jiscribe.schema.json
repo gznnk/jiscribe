@@ -237,6 +237,9 @@
 					"$ref": "#/$defs/StickyDoc"
 				},
 				{
+					"$ref": "#/$defs/TableDoc"
+				},
+				{
 					"$ref": "#/$defs/SvgDoc"
 				},
 				{
@@ -409,6 +412,9 @@
 				},
 				{
 					"$ref": "#/$defs/StickyDoc"
+				},
+				{
+					"$ref": "#/$defs/TableDoc"
 				},
 				{
 					"$ref": "#/$defs/SvgDoc"
@@ -3343,6 +3349,182 @@
 				}
 			}
 		},
+		"TableDoc": {
+			"description": "Table: a grid of cells. `x` / `y` are the top-left of the grid; its width is the column widths summed and its height the resolved row heights summed, so neither is stored and a table grows to the right and down. A row's \"height\" is a lower bound: the row is drawn as tall as its tallest cell's text needs, never clipping it. \"cells\" is dense — exactly one row per entry of \"rows\", one cell per entry of \"columns\" — and a cell carrying nothing but text may be written as that text alone (\"中川\" for { \"text\": \"中川\" }). Each cell holds its own typography and its own \"fill\", so there are no shape-wide textAlign/fontSize/... fields here.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "columns", "rows", "cells"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"table\".",
+					"type": "string",
+					"const": "table"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the grid, as it is drawn (rotation and flips applied).",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the grid, as it is drawn (rotation and flips applied).",
+					"type": "number"
+				},
+				"columns": {
+					"description": "The columns, left to right. A column stores the one measurement nothing derives: its width. Default: two 120px columns",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["width"],
+						"properties": {
+							"width": {
+								"description": "Column width in px, at least 24 — below that a cell has no room left to wrap text in.",
+								"type": "number",
+								"minimum": 24
+							}
+						}
+					}
+				},
+				"rows": {
+					"description": "The rows, top to bottom. Write {} for a row that is exactly as tall as what it holds. Default: two rows with no stored height",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"properties": {
+							"height": {
+								"description": "Lowest the row may be drawn, in px. Omitted lets the row be exactly as tall as its tallest cell's text needs; a row whose text outgrows this value is drawn taller, never clipped.",
+								"type": "number",
+								"minimum": 0
+							}
+						}
+					}
+				},
+				"cells": {
+					"description": "The cells, \"[row][column]\": exactly one array per entry of \"rows\", exactly one cell per entry of \"columns\". A cell is either the whole object or, when nothing about it is styled, its text alone.",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/TextRun"
+									},
+									"minItems": 1
+								},
+								{
+									"type": "object",
+									"additionalProperties": false,
+									"required": ["text"],
+									"properties": {
+										"text": {
+											"description": "The cell text. Write a plain string unless part of it has to be drawn differently; the array of runs is only for that, and the runs are concatenated in order to form the text. Default: \"\"",
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/TextRun"
+													},
+													"minItems": 1
+												}
+											],
+											"default": ""
+										},
+										"fill": {
+											"description": "Cell background: any CSS color, or \"auto\" to follow the theme. Omitted draws no background, so whatever is behind the table shows through. A table has no background of its own — this is where one is set.",
+											"type": "string"
+										},
+										"textAlign": {
+											"description": "Horizontal text alignment. Default: \"center\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/TextAlign"
+												}
+											],
+											"default": "center"
+										},
+										"verticalAlign": {
+											"description": "Vertical text alignment. Default: \"middle\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/VerticalAlign"
+												}
+											],
+											"default": "middle"
+										},
+										"fontColor": {
+											"$ref": "#/$defs/TextStyle/properties/fontColor"
+										},
+										"fontSize": {
+											"description": "Font size in pixels. Default: 14 (the 21px row pitch and the height formula 32 + 21 * rows.length are sized for it)",
+											"type": "number",
+											"minimum": 1,
+											"default": 14
+										},
+										"fontFamily": {
+											"$ref": "#/$defs/TextStyle/properties/fontFamily"
+										},
+										"fontWeight": {
+											"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (a record's title is bold unless you override it)",
+											"type": "string",
+											"default": "bold"
+										},
+										"fontStyle": {
+											"$ref": "#/$defs/TextStyle/properties/fontStyle"
+										},
+										"textDecoration": {
+											"$ref": "#/$defs/TextStyle/properties/textDecoration"
+										}
+									}
+								}
+							]
+						}
+					}
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
 		"SvgDoc": {
 			"description": "Raw inline SVG embedded as an opaque box. Use this only for visuals that the built-in shapes cannot express (icons, logos, ready-made technical figures). The SVG content is scaled to fit the box (its intrinsic size is taken from the markup's viewBox automatically). The SVG is sanitized at render time (scripts, event handlers, and external references are stripped). It is NOT a connector target and has no text/stroke/fill styling of its own.",
 			"type": "object",
@@ -3626,7 +3808,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / awsIcon / awsGroup / container / sticky / image (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / awsIcon / awsGroup / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

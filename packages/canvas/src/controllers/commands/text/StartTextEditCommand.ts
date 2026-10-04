@@ -5,7 +5,6 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
-import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
 import { selectTextSlot } from "../../selection/selectTextSlot";
 import { isTextSlotSelection } from "../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
@@ -96,12 +95,11 @@ export const StartTextEditCommand: ExecutableCommand = {
 
 		// Enter carries no pointer position, so the slot already selected one level
 		// below the object decides, falling back to the first slot when none is
-		// (nothing picked, or a part of another kind). The editor opens on one slot,
-		// and in this version the selection is always one collapsed range, so that
-		// slot is the first of the ids it covers.
+		// (nothing picked, or a part of another kind). The editor opens on one slot:
+		// the anchor of the first range, which is the slot a plain click left there.
 		const { part } = state.selection;
 		const slotId = isTextSlotSelection(part)
-			? collectSelectedPartIds(part)[0]
+			? part.ranges[0].anchorId
 			: getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;

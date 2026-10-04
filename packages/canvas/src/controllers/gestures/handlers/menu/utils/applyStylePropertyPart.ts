@@ -37,6 +37,7 @@ export const applyStylePropertyPart = (
 			state,
 			part.property,
 			part.value,
+			registries.objectPartKind,
 		);
 		return {
 			...newState,
@@ -69,7 +70,12 @@ export const applyStylePropertyPart = (
 		event.type === "dragStart" ||
 		event.type === "drag"
 	) {
-		return registries.styleProperty.apply(state, property, event.inputValue);
+		return registries.styleProperty.apply(
+			state,
+			property,
+			event.inputValue,
+			registries.objectPartKind,
+		);
 	}
 
 	// click / doubleClick: a press on the track jumps the thumb natively and lifts
@@ -86,6 +92,7 @@ export const applyStylePropertyPart = (
 			state,
 			property,
 			event.inputValue,
+			registries.objectPartKind,
 		);
 		return {
 			...newState,

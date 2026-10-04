@@ -2,22 +2,32 @@ import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { FC } from "react";
 
 import { ControlStrategy } from "./ControlStrategy";
-import type { CanvasEvent } from "./GestureHandlerTypes";
+import type { CanvasEvent, EventType } from "./GestureHandlerTypes";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type {
 	SelectionControlContext,
 	SelectionControlDefinition,
 	SelectionControlEvent,
+	SelectionControlEventType,
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
 import { createCowObjects } from "../../utils/cowObjects";
+import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
 
 /**
  * data-part namespace for selection controls. Keeps them out of the built-in
  * controls' flat namespace (resize: / rotation / vertex: …).
  */
 const SELECTION_CONTROL_NAMESPACE = "selection";
+
+/**
+ * Today's set, and what a definition naming none still gets. It lives with the
+ * adapter rather than with the definition type because it is the adapter that
+ * applies it, and controllers/gestures may not read a value out of
+ * controllers/ui (the layer fence in eslint.config.js).
+ */
+export const DEFAULT_SELECTION_CONTROL_EVENTS = ["drag", "dragEnd"] as const;
 
 /**
  * Extracts the object type from a selection-control data-part
@@ -31,6 +41,16 @@ export const parseSelectionControlObjectType = (
 	return namespace === SELECTION_CONTROL_NAMESPACE && objectType
 		? objectType
 		: null;
+};
+
+/** Whether the event kind is one the definition asked for. */
+const isOfferedEventType = (
+	definition: SelectionControlDefinition,
+	type: EventType,
+): type is SelectionControlEventType => {
+	const offered: readonly string[] =
+		definition.events ?? DEFAULT_SELECTION_CONTROL_EVENTS;
+	return offered.includes(type);
 };
 
 /**
@@ -73,10 +93,10 @@ class SelectionControlStrategy extends ControlStrategy {
 				stencilLibraryOpenCategory: null,
 			};
 		}
-		if (event.type !== "drag" && event.type !== "dragEnd") {
+		if (!isOfferedEventType(this.definition, event.type)) {
 			return state;
 		}
-		const updated = this.applyDrag(state, event);
+		const updated = this.applyEvent(state, event, event.type);
 		// dragEnd always releases edge scrolling, even when the drag was a no-op.
 		return event.type === "dragEnd"
 			? { ...updated, edgeScrollEnabled: false }
@@ -85,48 +105,91 @@ class SelectionControlStrategy extends ControlStrategy {
 
 	/**
 	 * Builds the definition's context from the start snapshot and current frame,
-	 * then writes its result back via COW. Returns the state unchanged when a
-	 * guard fails or the definition reports no change.
+	 * then writes its result back: the object via COW, the part selection with
+	 * this object's id filled in, and the ancestor group frames settled around
+	 * whatever the object's new box turned out to be. Returns the state unchanged
+	 * when a guard fails or the definition reports no change.
+	 *
+	 * The settling is core's because a definition cannot do it: it is handed its
+	 * own object and nothing else, so it can neither see the group it sits in nor
+	 * reach the pass that would recompute it (see reconcileGroupBounds).
 	 */
-	private applyDrag(
+	private applyEvent(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		type: SelectionControlEventType,
 	): CanvasControllerState {
 		const objectId = event.targetId;
 		if (!objectId) {
 			return state;
 		}
-		const snapshot = state.activeDrag?.startSnapshot;
-		if (!snapshot) {
-			return state;
-		}
-		const startObject = snapshot.objects[objectId];
-		if (!startObject || startObject.type !== this.objectType) {
-			return state;
-		}
 		const object = state.objects[objectId];
-		if (!object) {
+		if (!object || object.type !== this.objectType) {
+			return state;
+		}
+		const startObject = this.resolveStartObject(state, objectId, type);
+		if (!startObject) {
 			return state;
 		}
 
 		const context: SelectionControlContext = { object, startObject };
-		const controlEvent: SelectionControlEvent = {
-			type: event.type as "drag" | "dragEnd",
-			start: event.start,
-			last: event.last,
-			delta: event.delta,
-			mods: event.mods,
-			subPart: this.parseSubPart(event.targetPart),
-		};
-		const updatedObject = this.definition.handle(context, controlEvent);
-		if (!updatedObject) {
+		const subPart = this.parseSubPart(event.targetPart);
+		const controlEvent: SelectionControlEvent =
+			type === "drag" || type === "dragEnd"
+				? {
+						type,
+						start: event.start,
+						last: event.last,
+						delta: event.delta,
+						mods: event.mods,
+						subPart,
+					}
+				: { type, last: event.last, mods: event.mods, subPart };
+		const result = this.definition.handle(context, controlEvent);
+		if (!result) {
 			return state;
 		}
 
-		// COW view over the previous frame's map (rebased internally, #213)
-		const updatedObjects = createCowObjects(state.objects);
-		updatedObjects[objectId] = updatedObject as ObjectState;
-		return { ...state, objects: updatedObjects };
+		let nextState = state;
+		if (result.object) {
+			// COW view over the previous frame's map (rebased internally, #213)
+			const updatedObjects = createCowObjects(state.objects);
+			updatedObjects[objectId] = result.object as ObjectState;
+			nextState = reconcileGroupBounds(
+				{ ...nextState, objects: updatedObjects },
+				state,
+			);
+		}
+		if (result.selection !== undefined) {
+			// The control only draws on a sole selection of its own object, so that
+			// object is already the part's owner (CanvasSelection.objectIds[0]).
+			nextState = {
+				...nextState,
+				selection: { ...nextState.selection, part: result.selection },
+			};
+		}
+		return nextState;
+	}
+
+	/**
+	 * The object the definition rebuilds its result from. A drag reads the
+	 * gesture-start snapshot, so every frame is derived from where the object
+	 * stood when the pointer went down; an event that opens and closes in one
+	 * frame has moved nothing, so the current frame is its own start. Null when
+	 * the drag has no snapshot to build on, or it holds something else by then.
+	 */
+	private resolveStartObject(
+		state: CanvasControllerState,
+		objectId: string,
+		type: SelectionControlEventType,
+	): ObjectState | null {
+		if (type !== "drag" && type !== "dragEnd") {
+			return state.objects[objectId] ?? null;
+		}
+		const startObject = state.activeDrag?.startSnapshot?.objects[objectId];
+		return startObject && startObject.type === this.objectType
+			? startObject
+			: null;
 	}
 
 	/** The data-part segment after `${this.part}:`, or undefined when absent. */

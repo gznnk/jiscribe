@@ -544,14 +544,19 @@ export const applyObjectDefinition = (
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
 	// A type spelling its text out as slots takes part in slot selection without
-	// declaring anything: the ids are the keys of its `text`, so there is nothing
-	// per type to say. Declaring `"textSlot"` itself replaces that default rather
-	// than colliding with it (the rule `menu` and `propertyPanel` already follow).
+	// declaring anything: the ids are the keys of its `text` and the boxes come
+	// from the very calculator it draws them with, so there is nothing per type to
+	// say. Declaring `"textSlot"` itself replaces that default rather than
+	// colliding with it (the rule `menu` and `propertyPanel` already follow), which
+	// is how a type says what Delete does to its slots.
 	const declaredPartKinds = definition.partKinds ?? [];
 	const partKinds =
 		definition.features.text === "slots" &&
 		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
-			? [...declaredPartKinds, createTextSlotPartKindDefinition()]
+			? [
+					...declaredPartKinds,
+					createTextSlotPartKindDefinition(definition.textRegion),
+				]
 			: declaredPartKinds;
 	if (partKinds.length > 0) {
 		registries.objectPartKind.register(type, partKinds);

@@ -24,7 +24,9 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { selectTextSlot } from "../../../selection/selectTextSlot";
+import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
@@ -36,6 +38,7 @@ import type {
 import { applyPartClick } from "../utils/applyPartClick";
 import { ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
+import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { readTextSlotPart } from "../utils/partAddress";
 import {
@@ -44,6 +47,59 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
+
+/**
+/**
+ * Widens the live text-slot selection to the slot a modifier-held click landed
+ * in: the active range's focus moves there, its anchor stays where it is, and
+ * every other range is replaced. The caller has already established that a slot
+ * of this very object is picked and that the object is the whole selection.
+ *
+ * The run between the two ends is not stored: what lies between two of a type's
+ * parts is the type's to say, and a reader asks it when it needs the set
+ * (collectObjectPartIds).
+ *
+ * @param state - Current canvas controller state, its `selection.part` naming a
+ *   slot of `targetObject`
+ * @param targetObject - The object the click landed on
+ * @param part - That same `state.selection.part`, taken as the slot selection to
+ *   grow
+ * @param targetPart - The pressed element's [data-part]; one naming no live slot
+ *   of the object leaves the selection as it is, the modifier saying "widen" and
+ *   there being nothing to widen to
+ */
+const extendTextSlotSelection = (
+	state: CanvasControllerState,
+	targetObject: ObjectState,
+	part: ObjectPartSelection,
+	targetPart: string | undefined,
+): CanvasControllerState => {
+	const slotId = readTextSlotPart(targetPart);
+	const slots = isTextStyleState(targetObject) ? targetObject.text : undefined;
+	if (
+		slotId === undefined ||
+		slots === undefined ||
+		!Object.prototype.hasOwnProperty.call(slots, slotId)
+	) {
+		return state;
+	}
+	const { ranges } = part;
+	// What the menu acts on moves with the range, so the open submenu closes just
+	// as it does on a plain part click (applyPartClick).
+	return {
+		...state,
+		selection: {
+			...state.selection,
+			part: {
+				kind: part.kind,
+				ranges: [
+					{ anchorId: ranges[ranges.length - 1].anchorId, focusId: slotId },
+				],
+			},
+		},
+		objectMenuOpenId: null,
+	};
+};
 
 /**
  * Handles dragging an object.
@@ -356,6 +412,26 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the click event
 		if (event.type === "click") {
+			const isSoleSelection =
+				nextState.selection.objectIds.length === 1 &&
+				nextState.selection.objectIds[0] === targetObject.id;
+			// An additive modifier over an object that already has a slot selected
+			// widens that selection. Left to applyObjectSelection it would instead
+			// deselect the object, which is the one thing the modifier cannot mean
+			// while the pointer is aimed one level below it.
+			const slotPart = nextState.selection.part;
+			if (
+				isSoleSelection &&
+				isAdditiveSelectionMod(event.mods) &&
+				isTextSlotSelection(slotPart)
+			) {
+				return extendTextSlotSelection(
+					nextState,
+					targetObject,
+					slotPart,
+					event.targetPart,
+				);
+			}
 			const afterClick = applyObjectSelection(
 				nextState,
 				targetObject,
@@ -370,8 +446,7 @@ export const ObjectEventHandler: GestureHandler = {
 				!event.mods.meta &&
 				!event.mods.shift &&
 				!event.mods.alt &&
-				nextState.selection.objectIds.length === 1 &&
-				nextState.selection.objectIds[0] === targetObject.id;
+				isSoleSelection;
 			if (!addressesPart) {
 				return afterClick;
 			}

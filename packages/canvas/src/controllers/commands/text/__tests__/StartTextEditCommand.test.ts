@@ -17,7 +17,7 @@ const registries = createTestRegistries();
 // "record" below stands in for a plugin type, so the built-in bundle does not
 // carry it: register the textSlot kind applyObjectDefinition would give it.
 registries.objectPartKind.register("record", [
-	createTextSlotPartKindDefinition(),
+	createTextSlotPartKindDefinition(undefined),
 ]);
 
 const rect = {

@@ -4,8 +4,8 @@ import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasSelection } from "../selection/CanvasSelection";
-import { collectSelectedPartIds } from "../selection/collectSelectedPartIds";
-import { isTextSlotSelection } from "../selection/textSlotPartKind";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
+import { resolveSelectedTextSlotIds } from "../selection/resolveSelectedTextSlotIds";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
 
@@ -71,6 +71,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
+		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
 		const { selection, objects } = state;
 		const { objectIds: selectedIds } = selection;
@@ -90,7 +91,14 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			if (!obj) {
 				continue;
 			}
-			const updated = this.applyToObject(obj, property, path, value, selection);
+			const updated = this.applyToObject(
+				obj,
+				property,
+				path,
+				value,
+				selection,
+				objectPartKind,
+			);
 			if (updated === null) {
 				continue;
 			}
@@ -114,6 +122,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 						path,
 						value,
 						selection,
+						objectPartKind,
 					);
 					if (updated === null) {
 						continue;
@@ -139,16 +148,17 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 	 * @param obj - The object to write into; returned unchanged copies only
 	 * @param path - The property split on "." ("label.fill" → ["label", "fill"])
 	 * @param value - The value already coerced to the declared type
-	 * @param selectedSlotId - The text slot selected on this very object, undefined
-	 *   when none is (this object is not the slot's owner, nothing is selected one
-	 *   level below the object, or what is selected there is a part of another kind
-	 *   — a vertex). Only slot-storage handlers read it.
+	 * @param selectedSlotIds - The text slots the selection names on this very
+	 *   object, in the type's own order (resolveSelectedTextSlotIds); undefined
+	 *   when it names none — this object is not the owner of what is picked,
+	 *   nothing is picked one level below the object, or what is picked there is a
+	 *   kind that covers no slot. Only slot-storage handlers read it.
 	 */
 	protected writeValue(
 		obj: ObjectState,
 		path: readonly string[],
 		value: string | number | boolean,
-		_selectedSlotId: string | undefined,
+		_selectedSlotIds: readonly string[] | undefined,
 	): ObjectState | null {
 		return writeAtPath(
 			obj as unknown as Record<string, unknown>,
@@ -164,6 +174,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		path: readonly string[],
 		value: string,
 		selection: CanvasSelection,
+		objectPartKind: ObjectPartKindRegistry,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -177,11 +188,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			obj,
 			path,
 			coerced,
-			// The write lands on one slot, and in this version the selection is always
-			// one collapsed range, so that slot is the first of the ids it covers.
-			isTextSlotSelection(selection.part) && selection.objectIds[0] === obj.id
-				? collectSelectedPartIds(selection.part)[0]
-				: undefined,
+			resolveSelectedTextSlotIds(obj, selection, objectPartKind),
 		);
 	}
 }

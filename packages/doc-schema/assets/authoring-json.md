@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.11.0+1e02488e -->
+<!-- jiscribe guide 0.11.0+72f45af1 -->
 
 # The Jiscribe file format
 
@@ -118,6 +118,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `group`                 | `children`                                                     |
 | `container`             | `x`,`y`,`width`,`height`                                       |
 | `sticky`                | `x`,`y`,`width`,`height`                                       |
+| `table`                 | `x`,`y` + `columns`,`rows`,`cells` (no `width`/`height`)       |
 | `svg`                   | `x`,`y`,`width`,`height` + `svgText`                           |
 | `image`                 | `x`,`y`,`width`,`height` + `src`                               |
 | `connector` (in `root`) | `source`,`target`,`points:[]`                                  |

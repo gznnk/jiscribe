@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.11.0+1e02488e -->
+<!-- jiscribe guide 0.11.0+72f45af1 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -238,6 +238,7 @@ rather than a `rect` with a label on it.
 | `group`                 | container of child objects                                         |
 | `container`             | titled region (module, subsystem, boundary)                        |
 | `sticky`                | sticky note (no stroke or `rx`)                                    |
+| `table`                 | grid of cells (table)                                              |
 | `svg`                   | raw SVG escape hatch (opaque box)                                  |
 | `image`                 | picture file (raster or SVG) under the .jis directory (opaque box) |
 | `connector` (in `root`) | edge / arrow between objects                                       |

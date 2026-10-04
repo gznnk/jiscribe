@@ -170,6 +170,31 @@ export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/utils/getF
 export { getFirstSelectedPropValue } from "./controllers/ui/menu/utils/getFirstSelectedPropValue";
 export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedShapeStyle";
 
+// What a whole selection says about one property — one value, several it
+// disagrees on, or no object carrying it — and the readers a row draws that
+// with. The built-in color menus state a selection through these
+// (BackgroundColorMenu): `selectionValueOr` for the swatch's own color and
+// `selectionMixedValues` for the slices it is split into when they disagree.
+export type { SelectionValue } from "./controllers/ui/menu/utils/SelectionValue";
+export {
+	combineSelectionValues,
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "./controllers/ui/menu/utils/SelectionValue";
+
+// The read half of an ExtraStyleProperties declaration that names a
+// `textSlotField`: what the slots such a property's write would land on say
+// about it, folded by the rule above. Pair it with a `slotAware` custom item, or
+// the menu goes as soon as a slot is picked.
+export { readSelectionSlotField } from "./controllers/ui/menu/utils/readSelectionSlotField";
+
+// The registry that read takes alongside the picked parts, so a kind of the
+// type's own (a table's row) is read as the slots it covers rather than as none.
+export { useObjectPartKindRegistry } from "./controllers/registries/CanvasRegistriesContext";
+export type { ObjectPartKindRegistry } from "./controllers/selection/ObjectPartKindRegistry";
+
 // ---------------------------------------------------------------------------
 // Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)
 // ---------------------------------------------------------------------------
@@ -184,8 +209,11 @@ export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedSh
 // the callback (PropertyColorField) or through the same `data-part` grammar the
 // ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
 // `data-part` by hand is discouraged for the same reason as there.
-// Custom rows are dropped while a text slot is selected, since a plugin row has
-// no way to say it is slot-aware.
+// A custom row is dropped while a text slot is picked unless it declares itself
+// `slotAware`, exactly as the ObjectMenu's custom item is and under the same
+// name; one predicate reads both (filterTextSlotSections). Such a row reads the
+// picked parts off `objectPartSelection`, which it is handed alongside the
+// selection.
 // A section may also carry `isShown`, asked about the selection
 // (PropertyPanelSelection) before the section is drawn: a section whose every row
 // would return null uses it to take its heading away with them.
@@ -207,6 +235,17 @@ export { PropertyDropdownField } from "./controllers/ui/menu/PropertyPanel/commo
 export { PropertySegmentedControl } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export type { PropertySegmentedOption } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export { PropertyCheckbox } from "./controllers/ui/menu/PropertyPanel/common/PropertyCheckbox";
+
+// A declared `propertyPanel` replaces the features-derived default rather than
+// adding to it, so a type wanting one row more builds its declaration out of
+// that default: `appendPropertyPanelItems(createDefaultPropertyPanel(features),
+// PROPERTY_PANEL_SECTIONS.fill, row)`. The named section is created at the end
+// when the default has none. The core types that add a row do the same
+// (applyObjectDefinition), so spelling the default's rows out by hand is always
+// a drift waiting to happen.
+export { createDefaultPropertyPanel } from "./controllers/ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
+export { appendPropertyPanelItems } from "./controllers/ui/menu/PropertyPanel/utils/appendPropertyPanelItems";
+export { PROPERTY_PANEL_SECTIONS } from "./controllers/ui/menu/PropertyPanel/propertyPanelSections";
 
 // The `data-part` grammar the menu targets are read by (command: / toggle: /
 // set: / slider:). Build the strings with these rather than spelling the

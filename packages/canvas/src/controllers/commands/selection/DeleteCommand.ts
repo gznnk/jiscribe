@@ -3,7 +3,7 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../selection/CanvasSelection";
-import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
+import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
 import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
 import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
@@ -13,22 +13,35 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * The parts picked one level below the object read as the deletion target the
- * registry takes, or null while nothing is picked there. Validity is not asked
- * about: the reducer has already dropped a selection naming something gone
+ * registry takes, or null while nothing is picked there and while the kind is one
+ * the owner's type does not declare. Validity of the ids is not asked about: the
+ * reducer has already dropped a selection naming something gone
  * (reconcileSelection), so every id here has passed `has`. Whether the
  * parts can be deleted at all is a separate question (resolveDeletableParts).
  */
 const resolveSelectedParts = (
 	state: CanvasControllerState,
+	registries: Pick<ICanvasRegistries, "objectPartKind">,
 ): ObjectPartTarget | null => {
 	const { objectIds, part } = state.selection;
 	if (part === null) {
 		return null;
 	}
+	const owner = state.objects[objectIds[0]];
+	if (owner === undefined) {
+		return null;
+	}
+	const definition = registries.objectPartKind.get(owner.type, part.kind);
+	if (definition === undefined) {
+		return null;
+	}
+	// The channel stores the ends of its ranges, a deletion names parts, so the
+	// kind is asked what the picked ranges cover; the anchor a range was dragged
+	// from says nothing about what is to be deleted.
 	return {
-		objectId: objectIds[0],
+		objectId: owner.id,
 		kind: part.kind,
-		partIds: collectSelectedPartIds(part),
+		partIds: collectObjectPartIds(part, definition, owner),
 	};
 };
 
@@ -44,9 +57,8 @@ const clearPartSelection = (
  * object are deleted where their type registers a deletion for the kind; where it
  * registers none (a text slot), the key means what it means for the selected
  * objects, which are removed (a group with its descendants). A kind that wants
- * the key held while one of its parts is
- * picked, yet nothing removed, declares a deletion that refuses
- * (`delete: () => null`).
+ * the key held while one of its parts is picked, yet nothing removed, declares a
+ * deletion that refuses (`delete: () => null`).
  */
 export const DeleteCommand: ExecutableCommand = {
 	id: "delete",
@@ -60,7 +72,7 @@ export const DeleteCommand: ExecutableCommand = {
 		// A picked part claims the key where its type registers a deletion for its
 		// kind; a kind registering none has said Delete is not about its parts, so
 		// the key means what it means for the selected objects.
-		const target = resolveSelectedParts(state);
+		const target = resolveSelectedParts(state, registries);
 		if (
 			target !== null &&
 			resolveDeletableParts(state, target, registries) !== null
@@ -71,7 +83,7 @@ export const DeleteCommand: ExecutableCommand = {
 	},
 
 	execute: (state, registries) => {
-		const target = resolveSelectedParts(state);
+		const target = resolveSelectedParts(state, registries);
 		if (target !== null) {
 			const deletable = resolveDeletableParts(state, target, registries);
 			if (deletable !== null) {

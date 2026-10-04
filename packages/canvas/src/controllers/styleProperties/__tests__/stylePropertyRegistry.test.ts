@@ -25,7 +25,8 @@ const EXPECTED_OUTPUT: Record<StyleValueType, string | number | boolean> = {
 // The registry under test is taken from the real bundle wiring, so these tests
 // also guard that createCanvasRegistries registers the system handlers and
 // every ObjectTypeDefinition.extraStyleProperties declaration.
-const { styleProperty: registry } = createTestRegistries();
+const { styleProperty: registry, objectPartKind: objectPartKindRegistry } =
+	createTestRegistries();
 
 /** Every shape-declared extra property wired via BUILTIN_OBJECT_DEFINITIONS. */
 const EXTRA_DECLARATIONS = Object.entries(BUILTIN_OBJECT_DEFINITIONS).flatMap(
@@ -83,7 +84,12 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 				selection: selectionOf(["o1"]),
 				objects: { o1 },
 			});
-			const result = registry.apply(state, property, validValue);
+			const result = registry.apply(
+				state,
+				property,
+				validValue,
+				objectPartKindRegistry,
+			);
 			expect(readAtPath(result.objects["o1"], [property])).toBe(expected);
 		});
 
@@ -94,7 +100,9 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 				selection: selectionOf(["o1"]),
 				objects: { o1 },
 			});
-			expect(registry.apply(state, property, validValue)).toBe(state);
+			expect(
+				registry.apply(state, property, validValue, objectPartKindRegistry),
+			).toBe(state);
 		});
 
 		if (handler.valueType === "number") {
@@ -109,7 +117,9 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 					selection: selectionOf(["o1"]),
 					objects: { o1 },
 				});
-				expect(registry.apply(state, property, "abc")).toBe(state);
+				expect(
+					registry.apply(state, property, "abc", objectPartKindRegistry),
+				).toBe(state);
 			});
 		}
 	}
@@ -136,7 +146,12 @@ describe("shape-declared extra properties (registry-driven)", () => {
 				selection: selectionOf(["o1"]),
 				objects: { o1 },
 			});
-			const result = registry.apply(state, property, validValue);
+			const result = registry.apply(
+				state,
+				property,
+				validValue,
+				objectPartKindRegistry,
+			);
 			expect(readAtPath(result.objects["o1"], path)).toBe(expected);
 		});
 
@@ -151,7 +166,9 @@ describe("shape-declared extra properties (registry-driven)", () => {
 				selection: selectionOf(["o1"]),
 				objects: { o1 },
 			});
-			expect(registry.apply(state, property, validValue)).toBe(state);
+			expect(
+				registry.apply(state, property, validValue, objectPartKindRegistry),
+			).toBe(state);
 		});
 
 		if (path.length > 1) {
@@ -165,7 +182,9 @@ describe("shape-declared extra properties (registry-driven)", () => {
 					selection: selectionOf(["o1"]),
 					objects: { o1 },
 				});
-				expect(registry.apply(state, property, validValue)).toBe(state);
+				expect(
+					registry.apply(state, property, validValue, objectPartKindRegistry),
+				).toBe(state);
 			});
 		}
 	}

@@ -47,8 +47,16 @@ const dragTo = (x: number, y: number): SelectionControlEvent => ({
 	mods: {} as SelectionControlEvent["mods"],
 });
 
-const drag = (state: BraceState, x: number, y: number): BraceState =>
-	handleGroupMarkerTip({ object: state, startObject: state }, dragTo(x, y));
+const drag = (state: BraceState, x: number, y: number): BraceState => {
+	const { object } = handleGroupMarkerTip(
+		{ object: state, startObject: state },
+		dragTo(x, y),
+	);
+	if (!object) {
+		throw new Error("handleGroupMarkerTip wrote no object");
+	}
+	return object;
+};
 
 describe("handleGroupMarkerTip", () => {
 	it("moves the tip along the edge it is already on", () => {
@@ -104,10 +112,14 @@ describe("handleGroupMarkerTip", () => {
 describe("handleGroupMarkerDirection", () => {
 	const dragBracket = (x: number, y: number): BracketState => {
 		const state = bracketState();
-		return handleGroupMarkerDirection(
+		const { object } = handleGroupMarkerDirection(
 			{ object: state, startObject: state },
 			dragTo(x, y),
 		);
+		if (!object) {
+			throw new Error("handleGroupMarkerDirection wrote no object");
+		}
+		return object;
 	};
 
 	it("re-attaches the marker to the edge the dominant axis picks", () => {

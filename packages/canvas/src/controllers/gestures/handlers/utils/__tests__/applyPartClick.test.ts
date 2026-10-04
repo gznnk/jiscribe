@@ -38,7 +38,9 @@ const rect = (id: string): ObjectState =>
 
 /** The registry every case here is checked against, as applyObjectDefinition builds it. */
 const objectPartKind = createObjectPartKindRegistry();
-objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
+objectPartKind.register("record", [
+	createTextSlotPartKindDefinition(undefined),
+]);
 objectPartKind.register("polyline", [createVertexPartKindDefinition(2)]);
 
 const makeState = (

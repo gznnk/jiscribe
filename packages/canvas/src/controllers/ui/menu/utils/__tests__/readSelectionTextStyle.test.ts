@@ -7,6 +7,7 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { createTextSlotPartRegistry } from "../../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { readSelectionTextStyle } from "../readSelectionTextStyle";
@@ -50,9 +51,16 @@ const editingState = (
 		},
 	}) as unknown as CanvasControllerState;
 
+/** The fixtures wear the rect type, or a second one standing in for a mixed selection. */
+const objectPartKind = createTextSlotPartRegistry("rect", "record");
+
 describe("readSelectionTextStyle", () => {
 	it("nothing selected → every field is none", () => {
-		const style = readSelectionTextStyle(makeState([], {}), textStyleDefaults);
+		const style = readSelectionTextStyle(
+			makeState([], {}),
+			textStyleDefaults,
+			objectPartKind,
+		);
 		expect(style.fontSize).toEqual({ kind: "none" });
 		expect(style.textAlign).toEqual({ kind: "none" });
 	});
@@ -60,16 +68,22 @@ describe("readSelectionTextStyle", () => {
 	it("nothing selected holds text → none", () => {
 		const objects = { a: rect("a") };
 		expect(
-			readSelectionTextStyle(makeState(["a"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(
+				makeState(["a"], objects),
+				textStyleDefaults,
+				objectPartKind,
+			).fontSize,
 		).toEqual({ kind: "none" });
 	});
 
 	it("one shape → its own slot's values", () => {
 		const objects = { a: rect("a", { body: { text: "hi", fontSize: 20 } }) };
 		expect(
-			readSelectionTextStyle(makeState(["a"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(
+				makeState(["a"], objects),
+				textStyleDefaults,
+				objectPartKind,
+			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
 
@@ -79,8 +93,11 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo", fontSize: 20 } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a", "b"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(
+				makeState(["a", "b"], objects),
+				textStyleDefaults,
+				objectPartKind,
+			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
 
@@ -92,6 +109,7 @@ describe("readSelectionTextStyle", () => {
 		const style = readSelectionTextStyle(
 			makeState(["a", "b"], objects),
 			textStyleDefaults,
+			objectPartKind,
 		);
 		expect(style.fontSize).toEqual({ kind: "mixed", values: [20, 12] });
 		expect(style.textAlign).toEqual({ kind: "single", value: "center" });
@@ -103,8 +121,11 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo" } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a", "b"], objects), textStyleDefaults)
-				.fontWeight,
+			readSelectionTextStyle(
+				makeState(["a", "b"], objects),
+				textStyleDefaults,
+				objectPartKind,
+			).fontWeight,
 		).toEqual({ kind: "single", value: undefined });
 	});
 
@@ -114,8 +135,11 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo" } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a", "b"], objects), textStyleDefaults)
-				.fontWeight,
+			readSelectionTextStyle(
+				makeState(["a", "b"], objects),
+				textStyleDefaults,
+				objectPartKind,
+			).fontWeight,
 		).toEqual({ kind: "mixed", values: ["bold", undefined] });
 	});
 
@@ -131,6 +155,7 @@ describe("readSelectionTextStyle", () => {
 			readSelectionTextStyle(
 				makeState(["stated", "defaulted"], objects),
 				defaults,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 14 });
 	});
@@ -142,8 +167,11 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo", fontSize: 12 } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["g"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(
+				makeState(["g"], objects),
+				textStyleDefaults,
+				objectPartKind,
+			).fontSize,
 		).toEqual({ kind: "mixed", values: [20, 12] });
 	});
 
@@ -161,6 +189,7 @@ describe("readSelectionTextStyle", () => {
 					ranges: [{ anchorId: "rows", focusId: "rows" }],
 				}),
 				textStyleDefaults,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 12 });
 	});
@@ -173,8 +202,11 @@ describe("readSelectionTextStyle", () => {
 			}),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(
+				makeState(["a"], objects),
+				textStyleDefaults,
+				objectPartKind,
+			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
 });
@@ -192,6 +224,7 @@ describe("readSelectionTextStyle while a stretch of text is edited", () => {
 			readSelectionTextStyle(
 				editingState(a, [{ text: "hi", fontSize: 30 }, { text: "!" }]),
 				textStyleDefaults,
+				objectPartKind,
 			).fontSize,
 		).toEqual({ kind: "single", value: 30 });
 	});
@@ -204,8 +237,11 @@ describe("readSelectionTextStyle while a stretch of text is edited", () => {
 			text: { body: { text: "# Title", fontSize: 20 } },
 		} as unknown as ObjectState;
 		expect(
-			readSelectionTextStyle(editingState(a, "# Title"), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(
+				editingState(a, "# Title"),
+				textStyleDefaults,
+				objectPartKind,
+			).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
 });

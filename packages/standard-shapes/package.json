@@ -25,6 +25,7 @@
 		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
 		"@jiscribe/plugin-markdown-shape": "workspace:*",
 		"@jiscribe/plugin-sticky-shape": "workspace:*",
+		"@jiscribe/plugin-table-shape": "workspace:*",
 		"@jiscribe/plugin-uml-shapes": "workspace:*"
 	},
 	"peerDependencies": {

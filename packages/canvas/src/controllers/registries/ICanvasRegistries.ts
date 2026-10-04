@@ -115,6 +115,7 @@ export interface ICanvasRegistries {
 			state: CanvasControllerState,
 			property: string,
 			value: string,
+			objectPartKind: ObjectPartKindRegistry,
 		): CanvasControllerState;
 	};
 }

@@ -1,6 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
+	SelectionControlResult,
 } from "@jiscribe/canvas";
 import {
 	calcInverseAffineTransformedPoint,
@@ -8,6 +9,10 @@ import {
 	roundToDecimal,
 } from "@jiscribe/geometry";
 
+import {
+	CALLOUT_TAIL_PART_ID,
+	CALLOUT_TAIL_PART_KIND,
+} from "./calloutTailPart";
 import type { CalloutTailSide } from "../schema/callout/CalloutDoc";
 import type { CalloutState } from "../state/callout/CalloutState";
 
@@ -15,16 +20,31 @@ import type { CalloutState } from "../state/callout/CalloutState";
 const TAIL_POSITION_PRECISION = 4;
 
 /**
- * Handles the callout tail-tip control (free 2D drag of the tail tip).
- * The pointer is normalized into the tail model: `side` from the dominant
- * axis in local coordinates, `position` from the projection onto that edge.
+ * Handles the callout tail-tip control. A click selects the tip as a sub-part,
+ * which is what the handle draws itself selected from; a drag moves it, the
+ * pointer being normalized into the tail model — `side` from the dominant axis
+ * in local coordinates, `position` from the projection onto that edge.
+ *
+ * The drag writes no selection, so a drag started on an unselected tip leaves it
+ * unselected: moving a part is not choosing it.
  *
  * Registered via the callout's ObjectTypeDefinition.selectionControls.
  */
 export const handleCalloutTailTip = (
 	context: SelectionControlContext<CalloutState>,
 	event: SelectionControlEvent,
-): CalloutState => {
+): SelectionControlResult<CalloutState> => {
+	if (event.type === "click" || event.type === "doubleClick") {
+		return {
+			selection: {
+				kind: CALLOUT_TAIL_PART_KIND,
+				ranges: [
+					{ anchorId: CALLOUT_TAIL_PART_ID, focusId: CALLOUT_TAIL_PART_ID },
+				],
+			},
+		};
+	}
+
 	const startCallout = context.startObject;
 	const { width, height } = startCallout;
 
@@ -65,5 +85,5 @@ export const handleCalloutTailTip = (
 		TAIL_POSITION_PRECISION,
 	);
 
-	return { ...startCallout, tail: { side, position } };
+	return { object: { ...startCallout, tail: { side, position } } };
 };

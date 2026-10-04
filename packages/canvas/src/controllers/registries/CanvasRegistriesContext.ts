@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { defaultCanvasRegistries } from "./createCanvasRegistries";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 
 /**
  * Context that distributes the per-canvas registry bundle to descendant
@@ -23,4 +24,14 @@ export const CanvasRegistriesContext = createContext<CanvasRegistries>(
  */
 export function useCanvasRegistries(): CanvasRegistries {
 	return useContext(CanvasRegistriesContext);
+}
+
+/**
+ * The surrounding canvas's sub-part registry alone, for a menu item that has to
+ * read what a part selection covers (resolveSelectedTextSlotIds) — the one piece
+ * of the bundle a plugin's own component has a use for, the rest of the canvas
+ * state reaching it as props (ObjectMenuItemProps).
+ */
+export function useObjectPartKindRegistry(): ObjectPartKindRegistry {
+	return useCanvasRegistries().objectPartKind;
 }

@@ -14,5 +14,6 @@ export const SelectNextTextSlotCommand: ExecutableCommand = {
 
 	canExecute: (state) => getTextSlotCycleTarget(state) !== null,
 
-	execute: (state) => selectAdjacentTextSlot(state, 1),
+	execute: (state, registries) =>
+		selectAdjacentTextSlot(state, 1, registries.objectPartKind),
 };

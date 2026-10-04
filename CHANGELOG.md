@@ -30,17 +30,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **For plugin authors: picking a text slot is one case of a general part
   selection.** What was a slot-only field is now `selection.part`, a
   channel over the part kinds a type declares: the `kind` the ids belong to, and
-  a list of ranges, each a fixed `anchorId` and a
-  moving `focusId` — the model a DOM `Selection` keeps, so a later gesture can
-  grow the active range or add another without the stored form changing again. A
+  a list of ranges, each a fixed `anchorId` and a moving `focusId` — the model a
+  DOM `Selection` keeps, so a gesture can grow the active range (Shift over a
+  shape's slots does) or add another without the stored form changing again. A
   type that spells its text out as slots takes part with no declaration of its
   own: the `"textSlot"` kind is registered for it, its part ids being the keys of
   its own `text`. The reducer reconciles the channel after every action that
   rewrites the selection or the objects, through the kind's own `has`, so a
   selection the state no longer backs is already gone by the time anything reads
   it — the readers take `state.selection.part` as it stands, and each kind
-  answers for its own ids. Nothing the user does changes: every range written
-  today is a single slot.
+  answers for its own ids. What lies between the ends of a range is the kind's to
+  say, so a reader that wants the parts themselves asks for them
+  (`collectObjectPartIds`) rather than reading a stored list.
 - **For plugin authors: a type declares the sub-parts of its own objects.**
   `ObjectTypeDefinition.partKinds` takes one entry per part-id namespace (`kind`),
   each stating `has` — whether an id still names a part of that object — and
@@ -102,6 +103,68 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   shipped changes; a swept test holds that (`initializeCommands.exclusivity`).
   `CommandRegistry.register` now throws on a duplicate id rather than silently
   letting the later one win.
+- **A table cell's background can be set from the floating menu or the property
+  sidebar.** Cell Color paints the picked cells, or every cell when none is
+  picked, and shows the colours split when they disagree. **No fill** takes a
+  cell back to letting what is behind the table show through, which is not the
+  same document as a cell filled with `transparent`. Both surfaces read and write
+  the same cells, so the swatch states the value of exactly what it would change.
+  For plugin authors: an `extraStyleProperties` descriptor may name a
+  `textSlotField`, which stores the property on the selected slots rather than on
+  the object; a `custom` item declaring `slotAware` survives the narrowing that
+  happens while a slot is picked — on the property sidebar as well as the
+  floating menu, where such a row now receives the live
+  `selection`, pick included; and `createDefaultPropertyPanel` /
+  `appendPropertyPanelItems` / `PROPERTY_PANEL_SECTIONS` let a type add a row to
+  the built-in panel instead of restating it.
+- **A table's rows and columns can be added by the `+` beside the grid.** A round
+  `+` stands at every boundary a track can go at — every rule and both outer
+  edges of each axis — and clicking one inserts an empty track there. The cells
+  keep their contents as the grid renumbers around it, the inserted track is left
+  selected so a second insertion or a Delete needs no further aiming, and one
+  undo takes the insertion back.
+- For plugin authors: a selection control's click may now change the document.
+  A handler answering a `click` or a `doubleClick` with an `object` is committed
+  by the same step that closes out a drag, so the edit is materialized, recorded
+  in history and saved. A click that changes nothing still records nothing.
+- **A table's rows and columns can be selected, added and removed.** A grip
+  outside the top and left edges picks a whole column or row; clicking a cell
+  picks it, and Shift widens the pick to the block of cells between the two —
+  the rectangle they stand at opposite corners of, as a spreadsheet does it, not
+  the run of the cell order between them. Delete clears the picked cells' text,
+  or removes the picked row or column — never the last one left. Rows and columns
+  are inserted with Shift+Alt+arrow, and the cells keep their contents as the
+  grid renumbers around the insertion.
+- For plugin authors: a type declares what parts of itself can be selected
+  (`ObjectTypeDefinition.partKinds`), and core carries one selection below the object
+  level for every type — a range of them, not one. A `text: "slots"` type gets its
+  slots as parts without declaring anything, and declaring them itself replaces
+  that default, which is how a type says what Delete does to them and what a
+  Shift-extended range between two of them covers (`ObjectPartKindDefinition.range`,
+  omitted by every kind whose parts lie in one line). A selection control can now
+  take a click and answer with a selection rather than only with its own object.
+- **A table can be resized by its left and right edges**, the width change spread
+  over every column in the proportions it holds. A column never goes under its
+  minimum, and a table dragged narrower than its columns can be simply stops.
+  There are no handles on the height: a row's stored height is a lower bound its
+  text raises, so the height follows the cells and a row is given one by dragging
+  its boundary.
+- **A table's column and row boundaries can be dragged.** Grabbing the rule
+  between two columns gives one of them the width the other loses, so the table's
+  own edges stay where they are however far the boundary is pushed — past a
+  column's minimum it simply stops. Rows trade the same way, with one asymmetry a
+  row's stored height forces: that height is a lower bound the text raises, so
+  dragging a boundary up stops at the text of the row above it, while dragging it
+  down past the text of the row below grows the table rather than clipping that
+  text.
+- **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
+  it takes the same rich text, the same typography and the same in-place editing
+  every other shape's text does, and carries a `fill` besides. A table stores no
+  size: its width is the column widths summed, its height the resolved row
+  heights summed, and a row's `height` is a lower bound the text raises rather
+  than a box the text is clipped to. Cells are written as a dense grid — one row
+  per entry of `rows`, one cell per entry of `columns` — and a cell carrying
+  nothing but text may be written as that text alone.
 - For plugin authors: a shape may now declare `geometry: "point"` — the doc
   stores the position alone, and the box is measured from the content. Such a
   type writes its own mapper, measuring the box as it maps (`TextMapper` is the
@@ -242,6 +305,21 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
   untouched, so a selection holding a text resizes nothing until that id is left
   out. Reporting the box, aligning and distributing by it, and moving the shape
   are unchanged — only setting the box is refused.
+- **A group's frame no longer goes stale when a shape inside it is edited by a
+  command or a control.** Whether a group kept its box depended on _how_ an edit
+  was made rather than on what it did — removing a table's row with the Delete
+  key settled the group, inserting one from a `+` badge did not — so the
+  group's outline, its handles and the width and height it reports could be left
+  at the size it used to be. It heals on reload either way; what it cost in
+  the meantime was typing a size into a stale group, which scaled its children by
+  the wrong ratio.
+- **Styling a table row or column picked by its grip lands on that row or
+  column.** It used to be written to every cell of the table, because a picked
+  track could not say which cells it stood for — and the swatch it was read back
+  from showed the first cell alone, so the two did not even agree. For plugin
+  authors: `ObjectPartKindDefinition.textSlotIds` is how a kind that stands for a
+  group of slots names them, and a kind declaring none keeps landing on the whole
+  object as before.
 - **The reported box of a rotated shape whose size is measured no longer misses
   it.** `get_object_bounds`, and with it alignment, distribution and overlap
   checks, read a `text`'s stored coordinate as the box's plain top-left corner —
