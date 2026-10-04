@@ -679,8 +679,6 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
-					objectId: "r1",
-					slotId: "body",
 					text: "hello",
 					selection: { start: 0, end: 2 },
 				},
@@ -700,8 +698,6 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
-					objectId: "r1",
-					slotId: "body",
 					text: "hello",
 					selection: { start: 2, end: 2 },
 				},
@@ -730,8 +726,6 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
-					objectId: "r1",
-					slotId: "body",
 					text: [
 						{ text: "he", fontColor: "#d33", fontWeight: "bold" },
 						{ text: "llo!" },
@@ -756,8 +750,6 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
-					objectId: "r1",
-					slotId: "body",
 					text: "hello",
 					selection: { start: 0, end: 2 },
 				},
@@ -1003,8 +995,6 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					objects: { r1 },
 					textEditState: {
 						kind: "shape",
-						objectId: "r1",
-						slotId: "body",
 						text: "# Title",
 						selection: { start: 0, end: 2 },
 					},

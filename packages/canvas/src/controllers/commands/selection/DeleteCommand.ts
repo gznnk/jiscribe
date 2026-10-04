@@ -16,7 +16,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  * registry takes, or null while nothing is picked there and while the kind is one
  * the owner's type does not declare. Validity of the ids is not asked about: the
  * reducer has already dropped a selection naming something gone
- * (reconcileObjectPartSelection), so every id here has passed `has`. Whether the
+ * (reconcileSelection), so every id here has passed `has`. Whether the
  * parts can be deleted at all is a separate question (resolveDeletableParts).
  */
 const resolveSelectedParts = (

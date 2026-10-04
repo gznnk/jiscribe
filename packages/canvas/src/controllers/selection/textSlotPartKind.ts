@@ -15,7 +15,7 @@ export const TEXT_SLOT_PART_KIND = "textSlot";
  *
  * @param part - The parts picked one level below the object
  *   (`CanvasSelection.part`), taken as it stands (the reducer has already
- *   dropped one naming something gone, reconcileObjectPartSelection); null when
+ *   dropped one naming something gone, reconcileSelection); null when
  *   none are
  * @returns True only while a slot is picked; false when nothing is picked below
  *   the object, or what is picked is of another kind (a vertex)

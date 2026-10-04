@@ -105,6 +105,7 @@ import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
+import { resolveTextEdit } from "./utils/resolveTextEdit";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
@@ -603,12 +604,35 @@ const CanvasComponent = ({
 	const draftObjects = useMemo(
 		() =>
 			graftTextEditDraft(
-				state.objects,
-				state.textEditState,
+				{
+					objects: state.objects,
+					selection: state.selection,
+					textEditState: state.textEditState,
+				},
 				registries.objectContentResizer,
 			),
-		[state.objects, state.textEditState, registries],
+		[state.objects, state.selection, state.textEditState, registries],
 	);
+
+	// What the open editing session is on, for the layers that only need to know
+	// which object and slot the in-place editor covers (culling keeps it rendered,
+	// the overlay hands its slot over to the editor).
+	const textEdit = useMemo(
+		() =>
+			resolveTextEdit({
+				objects: state.objects,
+				selection: state.selection,
+				textEditState: state.textEditState,
+			}),
+		[state.objects, state.selection, state.textEditState],
+	);
+	const textEditObjectId =
+		textEdit === null
+			? null
+			: textEdit.kind === "shape"
+				? textEdit.object.id
+				: textEdit.connector.id;
+	const textEditSlotId = textEdit?.kind === "shape" ? textEdit.slotId : null;
 
 	// The menu is anchored below the drawn extent, which during a text edit is the
 	// draft-grafted box (a keystroke regrows an auto-sized text before commit), so
@@ -662,7 +686,7 @@ const CanvasComponent = ({
 		state.objects,
 		state.rootIds,
 		state.viewport,
-		state.textEditState?.objectId ?? null,
+		textEditObjectId,
 		registries.objectVisualBounds,
 	);
 
@@ -778,12 +802,8 @@ const CanvasComponent = ({
 								viewport={drawnViewport}
 								svgRef={svgRef}
 								isContentHidden={isContentHidden}
-								textEditObjectId={state.textEditState?.objectId ?? null}
-								textEditSlotId={
-									state.textEditState?.kind === "shape"
-										? state.textEditState.slotId
-										: null
-								}
+								textEditObjectId={textEditObjectId}
+								textEditSlotId={textEditSlotId}
 								isDrawMode={!!state.shapeDrawing}
 								visibleObjectIds={visibleObjectIds}
 								showGrid={grid?.show}
@@ -856,6 +876,7 @@ const CanvasComponent = ({
 							>
 								<TextEditorLayer
 									textEditState={state.textEditState}
+									selection={state.selection}
 									objects={draftObjects}
 									onTextChange={handleTextEditChange}
 									onEscape={handleTextEditEscape}

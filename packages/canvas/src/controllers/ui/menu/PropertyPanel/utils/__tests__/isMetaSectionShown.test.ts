@@ -65,12 +65,7 @@ describe("isMetaSectionShown", () => {
 	it("hides it while a shape's text is being edited", () => {
 		const state = makeState({
 			selection: selectionOf(["rect-1"]),
-			textEditState: {
-				kind: "shape",
-				objectId: "rect-1",
-				slotId: "body",
-				text: [],
-			},
+			textEditState: { kind: "shape", text: [] },
 		});
 
 		expect(isMetaSectionShown(state)).toBe(false);

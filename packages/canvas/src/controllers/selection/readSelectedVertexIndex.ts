@@ -9,7 +9,7 @@ import { VERTEX_PART_KIND } from "./createVertexPartKindDefinition";
  *
  * @param selection - What the canvas is pointed at, taken as it stands (the
  *   reducer has already dropped a part naming a vertex the object has outgrown,
- *   reconcileObjectPartSelection)
+ *   reconcileSelection)
  * @param objectId - The object whose vertex is asked for; a pick on another
  *   object, or on a kind other than the vertices, names none
  * @returns The index, or null when no vertex of this object is picked. The first

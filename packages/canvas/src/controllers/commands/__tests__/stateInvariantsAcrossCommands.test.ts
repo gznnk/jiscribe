@@ -13,7 +13,7 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { reconcileObjectPartSelection } from "../../selection/reconcileObjectPartSelection";
+import { reconcileSelection } from "../../selection/reconcileSelection";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 
 const registries = createTestRegistries();
@@ -41,10 +41,10 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 
 	// A slot selection the reducer's reconciliation keeps must name a live slot of
 	// the sole selected object. A command alone may leave a stale one behind — the
-	// reducer clears it after the command runs (reconcileObjectPartSelection) — so
+	// reducer clears it after the command runs (reconcileSelection) — so
 	// the invariant is pinned on the reconciled state, not the raw one. What this
 	// catches is a command turning a stale selection into a live one.
-	const { objectIds, part } = reconcileObjectPartSelection(
+	const { objectIds, part } = reconcileSelection(
 		state,
 		registries.objectPartKind,
 	).selection;

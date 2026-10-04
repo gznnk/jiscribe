@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { SelectionControlRegistry } from "../../../../ui/controls/SelectionControlRegistry";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ControlEventHandler } from "../ControlEventHandler";
@@ -26,12 +27,8 @@ const makeTextRect = (id: string, text: string): ObjectState =>
 const makeEditState = (pendingText: string): CanvasControllerState =>
 	({
 		objects: { "rect-1": makeTextRect("rect-1", "old") },
-		textEditState: {
-			kind: "shape",
-			objectId: "rect-1",
-			slotId: "body",
-			text: pendingText,
-		},
+		selection: selectionOf(["rect-1"]),
+		textEditState: { kind: "shape", text: pendingText },
 		commitVersion: 5,
 		contextMenuPosition: { x: 1, y: 1 },
 	}) as unknown as CanvasControllerState;

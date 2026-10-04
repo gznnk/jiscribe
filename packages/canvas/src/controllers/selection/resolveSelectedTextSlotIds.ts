@@ -20,7 +20,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  *   out of one made on their parent
  * @param selection - What the canvas is pointed at; its `part` is taken as it
  *   stands (the reducer has already dropped one naming something gone,
- *   reconcileObjectPartSelection), and its first object id is the part's owner
+ *   reconcileSelection), and its first object id is the part's owner
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, holding the kind's own
  *   reading of which slots it covers
  * @returns The slot ids in the type's own order, or undefined when the selection

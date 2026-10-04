@@ -207,8 +207,6 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 			{
 				textEditState: {
 					kind: "shape",
-					objectId: TABLE.id,
-					slotId: "r0c0",
 					text: "",
 				},
 			} as unknown as Partial<CanvasControllerState>,

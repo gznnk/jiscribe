@@ -31,7 +31,7 @@ export type TableCellFillSource = Pick<
  *
  * @param source - The selection the control was drawn for; it is the one both
  *   surfaces hand their custom items, which is `state.selection` as the reducer
- *   left it (reconcileObjectPartSelection)
+ *   left it (reconcileSelection)
  * @returns The folded value, ready for `selectionValueOr` / `selectionMixedValues`
  */
 export const useTableCellFill = (

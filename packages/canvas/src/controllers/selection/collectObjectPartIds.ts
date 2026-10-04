@@ -15,7 +15,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * @param selection - The parts picked below the object; its `kind` must be the
  *   one `part` answers for, and its ends are taken as they stand (the reducer
  *   has already dropped a selection naming something gone,
- *   reconcileObjectPartSelection)
+ *   reconcileSelection)
  * @param part - The definition registered for `(object.type, selection.kind)`
  * @param object - The object the ids are resolved against; the same one
  *   `selection.objectId` names

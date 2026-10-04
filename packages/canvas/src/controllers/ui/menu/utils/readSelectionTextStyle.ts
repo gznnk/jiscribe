@@ -27,8 +27,8 @@ export type SelectionTextStyle = {
  * The styling of every slot the rows state, one entry per object that holds
  * text. Parts picked below the object, or a stretch of text being edited, narrow
  * the whole thing to that one target — both require a single selection
- * (reconcileObjectPartSelection / resolveTextEditSelection), so nothing is hidden
- * by following the menus there. A picked part covering no slot (a vertex) leaves
+ * (reconcileSelection / resolveTextEditSelection), so nothing is hidden by
+ * following the menus there. A picked part covering no slot (a vertex) leaves
  * the object's own first slot as the answer, which is what the unnarrowed walk
  * would have given a sole selection anyway (getSelectedOrFirstTextSlot).
  */

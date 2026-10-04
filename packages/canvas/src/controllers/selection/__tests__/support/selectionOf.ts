@@ -10,7 +10,7 @@ import type { ObjectPartSelection } from "../../ObjectPartSelection";
  *   have
  * @param part - What is picked one level below the object, omitted for nothing.
  *   Taken verbatim too: the sole-selection rule the reducer keeps
- *   (reconcileObjectPartSelection) is not enforced here, so a fixture can state
+ *   (reconcileSelection) is not enforced here, so a fixture can state
  *   the state a reconcile is expected to clean up
  * @returns The selection
  */

@@ -80,7 +80,7 @@ const foldSharedTextSlotStyle = (slots: readonly TextSlot[]): TextSlot => {
  *
  * @param state - The current canvas controller state; its `selection.part` is
  *   read as it stands, the reducer having already dropped a stale one
- *   (reconcileObjectPartSelection)
+ *   (reconcileSelection)
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, keyed by
  *   the type of whichever object the slot was found on
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which decides whether the

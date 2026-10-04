@@ -76,12 +76,7 @@ describe("canvasReducer (integration)", () => {
 		it("END_TEXT_EDIT records when the text changes on commit", () => {
 			const state = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"]),
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "hello",
-				},
+				textEditState: { kind: "shape", text: "hello" },
 			});
 			const after = canvasReducer(state, {
 				type: "END_TEXT_EDIT",
@@ -94,12 +89,7 @@ describe("canvasReducer (integration)", () => {
 		it("cancelling END_TEXT_EDIT does not record and only clears textEditState", () => {
 			const state = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"]),
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "hello",
-				},
+				textEditState: { kind: "shape", text: "hello" },
 			});
 			const after = canvasReducer(state, {
 				type: "END_TEXT_EDIT",
@@ -112,12 +102,7 @@ describe("canvasReducer (integration)", () => {
 		it("END_TEXT_EDIT does not record on commit if the text has not changed", () => {
 			let state = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"]),
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "hello",
-				},
+				textEditState: { kind: "shape", text: "hello" },
 			});
 			// First time: the text changes, so it is recorded
 			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
@@ -126,12 +111,7 @@ describe("canvasReducer (integration)", () => {
 			// Commit again with the same text → no diff, so commitVersion does not increase and nothing is recorded
 			state = {
 				...state,
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "hello",
-				},
+				textEditState: { kind: "shape", text: "hello" },
 			};
 			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
 			expect(state.history.past).toHaveLength(1);

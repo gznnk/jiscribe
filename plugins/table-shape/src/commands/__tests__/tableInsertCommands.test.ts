@@ -256,8 +256,6 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		const editing = canvasWith(cellSelection(["r0c0"]), {
 			textEditState: {
 				kind: "shape",
-				objectId: TABLE.id,
-				slotId: "r0c0",
 				text: "",
 			},
 		} as unknown as Partial<CanvasControllerState>);

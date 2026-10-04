@@ -444,7 +444,7 @@ describe("getPropertyPanelSections", () => {
 		expect(getPropertyPanelSections(state, registry)).toEqual(RECT_SECTIONS);
 	});
 
-	// A slot selection survives for a selection of one alone (reconcileObjectPartSelection), so the
+	// A slot selection survives for a selection of one alone (reconcileSelection), so the
 	// multi-selection box is put beside one to reach the narrowing at all.
 	it("keeps the aspect-ratio lock out of a selected slot's sections", () => {
 		const state = stateOf({

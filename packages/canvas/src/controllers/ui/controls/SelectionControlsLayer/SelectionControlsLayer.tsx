@@ -12,7 +12,7 @@ type SelectionControlsLayerProps = {
 	/**
 	 * Part selection to read, `state.objectPartSelection` as it stands: the reducer
 	 * has already dropped one that would draw a control as selected on a part the
-	 * object no longer has (reconcileObjectPartSelection). It always names the
+	 * object no longer has (reconcileSelection). It always names the
 	 * single selected object, so it reaches every control of that object as is.
 	 */
 	objectPartSelection: ObjectPartSelection | null;

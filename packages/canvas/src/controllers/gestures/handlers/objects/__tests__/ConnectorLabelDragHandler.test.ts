@@ -10,7 +10,7 @@ import { createInitialControllerState } from "../../../../reducer/createInitialC
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
-import { reconcileObjectPartSelection } from "../../../../selection/reconcileObjectPartSelection";
+import { reconcileSelection } from "../../../../selection/reconcileSelection";
 import type {
 	CanvasEvent,
 	EventType,
@@ -174,10 +174,9 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 
 		expect(next.selection.objectIds).toEqual(["c1"]);
 		// The part selection is the reducer's to drop, which it does for every
-		// gesture result (reconcileObjectPartSelection).
+		// gesture result (reconcileSelection).
 		expect(
-			reconcileObjectPartSelection(next, registries.objectPartKind).selection
-				.part,
+			reconcileSelection(next, registries.objectPartKind).selection.part,
 		).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();

@@ -9,7 +9,7 @@ import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
  *
  * @param state - The current canvas controller state; the open text edit and the
  *   picked part are read, the latter as it stands (the reducer has already
- *   dropped a stale one, reconcileObjectPartSelection)
+ *   dropped a stale one, reconcileSelection)
  * @returns True while either holds; false while nothing is selected
  */
 export const isTextAddressed = (state: CanvasControllerState): boolean =>

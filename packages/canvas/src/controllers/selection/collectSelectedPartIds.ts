@@ -11,7 +11,7 @@ import type { ObjectPartSelection } from "./ObjectPartSelection";
  *
  * @param part - The parts picked one level below the object
  *   (`CanvasSelection.part`), taken as it stands (the reducer has already
- *   dropped one naming something gone, reconcileObjectPartSelection)
+ *   dropped one naming something gone, reconcileSelection)
  * @returns The covered ids, non-empty whenever `part.ranges` is
  */
 export const collectSelectedPartIds = (

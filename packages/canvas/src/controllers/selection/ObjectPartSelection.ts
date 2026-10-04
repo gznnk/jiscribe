@@ -22,7 +22,7 @@ export type ObjectPartRange = {
  * lose those ends, the way a DOM `Selection` would lose them if it kept the
  * covered nodes instead of its `Range`s.
  *
- * The reducer clears it (reconcileObjectPartSelection) once it stops describing
+ * The reducer clears it (reconcileSelection) once it stops describing
  * something real, so every reader takes `state.selection.part` as it stands.
  * That catches a part that is **gone**, not one that was **renumbered**. Where
  * the ids are positions (the vertices of a polyline, the rows and columns of a

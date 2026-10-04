@@ -46,8 +46,6 @@ const editingState = (
 		objects: { a: object },
 		textEditState: {
 			kind: "shape",
-			objectId: "a",
-			slotId: "body",
 			text: content,
 			selection: { start: 0, end: 2 },
 		},

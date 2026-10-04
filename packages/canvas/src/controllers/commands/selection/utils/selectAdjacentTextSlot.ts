@@ -48,7 +48,7 @@ export const getTextSlotCycleTarget = (
  *
  * @param state - The current canvas controller state; its `selection.part`
  *   names the slot the step starts from, and is live rather than stale because the
- *   reducer reconciles it (reconcileObjectPartSelection)
+ *   reducer reconciles it (reconcileSelection)
  * @param step - 1 for the next slot, -1 for the previous; with no slot selected
  *   yet these enter at the first and the last slot respectively
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which answers both the slot

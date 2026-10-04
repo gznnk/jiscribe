@@ -9,7 +9,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
-import { reconcileObjectPartSelection } from "../../../../selection/reconcileObjectPartSelection";
+import { reconcileSelection } from "../../../../selection/reconcileSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 import { ConnectorClickHandler } from "../ConnectorClickHandler";
@@ -51,11 +51,7 @@ const makeEditState = (
 	({
 		...makeState(labelText),
 		selection: selectionOf([editingId]),
-		textEditState: {
-			kind: "connectorLabel",
-			objectId: editingId,
-			text: pendingText,
-		},
+		textEditState: { kind: "connectorLabel", text: pendingText },
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
@@ -105,7 +101,6 @@ describe("ConnectorClickHandler - double click edit target", () => {
 		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "Yes",
 		});
 		expect(next.selection.objectIds).toEqual(["c1"]);
@@ -119,7 +114,6 @@ describe("ConnectorClickHandler - double click edit target", () => {
 		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "",
 		});
 		expect(next.selection.objectIds).toEqual(["c1"]);
@@ -163,7 +157,6 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 		const next = dblclickAt(stateWith(), { x: 150, y: 0 });
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "",
 			placement: { position: 0.75, offset: 0 },
 		});
@@ -253,7 +246,6 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "Yes",
 		});
 		expect(pendingPlacement(next)).toBeUndefined();
@@ -321,10 +313,9 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 		);
 		expect(next.selection.objectIds).toEqual(["c1"]);
 		// The part selection is the reducer's to drop, which it does for every
-		// gesture result (reconcileObjectPartSelection).
+		// gesture result (reconcileSelection).
 		expect(
-			reconcileObjectPartSelection(next, registries.objectPartKind).selection
-				.part,
+			reconcileSelection(next, registries.objectPartKind).selection.part,
 		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
@@ -338,8 +329,7 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 		);
 		expect(next.selection.objectIds).toEqual(["c1"]);
 		expect(
-			reconcileObjectPartSelection(next, registries.objectPartKind).selection
-				.part,
+			reconcileSelection(next, registries.objectPartKind).selection.part,
 		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();

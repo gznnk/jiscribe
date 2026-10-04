@@ -117,8 +117,12 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
+					// Placing selects the new shape, and the open session is owned by the
+					// selection (see textEditState), so the draft has to be written back
+					// first or it rides over onto the shape just placed.
+					const committed = commitTextEditIfNeeded(state);
 					const placed = addObjectToState(
-						state,
+						committed,
 						preset,
 						{
 							x: centerX,

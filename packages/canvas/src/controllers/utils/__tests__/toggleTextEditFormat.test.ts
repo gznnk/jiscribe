@@ -13,12 +13,13 @@ const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
 
 type MinState = Pick<
 	CanvasControllerState,
-	"textEditState" | "objects" | "commitVersion"
+	"textEditState" | "selection" | "objects" | "commitVersion"
 >;
 
 const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 	({
 		textEditState: null,
+		selection: { objectIds: [], part: null },
 		objects: {},
 		commitVersion: 0,
 		...overrides,
@@ -34,13 +35,8 @@ const editingState = (
 		objects: {
 			r1: { id: "r1", type: "rect", text: slots } as unknown,
 		} as CanvasControllerState["objects"],
-		textEditState: {
-			kind: "shape",
-			objectId: "r1",
-			slotId: "body",
-			text,
-			selection,
-		},
+		selection: { objectIds: ["r1"], part: null },
+		textEditState: { kind: "shape", text, selection },
 	});
 
 const bodyOf = (state: CanvasControllerState) =>
@@ -159,10 +155,9 @@ describe("toggleTextEditFormat", () => {
 					text: { body: { text: "# Title" } },
 				} as unknown,
 			} as CanvasControllerState["objects"],
+			selection: { objectIds: ["r1"], part: null },
 			textEditState: {
 				kind: "shape",
-				objectId: "r1",
-				slotId: "body",
 				text: "# Title",
 				selection: { start: 0, end: 2 },
 			},

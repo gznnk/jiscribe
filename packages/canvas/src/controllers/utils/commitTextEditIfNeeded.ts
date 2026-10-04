@@ -3,12 +3,10 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { applyLabelPlacement } from "./applyLabelPlacement";
+import { resolveTextEdit } from "./resolveTextEdit";
 import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import {
-	isTextStyleState,
-	type TextStyleState,
-} from "../../states/objects/base/TextStyleState";
+import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import {
 	readRichTextSlot,
@@ -147,8 +145,6 @@ function commitTextSlot(
 /**
  * Commits the active text editing session, if any.
  * A dispatcher that routes to a dedicated commit function per editing kind.
- * The target object is re-checked here because the session only holds an id, which
- * may no longer resolve to an object of the expected type.
  *
  * @param state - the current canvas controller state
  * @returns a new state reflecting the text (if not editing, returns the original state unchanged)
@@ -156,36 +152,22 @@ function commitTextSlot(
 export function commitTextEditIfNeeded(
 	state: CanvasControllerState,
 ): CanvasControllerState {
-	const { textEditState } = state;
-	if (!textEditState) {
+	if (!state.textEditState) {
+		return state;
+	}
+	const resolved = resolveTextEdit(state);
+	if (resolved === null) {
 		return state;
 	}
 
-	const targetObject = state.objects[textEditState.objectId];
-	if (!targetObject) {
-		return clearTextEdit(state);
-	}
-
 	// Connectors update the nested label.text rather than a slot of state.text.
-	if (textEditState.kind === "connectorLabel") {
-		if (targetObject.type !== "connector") {
-			return clearTextEdit(state);
-		}
+	if (resolved.kind === "connectorLabel") {
 		return commitConnectorLabel(
 			state,
-			targetObject as ConnectorState,
-			textEditState.text,
-			textEditState.placement,
+			resolved.connector,
+			resolved.text,
+			resolved.placement,
 		);
 	}
-
-	if (isTextStyleState(targetObject)) {
-		return commitTextSlot(
-			state,
-			targetObject,
-			textEditState.slotId,
-			textEditState.text,
-		);
-	}
-	return clearTextEdit(state);
+	return commitTextSlot(state, resolved.object, resolved.slotId, resolved.text);
 }

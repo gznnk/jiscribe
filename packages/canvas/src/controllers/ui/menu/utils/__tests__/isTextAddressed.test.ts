@@ -20,12 +20,7 @@ describe("isTextAddressed", () => {
 		expect(
 			isTextAddressed(
 				makeState({
-					textEditState: {
-						kind: "shape",
-						objectId: "rect-1",
-						slotId: "body",
-						text: "hi",
-					},
+					textEditState: { kind: "shape", text: "hi" },
 				} as unknown as Partial<CanvasControllerState>),
 			),
 		).toBe(true);
