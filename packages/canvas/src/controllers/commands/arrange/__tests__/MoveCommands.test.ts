@@ -180,12 +180,7 @@ describe("moveCommands", () => {
 			const state = makeState({
 				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 0, 0) },
-				textEditState: {
-					kind: "shape",
-					objectId: "a",
-					slotId: "body",
-					text: "",
-				},
+				textEditState: { kind: "shape", text: "" },
 			});
 			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});

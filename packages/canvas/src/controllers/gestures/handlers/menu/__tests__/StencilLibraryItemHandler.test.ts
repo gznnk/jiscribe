@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import { clickPlacedPlugin } from "../../../../__tests__/support/clickPlacedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
@@ -9,6 +10,10 @@ import { StencilLibraryItemHandler } from "../StencilLibraryItemHandler";
 
 // `pin` is the click-placed (non-drag-drawn) stand-in the plugin supplies.
 const registries = createCanvasRegistries({ plugins: [clickPlacedPlugin] });
+
+const bodyOf = (state: CanvasControllerState, id: string): unknown =>
+	(state.objects[id] as unknown as { text?: { body?: { text?: unknown } } })
+		.text?.body?.text;
 
 const makeState = (): CanvasControllerState =>
 	({
@@ -85,6 +90,34 @@ describe("StencilLibraryItemHandler", () => {
 		expect(next.rootIds).toHaveLength(1);
 		expect(next.shapeDrawing).toBeNull();
 		expect(next.commitVersion).toBe(1);
+	});
+
+	it("a click that places a shape commits an open text edit onto its own owner first", () => {
+		const edited = {
+			id: "rect-1",
+			type: "rect",
+			text: { body: { text: "" } },
+		} as unknown as ObjectState;
+		const state = {
+			...makeState(),
+			objects: { "rect-1": edited },
+			rootIds: ["rect-1"],
+			selection: selectionOf(["rect-1"]),
+			textEditState: { kind: "shape", text: "typed" },
+		} as CanvasControllerState;
+
+		const next = StencilLibraryItemHandler.handle(
+			state,
+			makeEvent("click", "item:pin"),
+			registries,
+		);
+
+		expect(bodyOf(next, "rect-1")).toBe("typed");
+		expect(next.textEditState).toBeNull();
+		// The owner is the selection, so had the draft outlived the placement it
+		// would have followed the selection onto the shape just placed.
+		const placedId = next.rootIds[1];
+		expect(next.objects[placedId]).not.toHaveProperty("text");
 	});
 
 	it("an unknown preset id does nothing", () => {

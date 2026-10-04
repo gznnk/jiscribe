@@ -65,12 +65,7 @@ describe("canvasReducer (integration)", () => {
 			// Reproduce a state where an editing session has started
 			state = {
 				...state,
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "editing",
-				},
+				textEditState: { kind: "shape", text: "editing" },
 			};
 
 			// undo while editing is a no-op (past is not consumed)

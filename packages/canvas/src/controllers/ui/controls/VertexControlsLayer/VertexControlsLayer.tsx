@@ -10,7 +10,7 @@ type VertexControlsLayerProps = {
 	/**
 	 * What the canvas is pointed at, `state.selection` as it stands: a picked
 	 * vertex of the selected object rings its handle, anything else leaves the
-	 * handles plain (reconcileObjectPartSelection keeps it from naming a vertex
+	 * handles plain (reconcileSelection keeps it from naming a vertex
 	 * the object has outgrown)
 	 */
 	selection: CanvasSelection;

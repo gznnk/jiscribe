@@ -180,7 +180,7 @@ describe("usePropertyPanelState", () => {
 		expect(render(reframed)).toBe(reframed);
 		const editing = {
 			...reframed,
-			textEditState: { kind: "shape", objectId: "selected", slotId: "main" },
+			textEditState: { kind: "shape", text: "" },
 		} as unknown as CanvasControllerState;
 		expect(render(editing)).toBe(editing);
 	});

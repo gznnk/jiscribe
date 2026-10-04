@@ -6,7 +6,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *
  * polyline-vertex.spec covers the same gesture on a standalone shape. A
  * connector reaches `selection.objectIds` only on its own, so this is the only path that
- * exercises the "sole selection" test (reconcileObjectPartSelection) for one.
+ * exercises the "sole selection" test (reconcileSelection) for one.
  * Lose it and the waypoint pick is dropped the moment it is made, which turns
  * Delete back into "delete the connector".
  *

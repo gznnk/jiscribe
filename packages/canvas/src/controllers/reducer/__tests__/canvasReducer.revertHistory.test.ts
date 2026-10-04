@@ -102,12 +102,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("is a no-op while a text edit is open, like undo itself", () => {
 			const state = createState({
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "",
-				},
+				textEditState: { kind: "shape", text: "" },
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);

@@ -127,14 +127,9 @@ const makeEditState = (
 			"rect-2": makeTextRect("rect-2", "other"),
 		},
 		rootIds: [editingId, "rect-2"],
-		selection: selectionOf([]),
+		selection: selectionOf([editingId]),
 		multiSelectGroup: null,
-		textEditState: {
-			kind: "shape",
-			objectId: editingId,
-			slotId: "body",
-			text: pendingText,
-		},
+		textEditState: { kind: "shape", text: pendingText },
 		commitVersion: 5,
 		contextMenuPosition: { x: 1, y: 1 },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -178,11 +173,11 @@ describe("ObjectEventHandler - text edit commit", () => {
 			registries,
 		);
 		// The pending text was committed by the pressed and prefilled again — not lost.
-		expect(afterDouble.textEditState).toEqual({
-			kind: "shape",
-			objectId: "rect-1",
-			slotId: "body",
-			text: "new",
+		expect(afterDouble.textEditState).toEqual({ kind: "shape", text: "new" });
+		// A rect holds one body, which is no part, so nothing is picked below it.
+		expect(afterDouble.selection).toEqual({
+			objectIds: ["rect-1"],
+			part: null,
 		});
 		expect(afterDouble.commitVersion).toBe(6);
 	});
@@ -398,6 +393,44 @@ describe("ObjectEventHandler - text slot selection", () => {
 				registries,
 			).objectMenuOpenId,
 		).toBeNull();
+	});
+
+	it("selects the slot it opens for editing, even from an unselected record", () => {
+		// The click before the double click only selects the object (applyPartClick
+		// addresses a part only inside an already-whole selection), so without this
+		// the session would open over no slot at all.
+		const next = ObjectEventHandler.handle(
+			makeSlotState([], null),
+			{
+				...makeSlotClickEvent("rec-1", textSlotPart("rows")),
+				type: "doubleClick",
+			} as CanvasEvent,
+			registries,
+		);
+		expect(next.textEditState).toEqual({ kind: "shape", text: "id: string" });
+		expect(next.selection).toEqual({
+			objectIds: ["rec-1"],
+			part: {
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
+			},
+		});
+	});
+
+	it("keeps the selection reference when the slot it opens is already picked", () => {
+		const state = makeSlotState(["rec-1"], {
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
+		});
+		const next = ObjectEventHandler.handle(
+			state,
+			{
+				...makeSlotClickEvent("rec-1", textSlotPart("rows")),
+				type: "doubleClick",
+			} as CanvasEvent,
+			registries,
+		);
+		expect(next.selection).toBe(state.selection);
 	});
 
 	it("closes an open ObjectMenu submenu when a double click opens the slot for editing", () => {

@@ -228,8 +228,6 @@ const openSession = (scenario: FuzzScenario): CanvasControllerState => {
 		objects,
 		textEditState: {
 			kind: "shape",
-			objectId: OBJECT_ID,
-			slotId: SLOT_ID,
 			text: readRichTextSlot(
 				(seeded as unknown as { text: TextSlots }).text,
 				SLOT_ID,
@@ -367,11 +365,7 @@ export const runTextEditFuzzSession = (
 		}
 
 		// What the grafted object draws is what the editor draws.
-		const grafted = graftTextEditDraft(
-			state.objects,
-			state.textEditState,
-			registries.objectContentResizer,
-		);
+		const grafted = graftTextEditDraft(state, registries.objectContentResizer);
 		const graftedBody = readRichTextSlot(
 			(grafted[OBJECT_ID] as unknown as { text: TextSlots }).text,
 			SLOT_ID,

@@ -1,22 +1,50 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { describe, it, expect } from "vitest";
 
+import type { ConnectorLabelPlacement } from "../../../connectors/label/calcConnectorLabelPlacement";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { commitTextEditIfNeeded } from "../commitTextEditIfNeeded";
 
 type MinState = Pick<
 	CanvasControllerState,
-	"textEditState" | "objects" | "commitVersion"
+	"textEditState" | "selection" | "objects" | "commitVersion"
 >;
 
 const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 	({
 		textEditState: null,
+		selection: { objectIds: [], part: null },
 		objects: {},
 		commitVersion: 0,
 		...overrides,
 	}) as unknown as CanvasControllerState;
+
+/** A shape slot edit as its two halves: the draft, and the selection that owns it. */
+const shapeEdit = (
+	objectId: string,
+	slotId: string,
+	text: RichText,
+): Pick<MinState, "textEditState" | "selection"> => ({
+	textEditState: { kind: "shape", text },
+	selection: { objectIds: [objectId], part: textSlotPartSelection(slotId) },
+});
+
+/** A connector label edit; the label is no part, so nothing is picked below the object. */
+const labelEdit = (
+	connectorId: string,
+	text: string,
+	placement?: ConnectorLabelPlacement,
+): Pick<MinState, "textEditState" | "selection"> => ({
+	textEditState: {
+		kind: "connectorLabel",
+		text,
+		...(placement && { placement }),
+	},
+	selection: { objectIds: [connectorId], part: null },
+});
 
 // object with keyed text slots (passes isTextStyleState)
 const textObj = (id: string, text: TextSlots) =>
@@ -31,49 +59,30 @@ describe("commitTextEditIfNeeded", () => {
 		expect(commitTextEditIfNeeded(state)).toBe(state);
 	});
 
-	it("textEditState present -> target object does not exist -> clears textEditState and returns", () => {
+	it("throws when the selected object the session belongs to is gone", () => {
 		const state = makeState({
-			textEditState: {
-				kind: "shape",
-				objectId: "missing",
-				slotId: "body",
-				text: "hello",
-			},
+			...shapeEdit("missing", "body", "hello"),
 		});
-		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
-		expect(result.commitVersion).toBe(0); // the commit version does not change
+		expect(() => commitTextEditIfNeeded(state)).toThrow(/missing/);
 	});
 
-	it("textEditState present -> target object's text is a number (fails isTextStyleState) -> clears textEditState", () => {
+	it("throws when the selected object's text is no slot map (fails isTextStyleState)", () => {
 		// isTextStyleState returns false unless text is the keyed normal form
 		const invalidTextObj = { id: "r1", type: "rect", text: 123 };
 		const state = makeState({
 			objects: {
 				r1: invalidTextObj as unknown as CanvasControllerState["objects"][string],
 			},
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "body",
-				text: "hello",
-			},
+			...shapeEdit("r1", "body", "hello"),
 		});
-		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
-		expect(result.commitVersion).toBe(0);
+		expect(() => commitTextEditIfNeeded(state)).toThrow(/no text slots/);
 	});
 
 	it("text unchanged -> clears textEditState but does not bump commitVersion", () => {
 		const obj = textObj("r1", { body: { text: "same text" } });
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "body",
-				text: "same text",
-			},
+			...shapeEdit("r1", "body", "same text"),
 			commitVersion: 5,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -85,12 +94,7 @@ describe("commitTextEditIfNeeded", () => {
 		const obj = textObj("r1", { body: { text: "old text" } });
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "body",
-				text: "new text",
-			},
+			...shapeEdit("r1", "body", "new text"),
 			commitVersion: 3,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -105,12 +109,7 @@ describe("commitTextEditIfNeeded", () => {
 		});
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "body",
-				text: "new text",
-			},
+			...shapeEdit("r1", "body", "new text"),
 		});
 		const result = commitTextEditIfNeeded(state);
 		expect(slotsOf(result, "r1")).toEqual({
@@ -125,12 +124,7 @@ describe("commitTextEditIfNeeded", () => {
 		};
 		const state = makeState({
 			objects: originalObjects,
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "body",
-				text: "updated",
-			},
+			...shapeEdit("r1", "body", "updated"),
 		});
 		commitTextEditIfNeeded(state);
 		const originalObj = originalObjects["r1"] as unknown as { text: TextSlots };
@@ -146,12 +140,7 @@ describe("commitTextEditIfNeeded", () => {
 		});
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "name",
-				text: "Account",
-			},
+			...shapeEdit("r1", "name", "Account"),
 		});
 		const result = commitTextEditIfNeeded(state);
 		expect(slotsOf(result, "r1")).toEqual({
@@ -168,12 +157,7 @@ describe("commitTextEditIfNeeded", () => {
 		});
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "rows",
-				text: "id\nname",
-			},
+			...shapeEdit("r1", "rows", "id\nname"),
 		});
 		const result = commitTextEditIfNeeded(state);
 		expect(slotsOf(result, "r1").rows.text).toEqual(["id", "name"]);
@@ -183,12 +167,7 @@ describe("commitTextEditIfNeeded", () => {
 		const obj = textObj("r1", { rows: { text: ["id", "name"] } });
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "rows",
-				text: "id\nname",
-			},
+			...shapeEdit("r1", "rows", "id\nname"),
 			commitVersion: 7,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -204,7 +183,7 @@ describe("commitTextEditIfNeeded", () => {
 		const c = connectorObj("c1");
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "Yes" },
+			...labelEdit("c1", "Yes"),
 			commitVersion: 1,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -220,7 +199,7 @@ describe("commitTextEditIfNeeded", () => {
 		const c = connectorObj("c1", { text: "Yes" });
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "" },
+			...labelEdit("c1", ""),
 			commitVersion: 1,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -248,7 +227,7 @@ describe("commitTextEditIfNeeded", () => {
 		} as unknown;
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "" },
+			...labelEdit("c1", ""),
 			commitVersion: 1,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -272,7 +251,7 @@ describe("commitTextEditIfNeeded", () => {
 		} as unknown;
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "" },
+			...labelEdit("c1", ""),
 			commitVersion: 1,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -292,7 +271,7 @@ describe("commitTextEditIfNeeded", () => {
 		} as unknown;
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "No" },
+			...labelEdit("c1", "No"),
 			commitVersion: 1,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -312,7 +291,7 @@ describe("commitTextEditIfNeeded", () => {
 		};
 		const state = makeState({
 			objects: originalObjects,
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "No" },
+			...labelEdit("c1", "No"),
 		});
 		commitTextEditIfNeeded(state);
 		const originalConnector = originalObjects["c1"] as unknown as {
@@ -326,12 +305,7 @@ describe("commitTextEditIfNeeded", () => {
 		const c = connectorObj("c1");
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "connectorLabel",
-				objectId: "c1",
-				text: "Yes",
-				placement: { position: 0.25, offset: 12 },
-			},
+			...labelEdit("c1", "Yes", { position: 0.25, offset: 12 }),
 		});
 		const result = commitTextEditIfNeeded(state);
 		const updated = result.objects["c1"] as unknown as {
@@ -344,12 +318,7 @@ describe("commitTextEditIfNeeded", () => {
 		const c = connectorObj("c1");
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "connectorLabel",
-				objectId: "c1",
-				text: "Yes",
-				placement: { position: 0.5, offset: 0 },
-			},
+			...labelEdit("c1", "Yes", { position: 0.5, offset: 0 }),
 		});
 		const result = commitTextEditIfNeeded(state);
 		const updated = result.objects["c1"] as unknown as {
@@ -362,12 +331,7 @@ describe("commitTextEditIfNeeded", () => {
 		const c = connectorObj("c1");
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "connectorLabel",
-				objectId: "c1",
-				text: "",
-				placement: { position: 0.25, offset: 12 },
-			},
+			...labelEdit("c1", "", { position: 0.25, offset: 12 }),
 			commitVersion: 1,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -388,12 +352,7 @@ describe("commitTextEditIfNeeded", () => {
 		} as unknown;
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "connectorLabel",
-				objectId: "c1",
-				text: "Back",
-				placement: { position: 0.75, offset: 0 },
-			},
+			...labelEdit("c1", "Back", { position: 0.75, offset: 0 }),
 		});
 		const result = commitTextEditIfNeeded(state);
 		const updated = result.objects["c1"] as unknown as {
@@ -414,7 +373,7 @@ describe("commitTextEditIfNeeded", () => {
 		} as unknown;
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "No" },
+			...labelEdit("c1", "No"),
 		});
 		const result = commitTextEditIfNeeded(state);
 		const updated = result.objects["c1"] as unknown as {
@@ -427,7 +386,7 @@ describe("commitTextEditIfNeeded", () => {
 		const c = connectorObj("c1", { text: "Yes" });
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
-			textEditState: { kind: "connectorLabel", objectId: "c1", text: "Yes" },
+			...labelEdit("c1", "Yes"),
 			commitVersion: 7,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -437,52 +396,31 @@ describe("commitTextEditIfNeeded", () => {
 
 	// ─── slot routing ───
 
-	it("an unknown slotId -> clears textEditState without writing back", () => {
+	it("throws on a slot the shape does not hold", () => {
 		const obj = textObj("r1", { body: { text: "original" } });
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "unknown",
-				text: "edited",
-			},
+			...shapeEdit("r1", "unknown", "edited"),
 			commitVersion: 2,
 		});
-		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
-		expect(result.commitVersion).toBe(2);
-		expect(slotsOf(result, "r1")).toEqual({ body: { text: "original" } });
+		expect(() => commitTextEditIfNeeded(state)).toThrow(/unknown/);
 	});
 
-	it('slotId "label" on a shape without such a slot -> clears like any unknown slot', () => {
+	it('throws on slotId "label" too, which is no reserved name', () => {
 		const obj = textObj("r1", { body: { text: "original" } });
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "label",
-				text: "edited",
-			},
+			...shapeEdit("r1", "label", "edited"),
 			commitVersion: 2,
 		});
-		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
-		expect(result.commitVersion).toBe(2);
-		expect(slotsOf(result, "r1")).toEqual({ body: { text: "original" } });
+		expect(() => commitTextEditIfNeeded(state)).toThrow(/label/);
 	});
 
 	it('a shape slot named "label" is not reserved -> commits into that slot', () => {
 		const obj = textObj("r1", { label: { text: "original", fontSize: 12 } });
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "r1",
-				slotId: "label",
-				text: "edited",
-			},
+			...shapeEdit("r1", "label", "edited"),
 			commitVersion: 2,
 		});
 		const result = commitTextEditIfNeeded(state);
@@ -493,23 +431,13 @@ describe("commitTextEditIfNeeded", () => {
 		});
 	});
 
-	it("connector: a slotId other than the label pseudo slot -> clears without writing back", () => {
+	it("throws on a shape slot edit whose selected object holds no text", () => {
 		const conn = connectorObj("c1", { text: "Yes" });
 		const state = makeState({
 			objects: { c1: conn as CanvasControllerState["objects"][string] },
-			textEditState: {
-				kind: "shape",
-				objectId: "c1",
-				slotId: "body",
-				text: "edited",
-			},
+			...shapeEdit("c1", "body", "edited"),
 			commitVersion: 2,
 		});
-		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
-		expect(result.commitVersion).toBe(2);
-		expect(
-			(result.objects["c1"] as unknown as { label: { text: string } }).label,
-		).toEqual({ text: "Yes" });
+		expect(() => commitTextEditIfNeeded(state)).toThrow(/no text slots/);
 	});
 });

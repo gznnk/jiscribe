@@ -15,7 +15,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  * The parts picked one level below the object read as the deletion target the
  * registry takes, or null while nothing is picked there. Validity is not asked
  * about: the reducer has already dropped a selection naming something gone
- * (reconcileObjectPartSelection), so every id here has passed `has`. Whether the
+ * (reconcileSelection), so every id here has passed `has`. Whether the
  * parts can be deleted at all is a separate question (resolveDeletableParts).
  */
 const resolveSelectedParts = (

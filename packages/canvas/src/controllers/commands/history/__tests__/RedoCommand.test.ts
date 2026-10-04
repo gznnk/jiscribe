@@ -158,12 +158,7 @@ describe("RedoCommand", () => {
 						past: [],
 						present: snapshotPrev,
 						future: [snapshotNext],
-						textEditState: {
-							kind: "shape",
-							objectId: "r1",
-							slotId: "body",
-							text: "",
-						},
+						textEditState: { kind: "shape", text: "" },
 					}),
 					registries,
 				),

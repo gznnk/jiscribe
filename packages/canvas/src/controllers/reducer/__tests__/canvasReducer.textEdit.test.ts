@@ -7,6 +7,7 @@ import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { createCanvasReducer } from "../canvasReducer";
 
 const canvasReducer = createCanvasReducer(createTestRegistries());
@@ -31,10 +32,9 @@ const styledRectDoc: CanvasDoc = {
 const editingState = (): CanvasControllerState => {
 	const base = createTestState(styledRectDoc);
 	return createTestState(styledRectDoc, {
+		selection: selectionOf(["rect-1"]),
 		textEditState: {
 			kind: "shape",
-			objectId: "rect-1",
-			slotId: "body",
 			text: readRichTextSlot(
 				(base.objects["rect-1"] as unknown as { text: TextSlots }).text,
 				"body",

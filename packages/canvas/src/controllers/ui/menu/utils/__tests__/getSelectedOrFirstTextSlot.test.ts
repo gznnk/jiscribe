@@ -148,8 +148,6 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 			objects: { r1: object },
 			textEditState: {
 				kind: "shape",
-				objectId: "r1",
-				slotId: BODY_TEXT_SLOT_ID,
 				text: content,
 				selection: { start: 0, end: 2 },
 			},

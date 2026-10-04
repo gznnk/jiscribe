@@ -24,7 +24,7 @@ export type ObjectPartRange = {
  * one slot it names (`ranges[0].anchorId`); the readers widen when a gesture
  * first writes a wider range.
  *
- * The reducer clears it (reconcileObjectPartSelection) once it stops describing
+ * The reducer clears it (reconcileSelection) once it stops describing
  * something real, so every reader takes `state.selection.part` as it stands.
  * That catches a part that is **gone**, not one that was **renumbered**. Where
  * the ids are positions (the vertices of a polyline, the rows and columns of a

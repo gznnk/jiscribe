@@ -87,10 +87,9 @@ export function useObjectMenuPosition(
 			: `${part.kind}:${part.ranges
 					.map((range) => `${range.anchorId}-${range.focusId}`)
 					.join(",")}`;
-	const textEditKey =
-		textEditState === null
-			? null
-			: `${textEditState.kind}:${textEditState.objectId}`;
+	// The kind alone: what the session is open over is `selectedIdsString` and
+	// `partKey`, which are deps of the same measurement.
+	const textEditKey = textEditState?.kind ?? null;
 
 	// Every way the view moves under the selection, as one state: dragging (except
 	// while an ObjectMenu dropdown is open, so its sliders stay usable) and the

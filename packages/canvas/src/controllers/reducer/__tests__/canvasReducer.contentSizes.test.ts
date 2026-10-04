@@ -10,6 +10,7 @@ import { resolveTextObjectFont } from "../../../states/objects/primitives/text/r
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { createCanvasReducer } from "../canvasReducer";
 
 /**
@@ -189,12 +190,9 @@ describe("canvasReducer (integration)", () => {
 		): CanvasControllerState => {
 			const state = {
 				...createTestState(docWithText("hello")),
-				textEditState: {
-					kind: "shape" as const,
-					objectId: "text-1",
-					slotId: "body",
-					text: "hello world",
-				},
+				// The session's owner is the selection (see textEditState).
+				selection: selectionOf(["text-1"]),
+				textEditState: { kind: "shape" as const, text: "hello world" },
 			};
 			return reducer(state, { type: "END_TEXT_EDIT", commit: true });
 		};

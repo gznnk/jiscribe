@@ -111,8 +111,11 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 	{
 		name: "text editing in progress",
 		state: buildState(rectsDoc, {
-			selection: selectionOf(["rect-1"]),
-			textEditState: { objectId: "rect-1" } as never,
+			selection: selectionOf(["rect-1"], {
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "body", focusId: "body" }],
+			}),
+			textEditState: { kind: "shape", text: "" },
 		}),
 	},
 	{

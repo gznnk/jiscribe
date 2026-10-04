@@ -17,7 +17,7 @@ type TransformControlsLayerProps = {
 	/**
 	 * Whether a text slot is selected inside the object; a stale flag would keep the
 	 * handles hidden, which is why the reducer reconciles the selection it is read
-	 * from (reconcileObjectPartSelection)
+	 * from (reconcileSelection)
 	 */
 	isTextSlotSelected: boolean;
 	/** Kind of the drag in progress; null when none is */
