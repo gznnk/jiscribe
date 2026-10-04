@@ -49,11 +49,11 @@ describe("getFirstTextSlotId", () => {
 describe("resolveTextSlotId", () => {
 	const slots = { name: { text: "User" }, rows: { text: ["id"] } };
 
-	it("honors a targetPart that names an actual slot", () => {
+	it("honors a slot id the shape holds", () => {
 		expect(resolveTextSlotId(slots, "rows")).toBe("rows");
 	});
 
-	it("falls back to the first slot for an absent or unknown targetPart", () => {
+	it("falls back to the first slot for an absent or unknown slot id", () => {
 		expect(resolveTextSlotId(slots, undefined)).toBe("name");
 		expect(resolveTextSlotId(slots, "bogus")).toBe("name");
 	});

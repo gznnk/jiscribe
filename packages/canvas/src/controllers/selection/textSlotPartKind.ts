@@ -2,8 +2,9 @@ import type { ObjectPartSelection } from "./ObjectPartSelection";
 
 /**
  * The part-id namespace of the text slots a `features.text === "slots"` type
- * spells out, with part ids spelled as the slot keys of the object's `text` —
- * the same ids the slot elements already carry in their `data-part`.
+ * spells out, with part ids spelled as the slot keys of the object's `text`.
+ * The kind half of the `data-part` its slot elements carry, which `textSlotPart`
+ * builds.
  */
 export const TEXT_SLOT_PART_KIND = "textSlot";
 

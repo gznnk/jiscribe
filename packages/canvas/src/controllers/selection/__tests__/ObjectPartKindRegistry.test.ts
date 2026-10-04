@@ -46,6 +46,37 @@ describe("ObjectPartKindRegistry", () => {
 		).toThrow(/vertex/);
 	});
 
+	it("takes a kind spelled as an identifier", () => {
+		const registry = createObjectPartKindRegistry();
+
+		expect(() =>
+			registry.register("table", [
+				partOf("textSlot"),
+				partOf("vertex"),
+				partOf("cell_2"),
+				partOf("table-cell"),
+			]),
+		).not.toThrow();
+	});
+
+	it("throws on a kind that is no identifier", () => {
+		const registry = createObjectPartKindRegistry();
+
+		// Holding the separator of a part address would make the split ambiguous.
+		expect(() => registry.register("table", [partOf("cell:row")])).toThrow(
+			/cell:row/,
+		);
+		expect(() => registry.register("table", [partOf("")])).toThrow(
+			/identifier/,
+		);
+		expect(() => registry.register("table", [partOf("2cells")])).toThrow(
+			/2cells/,
+		);
+		expect(() => registry.register("table", [partOf("cell row")])).toThrow(
+			/cell row/,
+		);
+	});
+
 	// Registration is per type rather than additive, the way a definition is
 	// applied whole (applyObjectDefinition).
 	it("replaces everything a type had registered before", () => {

@@ -5,12 +5,15 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { VERTEX_PART_KIND } from "../../../../selection/createVertexPartKindDefinition";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { applyPartClick } from "../../utils/applyPartClick";
 import { applyAxisLock } from "../../utils/axisLock";
+import { parsePartAddress } from "../../utils/partAddress";
 import { excludeCenterCandidates } from "../../utils/snap/excludeCenterCandidates";
 import {
 	buildSnapFeedback,
@@ -22,84 +25,63 @@ import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 /**
  * Handles vertex control interactions (moving a vertex).
  *
- * Target format: data-id=<objectId>, data-part="vertex:<vertexIndex>"
+ * Target format: data-id=<objectId>, data-part=vertexPart(<vertexIndex>)
  * Example: data-part="vertex:0"
  */
 export class VertexControlHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
-		if (event.targetKind !== "control") {
-			return false;
-		}
-
-		const targetPart = event.targetPart;
-		if (!targetPart) {
-			return false;
-		}
-
-		// Check whether this is a vertex control
-		return targetPart.startsWith("vertex:");
+		return (
+			event.targetKind === "control" &&
+			parsePartAddress(event.targetPart)?.kind === VERTEX_PART_KIND
+		);
 	}
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// targetId = objectId, targetPart = "vertex:<vertexIndex>"
 		const objectId = event.targetId;
 		const targetPart = event.targetPart;
 		if (!objectId || !targetPart) {
 			return state;
 		}
 
-		const vertexIndex = parseInt(targetPart.slice("vertex:".length), 10);
+		// A click only addresses the vertex, so the whole of it — range check
+		// included — is the shared part-click path.
+		if (event.type === "click") {
+			const targetObject = state.objects[objectId];
+			if (!targetObject) {
+				return state;
+			}
+			return applyPartClick(
+				state,
+				targetObject,
+				targetPart,
+				registries.objectPartKind,
+			);
+		}
 
+		// Only the drags read the id back as the index into `points`.
+		const vertexIndex = parseInt(
+			parsePartAddress(targetPart)?.partId ?? "",
+			10,
+		);
 		if (isNaN(vertexIndex) || vertexIndex < 0) {
 			return state;
 		}
 
-		// Route to the appropriate handler based on the gesture type
-		let nextState = state;
-
-		if (event.type === "click") {
-			nextState = this.handleClick(nextState, objectId, vertexIndex);
-		} else if (event.type === "dragStart") {
-			nextState = this.handleDragStart(nextState, objectId);
-		} else if (event.type === "drag") {
-			nextState = this.handleDrag(nextState, event, objectId, vertexIndex);
-		} else if (event.type === "dragEnd") {
-			nextState = this.handleDragEnd(nextState, event, objectId, vertexIndex);
+		if (event.type === "dragStart") {
+			return this.handleDragStart(state, objectId);
+		}
+		if (event.type === "drag") {
+			return this.handleDrag(state, event, objectId, vertexIndex);
+		}
+		if (event.type === "dragEnd") {
+			return this.handleDragEnd(state, event, objectId, vertexIndex);
 		}
 
-		return nextState;
-	}
-
-	/**
-	 * Handles a vertex control click. Selects the clicked vertex.
-	 */
-	private handleClick(
-		state: CanvasControllerState,
-		objectId: string,
-		vertexIndex: number,
-	): CanvasControllerState {
-		const targetObject = state.objects[objectId];
-		if (!isPoly(targetObject) || vertexIndex >= targetObject.points.length) {
-			return state;
-		}
-
-		return {
-			...state,
-			objectPartSelection: {
-				objectId,
-				kind: VERTEX_PART_KIND,
-				// A click picks the one vertex it landed on, so the range is collapsed
-				// and it is the whole selection: anything already picked is replaced.
-				ranges: [
-					{ anchorId: String(vertexIndex), focusId: String(vertexIndex) },
-				],
-			},
-			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
-		};
+		return state;
 	}
 
 	/**
