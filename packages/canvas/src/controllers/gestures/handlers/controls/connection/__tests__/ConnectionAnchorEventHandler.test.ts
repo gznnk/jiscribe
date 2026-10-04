@@ -11,6 +11,7 @@ import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeStat
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -398,7 +399,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			// The style menu targets the selected connector.
 			const selected: CanvasControllerState = {
 				...state,
-				selectedIds: [connectorId],
+				selection: selectionOf([connectorId]),
 			};
 
 			const dashed = registries.styleProperty.apply(

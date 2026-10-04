@@ -5,6 +5,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Command, KeyBinding } from "../../commands/CommandTypes";
 import { getPlatformShortcuts } from "../../commands/CommandUtils";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { ZOOM } from "../../utils/zoom";
@@ -72,52 +73,52 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 	{ name: "nothing selected", state: buildState(rectsDoc) },
 	{
 		name: "one object selected",
-		state: buildState(rectsDoc, { selectedIds: ["rect-1"] }),
+		state: buildState(rectsDoc, { selection: selectionOf(["rect-1"]) }),
 	},
 	{
 		name: "two objects selected",
-		state: buildState(rectsDoc, { selectedIds: ["rect-1", "rect-2"] }),
+		state: buildState(rectsDoc, {
+			selection: selectionOf(["rect-1", "rect-2"]),
+		}),
 	},
 	{
 		name: "connector selected",
-		state: buildState(rectsDoc, { selectedIds: ["conn-1"] }),
+		state: buildState(rectsDoc, { selection: selectionOf(["conn-1"]) }),
 	},
 	{
 		name: "vertex selected",
 		state: buildState(rectsDoc, {
-			objectPartSelection: vertexPartSelection("rect-1", 0),
+			selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 		}),
 	},
 	{
 		name: "slot-bearing object selected",
 		state: buildState(emptyDoc, {
 			objects: slotObjects,
-			selectedIds: ["rec-1"],
+			selection: selectionOf(["rec-1"]),
 		}),
 	},
 	{
 		name: "slot selected inside the object",
 		state: buildState(emptyDoc, {
 			objects: slotObjects,
-			selectedIds: ["rec-1"],
-			objectPartSelection: {
-				objectId: "rec-1",
+			selection: selectionOf(["rec-1"], {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "name", focusId: "name" }],
-			},
+			}),
 		}),
 	},
 	{
 		name: "text editing in progress",
 		state: buildState(rectsDoc, {
-			selectedIds: ["rect-1"],
+			selection: selectionOf(["rect-1"]),
 			textEditState: { objectId: "rect-1" } as never,
 		}),
 	},
 	{
 		name: "object drag in progress",
 		state: buildState(rectsDoc, {
-			selectedIds: ["rect-1"],
+			selection: selectionOf(["rect-1"]),
 			activeDrag: { startSnapshot: {} } as never,
 		}),
 	},
@@ -135,7 +136,7 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 	{
 		name: "history full in both directions",
 		state: buildState(rectsDoc, {
-			selectedIds: ["rect-1"],
+			selection: selectionOf(["rect-1"]),
 			history: historyDepth(1, 1),
 		}),
 	},

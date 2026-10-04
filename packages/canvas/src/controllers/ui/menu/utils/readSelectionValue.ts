@@ -21,7 +21,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
  * @returns `single` / `mixed` / `none`; `none` when no object of the selection carries the property
  */
 export const readSelectionValue = <Value>(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	readObjectValue: (object: ObjectState) => Value | undefined,
 ): SelectionValue<Value> => {

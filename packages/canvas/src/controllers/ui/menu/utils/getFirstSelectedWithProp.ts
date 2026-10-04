@@ -2,11 +2,11 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 
 /**
- * Returns the first object among `selectedIds` that has the given property.
+ * Returns the first object among `selection.objectIds` that has the given property.
  * When a group is included, recurses into its descendants.
  */
 export function getFirstSelectedWithProp(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	prop: string,
 ): ObjectState | undefined {

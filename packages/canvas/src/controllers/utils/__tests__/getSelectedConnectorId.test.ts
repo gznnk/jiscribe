@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { getSelectedConnectorId } from "../getSelectedConnectorId";
 
 const objects: Record<string, ObjectState> = {
@@ -11,30 +12,35 @@ const objects: Record<string, ObjectState> = {
 
 describe("getSelectedConnectorId", () => {
 	it("answers with a lone selected connector", () => {
-		expect(getSelectedConnectorId({ selectedIds: ["conn-1"], objects })).toBe(
-			"conn-1",
-		);
+		expect(
+			getSelectedConnectorId({ selection: selectionOf(["conn-1"]), objects }),
+		).toBe("conn-1");
 	});
 
 	it("gives null for a selected shape", () => {
 		expect(
-			getSelectedConnectorId({ selectedIds: ["rect-1"], objects }),
+			getSelectedConnectorId({ selection: selectionOf(["rect-1"]), objects }),
 		).toBeNull();
 	});
 
 	it("gives null while nothing is selected", () => {
-		expect(getSelectedConnectorId({ selectedIds: [], objects })).toBeNull();
+		expect(
+			getSelectedConnectorId({ selection: selectionOf([]), objects }),
+		).toBeNull();
 	});
 
 	it("gives null for a multi-selection, connectors included", () => {
 		expect(
-			getSelectedConnectorId({ selectedIds: ["conn-1", "conn-2"], objects }),
+			getSelectedConnectorId({
+				selection: selectionOf(["conn-1", "conn-2"]),
+				objects,
+			}),
 		).toBeNull();
 	});
 
 	it("gives null for an id the canvas does not hold", () => {
 		expect(
-			getSelectedConnectorId({ selectedIds: ["gone"], objects }),
+			getSelectedConnectorId({ selection: selectionOf(["gone"]), objects }),
 		).toBeNull();
 	});
 });

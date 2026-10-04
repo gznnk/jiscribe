@@ -60,7 +60,7 @@ function handleObjectDrag(
 	}
 
 	const eventStartObjects = dragStartSnapshot.objects;
-	const selectedIds = canvasState.selectedIds;
+	const selectedIds = canvasState.selection.objectIds;
 
 	// --- Axis lock via Shift ---
 	// While Shift is held, movement is locked to one axis. The locked axis (lockedAxis)
@@ -209,13 +209,13 @@ function handleObjectDragStart(
 	const { mods } = event;
 
 	// Determine the selection state
-	const isCurrentlySelected = canvasState.selectedIds.includes(id);
+	const isCurrentlySelected = canvasState.selection.objectIds.includes(id);
 	const ancestors = getAncestors(canvasState, id);
 	const isAncestorSelected = ancestors.some((ancestorId) =>
-		canvasState.selectedIds.includes(ancestorId),
+		canvasState.selection.objectIds.includes(ancestorId),
 	);
 
-	let selectedIds: string[];
+	let selectedIds: readonly string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
 	// The multiSelectGroup and keyPoints updates to set on the drag's start snapshot
 	let eventStartMultiSelectGroup =
@@ -224,11 +224,11 @@ function handleObjectDragStart(
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// Already selected: keep the current selection
-		selectedIds = canvasState.selectedIds;
+		selectedIds = canvasState.selection.objectIds;
 	} else {
 		// Not selected: apply hierarchical selection logic
 		const newSelection = determineSelection(targetObject, canvasState, mods);
-		selectedIds = newSelection ?? canvasState.selectedIds;
+		selectedIds = newSelection ?? canvasState.selection.objectIds;
 
 		// Create/update multiSelectGroup as the number of selected shapes increases
 		const eventStartObjects =
@@ -254,7 +254,7 @@ function handleObjectDragStart(
 		}
 	}
 
-	// Re-cache the exclusion set with the selectedIds finalized after dragStart
+	// Re-cache the exclusion set with the selection finalized after dragStart
 	// (refresh the snapshot if the selection changed from what it was when handleGesture was built)
 	const selectedIdsWithDescendants = canvasState.activeDrag
 		? buildSelectedIdsWithDescendants(
@@ -266,11 +266,10 @@ function handleObjectDragStart(
 	// Update the selection state and enable edge scrolling
 	const nextState = {
 		...canvasState,
-		selectedIds,
+		// The picked part goes with the object selection that carried it.
+		selection: { objectIds: selectedIds, part: null },
 		multiSelectGroup: newMultiSelectGroup,
 		edgeScrollEnabled: true,
-		// Clear the sub-object part selection
-		objectPartSelection: null,
 		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
@@ -309,7 +308,10 @@ function handleObjectDragEnd(
 	const resultState = handleObjectDrag(nextState, event, registries);
 
 	// Update the parent groups' bounding boxes
-	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
+	return updateAffectedGroupBounds(
+		resultState,
+		resultState.selection.objectIds,
+	);
 }
 
 /**
@@ -367,8 +369,8 @@ export const ObjectEventHandler: GestureHandler = {
 				!event.mods.meta &&
 				!event.mods.shift &&
 				!event.mods.alt &&
-				nextState.selectedIds.length === 1 &&
-				nextState.selectedIds[0] === targetObject.id;
+				nextState.selection.objectIds.length === 1 &&
+				nextState.selection.objectIds[0] === targetObject.id;
 			if (!addressesPart) {
 				return afterClick;
 			}

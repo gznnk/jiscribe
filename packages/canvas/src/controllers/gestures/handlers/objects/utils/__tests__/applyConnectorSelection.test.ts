@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { applyConnectorSelection } from "../applyConnectorSelection";
 
 const objects: Record<string, ObjectState> = {
@@ -12,7 +13,7 @@ const objects: Record<string, ObjectState> = {
 const makeState = (selectedIds: string[]): CanvasControllerState =>
 	({
 		objects,
-		selectedIds,
+		selection: selectionOf(selectedIds),
 		multiSelectGroup: { id: "ms" },
 		objectMenuOpenId: "stroke-color",
 		stencilLibraryOpenCategory: "basic",
@@ -25,7 +26,7 @@ describe("applyConnectorSelection", () => {
 			"conn-1",
 		);
 
-		expect(next.selectedIds).toEqual(["conn-1"]);
+		expect(next.selection.objectIds).toEqual(["conn-1"]);
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
@@ -38,6 +39,6 @@ describe("applyConnectorSelection", () => {
 
 	it("replaces another selected connector", () => {
 		const next = applyConnectorSelection(makeState(["conn-1"]), "conn-2");
-		expect(next.selectedIds).toEqual(["conn-2"]);
+		expect(next.selection.objectIds).toEqual(["conn-2"]);
 	});
 });

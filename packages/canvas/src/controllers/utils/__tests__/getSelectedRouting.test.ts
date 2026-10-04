@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { getSelectedRouting } from "../getSelectedRouting";
 
 const connector = (id: string, extra?: Record<string, unknown>): ObjectState =>
@@ -8,15 +9,15 @@ const connector = (id: string, extra?: Record<string, unknown>): ObjectState =>
 
 describe("getSelectedRouting", () => {
 	it("no connector selected -> default orthogonal", () => {
-		expect(getSelectedRouting({ selectedIds: [], objects: {} })).toBe(
-			"orthogonal",
-		);
+		expect(
+			getSelectedRouting({ selection: selectionOf([]), objects: {} }),
+		).toBe("orthogonal");
 	});
 
 	it("routing omitted -> orthogonal", () => {
 		expect(
 			getSelectedRouting({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c") },
 			}),
 		).toBe("orthogonal");
@@ -25,7 +26,7 @@ describe("getSelectedRouting", () => {
 	it("routing is 'straight' -> straight", () => {
 		expect(
 			getSelectedRouting({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c", { routing: "straight" }) },
 			}),
 		).toBe("straight");
@@ -34,7 +35,7 @@ describe("getSelectedRouting", () => {
 	it("routing is 'orthogonal' -> orthogonal", () => {
 		expect(
 			getSelectedRouting({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c", { routing: "orthogonal" }) },
 			}),
 		).toBe("orthogonal");

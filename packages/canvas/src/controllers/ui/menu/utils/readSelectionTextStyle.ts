@@ -36,7 +36,7 @@ const collectSelectionTextStyles = (
 ): TextSlotStyle[] => {
 	if (
 		resolveTextEditSelection(state) !== null ||
-		isTextSlotSelection(state.objectPartSelection)
+		isTextSlotSelection(state.selection.part)
 	) {
 		const slot = getSelectedOrFirstTextSlot(state, textStyleDefaults);
 		return slot === undefined ? [] : [slot];
@@ -44,7 +44,7 @@ const collectSelectionTextStyles = (
 
 	const styles: TextSlotStyle[] = [];
 	for (const object of collectSelectionObjects(
-		state.selectedIds,
+		state.selection.objectIds,
 		state.objects,
 	)) {
 		if (!isTextStyleState(object)) {

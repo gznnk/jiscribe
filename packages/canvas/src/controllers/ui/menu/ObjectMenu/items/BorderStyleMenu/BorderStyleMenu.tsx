@@ -72,7 +72,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -80,7 +80,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
 	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
 	const cornerRadius = readSelectionCornerRadius(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(

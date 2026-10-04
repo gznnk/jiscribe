@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "../../../utils/snap/calcSnapCandidates";
 import { VertexInsertHandler } from "../VertexInsertHandler";
@@ -26,15 +27,14 @@ const makeState = (points: Point[]): CanvasControllerState => {
 	return {
 		objects: { "poly-1": poly },
 		rootIds: ["poly-1"],
-		selectedIds: [],
-		objectPartSelection: null,
+		selection: selectionOf([]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "poly-1": poly },
 				keyPoints: {},
 				snapCandidates: null,
-				selectedIds: [],
+				selection: selectionOf([]),
 				selectedIdsWithDescendants: new Set(),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },

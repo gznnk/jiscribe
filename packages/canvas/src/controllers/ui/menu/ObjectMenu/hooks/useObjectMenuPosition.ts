@@ -54,8 +54,7 @@ export function useObjectMenuPosition(
 	isPointerOverMenu: boolean,
 ): ObjectMenuPosition {
 	const {
-		selectedIds,
-		objectPartSelection,
+		selection,
 		objects,
 		viewport,
 		contextMenuPosition,
@@ -80,11 +79,12 @@ export function useObjectMenuPosition(
 	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
 	// width must be re-measured then too or the centering uses the stale width;
 	// opening and closing a text editor narrows it the same way.
+	const { objectIds: selectedIds, part } = selection;
 	const selectedIdsString = selectedIds.slice().sort().join(",");
-	const objectPartSelectionKey =
-		objectPartSelection === null
+	const partKey =
+		part === null
 			? null
-			: `${objectPartSelection.objectId}:${objectPartSelection.kind}:${objectPartSelection.ranges
+			: `${part.kind}:${part.ranges
 					.map((range) => `${range.anchorId}-${range.focusId}`)
 					.join(",")}`;
 	const textEditKey =
@@ -149,13 +149,7 @@ export function useObjectMenuPosition(
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-	}, [
-		menuRef,
-		shouldRender,
-		selectedIdsString,
-		objectPartSelectionKey,
-		textEditKey,
-	]);
+	}, [menuRef, shouldRender, selectedIdsString, partKey, textEditKey]);
 
 	const liveBounds = useMemo(
 		() => calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds),

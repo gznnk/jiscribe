@@ -48,7 +48,8 @@ const collectSelectionSections = (
 	state: CanvasControllerState,
 	propertyPanelRegistry: PropertyPanelRegistry,
 ): PropertyPanelSection[] => {
-	const { selectedIds, objects } = state;
+	const { objectIds: selectedIds } = state.selection;
+	const { objects } = state;
 
 	const connectorId = getSelectedConnectorId(state);
 	if (connectorId !== null) {
@@ -96,7 +97,8 @@ const collectSelectionSections = (
  * belongs to them whatever those members are.
  */
 const holdsOwnAspectRatioLock = (state: CanvasControllerState): boolean => {
-	const { selectedIds, objects, multiSelectGroup } = state;
+	const { objectIds: selectedIds } = state.selection;
+	const { objects, multiSelectGroup } = state;
 	if (multiSelectGroup) {
 		return true;
 	}
@@ -115,7 +117,7 @@ const filterShownSections = (
 ): PropertyPanelSection[] => {
 	const selection: PropertyPanelSelection = {
 		objects: state.objects,
-		selectedIds: state.selectedIds,
+		selection: state.selection,
 	};
 	return sections.filter((section) => section.isShown?.(selection) ?? true);
 };
@@ -169,7 +171,7 @@ export const getPropertyPanelSections = (
 export const usePropertyPanelSections = (
 	state: CanvasControllerState,
 ): PropertyPanelSection[] => {
-	const { selectedIds, objectPartSelection, objects } = state;
+	const { selection, objects } = state;
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the section set is narrowed while it is (getPropertyPanelSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
@@ -178,12 +180,6 @@ export const usePropertyPanelSections = (
 	return useMemo(
 		() => getPropertyPanelSections(state, propertyPanel),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[
-			selectedIds,
-			objectPartSelection,
-			isEditingShapeText,
-			objects,
-			propertyPanel,
-		],
+		[selection, isEditingShapeText, objects, propertyPanel],
 	);
 };

@@ -24,10 +24,9 @@ export const beginConnectorReshape = (
 	}
 	return {
 		...nextState,
-		selectedIds: [connectorId],
 		// Reshaping renumbers the connector's waypoints, so a picked one is dropped
 		// rather than left addressing whoever took the number over.
-		objectPartSelection: null,
+		selection: { objectIds: [connectorId], part: null },
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,

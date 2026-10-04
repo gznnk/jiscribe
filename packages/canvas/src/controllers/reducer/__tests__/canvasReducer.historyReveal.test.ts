@@ -6,6 +6,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { applyActions, runCommands } from "./support/dispatch";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { calcObjectBoundingBox } from "../../utils/calcObjectBoundingBox";
 import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
 
@@ -57,7 +58,9 @@ const createdRect3State = (viewport: Viewport): CanvasControllerState =>
 describe("canvasReducer (integration)", () => {
 	describe("history reveal", () => {
 		it("pans to an object moved back off screen by undo", () => {
-			let state = createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+			let state = createTestState(twoRectsDoc, {
+				selection: selectionOf(["rect-1"]),
+			});
 			state = runCommands(state, "move-right");
 			state = { ...state, viewport: viewAt(5000, 5000) };
 
@@ -70,7 +73,9 @@ describe("canvasReducer (integration)", () => {
 		});
 
 		it("keeps the viewport itself when the change is already in view", () => {
-			let state = createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+			let state = createTestState(twoRectsDoc, {
+				selection: selectionOf(["rect-1"]),
+			});
 			state = runCommands(state, "move-right");
 			state = { ...state, viewport: viewAt(-100, -100) };
 
@@ -131,7 +136,7 @@ describe("canvasReducer (integration)", () => {
 			// Two rects 4000 apart, both nudged: their union cannot fit at zoom 2.
 			let state = createTestState(
 				docOf(rectDoc("rect-1", 0, 0), rectDoc("rect-2", 4000, 0)),
-				{ selectedIds: ["rect-1", "rect-2"] },
+				{ selection: selectionOf(["rect-1", "rect-2"]) },
 			);
 			state = runCommands(state, "move-down");
 			state = { ...state, viewport: viewAt(-3000, 0, 2) };
@@ -155,7 +160,7 @@ describe("canvasReducer (integration)", () => {
 						padding: { top: 0, right: 0, bottom: 0, left: 0 },
 					},
 				} as CanvasDoc,
-				{ selectedIds: ["rect-2"] },
+				{ selection: selectionOf(["rect-2"]) },
 			);
 			state = runCommands(state, "move-right");
 			state = { ...state, viewport: viewAt(0, 0) };

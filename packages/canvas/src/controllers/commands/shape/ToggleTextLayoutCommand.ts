@@ -11,7 +11,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export type TextLayoutSelection = Pick<
 	CanvasControllerState,
-	"objects" | "selectedIds"
+	"objects" | "selection"
 >;
 
 /**
@@ -22,13 +22,11 @@ export type TextLayoutSelection = Pick<
  * the rest alone, the way the style menu writes a property only to the objects
  * declaring it.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @returns The switchable ids, in selection order
  */
-export const collectTextLayoutIds = (
-	selection: TextLayoutSelection,
-): string[] =>
-	selection.selectedIds.filter((id) => isTextState(selection.objects[id]));
+export const collectTextLayoutIds = (state: TextLayoutSelection): string[] =>
+	state.selection.objectIds.filter((id) => isTextState(state.objects[id]));
 
 /**
  * Whether every text in the selection already wraps in a width of its own. A
@@ -36,18 +34,14 @@ export const collectTextLayoutIds = (
  * selection to the block layout and the second takes it back — which is what
  * makes two presses of one button land somewhere predictable.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @returns False when the selection holds no text at all
  */
-export const isSelectionTextBlock = (
-	selection: TextLayoutSelection,
-): boolean => {
-	const ids = collectTextLayoutIds(selection);
+export const isSelectionTextBlock = (state: TextLayoutSelection): boolean => {
+	const ids = collectTextLayoutIds(state);
 	return (
 		ids.length > 0 &&
-		ids.every(
-			(id) => (selection.objects[id] as TextState).textLayout === "block",
-		)
+		ids.every((id) => (state.objects[id] as TextState).textLayout === "block")
 	);
 };
 

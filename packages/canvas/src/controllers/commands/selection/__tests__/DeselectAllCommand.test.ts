@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DeselectAllCommand } from "../DeselectAllCommand";
@@ -13,8 +14,7 @@ const baseState = (
 ): CanvasControllerState =>
 	({
 		objects: {},
-		selectedIds: [],
-		objectPartSelection: null,
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		areaSelection: null,
 		shapeDrawing: null,
@@ -28,8 +28,7 @@ const baseState = (
 describe("DeselectAllCommand", () => {
 	it("clears all selection and editing state at once", () => {
 		const state = baseState({
-			selectedIds: ["a", "b"],
-			objectPartSelection: vertexPartSelection("p1", 0),
+			selection: selectionOf(["a", "b"], vertexPartSelection(0)),
 			multiSelectGroup: { id: "ms" } as never,
 			areaSelection: { x: 0, y: 0 } as never,
 			shapeDrawing: { type: "rect" } as never,
@@ -37,8 +36,8 @@ describe("DeselectAllCommand", () => {
 			edgeScrollEnabled: true,
 		});
 		const next = DeselectAllCommand.execute(state, registries);
-		expect(next.selectedIds).toEqual([]);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.objectIds).toEqual([]);
+		expect(next.selection.part).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.areaSelection).toBeNull();
 		expect(next.shapeDrawing).toBeNull();
@@ -58,16 +57,14 @@ describe("DeselectAllCommand", () => {
 					text: { name: { text: "User" }, rows: { text: [] } },
 				},
 			} as never,
-			selectedIds: ["rec-1"],
-			objectPartSelection: {
-				objectId: "rec-1",
+			selection: selectionOf(["rec-1"], {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
-			},
+			}),
 		});
 		const next = DeselectAllCommand.execute(state, registries);
-		expect(next.objectPartSelection).toBeNull();
-		expect(next.selectedIds).toEqual([]);
+		expect(next.selection.part).toBeNull();
+		expect(next.selection.objectIds).toEqual([]);
 	});
 
 	it("closes an open StencilLibrary category flyout", () => {
@@ -81,7 +78,7 @@ describe("DeselectAllCommand", () => {
 		it("is executable when there is an object selection", () => {
 			expect(
 				DeselectAllCommand.canExecute(
-					baseState({ selectedIds: ["a"] }),
+					baseState({ selection: selectionOf(["a"]) }),
 					registries,
 				),
 			).toBe(true);
@@ -90,7 +87,7 @@ describe("DeselectAllCommand", () => {
 		it("is executable when there is a connector selection", () => {
 			expect(
 				DeselectAllCommand.canExecute(
-					baseState({ selectedIds: ["c1"] }),
+					baseState({ selection: selectionOf(["c1"]) }),
 					registries,
 				),
 			).toBe(true);
@@ -100,8 +97,7 @@ describe("DeselectAllCommand", () => {
 			expect(
 				DeselectAllCommand.canExecute(
 					baseState({
-						selectedIds: ["p1"],
-						objectPartSelection: vertexPartSelection("p1", 0),
+						selection: selectionOf(["p1"], vertexPartSelection(0)),
 					}),
 					registries,
 				),
@@ -125,7 +121,7 @@ describe("DeselectAllCommand", () => {
 
 		it("is not executable during an object drag (other than area selection)", () => {
 			const state = baseState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
 				areaSelection: null,
 			});

@@ -16,6 +16,7 @@ import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
@@ -216,14 +217,14 @@ const openSession = (scenario: FuzzScenario): CanvasControllerState => {
 			},
 		],
 	} as unknown as CanvasDoc;
-	const base = createTestState(doc, { selectedIds: [OBJECT_ID] });
+	const base = createTestState(doc, { selection: selectionOf([OBJECT_ID]) });
 	const seeded = {
 		...base.objects[OBJECT_ID],
 		text: { [SLOT_ID]: { text: scenario.slotContent } },
 	} as CanvasControllerState["objects"][string];
 	const objects = { ...base.objects, [OBJECT_ID]: seeded };
 	return createTestState(doc, {
-		selectedIds: [OBJECT_ID],
+		selection: selectionOf([OBJECT_ID]),
 		objects,
 		textEditState: {
 			kind: "shape",

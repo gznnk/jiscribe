@@ -50,7 +50,7 @@ const computePastePlacement = (
 	// walk is the selection, not the clipboard that never moves.
 	const step = computeDuplicateOffset(state);
 	const chainedCenter = isLastDuplicateStillSelected(state)
-		? getSelectionCenter(state, state.selectedIds)
+		? getSelectionCenter(state, state.selection.objectIds)
 		: null;
 	const offset: Point = chainedCenter
 		? {
@@ -135,7 +135,7 @@ export const handlePaste = (
 		...state,
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
-		selectedIds: newObjectIds,
+		selection: { objectIds: newObjectIds, part: null },
 		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),
 		contextMenuPosition: null,
 		commitVersion: state.commitVersion + 1,

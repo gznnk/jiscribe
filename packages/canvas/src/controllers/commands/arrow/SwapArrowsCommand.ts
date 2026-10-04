@@ -12,7 +12,7 @@ export const SwapArrowsCommand: ExecutableCommand = {
 		if (getSelectedConnectorId(state) !== null) {
 			return true;
 		}
-		return state.selectedIds.some(
+		return state.selection.objectIds.some(
 			(id) => state.objects[id]?.type === "polyline",
 		);
 	},
@@ -42,7 +42,7 @@ export const SwapArrowsCommand: ExecutableCommand = {
 		const updatedObjects = { ...state.objects };
 		let changed = false;
 
-		for (const id of state.selectedIds) {
+		for (const id of state.selection.objectIds) {
 			const obj = state.objects[id];
 			if (!obj) {
 				continue;

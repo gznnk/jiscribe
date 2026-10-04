@@ -25,7 +25,7 @@ export const readSelectionArrowType = (
 	state: CanvasControllerState,
 	property: (typeof ARROW_STYLE_KEYS)[number],
 ): SelectionValue<ArrowType> =>
-	readSelectionValue(state.selectedIds, state.objects, (object) => {
+	readSelectionValue(state.selection.objectIds, state.objects, (object) => {
 		if (!object.features?.arrow) {
 			return undefined;
 		}

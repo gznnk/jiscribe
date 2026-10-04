@@ -6,7 +6,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * or `undefined` if no common ancestor group exists.
  */
 export function findLowestCommonAncestor(
-	ids: string[],
+	ids: readonly string[],
 	objects: Record<string, ObjectState>,
 ): string | undefined {
 	if (ids.length === 0) {

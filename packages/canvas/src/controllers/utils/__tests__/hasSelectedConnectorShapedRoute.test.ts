@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { hasSelectedConnectorShapedRoute } from "../hasSelectedConnectorShapedRoute";
 
 const connector = (
@@ -16,7 +17,10 @@ const connector = (
 describe("hasSelectedConnectorShapedRoute", () => {
 	it("no connector selected -> false", () => {
 		expect(
-			hasSelectedConnectorShapedRoute({ selectedIds: [], objects: {} }),
+			hasSelectedConnectorShapedRoute({
+				selection: selectionOf([]),
+				objects: {},
+			}),
 		).toBe(false);
 	});
 
@@ -24,7 +28,7 @@ describe("hasSelectedConnectorShapedRoute", () => {
 		const rect = { id: "r", type: "rect" } as unknown as ObjectState;
 		expect(
 			hasSelectedConnectorShapedRoute({
-				selectedIds: ["r"],
+				selection: selectionOf(["r"]),
 				objects: { r: rect },
 			}),
 		).toBe(false);
@@ -33,7 +37,7 @@ describe("hasSelectedConnectorShapedRoute", () => {
 	it("the route carries no vertices -> false (the engine routes it)", () => {
 		expect(
 			hasSelectedConnectorShapedRoute({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c", []) },
 			}),
 		).toBe(false);
@@ -42,7 +46,7 @@ describe("hasSelectedConnectorShapedRoute", () => {
 	it("the route carries a vertex -> true (shaped by hand)", () => {
 		expect(
 			hasSelectedConnectorShapedRoute({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c", [{ x: 10, y: 20 }]) },
 			}),
 		).toBe(true);

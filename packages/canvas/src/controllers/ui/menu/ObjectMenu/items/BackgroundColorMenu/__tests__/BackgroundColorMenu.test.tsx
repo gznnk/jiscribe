@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
 import { BackgroundColorMenu } from "../BackgroundColorMenu";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -27,7 +28,7 @@ const rect = (id: string, fill: string): ObjectState =>
 /** The selection with the menu's dropdown open, so the picker grid is drawn too. */
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
-		selectedIds: shapes.map((shape) => shape.id),
+		selection: selectionOf(shapes.map((shape) => shape.id)),
 		objectMenuOpenId: "bg-color",
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),
 	}) as unknown as CanvasControllerState;

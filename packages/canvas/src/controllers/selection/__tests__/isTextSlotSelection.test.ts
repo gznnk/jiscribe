@@ -7,7 +7,6 @@ describe("isTextSlotSelection", () => {
 	it("holds for a pick of the slot kind", () => {
 		expect(
 			isTextSlotSelection({
-				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
@@ -19,6 +18,6 @@ describe("isTextSlotSelection", () => {
 	});
 
 	it("does not hold for a pick of another kind", () => {
-		expect(isTextSlotSelection(vertexPartSelection("p1", 0))).toBe(false);
+		expect(isTextSlotSelection(vertexPartSelection(0))).toBe(false);
 	});
 });

@@ -3,7 +3,7 @@ import { isConnectorState } from "../../states/objects/connector/ConnectorState"
 
 /** What a requested selection turns into */
 export type ResolvedSelection = {
-	/** Ids that become `selectedIds`: either shapes and groups, or a single connector */
+	/** Ids that become `selection.objectIds`: either shapes and groups, or a single connector */
 	selectedIds: string[];
 	/**
 	 * Requested ids that could not be selected: ids absent from the canvas, and

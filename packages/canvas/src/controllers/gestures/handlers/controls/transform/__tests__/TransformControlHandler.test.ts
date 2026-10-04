@@ -5,6 +5,7 @@ import type { GroupState } from "../../../../../../states/objects/primitives/gro
 import { MIN_GROUP_DIMENSION } from "../../../../../../states/utils/groupDimensions";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { TransformControlHandler } from "../TransformControlHandler";
 
@@ -68,7 +69,7 @@ const makeGroupResizeState = (): CanvasControllerState => {
 		registries,
 		objects,
 		rootIds: ["g"],
-		selectedIds: ["g"],
+		selection: selectionOf(["g"]),
 		viewport,
 		multiSelectGroup: null,
 		snapFeedback: { x: [], y: [] },
@@ -78,7 +79,7 @@ const makeGroupResizeState = (): CanvasControllerState => {
 				keyPoints: {},
 				bboxes: {},
 				snapCandidates: { x: [], y: [] },
-				selectedIds: ["g"],
+				selection: selectionOf(["g"]),
 				selectedIdsWithDescendants: new Set(["g", "a"]),
 				multiSelectGroup: null,
 				viewport,
@@ -98,14 +99,14 @@ const makeDragState = (): CanvasControllerState => {
 		registries,
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
-		selectedIds: ["rect-1"],
+		selection: selectionOf(["rect-1"]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "rect-1": rect },
 				keyPoints: {},
 				snapCandidates: null,
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				selectedIdsWithDescendants: new Set(["rect-1"]),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },

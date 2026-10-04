@@ -39,7 +39,7 @@ const buildUpdatedMeta = (
  * typed edit (the preview applied it already) and is recorded, while an edit
  * with no target is a no-op whether previewed or committed.
  *
- * @param state - The state whose selection names the object: a lone `selectedIds` entry
+ * @param state - The state whose selection names the object: a lone `selection.objectIds` entry
  */
 export const canApplyMetaProperty = (state: CanvasControllerState): boolean =>
 	resolveMetaTargetId(state) !== null;

@@ -17,7 +17,7 @@ export const SendBackwardCommand: ExecutableCommand = {
 	},
 
 	execute: (state) => {
-		const selectedIds = state.selectedIds;
+		const selectedIds = state.selection.objectIds;
 		const commonParentId = state.objects[selectedIds[0]]?.parentId;
 		const sourceIds =
 			commonParentId != null

@@ -19,7 +19,7 @@ export type TextPlacedObjectState = ObjectState &
  */
 export type TextVerticalBasisSelection = Pick<
 	CanvasControllerState,
-	"objects" | "selectedIds"
+	"objects" | "selection"
 >;
 
 /**
@@ -28,16 +28,16 @@ export type TextVerticalBasisSelection = Pick<
  * switches the ones that move and leaves the rest alone, the way the style menu
  * writes a property only to the objects declaring it.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @param textVerticalBasisRegistry - The canvas's per-type answer; a type absent from it is skipped
  * @returns The switchable ids, in selection order
  */
 export const collectTextVerticalBasisIds = (
-	selection: TextVerticalBasisSelection,
+	state: TextVerticalBasisSelection,
 	textVerticalBasisRegistry: ObjectTextVerticalBasisRegistry,
 ): string[] =>
-	selection.selectedIds.filter((id) => {
-		const object = selection.objects[id];
+	state.selection.objectIds.filter((id) => {
+		const object = state.objects[id];
 		return (
 			object !== undefined && textVerticalBasisRegistry.supports(object.type)
 		);
@@ -49,20 +49,20 @@ export const collectTextVerticalBasisIds = (
  * the whole selection to the frame basis and the second takes it back — which is
  * what makes two presses of one button land somewhere predictable.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @param textVerticalBasisRegistry - The canvas's per-type answer
  * @returns False when nothing in the selection can be switched at all
  */
 export const isSelectionTextVerticalBasisFrame = (
-	selection: TextVerticalBasisSelection,
+	state: TextVerticalBasisSelection,
 	textVerticalBasisRegistry: ObjectTextVerticalBasisRegistry,
 ): boolean => {
-	const ids = collectTextVerticalBasisIds(selection, textVerticalBasisRegistry);
+	const ids = collectTextVerticalBasisIds(state, textVerticalBasisRegistry);
 	return (
 		ids.length > 0 &&
 		ids.every(
 			(id) =>
-				(selection.objects[id] as TextPlacedObjectState).textVerticalBasis ===
+				(state.objects[id] as TextPlacedObjectState).textVerticalBasis ===
 				"frame",
 		)
 	);

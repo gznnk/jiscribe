@@ -21,16 +21,16 @@ import type { PropertyPanelItemProps } from "../PropertyPanelTypes";
  */
 const ConnectorRoutingItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 }) => {
 	const messages = useCanvasMessages();
 
-	if (isSelectedConnectorSelfLoop({ objects, selectedIds })) {
+	if (isSelectedConnectorSelfLoop({ objects, selection })) {
 		return null;
 	}
 
 	// An omitted routing draws orthogonal, so that is the segment to light.
-	const routing = getSelectedRouting({ objects, selectedIds });
+	const routing = getSelectedRouting({ objects, selection });
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowRouting}>

@@ -9,5 +9,5 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * @param selection - The slice a section's `isShown` receives; a selection that is not a lone connector gives false
  */
 export const hasSelectedConnectorLabelText = (
-	selection: Pick<CanvasControllerState, "selectedIds" | "objects">,
+	selection: Pick<CanvasControllerState, "selection" | "objects">,
 ): boolean => Boolean(getSelectedConnectorLabel(selection)?.text);

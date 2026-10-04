@@ -98,8 +98,8 @@ describe("handleGesture - area selection (marquee)", () => {
 			registries,
 		);
 
-		expect([...state.selectedIds].sort()).toEqual(["r1", "r2"]);
-		expect(state.selectedIds).not.toContain("far");
+		expect([...state.selection.objectIds].sort()).toEqual(["r1", "r2"]);
+		expect(state.selection.objectIds).not.toContain("far");
 
 		// Two objects selected -> a transient multi-select group wraps them.
 		expect(state.multiSelectGroup?.id).toBe(MULTI_SELECT_GROUP.ID);
@@ -118,7 +118,7 @@ describe("handleGesture - area selection (marquee)", () => {
 		);
 		// Area 0..50 clips r1 (30..70) — partial overlap, so not selected.
 		state = handleGesture(state, dragGesture("drag", 0, 0, 50, 50), registries);
-		expect(state.selectedIds).toEqual([]);
+		expect(state.selection.objectIds).toEqual([]);
 		expect(state.multiSelectGroup).toBeNull();
 	});
 

@@ -211,15 +211,14 @@ export const createCanvasReducer =
 				);
 				return {
 					...state,
-					selectedIds,
+					// The part hanging off the previous selection means nothing for the
+					// new one, nor does the open submenu (same clears as SelectAllCommand).
+					selection: { objectIds: selectedIds, part: null },
 					multiSelectGroup: createMultiSelectGroup(
 						selectedIds,
 						state.objects,
 						state.multiSelectGroup,
 					),
-					// The UI hanging off the previous selection means nothing for the
-					// new one (same clears as SelectAllCommand).
-					objectPartSelection: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
 				};
@@ -617,7 +616,7 @@ const buildPropertyCoalesceKey = (
 	prefix: string,
 	property: string,
 ): string => {
-	return `${prefix}:${property}:${state.selectedIds.join(",")}`;
+	return `${prefix}:${property}:${state.selection.objectIds.join(",")}`;
 };
 
 /**

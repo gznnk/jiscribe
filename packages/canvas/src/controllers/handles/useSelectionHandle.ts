@@ -48,7 +48,7 @@ export const useSelectionHandle = (
 	return useMemo(
 		() => ({
 			getSelectedIds: () => {
-				return [...canvasStateRef.current.selectedIds];
+				return [...canvasStateRef.current.selection.objectIds];
 			},
 			select: (ids) => {
 				dispatch({ type: "SET_SELECTION", ids });

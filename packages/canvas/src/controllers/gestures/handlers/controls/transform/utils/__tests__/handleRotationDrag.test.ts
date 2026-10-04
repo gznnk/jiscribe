@@ -4,6 +4,7 @@ import type { ObjectState } from "../../../../../../../states/objects/base/Objec
 import type { GroupState } from "../../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerTypes";
 import { handleRotationDrag } from "../handleRotationDrag";
 
@@ -60,7 +61,7 @@ const makeState = (
 		registries,
 		objects,
 		rootIds: Object.keys(objects),
-		selectedIds,
+		selection: selectionOf(selectedIds),
 		multiSelectGroup,
 		viewport: VIEWPORT,
 		activeDrag: {
@@ -321,7 +322,7 @@ describe("handleRotationDrag", () => {
 		it("returns the state as is when no drag is open", () => {
 			const state = {
 				objects: { "rect-1": makeRect("rect-1", 50, 25) },
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				activeDrag: null,
 			} as unknown as CanvasControllerState;
 			expect(

@@ -117,7 +117,7 @@ export class VertexInsertHandler extends ControlStrategy {
 			objects: updatedObjects,
 			// An insertion renumbers the vertices after it, so a picked one is dropped
 			// rather than left addressing whoever took the number over.
-			objectPartSelection: null,
+			selection: { ...state.selection, part: null },
 			edgeScrollEnabled: true,
 		};
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { hasSelectedConnectorLabelText } from "../hasSelectedConnectorLabelText";
 
 const objectsOf = (connector: Record<string, unknown>) =>
@@ -13,7 +14,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is true for a selected connector whose label has text", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedIds: ["c1"],
+				selection: selectionOf(["c1"]),
 				objects: objectsOf({ label: { text: "Yes" } }),
 			}),
 		).toBe(true);
@@ -22,7 +23,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is false when the label's text is empty", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedIds: ["c1"],
+				selection: selectionOf(["c1"]),
 				objects: objectsOf({ label: { text: "" } }),
 			}),
 		).toBe(false);
@@ -31,7 +32,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is false for a connector carrying no label", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedIds: ["c1"],
+				selection: selectionOf(["c1"]),
 				objects: objectsOf({}),
 			}),
 		).toBe(false);
@@ -40,7 +41,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is false when no connector is selected", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedIds: [],
+				selection: selectionOf([]),
 				objects: objectsOf({ label: { text: "Yes" } }),
 			}),
 		).toBe(false);

@@ -7,7 +7,7 @@ import { ConnectorControls } from "../ConnectorControls";
 
 type ConnectorControlsLayerProps = Pick<
 	CanvasControllerState,
-	"selectedIds" | "objects" | "objectPartSelection"
+	"selection" | "objects"
 > & {
 	zoom?: number;
 };
@@ -19,8 +19,8 @@ type ConnectorControlsLayerProps = Pick<
  */
 const ConnectorControlsLayerComponent: React.FC<
 	ConnectorControlsLayerProps
-> = ({ selectedIds, objects, zoom, objectPartSelection }) => {
-	const connectorId = getSelectedConnectorId({ selectedIds, objects });
+> = ({ selection, objects, zoom }) => {
+	const connectorId = getSelectedConnectorId({ selection, objects });
 	if (connectorId === null) {
 		return null;
 	}
@@ -30,7 +30,7 @@ const ConnectorControlsLayerComponent: React.FC<
 			connectorState={objects[connectorId] as ConnectorState}
 			objects={objects}
 			zoom={zoom}
-			objectPartSelection={objectPartSelection}
+			selection={selection}
 		/>
 	);
 };

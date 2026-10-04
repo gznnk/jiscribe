@@ -12,6 +12,7 @@ import type { ConnectorState } from "../../../states/objects/connector/Connector
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { reconcileObjectPartSelection } from "../../selection/reconcileObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 
@@ -26,12 +27,15 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 	const violations: string[] = [];
 
 	// A connector is selected on its own: one of them, never beside a shape.
-	for (const id of state.selectedIds) {
-		if (isConnectorState(state.objects[id]) && state.selectedIds.length > 1) {
+	for (const id of state.selection.objectIds) {
+		if (
+			isConnectorState(state.objects[id]) &&
+			state.selection.objectIds.length > 1
+		) {
 			violations.push(`connector ${id} is selected alongside other objects`);
 		}
 		if (!state.objects[id]) {
-			violations.push(`selectedIds references nonexistent object ${id}`);
+			violations.push(`selection.objectIds names nonexistent object ${id}`);
 		}
 	}
 
@@ -40,22 +44,22 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 	// reducer clears it after the command runs (reconcileObjectPartSelection) — so
 	// the invariant is pinned on the reconciled state, not the raw one. What this
 	// catches is a command turning a stale selection into a live one.
-	const { objectPartSelection } = reconcileObjectPartSelection(
+	const { objectIds, part } = reconcileObjectPartSelection(
 		state,
 		registries.objectPartKind,
-	);
-	if (objectPartSelection !== null) {
-		const { objectId, ranges } = objectPartSelection;
-		const slotId = ranges[0].anchorId;
-		if (state.selectedIds.length !== 1 || state.selectedIds[0] !== objectId) {
+	).selection;
+	if (part !== null) {
+		const slotId = part.ranges[0].anchorId;
+		if (objectIds.length !== 1) {
 			violations.push(
-				`objectPartSelection resolves to ${objectId} which is not the sole selection`,
+				`selection.part survives a selection of ${objectIds.length} objects`,
 			);
 		}
+		const objectId = objectIds[0];
 		const owner = state.objects[objectId];
 		if (!isTextStyleState(owner) || owner.text?.[slotId] === undefined) {
 			violations.push(
-				`objectPartSelection resolves to slot ${slotId} which ${objectId} does not have`,
+				`selection.part resolves to slot ${slotId} which ${objectId} does not have`,
 			);
 		}
 	}
@@ -152,35 +156,33 @@ describe("every command preserves structural invariants", () => {
 			label: "one shape selected",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedIds: ["rect-1"],
+					selection: selectionOf(["rect-1"]),
 				}),
 		},
 		{
 			label: "all shapes selected",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedIds: ["rect-1", "rect-2"],
+					selection: selectionOf(["rect-1", "rect-2"]),
 				}),
 		},
 		{
 			// No built-in type spells its text out as slots, so this exercises the
-			// stale side: no command may turn a raw objectPartSelection into a live one.
+			// stale side: no command may turn a raw part selection into a live one.
 			label: "one shape selected with a stale text slot",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedIds: ["rect-1"],
-					objectPartSelection: {
-						objectId: "rect-1",
+					selection: selectionOf(["rect-1"], {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "no-such-slot", focusId: "no-such-slot" }],
-					},
+					}),
 				}),
 		},
 		{
 			label: "a connector selected",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedIds: ["conn-1"],
+					selection: selectionOf(["conn-1"]),
 				}),
 		},
 		{
@@ -188,12 +190,15 @@ describe("every command preserves structural invariants", () => {
 			build: () => {
 				const inner = runCommand(
 					createCommandState(threeRectsWithConnectorDoc, {
-						selectedIds: ["rect-1", "rect-2"],
+						selection: selectionOf(["rect-1", "rect-2"]),
 					}),
 					"group",
 				);
 				return runCommand(
-					{ ...inner, selectedIds: [inner.selectedIds[0], "rect-3"] },
+					{
+						...inner,
+						selection: selectionOf([inner.selection.objectIds[0], "rect-3"]),
+					},
 					"group",
 				);
 			},

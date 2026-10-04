@@ -8,6 +8,7 @@ import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../ObjectPartSelection";
 import { reconcileObjectPartSelection } from "../reconcileObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
+import { selectionOf } from "./support/selectionOf";
 import { vertexPartSelection } from "./support/vertexPartSelection";
 
 /** A record-like shape: multiple text slots, declared via features.text = "slots". */
@@ -42,17 +43,15 @@ objectPartKind.register("connector", [createVertexPartKindDefinition(2)]);
 const makeState = (
 	objects: Record<string, ObjectState>,
 	selectedIds: string[],
-	objectPartSelection: ObjectPartSelection | null,
+	part: ObjectPartSelection | null,
 ): CanvasControllerState =>
 	({
 		objects,
-		selectedIds,
-		objectPartSelection,
+		selection: selectionOf(selectedIds, part),
 	}) as unknown as CanvasControllerState;
 
 /** The single-slot part selection most cases here are built from. */
-const textSlot = (objectId: string, slotId: string): ObjectPartSelection => ({
-	objectId,
+const textSlot = (slotId: string): ObjectPartSelection => ({
 	kind: TEXT_SLOT_PART_KIND,
 	ranges: [{ anchorId: slotId, focusId: slotId }],
 });
@@ -62,7 +61,7 @@ describe("reconcileObjectPartSelection", () => {
 		const state = makeState(
 			{ "rec-1": slotShape("rec-1") },
 			["rec-1"],
-			textSlot("rec-1", "rows"),
+			textSlot("rows"),
 		);
 		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
 	});
@@ -77,34 +76,23 @@ describe("reconcileObjectPartSelection", () => {
 			"rec-1": slotShape("rec-1"),
 			"rec-2": slotShape("rec-2"),
 		};
-		const slot = textSlot("rec-1", "name");
+		const slot = textSlot("name");
 		expect(
 			reconcileObjectPartSelection(
 				makeState(objects, ["rec-1", "rec-2"], slot),
 				objectPartKind,
-			).objectPartSelection,
+			).selection.part,
 		).toBeNull();
 		expect(
 			reconcileObjectPartSelection(makeState(objects, [], slot), objectPartKind)
-				.objectPartSelection,
-		).toBeNull();
-	});
-
-	it("clears the selection when it moved to another object", () => {
-		const objects = {
-			"rec-1": slotShape("rec-1"),
-			"rec-2": slotShape("rec-2"),
-		};
-		const state = makeState(objects, ["rec-2"], textSlot("rec-1", "name"));
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+				.selection.part,
 		).toBeNull();
 	});
 
 	it("clears the selection when the object is gone", () => {
-		const state = makeState({}, ["rec-1"], textSlot("rec-1", "name"));
+		const state = makeState({}, ["rec-1"], textSlot("name"));
 		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+			reconcileObjectPartSelection(state, objectPartKind).selection.part,
 		).toBeNull();
 	});
 
@@ -118,10 +106,10 @@ describe("reconcileObjectPartSelection", () => {
 		const state = makeState(
 			{ "rect-1": singleSlotRect },
 			["rect-1"],
-			textSlot("rect-1", "body"),
+			textSlot("body"),
 		);
 		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+			reconcileObjectPartSelection(state, objectPartKind).selection.part,
 		).toBeNull();
 	});
 
@@ -129,10 +117,10 @@ describe("reconcileObjectPartSelection", () => {
 		const state = makeState(
 			{ "rec-1": slotShape("rec-1") },
 			["rec-1"],
-			textSlot("rec-1", "operations"),
+			textSlot("operations"),
 		);
 		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+			reconcileObjectPartSelection(state, objectPartKind).selection.part,
 		).toBeNull();
 	});
 
@@ -140,10 +128,10 @@ describe("reconcileObjectPartSelection", () => {
 		const state = makeState(
 			{ "rec-1": slotShape("rec-1") },
 			["rec-1"],
-			textSlot("rec-1", "toString"),
+			textSlot("toString"),
 		);
 		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+			reconcileObjectPartSelection(state, objectPartKind).selection.part,
 		).toBeNull();
 	});
 
@@ -157,16 +145,15 @@ describe("reconcileObjectPartSelection", () => {
 		const state = makeState(
 			{ "rec-1": brokenShape },
 			["rec-1"],
-			textSlot("rec-1", "name"),
+			textSlot("name"),
 		);
 		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+			reconcileObjectPartSelection(state, objectPartKind).selection.part,
 		).toBeNull();
 	});
 
 	it("clears the whole selection when one range has a dead end, rather than narrowing it", () => {
 		const state = makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], {
-			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [
 				{ anchorId: "name", focusId: "rows" },
@@ -174,7 +161,7 @@ describe("reconcileObjectPartSelection", () => {
 			],
 		});
 		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+			reconcileObjectPartSelection(state, objectPartKind).selection.part,
 		).toBeNull();
 	});
 
@@ -182,25 +169,25 @@ describe("reconcileObjectPartSelection", () => {
 		const state = makeState(
 			{ "c-1": connector("c-1") },
 			["c-1"],
-			vertexPartSelection("c-1", 1),
+			vertexPartSelection(1),
 		);
 		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
 	});
 
 	it("clears a vertex picked on a connector another object has since replaced", () => {
 		const objects = { "c-1": connector("c-1"), "rec-1": slotShape("rec-1") };
-		const pick = vertexPartSelection("c-1", 1);
+		const pick = vertexPartSelection(1);
 		expect(
 			reconcileObjectPartSelection(
 				makeState(objects, ["rec-1"], pick),
 				objectPartKind,
-			).objectPartSelection,
+			).selection.part,
 		).toBeNull();
 		expect(
 			reconcileObjectPartSelection(
 				makeState(objects, ["c-2"], pick),
 				objectPartKind,
-			).objectPartSelection,
+			).selection.part,
 		).toBeNull();
 	});
 
@@ -208,16 +195,15 @@ describe("reconcileObjectPartSelection", () => {
 		const state = makeState(
 			{ "c-1": connector("c-1") },
 			["c-1"],
-			vertexPartSelection("c-1", 7),
+			vertexPartSelection(7),
 		);
 		expect(
-			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,
+			reconcileObjectPartSelection(state, objectPartKind).selection.part,
 		).toBeNull();
 	});
 
 	it("returns the state itself when every range survived", () => {
 		const state = makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], {
-			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [
 				{ anchorId: "name", focusId: "name" },

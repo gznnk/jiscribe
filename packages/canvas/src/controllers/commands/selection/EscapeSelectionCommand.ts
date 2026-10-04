@@ -19,8 +19,12 @@ export const EscapeSelectionCommand: ExecutableCommand = {
 		// first, leaving the object it belongs to selected. The step changes what the
 		// menu acts on, so an open submenu closes with it (clearAllSelection does the
 		// same on the step after).
-		if (state.objectPartSelection !== null) {
-			return { ...state, objectPartSelection: null, objectMenuOpenId: null };
+		if (state.selection.part !== null) {
+			return {
+				...state,
+				selection: { ...state.selection, part: null },
+				objectMenuOpenId: null,
+			};
 		}
 		return clearAllSelection(state);
 	},

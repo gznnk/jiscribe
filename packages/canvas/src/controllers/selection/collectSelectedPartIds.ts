@@ -9,17 +9,17 @@ import type { ObjectPartSelection } from "./ObjectPartSelection";
  * A range whose ends differ collapses to its focus: what lies between two parts
  * is the kind's own question, and none is asked here.
  *
- * @param selection - The parts picked one level below the object, taken as it
- *   stands (the reducer has already dropped one naming something gone,
- *   reconcileObjectPartSelection)
- * @returns The covered ids, non-empty whenever `selection.ranges` is
+ * @param part - The parts picked one level below the object
+ *   (`CanvasSelection.part`), taken as it stands (the reducer has already
+ *   dropped one naming something gone, reconcileObjectPartSelection)
+ * @returns The covered ids, non-empty whenever `part.ranges` is
  */
 export const collectSelectedPartIds = (
-	selection: ObjectPartSelection,
+	part: ObjectPartSelection,
 ): readonly string[] => {
 	const collected: string[] = [];
 	const seen = new Set<string>();
-	for (const range of selection.ranges) {
+	for (const range of part.ranges) {
 		if (!seen.has(range.focusId)) {
 			seen.add(range.focusId);
 			collected.push(range.focusId);

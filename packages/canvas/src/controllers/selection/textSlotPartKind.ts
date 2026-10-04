@@ -13,14 +13,14 @@ export const TEXT_SLOT_PART_KIND = "textSlot";
  * registers this one kind for every text slot there is, so comparing the name is
  * the definition itself rather than a lookup standing in for one.
  *
- * @param objectPartSelection - The parts picked one level below the object,
- *   taken as it stands (the reducer has already dropped one naming something
- *   gone, reconcileObjectPartSelection); null when none are
+ * @param part - The parts picked one level below the object
+ *   (`CanvasSelection.part`), taken as it stands (the reducer has already
+ *   dropped one naming something gone, reconcileObjectPartSelection); null when
+ *   none are
  * @returns True only while a slot is picked; false when nothing is picked below
  *   the object, or what is picked is of another kind (a vertex)
  */
 export const isTextSlotSelection = (
-	objectPartSelection: ObjectPartSelection | null,
-): objectPartSelection is ObjectPartSelection =>
-	objectPartSelection !== null &&
-	objectPartSelection.kind === TEXT_SLOT_PART_KIND;
+	part: ObjectPartSelection | null,
+): part is ObjectPartSelection =>
+	part !== null && part.kind === TEXT_SLOT_PART_KIND;

@@ -1,4 +1,5 @@
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 
 export type BuiltinItemKey =
 	| "arrowHead"
@@ -58,8 +59,8 @@ export type OpenReferenceHandler = (payload: OpenReferencePayload) => void;
  */
 export type ObjectMenuItemProps = {
 	objects: Record<string, ObjectState>;
-	/** The selection, in selection order; a lone connector is one of them (CanvasControllerState.selectedIds). */
-	selectedIds: string[];
+	/** What the canvas is pointed at: the objects picked, and the part picked below a single one of them (CanvasSelection). */
+	selection: CanvasSelection;
 	/** ID of the currently open menu section (`toggle:{sectionId}`). */
 	openSectionId: string | null;
 	onPropertyUpdate: StylePropertyUpdater;

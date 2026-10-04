@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { isArrangeableSelection } from "../isArrangeableSelection";
 
 const makeState = (
@@ -8,7 +9,7 @@ const makeState = (
 	objects: Record<string, { parentId?: string; type?: string }>,
 ): CanvasControllerState =>
 	({
-		selectedIds,
+		selection: selectionOf(selectedIds),
 		objects,
 	}) as unknown as CanvasControllerState;
 
@@ -17,7 +18,7 @@ describe("isArrangeableSelection", () => {
 		expect(isArrangeableSelection(makeState([], {}))).toBe(false);
 	});
 
-	describe("object selection (selectedIds)", () => {
+	describe("object selection", () => {
 		it("a single root is true", () => {
 			expect(isArrangeableSelection(makeState(["a"], { a: {} }))).toBe(true);
 		});

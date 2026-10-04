@@ -13,7 +13,7 @@ import { CONTAINER_DOC_DEFAULTS } from "../schema/ContainerDoc";
  * @returns The first selected container's `headerFill`, or the doc default (`"auto"`, the theme surface) when none carries one
  */
 export const getSelectedHeaderFill = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 ): string =>
 	getFirstSelectedPropValue(selectedIds, objects, "headerFill", isString) ??

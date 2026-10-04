@@ -148,9 +148,9 @@ export const handleGesture = (
 				: state.dragStartCaches.snapCandidates;
 
 		// Precompute the ID set of selected objects plus all descendants (to avoid recomputing on every drag event)
-		// If a handler changes selectedIds after dragStart, ObjectEventHandler overwrites it
+		// If a handler changes the selection after dragStart, ObjectEventHandler overwrites it
 		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
-			state.selectedIds,
+			state.selection.objectIds,
 			state.objects,
 		);
 
@@ -163,7 +163,7 @@ export const handleGesture = (
 			keyPoints,
 			bboxes,
 			snapCandidates,
-			selectedIds: state.selectedIds,
+			selectedIds: state.selection.objectIds,
 			selectedIdsWithDescendants,
 			multiSelectGroup: state.multiSelectGroup,
 			viewport: state.viewport,

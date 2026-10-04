@@ -4,15 +4,16 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
 
 /**
- * Connectors are selected via selectedIds, which is mutually exclusive with selectedIds.
+ * A connector is selected on its own, never beside a shape.
  * The order of rootIds specifies the connector's initial z position.
  */
 const withConnectorSelected = (rootIds: string[]): CanvasControllerState =>
 	createCommandState(twoRectsWithConnectorDoc, {
-		selectedIds: ["conn-1"],
+		selection: selectionOf(["conn-1"]),
 		rootIds,
 	});
 

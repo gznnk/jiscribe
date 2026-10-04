@@ -25,11 +25,12 @@ export const CopyCommand: ExecutableCommand = {
 	// Not offered for a lone connector: a connector is copied as part of the
 	// shapes it runs between (selectConnectorsInSelection), never on its own.
 	canExecute: (state) =>
-		state.selectedIds.length > 0 && getSelectedConnectorId(state) === null,
+		state.selection.objectIds.length > 0 &&
+		getSelectedConnectorId(state) === null,
 
 	execute: (state) => {
 		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
-			state.selectedIds,
+			state.selection.objectIds,
 			state.objects,
 		);
 
@@ -51,7 +52,7 @@ export const CopyCommand: ExecutableCommand = {
 			objects[connId] = state.objects[connId];
 		}
 
-		const firstObj = state.objects[state.selectedIds[0]];
+		const firstObj = state.objects[state.selection.objectIds[0]];
 		const center =
 			state.multiSelectGroup != null
 				? { x: state.multiSelectGroup.cx, y: state.multiSelectGroup.cy }
@@ -64,7 +65,7 @@ export const CopyCommand: ExecutableCommand = {
 		// preserving their relative stacking. Connectors are kept mixed into rootIds rather than a
 		// separate array (same representation as state's rootIds).
 		const rootIds = sortObjectIdsByZOrder(
-			[...state.selectedIds, ...connectorIds],
+			[...state.selection.objectIds, ...connectorIds],
 			state.objects,
 			state.rootIds,
 		);

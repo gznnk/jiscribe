@@ -120,7 +120,7 @@ const applyConnectorRouting = (
 		},
 		// Switching the routing rewrites the waypoints, so a picked one is dropped
 		// rather than left addressing whoever took the number over.
-		objectPartSelection: null,
+		selection: { ...state.selection, part: null },
 		commitVersion: state.commitVersion + 1,
 	};
 };

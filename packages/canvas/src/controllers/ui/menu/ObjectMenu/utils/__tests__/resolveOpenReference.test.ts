@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { resolveOpenReference } from "../resolveOpenReference";
 
 const rect = (id: string, meta?: Record<string, unknown>): ObjectState =>
@@ -16,7 +17,7 @@ const makeState = (
 	objects: Record<string, ObjectState>,
 ): CanvasControllerState =>
 	({
-		selectedIds,
+		selection: selectionOf(selectedIds),
 		objects,
 	}) as unknown as CanvasControllerState;
 

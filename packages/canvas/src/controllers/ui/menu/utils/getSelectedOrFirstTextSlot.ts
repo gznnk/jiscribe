@@ -49,7 +49,7 @@ const withTypeStyleDefaults = (
  * draws even where the author set nothing — and a toggle reads its direction off
  * the same value.
  *
- * @param state - The current canvas controller state; its `objectPartSelection` is
+ * @param state - The current canvas controller state; its `selection.part` is
  *   read as it stands, the reducer having already dropped a stale one
  *   (reconcileObjectPartSelection)
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, keyed by
@@ -72,13 +72,13 @@ export const getSelectedOrFirstTextSlot = (
 		};
 	}
 
-	const { objectPartSelection } = state;
-	if (isTextSlotSelection(objectPartSelection)) {
-		const target = state.objects[objectPartSelection.objectId];
+	const { objectIds, part } = state.selection;
+	if (isTextSlotSelection(part)) {
+		const target = state.objects[objectIds[0]];
 		if (isTextStyleState(target)) {
 			// One slot is read, and in this version the selection is always one
 			// collapsed range, so that slot is the first of the ids it covers.
-			const slotId = collectSelectedPartIds(objectPartSelection)[0];
+			const slotId = collectSelectedPartIds(part)[0];
 			return withTypeStyleDefaults(
 				textStyleDefaults,
 				target.type,
@@ -89,7 +89,7 @@ export const getSelectedOrFirstTextSlot = (
 	}
 
 	const firstWithText = getFirstSelectedWithProp(
-		state.selectedIds,
+		objectIds,
 		state.objects,
 		"text",
 	) as (ObjectState & TextStyleState) | undefined;

@@ -6,6 +6,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { readSelectionTextStyle } from "../readSelectionTextStyle";
@@ -27,12 +28,11 @@ const group = (id: string, childIds: string[]): GroupState =>
 const makeState = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
-	objectPartSelection: ObjectPartSelection | null = null,
+	part: ObjectPartSelection | null = null,
 ): CanvasControllerState =>
 	({
-		selectedIds,
+		selection: selectionOf(selectedIds, part),
 		objects,
-		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 
 /** An object being edited on its body slot, with its first two characters selected. */
@@ -41,9 +41,8 @@ const editingState = (
 	content: RichText,
 ): CanvasControllerState =>
 	({
-		selectedIds: ["a"],
+		selection: selectionOf(["a"]),
 		objects: { a: object },
-		objectPartSelection: null,
 		textEditState: {
 			kind: "shape",
 			objectId: "a",
@@ -160,7 +159,6 @@ describe("readSelectionTextStyle", () => {
 		expect(
 			readSelectionTextStyle(
 				makeState(["a"], objects, {
-					objectId: "a",
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "rows", focusId: "rows" }],
 				}),

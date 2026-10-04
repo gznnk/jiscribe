@@ -14,7 +14,7 @@ import { CONTAINER_HEADER_HEIGHT } from "../schema/ContainerDoc";
  * @returns The first selected container's `headerHeight` in local px, or CONTAINER_HEADER_HEIGHT when none states one
  */
 export const getSelectedHeaderHeight = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 ): number =>
 	getFirstSelectedPropValue(selectedIds, objects, "headerHeight", isNumber) ??

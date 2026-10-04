@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
 import { ArrowHeadMenu } from "../ArrowHeadMenu";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -24,7 +25,7 @@ const line = (id: string, startArrow: string, endArrow: string): ObjectState =>
 
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
-		selectedIds: shapes.map((shape) => shape.id),
+		selection: selectionOf(shapes.map((shape) => shape.id)),
 		objectMenuOpenId: null,
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),
 	}) as unknown as CanvasControllerState;

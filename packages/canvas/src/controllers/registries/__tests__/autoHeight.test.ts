@@ -10,6 +10,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isValidRectState } from "../../../states/objects/primitives/rect/validateRectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { ToggleAutoHeightCommand } from "../../commands/shape/ToggleAutoHeightCommand";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { reconcileObjectContentSizes } from "../../utils/reconcileObjectContentSizes";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
@@ -45,7 +46,7 @@ const controllerStateOf = (object: ObjectState): CanvasControllerState =>
 	({
 		objects: { [object.id]: object },
 		rootIds: [object.id],
-		selectedIds: [object.id],
+		selection: selectionOf([object.id]),
 		multiSelectGroup: null,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;

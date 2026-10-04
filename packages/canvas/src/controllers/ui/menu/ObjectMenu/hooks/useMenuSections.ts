@@ -51,7 +51,8 @@ const collectSelectionSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): ObjectMenuSection[] => {
-	const { selectedIds, objects } = state;
+	const { objectIds: selectedIds } = state.selection;
+	const { objects } = state;
 
 	const connectorId = getSelectedConnectorId(state);
 	if (connectorId !== null) {
@@ -130,7 +131,7 @@ export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
 ): ObjectMenuSection[] => {
-	const { selectedIds, objectPartSelection, objects } = state;
+	const { selection, objects } = state;
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
@@ -139,13 +140,6 @@ export const useMenuSections = (
 	return useMemo(
 		() => (enabled ? getMenuSections(state, objectMenu) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[
-			enabled,
-			selectedIds,
-			objectPartSelection,
-			isEditingShapeText,
-			objects,
-			objectMenu,
-		],
+		[enabled, selection, isEditingShapeText, objects, objectMenu],
 	);
 };

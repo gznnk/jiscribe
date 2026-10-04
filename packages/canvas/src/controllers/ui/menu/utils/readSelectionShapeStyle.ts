@@ -49,7 +49,7 @@ export type SelectionShapeStyle = {
  * @returns Every field; each is `none` when no object of the selection declares `styleGroup`
  */
 export const readSelectionShapeStyle = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
 	styleGroup: ShapeStyleGroup,

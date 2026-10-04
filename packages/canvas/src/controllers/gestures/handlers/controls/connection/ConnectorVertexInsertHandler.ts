@@ -140,7 +140,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 			objects: updatedObjects,
 			// An insertion renumbers the waypoints after it, so a picked one is dropped
 			// rather than left addressing whoever took the number over.
-			objectPartSelection: null,
+			selection: { ...state.selection, part: null },
 			edgeScrollEnabled: true,
 		};
 

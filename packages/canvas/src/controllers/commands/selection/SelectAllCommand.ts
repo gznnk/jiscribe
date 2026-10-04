@@ -26,7 +26,7 @@ export const SelectAllCommand: ExecutableCommand = {
 
 		return {
 			...state,
-			selectedIds: selectableIds,
+			selection: { objectIds: selectableIds, part: null },
 			multiSelectGroup: createMultiSelectGroup(
 				selectableIds,
 				state.objects,

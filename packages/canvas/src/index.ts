@@ -187,6 +187,8 @@ export type {
 	TransformByGroupFunction,
 	RotateByGroupFunction,
 } from "./controllers/gestures/registry/ObjectBehaviorTypes";
+// What an ObjectMenu item and a sidebar row are handed as their `selection`.
+export type { CanvasSelection } from "./controllers/selection/CanvasSelection";
 export type {
 	ObjectMenuSection,
 	ObjectMenuItem,

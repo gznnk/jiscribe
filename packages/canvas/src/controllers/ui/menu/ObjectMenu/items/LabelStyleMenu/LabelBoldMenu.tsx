@@ -17,10 +17,10 @@ import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
  */
 const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selectedIds });
+	const label = getSelectedConnectorLabel({ objects, selection });
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
