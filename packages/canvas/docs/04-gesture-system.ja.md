@@ -172,9 +172,17 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 ラベルを作る。確定するまでは `textEditState` が保持し、コネクターには書き込まない。
 複数スロットを持つ図形は入れ子の形を使う: 例えば UML の `record`
 （`plugins/uml-shapes/src/presentation/RecordBox.tsx`）の `<g data-kind="object">` は、その箱が持つ
-区画ごとの矩形を包み、各区画にスロット id をそのまま `data-part` として付ける（`data-part="name"` /
-`data-part="attributes"` など）。ダブルクリックした区画から編集スロットを解決する
-（`resolveTextSlotId` が値を `state.text` のキーと照合し、該当しなければ先頭のスロットに落とす）。
+区画ごとの矩形を包み、各区画にそのスロットの部品住所を `data-part` として付ける
+（`data-part="textSlot:name"` / `data-part="textSlot:attributes"` など。`textSlotPart` で組む）。
+この住所からクリックした区画のスロットを選び（`applyPartClick`）、ダブルクリックした区画から
+編集スロットを解決する（`resolveTextSlotId` が id を `state.text` のキーと照合し、該当しなければ
+先頭のスロットに落とす）。
+
+オブジェクト自身のサブ部品の part 文法——`<kind>:<partId>`。`kind` は `ObjectPartKindRegistry` が
+答える名前空間、`partId` はコアには不透明——の正本は `controllers/selection/partAddress.ts` で、
+`menu` kind が自分の正本を持つのと同じ形。書く側は kind ごとの組み立て関数
+（`textSlotPart`。プラグイン向けに `@jiscribe/canvas` から公開。`vertexPart`）で住所を組み、
+`applyPartClick` が読み戻すので、ハンドラが kind を書くことはない。
 
 #### 移行（issue #81）— 完了
 

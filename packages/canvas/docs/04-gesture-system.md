@@ -179,9 +179,16 @@ With no label yet, a double click on the bare line creates one at the clicked po
 the path and snapped the same way), carried in `textEditState` until the edit is committed.
 A multi-slot shape uses the nested form instead: for example, the `<g data-kind="object">` of the UML
 `record` shape (`plugins/uml-shapes/src/presentation/RecordBox.tsx`) wraps one rect per compartment the box
-has, each carrying its slot id as its `data-part` (`data-part="name"`, `data-part="attributes"`, and so
-on), which is how a double click resolves the text slot it landed in (`resolveTextSlotId` checks the value
-against the keys of `state.text` and falls back to the first slot otherwise).
+has, each carrying that slot's part address as its `data-part` (`data-part="textSlot:name"`,
+`data-part="textSlot:attributes"`, and so on, built with `textSlotPart`). That address is how a click picks
+the slot it landed in (`applyPartClick`) and a double click resolves the one to edit (`resolveTextSlotId`
+checks the id against the keys of `state.text` and falls back to the first slot otherwise).
+
+The part grammar of an object's own sub-parts — `<kind>:<partId>`, where `kind` is a namespace
+`ObjectPartKindRegistry` answers for and `partId` is opaque to core — has its home in
+`controllers/selection/partAddress.ts`, the way the `menu` kind's has its own. Writers build the address
+with the per-kind builder (`textSlotPart`, exported for plugins from `@jiscribe/canvas`; `vertexPart`) and
+`applyPartClick` reads it back, so no handler spells a kind.
 
 #### Migration (issue #81) — completed
 

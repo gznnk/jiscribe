@@ -301,6 +301,12 @@ A type whose `features.text` is `"slots"` is given the `"textSlot"` kind without
 declaring anything, its part ids being the keys of its own `text`; declaring
 `"textSlot"` yourself replaces that one rather than colliding with it.
 
+A kind's name holds no `:`, that being the separator of the `<kind>:<partId>`
+address a part's element carries in its `data-part` (`partAddress.ts`). Marking
+the element is all a part takes to be pickable: core parses the address, checks
+it against the kind's `has` and writes the selection (`applyPartClick`). For text
+slots the builder is `textSlotPart`, exported from `@jiscribe/canvas`.
+
 ## What is not extensible yet
 
 Honest limits, so you do not design against something that is not there.

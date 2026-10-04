@@ -4,12 +4,19 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { VERTEX_PART_KIND } from "../../../../../selection/createVertexPartKindDefinition";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import {
+	vertexPart,
+	VERTEX_PART_KIND,
+} from "../../../../../selection/createVertexPartKindDefinition";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "../../../utils/snap/calcSnapCandidates";
 import { VertexControlHandler } from "../VertexControlHandler";
 
 const handler = new VertexControlHandler();
+// A click resolves the vertex through the registry's `vertex` kind, which
+// "polyline" carries as a built-in type.
+const registries = createTestRegistries();
 
 const makePoly = (id: string, points: Point[]) =>
 	({
@@ -54,7 +61,7 @@ const makeDragEvent = (
 		type: "drag",
 		targetKind: "control",
 		targetId: "poly-1",
-		targetPart: `vertex:${vertexIndex}`,
+		targetPart: vertexPart(vertexIndex),
 		button: 0,
 		last,
 		mods: { shift, alt: false, ctrl: false, meta: false },
@@ -85,6 +92,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 				{ x: 100, y: 0 },
 			]),
 			makeDragEvent({ x: 30, y: 12 }, false),
+			registries,
 		);
 		expect(vertexAt(next, 0)).toEqual({ x: 30, y: 12 });
 		expect(next.axisLockFeedback).toBeNull();
@@ -97,6 +105,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 				{ x: 100, y: 0 },
 			]),
 			makeDragEvent({ x: 70, y: 38 }, true),
+			registries,
 		);
 		expect(vertexAt(next, 0)).toEqual({ x: 70, y: 30 });
 		expect(next.axisLockFeedback).toEqual({ y: 30 });
@@ -109,6 +118,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 				{ x: 100, y: 0 },
 			]),
 			makeDragEvent({ x: 25, y: 80 }, true),
+			registries,
 		);
 		expect(vertexAt(next, 0)).toEqual({ x: 20, y: 80 });
 		expect(next.axisLockFeedback).toEqual({ x: 20 });
@@ -123,6 +133,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 				]),
 				// dx=4 (dominant/free axis), dy=3 -> 4 <= 6px (zoom=1), snaps to origin
 				makeDragEvent({ x: 24, y: 33 }, true),
+				registries,
 			);
 			expect(vertexAt(next, 0)).toEqual({ x: 20, y: 30 });
 			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
@@ -136,6 +147,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 				]),
 				// dx=8 > 6px -> horizontal movement with Y locked
 				makeDragEvent({ x: 28, y: 33 }, true),
+				registries,
 			);
 			expect(vertexAt(next, 0)).toEqual({ x: 28, y: 30 });
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
@@ -156,7 +168,7 @@ describe("VertexControlHandler - handleDragEnd", () => {
 			type: "dragEnd",
 		} as CanvasEvent;
 
-		const next = handler.handle(state, event);
+		const next = handler.handle(state, event, registries);
 
 		expect(vertexAt(next, 0)).toEqual({ x: 30, y: 12 });
 		expect(next.edgeScrollEnabled).toBe(false);
@@ -205,11 +217,15 @@ describe("VertexControlHandler - snapping against the edited poly", () => {
 			},
 		} as CanvasControllerState;
 
-		const afterStart = handler.handle(state, {
-			...makeDragEvent(polyPoints[0], false),
-			type: "dragStart",
-		} as CanvasEvent);
-		return handler.handle(afterStart, makeDragEvent(last, false));
+		const afterStart = handler.handle(
+			state,
+			{
+				...makeDragEvent(polyPoints[0], false),
+				type: "dragStart",
+			} as CanvasEvent,
+			registries,
+		);
+		return handler.handle(afterStart, makeDragEvent(last, false), registries);
 	};
 
 	it("does not snap to its own bbox center", () => {
@@ -240,7 +256,7 @@ describe("VertexControlHandler - picking a vertex", () => {
 			type: "click",
 			targetKind: "control",
 			targetId: "poly-1",
-			targetPart: `vertex:${vertexIndex}`,
+			targetPart: vertexPart(vertexIndex),
 			button: 0,
 			last: { x: 0, y: 0 },
 			mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -253,6 +269,7 @@ describe("VertexControlHandler - picking a vertex", () => {
 				{ x: 100, y: 0 },
 			]),
 			clickEvent(1),
+			registries,
 		);
 		expect(next.objectPartSelection).toEqual({
 			objectId: "poly-1",
@@ -261,12 +278,20 @@ describe("VertexControlHandler - picking a vertex", () => {
 		});
 	});
 
-	it("a click on an index the object has outgrown changes nothing", () => {
+	it("a click on an index the object has outgrown picks nothing", () => {
 		const state = makeDragState([
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
 		]);
-		expect(handler.handle(state, clickEvent(7))).toBe(state);
+
+		// Nothing was picked, so the state is handed back as it stands rather than
+		// rewritten with the same null (applyPartClick).
+		expect(handler.handle(state, clickEvent(7), registries)).toBe(state);
+
+		const picked = handler.handle(state, clickEvent(1), registries);
+		expect(
+			handler.handle(picked, clickEvent(7), registries).objectPartSelection,
+		).toBeNull();
 	});
 
 	it("a dragStart drops the pick, the vertex being moved rather than addressed", () => {
@@ -276,11 +301,16 @@ describe("VertexControlHandler - picking a vertex", () => {
 				{ x: 100, y: 0 },
 			]),
 			clickEvent(0),
+			registries,
 		);
-		const next = handler.handle(picked, {
-			...makeDragEvent({ x: 0, y: 0 }, false),
-			type: "dragStart",
-		} as CanvasEvent);
+		const next = handler.handle(
+			picked,
+			{
+				...makeDragEvent({ x: 0, y: 0 }, false),
+				type: "dragStart",
+			} as CanvasEvent,
+			registries,
+		);
 		expect(next.objectPartSelection).toBeNull();
 	});
 });

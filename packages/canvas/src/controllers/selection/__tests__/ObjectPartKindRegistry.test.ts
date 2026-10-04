@@ -46,6 +46,14 @@ describe("ObjectPartKindRegistry", () => {
 		).toThrow(/vertex/);
 	});
 
+	it("throws on a kind holding the separator of a part address", () => {
+		const registry = createObjectPartKindRegistry();
+
+		expect(() => registry.register("table", [partOf("cell:row")])).toThrow(
+			/cell:row/,
+		);
+	});
+
 	// Registration is per type rather than additive, the way a definition is
 	// applied whole (applyObjectDefinition).
 	it("replaces everything a type had registered before", () => {

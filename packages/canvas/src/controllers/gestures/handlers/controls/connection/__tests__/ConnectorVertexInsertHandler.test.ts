@@ -229,7 +229,7 @@ describe("moving a connector waypoint via VertexControlHandler (reuse check)", (
 			mods: { shift: false, alt: false, ctrl: false, meta: false },
 		} as unknown as CanvasEvent;
 
-		const next = moveHandler.handle(state, event);
+		const next = moveHandler.handle(state, event, registries);
 		expect(pointsOf(next)).toEqual([
 			{ x: 0, y: 0 },
 			{ x: 120, y: 40 },

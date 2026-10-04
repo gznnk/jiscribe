@@ -1,3 +1,4 @@
+import { textSlotPart } from "@jiscribe/canvas";
 import { createFrameObject } from "@jiscribe/canvas-sdk";
 import type { Rect } from "@jiscribe/geometry";
 
@@ -16,8 +17,8 @@ import type { RecordState } from "../state/RecordState";
  * per-slot text overlays placed by calcRecordTextRegion, memo) lives in
  * createFrameObject; here we draw the compartments and the linework. The wrapping
  * <g> carries the object's data-kind/data-id, and each compartment carries its
- * slot id as data-part, so a double click resolves to the compartment it landed
- * in (getGestureTarget).
+ * slot's address as data-part (textSlotPart), so a click picks the compartment it
+ * landed in and a double click opens it (getGestureTarget).
  *
  * Every fill is laid down before any line, so a compartment's fill can never
  * cover the divider above it.
@@ -57,7 +58,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 			{compartments.map(({ slotId, region }) => (
 				<RecordCompartment
 					key={slotId}
-					data-part={slotId}
+					data-part={textSlotPart(slotId)}
 					x={region.x}
 					y={region.y}
 					width={region.width}

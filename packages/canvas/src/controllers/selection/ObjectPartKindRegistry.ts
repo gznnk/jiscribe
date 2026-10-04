@@ -1,5 +1,6 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
+import { PART_ADDRESS_SEPARATOR } from "./partAddress";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
@@ -12,7 +13,11 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  */
 export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 	{
-		/** The part-id namespace this entry answers for: "textSlot", "vertex", "cell". */
+		/**
+		 * The part-id namespace this entry answers for: "textSlot", "vertex",
+		 * "cell". Holds no `:`, that being the separator of the DOM addresses the
+		 * parts carry (partAddress).
+		 */
 		kind: string;
 
 		/**
@@ -52,7 +57,8 @@ export class ObjectPartKindRegistry {
 	 *
 	 * @param type - The object type these parts belong to
 	 * @param parts - One entry per `kind`; a repeated kind throws, since the
-	 *   second would silently shadow the first
+	 *   second would silently shadow the first, and so does a kind holding `:`,
+	 *   which would collide with the separator of a part's DOM address
 	 */
 	register<TState extends ObjectState>(
 		type: ObjectType,
@@ -60,6 +66,11 @@ export class ObjectPartKindRegistry {
 	): void {
 		const byKind = new Map<string, ObjectPartKindDefinition>();
 		for (const part of parts) {
+			if (part.kind.includes(PART_ADDRESS_SEPARATOR)) {
+				throw new Error(
+					`Object part kind "${part.kind}" holds "${PART_ADDRESS_SEPARATOR}", the separator of a part address`,
+				);
+			}
 			if (byKind.has(part.kind)) {
 				throw new Error(`Duplicate object part kind "${part.kind}"`);
 			}
