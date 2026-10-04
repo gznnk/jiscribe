@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { collectObjectPartIds } from "../collectObjectPartIds";
+import { collectSelectedPartIds } from "../collectSelectedPartIds";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
 
 const selectionOf = (
 	ranges: { anchorId: string; focusId: string }[],
-): Parameters<typeof collectObjectPartIds>[0] => ({
+): Parameters<typeof collectSelectedPartIds>[0] => ({
 	objectId: "rec-1",
 	kind: TEXT_SLOT_PART_KIND,
 	ranges,
 });
 
-describe("collectObjectPartIds", () => {
+describe("collectSelectedPartIds", () => {
 	it("gives the one id a collapsed range names", () => {
 		expect(
-			collectObjectPartIds(
+			collectSelectedPartIds(
 				selectionOf([{ anchorId: "name", focusId: "name" }]),
 			),
 		).toEqual(["name"]);
@@ -22,7 +22,7 @@ describe("collectObjectPartIds", () => {
 
 	it("collapses a range whose ends differ to its focus", () => {
 		expect(
-			collectObjectPartIds(
+			collectSelectedPartIds(
 				selectionOf([{ anchorId: "name", focusId: "rows" }]),
 			),
 		).toEqual(["rows"]);
@@ -30,7 +30,7 @@ describe("collectObjectPartIds", () => {
 
 	it("keeps the ranges in their stored order", () => {
 		expect(
-			collectObjectPartIds(
+			collectSelectedPartIds(
 				selectionOf([
 					{ anchorId: "rows", focusId: "rows" },
 					{ anchorId: "name", focusId: "name" },
@@ -41,7 +41,7 @@ describe("collectObjectPartIds", () => {
 
 	it("gives a repeated id once", () => {
 		expect(
-			collectObjectPartIds(
+			collectSelectedPartIds(
 				selectionOf([
 					{ anchorId: "name", focusId: "name" },
 					{ anchorId: "rows", focusId: "name" },

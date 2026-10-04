@@ -13,7 +13,6 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
-import { createTextSlotPartRegistry } from "../../selection/__tests__/support/textSlotPartRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
 
@@ -43,21 +42,11 @@ initializeStyleProperties(
 styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
-// Every type whose fixtures hold slots takes part in slot selection, the way
-// applyObjectDefinition makes a `features.text === "slots"` type take part.
-const objectPartKind = createTextSlotPartRegistry(
-	"rect",
-	"group",
-	"connector",
-	EXTRA_SHAPE_TYPE,
-);
-
 const applyStyleProperty = (
 	state: CanvasControllerState,
 	property: string,
 	value: string,
-): CanvasControllerState =>
-	styleRegistry.apply(state, property, value, objectPartKind);
+): CanvasControllerState => styleRegistry.apply(state, property, value);
 
 type MinState = Pick<
 	CanvasControllerState,

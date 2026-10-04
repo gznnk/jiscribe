@@ -5,7 +5,8 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
-import { resolveSelectedTextSlotIds } from "../../selection/resolveSelectedTextSlotIds";
+import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
+import { isTextSlotSelection } from "../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
 import type { ExecutableCommand } from "../CommandTypes";
 
@@ -52,7 +53,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return canEditText(state.objects[state.selectedIds[0]]);
 	},
 
-	execute(state, registries) {
+	execute(state) {
 		// When a connector is selected, start editing its label (label.text).
 		if (state.selectedConnectorId && state.selectedIds.length === 0) {
 			const connector = state.objects[state.selectedConnectorId];
@@ -86,17 +87,15 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return state;
 		}
 
-		// Enter carries no pointer position, so the part already selected one level
-		// below the object decides, falling back to the first slot when it names no
-		// slot (nothing picked, or a kind covering none). The editor opens on one
-		// slot, and in this version the selection is always one collapsed range, so
-		// that slot is the first of the ones it names.
-		const slotId =
-			resolveSelectedTextSlotIds(
-				targetObject,
-				state.objectPartSelection,
-				registries.objectPartKind,
-			)?.[0] ?? getFirstTextSlotId(targetObject.text);
+		// Enter carries no pointer position, so the slot already selected one level
+		// below the object decides, falling back to the first slot when none is
+		// (nothing picked, or a part of another kind). The editor opens on one slot,
+		// and in this version the selection is always one collapsed range, so that
+		// slot is the first of the ids it covers.
+		const { objectPartSelection } = state;
+		const slotId = isTextSlotSelection(objectPartSelection)
+			? collectSelectedPartIds(objectPartSelection)[0]
+			: getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;
 		}

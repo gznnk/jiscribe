@@ -22,8 +22,4 @@ export const createTextSlotPartKindDefinition =
 			isTextStyleState(object) &&
 			object.text !== undefined &&
 			Object.prototype.hasOwnProperty.call(object.text, partId),
-
-		// The identity: these part ids are slot ids already, which is what spares the
-		// slot rules a special case for this kind (resolveSelectedTextSlotIds).
-		textSlotIds: (_object, partIds) => partIds,
 	});

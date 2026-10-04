@@ -59,7 +59,7 @@ import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import { isTextSlotAddressed } from "./selection/isTextSlotAddressed";
+import { isTextSlotSelection } from "./selection/textSlotPartKind";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -703,12 +703,6 @@ const CanvasComponent = ({
 	const { minX, minY, zoom } = drawnViewport;
 
 	const { objectPartSelection } = state;
-	// Only a pick standing for text slots narrows the chrome to text; a vertex
-	// leaves it addressing the object as a whole.
-	const isTextSlotSelected = isTextSlotAddressed(
-		state,
-		registries.objectPartKind,
-	);
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
@@ -819,7 +813,7 @@ const CanvasComponent = ({
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={isTextSlotSelected}
+									isTextSlotSelected={isTextSlotSelection(objectPartSelection)}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer

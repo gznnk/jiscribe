@@ -3,9 +3,9 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { collectSelectedPartIds } from "../../../selection/collectSelectedPartIds";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
-import { resolveSelectedTextSlotIds } from "../../../selection/resolveSelectedTextSlotIds";
+import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 import { Outline } from "../Outline";
 import { TextSlotOutline } from "../TextSlotOutline";
@@ -17,7 +17,7 @@ type SelectionOverlayProps = {
 	/**
 	 * Part selection to outline, `state.objectPartSelection` as it stands: the
 	 * reducer has already dropped one that would draw a box around a slot no longer
-	 * selected (reconcileObjectPartSelection). Only a pick standing for text slots
+	 * selected (reconcileObjectPartSelection). Only a pick of a text slot
 	 * is outlined; a vertex has handles of its own (VertexControlsLayer)
 	 */
 	objectPartSelection?: ObjectPartSelection | null;
@@ -36,26 +36,13 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	multiSelectGroup,
 	objectPartSelection = null,
 }) => {
-	const { objectPartKind } = useCanvasRegistries();
-
 	if (selectedIds.length === 0) {
 		return null;
 	}
 
-	const partOwner =
-		objectPartSelection === null
-			? undefined
-			: objects[objectPartSelection.objectId];
-	// One box, because in this version the selection is always a single collapsed
-	// range (no Shift or Ctrl gesture builds a wider one yet).
-	const outlinedSlotId =
-		partOwner === undefined
-			? undefined
-			: resolveSelectedTextSlotIds(
-					partOwner,
-					objectPartSelection,
-					objectPartKind,
-				)?.[0];
+	const slotSelection = isTextSlotSelection(objectPartSelection)
+		? objectPartSelection
+		: null;
 
 	// Collect selected IDs plus all descendants (deduped)
 	const uniqueIds = new Set(selectedIds);
@@ -81,7 +68,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 					<Outline
 						key={id}
 						frame={obj}
-						dashed={outlinedSlotId !== undefined && partOwner?.id === id}
+						dashed={slotSelection?.objectId === id}
 					/>
 				);
 			})}
@@ -91,8 +78,13 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 				isTransformedFrame(multiSelectGroup) && (
 					<Outline key="multi-select-group" frame={multiSelectGroup} />
 				)}
-			{partOwner !== undefined && outlinedSlotId !== undefined && (
-				<TextSlotOutline object={partOwner} slotId={outlinedSlotId} />
+			{slotSelection && objects[slotSelection.objectId] && (
+				<TextSlotOutline
+					object={objects[slotSelection.objectId]}
+					// One box, because in this version the selection is always a single
+					// collapsed range (no Shift or Ctrl gesture builds a wider one yet).
+					slotId={collectSelectedPartIds(slotSelection)[0]}
+				/>
 			)}
 		</g>
 	);

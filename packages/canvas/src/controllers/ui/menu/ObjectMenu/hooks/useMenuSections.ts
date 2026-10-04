@@ -2,9 +2,8 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { isTextSlotAddressed } from "../../../../selection/isTextSlotAddressed";
-import type { ObjectPartKindRegistry } from "../../../../selection/ObjectPartKindRegistry";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
@@ -112,19 +111,14 @@ const collectSelectionSections = (
  *
  * @param state - The current canvas controller state
  * @param objectMenuRegistry - Per-canvas ObjectMenuRegistry, asked once per concrete type in the selection
- * @param objectPartKind - Per-canvas ObjectPartKindRegistry, read for whether the pick below the object stands for text slots
  * @returns The sections in display order
  */
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
-	objectPartKind: ObjectPartKindRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
-	if (
-		!isTextSlotAddressed(state, objectPartKind) &&
-		state.textEditState?.kind !== "shape"
-	) {
+	if (!isTextAddressed(state)) {
 		return sections;
 	}
 	return filterTextSlotMenuSections(sections);
@@ -144,10 +138,10 @@ export const useMenuSections = (
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
-	const { objectMenu, objectPartKind } = useCanvasRegistries();
+	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
-		() => (enabled ? getMenuSections(state, objectMenu, objectPartKind) : []),
+		() => (enabled ? getMenuSections(state, objectMenu) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
 			enabled,
@@ -157,7 +151,6 @@ export const useMenuSections = (
 			isEditingShapeText,
 			objects,
 			objectMenu,
-			objectPartKind,
 		],
 	);
 };

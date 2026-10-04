@@ -8,8 +8,7 @@ import { combineSelectionValues } from "./SelectionValue";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { isTextSlotAddressed } from "../../../selection/isTextSlotAddressed";
-import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
+import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -34,17 +33,12 @@ export type SelectionTextStyle = {
 const collectSelectionTextStyles = (
 	state: CanvasControllerState,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
-	objectPartKind: ObjectPartKindRegistry,
 ): TextSlotStyle[] => {
 	if (
 		resolveTextEditSelection(state) !== null ||
-		isTextSlotAddressed(state, objectPartKind)
+		isTextSlotSelection(state.objectPartSelection)
 	) {
-		const slot = getSelectedOrFirstTextSlot(
-			state,
-			textStyleDefaults,
-			objectPartKind,
-		);
+		const slot = getSelectedOrFirstTextSlot(state, textStyleDefaults);
 		return slot === undefined ? [] : [slot];
 	}
 
@@ -88,19 +82,13 @@ const readSlotStyleField = <Key extends keyof TextSlotStyle>(
  *
  * @param state - The current canvas controller state; the selection, the objects it names, and any open editor or picked slot are read
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, consulted per object by its own type
- * @param objectPartKind - Per-canvas ObjectPartKindRegistry, read for whether the pick below the object stands for text slots
  * @returns Every field of TextSlotStyle; each is `none` when nothing selected holds text
  */
 export const readSelectionTextStyle = (
 	state: CanvasControllerState,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
-	objectPartKind: ObjectPartKindRegistry,
 ): SelectionTextStyle => {
-	const styles = collectSelectionTextStyles(
-		state,
-		textStyleDefaults,
-		objectPartKind,
-	);
+	const styles = collectSelectionTextStyles(state, textStyleDefaults);
 	return {
 		fontColor: readSlotStyleField(styles, "fontColor"),
 		fontSize: readSlotStyleField(styles, "fontSize"),

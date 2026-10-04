@@ -14,7 +14,7 @@ import type { ObjectPartSelection } from "./ObjectPartSelection";
  *   reconcileObjectPartSelection)
  * @returns The covered ids, non-empty whenever `selection.ranges` is
  */
-export const collectObjectPartIds = (
+export const collectSelectedPartIds = (
 	selection: ObjectPartSelection,
 ): readonly string[] => {
 	const collected: string[] = [];

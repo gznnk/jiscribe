@@ -1,6 +1,25 @@
+import type { ObjectPartSelection } from "./ObjectPartSelection";
+
 /**
  * The part-id namespace of the text slots a `features.text === "slots"` type
  * spells out, with part ids spelled as the slot keys of the object's `text` —
  * the same ids the slot elements already carry in their `data-part`.
  */
 export const TEXT_SLOT_PART_KIND = "textSlot";
+
+/**
+ * Whether what is picked one level below the object is a text slot. Core
+ * registers this one kind for every text slot there is, so comparing the name is
+ * the definition itself rather than a lookup standing in for one.
+ *
+ * @param objectPartSelection - The parts picked one level below the object,
+ *   taken as it stands (the reducer has already dropped one naming something
+ *   gone, reconcileObjectPartSelection); null when none are
+ * @returns True only while a slot is picked; false when nothing is picked below
+ *   the object, or what is picked is of another kind (a vertex)
+ */
+export const isTextSlotSelection = (
+	objectPartSelection: ObjectPartSelection | null,
+): objectPartSelection is ObjectPartSelection =>
+	objectPartSelection !== null &&
+	objectPartSelection.kind === TEXT_SLOT_PART_KIND;

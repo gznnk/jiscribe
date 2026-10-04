@@ -24,7 +24,10 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import {
+	isTextSlotSelection,
+	TEXT_SLOT_PART_KIND,
+} from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
@@ -87,7 +90,7 @@ function handleTextSlotClick(
 	// the id is still replaced.
 	if (
 		currentPartSelection?.objectId === targetObject.id &&
-		currentPartSelection.kind === TEXT_SLOT_PART_KIND &&
+		isTextSlotSelection(currentPartSelection) &&
 		currentPartSelection.ranges.length === 1 &&
 		currentPartSelection.ranges[0].anchorId === slotId &&
 		currentPartSelection.ranges[0].focusId === slotId

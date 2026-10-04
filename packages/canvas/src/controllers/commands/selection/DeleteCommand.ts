@@ -2,7 +2,7 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
-import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
+import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
 import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
 import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
@@ -27,7 +27,7 @@ const resolveSelectedParts = (
 	return {
 		objectId: objectPartSelection.objectId,
 		kind: objectPartSelection.kind,
-		partIds: collectObjectPartIds(objectPartSelection),
+		partIds: collectSelectedPartIds(objectPartSelection),
 	};
 };
 

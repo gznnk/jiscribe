@@ -15,22 +15,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- **For plugin authors: picking a vertex is a part selection too, and a kind
-  states which text slots it covers.** The separate single-vertex field is gone:
-  a vertex handle now writes `objectPartSelection` under the `vertex` kind, so
-  the one channel carries every pick made one level below the object and the
-  reducer's reconciliation covers vertices as it already covered slots —
-  including a connector's waypoints, picked while the connector itself is the
-  selection. Because two kinds now share the channel, a kind standing for text
-  slots says so: `ObjectPartKindDefinition.textSlotIds` gives the slots its parts
-  cover, `"textSlot"` declaring the identity and a kind naming something other
-  than text declaring nothing, and a slot-level write or read falls back to the
-  object as a whole where a kind covers none. What the user sees changes where
-  the vertex pick now follows the rules a slot pick already had: a style write or
-  a sidebar edit of the size, position or rotation no longer drops the picked
-  vertex (nothing renumbers it), so a Delete right after goes to that vertex
-  rather than to the whole shape, and Escape drops the vertex first and the shape
-  on the next press.
+- **For plugin authors: picking a vertex is a part selection too.** The separate
+  single-vertex field is gone: a vertex handle now writes `objectPartSelection`
+  under the `vertex` kind, so the one channel carries every pick made one level
+  below the object and the reducer's reconciliation covers vertices as it already
+  covered slots — including a connector's waypoints, picked while the connector
+  itself is the selection. Because two kinds now share the channel, every reader
+  that narrows itself to text asks for the slot kind by name rather than for a
+  pick of any sort. What the user sees changes where the vertex pick now follows
+  the rules a slot pick already had: a style write or a sidebar edit of the size,
+  position or rotation no longer drops the picked vertex (nothing renumbers it),
+  so a Delete right after goes to that vertex rather than to the whole shape, and
+  Escape drops the vertex first and the shape on the next press.
 - **For plugin authors: picking a text slot is one case of a general part
   selection.** What was a slot-only field is now `objectPartSelection`, a
   channel over the part kinds a type declares: the object it addresses, the

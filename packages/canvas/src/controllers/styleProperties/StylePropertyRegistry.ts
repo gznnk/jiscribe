@@ -4,7 +4,6 @@ import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { ExtraStyleProperty } from "./ExtraStyleProperty";
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 
 /**
  * Per-canvas registry and dispatch entry for styleable property updates.
@@ -40,23 +39,14 @@ export class StylePropertyRegistry {
 		return this.extrasByType.get(type)?.[property];
 	}
 
-	/**
-	 * Applies a property update to the selection via the resolved handler.
-	 *
-	 * @param state - The state to write into
-	 * @param property - The property name; one with no registered handler falls to the ExtraStyleProperties gate
-	 * @param value - The menu's raw string, coerced by the handler
-	 * @param objectPartKind - Per-canvas ObjectPartKindRegistry, passed on so a handler can
-	 *   tell a part-level write from an object-level one
-	 */
+	/** Applies a property update to the selection via the resolved handler. */
 	apply(
 		state: CanvasControllerState,
 		property: string,
 		value: string,
-		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
 		const handler = this.handlers.get(property) ?? this.extraFallback;
-		return handler.apply(state, property, value, objectPartKind);
+		return handler.apply(state, property, value);
 	}
 
 	/** Clears only the per-type declarations (handlers are canvas-wide, not per-object). */

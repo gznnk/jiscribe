@@ -1,4 +1,4 @@
-import { collectObjectPartIds } from "./collectObjectPartIds";
+import { collectSelectedPartIds } from "./collectSelectedPartIds";
 import { VERTEX_PART_KIND } from "./createVertexPartKindDefinition";
 import type { ObjectPartSelection } from "./ObjectPartSelection";
 
@@ -13,7 +13,7 @@ import type { ObjectPartSelection } from "./ObjectPartSelection";
  * @param objectId - The object whose vertex is asked for; a pick on another
  *   object, or on a kind other than the vertices, names none
  * @returns The index, or null when no vertex of this object is picked. The first
- *   of the covered ids (collectObjectPartIds) is the one read: every range
+ *   of the covered ids (collectSelectedPartIds) is the one read: every range
  *   written today is collapsed, so it is the only one
  */
 export const readSelectedVertexIndex = (
@@ -27,5 +27,5 @@ export const readSelectedVertexIndex = (
 	) {
 		return null;
 	}
-	return Number(collectObjectPartIds(objectPartSelection)[0]);
+	return Number(collectSelectedPartIds(objectPartSelection)[0]);
 };

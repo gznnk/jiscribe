@@ -8,7 +8,6 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { isTextSlotAddressed } from "../../../../../selection/isTextSlotAddressed";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
@@ -18,6 +17,7 @@ import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../../icons/UnderlineIcon";
+import { isTextAddressed } from "../../../utils/isTextAddressed";
 import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
 import { selectionValueOr } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -55,11 +55,10 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults, objectPartKind } = useCanvasRegistries();
+	const { objectTextStyleDefaults } = useCanvasRegistries();
 	const textStyle = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
-		objectPartKind,
 	);
 	// Each button is its own toggle, so mixing is read per field. A field the
 	// selection disagrees about reads as off, so one press brings all of it on.
@@ -122,10 +121,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		</ObjectMenuButton>
 	);
 
-	const isTextFocused =
-		canvasState.textEditState?.kind === "shape" ||
-		isTextSlotAddressed(canvasState, objectPartKind);
-	if (isTextFocused) {
+	if (isTextAddressed(canvasState)) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}
 

@@ -29,9 +29,8 @@ import type {
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
-import { isTextSlotAddressed } from "../../../selection/isTextSlotAddressed";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
+import { isTextAddressed } from "../utils/isTextAddressed";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
@@ -187,7 +186,6 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// The dropdown panels are DOM children of the container, so moving onto one
 	// is not a leave.
 	const [isPointerOverMenu, setIsPointerOverMenu] = useState(false);
-	const { objectPartKind } = useCanvasRegistries();
 	const handlePointerEnter = useCallback(() => setIsPointerOverMenu(true), []);
 	const handlePointerLeave = useCallback(() => setIsPointerOverMenu(false), []);
 	const { shouldRender, x, y } = useObjectMenuPosition(
@@ -201,10 +199,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// None of the system sections acts on a text slot, so they all go while one is
 	// selected — and likewise while an editor is open, where the menu is there to
 	// style the text being edited.
-	const showSystemSections =
-		shouldRender &&
-		!isTextSlotAddressed(canvasState, objectPartKind) &&
-		canvasState.textEditState?.kind !== "shape";
+	const showSystemSections = shouldRender && !isTextAddressed(canvasState);
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
 		: [];

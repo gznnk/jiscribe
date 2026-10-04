@@ -9,8 +9,8 @@ import { selectors } from "../../support/selectors";
  * to the menus around it was untested. Two things are guarded here.
  *
  * (1) The ObjectMenu keeps its line items. The menus narrow themselves to text
- * while a *text slot* is picked, and they tell the two apart by asking the part
- * kind (isTextSlotAddressed) rather than reading the picked id as a slot id.
+ * while a *text slot* is picked, and they tell the two apart by the pick's kind
+ * (isTextAddressed) rather than by reading the picked id as a slot id.
  * Read it directly and a vertex looks like a slot, which narrows a polyline —
  * a type with no text items at all — down to an empty menu that disappears.
  *
