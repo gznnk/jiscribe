@@ -15,24 +15,35 @@ const connector = (
 
 describe("hasSelectedConnectorShapedRoute", () => {
 	it("no connector selected -> false", () => {
-		expect(hasSelectedConnectorShapedRoute(null, {})).toBe(false);
+		expect(
+			hasSelectedConnectorShapedRoute({ selectedIds: [], objects: {} }),
+		).toBe(false);
 	});
 
 	it("selected ID is not a connector -> false", () => {
 		const rect = { id: "r", type: "rect" } as unknown as ObjectState;
-		expect(hasSelectedConnectorShapedRoute("r", { r: rect })).toBe(false);
+		expect(
+			hasSelectedConnectorShapedRoute({
+				selectedIds: ["r"],
+				objects: { r: rect },
+			}),
+		).toBe(false);
 	});
 
 	it("the route carries no vertices -> false (the engine routes it)", () => {
 		expect(
-			hasSelectedConnectorShapedRoute("c", { c: connector("c", []) }),
+			hasSelectedConnectorShapedRoute({
+				selectedIds: ["c"],
+				objects: { c: connector("c", []) },
+			}),
 		).toBe(false);
 	});
 
 	it("the route carries a vertex -> true (shaped by hand)", () => {
 		expect(
-			hasSelectedConnectorShapedRoute("c", {
-				c: connector("c", [{ x: 10, y: 20 }]),
+			hasSelectedConnectorShapedRoute({
+				selectedIds: ["c"],
+				objects: { c: connector("c", [{ x: 10, y: 20 }]) },
 			}),
 		).toBe(true);
 	});

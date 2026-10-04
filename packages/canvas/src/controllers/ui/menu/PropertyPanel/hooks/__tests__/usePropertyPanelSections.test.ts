@@ -132,7 +132,6 @@ const stateOf = (
 	({
 		objects: {},
 		selectedIds: [],
-		selectedConnectorId: null,
 		objectPartSelection: null,
 		multiSelectGroup: null,
 		...overrides,
@@ -155,7 +154,7 @@ describe("getPropertyPanelSections", () => {
 	it("returns the connector's sections when one is selected", () => {
 		const state = stateOf({
 			objects: { "c-1": shape("c-1", "connector") },
-			selectedConnectorId: "c-1",
+			selectedIds: ["c-1"],
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual(LINE_SECTIONS);

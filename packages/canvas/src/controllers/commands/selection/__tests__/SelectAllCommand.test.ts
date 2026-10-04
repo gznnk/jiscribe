@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
+import { reconcileObjectPartSelection } from "../../../selection/reconcileObjectPartSelection";
 import { SelectAllCommand } from "../SelectAllCommand";
 
 const registries = createTestRegistries();
@@ -27,9 +29,8 @@ const makeState = (params: {
 	({
 		rootIds: params.rootIds,
 		objects: params.objects,
-		selectedIds: [],
-		selectedConnectorId: "stale",
-		selectedVertex: { objectId: "x", vertexIndex: 0 },
+		selectedIds: ["stale"],
+		objectPartSelection: vertexPartSelection("x", 0),
 		multiSelectGroup: null,
 		objectMenuOpenId: "x",
 	}) as unknown as CanvasControllerState;
@@ -54,15 +55,20 @@ describe("SelectAllCommand", () => {
 		).not.toBeNull();
 	});
 
-	it("clears the mutually-exclusive connector and vertex selections", () => {
+	it("replaces the previous selection and clears the part selection", () => {
 		const state = makeState({
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
 		});
 		const next = SelectAllCommand.execute(state, registries);
-		expect(next.selectedConnectorId).toBeNull();
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selectedIds).not.toContain("stale");
 		expect(next.objectMenuOpenId).toBeNull();
+		// The part selection is the reducer's to drop, which it does for every
+		// command result (reconcileObjectPartSelection).
+		expect(
+			reconcileObjectPartSelection(next, registries.objectPartKind)
+				.objectPartSelection,
+		).toBeNull();
 	});
 
 	describe("canExecute", () => {

@@ -2,17 +2,16 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextState } from "../../../states/objects/primitives/text/TextState";
 import { isTextState } from "../../../states/objects/primitives/text/TextState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * What the two helpers below read off the canvas: the selection and the objects
- * it names. Narrow enough for the menu item, which is handed those three and
+ * it names. Narrow enough for the menu item, which is handed those two and
  * nothing else (ObjectMenuItemProps).
  */
 export type TextLayoutSelection = Pick<
 	CanvasControllerState,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selectedIds"
 >;
 
 /**
@@ -29,9 +28,7 @@ export type TextLayoutSelection = Pick<
 export const collectTextLayoutIds = (
 	selection: TextLayoutSelection,
 ): string[] =>
-	getEffectiveSelectedIds(selection).filter((id) =>
-		isTextState(selection.objects[id]),
-	);
+	selection.selectedIds.filter((id) => isTextState(selection.objects[id]));
 
 /**
  * Whether every text in the selection already wraps in a width of its own. A

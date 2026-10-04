@@ -12,6 +12,7 @@ import type {
 } from "../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type {
 	CanvasEvent,
 	EventType,
@@ -232,7 +233,7 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 		const state = {
 			...stateWith(connectorWithVertices()),
 			selectedIds: ["other"],
-			selectedVertex: { objectId: "other", vertexIndex: 0 },
+			objectPartSelection: vertexPartSelection("other", 0),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 			contextMenuPosition: { x: 1, y: 1 },
@@ -244,9 +245,8 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 			registries,
 		);
 
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selectedIds).toEqual(["c1"]);
+		expect(next.objectPartSelection).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();

@@ -8,10 +8,9 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
  * channels a selection can occupy are both read. A selected text slot rides on a
  * selected object, so it counts as a selection here.
  *
- * @param state - The selection channels are read: `selectedIds` (objects) and `selectedConnectorId`
+ * @param state - Only `selectedIds` is read
  * @returns True while nothing at all is selected
  */
 export const isCanvasSectionShown = (
-	state: Pick<CanvasControllerState, "selectedIds" | "selectedConnectorId">,
-): boolean =>
-	state.selectedIds.length === 0 && state.selectedConnectorId === null;
+	state: Pick<CanvasControllerState, "selectedIds">,
+): boolean => state.selectedIds.length === 0;

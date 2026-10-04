@@ -39,7 +39,6 @@ describe("resolveRequestedSelection", () => {
 			resolveRequestedSelection(["rect-2", "rect-1", "rect-2"], objects),
 		).toEqual({
 			selectedIds: ["rect-2", "rect-1"],
-			selectedConnectorId: null,
 			ignoredIds: [],
 		});
 	});
@@ -47,7 +46,6 @@ describe("resolveRequestedSelection", () => {
 	it("clears the selection for an empty list", () => {
 		expect(resolveRequestedSelection([], objects)).toEqual({
 			selectedIds: [],
-			selectedConnectorId: null,
 			ignoredIds: [],
 		});
 	});
@@ -55,25 +53,21 @@ describe("resolveRequestedSelection", () => {
 	it("drops ids that are not on the canvas", () => {
 		expect(resolveRequestedSelection(["rect-1", "nope"], objects)).toEqual({
 			selectedIds: ["rect-1"],
-			selectedConnectorId: null,
 			ignoredIds: ["nope"],
 		});
 	});
 
-	it("puts a lone connector on the connector channel", () => {
+	it("selects a lone connector", () => {
 		expect(resolveRequestedSelection(["conn-1"], objects)).toEqual({
-			selectedIds: [],
-			selectedConnectorId: "conn-1",
+			selectedIds: ["conn-1"],
 			ignoredIds: [],
 		});
 	});
 
 	it("drops a connector asked for together with a shape", () => {
-		// The state holds shapes and the connector in mutually exclusive channels,
-		// so the pair cannot be selected at once.
+		// A connector is selected on its own, so the pair cannot be selected at once.
 		expect(resolveRequestedSelection(["rect-1", "conn-1"], objects)).toEqual({
 			selectedIds: ["rect-1"],
-			selectedConnectorId: null,
 			ignoredIds: ["conn-1"],
 		});
 	});
@@ -81,7 +75,6 @@ describe("resolveRequestedSelection", () => {
 	it("drops every connector when several are asked for", () => {
 		expect(resolveRequestedSelection(["conn-1", "conn-2"], objects)).toEqual({
 			selectedIds: [],
-			selectedConnectorId: null,
 			ignoredIds: ["conn-1", "conn-2"],
 		});
 	});

@@ -65,10 +65,7 @@ const handleDragStart = (
 
 	return {
 		...nextState,
-		selectedConnectorId: connectorId,
-		selectedIds: [],
-		// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-		selectedVertex: null,
+		selectedIds: [connectorId],
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,

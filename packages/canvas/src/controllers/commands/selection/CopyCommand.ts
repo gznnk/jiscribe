@@ -4,6 +4,7 @@ import type { ClipboardData } from "./ClipboardData";
 import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import type { ExecutableCommand } from "../CommandTypes";
 
@@ -21,7 +22,10 @@ export const CopyCommand: ExecutableCommand = {
 		default: [{ code: "KeyC", ctrl: true }],
 	},
 
-	canExecute: (state) => state.selectedIds.length > 0,
+	// Not offered for a lone connector: a connector is copied as part of the
+	// shapes it runs between (selectConnectorsInSelection), never on its own.
+	canExecute: (state) =>
+		state.selectedIds.length > 0 && getSelectedConnectorId(state) === null,
 
 	execute: (state) => {
 		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(

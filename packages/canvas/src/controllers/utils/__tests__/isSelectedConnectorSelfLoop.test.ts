@@ -17,29 +17,42 @@ const connector = (
 
 describe("isSelectedConnectorSelfLoop", () => {
 	it("no connector selected -> false", () => {
-		expect(isSelectedConnectorSelfLoop(null, {})).toBe(false);
+		expect(isSelectedConnectorSelfLoop({ selectedIds: [], objects: {} })).toBe(
+			false,
+		);
 	});
 
 	it("selected ID is not a connector -> false", () => {
 		const rect = { id: "r", type: "rect" } as unknown as ObjectState;
-		expect(isSelectedConnectorSelfLoop("r", { r: rect })).toBe(false);
+		expect(
+			isSelectedConnectorSelfLoop({ selectedIds: ["r"], objects: { r: rect } }),
+		).toBe(false);
 	});
 
 	it("both ends share the same owner -> true (self-loop)", () => {
 		expect(
-			isSelectedConnectorSelfLoop("c", { c: connector("c", "n1", "n1") }),
+			isSelectedConnectorSelfLoop({
+				selectedIds: ["c"],
+				objects: { c: connector("c", "n1", "n1") },
+			}),
 		).toBe(true);
 	});
 
 	it("ends have different owners -> false", () => {
 		expect(
-			isSelectedConnectorSelfLoop("c", { c: connector("c", "n1", "n2") }),
+			isSelectedConnectorSelfLoop({
+				selectedIds: ["c"],
+				objects: { c: connector("c", "n1", "n2") },
+			}),
 		).toBe(false);
 	});
 
 	it("one end is unconnected -> false", () => {
 		expect(
-			isSelectedConnectorSelfLoop("c", { c: connector("c", "n1", undefined) }),
+			isSelectedConnectorSelfLoop({
+				selectedIds: ["c"],
+				objects: { c: connector("c", "n1", undefined) },
+			}),
 		).toBe(false);
 	});
 });

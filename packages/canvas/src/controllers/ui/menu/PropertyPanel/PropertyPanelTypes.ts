@@ -101,7 +101,7 @@ export type PropertyPanelSection = {
  */
 export type PropertyPanelSelection = Pick<
 	PropertyPanelItemProps,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selectedIds"
 >;
 
 /**
@@ -181,8 +181,8 @@ export type PropertyPanelMetaUpdater = (
  */
 export type PropertyPanelItemProps = {
 	objects: Record<string, ObjectState>;
+	/** The selection, in selection order; a lone connector is one of them (CanvasControllerState.selectedIds). */
 	selectedIds: string[];
-	selectedConnectorId: string | null;
 	/** The frame a multi-selection is transformed through; null while one object or nothing is selected. */
 	multiSelectGroup: GroupState | null;
 	onPropertyUpdate: StylePropertyUpdater;

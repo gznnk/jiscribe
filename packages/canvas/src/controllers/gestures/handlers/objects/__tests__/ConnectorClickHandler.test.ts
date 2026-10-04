@@ -7,6 +7,8 @@ import type { ConnectorState } from "../../../../../states/objects/connector/Con
 import { outlinedPlugin } from "../../../../__tests__/support/outlinedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
+import { reconcileObjectPartSelection } from "../../../../selection/reconcileObjectPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 import { ConnectorClickHandler } from "../ConnectorClickHandler";
@@ -32,8 +34,7 @@ const makeState = (labelText: string): CanvasControllerState =>
 		},
 		rootIds: ["c1", "c2"],
 		selectedIds: [],
-		selectedConnectorId: null,
-		selectedVertex: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		textEditState: null,
 		commitVersion: 5,
@@ -49,7 +50,7 @@ const makeEditState = (
 ): CanvasControllerState =>
 	({
 		...makeState(labelText),
-		selectedConnectorId: editingId,
+		selectedIds: [editingId],
 		textEditState: {
 			kind: "connectorLabel",
 			objectId: editingId,
@@ -93,7 +94,7 @@ describe("ConnectorClickHandler - double click edit target", () => {
 			registries,
 		);
 		expect(next.textEditState).toBeNull();
-		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selectedIds).toEqual(["c1"]);
 	});
 
 	it("with a committed label, a double click on the label box opens the editor prefilled", () => {
@@ -107,7 +108,7 @@ describe("ConnectorClickHandler - double click edit target", () => {
 			objectId: "c1",
 			text: "Yes",
 		});
-		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selectedIds).toEqual(["c1"]);
 	});
 
 	it("without a label, a double click anywhere on the line opens the editor empty", () => {
@@ -121,7 +122,7 @@ describe("ConnectorClickHandler - double click edit target", () => {
 			objectId: "c1",
 			text: "",
 		});
-		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selectedIds).toEqual(["c1"]);
 	});
 });
 
@@ -287,7 +288,7 @@ describe("ConnectorClickHandler - clicks while editing commit", () => {
 		expect(labelText(afterDouble, "c1")).toBe("new");
 		expect(afterDouble.textEditState).toBeNull();
 		expect(afterDouble.commitVersion).toBe(6);
-		expect(afterDouble.selectedConnectorId).toBe("c1");
+		expect(afterDouble.selectedIds).toEqual(["c1"]);
 	});
 
 	it("a pressed on a different connector commits the pending edit", () => {
@@ -307,7 +308,7 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 	const staleUiState = (): CanvasControllerState =>
 		({
 			...makeState("Yes"),
-			selectedVertex: { objectId: "c2", vertexIndex: 0 },
+			objectPartSelection: vertexPartSelection("c2", 0),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 		}) as unknown as CanvasControllerState;
@@ -318,8 +319,13 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			makeEvent("click", "c1"),
 			registries,
 		);
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selectedIds).toEqual(["c1"]);
+		// The part selection is the reducer's to drop, which it does for every
+		// gesture result (reconcileObjectPartSelection).
+		expect(
+			reconcileObjectPartSelection(next, registries.objectPartKind)
+				.objectPartSelection,
+		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
@@ -330,8 +336,11 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selectedIds).toEqual(["c1"]);
+		expect(
+			reconcileObjectPartSelection(next, registries.objectPartKind)
+				.objectPartSelection,
+		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});

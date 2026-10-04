@@ -57,15 +57,13 @@ describe("canvasReducer / SET_SELECTION", () => {
 
 	it("clears the UI hanging off the previous selection", () => {
 		const state = createState({
-			selectedIds: [],
-			selectedConnectorId: "conn-1",
+			selectedIds: ["conn-1"],
 			objectMenuOpenId: "rect-1",
 		});
 
 		const next = canvasReducer(state, setSelection(["rect-1"]));
 
-		expect(next.selectedConnectorId).toBeNull();
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selectedIds).toEqual(["rect-1"]);
 		expect(next.objectPartSelection).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 	});

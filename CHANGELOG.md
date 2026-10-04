@@ -15,6 +15,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **For plugin authors: picking a vertex is a part selection too.** The separate
+  single-vertex field is gone: a vertex handle now writes `objectPartSelection`
+  under the `vertex` kind, so the one channel carries every pick made one level
+  below the object and the reducer's reconciliation covers vertices as it already
+  covered slots — including a connector's waypoints, picked while the connector
+  itself is the selection. Because two kinds now share the channel, every reader
+  that narrows itself to text asks for the slot kind by name rather than for a
+  pick of any sort. What the user sees changes where the vertex pick now follows
+  the rules a slot pick already had: a style write or a sidebar edit of the size,
+  position or rotation no longer drops the picked vertex (nothing renumbers it),
+  so a Delete right after goes to that vertex rather than to the whole shape, and
+  Escape drops the vertex first and the shape on the next press.
 - **For plugin authors: picking a text slot is one case of a general part
   selection.** What was a slot-only field is now `objectPartSelection`, a
   channel over the part kinds a type declares: the object it addresses, the
@@ -114,6 +126,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: a connector is selected through `selectedIds` like
+  everything else.** The separate single-connector field is gone, so the one id
+  list carries every selection the canvas holds; the rule it carried stays as the
+  writers' own — a connector is selected on its own, one of them, never beside a
+  shape — and a reader that needs it asks `getSelectedConnectorId` for that
+  shape. `ObjectMenuItemProps` and `PropertyPanelItemProps` no longer pass
+  `selectedConnectorId`: a row reads the connector off the `selectedIds` and
+  `objects` it already receives. For hosts nothing changes — `getSelection`,
+  `select` and `onSelectionChange` have levelled the two into one list all along
+  — except that `select`'s report drops the same field.
 - **A right click selects the shape it lands on, and then opens the context
   menu.** The menu used to act on whatever was selected at the time, so a right
   click on another shape ran the command on the one still selected elsewhere —
@@ -139,6 +161,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **Delete on a connector's last waypoints does something again.** A connector's
+  `points` holds only the waypoints between its endpoints, yet its vertex floor
+  was the polyline's two, so with one or two waypoints left the key was claimed
+  and refused: nothing moved, and the connector did not go either. The floor is
+  now none, so a picked waypoint is always removed — down to the straight route
+  the connector started as.
 - **A shape whose size is measured no longer stays put when the group around it
   is resized.** Scaling a group scales the gaps inside it, and every shape that
   stores a box moved with them — but a `text`, whose box is its own content,

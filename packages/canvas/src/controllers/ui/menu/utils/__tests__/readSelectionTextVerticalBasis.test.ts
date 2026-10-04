@@ -23,7 +23,6 @@ const selectionOf = (
 ): TextVerticalBasisSelection => ({
 	objects: Object.fromEntries(objects.map((object) => [object.id, object])),
 	selectedIds: objects.map((object) => object.id),
-	selectedConnectorId: null,
 });
 
 const readBasis = (selection: TextVerticalBasisSelection) =>

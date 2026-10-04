@@ -7,12 +7,12 @@ import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
 
 /**
- * Connectors are selected via selectedConnectorId, which is mutually exclusive with selectedIds.
+ * Connectors are selected via selectedIds, which is mutually exclusive with selectedIds.
  * The order of rootIds specifies the connector's initial z position.
  */
 const withConnectorSelected = (rootIds: string[]): CanvasControllerState =>
 	createCommandState(twoRectsWithConnectorDoc, {
-		selectedConnectorId: "conn-1",
+		selectedIds: ["conn-1"],
 		rootIds,
 	});
 

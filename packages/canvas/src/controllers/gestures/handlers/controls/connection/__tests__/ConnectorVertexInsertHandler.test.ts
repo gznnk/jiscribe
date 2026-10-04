@@ -40,9 +40,8 @@ const makeState = (points: Point[]): CanvasControllerState => {
 	return {
 		objects: { "conn-1": connector },
 		rootIds: ["conn-1"],
-		selectedIds: [],
-		selectedConnectorId: "conn-1",
-		selectedVertex: null,
+		selectedIds: ["conn-1"],
+		objectPartSelection: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
@@ -229,7 +228,7 @@ describe("moving a connector waypoint via VertexControlHandler (reuse check)", (
 			mods: { shift: false, alt: false, ctrl: false, meta: false },
 		} as unknown as CanvasEvent;
 
-		const next = moveHandler.handle(state, event);
+		const next = moveHandler.handle(state, event, registries);
 		expect(pointsOf(next)).toEqual([
 			{ x: 0, y: 0 },
 			{ x: 120, y: 40 },
@@ -298,7 +297,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			registries,
 		);
 		expect(next.textEditState).toBeUndefined();
-		expect(next.selectedConnectorId).toBe("conn-1");
+		expect(next.selectedIds).toEqual(["conn-1"]);
 	});
 
 	it("a hover stack entry of another connector's label does not count as a label hit", () => {

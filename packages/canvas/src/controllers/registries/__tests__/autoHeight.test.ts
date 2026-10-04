@@ -46,7 +46,6 @@ const controllerStateOf = (object: ObjectState): CanvasControllerState =>
 		objects: { [object.id]: object },
 		rootIds: [object.id],
 		selectedIds: [object.id],
-		selectedConnectorId: null,
 		multiSelectGroup: null,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;

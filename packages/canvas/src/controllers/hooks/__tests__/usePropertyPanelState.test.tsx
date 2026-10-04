@@ -149,8 +149,7 @@ describe("usePropertyPanelState", () => {
 	it("follows the selected connector rather than selectedIds", () => {
 		const initial = {
 			...baseState(),
-			selectedIds: [],
-			selectedConnectorId: "other",
+			selectedIds: ["other"],
 		};
 		const { first, render } = mount(initial);
 		const connectorChanged = {

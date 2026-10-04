@@ -5,6 +5,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Command, KeyBinding } from "../../commands/CommandTypes";
 import { getPlatformShortcuts } from "../../commands/CommandUtils";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
+import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { ZOOM } from "../../utils/zoom";
 import { createTestRegistries } from "../createCanvasRegistries";
@@ -79,12 +80,12 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 	},
 	{
 		name: "connector selected",
-		state: buildState(rectsDoc, { selectedConnectorId: "conn-1" }),
+		state: buildState(rectsDoc, { selectedIds: ["conn-1"] }),
 	},
 	{
 		name: "vertex selected",
 		state: buildState(rectsDoc, {
-			selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
+			objectPartSelection: vertexPartSelection("rect-1", 0),
 		}),
 	},
 	{

@@ -28,7 +28,7 @@ const FONT_SIZE_STEP = 2;
  */
 const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 	openSectionId,
 	onPropertyUpdate,
 }) => {
@@ -40,7 +40,7 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

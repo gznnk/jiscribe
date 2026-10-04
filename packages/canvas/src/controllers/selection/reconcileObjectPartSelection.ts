@@ -33,10 +33,9 @@ export const reconcileObjectPartSelection = (
 	if (objectPartSelection === null) {
 		return state;
 	}
-	if (
-		selectedIds.length !== 1 ||
-		selectedIds[0] !== objectPartSelection.objectId
-	) {
+	const isSoleSelection =
+		selectedIds.length === 1 && selectedIds[0] === objectPartSelection.objectId;
+	if (!isSoleSelection) {
 		return { ...state, objectPartSelection: null };
 	}
 

@@ -26,8 +26,7 @@ const makeState = (params: {
 	rootIds: string[];
 }): CanvasControllerState =>
 	({
-		selectedVertex: null,
-		selectedConnectorId: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		internalClipboard: null,
 		objectMenuOpenId: null,

@@ -111,13 +111,13 @@ async function textColorByContent(
 }
 
 /**
- * The `data-part` of the compartment the selected slot outline sits on, or
- * undefined while no slot is selected. The overlay carries no slot id, so the
- * slot is named by matching the outline's rect against the compartments'. A
- * stereotype and a title band are the same height, so height alone would not
- * name them.
+ * The id of the slot the selected slot outline sits on, or undefined while no
+ * slot is selected. The overlay carries no slot id, so the slot is named by
+ * matching the outline's rect against the compartments' and reading the id out
+ * of the matched compartment's `data-part` (`textSlot:<slotId>`). A stereotype
+ * and a title band are the same height, so height alone would not name them.
  */
-async function selectedSlotPart(
+async function selectedSlotId(
 	canvas: CanvasDriver,
 	id: string,
 ): Promise<string | undefined> {
@@ -142,7 +142,10 @@ async function selectedSlotPart(
 				compartment.getAttribute("height") ===
 					slotOutline.getAttribute("height"),
 		);
-		return matched?.getAttribute("data-part") ?? undefined;
+		const address = matched?.getAttribute("data-part");
+		return address?.startsWith("textSlot:")
+			? address.slice("textSlot:".length)
+			: undefined;
 	}, id);
 }
 
@@ -336,7 +339,7 @@ test.describe("record: selecting one text slot", () => {
 		for (const expectedPart of ["name", "attributes", "name"]) {
 			await canvas.page.keyboard.press("Tab");
 			await expect
-				.poll(() => selectedSlotPart(canvas, id), {
+				.poll(() => selectedSlotId(canvas, id), {
 					message: `Tab reaches the ${expectedPart} slot`,
 				})
 				.toBe(expectedPart);
@@ -367,7 +370,7 @@ test.describe("record: selecting one text slot", () => {
 		]) {
 			await canvas.page.keyboard.press("Tab");
 			await expect
-				.poll(() => selectedSlotPart(canvas, id), {
+				.poll(() => selectedSlotId(canvas, id), {
 					message: `Tab reaches the ${expectedPart} slot`,
 				})
 				.toBe(expectedPart);

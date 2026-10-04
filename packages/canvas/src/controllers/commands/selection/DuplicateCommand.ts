@@ -8,6 +8,7 @@ import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWit
 import { cloneObjects } from "../../utils/cloneObjects";
 import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -22,7 +23,10 @@ export const DuplicateCommand: ExecutableCommand = {
 		default: [{ code: "KeyD", ctrl: true }],
 	},
 
-	canExecute: (state) => state.selectedIds.length > 0,
+	// Not offered for a lone connector: a connector is duplicated as part of the
+	// shapes it runs between (selectConnectorsInSelection), never on its own.
+	canExecute: (state) =>
+		state.selectedIds.length > 0 && getSelectedConnectorId(state) === null,
 
 	execute: (state, registries) => {
 		const { selectedIds } = state;

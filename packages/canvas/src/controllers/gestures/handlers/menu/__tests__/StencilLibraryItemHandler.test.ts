@@ -15,7 +15,6 @@ const makeState = (): CanvasControllerState =>
 		objects: {},
 		rootIds: [],
 		selectedIds: [],
-		selectedConnectorId: null,
 		multiSelectGroup: null,
 		textEditState: null,
 		shapeDrawing: null,

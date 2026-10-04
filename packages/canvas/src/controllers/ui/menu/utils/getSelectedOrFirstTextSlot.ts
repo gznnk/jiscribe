@@ -9,6 +9,8 @@ import type { TextStyleState } from "../../../../states/objects/base/TextStyleSt
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { collectSelectedPartIds } from "../../../selection/collectSelectedPartIds";
+import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -71,12 +73,12 @@ export const getSelectedOrFirstTextSlot = (
 	}
 
 	const { objectPartSelection } = state;
-	if (objectPartSelection !== null) {
+	if (isTextSlotSelection(objectPartSelection)) {
 		const target = state.objects[objectPartSelection.objectId];
 		if (isTextStyleState(target)) {
 			// One slot is read, and in this version the selection is always one
-			// collapsed range, so that slot is the first range's anchor.
-			const slotId = objectPartSelection.ranges[0].anchorId;
+			// collapsed range, so that slot is the first of the ids it covers.
+			const slotId = collectSelectedPartIds(objectPartSelection)[0];
 			return withTypeStyleDefaults(
 				textStyleDefaults,
 				target.type,

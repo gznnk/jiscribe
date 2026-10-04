@@ -8,6 +8,7 @@ import { selectContextMenuTarget } from "./utils/selectContextMenuTarget";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
+import { getSelectedConnectorId } from "../../../utils/getSelectedConnectorId";
 import { ZOOM } from "../../../utils/zoom";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
@@ -344,6 +345,12 @@ export const CanvasEventHandler: GestureHandler = {
 				// An additive marquee keeps what was selected and adds to it; a plain one
 				// replaces the selection.
 				const isAdditive = isAdditiveSelectionMod(event.mods);
+				// A marquee only ever picks up shapes, so an additive one started while
+				// a connector was selected builds on nothing.
+				const baseIds =
+					isAdditive && getSelectedConnectorId(nextState) === null
+						? nextState.selectedIds
+						: [];
 				nextState = {
 					...nextState,
 					areaSelection: {
@@ -352,13 +359,9 @@ export const CanvasEventHandler: GestureHandler = {
 						endX: event.last.x,
 						endY: event.last.y,
 						hitIds: [],
-						baseIds: isAdditive ? nextState.selectedIds : [],
+						baseIds,
 					},
-					selectedIds: isAdditive ? nextState.selectedIds : [],
-					// Object and connector selection are exclusive, and a marquee only ever
-					// picks up objects — so these go even for an additive marquee.
-					selectedConnectorId: null,
-					selectedVertex: null,
+					selectedIds: baseIds,
 					// A plain marquee clears it here too (not only on "pressed"): the
 					// early-out below keeps the previous multiSelectGroup as-is while the
 					// hit set stays empty. An additive one keeps the base's group until the
@@ -466,8 +469,6 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					...nextState,
 					selectedIds: [],
-					selectedConnectorId: null,
-					selectedVertex: null,
 					// Reset the multi-select group
 					multiSelectGroup: null,
 				};

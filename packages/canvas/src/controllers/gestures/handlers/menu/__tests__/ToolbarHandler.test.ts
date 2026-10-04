@@ -13,7 +13,6 @@ const makeState = (): CanvasControllerState =>
 		objects: {},
 		rootIds: [],
 		selectedIds: [],
-		selectedConnectorId: null,
 		multiSelectGroup: null,
 		textEditState: null,
 		contextMenuPosition: { x: 1, y: 1 },

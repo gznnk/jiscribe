@@ -1,5 +1,4 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
 import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
 import type { ExecutableCommand } from "../CommandTypes";
 
@@ -18,7 +17,7 @@ export const BringForwardCommand: ExecutableCommand = {
 	},
 
 	execute: (state) => {
-		const selectedIds = getEffectiveSelectedIds(state);
+		const selectedIds = state.selectedIds;
 		const commonParentId = state.objects[selectedIds[0]]?.parentId;
 		const sourceIds =
 			commonParentId != null

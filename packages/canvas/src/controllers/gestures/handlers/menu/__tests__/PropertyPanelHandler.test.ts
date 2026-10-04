@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { PropertyPanelHandler } from "../PropertyPanelHandler";
 
@@ -193,9 +194,7 @@ describe("PropertyPanelHandler", () => {
 				},
 				rootIds: ["rect-1"],
 				selectedIds: ["rect-1"],
-				selectedConnectorId: null,
-				selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
-				objectPartSelection: null,
+				objectPartSelection: vertexPartSelection("rect-1", 0),
 				multiSelectGroup: null,
 				textEditState: null,
 				commitVersion: 5,
@@ -214,7 +213,10 @@ describe("PropertyPanelHandler", () => {
 			);
 			expect(rectOf(next).fill).toBe("#dc2626");
 			expect(next.commitVersion).toBe(6);
-			expect(next.selectedVertex).toBeNull();
+			// Styling renumbers nothing, so what is picked below the object stays picked.
+			expect(next.objectPartSelection).toEqual(
+				vertexPartSelection("rect-1", 0),
+			);
 		});
 
 		it("a slider previews on drag and commits on dragEnd", () => {

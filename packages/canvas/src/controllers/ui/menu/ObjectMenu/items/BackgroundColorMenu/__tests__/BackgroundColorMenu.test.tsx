@@ -28,7 +28,6 @@ const rect = (id: string, fill: string): ObjectState =>
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
 		selectedIds: shapes.map((shape) => shape.id),
-		selectedConnectorId: null,
 		objectMenuOpenId: "bg-color",
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),
 	}) as unknown as CanvasControllerState;

@@ -6,7 +6,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *
  * Guards vertex insertion (VertexInsertHandler) and deletion by selecting a
  * vertex handle then pressing Delete (VertexControlHandler.handleClick ->
- * DeleteCommand's selectedVertex path). The points attribute is checked: a
+ * DeleteCommand's part-deletion path). The points attribute is checked: a
  * midpoint handle drag adds a vertex, and deleting a selected middle vertex
  * removes one.
  *
@@ -88,7 +88,7 @@ test.describe("polyline vertex editing", () => {
 		await expect.poll(() => vertexCount(canvas, id)).toBe(3);
 
 		// Click the middle vertex handle to select it; a selected handle takes the selection fill.
-		// Delete only after that fill change, which is when selectedVertex is committed.
+		// Delete only after that fill change, which is when the vertex pick is committed.
 		const selectedFill = await canvas.normalizeColor("#0d99ff");
 		await canvas.page.click(`[data-id="${id}"][data-part="vertex:1"]`);
 		await expect

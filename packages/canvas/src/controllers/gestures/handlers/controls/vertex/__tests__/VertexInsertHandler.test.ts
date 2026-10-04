@@ -27,7 +27,7 @@ const makeState = (points: Point[]): CanvasControllerState => {
 		objects: { "poly-1": poly },
 		rootIds: ["poly-1"],
 		selectedIds: [],
-		selectedVertex: null,
+		objectPartSelection: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {

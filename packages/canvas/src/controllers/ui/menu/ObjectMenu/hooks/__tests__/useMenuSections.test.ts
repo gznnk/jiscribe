@@ -50,7 +50,6 @@ const makeState = (
 	({
 		objects: { "rec-1": slotShape("rec-1") },
 		selectedIds: ["rec-1"],
-		selectedConnectorId: null,
 		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 

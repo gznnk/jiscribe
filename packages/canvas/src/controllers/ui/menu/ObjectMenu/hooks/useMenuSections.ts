@@ -3,6 +3,8 @@ import { useMemo } from "react";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
+import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
@@ -41,23 +43,19 @@ const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] =>
 /**
  * Collects the menu sections of the current selection, before any slot narrowing.
  *
- * When a connector is selected (selectedConnectorId != null), returns the sections for
- * its type. When group objects are selected, expands the descendant concrete object
- * types; if multiple types are mixed, only the common sections are shown (AND-merge).
+ * A selected connector returns the sections for its type. When group objects are
+ * selected, expands the descendant concrete object types; if multiple types are
+ * mixed, only the common sections are shown (AND-merge).
  */
 const collectSelectionSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, objects } = state;
+	const { selectedIds, objects } = state;
 
-	// When a connector is selected, return the connector's sections instead of selectedIds
-	if (selectedConnectorId !== null) {
-		const connector = objects[selectedConnectorId];
-		if (!connector) {
-			return [];
-		}
-		return objectMenuRegistry.getSections(connector.type);
+	const connectorId = getSelectedConnectorId(state);
+	if (connectorId !== null) {
+		return objectMenuRegistry.getSections(objects[connectorId].type);
 	}
 
 	if (selectedIds.length === 0) {
@@ -101,21 +99,23 @@ const collectSelectionSections = (
  *
  * While a text slot is selected the sections are narrowed to the text items, so the
  * menu never offers an action that the slot cannot receive. Doing it here keeps every
- * `features.text === "slots"` type covered without each definition opting in.
+ * `features.text === "slots"` type covered without each definition opting in. A pick
+ * of another sort (a vertex) leaves them alone, the menu still acting on the object.
  *
  * An open text editor narrows them the same way, for the same reason read the other
  * way round: what the menu offers there has to be something a stretch of the text
  * being edited can take, and reshaping or restacking the shape mid-edit is not it.
+ *
+ * @param state - The current canvas controller state
+ * @param objectMenuRegistry - Per-canvas ObjectMenuRegistry, asked once per concrete type in the selection
+ * @returns The sections in display order
  */
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
-	if (
-		state.objectPartSelection === null &&
-		state.textEditState?.kind !== "shape"
-	) {
+	if (!isTextAddressed(state)) {
 		return sections;
 	}
 	return filterTextSlotMenuSections(sections);
@@ -130,8 +130,7 @@ export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, objectPartSelection, objects } =
-		state;
+	const { selectedIds, objectPartSelection, objects } = state;
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
@@ -143,7 +142,6 @@ export const useMenuSections = (
 		[
 			enabled,
 			selectedIds,
-			selectedConnectorId,
 			objectPartSelection,
 			isEditingShapeText,
 			objects,

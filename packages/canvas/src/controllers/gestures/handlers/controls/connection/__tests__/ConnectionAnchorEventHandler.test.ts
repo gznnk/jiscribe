@@ -395,11 +395,10 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		it("applies stroke-group updates dispatched by the style menu (dash / color / width)", () => {
 			const { state, connectorId } = createConnectorFromRect();
-			// The style menu targets the selected connector via selectedConnectorId.
+			// The style menu targets the selected connector.
 			const selected: CanvasControllerState = {
 				...state,
-				selectedIds: [],
-				selectedConnectorId: connectorId,
+				selectedIds: [connectorId],
 			};
 
 			const dashed = registries.styleProperty.apply(

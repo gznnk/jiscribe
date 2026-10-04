@@ -4,13 +4,20 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { createTextSlotPartKindDefinition } from "../../../../selection/createTextSlotPartKindDefinition";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { Mods } from "../../../registry/ObjectBehaviorTypes";
+import { textSlotPart } from "../../utils/partAddress";
 import { ObjectEventHandler } from "../ObjectEventHandler";
 
 const registries = createTestRegistries();
+// "record" below stands in for a plugin type, so the built-in bundle does not
+// carry it: register the textSlot kind applyObjectDefinition would give it.
+registries.objectPartKind.register("record", [
+	createTextSlotPartKindDefinition(),
+]);
 
 const SIZE = 10;
 
@@ -56,8 +63,7 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],
-		selectedConnectorId: null,
-		selectedVertex: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		textEditState: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -122,8 +128,7 @@ const makeEditState = (
 		},
 		rootIds: [editingId, "rect-2"],
 		selectedIds: [],
-		selectedConnectorId: null,
-		selectedVertex: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		textEditState: {
 			kind: "shape",
@@ -252,8 +257,6 @@ const makeSlotState = (
 		},
 		rootIds: ["rec-1", "rect-2"],
 		selectedIds,
-		selectedConnectorId: null,
-		selectedVertex: null,
 		objectPartSelection,
 		multiSelectGroup: null,
 		textEditState: null,
@@ -278,7 +281,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 	it("selects the clicked slot when the record is already the whole selection", () => {
 		const next = ObjectEventHandler.handle(
 			makeSlotState(["rec-1"], null),
-			makeSlotClickEvent("rec-1", "rows"),
+			makeSlotClickEvent("rec-1", textSlotPart("rows")),
 			registries,
 		);
 		expect(next.objectPartSelection).toEqual({
@@ -296,7 +299,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
-			makeSlotClickEvent("rec-1", "name"),
+			makeSlotClickEvent("rec-1", textSlotPart("name")),
 			registries,
 		);
 		expect(next.objectPartSelection).toEqual({
@@ -315,7 +318,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(
 			ObjectEventHandler.handle(
 				state,
-				makeSlotClickEvent("rec-1", "rows"),
+				makeSlotClickEvent("rec-1", textSlotPart("rows")),
 				registries,
 			),
 		).toBe(state);
@@ -337,7 +340,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(
 			ObjectEventHandler.handle(
 				selected,
-				makeSlotClickEvent("rec-1", "unknown-part"),
+				makeSlotClickEvent("rec-1", textSlotPart("unknown-part")),
 				registries,
 			).objectPartSelection,
 		).toBeNull();
@@ -346,7 +349,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 	it("selects only the object on the first click, leaving no slot selected", () => {
 		const next = ObjectEventHandler.handle(
 			makeSlotState([], null),
-			makeSlotClickEvent("rec-1", "rows"),
+			makeSlotClickEvent("rec-1", textSlotPart("rows")),
 			registries,
 		);
 		expect(next.selectedIds).toEqual(["rec-1"]);
@@ -374,7 +377,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
-			makeSlotClickEvent("rec-1", "name", { ctrl: true }),
+			makeSlotClickEvent("rec-1", textSlotPart("name"), { ctrl: true }),
 			registries,
 		);
 		// Ctrl toggles the record out of the selection; the slot goes with it.
@@ -394,7 +397,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(
 			ObjectEventHandler.handle(
 				withSubmenu,
-				makeSlotClickEvent("rec-1", "name"),
+				makeSlotClickEvent("rec-1", textSlotPart("name")),
 				registries,
 			).objectMenuOpenId,
 		).toBeNull();
@@ -419,7 +422,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		const next = ObjectEventHandler.handle(
 			withSubmenu,
 			{
-				...makeSlotClickEvent("rec-1", "rows"),
+				...makeSlotClickEvent("rec-1", textSlotPart("rows")),
 				type: "doubleClick",
 			} as CanvasEvent,
 			registries,
@@ -435,7 +438,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		} as CanvasControllerState;
 		const next = ObjectEventHandler.handle(
 			state,
-			makeSlotClickEvent("rect-3", "body"),
+			makeSlotClickEvent("rect-3", textSlotPart("body")),
 			registries,
 		);
 		expect(next.objectPartSelection).toBeNull();

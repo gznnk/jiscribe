@@ -1,21 +1,21 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../CanvasTypes";
+import { getSelectedConnectorId } from "./getSelectedConnectorId";
 
 /**
- * Returns the label of the selected connector (selectedConnectorId).
+ * Returns the label of the selected connector.
  * A shared helper for the label rows of both surfaces (the ObjectMenu's LabelStyleMenu
  * and the properties sidebar's Label section) to read the current value.
- * Equivalent to getFirstSelectedWithProp for shapes, but a connector is accessed via
- * selectedConnectorId and its style is nested under label, so it is retrieved via a
- * separate path.
+ * Equivalent to getFirstSelectedWithProp for shapes, but a connector's style is
+ * nested under label, so it is retrieved via a separate path.
+ *
+ * @param selection - The selection and the objects it names; a selection that is not a lone connector gives undefined
  */
 export const getSelectedConnectorLabel = (
-	selectedConnectorId: string | null,
-	objects: Record<string, ObjectState>,
+	selection: Pick<CanvasControllerState, "selectedIds" | "objects">,
 ): ConnectorLabel | undefined => {
-	const connector = selectedConnectorId
-		? objects[selectedConnectorId]
-		: undefined;
+	const connectorId = getSelectedConnectorId(selection);
+	const connector = connectorId ? selection.objects[connectorId] : undefined;
 	return (connector as { label?: ConnectorLabel } | undefined)?.label;
 };

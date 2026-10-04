@@ -9,6 +9,7 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { readSelectedVertexIndex } from "../../../selection/readSelectedVertexIndex";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 // Handle colors may hold var(--jiscribe-*), so they are applied via style
@@ -23,7 +24,12 @@ type ConnectorControlsProps = {
 	connectorState: ConnectorState;
 	objects: CanvasState["objects"];
 	zoom?: number;
-	selectedVertex?: CanvasControllerState["selectedVertex"];
+	/**
+	 * Parts picked below the object, `state.objectPartSelection` as it stands: a
+	 * waypoint of this very connector rings its handle, anything else leaves the
+	 * handles plain
+	 */
+	objectPartSelection?: CanvasControllerState["objectPartSelection"];
 };
 
 /**
@@ -52,7 +58,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	connectorState,
 	objects,
 	zoom = 1,
-	selectedVertex = null,
+	objectPartSelection = null,
 }) => {
 	const resolved = useResolvedConnectorPoints(
 		connectorState,
@@ -84,10 +90,10 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	// index the drawn path, so offering them there would hand out handles nothing answers to.
 	const isOrthogonal = isConnectorDrawnOrthogonal(connectorState);
 	const waypoints = connectorState.points;
-	const selectedVertexIndex =
-		selectedVertex?.objectId === connectorState.id
-			? selectedVertex.vertexIndex
-			: null;
+	const selectedVertexIndex = readSelectedVertexIndex(
+		objectPartSelection,
+		connectorState.id,
+	);
 
 	return (
 		<g data-layer="connector-controls">

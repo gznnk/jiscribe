@@ -4,8 +4,8 @@ import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 
 /**
  * The `textSlot` part definition every `features.text === "slots"` type gets,
- * with part ids spelled as the keys of the object's own `text` — the same ids
- * the slot elements already carry in their `data-part`. Nothing in it is
+ * with part ids spelled as the keys of the object's own `text` — the id half of
+ * the `data-part` its slot elements carry (textSlotPart). Nothing in it is
  * per-type, which is why applyObjectDefinition registers it without the type
  * saying anything.
  *

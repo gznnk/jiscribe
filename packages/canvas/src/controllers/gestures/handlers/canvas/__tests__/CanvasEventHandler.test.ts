@@ -22,8 +22,7 @@ const makeState = (
 		objects: { a: makeTextRect("a", "old text") },
 		rootIds: ["a"],
 		selectedIds: ["a"],
-		selectedConnectorId: null,
-		selectedVertex: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		shapeDrawing: null,
 		areaSelection: null,
@@ -302,8 +301,6 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.areaSelection?.baseIds).toEqual(["b"]);
 			expect(nextState.selectedIds).toEqual(["b"]);
 			expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
-			// A marquee only picks up objects, so the connector channel still goes
-			expect(nextState.selectedConnectorId).toBeNull();
 		});
 
 		it("an additive drag selects the base plus the newly enclosed ids", () => {
@@ -632,8 +629,7 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			expect(nextState.selectedConnectorId).toBe("line");
-			expect(nextState.selectedIds).toEqual([]);
+			expect(nextState.selectedIds).toEqual(["line"]);
 		});
 
 		it("selects an unselected shape on a touch long press too", () => {

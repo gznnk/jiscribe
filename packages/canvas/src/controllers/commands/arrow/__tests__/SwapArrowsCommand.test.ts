@@ -34,10 +34,8 @@ const makeRect = (id: string): ObjectState =>
 const makeState = (params: {
 	selectedIds: string[];
 	objects: Record<string, ObjectState>;
-	selectedConnectorId?: string | null;
 }): CanvasControllerState =>
 	({
-		selectedConnectorId: null,
 		...params,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;
@@ -46,8 +44,7 @@ describe("SwapArrowsCommand", () => {
 	describe("when a connector is selected", () => {
 		it("swaps the start/end arrows", () => {
 			const state = makeState({
-				selectedIds: [],
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1: makeConnector("c1", "Triangle", "None") },
 			});
 			const next = SwapArrowsCommand.execute(state, registries);
@@ -59,8 +56,7 @@ describe("SwapArrowsCommand", () => {
 
 		it("treats an unspecified arrow as None when swapping", () => {
 			const state = makeState({
-				selectedIds: [],
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1: makeConnector("c1", "Triangle", undefined) },
 			});
 			const conn = SwapArrowsCommand.execute(state, registries).objects[
@@ -112,8 +108,7 @@ describe("SwapArrowsCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when a connector is selected", () => {
 			const state = makeState({
-				selectedIds: [],
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1: makeConnector("c1", "None", "None") },
 			});
 			expect(SwapArrowsCommand.canExecute(state, registries)).toBe(true);

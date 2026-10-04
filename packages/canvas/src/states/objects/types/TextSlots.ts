@@ -63,24 +63,25 @@ export const getFirstTextSlotId = (
 ): string | undefined => (text ? Object.keys(text)[0] : undefined);
 
 /**
- * Resolves the slot an interaction targets. `targetPart` comes from the DOM
- * ([data-part]) and is therefore untrusted, so it is honored only when it names
- * an actual slot; anything else falls back to the first slot.
+ * Resolves the slot an interaction targets: the named slot when the shape holds
+ * it, else the first slot. The name comes from the DOM (readTextSlotPart) and is
+ * therefore untrusted, which is why only an own key of `text` is honored.
  *
  * @param text - The shape's slots; undefined for a shape that holds no text
- * @param targetPart - The pressed element's [data-part], if any
+ * @param slotId - The slot the pressed element named, if any; undefined when the
+ *   press named no text slot (a press on the body, or on a part of another kind)
  * @returns The resolved slot id, or undefined when the shape has no slot at all
  */
 export const resolveTextSlotId = (
 	text: TextSlots | undefined,
-	targetPart: string | undefined,
+	slotId: string | undefined,
 ): string | undefined => {
 	if (
 		text &&
-		targetPart !== undefined &&
-		Object.prototype.hasOwnProperty.call(text, targetPart)
+		slotId !== undefined &&
+		Object.prototype.hasOwnProperty.call(text, slotId)
 	) {
-		return targetPart;
+		return slotId;
 	}
 	return getFirstTextSlotId(text);
 };

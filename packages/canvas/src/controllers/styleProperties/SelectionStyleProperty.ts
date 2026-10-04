@@ -3,7 +3,9 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { collectSelectedPartIds } from "../selection/collectSelectedPartIds";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
+import { isTextSlotSelection } from "../selection/textSlotPartKind";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
 
@@ -70,37 +72,15 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		value: string,
 	): CanvasControllerState {
-		const { selectedIds, selectedConnectorId, objects, objectPartSelection } =
-			state;
+		const { selectedIds, objects, objectPartSelection } = state;
 		const path = property.split(".");
-
-		// Connector selected (selectedIds is empty)
-		if (selectedIds.length === 0 && selectedConnectorId !== null) {
-			const connector = objects[selectedConnectorId];
-			if (!connector) {
-				return state;
-			}
-			const updated = this.applyToObject(
-				connector,
-				property,
-				path,
-				value,
-				objectPartSelection,
-			);
-			if (updated === null) {
-				return state;
-			}
-			// Copy-on-write view instead of a full spread: slider drags call apply
-			// per pointermove frame (#213). handleGesture / the reducer materialize.
-			const updatedObjects = createCowObjects(objects);
-			updatedObjects[selectedConnectorId] = updated;
-			return { ...state, objects: updatedObjects };
-		}
 
 		if (selectedIds.length === 0) {
 			return state;
 		}
 
+		// Copy-on-write view instead of a full spread: slider drags call apply
+		// per pointermove frame (#213). handleGesture / the reducer materialize.
 		const updatedObjects = createCowObjects(objects);
 		let changed = false;
 
@@ -165,8 +145,9 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 	 * @param path - The property split on "." ("label.fill" → ["label", "fill"])
 	 * @param value - The value already coerced to the declared type
 	 * @param selectedSlotId - The text slot selected on this very object, undefined
-	 *   when none is (this object is not the slot's owner, or nothing is selected
-	 *   one level below the object). Only slot-storage handlers read it.
+	 *   when none is (this object is not the slot's owner, nothing is selected one
+	 *   level below the object, or what is selected there is a part of another kind
+	 *   — a vertex). Only slot-storage handlers read it.
 	 */
 	protected writeValue(
 		obj: ObjectState,
@@ -202,9 +183,10 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			path,
 			coerced,
 			// The write lands on one slot, and in this version the selection is always
-			// one collapsed range, so that slot is the first range's anchor.
-			objectPartSelection?.objectId === obj.id
-				? objectPartSelection.ranges[0].anchorId
+			// one collapsed range, so that slot is the first of the ids it covers.
+			isTextSlotSelection(objectPartSelection) &&
+				objectPartSelection.objectId === obj.id
+				? collectSelectedPartIds(objectPartSelection)[0]
 				: undefined,
 		);
 	}

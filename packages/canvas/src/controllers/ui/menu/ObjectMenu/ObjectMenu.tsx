@@ -30,6 +30,7 @@ import type {
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
+import { isTextAddressed } from "../utils/isTextAddressed";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
@@ -132,7 +133,6 @@ const renderItem = (
 					key={item.id}
 					objects={canvasState.objects}
 					selectedIds={canvasState.selectedIds}
-					selectedConnectorId={canvasState.selectedConnectorId}
 					openSectionId={canvasState.objectMenuOpenId}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
@@ -198,10 +198,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// None of the system sections acts on a text slot, so they all go while one is
 	// selected — and likewise while an editor is open, where the menu is there to
 	// style the text being edited.
-	const showSystemSections =
-		shouldRender &&
-		canvasState.objectPartSelection === null &&
-		canvasState.textEditState?.kind !== "shape";
+	const showSystemSections = shouldRender && !isTextAddressed(canvasState);
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
 		: [];

@@ -21,7 +21,6 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		selectedIds,
-		selectedConnectorId: null,
 		objects,
 	}) as unknown as CanvasControllerState;
 
@@ -182,6 +181,27 @@ describe("determineSelection", () => {
 			const state = makeState(["root-rect"], baseObjects);
 			const result = determineSelection(rectObj("root-rect"), state, mods);
 			expect(result).toEqual([]);
+		});
+	});
+
+	describe("a selected connector", () => {
+		const connectorObjects = {
+			...baseObjects,
+			conn1: { id: "conn1", type: "connector" } as unknown as ObjectState,
+		};
+
+		it("is replaced by a plain click on a shape", () => {
+			const state = makeState(["conn1"], connectorObjects);
+			expect(determineSelection(rectObj("root-rect"), state, noMods)).toEqual([
+				"root-rect",
+			]);
+		});
+
+		it("is replaced rather than added to by an additive click on a shape", () => {
+			const state = makeState(["conn1"], connectorObjects);
+			expect(determineSelection(rectObj("root-rect"), state, ctrlMods)).toEqual(
+				["root-rect"],
+			);
 		});
 	});
 

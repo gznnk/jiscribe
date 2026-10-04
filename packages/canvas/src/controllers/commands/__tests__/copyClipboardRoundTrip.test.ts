@@ -145,7 +145,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 		);
 	});
 
-	it("paste selects only the pasted shapes (connectors stay in their own channel)", () => {
+	it("paste selects only the pasted shapes, never the connectors it brought", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
 			selectedIds: ["rect-1", "rect-2"],
 		});
@@ -157,6 +157,5 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 			(id) => after.objects[id]?.type === "rect",
 		);
 		expect([...after.selectedIds].sort()).toEqual([...newRectIds].sort());
-		expect(after.selectedConnectorId).toBeNull();
 	});
 });

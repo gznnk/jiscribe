@@ -73,7 +73,7 @@ async function partNames(
 	}, id);
 }
 
-/** Local y and height of a compartment rect (data-part); how the band's growth is read. */
+/** Local y and height of a compartment rect (its slot's data-part); how the band's growth is read. */
 async function partRect(
 	canvas: CanvasDriver,
 	id: string,
@@ -82,7 +82,7 @@ async function partRect(
 	const rect = await canvas.page.evaluate(
 		({ objectId, partName }) => {
 			const el = document.querySelector(
-				`[data-kind="object"][data-id="${objectId}"] [data-part="${partName}"]`,
+				`[data-kind="object"][data-id="${objectId}"] [data-part="textSlot:${partName}"]`,
 			);
 			if (!el) {
 				return null;
@@ -155,7 +155,10 @@ test.describe("record (a box with compartments)", () => {
 		// One object = one data-kind=object element; the compartments carry only data-part.
 		expect(record.tag).toBe("g");
 
-		expect(await partNames(canvas, record.id)).toEqual(["name", "attributes"]);
+		expect(await partNames(canvas, record.id)).toEqual([
+			"textSlot:name",
+			"textSlot:attributes",
+		]);
 	});
 
 	test("builds the class stencil with 3 compartments where the middle one takes only its rows", async ({
@@ -173,9 +176,9 @@ test.describe("record (a box with compartments)", () => {
 		await canvas.deselect();
 
 		expect(await partNames(canvas, id)).toEqual([
-			"name",
-			"attributes",
-			"operations",
+			"textSlot:name",
+			"textSlot:attributes",
+			"textSlot:operations",
 		]);
 
 		expect((await partRect(canvas, id, "attributes")).height).toBe(25);
@@ -259,7 +262,7 @@ test.describe("record (a box with compartments)", () => {
 		await canvas.deselect();
 
 		// Double-click the rotated row compartment directly to open the attributes editor.
-		const attributes = group.locator('[data-part="attributes"]');
+		const attributes = group.locator('[data-part="textSlot:attributes"]');
 		await attributes.dblclick();
 		await expect(canvas.textEditorSurface()).toBeVisible();
 
@@ -329,7 +332,7 @@ test.describe("record (a box with compartments)", () => {
 			.boundingBox();
 		const attributesBox = await canvas.page
 			.locator(
-				`[data-kind="object"][data-id="${record.id}"] [data-part="attributes"]`,
+				`[data-kind="object"][data-id="${record.id}"] [data-part="textSlot:attributes"]`,
 			)
 			.boundingBox();
 		if (!editorBox || !attributesBox) {
@@ -449,7 +452,7 @@ test.describe("record (a box with compartments)", () => {
 		// The editor stops at that same edge instead of growing past the shape.
 		const bandBox = await canvas.page
 			.locator(
-				`[data-kind="object"][data-id="${record.id}"] [data-part="name"]`,
+				`[data-kind="object"][data-id="${record.id}"] [data-part="textSlot:name"]`,
 			)
 			.boundingBox();
 		const editorBox = await canvas.page
@@ -505,9 +508,9 @@ test.describe("record (a box with compartments)", () => {
 		await canvas.deselect();
 
 		expect(await partNames(canvas, id)).toEqual([
-			"stereotype",
-			"name",
-			"operations",
+			"textSlot:stereotype",
+			"textSlot:name",
+			"textSlot:operations",
 		]);
 
 		// Stacked top to bottom in that order, each starting where the one above ends.

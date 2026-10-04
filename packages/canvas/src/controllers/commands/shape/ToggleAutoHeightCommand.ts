@@ -1,17 +1,16 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ObjectAutoHeightRegistry } from "../../../states/registry/ObjectAutoHeightRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * What the two helpers below read off the canvas: the selection and the objects
- * it names. Narrow enough for the menu item, which is handed those three and
+ * it names. Narrow enough for the menu item, which is handed those two and
  * nothing else (ObjectMenuItemProps).
  */
 export type AutoHeightSelection = Pick<
 	CanvasControllerState,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selectedIds"
 >;
 
 /**
@@ -28,7 +27,7 @@ export const collectAutoHeightIds = (
 	selection: AutoHeightSelection,
 	autoHeightRegistry: ObjectAutoHeightRegistry,
 ): string[] =>
-	getEffectiveSelectedIds(selection).filter((id) => {
+	selection.selectedIds.filter((id) => {
 		const object = selection.objects[id];
 		return object !== undefined && autoHeightRegistry.supports(object.type);
 	});

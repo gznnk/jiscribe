@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { EscapeSelectionCommand } from "../EscapeSelectionCommand";
 
@@ -13,8 +14,6 @@ const baseState = (
 	({
 		objects: {},
 		selectedIds: [],
-		selectedConnectorId: null,
-		selectedVertex: null,
 		objectPartSelection: null,
 		multiSelectGroup: null,
 		areaSelection: null,
@@ -46,11 +45,9 @@ const slotSelectedState = (): CanvasControllerState =>
 	});
 
 describe("EscapeSelectionCommand", () => {
-	it("clears all selection and editing state when no text slot is selected", () => {
+	it("clears all selection and editing state when nothing is part-selected", () => {
 		const state = baseState({
 			selectedIds: ["a", "b"],
-			selectedConnectorId: "c1",
-			selectedVertex: { objectId: "p1", vertexIndex: 0 },
 			multiSelectGroup: { id: "ms" } as never,
 			areaSelection: { x: 0, y: 0 } as never,
 			shapeDrawing: { type: "rect" } as never,
@@ -59,13 +56,25 @@ describe("EscapeSelectionCommand", () => {
 		});
 		const next = EscapeSelectionCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedConnectorId).toBeNull();
-		expect(next.selectedVertex).toBeNull();
+		expect(next.objectPartSelection).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.areaSelection).toBeNull();
 		expect(next.shapeDrawing).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.edgeScrollEnabled).toBe(false);
+	});
+
+	it("drops only a picked vertex on the first press, keeping the object selected", () => {
+		const state = baseState({
+			objects: {
+				p1: { id: "p1", type: "polyline", points: [] },
+			} as never,
+			selectedIds: ["p1"],
+			objectPartSelection: vertexPartSelection("p1", 0),
+		});
+		const next = EscapeSelectionCommand.execute(state, registries);
+		expect(next.objectPartSelection).toBeNull();
+		expect(next.selectedIds).toEqual(["p1"]);
 	});
 
 	describe("staged deselection of a text slot", () => {

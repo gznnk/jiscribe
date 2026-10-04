@@ -4,23 +4,14 @@ import { isCanvasSectionShown } from "../isCanvasSectionShown";
 
 describe("isCanvasSectionShown", () => {
 	it("shows the section while nothing is selected", () => {
-		expect(
-			isCanvasSectionShown({ selectedIds: [], selectedConnectorId: null }),
-		).toBe(true);
+		expect(isCanvasSectionShown({ selectedIds: [] })).toBe(true);
 	});
 
 	it("hides it once an object is selected", () => {
-		expect(
-			isCanvasSectionShown({
-				selectedIds: ["rect-1"],
-				selectedConnectorId: null,
-			}),
-		).toBe(false);
+		expect(isCanvasSectionShown({ selectedIds: ["rect-1"] })).toBe(false);
 	});
 
 	it("hides it once a connector is selected", () => {
-		expect(
-			isCanvasSectionShown({ selectedIds: [], selectedConnectorId: "conn-1" }),
-		).toBe(false);
+		expect(isCanvasSectionShown({ selectedIds: ["conn-1"] })).toBe(false);
 	});
 });

@@ -25,7 +25,6 @@ const line = (id: string, startArrow: string, endArrow: string): ObjectState =>
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
 		selectedIds: shapes.map((shape) => shape.id),
-		selectedConnectorId: null,
 		objectMenuOpenId: null,
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),
 	}) as unknown as CanvasControllerState;

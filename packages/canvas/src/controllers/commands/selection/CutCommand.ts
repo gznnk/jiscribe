@@ -1,5 +1,6 @@
 import { CopyCommand } from "./CopyCommand";
 import { DeleteCommand } from "./DeleteCommand";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -16,16 +17,18 @@ export const CutCommand: ExecutableCommand = {
 		default: [{ code: "KeyX", ctrl: true }],
 	},
 
-	canExecute: (state) => state.selectedIds.length > 0,
+	// Offered where Copy is, which it composes: not for a lone connector.
+	canExecute: (state) =>
+		state.selectedIds.length > 0 && getSelectedConnectorId(state) === null,
 
 	execute: (state, registries) => {
-		// Clear selectedVertex before composing.
-		// Otherwise CopyCommand copies the entire polyline while DeleteCommand
-		// deletes only a single vertex, producing an asymmetric result.
+		// Drop the part selection before composing. Otherwise CopyCommand copies the
+		// entire polyline while DeleteCommand deletes only a single vertex, producing
+		// an asymmetric result.
 		const stateWithClipboard = CopyCommand.execute(
 			{
 				...state,
-				selectedVertex: null,
+				objectPartSelection: null,
 			},
 			registries,
 		);

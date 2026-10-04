@@ -6,10 +6,10 @@ import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 /**
- * Connectors live in the separate selectedConnectorId channel and are only mixed into
- * rootIds for z-ordering. They must never be pulled into selectedIds / a group, because
- * a connector follows its endpoints rather than a group transform, and the group OBB
- * calculation would misread it as a Poly (waypoints only).
+ * A connector is only ever selected on its own, and is mixed into rootIds for
+ * z-ordering alone. It must never be pulled into a multi-selection / a group,
+ * because a connector follows its endpoints rather than a group transform, and
+ * the group OBB calculation would misread it as a Poly (waypoints only).
  *
  * Guards both leak points: Select All (fills selectedIds from rootIds) and Group itself.
  */

@@ -3,6 +3,7 @@ import type { Point } from "@jiscribe/geometry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { materializeObjects } from "../../utils/cowObjects";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -70,9 +71,12 @@ const createMoveCommand = (
 		shortcuts: {
 			default: [{ code: ARROW_CODE[direction], shift: isLarge }],
 		},
-		// Disabled during text editing so caret movement takes priority
+		// Disabled during text editing so caret movement takes priority. A lone
+		// connector is not nudged either: it follows its endpoints.
 		canExecute: (state: CanvasControllerState) =>
-			state.selectedIds.length > 0 && state.textEditState === null,
+			state.selectedIds.length > 0 &&
+			state.textEditState === null &&
+			getSelectedConnectorId(state) === null,
 		execute: (state: CanvasControllerState, registries: ICanvasRegistries) => {
 			const { objects, multiSelectGroup } = moveSelection({
 				selectedIds: state.selectedIds,

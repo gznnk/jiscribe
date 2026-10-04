@@ -43,12 +43,10 @@ export function applyObjectSelection(
 
 	return {
 		...canvasState,
+		// Shapes only: determineSelection builds the list from the shapes alone, so
+		// a connector that was selected is gone from it.
 		selectedIds,
 		multiSelectGroup,
-		// Clear the connector selection to guarantee mutual exclusion
-		selectedConnectorId: null,
-		// Clear the vertex selection
-		selectedVertex: null,
 		// Clear the sub-object part selection
 		objectPartSelection: null,
 		// Close the submenu on selection change

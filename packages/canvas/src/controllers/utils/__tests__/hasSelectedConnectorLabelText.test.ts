@@ -13,7 +13,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is true for a selected connector whose label has text", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: objectsOf({ label: { text: "Yes" } }),
 			}),
 		).toBe(true);
@@ -22,7 +22,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is false when the label's text is empty", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: objectsOf({ label: { text: "" } }),
 			}),
 		).toBe(false);
@@ -31,7 +31,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is false for a connector carrying no label", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: objectsOf({}),
 			}),
 		).toBe(false);
@@ -40,7 +40,7 @@ describe("hasSelectedConnectorLabelText", () => {
 	it("is false when no connector is selected", () => {
 		expect(
 			hasSelectedConnectorLabelText({
-				selectedConnectorId: null,
+				selectedIds: [],
 				objects: objectsOf({ label: { text: "Yes" } }),
 			}),
 		).toBe(false);
