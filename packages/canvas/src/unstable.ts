@@ -289,4 +289,12 @@ export type {
 	PlatformKeyBindings,
 } from "./controllers/commands/CommandTypes";
 export type { CanvasControllerState } from "./controllers/CanvasTypes";
+export type { CanvasSelection } from "./controllers/selection/CanvasSelection";
+export type {
+	ObjectPartRange,
+	ObjectPartSelection,
+} from "./controllers/selection/ObjectPartSelection";
+export { isTextSlotSelection } from "./controllers/selection/textSlotPartKind";
+export { collectSelectedPartIds } from "./controllers/selection/collectSelectedPartIds";
+export { getSelectedConnectorId } from "./controllers/utils/getSelectedConnectorId";
 export type { ICanvasRegistries } from "./controllers/registries/ICanvasRegistries";

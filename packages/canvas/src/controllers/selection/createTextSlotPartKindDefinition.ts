@@ -14,10 +14,10 @@ const readSlots = (object: ObjectState): TextSlots | undefined =>
 
 /**
  * The `textSlot` part definition every `features.text === "slots"` type gets,
- * with part ids spelled as the keys of `state.text` — the same ids the slot
- * elements already carry in their `data-part`. Registered generically from
- * `applyObjectDefinition`, so a type declares nothing to take part in slot
- * selection.
+ * with part ids spelled as the keys of the object's own `text` — the id half of
+ * the `data-part` its slot elements carry (textSlotPart). Nothing in it is
+ * per-type, which is why applyObjectDefinition registers it without the type
+ * saying anything.
  *
  * @param textRegion - The type's own `ObjectTypeDefinition.textRegion`;
  *   undefined for a type that registers none, whose slots then each take the

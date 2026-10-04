@@ -25,7 +25,7 @@ import type {
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
@@ -34,10 +34,12 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { applyPartClick } from "../utils/applyPartClick";
 import { ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
+import { readTextSlotPart } from "../utils/partAddress";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -46,107 +48,57 @@ import {
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 /**
- * Selects the text slot a click landed in, one level below the object selection.
- * The caller decides that the click addresses a slot; this only maps the pressed
- * element's [data-part] onto a slot of the shape.
- *
- * Unlike the double-click path it does not go through resolveTextSlotId: a click that
- * misses every slot (no [data-part], or one naming something else) must not select the
- * first slot by fallback, it steps back up to the object level by clearing the slot.
- *
- * With an additive modifier held the click extends the live selection instead of
- * replacing it, moving the active range's focus to the clicked slot and leaving
- * its anchor where it is. A plain click leaves one collapsed range, and that slot
- * is the anchor the next extension runs from.
- */
-function handleTextSlotClick(
-	canvasState: CanvasControllerState,
-	targetObject: ObjectState,
-	targetPart: string | undefined,
-	isExtending: boolean,
-): CanvasControllerState {
-	if (
-		targetObject.features?.text !== "slots" ||
-		!isTextStyleState(targetObject)
-	) {
-		return canvasState;
-	}
-
-	const slots = targetObject.text;
-	const slotId =
-		slots !== undefined &&
-		targetPart !== undefined &&
-		Object.prototype.hasOwnProperty.call(slots, targetPart)
-			? targetPart
-			: null;
-
-	// A slot change moves what the menu acts on, so it closes the open submenu just
-	// as an object selection change does. Re-clicking the same slot changes nothing
-	// and returns the state untouched, leaving the submenu as it was.
-	const currentPartSelection = canvasState.objectPartSelection;
-	if (slotId === null) {
-		return currentPartSelection === null
-			? canvasState
-			: { ...canvasState, objectPartSelection: null, objectMenuOpenId: null };
-	}
-	const extended = isExtending
-		? extendTextSlotSelection(canvasState, targetObject, slotId)
-		: null;
-	// A plain click picks the one slot it landed on, so the range it writes is
-	// collapsed and it is the whole selection: anything already picked is replaced.
-	// Only a slot selection can already be that very slot — a part of another kind
-	// sharing the id is still replaced.
-	if (
-		extended === null &&
-		currentPartSelection?.objectId === targetObject.id &&
-		currentPartSelection.kind === TEXT_SLOT_PART_KIND &&
-		currentPartSelection.ranges.length === 1 &&
-		currentPartSelection.ranges[0].anchorId === slotId &&
-		currentPartSelection.ranges[0].focusId === slotId
-	) {
-		return canvasState;
-	}
-	return {
-		...canvasState,
-		objectPartSelection: extended ?? {
-			objectId: targetObject.id,
-			kind: TEXT_SLOT_PART_KIND,
-			ranges: [{ anchorId: slotId, focusId: slotId }],
-		},
-		objectMenuOpenId: null,
-	};
-}
-
 /**
- * The slot selection a modifier-held click widens the live one to: the active
- * range grown to the clicked slot, its anchor left where it is. Null when there
- * is nothing to extend from — no live slot selection on this very object — which
- * leaves the caller to treat the click as a plain one.
+ * Widens the live text-slot selection to the slot a modifier-held click landed
+ * in: the active range's focus moves there, its anchor stays where it is, and
+ * every other range is replaced. The caller has already established that a slot
+ * of this very object is picked and that the object is the whole selection.
  *
  * The run between the two ends is not stored: what lies between two of a type's
  * parts is the type's to say, and a reader asks it when it needs the set
  * (collectObjectPartIds).
+ *
+ * @param state - Current canvas controller state, its `selection.part` naming a
+ *   slot of `targetObject`
+ * @param targetObject - The object the click landed on
+ * @param part - That same `state.selection.part`, taken as the slot selection to
+ *   grow
+ * @param targetPart - The pressed element's [data-part]; one naming no live slot
+ *   of the object leaves the selection as it is, the modifier saying "widen" and
+ *   there being nothing to widen to
  */
-function extendTextSlotSelection(
-	canvasState: CanvasControllerState,
+const extendTextSlotSelection = (
+	state: CanvasControllerState,
 	targetObject: ObjectState,
-	slotId: string,
-): ObjectPartSelection | null {
-	const currentPartSelection = canvasState.objectPartSelection;
+	part: ObjectPartSelection,
+	targetPart: string | undefined,
+): CanvasControllerState => {
+	const slotId = readTextSlotPart(targetPart);
+	const slots = isTextStyleState(targetObject) ? targetObject.text : undefined;
 	if (
-		currentPartSelection === null ||
-		currentPartSelection.objectId !== targetObject.id ||
-		currentPartSelection.kind !== TEXT_SLOT_PART_KIND
+		slotId === undefined ||
+		slots === undefined ||
+		!Object.prototype.hasOwnProperty.call(slots, slotId)
 	) {
-		return null;
+		return state;
 	}
-	const { ranges } = currentPartSelection;
+	const { ranges } = part;
+	// What the menu acts on moves with the range, so the open submenu closes just
+	// as it does on a plain part click (applyPartClick).
 	return {
-		objectId: targetObject.id,
-		kind: TEXT_SLOT_PART_KIND,
-		ranges: [{ anchorId: ranges[ranges.length - 1].anchorId, focusId: slotId }],
+		...state,
+		selection: {
+			...state.selection,
+			part: {
+				kind: part.kind,
+				ranges: [
+					{ anchorId: ranges[ranges.length - 1].anchorId, focusId: slotId },
+				],
+			},
+		},
+		objectMenuOpenId: null,
 	};
-}
+};
 
 /**
  * Handles dragging an object.
@@ -164,7 +116,7 @@ function handleObjectDrag(
 	}
 
 	const eventStartObjects = dragStartSnapshot.objects;
-	const selectedIds = canvasState.selectedIds;
+	const selectedIds = canvasState.selection.objectIds;
 
 	// --- Axis lock via Shift ---
 	// While Shift is held, movement is locked to one axis. The locked axis (lockedAxis)
@@ -313,13 +265,13 @@ function handleObjectDragStart(
 	const { mods } = event;
 
 	// Determine the selection state
-	const isCurrentlySelected = canvasState.selectedIds.includes(id);
+	const isCurrentlySelected = canvasState.selection.objectIds.includes(id);
 	const ancestors = getAncestors(canvasState, id);
 	const isAncestorSelected = ancestors.some((ancestorId) =>
-		canvasState.selectedIds.includes(ancestorId),
+		canvasState.selection.objectIds.includes(ancestorId),
 	);
 
-	let selectedIds: string[];
+	let selectedIds: readonly string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
 	// The multiSelectGroup and keyPoints updates to set on the drag's start snapshot
 	let eventStartMultiSelectGroup =
@@ -328,11 +280,11 @@ function handleObjectDragStart(
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// Already selected: keep the current selection
-		selectedIds = canvasState.selectedIds;
+		selectedIds = canvasState.selection.objectIds;
 	} else {
 		// Not selected: apply hierarchical selection logic
 		const newSelection = determineSelection(targetObject, canvasState, mods);
-		selectedIds = newSelection ?? canvasState.selectedIds;
+		selectedIds = newSelection ?? canvasState.selection.objectIds;
 
 		// Create/update multiSelectGroup as the number of selected shapes increases
 		const eventStartObjects =
@@ -358,7 +310,7 @@ function handleObjectDragStart(
 		}
 	}
 
-	// Re-cache the exclusion set with the selectedIds finalized after dragStart
+	// Re-cache the exclusion set with the selection finalized after dragStart
 	// (refresh the snapshot if the selection changed from what it was when handleGesture was built)
 	const selectedIdsWithDescendants = canvasState.activeDrag
 		? buildSelectedIdsWithDescendants(
@@ -370,15 +322,10 @@ function handleObjectDragStart(
 	// Update the selection state and enable edge scrolling
 	const nextState = {
 		...canvasState,
-		selectedIds,
+		// The picked part goes with the object selection that carried it.
+		selection: { objectIds: selectedIds, part: null },
 		multiSelectGroup: newMultiSelectGroup,
 		edgeScrollEnabled: true,
-		// Clear the connector selection to guarantee mutual exclusion
-		selectedConnectorId: null,
-		// Clear the vertex selection
-		selectedVertex: null,
-		// Clear the sub-object part selection
-		objectPartSelection: null,
 		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
@@ -417,7 +364,10 @@ function handleObjectDragEnd(
 	const resultState = handleObjectDrag(nextState, event, registries);
 
 	// Update the parent groups' bounding boxes
-	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
+	return updateAffectedGroupBounds(
+		resultState,
+		resultState.selection.objectIds,
+	);
 }
 
 /**
@@ -462,22 +412,23 @@ export const ObjectEventHandler: GestureHandler = {
 		// Handle the click event
 		if (event.type === "click") {
 			const isSoleSelection =
-				nextState.selectedIds.length === 1 &&
-				nextState.selectedIds[0] === targetObject.id;
+				nextState.selection.objectIds.length === 1 &&
+				nextState.selection.objectIds[0] === targetObject.id;
 			// An additive modifier over an object that already has a slot selected
 			// widens that selection. Left to applyObjectSelection it would instead
 			// deselect the object, which is the one thing the modifier cannot mean
 			// while the pointer is aimed one level below it.
-			const extendsPartSelection =
+			const slotPart = nextState.selection.part;
+			if (
 				isSoleSelection &&
 				isAdditiveSelectionMod(event.mods) &&
-				nextState.objectPartSelection?.kind === TEXT_SLOT_PART_KIND;
-			if (extendsPartSelection) {
-				return handleTextSlotClick(
+				isTextSlotSelection(slotPart)
+			) {
+				return extendTextSlotSelection(
 					nextState,
 					targetObject,
+					slotPart,
 					event.targetPart,
-					true,
 				);
 			}
 			const afterClick = applyObjectSelection(
@@ -486,23 +437,23 @@ export const ObjectEventHandler: GestureHandler = {
 				event.mods,
 			);
 			// A click that leaves the selection as it was, on the object that is already
-			// the whole selection, addresses a text slot inside it instead. Any modifier
+			// the whole selection, addresses a part inside it instead. Any modifier
 			// belongs to selection editing, so it is left to applyObjectSelection alone.
-			const addressesTextSlot =
+			const addressesPart =
 				afterClick === nextState &&
 				!event.mods.ctrl &&
 				!event.mods.meta &&
 				!event.mods.shift &&
 				!event.mods.alt &&
 				isSoleSelection;
-			if (!addressesTextSlot) {
+			if (!addressesPart) {
 				return afterClick;
 			}
-			return handleTextSlotClick(
+			return applyPartClick(
 				afterClick,
 				targetObject,
 				event.targetPart,
-				false,
+				registries.objectPartKind,
 			);
 		}
 
@@ -515,10 +466,13 @@ export const ObjectEventHandler: GestureHandler = {
 			// used by the property-update side (TextSlotStyleProperty) as authoritative.
 			const features = targetObject.features;
 			if (features?.text !== undefined && isTextStyleState(targetObject)) {
-				// The pressed element's [data-part] names the slot (as it does for a
-				// connector's label). It comes from the DOM, so resolveTextSlotId
-				// honors it only when it matches a slot and otherwise opens the first.
-				const slotId = resolveTextSlotId(targetObject.text, event.targetPart);
+				// The pressed element's [data-part] names the slot. It comes from the
+				// DOM, so resolveTextSlotId honors it only when it matches a slot and
+				// otherwise opens the first.
+				const slotId = resolveTextSlotId(
+					targetObject.text,
+					readTextSlotPart(event.targetPart),
+				);
 				if (slotId === undefined) {
 					return nextState;
 				}

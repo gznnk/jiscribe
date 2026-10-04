@@ -6,7 +6,6 @@ import { remapTablePartSelectionForInsert } from "../remapTablePartSelectionForI
 
 /** A selection of collapsed ranges, one per id — what a grip or a cell click writes. */
 const selectionOf = (kind: string, partIds: string[]): ObjectPartSelection => ({
-	objectId: "t-1",
 	kind,
 	ranges: partIds.map((partId) => ({ anchorId: partId, focusId: partId })),
 });
@@ -39,7 +38,6 @@ describe("remapTablePartSelectionForInsert", () => {
 	it("moves both ends of a range, the anchor as readily as the focus", () => {
 		const moved = remapTablePartSelectionForInsert(
 			{
-				objectId: "t-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "r2c0", focusId: "r1c0" }],
 			},

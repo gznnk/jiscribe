@@ -11,6 +11,8 @@ import type {
 } from "../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type {
 	CanvasEvent,
 	EventType,
@@ -200,8 +202,7 @@ describe("ConnectorSegmentSlideHandler - dragStart", () => {
 	it("selects the connector exclusively and enables edge scrolling", () => {
 		const state = {
 			...stateWith(orthogonalConnector()),
-			selectedIds: ["other"],
-			selectedVertex: { objectId: "other", vertexIndex: 0 },
+			selection: selectionOf(["other"], vertexPartSelection(0)),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 			contextMenuPosition: { x: 1, y: 1 },
@@ -213,9 +214,8 @@ describe("ConnectorSegmentSlideHandler - dragStart", () => {
 			registries,
 		);
 
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selection.objectIds).toEqual(["c1"]);
+		expect(next.selection.part).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();

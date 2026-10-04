@@ -19,7 +19,7 @@ export type ClientRect = {
  *
  * @param canvas - The driver for the page under test
  * @param objectId - The table's object id, as `captureObjects` reports it
- * @param cellId - The cell's slot id (`r0c1`), which is its `data-part`
+ * @param cellId - The cell's slot id (`r0c1`), the id half of its `data-part`
  * @returns The cell's client rect; throws when the table or the cell is not drawn
  */
 export async function cellRect(
@@ -30,7 +30,7 @@ export async function cellRect(
 	return canvas.page.evaluate(
 		([id, part]) => {
 			const cell = document.querySelector(
-				`[data-kind="object"][data-id="${id}"] [data-part="${part}"]`,
+				`[data-kind="object"][data-id="${id}"] [data-part="textSlot:${part}"]`,
 			);
 			if (cell === null) {
 				throw new Error(`no cell ${part} on ${id}`);
@@ -71,7 +71,7 @@ export async function cellCenter(
  *
  * @param canvas - The driver for the page under test
  * @param objectId - The table's object id
- * @param cellId - The cell's slot id (`r0c1`), which is its `data-part`
+ * @param cellId - The cell's slot id (`r0c1`), the id half of its `data-part`
  * @returns The computed `fill`; throws when the cell is not drawn
  */
 export async function cellFillColor(
@@ -82,7 +82,7 @@ export async function cellFillColor(
 	return canvas.page.evaluate(
 		([id, part]) => {
 			const cell = document.querySelector(
-				`[data-kind="object"][data-id="${id}"] [data-part="${part}"]`,
+				`[data-kind="object"][data-id="${id}"] [data-part="textSlot:${part}"]`,
 			);
 			if (cell === null) {
 				throw new Error(`no cell ${part} on ${id}`);
@@ -99,7 +99,7 @@ export async function cellFillColor(
  *
  * @param canvas - The driver for the page under test
  * @param objectId - The table's object id; an id nothing is drawn for counts 0
- * @returns The number of cell elements, found by the `r<row>c<column>` part they carry
+ * @returns The number of cell elements, found by the `textSlot:r<row>c<column>` address they carry
  */
 export async function cellCount(
 	canvas: CanvasDriver,
@@ -108,7 +108,7 @@ export async function cellCount(
 	return canvas.page.evaluate(
 		(id) =>
 			document.querySelectorAll(
-				`[data-kind="object"][data-id="${id}"] [data-part^="r"]`,
+				`[data-kind="object"][data-id="${id}"] [data-part^="textSlot:r"]`,
 			).length,
 		objectId,
 	);
@@ -292,10 +292,10 @@ export async function selectedCellIds(
 	return canvas.page.evaluate((id) => {
 		const cells = [
 			...document.querySelectorAll(
-				`[data-kind="object"][data-id="${id}"] [data-part^="r"]`,
+				`[data-kind="object"][data-id="${id}"] [data-part^="textSlot:r"]`,
 			),
 		].map((cell) => ({
-			cellId: cell.getAttribute("data-part") ?? "",
+			cellId: (cell.getAttribute("data-part") ?? "").replace("textSlot:", ""),
 			box: cell.getBoundingClientRect(),
 		}));
 		// The object's own outline comes first, the sub-parts after (SelectionOverlay).

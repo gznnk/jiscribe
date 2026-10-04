@@ -1,5 +1,5 @@
+import type { CanvasSelection } from "./CanvasSelection";
 import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
-import type { ObjectPartSelection } from "./ObjectPartSelection";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
@@ -14,20 +14,23 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  *
  * @param objects - The canvas's objects, for looking the selection's owner up by id
  * @param registry - The part registry the owner's type declared its kinds in
- * @param selection - The live part selection (`state.objectPartSelection`, which the reducer keeps valid); null answers false, there being no part to outline
+ * @param selection - What the canvas is pointed at (`state.selection`, whose
+ *   `part` the reducer keeps valid); a null `part` answers false, there being
+ *   none to outline, and the part's owner is the sole selected object
  * @returns True only when a part is selected and its kind is one the overlay draws a box for
  */
 export const isObjectPartOutlined = (
 	objects: Readonly<Record<string, ObjectState>>,
 	registry: ObjectPartKindRegistry,
-	selection: ObjectPartSelection | null,
+	selection: CanvasSelection,
 ): boolean => {
-	if (selection === null) {
+	const { objectIds, part } = selection;
+	if (part === null) {
 		return false;
 	}
-	const owner = objects[selection.objectId];
+	const owner = objects[objectIds[0]];
 	if (owner === undefined) {
 		return false;
 	}
-	return registry.get(owner.type, selection.kind)?.region !== undefined;
+	return registry.get(owner.type, part.kind)?.region !== undefined;
 };

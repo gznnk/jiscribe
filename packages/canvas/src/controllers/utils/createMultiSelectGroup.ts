@@ -27,7 +27,7 @@ export const MULTI_SELECT_GROUP = {
  *   top-level shapes/groups present in the map, so the union is identical to the traversal.
  */
 export function createMultiSelectGroup(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	allObjects: Record<string, ObjectState>,
 	existingMultiSelectGroup?: GroupState | null,
 	precomputedBBoxes?: Record<string, BoundingBox>,

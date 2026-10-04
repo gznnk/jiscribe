@@ -6,6 +6,7 @@ import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
@@ -34,7 +35,7 @@ const stateWithSelectedRect = (): CanvasControllerState => {
 		...base,
 		objects: { ...base.objects, r1: rect },
 		rootIds: [...base.rootIds, "r1"],
-		selectedIds: ["r1"],
+		selection: selectionOf(["r1"]),
 	});
 };
 

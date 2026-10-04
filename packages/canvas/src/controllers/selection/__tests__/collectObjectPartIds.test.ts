@@ -44,7 +44,7 @@ const rectangularKind: ObjectPartKindDefinition = {
 
 const selection = (
 	ranges: ObjectPartSelection["ranges"],
-): ObjectPartSelection => ({ objectId: "t1", kind: "cell", ranges });
+): ObjectPartSelection => ({ kind: "cell", ranges });
 
 describe("collectObjectPartIds", () => {
 	it("covers the one part a collapsed range names", () => {

@@ -3,8 +3,8 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { CanvasSelection } from "../selection/CanvasSelection";
 import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
-import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 import { resolveSelectedTextSlotIds } from "../selection/resolveSelectedTextSlotIds";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
@@ -73,38 +73,16 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		value: string,
 		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
-		const { selectedIds, selectedConnectorId, objects, objectPartSelection } =
-			state;
+		const { selection, objects } = state;
+		const { objectIds: selectedIds } = selection;
 		const path = property.split(".");
-
-		// Connector selected (selectedIds is empty)
-		if (selectedIds.length === 0 && selectedConnectorId !== null) {
-			const connector = objects[selectedConnectorId];
-			if (!connector) {
-				return state;
-			}
-			const updated = this.applyToObject(
-				connector,
-				property,
-				path,
-				value,
-				objectPartSelection,
-				objectPartKind,
-			);
-			if (updated === null) {
-				return state;
-			}
-			// Copy-on-write view instead of a full spread: slider drags call apply
-			// per pointermove frame (#213). handleGesture / the reducer materialize.
-			const updatedObjects = createCowObjects(objects);
-			updatedObjects[selectedConnectorId] = updated;
-			return { ...state, objects: updatedObjects };
-		}
 
 		if (selectedIds.length === 0) {
 			return state;
 		}
 
+		// Copy-on-write view instead of a full spread: slider drags call apply
+		// per pointermove frame (#213). handleGesture / the reducer materialize.
 		const updatedObjects = createCowObjects(objects);
 		let changed = false;
 
@@ -118,7 +96,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 				property,
 				path,
 				value,
-				objectPartSelection,
+				selection,
 				objectPartKind,
 			);
 			if (updated === null) {
@@ -143,7 +121,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 						property,
 						path,
 						value,
-						objectPartSelection,
+						selection,
 						objectPartKind,
 					);
 					if (updated === null) {
@@ -195,7 +173,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		path: readonly string[],
 		value: string,
-		objectPartSelection: ObjectPartSelection | null,
+		selection: CanvasSelection,
 		objectPartKind: ObjectPartKindRegistry,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
@@ -210,7 +188,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			obj,
 			path,
 			coerced,
-			resolveSelectedTextSlotIds(obj, objectPartSelection, objectPartKind),
+			resolveSelectedTextSlotIds(obj, selection, objectPartKind),
 		);
 	}
 }

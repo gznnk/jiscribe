@@ -25,7 +25,7 @@ import { getSelectedHeaderFill } from "../state/getSelectedHeaderFill";
  */
 const HeaderColorPropertyComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	onPropertyUpdate,
 }) => {
 	const locale = useCanvasLocale();
@@ -34,7 +34,7 @@ const HeaderColorPropertyComponent: React.FC<PropertyPanelItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyRowHeader}>
 			<PropertyColorField
-				value={getSelectedHeaderFill(selectedIds, objects)}
+				value={getSelectedHeaderFill(selection.objectIds, objects)}
 				property="headerFill"
 				role="surface"
 				title={messages.menuHeaderColor}

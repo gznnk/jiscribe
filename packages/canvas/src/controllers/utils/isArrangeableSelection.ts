@@ -1,17 +1,14 @@
 import type { CanvasControllerState } from "../CanvasTypes";
-import { getEffectiveSelectedIds } from "./getEffectiveSelectedIds";
 
 /**
  * Determines whether the arrange (z-order change) command can be executed.
  *
- * Because it targets connector selection (selectedConnectorId) in addition to object
- * selection (selectedIds), the check uses the effective selection via getEffectiveSelectedIds.
- * Returns true when the effective selection is non-empty and all elements share the same
- * parent (within the same group, or all at root). A connector is always directly under root,
- * so on its own it is always true.
+ * Returns true when the selection is non-empty and all of it shares the same
+ * parent (within the same group, or all at root). A connector is always directly
+ * under root, so on its own it is always true.
  */
 export function isArrangeableSelection(state: CanvasControllerState): boolean {
-	const ids = getEffectiveSelectedIds(state);
+	const ids = state.selection.objectIds;
 	if (ids.length === 0) {
 		return false;
 	}

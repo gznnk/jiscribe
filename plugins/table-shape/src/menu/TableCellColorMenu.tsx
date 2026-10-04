@@ -42,19 +42,14 @@ const SECTION_ID = "table-cell-color";
  */
 const TableCellColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
-	objectPartSelection,
+	selection,
 	openSectionId,
 	onPropertyUpdate,
 }) => {
 	const strings = useTableStrings();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const cellFill = useTableCellFill({
-		objects,
-		selectedIds,
-		objectPartSelection,
-	});
+	const cellFill = useTableCellFill({ objects, selection });
 	const isMixed = isMixedSelectionValue(cellFill);
 	const sharedFill = selectionValueOr(cellFill, undefined);
 	const isNoFill = !isMixed && sharedFill === undefined;

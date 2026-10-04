@@ -11,8 +11,8 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
 /**
  * Handles click events on connectors.
- * Connectors are selected independently from objects (selectedConnectorId vs selectedIds).
- * Only single selection is supported; selecting a connector clears selectedIds, and vice versa.
+ * A connector is selected on its own: selecting one replaces whatever was
+ * selected, and selecting a shape replaces it in turn.
  *
  * Label editing (label.text) starts on a double click, with the edit target
  * depending on whether a label exists:

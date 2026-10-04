@@ -16,7 +16,7 @@ import { collectDescendantIds } from "../../../utils/collectDescendantIds";
  * @returns The objects, with a group listed before the descendants it contributes; no id appears twice, the map being a tree
  */
 export const collectSelectionObjects = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 ): ObjectState[] => {
 	const collected: ObjectState[] = [];

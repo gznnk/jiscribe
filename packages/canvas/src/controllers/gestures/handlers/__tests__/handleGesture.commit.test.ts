@@ -84,7 +84,7 @@ const stateWithSelectedRect = (
 		...base,
 		objects: { ...base.objects, r1: rect },
 		rootIds: [...base.rootIds, "r1"],
-		selectedIds: ["r1"],
+		selection: { objectIds: ["r1"], part: null },
 	};
 };
 
@@ -191,7 +191,7 @@ describe("handleGesture - commit", () => {
 
 		const next = handleGesture(state, controlGesture("click"), registries);
 
-		expect(next.objectPartSelection?.ranges).toEqual([
+		expect(next.selection.part?.ranges).toEqual([
 			{ anchorId: "body", focusId: "body" },
 		]);
 		expect(next.commitVersion).toBe(state.commitVersion);

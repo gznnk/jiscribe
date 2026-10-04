@@ -8,14 +8,15 @@ import {
 import { TABLE_CELL_FILL_FIELD } from "../schema/TableDoc";
 
 /**
- * What the two cell-background controls are handed in common: the selection and
- * the cells picked below it. Both surfaces' props carry these three fields
- * (ObjectMenuItemProps / PropertyPanelItemProps), so naming them once is what
- * stops the controls from resolving different cells.
+ * What the two cell-background controls are handed in common: the selection,
+ * which carries the cells picked below it, and the objects it names. Both
+ * surfaces' props carry these two fields (ObjectMenuItemProps /
+ * PropertyPanelItemProps), so naming them once is what stops the controls from
+ * resolving different cells.
  */
 export type TableCellFillSource = Pick<
 	ObjectMenuItemProps,
-	"objects" | "selectedIds" | "objectPartSelection"
+	"objects" | "selection"
 >;
 
 /**
@@ -28,10 +29,9 @@ export type TableCellFillSource = Pick<
  * cells (tableTrackParts) — and every cell of the table when none are picked,
  * which is exactly where the write goes (readSelectionSlotField).
  *
- * @param source - The selection the control was drawn for; `objectPartSelection`
- *   is the one both surfaces hand their custom items, which is
- *   `state.objectPartSelection` as the reducer left it
- *   (reconcileObjectPartSelection)
+ * @param source - The selection the control was drawn for; it is the one both
+ *   surfaces hand their custom items, which is `state.selection` as the reducer
+ *   left it (reconcileObjectPartSelection)
  * @returns The folded value, ready for `selectionValueOr` / `selectionMixedValues`
  */
 export const useTableCellFill = (
@@ -39,9 +39,8 @@ export const useTableCellFill = (
 ): SelectionValue<string | undefined> => {
 	const objectPartKind = useObjectPartKindRegistry();
 	return readSelectionSlotField(
-		source.selectedIds,
+		source.selection,
 		source.objects,
-		source.objectPartSelection,
 		objectPartKind,
 		TABLE_CELL_FILL_FIELD,
 	);

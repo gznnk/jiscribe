@@ -7,6 +7,7 @@ import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { createTextSlotPartKindDefinition } from "../../selection/createTextSlotPartKindDefinition";
 import type { ObjectPartSelection } from "../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
@@ -38,7 +39,6 @@ const createState = (
 	createTestState(twoRectsDoc, { objects: slotObjects, ...overrides });
 
 const bodySlotSelection: ObjectPartSelection = {
-	objectId: "rect-1",
 	kind: TEXT_SLOT_PART_KIND,
 	ranges: [{ anchorId: "body", focusId: "body" }],
 };
@@ -69,22 +69,20 @@ const adoptDoc = (
 	),
 });
 
-describe("canvasReducer / objectPartSelection reconciliation", () => {
+describe("canvasReducer / selection.part reconciliation", () => {
 	it("keeps a part selection the state still backs, by the same reference", () => {
 		const state = createState({
-			selectedIds: ["rect-1"],
-			objectPartSelection: bodySlotSelection,
+			selection: selectionOf(["rect-1"], bodySlotSelection),
 		});
 
-		expect(canvasReducer(state, nudgeSelection).objectPartSelection).toBe(
+		expect(canvasReducer(state, nudgeSelection).selection.part).toBe(
 			bodySlotSelection,
 		);
 	});
 
 	it("drops one whose object SET_SELECTION no longer leaves as the sole selection", () => {
 		const state = createState({
-			selectedIds: ["rect-1"],
-			objectPartSelection: bodySlotSelection,
+			selection: selectionOf(["rect-1"], bodySlotSelection),
 		});
 
 		const next = canvasReducer(state, {
@@ -92,45 +90,42 @@ describe("canvasReducer / objectPartSelection reconciliation", () => {
 			ids: ["rect-1", "rect-2"],
 		});
 
-		expect(next.selectedIds).toEqual(["rect-1", "rect-2"]);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.objectIds).toEqual(["rect-1", "rect-2"]);
+		expect(next.selection.part).toBeNull();
 	});
 
 	it("drops one when the command that ran deleted its object", () => {
 		const state = createState({
-			selectedIds: ["rect-1"],
-			objectPartSelection: bodySlotSelection,
+			selection: selectionOf(["rect-1"], bodySlotSelection),
 		});
 
 		const next = canvasReducer(state, deleteSelection);
 
 		expect(next.objects["rect-1"]).toBeUndefined();
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.part).toBeNull();
 	});
 
 	it("leaves none behind across a revert", () => {
 		// The restore resets the transient channels itself; what this pins is that
 		// nothing addressed below the object survives into the restored document.
 		const state = createState({
-			selectedIds: ["rect-1"],
-			objectPartSelection: bodySlotSelection,
+			selection: selectionOf(["rect-1"], bodySlotSelection),
 		});
 
 		const nudged = canvasReducer(state, nudgeSelection);
-		expect(nudged.objectPartSelection).toBe(bodySlotSelection);
+		expect(nudged.selection.part).toBe(bodySlotSelection);
 
 		const reverted = canvasReducer(nudged, {
 			type: "REVERT_HISTORY",
 			entry: nudged.history.past[0],
 		});
 
-		expect(reverted.objectPartSelection).toBeNull();
+		expect(reverted.selection.part).toBeNull();
 	});
 
 	it("drops one whose object the externally synced document no longer holds", () => {
 		const state = createState({
-			selectedIds: ["rect-1"],
-			objectPartSelection: bodySlotSelection,
+			selection: selectionOf(["rect-1"], bodySlotSelection),
 		});
 
 		const next = canvasReducer(
@@ -139,13 +134,12 @@ describe("canvasReducer / objectPartSelection reconciliation", () => {
 		);
 
 		expect(next.objects["rect-1"]).toBeUndefined();
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.part).toBeNull();
 	});
 
 	it("drops one whose object the loaded document no longer holds", () => {
 		const state = createState({
-			selectedIds: ["rect-1"],
-			objectPartSelection: bodySlotSelection,
+			selection: selectionOf(["rect-1"], bodySlotSelection),
 		});
 
 		const next = canvasReducer(
@@ -154,6 +148,6 @@ describe("canvasReducer / objectPartSelection reconciliation", () => {
 		);
 
 		expect(next.objects["rect-1"]).toBeUndefined();
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.part).toBeNull();
 	});
 });

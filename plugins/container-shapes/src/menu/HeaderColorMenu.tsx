@@ -28,7 +28,7 @@ const SECTION_ID = "header-color";
  */
 const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	openSectionId,
 	onPropertyUpdate,
 }) => {
@@ -36,7 +36,7 @@ const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentColor = getSelectedHeaderFill(selectedIds, objects);
+	const currentColor = getSelectedHeaderFill(selection.objectIds, objects);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

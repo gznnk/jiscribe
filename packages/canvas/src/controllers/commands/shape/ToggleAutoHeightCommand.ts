@@ -1,17 +1,16 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ObjectAutoHeightRegistry } from "../../../states/registry/ObjectAutoHeightRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * What the two helpers below read off the canvas: the selection and the objects
- * it names. Narrow enough for the menu item, which is handed those three and
+ * it names. Narrow enough for the menu item, which is handed those two and
  * nothing else (ObjectMenuItemProps).
  */
 export type AutoHeightSelection = Pick<
 	CanvasControllerState,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selection"
 >;
 
 /**
@@ -20,16 +19,16 @@ export type AutoHeightSelection = Pick<
  * switches the ones that can and leaves the rest alone, the way the style menu
  * writes a property only to the objects declaring it.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @param autoHeightRegistry - The canvas's per-type answer; a type absent from it is skipped
  * @returns The switchable ids, in selection order
  */
 export const collectAutoHeightIds = (
-	selection: AutoHeightSelection,
+	state: AutoHeightSelection,
 	autoHeightRegistry: ObjectAutoHeightRegistry,
 ): string[] =>
-	getEffectiveSelectedIds(selection).filter((id) => {
-		const object = selection.objects[id];
+	state.selection.objectIds.filter((id) => {
+		const object = state.objects[id];
 		return object !== undefined && autoHeightRegistry.supports(object.type);
 	});
 
@@ -39,18 +38,17 @@ export const collectAutoHeightIds = (
  * brings the whole selection to auto and the second takes it back — which is
  * what makes two presses of one button land somewhere predictable.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @param autoHeightRegistry - The canvas's per-type answer
  * @returns False when nothing in the selection can be switched at all
  */
 export const isSelectionAutoHeight = (
-	selection: AutoHeightSelection,
+	state: AutoHeightSelection,
 	autoHeightRegistry: ObjectAutoHeightRegistry,
 ): boolean => {
-	const ids = collectAutoHeightIds(selection, autoHeightRegistry);
+	const ids = collectAutoHeightIds(state, autoHeightRegistry);
 	return (
-		ids.length > 0 &&
-		ids.every((id) => selection.objects[id].autoHeight === true)
+		ids.length > 0 && ids.every((id) => state.objects[id].autoHeight === true)
 	);
 };
 

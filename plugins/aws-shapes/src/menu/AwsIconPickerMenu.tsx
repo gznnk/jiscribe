@@ -48,7 +48,7 @@ const FilterChip: React.FC<React.ComponentProps<typeof AwsFilterChip>> = (
 
 /** The icon the selected shape draws, as its canonical name. */
 const readSelectedIcon = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: ObjectMenuItemProps["objects"],
 ): string => {
 	const first = objects[selectedIds[0] ?? ""] as
@@ -80,7 +80,7 @@ const readSelectedIcon = (
  */
 const AwsIconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	openSectionId,
 }) => {
 	const locale = useCanvasLocale();
@@ -90,7 +90,7 @@ const AwsIconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const [query, setQuery] = useState("");
 	const [tier, setTier] = useState<AwsIconTier | undefined>(undefined);
 	const [category, setCategory] = useState<string | undefined>(undefined);
-	const currentIcon = readSelectedIcon(selectedIds, objects);
+	const currentIcon = readSelectedIcon(selection.objectIds, objects);
 	const { names, total } = useMemo(
 		() => searchAwsIcons({ query, tier, category }),
 		[query, tier, category],

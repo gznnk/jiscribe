@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { TogglePropertyPanelCommand } from "../TogglePropertyPanelCommand";
 
 const registries = createTestRegistries();
@@ -12,7 +13,7 @@ const makeState = (
 	({
 		propertyPanel: { isOpen: false, collapsedSectionIds: ["style"] },
 		stencilLibraryOpenCategory: "flowchart",
-		selectedIds: ["a"],
+		selection: selectionOf(["a"]),
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -40,7 +41,7 @@ describe("TogglePropertyPanelCommand", () => {
 	it("leaves the collapsed sections and the selection alone", () => {
 		const next = TogglePropertyPanelCommand.execute(makeState(), registries);
 		expect(next.propertyPanel.collapsedSectionIds).toEqual(["style"]);
-		expect(next.selectedIds).toEqual(["a"]);
+		expect(next.selection.objectIds).toEqual(["a"]);
 	});
 
 	it("carries no keyboard shortcut", () => {

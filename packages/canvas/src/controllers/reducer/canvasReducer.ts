@@ -205,24 +205,20 @@ export const createCanvasReducer =
 			}
 
 			case "SET_SELECTION": {
-				const { selectedIds, selectedConnectorId } = resolveRequestedSelection(
+				const { selectedIds } = resolveRequestedSelection(
 					action.ids,
 					state.objects,
 				);
 				return {
 					...state,
-					selectedIds,
-					selectedConnectorId,
+					// The part hanging off the previous selection means nothing for the
+					// new one, nor does the open submenu (same clears as SelectAllCommand).
+					selection: { objectIds: selectedIds, part: null },
 					multiSelectGroup: createMultiSelectGroup(
 						selectedIds,
 						state.objects,
 						state.multiSelectGroup,
 					),
-					// The channels are mutually exclusive, and the UI hanging off the
-					// previous selection means nothing for the new one (same clears as
-					// SelectAllCommand).
-					selectedVertex: null,
-					objectPartSelection: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
 				};
@@ -242,16 +238,14 @@ export const createCanvasReducer =
 					action.value,
 					registries.objectPartKind,
 				);
-				// Clear the vertex selection after a property change (so the Delete key acts as object deletion).
 				// This path bypasses handleGesture, so flatten the COW view here
 				// (one-shot update, same pattern as MoveCommands; #213).
-				const updatedWithVertexCleared = {
+				const materialized = {
 					...updated,
 					objects: materializeObjects(updated.objects),
-					selectedVertex: null,
 				};
 				const partSelectionResult = reconcileObjectPartSelection(
-					updatedWithVertexCleared,
+					materialized,
 					registries.objectPartKind,
 				);
 				if (!action.commit) {
@@ -298,15 +292,14 @@ export const createCanvasReducer =
 				) {
 					return state;
 				}
-				// Same one-shot flattening and vertex clearing as the menu route: this
-				// path bypasses handleGesture, which is what normally does both (#213).
-				const updatedWithVertexCleared = {
+				// Same one-shot flattening as the menu route: this path bypasses
+				// handleGesture, which is what normally does it (#213).
+				const materialized = {
 					...updated,
 					objects: materializeObjects(updated.objects),
-					selectedVertex: null,
 				};
 				const partSelectionResult = reconcileObjectPartSelection(
-					updatedWithVertexCleared,
+					materialized,
 					registries.objectPartKind,
 				);
 				if (!action.commit) {
@@ -333,8 +326,8 @@ export const createCanvasReducer =
 			case "DOCUMENT_PROPERTY_UPDATE": {
 				// The third property route: what the sidebar states about the document
 				// itself rather than about a selection. No object is touched, so the
-				// COW flattening and vertex clearing the other two routes do would
-				// have nothing to act on here.
+				// COW flattening the other two routes do would have nothing to act on
+				// here.
 				//
 				// null drops the setting, which hands it back to the host (the
 				// headless setBackground / setView ops' rule).
@@ -369,8 +362,8 @@ export const createCanvasReducer =
 			case "META_PROPERTY_UPDATE": {
 				// The fourth property route: the note the selected object carries in
 				// the document. Nothing is drawn from it, so the re-measure the style
-				// route needs and the vertex clearing the geometry ones do both have
-				// nothing to act on — the object's shape is the one it already had.
+				// route needs has nothing to act on — the object's shape is the one it
+				// already had.
 				const updated = handleMetaPropertyUpdate(
 					state,
 					action.property,
@@ -624,11 +617,7 @@ const buildPropertyCoalesceKey = (
 	prefix: string,
 	property: string,
 ): string => {
-	const target =
-		state.selectedIds.length > 0
-			? state.selectedIds.join(",")
-			: (state.selectedConnectorId ?? "");
-	return `${prefix}:${property}:${target}`;
+	return `${prefix}:${property}:${state.selection.objectIds.join(",")}`;
 };
 
 /**

@@ -9,7 +9,7 @@ import { resolveTransformHandles } from "../ObjectTransformHandlesRegistry";
 import { TransformControls } from "../TransformControls";
 
 type TransformControlsLayerProps = {
-	selectedIds: string[];
+	selectedIds: readonly string[];
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
 	zoom?: number;

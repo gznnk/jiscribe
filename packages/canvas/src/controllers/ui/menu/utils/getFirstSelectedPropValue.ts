@@ -12,7 +12,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
  * @returns The value, or undefined when nothing selected has the property
  */
 export const getFirstSelectedPropValue = <Value>(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	prop: string,
 	isValue: (value: unknown) => value is Value,

@@ -42,7 +42,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { fill } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"fill",

@@ -11,7 +11,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * its descendants (e.g. area selection).
  */
 export function getTopLevelSelectedIds(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 ): string[] {
 	const selectedSet = new Set(selectedIds);

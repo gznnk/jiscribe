@@ -1,4 +1,4 @@
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
+import { BODY_TEXT_SLOT_ID, textSlotPart } from "@jiscribe/canvas";
 import { readTextSlot } from "@jiscribe/canvas/unstable";
 import type { TextSlot } from "@jiscribe/doc";
 import type { Dimensions } from "@jiscribe/geometry";
@@ -18,8 +18,9 @@ type BelowLabelHitAreaProps = {
  * Transparent grab area over the label a shape hangs below its box
  * (calcBelowLabelTextRegion). The label's own foreignObject is
  * `pointer-events: none`, so without this the label could neither be dragged nor
- * double-clicked into the editor; `data-part` names the slot such a double-click
- * opens (resolveTextSlotId). An empty label draws nothing, so it gets no area.
+ * double-clicked into the editor; `data-part` carries the address of the slot
+ * such a double-click opens (textSlotPart, read back by resolveTextSlotId). An
+ * empty label draws nothing, so it gets no area.
  *
  * Place it inside the shape's own `data-kind="object"` group — it is a part of
  * that object, not one of its own (the DOM contract allows a single
@@ -37,7 +38,7 @@ export const BelowLabelHitArea: React.FC<BelowLabelHitAreaProps> = ({
 	const label = calcBelowLabelTextRegion(state, BODY_TEXT_SLOT_ID);
 	return (
 		<HitAreaRect
-			data-part={BODY_TEXT_SLOT_ID}
+			data-part={textSlotPart(BODY_TEXT_SLOT_ID)}
 			x={label.x}
 			y={label.y}
 			width={label.width}

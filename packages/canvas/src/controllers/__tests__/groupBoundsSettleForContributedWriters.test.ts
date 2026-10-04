@@ -82,7 +82,7 @@ const stateWithGroupedRect = (
 		...base,
 		objects: { ...base.objects, [GROUP_ID]: group, [CHILD_ID]: child },
 		rootIds: [...base.rootIds, GROUP_ID],
-		selectedIds: [CHILD_ID],
+		selection: { objectIds: [CHILD_ID], part: null },
 	};
 };
 

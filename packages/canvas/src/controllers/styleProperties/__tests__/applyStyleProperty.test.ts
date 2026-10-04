@@ -13,6 +13,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import {
 	createTextSlotPartRegistry,
 	NON_SLOT_PART_KIND,
@@ -90,22 +91,18 @@ const applyStyleProperty = (
 
 type MinState = Pick<
 	CanvasControllerState,
-	| "selectedIds"
-	| "selectedConnectorId"
+	| "selection"
 	| "objects"
 	| "multiSelectGroup"
-	| "objectPartSelection"
 	| "textEditState"
 	| "commitVersion"
 >;
 
 const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 	({
-		selectedIds: [],
-		selectedConnectorId: null,
+		selection: selectionOf([]),
 		objects: {},
 		multiSelectGroup: null,
-		objectPartSelection: null,
 		textEditState: null,
 		commitVersion: 0,
 		...overrides,
@@ -174,18 +171,18 @@ const extraShapeObj = (id: string): ObjectState =>
 	}) as unknown as ObjectState;
 
 describe("StylePropertyRegistry.apply (selection style updates)", () => {
-	describe("selectedIds is empty and selectedConnectorId is null", () => {
+	describe("nothing selected", () => {
 		it("-> returns the same reference", () => {
 			const state = makeState();
 			expect(applyStyleProperty(state, "fill", "#ff0000")).toBe(state);
 		});
 	});
 
-	describe("selectedConnectorId present (connector selected)", () => {
+	describe("a connector selected", () => {
 		it("supported property (stroke) -> the connector is updated", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "stroke", "#ff0000");
@@ -196,21 +193,21 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("unsupported property (fill on connector) -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "fill", "#ff0000")).toBe(state);
 		});
 
 		it("object does not exist -> returns the same reference", () => {
-			const state = makeState({ selectedConnectorId: "missing" });
+			const state = makeState({ selection: selectionOf(["missing"]) });
 			expect(applyStyleProperty(state, "stroke", "#ff0000")).toBe(state);
 		});
 
 		it("strokeWidth is converted to a number and applied", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "strokeWidth", "3");
@@ -223,7 +220,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("non-numeric strokeWidth -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "strokeWidth", "abc")).toBe(state);
@@ -232,7 +229,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("arrow property (endArrow) -> applied via the connector's arrow feature", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "endArrow", "FilledTriangle");
@@ -251,7 +248,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fill -> nested-updated on connector.label.fill", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.fill", "#ff0000");
@@ -266,7 +263,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.stroke -> nested-updated on label.stroke", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.stroke", "#00ff00");
@@ -279,7 +276,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.strokeDashType -> nested-updated, kept as a string", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(
@@ -296,7 +293,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fontSize is numeric-converted and updated", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.fontSize", "20");
@@ -309,7 +306,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fontColor / label.fontWeight are updated, kept as strings", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const afterColor = applyStyleProperty(
@@ -337,7 +334,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fontFamily keeps the stack it is given, commas and quotes included", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const stack = '"Source Serif 4", "Noto Serif JP", serif';
@@ -351,7 +348,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.strokeWidth is numeric-converted and updated", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.strokeWidth", "2");
@@ -364,7 +361,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("non-numeric label.strokeWidth -> returns the same reference", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "label.strokeWidth", "x")).toBe(state);
@@ -373,7 +370,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.* on a connector with no label -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "label.fill", "#ff0000")).toBe(state);
@@ -382,7 +379,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("the original objects are not mutated (immutable)", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1 },
 			});
 			applyStyleProperty(state, "label.fill", "#ff0000");
@@ -392,11 +389,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		});
 	});
 
-	describe("selectedIds present (normal selection)", () => {
+	describe("an object selection (the normal case)", () => {
 		it("applying fill to a rect -> fill is updated", () => {
 			const r1 = rectObj("r1");
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 			});
 			const result = applyStyleProperty(state, "fill", "#123456");
@@ -407,7 +404,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("unsupported property -> returns the same reference", () => {
 			const r1 = rectObj("r1");
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 			});
 			expect(applyStyleProperty(state, "startArrow", "triangle")).toBe(state);
@@ -416,7 +413,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("fillOpacity is converted to a number and applied", () => {
 			const r1 = rectObj("r1");
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 			});
 			const result = applyStyleProperty(state, "fillOpacity", "0.4");
@@ -429,7 +426,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("fillOpacity on a polyline -> returns the same reference, it has no fill", () => {
 			const p1 = polylineObj("p1");
 			const state = makeState({
-				selectedIds: ["p1"],
+				selection: selectionOf(["p1"]),
 				objects: { p1 },
 			});
 			expect(applyStyleProperty(state, "fillOpacity", "0.4")).toBe(state);
@@ -438,7 +435,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("strokeOpacity is converted to a number and applied", () => {
 			const p1 = polylineObj("p1");
 			const state = makeState({
-				selectedIds: ["p1"],
+				selection: selectionOf(["p1"]),
 				objects: { p1 },
 			});
 			const result = applyStyleProperty(state, "strokeOpacity", "0.25");
@@ -451,7 +448,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("arrow property on a polyline -> applied via its arrow feature", () => {
 			const p1 = polylineObj("p1");
 			const state = makeState({
-				selectedIds: ["p1"],
+				selection: selectionOf(["p1"]),
 				objects: { p1 },
 			});
 			const result = applyStyleProperty(state, "startArrow", "OpenArrow");
@@ -463,7 +460,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const g1 = groupObj("g1", ["p1"]);
 			const p1 = polylineObj("p1");
 			const state = makeState({
-				selectedIds: ["g1"],
+				selection: selectionOf(["g1"]),
 				objects: { g1, p1 },
 			});
 			const result = applyStyleProperty(state, "endArrow", "FilledTriangle");
@@ -475,7 +472,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const r1 = rectObj("r1");
 			const r2 = rectObj("r2");
 			const state = makeState({
-				selectedIds: ["r1", "r2"],
+				selection: selectionOf(["r1", "r2"]),
 				objects: { r1, r2 },
 			});
 			const result = applyStyleProperty(state, "fill", "#abcdef");
@@ -493,7 +490,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				lockAspectRatio: true,
 			} as CanvasControllerState["multiSelectGroup"];
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 				multiSelectGroup: multiGroup,
 			});
@@ -506,14 +503,20 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("the original objects are not mutated (immutable)", () => {
 			const r1 = rectObj("r1");
 			const originalFill = (r1 as unknown as { fill: string }).fill;
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			applyStyleProperty(state, "fill", "#000000");
 			expect((r1 as unknown as { fill: string }).fill).toBe(originalFill);
 		});
 
 		it("lockAspectRatio on a single selection -> applied to the object itself", () => {
 			const r1 = rectObj("r1");
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const result = applyStyleProperty(state, "lockAspectRatio", "true");
 			expect(
 				(result.objects["r1"] as unknown as { lockAspectRatio: boolean })
@@ -525,7 +528,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const g1 = groupObj("g1", ["r1"]);
 			const r1 = rectObj("r1");
 			const state = makeState({
-				selectedIds: ["g1"],
+				selection: selectionOf(["g1"]),
 				objects: { g1, r1 },
 			});
 			const result = applyStyleProperty(state, "lockAspectRatio", "true");
@@ -569,7 +572,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("writes into the slot rather than the object root", () => {
 			const r1 = bodyRect("r1");
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const result = applyStyleProperty(state, "fontSize", "24");
 			expect(slotsOf(result, "r1").body).toEqual({
 				text: "hello",
@@ -580,7 +586,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("writes into every slot while no single slot is selected", () => {
 			const r1 = keyedRect("r1");
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const result = applyStyleProperty(state, "fontWeight", "bold");
 			expect(slotsOf(result, "r1")).toEqual({
 				name: { text: "User", fontWeight: "bold" },
@@ -590,7 +599,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("writes fontStyle and textDecoration into the slot as strings", () => {
 			const r1 = bodyRect("r1");
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const italic = applyStyleProperty(state, "fontStyle", "italic");
 			expect(slotsOf(italic, "r1").body).toEqual({
 				text: "hello",
@@ -620,7 +632,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					},
 				},
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 
 			const result = applyStyleProperty(state, "fontWeight", "normal");
 
@@ -644,7 +659,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					},
 				},
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 
 			const result = applyStyleProperty(state, "fontWeight", "normal");
 
@@ -657,7 +675,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("lands on the selected characters while an editor is open", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
@@ -678,7 +696,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("styles the whole slot when the editor has nothing selected", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
@@ -708,7 +726,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				},
 			} as unknown as ObjectState;
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
@@ -734,7 +752,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("styles the whole slot for a property no stretch of text can carry", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1 },
 				textEditState: {
 					kind: "shape",
@@ -755,7 +773,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("keeps the slot's content and its other styling", () => {
 			const r1 = bodyRect("r1", { textAlign: "right", fontSize: 12 });
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const result = applyStyleProperty(state, "fontSize", "24");
 			expect(slotsOf(result, "r1").body).toEqual({
 				text: "hello",
@@ -769,7 +790,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const r1 = bodyRect("r1");
 			const r2 = bodyRect("r2");
 			const state = makeState({
-				selectedIds: ["r1", "g1"],
+				selection: selectionOf(["r1", "g1"]),
 				objects: { g1, r1, r2 },
 			});
 			const result = applyStyleProperty(state, "fontColor", "#123456");
@@ -779,13 +800,19 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("skips an object that holds no text at all", () => {
 			const p1 = polylineObj("p1");
-			const state = makeState({ selectedIds: ["p1"], objects: { p1 } });
+			const state = makeState({
+				selection: selectionOf(["p1"]),
+				objects: { p1 },
+			});
 			expect(applyStyleProperty(state, "fontSize", "24")).toBe(state);
 		});
 
 		it("does not mutate the original slots (immutable)", () => {
 			const r1 = bodyRect("r1", { fontSize: 12 });
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			applyStyleProperty(state, "fontSize", "24");
 			expect(slotsOf(state, "r1").body.fontSize).toBe(12);
 		});
@@ -805,13 +832,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			it("writes the selected slot only, leaving the others as they were", () => {
 				const r1 = slotRect("r1", { fontSize: 12 });
 				const state = makeState({
-					selectedIds: ["r1"],
-					objects: { r1 },
-					objectPartSelection: {
-						objectId: "r1",
+					selection: selectionOf(["r1"], {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "rows", focusId: "rows" }],
-					},
+					}),
+					objects: { r1 },
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1")).toEqual({
@@ -830,13 +855,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					},
 				} as unknown as ObjectState;
 				const state = makeState({
-					selectedIds: ["r1"],
-					objects: { r1 },
-					objectPartSelection: {
-						objectId: "r1",
+					selection: selectionOf(["r1"], {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "name", focusId: "rows" }],
-					},
+					}),
+					objects: { r1 },
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1")).toEqual({
@@ -849,33 +872,15 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			it("writes every slot when what is selected below the object is not a slot", () => {
 				const r1 = slotRect("r1", { fontSize: 12 });
 				const state = makeState({
-					selectedIds: ["r1"],
-					objects: { r1 },
-					objectPartSelection: {
-						objectId: "r1",
+					selection: selectionOf(["r1"], {
 						kind: "vertex",
 						ranges: [{ anchorId: "0", focusId: "0" }],
-					},
+					}),
+					objects: { r1 },
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1").name.fontSize).toBe(24);
 				expect(slotsOf(result, "r1").rows.fontSize).toBe(24);
-			});
-
-			it("writes every slot when the slot selection names another object", () => {
-				const r1 = slotRect("r1");
-				const state = makeState({
-					selectedIds: ["r1"],
-					objects: { r1 },
-					objectPartSelection: {
-						objectId: "gone",
-						kind: TEXT_SLOT_PART_KIND,
-						ranges: [{ anchorId: "rows", focusId: "rows" }],
-					},
-				});
-				const result = applyStyleProperty(state, "fontWeight", "bold");
-				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
-				expect(slotsOf(result, "r1").rows.fontWeight).toBe("bold");
 			});
 
 			it("does not carry the slot restriction into group descendants", () => {
@@ -888,13 +893,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				} as unknown as ObjectState;
 				const r1 = slotRect("r1");
 				const state = makeState({
-					selectedIds: ["g1"],
-					objects: { g1, r1 },
-					objectPartSelection: {
-						objectId: "g1",
+					selection: selectionOf(["g1"], {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "rows", focusId: "rows" }],
-					},
+					}),
+					objects: { g1, r1 },
 				});
 				const result = applyStyleProperty(state, "fontWeight", "bold");
 				expect(slotsOf(result, "g1").name.fontWeight).toBeUndefined();
@@ -906,13 +909,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			it("leaves the text content property writing the first slot", () => {
 				const r1 = slotRect("r1");
 				const state = makeState({
-					selectedIds: ["r1"],
-					objects: { r1 },
-					objectPartSelection: {
-						objectId: "r1",
+					selection: selectionOf(["r1"], {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "rows", focusId: "rows" }],
-					},
+					}),
+					objects: { r1 },
 				});
 				const result = applyStyleProperty(state, "text", "Account");
 				expect(slotsOf(result, "r1")).toEqual({
@@ -942,7 +943,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 			it("keeps them when a whole-slot property is written", () => {
 				const r1 = cellRect("r1");
-				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				const state = makeState({
+					selection: selectionOf(["r1"]),
+					objects: { r1 },
+				});
 				const result = applyStyleProperty(state, "textAlign", "center");
 				expect(slotsOf(result, "r1")).toEqual({
 					"0_0": { text: "id", fill: "#eef", textAlign: "center" },
@@ -954,7 +958,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				const r1 = cellRect("r1", {
 					text: [{ text: "id", fontWeight: "bold" }],
 				});
-				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				const state = makeState({
+					selection: selectionOf(["r1"]),
+					objects: { r1 },
+				});
 				const result = applyStyleProperty(state, "fontWeight", "normal");
 				expect(slotsOf(result, "r1")["0_0"]).toEqual({
 					text: "id",
@@ -966,13 +973,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			it("keeps them when the write lands on the selected slot alone", () => {
 				const r1 = cellRect("r1");
 				const state = makeState({
-					selectedIds: ["r1"],
-					objects: { r1 },
-					objectPartSelection: {
-						objectId: "r1",
+					selection: selectionOf(["r1"], {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "0_1", focusId: "0_1" }],
-					},
+					}),
+					objects: { r1 },
 				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1")).toEqual({
@@ -994,7 +999,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			/** The same shape being edited with its first two characters selected. */
 			const editingSource = (r1: ObjectState): CanvasControllerState =>
 				makeState({
-					selectedIds: ["r1"],
+					selection: selectionOf(["r1"]),
 					objects: { r1 },
 					textEditState: {
 						kind: "shape",
@@ -1007,13 +1012,19 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 			it("skips an emphasis property, the syntax carrying it instead", () => {
 				const r1 = sourceRect("r1");
-				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				const state = makeState({
+					selection: selectionOf(["r1"]),
+					objects: { r1 },
+				});
 				expect(applyStyleProperty(state, "fontWeight", "bold")).toBe(state);
 			});
 
 			it("writes a property the body does accept", () => {
 				const r1 = sourceRect("r1");
-				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				const state = makeState({
+					selection: selectionOf(["r1"]),
+					objects: { r1 },
+				});
 				const result = applyStyleProperty(state, "fontSize", "24");
 				expect(slotsOf(result, "r1").body).toEqual({
 					text: "# Title",
@@ -1042,7 +1053,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				const r1 = sourceRect("r1");
 				const r2 = bodyRect("r2");
 				const state = makeState({
-					selectedIds: ["r1", "r2"],
+					selection: selectionOf(["r1", "r2"]),
 					objects: { r1, r2 },
 				});
 				const result = applyStyleProperty(state, "fontWeight", "bold");
@@ -1068,7 +1079,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				...rectObj("r1"),
 				text: { body: { text: "hello", fontSize: 12 } },
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const result = applyStyleProperty(state, "text", "world");
 			expect(slotsOf(result, "r1").body).toEqual({
 				text: "world",
@@ -1081,7 +1095,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				...rectObj("r1"),
 				text: { name: { text: "User" }, rows: { text: ["id"] } },
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const result = applyStyleProperty(state, "text", "Account");
 			expect(slotsOf(result, "r1")).toEqual({
 				name: { text: "Account" },
@@ -1094,7 +1111,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				...rectObj("r1"),
 				text: { rows: { text: ["id"] } },
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			const result = applyStyleProperty(state, "text", "id\nemail");
 			expect(slotsOf(result, "r1").rows).toEqual({ text: ["id", "email"] });
 		});
@@ -1104,7 +1124,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				...rectObj("r1"),
 				text: {},
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			expect(applyStyleProperty(state, "text", "world")).toBe(state);
 		});
 	});
@@ -1112,7 +1135,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 	describe("shape-declared extra properties (accentColor)", () => {
 		it("accentColor on the declaring shape -> applied", () => {
 			const e1 = extraShapeObj("e1");
-			const state = makeState({ selectedIds: ["e1"], objects: { e1 } });
+			const state = makeState({
+				selection: selectionOf(["e1"]),
+				objects: { e1 },
+			});
 			const result = applyStyleProperty(state, "accentColor", "#336699");
 			expect(
 				(result.objects["e1"] as unknown as { accentColor: string })
@@ -1122,7 +1148,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("accentColor on a rect (undeclared shape) -> returns the same reference", () => {
 			const r1 = rectObj("r1");
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			expect(applyStyleProperty(state, "accentColor", "#336699")).toBe(state);
 		});
 
@@ -1130,7 +1159,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const g1 = groupObj("g1", ["e1"]);
 			const e1 = extraShapeObj("e1");
 			const state = makeState({
-				selectedIds: ["g1"],
+				selection: selectionOf(["g1"]),
 				objects: { g1, e1 },
 			});
 			const result = applyStyleProperty(state, "accentColor", "#112233");
@@ -1142,7 +1171,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("a completely unknown property -> returns the same reference", () => {
 			const e1 = extraShapeObj("e1");
-			const state = makeState({ selectedIds: ["e1"], objects: { e1 } });
+			const state = makeState({
+				selection: selectionOf(["e1"]),
+				objects: { e1 },
+			});
 			expect(applyStyleProperty(state, "notAProperty", "x")).toBe(state);
 		});
 	});
@@ -1180,7 +1212,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("writes the declared field on every slot while none is picked", () => {
 			const s1 = cellShapeObj("s1");
-			const state = makeState({ selectedIds: ["s1"], objects: { s1 } });
+			const state = makeState({
+				selection: selectionOf(["s1"]),
+				objects: { s1 },
+			});
 			const result = applyStyleProperty(state, "cellFill", "#fee");
 			expect(cellsOf(result, "s1")).toEqual({
 				r0c0: { text: "head", fill: "#fee" },
@@ -1193,13 +1228,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("writes only the picked slots", () => {
 			const s1 = cellShapeObj("s1");
 			const state = makeState({
-				selectedIds: ["s1"],
-				objects: { s1 },
-				objectPartSelection: {
-					objectId: "s1",
+				selection: selectionOf(["s1"], {
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "r0c1", focusId: "r0c1" }],
-				},
+				}),
+				objects: { s1 },
 			});
 			const result = applyStyleProperty(state, "cellFill", "#fee");
 			expect(cellsOf(result, "s1")).toEqual({
@@ -1211,13 +1244,11 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("drops the field when written empty rather than storing the empty string", () => {
 			const s1 = cellShapeObj("s1");
 			const state = makeState({
-				selectedIds: ["s1"],
-				objects: { s1 },
-				objectPartSelection: {
-					objectId: "s1",
+				selection: selectionOf(["s1"], {
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "r0c0", focusId: "r0c0" }],
-				},
+				}),
+				objects: { s1 },
 			});
 			const result = applyStyleProperty(state, "cellFill", "");
 			expect(cellsOf(result, "s1").r0c0).toEqual({ text: "head" });
@@ -1226,7 +1257,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 
 		it("leaves a shape that declares no such extra untouched", () => {
 			const r1 = rectObj("r1");
-			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
 			expect(applyStyleProperty(state, "cellFill", "#fee")).toBe(state);
 		});
 	});
@@ -1268,16 +1302,14 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		const stateWithPart = (kind: string, partIds: string[]) => {
 			const s1 = gridShapeObj("s1");
 			return makeState({
-				selectedIds: ["s1"],
-				objects: { s1 },
-				objectPartSelection: {
-					objectId: "s1",
+				selection: selectionOf(["s1"], {
 					kind,
 					ranges: partIds.map((partId) => ({
 						anchorId: partId,
 						focusId: partId,
 					})),
-				},
+				}),
+				objects: { s1 },
 			});
 		};
 

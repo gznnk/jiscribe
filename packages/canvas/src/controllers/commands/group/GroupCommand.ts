@@ -23,15 +23,16 @@ export const GroupCommand: ExecutableCommand = {
 	// Connectors are never groupable (they follow their endpoints, not a group transform),
 	// so only shape-type selections count toward the "2 or more" requirement.
 	canExecute: (state) =>
-		state.selectedIds.filter((id) => !isConnectorState(state.objects[id]))
-			.length >= 2,
+		state.selection.objectIds.filter(
+			(id) => !isConnectorState(state.objects[id]),
+		).length >= 2,
 
 	execute: (state) => {
 		const groupId = crypto.randomUUID();
 		// Defensively drop connectors here too: even if a selection path leaks a connector
-		// into selectedIds, it must not be pulled into the group (the bounds calculation
+		// into the selection, it must not be pulled into the group (the bounds calculation
 		// would treat it as a Poly and use its waypoints only, yielding a wrong OBB).
-		const selectedIds = state.selectedIds.filter(
+		const selectedIds = state.selection.objectIds.filter(
 			(id) => !isConnectorState(state.objects[id]),
 		);
 		const selectedSet = new Set(selectedIds);
@@ -146,7 +147,7 @@ export const GroupCommand: ExecutableCommand = {
 			...state,
 			objects: updatedObjects,
 			rootIds: updatedRootIds,
-			selectedIds: [groupId],
+			selection: { objectIds: [groupId], part: null },
 			// The marquee's multiSelectGroup must not survive into the single-group
 			// selection: stale, it swallows lockAspectRatio reads/writes meant for
 			// the real group object (multiSelectGroup takes precedence in both).

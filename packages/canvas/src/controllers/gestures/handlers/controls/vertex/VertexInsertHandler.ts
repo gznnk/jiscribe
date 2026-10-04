@@ -115,7 +115,9 @@ export class VertexInsertHandler extends ControlStrategy {
 		const nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
-			selectedVertex: null,
+			// An insertion renumbers the vertices after it, so a picked one is dropped
+			// rather than left addressing whoever took the number over.
+			selection: { ...state.selection, part: null },
 			edgeScrollEnabled: true,
 		};
 

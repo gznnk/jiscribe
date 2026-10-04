@@ -2,8 +2,8 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
+import { EMPTY_SELECTION } from "../../selection/CanvasSelection";
 import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
-import { VERTEX_PART_KIND } from "../../selection/createVertexPartKindDefinition";
 import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
 import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
@@ -12,86 +12,53 @@ import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
- * The legacy single-vertex field read as the deletion target the registry takes,
- * or null while it names nothing: no vertex selected, the object gone, or an
- * index the object has outgrown (an undo can leave one behind) — a selection
- * that is no selection, which the key then passes over. Validity is the
- * selection's own question, answered here on read until the field is folded into
- * the part channel, where the reducer answers it for every kind at once
- * (reconcileObjectPartSelection); whether the vertex can be deleted is a separate
- * one (resolveDeletableParts).
+ * The parts picked one level below the object read as the deletion target the
+ * registry takes, or null while nothing is picked there and while the kind is one
+ * the owner's type does not declare. Validity of the ids is not asked about: the
+ * reducer has already dropped a selection naming something gone
+ * (reconcileObjectPartSelection), so every id here has passed `has`. Whether the
+ * parts can be deleted at all is a separate question (resolveDeletableParts).
  */
-const resolveSelectedVertex = (
+const resolveSelectedParts = (
 	state: CanvasControllerState,
-	registries: ICanvasRegistries,
+	registries: Pick<ICanvasRegistries, "objectPartKind">,
 ): ObjectPartTarget | null => {
-	const { selectedVertex } = state;
-	if (selectedVertex === null) {
+	const { objectIds, part } = state.selection;
+	if (part === null) {
 		return null;
 	}
-	const object = state.objects[selectedVertex.objectId];
-	const partId = String(selectedVertex.vertexIndex);
-	const vertexKind = object
-		? registries.objectPartKind.get(object.type, VERTEX_PART_KIND)
-		: undefined;
-	if (!object || !vertexKind?.has(object, partId)) {
+	const owner = state.objects[objectIds[0]];
+	if (owner === undefined) {
 		return null;
 	}
+	const definition = registries.objectPartKind.get(owner.type, part.kind);
+	if (definition === undefined) {
+		return null;
+	}
+	// The channel stores the ends of its ranges, a deletion names parts, so the
+	// kind is asked what the picked ranges cover; the anchor a range was dragged
+	// from says nothing about what is to be deleted.
 	return {
-		objectId: selectedVertex.objectId,
-		kind: VERTEX_PART_KIND,
-		partIds: [partId],
+		objectId: owner.id,
+		kind: part.kind,
+		partIds: collectObjectPartIds(part, definition, owner),
 	};
 };
 
-/**
- * The deletion requests the key stands for, in the order it tries them: the
- * legacy vertex field first, then the part channel. Both are read through their
- * own validity check, so a channel naming nothing contributes no request at all.
- */
-const resolveDeletionTargets = (
+const clearPartSelection = (
 	state: CanvasControllerState,
-	registries: ICanvasRegistries,
-): ObjectPartTarget[] => {
-	const targets: ObjectPartTarget[] = [];
-	const vertexTarget = resolveSelectedVertex(state, registries);
-	if (vertexTarget !== null) {
-		targets.push(vertexTarget);
-	}
-	// The part channel names ends, a deletion names parts, so the kind is asked
-	// what the picked ranges cover; the anchor a range was dragged from says
-	// nothing about what is to be deleted.
-	const { objectPartSelection } = state;
-	const partOwner = objectPartSelection
-		? state.objects[objectPartSelection.objectId]
-		: undefined;
-	const part =
-		objectPartSelection && partOwner
-			? registries.objectPartKind.get(partOwner.type, objectPartSelection.kind)
-			: undefined;
-	if (objectPartSelection && partOwner && part) {
-		targets.push({
-			objectId: objectPartSelection.objectId,
-			kind: objectPartSelection.kind,
-			partIds: collectObjectPartIds(objectPartSelection, part, partOwner),
-		});
-	}
-	return targets;
-};
-
-const clearSelectedVertex = (
-	state: CanvasControllerState,
-): CanvasControllerState => ({ ...state, selectedVertex: null });
+): CanvasControllerState => ({
+	...state,
+	selection: { ...state.selection, part: null },
+});
 
 /**
- * Command that deletes the current selection. A picked part — a selected vertex,
- * or whatever the part channel holds — is deleted where its type registers a
- * deletion for the kind; where it registers none, or the selection names nothing
- * any more, the key means what it means for the selected objects, which are
- * removed (a group with its descendants) along with the selected connector. That
- * fall-through is what keeps Delete over a text slot deleting the shape the slot
- * belongs to. A kind that wants the key held while one of its parts is picked,
- * yet nothing removed, declares a deletion that refuses (`delete: () => null`).
+ * Command that deletes the current selection. Parts picked one level below the
+ * object are deleted where their type registers a deletion for the kind; where it
+ * registers none (a text slot), the key means what it means for the selected
+ * objects, which are removed (a group with its descendants). A kind that wants
+ * the key held while one of its parts is picked, yet nothing removed, declares a
+ * deletion that refuses (`delete: () => null`).
  */
 export const DeleteCommand: ExecutableCommand = {
 	id: "delete",
@@ -102,47 +69,46 @@ export const DeleteCommand: ExecutableCommand = {
 	},
 
 	canExecute: (state, registries) => {
-		// A picked part claims the key where its kind registers a deletion for it; a
-		// kind registering none has said Delete is not about its parts, so the key
-		// means what it means for the selected objects.
-		const isPartDeletable = resolveDeletionTargets(state, registries).some(
-			(target) => resolveDeletableParts(state, target, registries) !== null,
-		);
-		if (isPartDeletable) {
+		// A picked part claims the key where its type registers a deletion for its
+		// kind; a kind registering none has said Delete is not about its parts, so
+		// the key means what it means for the selected objects.
+		const target = resolveSelectedParts(state, registries);
+		if (
+			target !== null &&
+			resolveDeletableParts(state, target, registries) !== null
+		) {
 			return true;
 		}
-		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
+		return state.selection.objectIds.length > 0;
 	},
 
 	execute: (state, registries) => {
-		for (const target of resolveDeletionTargets(state, registries)) {
+		const target = resolveSelectedParts(state, registries);
+		if (target !== null) {
 			const deletable = resolveDeletableParts(state, target, registries);
-			if (deletable === null) {
-				continue;
+			if (deletable !== null) {
+				const deletedObject = deletable.part.delete(
+					deletable.object,
+					target.partIds,
+				);
+				if (deletedObject === null) {
+					// The type refused this one deletion (a polyline at its vertex floor):
+					// the key stays claimed, yet nothing changes.
+					return state;
+				}
+				return commitPartDeletion(state, deletedObject);
 			}
-			const deletedObject = deletable.part.delete(
-				deletable.object,
-				target.partIds,
-			);
-			if (deletedObject === null) {
-				// The type refused this one deletion (a polyline at its vertex floor):
-				// the key stays claimed, yet nothing changes.
-				return state;
-			}
-			return commitPartDeletion(state, deletedObject);
 		}
-		// No channel names a part, or no kind they name registers a deletion: the
-		// key is the objects', and the vertex field is dropped along with them.
-		return deleteSelectedObjects(clearSelectedVertex(state), registries);
+		// Either nothing is picked below the object or the kind registers no
+		// deletion: the key is the objects', and the pick goes with them.
+		return deleteSelectedObjects(clearPartSelection(state), registries);
 	},
 };
 
 /**
  * Commits the object the part definition gave back as one command edit (plain
  * spread of the objects map, no copy-on-write view), the counterpart of
- * `deleteSelectedObjects` for the part branch. Both channels the parts could
- * have been picked through are blanked: the object they addressed has changed
- * underneath them.
+ * `deleteSelectedObjects` for the part branch.
  */
 const commitPartDeletion = (
 	state: CanvasControllerState,
@@ -154,8 +120,10 @@ const commitPartDeletion = (
 			...state.objects,
 			[deletedObject.id]: deletedObject,
 		},
-		selectedVertex: null,
-		objectPartSelection: null,
+		// Removing a part renumbers the ids of a positional kind (the vertices), so
+		// the pick is dropped rather than left addressing whoever took the number
+		// over (see ObjectPartSelection).
+		selection: { ...state.selection, part: null },
 		// A deletion is not something a duplicate can be offset from any more.
 		lastDuplicate: null,
 		commitVersion: state.commitVersion + 1,
@@ -167,8 +135,8 @@ const commitPartDeletion = (
 };
 
 /**
- * Removes the selected objects (a group with its descendants) and the selected
- * connector, cleaning up the connectors and groups that referred to them.
+ * Removes the selected objects (a group with its descendants), cleaning up the
+ * connectors and groups that referred to them.
  */
 const deleteSelectedObjects = (
 	state: CanvasControllerState,
@@ -194,13 +162,8 @@ const deleteSelectedObjects = (
 		}
 	};
 
-	for (const id of state.selectedIds) {
+	for (const id of state.selection.objectIds) {
 		collectIds(id);
-	}
-
-	// Also add the selected connector to the deletion targets
-	if (state.selectedConnectorId != null) {
-		idsToDelete.add(state.selectedConnectorId);
 	}
 
 	// Clean up connectors (run first so coordinates resolve against the pre-delete state)
@@ -219,7 +182,7 @@ const deleteSelectedObjects = (
 
 	// For selected objects whose parent is not being deleted, remove them from the parent's childIds
 	const affectedParentIds = new Set<string>();
-	for (const id of state.selectedIds) {
+	for (const id of state.selection.objectIds) {
 		const obj = state.objects[id];
 		if (obj?.parentId != null && !idsToDelete.has(obj.parentId)) {
 			const parent = updatedObjects[obj.parentId];
@@ -239,10 +202,9 @@ const deleteSelectedObjects = (
 		objects: updatedObjects,
 		// Connectors are also included in rootIds, so from the rootIds left after
 		// orphaned-connector cleanup, remove all deletion targets at once
-		// (selected objects, descendants, and the selected connector).
+		// (the selected objects and their descendants).
 		rootIds: stateAfterConnectors.rootIds.filter((id) => !idsToDelete.has(id)),
-		selectedIds: [] as string[],
-		selectedConnectorId: null,
+		selection: EMPTY_SELECTION,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
 		lastDuplicate: null,

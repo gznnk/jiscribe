@@ -42,7 +42,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { stroke } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",

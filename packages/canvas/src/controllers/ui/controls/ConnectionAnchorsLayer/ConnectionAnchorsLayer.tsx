@@ -21,7 +21,7 @@ import { ConnectionAnchors } from "../ConnectionAnchors";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
 
 type ConnectionAnchorsLayerProps = {
-	selectedIds: string[];
+	selectedIds: readonly string[];
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	/**

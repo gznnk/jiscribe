@@ -32,7 +32,7 @@ const keepsProportion = (
 	if (state.multiSelectGroup) {
 		return state.multiSelectGroup.lockAspectRatio ?? false;
 	}
-	return state.selectedIds.some((id) => {
+	return state.selection.objectIds.some((id) => {
 		const object = state.objects[id];
 		return (
 			object !== undefined &&
@@ -93,7 +93,7 @@ export const dropAutoHeightOnResize = (
 	}
 	const ids =
 		state.activeDrag?.startSnapshot.selectedIdsWithDescendants ??
-		buildSelectedIdsWithDescendants(state.selectedIds, state.objects);
+		buildSelectedIdsWithDescendants(state.selection.objectIds, state.objects);
 	const objects = settleHeights(state.objects, ids);
 	if (objects === state.objects) {
 		return state;

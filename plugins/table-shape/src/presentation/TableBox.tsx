@@ -1,3 +1,4 @@
+import { textSlotPart } from "@jiscribe/canvas";
 import { createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { resolveCellPaint } from "./resolveCellPaint";
@@ -10,7 +11,8 @@ import type { TableState } from "../state/TableState";
  * Frame logic (transform, color resolution, per-cell text overlays placed by
  * calcTableTextRegion, memo) lives in createFrameObject; here we draw the cells
  * and the linework. The wrapping <g> carries the object's data-kind/data-id, and
- * each cell carries its cell id as data-part, so a double click resolves to the
+ * each cell carries its cell id as its `data-part` address (textSlotPart), so a
+ * click picks the cell it lands in and a double click resolves to the
  * cell it landed in (getGestureTarget).
  *
  * The text is drawn by createFrameObject, which gives every key of `state.text`
@@ -45,7 +47,7 @@ export const TableBox = createFrameObject<TableState>((state, shape) => {
 			{Object.entries(cellRects).map(([cellId, rect]) => (
 				<TableCellSurface
 					key={cellId}
-					data-part={cellId}
+					data-part={textSlotPart(cellId)}
 					x={rect.x}
 					y={rect.y}
 					width={rect.width}

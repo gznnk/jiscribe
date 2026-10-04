@@ -20,7 +20,7 @@ export const DEFAULT_CORNER_RADIUS = 0;
  * @returns The radius in pixels; `none` when nothing in the selection has corners to round
  */
 export const readSelectionCornerRadius = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 ): SelectionValue<number> =>
 	readSelectionValue(selectedIds, objects, (object) => {

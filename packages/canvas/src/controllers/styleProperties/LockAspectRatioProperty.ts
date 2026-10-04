@@ -25,8 +25,8 @@ export class LockAspectRatioProperty extends SelectionStyleProperty {
 		value: string,
 		objectPartKind: ObjectPartKindRegistry,
 	): CanvasControllerState {
-		const { selectedIds, multiSelectGroup } = state;
-		if (selectedIds.length > 0 && multiSelectGroup) {
+		const { multiSelectGroup } = state;
+		if (state.selection.objectIds.length > 0 && multiSelectGroup) {
 			return {
 				...state,
 				multiSelectGroup: {

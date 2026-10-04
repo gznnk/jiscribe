@@ -114,13 +114,13 @@ async function textColorByContent(
 }
 
 /**
- * The `data-part` of the compartment the selected slot outline sits on, or
- * undefined while no slot is selected. The overlay carries no slot id, so the
- * slot is named by matching the outline's rect against the compartments'. A
- * stereotype and a title band are the same height, so height alone would not
- * name them.
+ * The id of the slot the selected slot outline sits on, or undefined while no
+ * slot is selected. The overlay carries no slot id, so the slot is named by
+ * matching the outline's rect against the compartments' and reading the id out
+ * of the matched compartment's `data-part` (`textSlot:<slotId>`). A stereotype
+ * and a title band are the same height, so height alone would not name them.
  */
-async function selectedSlotPart(
+async function selectedSlotId(
 	canvas: CanvasDriver,
 	id: string,
 ): Promise<string | undefined> {
@@ -145,16 +145,20 @@ async function selectedSlotPart(
 				compartment.getAttribute("height") ===
 					slotOutline.getAttribute("height"),
 		);
-		return matched?.getAttribute("data-part") ?? undefined;
+		const address = matched?.getAttribute("data-part");
+		return address?.startsWith("textSlot:")
+			? address.slice("textSlot:".length)
+			: undefined;
 	}, id);
 }
 
 /**
- * The `data-part` of every compartment the selection outlines, in the order the
+ * The slot id of every compartment the selection outlines, in the order the
  * overlay draws them: the object's own outline comes first and is dropped, the
- * slots' follow. Empty while only the object is selected.
+ * slots' follow. Read off each compartment's `data-part` address
+ * (`textSlot:<slotId>`). Empty while only the object is selected.
  */
-async function selectedSlotParts(
+async function selectedSlotIds(
 	canvas: CanvasDriver,
 	id: string,
 ): Promise<string[]> {
@@ -173,7 +177,10 @@ async function selectedSlotParts(
 					compartment.getAttribute("y") === outline.getAttribute("y") &&
 					compartment.getAttribute("height") === outline.getAttribute("height"),
 			);
-			return matched?.getAttribute("data-part") ?? "";
+			const address = matched?.getAttribute("data-part") ?? "";
+			return address.startsWith("textSlot:")
+				? address.slice("textSlot:".length)
+				: "";
 		});
 	}, id);
 }
@@ -368,7 +375,7 @@ test.describe("record: selecting one text slot", () => {
 		for (const expectedPart of ["name", "attributes", "name"]) {
 			await canvas.page.keyboard.press("Tab");
 			await expect
-				.poll(() => selectedSlotPart(canvas, id), {
+				.poll(() => selectedSlotId(canvas, id), {
 					message: `Tab reaches the ${expectedPart} slot`,
 				})
 				.toBe(expectedPart);
@@ -399,7 +406,7 @@ test.describe("record: selecting one text slot", () => {
 		]) {
 			await canvas.page.keyboard.press("Tab");
 			await expect
-				.poll(() => selectedSlotPart(canvas, id), {
+				.poll(() => selectedSlotId(canvas, id), {
 					message: `Tab reaches the ${expectedPart} slot`,
 				})
 				.toBe(expectedPart);
@@ -411,11 +418,11 @@ test.describe("record: selecting one text slot", () => {
 	}) => {
 		const id = await createFilledRecord(canvas);
 		await selectNameSlot(canvas);
-		expect(await selectedSlotParts(canvas, id)).toEqual(["name"]);
+		expect(await selectedSlotIds(canvas, id)).toEqual(["name"]);
 
 		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
 		await expect
-			.poll(() => selectedSlotParts(canvas, id), {
+			.poll(() => selectedSlotIds(canvas, id), {
 				message: "both compartments are outlined",
 			})
 			.toEqual(["name", "attributes"]);
@@ -448,13 +455,13 @@ test.describe("record: selecting one text slot", () => {
 		await selectNameSlot(canvas);
 		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
 		await expect
-			.poll(() => selectedSlotParts(canvas, id))
+			.poll(() => selectedSlotIds(canvas, id))
 			.toEqual(["name", "attributes"]);
 
 		// A different spot from the Shift-click, so the pair is not read as a double click.
 		await canvas.clickAt(NAME_SPOT);
 		await expect
-			.poll(() => selectedSlotParts(canvas, id), {
+			.poll(() => selectedSlotIds(canvas, id), {
 				message: "the plain click leaves only the compartment it landed in",
 			})
 			.toEqual(["name"]);
@@ -465,13 +472,13 @@ test.describe("record: selecting one text slot", () => {
 		await selectNameSlot(canvas);
 		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
 		await expect
-			.poll(() => selectedSlotParts(canvas, id))
+			.poll(() => selectedSlotIds(canvas, id))
 			.toEqual(["name", "attributes"]);
 
 		// Forward from the last of the range, which wraps back to the title band.
 		await canvas.page.keyboard.press("Tab");
 		await expect
-			.poll(() => selectedSlotParts(canvas, id), {
+			.poll(() => selectedSlotIds(canvas, id), {
 				message: "Tab leaves one compartment selected",
 			})
 			.toEqual(["name"]);

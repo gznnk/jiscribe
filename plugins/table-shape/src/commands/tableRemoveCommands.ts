@@ -87,7 +87,7 @@ const createTableRemoveCommand = (spec: TableRemoveCommandSpec): Command => ({
 		return {
 			...state,
 			objects: { ...state.objects, [selected.objectId]: removed },
-			objectPartSelection: null,
+			selection: { ...state.selection, part: null },
 			commitVersion: state.commitVersion + 1,
 		};
 	},

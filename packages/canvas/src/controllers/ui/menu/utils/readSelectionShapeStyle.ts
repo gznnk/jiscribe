@@ -42,14 +42,14 @@ export type SelectionShapeStyle = {
  * drawn with: a shape stating `#fff` and one whose type defaults to `#fff` read
  * as one value, not two.
  *
- * @param selectedIds - The selection; a selected group contributes its descendants too. Pass the effective ids (getEffectiveSelectedIds) for the rows a connector also answers
+ * @param selectedIds - The selection; a selected group contributes its descendants too, and a selected connector answers for itself on the rows it declares
  * @param objects - Every object of the canvas, keyed by id
  * @param shapeStyleDefaults - Per-canvas ObjectShapeStyleDefaultsRegistry, consulted per object by its own type
  * @param styleGroup - Which group decides who has a say: `"stroke"` for the outline rows, `"fill"` for the face ones. Every field is answered either way, but only the group's own fields were narrowed to the objects that declare them
  * @returns Every field; each is `none` when no object of the selection declares `styleGroup`
  */
 export const readSelectionShapeStyle = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
 	styleGroup: ShapeStyleGroup,

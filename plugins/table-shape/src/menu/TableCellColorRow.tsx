@@ -39,16 +39,11 @@ const UNFILLED_SWATCH = "transparent";
  */
 const TableCellColorRowComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedIds,
-	objectPartSelection,
+	selection,
 	onPropertyUpdate,
 }) => {
 	const strings = useTableStrings();
-	const cellFill = useTableCellFill({
-		objects,
-		selectedIds,
-		objectPartSelection,
-	});
+	const cellFill = useTableCellFill({ objects, selection });
 	const isMixed = isMixedSelectionValue(cellFill);
 	const sharedFill = selectionValueOr(cellFill, undefined);
 	const isNoFill = !isMixed && sharedFill === undefined;

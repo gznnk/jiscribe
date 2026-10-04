@@ -4,7 +4,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 
 /**
- * Returns the first object among `selectedIds` whose type enables the given
+ * Returns the first object among `selection.objectIds` whose type enables the given
  * style group. When a group is included, recurses into its descendants.
  *
  * The counterpart to {@link getFirstSelectedWithProp} for the fields a type has
@@ -19,7 +19,7 @@ import { collectDescendantIds } from "../../../utils/collectDescendantIds";
  * @returns The object, or undefined when nothing selected declares the group (a state carrying no `features` declares none)
  */
 export function getFirstSelectedWithStyleGroup(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	styleGroup: ShapeStyleGroup,
 ): ObjectState | undefined {

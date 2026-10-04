@@ -6,6 +6,9 @@ import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
+import { reconcileObjectPartSelection } from "../../selection/reconcileObjectPartSelection";
 import type { ClipboardData } from "../selection/ClipboardData";
 import { CopyCommand } from "../selection/CopyCommand";
 
@@ -14,7 +17,7 @@ const registries = createTestRegistries();
 /** A selection whose z-order has the connector "between" rect-1 and rect-2. */
 const betweenState = (): CanvasControllerState =>
 	createCommandState(twoRectsWithConnectorDoc, {
-		selectedIds: ["rect-1", "rect-2"],
+		selection: selectionOf(["rect-1", "rect-2"]),
 		rootIds: ["rect-1", "conn-1", "rect-2"],
 	});
 
@@ -51,20 +54,20 @@ describe("preserves connectors' relative z order on copy/duplicate", () => {
 });
 
 /**
- * A paste that makes selectedIds non-empty must clear the mutually-exclusive
- * connector/vertex selection (regression guard for #71). Otherwise SwapArrows / Delete
- * and the like would act on an old connector/vertex that is no longer on screen.
+ * A paste replaces the selection with the shapes it created, dropping a selected
+ * connector or vertex with it (regression guard for #71). Otherwise SwapArrows /
+ * Delete and the like would act on an old connector/vertex that is no longer on
+ * screen.
  */
 describe("maintains selection mutual exclusivity on paste", () => {
-	it("pasting while a connector is selected sets selectedConnectorId to null", () => {
+	it("pasting while a connector is selected leaves the connector unselected", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: [],
-			selectedConnectorId: "conn-1",
+			selection: selectionOf(["conn-1"]),
 			rootIds: ["rect-1", "conn-1", "rect-2"],
 		});
 		const clipboard = CopyCommand.execute(
 			createCommandState(twoRectsWithConnectorDoc, {
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				rootIds: ["rect-1", "conn-1", "rect-2"],
 			}),
 			registries,
@@ -72,19 +75,18 @@ describe("maintains selection mutual exclusivity on paste", () => {
 		expect(clipboard).not.toBeNull();
 
 		const after = handlePaste(state, clipboard!, registries);
-		expect(after.selectedConnectorId).toBeNull();
-		expect(after.selectedIds.length).toBeGreaterThan(0);
+		expect(after.selection.objectIds).not.toContain("conn-1");
+		expect(after.selection.objectIds.length).toBeGreaterThan(0);
 	});
 
-	it("pasting while a vertex is selected sets selectedVertex to null", () => {
+	it("pasting while a vertex is selected drops the part selection", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: [],
-			selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
+			selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 			rootIds: ["rect-1", "conn-1", "rect-2"],
 		});
 		const clipboard = CopyCommand.execute(
 			createCommandState(twoRectsWithConnectorDoc, {
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				rootIds: ["rect-1", "conn-1", "rect-2"],
 			}),
 			registries,
@@ -92,7 +94,12 @@ describe("maintains selection mutual exclusivity on paste", () => {
 		expect(clipboard).not.toBeNull();
 
 		const after = handlePaste(state, clipboard!, registries);
-		expect(after.selectedVertex).toBeNull();
+		// The part selection is the reducer's to drop, which it does for the paste
+		// branch like every other (reconcileObjectPartSelection).
+		expect(
+			reconcileObjectPartSelection(after, registries.objectPartKind).selection
+				.part,
+		).toBeNull();
 	});
 });
 

@@ -11,7 +11,9 @@ export type ObjectPartRange = {
 
 /**
  * The sub-parts addressed one level below the object selection, in a namespace
- * the object's own type owns (`kind`).
+ * the object's own type owns (`kind`). The object they belong to is the sole
+ * selected one (`CanvasSelection.objectIds[0]`), which is why none is named
+ * here.
  *
  * Ranges rather than a set of ids: the set is what a reader derives
  * (collectObjectPartIds, through the kind, which alone knows what lies between
@@ -21,7 +23,7 @@ export type ObjectPartRange = {
  * covered nodes instead of its `Range`s.
  *
  * The reducer clears it (reconcileObjectPartSelection) once it stops describing
- * something real, so every reader takes `state.objectPartSelection` as it stands.
+ * something real, so every reader takes `state.selection.part` as it stands.
  * That catches a part that is **gone**, not one that was **renumbered**. Where
  * the ids are positions (the vertices of a polyline, the rows and columns of a
  * table), an operation that renumbers them — an insertion, a removal — rewrites
@@ -29,13 +31,6 @@ export type ObjectPartRange = {
  * the part that took the number over.
  */
 export type ObjectPartSelection = {
-	/**
-	 * The object the parts belong to. The selection is live only while this is the
-	 * sole selected object; the reducer drops the whole selection once it is not,
-	 * rather than every write that moves the selection having to clear it.
-	 */
-	objectId: string;
-
 	/** Part-id namespace owned by the object type: "textSlot", "vertex", "cell". */
 	kind: string;
 

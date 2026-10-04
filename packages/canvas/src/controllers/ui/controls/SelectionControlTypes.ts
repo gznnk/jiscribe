@@ -93,7 +93,7 @@ export type SelectionControlResult<TState extends ObjectState = ObjectState> = {
 	 * omitted leaves it alone. `objectId` is filled in by the adapter, so a
 	 * handle cannot address another object.
 	 */
-	selection?: Omit<ObjectPartSelection, "objectId"> | null;
+	selection?: ObjectPartSelection | null;
 };
 
 /**

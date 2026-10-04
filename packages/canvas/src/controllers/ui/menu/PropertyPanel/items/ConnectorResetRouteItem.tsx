@@ -22,7 +22,7 @@ import type { PropertyPanelItemProps } from "../PropertyPanelTypes";
  */
 const ConnectorResetRouteItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
@@ -36,9 +36,7 @@ const ConnectorResetRouteItemComponent: React.FC<PropertyPanelItemProps> = ({
 		<PropertyRow>
 			<PropertyCommandButton
 				type="button"
-				disabled={
-					!hasSelectedConnectorShapedRoute(selectedConnectorId, objects)
-				}
+				disabled={!hasSelectedConnectorShapedRoute({ objects, selection })}
 				title={label}
 				data-part={commandPart(ResetConnectorRouteCommand.id)}
 			>

@@ -4,22 +4,22 @@ import { memo } from "react";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { collectObjectPartIds } from "../../../selection/collectObjectPartIds";
-import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 import { ObjectPartOutline } from "../ObjectPartOutline";
 import { Outline } from "../Outline";
 
 type SelectionOverlayProps = {
-	selectedIds: string[];
+	/**
+	 * What the canvas is pointed at, `state.selection` as it stands: the reducer
+	 * has already dropped a part that would draw a box around one no longer
+	 * selected (reconcileObjectPartSelection). Only a kind declaring a `region` is
+	 * outlined; a vertex has handles of its own (VertexControlsLayer)
+	 */
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
-	/**
-	 * Part selection to outline, `state.objectPartSelection` as it stands: the
-	 * reducer has already dropped one that would draw a box around a part no longer
-	 * selected (reconcileObjectPartSelection)
-	 */
-	objectPartSelection?: ObjectPartSelection | null;
 };
 
 /**
@@ -32,13 +32,13 @@ type SelectionOverlayProps = {
  * answers with (ObjectPartKindDefinition.region).
  */
 const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
-	selectedIds,
+	selection,
 	objects,
 	multiSelectGroup,
-	objectPartSelection = null,
 }) => {
 	const { objectPartKind } = useCanvasRegistries();
 
+	const { objectIds: selectedIds, part: partSelection } = selection;
 	if (selectedIds.length === 0) {
 		return null;
 	}
@@ -52,17 +52,16 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	}
 
 	// The type answers for its own parts, so both the object and its definition of
-	// that kind have to be in hand before any of them can be outlined.
-	const partOwner = objectPartSelection
-		? objects[objectPartSelection.objectId]
-		: undefined;
+	// that kind have to be in hand before any of them can be outlined. The part is
+	// only ever live on a sole selection, so that is its owner.
+	const partOwner = partSelection ? objects[selectedIds[0]] : undefined;
 	const part =
-		objectPartSelection && partOwner
-			? objectPartKind.get(partOwner.type, objectPartSelection.kind)
+		partSelection && partOwner
+			? objectPartKind.get(partOwner.type, partSelection.kind)
 			: undefined;
 	const outlinedPartIds =
-		objectPartSelection && partOwner && part?.region
-			? collectObjectPartIds(objectPartSelection, part, partOwner)
+		partSelection && partOwner && part?.region
+			? collectObjectPartIds(partSelection, part, partOwner)
 			: [];
 
 	return (
@@ -81,7 +80,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 					<Outline
 						key={id}
 						frame={obj}
-						dashed={objectPartSelection?.objectId === id}
+						dashed={outlinedPartIds.length > 0 && partOwner?.id === id}
 					/>
 				);
 			})}

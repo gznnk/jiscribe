@@ -2,10 +2,11 @@ import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { CanvasSelection } from "../CanvasSelection";
+import { EMPTY_SELECTION } from "../CanvasSelection";
 import { isObjectPartOutlined } from "../isObjectPartOutlined";
 import type { ObjectPartKindDefinition } from "../ObjectPartKindRegistry";
 import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
-import type { ObjectPartSelection } from "../ObjectPartSelection";
 
 const REGION: Rect = { x: 0, y: 0, width: 10, height: 10 };
 
@@ -13,10 +14,9 @@ const objects: Readonly<Record<string, ObjectState>> = {
 	a: { id: "a", type: "record" } as unknown as ObjectState,
 };
 
-const selectionOf = (kind: string): ObjectPartSelection => ({
-	objectId: "a",
-	kind,
-	ranges: [{ anchorId: "p", focusId: "p" }],
+const selectionOf = (kind: string): CanvasSelection => ({
+	objectIds: ["a"],
+	part: { kind, ranges: [{ anchorId: "p", focusId: "p" }] },
 });
 
 const registryWith = (...parts: ObjectPartKindDefinition[]) => {
@@ -61,9 +61,9 @@ describe("isObjectPartOutlined", () => {
 	});
 
 	it("is false where nothing is selected below the object", () => {
-		expect(isObjectPartOutlined(objects, registryWith(outlined), null)).toBe(
-			false,
-		);
+		expect(
+			isObjectPartOutlined(objects, registryWith(outlined), EMPTY_SELECTION),
+		).toBe(false);
 	});
 
 	it("is false for a kind the owner's type never declared", () => {

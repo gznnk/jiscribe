@@ -54,9 +54,7 @@ export function useObjectMenuPosition(
 	isPointerOverMenu: boolean,
 ): ObjectMenuPosition {
 	const {
-		selectedIds,
-		selectedConnectorId,
-		objectPartSelection,
+		selection,
 		objects,
 		viewport,
 		contextMenuPosition,
@@ -81,11 +79,12 @@ export function useObjectMenuPosition(
 	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
 	// width must be re-measured then too or the centering uses the stale width;
 	// opening and closing a text editor narrows it the same way.
+	const { objectIds: selectedIds, part } = selection;
 	const selectedIdsString = selectedIds.slice().sort().join(",");
-	const objectPartSelectionKey =
-		objectPartSelection === null
+	const partKey =
+		part === null
 			? null
-			: `${objectPartSelection.objectId}:${objectPartSelection.ranges
+			: `${part.kind}:${part.ranges
 					.map((range) => `${range.anchorId}-${range.focusId}`)
 					.join(",")}`;
 	const textEditKey =
@@ -102,8 +101,7 @@ export function useObjectMenuPosition(
 	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
 
 	const shouldRender = useMemo(() => {
-		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
-		if (!hasSelection) {
+		if (selectedIds.length === 0) {
 			return false;
 		}
 		if (contextMenuPosition !== null) {
@@ -139,7 +137,6 @@ export function useObjectMenuPosition(
 		return true;
 	}, [
 		selectedIds,
-		selectedConnectorId,
 		contextMenuPosition,
 		isViewUnsettled,
 		areaSelection,
@@ -152,25 +149,11 @@ export function useObjectMenuPosition(
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-	}, [
-		menuRef,
-		shouldRender,
-		selectedIdsString,
-		selectedConnectorId,
-		objectPartSelectionKey,
-		textEditKey,
-	]);
+	}, [menuRef, shouldRender, selectedIdsString, partKey, textEditKey]);
 
 	const liveBounds = useMemo(
-		() =>
-			calcObjectsBoundingBox(
-				selectedConnectorId !== null
-					? [selectedConnectorId, ...selectedIds]
-					: selectedIds,
-				objects,
-				objectVisualBounds,
-			),
-		[selectedIds, selectedConnectorId, objects, objectVisualBounds],
+		() => calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds),
+		[selectedIds, objects, objectVisualBounds],
 	);
 
 	// The menu writes properties that resize what it is anchored to: a font size or
@@ -185,7 +168,7 @@ export function useObjectMenuPosition(
 	// viewport clamping and the menu's own measured size all keep updating, so
 	// panning or zooming with a dropdown open still places the menu correctly.
 	const isMenuInUse = objectMenuOpenId !== null || isPointerOverMenu;
-	const anchorKey = `${selectedIdsString}/${selectedConnectorId ?? ""}`;
+	const anchorKey = selectedIdsString;
 	const latchedAnchorRef = useRef({ key: anchorKey, bounds: liveBounds });
 	if (
 		!shouldRender ||

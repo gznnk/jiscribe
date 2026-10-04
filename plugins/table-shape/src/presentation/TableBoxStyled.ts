@@ -4,8 +4,8 @@ import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * Table sub-parts. The cell rects are the shape's hit regions and carry
- * `data-part` (the cell id), which is what a double click resolves the edited cell
- * from. They capture pointer events even where nothing is painted, so a cell with
+ * `data-part` (the cell's address, textSlotPart), which is what a click picks the
+ * cell by and a double click resolves the edited cell from. They capture pointer events even where nothing is painted, so a cell with
  * no background of its own is still grabbable.
  *
  * Only the wrapping <g> carries data-kind/data-id: one object is one data-kind

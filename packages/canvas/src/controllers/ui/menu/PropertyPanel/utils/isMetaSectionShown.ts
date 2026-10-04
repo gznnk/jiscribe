@@ -1,5 +1,6 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
+import { isTextAddressed } from "../../utils/isTextAddressed";
 
 /**
  * Whether the sidebar shows its Meta section — the note the selected object
@@ -15,10 +16,7 @@ import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
  * @returns True while a single object, or a connector, is selected and no text is being addressed
  */
 export const isMetaSectionShown = (state: CanvasControllerState): boolean => {
-	if (
-		state.objectPartSelection !== null ||
-		state.textEditState?.kind === "shape"
-	) {
+	if (isTextAddressed(state)) {
 		return false;
 	}
 	return resolveMetaTargetId(state) !== null;

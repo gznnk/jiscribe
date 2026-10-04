@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { resolveOpenReference } from "../resolveOpenReference";
 
 const rect = (id: string, meta?: Record<string, unknown>): ObjectState =>
@@ -14,12 +15,10 @@ const rect = (id: string, meta?: Record<string, unknown>): ObjectState =>
 const makeState = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
-	selectedConnectorId: string | null = null,
 ): CanvasControllerState =>
 	({
-		selectedIds,
+		selection: selectionOf(selectedIds),
 		objects,
-		selectedConnectorId,
 	}) as unknown as CanvasControllerState;
 
 describe("resolveOpenReference", () => {
@@ -41,11 +40,6 @@ describe("resolveOpenReference", () => {
 		expect(
 			resolveOpenReference(makeState(["r1", "r2"], { r1, r2 })),
 		).toBeNull();
-	});
-
-	it("returns null when only a connector is selected", () => {
-		const c = rect("c1", { reference: "./a.md" });
-		expect(resolveOpenReference(makeState([], { c1: c }, "c1"))).toBeNull();
 	});
 
 	it("returns null when the object has no meta", () => {

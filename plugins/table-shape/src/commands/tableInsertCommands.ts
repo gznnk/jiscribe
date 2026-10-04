@@ -110,14 +110,17 @@ const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
 		return {
 			...state,
 			objects: { ...state.objects, [target.objectId]: inserted },
-			objectPartSelection:
-				state.objectPartSelection === null
-					? null
-					: remapTablePartSelectionForInsert(
-							state.objectPartSelection,
-							spec.axis,
-							target.at,
-						),
+			selection: {
+				...state.selection,
+				part:
+					state.selection.part === null
+						? null
+						: remapTablePartSelectionForInsert(
+								state.selection.part,
+								spec.axis,
+								target.at,
+							),
+			},
 			commitVersion: state.commitVersion + 1,
 		};
 	},

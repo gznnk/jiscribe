@@ -2,7 +2,6 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
@@ -43,7 +42,7 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { stroke } = readSelectionShapeStyle(
-		getEffectiveSelectedIds(canvasState),
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",

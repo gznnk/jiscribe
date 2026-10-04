@@ -10,6 +10,7 @@ import {
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { ToggleTextLayoutCommand } from "../../commands/shape/ToggleTextLayoutCommand";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { reconcileObjectContentSizes } from "../../utils/reconcileObjectContentSizes";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
@@ -62,8 +63,7 @@ const controllerStateOf = (...objects: ObjectState[]): CanvasControllerState =>
 	({
 		objects: Object.fromEntries(objects.map((object) => [object.id, object])),
 		rootIds: objects.map((object) => object.id),
-		selectedIds: objects.map((object) => object.id),
-		selectedConnectorId: null,
+		selection: selectionOf(objects.map((object) => object.id)),
 		multiSelectGroup: null,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;

@@ -1,5 +1,5 @@
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 
 export type BuiltinItemKey =
 	| "arrowHead"
@@ -59,18 +59,8 @@ export type OpenReferenceHandler = (payload: OpenReferencePayload) => void;
  */
 export type ObjectMenuItemProps = {
 	objects: Record<string, ObjectState>;
-	selectedIds: string[];
-	selectedConnectorId: string | null;
-	/**
-	 * The parts picked one level below the object — a table's cells, a polyline's
-	 * vertices — as `state.objectPartSelection` stands
-	 * (reconcileObjectPartSelection), or null when none are. Read by an item whose
-	 * write lands on those parts rather than on the object, so that what it shows
-	 * is the value of exactly what it would change (readSelectionSlotField); such
-	 * an item has to declare itself `slotAware` to be drawn at all while they are
-	 * picked.
-	 */
-	objectPartSelection: ObjectPartSelection | null;
+	/** What the canvas is pointed at: the objects picked, and the part picked below a single one of them (CanvasSelection). */
+	selection: CanvasSelection;
 	/** ID of the currently open menu section (`toggle:{sectionId}`). */
 	openSectionId: string | null;
 	onPropertyUpdate: StylePropertyUpdater;

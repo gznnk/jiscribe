@@ -76,16 +76,17 @@ export const resolveTableTrackSelection = (
 	axis: TableAxis,
 	objectPartKind: ObjectPartKindRegistry,
 ): TableTrackSelection | null => {
-	if (state.textEditState !== null || state.selectedIds.length !== 1) {
+	if (state.textEditState !== null || state.selection.objectIds.length !== 1) {
 		return null;
 	}
-	const objectId = state.selectedIds[0];
+	const objectId = state.selection.objectIds[0];
 	const object = state.objects[objectId];
 	if (object === undefined || object.type !== TableFeatures.type) {
 		return null;
 	}
-	const selection = state.objectPartSelection;
-	if (selection === null || selection.objectId !== objectId) {
+	// The part is only ever live on a sole selection, so it is this table's.
+	const selection = state.selection.part;
+	if (selection === null) {
 		return null;
 	}
 

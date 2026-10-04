@@ -158,7 +158,8 @@ export const TABLE_CELL_STYLE_DEFAULTS = {
 } as const satisfies TextSlotStyle;
 
 /**
- * The slot id one cell is keyed by in state, and the name its `data-part` carries.
+ * The slot id one cell is keyed by in state, and the id half of the `data-part`
+ * its element carries (textSlotPart).
  * Never written to a document: the grid position is what the file holds, and the
  * ids are rebuilt from it on every read, so inserting a row renames nothing the
  * file can see.

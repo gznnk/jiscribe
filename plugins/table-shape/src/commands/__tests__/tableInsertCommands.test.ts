@@ -55,13 +55,12 @@ const TABLE = {
  * state has no bearing on an insertion.
  */
 const canvasWith = (
-	partSelection: CanvasControllerState["objectPartSelection"],
+	partSelection: CanvasControllerState["selection"]["part"],
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
 		objects: { [TABLE.id]: TABLE },
-		selectedIds: [TABLE.id],
-		objectPartSelection: partSelection,
+		selection: { objectIds: [TABLE.id], part: partSelection },
 		textEditState: null,
 		commitVersion: 7,
 		...overrides,
@@ -86,7 +85,6 @@ const commandById = (id: string) => {
 
 /** A pick of whole cells, one collapsed range each — what a cell click writes. */
 const cellSelection = (partIds: string[]) => ({
-	objectId: TABLE.id,
 	kind: TEXT_SLOT_PART_KIND,
 	ranges: partIds.map((partId) => ({ anchorId: partId, focusId: partId })),
 });
@@ -162,7 +160,6 @@ describe("TABLE_INSERT_COMMANDS", () => {
 
 	it("inserts relative to a track selection of its own axis", () => {
 		const row = canvasWith({
-			objectId: TABLE.id,
 			kind: "row",
 			ranges: [{ anchorId: "1", focusId: "1" }],
 		});
@@ -182,7 +179,7 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		);
 
 		// The cell that was picked is still the cell that is picked, one row down.
-		expect(next?.objectPartSelection?.ranges).toEqual([
+		expect(next?.selection.part?.ranges).toEqual([
 			{ anchorId: "r2c0", focusId: "r2c0" },
 		]);
 		expect(next?.commitVersion).toBe(8);
@@ -190,7 +187,6 @@ describe("TABLE_INSERT_COMMANDS", () => {
 
 	it("moves a track selection with the grid", () => {
 		const state = canvasWith({
-			objectId: TABLE.id,
 			kind: "row",
 			ranges: [{ anchorId: "1", focusId: "1" }],
 		});
@@ -199,7 +195,7 @@ describe("TABLE_INSERT_COMMANDS", () => {
 			registries,
 		);
 
-		expect(next?.objectPartSelection?.ranges).toEqual([
+		expect(next?.selection.part?.ranges).toEqual([
 			{ anchorId: "2", focusId: "2" },
 		]);
 	});
@@ -217,7 +213,6 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		expect(
 			canInsertRow(
 				canvasWith({
-					objectId: TABLE.id,
 					kind: "column",
 					ranges: [{ anchorId: "0", focusId: "0" }],
 				}),
@@ -227,7 +222,6 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		expect(
 			canInsertColumn(
 				canvasWith({
-					objectId: TABLE.id,
 					kind: "column",
 					ranges: [{ anchorId: "0", focusId: "0" }],
 				}),
@@ -236,21 +230,22 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		).toBe(true);
 	});
 
-	it("is unavailable when the selection is not this one table's", () => {
+	it("is unavailable while no table is selected, or the picked kind is none of its own", () => {
 		const canInsertRow = commandById("table.insertRowAbove").canExecute;
 
 		expect(
 			canInsertRow(
-				canvasWith(cellSelection(["r0c0"]), { selectedIds: [] }),
+				canvasWith(cellSelection(["r0c0"]), {
+					selection: { objectIds: [], part: null },
+				}),
 				registries,
 			),
 		).toBe(false);
 		expect(
 			canInsertRow(
 				canvasWith({
-					objectId: "other",
-					kind: TEXT_SLOT_PART_KIND,
-					ranges: [{ anchorId: "r0c0", focusId: "r0c0" }],
+					kind: "tail",
+					ranges: [{ anchorId: "tip", focusId: "tip" }],
 				}),
 				registries,
 			),

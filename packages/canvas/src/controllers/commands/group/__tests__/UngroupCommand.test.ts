@@ -4,6 +4,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { UngroupCommand } from "../UngroupCommand";
 
 const registries = createTestRegistries();
@@ -47,7 +49,7 @@ const makeGroup = (
 	}) as unknown as GroupState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 }): CanvasControllerState =>
@@ -62,7 +64,7 @@ const makeState = (params: {
 describe("UngroupCommand", () => {
 	it("dissolves a root group and promotes its children to the root", () => {
 		const state = makeState({
-			selectedIds: ["g"],
+			selection: selectionOf(["g"]),
 			objects: {
 				g: makeGroup("g", ["a", "b"]),
 				a: makeRect("a", 0, 0, "g"),
@@ -80,13 +82,13 @@ describe("UngroupCommand", () => {
 		expect(next.objects["a"]?.parentId).toBeUndefined();
 		expect(next.objects["b"]?.parentId).toBeUndefined();
 		// the dissolved children are selected
-		expect(next.selectedIds).toEqual(["a", "b"]);
+		expect(next.selection.objectIds).toEqual(["a", "b"]);
 		expect(next.commitVersion).toBe(1);
 	});
 
 	it("a nested group is expanded within its parent group's childIds", () => {
 		const state = makeState({
-			selectedIds: ["inner"],
+			selection: selectionOf(["inner"]),
 			objects: {
 				outer: makeGroup("outer", ["inner", "c"]),
 				inner: makeGroup("inner", ["a", "b"], "outer"),
@@ -114,7 +116,7 @@ describe("UngroupCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when the selection is all groups", () => {
 			const state = makeState({
-				selectedIds: ["g"],
+				selection: selectionOf(["g"]),
 				objects: { g: makeGroup("g", ["a"]), a: makeRect("a", 0, 0, "g") },
 				rootIds: ["g"],
 			});
@@ -123,7 +125,7 @@ describe("UngroupCommand", () => {
 
 		it("is not executable for a selection containing non-groups", () => {
 			const state = makeState({
-				selectedIds: ["g", "a"],
+				selection: selectionOf(["g", "a"]),
 				objects: { g: makeGroup("g", []), a: makeRect("a", 0, 0) },
 				rootIds: ["g", "a"],
 			});
@@ -133,7 +135,7 @@ describe("UngroupCommand", () => {
 		it("is not executable when there is no selection", () => {
 			expect(
 				UngroupCommand.canExecute(
-					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					makeState({ selection: selectionOf([]), objects: {}, rootIds: [] }),
 					registries,
 				),
 			).toBe(false);

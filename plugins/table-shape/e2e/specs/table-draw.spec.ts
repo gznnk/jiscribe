@@ -40,8 +40,9 @@ test.describe("table drawing", () => {
 		);
 		expect(created?.tag).toBe("g");
 
-		// The default table is 2x2, and every cell carries its own id as data-part —
-		// which is what a double click resolves a cell from.
+		// The default table is 2x2, and every cell carries its own address as
+		// data-part (textSlotPart) — which is what a click picks a cell by and a
+		// double click resolves a cell from.
 		const cellParts = await canvas.page.evaluate(
 			(objectId) =>
 				[
@@ -51,7 +52,12 @@ test.describe("table drawing", () => {
 				].map((cell) => cell.getAttribute("data-part")),
 			id,
 		);
-		expect(cellParts).toEqual(["r0c0", "r0c1", "r1c0", "r1c1"]);
+		expect(cellParts).toEqual([
+			"textSlot:r0c0",
+			"textSlot:r0c1",
+			"textSlot:r1c0",
+			"textSlot:r1c1",
+		]);
 	});
 
 	test("takes its height from the text, growing downwards", async ({

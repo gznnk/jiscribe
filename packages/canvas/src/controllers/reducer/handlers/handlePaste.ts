@@ -50,7 +50,7 @@ const computePastePlacement = (
 	// walk is the selection, not the clipboard that never moves.
 	const step = computeDuplicateOffset(state);
 	const chainedCenter = isLastDuplicateStillSelected(state)
-		? getSelectionCenter(state, state.selectedIds)
+		? getSelectionCenter(state, state.selection.objectIds)
 		: null;
 	const offset: Point = chainedCenter
 		? {
@@ -126,7 +126,7 @@ export const handlePaste = (
 
 	const mergedObjects = { ...state.objects, ...newObjects };
 
-	// Select only the copied shapes (connectors are managed separately via selectedConnectorId, so exclude them).
+	// Select only the copied shapes (a connector is only ever selected on its own, so exclude them).
 	const newObjectIds = newTopLevelIds.filter(
 		(id) => mergedObjects[id]?.type !== "connector",
 	);
@@ -135,12 +135,7 @@ export const handlePaste = (
 		...state,
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
-		selectedIds: newObjectIds,
-		// Clear the mutually exclusive connector/vertex selection so the shape selection is non-empty
-		// (same as other selectedIds mutation paths; without clearing, SwapArrows / Delete etc.
-		// would act on the old connector/vertex that is no longer on screen).
-		selectedConnectorId: null,
-		selectedVertex: null,
+		selection: { objectIds: newObjectIds, part: null },
 		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),
 		contextMenuPosition: null,
 		commitVersion: state.commitVersion + 1,

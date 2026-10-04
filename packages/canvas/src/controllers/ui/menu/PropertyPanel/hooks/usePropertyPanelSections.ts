@@ -3,6 +3,8 @@ import { useMemo } from "react";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
+import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
@@ -20,23 +22,21 @@ import { filterTextSlotPanelSections } from "../utils/filterTextSlotPanelSection
  * Collects the sidebar sections of the current selection, before any slot
  * narrowing.
  *
- * When a connector is selected (selectedConnectorId != null), returns the
- * sections for its type. When group objects are selected, expands the descendant
- * concrete object types; if multiple types are mixed, only what they all offer
- * is shown (AND-merge, down to the individual row).
+ * A selected connector returns the sections for its type. When group objects
+ * are selected, expands the descendant concrete object types; if multiple types
+ * are mixed, only what they all offer is shown (AND-merge, down to the
+ * individual row).
  */
 const collectSelectionSections = (
 	state: CanvasControllerState,
 	propertyPanelRegistry: PropertyPanelRegistry,
 ): PropertyPanelSection[] => {
-	const { selectedIds, selectedConnectorId, objects } = state;
+	const { objectIds: selectedIds } = state.selection;
+	const { objects } = state;
 
-	if (selectedConnectorId !== null) {
-		const connector = objects[selectedConnectorId];
-		if (!connector) {
-			return [];
-		}
-		return propertyPanelRegistry.getSections(connector.type);
+	const connectorId = getSelectedConnectorId(state);
+	if (connectorId !== null) {
+		return propertyPanelRegistry.getSections(objects[connectorId].type);
 	}
 
 	if (selectedIds.length === 0) {
@@ -80,7 +80,8 @@ const collectSelectionSections = (
  * belongs to them whatever those members are.
  */
 const holdsOwnAspectRatioLock = (state: CanvasControllerState): boolean => {
-	const { selectedIds, objects, multiSelectGroup } = state;
+	const { objectIds: selectedIds } = state.selection;
+	const { objects, multiSelectGroup } = state;
 	if (multiSelectGroup) {
 		return true;
 	}
@@ -99,8 +100,7 @@ const filterShownSections = (
 ): PropertyPanelSection[] => {
 	const selection: PropertyPanelSelection = {
 		objects: state.objects,
-		selectedIds: state.selectedIds,
-		selectedConnectorId: state.selectedConnectorId,
+		selection: state.selection,
 	};
 	return sections.filter((section) => section.isShown?.(selection) ?? true);
 };
@@ -130,10 +130,7 @@ export const getPropertyPanelSections = (
 	propertyPanelRegistry: PropertyPanelRegistry,
 ): PropertyPanelSection[] => {
 	const sections = collectSelectionSections(state, propertyPanelRegistry);
-	if (
-		state.objectPartSelection === null &&
-		state.textEditState?.kind !== "shape"
-	) {
+	if (!isTextAddressed(state)) {
 		// This path alone: the branch below hands a selected slot the text section
 		// and nothing else, and the box the lock governs is not the slot's.
 		return filterShownSections(
@@ -158,8 +155,7 @@ export const getPropertyPanelSections = (
 export const usePropertyPanelSections = (
 	state: CanvasControllerState,
 ): PropertyPanelSection[] => {
-	const { selectedIds, selectedConnectorId, objectPartSelection, objects } =
-		state;
+	const { selection, objects } = state;
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the section set is narrowed while it is (getPropertyPanelSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
@@ -168,13 +164,6 @@ export const usePropertyPanelSections = (
 	return useMemo(
 		() => getPropertyPanelSections(state, propertyPanel),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[
-			selectedIds,
-			selectedConnectorId,
-			objectPartSelection,
-			isEditingShapeText,
-			objects,
-			propertyPanel,
-		],
+		[selection, isEditingShapeText, objects, propertyPanel],
 	);
 };

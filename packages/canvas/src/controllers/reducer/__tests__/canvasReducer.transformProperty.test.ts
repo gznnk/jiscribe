@@ -8,6 +8,7 @@ import { rectDoc, twoRectsDoc } from "./support/fixtures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import type { TransformProperty } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -49,7 +50,9 @@ const update = (
 const singleRectState = (
 	objectOverrides: Partial<Record<string, unknown>> = {},
 ): CanvasControllerState => {
-	const state = createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+	const state = createTestState(twoRectsDoc, {
+		selection: selectionOf(["rect-1"]),
+	});
 	if (Object.keys(objectOverrides).length === 0) {
 		return state;
 	}
@@ -75,7 +78,9 @@ const multiSelectState = (): CanvasControllerState =>
 /** The two rects wrapped in one group, that group selected. */
 const groupedState = (): CanvasControllerState => {
 	const grouped = canvasReducer(
-		createTestState(twoRectsDoc, { selectedIds: ["rect-1", "rect-2"] }),
+		createTestState(twoRectsDoc, {
+			selection: selectionOf(["rect-1", "rect-2"]),
+		}),
 		{ type: "COMMAND", commandId: "group" },
 	);
 	return grouped;
@@ -212,7 +217,7 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 	describe("a group's frame", () => {
 		it("scales the children when the group is widened", () => {
 			const grouped = groupedState();
-			const groupId = grouped.selectedIds[0];
+			const groupId = grouped.selection.objectIds[0];
 			expect(frameOf(grouped, groupId).width).toBe(110);
 
 			const next = update(grouped, "width", 220);
@@ -274,7 +279,7 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 
 		it("leaves it alone for a connector-only selection", () => {
 			const connectorSelected = createTestState(connectorDoc, {
-				selectedConnectorId: "conn-1",
+				selection: selectionOf(["conn-1"]),
 			});
 
 			expectNoOp(connectorSelected, "width", 40);

@@ -6,6 +6,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { BUILTIN_OBJECT_DEFINITIONS } from "../../registries/applyObjectDefinition";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { FeatureGatedStyleProperty } from "../FeatureGatedStyleProperty";
 import { SYSTEM_STYLE_PROPERTIES } from "../systemStyleProperties";
 
@@ -37,18 +38,13 @@ const EXTRA_DECLARATIONS = Object.entries(BUILTIN_OBJECT_DEFINITIONS).flatMap(
 
 const makeState = (
 	overrides: Partial<
-		Pick<
-			CanvasControllerState,
-			"selectedIds" | "selectedConnectorId" | "objects" | "multiSelectGroup"
-		>
+		Pick<CanvasControllerState, "selection" | "objects" | "multiSelectGroup">
 	>,
 ): CanvasControllerState =>
 	({
-		selectedIds: [],
-		selectedConnectorId: null,
+		selection: selectionOf([]),
 		objects: {},
 		multiSelectGroup: null,
-		objectPartSelection: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -84,7 +80,10 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 				[handler.gate]: true,
 			} as ObjectFeatures;
 			const o1 = { id: "o1", type: "rect", features } as ObjectState;
-			const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
+			const state = makeState({
+				selection: selectionOf(["o1"]),
+				objects: { o1 },
+			});
 			const result = registry.apply(
 				state,
 				property,
@@ -97,7 +96,10 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 		it(`${property}: no-op when the "${handler.gate}" feature is off`, () => {
 			const features = { type: "rect", geometry: "rect" } as ObjectFeatures;
 			const o1 = { id: "o1", type: "rect", features } as ObjectState;
-			const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
+			const state = makeState({
+				selection: selectionOf(["o1"]),
+				objects: { o1 },
+			});
 			expect(
 				registry.apply(state, property, validValue, objectPartKindRegistry),
 			).toBe(state);
@@ -111,7 +113,10 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 					[handler.gate]: true,
 				} as ObjectFeatures;
 				const o1 = { id: "o1", type: "rect", features } as ObjectState;
-				const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
+				const state = makeState({
+					selection: selectionOf(["o1"]),
+					objects: { o1 },
+				});
 				expect(
 					registry.apply(state, property, "abc", objectPartKindRegistry),
 				).toBe(state);
@@ -137,7 +142,10 @@ describe("shape-declared extra properties (registry-driven)", () => {
 				features: { type, geometry: "rect" },
 				...parentScaffold(path),
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
+			const state = makeState({
+				selection: selectionOf(["o1"]),
+				objects: { o1 },
+			});
 			const result = registry.apply(
 				state,
 				property,
@@ -154,7 +162,10 @@ describe("shape-declared extra properties (registry-driven)", () => {
 				features: { type: "rect", geometry: "rect" },
 				...parentScaffold(path),
 			} as unknown as ObjectState;
-			const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
+			const state = makeState({
+				selection: selectionOf(["o1"]),
+				objects: { o1 },
+			});
 			expect(
 				registry.apply(state, property, validValue, objectPartKindRegistry),
 			).toBe(state);
@@ -167,7 +178,10 @@ describe("shape-declared extra properties (registry-driven)", () => {
 					type,
 					features: { type, geometry: "rect" },
 				} as unknown as ObjectState;
-				const state = makeState({ selectedIds: ["o1"], objects: { o1 } });
+				const state = makeState({
+					selection: selectionOf(["o1"]),
+					objects: { o1 },
+				});
 				expect(
 					registry.apply(state, property, validValue, objectPartKindRegistry),
 				).toBe(state);

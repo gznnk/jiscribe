@@ -78,8 +78,8 @@ const foldSharedTextSlotStyle = (slots: readonly TextSlot[]): TextSlot => {
  * draws even where the author set nothing — and a toggle reads its direction off
  * the same value.
  *
- * @param state - The current canvas controller state; its `objectPartSelection`
- *   is read as it stands, the reducer having already dropped a stale one
+ * @param state - The current canvas controller state; its `selection.part` is
+ *   read as it stands, the reducer having already dropped a stale one
  *   (reconcileObjectPartSelection)
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, keyed by
  *   the type of whichever object the slot was found on
@@ -104,16 +104,13 @@ export const getSelectedOrFirstTextSlot = (
 		};
 	}
 
-	const { objectPartSelection } = state;
-	if (objectPartSelection !== null) {
-		const target = state.objects[objectPartSelection.objectId];
+	const { objectIds, part } = state.selection;
+	if (part !== null) {
+		const target = state.objects[objectIds[0]];
 		if (isTextStyleState(target)) {
 			const selectedSlotIds =
-				resolveSelectedTextSlotIds(
-					target,
-					objectPartSelection,
-					objectPartKind,
-				) ?? [];
+				resolveSelectedTextSlotIds(target, state.selection, objectPartKind) ??
+				[];
 			const selectedSlots = selectedSlotIds
 				.map((slotId) =>
 					withTypeStyleDefaults(
@@ -137,7 +134,7 @@ export const getSelectedOrFirstTextSlot = (
 	}
 
 	const firstWithText = getFirstSelectedWithProp(
-		state.selectedIds,
+		objectIds,
 		state.objects,
 		"text",
 	) as (ObjectState & TextStyleState) | undefined;

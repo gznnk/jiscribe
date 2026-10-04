@@ -9,14 +9,14 @@ import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
  * carries such parts (the ObjectMenu and the properties sidebar).
  *
  * The React onChange route (STYLE_PROPERTY_UPDATE in canvasReducer) writes the
- * same properties without passing through here; logic both routes need (such as
- * clearing selectedVertex) has to be added to each of them.
+ * same properties without passing through here; logic both routes need has to be
+ * added to each of them.
  *
  * @param state - State to write into, with the caller's own press dismiss already applied: a slider press returns from here
  * @param event - The gesture. `set:` acts on click / doubleClick only. `slider:` previews on pressed / dragStart / drag and commits on dragEnd / click / doubleClick, reading the value from `inputValue`; a slider event without one warns and changes nothing
  * @param part - `event.targetPart` already parsed (parseMenuPart); null and kinds other than `set` / `slider` are left to the caller
  * @param registries - Registries of the canvas; `styleProperty` resolves the property name
- * @returns The next state, or null when the part is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller); every write clears `selectedVertex`. A style part on an event it does not act on returns `state` itself
+ * @returns The next state, or null when the part is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller); a write leaves the part picked below the object alone, styling never renumbering what it writes to. A style part on an event it does not act on returns `state` itself
  */
 export const applyStylePropertyPart = (
 	state: CanvasControllerState,
@@ -41,7 +41,6 @@ export const applyStylePropertyPart = (
 		);
 		return {
 			...newState,
-			selectedVertex: null,
 			commitVersion: state.commitVersion + 1,
 		};
 	}
@@ -71,13 +70,12 @@ export const applyStylePropertyPart = (
 		event.type === "dragStart" ||
 		event.type === "drag"
 	) {
-		const newState = registries.styleProperty.apply(
+		return registries.styleProperty.apply(
 			state,
 			property,
 			event.inputValue,
 			registries.objectPartKind,
 		);
-		return { ...newState, selectedVertex: null };
 	}
 
 	// click / doubleClick: a press on the track jumps the thumb natively and lifts
@@ -98,7 +96,6 @@ export const applyStylePropertyPart = (
 		);
 		return {
 			...newState,
-			selectedVertex: null,
 			commitVersion: state.commitVersion + 1,
 		};
 	}

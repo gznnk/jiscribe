@@ -7,7 +7,7 @@ import type {
 	MetaProperty,
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
-import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 /**
@@ -111,7 +111,7 @@ export type PropertyPanelSection = {
  */
 export type PropertyPanelSelection = Pick<
 	PropertyPanelItemProps,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selection"
 >;
 
 /**
@@ -191,18 +191,8 @@ export type PropertyPanelMetaUpdater = (
  */
 export type PropertyPanelItemProps = {
 	objects: Record<string, ObjectState>;
-	selectedIds: string[];
-	selectedConnectorId: string | null;
-	/**
-	 * The parts picked one level below the object — a table's cells, a polyline's
-	 * vertices — as `state.objectPartSelection` stands
-	 * (reconcileObjectPartSelection), or null when none are. Read by a row whose
-	 * write lands on those parts rather than on the object, so that what it shows
-	 * is the value of exactly what it would change (readSelectionSlotField); such
-	 * a row has to declare itself `slotAware` to be drawn at all while they are
-	 * picked.
-	 */
-	objectPartSelection: ObjectPartSelection | null;
+	/** What the canvas is pointed at: the objects picked, and the part picked below a single one of them (CanvasSelection). */
+	selection: CanvasSelection;
 	/** The frame a multi-selection is transformed through; null while one object or nothing is selected. */
 	multiSelectGroup: GroupState | null;
 	onPropertyUpdate: StylePropertyUpdater;

@@ -161,10 +161,11 @@ class SelectionControlStrategy extends ControlStrategy {
 			);
 		}
 		if (result.selection !== undefined) {
+			// The control only draws on a sole selection of its own object, so that
+			// object is already the part's owner (CanvasSelection.objectIds[0]).
 			nextState = {
 				...nextState,
-				objectPartSelection:
-					result.selection === null ? null : { ...result.selection, objectId },
+				selection: { ...nextState.selection, part: result.selection },
 			};
 		}
 		return nextState;

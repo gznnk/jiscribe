@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { ToggleTextVerticalBasisCommand } from "../../commands/shape/ToggleTextVerticalBasisCommand";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { isSelectionTextVerticalBasisFrame } from "../../utils/textVerticalBasisSelection";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
@@ -30,8 +31,7 @@ const controllerStateOf = (...objects: ObjectState[]): CanvasControllerState =>
 	({
 		objects: Object.fromEntries(objects.map((object) => [object.id, object])),
 		rootIds: objects.map((object) => object.id),
-		selectedIds: objects.map((object) => object.id),
-		selectedConnectorId: null,
+		selection: selectionOf(objects.map((object) => object.id)),
 		multiSelectGroup: null,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;

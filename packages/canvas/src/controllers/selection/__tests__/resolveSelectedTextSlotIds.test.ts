@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 
+import { selectionOf } from "./support/selectionOf";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createTextSlotPartKindDefinition } from "../createTextSlotPartKindDefinition";
 import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
@@ -43,7 +44,11 @@ objectPartKind.register("table", [
 describe("resolveSelectedTextSlotIds", () => {
 	it("names nothing when nothing is picked", () => {
 		expect(
-			resolveSelectedTextSlotIds(grid("t1"), null, objectPartKind),
+			resolveSelectedTextSlotIds(
+				grid("t1"),
+				selectionOf(["t1"]),
+				objectPartKind,
+			),
 		).toBeUndefined();
 	});
 
@@ -51,11 +56,10 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t2"),
-				{
-					objectId: "t1",
+				selectionOf(["t1"], {
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "r0c0", focusId: "r0c0" }],
-				},
+				}),
 				objectPartKind,
 			),
 		).toBeUndefined();
@@ -65,14 +69,13 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{
-					objectId: "t1",
+				selectionOf(["t1"], {
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [
 						{ anchorId: "r0c1", focusId: "r0c1" },
 						{ anchorId: "r1c0", focusId: "r1c0" },
 					],
-				},
+				}),
 				objectPartKind,
 			),
 		).toEqual(["r0c1", "r1c0"]);
@@ -82,11 +85,10 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{
-					objectId: "t1",
+				selectionOf(["t1"], {
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "r1c0", focusId: "r0c1" }],
-				},
+				}),
 				objectPartKind,
 			),
 		).toEqual(["r0c1", "r1c0"]);
@@ -96,11 +98,10 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{
-					objectId: "t1",
+				selectionOf(["t1"], {
 					kind: "row",
 					ranges: [{ anchorId: "1", focusId: "1" }],
-				},
+				}),
 				objectPartKind,
 			),
 		).toEqual(["r1c0", "r1c1"]);
@@ -110,22 +111,20 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{
-					objectId: "t1",
+				selectionOf(["t1"], {
 					kind: "tail",
 					ranges: [{ anchorId: "tip", focusId: "tip" }],
-				},
+				}),
 				objectPartKind,
 			),
 		).toBeUndefined();
 		expect(
 			resolveSelectedTextSlotIds(
 				grid("t1"),
-				{
-					objectId: "t1",
+				selectionOf(["t1"], {
 					kind: "column",
 					ranges: [{ anchorId: "0", focusId: "0" }],
-				},
+				}),
 				objectPartKind,
 			),
 		).toBeUndefined();
@@ -136,11 +135,10 @@ describe("resolveSelectedTextSlotIds", () => {
 		expect(
 			resolveSelectedTextSlotIds(
 				bare,
-				{
-					objectId: "b1",
+				selectionOf(["b1"], {
 					kind: "row",
 					ranges: [{ anchorId: "0", focusId: "0" }],
-				},
+				}),
 				objectPartKind,
 			),
 		).toBeUndefined();

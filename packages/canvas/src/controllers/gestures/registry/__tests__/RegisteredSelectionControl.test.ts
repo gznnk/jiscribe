@@ -20,11 +20,21 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		objects: { "obj-1": object },
+		selection: { objectIds: ["obj-1"], part: null },
 		activeDrag: {
 			startSnapshot: { objects: { "obj-1": snapshotObject } },
 			kind: "other",
 		},
 	}) as unknown as CanvasControllerState;
+
+/** The same state with one part picked below the object. */
+const withPart = (
+	state: CanvasControllerState,
+	part: CanvasControllerState["selection"]["part"],
+): CanvasControllerState => ({
+	...state,
+	selection: { ...state.selection, part },
+});
 
 /** State with the current frame but no gesture-start snapshot. */
 const makeStateWithoutSnapshot = (object: ObjectState): CanvasControllerState =>
@@ -290,8 +300,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		});
 		const state = makeState(makeObject());
 		const next = strategy.handle(state, makeEvent("click"), undefined as never);
-		expect(next.objectPartSelection).toEqual({
-			objectId: "obj-1",
+		expect(next.selection.part).toEqual({
 			kind: "tail",
 			ranges: [{ anchorId: "tip", focusId: "tip" }],
 		});
@@ -301,7 +310,6 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 
 	it("clears the part selection for a null selection and leaves it for an omitted one", () => {
 		const selected = {
-			objectId: "obj-1",
 			kind: "tail",
 			ranges: [{ anchorId: "tip", focusId: "tip" }],
 		};
@@ -312,21 +320,21 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			handle: () => ({ selection: null }),
 		}).strategy;
 		const cleared = clearing.handle(
-			{ ...makeState(makeObject()), objectPartSelection: selected },
+			withPart(makeState(makeObject()), selected),
 			makeEvent("click"),
 			undefined as never,
 		);
-		expect(cleared.objectPartSelection).toBeNull();
+		expect(cleared.selection.part).toBeNull();
 
 		const keeping = createRegisteredSelectionControl("container", {
 			...markingDefinition(),
 			events: ["click"],
 		}).strategy;
 		const kept = keeping.handle(
-			{ ...makeState(makeObject()), objectPartSelection: selected },
+			withPart(makeState(makeObject()), selected),
 			makeEvent("click"),
 			undefined as never,
 		);
-		expect(kept.objectPartSelection).toBe(selected);
+		expect(kept.selection.part).toBe(selected);
 	});
 });

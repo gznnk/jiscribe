@@ -1,6 +1,6 @@
+import type { CanvasSelection } from "./CanvasSelection";
 import { collectObjectPartIds } from "./collectObjectPartIds";
 import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
-import type { ObjectPartSelection } from "./ObjectPartSelection";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
@@ -18,9 +18,9 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * @param object - The object about to be written or read; a selection sitting on
  *   another object names nothing here, which is what keeps a group's descendants
  *   out of one made on their parent
- * @param objectPartSelection - The parts picked one level below the object,
- *   taken as it stands (the reducer has already dropped one naming something
- *   gone, reconcileObjectPartSelection); null when none are
+ * @param selection - What the canvas is pointed at; its `part` is taken as it
+ *   stands (the reducer has already dropped one naming something gone,
+ *   reconcileObjectPartSelection), and its first object id is the part's owner
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, holding the kind's own
  *   reading of which slots it covers
  * @returns The slot ids in the type's own order, or undefined when the selection
@@ -31,13 +31,11 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  */
 export const resolveSelectedTextSlotIds = (
 	object: ObjectState,
-	objectPartSelection: ObjectPartSelection | null,
+	selection: CanvasSelection,
 	objectPartKind: ObjectPartKindRegistry,
 ): readonly string[] | undefined => {
-	if (
-		objectPartSelection === null ||
-		objectPartSelection.objectId !== object.id
-	) {
+	const { objectIds, part: objectPartSelection } = selection;
+	if (objectPartSelection === null || objectIds[0] !== object.id) {
 		return undefined;
 	}
 	const part = objectPartKind.get(object.type, objectPartSelection.kind);

@@ -3,6 +3,7 @@ import type { Point } from "@jiscribe/geometry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { materializeObjects } from "../../utils/cowObjects";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -70,12 +71,15 @@ const createMoveCommand = (
 		shortcuts: {
 			default: [{ code: ARROW_CODE[direction], shift: isLarge }],
 		},
-		// Disabled during text editing so caret movement takes priority
+		// Disabled during text editing so caret movement takes priority. A lone
+		// connector is not nudged either: it follows its endpoints.
 		canExecute: (state: CanvasControllerState) =>
-			state.selectedIds.length > 0 && state.textEditState === null,
+			state.selection.objectIds.length > 0 &&
+			state.textEditState === null &&
+			getSelectedConnectorId(state) === null,
 		execute: (state: CanvasControllerState, registries: ICanvasRegistries) => {
 			const { objects, multiSelectGroup } = moveSelection({
-				selectedIds: state.selectedIds,
+				selectedIds: state.selection.objectIds,
 				srcObjects: state.objects,
 				srcMultiSelectGroup: state.multiSelectGroup,
 				delta: calcNudgeDelta(direction, step),
@@ -85,7 +89,7 @@ const createMoveCommand = (
 			// The moveSelection result is a COW view; flatten it before it enters history.
 			const moved = updateAffectedGroupBounds(
 				{ ...state, objects: materializeObjects(objects), multiSelectGroup },
-				state.selectedIds,
+				state.selection.objectIds,
 			);
 			// Coalesce consecutive nudges to the same selection (including key repeat) into
 			// a single undo. Since the selection IDs are part of the key, a changed target
@@ -96,7 +100,7 @@ const createMoveCommand = (
 				commitVersion: state.commitVersion + 1,
 				historyCoalesce: {
 					...state.historyCoalesce,
-					pending: `${MOVE_COALESCE_PREFIX}:${state.selectedIds.join(",")}`,
+					pending: `${MOVE_COALESCE_PREFIX}:${state.selection.objectIds.join(",")}`,
 				},
 			};
 		},

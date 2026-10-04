@@ -7,6 +7,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import {
 	createTextSlotPartRegistry,
 	NON_SLOT_PART_KIND,
@@ -34,12 +35,11 @@ const group = (id: string, childIds: string[]): GroupState =>
 const makeState = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
-	objectPartSelection: ObjectPartSelection | null = null,
+	part: ObjectPartSelection | null = null,
 ): CanvasControllerState =>
 	({
-		selectedIds,
+		selection: selectionOf(selectedIds, part),
 		objects,
-		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 
 /** Every fixture here wears the rect type with features.text: "slots". */
@@ -149,7 +149,6 @@ describe("getSelectedOrFirstTextSlot", () => {
 					["r1"],
 					{ r1: r },
 					{
-						objectId: "r1",
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "rows", focusId: "rows" }],
 					},
@@ -170,7 +169,6 @@ describe("getSelectedOrFirstTextSlot", () => {
 				["r1"],
 				{ r1: r },
 				{
-					objectId: "r1",
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "name", focusId: "rows" }],
 				},
@@ -197,7 +195,6 @@ describe("getSelectedOrFirstTextSlot", () => {
 				["r1"],
 				{ r1: grid },
 				{
-					objectId: "r1",
 					kind: SLOT_GROUP_PART_KIND,
 					ranges: rowIds.map((rowId) => ({
 						anchorId: rowId,
@@ -235,7 +232,6 @@ describe("getSelectedOrFirstTextSlot", () => {
 						["r1"],
 						{ r1: grid },
 						{
-							objectId: "r1",
 							kind: NON_SLOT_PART_KIND,
 							ranges: [{ anchorId: "tip", focusId: "tip" }],
 						},
@@ -260,9 +256,8 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 		content: RichText,
 	): CanvasControllerState =>
 		({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1: object },
-			objectPartSelection: null,
 			textEditState: {
 				kind: "shape",
 				objectId: "r1",

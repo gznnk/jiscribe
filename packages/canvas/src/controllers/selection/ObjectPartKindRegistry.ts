@@ -13,7 +13,10 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  */
 export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 	{
-		/** The part-id namespace this entry answers for: "textSlot", "vertex", "cell". */
+		/**
+		 * The part-id namespace this entry answers for: "textSlot", "vertex",
+		 * "cell". An identifier, which `register` enforces.
+		 */
 		kind: string;
 
 		/**
@@ -89,6 +92,9 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		delete?: (object: TState, partIds: readonly string[]) => TState | null;
 	};
 
+/** A kind as an identifier: a letter, then letters, digits, `_` or `-`. */
+const KIND_IDENTIFIER = /^[A-Za-z][\w-]*$/;
+
 /**
  * Per-type registry of sub-part definitions, keyed by `(type, kind)`.
  * Types that register nothing have no sub-parts: nothing of theirs can be
@@ -106,7 +112,8 @@ export class ObjectPartKindRegistry {
 	 *
 	 * @param type - The object type these parts belong to
 	 * @param parts - One entry per `kind`; a repeated kind throws, since the
-	 *   second would silently shadow the first
+	 *   second would silently shadow the first, and so does a kind that is no
+	 *   identifier (a letter, then letters, digits, `_` or `-`)
 	 */
 	register<TState extends ObjectState>(
 		type: ObjectType,
@@ -114,6 +121,11 @@ export class ObjectPartKindRegistry {
 	): void {
 		const byKind = new Map<string, ObjectPartKindDefinition>();
 		for (const part of parts) {
+			if (!KIND_IDENTIFIER.test(part.kind)) {
+				throw new Error(
+					`Object part kind "${part.kind}" is no identifier: a letter, then letters, digits, "_" or "-"`,
+				);
+			}
 			if (byKind.has(part.kind)) {
 				throw new Error(`Duplicate object part kind "${part.kind}"`);
 			}

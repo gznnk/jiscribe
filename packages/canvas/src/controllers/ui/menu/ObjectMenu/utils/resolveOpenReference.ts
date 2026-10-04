@@ -15,7 +15,8 @@ import type { OpenReferencePayload } from "../ObjectMenuTypes";
 export const resolveOpenReference = (
 	canvasState: CanvasControllerState,
 ): OpenReferencePayload | null => {
-	const { selectedIds, objects } = canvasState;
+	const { objectIds: selectedIds } = canvasState.selection;
+	const { objects } = canvasState;
 	if (selectedIds.length !== 1) {
 		return null;
 	}

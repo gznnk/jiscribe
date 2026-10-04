@@ -1,4 +1,4 @@
-import { TEXT_SLOT_PART_KIND , createCanvasRegistries } from "@jiscribe/canvas";
+import { TEXT_SLOT_PART_KIND, createCanvasRegistries } from "@jiscribe/canvas";
 import type {
 	CanvasControllerState,
 	ICanvasRegistries,
@@ -64,13 +64,12 @@ const SMALLEST = {
  */
 const canvasWith = (
 	table: TableState,
-	partSelection: CanvasControllerState["objectPartSelection"],
+	partSelection: CanvasControllerState["selection"]["part"],
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
 		objects: { [TABLE.id]: table },
-		selectedIds: [TABLE.id],
-		objectPartSelection: partSelection,
+		selection: { objectIds: [TABLE.id], part: partSelection },
 		textEditState: null,
 		commitVersion: 7,
 		...overrides,
@@ -95,7 +94,6 @@ const commandById = (id: string) => {
 
 /** A pick of whole tracks, one collapsed range each — what a grip writes. */
 const trackSelection = (kind: string, partIds: string[]) => ({
-	objectId: TABLE.id,
 	kind,
 	ranges: partIds.map((partId) => ({ anchorId: partId, focusId: partId })),
 });
@@ -167,8 +165,8 @@ describe("TABLE_REMOVE_COMMANDS", () => {
 		const state = canvasWith(TABLE, trackSelection("row", ["1"]));
 		const next = commandById("table.deleteRow").execute?.(state, registries);
 
-		expect(next?.objectPartSelection).toBeNull();
-		expect(next?.selectedIds).toEqual([TABLE.id]);
+		expect(next?.selection.part).toBeNull();
+		expect(next?.selection.objectIds).toEqual([TABLE.id]);
 	});
 
 	it("is unavailable without a part selection naming a track of its axis", () => {

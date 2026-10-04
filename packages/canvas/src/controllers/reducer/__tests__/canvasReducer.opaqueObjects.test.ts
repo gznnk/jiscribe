@@ -7,6 +7,7 @@ import { rectDoc } from "./support/fixtures";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -62,7 +63,10 @@ describe("canvasReducer: objects of a type the canvas does not carry", () => {
 			createTestState(docWithUnknownObject),
 			"selectAll",
 		);
-		expect([...selected.selectedIds].sort()).toEqual(["rect-1", "rect-2"]);
+		expect([...selected.selection.objectIds].sort()).toEqual([
+			"rect-1",
+			"rect-2",
+		]);
 
 		const after = command(selected, "delete");
 
@@ -75,7 +79,7 @@ describe("canvasReducer: objects of a type the canvas does not carry", () => {
 	it("survive grouping what is around them, and undo brings the document back as it was", () => {
 		const grouped = command(
 			createTestState(docWithUnknownObject, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);

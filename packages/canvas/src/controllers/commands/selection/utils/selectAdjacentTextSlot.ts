@@ -4,7 +4,10 @@ import { isTextStyleState } from "../../../../states/objects/base/TextStyleState
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { collectObjectPartIds } from "../../../selection/collectObjectPartIds";
 import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import {
+	isTextSlotSelection,
+	TEXT_SLOT_PART_KIND,
+} from "../../../selection/textSlotPartKind";
 
 /**
  * The object whose slots Tab / Shift+Tab walk through: the sole selection, when
@@ -22,10 +25,10 @@ export const getTextSlotCycleTarget = (
 	if (state.activeDrag !== null) {
 		return null;
 	}
-	if (state.selectedIds.length !== 1) {
+	if (state.selection.objectIds.length !== 1) {
 		return null;
 	}
-	const target = state.objects[state.selectedIds[0]];
+	const target = state.objects[state.selection.objectIds[0]];
 	if (target === undefined || target.features?.text !== "slots") {
 		return null;
 	}
@@ -43,14 +46,14 @@ export const getTextSlotCycleTarget = (
  * collapses, leaving the slot next to the end the step travels towards — the
  * last of the range going forwards, the first of it going back.
  *
- * @param state - The current canvas controller state; its `objectPartSelection`
+ * @param state - The current canvas controller state; its `selection.part`
  *   names the slot the step starts from, and is live rather than stale because the
  *   reducer reconciles it (reconcileObjectPartSelection)
  * @param step - 1 for the next slot, -1 for the previous; with no slot selected
  *   yet these enter at the first and the last slot respectively
  * @param objectPartKind - Per-canvas ObjectPartKindRegistry, which answers both the slot
- *   order and whether the live selection still names slots of this object
- * @returns A new state with `objectPartSelection` moved and any open ObjectMenu submenu
+ *   order and what the live selection covers
+ * @returns A new state with `selection.part` moved and any open ObjectMenu submenu
  *   closed, or the input state when the selection does not qualify or the object
  *   declares no slot at all
  */
@@ -69,13 +72,14 @@ export const selectAdjacentTextSlot = (
 		return state;
 	}
 
-	const { objectPartSelection } = state;
+	// Tab walks one slot at a time, so the step starts from the end of what is
+	// picked that it travels towards — the last slot covered going forwards, the
+	// first going back — and lands on a collapsed range of its own. The object is
+	// the sole selection (getTextSlotCycleTarget), so a slot pick is its own.
+	const slotSelection = state.selection.part;
 	const currentSlotIds =
-		part !== undefined &&
-		objectPartSelection !== null &&
-		objectPartSelection.kind === TEXT_SLOT_PART_KIND &&
-		objectPartSelection.objectId === target.id
-			? collectObjectPartIds(objectPartSelection, part, target)
+		part !== undefined && isTextSlotSelection(slotSelection)
+			? collectObjectPartIds(slotSelection, part, target)
 			: undefined;
 	const currentSlotId =
 		currentSlotIds === undefined
@@ -94,10 +98,12 @@ export const selectAdjacentTextSlot = (
 
 	return {
 		...state,
-		objectPartSelection: {
-			objectId: target.id,
-			kind: TEXT_SLOT_PART_KIND,
-			ranges: [{ anchorId: slotIds[nextIndex], focusId: slotIds[nextIndex] }],
+		selection: {
+			...state.selection,
+			part: {
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: slotIds[nextIndex], focusId: slotIds[nextIndex] }],
+			},
 		},
 		objectMenuOpenId: null,
 	};

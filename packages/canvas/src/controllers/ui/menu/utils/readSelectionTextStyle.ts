@@ -25,10 +25,12 @@ export type SelectionTextStyle = {
 
 /**
  * The styling of every slot the rows state, one entry per object that holds
- * text. Slots picked below the object, or a stretch of text being edited,
- * narrow the whole thing to that one target — both require a single selection
+ * text. Parts picked below the object, or a stretch of text being edited, narrow
+ * the whole thing to that one target — both require a single selection
  * (reconcileObjectPartSelection / resolveTextEditSelection), so nothing is hidden
- * by following the menus there.
+ * by following the menus there. A picked part covering no slot (a vertex) leaves
+ * the object's own first slot as the answer, which is what the unnarrowed walk
+ * would have given a sole selection anyway (getSelectedOrFirstTextSlot).
  */
 const collectSelectionTextStyles = (
 	state: CanvasControllerState,
@@ -37,7 +39,7 @@ const collectSelectionTextStyles = (
 ): TextSlotStyle[] => {
 	if (
 		resolveTextEditSelection(state) !== null ||
-		state.objectPartSelection !== null
+		state.selection.part !== null
 	) {
 		const slot = getSelectedOrFirstTextSlot(
 			state,
@@ -49,7 +51,7 @@ const collectSelectionTextStyles = (
 
 	const styles: TextSlotStyle[] = [];
 	for (const object of collectSelectionObjects(
-		state.selectedIds,
+		state.selection.objectIds,
 		state.objects,
 	)) {
 		if (!isTextStyleState(object)) {
