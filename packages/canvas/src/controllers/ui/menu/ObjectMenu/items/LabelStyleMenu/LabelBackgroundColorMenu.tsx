@@ -23,7 +23,7 @@ const SECTION_ID = "label-bg-color";
  */
 const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 	openSectionId,
 	onPropertyUpdate,
 }) => {
@@ -35,7 +35,7 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel({ objects, selection });
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

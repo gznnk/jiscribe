@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
 import { createObjectMenuRegistry } from "../../ObjectMenuRegistry";
@@ -44,14 +45,10 @@ const RECORD_SECTIONS: ObjectMenuSection[] = [
 	},
 ];
 
-const makeState = (
-	objectPartSelection: ObjectPartSelection | null,
-): CanvasControllerState =>
+const makeState = (part: ObjectPartSelection | null): CanvasControllerState =>
 	({
 		objects: { "rec-1": slotShape("rec-1") },
-		selectedIds: ["rec-1"],
-		selectedConnectorId: null,
-		objectPartSelection,
+		selection: selectionOf(["rec-1"], part),
 	}) as unknown as CanvasControllerState;
 
 const registry = createObjectMenuRegistry();
@@ -64,7 +61,6 @@ describe("getMenuSections", () => {
 
 	it("keeps only the text items once a slot is selected", () => {
 		const state = makeState({
-			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "name", focusId: "name" }],
 		});

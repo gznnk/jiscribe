@@ -1,5 +1,6 @@
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 export const SwapArrowsCommand: ExecutableCommand = {
@@ -8,29 +9,26 @@ export const SwapArrowsCommand: ExecutableCommand = {
 	category: "edit",
 
 	canExecute: (state) => {
-		if (state.selectedConnectorId !== null) {
-			return state.objects[state.selectedConnectorId]?.type === "connector";
+		if (getSelectedConnectorId(state) !== null) {
+			return true;
 		}
-		return state.selectedIds.some(
+		return state.selection.objectIds.some(
 			(id) => state.objects[id]?.type === "polyline",
 		);
 	},
 
 	execute: (state) => {
-		// When a connector is selected (takes priority over selectedIds — same precedence as getEffectiveSelectedIds)
-		if (state.selectedConnectorId !== null) {
-			const connector = state.objects[state.selectedConnectorId] as
-				ConnectorState | undefined;
-			if (!connector || connector.type !== "connector") {
-				return state;
-			}
+		// A selected connector is the whole selection, so it answers on its own
+		const connectorId = getSelectedConnectorId(state);
+		if (connectorId !== null) {
+			const connector = state.objects[connectorId] as ConnectorState;
 			const prev = connector.startArrow ?? "None";
 			const next = connector.endArrow ?? "None";
 			return {
 				...state,
 				objects: {
 					...state.objects,
-					[state.selectedConnectorId]: {
+					[connectorId]: {
 						...connector,
 						startArrow: next,
 						endArrow: prev,
@@ -44,7 +42,7 @@ export const SwapArrowsCommand: ExecutableCommand = {
 		const updatedObjects = { ...state.objects };
 		let changed = false;
 
-		for (const id of state.selectedIds) {
+		for (const id of state.selection.objectIds) {
 			const obj = state.objects[id];
 			if (!obj) {
 				continue;

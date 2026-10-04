@@ -6,6 +6,7 @@ import { rectDoc, twoRectsDoc } from "./support/fixtures";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -15,7 +16,7 @@ const canvasReducer = createCanvasReducer(registries);
 
 const createState = (): CanvasControllerState =>
 	createTestState(twoRectsDoc, {
-		selectedIds: ["rect-1"],
+		selection: selectionOf(["rect-1"]),
 		// Reproduce a situation where a coalescing marker remains from the previous operation
 		historyCoalesce: {
 			recorded: { key: "move:rect-1", time: Date.now() },
@@ -75,7 +76,7 @@ describe("canvasReducer (integration)", () => {
 			const state = createState();
 			const after = canvasReducer(state, syncExternal());
 
-			expect(after.selectedIds).toEqual([]);
+			expect(after.selection.objectIds).toEqual([]);
 			expect(after.historyCoalesce.recorded).toBeNull();
 			expect(after.historyCoalesce.pending).toBeNull();
 		});
@@ -104,7 +105,7 @@ describe("canvasReducer (integration)", () => {
 			const state = createState();
 			const after = canvasReducer(state, loadDocument(otherDoc));
 
-			expect(after.selectedIds).toEqual([]);
+			expect(after.selection.objectIds).toEqual([]);
 			expect(after.historyCoalesce.recorded).toBeNull();
 			expect(after.historyCoalesce.pending).toBeNull();
 			expect(after.viewport).toBe(state.viewport);

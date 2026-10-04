@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
 import { createPropertyPanelRegistry } from "../../PropertyPanelRegistry";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
@@ -84,7 +85,7 @@ const GAUGE_SECTIONS: PropertyPanelSection[] = [
 	{
 		id: "gauge",
 		label: "Gauge",
-		isShown: (selection) => selection.selectedIds.length === 1,
+		isShown: (selection) => selection.selection.objectIds.length === 1,
 		items: [{ type: "custom", id: "gauge-range", component: BadgeRow }],
 	},
 ];
@@ -131,9 +132,7 @@ const stateOf = (
 ): CanvasControllerState =>
 	({
 		objects: {},
-		selectedIds: [],
-		selectedConnectorId: null,
-		objectPartSelection: null,
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -146,7 +145,7 @@ describe("getPropertyPanelSections", () => {
 	it("returns the selected type's sections untouched", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
-			selectedIds: ["r-1"],
+			selection: selectionOf(["r-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual(RECT_SECTIONS);
@@ -155,7 +154,7 @@ describe("getPropertyPanelSections", () => {
 	it("returns the connector's sections when one is selected", () => {
 		const state = stateOf({
 			objects: { "c-1": shape("c-1", "connector") },
-			selectedConnectorId: "c-1",
+			selection: selectionOf(["c-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual(LINE_SECTIONS);
@@ -167,7 +166,7 @@ describe("getPropertyPanelSections", () => {
 				"r-1": shape("r-1", "rect"),
 				"e-1": shape("e-1", "ellipse"),
 			},
-			selectedIds: ["r-1", "e-1"],
+			selection: selectionOf(["r-1", "e-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([
@@ -187,7 +186,7 @@ describe("getPropertyPanelSections", () => {
 				"r-1": shape("r-1", "rect"),
 				"c-1": shape("c-1", "connector"),
 			},
-			selectedIds: ["r-1", "c-1"],
+			selection: selectionOf(["r-1", "c-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([]);
@@ -200,7 +199,7 @@ describe("getPropertyPanelSections", () => {
 				"r-1": shape("r-1", "rect"),
 				"e-1": shape("e-1", "ellipse"),
 			},
-			selectedIds: ["g-1"],
+			selection: selectionOf(["g-1"]),
 		});
 
 		expect(
@@ -211,12 +210,10 @@ describe("getPropertyPanelSections", () => {
 	it("keeps only the text section once a slot is selected", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
-			selectedIds: ["r-1"],
-			objectPartSelection: {
-				objectId: "r-1",
+			selection: selectionOf(["r-1"], {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "body", focusId: "body" }],
-			},
+			}),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([
@@ -231,7 +228,7 @@ describe("getPropertyPanelSections", () => {
 	it("keeps a plugin's custom row beside the built-in ones", () => {
 		const state = stateOf({
 			objects: { "k-1": shape("k-1", "container") },
-			selectedIds: ["k-1"],
+			selection: selectionOf(["k-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual(
@@ -245,7 +242,7 @@ describe("getPropertyPanelSections", () => {
 				"k-1": shape("k-1", "container"),
 				"k-2": shape("k-2", "container"),
 			},
-			selectedIds: ["k-1", "k-2"],
+			selection: selectionOf(["k-1", "k-2"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual(
@@ -259,7 +256,7 @@ describe("getPropertyPanelSections", () => {
 				"k-1": shape("k-1", "container"),
 				"b-1": shape("b-1", "badge"),
 			},
-			selectedIds: ["k-1", "b-1"],
+			selection: selectionOf(["k-1", "b-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([
@@ -270,12 +267,10 @@ describe("getPropertyPanelSections", () => {
 	it("drops the custom rows of the text section once a slot is selected", () => {
 		const state = stateOf({
 			objects: { "k-1": shape("k-1", "container") },
-			selectedIds: ["k-1"],
-			objectPartSelection: {
-				objectId: "k-1",
+			selection: selectionOf(["k-1"], {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "body", focusId: "body" }],
-			},
+			}),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([
@@ -286,7 +281,7 @@ describe("getPropertyPanelSections", () => {
 	it("keeps a section whose isShown accepts the selection", () => {
 		const state = stateOf({
 			objects: { "g-1": shape("g-1", "gauge") },
-			selectedIds: ["g-1"],
+			selection: selectionOf(["g-1"]),
 		});
 
 		expect(
@@ -300,7 +295,7 @@ describe("getPropertyPanelSections", () => {
 				"g-1": shape("g-1", "gauge"),
 				"g-2": shape("g-2", "gauge"),
 			},
-			selectedIds: ["g-1", "g-2"],
+			selection: selectionOf(["g-1", "g-2"]),
 		});
 
 		expect(
@@ -314,7 +309,7 @@ describe("getPropertyPanelSections", () => {
 				"r-1": shape("r-1", "rect"),
 				"e-1": shape("e-1", "ellipse"),
 			},
-			selectedIds: ["r-1", "e-1"],
+			selection: selectionOf(["r-1", "e-1"]),
 			multiSelectGroup: multiSelectGroupOf(["r-1", "e-1"]),
 		});
 
@@ -336,7 +331,7 @@ describe("getPropertyPanelSections", () => {
 				"r-1": shape("r-1", "rect"),
 				"e-1": shape("e-1", "ellipse"),
 			},
-			selectedIds: ["g-1"],
+			selection: selectionOf(["g-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)[0].items).toContainEqual({
@@ -350,7 +345,7 @@ describe("getPropertyPanelSections", () => {
 				"r-1": shape("r-1", "rect"),
 				"c-1": shape("c-1", "connector"),
 			},
-			selectedIds: ["r-1", "c-1"],
+			selection: selectionOf(["r-1", "c-1"]),
 			multiSelectGroup: multiSelectGroupOf(["r-1", "c-1"]),
 		});
 
@@ -369,7 +364,7 @@ describe("getPropertyPanelSections", () => {
 				"b-1": shape("b-1", "box"),
 				"b-2": shape("b-2", "box"),
 			},
-			selectedIds: ["b-1", "b-2"],
+			selection: selectionOf(["b-1", "b-2"]),
 			multiSelectGroup: multiSelectGroupOf(["b-1", "b-2"]),
 		});
 
@@ -383,7 +378,7 @@ describe("getPropertyPanelSections", () => {
 	it("does not add the aspect-ratio lock to a selection of one shape", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
-			selectedIds: ["r-1"],
+			selection: selectionOf(["r-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual(RECT_SECTIONS);
@@ -395,13 +390,11 @@ describe("getPropertyPanelSections", () => {
 	it("keeps the aspect-ratio lock out of a selected slot's sections", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
-			selectedIds: ["r-1"],
-			multiSelectGroup: multiSelectGroupOf(["r-1"]),
-			objectPartSelection: {
-				objectId: "r-1",
+			selection: selectionOf(["r-1"], {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "body", focusId: "body" }],
-			},
+			}),
+			multiSelectGroup: multiSelectGroupOf(["r-1"]),
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([
@@ -416,7 +409,7 @@ describe("getPropertyPanelSections", () => {
 	it("keeps only the text section while a shape's text is being edited", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
-			selectedIds: ["r-1"],
+			selection: selectionOf(["r-1"]),
 			textEditState: { kind: "shape" },
 		} as unknown as Partial<CanvasControllerState>);
 

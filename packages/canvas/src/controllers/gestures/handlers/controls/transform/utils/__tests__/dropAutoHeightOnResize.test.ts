@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerTypes";
 import { dropAutoHeightOnResize } from "../dropAutoHeightOnResize";
 
@@ -24,7 +25,7 @@ const dragStartState = (
 ): CanvasControllerState =>
 	({
 		objects: { [object.id]: object },
-		selectedIds: [object.id],
+		selection: selectionOf([object.id]),
 		multiSelectGroup: null,
 		activeDrag: {
 			startSnapshot: {

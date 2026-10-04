@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { CanvasControllerState } from "../../CanvasTypes";
-import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import type { CanvasAction } from "../CanvasActions";
-import { createCanvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { twoRectsDoc } from "./support/fixtures";
+import type { CanvasControllerState } from "../../CanvasTypes";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import type { CanvasAction } from "../CanvasActions";
+import { createCanvasReducer } from "../canvasReducer";
 
 const canvasReducer = createCanvasReducer(createTestRegistries());
 
@@ -20,11 +21,11 @@ const setSelection = (ids: readonly string[]): CanvasAction => ({
 
 describe("canvasReducer / SET_SELECTION", () => {
 	it("replaces the selection with the requested ids", () => {
-		const state = createState({ selectedIds: ["rect-1"] });
+		const state = createState({ selection: selectionOf(["rect-1"]) });
 
 		const next = canvasReducer(state, setSelection(["rect-2"]));
 
-		expect(next.selectedIds).toEqual(["rect-2"]);
+		expect(next.selection.objectIds).toEqual(["rect-2"]);
 	});
 
 	it("builds the multi-select group for two or more objects", () => {
@@ -33,7 +34,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 			setSelection(["rect-1", "rect-2"]),
 		);
 
-		expect(next.selectedIds).toEqual(["rect-1", "rect-2"]);
+		expect(next.selection.objectIds).toEqual(["rect-1", "rect-2"]);
 		expect(next.multiSelectGroup).not.toBeNull();
 	});
 
@@ -45,28 +46,26 @@ describe("canvasReducer / SET_SELECTION", () => {
 
 		const next = canvasReducer(state, setSelection([]));
 
-		expect(next.selectedIds).toEqual([]);
+		expect(next.selection.objectIds).toEqual([]);
 		expect(next.multiSelectGroup).toBeNull();
 	});
 
 	it("ignores ids that are not on the canvas", () => {
 		const next = canvasReducer(createState(), setSelection(["gone", "rect-1"]));
 
-		expect(next.selectedIds).toEqual(["rect-1"]);
+		expect(next.selection.objectIds).toEqual(["rect-1"]);
 	});
 
 	it("clears the UI hanging off the previous selection", () => {
 		const state = createState({
-			selectedIds: [],
-			selectedConnectorId: "conn-1",
+			selection: selectionOf(["conn-1"]),
 			objectMenuOpenId: "rect-1",
 		});
 
 		const next = canvasReducer(state, setSelection(["rect-1"]));
 
-		expect(next.selectedConnectorId).toBeNull();
-		expect(next.selectedVertex).toBeNull();
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.objectIds).toEqual(["rect-1"]);
+		expect(next.selection.part).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 	});
 

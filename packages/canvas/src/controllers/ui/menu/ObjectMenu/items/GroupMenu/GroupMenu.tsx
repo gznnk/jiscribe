@@ -22,8 +22,8 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const resolveCommand = useCommandState(canvasState);
 	// Determine if the single selected item is a group (→ show ungroup)
 	const singleSelected =
-		canvasState.selectedIds.length === 1
-			? canvasState.objects[canvasState.selectedIds[0]]
+		canvasState.selection.objectIds.length === 1
+			? canvasState.objects[canvasState.selection.objectIds[0]]
 			: undefined;
 	const isGroup = singleSelected?.type === "group";
 

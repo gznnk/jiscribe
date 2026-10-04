@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { getSelectedLockAspectRatio } from "../getSelectedLockAspectRatio";
 
 const obj = (id: string, extra?: Record<string, unknown>): ObjectState =>
@@ -10,7 +11,7 @@ const obj = (id: string, extra?: Record<string, unknown>): ObjectState =>
 const state = (over: Partial<CanvasControllerState>): CanvasControllerState =>
 	({
 		objects: {},
-		selectedIds: [],
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		...over,
 	}) as unknown as CanvasControllerState;
@@ -23,7 +24,7 @@ describe("getSelectedLockAspectRatio", () => {
 	it("single selection with lockAspectRatio=true → true", () => {
 		const s = state({
 			objects: { a: obj("a", { lockAspectRatio: true }) },
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 		});
 		expect(getSelectedLockAspectRatio(s)).toBe(true);
 	});
@@ -31,7 +32,7 @@ describe("getSelectedLockAspectRatio", () => {
 	it("single selection where lockAspectRatio is not a boolean → false", () => {
 		const s = state({
 			objects: { a: obj("a", { lockAspectRatio: "yes" }) },
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 		});
 		expect(getSelectedLockAspectRatio(s)).toBe(false);
 	});
@@ -39,7 +40,7 @@ describe("getSelectedLockAspectRatio", () => {
 	it("prefers multiSelectGroup when present", () => {
 		const s = state({
 			objects: { a: obj("a", { lockAspectRatio: false }) },
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			multiSelectGroup: {
 				lockAspectRatio: true,
 			} as CanvasControllerState["multiSelectGroup"],

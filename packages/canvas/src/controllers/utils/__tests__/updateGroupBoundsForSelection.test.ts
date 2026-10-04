@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { createCowObjects } from "../cowObjects";
 import { updateGroupBoundsForSelection } from "../updateGroupBoundsForSelection";
 import { updateGroupBoundsFromRoots } from "../updateGroupBoundsFromRoot";
@@ -48,7 +49,10 @@ const makeState = (
 	objects: Record<string, ObjectState>,
 	selectedIds: string[],
 ): CanvasControllerState =>
-	({ objects, selectedIds }) as unknown as CanvasControllerState;
+	({
+		objects,
+		selection: selectionOf(selectedIds),
+	}) as unknown as CanvasControllerState;
 
 describe("updateGroupBoundsForSelection", () => {
 	it("returns the state itself when nothing selected lives in a group", () => {

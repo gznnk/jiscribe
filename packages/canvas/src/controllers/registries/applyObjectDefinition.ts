@@ -272,9 +272,9 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			rotateByGroup: connectorRotateByGroup,
 		},
 		// `points` holds the waypoints between the two endpoints, not the whole
-		// route, so the floor is the polyline's rather than one of its own: a
-		// connector with two waypoints keeps both.
-		partKinds: [createVertexPartKindDefinition<ConnectorState>(2)],
+		// route: the endpoints are not among them, so there is no floor — a
+		// connector with no waypoint left is the straight route it started as.
+		partKinds: [createVertexPartKindDefinition<ConnectorState>(0)],
 		extraStyleProperties: ConnectorExtraStyleProperties,
 		menu: [
 			{

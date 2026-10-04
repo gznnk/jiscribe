@@ -2,13 +2,20 @@ import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { readSelectedVertexIndex } from "../../../selection/readSelectedVertexIndex";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 type VertexControlsLayerProps = {
-	selectedIds: string[];
+	/**
+	 * What the canvas is pointed at, `state.selection` as it stands: a picked
+	 * vertex of the selected object rings its handle, anything else leaves the
+	 * handles plain (reconcileObjectPartSelection keeps it from naming a vertex
+	 * the object has outgrown)
+	 */
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	zoom?: number;
-	selectedVertex: { objectId: string; vertexIndex: number } | null;
 };
 
 /**
@@ -16,11 +23,11 @@ type VertexControlsLayerProps = {
  * This layer is responsible for showing vertex editing controls for poly-based shapes.
  */
 const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
-	selectedIds,
+	selection,
 	objects,
 	zoom = 1,
-	selectedVertex,
 }) => {
+	const { objectIds: selectedIds } = selection;
 	// Only render for single selection
 	if (selectedIds.length !== 1) {
 		return null;
@@ -41,10 +48,7 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 	) {
 		const points = selectedObject.points as Point[];
 		const isClosed = selectedObject.type === "polygon";
-		const selectedVertexIndex =
-			selectedVertex?.objectId === selectedId
-				? selectedVertex.vertexIndex
-				: null;
+		const selectedVertexIndex = readSelectedVertexIndex(selection, selectedId);
 		return (
 			<>
 				{/* Vertex controls for moving existing vertices */}

@@ -138,7 +138,9 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		const nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
-			selectedVertex: null,
+			// An insertion renumbers the waypoints after it, so a picked one is dropped
+			// rather than left addressing whoever took the number over.
+			selection: { ...state.selection, part: null },
 			edgeScrollEnabled: true,
 		};
 

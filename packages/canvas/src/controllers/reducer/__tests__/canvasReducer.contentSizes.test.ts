@@ -159,7 +159,7 @@ describe("canvasReducer (integration)", () => {
 				data: clipboardWithStaleTextBox(state),
 			});
 
-			const pastedId = after.selectedIds[0];
+			const pastedId = after.selection.objectIds[0];
 			expect(pastedId).not.toBe("text-1");
 			expect(boxOf(after, pastedId)).toEqual({
 				...measuredBoxOf("hello"),

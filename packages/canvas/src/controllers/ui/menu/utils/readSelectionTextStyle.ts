@@ -8,6 +8,7 @@ import { combineSelectionValues } from "./SelectionValue";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -35,7 +36,7 @@ const collectSelectionTextStyles = (
 ): TextSlotStyle[] => {
 	if (
 		resolveTextEditSelection(state) !== null ||
-		state.objectPartSelection !== null
+		isTextSlotSelection(state.selection.part)
 	) {
 		const slot = getSelectedOrFirstTextSlot(state, textStyleDefaults);
 		return slot === undefined ? [] : [slot];
@@ -43,7 +44,7 @@ const collectSelectionTextStyles = (
 
 	const styles: TextSlotStyle[] = [];
 	for (const object of collectSelectionObjects(
-		state.selectedIds,
+		state.selection.objectIds,
 		state.objects,
 	)) {
 		if (!isTextStyleState(object)) {

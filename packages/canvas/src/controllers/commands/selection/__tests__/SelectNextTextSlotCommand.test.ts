@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { SelectNextTextSlotCommand } from "../SelectNextTextSlotCommand";
 
@@ -19,8 +20,7 @@ const baseState = (
 				text: { name: { text: "User" }, attributes: { text: [] } },
 			},
 		},
-		selectedIds: ["rec-1"],
-		objectPartSelection: null,
+		selection: selectionOf(["rec-1"]),
 		activeDrag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -34,15 +34,13 @@ describe("SelectNextTextSlotCommand", () => {
 
 	it("moves the selection to the next slot", () => {
 		const first = SelectNextTextSlotCommand.execute(baseState({}), registries);
-		expect(first.objectPartSelection).toEqual({
-			objectId: "rec-1",
+		expect(first.selection.part).toEqual({
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "name", focusId: "name" }],
 		});
 		expect(
-			SelectNextTextSlotCommand.execute(first, registries).objectPartSelection,
+			SelectNextTextSlotCommand.execute(first, registries).selection.part,
 		).toEqual({
-			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "attributes", focusId: "attributes" }],
 		});
@@ -57,7 +55,7 @@ describe("SelectNextTextSlotCommand", () => {
 	it("is not executable for a multiple selection", () => {
 		expect(
 			SelectNextTextSlotCommand.canExecute(
-				baseState({ selectedIds: ["rec-1", "rec-2"] }),
+				baseState({ selection: selectionOf(["rec-1", "rec-2"]) }),
 				registries,
 			),
 		).toBe(false);

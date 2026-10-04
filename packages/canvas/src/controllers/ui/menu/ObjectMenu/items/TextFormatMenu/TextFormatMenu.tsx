@@ -17,6 +17,7 @@ import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../../icons/UnderlineIcon";
+import { isTextAddressed } from "../../../utils/isTextAddressed";
 import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
 import { selectionValueOr } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -120,10 +121,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		</ObjectMenuButton>
 	);
 
-	const isTextFocused =
-		canvasState.textEditState?.kind === "shape" ||
-		canvasState.objectPartSelection !== null;
-	if (isTextFocused) {
+	if (isTextAddressed(canvasState)) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}
 

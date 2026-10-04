@@ -6,6 +6,7 @@ import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 
 /**
  * Duplicate is a deep clone: every reference the copies carry — connector
@@ -18,7 +19,7 @@ import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGro
 describe("duplicate deep-clones with all references remapped", () => {
 	it("a duplicated connector points at the duplicated shapes, never at the originals", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-1", "rect-2"],
+			selection: selectionOf(["rect-1", "rect-2"]),
 		});
 		const after = runCommand(state, "duplicate");
 
@@ -44,17 +45,19 @@ describe("duplicate deep-clones with all references remapped", () => {
 		expect(originalConnector.target.owner?.id).toBe("rect-2");
 
 		// Only the duplicated shapes are selected afterwards.
-		expect([...after.selectedIds].sort()).toEqual([...newRectIds].sort());
+		expect([...after.selection.objectIds].sort()).toEqual(
+			[...newRectIds].sort(),
+		);
 	});
 
 	it("a duplicated group gets fresh children whose parentId is the fresh group", () => {
 		const grouped = runCommand(
 			createCommandState(twoRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const originalGroupId = grouped.selectedIds[0];
+		const originalGroupId = grouped.selection.objectIds[0];
 		const originalGroup = grouped.objects[originalGroupId] as GroupState;
 
 		const after = runCommand(grouped, "duplicate");
@@ -93,14 +96,14 @@ describe("duplicate deep-clones with all references remapped", () => {
 	it("duplicating a group child inserts the copy into the parent group right after the original", () => {
 		const grouped = runCommand(
 			createCommandState(twoRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const groupId = grouped.selectedIds[0];
+		const groupId = grouped.selection.objectIds[0];
 
 		const after = runCommand(
-			{ ...grouped, selectedIds: ["rect-1"] },
+			{ ...grouped, selection: selectionOf(["rect-1"]) },
 			"duplicate",
 		);
 
@@ -111,7 +114,7 @@ describe("duplicate deep-clones with all references remapped", () => {
 		expect(group.childIds[2]).toBe("rect-2");
 		const newRectId = group.childIds[1];
 		expect(after.objects[newRectId]?.parentId).toBe(groupId);
-		expect(after.selectedIds).toEqual([newRectId]);
+		expect(after.selection.objectIds).toEqual([newRectId]);
 
 		// conn-1 is not duplicated: its rect-2 endpoint is outside the selection.
 		// The root gains no new top-level elements.

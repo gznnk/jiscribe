@@ -1,12 +1,10 @@
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 
-/** What a requested selection turns into, split by the state's two channels */
+/** What a requested selection turns into */
 export type ResolvedSelection = {
-	/** Ids that go into `selectedIds` (shapes and groups, never connectors) */
+	/** Ids that become `selection.objectIds`: either shapes and groups, or a single connector */
 	selectedIds: string[];
-	/** Id that goes into `selectedConnectorId`; null when no connector is selected */
-	selectedConnectorId: string | null;
 	/**
 	 * Requested ids that could not be selected: ids absent from the canvas, and
 	 * connectors asked for alongside anything else (only one connector can be
@@ -16,22 +14,22 @@ export type ResolvedSelection = {
 };
 
 /**
- * Maps a host-requested id list onto the selection state's two channels.
+ * Maps a host-requested id list onto the selection state.
  *
- * Shapes and connectors are selected through separate fields, and a connector is
- * selectable only on its own — the id list a host hands over cannot express that,
- * so this decides what of it is applicable and reports the rest.
+ * A connector is selectable only on its own — the id list a host hands over
+ * cannot express that, so this decides what of it is applicable and reports the
+ * rest.
  *
  * @param requestedIds - Ids to select, in the caller's order. Duplicates are
  *   collapsed; an empty list clears the selection
  * @param objects - Flat object map the ids are resolved against
- * @returns The two channels plus the dropped ids (see {@link ResolvedSelection})
+ * @returns The selection plus the dropped ids (see {@link ResolvedSelection})
  */
 export const resolveRequestedSelection = (
 	requestedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 ): ResolvedSelection => {
-	const selectedIds: string[] = [];
+	const objectIds: string[] = [];
 	const connectorIds: string[] = [];
 	const ignoredIds: string[] = [];
 
@@ -45,18 +43,14 @@ export const resolveRequestedSelection = (
 			connectorIds.push(id);
 			continue;
 		}
-		selectedIds.push(id);
+		objectIds.push(id);
 	}
 
-	// A lone connector takes the connector channel; anything else leaves it empty
-	// and reports the connectors as dropped.
-	const takesConnectorChannel =
-		connectorIds.length === 1 && selectedIds.length === 0;
+	// A lone connector becomes the whole selection; anything else leaves it to the
+	// shapes and reports the connectors as dropped.
+	const takesSelection = connectorIds.length === 1 && objectIds.length === 0;
 	return {
-		selectedIds,
-		selectedConnectorId: takesConnectorChannel ? connectorIds[0] : null,
-		ignoredIds: takesConnectorChannel
-			? ignoredIds
-			: [...ignoredIds, ...connectorIds],
+		selectedIds: takesSelection ? [connectorIds[0]] : objectIds,
+		ignoredIds: takesSelection ? ignoredIds : [...ignoredIds, ...connectorIds],
 	};
 };

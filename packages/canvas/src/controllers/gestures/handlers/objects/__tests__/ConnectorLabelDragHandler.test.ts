@@ -8,6 +8,9 @@ import { deepFreezeState } from "../../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
+import { reconcileObjectPartSelection } from "../../../../selection/reconcileObjectPartSelection";
 import type {
 	CanvasEvent,
 	EventType,
@@ -157,8 +160,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 	it("selects the connector exclusively and enables edge scrolling", () => {
 		const state = {
 			...stateWith(labeledConnector({ text: "Yes" })),
-			selectedIds: ["other"],
-			selectedVertex: { objectId: "other", vertexIndex: 0 },
+			selection: selectionOf(["other"], vertexPartSelection(0)),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 			contextMenuPosition: { x: 1, y: 1 },
@@ -170,9 +172,13 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 			registries,
 		);
 
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selection.objectIds).toEqual(["c1"]);
+		// The part selection is the reducer's to drop, which it does for every
+		// gesture result (reconcileObjectPartSelection).
+		expect(
+			reconcileObjectPartSelection(next, registries.objectPartKind).selection
+				.part,
+		).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
@@ -186,7 +192,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 			dragEvent("dragStart", { x: 100, y: 0 }, { x: 100, y: 0 }),
 			registries,
 		);
-		expect(next.selectedConnectorId).toBeNull();
+		expect(next.selection.objectIds).toEqual([]);
 		expect(next.edgeScrollEnabled).toBe(false);
 	});
 });

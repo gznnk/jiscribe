@@ -4,11 +4,12 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { runCommands, testReducerRegistries } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 
 // Start with rect-1 selected (cx=5, cy=5)
 const createState = (): CanvasControllerState =>
-	createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+	createTestState(twoRectsDoc, { selection: selectionOf(["rect-1"]) });
 
 const cxOf = (state: CanvasControllerState) =>
 	(state.objects["rect-1"] as unknown as { cx: number }).cx;
@@ -61,7 +62,7 @@ describe("canvasReducer (integration)", () => {
 			expect(state.history.past).toHaveLength(1);
 
 			// Select a different shape (simulating a click selection; the coalescing key changes to move:rect-2)
-			state = { ...state, selectedIds: ["rect-2"] };
+			state = { ...state, selection: selectionOf(["rect-2"]) };
 			state = runCommands(state, "move-right");
 			expect(state.history.past).toHaveLength(2);
 		});

@@ -9,25 +9,26 @@ import type { ConnectorState } from "../../../states/objects/connector/Connector
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../utils/calcConnectorBoundingBox";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Executable only when the current selection is a single connector.
- * Routing switching is only meaningful for the connector referenced by selectedConnectorId.
+ * Routing switching is only meaningful for a connector.
  */
 const isConnectorSelected = (state: CanvasControllerState): boolean =>
-	state.selectedConnectorId !== null &&
-	state.objects[state.selectedConnectorId]?.type === "connector";
+	getSelectedConnectorId(state) !== null;
 
 /**
  * Switching to straight is possible only when a single connector is selected and it is not a self-loop.
  * A self-loop breaks down as a straight line, so it is treated as orthogonal-only.
  */
 const canSetStraight = (state: CanvasControllerState): boolean => {
-	if (!isConnectorSelected(state)) {
+	const connectorId = getSelectedConnectorId(state);
+	if (connectorId === null) {
 		return false;
 	}
-	const connector = state.objects[state.selectedConnectorId as string];
+	const connector = state.objects[connectorId];
 	return (
 		connector?.type === "connector" &&
 		!isSelfLoopConnector(connector as ConnectorState)
@@ -84,7 +85,7 @@ const applyConnectorRouting = (
 	routing: ConnectorRouting,
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
-	const id = state.selectedConnectorId;
+	const id = getSelectedConnectorId(state);
 	if (id === null) {
 		return state;
 	}
@@ -117,7 +118,9 @@ const applyConnectorRouting = (
 			...state.objects,
 			[id]: nextConnector,
 		},
-		selectedVertex: null,
+		// Switching the routing rewrites the waypoints, so a picked one is dropped
+		// rather than left addressing whoever took the number over.
+		selection: { ...state.selection, part: null },
 		commitVersion: state.commitVersion + 1,
 	};
 };

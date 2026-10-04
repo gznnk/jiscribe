@@ -4,18 +4,18 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { SendBackwardCommand } from "../SendBackwardCommand";
 
 const registries = createTestRegistries();
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
-	selectedConnectorId?: string | null;
 }): CanvasControllerState =>
 	({
-		selectedConnectorId: null,
 		...params,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;
@@ -30,7 +30,7 @@ describe("SendBackwardCommand", () => {
 	describe("selection at the root level", () => {
 		it("moves a single selection one step back (swapping with its neighbor)", () => {
 			const state = makeState({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
@@ -43,7 +43,7 @@ describe("SendBackwardCommand", () => {
 
 		it("does not move the backmost element", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
@@ -56,7 +56,7 @@ describe("SendBackwardCommand", () => {
 
 		it("moves a contiguous selection block back as a single unit", () => {
 			const state = makeState({
-				selectedIds: ["b", "c"],
+				selection: selectionOf(["b", "c"]),
 				objects: {
 					a: makeRect("a"),
 					b: makeRect("b"),
@@ -75,7 +75,7 @@ describe("SendBackwardCommand", () => {
 
 		it("increments commitVersion", () => {
 			const state = makeState({
-				selectedIds: ["b"],
+				selection: selectionOf(["b"]),
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
@@ -88,7 +88,7 @@ describe("SendBackwardCommand", () => {
 	describe("selection within the same group", () => {
 		it("moves one step back within childIds without changing rootIds", () => {
 			const state = makeState({
-				selectedIds: ["c3"],
+				selection: selectionOf(["c3"]),
 				objects: {
 					g: makeGroup("g", ["c1", "c2", "c3"]),
 					c1: makeRect("c1", "g"),
@@ -110,7 +110,7 @@ describe("SendBackwardCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when the selection shares the same parent", () => {
 			const state = makeState({
-				selectedIds: ["a", "b"],
+				selection: selectionOf(["a", "b"]),
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
@@ -120,7 +120,7 @@ describe("SendBackwardCommand", () => {
 		it("is not executable when there is no selection", () => {
 			expect(
 				SendBackwardCommand.canExecute(
-					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					makeState({ selection: selectionOf([]), objects: {}, rootIds: [] }),
 					registries,
 				),
 			).toBe(false);

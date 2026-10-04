@@ -13,7 +13,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  */
 export function updateAffectedGroupBounds(
 	state: CanvasControllerState,
-	changedIds: string[],
+	changedIds: readonly string[],
 ): CanvasControllerState {
 	const affectedGroupIds = new Set<string>();
 

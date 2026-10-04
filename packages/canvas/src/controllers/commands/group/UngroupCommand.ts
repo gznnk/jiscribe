@@ -14,11 +14,13 @@ export const UngroupCommand: ExecutableCommand = {
 	},
 
 	canExecute: (state) => {
-		if (state.selectedIds.length === 0) {
+		if (state.selection.objectIds.length === 0) {
 			return false;
 		}
 		// All selected objects must be groups
-		return state.selectedIds.every((id) => state.objects[id]?.type === "group");
+		return state.selection.objectIds.every(
+			(id) => state.objects[id]?.type === "group",
+		);
 	},
 
 	execute: (state) => {
@@ -26,7 +28,7 @@ export const UngroupCommand: ExecutableCommand = {
 		let updatedRootIds = [...state.rootIds];
 		const promotedChildIds: string[] = [];
 
-		for (const groupId of state.selectedIds) {
+		for (const groupId of state.selection.objectIds) {
 			const group = updatedObjects[groupId] as GroupState;
 			if (!group || group.type !== "group") {
 				continue;
@@ -75,7 +77,7 @@ export const UngroupCommand: ExecutableCommand = {
 			...state,
 			objects: updatedObjects,
 			rootIds: updatedRootIds,
-			selectedIds: promotedChildIds,
+			selection: { objectIds: promotedChildIds, part: null },
 			multiSelectGroup: createMultiSelectGroup(
 				promotedChildIds,
 				updatedObjects,

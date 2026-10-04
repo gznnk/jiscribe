@@ -7,6 +7,7 @@ import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import { createFrameMapper } from "../../../states/objects/base/FrameMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { createCanvasReducer } from "../canvasReducer";
 import { createInitialControllerState } from "../createInitialControllerState";
 
@@ -85,7 +86,7 @@ const cappedDoc: CanvasDoc = {
 /** The initial state with the shape selected, which is what the command acts on. */
 const createSelectedState = (): CanvasControllerState => {
 	const state = createInitialControllerState(cappedDoc, registries);
-	return { ...state, selectedIds: ["capped-1"] };
+	return { ...state, selection: selectionOf(["capped-1"]) };
 };
 
 /** The two fields the chain moves, read off a state without narrowing it. */

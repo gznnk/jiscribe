@@ -2,17 +2,16 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextState } from "../../../states/objects/primitives/text/TextState";
 import { isTextState } from "../../../states/objects/primitives/text/TextState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * What the two helpers below read off the canvas: the selection and the objects
- * it names. Narrow enough for the menu item, which is handed those three and
+ * it names. Narrow enough for the menu item, which is handed those two and
  * nothing else (ObjectMenuItemProps).
  */
 export type TextLayoutSelection = Pick<
 	CanvasControllerState,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selection"
 >;
 
 /**
@@ -23,15 +22,11 @@ export type TextLayoutSelection = Pick<
  * the rest alone, the way the style menu writes a property only to the objects
  * declaring it.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @returns The switchable ids, in selection order
  */
-export const collectTextLayoutIds = (
-	selection: TextLayoutSelection,
-): string[] =>
-	getEffectiveSelectedIds(selection).filter((id) =>
-		isTextState(selection.objects[id]),
-	);
+export const collectTextLayoutIds = (state: TextLayoutSelection): string[] =>
+	state.selection.objectIds.filter((id) => isTextState(state.objects[id]));
 
 /**
  * Whether every text in the selection already wraps in a width of its own. A
@@ -39,18 +34,14 @@ export const collectTextLayoutIds = (
  * selection to the block layout and the second takes it back — which is what
  * makes two presses of one button land somewhere predictable.
  *
- * @param selection - The current selection and the objects it names
+ * @param state - The current selection and the objects it names
  * @returns False when the selection holds no text at all
  */
-export const isSelectionTextBlock = (
-	selection: TextLayoutSelection,
-): boolean => {
-	const ids = collectTextLayoutIds(selection);
+export const isSelectionTextBlock = (state: TextLayoutSelection): boolean => {
+	const ids = collectTextLayoutIds(state);
 	return (
 		ids.length > 0 &&
-		ids.every(
-			(id) => (selection.objects[id] as TextState).textLayout === "block",
-		)
+		ids.every((id) => (state.objects[id] as TextState).textLayout === "block")
 	);
 };
 

@@ -6,8 +6,10 @@ import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { selectContextMenuTarget } from "./utils/selectContextMenuTarget";
 import type { SnapFeedback } from "../../../CanvasTypes";
+import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
+import { getSelectedConnectorId } from "../../../utils/getSelectedConnectorId";
 import { ZOOM } from "../../../utils/zoom";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
@@ -283,7 +285,7 @@ export const CanvasEventHandler: GestureHandler = {
 						...nextState,
 						objects: { ...nextState.objects, [objectState.id]: objectState },
 						rootIds: [...nextState.rootIds, objectState.id],
-						selectedIds: [objectState.id],
+						selection: { objectIds: [objectState.id], part: null },
 					};
 				}
 
@@ -344,6 +346,12 @@ export const CanvasEventHandler: GestureHandler = {
 				// An additive marquee keeps what was selected and adds to it; a plain one
 				// replaces the selection.
 				const isAdditive = isAdditiveSelectionMod(event.mods);
+				// A marquee only ever picks up shapes, so an additive one started while
+				// a connector was selected builds on nothing.
+				const baseIds =
+					isAdditive && getSelectedConnectorId(nextState) === null
+						? nextState.selection.objectIds
+						: [];
 				nextState = {
 					...nextState,
 					areaSelection: {
@@ -352,13 +360,9 @@ export const CanvasEventHandler: GestureHandler = {
 						endX: event.last.x,
 						endY: event.last.y,
 						hitIds: [],
-						baseIds: isAdditive ? nextState.selectedIds : [],
+						baseIds,
 					},
-					selectedIds: isAdditive ? nextState.selectedIds : [],
-					// Object and connector selection are exclusive, and a marquee only ever
-					// picks up objects — so these go even for an additive marquee.
-					selectedConnectorId: null,
-					selectedVertex: null,
+					selection: { objectIds: baseIds, part: null },
 					// A plain marquee clears it here too (not only on "pressed"): the
 					// early-out below keeps the previous multiSelectGroup as-is while the
 					// hit set stays empty. An additive one keeps the base's group until the
@@ -391,7 +395,7 @@ export const CanvasEventHandler: GestureHandler = {
 					areaMaxY,
 				);
 
-				// Same hit set as the previous frame: keep selectedIds / multiSelectGroup
+				// Same hit set as the previous frame: keep the selection / multiSelectGroup
 				// as-is and skip group folding and multiSelectGroup rebuilding (#219).
 				// Element order is stable because collectIdsInArea scans the same bboxes map.
 				const areSameIds =
@@ -426,7 +430,7 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					...nextState,
 					areaSelection: { ...area, endX, endY, hitIds },
-					selectedIds,
+					selection: { objectIds: selectedIds, part: null },
 					multiSelectGroup,
 				};
 				return nextState;
@@ -465,9 +469,7 @@ export const CanvasEventHandler: GestureHandler = {
 			if (isTouch || !isAdditiveSelectionMod(event.mods)) {
 				nextState = {
 					...nextState,
-					selectedIds: [],
-					selectedConnectorId: null,
-					selectedVertex: null,
+					selection: EMPTY_SELECTION,
 					// Reset the multi-select group
 					multiSelectGroup: null,
 				};

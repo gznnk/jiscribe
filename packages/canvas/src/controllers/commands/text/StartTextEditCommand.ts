@@ -5,7 +5,10 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
+import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
+import { isTextSlotSelection } from "../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -38,26 +41,24 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return false;
 		}
 
-		// A single connector selection (selectedConnectorId) allows label editing.
-		if (state.selectedConnectorId && state.selectedIds.length === 0) {
-			return state.objects[state.selectedConnectorId]?.type === "connector";
+		// A selected connector edits its label instead.
+		if (getSelectedConnectorId(state) !== null) {
+			return true;
 		}
 
 		// Single selection only
-		if (state.selectedIds.length !== 1) {
+		if (state.selection.objectIds.length !== 1) {
 			return false;
 		}
 
-		return canEditText(state.objects[state.selectedIds[0]]);
+		return canEditText(state.objects[state.selection.objectIds[0]]);
 	},
 
 	execute(state) {
 		// When a connector is selected, start editing its label (label.text).
-		if (state.selectedConnectorId && state.selectedIds.length === 0) {
-			const connector = state.objects[state.selectedConnectorId];
-			if (connector?.type !== "connector") {
-				return state;
-			}
+		const connectorId = getSelectedConnectorId(state);
+		if (connectorId !== null) {
+			const connector = state.objects[connectorId];
 			const labelText =
 				(connector as { label?: { text?: string } }).label?.text ?? "";
 			return {
@@ -67,7 +68,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 				objectMenuOpenId: null,
 				textEditState: {
 					kind: "connectorLabel",
-					objectId: state.selectedConnectorId,
+					objectId: connectorId,
 					text: labelText,
 					// Enter carries no pointer position, so a label being created takes
 					// the default placement. Without it the commit would spread the
@@ -78,20 +79,22 @@ export const StartTextEditCommand: ExecutableCommand = {
 			};
 		}
 
-		const objectId = state.selectedIds[0];
+		const objectId = state.selection.objectIds[0];
 		const targetObject = state.objects[objectId];
 
 		if (!canEditText(targetObject)) {
 			return state;
 		}
 
-		// Enter carries no pointer position, so the part already selected one level
-		// below the object decides, falling back to the first slot when there is
-		// none. The editor opens on one slot, and in this version the selection is
-		// always one collapsed range, so the anchor of the first range is that slot.
-		const slotId =
-			state.objectPartSelection?.ranges[0].anchorId ??
-			getFirstTextSlotId(targetObject.text);
+		// Enter carries no pointer position, so the slot already selected one level
+		// below the object decides, falling back to the first slot when none is
+		// (nothing picked, or a part of another kind). The editor opens on one slot,
+		// and in this version the selection is always one collapsed range, so that
+		// slot is the first of the ids it covers.
+		const { part } = state.selection;
+		const slotId = isTextSlotSelection(part)
+			? collectSelectedPartIds(part)[0]
+			: getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;
 		}

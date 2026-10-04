@@ -22,6 +22,7 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
+import type { ResolveImageBlob } from "../export";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -58,7 +59,7 @@ import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import type { ResolveImageBlob } from "../export";
+import { isTextSlotSelection } from "./selection/textSlotPartKind";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -428,11 +429,7 @@ const CanvasComponent = ({
 	// fold back out of order are still recognized as self-saves (#29).
 	const selfSaveNonceTracker = useSelfSaveNonceTracker();
 
-	useNotifySelectionChange(
-		state.selectedIds,
-		state.selectedConnectorId,
-		onSelectionChange,
-	);
+	useNotifySelectionChange(state.selection.objectIds, onSelectionChange);
 
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
@@ -701,8 +698,6 @@ const CanvasComponent = ({
 	);
 	const { minX, minY, zoom } = drawnViewport;
 
-	const { objectPartSelection } = state;
-
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
 	// What the bar's command buttons read to draw themselves disabled. A plain
@@ -795,28 +790,26 @@ const CanvasComponent = ({
 									objects={state.objects}
 								/>
 								<SelectionOverlay
-									selectedIds={state.selectedIds}
+									selection={state.selection}
 									objects={draftObjects}
 									multiSelectGroup={state.multiSelectGroup}
-									objectPartSelection={objectPartSelection}
 								/>
 								<ConnectorControlsLayer
-									selectedConnectorId={state.selectedConnectorId}
+									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
-									selectedVertex={state.selectedVertex}
 								/>
 								<TransformControlsLayer
-									selectedIds={state.selectedIds}
+									selectedIds={state.selection.objectIds}
 									objects={state.objects}
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={objectPartSelection !== null}
+									isTextSlotSelected={isTextSlotSelection(state.selection.part)}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer
-									selectedIds={state.selectedIds}
+									selectedIds={state.selection.objectIds}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									connectorDraft={state.connectorDraft}
@@ -824,13 +817,12 @@ const CanvasComponent = ({
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<VertexControlsLayer
-									selectedIds={state.selectedIds}
+									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
-									selectedVertex={state.selectedVertex}
 								/>
 								<SelectionControlsLayer
-									selectedIds={state.selectedIds}
+									selectedIds={state.selection.objectIds}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}

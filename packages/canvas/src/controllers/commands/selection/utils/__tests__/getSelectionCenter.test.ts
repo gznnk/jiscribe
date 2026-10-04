@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../../selection/CanvasSelection";
 import { getSelectionCenter } from "../getSelectionCenter";
 
 // ---------------------------------------------------------------------------
@@ -46,7 +48,7 @@ const makePoly = (
 
 const makeState = (
 	params: Partial<CanvasControllerState> & {
-		selectedIds: string[];
+		selection: CanvasSelection;
 		objects: Record<string, ObjectState>;
 	},
 ): CanvasControllerState =>
@@ -62,13 +64,13 @@ const makeState = (
 
 describe("getSelectionCenter", () => {
 	it("empty ids → null", () => {
-		const state = makeState({ selectedIds: [], objects: {} });
+		const state = makeState({ selection: selectionOf([]), objects: {} });
 		expect(getSelectionCenter(state, [])).toBeNull();
 	});
 
 	it("multi-selection + multiSelectGroup → the group's cx/cy", () => {
 		const state = makeState({
-			selectedIds: ["r1", "r2"],
+			selection: selectionOf(["r1", "r2"]),
 			objects: {},
 			multiSelectGroup: { cx: 50, cy: 60 } as unknown as GroupState,
 		});
@@ -79,7 +81,10 @@ describe("getSelectionCenter", () => {
 	});
 
 	it("multi-selection but multiSelectGroup is null → null", () => {
-		const state = makeState({ selectedIds: ["r1", "r2"], objects: {} });
+		const state = makeState({
+			selection: selectionOf(["r1", "r2"]),
+			objects: {},
+		});
 		expect(getSelectionCenter(state, ["r1", "r2"])).toBeNull();
 	});
 
@@ -90,7 +95,7 @@ describe("getSelectionCenter", () => {
 			childIds: ["r1"],
 		} as unknown as ObjectState;
 		const state = makeState({
-			selectedIds: ["g1"],
+			selection: selectionOf(["g1"]),
 			objects: { g1: g, r1: r },
 		});
 		expect(getSelectionCenter(state, ["g1"])).toEqual({ cx: 30, cy: 40 });
@@ -98,13 +103,19 @@ describe("getSelectionCenter", () => {
 
 	it("single group without valid children → null", () => {
 		const g = makeGroup("g1", 10, 20);
-		const state = makeState({ selectedIds: ["g1"], objects: { g1: g } });
+		const state = makeState({
+			selection: selectionOf(["g1"]),
+			objects: { g1: g },
+		});
 		expect(getSelectionCenter(state, ["g1"])).toBeNull();
 	});
 
 	it("single rect (TransformedFrame) → cx/cy", () => {
 		const r = makeRect("r1", 30, 40);
-		const state = makeState({ selectedIds: ["r1"], objects: { r1: r } });
+		const state = makeState({
+			selection: selectionOf(["r1"]),
+			objects: { r1: r },
+		});
 		expect(getSelectionCenter(state, ["r1"])).toEqual({ cx: 30, cy: 40 });
 	});
 
@@ -113,12 +124,15 @@ describe("getSelectionCenter", () => {
 			{ x: 0, y: 0 },
 			{ x: 100, y: 200 },
 		]);
-		const state = makeState({ selectedIds: ["p1"], objects: { p1: p } });
+		const state = makeState({
+			selection: selectionOf(["p1"]),
+			objects: { p1: p },
+		});
 		expect(getSelectionCenter(state, ["p1"])).toEqual({ cx: 50, cy: 100 });
 	});
 
 	it("object does not exist → null", () => {
-		const state = makeState({ selectedIds: ["x"], objects: {} });
+		const state = makeState({ selection: selectionOf(["x"]), objects: {} });
 		expect(getSelectionCenter(state, ["x"])).toBeNull();
 	});
 });

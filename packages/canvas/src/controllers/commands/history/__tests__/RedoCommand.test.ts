@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import {
 	createDocSnapshotFromDoc,
 	resolveDocSnapshot,
@@ -28,7 +31,7 @@ const makeState = (params: {
 	future: DocSnapshot[];
 	activeDrag?: unknown;
 	textEditState?: unknown;
-	selectedIds?: string[];
+	selection?: CanvasSelection;
 }): CanvasControllerState =>
 	({
 		history: {
@@ -45,8 +48,7 @@ const makeState = (params: {
 		},
 		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
-		selectedIds: params.selectedIds ?? [],
-		selectedConnectorId: null,
+		selection: params.selection ?? EMPTY_SELECTION,
 		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,
@@ -79,9 +81,11 @@ describe("RedoCommand", () => {
 			past: [],
 			present: snapshotPrev,
 			future: [snapshotNext],
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 		});
-		expect(RedoCommand.execute(state, registries).selectedIds).toEqual(["r1"]);
+		expect(RedoCommand.execute(state, registries).selection.objectIds).toEqual([
+			"r1",
+		]);
 	});
 
 	it("raises a save request and leaves commitVersion unchanged", () => {

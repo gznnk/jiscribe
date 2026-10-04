@@ -13,11 +13,11 @@ export const ZoomToSelectionCommand: ExecutableCommand = {
 		default: [{ code: "Digit2", ctrl: true }],
 	},
 
-	canExecute: (state) => state.selectedIds.length > 0,
+	canExecute: (state) => state.selection.objectIds.length > 0,
 
 	execute: (state, registries) => {
 		const fitted = calcSelectionFitViewport(
-			state.selectedIds,
+			state.selection.objectIds,
 			state.objects,
 			{
 				width: state.viewport.width,

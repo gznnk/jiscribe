@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { StencilLibraryPanelHandler } from "../StencilLibraryPanelHandler";
 
@@ -13,7 +14,7 @@ const makeState = (
 	({
 		stencilLibraryPanel: { isOpen: true, collapsedSectionIds: [] },
 		stencilLibraryOpenCategory: "flowchart",
-		selectedIds: ["a"],
+		selection: selectionOf(["a"]),
 		contextMenuPosition: { x: 1, y: 1 },
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -107,7 +108,7 @@ describe("StencilLibraryPanelHandler", () => {
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		// The panel is persistent chrome, and a press over chrome is not a press on
 		// the canvas: neither the panel nor the selection goes away with it.
-		expect(next.selectedIds).toEqual(["a"]);
+		expect(next.selection.objectIds).toEqual(["a"]);
 		expect(next.stencilLibraryPanel.isOpen).toBe(true);
 		expect(next.stencilLibraryPanel.collapsedSectionIds).toEqual([]);
 	});

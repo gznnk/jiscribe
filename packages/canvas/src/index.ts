@@ -187,6 +187,8 @@ export type {
 	TransformByGroupFunction,
 	RotateByGroupFunction,
 } from "./controllers/gestures/registry/ObjectBehaviorTypes";
+// What an ObjectMenu item and a sidebar row are handed as their `selection`.
+export type { CanvasSelection } from "./controllers/selection/CanvasSelection";
 export type {
 	ObjectMenuSection,
 	ObjectMenuItem,
@@ -215,6 +217,10 @@ export type {
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
 export type { ObjectPartKindDefinition } from "./controllers/selection/ObjectPartKindRegistry";
+// The `data-part` a text slot's element carries: a shape that draws one hit
+// region per slot marks each region with it, which is how a click picks that
+// slot and a double click opens it for editing.
+export { textSlotPart } from "./controllers/gestures/handlers/utils/partAddress";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-body shape (`features.text: "body"` / `"source"`)
 // holds, i.e. the key its `state.text` carries. A shape with several slots names

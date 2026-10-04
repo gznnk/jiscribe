@@ -43,7 +43,7 @@ const MAX_RESULTS = 96;
 
 /** The icon the selection is currently drawn with, as a current name. */
 const readSelectedIcon = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: ObjectMenuItemProps["objects"],
 ): string => {
 	const first = objects[selectedIds[0] ?? ""] as
@@ -102,7 +102,7 @@ const searchIcons = (query: string): { names: string[]; total: number } => {
  */
 const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	openSectionId,
 }) => {
 	const locale = useCanvasLocale();
@@ -110,7 +110,7 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
 	const [query, setQuery] = useState("");
-	const currentIcon = readSelectedIcon(selectedIds, objects);
+	const currentIcon = readSelectedIcon(selection.objectIds, objects);
 	const { names, total } = useMemo(() => searchIcons(query), [query]);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,

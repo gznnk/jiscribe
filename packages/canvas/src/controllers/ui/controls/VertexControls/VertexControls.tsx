@@ -3,6 +3,7 @@ import { Fragment, memo } from "react";
 
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
+import { vertexPart } from "../../../gestures/handlers/utils/partAddress";
 
 const VERTEX_RING_RADIUS = 7;
 const VERTEX_RING_STROKE_WIDTH = 1.5;
@@ -37,7 +38,7 @@ type VertexControlsProps = {
  *
  * Each vertex has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id=<objectId> + data-part="vertex:<vertexIndex>" for identifying which vertex was interacted with
+ * - data-id=<objectId> + data-part=vertexPart(<vertexIndex>) for identifying which vertex was interacted with
  */
 const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 	objectId,
@@ -76,7 +77,7 @@ const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 							}
 							data-kind="control"
 							data-id={objectId}
-							data-part={`vertex:${index}`}
+							data-part={vertexPart(index)}
 							style={{
 								fill: isSelected ? theme.handleAccent : theme.handleFill,
 								stroke: isSelected ? theme.handleFill : theme.handleAccent,

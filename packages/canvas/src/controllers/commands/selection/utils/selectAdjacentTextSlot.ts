@@ -20,10 +20,10 @@ export const getTextSlotCycleTarget = (
 	if (state.activeDrag !== null) {
 		return null;
 	}
-	if (state.selectedIds.length !== 1) {
+	if (state.selection.objectIds.length !== 1) {
 		return null;
 	}
-	const target = state.objects[state.selectedIds[0]];
+	const target = state.objects[state.selection.objectIds[0]];
 	if (target === undefined || target.features?.text !== "slots") {
 		return null;
 	}
@@ -37,12 +37,12 @@ export const getTextSlotCycleTarget = (
  * Moves the slot selection one step along the object's slot order (the key order
  * of `state.text`), wrapping around at either end.
  *
- * @param state - The current canvas controller state; its `objectPartSelection`
+ * @param state - The current canvas controller state; its `selection.part`
  *   names the slot the step starts from, and is live rather than stale because the
  *   reducer reconciles it (reconcileObjectPartSelection)
  * @param step - 1 for the next slot, -1 for the previous; with no slot selected
  *   yet these enter at the first and the last slot respectively
- * @returns A new state with `objectPartSelection` moved and any open ObjectMenu submenu
+ * @returns A new state with `selection.part` moved and any open ObjectMenu submenu
  *   closed, or the input state when the selection does not qualify or the object
  *   declares no slot at all
  */
@@ -62,7 +62,7 @@ export const selectAdjacentTextSlot = (
 	// Tab walks one slot at a time, so the step starts from the active range's
 	// moving end — in this version the only end there is, every range being
 	// collapsed — and lands on a collapsed range of its own.
-	const ranges = state.objectPartSelection?.ranges;
+	const ranges = state.selection.part?.ranges;
 	const currentSlotId =
 		ranges === undefined ? undefined : ranges[ranges.length - 1].focusId;
 	const currentIndex =
@@ -76,10 +76,12 @@ export const selectAdjacentTextSlot = (
 
 	return {
 		...state,
-		objectPartSelection: {
-			objectId: target.id,
-			kind: TEXT_SLOT_PART_KIND,
-			ranges: [{ anchorId: slotIds[nextIndex], focusId: slotIds[nextIndex] }],
+		selection: {
+			...state.selection,
+			part: {
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: slotIds[nextIndex], focusId: slotIds[nextIndex] }],
+			},
 		},
 		objectMenuOpenId: null,
 	};

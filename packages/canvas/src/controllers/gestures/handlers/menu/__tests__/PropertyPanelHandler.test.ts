@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { PropertyPanelHandler } from "../PropertyPanelHandler";
 
@@ -15,7 +17,7 @@ const makeState = (
 	({
 		propertyPanel: { isOpen: true, collapsedSectionIds: [] },
 		stencilLibraryOpenCategory: "flowchart",
-		selectedIds: ["a"],
+		selection: selectionOf(["a"]),
 		contextMenuPosition: { x: 1, y: 1 },
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -82,7 +84,7 @@ describe("PropertyPanelHandler", () => {
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		// The panel is persistent chrome, so a press on it leaves it open
 		expect(next.propertyPanel.isOpen).toBe(true);
-		expect(next.selectedIds).toEqual(["a"]);
+		expect(next.selection.objectIds).toEqual(["a"]);
 	});
 
 	it("a click on the panel's own background changes nothing", () => {
@@ -192,10 +194,7 @@ describe("PropertyPanelHandler", () => {
 					} as unknown as ObjectState,
 				},
 				rootIds: ["rect-1"],
-				selectedIds: ["rect-1"],
-				selectedConnectorId: null,
-				selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
-				objectPartSelection: null,
+				selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 				multiSelectGroup: null,
 				textEditState: null,
 				commitVersion: 5,
@@ -214,7 +213,8 @@ describe("PropertyPanelHandler", () => {
 			);
 			expect(rectOf(next).fill).toBe("#dc2626");
 			expect(next.commitVersion).toBe(6);
-			expect(next.selectedVertex).toBeNull();
+			// Styling renumbers nothing, so what is picked below the object stays picked.
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a slider previews on drag and commits on dragEnd", () => {

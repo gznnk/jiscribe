@@ -8,12 +8,13 @@ export const DUPLICATE_OFFSET = { x: 20, y: 20 };
  * Whether the objects created by the previous Duplicate/Paste are exactly the current
  * selection, which is the condition for chaining the next one off them.
  *
- * @param state - Compared as sets, so the order of selectedIds does not matter
+ * @param state - Compared as sets, so the order of the selection does not matter
  */
 export function isLastDuplicateStillSelected(
 	state: CanvasControllerState,
 ): boolean {
-	const { lastDuplicate, selectedIds } = state;
+	const { lastDuplicate } = state;
+	const { objectIds: selectedIds } = state.selection;
 	if (!lastDuplicate || lastDuplicate.newIds.length !== selectedIds.length) {
 		return false;
 	}
@@ -34,7 +35,8 @@ export function computeDuplicateOffset(state: CanvasControllerState): {
 	x: number;
 	y: number;
 } {
-	const { lastDuplicate, selectedIds } = state;
+	const { lastDuplicate } = state;
+	const { objectIds: selectedIds } = state.selection;
 	if (!lastDuplicate || !isLastDuplicateStillSelected(state)) {
 		return DUPLICATE_OFFSET;
 	}

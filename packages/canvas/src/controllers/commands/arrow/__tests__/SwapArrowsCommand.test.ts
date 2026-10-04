@@ -5,6 +5,8 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { SwapArrowsCommand } from "../SwapArrowsCommand";
 
 const registries = createTestRegistries();
@@ -32,12 +34,10 @@ const makeRect = (id: string): ObjectState =>
 	({ id, type: "rect" }) as ObjectState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
-	selectedConnectorId?: string | null;
 }): CanvasControllerState =>
 	({
-		selectedConnectorId: null,
 		...params,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;
@@ -46,8 +46,7 @@ describe("SwapArrowsCommand", () => {
 	describe("when a connector is selected", () => {
 		it("swaps the start/end arrows", () => {
 			const state = makeState({
-				selectedIds: [],
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1: makeConnector("c1", "Triangle", "None") },
 			});
 			const next = SwapArrowsCommand.execute(state, registries);
@@ -59,8 +58,7 @@ describe("SwapArrowsCommand", () => {
 
 		it("treats an unspecified arrow as None when swapping", () => {
 			const state = makeState({
-				selectedIds: [],
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1: makeConnector("c1", "Triangle", undefined) },
 			});
 			const conn = SwapArrowsCommand.execute(state, registries).objects[
@@ -74,7 +72,7 @@ describe("SwapArrowsCommand", () => {
 	describe("when polylines are selected", () => {
 		it("swaps the arrows for each selected polyline", () => {
 			const state = makeState({
-				selectedIds: ["p1"],
+				selection: selectionOf(["p1"]),
 				objects: { p1: makePolyline("p1", "Triangle", "None") },
 			});
 			const poly = SwapArrowsCommand.execute(state, registries).objects[
@@ -86,7 +84,7 @@ describe("SwapArrowsCommand", () => {
 
 		it("swaps only the applicable targets even when non-polylines are mixed in", () => {
 			const state = makeState({
-				selectedIds: ["p1", "r1"],
+				selection: selectionOf(["p1", "r1"]),
 				objects: {
 					p1: makePolyline("p1", "Triangle", "None"),
 					r1: makeRect("r1"),
@@ -102,7 +100,7 @@ describe("SwapArrowsCommand", () => {
 
 		it("returns the state unchanged when there are no target polylines", () => {
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1: makeRect("r1") },
 			});
 			expect(SwapArrowsCommand.execute(state, registries)).toBe(state);
@@ -112,8 +110,7 @@ describe("SwapArrowsCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when a connector is selected", () => {
 			const state = makeState({
-				selectedIds: [],
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1: makeConnector("c1", "None", "None") },
 			});
 			expect(SwapArrowsCommand.canExecute(state, registries)).toBe(true);
@@ -121,7 +118,7 @@ describe("SwapArrowsCommand", () => {
 
 		it("is executable when the selection contains a polyline", () => {
 			const state = makeState({
-				selectedIds: ["p1"],
+				selection: selectionOf(["p1"]),
 				objects: { p1: makePolyline("p1", "None", "None") },
 			});
 			expect(SwapArrowsCommand.canExecute(state, registries)).toBe(true);
@@ -129,7 +126,7 @@ describe("SwapArrowsCommand", () => {
 
 		it("is not executable when the selection has no arrow-bearing objects", () => {
 			const state = makeState({
-				selectedIds: ["r1"],
+				selection: selectionOf(["r1"]),
 				objects: { r1: makeRect("r1") },
 			});
 			expect(SwapArrowsCommand.canExecute(state, registries)).toBe(false);

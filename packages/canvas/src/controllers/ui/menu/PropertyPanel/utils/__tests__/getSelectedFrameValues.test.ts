@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { getSelectedFrameValues } from "../getSelectedFrameValues";
 
 const rect = (id: string, extra: Record<string, unknown> = {}): ObjectState =>
@@ -39,8 +40,7 @@ const makeState = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	({
-		selectedIds: [],
-		selectedConnectorId: null,
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		objects: {},
 		...overrides,
@@ -52,16 +52,24 @@ describe("getSelectedFrameValues", () => {
 	});
 
 	it("a connector selection has no frame", () => {
+		// A connector's geometry is its waypoints: no cx / cy / width / height and no
+		// transform, which is what isTransformedFrame refuses it on.
 		const state = makeState({
-			selectedConnectorId: "c",
-			objects: { c: { id: "c", type: "connector" } as unknown as ObjectState },
+			selection: selectionOf(["c"]),
+			objects: {
+				c: {
+					id: "c",
+					type: "connector",
+					points: [{ x: 50, y: 50 }],
+				} as unknown as ObjectState,
+			},
 		});
 		expect(getSelectedFrameValues(state)).toBeNull();
 	});
 
 	it("a selected object whose type carries no frame → null", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: { a: { id: "a", type: "connector" } as unknown as ObjectState },
 		});
 		expect(getSelectedFrameValues(state)).toBeNull();
@@ -69,7 +77,7 @@ describe("getSelectedFrameValues", () => {
 
 	it("a single unrotated rect: top-left, size and angle", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: { a: rect("a") },
 		});
 		expect(getSelectedFrameValues(state)).toEqual({
@@ -83,7 +91,7 @@ describe("getSelectedFrameValues", () => {
 
 	it("a rotated rect: x/y name the rotated corner, not the bounding box", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: {
 				a: rect("a", { width: 10, height: 4, rotation: 90 }),
 			},
@@ -98,7 +106,7 @@ describe("getSelectedFrameValues", () => {
 
 	it("a multi-selection reads the multiSelectGroup's frame, not the individual objects", () => {
 		const state = makeState({
-			selectedIds: ["a", "b"],
+			selection: selectionOf(["a", "b"]),
 			objects: {
 				a: rect("a", { cx: 5, cy: 5 }),
 				b: rect("b", { cx: 105, cy: 105 }),
@@ -121,7 +129,7 @@ describe("getSelectedFrameValues", () => {
 
 	it("a group selected on its own reads its own bounding frame", () => {
 		const state = makeState({
-			selectedIds: ["g"],
+			selection: selectionOf(["g"]),
 			objects: {
 				g: group("g", { cx: 55, cy: 55, width: 110, height: 110 }),
 			},

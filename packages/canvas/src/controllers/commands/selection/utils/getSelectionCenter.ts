@@ -8,7 +8,7 @@ import { calcObjectBoundingBox } from "../../../utils/calcObjectBoundingBox";
  */
 export function getSelectionCenter(
 	state: CanvasControllerState,
-	ids: string[],
+	ids: readonly string[],
 ): { cx: number; cy: number } | null {
 	if (ids.length === 0) {
 		return null;

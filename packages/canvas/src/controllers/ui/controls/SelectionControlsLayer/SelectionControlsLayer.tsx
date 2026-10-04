@@ -4,7 +4,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 
 type SelectionControlsLayerProps = {
-	selectedIds: string[];
+	selectedIds: readonly string[];
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	isTextEditing: boolean;

@@ -11,8 +11,8 @@ const CANONICAL_INDEX = /^(0|[1-9]\d*)$/;
 
 /**
  * The `vertex` part definition for a type whose state carries a `points` array,
- * with part ids spelled as the decimal index into it ("0", "1", …) — the same
- * ids the vertex handles already carry in their `data-part`.
+ * with part ids spelled as the decimal index into it ("0", "1", …). The kind half
+ * of the `data-part` its vertex handles carry, which `vertexPart` builds.
  *
  * @param minVertexCount - How few vertices the type still draws as itself; a
  *   deletion that would leave fewer is refused rather than applied. An open

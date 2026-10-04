@@ -1,12 +1,13 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 
 /**
  * Whether a full clear would change anything. Shared by the two commands that
  * clear (DeselectAll and EscapeSelection) so their availability cannot drift
  * from {@link clearAllSelection}'s field list.
  *
- * A slot selection is not asked about separately: it only resolves while its
- * object is the sole selection, which `selectedIds` already covers.
+ * A part selection is not asked about separately: it only resolves while its
+ * object is the sole selection, which `selection.objectIds` already covers.
  *
  * @param state - The current canvas controller state
  * @returns True when something is selected or open; false during an object drag
@@ -17,9 +18,7 @@ export const isSelectionClearable = (state: CanvasControllerState): boolean => {
 		return false;
 	}
 	return (
-		state.selectedIds.length > 0 ||
-		state.selectedConnectorId !== null ||
-		state.selectedVertex !== null ||
+		state.selection.objectIds.length > 0 ||
 		state.areaSelection !== null ||
 		state.shapeDrawing !== null ||
 		state.stencilLibraryOpenCategory !== null
@@ -27,8 +26,7 @@ export const isSelectionClearable = (state: CanvasControllerState): boolean => {
 };
 
 /**
- * Drops every selection channel at once, along with the transient UI that hangs
- * off a selection.
+ * Drops the selection, along with the transient UI that hangs off one.
  *
  * @param state - The current canvas controller state
  * @returns A new state with the selection fields cleared; every other field is
@@ -38,11 +36,7 @@ export const clearAllSelection = (
 	state: CanvasControllerState,
 ): CanvasControllerState => ({
 	...state,
-	selectedIds: [],
-	selectedConnectorId: null,
-	// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-	selectedVertex: null,
-	objectPartSelection: null,
+	selection: EMPTY_SELECTION,
 	multiSelectGroup: null,
 	areaSelection: null,
 	objectMenuOpenId: null,

@@ -124,7 +124,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 				clickOn(0, "menu", "context-menu", "command:selectAll"),
 				registries,
 			);
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 		});
 
 		it("does not execute the command on right-click", () => {
@@ -133,7 +133,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 				clickOn(2, "menu", "context-menu", "command:selectAll"),
 				registries,
 			);
-			expect(nextState.selectedIds).toEqual([]);
+			expect(nextState.selection.objectIds).toEqual([]);
 			// Falls through to the canvas right-button behavior: the context menu
 			// re-opens at the new click position instead of executing the item.
 			expect(nextState.contextMenuPosition).toEqual({

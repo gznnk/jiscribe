@@ -4,12 +4,18 @@ import { hasSelectedDescendants } from "./hasSelectedDescendants";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
 import type { Mods } from "../../../registry/ObjectBehaviorTypes";
 import { isAdditiveSelectionMod } from "../../utils/isAdditiveSelectionMod";
 
 /**
  * Determines the new selection IDs based on hierarchical selection logic.
  * Extracted from DefaultClickEventHandler to be reused in drag handlers.
+ *
+ * A connector takes no part in the object hierarchy and is never selected
+ * alongside a shape, so the decision — and the selection it returns — is built
+ * from the shapes alone: an additive press on a shape while a connector is
+ * selected replaces it rather than adding to it.
  *
  * @param objectState - The object that was clicked/dragged
  * @param canvasState - Current canvas controller state
@@ -21,10 +27,14 @@ export function determineSelection(
 	objectState: ObjectState,
 	canvasState: CanvasControllerState,
 	mods: Mods,
-): string[] | null {
+): readonly string[] | null {
 	const { id } = objectState;
 	const isAdditive = isAdditiveSelectionMod(mods);
-	const isCurrentlySelected = canvasState.selectedIds.includes(id);
+	const baseSelectedIds =
+		getSelectedConnectorId(canvasState) === null
+			? canvasState.selection.objectIds
+			: [];
+	const isCurrentlySelected = baseSelectedIds.includes(id);
 
 	// Get ancestors of the clicked object
 	const ancestors = getAncestors(canvasState, id);
@@ -53,7 +63,7 @@ export function determineSelection(
 
 		// Find if any ancestor is selected
 		const selectedAncestorIdx = ancestors.findIndex((ancestorId) =>
-			canvasState.selectedIds.includes(ancestorId),
+			baseSelectedIds.includes(ancestorId),
 		);
 		const isAncestorSelected = selectedAncestorIdx >= 0;
 
@@ -112,8 +122,7 @@ export function determineSelection(
 				const isDirectChild = group.childIds.includes(id);
 				// Check if this group has other selected children
 				const hasOtherSelectedChildren = group.childIds.some(
-					(childId) =>
-						childId !== id && canvasState.selectedIds.includes(childId),
+					(childId) => childId !== id && baseSelectedIds.includes(childId),
 				);
 				return isDirectChild && hasOtherSelectedChildren;
 			});
@@ -134,11 +143,11 @@ export function determineSelection(
 			} else {
 				// --- Case 3: Check for common ancestor with other selections ---
 
-				if (canvasState.selectedIds.length > 0) {
+				if (baseSelectedIds.length > 0) {
 					// Find common ancestor with other selected items.
 					// Build the membership Set once here so the recursive
 					// hasSelectedDescendants checks stay O(subtree) per ancestor.
-					const selectedSet = new Set(canvasState.selectedIds);
+					const selectedSet = new Set(baseSelectedIds);
 					const reversedAncestors = [...ancestors].reverse();
 					const commonAncestorIdx = reversedAncestors.findIndex(
 						(ancestorId) => {
@@ -206,18 +215,18 @@ export function determineSelection(
 
 	// ========== Update selectedIds based on determined target ==========
 
-	let selectedIds: string[];
+	let selectedIds: readonly string[];
 
 	if (isAdditive) {
 		// Additive mode: toggle or add
 		if (shouldSelectTarget) {
 			// Add to selection (if not already there)
-			selectedIds = canvasState.selectedIds.includes(newSelectionTargetId)
-				? canvasState.selectedIds
-				: [...canvasState.selectedIds, newSelectionTargetId];
+			selectedIds = baseSelectedIds.includes(newSelectionTargetId)
+				? baseSelectedIds
+				: [...baseSelectedIds, newSelectionTargetId];
 		} else {
 			// Remove from selection
-			selectedIds = canvasState.selectedIds.filter(
+			selectedIds = baseSelectedIds.filter(
 				(sid) => sid !== newSelectionTargetId,
 			);
 		}

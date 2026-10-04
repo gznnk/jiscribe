@@ -5,6 +5,7 @@ import { createTestState } from "./support/createTestState";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import type { MetaProperty } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -26,7 +27,7 @@ const update = (
 
 /** rect-1 selected on its own, which is what the Meta section is drawn for. */
 const singleRectState = (): CanvasControllerState =>
-	createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+	createTestState(twoRectsDoc, { selection: selectionOf(["rect-1"]) });
 
 /** A group holding rect-1, selected as a whole. */
 const groupDoc: CanvasDoc = {
@@ -74,7 +75,7 @@ describe("canvasReducer / META_PROPERTY_UPDATE", () => {
 
 	it("states the name of the selected connector", () => {
 		const connectorSelected = createTestState(connectorDoc, {
-			selectedConnectorId: "conn-1",
+			selection: selectionOf(["conn-1"]),
 		});
 
 		const state = update(connectorSelected, "name", "Uplink");
@@ -84,7 +85,7 @@ describe("canvasReducer / META_PROPERTY_UPDATE", () => {
 
 	it("writes the group's own note, not its children's", () => {
 		const groupSelected = createTestState(groupDoc, {
-			selectedIds: ["group-1"],
+			selection: selectionOf(["group-1"]),
 		});
 
 		const state = update(groupSelected, "name", "Cluster");
@@ -95,7 +96,7 @@ describe("canvasReducer / META_PROPERTY_UPDATE", () => {
 
 	it("leaves a multi-selection alone: a note belongs to one object", () => {
 		const before = createTestState(twoRectsDoc, {
-			selectedIds: ["rect-1", "rect-2"],
+			selection: selectionOf(["rect-1", "rect-2"]),
 		});
 
 		expect(update(before, "name", "Server")).toBe(before);

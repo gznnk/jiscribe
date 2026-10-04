@@ -15,7 +15,7 @@ export const getSelectedLockAspectRatio = (
 	}
 
 	// For a single selection, use the selected object's value
-	for (const id of state.selectedIds) {
+	for (const id of state.selection.objectIds) {
 		const obj = state.objects[id];
 		if (
 			obj &&

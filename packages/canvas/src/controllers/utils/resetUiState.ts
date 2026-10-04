@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
+import { EMPTY_SELECTION } from "../selection/CanvasSelection";
 
 /**
  * Transient UI/interaction fields of CanvasControllerState.
@@ -16,7 +17,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  */
 export type UiStateReset = Pick<
 	CanvasControllerState,
-	| "selectedIds"
+	| "selection"
 	| "activeDrag"
 	| "inertialScrolling"
 	| "dragStartCaches"
@@ -29,9 +30,6 @@ export type UiStateReset = Pick<
 	| "multiSelectGroup"
 	| "textEditState"
 	| "connectorDraft"
-	| "selectedConnectorId"
-	| "selectedVertex"
-	| "objectPartSelection"
 	| "snapFeedback"
 	| "axisLockFeedback"
 	| "shapeDrawing"
@@ -45,11 +43,11 @@ export type UiStateReset = Pick<
  * across history navigation, external sync, and initialization. Spread over a
  * state to clear them all at once: `{ ...state, ...resetUiState() }`.
  *
- * Returns a fresh object (with fresh `selectedIds` / `dragStartCaches`) on every
- * call so no mutable reference is shared between states.
+ * Returns a fresh object (with a fresh `dragStartCaches`) on every call so no
+ * mutable reference is shared between states.
  */
 export const resetUiState = (): UiStateReset => ({
-	selectedIds: [],
+	selection: EMPTY_SELECTION,
 	// cancelPendingGesture() drops an in-flight drag without firing dragEnd, so this
 	// reset is what keeps the drag from outliving the gesture on an external swap.
 	activeDrag: null,
@@ -66,9 +64,6 @@ export const resetUiState = (): UiStateReset => ({
 	multiSelectGroup: null,
 	textEditState: null,
 	connectorDraft: null,
-	selectedConnectorId: null,
-	selectedVertex: null,
-	objectPartSelection: null,
 	snapFeedback: null,
 	axisLockFeedback: null,
 	shapeDrawing: null,

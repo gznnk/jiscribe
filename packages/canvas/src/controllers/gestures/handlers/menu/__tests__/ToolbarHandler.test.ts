@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ToolbarHandler } from "../ToolbarHandler";
 
@@ -12,8 +13,7 @@ const makeState = (): CanvasControllerState =>
 		registries,
 		objects: {},
 		rootIds: [],
-		selectedIds: [],
-		selectedConnectorId: null,
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		textEditState: null,
 		contextMenuPosition: { x: 1, y: 1 },

@@ -31,7 +31,7 @@ const SECTION_ID = "sticky-color";
  */
 const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
@@ -39,7 +39,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const isOpen = openSectionId === SECTION_ID;
 	const shapeStyleDefaults = useObjectShapeStyleDefaultsRegistry();
 	const currentColor = getSelectedShapeStyle(
-		selectedIds,
+		selection.objectIds,
 		objects,
 		shapeStyleDefaults,
 		"fill",

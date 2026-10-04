@@ -4,6 +4,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { DuplicateCommand } from "../DuplicateCommand";
 
 const registries = createTestRegistries();
@@ -42,7 +44,7 @@ const makeGroup = (id: string, childIds: string[]): GroupState =>
 	}) as unknown as GroupState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 }): CanvasControllerState =>
@@ -57,7 +59,7 @@ const makeState = (params: {
 describe("DuplicateCommand", () => {
 	it("duplicates a root selection at the default offset (+20,+20) and stacks it in front", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: { a: makeRect("a", 100, 100) },
 			rootIds: ["a"],
 		});
@@ -77,20 +79,20 @@ describe("DuplicateCommand", () => {
 
 	it("selects the duplicate and records lastDuplicate", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: { a: makeRect("a", 100, 100) },
 			rootIds: ["a"],
 		});
 		const next = DuplicateCommand.execute(state, registries);
-		expect(next.selectedIds).toEqual([next.rootIds[1]]);
-		expect(next.lastDuplicate?.newIds).toEqual(next.selectedIds);
+		expect(next.selection.objectIds).toEqual([next.rootIds[1]]);
+		expect(next.lastDuplicate?.newIds).toEqual(next.selection.objectIds);
 		expect(next.lastDuplicate?.offset).toEqual({ x: 20, y: 20 });
 		expect(next.commitVersion).toBe(1);
 	});
 
 	it("duplicates an in-group selection within the same parent group", () => {
 		const state = makeState({
-			selectedIds: ["c1"],
+			selection: selectionOf(["c1"]),
 			objects: {
 				g: makeGroup("g", ["c1", "c2"]),
 				c1: makeRect("c1", 50, 50, "g"),
@@ -99,7 +101,7 @@ describe("DuplicateCommand", () => {
 			rootIds: ["g"],
 		});
 		const next = DuplicateCommand.execute(state, registries);
-		const newId = next.selectedIds[0];
+		const newId = next.selection.objectIds[0];
 		// the new object's parent is group g
 		expect(next.objects[newId]?.parentId).toBe("g");
 		// it is added to the parent group's childIds
@@ -111,7 +113,7 @@ describe("DuplicateCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when there is a selection", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 0, 0) },
 				rootIds: ["a"],
 			});
@@ -121,7 +123,7 @@ describe("DuplicateCommand", () => {
 		it("is not executable when there is no selection", () => {
 			expect(
 				DuplicateCommand.canExecute(
-					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					makeState({ selection: selectionOf([]), objects: {}, rootIds: [] }),
 					registries,
 				),
 			).toBe(false);
