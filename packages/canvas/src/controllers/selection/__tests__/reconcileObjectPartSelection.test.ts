@@ -43,12 +43,10 @@ const makeState = (
 	objects: Record<string, ObjectState>,
 	selectedIds: string[],
 	objectPartSelection: ObjectPartSelection | null,
-	selectedConnectorId: string | null = null,
 ): CanvasControllerState =>
 	({
 		objects,
 		selectedIds,
-		selectedConnectorId,
 		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 
@@ -180,12 +178,11 @@ describe("reconcileObjectPartSelection", () => {
 		).toBeNull();
 	});
 
-	it("keeps a vertex picked on the connector the connector channel holds", () => {
+	it("keeps a vertex picked on the selected connector", () => {
 		const state = makeState(
 			{ "c-1": connector("c-1") },
-			[],
+			["c-1"],
 			vertexPartSelection("c-1", 1),
-			"c-1",
 		);
 		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
 	});
@@ -195,13 +192,13 @@ describe("reconcileObjectPartSelection", () => {
 		const pick = vertexPartSelection("c-1", 1);
 		expect(
 			reconcileObjectPartSelection(
-				makeState(objects, ["rec-1"], pick, null),
+				makeState(objects, ["rec-1"], pick),
 				objectPartKind,
 			).objectPartSelection,
 		).toBeNull();
 		expect(
 			reconcileObjectPartSelection(
-				makeState(objects, [], pick, "c-2"),
+				makeState(objects, ["c-2"], pick),
 				objectPartKind,
 			).objectPartSelection,
 		).toBeNull();
@@ -210,9 +207,8 @@ describe("reconcileObjectPartSelection", () => {
 	it("clears a vertex the connector has outgrown", () => {
 		const state = makeState(
 			{ "c-1": connector("c-1") },
-			[],
+			["c-1"],
 			vertexPartSelection("c-1", 7),
-			"c-1",
 		);
 		expect(
 			reconcileObjectPartSelection(state, objectPartKind).objectPartSelection,

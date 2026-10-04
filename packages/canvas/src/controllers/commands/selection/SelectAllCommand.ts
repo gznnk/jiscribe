@@ -17,9 +17,9 @@ export const SelectAllCommand: ExecutableCommand = {
 	},
 
 	execute: (state) => {
-		// Connectors are mixed into rootIds but belong to the separate selectedConnectorId
-		// channel; they must never enter selectedIds (otherwise Group would grab them).
-		// Paste already applies this same filter (handlePaste), so Select All matches it.
+		// Connectors are mixed into rootIds but are only ever selected on their own,
+		// so Select All leaves them out (otherwise Group would grab them). Paste
+		// applies the same filter (handlePaste).
 		const selectableIds = state.rootIds.filter(
 			(id) => !isConnectorState(state.objects[id]),
 		);
@@ -32,9 +32,6 @@ export const SelectAllCommand: ExecutableCommand = {
 				state.objects,
 				state.multiSelectGroup,
 			),
-			// selectedIds is mutually exclusive with selectedConnectorId.
-			// Without clearing it, the branching in SwapArrows and the style-property handlers breaks.
-			selectedConnectorId: null,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
 		};

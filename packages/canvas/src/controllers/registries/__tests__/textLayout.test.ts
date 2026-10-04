@@ -63,7 +63,6 @@ const controllerStateOf = (...objects: ObjectState[]): CanvasControllerState =>
 		objects: Object.fromEntries(objects.map((object) => [object.id, object])),
 		rootIds: objects.map((object) => object.id),
 		selectedIds: objects.map((object) => object.id),
-		selectedConnectorId: null,
 		multiSelectGroup: null,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;

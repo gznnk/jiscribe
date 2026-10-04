@@ -55,7 +55,6 @@ export function useObjectMenuPosition(
 ): ObjectMenuPosition {
 	const {
 		selectedIds,
-		selectedConnectorId,
 		objectPartSelection,
 		objects,
 		viewport,
@@ -102,8 +101,7 @@ export function useObjectMenuPosition(
 	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
 
 	const shouldRender = useMemo(() => {
-		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
-		if (!hasSelection) {
+		if (selectedIds.length === 0) {
 			return false;
 		}
 		if (contextMenuPosition !== null) {
@@ -139,7 +137,6 @@ export function useObjectMenuPosition(
 		return true;
 	}, [
 		selectedIds,
-		selectedConnectorId,
 		contextMenuPosition,
 		isViewUnsettled,
 		areaSelection,
@@ -156,21 +153,13 @@ export function useObjectMenuPosition(
 		menuRef,
 		shouldRender,
 		selectedIdsString,
-		selectedConnectorId,
 		objectPartSelectionKey,
 		textEditKey,
 	]);
 
 	const liveBounds = useMemo(
-		() =>
-			calcObjectsBoundingBox(
-				selectedConnectorId !== null
-					? [selectedConnectorId, ...selectedIds]
-					: selectedIds,
-				objects,
-				objectVisualBounds,
-			),
-		[selectedIds, selectedConnectorId, objects, objectVisualBounds],
+		() => calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds),
+		[selectedIds, objects, objectVisualBounds],
 	);
 
 	// The menu writes properties that resize what it is anchored to: a font size or
@@ -185,7 +174,7 @@ export function useObjectMenuPosition(
 	// viewport clamping and the menu's own measured size all keep updating, so
 	// panning or zooming with a dropdown open still places the menu correctly.
 	const isMenuInUse = objectMenuOpenId !== null || isPointerOverMenu;
-	const anchorKey = `${selectedIdsString}/${selectedConnectorId ?? ""}`;
+	const anchorKey = selectedIdsString;
 	const latchedAnchorRef = useRef({ key: anchorKey, bounds: liveBounds });
 	if (
 		!shouldRender ||

@@ -29,8 +29,7 @@ const makeState = (params: {
 	({
 		rootIds: params.rootIds,
 		objects: params.objects,
-		selectedIds: [],
-		selectedConnectorId: "stale",
+		selectedIds: ["stale"],
 		objectPartSelection: vertexPartSelection("x", 0),
 		multiSelectGroup: null,
 		objectMenuOpenId: "x",
@@ -56,13 +55,13 @@ describe("SelectAllCommand", () => {
 		).not.toBeNull();
 	});
 
-	it("clears the mutually-exclusive connector and part selections", () => {
+	it("replaces the previous selection and clears the part selection", () => {
 		const state = makeState({
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
 		});
 		const next = SelectAllCommand.execute(state, registries);
-		expect(next.selectedConnectorId).toBeNull();
+		expect(next.selectedIds).not.toContain("stale");
 		expect(next.objectMenuOpenId).toBeNull();
 		// The part selection is the reducer's to drop, which it does for every
 		// command result (reconcileObjectPartSelection).

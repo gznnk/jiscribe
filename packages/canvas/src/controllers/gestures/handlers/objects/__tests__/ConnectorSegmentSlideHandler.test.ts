@@ -214,8 +214,7 @@ describe("ConnectorSegmentSlideHandler - dragStart", () => {
 			registries,
 		);
 
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedIds).toEqual([]);
+		expect(next.selectedIds).toEqual(["c1"]);
 		expect(next.objectPartSelection).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();

@@ -8,6 +8,7 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
+import { getSelectedConnectorId } from "../../../../../utils/getSelectedConnectorId";
 import { getSelectedRouting } from "../../../../../utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "../../../../../utils/isSelectedConnectorSelfLoop";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
@@ -69,20 +70,28 @@ const ROUTING_OPTIONS: RoutingOption[] = [
  */
 const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentRouting = getSelectedRouting(selectedConnectorId, objects);
+	const currentRouting = getSelectedRouting(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
-	if (isSelectedConnectorSelfLoop(selectedConnectorId, objects)) {
+	if (
+		isSelectedConnectorSelfLoop(
+			getSelectedConnectorId({ objects, selectedIds }),
+			objects,
+		)
+	) {
 		return null;
 	}
 

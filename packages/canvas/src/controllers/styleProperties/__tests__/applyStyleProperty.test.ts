@@ -51,7 +51,6 @@ const applyStyleProperty = (
 type MinState = Pick<
 	CanvasControllerState,
 	| "selectedIds"
-	| "selectedConnectorId"
 	| "objects"
 	| "multiSelectGroup"
 	| "objectPartSelection"
@@ -62,7 +61,6 @@ type MinState = Pick<
 const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 	({
 		selectedIds: [],
-		selectedConnectorId: null,
 		objects: {},
 		multiSelectGroup: null,
 		objectPartSelection: null,
@@ -134,18 +132,18 @@ const extraShapeObj = (id: string): ObjectState =>
 	}) as unknown as ObjectState;
 
 describe("StylePropertyRegistry.apply (selection style updates)", () => {
-	describe("selectedIds is empty and selectedConnectorId is null", () => {
+	describe("nothing selected", () => {
 		it("-> returns the same reference", () => {
 			const state = makeState();
 			expect(applyStyleProperty(state, "fill", "#ff0000")).toBe(state);
 		});
 	});
 
-	describe("selectedConnectorId present (connector selected)", () => {
+	describe("a connector selected", () => {
 		it("supported property (stroke) -> the connector is updated", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "stroke", "#ff0000");
@@ -156,21 +154,21 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("unsupported property (fill on connector) -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "fill", "#ff0000")).toBe(state);
 		});
 
 		it("object does not exist -> returns the same reference", () => {
-			const state = makeState({ selectedConnectorId: "missing" });
+			const state = makeState({ selectedIds: ["missing"] });
 			expect(applyStyleProperty(state, "stroke", "#ff0000")).toBe(state);
 		});
 
 		it("strokeWidth is converted to a number and applied", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "strokeWidth", "3");
@@ -183,7 +181,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("non-numeric strokeWidth -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "strokeWidth", "abc")).toBe(state);
@@ -192,7 +190,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("arrow property (endArrow) -> applied via the connector's arrow feature", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "endArrow", "FilledTriangle");
@@ -211,7 +209,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fill -> nested-updated on connector.label.fill", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.fill", "#ff0000");
@@ -226,7 +224,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.stroke -> nested-updated on label.stroke", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.stroke", "#00ff00");
@@ -239,7 +237,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.strokeDashType -> nested-updated, kept as a string", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(
@@ -256,7 +254,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fontSize is numeric-converted and updated", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.fontSize", "20");
@@ -269,7 +267,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fontColor / label.fontWeight are updated, kept as strings", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const afterColor = applyStyleProperty(
@@ -297,7 +295,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.fontFamily keeps the stack it is given, commas and quotes included", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const stack = '"Source Serif 4", "Noto Serif JP", serif';
@@ -311,7 +309,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.strokeWidth is numeric-converted and updated", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			const result = applyStyleProperty(state, "label.strokeWidth", "2");
@@ -324,7 +322,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("non-numeric label.strokeWidth -> returns the same reference", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "label.strokeWidth", "x")).toBe(state);
@@ -333,7 +331,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("label.* on a connector with no label -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			expect(applyStyleProperty(state, "label.fill", "#ff0000")).toBe(state);
@@ -342,7 +340,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		it("the original objects are not mutated (immutable)", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 				objects: { c1 },
 			});
 			applyStyleProperty(state, "label.fill", "#ff0000");

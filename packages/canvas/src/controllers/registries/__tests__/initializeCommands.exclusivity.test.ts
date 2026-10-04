@@ -80,7 +80,7 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 	},
 	{
 		name: "connector selected",
-		state: buildState(rectsDoc, { selectedConnectorId: "conn-1" }),
+		state: buildState(rectsDoc, { selectedIds: ["conn-1"] }),
 	},
 	{
 		name: "vertex selected",

@@ -3,7 +3,6 @@ import { memo, useRef } from "react";
 
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import {
 	setPart,
 	togglePart,
@@ -53,7 +52,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
-		getEffectiveSelectedIds(canvasState),
+		canvasState.selectedIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",

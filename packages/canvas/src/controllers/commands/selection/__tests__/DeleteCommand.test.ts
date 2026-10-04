@@ -50,12 +50,10 @@ const makeState = (params: {
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 	objectPartSelection?: CanvasControllerState["objectPartSelection"];
-	selectedConnectorId?: string | null;
 	lastDuplicate?: CanvasControllerState["lastDuplicate"];
 }): CanvasControllerState =>
 	({
 		objectPartSelection: null,
-		selectedConnectorId: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,
 		commitVersion: 0,
@@ -313,10 +311,9 @@ describe("DeleteCommand", () => {
 
 		it("is executable when there is a connector selection", () => {
 			const state = makeState({
-				selectedIds: [],
 				objects: {},
 				rootIds: [],
-				selectedConnectorId: "c1",
+				selectedIds: ["c1"],
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});

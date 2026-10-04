@@ -14,12 +14,10 @@ const rect = (id: string, meta?: Record<string, unknown>): ObjectState =>
 const makeState = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
-	selectedConnectorId: string | null = null,
 ): CanvasControllerState =>
 	({
 		selectedIds,
 		objects,
-		selectedConnectorId,
 	}) as unknown as CanvasControllerState;
 
 describe("resolveOpenReference", () => {
@@ -41,11 +39,6 @@ describe("resolveOpenReference", () => {
 		expect(
 			resolveOpenReference(makeState(["r1", "r2"], { r1, r2 })),
 		).toBeNull();
-	});
-
-	it("returns null when only a connector is selected", () => {
-		const c = rect("c1", { reference: "./a.md" });
-		expect(resolveOpenReference(makeState([], { c1: c }, "c1"))).toBeNull();
 	});
 
 	it("returns null when the object has no meta", () => {

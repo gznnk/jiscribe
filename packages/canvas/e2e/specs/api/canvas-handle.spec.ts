@@ -580,7 +580,6 @@ test.describe("canvas handle / selection", () => {
 			),
 		).toEqual({
 			selectedIds: [first, second],
-			selectedConnectorId: null,
 			ignoredIds: [],
 		});
 		await expect
@@ -606,7 +605,6 @@ test.describe("canvas handle / selection", () => {
 			),
 		).toEqual({
 			selectedIds: [source],
-			selectedConnectorId: null,
 			ignoredIds: ["no-such-id"],
 		});
 
@@ -618,7 +616,6 @@ test.describe("canvas handle / selection", () => {
 			),
 		).toEqual({
 			selectedIds: [source],
-			selectedConnectorId: null,
 			ignoredIds: [connector],
 		});
 		await expect
@@ -628,13 +625,12 @@ test.describe("canvas handle / selection", () => {
 		expect(
 			await handle.evaluate((h, id) => h.selection.select([id]), connector),
 		).toEqual({
-			selectedIds: [],
-			selectedConnectorId: connector,
+			selectedIds: [connector],
 			ignoredIds: [],
 		});
 		await expect
 			.poll(() => handle.evaluate((h) => h.selection.getSelectedIds()), {
-				message: "the connector channel is read back out with the shapes",
+				message: "a lone connector is read back out like any other selection",
 			})
 			.toEqual([connector]);
 	});

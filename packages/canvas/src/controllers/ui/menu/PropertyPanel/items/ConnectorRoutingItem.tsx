@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
 import { getSelectedRouting } from "../../../../utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "../../../../utils/isSelectedConnectorSelfLoop";
 import { OrthogonalConnectorIcon } from "../../../icons/OrthogonalConnectorIcon";
@@ -21,16 +22,24 @@ import type { PropertyPanelItemProps } from "../PropertyPanelTypes";
  */
 const ConnectorRoutingItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 }) => {
 	const messages = useCanvasMessages();
 
-	if (isSelectedConnectorSelfLoop(selectedConnectorId, objects)) {
+	if (
+		isSelectedConnectorSelfLoop(
+			getSelectedConnectorId({ objects, selectedIds }),
+			objects,
+		)
+	) {
 		return null;
 	}
 
 	// An omitted routing draws orthogonal, so that is the segment to light.
-	const routing = getSelectedRouting(selectedConnectorId, objects);
+	const routing = getSelectedRouting(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowRouting}>

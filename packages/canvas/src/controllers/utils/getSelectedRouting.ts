@@ -8,11 +8,10 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * Defaults to orthogonal when routing is omitted.
  */
 export const getSelectedRouting = (
-	selectedConnectorId: string | null,
+	connectorId: string | null,
 	objects: Record<string, ObjectState>,
 ): ConnectorRouting => {
-	const connector =
-		selectedConnectorId !== null ? objects[selectedConnectorId] : undefined;
+	const connector = connectorId !== null ? objects[connectorId] : undefined;
 	const routing = (connector as Record<string, unknown> | undefined)
 		?.routing as ConnectorRouting | undefined;
 	return isOrthogonalRouting(routing) ? "orthogonal" : "straight";

@@ -4,6 +4,7 @@ import { memo, useRef } from "react";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorId } from "../../../../../utils/getSelectedConnectorId";
 import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -22,7 +23,7 @@ const SECTION_ID = "label-font-color";
  */
 const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 	openSectionId,
 	onPropertyUpdate,
 }) => {
@@ -34,7 +35,10 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

@@ -53,15 +53,15 @@ describe("preserves connectors' relative z order on copy/duplicate", () => {
 });
 
 /**
- * A paste that makes selectedIds non-empty must clear the mutually-exclusive
- * connector/vertex selection (regression guard for #71). Otherwise SwapArrows / Delete
- * and the like would act on an old connector/vertex that is no longer on screen.
+ * A paste replaces the selection with the shapes it created, dropping a selected
+ * connector or vertex with it (regression guard for #71). Otherwise SwapArrows /
+ * Delete and the like would act on an old connector/vertex that is no longer on
+ * screen.
  */
 describe("maintains selection mutual exclusivity on paste", () => {
-	it("pasting while a connector is selected sets selectedConnectorId to null", () => {
+	it("pasting while a connector is selected leaves the connector unselected", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: [],
-			selectedConnectorId: "conn-1",
+			selectedIds: ["conn-1"],
 			rootIds: ["rect-1", "conn-1", "rect-2"],
 		});
 		const clipboard = CopyCommand.execute(
@@ -74,7 +74,7 @@ describe("maintains selection mutual exclusivity on paste", () => {
 		expect(clipboard).not.toBeNull();
 
 		const after = handlePaste(state, clipboard!, registries);
-		expect(after.selectedConnectorId).toBeNull();
+		expect(after.selectedIds).not.toContain("conn-1");
 		expect(after.selectedIds.length).toBeGreaterThan(0);
 	});
 

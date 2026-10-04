@@ -8,11 +8,10 @@ import type { ConnectorState } from "../../states/objects/connector/ConnectorSta
  * so the routing toggle is not rendered (switching to straight would break them).
  */
 export const isSelectedConnectorSelfLoop = (
-	selectedConnectorId: string | null,
+	connectorId: string | null,
 	objects: Record<string, ObjectState>,
 ): boolean => {
-	const connector =
-		selectedConnectorId !== null ? objects[selectedConnectorId] : undefined;
+	const connector = connectorId !== null ? objects[connectorId] : undefined;
 	if (!connector || connector.type !== "connector") {
 		return false;
 	}

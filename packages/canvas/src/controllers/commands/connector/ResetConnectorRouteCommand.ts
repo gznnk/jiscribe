@@ -1,5 +1,6 @@
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import { hasSelectedConnectorShapedRoute } from "../../utils/hasSelectedConnectorShapedRoute";
 import type { ExecutableCommand } from "../CommandTypes";
 
@@ -7,7 +8,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 const selectedShapedConnector = (
 	state: CanvasControllerState,
 ): ConnectorState | null => {
-	const id = state.selectedConnectorId;
+	const id = getSelectedConnectorId(state);
 	if (id === null || !hasSelectedConnectorShapedRoute(id, state.objects)) {
 		return null;
 	}
@@ -47,6 +48,9 @@ export const ResetConnectorRouteCommand: ExecutableCommand = {
 	label: { en: "Reset Route", ja: "経路を自動に戻す" },
 	category: "edit",
 	canExecute: (state) =>
-		hasSelectedConnectorShapedRoute(state.selectedConnectorId, state.objects),
+		hasSelectedConnectorShapedRoute(
+			getSelectedConnectorId(state),
+			state.objects,
+		),
 	execute: resetConnectorRoute,
 };

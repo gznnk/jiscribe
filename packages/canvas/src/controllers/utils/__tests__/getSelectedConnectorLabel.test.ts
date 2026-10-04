@@ -4,7 +4,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { getSelectedConnectorLabel } from "../getSelectedConnectorLabel";
 
 describe("getSelectedConnectorLabel", () => {
-	it("no connector selected (selectedConnectorId is null) → undefined", () => {
+	it("no connector selected (null id) → undefined", () => {
 		expect(getSelectedConnectorLabel(null, {})).toBeUndefined();
 	});
 

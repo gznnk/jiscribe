@@ -58,8 +58,8 @@ export type OpenReferenceHandler = (payload: OpenReferencePayload) => void;
  */
 export type ObjectMenuItemProps = {
 	objects: Record<string, ObjectState>;
+	/** The selection, in selection order; a lone connector is one of them (CanvasControllerState.selectedIds). */
 	selectedIds: string[];
-	selectedConnectorId: string | null;
 	/** ID of the currently open menu section (`toggle:{sectionId}`). */
 	openSectionId: string | null;
 	onPropertyUpdate: StylePropertyUpdater;

@@ -54,7 +54,6 @@ const makeState = (params: {
 		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
 		selectedIds: params.selectedIds ?? [],
-		selectedConnectorId: null,
 		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,

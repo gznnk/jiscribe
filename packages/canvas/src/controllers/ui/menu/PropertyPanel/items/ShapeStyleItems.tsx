@@ -5,7 +5,6 @@ import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { getEffectiveSelectedIds } from "../../../../utils/getEffectiveSelectedIds";
 import { DashedLineIcon } from "../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../icons/SolidLineIcon";
@@ -122,7 +121,7 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { stroke } = readSelectionShapeStyle(
-		getEffectiveSelectedIds(canvasState),
+		canvasState.selectedIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -155,7 +154,7 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeWidth } = readSelectionShapeStyle(
-		getEffectiveSelectedIds(canvasState),
+		canvasState.selectedIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -195,7 +194,7 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeDashType } = readSelectionShapeStyle(
-		getEffectiveSelectedIds(canvasState),
+		canvasState.selectedIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -244,7 +243,7 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeOpacity } = readSelectionShapeStyle(
-		getEffectiveSelectedIds(canvasState),
+		canvasState.selectedIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",

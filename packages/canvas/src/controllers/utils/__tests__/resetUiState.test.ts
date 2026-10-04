@@ -19,7 +19,6 @@ describe("resetUiState", () => {
 			multiSelectGroup: null,
 			textEditState: null,
 			connectorDraft: null,
-			selectedConnectorId: null,
 			objectPartSelection: null,
 			snapFeedback: null,
 			axisLockFeedback: null,

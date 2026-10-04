@@ -5,6 +5,7 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorId } from "../../../../../utils/getSelectedConnectorId";
 import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -35,7 +36,7 @@ const MAX_BORDER_WIDTH = 12;
  */
 const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 	openSectionId,
 	onPropertyUpdate,
 }) => {
@@ -47,7 +48,10 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

@@ -25,27 +25,14 @@ const registries = createTestRegistries();
 const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 	const violations: string[] = [];
 
-	// Selection channels are mutually exclusive, and connectors never enter selectedIds.
-	if (state.selectedIds.length > 0 && state.selectedConnectorId !== null) {
-		violations.push(
-			"selectedIds and selectedConnectorId are both set (channels must be mutually exclusive)",
-		);
-	}
+	// A connector is selected on its own: one of them, never beside a shape.
 	for (const id of state.selectedIds) {
-		if (isConnectorState(state.objects[id])) {
-			violations.push(`connector ${id} leaked into selectedIds`);
+		if (isConnectorState(state.objects[id]) && state.selectedIds.length > 1) {
+			violations.push(`connector ${id} is selected alongside other objects`);
 		}
 		if (!state.objects[id]) {
 			violations.push(`selectedIds references nonexistent object ${id}`);
 		}
-	}
-	if (
-		state.selectedConnectorId !== null &&
-		!state.objects[state.selectedConnectorId]
-	) {
-		violations.push(
-			`selectedConnectorId references nonexistent object ${state.selectedConnectorId}`,
-		);
 	}
 
 	// A slot selection the reducer's reconciliation keeps must name a live slot of
@@ -193,7 +180,7 @@ describe("every command preserves structural invariants", () => {
 			label: "a connector selected",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedConnectorId: "conn-1",
+					selectedIds: ["conn-1"],
 				}),
 		},
 		{

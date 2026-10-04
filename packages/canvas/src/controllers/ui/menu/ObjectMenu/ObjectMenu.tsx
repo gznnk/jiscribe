@@ -133,7 +133,6 @@ const renderItem = (
 					key={item.id}
 					objects={canvasState.objects}
 					selectedIds={canvasState.selectedIds}
-					selectedConnectorId={canvasState.selectedConnectorId}
 					openSectionId={canvasState.objectMenuOpenId}
 					onPropertyUpdate={onPropertyUpdate}
 				/>

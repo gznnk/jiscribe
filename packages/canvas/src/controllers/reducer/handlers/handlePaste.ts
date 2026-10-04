@@ -126,7 +126,7 @@ export const handlePaste = (
 
 	const mergedObjects = { ...state.objects, ...newObjects };
 
-	// Select only the copied shapes (connectors are managed separately via selectedConnectorId, so exclude them).
+	// Select only the copied shapes (a connector is only ever selected on its own, so exclude them).
 	const newObjectIds = newTopLevelIds.filter(
 		(id) => mergedObjects[id]?.type !== "connector",
 	);
@@ -136,10 +136,6 @@ export const handlePaste = (
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
 		selectedIds: newObjectIds,
-		// Clear the mutually exclusive connector selection so the shape selection is non-empty
-		// (same as other selectedIds mutation paths; without clearing, SwapArrows / Delete etc.
-		// would act on the old connector that is no longer on screen).
-		selectedConnectorId: null,
 		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),
 		contextMenuPosition: null,
 		commitVersion: state.commitVersion + 1,

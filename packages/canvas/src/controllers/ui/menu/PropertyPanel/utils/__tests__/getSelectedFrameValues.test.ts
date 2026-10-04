@@ -40,7 +40,6 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		selectedIds: [],
-		selectedConnectorId: null,
 		multiSelectGroup: null,
 		objects: {},
 		...overrides,
@@ -53,7 +52,7 @@ describe("getSelectedFrameValues", () => {
 
 	it("a connector selection has no frame", () => {
 		const state = makeState({
-			selectedConnectorId: "c",
+			selectedIds: ["c"],
 			objects: { c: { id: "c", type: "connector" } as unknown as ObjectState },
 		});
 		expect(getSelectedFrameValues(state)).toBeNull();

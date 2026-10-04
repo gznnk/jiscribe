@@ -36,15 +36,11 @@ const EXTRA_DECLARATIONS = Object.entries(BUILTIN_OBJECT_DEFINITIONS).flatMap(
 
 const makeState = (
 	overrides: Partial<
-		Pick<
-			CanvasControllerState,
-			"selectedIds" | "selectedConnectorId" | "objects" | "multiSelectGroup"
-		>
+		Pick<CanvasControllerState, "selectedIds" | "objects" | "multiSelectGroup">
 	>,
 ): CanvasControllerState =>
 	({
 		selectedIds: [],
-		selectedConnectorId: null,
 		objects: {},
 		multiSelectGroup: null,
 		objectPartSelection: null,

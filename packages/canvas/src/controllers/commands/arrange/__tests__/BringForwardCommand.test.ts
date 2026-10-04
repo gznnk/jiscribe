@@ -12,10 +12,8 @@ const makeState = (params: {
 	selectedIds: string[];
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
-	selectedConnectorId?: string | null;
 }): CanvasControllerState =>
 	({
-		selectedConnectorId: null,
 		...params,
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;

@@ -6,12 +6,10 @@ import { isArrangeableSelection } from "../isArrangeableSelection";
 const makeState = (
 	selectedIds: string[],
 	objects: Record<string, { parentId?: string; type?: string }>,
-	selectedConnectorId: string | null = null,
 ): CanvasControllerState =>
 	({
 		selectedIds,
 		objects,
-		selectedConnectorId,
 	}) as unknown as CanvasControllerState;
 
 describe("isArrangeableSelection", () => {
@@ -55,9 +53,9 @@ describe("isArrangeableSelection", () => {
 		});
 	});
 
-	describe("connector selection (selectedConnectorId)", () => {
+	describe("connector selection", () => {
 		it("a single connector selection is true (the condition for showing StackOrder)", () => {
-			const state = makeState([], { conn: { type: "connector" } }, "conn");
+			const state = makeState(["conn"], { conn: { type: "connector" } });
 			expect(isArrangeableSelection(state)).toBe(true);
 		});
 	});

@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorId } from "../../../../../utils/getSelectedConnectorId";
 import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
@@ -17,10 +18,13 @@ import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
  */
 const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

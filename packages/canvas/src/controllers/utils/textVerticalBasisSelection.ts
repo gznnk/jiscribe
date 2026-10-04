@@ -1,4 +1,3 @@
-import { getEffectiveSelectedIds } from "./getEffectiveSelectedIds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
@@ -15,12 +14,12 @@ export type TextPlacedObjectState = ObjectState &
 
 /**
  * What the helpers here read off the canvas: the selection and the objects it
- * names. Narrow enough for the menu item, which is handed those three and
+ * names. Narrow enough for the menu item, which is handed those two and
  * nothing else (ObjectMenuItemProps).
  */
 export type TextVerticalBasisSelection = Pick<
 	CanvasControllerState,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selectedIds"
 >;
 
 /**
@@ -37,7 +36,7 @@ export const collectTextVerticalBasisIds = (
 	selection: TextVerticalBasisSelection,
 	textVerticalBasisRegistry: ObjectTextVerticalBasisRegistry,
 ): string[] =>
-	getEffectiveSelectedIds(selection).filter((id) => {
+	selection.selectedIds.filter((id) => {
 		const object = selection.objects[id];
 		return (
 			object !== undefined && textVerticalBasisRegistry.supports(object.type)

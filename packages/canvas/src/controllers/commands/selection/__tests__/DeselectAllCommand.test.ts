@@ -14,7 +14,6 @@ const baseState = (
 	({
 		objects: {},
 		selectedIds: [],
-		selectedConnectorId: null,
 		objectPartSelection: null,
 		multiSelectGroup: null,
 		areaSelection: null,
@@ -30,7 +29,6 @@ describe("DeselectAllCommand", () => {
 	it("clears all selection and editing state at once", () => {
 		const state = baseState({
 			selectedIds: ["a", "b"],
-			selectedConnectorId: "c1",
 			objectPartSelection: vertexPartSelection("p1", 0),
 			multiSelectGroup: { id: "ms" } as never,
 			areaSelection: { x: 0, y: 0 } as never,
@@ -40,7 +38,6 @@ describe("DeselectAllCommand", () => {
 		});
 		const next = DeselectAllCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedConnectorId).toBeNull();
 		expect(next.objectPartSelection).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.areaSelection).toBeNull();
@@ -93,7 +90,7 @@ describe("DeselectAllCommand", () => {
 		it("is executable when there is a connector selection", () => {
 			expect(
 				DeselectAllCommand.canExecute(
-					baseState({ selectedConnectorId: "c1" }),
+					baseState({ selectedIds: ["c1"] }),
 					registries,
 				),
 			).toBe(true);

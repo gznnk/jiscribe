@@ -6,10 +6,10 @@ import type {
 } from "../../gestures/registry/ObjectBehaviorTypes";
 
 /**
- * No-op: connectors are never in selectedIds (exclusive selection via
- * selectedConnectorId) and cloneObjects applies offsets to rootIds only,
- * so this function is never reached in practice. Connector geometry follows
- * its endpoints, which are resolved dynamically at render time.
+ * No-op: the paths that move a selection refuse one that is a lone connector
+ * (moveCommands, ObjectEventHandler), and cloneObjects applies offsets to
+ * rootIds only, so this function is never reached in practice. Connector
+ * geometry follows its endpoints, which are resolved dynamically at render time.
  */
 export const moveByDelta: MoveByDeltaFunction<ConnectorState> = (
 	state,

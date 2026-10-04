@@ -15,6 +15,7 @@ import { memo } from "react";
 
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
 import { getSelectedConnectorLabel } from "../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../icons/BoldIcon";
@@ -44,10 +45,13 @@ const MAX_BORDER_WIDTH = 12;
 /** The face the label's text is drawn in, picked from the shipped set. */
 const ConnectorLabelFontFamilyItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selectedConnectorId }) => {
+> = ({ objects, selectedIds }) => {
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	if (!label?.text) {
@@ -83,11 +87,14 @@ export const ConnectorLabelFontFamilyItem = memo(
 /** How large the label's text is drawn. */
 const ConnectorLabelFontSizeItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	if (!label?.text) {
 		return null;
@@ -121,9 +128,12 @@ export const ConnectorLabelFontSizeItem = memo(
 /** The ink the label's text is drawn in. */
 const ConnectorLabelFontColorItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selectedConnectorId, onPropertyUpdate }) => {
+> = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	if (!label?.text) {
 		return null;
@@ -152,10 +162,13 @@ export const ConnectorLabelFontColorItem = memo(
  */
 const ConnectorLabelStyleItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	if (!label?.text) {
 		return null;
@@ -189,9 +202,12 @@ export const ConnectorLabelStyleItem = memo(ConnectorLabelStyleItemComponent);
  */
 const ConnectorLabelBackgroundItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selectedConnectorId, onPropertyUpdate }) => {
+> = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	if (!label?.text) {
 		return null;
@@ -219,9 +235,12 @@ export const ConnectorLabelBackgroundItem = memo(
 /** The outline of the label's box; drawn only while its width is above 0. */
 const ConnectorLabelBorderColorItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selectedConnectorId, onPropertyUpdate }) => {
+> = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	if (!label?.text) {
 		return null;
@@ -249,9 +268,12 @@ export const ConnectorLabelBorderColorItem = memo(
 /** How thick the label's outline is drawn. 0 (the default) draws none. */
 const ConnectorLabelBorderWidthItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selectedConnectorId, onPropertyUpdate }) => {
+> = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	if (!label?.text) {
 		return null;
@@ -285,9 +307,12 @@ export const ConnectorLabelBorderWidthItem = memo(
 /** Solid, dashed or dotted. An unset value draws solid, so that is what reads active. */
 const ConnectorLabelBorderTypeItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selectedConnectorId }) => {
+> = ({ objects, selectedIds }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel(
+		getSelectedConnectorId({ objects, selectedIds }),
+		objects,
+	);
 
 	if (!label?.text) {
 		return null;

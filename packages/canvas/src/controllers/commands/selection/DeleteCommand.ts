@@ -39,8 +39,8 @@ const clearPartSelection = (
  * Command that deletes the current selection. Parts picked one level below the
  * object are deleted where their type registers a deletion for the kind; where it
  * registers none (a text slot), the key means what it means for the selected
- * objects, which are removed (a group with its descendants) along with the
- * selected connector. A kind that wants the key held while one of its parts is
+ * objects, which are removed (a group with its descendants). A kind that wants
+ * the key held while one of its parts is
  * picked, yet nothing removed, declares a deletion that refuses
  * (`delete: () => null`).
  */
@@ -63,7 +63,7 @@ export const DeleteCommand: ExecutableCommand = {
 		) {
 			return true;
 		}
-		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
+		return state.selectedIds.length > 0;
 	},
 
 	execute: (state, registries) => {
@@ -119,8 +119,8 @@ const commitPartDeletion = (
 };
 
 /**
- * Removes the selected objects (a group with its descendants) and the selected
- * connector, cleaning up the connectors and groups that referred to them.
+ * Removes the selected objects (a group with its descendants), cleaning up the
+ * connectors and groups that referred to them.
  */
 const deleteSelectedObjects = (
 	state: CanvasControllerState,
@@ -148,11 +148,6 @@ const deleteSelectedObjects = (
 
 	for (const id of state.selectedIds) {
 		collectIds(id);
-	}
-
-	// Also add the selected connector to the deletion targets
-	if (state.selectedConnectorId != null) {
-		idsToDelete.add(state.selectedConnectorId);
 	}
 
 	// Clean up connectors (run first so coordinates resolve against the pre-delete state)
@@ -191,10 +186,9 @@ const deleteSelectedObjects = (
 		objects: updatedObjects,
 		// Connectors are also included in rootIds, so from the rootIds left after
 		// orphaned-connector cleanup, remove all deletion targets at once
-		// (selected objects, descendants, and the selected connector).
+		// (the selected objects and their descendants).
 		rootIds: stateAfterConnectors.rootIds.filter((id) => !idsToDelete.has(id)),
 		selectedIds: [] as string[],
-		selectedConnectorId: null,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
 		lastDuplicate: null,

@@ -269,8 +269,6 @@ function handleObjectDragStart(
 		selectedIds,
 		multiSelectGroup: newMultiSelectGroup,
 		edgeScrollEnabled: true,
-		// Clear the connector selection to guarantee mutual exclusion
-		selectedConnectorId: null,
 		// Clear the sub-object part selection
 		objectPartSelection: null,
 		// Close the object menu dropdown at drag start

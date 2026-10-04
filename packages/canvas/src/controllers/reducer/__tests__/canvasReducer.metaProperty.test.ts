@@ -74,7 +74,7 @@ describe("canvasReducer / META_PROPERTY_UPDATE", () => {
 
 	it("states the name of the selected connector", () => {
 		const connectorSelected = createTestState(connectorDoc, {
-			selectedConnectorId: "conn-1",
+			selectedIds: ["conn-1"],
 		});
 
 		const state = update(connectorSelected, "name", "Uplink");

@@ -419,6 +419,14 @@ export type CanvasControllerState = CanvasState & {
 
 	history: HistoryState;
 
+	/**
+	 * The selected objects' ids, in the order they were selected. Shapes, groups
+	 * and connectors alike, with one rule the writers keep: a connector is
+	 * selected on its own — one of them, never alongside a shape
+	 * (applyConnectorSelection / applyObjectSelection / resolveRequestedSelection).
+	 * Readers that need the connector therefore ask for it by that shape
+	 * (getSelectedConnectorId).
+	 */
 	selectedIds: string[];
 
 	/** null when no gesture is in progress */
@@ -625,9 +633,6 @@ export type CanvasControllerState = CanvasState & {
 
 	/** Set while dragging from a connection anchor; committed or discarded on dragEnd */
 	connectorDraft: ConnectorDraft | null;
-
-	/** Managed independently from selectedIds (shapes only), guaranteeing mutual exclusion */
-	selectedConnectorId: string | null;
 
 	/**
 	 * Sub-parts addressed one level below the object selection, in a namespace the

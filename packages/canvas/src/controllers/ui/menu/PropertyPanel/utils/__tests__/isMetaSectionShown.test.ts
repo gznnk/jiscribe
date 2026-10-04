@@ -19,7 +19,6 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		selectedIds: [],
-		selectedConnectorId: null,
 		objectPartSelection: null,
 		textEditState: null,
 		objects: {},
@@ -34,9 +33,9 @@ describe("isMetaSectionShown", () => {
 	});
 
 	it("shows it for a selected connector", () => {
-		expect(
-			isMetaSectionShown(makeState({ selectedConnectorId: "conn-1" })),
-		).toBe(true);
+		expect(isMetaSectionShown(makeState({ selectedIds: ["conn-1"] }))).toBe(
+			true,
+		);
 	});
 
 	it("hides it for a multi-selection, which names no single note", () => {

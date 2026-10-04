@@ -29,7 +29,6 @@ const makeState = (): CanvasControllerState =>
 		objects: { "rect-1": makeRect("rect-1") },
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],
-		selectedConnectorId: null,
 		objectPartSelection: vertexPartSelection("rect-1", 0),
 		multiSelectGroup: null,
 		textEditState: null,

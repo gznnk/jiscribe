@@ -19,12 +19,11 @@ const makeConnector = (id: string, points: Point[]): ConnectorState =>
 	}) as unknown as ConnectorState;
 
 const makeState = (params: {
-	selectedConnectorId: string | null;
+	selectedIds: string[];
 	objects: Record<string, ConnectorState>;
 	objectPartSelection?: CanvasControllerState["objectPartSelection"];
 }): CanvasControllerState =>
 	({
-		selectedIds: [],
 		commitVersion: 0,
 		objectPartSelection: null,
 		...params,
@@ -33,7 +32,7 @@ const makeState = (params: {
 describe("ResetConnectorRouteCommand", () => {
 	it("drops the vertices of the selected connector", () => {
 		const state = makeState({
-			selectedConnectorId: "c1",
+			selectedIds: ["c1"],
 			objects: {
 				c1: makeConnector("c1", [
 					{ x: 10, y: 20 },
@@ -53,7 +52,7 @@ describe("ResetConnectorRouteCommand", () => {
 
 	it("is unavailable for a connector the engine already routes", () => {
 		const state = makeState({
-			selectedConnectorId: "c1",
+			selectedIds: ["c1"],
 			objects: { c1: makeConnector("c1", []) },
 		});
 
@@ -64,7 +63,7 @@ describe("ResetConnectorRouteCommand", () => {
 	});
 
 	it("is unavailable when no connector is selected", () => {
-		const state = makeState({ selectedConnectorId: null, objects: {} });
+		const state = makeState({ selectedIds: [], objects: {} });
 
 		expect(ResetConnectorRouteCommand.canExecute?.(state, registries)).toBe(
 			false,
