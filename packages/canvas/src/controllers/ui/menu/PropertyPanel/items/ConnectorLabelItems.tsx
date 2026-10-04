@@ -15,7 +15,6 @@ import { memo } from "react";
 
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
 import { getSelectedConnectorLabel } from "../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../icons/BoldIcon";
@@ -48,10 +47,7 @@ const ConnectorLabelFontFamilyItemComponent: React.FC<
 > = ({ objects, selectedIds }) => {
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	if (!label?.text) {
@@ -91,10 +87,7 @@ const ConnectorLabelFontSizeItemComponent: React.FC<PropertyPanelItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	if (!label?.text) {
 		return null;
@@ -130,10 +123,7 @@ const ConnectorLabelFontColorItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	if (!label?.text) {
 		return null;
@@ -165,10 +155,7 @@ const ConnectorLabelStyleItemComponent: React.FC<PropertyPanelItemProps> = ({
 	selectedIds,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	if (!label?.text) {
 		return null;
@@ -204,10 +191,7 @@ const ConnectorLabelBackgroundItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	if (!label?.text) {
 		return null;
@@ -237,10 +221,7 @@ const ConnectorLabelBorderColorItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	if (!label?.text) {
 		return null;
@@ -270,10 +251,7 @@ const ConnectorLabelBorderWidthItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selectedIds, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	if (!label?.text) {
 		return null;
@@ -309,10 +287,7 @@ const ConnectorLabelBorderTypeItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selectedIds }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(
-		getSelectedConnectorId({ objects, selectedIds }),
-		objects,
-	);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	if (!label?.text) {
 		return null;

@@ -5,7 +5,6 @@ import { ResetConnectorRouteCommand } from "../../../../commands/connector/Reset
 import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
 import { hasSelectedConnectorShapedRoute } from "../../../../utils/hasSelectedConnectorShapedRoute";
 import { PropertyCommandButton } from "../common/PropertyControlsStyled";
 import { PropertyRow } from "../common/PropertyRow";
@@ -37,12 +36,7 @@ const ConnectorResetRouteItemComponent: React.FC<PropertyPanelItemProps> = ({
 		<PropertyRow>
 			<PropertyCommandButton
 				type="button"
-				disabled={
-					!hasSelectedConnectorShapedRoute(
-						getSelectedConnectorId({ objects, selectedIds }),
-						objects,
-					)
-				}
+				disabled={!hasSelectedConnectorShapedRoute({ objects, selectedIds })}
 				title={label}
 				data-part={commandPart(ResetConnectorRouteCommand.id)}
 			>

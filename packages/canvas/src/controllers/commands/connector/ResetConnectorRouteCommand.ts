@@ -9,7 +9,7 @@ const selectedShapedConnector = (
 	state: CanvasControllerState,
 ): ConnectorState | null => {
 	const id = getSelectedConnectorId(state);
-	if (id === null || !hasSelectedConnectorShapedRoute(id, state.objects)) {
+	if (id === null || !hasSelectedConnectorShapedRoute(state)) {
 		return null;
 	}
 	return state.objects[id] as ConnectorState;
@@ -47,10 +47,6 @@ export const ResetConnectorRouteCommand: ExecutableCommand = {
 	id: "resetConnectorRoute",
 	label: { en: "Reset Route", ja: "経路を自動に戻す" },
 	category: "edit",
-	canExecute: (state) =>
-		hasSelectedConnectorShapedRoute(
-			getSelectedConnectorId(state),
-			state.objects,
-		),
+	canExecute: hasSelectedConnectorShapedRoute,
 	execute: resetConnectorRoute,
 };

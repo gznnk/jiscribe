@@ -4,12 +4,16 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { getSelectedConnectorLabel } from "../getSelectedConnectorLabel";
 
 describe("getSelectedConnectorLabel", () => {
-	it("no connector selected (null id) → undefined", () => {
-		expect(getSelectedConnectorLabel(null, {})).toBeUndefined();
+	it("no connector selected (empty selection) → undefined", () => {
+		expect(
+			getSelectedConnectorLabel({ selectedIds: [], objects: {} }),
+		).toBeUndefined();
 	});
 
 	it("a selected id exists but the target does not → undefined", () => {
-		expect(getSelectedConnectorLabel("missing", {})).toBeUndefined();
+		expect(
+			getSelectedConnectorLabel({ selectedIds: ["missing"], objects: {} }),
+		).toBeUndefined();
 	});
 
 	it("a connector with a label → returns its label", () => {
@@ -17,13 +21,17 @@ describe("getSelectedConnectorLabel", () => {
 		const objects = {
 			c1: { id: "c1", type: "connector", label },
 		} as unknown as Record<string, ObjectState>;
-		expect(getSelectedConnectorLabel("c1", objects)).toEqual(label);
+		expect(getSelectedConnectorLabel({ selectedIds: ["c1"], objects })).toEqual(
+			label,
+		);
 	});
 
 	it("a connector without a label → undefined", () => {
 		const objects = {
 			c1: { id: "c1", type: "connector" },
 		} as unknown as Record<string, ObjectState>;
-		expect(getSelectedConnectorLabel("c1", objects)).toBeUndefined();
+		expect(
+			getSelectedConnectorLabel({ selectedIds: ["c1"], objects }),
+		).toBeUndefined();
 	});
 });

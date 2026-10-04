@@ -24,10 +24,11 @@ const isConnectorSelected = (state: CanvasControllerState): boolean =>
  * A self-loop breaks down as a straight line, so it is treated as orthogonal-only.
  */
 const canSetStraight = (state: CanvasControllerState): boolean => {
-	if (!isConnectorSelected(state)) {
+	const connectorId = getSelectedConnectorId(state);
+	if (connectorId === null) {
 		return false;
 	}
-	const connector = state.objects[getSelectedConnectorId(state) as string];
+	const connector = state.objects[connectorId];
 	return (
 		connector?.type === "connector" &&
 		!isSelfLoopConnector(connector as ConnectorState)

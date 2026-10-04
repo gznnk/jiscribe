@@ -1,4 +1,3 @@
-import { getSelectedConnectorId } from "./getSelectedConnectorId";
 import { getSelectedConnectorLabel } from "./getSelectedConnectorLabel";
 import type { CanvasControllerState } from "../CanvasTypes";
 
@@ -11,10 +10,4 @@ import type { CanvasControllerState } from "../CanvasTypes";
  */
 export const hasSelectedConnectorLabelText = (
 	selection: Pick<CanvasControllerState, "selectedIds" | "objects">,
-): boolean =>
-	Boolean(
-		getSelectedConnectorLabel(
-			getSelectedConnectorId(selection),
-			selection.objects,
-		)?.text,
-	);
+): boolean => Boolean(getSelectedConnectorLabel(selection)?.text);

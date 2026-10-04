@@ -1,16 +1,20 @@
-import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
+import type { CanvasControllerState } from "../CanvasTypes";
+import { getSelectedConnectorId } from "./getSelectedConnectorId";
 
 /**
  * Whether the selected connector's route was shaped by hand, i.e. it carries
  * vertices of its own. One with none is already the engine's to route, so there
  * is nothing to reset.
+ *
+ * @param selection - The selection and the objects it names; a selection that is not a lone connector gives false
  */
 export const hasSelectedConnectorShapedRoute = (
-	connectorId: string | null,
-	objects: Record<string, ObjectState>,
+	selection: Pick<CanvasControllerState, "selectedIds" | "objects">,
 ): boolean => {
-	const connector = connectorId !== null ? objects[connectorId] : undefined;
+	const connectorId = getSelectedConnectorId(selection);
+	const connector =
+		connectorId !== null ? selection.objects[connectorId] : undefined;
 	if (!connector || connector.type !== "connector") {
 		return false;
 	}
