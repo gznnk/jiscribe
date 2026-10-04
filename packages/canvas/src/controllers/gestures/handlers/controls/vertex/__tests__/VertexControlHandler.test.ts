@@ -33,14 +33,14 @@ const makeDragState = (points: Point[]): CanvasControllerState => {
 	return {
 		objects: { "poly-1": poly },
 		rootIds: ["poly-1"],
-		selection: selectionOf([]),
+		selection: selectionOf(["poly-1"]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "poly-1": poly },
 				keyPoints: {},
 				snapCandidates: null,
-				selection: selectionOf([]),
+				selection: selectionOf(["poly-1"]),
 				selectedIdsWithDescendants: new Set(),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -259,6 +259,17 @@ describe("VertexControlHandler - picking a vertex", () => {
 			last: { x: 0, y: 0 },
 			mods: { shift: false, alt: false, ctrl: false, meta: false },
 		}) as unknown as CanvasEvent;
+
+	it("a click on a handle of an object that is not the sole selection picks nothing", () => {
+		const state = makeDragState([
+			{ x: 0, y: 0 },
+			{ x: 100, y: 0 },
+		]);
+		const unselected = { ...state, selection: selectionOf([]) };
+		expect(handler.handle(unselected, clickEvent(1), registries)).toBe(
+			unselected,
+		);
+	});
 
 	it("a click picks the vertex it landed on, as one collapsed range", () => {
 		const next = handler.handle(

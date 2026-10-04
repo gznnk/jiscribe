@@ -1,5 +1,4 @@
 /**
-import type { CanvasSelection } from "./CanvasSelection";
  * A range of parts inside one kind: the fixed end a Shift-extension grows from,
  * and the end that moves. Collapsed (`anchorId === focusId`) for a single part.
  */

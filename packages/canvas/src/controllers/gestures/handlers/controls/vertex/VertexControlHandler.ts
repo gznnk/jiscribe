@@ -50,7 +50,13 @@ export class VertexControlHandler extends ControlStrategy {
 		// A click only addresses the vertex, so the whole of it — range check
 		// included — is the shared part-click path.
 		if (event.type === "click") {
-			const targetObject = state.objects[objectId];
+			// The handles are drawn for the sole selected object only, so a handle
+			// naming another one is stale DOM and addresses nothing.
+			const { objectIds } = state.selection;
+			const targetObject =
+				objectIds.length === 1 && objectIds[0] === objectId
+					? state.objects[objectId]
+					: undefined;
 			if (!targetObject) {
 				return state;
 			}
