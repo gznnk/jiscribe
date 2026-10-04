@@ -270,6 +270,7 @@ export const createCanvasReducer =
 					state,
 					action.property,
 					action.value,
+					registries,
 				);
 				// This path bypasses handleGesture, so flatten the COW view here
 				// (one-shot update, same pattern as MoveCommands; #213).

@@ -50,11 +50,10 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
 	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
+		canvasState,
+		registries,
 		"stroke",
 	);
 	const isDashMixed = isMixedSelectionValue(strokeDashType);

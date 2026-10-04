@@ -7,6 +7,7 @@ import { PolylineFeatures } from "@jiscribe/doc/model/objects/primitives/polylin
 import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
@@ -15,6 +16,9 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
+import { coreStyleTable } from "../../style/coreStyleTable";
+import type { StyleIntentRegistries } from "../../style/ObjectStyleRegistry";
+import { createObjectStyleRegistry } from "../../style/ObjectStyleRegistry";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
 
 // A synthetic type with a flat (non-nested) extra property, standing in for a
@@ -43,11 +47,28 @@ initializeStyleProperties(
 styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
+// The style tables the properties already moved over are answered by, wired the
+// way applyObjectDefinition wires them: each fixture type's own features.
+const styleRegistries: StyleIntentRegistries = {
+	objectStyle: createObjectStyleRegistry(),
+	objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
+};
+for (const features of [
+	RectFeatures,
+	ConnectorFeatures,
+	PolylineFeatures,
+	GroupFeatures,
+	ExtraShapeFeatures,
+]) {
+	styleRegistries.objectStyle.register(features.type, coreStyleTable(features));
+}
+
 const applyStyleProperty = (
 	state: CanvasControllerState,
 	property: string,
 	value: string,
-): CanvasControllerState => styleRegistry.apply(state, property, value);
+): CanvasControllerState =>
+	styleRegistry.apply(state, property, value, styleRegistries);
 
 type MinState = Pick<
 	CanvasControllerState,

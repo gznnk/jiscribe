@@ -45,13 +45,8 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { fill } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"fill",
-	);
+	const registries = useCanvasRegistries();
+	const { fill } = readSelectionShapeStyle(canvasState, registries, "fill");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -78,11 +73,10 @@ const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
 	const { fillOpacity } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
+		canvasState,
+		registries,
 		"fill",
 	);
 
@@ -119,13 +113,8 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { stroke } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
-	);
+	const registries = useCanvasRegistries();
+	const { stroke } = readSelectionShapeStyle(canvasState, registries, "stroke");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -152,11 +141,10 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
 	const { strokeWidth } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
+		canvasState,
+		registries,
 		"stroke",
 	);
 
@@ -192,11 +180,10 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
 	const { strokeDashType } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
+		canvasState,
+		registries,
 		"stroke",
 	);
 	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
@@ -241,11 +228,10 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
 	const { strokeOpacity } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
+		canvasState,
+		registries,
 		"stroke",
 	);
 

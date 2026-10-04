@@ -1,10 +1,19 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+import type {
+	ObjectShapeStyleDefaultsRegistry,
+	ShapeStyleGroup,
+} from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { coreStyleTable } from "../../../../style/coreStyleTable";
+import type { StyleIntentRegistries } from "../../../../style/ObjectStyleRegistry";
+import { createObjectStyleRegistry } from "../../../../style/ObjectStyleRegistry";
 import { readSelectionShapeStyle } from "../readSelectionShapeStyle";
 
 /** A shape declaring both style groups, the way a rect's features do. */
@@ -40,9 +49,40 @@ const group = (id: string, childIds: string[]): GroupState =>
 
 const shapeStyleDefaults = createObjectShapeStyleDefaultsRegistry();
 
+/**
+ * The production wiring of the fill intent for these fixtures: every type they
+ * use gets the table its own features derive (applyObjectDefinition does the
+ * same with each ObjectTypeDefinition).
+ */
+const registriesOf = (
+	objects: Record<string, ObjectState>,
+	defaults: ObjectShapeStyleDefaultsRegistry,
+): StyleIntentRegistries => {
+	const objectStyle = createObjectStyleRegistry();
+	for (const object of Object.values(objects)) {
+		if (object.features) {
+			objectStyle.register(object.type, coreStyleTable(object.features));
+		}
+	}
+	return { objectStyle, objectShapeStyleDefaults: defaults };
+};
+
+/** The reader called with a state and registries built from the fixture at hand. */
+const readStyle = (
+	selectedIds: readonly string[],
+	objects: Record<string, ObjectState>,
+	defaults: ObjectShapeStyleDefaultsRegistry,
+	styleGroup: ShapeStyleGroup,
+) =>
+	readSelectionShapeStyle(
+		{ selection: selectionOf(selectedIds), objects } as CanvasControllerState,
+		registriesOf(objects, defaults),
+		styleGroup,
+	);
+
 describe("readSelectionShapeStyle", () => {
 	it("nothing selected → every field is none", () => {
-		const style = readSelectionShapeStyle([], {}, shapeStyleDefaults, "fill");
+		const style = readStyle([], {}, shapeStyleDefaults, "fill");
 		expect(style.fill).toEqual({ kind: "none" });
 		expect(style.stroke).toEqual({ kind: "none" });
 		expect(style.strokeWidth).toEqual({ kind: "none" });
@@ -53,16 +93,17 @@ describe("readSelectionShapeStyle", () => {
 
 	it("nothing selected declares the group → none, even for a shape that is there", () => {
 		const objects = { t: bareRect("t") };
-		expect(
-			readSelectionShapeStyle(["t"], objects, shapeStyleDefaults, "fill").fill,
-		).toEqual({ kind: "none" });
+		expect(readStyle(["t"], objects, shapeStyleDefaults, "fill").fill).toEqual({
+			kind: "none",
+		});
 	});
 
 	it("one shape → its own value", () => {
 		const objects = { a: rect("a", { fill: "#f00" }) };
-		expect(
-			readSelectionShapeStyle(["a"], objects, shapeStyleDefaults, "fill").fill,
-		).toEqual({ kind: "single", value: "#f00" });
+		expect(readStyle(["a"], objects, shapeStyleDefaults, "fill").fill).toEqual({
+			kind: "single",
+			value: "#f00",
+		});
 	});
 
 	it("two shapes agreeing → one value", () => {
@@ -71,8 +112,7 @@ describe("readSelectionShapeStyle", () => {
 			b: rect("b", { fill: "#f00" }),
 		};
 		expect(
-			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "fill")
-				.fill,
+			readStyle(["a", "b"], objects, shapeStyleDefaults, "fill").fill,
 		).toEqual({ kind: "single", value: "#f00" });
 	});
 
@@ -82,8 +122,7 @@ describe("readSelectionShapeStyle", () => {
 			b: rect("b", { fill: "#0f0" }),
 		};
 		expect(
-			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "fill")
-				.fill,
+			readStyle(["a", "b"], objects, shapeStyleDefaults, "fill").fill,
 		).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
 	});
 
@@ -92,12 +131,7 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fill: "#f00", strokeWidth: 2 }),
 			b: rect("b", { fill: "#0f0", strokeWidth: 2 }),
 		};
-		const style = readSelectionShapeStyle(
-			["a", "b"],
-			objects,
-			shapeStyleDefaults,
-			"fill",
-		);
+		const style = readStyle(["a", "b"], objects, shapeStyleDefaults, "fill");
 		expect(style.fill).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
 		expect(style.strokeWidth).toEqual({ kind: "single", value: 2 });
 	});
@@ -111,12 +145,7 @@ describe("readSelectionShapeStyle", () => {
 			defaulted: rect("defaulted", undefined, "plain"),
 		};
 		expect(
-			readSelectionShapeStyle(
-				["stated", "defaulted"],
-				objects,
-				defaults,
-				"fill",
-			).fill,
+			readStyle(["stated", "defaulted"], objects, defaults, "fill").fill,
 		).toEqual({ kind: "single", value: "#fff" });
 	});
 
@@ -126,8 +155,7 @@ describe("readSelectionShapeStyle", () => {
 			b: rect("b", { fill: "#ffffff" }),
 		};
 		expect(
-			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "fill")
-				.fill,
+			readStyle(["a", "b"], objects, shapeStyleDefaults, "fill").fill,
 		).toEqual({ kind: "mixed", values: [AUTO_COLOR, "#ffffff"] });
 	});
 
@@ -137,7 +165,7 @@ describe("readSelectionShapeStyle", () => {
 			b: rect("b"),
 		};
 		expect(
-			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
+			readStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
 				.strokeDashType,
 		).toEqual({ kind: "single", value: "solid" });
 	});
@@ -148,19 +176,14 @@ describe("readSelectionShapeStyle", () => {
 			b: rect("b"),
 		};
 		expect(
-			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
+			readStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
 				.strokeDashType,
 		).toEqual({ kind: "mixed", values: ["dashed", "solid"] });
 	});
 
 	it("an opacity nobody declared reads as the fallback, not as no value", () => {
 		const objects = { a: rect("a") };
-		const style = readSelectionShapeStyle(
-			["a"],
-			objects,
-			shapeStyleDefaults,
-			"fill",
-		);
+		const style = readStyle(["a"], objects, shapeStyleDefaults, "fill");
 		expect(style.fillOpacity).toEqual({
 			kind: "single",
 			value: SHAPE_STYLE_FALLBACK.fillOpacity,
@@ -172,12 +195,7 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fillOpacity: 0.4 }),
 			b: rect("b", { fillOpacity: 1 }),
 		};
-		const style = readSelectionShapeStyle(
-			["a", "b"],
-			objects,
-			shapeStyleDefaults,
-			"fill",
-		);
+		const style = readStyle(["a", "b"], objects, shapeStyleDefaults, "fill");
 		// The first shape's own opacity, not the fallback: the row's arrows step
 		// from it (PropertyNumberField).
 		expect(style.fillOpacity).toEqual({ kind: "mixed", values: [0.4, 1] });
@@ -189,12 +207,7 @@ describe("readSelectionShapeStyle", () => {
 
 	it("the two opacities are told apart", () => {
 		const objects = { a: rect("a", { strokeOpacity: 0.25 }) };
-		const style = readSelectionShapeStyle(
-			["a"],
-			objects,
-			shapeStyleDefaults,
-			"stroke",
-		);
+		const style = readStyle(["a"], objects, shapeStyleDefaults, "stroke");
 		expect(style.strokeOpacity).toEqual({ kind: "single", value: 0.25 });
 		expect(style.fillOpacity).toEqual({
 			kind: "single",
@@ -208,9 +221,10 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fill: "#f00" }),
 			b: rect("b", { fill: "#0f0" }),
 		};
-		expect(
-			readSelectionShapeStyle(["g"], objects, shapeStyleDefaults, "fill").fill,
-		).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
+		expect(readStyle(["g"], objects, shapeStyleDefaults, "fill").fill).toEqual({
+			kind: "mixed",
+			values: ["#f00", "#0f0"],
+		});
 	});
 
 	it("a connector in the selection is one voice among the strokes", () => {
@@ -222,12 +236,10 @@ describe("readSelectionShapeStyle", () => {
 		} as unknown as ObjectState;
 		const objects = { a: rect("a", { stroke: "#f00" }), c: connector };
 		expect(
-			readSelectionShapeStyle(["a", "c"], objects, shapeStyleDefaults, "stroke")
-				.stroke,
+			readStyle(["a", "c"], objects, shapeStyleDefaults, "stroke").stroke,
 		).toEqual({ kind: "mixed", values: ["#f00", "#00f"] });
 		expect(
-			readSelectionShapeStyle(["c"], objects, shapeStyleDefaults, "stroke")
-				.stroke,
+			readStyle(["c"], objects, shapeStyleDefaults, "stroke").stroke,
 		).toEqual({ kind: "single", value: "#00f" });
 	});
 });

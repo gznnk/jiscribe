@@ -4,12 +4,18 @@ import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { ExtraStyleProperty } from "./ExtraStyleProperty";
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { applyStyleIntent } from "../style/applyStyleIntent";
+import type { StyleIntentRegistries } from "../style/ObjectStyleRegistry";
 
 /**
  * Per-canvas registry and dispatch entry for styleable property updates.
  * Holds property → handler registrations (system properties, wired at bundle
  * creation) plus per-type ExtraStyleProperties declarations (wired per object
  * definition). Properties with neither registration apply to nothing (fail-closed).
+ *
+ * Being replaced by the per-type style tables (ObjectStyleRegistry): the
+ * properties already moved over are forwarded by `apply` rather than handled
+ * here, and this class goes once the last of them has.
  */
 export class StylePropertyRegistry {
 	private readonly handlers = new Map<string, StylePropertyHandler>();
@@ -39,12 +45,30 @@ export class StylePropertyRegistry {
 		return this.extrasByType.get(type)?.[property];
 	}
 
-	/** Applies a property update to the selection via the resolved handler. */
+	/**
+	 * Applies a property update to the selection via the resolved handler.
+	 *
+	 * @param state - The state to write into; its selection decides who is reached
+	 * @param property - The property name, as the menus' parts spell it
+	 * @param value - The value as a string, coerced by the handler to its declared type
+	 * @param registries - The canvas's style tables and shape-style defaults, for the properties already moved to the style intents
+	 */
 	apply(
 		state: CanvasControllerState,
 		property: string,
 		value: string,
+		registries: StyleIntentRegistries,
 	): CanvasControllerState {
+		// Temporary: the properties moved to the style tables are answered there
+		// (ObjectStyleRegistry) rather than by a handler. This fork goes away with
+		// the whole registry, once the last property has moved over.
+		if (property === "fill") {
+			return applyStyleIntent(
+				state,
+				{ kind: "fill", color: value },
+				registries,
+			);
+		}
 		const handler = this.handlers.get(property) ?? this.extraFallback;
 		return handler.apply(state, property, value);
 	}

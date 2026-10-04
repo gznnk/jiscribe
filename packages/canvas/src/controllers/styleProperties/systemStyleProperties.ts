@@ -11,8 +11,18 @@ import { TextContentProperty } from "./TextContentProperty";
 import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
 
 /**
+ * The names the style tables answer for instead (ObjectStyleRegistry, reached
+ * through StylePropertyRegistry.apply). Subtracted from SystemStyleName below so
+ * the exhaustive record neither demands a handler that nothing would reach nor
+ * lets one linger. The list grows as the remaining properties move over, and
+ * takes this whole module with it.
+ */
+type IntentStyleName = "fill";
+
+/**
  * Every name a system style property may carry, taken from the style groups the doc
- * declares. `Record<SystemStyleName, ...>` below then demands one handler each, so a
+ * declares, less the ones already answered by the style tables (IntentStyleName).
+ * `Record<SystemStyleName, ...>` below then demands one handler each, so a
  * field added to a group fails to compile until it is given one, and a name no group
  * owns is refused.
  *
@@ -21,14 +31,16 @@ import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
  * rotation and the flips are moved through their own gestures and ops, never through a
  * style property, so listing them would demand handlers that nothing would reach.
  */
-type SystemStyleName =
+type SystemStyleName = Exclude<
 	| (typeof FILL_STYLE_KEYS)[number]
 	| (typeof STROKE_STYLE_KEYS)[number]
 	| (typeof RADIUS_STYLE_KEYS)[number]
 	| (typeof TEXT_SLOT_STYLE_KEYS)[number]
 	| (typeof ARROW_STYLE_KEYS)[number]
 	| "text"
-	| "lockAspectRatio";
+	| "lockAspectRatio",
+	IntentStyleName
+>;
 
 /**
  * System style properties: one handler per SystemStyleName, registered into every
@@ -47,7 +59,6 @@ export const SYSTEM_STYLE_PROPERTIES: Record<
 	SystemStyleName,
 	StylePropertyHandler
 > = {
-	fill: new FeatureGatedStyleProperty("fill", "string"),
 	fillOpacity: new FeatureGatedStyleProperty("fill", "number"),
 	stroke: new FeatureGatedStyleProperty("stroke", "string"),
 	strokeWidth: new FeatureGatedStyleProperty("stroke", "number"),

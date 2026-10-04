@@ -27,6 +27,7 @@ import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import { createObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
+import { createObjectStyleRegistry } from "../style/ObjectStyleRegistry";
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
@@ -82,6 +83,7 @@ export const createCanvasRegistries = (
 		propertyPanel: createPropertyPanelRegistry(),
 		stencil: createStencilRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
+		objectStyle: createObjectStyleRegistry(),
 		styleProperty: createStylePropertyRegistry(),
 	};
 

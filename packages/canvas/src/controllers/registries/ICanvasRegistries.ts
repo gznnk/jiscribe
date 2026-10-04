@@ -13,6 +13,10 @@ import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/Obje
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
+import type {
+	ObjectStyleRegistry,
+	StyleIntentRegistries,
+} from "../style/ObjectStyleRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
@@ -106,15 +110,26 @@ export interface ICanvasRegistries {
 		get(commandId: string): CommandLike | undefined;
 	};
 	/**
+	 * Per-type style tables, read by the walkers that write a style
+	 * (applyStyleIntent) and report it (readStyleIntent): what a style intent
+	 * means to the type it is addressed to.
+	 */
+	objectStyle: ObjectStyleRegistry;
+	/**
 	 * Styleable-property update dispatch, used by the menus' gesture route
 	 * (applyStylePropertyPart) and the reducer's STYLE_PROPERTY_UPDATE. Inline shape for the same acyclicity
 	 * reason as `command` (the concrete class is `StylePropertyRegistry`).
 	 */
 	styleProperty: {
+		/**
+		 * @param registries - This very bundle, for the properties already answered
+		 *   by the style tables (applyStyleIntent); a caller hands its own over
+		 */
 		apply(
 			state: CanvasControllerState,
 			property: string,
 			value: string,
+			registries: StyleIntentRegistries,
 		): CanvasControllerState;
 	};
 }

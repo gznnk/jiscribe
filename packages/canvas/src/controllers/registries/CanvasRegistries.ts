@@ -26,6 +26,7 @@ import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
+import type { ObjectStyleRegistry } from "../style/ObjectStyleRegistry";
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
@@ -97,6 +98,11 @@ export type CanvasRegistries = {
 	propertyPanel: PropertyPanelRegistry;
 	stencil: StencilRegistry;
 	objectFactory: ObjectFactoryRegistry;
+	/**
+	 * Per-type style tables: which style intents a type takes and where each
+	 * lands in its data, so writing a style and reporting it read one answer.
+	 */
+	objectStyle: ObjectStyleRegistry;
 	styleProperty: StylePropertyRegistry;
 };
 

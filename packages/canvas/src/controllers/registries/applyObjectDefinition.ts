@@ -103,6 +103,7 @@ import {
 import { createTextSlotPartKindDefinition } from "../selection/createTextSlotPartKindDefinition";
 import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
 import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
+import { coreStyleTable } from "../style/coreStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
@@ -458,6 +459,7 @@ export const applyObjectDefinition = (
 	registries.objectComponent.register(type, definition.component);
 	registries.objectTextStyleDefaults.registerDefinition(type, definition);
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
+	registries.objectStyle.register(type, coreStyleTable(definition.features));
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {
 		registries.objectAutoHeight.register(type);

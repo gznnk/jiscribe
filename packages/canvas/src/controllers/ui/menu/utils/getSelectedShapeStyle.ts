@@ -1,5 +1,3 @@
-import { isNumber, isString } from "@jiscribe/basic-validators";
-import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import type {
 	ObjectShapeStyleDefaultsRegistry,
@@ -9,6 +7,7 @@ import type {
 
 import { getFirstSelectedWithStyleGroup } from "./getFirstSelectedWithStyleGroup";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { pickShapeStyleFields } from "../../../utils/pickShapeStyleFields";
 
 const NOTHING_SELECTED: ResolvedShapeStyle = { ...SHAPE_STYLE_FALLBACK };
 
@@ -19,9 +18,9 @@ const NOTHING_SELECTED: ResolvedShapeStyle = { ...SHAPE_STYLE_FALLBACK };
  * The built-in menus state the whole selection instead, resolving each object
  * through this (readSelectionShapeStyle).
  *
- * The single place that reads the style fields off an ObjectState, which is why
- * the cast to a bag of unknown values lives here: a field the state carries with
- * the wrong type is dropped rather than passed on, and resolution takes over.
+ * The object's own fields are read through `pickShapeStyleFields`, which is what
+ * drops a field the state carries with the wrong type and lets resolution take
+ * over for it.
  *
  * @param selectedIds - The selection, in the order the first match is taken from; a selected group is searched down into its descendants
  * @param objects - Every object of the canvas, keyed by id; ids not in it are skipped
@@ -43,15 +42,8 @@ export const getSelectedShapeStyle = (
 	if (selected === undefined) {
 		return NOTHING_SELECTED;
 	}
-	const own = selected as Record<string, unknown>;
-	return shapeStyleDefaults.resolveShapeStyle(selected.type, {
-		stroke: isString(own.stroke) ? own.stroke : undefined,
-		strokeWidth: isNumber(own.strokeWidth) ? own.strokeWidth : undefined,
-		strokeDashType: isStrokeDashType(own.strokeDashType)
-			? own.strokeDashType
-			: undefined,
-		strokeOpacity: isNumber(own.strokeOpacity) ? own.strokeOpacity : undefined,
-		fill: isString(own.fill) ? own.fill : undefined,
-		fillOpacity: isNumber(own.fillOpacity) ? own.fillOpacity : undefined,
-	});
+	return shapeStyleDefaults.resolveShapeStyle(
+		selected.type,
+		pickShapeStyleFields(selected),
+	);
 };

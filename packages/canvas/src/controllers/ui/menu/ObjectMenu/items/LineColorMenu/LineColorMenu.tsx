@@ -40,13 +40,8 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { stroke } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
-	);
+	const registries = useCanvasRegistries();
+	const { stroke } = readSelectionShapeStyle(canvasState, registries, "stroke");
 	const isMixed = isMixedSelectionValue(stroke);
 	const currentColor = selectionValueOr(stroke, SHAPE_STYLE_FALLBACK.stroke);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(

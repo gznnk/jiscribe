@@ -1,14 +1,13 @@
 import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
-import type {
-	ObjectShapeStyleDefaultsRegistry,
-	ShapeStyleGroup,
-} from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ShapeStyleGroup } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 
 import { collectSelectionObjects } from "./collectSelectionObjects";
 import { getSelectedShapeStyle } from "./getSelectedShapeStyle";
 import type { SelectionValue } from "./SelectionValue";
 import { combineSelectionValues } from "./SelectionValue";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { StyleIntentRegistries } from "../../../style/ObjectStyleRegistry";
+import { readStyleIntent } from "../../../style/readStyleIntent";
 
 /**
  * The dash a stroke nobody declared one for is drawn with. A resolved style
@@ -42,18 +41,21 @@ export type SelectionShapeStyle = {
  * drawn with: a shape stating `#fff` and one whose type defaults to `#fff` read
  * as one value, not two.
  *
- * @param selectedIds - The selection; a selected group contributes its descendants too, and a selected connector answers for itself on the rows it declares
- * @param objects - Every object of the canvas, keyed by id
- * @param shapeStyleDefaults - Per-canvas ObjectShapeStyleDefaultsRegistry, consulted per object by its own type
+ * `fill` is the one field already answered by the style tables
+ * ({@link readStyleIntent}); the rest follow as their intents move over, and
+ * this whole function goes with the last of them.
+ *
+ * @param state - The canvas state; a selected group contributes its descendants too, and a selected connector answers for itself on the rows it declares
+ * @param registries - The canvas's style tables and shape-style defaults, the latter consulted per object by its own type
  * @param styleGroup - Which group decides who has a say: `"stroke"` for the outline rows, `"fill"` for the face ones. Every field is answered either way, but only the group's own fields were narrowed to the objects that declare them
  * @returns Every field; each is `none` when no object of the selection declares `styleGroup`
  */
 export const readSelectionShapeStyle = (
-	selectedIds: readonly string[],
-	objects: Record<string, ObjectState>,
-	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
+	state: CanvasControllerState,
+	registries: StyleIntentRegistries,
 	styleGroup: ShapeStyleGroup,
 ): SelectionShapeStyle => {
+	const { objects } = state;
 	const strokes: string[] = [];
 	const strokeWidths: number[] = [];
 	const strokeDashTypes: StrokeDashType[] = [];
@@ -61,14 +63,17 @@ export const readSelectionShapeStyle = (
 	const fills: string[] = [];
 	const fillOpacities: number[] = [];
 
-	for (const object of collectSelectionObjects(selectedIds, objects)) {
+	for (const object of collectSelectionObjects(
+		state.selection.objectIds,
+		objects,
+	)) {
 		if (!object.features?.[styleGroup]) {
 			continue;
 		}
 		const style = getSelectedShapeStyle(
 			[object.id],
 			{ [object.id]: object },
-			shapeStyleDefaults,
+			registries.objectShapeStyleDefaults,
 			styleGroup,
 		);
 		strokes.push(style.stroke);
@@ -84,7 +89,14 @@ export const readSelectionShapeStyle = (
 		strokeWidth: combineSelectionValues(strokeWidths),
 		strokeDashType: combineSelectionValues(strokeDashTypes),
 		strokeOpacity: combineSelectionValues(strokeOpacities),
-		fill: combineSelectionValues(fills),
+		// A `"stroke"` call keeps the walk above: it answers the fill of whoever
+		// declares a *stroke*, which is a different set of objects from the one the
+		// fill intent reaches. Nothing reads that field today, and the distinction
+		// disappears once the stroke group moves over as well.
+		fill:
+			styleGroup === "fill"
+				? readStyleIntent(state, "fill", registries)
+				: combineSelectionValues(fills),
 		fillOpacity: combineSelectionValues(fillOpacities),
 	};
 };
