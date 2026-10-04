@@ -131,20 +131,26 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   draft and nothing else, and what is being edited is `selection` — the lone
   selected object, with the slot as its `textSlot` part where the type has slots
   to pick (a type holding one body picks nothing below itself, so that body is
-  the slot). Read it through `resolveTextEdit`, the one place the two halves are
-  paired again, which throws rather than returning null when they do not pair up
-  (a session with no owner is a bug, not an empty editor). Two things the user
-  sees follow from the owner being in one place. A double click on a multi-slot
-  shape that was not yet selected now picks the slot it opens, the way Enter and a
-  second click already did, so the text menus read that slot rather than the
-  shape's first one, and Escape leaves the editor, then the slot, then the shape
-  — three steps however the editor was opened, where this path had two. And the
-  host's `select()` commits what is being typed before moving the selection,
-  instead of leaving the session pointing at the newly selected object. A slot
-  that disappears under an open editor now closes it, the draft being discarded
-  for want of anywhere to write it — `reconcileSelection` (renamed from
-  `reconcileObjectPartSelection`) is the one net over both halves, so an editor
-  can no longer outlive the object or slot it was opened on.
+  the slot). Inside the canvas the two halves are paired again in one place,
+  `resolveTextEdit`, which throws rather than returning null when they do not pair
+  up (a session with no owner is a bug, not an empty editor). Three things the
+  user sees follow from the owner being in one place. A double click on a
+  multi-slot shape that was not yet selected now picks the slot it opens, the way
+  Enter and a second click already did, so the text menus read that slot rather
+  than the shape's first one, and Escape leaves the editor, then the slot, then
+  the shape — three steps however the editor was opened, where this path had two.
+  The host's `select()` commits what is being typed before moving the selection,
+  instead of leaving the session pointing at the newly selected object, while a
+  `select()` naming the selection already held leaves the editor open. And a
+  double click that opens an editor on a child of a group, or on one shape of a
+  multi-selection, narrows the selection to that shape alone and leaves it there
+  once the edit ends: the owner is the selection, so there is no group or
+  multi-selection left to return to. A slot that disappears under an open editor
+  now closes it, the draft being discarded for want of anywhere to write it —
+  `reconcileSelection` (renamed from `reconcileObjectPartSelection`) is the one
+  net over both halves, and it closes a session over a slot type the moment
+  `selection.part` stops naming a slot, so an editor can no longer outlive the
+  object or slot it was opened on.
 - **For plugin authors: a sub-part's element carries its address as
   `data-part="<kind>:<id>"`.** A text slot's element used to carry the bare slot
   id; it now carries `textSlot:<slotId>`, built with `textSlotPart(slotId)`

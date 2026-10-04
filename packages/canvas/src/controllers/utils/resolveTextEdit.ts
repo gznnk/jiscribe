@@ -52,7 +52,9 @@ export type ResolvedTextEdit =
  *   slot to edit, a label session's owner is no connector. Unreachable for a
  *   state the reducer has handed on, which closes such a session on the way out
  *   (`reconcileSelection`); returning null instead would make the editor vanish
- *   with nothing to trace it back to
+ *   with nothing to trace it back to. A session over a type with slots whose
+ *   `selection.part` no longer names one is closed there too, rather than being
+ *   caught here: the fallback below cannot tell which slot was meant
  */
 export const resolveTextEdit = (
 	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
@@ -95,8 +97,11 @@ export const resolveTextEdit = (
 			`Shape text edit is open over an object holding no text slots: ${objectId}`,
 		);
 	}
-	// A slot pick only exists where the type spells its text out as slots; a type
-	// holding one body picks nothing below itself, and that body is the slot.
+	// The fallback is for the types that pick nothing below themselves: one
+	// holding a single body, which is the slot. A type spelling its text out as
+	// slots always names the one being edited, the reducer closing a session that
+	// stops doing so (reconcileSelection), so the fallback never stands in for a
+	// slot it could only guess at.
 	const slotId = isTextSlotSelection(part)
 		? collectSelectedPartIds(part)[0]
 		: getFirstTextSlotId(owner.text);

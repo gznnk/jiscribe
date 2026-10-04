@@ -199,16 +199,33 @@ export const createCanvasReducer =
 			}
 
 			case "SET_SELECTION": {
+				// Resolved against the state as it stands: a commit rewrites one
+				// object's text, never which ids the canvas holds, so what the request
+				// resolves to is the same before and after one.
+				const { selectedIds } = resolveRequestedSelection(
+					action.ids,
+					state.objects,
+				);
+				// A request naming the selection already held moves nothing, so an open
+				// session stays open — `selection.part` and all, since a session over a
+				// type with slots dies the moment the slot is no longer named
+				// (reconcileSelection). Otherwise a host restating the selection it just
+				// read would end typing it never asked about.
+				if (
+					state.textEditState &&
+					selectedIds.length === state.selection.objectIds.length &&
+					selectedIds.every(
+						(id, index) => id === state.selection.objectIds[index],
+					)
+				) {
+					return state;
+				}
 				// An open editing session belongs to the selection it sits on (see
 				// textEditState), so moving the selection ends the session rather than
 				// leaving it pointing at whatever was just selected. Committed, not
 				// discarded: the host asked for another selection, not for the typing
 				// to be thrown away.
 				const committedResult = commitTextEditIfNeeded(state);
-				const { selectedIds } = resolveRequestedSelection(
-					action.ids,
-					committedResult.objects,
-				);
 				const selectedResult: CanvasControllerState = {
 					...committedResult,
 					// The part hanging off the previous selection means nothing for the

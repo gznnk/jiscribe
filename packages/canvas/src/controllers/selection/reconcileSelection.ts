@@ -1,5 +1,6 @@
 import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "./ObjectPartSelection";
+import { isTextSlotSelection, TEXT_SLOT_PART_KIND } from "./textSlotPartKind";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -46,6 +47,28 @@ const isTextEditOwnerLive = (
 };
 
 /**
+ * Whether a shape session still names the slot it is written back to. A type that
+ * spells its text out as slots says which one in `selection.part`, so a part of
+ * another kind — or none — leaves the session with no slot of its own, and
+ * `resolveTextEdit` would fall back to the type's first one. A type holding one
+ * body registers no slot kind and names nothing below itself, that body being the
+ * slot.
+ */
+const isTextEditSlotAddressed = (
+	target: ObjectState | undefined,
+	part: ObjectPartSelection | null,
+	objectPartKind: ObjectPartKindRegistry,
+): boolean => {
+	if (target === undefined) {
+		return false;
+	}
+	return (
+		objectPartKind.get(target.type, TEXT_SLOT_PART_KIND) === undefined ||
+		isTextSlotSelection(part)
+	);
+};
+
+/**
  * Brings the selection and what hangs off it — the parts picked below the object,
  * and the open text edit — back in line with the state the action just produced.
  * The safety net every reducer branch that rewrites `selection` or `objects` runs
@@ -61,9 +84,11 @@ const isTextEditOwnerLive = (
  *   ranges (`has`)
  * - the open text edit, once no object can hold it: the selection is not one live
  *   object, a shape session's object holds no text slots, a label session's
- *   object is no connector, or — for a shape session — the part naming the slot
- *   it was being written to has just been dropped. Discarded, not committed:
- *   there is nowhere left to write the draft
+ *   object is no connector, or — for a shape session over a type that spells its
+ *   text out as slots — `selection.part` is no longer the live textSlot pick
+ *   naming the slot it was being written to, whether it was dropped here or some
+ *   writer left a part of another kind behind. Discarded, not committed: there is
+ *   nowhere left to write the draft
  *
  * Catches what is gone, not what was renumbered: an operation that renumbers a
  * kind's ids rewrites or clears the selection itself (see ObjectPartSelection).
@@ -72,7 +97,9 @@ const isTextEditOwnerLive = (
  *   edit may name something the same action removed
  * @param objectPartKind - Per-canvas registry of part kinds, asked for the
  *   selection's own `kind` under the selected object's type; a type that declares
- *   no such kind has no parts to select, so the selection is dropped
+ *   no such kind has no parts to select, so the selection is dropped. Asked for
+ *   the textSlot kind as well, to tell a type whose session needs a slot pick
+ *   from one holding a single body
  * @returns `state` itself (same reference) when nothing has to change, which is
  *   what keeps memoized readers from re-rendering; otherwise a copy with the dead
  *   half nulled
@@ -96,7 +123,8 @@ export const reconcileSelection = (
 	const isTextEditLive =
 		!textEditState ||
 		(isTextEditOwnerLive(target, textEditState) &&
-			(textEditState.kind !== "shape" || isPartLive));
+			(textEditState.kind !== "shape" ||
+				(isPartLive && isTextEditSlotAddressed(target, part, objectPartKind))));
 	if (isPartLive && isTextEditLive) {
 		return state;
 	}

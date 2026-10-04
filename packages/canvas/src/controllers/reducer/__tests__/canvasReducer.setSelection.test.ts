@@ -113,6 +113,14 @@ describe("canvasReducer / SET_SELECTION", () => {
 			expect(next.saveRequest.version).toBe(state.saveRequest.version + 1);
 		});
 
+		it("leaves the editor open when the request names the selection already held", () => {
+			const state = editingState();
+
+			const next = canvasReducer(state, setSelection(["rect-1"]));
+
+			expect(next).toBe(state);
+		});
+
 		it("records nothing when the draft was never changed", () => {
 			const state = createState({
 				selection: selectionOf(["rect-1"]),

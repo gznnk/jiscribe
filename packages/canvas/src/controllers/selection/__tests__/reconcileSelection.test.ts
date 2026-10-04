@@ -4,7 +4,10 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTextSlotPartKindDefinition } from "../createTextSlotPartKindDefinition";
 import { createVertexPartKindDefinition } from "../createVertexPartKindDefinition";
-import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
+import {
+	createObjectPartKindRegistry,
+	type ObjectPartKindDefinition,
+} from "../ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../ObjectPartSelection";
 import { reconcileSelection } from "../reconcileSelection";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
@@ -29,6 +32,30 @@ const singleBodyShape = (id: string): ObjectState =>
 		text: { body: { text: "hello" } },
 	}) as unknown as ObjectState;
 
+/**
+ * A slot type picking something else of its own as well: the one way
+ * `selection.part` can be live and still name no slot to write a draft back to.
+ */
+const cellShape = (id: string): ObjectState =>
+	({
+		id,
+		type: "table",
+		features: { text: "slots" },
+		text: { a1: { text: "x" } },
+	}) as unknown as ObjectState;
+
+/** The second kind "table" declares, every id of which it holds. */
+const cellPartKind: ObjectPartKindDefinition = {
+	kind: "cell",
+	has: () => true,
+};
+
+/** A single-cell pick, the shape of a part of the kind that is no slot. */
+const cellPart: ObjectPartSelection = {
+	kind: cellPartKind.kind,
+	ranges: [{ anchorId: "a1", focusId: "a1" }],
+};
+
 /** A connector carrying two waypoints, the parts of its `vertex` kind. */
 const connector = (id: string): ObjectState =>
 	({
@@ -43,10 +70,15 @@ const connector = (id: string): ObjectState =>
 /**
  * The registry every case here reconciles against: "record" takes part the way
  * applyObjectDefinition makes every `features.text === "slots"` type take part,
- * "connector" declares its waypoints, and nothing else takes part at all.
+ * "table" takes both that and cells of its own, "connector" declares its
+ * waypoints, and nothing else takes part at all.
  */
 const objectPartKind = createObjectPartKindRegistry();
 objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
+objectPartKind.register("table", [
+	createTextSlotPartKindDefinition(),
+	cellPartKind,
+]);
 objectPartKind.register("connector", [createVertexPartKindDefinition(2)]);
 
 const makeState = (
@@ -230,6 +262,27 @@ describe("reconcileSelection", () => {
 				{ kind: "shape", text: "edited" },
 			);
 			expect(reconcileSelection(state, objectPartKind)).toBe(state);
+		});
+
+		it("is discarded on a slot type that picks nothing, which names no slot", () => {
+			const state = editing(
+				makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], null),
+				{ kind: "shape", text: "edited" },
+			);
+			expect(
+				reconcileSelection(state, objectPartKind).textEditState,
+			).toBeNull();
+		});
+
+		it("is discarded on a slot type whose live pick is of another kind", () => {
+			const state = editing(
+				makeState({ "tbl-1": cellShape("tbl-1") }, ["tbl-1"], cellPart),
+				{ kind: "shape", text: "edited" },
+			);
+			const after = reconcileSelection(state, objectPartKind);
+			// The pick itself is live, so it stays; only the session goes.
+			expect(after.selection.part).toBe(cellPart);
+			expect(after.textEditState).toBeNull();
 		});
 
 		it("is discarded along with the slot it was being written to", () => {

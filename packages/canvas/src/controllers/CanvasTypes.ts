@@ -595,11 +595,13 @@ export type CanvasControllerState = CanvasState & {
 	 *
 	 * Three invariants every writer keeps:
 	 * - non-null means `selection.objectIds` holds exactly one id, the owner's
-	 * - `kind: "shape"` means that object holds text. The slot is
-	 *   `selection.part`, one collapsed textSlot range, for a type that spells
-	 *   its text out as slots; a type holding one body takes no pick below itself
-	 *   (applyObjectDefinition registers the kind only for the former), so its
-	 *   `part` is null and the slot is the only one its `text` holds
+	 * - `kind: "shape"` means that object holds text. A type that spells its text
+	 *   out as slots — one the textSlot kind is registered for
+	 *   (applyObjectDefinition) — must name the slot in `selection.part`, as one
+	 *   collapsed textSlot range; nothing else there, a pick of another kind
+	 *   included, keeps the session alive. A type holding one body registers no
+	 *   such kind and takes no pick below itself, so its `part` is null and the
+	 *   slot is the only one its `text` holds
 	 * - `kind: "connectorLabel"` means that one id is a connector, with
 	 *   `selection.part` null
 	 *
