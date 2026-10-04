@@ -47,8 +47,8 @@ export type SelectionShapeStyle = {
  *
  * @param state - The canvas state; a selected group contributes its descendants too, and a selected connector answers for itself on the rows it declares
  * @param registries - The canvas's style tables and shape-style defaults, the latter consulted per object by its own type
- * @param styleGroup - Which group decides who has a say: `"stroke"` for the outline rows, `"fill"` for the face ones. Every field is answered either way, but only the group's own fields were narrowed to the objects that declare them
- * @returns Every field; each is `none` when no object of the selection declares `styleGroup`
+ * @param styleGroup - Which group decides who has a say: `"stroke"` for the outline rows, `"fill"` for the face ones. Every field is answered either way, but only the group's own fields were narrowed to the objects that declare them — except `fill`, already narrowed by its own intent
+ * @returns Every field; each is `none` when no object of the selection declares `styleGroup` (`fill`: declares a fill)
  */
 export const readSelectionShapeStyle = (
 	state: CanvasControllerState,
@@ -60,7 +60,6 @@ export const readSelectionShapeStyle = (
 	const strokeWidths: number[] = [];
 	const strokeDashTypes: StrokeDashType[] = [];
 	const strokeOpacities: number[] = [];
-	const fills: string[] = [];
 	const fillOpacities: number[] = [];
 
 	for (const object of collectSelectionObjects(
@@ -80,7 +79,6 @@ export const readSelectionShapeStyle = (
 		strokeWidths.push(style.strokeWidth);
 		strokeDashTypes.push(style.strokeDashType ?? UNDECLARED_STROKE_DASH);
 		strokeOpacities.push(style.strokeOpacity);
-		fills.push(style.fill);
 		fillOpacities.push(style.fillOpacity);
 	}
 
@@ -89,14 +87,10 @@ export const readSelectionShapeStyle = (
 		strokeWidth: combineSelectionValues(strokeWidths),
 		strokeDashType: combineSelectionValues(strokeDashTypes),
 		strokeOpacity: combineSelectionValues(strokeOpacities),
-		// A `"stroke"` call keeps the walk above: it answers the fill of whoever
-		// declares a *stroke*, which is a different set of objects from the one the
-		// fill intent reaches. Nothing reads that field today, and the distinction
-		// disappears once the stroke group moves over as well.
-		fill:
-			styleGroup === "fill"
-				? readStyleIntent(state, "fill", registries)
-				: combineSelectionValues(fills),
+		// Read through the fill intent whatever `styleGroup` is, so this field is
+		// narrowed to the objects that declare a fill — the set a write reaches —
+		// rather than to whoever declares the group asked for.
+		fill: readStyleIntent(state, "fill", registries),
 		fillOpacity: combineSelectionValues(fillOpacities),
 	};
 };
