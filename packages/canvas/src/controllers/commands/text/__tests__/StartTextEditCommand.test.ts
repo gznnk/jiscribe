@@ -56,8 +56,7 @@ const stateWithSelection = (selectedId: string) =>
 const stateWithConnectorSelected = (connectorId: string) =>
 	deepFreezeState({
 		...createInitialControllerState(doc, registries),
-		selectedIds: [],
-		selectedConnectorId: connectorId,
+		selectedIds: [connectorId],
 	});
 
 describe("StartTextEditCommand", () => {

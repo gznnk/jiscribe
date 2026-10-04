@@ -126,6 +126,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: a connector is selected through `selectedIds` like
+  everything else.** The separate single-connector field is gone, so the one id
+  list carries every selection the canvas holds; the rule it carried stays as the
+  writers' own — a connector is selected on its own, one of them, never beside a
+  shape — and a reader that needs it asks `getSelectedConnectorId` for that
+  shape. `ObjectMenuItemProps` and `PropertyPanelItemProps` no longer pass
+  `selectedConnectorId`: a row reads the connector off the `selectedIds` and
+  `objects` it already receives. For hosts nothing changes — `getSelection`,
+  `select` and `onSelectionChange` have levelled the two into one list all along
+  — except that `select`'s report drops the same field.
 - **A right click selects the shape it lands on, and then opens the context
   menu.** The menu used to act on whatever was selected at the time, so a right
   click on another shape ran the command on the one still selected elsewhere —

@@ -14,7 +14,6 @@ const baseState = (
 	({
 		objects: {},
 		selectedIds: [],
-		selectedConnectorId: null,
 		objectPartSelection: null,
 		multiSelectGroup: null,
 		areaSelection: null,
@@ -49,7 +48,6 @@ describe("EscapeSelectionCommand", () => {
 	it("clears all selection and editing state when nothing is part-selected", () => {
 		const state = baseState({
 			selectedIds: ["a", "b"],
-			selectedConnectorId: "c1",
 			multiSelectGroup: { id: "ms" } as never,
 			areaSelection: { x: 0, y: 0 } as never,
 			shapeDrawing: { type: "rect" } as never,
@@ -58,7 +56,6 @@ describe("EscapeSelectionCommand", () => {
 		});
 		const next = EscapeSelectionCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedConnectorId).toBeNull();
 		expect(next.objectPartSelection).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.areaSelection).toBeNull();

@@ -172,8 +172,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 			registries,
 		);
 
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedIds).toEqual([]);
+		expect(next.selectedIds).toEqual(["c1"]);
 		// The part selection is the reducer's to drop, which it does for every
 		// gesture result (reconcileObjectPartSelection).
 		expect(
@@ -193,7 +192,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 			dragEvent("dragStart", { x: 100, y: 0 }, { x: 100, y: 0 }),
 			registries,
 		);
-		expect(next.selectedConnectorId).toBeNull();
+		expect(next.selectedIds).toEqual([]);
 		expect(next.edgeScrollEnabled).toBe(false);
 	});
 });

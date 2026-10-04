@@ -72,9 +72,6 @@ const RESIZE_INTENT_ANCHOR = {
 const resolveTransformTarget = (
 	state: CanvasControllerState,
 ): TransformTarget | null => {
-	if (state.selectedConnectorId != null) {
-		return null;
-	}
 	if (state.selectedIds.length > 1) {
 		const multiSelectGroup = state.multiSelectGroup;
 		if (

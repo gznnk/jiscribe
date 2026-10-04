@@ -24,8 +24,7 @@ export const beginConnectorReshape = (
 	}
 	return {
 		...nextState,
-		selectedConnectorId: connectorId,
-		selectedIds: [],
+		selectedIds: [connectorId],
 		// Reshaping renumbers the connector's waypoints, so a picked one is dropped
 		// rather than left addressing whoever took the number over.
 		objectPartSelection: null,

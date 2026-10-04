@@ -4,12 +4,11 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 /**
  * Deleting a waypoint of a connector that was picked by clicking its handle.
  *
- * polyline-vertex.spec covers the same gesture on a standalone shape, where the
- * vertex belongs to the one object in `selectedIds`. A connector is selected
- * through `selectedConnectorId` instead, so this is the only path that exercises
- * the "sole selection" test reading that channel as well
- * (reconcileObjectPartSelection). Lose it and the waypoint pick is dropped the
- * moment it is made, which turns Delete back into "delete the connector".
+ * polyline-vertex.spec covers the same gesture on a standalone shape. A
+ * connector reaches `selectedIds` only on its own, so this is the only path that
+ * exercises the "sole selection" test (reconcileObjectPartSelection) for one.
+ * Lose it and the waypoint pick is dropped the moment it is made, which turns
+ * Delete back into "delete the connector".
  *
  * Sync note: a waypoint counts as picked once its handle takes the selection
  * fill (#0d99ff), the same commit point polyline-vertex.spec waits for. Delete is

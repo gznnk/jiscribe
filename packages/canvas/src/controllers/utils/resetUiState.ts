@@ -29,7 +29,6 @@ export type UiStateReset = Pick<
 	| "multiSelectGroup"
 	| "textEditState"
 	| "connectorDraft"
-	| "selectedConnectorId"
 	| "objectPartSelection"
 	| "snapFeedback"
 	| "axisLockFeedback"
@@ -65,7 +64,6 @@ export const resetUiState = (): UiStateReset => ({
 	multiSelectGroup: null,
 	textEditState: null,
 	connectorDraft: null,
-	selectedConnectorId: null,
 	objectPartSelection: null,
 	snapFeedback: null,
 	axisLockFeedback: null,

@@ -8,22 +8,35 @@ const connector = (id: string, extra?: Record<string, unknown>): ObjectState =>
 
 describe("getSelectedRouting", () => {
 	it("no connector selected -> default orthogonal", () => {
-		expect(getSelectedRouting(null, {})).toBe("orthogonal");
+		expect(getSelectedRouting({ selectedIds: [], objects: {} })).toBe(
+			"orthogonal",
+		);
 	});
 
 	it("routing omitted -> orthogonal", () => {
-		expect(getSelectedRouting("c", { c: connector("c") })).toBe("orthogonal");
+		expect(
+			getSelectedRouting({
+				selectedIds: ["c"],
+				objects: { c: connector("c") },
+			}),
+		).toBe("orthogonal");
 	});
 
 	it("routing is 'straight' -> straight", () => {
 		expect(
-			getSelectedRouting("c", { c: connector("c", { routing: "straight" }) }),
+			getSelectedRouting({
+				selectedIds: ["c"],
+				objects: { c: connector("c", { routing: "straight" }) },
+			}),
 		).toBe("straight");
 	});
 
 	it("routing is 'orthogonal' -> orthogonal", () => {
 		expect(
-			getSelectedRouting("c", { c: connector("c", { routing: "orthogonal" }) }),
+			getSelectedRouting({
+				selectedIds: ["c"],
+				objects: { c: connector("c", { routing: "orthogonal" }) },
+			}),
 		).toBe("orthogonal");
 	});
 });

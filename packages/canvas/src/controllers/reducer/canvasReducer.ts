@@ -205,22 +205,20 @@ export const createCanvasReducer =
 			}
 
 			case "SET_SELECTION": {
-				const { selectedIds, selectedConnectorId } = resolveRequestedSelection(
+				const { selectedIds } = resolveRequestedSelection(
 					action.ids,
 					state.objects,
 				);
 				return {
 					...state,
 					selectedIds,
-					selectedConnectorId,
 					multiSelectGroup: createMultiSelectGroup(
 						selectedIds,
 						state.objects,
 						state.multiSelectGroup,
 					),
-					// The channels are mutually exclusive, and the UI hanging off the
-					// previous selection means nothing for the new one (same clears as
-					// SelectAllCommand).
+					// The UI hanging off the previous selection means nothing for the
+					// new one (same clears as SelectAllCommand).
 					objectPartSelection: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
@@ -619,11 +617,7 @@ const buildPropertyCoalesceKey = (
 	prefix: string,
 	property: string,
 ): string => {
-	const target =
-		state.selectedIds.length > 0
-			? state.selectedIds.join(",")
-			: (state.selectedConnectorId ?? "");
-	return `${prefix}:${property}:${target}`;
+	return `${prefix}:${property}:${state.selectedIds.join(",")}`;
 };
 
 /**

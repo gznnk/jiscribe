@@ -25,9 +25,6 @@ export type SelectedFrameValues = {
 export const getSelectedFrameValues = (
 	state: CanvasControllerState,
 ): SelectedFrameValues | null => {
-	if (state.selectedConnectorId != null) {
-		return null;
-	}
 	const frame =
 		state.selectedIds.length > 1
 			? state.multiSelectGroup

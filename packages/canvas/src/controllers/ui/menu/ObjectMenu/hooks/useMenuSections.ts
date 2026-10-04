@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
 import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
@@ -42,23 +43,19 @@ const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] =>
 /**
  * Collects the menu sections of the current selection, before any slot narrowing.
  *
- * When a connector is selected (selectedConnectorId != null), returns the sections for
- * its type. When group objects are selected, expands the descendant concrete object
- * types; if multiple types are mixed, only the common sections are shown (AND-merge).
+ * A selected connector returns the sections for its type. When group objects are
+ * selected, expands the descendant concrete object types; if multiple types are
+ * mixed, only the common sections are shown (AND-merge).
  */
 const collectSelectionSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, objects } = state;
+	const { selectedIds, objects } = state;
 
-	// When a connector is selected, return the connector's sections instead of selectedIds
-	if (selectedConnectorId !== null) {
-		const connector = objects[selectedConnectorId];
-		if (!connector) {
-			return [];
-		}
-		return objectMenuRegistry.getSections(connector.type);
+	const connectorId = getSelectedConnectorId(state);
+	if (connectorId !== null) {
+		return objectMenuRegistry.getSections(objects[connectorId].type);
 	}
 
 	if (selectedIds.length === 0) {
@@ -133,8 +130,7 @@ export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, objectPartSelection, objects } =
-		state;
+	const { selectedIds, objectPartSelection, objects } = state;
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
@@ -146,7 +142,6 @@ export const useMenuSections = (
 		[
 			enabled,
 			selectedIds,
-			selectedConnectorId,
 			objectPartSelection,
 			isEditingShapeText,
 			objects,

@@ -429,11 +429,7 @@ const CanvasComponent = ({
 	// fold back out of order are still recognized as self-saves (#29).
 	const selfSaveNonceTracker = useSelfSaveNonceTracker();
 
-	useNotifySelectionChange(
-		state.selectedIds,
-		state.selectedConnectorId,
-		onSelectionChange,
-	);
+	useNotifySelectionChange(state.selectedIds, onSelectionChange);
 
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
@@ -802,7 +798,7 @@ const CanvasComponent = ({
 									objectPartSelection={objectPartSelection}
 								/>
 								<ConnectorControlsLayer
-									selectedConnectorId={state.selectedConnectorId}
+									selectedIds={state.selectedIds}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									objectPartSelection={objectPartSelection}

@@ -1,18 +1,21 @@
 import { isSelfLoopConnector } from "@jiscribe/doc/model/objects/connector/isSelfLoopConnector";
 
-import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
+import type { CanvasControllerState } from "../CanvasTypes";
+import { getSelectedConnectorId } from "./getSelectedConnectorId";
 
 /**
  * Whether the selected connector is a self-loop. Self-loops are orthogonal-only,
  * so the routing toggle is not rendered (switching to straight would break them).
+ *
+ * @param selection - The selection and the objects it names; a selection that is not a lone connector gives false
  */
 export const isSelectedConnectorSelfLoop = (
-	selectedConnectorId: string | null,
-	objects: Record<string, ObjectState>,
+	selection: Pick<CanvasControllerState, "selectedIds" | "objects">,
 ): boolean => {
+	const connectorId = getSelectedConnectorId(selection);
 	const connector =
-		selectedConnectorId !== null ? objects[selectedConnectorId] : undefined;
+		connectorId !== null ? selection.objects[connectorId] : undefined;
 	if (!connector || connector.type !== "connector") {
 		return false;
 	}

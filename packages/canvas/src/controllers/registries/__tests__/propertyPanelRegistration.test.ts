@@ -49,9 +49,13 @@ const selectionOfConnector = (
 	connectorId: string,
 	connector: Record<string, unknown>,
 ): PropertyPanelSelection => ({
-	objects: { [connectorId]: connector as unknown as ObjectState },
-	selectedIds: [],
-	selectedConnectorId: connectorId,
+	objects: {
+		[connectorId]: {
+			type: "connector",
+			...connector,
+		} as unknown as ObjectState,
+	},
+	selectedIds: [connectorId],
 });
 
 describe("propertyPanel registration", () => {

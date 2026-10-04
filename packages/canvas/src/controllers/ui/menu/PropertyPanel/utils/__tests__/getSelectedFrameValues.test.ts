@@ -40,7 +40,6 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		selectedIds: [],
-		selectedConnectorId: null,
 		multiSelectGroup: null,
 		objects: {},
 		...overrides,
@@ -52,9 +51,17 @@ describe("getSelectedFrameValues", () => {
 	});
 
 	it("a connector selection has no frame", () => {
+		// A connector's geometry is its waypoints: no cx / cy / width / height and no
+		// transform, which is what isTransformedFrame refuses it on.
 		const state = makeState({
-			selectedConnectorId: "c",
-			objects: { c: { id: "c", type: "connector" } as unknown as ObjectState },
+			selectedIds: ["c"],
+			objects: {
+				c: {
+					id: "c",
+					type: "connector",
+					points: [{ x: 50, y: 50 }],
+				} as unknown as ObjectState,
+			},
 		});
 		expect(getSelectedFrameValues(state)).toBeNull();
 	});

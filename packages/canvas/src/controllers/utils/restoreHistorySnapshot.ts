@@ -81,11 +81,8 @@ export const restoreHistorySnapshot = (
 		mapper,
 		registries.objectContentResizer,
 	);
-	const { selectedIds, selectedConnectorId } = resolveRequestedSelection(
-		[
-			...state.selectedIds,
-			...(state.selectedConnectorId ? [state.selectedConnectorId] : []),
-		],
+	const { selectedIds } = resolveRequestedSelection(
+		state.selectedIds,
 		restoredState.objects,
 	);
 
@@ -93,7 +90,6 @@ export const restoreHistorySnapshot = (
 		...restoredState,
 		...resetUiState(),
 		selectedIds,
-		selectedConnectorId,
 		// Rebuilt rather than carried: the objects it wraps may have moved or gone.
 		multiSelectGroup: createMultiSelectGroup(
 			selectedIds,

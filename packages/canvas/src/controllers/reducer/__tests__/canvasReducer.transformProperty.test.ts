@@ -274,7 +274,7 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 
 		it("leaves it alone for a connector-only selection", () => {
 			const connectorSelected = createTestState(connectorDoc, {
-				selectedConnectorId: "conn-1",
+				selectedIds: ["conn-1"],
 			});
 
 			expectNoOp(connectorSelected, "width", 40);

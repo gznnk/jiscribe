@@ -63,7 +63,6 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],
-		selectedConnectorId: null,
 		objectPartSelection: null,
 		multiSelectGroup: null,
 		textEditState: null,
@@ -129,7 +128,6 @@ const makeEditState = (
 		},
 		rootIds: [editingId, "rect-2"],
 		selectedIds: [],
-		selectedConnectorId: null,
 		objectPartSelection: null,
 		multiSelectGroup: null,
 		textEditState: {
@@ -259,7 +257,6 @@ const makeSlotState = (
 		},
 		rootIds: ["rec-1", "rect-2"],
 		selectedIds,
-		selectedConnectorId: null,
 		objectPartSelection,
 		multiSelectGroup: null,
 		textEditState: null,

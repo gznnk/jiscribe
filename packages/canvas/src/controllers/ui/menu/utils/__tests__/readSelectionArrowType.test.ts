@@ -32,12 +32,10 @@ const group = (id: string, childIds: string[]): GroupState =>
 const makeState = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
-	selectedConnectorId: string | null = null,
 ): CanvasControllerState =>
 	({
 		selectedIds,
 		objects,
-		selectedConnectorId,
 	}) as unknown as CanvasControllerState;
 
 describe("readSelectionArrowType", () => {
@@ -57,7 +55,7 @@ describe("readSelectionArrowType", () => {
 	it("the selected connector answers for itself", () => {
 		const objects = { c: connector("c", { endArrow: "Arrow" }) };
 		expect(
-			readSelectionArrowType(makeState([], objects, "c"), "endArrow"),
+			readSelectionArrowType(makeState(["c"], objects), "endArrow"),
 		).toEqual({ kind: "single", value: "Arrow" });
 	});
 

@@ -25,7 +25,7 @@ const SECTION_ID = "label-font-family";
  */
 const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selectedIds,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
@@ -37,7 +37,7 @@ const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const label = getSelectedConnectorLabel({ objects, selectedIds });
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

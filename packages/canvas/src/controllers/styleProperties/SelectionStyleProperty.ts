@@ -72,37 +72,15 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		value: string,
 	): CanvasControllerState {
-		const { selectedIds, selectedConnectorId, objects, objectPartSelection } =
-			state;
+		const { selectedIds, objects, objectPartSelection } = state;
 		const path = property.split(".");
-
-		// Connector selected (selectedIds is empty)
-		if (selectedIds.length === 0 && selectedConnectorId !== null) {
-			const connector = objects[selectedConnectorId];
-			if (!connector) {
-				return state;
-			}
-			const updated = this.applyToObject(
-				connector,
-				property,
-				path,
-				value,
-				objectPartSelection,
-			);
-			if (updated === null) {
-				return state;
-			}
-			// Copy-on-write view instead of a full spread: slider drags call apply
-			// per pointermove frame (#213). handleGesture / the reducer materialize.
-			const updatedObjects = createCowObjects(objects);
-			updatedObjects[selectedConnectorId] = updated;
-			return { ...state, objects: updatedObjects };
-		}
 
 		if (selectedIds.length === 0) {
 			return state;
 		}
 
+		// Copy-on-write view instead of a full spread: slider drags call apply
+		// per pointermove frame (#213). handleGesture / the reducer materialize.
 		const updatedObjects = createCowObjects(objects);
 		let changed = false;
 

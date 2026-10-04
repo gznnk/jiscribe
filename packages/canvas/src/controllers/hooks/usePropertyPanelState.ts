@@ -2,11 +2,10 @@ import { useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
-import { getEffectiveSelectedIds } from "../utils/getEffectiveSelectedIds";
 
 /**
  * Everything the properties sidebar reads, as one flat list to compare entry by
- * entry. The selection fields come first; after them, the objects the selection
+ * entry. The selection comes first; after it, the objects the selection
  * names — each selected object and, for a group, its descendants — which is the
  * only part of `objects` any row looks at (a row's frame, style, note and parent
  * are all fields of those objects).
@@ -15,7 +14,7 @@ import { getEffectiveSelectedIds } from "../utils/getEffectiveSelectedIds";
  * panel's reads and left out here goes stale on screen without a warning.
  */
 const readPropertyPanelKey = (state: CanvasControllerState): unknown[] => {
-	const selectedObjects = getEffectiveSelectedIds(state).flatMap((id) => [
+	const selectedObjects = state.selectedIds.flatMap((id) => [
 		state.objects[id],
 		...collectDescendantIds(id, state.objects).map(
 			(descendantId) => state.objects[descendantId],
@@ -23,7 +22,6 @@ const readPropertyPanelKey = (state: CanvasControllerState): unknown[] => {
 	]);
 	return [
 		state.selectedIds,
-		state.selectedConnectorId,
 		state.objectPartSelection,
 		state.textEditState,
 		state.multiSelectGroup,
