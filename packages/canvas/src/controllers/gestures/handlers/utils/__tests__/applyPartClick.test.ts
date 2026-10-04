@@ -1,17 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { vertexPartSelection } from "./support/vertexPartSelection";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { CanvasControllerState } from "../../CanvasTypes";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
+import { createTextSlotPartKindDefinition } from "../../../../selection/createTextSlotPartKindDefinition";
+import { createVertexPartKindDefinition } from "../../../../selection/createVertexPartKindDefinition";
+import { createObjectPartKindRegistry } from "../../../../selection/ObjectPartKindRegistry";
+import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
+import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { applyPartClick } from "../applyPartClick";
-import { createTextSlotPartKindDefinition } from "../createTextSlotPartKindDefinition";
-import {
-	createVertexPartKindDefinition,
-	vertexPart,
-} from "../createVertexPartKindDefinition";
-import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
-import type { ObjectPartSelection } from "../ObjectPartSelection";
-import { textSlotPart, TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
+import { textSlotPart, vertexPart } from "../partAddress";
 
 /** A record-like shape: multiple text slots, declared via features.text = "slots". */
 const slotShape = (id: string): ObjectState =>

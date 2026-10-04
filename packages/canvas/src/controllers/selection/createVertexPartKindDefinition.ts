@@ -1,7 +1,6 @@
 import type { Poly } from "@jiscribe/doc/model/objects/types/Poly";
 
 import type { ObjectPartKindDefinition } from "./ObjectPartKindRegistry";
-import { formatPartAddress } from "./partAddress";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /** The part-id namespace of the vertices a poly-geometry type stores in `points`. */
@@ -11,20 +10,9 @@ export const VERTEX_PART_KIND = "vertex";
 const CANONICAL_INDEX = /^(0|[1-9]\d*)$/;
 
 /**
- * The `data-part` one vertex handle carries: how a click picks that vertex
- * (applyPartClick) and a drag moves it (VertexControlHandler).
- *
- * @param index - Index into the object's `points`; a non-negative integer, since
- *   only the canonical decimal spelling names a vertex
- * @returns The `data-part` value, `vertex:<index>`
- */
-export const vertexPart = (index: number): string =>
-	formatPartAddress(VERTEX_PART_KIND, String(index));
-
-/**
  * The `vertex` part definition for a type whose state carries a `points` array,
- * with part ids spelled as the decimal index into it ("0", "1", …) — the id half
- * of the `data-part` its vertex handles carry ({@link vertexPart}).
+ * with part ids spelled as the decimal index into it ("0", "1", …). The kind half
+ * of the `data-part` its vertex handles carry, which `vertexPart` builds.
  *
  * @param minVertexCount - How few vertices the type still draws as itself; a
  *   deletion that would leave fewer is refused rather than applied. An open

@@ -24,8 +24,6 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import { applyPartClick } from "../../../selection/applyPartClick";
-import { readTextSlotPart } from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
@@ -34,9 +32,11 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { applyPartClick } from "../utils/applyPartClick";
 import { ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
+import { readTextSlotPart } from "../utils/partAddress";
 import {
 	buildSnapFeedback,
 	findSnap,

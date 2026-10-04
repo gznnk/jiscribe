@@ -179,10 +179,11 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 先頭のスロットに落とす）。
 
 オブジェクト自身のサブ部品の part 文法——`<kind>:<partId>`。`kind` は `ObjectPartKindRegistry` が
-答える名前空間、`partId` はコアには不透明——の正本は `controllers/selection/partAddress.ts` で、
-`menu` kind が自分の正本を持つのと同じ形。書く側は kind ごとの組み立て関数
-（`textSlotPart`。プラグイン向けに `@jiscribe/canvas` から公開。`vertexPart`）で住所を組み、
-`applyPartClick` が読み戻すので、ハンドラが kind を書くことはない。
+答える名前空間、`partId` はコアには不透明——の正本は
+`controllers/gestures/handlers/utils/partAddress.ts` で、`menu` kind が自分の正本を持つのと同じ形。
+書く側は kind ごとの組み立て関数（`textSlotPart`。プラグイン向けに `@jiscribe/canvas` からも公開。
+`vertexPart`）で住所を組み、クリック経路は `parsePartAddress` で分解する（`applyPartClick`）。
+ハンドラが kind を書くことはない。
 
 #### 移行（issue #81）— 完了
 

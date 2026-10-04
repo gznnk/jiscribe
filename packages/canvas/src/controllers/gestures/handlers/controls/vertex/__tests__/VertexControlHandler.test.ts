@@ -5,11 +5,9 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
-import {
-	vertexPart,
-	VERTEX_PART_KIND,
-} from "../../../../../selection/createVertexPartKindDefinition";
+import { VERTEX_PART_KIND } from "../../../../../selection/createVertexPartKindDefinition";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
+import { vertexPart } from "../../../utils/partAddress";
 import { calcSnapCandidates } from "../../../utils/snap/calcSnapCandidates";
 import { VertexControlHandler } from "../VertexControlHandler";
 

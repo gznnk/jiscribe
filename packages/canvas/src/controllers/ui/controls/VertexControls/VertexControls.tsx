@@ -3,7 +3,7 @@ import { Fragment, memo } from "react";
 
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
-import { vertexPart } from "../../../selection/createVertexPartKindDefinition";
+import { vertexPart } from "../../../gestures/handlers/utils/partAddress";
 
 const VERTEX_RING_RADIUS = 7;
 const VERTEX_RING_STROKE_WIDTH = 1.5;

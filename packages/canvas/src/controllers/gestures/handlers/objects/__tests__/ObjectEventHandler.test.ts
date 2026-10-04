@@ -6,12 +6,10 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../../../selection/createTextSlotPartKindDefinition";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
-import {
-	textSlotPart,
-	TEXT_SLOT_PART_KIND,
-} from "../../../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { Mods } from "../../../registry/ObjectBehaviorTypes";
+import { textSlotPart } from "../../utils/partAddress";
 import { ObjectEventHandler } from "../ObjectEventHandler";
 
 const registries = createTestRegistries();

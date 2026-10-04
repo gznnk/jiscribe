@@ -6,14 +6,14 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { applyPartClick } from "../../../../selection/applyPartClick";
 import { VERTEX_PART_KIND } from "../../../../selection/createVertexPartKindDefinition";
-import { parsePartAddress } from "../../../../selection/partAddress";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { applyPartClick } from "../../utils/applyPartClick";
 import { applyAxisLock } from "../../utils/axisLock";
+import { parsePartAddress } from "../../utils/partAddress";
 import { excludeCenterCandidates } from "../../utils/snap/excludeCenterCandidates";
 import {
 	buildSnapFeedback,
