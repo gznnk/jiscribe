@@ -30,10 +30,15 @@ export const selectTextSlot = (
 	objectPartKind: ObjectPartKindRegistry,
 ): CanvasSelection => {
 	const { objectIds, part } = selection;
+	// The object becomes the whole selection either way; a group or a
+	// multi-selection it was part of is dropped, and the array is kept only when
+	// it already named this object alone.
 	const isSameObject = objectIds.length === 1 && objectIds[0] === object.id;
 	const takesSlotPick =
 		objectPartKind.get(object.type, TEXT_SLOT_PART_KIND) !== undefined;
 	if (!takesSlotPick) {
+		// A single-body type: nothing to pick below the object, so `part` is null
+		// and the one body is the slot. Same reference when that is already so.
 		return isSameObject && part === null
 			? selection
 			: { objectIds: isSameObject ? objectIds : [object.id], part: null };
@@ -45,8 +50,11 @@ export const selectTextSlot = (
 		part.ranges[0].anchorId === slotId &&
 		part.ranges[0].focusId === slotId
 	) {
+		// Already this object and this slot alone: same reference.
 		return selection;
 	}
+	// A slot type: the slot is named as one collapsed textSlot range, replacing
+	// whatever part (another slot, a vertex, none) was picked before.
 	return {
 		objectIds: isSameObject ? objectIds : [object.id],
 		part: {
