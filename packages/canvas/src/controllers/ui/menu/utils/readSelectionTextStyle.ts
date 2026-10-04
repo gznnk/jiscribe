@@ -27,7 +27,7 @@ export type SelectionTextStyle = {
  * The styling of every slot the rows state, one entry per object that holds
  * text. A slot picked below the object, or a stretch of text being edited,
  * narrows the whole thing to that one target — both require a single selection
- * (reconcileObjectPartSelection / resolveTextEditSelection), so nothing is hidden
+ * (reconcileSelection / resolveTextEditSelection), so nothing is hidden
  * by following the menus there.
  */
 const collectSelectionTextStyles = (

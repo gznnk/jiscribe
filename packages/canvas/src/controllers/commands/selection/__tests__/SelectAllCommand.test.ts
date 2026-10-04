@@ -5,7 +5,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
-import { reconcileObjectPartSelection } from "../../../selection/reconcileObjectPartSelection";
+import { reconcileSelection } from "../../../selection/reconcileSelection";
 import { SelectAllCommand } from "../SelectAllCommand";
 
 const registries = createTestRegistries();
@@ -64,10 +64,9 @@ describe("SelectAllCommand", () => {
 		expect(next.selection.objectIds).not.toContain("stale");
 		expect(next.objectMenuOpenId).toBeNull();
 		// The part selection is the reducer's to drop, which it does for every
-		// command result (reconcileObjectPartSelection).
+		// command result (reconcileSelection).
 		expect(
-			reconcileObjectPartSelection(next, registries.objectPartKind).selection
-				.part,
+			reconcileSelection(next, registries.objectPartKind).selection.part,
 		).toBeNull();
 	});
 

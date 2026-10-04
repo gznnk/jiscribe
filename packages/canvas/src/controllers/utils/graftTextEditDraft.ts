@@ -1,7 +1,7 @@
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
+import { resolveTextEdit } from "./resolveTextEdit";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import {
 	readRichTextSlot,
 	writeRichTextSlot,
@@ -21,59 +21,43 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * through the same {@link writeRichTextSlot} the commit uses, so a rows-holding
  * slot takes the split form rather than the joined body.
  *
- * @param objects - The committed objects map
- * @param textEditState - The active editing session; null (or a connector label,
- *   whose editor is already live off its own measurement) grafts nothing
+ * @param state - The committed objects map with the editing session and the
+ *   selection that owns it; no session (or a connector label, whose editor is
+ *   already live off its own measurement) grafts nothing
  * @param contentResizer - The per-canvas content-resizer registry; the edited
  *   object's type is looked up there, and one absent from it is grafted with its
  *   stored box untouched
- * @returns A map with only the edited object replaced, or `objects` itself when
- *   there is nothing to graft (unchanged reference, so downstream memos hold)
+ * @returns A map with only the edited object replaced, or `state.objects` itself
+ *   when there is nothing to graft (unchanged reference, so downstream memos hold)
  */
 export const graftTextEditDraft = (
-	objects: Record<string, ObjectState>,
-	textEditState: CanvasControllerState["textEditState"],
+	state: Pick<CanvasControllerState, "objects" | "selection" | "textEditState">,
 	contentResizer: ObjectContentResizerRegistry,
 ): Record<string, ObjectState> => {
-	if (textEditState?.kind !== "shape") {
+	const { objects } = state;
+	const resolved = resolveTextEdit(state);
+	if (resolved?.kind !== "shape") {
 		return objects;
 	}
-
-	const target = objects[textEditState.objectId];
-	if (
-		target === undefined ||
-		!isTextStyleState(target) ||
-		target.text === undefined ||
-		!(textEditState.slotId in target.text)
-	) {
+	const { object: target, slotId } = resolved;
+	if (target.text === undefined) {
 		return objects;
 	}
 
 	// The draft equals the committed body until the first keystroke (and again
 	// whenever it is typed back), so the identity is kept through both.
-	if (
-		isSameRichText(
-			readRichTextSlot(target.text, textEditState.slotId),
-			textEditState.text,
-		)
-	) {
+	if (isSameRichText(readRichTextSlot(target.text, slotId), resolved.text)) {
 		return objects;
 	}
 
 	const grafted = {
 		...target,
-		text: writeRichTextSlot(
-			target.text,
-			textEditState.slotId,
-			textEditState.text,
-		),
+		text: writeRichTextSlot(target.text, slotId, resolved.text),
 	} as ObjectState;
 
 	const resizeToContent = contentResizer.get(grafted.type);
 	return {
 		...objects,
-		[textEditState.objectId]: resizeToContent
-			? resizeToContent(grafted, {})
-			: grafted,
+		[target.id]: resizeToContent ? resizeToContent(grafted, {}) : grafted,
 	};
 };

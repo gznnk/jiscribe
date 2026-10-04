@@ -8,8 +8,8 @@ import {
 import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
+import { resolveTextEdit } from "./resolveTextEdit";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../states/objects/types/TextSlots";
 import { writeRichTextSlot } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -58,42 +58,34 @@ export type TextEditSelection = {
 export const resolveTextEditSelection = (
 	state: CanvasControllerState,
 ): TextEditSelection | null => {
-	const { textEditState } = state;
-	if (textEditState?.kind !== "shape") {
+	const resolved = resolveTextEdit(state);
+	if (resolved?.kind !== "shape") {
 		return null;
 	}
-	const { selection } = textEditState;
+	const { object: target, slotId, selection } = resolved;
 	if (selection === undefined || selection.start >= selection.end) {
 		return null;
 	}
 
-	const target = state.objects[textEditState.objectId];
-	if (target === undefined || !isTextStyleState(target)) {
-		return null;
-	}
 	// A source-language body is a plain string the shape renders itself: a run
 	// laid over a stretch of it would be dropped on save and never drawn, so
 	// every caller falls back to whole-slot styling by finding no selection here.
 	if (target.features?.text === "source") {
 		return null;
 	}
-	const slot = target.text?.[textEditState.slotId];
+	const slot = target.text?.[slotId];
 	if (target.text === undefined || slot === undefined) {
 		return null;
 	}
 
-	const slots = writeRichTextSlot(
-		target.text,
-		textEditState.slotId,
-		textEditState.text,
-	);
+	const slots = writeRichTextSlot(target.text, slotId, resolved.text);
 	return {
-		objectId: textEditState.objectId,
+		objectId: target.id,
 		type: target.type,
-		slotId: textEditState.slotId,
+		slotId,
 		slot,
 		slots,
-		content: textEditState.text,
+		content: resolved.text,
 		isRowPartitioned: isTextRows(slot.text),
 		start: selection.start,
 		end: selection.end,

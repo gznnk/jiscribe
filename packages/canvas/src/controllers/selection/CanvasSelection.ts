@@ -4,7 +4,7 @@ import type { ObjectPartSelection } from "./ObjectPartSelection";
  * What the canvas is pointed at: the objects picked, and the parts picked one
  * level below them. Nested rather than two fields of the state, so every writer
  * that moves the object selection states what becomes of the part in the same
- * breath, and reconcileObjectPartSelection is left as the safety net it is.
+ * breath, and reconcileSelection is left as the safety net it is.
  */
 export type CanvasSelection = {
 	/**
@@ -24,7 +24,7 @@ export type CanvasSelection = {
 	 * a connector. Non-null only while `objectIds` holds exactly one id, which is
 	 * the object the parts belong to. Always valid where it is read: every reducer
 	 * branch that rewrites the selection or the objects drops a part the state no
-	 * longer backs (reconcileObjectPartSelection), instead of every reader
+	 * longer backs (reconcileSelection), instead of every reader
 	 * validating it.
 	 */
 	part: ObjectPartSelection | null;

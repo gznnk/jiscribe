@@ -587,13 +587,31 @@ export type CanvasControllerState = CanvasState & {
 	 */
 	multiSelectGroup: GroupState | null;
 
-	/** null when not editing text */
+	/**
+	 * The open editing session's draft, null when not editing text. What is being
+	 * edited is `selection`, not named here, which is what keeps the two from
+	 * drifting apart. Read through resolveTextEdit, which pairs the draft with its
+	 * owner again.
+	 *
+	 * Three invariants every writer keeps:
+	 * - non-null means `selection.objectIds` holds exactly one id, the owner's
+	 * - `kind: "shape"` means that object holds text. The slot is
+	 *   `selection.part`, one collapsed textSlot range, for a type that spells
+	 *   its text out as slots; a type holding one body takes no pick below itself
+	 *   (applyObjectDefinition registers the kind only for the former), so its
+	 *   `part` is null and the slot is the only one its `text` holds
+	 * - `kind: "connectorLabel"` means that one id is a connector, with
+	 *   `selection.part` null
+	 *
+	 * And one duty: a writer that moves `selection.objectIds` while a session is
+	 * open runs commitTextEditIfNeeded first (SET_SELECTION, the press handlers).
+	 * The reducer's reconcileSelection only catches an owner that is gone or
+	 * cannot hold the session; a draft left over a move to another text-holding
+	 * object is indistinguishable from one started there, and commits into it.
+	 */
 	textEditState:
 		| {
 				kind: "shape";
-				objectId: string;
-				/** Key of the object's `state.text` */
-				slotId: string;
 				/**
 				 * The draft body, styling included; a slot holding rows is joined with
 				 * "\n" while editing. Every keystroke advances it with the same
@@ -613,7 +631,6 @@ export type CanvasControllerState = CanvasState & {
 		  }
 		| {
 				kind: "connectorLabel";
-				objectId: string;
 				text: string;
 				/**
 				 * Placement the label being created takes on commit: the double-clicked point

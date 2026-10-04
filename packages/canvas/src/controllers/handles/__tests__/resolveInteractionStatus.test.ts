@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { resolveInteractionStatus } from "../useInteractionHandle";
 
 /**
@@ -10,10 +11,19 @@ import { resolveInteractionStatus } from "../useInteractionHandle";
 
 type StatusInput = Parameters<typeof resolveInteractionStatus>[0];
 
+/** The object every text-edit case here is open on. */
+const slottedRect = {
+	id: "r1",
+	type: "rect",
+	text: { body: { text: "" } },
+} as unknown as ObjectState;
+
 const idleState: StatusInput = {
 	activeDrag: null,
 	inertialScrolling: false,
 	textEditState: null,
+	selection: { objectIds: [], part: null },
+	objects: { r1: slottedRect },
 	shapeDrawing: null,
 	activeModal: null,
 };
@@ -25,12 +35,11 @@ const resolve = (overrides: Partial<StatusInput> = {}) =>
 const dragOf = (kind: string): StatusInput["activeDrag"] =>
 	({ kind }) as unknown as StatusInput["activeDrag"];
 
-const textEdit = {
-	kind: "shape",
-	objectId: "r1",
-	slotId: "body",
-	text: "",
-} as unknown as StatusInput["textEditState"];
+/** A session open on r1's body slot: the draft, plus the selection that owns it. */
+const textEdit: Partial<StatusInput> = {
+	textEditState: { kind: "shape", text: "" },
+	selection: { objectIds: ["r1"], part: null },
+};
 
 const armedTool = {
 	preset: { id: "process", objectType: "rect" },
@@ -60,7 +69,7 @@ describe("resolveInteractionStatus", () => {
 	});
 
 	it("is busy while a text editor holds uncommitted text, and names the object", () => {
-		const status = resolve({ textEditState: textEdit });
+		const status = resolve(textEdit);
 		expect(status.editingTextId).toBe("r1");
 		expect(status.isBusy).toBe(true);
 	});
@@ -96,7 +105,7 @@ describe("resolveInteractionStatus", () => {
 			{},
 			{ activeDrag: dragOf("move") },
 			{ inertialScrolling: true },
-			{ textEditState: textEdit },
+			textEdit,
 			{ shapeDrawing: armedTool },
 			{ activeModal: "export" as const },
 		]) {

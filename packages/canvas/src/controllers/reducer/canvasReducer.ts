@@ -19,7 +19,7 @@ import {
 } from "./handlers/handleTransformPropertyUpdate";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
-import { reconcileObjectPartSelection } from "../selection/reconcileObjectPartSelection";
+import { reconcileSelection } from "../selection/reconcileSelection";
 import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
@@ -66,8 +66,8 @@ export const createCanvasReducer =
 				// the shape outlines, which a re-measured box moves. The box pass has
 				// no commit gate — a slider drag must not clip its own text — while the
 				// vertex pass keeps one, since settling vertices is a commit-time step.
-				// Then the part selection last, once the objects and the selection it
-				// refers to have settled.
+				// Then the selection last, once the objects and the selection it refers
+				// to have settled.
 				const resizedResult = reconcileObjectContentSizes(
 					gestureResult,
 					state,
@@ -78,11 +78,11 @@ export const createCanvasReducer =
 					state,
 					registries,
 				);
-				const partSelectionResult = reconcileObjectPartSelection(
+				const selectionResult = reconcileSelection(
 					reconciledResult,
 					registries.objectPartKind,
 				);
-				return recordHistoryIfNeeded(partSelectionResult, state);
+				return recordHistoryIfNeeded(selectionResult, state);
 			}
 
 			case "COMMAND": {
@@ -101,11 +101,11 @@ export const createCanvasReducer =
 					state,
 					registries,
 				);
-				const partSelectionResult = reconcileObjectPartSelection(
+				const selectionResult = reconcileSelection(
 					reconciledResult,
 					registries.objectPartKind,
 				);
-				return recordHistoryIfNeeded(partSelectionResult, state);
+				return recordHistoryIfNeeded(selectionResult, state);
 			}
 
 			case "REVERT_HISTORY": {
@@ -142,10 +142,7 @@ export const createCanvasReducer =
 					state,
 					registries,
 				);
-				return reconcileObjectPartSelection(
-					reconciledResult,
-					registries.objectPartKind,
-				);
+				return reconcileSelection(reconciledResult, registries.objectPartKind);
 			}
 
 			case "REMEASURE_TEXT": {
@@ -158,10 +155,7 @@ export const createCanvasReducer =
 					registries.objectContentResizer,
 					true,
 				);
-				return reconcileObjectPartSelection(
-					resizedResult,
-					registries.objectPartKind,
-				);
+				return reconcileSelection(resizedResult, registries.objectPartKind);
 			}
 
 			case "CONTAINER_RESIZE": {
@@ -205,23 +199,46 @@ export const createCanvasReducer =
 			}
 
 			case "SET_SELECTION": {
+				// An open editing session belongs to the selection it sits on (see
+				// textEditState), so moving the selection ends the session rather than
+				// leaving it pointing at whatever was just selected. Committed, not
+				// discarded: the host asked for another selection, not for the typing
+				// to be thrown away.
+				const committedResult = commitTextEditIfNeeded(state);
 				const { selectedIds } = resolveRequestedSelection(
 					action.ids,
-					state.objects,
+					committedResult.objects,
 				);
-				return {
-					...state,
+				const selectedResult: CanvasControllerState = {
+					...committedResult,
 					// The part hanging off the previous selection means nothing for the
 					// new one, nor does the open submenu (same clears as SelectAllCommand).
 					selection: { objectIds: selectedIds, part: null },
 					multiSelectGroup: createMultiSelectGroup(
 						selectedIds,
-						state.objects,
-						state.multiSelectGroup,
+						committedResult.objects,
+						committedResult.multiSelectGroup,
 					),
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
 				};
+				if (!state.textEditState) {
+					return selectedResult;
+				}
+				// The same tail the commit gets when Escape or a press ends it
+				// (END_TEXT_EDIT), so a committed body is measured, settled and undoable
+				// here too.
+				const resizedResult = reconcileObjectContentSizes(
+					selectedResult,
+					state,
+					registries.objectContentResizer,
+				);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					resizedResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "STYLE_PROPERTY_UPDATE": {
@@ -243,7 +260,7 @@ export const createCanvasReducer =
 					...updated,
 					objects: materializeObjects(updated.objects),
 				};
-				const partSelectionResult = reconcileObjectPartSelection(
+				const selectionResult = reconcileSelection(
 					materialized,
 					registries.objectPartKind,
 				);
@@ -251,13 +268,13 @@ export const createCanvasReducer =
 					// A live preview draws at the new typography, so its box has to be
 					// measured at the new typography too.
 					return reconcileObjectContentSizes(
-						partSelectionResult,
+						selectionResult,
 						state,
 						registries.objectContentResizer,
 					);
 				}
 				return commitPropertyUpdate(
-					partSelectionResult,
+					selectionResult,
 					state,
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
@@ -297,19 +314,19 @@ export const createCanvasReducer =
 					...updated,
 					objects: materializeObjects(updated.objects),
 				};
-				const partSelectionResult = reconcileObjectPartSelection(
+				const selectionResult = reconcileSelection(
 					materialized,
 					registries.objectPartKind,
 				);
 				if (!action.commit) {
 					return reconcileObjectContentSizes(
-						partSelectionResult,
+						selectionResult,
 						state,
 						registries.objectContentResizer,
 					);
 				}
 				return commitPropertyUpdate(
-					partSelectionResult,
+					selectionResult,
 					state,
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
@@ -378,15 +395,15 @@ export const createCanvasReducer =
 				) {
 					return state;
 				}
-				const partSelectionResult = reconcileObjectPartSelection(
+				const selectionResult = reconcileSelection(
 					updated,
 					registries.objectPartKind,
 				);
 				if (!action.commit) {
-					return partSelectionResult;
+					return selectionResult;
 				}
 				return commitPropertyUpdate(
-					partSelectionResult,
+					selectionResult,
 					state,
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
@@ -407,7 +424,7 @@ export const createCanvasReducer =
 				// The same document edited elsewhere, so the entries recorded for it stay
 				// usable: the current present moves onto past and the edit becomes
 				// undoable like any local commit.
-				return reconcileObjectPartSelection(
+				return reconcileSelection(
 					adoptDocumentState(state, action.payload, [
 						...state.history.past,
 						state.history.present,
@@ -420,7 +437,7 @@ export const createCanvasReducer =
 				// Another document, so its predecessor's entries go with it: undoing into
 				// them would restore the old contents under the new document's name
 				// (see LoadDocumentAction).
-				return reconcileObjectPartSelection(
+				return reconcileSelection(
 					adoptDocumentState(state, action.payload, []),
 					registries.objectPartKind,
 				);
@@ -483,11 +500,11 @@ export const createCanvasReducer =
 					state,
 					registries.objectContentResizer,
 				);
-				const partSelectionResult = reconcileObjectPartSelection(
+				const selectionResult = reconcileSelection(
 					resizedResult,
 					registries.objectPartKind,
 				);
-				return recordHistoryIfNeeded(partSelectionResult, state);
+				return recordHistoryIfNeeded(selectionResult, state);
 			}
 
 			case "END_TEXT_EDIT": {
@@ -507,11 +524,11 @@ export const createCanvasReducer =
 						state,
 						registries,
 					);
-					const partSelectionResult = reconcileObjectPartSelection(
+					const selectionResult = reconcileSelection(
 						reconciledResult,
 						registries.objectPartKind,
 					);
-					return recordHistoryIfNeeded(partSelectionResult, state);
+					return recordHistoryIfNeeded(selectionResult, state);
 				}
 
 				// On cancel, clear only textEditState
@@ -533,11 +550,11 @@ export const createCanvasReducer =
 					state,
 					registries,
 				);
-				const partSelectionResult = reconcileObjectPartSelection(
+				const selectionResult = reconcileSelection(
 					reconciledResult,
 					registries.objectPartKind,
 				);
-				return recordHistoryIfNeeded(partSelectionResult, state);
+				return recordHistoryIfNeeded(selectionResult, state);
 			}
 
 			case "CLOSE_CONTEXT_MENU": {

@@ -24,6 +24,7 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { selectTextSlot } from "../../../selection/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
@@ -403,13 +404,21 @@ export const ObjectEventHandler: GestureHandler = {
 				}
 				return {
 					...nextState,
+					// The slot being edited is the selection (see textEditState): the
+					// click that precedes the double-click only selects the object, and
+					// leaves the slot unselected unless the object already was the whole
+					// selection (applyPartClick).
+					selection: selectTextSlot(
+						nextState.selection,
+						targetObject,
+						slotId,
+						registries.objectPartKind,
+					),
 					// The click that precedes the double-click leaves an already-selected
 					// slot untouched, so the submenu open over it is closed here.
 					objectMenuOpenId: null,
 					textEditState: {
 						kind: "shape",
-						objectId: targetObject.id,
-						slotId,
 						text: readRichTextSlot(targetObject.text, slotId),
 					},
 				};

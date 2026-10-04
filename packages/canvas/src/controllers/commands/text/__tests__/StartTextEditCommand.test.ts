@@ -5,6 +5,8 @@ import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
+import { createTextSlotPartKindDefinition } from "../../../selection/createTextSlotPartKindDefinition";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
@@ -12,6 +14,11 @@ import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { StartTextEditCommand } from "../StartTextEditCommand";
 
 const registries = createTestRegistries();
+// "record" below stands in for a plugin type, so the built-in bundle does not
+// carry it: register the textSlot kind applyObjectDefinition would give it.
+registries.objectPartKind.register("record", [
+	createTextSlotPartKindDefinition(),
+]);
 
 const rect = {
 	id: "rect-1",
@@ -61,27 +68,30 @@ const stateWithConnectorSelected = (connectorId: string) =>
 	});
 
 describe("StartTextEditCommand", () => {
-	it("a rect that supports text can start editing", () => {
+	it("a rect that supports text can start editing on its one body", () => {
 		const state = stateWithSelection("rect-1");
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
-		expect(
-			StartTextEditCommand.execute(state, registries).textEditState,
-		).toMatchObject({ objectId: "rect-1", slotId: "body" });
+		const after = StartTextEditCommand.execute(state, registries);
+		expect(after.textEditState).toMatchObject({ kind: "shape" });
+		// A rect holds one body rather than slots, so there is no part to pick.
+		expect(after.selection).toBe(state.selection);
 	});
 
 	it("creating a connector label from Enter takes the default placement, not what a deleted label left", () => {
 		const state = stateWithConnectorSelected("connector-1");
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
 
-		const textEditState = StartTextEditCommand.execute(
-			state,
-			registries,
-		).textEditState;
+		const after = StartTextEditCommand.execute(state, registries);
+		const { textEditState } = after;
 		expect(textEditState).toMatchObject({
 			kind: "connectorLabel",
-			objectId: "connector-1",
 			text: "",
 			placement: DEFAULT_LABEL_PLACEMENT,
+		});
+		// The connector itself owns the session, with nothing picked below it.
+		expect(after.selection).toEqual({
+			objectIds: ["connector-1"],
+			part: null,
 		});
 
 		// The placement rides through the commit, so the revived label sits at the
@@ -134,20 +144,26 @@ describe("StartTextEditCommand", () => {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			});
-			expect(
-				StartTextEditCommand.execute(state, registries).textEditState,
-			).toMatchObject({
-				objectId: "rec-1",
-				slotId: "rows",
+			const after = StartTextEditCommand.execute(state, registries);
+			expect(after.textEditState).toMatchObject({
+				kind: "shape",
 				text: "id: string",
 			});
+			// Already that slot, so the selection is handed over unchanged.
+			expect(after.selection).toBe(state.selection);
 		});
 
-		it("edits the first slot when no slot is selected", () => {
+		it("edits the first slot when no slot is selected, and selects it", () => {
 			const state = stateWithSlotSelection(null);
-			expect(
-				StartTextEditCommand.execute(state, registries).textEditState,
-			).toMatchObject({ objectId: "rec-1", slotId: "name" });
+			const after = StartTextEditCommand.execute(state, registries);
+			expect(after.textEditState).toMatchObject({
+				kind: "shape",
+				text: "User",
+			});
+			expect(after.selection).toEqual({
+				objectIds: ["rec-1"],
+				part: textSlotPartSelection("name"),
+			});
 		});
 
 		it("closes an open ObjectMenu submenu, which the edit session re-lays out", () => {

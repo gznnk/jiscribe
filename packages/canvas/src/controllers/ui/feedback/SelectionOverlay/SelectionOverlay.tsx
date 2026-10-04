@@ -14,7 +14,7 @@ type SelectionOverlayProps = {
 	/**
 	 * What the canvas is pointed at, `state.selection` as it stands: the reducer
 	 * has already dropped a part that would draw a box around a slot no longer
-	 * selected (reconcileObjectPartSelection). Only a pick of a text slot is
+	 * selected (reconcileSelection). Only a pick of a text slot is
 	 * outlined; a vertex has handles of its own (VertexControlsLayer)
 	 */
 	selection: CanvasSelection;

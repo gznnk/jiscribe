@@ -44,7 +44,7 @@ const KIND_IDENTIFIER = /^[A-Za-z][\w-]*$/;
 /**
  * Per-type registry of sub-part definitions, keyed by `(type, kind)`.
  * Types that register nothing have no sub-parts: nothing of theirs can be
- * selected one level below the object (reconcileObjectPartSelection), and
+ * selected one level below the object (reconcileSelection), and
  * deletion falls through to the object as a whole.
  */
 export class ObjectPartKindRegistry {

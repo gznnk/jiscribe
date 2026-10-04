@@ -15,13 +15,11 @@ import type { ObjectOutlineRegistry } from "../../../../rendering/objects/regist
 import type { ObjectTextRegionCalculator } from "../../../../rendering/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import {
-	isTextStyleState,
-	type TextStyleState,
-} from "../../../../states/objects/base/TextStyleState";
+import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { resolveTextEdit } from "../../../utils/resolveTextEdit";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
@@ -191,6 +189,8 @@ function renderTextEditor(
 
 type TextEditorLayerProps = {
 	textEditState: CanvasControllerState["textEditState"];
+	/** Who the session belongs to; the object and the slot are read off it (resolveTextEdit). */
+	selection: CanvasControllerState["selection"];
 	objects: CanvasControllerState["objects"];
 	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
 	onTextChange: (text: RichText) => void;
@@ -209,6 +209,7 @@ type TextEditorLayerProps = {
  */
 const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	textEditState,
+	selection,
 	objects,
 	onTextChange,
 	onEscape,
@@ -221,9 +222,8 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	if (!textEditState) {
 		return null;
 	}
-
-	const targetObject = objects[textEditState.objectId];
-	if (!targetObject) {
+	const resolved = resolveTextEdit({ textEditState, selection, objects });
+	if (resolved === null) {
 		return null;
 	}
 
@@ -235,15 +235,12 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		onToggleFormat,
 	};
 
-	if (textEditState.kind === "connectorLabel") {
-		if (targetObject.type !== "connector") {
-			return null;
-		}
+	if (resolved.kind === "connectorLabel") {
 		return renderConnectorLabelEditor(
-			targetObject as ConnectorState,
+			resolved.connector,
 			objects,
-			textEditState.text,
-			textEditState.placement,
+			resolved.text,
+			resolved.placement,
 			handlers,
 			registries.objectOutline,
 			registries.objectAnchorRegion,
@@ -251,29 +248,19 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		);
 	}
 
-	// Any other slot id is a key of the shape's own text; one the shape does not
-	// have has no region to place the editor in, so nothing is rendered.
-	if (
-		isTextStyleState(targetObject) &&
-		targetObject.text !== undefined &&
-		textEditState.slotId in targetObject.text
-	) {
-		// Shapes with text also carry geometry (cx/cy/width...).
-		const geometryObject = targetObject as typeof targetObject &
-			TransformedFrame;
-		return renderTextEditor(
-			geometryObject,
-			textEditState.objectId,
-			textEditState.slotId,
-			textEditState.text,
-			handlers,
-			registries.objectTextStyleDefaults,
-			registries.objectTextRegion.get(targetObject.type),
-			registries.objectTextEditOverflow.get(targetObject.type),
-		);
-	}
-
-	return null;
+	// Shapes with text also carry geometry (cx/cy/width...).
+	const geometryObject = resolved.object as typeof resolved.object &
+		TransformedFrame;
+	return renderTextEditor(
+		geometryObject,
+		resolved.object.id,
+		resolved.slotId,
+		resolved.text,
+		handlers,
+		registries.objectTextStyleDefaults,
+		registries.objectTextRegion.get(resolved.object.type),
+		registries.objectTextEditOverflow.get(resolved.object.type),
+	);
 };
 
 export const TextEditorLayer = memo(TextEditorLayerComponent);

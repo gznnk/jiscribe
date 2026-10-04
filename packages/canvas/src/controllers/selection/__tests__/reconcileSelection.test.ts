@@ -6,7 +6,7 @@ import { createTextSlotPartKindDefinition } from "../createTextSlotPartKindDefin
 import { createVertexPartKindDefinition } from "../createVertexPartKindDefinition";
 import { createObjectPartKindRegistry } from "../ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../ObjectPartSelection";
-import { reconcileObjectPartSelection } from "../reconcileObjectPartSelection";
+import { reconcileSelection } from "../reconcileSelection";
 import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
 import { selectionOf } from "./support/selectionOf";
 import { vertexPartSelection } from "./support/vertexPartSelection";
@@ -18,6 +18,15 @@ const slotShape = (id: string): ObjectState =>
 		type: "record",
 		features: { text: "slots" },
 		text: { name: { text: "User" }, rows: { text: ["id: string"] } },
+	}) as unknown as ObjectState;
+
+/** A shape holding one body: it declares no part kind, so it picks nothing below itself. */
+const singleBodyShape = (id: string): ObjectState =>
+	({
+		id,
+		type: "rect",
+		features: { text: "body" },
+		text: { body: { text: "hello" } },
 	}) as unknown as ObjectState;
 
 /** A connector carrying two waypoints, the parts of its `vertex` kind. */
@@ -50,25 +59,31 @@ const makeState = (
 		selection: selectionOf(selectedIds, part),
 	}) as unknown as CanvasControllerState;
 
+/** The same state with an editing session open over whatever it has selected. */
+const editing = (
+	state: CanvasControllerState,
+	textEditState: CanvasControllerState["textEditState"],
+): CanvasControllerState => ({ ...state, textEditState });
+
 /** The single-slot part selection most cases here are built from. */
 const textSlot = (slotId: string): ObjectPartSelection => ({
 	kind: TEXT_SLOT_PART_KIND,
 	ranges: [{ anchorId: slotId, focusId: slotId }],
 });
 
-describe("reconcileObjectPartSelection", () => {
+describe("reconcileSelection", () => {
 	it("returns the state itself (same reference) when the selection is valid", () => {
 		const state = makeState(
 			{ "rec-1": slotShape("rec-1") },
 			["rec-1"],
 			textSlot("rows"),
 		);
-		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
+		expect(reconcileSelection(state, objectPartKind)).toBe(state);
 	});
 
 	it("returns the state itself when nothing is part-selected", () => {
 		const state = makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], null);
-		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
+		expect(reconcileSelection(state, objectPartKind)).toBe(state);
 	});
 
 	it("clears the selection once it covers more than its own object", () => {
@@ -78,22 +93,20 @@ describe("reconcileObjectPartSelection", () => {
 		};
 		const slot = textSlot("name");
 		expect(
-			reconcileObjectPartSelection(
+			reconcileSelection(
 				makeState(objects, ["rec-1", "rec-2"], slot),
 				objectPartKind,
 			).selection.part,
 		).toBeNull();
 		expect(
-			reconcileObjectPartSelection(makeState(objects, [], slot), objectPartKind)
-				.selection.part,
+			reconcileSelection(makeState(objects, [], slot), objectPartKind).selection
+				.part,
 		).toBeNull();
 	});
 
 	it("clears the selection when the object is gone", () => {
 		const state = makeState({}, ["rec-1"], textSlot("name"));
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).selection.part,
-		).toBeNull();
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
 
 	it("clears the selection when the object's type registers no such kind", () => {
@@ -108,9 +121,7 @@ describe("reconcileObjectPartSelection", () => {
 			["rect-1"],
 			textSlot("body"),
 		);
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).selection.part,
-		).toBeNull();
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
 
 	it("clears the selection when the slot no longer exists on the object", () => {
@@ -119,9 +130,7 @@ describe("reconcileObjectPartSelection", () => {
 			["rec-1"],
 			textSlot("operations"),
 		);
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).selection.part,
-		).toBeNull();
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
 
 	it("clears a slot id that only names an Object.prototype member", () => {
@@ -130,9 +139,7 @@ describe("reconcileObjectPartSelection", () => {
 			["rec-1"],
 			textSlot("toString"),
 		);
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).selection.part,
-		).toBeNull();
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
 
 	it("clears the selection when the object's text is not the keyed normal form", () => {
@@ -147,9 +154,7 @@ describe("reconcileObjectPartSelection", () => {
 			["rec-1"],
 			textSlot("name"),
 		);
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).selection.part,
-		).toBeNull();
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
 
 	it("clears the whole selection when one range has a dead end, rather than narrowing it", () => {
@@ -160,9 +165,7 @@ describe("reconcileObjectPartSelection", () => {
 				{ anchorId: "name", focusId: "operations" },
 			],
 		});
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).selection.part,
-		).toBeNull();
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
 
 	it("keeps a vertex picked on the selected connector", () => {
@@ -171,23 +174,19 @@ describe("reconcileObjectPartSelection", () => {
 			["c-1"],
 			vertexPartSelection(1),
 		);
-		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
+		expect(reconcileSelection(state, objectPartKind)).toBe(state);
 	});
 
 	it("clears a vertex picked on a connector another object has since replaced", () => {
 		const objects = { "c-1": connector("c-1"), "rec-1": slotShape("rec-1") };
 		const pick = vertexPartSelection(1);
 		expect(
-			reconcileObjectPartSelection(
-				makeState(objects, ["rec-1"], pick),
-				objectPartKind,
-			).selection.part,
+			reconcileSelection(makeState(objects, ["rec-1"], pick), objectPartKind)
+				.selection.part,
 		).toBeNull();
 		expect(
-			reconcileObjectPartSelection(
-				makeState(objects, ["c-2"], pick),
-				objectPartKind,
-			).selection.part,
+			reconcileSelection(makeState(objects, ["c-2"], pick), objectPartKind)
+				.selection.part,
 		).toBeNull();
 	});
 
@@ -197,9 +196,7 @@ describe("reconcileObjectPartSelection", () => {
 			["c-1"],
 			vertexPartSelection(7),
 		);
-		expect(
-			reconcileObjectPartSelection(state, objectPartKind).selection.part,
-		).toBeNull();
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
 
 	it("returns the state itself when every range survived", () => {
@@ -210,6 +207,111 @@ describe("reconcileObjectPartSelection", () => {
 				{ anchorId: "rows", focusId: "name" },
 			],
 		});
-		expect(reconcileObjectPartSelection(state, objectPartKind)).toBe(state);
+		expect(reconcileSelection(state, objectPartKind)).toBe(state);
+	});
+
+	/**
+	 * The other half of what hangs off the selection. Every case here is a state
+	 * `resolveTextEdit` would throw on, so what this proves is that no state the
+	 * reducer hands on can reach it.
+	 */
+	describe("an open text edit", () => {
+		it("survives while the slot it is on does", () => {
+			const state = editing(
+				makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], textSlot("name")),
+				{ kind: "shape", text: "edited" },
+			);
+			expect(reconcileSelection(state, objectPartKind)).toBe(state);
+		});
+
+		it("survives on a one-body shape, which picks nothing below itself", () => {
+			const state = editing(
+				makeState({ "rect-1": singleBodyShape("rect-1") }, ["rect-1"], null),
+				{ kind: "shape", text: "edited" },
+			);
+			expect(reconcileSelection(state, objectPartKind)).toBe(state);
+		});
+
+		it("is discarded along with the slot it was being written to", () => {
+			const state = editing(
+				makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], textSlot("gone")),
+				{ kind: "shape", text: "edited" },
+			);
+			const after = reconcileSelection(state, objectPartKind);
+			expect(after.selection.part).toBeNull();
+			expect(after.textEditState).toBeNull();
+		});
+
+		it("is discarded when a one-body shape's owner is gone, with no part to catch it", () => {
+			const state = editing(makeState({}, ["rect-1"], null), {
+				kind: "shape",
+				text: "edited",
+			});
+			expect(
+				reconcileSelection(state, objectPartKind).textEditState,
+			).toBeNull();
+		});
+
+		it("is discarded when the object it is on stopped holding text", () => {
+			const state = editing(
+				makeState({ "c-1": connector("c-1") }, ["c-1"], null),
+				{ kind: "shape", text: "edited" },
+			);
+			expect(
+				reconcileSelection(state, objectPartKind).textEditState,
+			).toBeNull();
+		});
+
+		it("is discarded when the selection grew past one object", () => {
+			const state = editing(
+				makeState(
+					{ "rec-1": slotShape("rec-1"), "c-1": connector("c-1") },
+					["rec-1", "c-1"],
+					null,
+				),
+				{ kind: "shape", text: "edited" },
+			);
+			expect(
+				reconcileSelection(state, objectPartKind).textEditState,
+			).toBeNull();
+		});
+
+		it("keeps a connector label while its connector is the selection", () => {
+			const state = editing(
+				makeState({ "c-1": connector("c-1") }, ["c-1"], null),
+				{ kind: "connectorLabel", text: "Yes" },
+			);
+			expect(reconcileSelection(state, objectPartKind)).toBe(state);
+		});
+
+		it("discards a connector label once its connector is gone", () => {
+			const state = editing(makeState({}, ["c-1"], null), {
+				kind: "connectorLabel",
+				text: "Yes",
+			});
+			expect(
+				reconcileSelection(state, objectPartKind).textEditState,
+			).toBeNull();
+		});
+
+		it("discards a connector label whose object is no connector any more", () => {
+			const state = editing(
+				makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], null),
+				{ kind: "connectorLabel", text: "Yes" },
+			);
+			expect(
+				reconcileSelection(state, objectPartKind).textEditState,
+			).toBeNull();
+		});
+
+		it("keeps a connector label when a part is dropped, it sitting on none", () => {
+			const state = editing(
+				makeState({ "c-1": connector("c-1") }, ["c-1"], vertexPartSelection(7)),
+				{ kind: "connectorLabel", text: "Yes" },
+			);
+			const after = reconcileSelection(state, objectPartKind);
+			expect(after.selection.part).toBeNull();
+			expect(after.textEditState).toBe(state.textEditState);
+		});
 	});
 });

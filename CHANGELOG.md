@@ -126,13 +126,32 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: a text edit is opened on the selection, not alongside
+  it.** `textEditState` no longer names its own object or slot: it carries the
+  draft and nothing else, and what is being edited is `selection` — the lone
+  selected object, with the slot as its `textSlot` part where the type has slots
+  to pick (a type holding one body picks nothing below itself, so that body is
+  the slot). Read it through `resolveTextEdit`, the one place the two halves are
+  paired again, which throws rather than returning null when they do not pair up
+  (a session with no owner is a bug, not an empty editor). Two things the user
+  sees follow from the owner being in one place. A double click on a multi-slot
+  shape that was not yet selected now picks the slot it opens, the way Enter and a
+  second click already did, so the text menus read that slot rather than the
+  shape's first one, and Escape leaves the editor, then the slot, then the shape
+  — three steps however the editor was opened, where this path had two. And the
+  host's `select()` commits what is being typed before moving the selection,
+  instead of leaving the session pointing at the newly selected object. A slot
+  that disappears under an open editor now closes it, the draft being discarded
+  for want of anywhere to write it — `reconcileSelection` (renamed from
+  `reconcileObjectPartSelection`) is the one net over both halves, so an editor
+  can no longer outlive the object or slot it was opened on.
 - **For plugin authors: the selection is one nested value, `selection: { objectIds,
 part }`.** `CanvasControllerState` used to hold the object selection and the
   pick made one level below it as two fields that only made sense together, so a
   writer could move one and forget the other and only the reducer's safety net
   caught it. Nested, every writer states both in the same breath — and
-  `reconcileObjectPartSelection` is back to being the net it was meant to be,
-  dropping a part whose object is gone or whose ids have been renumbered.
+  `reconcileSelection` is back to being the net it was meant to be, dropping a
+  part whose object is gone or whose ids have been renumbered.
   `objectIds` is read-only, and `part` is non-null only while exactly one object
   is selected, which is why `ObjectPartSelection` no longer names its own object:
   its owner is `selection.objectIds[0]`. `ObjectMenuItemProps` and

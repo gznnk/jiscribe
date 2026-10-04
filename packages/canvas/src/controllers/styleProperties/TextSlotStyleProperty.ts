@@ -14,6 +14,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { resolveTextEdit } from "../utils/resolveTextEdit";
 import {
 	resolveTextEditSelection,
 	styleTextEditSelection,
@@ -74,16 +75,17 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		) {
 			return applied;
 		}
+		const resolved = resolveTextEdit(applied);
+		if (resolved?.kind !== "shape") {
+			return applied;
+		}
 		// Only when the write landed on the edited slot: an untouched slot keeps its
 		// object reference, and clearing the draft for it would drop real styling.
-		const editedBefore = before.objects[textEditState.objectId] as
-			(ObjectState & TextStyleState) | undefined;
-		const editedAfter = applied.objects[textEditState.objectId] as
+		const editedBefore = before.objects[resolved.object.id] as
 			(ObjectState & TextStyleState) | undefined;
 		if (
-			editedAfter === undefined ||
-			editedBefore?.text?.[textEditState.slotId] ===
-				editedAfter.text?.[textEditState.slotId]
+			editedBefore?.text?.[resolved.slotId] ===
+			resolved.object.text?.[resolved.slotId]
 		) {
 			return applied;
 		}

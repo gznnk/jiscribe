@@ -39,13 +39,8 @@ const editingState = (
 		objects: {
 			o1: { id: "o1", type: features.type, features, text: slots },
 		},
-		textEditState: {
-			kind: "shape",
-			objectId: "o1",
-			slotId: "body",
-			text,
-			selection,
-		},
+		selection: { objectIds: ["o1"], part: null },
+		textEditState: { kind: "shape", text, selection },
 	}) as unknown as CanvasControllerState;
 
 const bodyOf = (state: CanvasControllerState) =>

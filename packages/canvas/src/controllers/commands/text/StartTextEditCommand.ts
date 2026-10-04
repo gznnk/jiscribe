@@ -6,6 +6,7 @@ import {
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
 import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
+import { selectTextSlot } from "../../selection/selectTextSlot";
 import { isTextSlotSelection } from "../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
 import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
@@ -54,7 +55,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return canEditText(state.objects[state.selection.objectIds[0]]);
 	},
 
-	execute(state) {
+	execute(state, registries) {
 		// When a connector is selected, start editing its label (label.text).
 		const connectorId = getSelectedConnectorId(state);
 		if (connectorId !== null) {
@@ -66,9 +67,16 @@ export const StartTextEditCommand: ExecutableCommand = {
 				// An open submenu does not survive the edit session (the menu is hidden or
 				// re-laid out), so it would otherwise pop back on exit.
 				objectMenuOpenId: null,
+				// The selection is already that one connector
+				// (getSelectedConnectorId), so only a part picked below it has to go:
+				// the label is no part, and the session's owner must be the object
+				// itself (see textEditState).
+				selection:
+					state.selection.part === null
+						? state.selection
+						: { ...state.selection, part: null },
 				textEditState: {
 					kind: "connectorLabel",
-					objectId: connectorId,
 					text: labelText,
 					// Enter carries no pointer position, so a label being created takes
 					// the default placement. Without it the commit would spread the
@@ -102,10 +110,17 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return {
 			...state,
 			objectMenuOpenId: null,
+			// The slot being edited is the selection (see textEditState), so the one
+			// the fallback picked is written there too; a slot already selected keeps
+			// the reference.
+			selection: selectTextSlot(
+				state.selection,
+				targetObject,
+				slotId,
+				registries.objectPartKind,
+			),
 			textEditState: {
 				kind: "shape",
-				objectId,
-				slotId,
 				text: readRichTextSlot(targetObject.text, slotId),
 			},
 		};

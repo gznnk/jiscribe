@@ -121,9 +121,9 @@ export const startConnectorLabelEdit = (
 			: null;
 	return {
 		...selectedState,
+		// The owner is the selection written just above (see textEditState).
 		textEditState: {
 			kind: "connectorLabel",
-			objectId: connectorId,
 			text: labelText,
 			...(placement ? { placement } : {}),
 		},
