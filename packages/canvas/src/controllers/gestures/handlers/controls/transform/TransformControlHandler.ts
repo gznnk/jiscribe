@@ -104,12 +104,12 @@ export class TransformControlHandler extends ControlStrategy {
 		if (
 			anchorType !== "rotation" &&
 			startSnapshot?.multiSelectGroup &&
-			state.selectedIds.length > 1
+			state.selection.objectIds.length > 1
 		) {
 			startSnapshot = {
 				...startSnapshot,
 				multiSelectResizeBoundsCache: createMultiSelectResizeBoundsCache(
-					state.selectedIds,
+					state.selection.objectIds,
 					startSnapshot.objects,
 					startSnapshot.multiSelectGroup,
 				),
@@ -149,7 +149,7 @@ export class TransformControlHandler extends ControlStrategy {
 		let startFrame: (TransformedFrame & TransformState) | null = null;
 		let selectedId: string | null = null;
 		let isGroupTarget = false;
-		const isMultiSelect = state.selectedIds.length > 1;
+		const isMultiSelect = state.selection.objectIds.length > 1;
 
 		if (isMultiSelect) {
 			// For multi-selection, use multiSelectGroup
@@ -162,9 +162,9 @@ export class TransformControlHandler extends ControlStrategy {
 				startFrame = multiSelectGroup as TransformedFrame & TransformState;
 				isGroupTarget = true;
 			}
-		} else if (state.selectedIds.length === 1) {
+		} else if (state.selection.objectIds.length === 1) {
 			// For single selection
-			selectedId = state.selectedIds[0];
+			selectedId = state.selection.objectIds[0];
 			const startObject = dragStartSnapshot.objects[selectedId];
 			if (
 				startObject &&
@@ -324,7 +324,7 @@ export class TransformControlHandler extends ControlStrategy {
 						updatedGroup,
 					)
 				: calcMultiSelectGroupBounds(
-						state.selectedIds,
+						state.selection.objectIds,
 						nextState.objects,
 						nextState.multiSelectGroup,
 					);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { isTextAddressed } from "../isTextAddressed";
@@ -9,8 +10,7 @@ const makeState = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	({
-		selectedIds: ["rect-1"],
-		objectPartSelection: null,
+		selection: selectionOf(["rect-1"]),
 		textEditState: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -35,11 +35,10 @@ describe("isTextAddressed", () => {
 		expect(
 			isTextAddressed(
 				makeState({
-					objectPartSelection: {
-						objectId: "rect-1",
+					selection: selectionOf(["rect-1"], {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "body", focusId: "body" }],
-					},
+					}),
 				}),
 			),
 		).toBe(true);
@@ -48,7 +47,9 @@ describe("isTextAddressed", () => {
 	it("does not hold for a picked vertex, which leaves the object the subject", () => {
 		expect(
 			isTextAddressed(
-				makeState({ objectPartSelection: vertexPartSelection("rect-1", 0) }),
+				makeState({
+					selection: selectionOf(["rect-1"], vertexPartSelection(0)),
+				}),
 			),
 		).toBe(false);
 	});

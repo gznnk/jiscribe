@@ -2,7 +2,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 
 /**
  * Selects a connector, dropping whatever else was selected: a connector is the
- * whole selection or nothing (see CanvasControllerState.selectedIds). Shared by
+ * whole selection or nothing (see CanvasControllerState.selection.objectIds). Shared by
  * the left-button click (ConnectorClickHandler) and by the right button / long
  * press that opens the context menu (CanvasEventHandler).
  *
@@ -17,14 +17,15 @@ export function applyConnectorSelection(
 	canvasState: CanvasControllerState,
 	connectorId: string,
 ): CanvasControllerState {
-	const { selectedIds } = canvasState;
-	if (selectedIds.length === 1 && selectedIds[0] === connectorId) {
+	const { objectIds } = canvasState.selection;
+	if (objectIds.length === 1 && objectIds[0] === connectorId) {
 		return canvasState;
 	}
 
 	return {
 		...canvasState,
-		selectedIds: [connectorId],
+		// A picked part goes with the object it hung off: the connector replaces it.
+		selection: { objectIds: [connectorId], part: null },
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,

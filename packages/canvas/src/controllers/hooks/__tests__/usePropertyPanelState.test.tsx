@@ -9,6 +9,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { usePropertyPanelState } from "../usePropertyPanelState";
 
 /**
@@ -60,7 +61,7 @@ const baseState = (): CanvasControllerState => {
 			child: rectAt("child", 50, "group"),
 		},
 		rootIds: ["selected", "other", "group"],
-		selectedIds: ["selected"],
+		selection: selectionOf(["selected"]),
 	};
 };
 
@@ -131,12 +132,12 @@ describe("usePropertyPanelState", () => {
 	it("moves to the new state when the selection changes", () => {
 		const initial = baseState();
 		const { render } = mount(initial);
-		const reselected = { ...initial, selectedIds: ["other"] };
+		const reselected = { ...initial, selection: selectionOf(["other"]) };
 		expect(render(reselected)).toBe(reselected);
 	});
 
 	it("moves to the new state when a descendant of a selected group changes", () => {
-		const initial = { ...baseState(), selectedIds: ["group"] };
+		const initial = { ...baseState(), selection: selectionOf(["group"]) };
 		const { first, render } = mount(initial);
 		const childMoved = {
 			...initial,
@@ -146,10 +147,10 @@ describe("usePropertyPanelState", () => {
 		expect(render(childMoved)).not.toBe(first);
 	});
 
-	it("follows the selected connector rather than selectedIds", () => {
+	it("follows the selected connector rather than the object selection", () => {
 		const initial = {
 			...baseState(),
-			selectedIds: ["other"],
+			selection: selectionOf(["other"]),
 		};
 		const { first, render } = mount(initial);
 		const connectorChanged = {
@@ -187,7 +188,7 @@ describe("usePropertyPanelState", () => {
 	it("latches again after a change, so the next pan holds the latest state", () => {
 		const initial = baseState();
 		const { render } = mount(initial);
-		const reselected = { ...initial, selectedIds: ["other"] };
+		const reselected = { ...initial, selection: selectionOf(["other"]) };
 		render(reselected);
 		const panned = {
 			...reselected,

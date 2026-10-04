@@ -38,7 +38,7 @@ const resetConnectorRoute = (
 			[connector.id]: resetConnector,
 		},
 		// The waypoints are gone, so a picked one addresses nothing.
-		objectPartSelection: null,
+		selection: { ...state.selection, part: null },
 		commitVersion: state.commitVersion + 1,
 	};
 };

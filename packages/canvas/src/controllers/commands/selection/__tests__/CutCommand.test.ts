@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { CutCommand } from "../CutCommand";
 
 const registries = createTestRegistries();
@@ -21,12 +23,11 @@ const makeRect = (id: string): ObjectState =>
 	}) as ObjectState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 }): CanvasControllerState =>
 	({
-		objectPartSelection: null,
 		multiSelectGroup: null,
 		internalClipboard: null,
 		objectMenuOpenId: null,
@@ -38,7 +39,7 @@ const makeState = (params: {
 describe("CutCommand", () => {
 	it("stashes the selection to the clipboard and then deletes it (copy + delete combined)", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: { a: makeRect("a"), b: makeRect("b") },
 			rootIds: ["a", "b"],
 		});
@@ -51,13 +52,13 @@ describe("CutCommand", () => {
 		// delete: removed from the canvas
 		expect(next.objects["a"]).toBeUndefined();
 		expect(next.rootIds).toEqual(["b"]);
-		expect(next.selectedIds).toEqual([]);
+		expect(next.selection.objectIds).toEqual([]);
 	});
 
 	describe("canExecute", () => {
 		it("is executable when there is a selection", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a") },
 				rootIds: ["a"],
 			});
@@ -67,7 +68,7 @@ describe("CutCommand", () => {
 		it("is not executable when there is no selection", () => {
 			expect(
 				CutCommand.canExecute(
-					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					makeState({ selection: selectionOf([]), objects: {}, rootIds: [] }),
 					registries,
 				),
 			).toBe(false);

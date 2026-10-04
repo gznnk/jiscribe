@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import {
 	getTextSlotCycleTarget,
@@ -24,15 +25,14 @@ const baseState = (
 ): CanvasControllerState =>
 	({
 		objects: { "rec-1": recordObject },
-		selectedIds: ["rec-1"],
-		objectPartSelection: null,
+		selection: selectionOf(["rec-1"]),
 		activeDrag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
 /** Every range a Tab step writes is collapsed, so one id names the whole selection. */
 const selectedSlotId = (state: CanvasControllerState): string | undefined =>
-	state.objectPartSelection?.ranges[0].anchorId;
+	state.selection.part?.ranges[0].anchorId;
 
 describe("getTextSlotCycleTarget", () => {
 	it("returns the sole selected object when it spells its text out as slots", () => {
@@ -41,12 +41,16 @@ describe("getTextSlotCycleTarget", () => {
 
 	it("returns null for a multiple selection", () => {
 		expect(
-			getTextSlotCycleTarget(baseState({ selectedIds: ["rec-1", "rec-2"] })),
+			getTextSlotCycleTarget(
+				baseState({ selection: selectionOf(["rec-1", "rec-2"]) }),
+			),
 		).toBeNull();
 	});
 
 	it("returns null when nothing is selected", () => {
-		expect(getTextSlotCycleTarget(baseState({ selectedIds: [] }))).toBeNull();
+		expect(
+			getTextSlotCycleTarget(baseState({ selection: selectionOf([]) })),
+		).toBeNull();
 	});
 
 	it("returns null for a shape whose text is a single body", () => {
@@ -59,7 +63,10 @@ describe("getTextSlotCycleTarget", () => {
 					text: { body: { text: "hello" } },
 				},
 			} as never,
-			selectedIds: ["rect-1"],
+			selection: selectionOf(["rect-1"], {
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "operations", focusId: "operations" }],
+			}),
 		});
 		expect(getTextSlotCycleTarget(state)).toBeNull();
 	});
@@ -93,37 +100,18 @@ describe("selectAdjacentTextSlot", () => {
 	});
 
 	it("wraps around at either end", () => {
-		const atLast = baseState({
-			objectPartSelection: {
-				objectId: "rec-1",
-				kind: TEXT_SLOT_PART_KIND,
-				ranges: [{ anchorId: "operations", focusId: "operations" }],
-			},
-		});
+		const atLast = baseState({});
 		expect(selectedSlotId(selectAdjacentTextSlot(atLast, 1))).toBe("name");
 
 		const atFirst = baseState({
-			objectPartSelection: {
-				objectId: "rec-1",
+			selection: selectionOf(["rec-1"], {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "name", focusId: "name" }],
-			},
+			}),
 		});
 		expect(selectedSlotId(selectAdjacentTextSlot(atFirst, -1))).toBe(
 			"operations",
 		);
-	});
-
-	it("treats a stale slot selection as none selected", () => {
-		// The slot names an object that is not the selection, so it does not decide the start.
-		const state = baseState({
-			objectPartSelection: {
-				objectId: "other",
-				kind: TEXT_SLOT_PART_KIND,
-				ranges: [{ anchorId: "operations", focusId: "operations" }],
-			},
-		});
-		expect(selectedSlotId(selectAdjacentTextSlot(state, 1))).toBe("name");
 	});
 
 	it("closes an open ObjectMenu submenu, which no longer acts on the slot walked away from", () => {
@@ -132,7 +120,7 @@ describe("selectAdjacentTextSlot", () => {
 	});
 
 	it("leaves a state whose selection does not qualify untouched", () => {
-		const state = baseState({ selectedIds: [] });
+		const state = baseState({ selection: selectionOf([]) });
 		expect(selectAdjacentTextSlot(state, 1)).toBe(state);
 	});
 

@@ -12,7 +12,7 @@ import { getTopLevelSelectedIds } from "../../../../utils/getTopLevelSelectedIds
  *
  * ### Flow
  * ① Remove descendants whose ancestor is already selected (enforcing the invariant).
- *   Even if a group and its descendants both end up in selectedIds (e.g. via area selection),
+ *   Even if a group and its descendants both end up in the selection (e.g. via area selection),
  *   drop the descendants and keep only the top-level items.
  * ② Fold groups whose "all children are selected" upward toward the parents, worklist-style.
  *   - Enqueue the direct parent group of each selected item as a starting point.
@@ -35,7 +35,7 @@ import { getTopLevelSelectedIds } from "../../../../utils/getTopLevelSelectedIds
  */
 export function autoSelectParentGroups(
 	state: CanvasState,
-	selectedIds: string[],
+	selectedIds: readonly string[],
 ): string[] {
 	// ① Remove descendants whose ancestor is already selected
 	const selected = new Set(getTopLevelSelectedIds(selectedIds, state.objects));

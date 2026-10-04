@@ -250,4 +250,5 @@ export type {
 	PlatformKeyBindings,
 } from "./controllers/commands/CommandTypes";
 export type { CanvasControllerState } from "./controllers/CanvasTypes";
+export type { CanvasSelection } from "./controllers/selection/CanvasSelection";
 export type { ICanvasRegistries } from "./controllers/registries/ICanvasRegistries";

@@ -3,8 +3,8 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { CanvasSelection } from "../selection/CanvasSelection";
 import { collectSelectedPartIds } from "../selection/collectSelectedPartIds";
-import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 import { isTextSlotSelection } from "../selection/textSlotPartKind";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
@@ -72,7 +72,8 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		value: string,
 	): CanvasControllerState {
-		const { selectedIds, objects, objectPartSelection } = state;
+		const { selection, objects } = state;
+		const { objectIds: selectedIds } = selection;
 		const path = property.split(".");
 
 		if (selectedIds.length === 0) {
@@ -89,13 +90,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			if (!obj) {
 				continue;
 			}
-			const updated = this.applyToObject(
-				obj,
-				property,
-				path,
-				value,
-				objectPartSelection,
-			);
+			const updated = this.applyToObject(obj, property, path, value, selection);
 			if (updated === null) {
 				continue;
 			}
@@ -118,7 +113,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 						property,
 						path,
 						value,
-						objectPartSelection,
+						selection,
 					);
 					if (updated === null) {
 						continue;
@@ -168,7 +163,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		path: readonly string[],
 		value: string,
-		objectPartSelection: ObjectPartSelection | null,
+		selection: CanvasSelection,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -184,9 +179,8 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			coerced,
 			// The write lands on one slot, and in this version the selection is always
 			// one collapsed range, so that slot is the first of the ids it covers.
-			isTextSlotSelection(objectPartSelection) &&
-				objectPartSelection.objectId === obj.id
-				? collectSelectedPartIds(objectPartSelection)[0]
+			isTextSlotSelection(selection.part) && selection.objectIds[0] === obj.id
+				? collectSelectedPartIds(selection.part)[0]
 				: undefined,
 		);
 	}

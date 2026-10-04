@@ -27,7 +27,7 @@ export function updateGroupBoundsFromRoot(
  *
  * @param state - Current canvas controller state with updated object positions
  * @param groupIds - IDs of the groups whose root subtrees should be updated;
- *   read only, so a caller may hand over its own `selectedIds`
+ *   read only, so a caller may hand over its own `selection.objectIds`
  * @returns Updated canvas controller state with recalculated group bounds
  */
 export function updateGroupBoundsFromRoots(

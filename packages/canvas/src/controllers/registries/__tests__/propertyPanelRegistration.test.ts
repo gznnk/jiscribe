@@ -9,6 +9,7 @@ import {
 import type { RectState } from "../../../states/objects/primitives/rect/RectState";
 import { isValidRectState } from "../../../states/objects/primitives/rect/validateRectState";
 import { createFrameBehavior } from "../../behaviors/base/FrameController";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import type {
 	PropertyPanelItem,
 	PropertyPanelSection,
@@ -55,7 +56,7 @@ const selectionOfConnector = (
 			...connector,
 		} as unknown as ObjectState,
 	},
-	selectedIds: [connectorId],
+	selection: selectionOf([connectorId]),
 });
 
 describe("propertyPanel registration", () => {

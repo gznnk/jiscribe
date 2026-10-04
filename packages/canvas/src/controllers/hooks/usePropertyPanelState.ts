@@ -14,15 +14,15 @@ import { collectDescendantIds } from "../utils/collectDescendantIds";
  * panel's reads and left out here goes stale on screen without a warning.
  */
 const readPropertyPanelKey = (state: CanvasControllerState): unknown[] => {
-	const selectedObjects = state.selectedIds.flatMap((id) => [
+	const selectedObjects = state.selection.objectIds.flatMap((id) => [
 		state.objects[id],
 		...collectDescendantIds(id, state.objects).map(
 			(descendantId) => state.objects[descendantId],
 		),
 	]);
 	return [
-		state.selectedIds,
-		state.objectPartSelection,
+		state.selection.objectIds,
+		state.selection.part,
 		state.textEditState,
 		state.multiSelectGroup,
 		state.background,

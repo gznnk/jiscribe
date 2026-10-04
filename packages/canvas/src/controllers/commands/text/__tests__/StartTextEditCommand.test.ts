@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
@@ -50,13 +51,13 @@ const doc = {
 const stateWithSelection = (selectedId: string) =>
 	deepFreezeState({
 		...createInitialControllerState(doc, registries),
-		selectedIds: [selectedId],
+		selection: selectionOf([selectedId]),
 	});
 
 const stateWithConnectorSelected = (connectorId: string) =>
 	deepFreezeState({
 		...createInitialControllerState(doc, registries),
-		selectedIds: [connectorId],
+		selection: selectionOf([connectorId]),
 	});
 
 describe("StartTextEditCommand", () => {
@@ -114,9 +115,7 @@ describe("StartTextEditCommand", () => {
 
 	describe("a shape with slots", () => {
 		/** A record standing in: no built-in type declares `features.text = "slots"`. */
-		const stateWithSlotSelection = (
-			objectPartSelection: ObjectPartSelection | null,
-		) =>
+		const stateWithSlotSelection = (part: ObjectPartSelection | null) =>
 			deepFreezeState({
 				...createInitialControllerState(doc, registries),
 				objects: {
@@ -127,13 +126,11 @@ describe("StartTextEditCommand", () => {
 						text: { name: { text: "User" }, rows: { text: ["id: string"] } },
 					},
 				} as never,
-				selectedIds: ["rec-1"],
-				objectPartSelection,
+				selection: selectionOf(["rec-1"], part),
 			});
 
 		it("edits the selected slot", () => {
 			const state = stateWithSlotSelection({
-				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			});
@@ -156,7 +153,6 @@ describe("StartTextEditCommand", () => {
 		it("closes an open ObjectMenu submenu, which the edit session re-lays out", () => {
 			const state = deepFreezeState({
 				...stateWithSlotSelection({
-					objectId: "rec-1",
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "rows", focusId: "rows" }],
 				}),

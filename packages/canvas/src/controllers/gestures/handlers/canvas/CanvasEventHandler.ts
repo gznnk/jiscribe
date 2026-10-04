@@ -6,6 +6,7 @@ import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { selectContextMenuTarget } from "./utils/selectContextMenuTarget";
 import type { SnapFeedback } from "../../../CanvasTypes";
+import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { getSelectedConnectorId } from "../../../utils/getSelectedConnectorId";
@@ -284,7 +285,7 @@ export const CanvasEventHandler: GestureHandler = {
 						...nextState,
 						objects: { ...nextState.objects, [objectState.id]: objectState },
 						rootIds: [...nextState.rootIds, objectState.id],
-						selectedIds: [objectState.id],
+						selection: { objectIds: [objectState.id], part: null },
 					};
 				}
 
@@ -349,7 +350,7 @@ export const CanvasEventHandler: GestureHandler = {
 				// a connector was selected builds on nothing.
 				const baseIds =
 					isAdditive && getSelectedConnectorId(nextState) === null
-						? nextState.selectedIds
+						? nextState.selection.objectIds
 						: [];
 				nextState = {
 					...nextState,
@@ -361,7 +362,7 @@ export const CanvasEventHandler: GestureHandler = {
 						hitIds: [],
 						baseIds,
 					},
-					selectedIds: baseIds,
+					selection: { objectIds: baseIds, part: null },
 					// A plain marquee clears it here too (not only on "pressed"): the
 					// early-out below keeps the previous multiSelectGroup as-is while the
 					// hit set stays empty. An additive one keeps the base's group until the
@@ -394,7 +395,7 @@ export const CanvasEventHandler: GestureHandler = {
 					areaMaxY,
 				);
 
-				// Same hit set as the previous frame: keep selectedIds / multiSelectGroup
+				// Same hit set as the previous frame: keep the selection / multiSelectGroup
 				// as-is and skip group folding and multiSelectGroup rebuilding (#219).
 				// Element order is stable because collectIdsInArea scans the same bboxes map.
 				const areSameIds =
@@ -429,7 +430,7 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					...nextState,
 					areaSelection: { ...area, endX, endY, hitIds },
-					selectedIds,
+					selection: { objectIds: selectedIds, part: null },
 					multiSelectGroup,
 				};
 				return nextState;
@@ -468,7 +469,7 @@ export const CanvasEventHandler: GestureHandler = {
 			if (isTouch || !isAdditiveSelectionMod(event.mods)) {
 				nextState = {
 					...nextState,
-					selectedIds: [],
+					selection: EMPTY_SELECTION,
 					// Reset the multi-select group
 					multiSelectGroup: null,
 				};

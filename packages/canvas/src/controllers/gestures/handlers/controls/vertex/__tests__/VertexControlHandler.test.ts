@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { VERTEX_PART_KIND } from "../../../../../selection/createVertexPartKindDefinition";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { vertexPart } from "../../../utils/partAddress";
@@ -32,15 +33,14 @@ const makeDragState = (points: Point[]): CanvasControllerState => {
 	return {
 		objects: { "poly-1": poly },
 		rootIds: ["poly-1"],
-		selectedIds: [],
-		objectPartSelection: null,
+		selection: selectionOf([]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "poly-1": poly },
 				keyPoints: {},
 				snapCandidates: null,
-				selectedIds: [],
+				selection: selectionOf([]),
 				selectedIdsWithDescendants: new Set(),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -269,8 +269,7 @@ describe("VertexControlHandler - picking a vertex", () => {
 			clickEvent(1),
 			registries,
 		);
-		expect(next.objectPartSelection).toEqual({
-			objectId: "poly-1",
+		expect(next.selection.part).toEqual({
 			kind: VERTEX_PART_KIND,
 			ranges: [{ anchorId: "1", focusId: "1" }],
 		});
@@ -288,7 +287,7 @@ describe("VertexControlHandler - picking a vertex", () => {
 
 		const picked = handler.handle(state, clickEvent(1), registries);
 		expect(
-			handler.handle(picked, clickEvent(7), registries).objectPartSelection,
+			handler.handle(picked, clickEvent(7), registries).selection.part,
 		).toBeNull();
 	});
 
@@ -309,6 +308,6 @@ describe("VertexControlHandler - picking a vertex", () => {
 			} as CanvasEvent,
 			registries,
 		);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.part).toBeNull();
 	});
 });

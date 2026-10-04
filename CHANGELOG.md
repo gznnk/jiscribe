@@ -16,8 +16,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 ### Added
 
 - **For plugin authors: picking a vertex is a part selection too.** The separate
-  single-vertex field is gone: a vertex handle now writes `objectPartSelection`
-  under the `vertex` kind, so the one channel carries every pick made one level
+  single-vertex field is gone: a vertex handle now writes `selection.part` under
+  the `vertex` kind, so the one channel carries every pick made one level
   below the object and the reducer's reconciliation covers vertices as it already
   covered slots — including a connector's waypoints, picked while the connector
   itself is the selection. Because two kinds now share the channel, every reader
@@ -28,9 +28,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   so a Delete right after goes to that vertex rather than to the whole shape, and
   Escape drops the vertex first and the shape on the next press.
 - **For plugin authors: picking a text slot is one case of a general part
-  selection.** What was a slot-only field is now `objectPartSelection`, a
-  channel over the part kinds a type declares: the object it addresses, the
-  `kind` the ids belong to, and a list of ranges, each a fixed `anchorId` and a
+  selection.** What was a slot-only field is now `selection.part`, a
+  channel over the part kinds a type declares: the `kind` the ids belong to, and
+  a list of ranges, each a fixed `anchorId` and a
   moving `focusId` — the model a DOM `Selection` keeps, so a later gesture can
   grow the active range or add another without the stored form changing again. A
   type that spells its text out as slots takes part with no declaration of its
@@ -38,7 +38,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   its own `text`. The reducer reconciles the channel after every action that
   rewrites the selection or the objects, through the kind's own `has`, so a
   selection the state no longer backs is already gone by the time anything reads
-  it — the readers take `state.objectPartSelection` as it stands, and each kind
+  it — the readers take `state.selection.part` as it stands, and each kind
   answers for its own ids. Nothing the user does changes: every range written
   today is a single slot.
 - **For plugin authors: a type declares the sub-parts of its own objects.**
@@ -126,16 +126,31 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
-- **For plugin authors: a connector is selected through `selectedIds` like
-  everything else.** The separate single-connector field is gone, so the one id
-  list carries every selection the canvas holds; the rule it carried stays as the
-  writers' own — a connector is selected on its own, one of them, never beside a
-  shape — and a reader that needs it asks `getSelectedConnectorId` for that
-  shape. `ObjectMenuItemProps` and `PropertyPanelItemProps` no longer pass
-  `selectedConnectorId`: a row reads the connector off the `selectedIds` and
-  `objects` it already receives. For hosts nothing changes — `getSelection`,
-  `select` and `onSelectionChange` have levelled the two into one list all along
-  — except that `select`'s report drops the same field.
+- **For plugin authors: the selection is one nested value, `selection: { objectIds,
+part }`.** `CanvasControllerState` used to hold the object selection and the
+  pick made one level below it as two fields that only made sense together, so a
+  writer could move one and forget the other and only the reducer's safety net
+  caught it. Nested, every writer states both in the same breath — and
+  `reconcileObjectPartSelection` is back to being the net it was meant to be,
+  dropping a part whose object is gone or whose ids have been renumbered.
+  `objectIds` is read-only, and `part` is non-null only while exactly one object
+  is selected, which is why `ObjectPartSelection` no longer names its own object:
+  its owner is `selection.objectIds[0]`. `ObjectMenuItemProps` and
+  `PropertyPanelItemProps` hand a row the whole `selection` in place of
+  `selectedIds`, so a slot-aware row reads the pick from the same value it reads
+  the ids from. Hosts are unaffected: `getSelection`, `select` and
+  `onSelectionChange` still speak in plain id lists.
+- **For plugin authors: a connector is selected through the one id list like
+  everything else.** The separate single-connector field is gone, so
+  `selection.objectIds` carries every selection the canvas holds; the rule it
+  carried stays as the writers' own — a connector is selected on its own, one of
+  them, never beside a shape — and a reader that needs it asks
+  `getSelectedConnectorId` for that shape. `ObjectMenuItemProps` and
+  `PropertyPanelItemProps` no longer pass `selectedConnectorId`: a row reads the
+  connector off the `selection` and `objects` it already receives. For hosts
+  nothing changes — `getSelection`, `select` and `onSelectionChange` have
+  levelled the two into one list all along — except that `select`'s report drops
+  the same field.
 - **A right click selects the shape it lands on, and then opens the context
   menu.** The menu used to act on whatever was selected at the time, so a right
   click on another shape ran the command on the one still selected elsewhere —

@@ -2,6 +2,7 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
+import { EMPTY_SELECTION } from "../../selection/CanvasSelection";
 import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
 import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
 import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
@@ -20,20 +21,23 @@ import type { ExecutableCommand } from "../CommandTypes";
 const resolveSelectedParts = (
 	state: CanvasControllerState,
 ): ObjectPartTarget | null => {
-	const { objectPartSelection } = state;
-	if (objectPartSelection === null) {
+	const { objectIds, part } = state.selection;
+	if (part === null) {
 		return null;
 	}
 	return {
-		objectId: objectPartSelection.objectId,
-		kind: objectPartSelection.kind,
-		partIds: collectSelectedPartIds(objectPartSelection),
+		objectId: objectIds[0],
+		kind: part.kind,
+		partIds: collectSelectedPartIds(part),
 	};
 };
 
 const clearPartSelection = (
 	state: CanvasControllerState,
-): CanvasControllerState => ({ ...state, objectPartSelection: null });
+): CanvasControllerState => ({
+	...state,
+	selection: { ...state.selection, part: null },
+});
 
 /**
  * Command that deletes the current selection. Parts picked one level below the
@@ -63,7 +67,7 @@ export const DeleteCommand: ExecutableCommand = {
 		) {
 			return true;
 		}
-		return state.selectedIds.length > 0;
+		return state.selection.objectIds.length > 0;
 	},
 
 	execute: (state, registries) => {
@@ -107,7 +111,7 @@ const commitPartDeletion = (
 		// Removing a part renumbers the ids of a positional kind (the vertices), so
 		// the pick is dropped rather than left addressing whoever took the number
 		// over (see ObjectPartSelection).
-		objectPartSelection: null,
+		selection: { ...state.selection, part: null },
 		// A deletion is not something a duplicate can be offset from any more.
 		lastDuplicate: null,
 		commitVersion: state.commitVersion + 1,
@@ -146,7 +150,7 @@ const deleteSelectedObjects = (
 		}
 	};
 
-	for (const id of state.selectedIds) {
+	for (const id of state.selection.objectIds) {
 		collectIds(id);
 	}
 
@@ -166,7 +170,7 @@ const deleteSelectedObjects = (
 
 	// For selected objects whose parent is not being deleted, remove them from the parent's childIds
 	const affectedParentIds = new Set<string>();
-	for (const id of state.selectedIds) {
+	for (const id of state.selection.objectIds) {
 		const obj = state.objects[id];
 		if (obj?.parentId != null && !idsToDelete.has(obj.parentId)) {
 			const parent = updatedObjects[obj.parentId];
@@ -188,7 +192,7 @@ const deleteSelectedObjects = (
 		// orphaned-connector cleanup, remove all deletion targets at once
 		// (the selected objects and their descendants).
 		rootIds: stateAfterConnectors.rootIds.filter((id) => !idsToDelete.has(id)),
-		selectedIds: [] as string[],
+		selection: EMPTY_SELECTION,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
 		lastDuplicate: null,

@@ -4,6 +4,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { CopyCommand } from "../CopyCommand";
 
 const registries = createTestRegistries();
@@ -54,13 +56,13 @@ const makeConnector = (
 };
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 	connectorIds: string[];
 }): CanvasControllerState =>
 	({
-		selectedIds: params.selectedIds,
+		selection: params.selection,
 		objects: params.objects,
 		// connectors are managed interleaved in rootIds rather than a separate array, so include them in rootIds.
 		rootIds: [...params.rootIds, ...params.connectorIds],
@@ -79,7 +81,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 		const r2 = makeRect("r2");
 		const conn = makeConnector("conn1", "r1", "r2");
 		const state = makeState({
-			selectedIds: ["r1", "r2"],
+			selection: selectionOf(["r1", "r2"]),
 			objects: { r1, r2, conn1: conn },
 			rootIds: ["r1", "r2"],
 			connectorIds: ["conn1"],
@@ -92,7 +94,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 		const r1 = makeRect("r1");
 		const conn = makeConnector("conn1", "r1", null);
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1, conn1: conn },
 			rootIds: ["r1"],
 			connectorIds: ["conn1"],
@@ -105,7 +107,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 		const r1 = makeRect("r1");
 		const conn = makeConnector("conn1", null, "r1");
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1, conn1: conn },
 			rootIds: ["r1"],
 			connectorIds: ["conn1"],
@@ -118,7 +120,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 		const r1 = makeRect("r1");
 		const conn = makeConnector("conn1", null, null);
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1, conn1: conn },
 			rootIds: ["r1"],
 			connectorIds: ["conn1"],
@@ -132,7 +134,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 		const r2 = makeRect("r2");
 		const conn = makeConnector("conn1", "r1", "r2");
 		const state = makeState({
-			selectedIds: ["r1"], // r2 is not selected
+			selection: selectionOf(["r1"]), // r2 is not selected
 			objects: { r1, r2, conn1: conn },
 			rootIds: ["r1", "r2"],
 			connectorIds: ["conn1"],
@@ -146,7 +148,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 		const r2 = makeRect("r2");
 		const conn = makeConnector("conn1", "r2", null); // r2 is not selected
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1, r2, conn1: conn },
 			rootIds: ["r1", "r2"],
 			connectorIds: ["conn1"],
@@ -161,7 +163,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 		const r3 = makeRect("r3");
 		const conn = makeConnector("conn1", "r2", "r3"); // r2, r3 are not selected
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1, r2, r3, conn1: conn },
 			rootIds: ["r1", "r2", "r3"],
 			connectorIds: ["conn1"],
@@ -175,7 +177,7 @@ describe("CopyCommand — basic clipboard behavior", () => {
 	it("selected objects are included in internalClipboard's objects and rootIds", () => {
 		const r1 = makeRect("r1");
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1 },
 			rootIds: ["r1"],
 			connectorIds: [],
@@ -187,7 +189,7 @@ describe("CopyCommand — basic clipboard behavior", () => {
 
 	it("canExecute is false when selectedIds is empty", () => {
 		const state = makeState({
-			selectedIds: [],
+			selection: selectionOf([]),
 			objects: {},
 			rootIds: [],
 			connectorIds: [],
@@ -198,7 +200,7 @@ describe("CopyCommand — basic clipboard behavior", () => {
 	it("canExecute is true when there are selectedIds", () => {
 		const r1 = makeRect("r1");
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1 },
 			rootIds: ["r1"],
 			connectorIds: [],

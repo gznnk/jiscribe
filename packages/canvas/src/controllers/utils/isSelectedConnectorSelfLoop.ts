@@ -11,7 +11,7 @@ import { getSelectedConnectorId } from "./getSelectedConnectorId";
  * @param selection - The selection and the objects it names; a selection that is not a lone connector gives false
  */
 export const isSelectedConnectorSelfLoop = (
-	selection: Pick<CanvasControllerState, "selectedIds" | "objects">,
+	selection: Pick<CanvasControllerState, "selection" | "objects">,
 ): boolean => {
 	const connectorId = getSelectedConnectorId(selection);
 	const connector =

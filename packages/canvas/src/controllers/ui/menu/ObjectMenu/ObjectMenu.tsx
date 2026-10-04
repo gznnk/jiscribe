@@ -132,7 +132,7 @@ const renderItem = (
 				<item.component
 					key={item.id}
 					objects={canvasState.objects}
-					selectedIds={canvasState.selectedIds}
+					selection={canvasState.selection}
 					openSectionId={canvasState.objectMenuOpenId}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
@@ -146,7 +146,8 @@ const buildSystemSections = (
 ): ObjectMenuSection[] => {
 	const systemSections: ObjectMenuSection[] = [];
 
-	const { selectedIds, objects } = canvasState;
+	const { objectIds: selectedIds } = canvasState.selection;
+	const { objects } = canvasState;
 	const singleSelected =
 		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
 

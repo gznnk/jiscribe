@@ -65,7 +65,7 @@ const handleDragStart = (
 
 	return {
 		...nextState,
-		selectedIds: [connectorId],
+		selection: { objectIds: [connectorId], part: null },
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,

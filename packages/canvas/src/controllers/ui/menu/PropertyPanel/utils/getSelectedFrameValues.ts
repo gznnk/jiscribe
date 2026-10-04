@@ -26,10 +26,10 @@ export const getSelectedFrameValues = (
 	state: CanvasControllerState,
 ): SelectedFrameValues | null => {
 	const frame =
-		state.selectedIds.length > 1
+		state.selection.objectIds.length > 1
 			? state.multiSelectGroup
-			: state.selectedIds.length === 1
-				? state.objects[state.selectedIds[0]]
+			: state.selection.objectIds.length === 1
+				? state.objects[state.selection.objectIds[0]]
 				: null;
 	if (!frame || !isTransformedFrame(frame)) {
 		return null;

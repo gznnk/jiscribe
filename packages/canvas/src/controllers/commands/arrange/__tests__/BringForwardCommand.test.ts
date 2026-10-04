@@ -4,12 +4,14 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { BringForwardCommand } from "../BringForwardCommand";
 
 const registries = createTestRegistries();
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 }): CanvasControllerState =>
@@ -28,7 +30,7 @@ describe("BringForwardCommand", () => {
 	describe("selection at the root level", () => {
 		it("moves a single selection one step forward (swapping with its neighbor)", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
@@ -41,7 +43,7 @@ describe("BringForwardCommand", () => {
 
 		it("does not move the frontmost element", () => {
 			const state = makeState({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
@@ -54,7 +56,7 @@ describe("BringForwardCommand", () => {
 
 		it("advances a contiguous selection block forward as a single unit", () => {
 			const state = makeState({
-				selectedIds: ["b", "c"],
+				selection: selectionOf(["b", "c"]),
 				objects: {
 					a: makeRect("a"),
 					b: makeRect("b"),
@@ -74,7 +76,7 @@ describe("BringForwardCommand", () => {
 
 		it("increments commitVersion", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
@@ -87,7 +89,7 @@ describe("BringForwardCommand", () => {
 	describe("selection within the same group", () => {
 		it("moves one step forward within childIds without changing rootIds", () => {
 			const state = makeState({
-				selectedIds: ["c1"],
+				selection: selectionOf(["c1"]),
 				objects: {
 					g: makeGroup("g", ["c1", "c2", "c3"]),
 					c1: makeRect("c1", "g"),
@@ -109,7 +111,7 @@ describe("BringForwardCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when the selection shares the same parent", () => {
 			const state = makeState({
-				selectedIds: ["a", "b"],
+				selection: selectionOf(["a", "b"]),
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
@@ -119,7 +121,7 @@ describe("BringForwardCommand", () => {
 		it("is not executable when there is no selection", () => {
 			expect(
 				BringForwardCommand.canExecute(
-					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					makeState({ selection: selectionOf([]), objects: {}, rootIds: [] }),
 					registries,
 				),
 			).toBe(false);
@@ -127,7 +129,7 @@ describe("BringForwardCommand", () => {
 
 		it("is not executable for a mixed selection with different parents", () => {
 			const state = makeState({
-				selectedIds: ["a", "c1"],
+				selection: selectionOf(["a", "c1"]),
 				objects: {
 					a: makeRect("a"),
 					g: makeGroup("g", ["c1"]),

@@ -10,6 +10,7 @@ import {
 } from "./support/fixtures";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 
 const connectorOf = (
 	state: CanvasControllerState,
@@ -26,7 +27,7 @@ const connectorOf = (
 describe("connectors never dangle after endpoint deletion", () => {
 	it("deleting one endpoint shape detaches that side to a free anchor at the former outline point", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-2"],
+			selection: selectionOf(["rect-2"]),
 		});
 		const after = runCommand(state, "delete");
 
@@ -51,18 +52,18 @@ describe("connectors never dangle after endpoint deletion", () => {
 
 	it("deleting both endpoint shapes deletes the connector with them", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-1", "rect-2"],
+			selection: selectionOf(["rect-1", "rect-2"]),
 		});
 		const after = runCommand(state, "delete");
 
 		expect(after.objects).toEqual({});
 		expect(after.rootIds).toEqual([]);
-		expect(after.selectedIds).toEqual([]);
+		expect(after.selection.objectIds).toEqual([]);
 	});
 
 	it("deleting the last owner of a half-free connector deletes the connector (no free-free leftovers)", () => {
 		const state = createCommandState(halfFreeConnectorDoc, {
-			selectedIds: ["rect-1"],
+			selection: selectionOf(["rect-1"]),
 		});
 		// Precondition: the half-free connector survives doc loading.
 		expect(connectorOf(state)).toBeDefined();
@@ -75,7 +76,7 @@ describe("connectors never dangle after endpoint deletion", () => {
 
 	it("cut detaches the connector like delete, and the clipboard excludes the partially-connected connector", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-2"],
+			selection: selectionOf(["rect-2"]),
 		});
 		const after = runCommand(state, "cut");
 
@@ -93,11 +94,11 @@ describe("connectors never dangle after endpoint deletion", () => {
 	it("deleting a group cascades to its descendants and detaches their connectors", () => {
 		const grouped = runCommand(
 			createCommandState(threeRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const groupId = grouped.selectedIds[0];
+		const groupId = grouped.selection.objectIds[0];
 		expect(grouped.objects[groupId]?.type).toBe("group");
 
 		const after = runCommand(grouped, "delete");

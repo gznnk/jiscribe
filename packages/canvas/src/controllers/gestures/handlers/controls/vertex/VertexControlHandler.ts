@@ -95,7 +95,7 @@ export class VertexControlHandler extends ControlStrategy {
 	): CanvasControllerState {
 		const nextState: CanvasControllerState = {
 			...state,
-			objectPartSelection: null,
+			selection: { ...state.selection, part: null },
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,

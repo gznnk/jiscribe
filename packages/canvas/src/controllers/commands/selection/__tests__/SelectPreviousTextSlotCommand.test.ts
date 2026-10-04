@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { SelectPreviousTextSlotCommand } from "../SelectPreviousTextSlotCommand";
 
@@ -19,8 +20,7 @@ const baseState = (
 				text: { name: { text: "User" }, attributes: { text: [] } },
 			},
 		},
-		selectedIds: ["rec-1"],
-		objectPartSelection: null,
+		selection: selectionOf(["rec-1"]),
 		activeDrag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -37,16 +37,13 @@ describe("SelectPreviousTextSlotCommand", () => {
 			baseState({}),
 			registries,
 		);
-		expect(last.objectPartSelection).toEqual({
-			objectId: "rec-1",
+		expect(last.selection.part).toEqual({
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "attributes", focusId: "attributes" }],
 		});
 		expect(
-			SelectPreviousTextSlotCommand.execute(last, registries)
-				.objectPartSelection,
+			SelectPreviousTextSlotCommand.execute(last, registries).selection.part,
 		).toEqual({
-			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "name", focusId: "name" }],
 		});
@@ -61,7 +58,7 @@ describe("SelectPreviousTextSlotCommand", () => {
 	it("is not executable for a multiple selection", () => {
 		expect(
 			SelectPreviousTextSlotCommand.canExecute(
-				baseState({ selectedIds: ["rec-1", "rec-2"] }),
+				baseState({ selection: selectionOf(["rec-1", "rec-2"]) }),
 				registries,
 			),
 		).toBe(false);

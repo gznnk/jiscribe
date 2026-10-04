@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import { createTextSlotPartKindDefinition } from "../../../../selection/createTextSlotPartKindDefinition";
 import { createVertexPartKindDefinition } from "../../../../selection/createVertexPartKindDefinition";
@@ -41,7 +42,7 @@ objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
 objectPartKind.register("polyline", [createVertexPartKindDefinition(2)]);
 
 const makeState = (
-	objectPartSelection: ObjectPartSelection | null,
+	part: ObjectPartSelection | null,
 	objectMenuOpenId: string | null = null,
 ): CanvasControllerState =>
 	({
@@ -50,16 +51,12 @@ const makeState = (
 			"poly-1": poly("poly-1"),
 			"rect-1": rect("rect-1"),
 		},
-		objectPartSelection,
+		selection: selectionOf(["rec-1"], part),
 		objectMenuOpenId,
 		stencilLibraryOpenCategory: "basic",
 	}) as unknown as CanvasControllerState;
 
-const textSlotSelection = (
-	objectId: string,
-	slotId: string,
-): ObjectPartSelection => ({
-	objectId,
+const textSlotSelection = (slotId: string): ObjectPartSelection => ({
 	kind: TEXT_SLOT_PART_KIND,
 	ranges: [{ anchorId: slotId, focusId: slotId }],
 });
@@ -75,9 +72,7 @@ describe("applyPartClick", () => {
 			objectPartKind,
 		);
 
-		expect(next.objectPartSelection).toEqual(
-			textSlotSelection("rec-1", "rows"),
-		);
+		expect(next.selection.part).toEqual(textSlotSelection("rows"));
 	});
 
 	it("reads a vertex handle's address through the same path", () => {
@@ -90,11 +85,11 @@ describe("applyPartClick", () => {
 			objectPartKind,
 		);
 
-		expect(next.objectPartSelection).toEqual(vertexPartSelection("poly-1", 1));
+		expect(next.selection.part).toEqual(vertexPartSelection(1));
 	});
 
 	it("replaces whatever was picked, including a part of another kind", () => {
-		const state = makeState(vertexPartSelection("poly-1", 1));
+		const state = makeState(vertexPartSelection(1));
 
 		const next = applyPartClick(
 			state,
@@ -103,9 +98,7 @@ describe("applyPartClick", () => {
 			objectPartKind,
 		);
 
-		expect(next.objectPartSelection).toEqual(
-			textSlotSelection("rec-1", "name"),
-		);
+		expect(next.selection.part).toEqual(textSlotSelection("name"));
 	});
 
 	it("closes the open submenu and the stencil flyout on the part that is picked", () => {
@@ -123,7 +116,7 @@ describe("applyPartClick", () => {
 	});
 
 	it("clears the pick when the id names no part the object still has", () => {
-		const state = makeState(textSlotSelection("rec-1", "rows"), "alignment");
+		const state = makeState(textSlotSelection("rows"), "alignment");
 
 		const next = applyPartClick(
 			state,
@@ -132,12 +125,12 @@ describe("applyPartClick", () => {
 			objectPartKind,
 		);
 
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.part).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 	});
 
 	it("clears the pick when the object's type declares no such kind", () => {
-		const state = makeState(textSlotSelection("rec-1", "rows"));
+		const state = makeState(textSlotSelection("rows"));
 
 		expect(
 			applyPartClick(
@@ -145,7 +138,7 @@ describe("applyPartClick", () => {
 				state.objects["rec-1"],
 				vertexPart(0),
 				objectPartKind,
-			).objectPartSelection,
+			).selection.part,
 		).toBeNull();
 		expect(
 			applyPartClick(
@@ -153,26 +146,26 @@ describe("applyPartClick", () => {
 				state.objects["rect-1"],
 				textSlotPart("body"),
 				objectPartKind,
-			).objectPartSelection,
+			).selection.part,
 		).toBeNull();
 	});
 
 	it("clears the pick on a click beside the parts, which steps up to the object", () => {
-		const state = makeState(textSlotSelection("rec-1", "rows"));
+		const state = makeState(textSlotSelection("rows"));
 
 		expect(
 			applyPartClick(state, state.objects["rec-1"], undefined, objectPartKind)
-				.objectPartSelection,
+				.selection.part,
 		).toBeNull();
 		// A bare slot id, the way the plugins spelled it before the address.
 		expect(
 			applyPartClick(state, state.objects["rec-1"], "rows", objectPartKind)
-				.objectPartSelection,
+				.selection.part,
 		).toBeNull();
 	});
 
 	it("hands back the state itself when the picked part is clicked again", () => {
-		const state = makeState(textSlotSelection("rec-1", "rows"), "alignment");
+		const state = makeState(textSlotSelection("rows"), "alignment");
 
 		expect(
 			applyPartClick(

@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 
 /**
  * Whether a full clear would change anything. Shared by the two commands that
@@ -6,7 +7,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
  * from {@link clearAllSelection}'s field list.
  *
  * A part selection is not asked about separately: it only resolves while its
- * object is the sole selection, which `selectedIds` already covers.
+ * object is the sole selection, which `selection.objectIds` already covers.
  *
  * @param state - The current canvas controller state
  * @returns True when something is selected or open; false during an object drag
@@ -17,7 +18,7 @@ export const isSelectionClearable = (state: CanvasControllerState): boolean => {
 		return false;
 	}
 	return (
-		state.selectedIds.length > 0 ||
+		state.selection.objectIds.length > 0 ||
 		state.areaSelection !== null ||
 		state.shapeDrawing !== null ||
 		state.stencilLibraryOpenCategory !== null
@@ -35,8 +36,7 @@ export const clearAllSelection = (
 	state: CanvasControllerState,
 ): CanvasControllerState => ({
 	...state,
-	selectedIds: [],
-	objectPartSelection: null,
+	selection: EMPTY_SELECTION,
 	multiSelectGroup: null,
 	areaSelection: null,
 	objectMenuOpenId: null,

@@ -7,6 +7,7 @@ import type {
 	MetaProperty,
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 /**
@@ -101,7 +102,7 @@ export type PropertyPanelSection = {
  */
 export type PropertyPanelSelection = Pick<
 	PropertyPanelItemProps,
-	"objects" | "selectedIds"
+	"objects" | "selection"
 >;
 
 /**
@@ -181,8 +182,8 @@ export type PropertyPanelMetaUpdater = (
  */
 export type PropertyPanelItemProps = {
 	objects: Record<string, ObjectState>;
-	/** The selection, in selection order; a lone connector is one of them (CanvasControllerState.selectedIds). */
-	selectedIds: string[];
+	/** What the canvas is pointed at: the objects picked, and the part picked below a single one of them (CanvasSelection). */
+	selection: CanvasSelection;
 	/** The frame a multi-selection is transformed through; null while one object or nothing is selected. */
 	multiSelectGroup: GroupState | null;
 	onPropertyUpdate: StylePropertyUpdater;

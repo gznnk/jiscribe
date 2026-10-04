@@ -14,4 +14,4 @@ import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
  */
 export const isTextAddressed = (state: CanvasControllerState): boolean =>
 	state.textEditState?.kind === "shape" ||
-	isTextSlotSelection(state.objectPartSelection);
+	isTextSlotSelection(state.selection.part);

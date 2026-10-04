@@ -25,7 +25,7 @@ import { getSelectedHeaderHeight } from "../state/getSelectedHeaderHeight";
  */
 const HeaderHeightPropertyComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	onPropertyUpdate,
 }) => {
 	const locale = useCanvasLocale();
@@ -34,7 +34,7 @@ const HeaderHeightPropertyComponent: React.FC<PropertyPanelItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyRowHeader}>
 			<PropertyNumberField
-				value={getSelectedHeaderHeight(selectedIds, objects)}
+				value={getSelectedHeaderHeight(selection.objectIds, objects)}
 				min={CONTAINER_MIN_HEADER_HEIGHT}
 				ariaLabel={messages.fieldHeaderHeight}
 				testId="property-field:headerHeight"

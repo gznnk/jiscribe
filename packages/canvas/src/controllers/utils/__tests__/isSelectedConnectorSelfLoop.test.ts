@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { isSelectedConnectorSelfLoop } from "../isSelectedConnectorSelfLoop";
 
 const connector = (
@@ -17,22 +18,25 @@ const connector = (
 
 describe("isSelectedConnectorSelfLoop", () => {
 	it("no connector selected -> false", () => {
-		expect(isSelectedConnectorSelfLoop({ selectedIds: [], objects: {} })).toBe(
-			false,
-		);
+		expect(
+			isSelectedConnectorSelfLoop({ selection: selectionOf([]), objects: {} }),
+		).toBe(false);
 	});
 
 	it("selected ID is not a connector -> false", () => {
 		const rect = { id: "r", type: "rect" } as unknown as ObjectState;
 		expect(
-			isSelectedConnectorSelfLoop({ selectedIds: ["r"], objects: { r: rect } }),
+			isSelectedConnectorSelfLoop({
+				selection: selectionOf(["r"]),
+				objects: { r: rect },
+			}),
 		).toBe(false);
 	});
 
 	it("both ends share the same owner -> true (self-loop)", () => {
 		expect(
 			isSelectedConnectorSelfLoop({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c", "n1", "n1") },
 			}),
 		).toBe(true);
@@ -41,7 +45,7 @@ describe("isSelectedConnectorSelfLoop", () => {
 	it("ends have different owners -> false", () => {
 		expect(
 			isSelectedConnectorSelfLoop({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c", "n1", "n2") },
 			}),
 		).toBe(false);
@@ -50,7 +54,7 @@ describe("isSelectedConnectorSelfLoop", () => {
 	it("one end is unconnected -> false", () => {
 		expect(
 			isSelectedConnectorSelfLoop({
-				selectedIds: ["c"],
+				selection: selectionOf(["c"]),
 				objects: { c: connector("c", "n1", undefined) },
 			}),
 		).toBe(false);

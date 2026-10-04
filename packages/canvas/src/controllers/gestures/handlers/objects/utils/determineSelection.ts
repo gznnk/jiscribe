@@ -27,11 +27,13 @@ export function determineSelection(
 	objectState: ObjectState,
 	canvasState: CanvasControllerState,
 	mods: Mods,
-): string[] | null {
+): readonly string[] | null {
 	const { id } = objectState;
 	const isAdditive = isAdditiveSelectionMod(mods);
 	const baseSelectedIds =
-		getSelectedConnectorId(canvasState) === null ? canvasState.selectedIds : [];
+		getSelectedConnectorId(canvasState) === null
+			? canvasState.selection.objectIds
+			: [];
 	const isCurrentlySelected = baseSelectedIds.includes(id);
 
 	// Get ancestors of the clicked object
@@ -213,7 +215,7 @@ export function determineSelection(
 
 	// ========== Update selectedIds based on determined target ==========
 
-	let selectedIds: string[];
+	let selectedIds: readonly string[];
 
 	if (isAdditive) {
 		// Additive mode: toggle or add

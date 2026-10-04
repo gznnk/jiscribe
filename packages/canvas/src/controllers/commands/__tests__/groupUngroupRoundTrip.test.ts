@@ -7,6 +7,7 @@ import {
 	twoRectsWithConnectorDoc,
 } from "./support/fixtures";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 
 /**
  * Group and ungroup are structural inverses: ungroup must restore the children's
@@ -19,11 +20,11 @@ describe("group → ungroup restores the flat structure", () => {
 	it("children return to the root with no parentId, replacing the group at its z position", () => {
 		const grouped = runCommand(
 			createCommandState(twoRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const groupId = grouped.selectedIds[0];
+		const groupId = grouped.selection.objectIds[0];
 		// Grouping pulled the rects out of the root and appended the group at the front.
 		expect(grouped.rootIds).toEqual(["conn-1", groupId]);
 
@@ -35,18 +36,18 @@ describe("group → ungroup restores the flat structure", () => {
 		expect(ungrouped.objects["rect-1"]?.parentId).toBeUndefined();
 		expect(ungrouped.objects["rect-2"]?.parentId).toBeUndefined();
 		// The promoted children become the selection.
-		expect(ungrouped.selectedIds).toEqual(["rect-1", "rect-2"]);
+		expect(ungrouped.selection.objectIds).toEqual(["rect-1", "rect-2"]);
 	});
 
 	it("grouping preserves the children's z-order regardless of selection order", () => {
 		const grouped = runCommand(
 			createCommandState(twoRectsWithConnectorDoc, {
 				// Selection order is front-to-back (e.g. shift-clicking front first) …
-				selectedIds: ["rect-2", "rect-1"],
+				selection: selectionOf(["rect-2", "rect-1"]),
 			}),
 			"group",
 		);
-		const group = grouped.objects[grouped.selectedIds[0]] as GroupState;
+		const group = grouped.objects[grouped.selection.objectIds[0]] as GroupState;
 
 		// … but childIds follow the canvas z-order, not the click order.
 		expect(group.childIds).toEqual(["rect-1", "rect-2"]);
@@ -58,16 +59,16 @@ describe("nested grouping composes and decomposes through the LCA", () => {
 	const buildNested = () => {
 		const inner = runCommand(
 			createCommandState(threeRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const innerGroupId = inner.selectedIds[0];
+		const innerGroupId = inner.selection.objectIds[0];
 		const outer = runCommand(
-			{ ...inner, selectedIds: [innerGroupId, "rect-3"] },
+			{ ...inner, selection: selectionOf([innerGroupId, "rect-3"]) },
 			"group",
 		);
-		return { outer, innerGroupId, outerGroupId: outer.selectedIds[0] };
+		return { outer, innerGroupId, outerGroupId: outer.selection.objectIds[0] };
 	};
 
 	it("grouping a group with a shape nests them under a new root group", () => {
@@ -105,20 +106,20 @@ describe("nested grouping composes and decomposes through the LCA", () => {
 	it("re-grouping all children of a group dissolves the now-singleton outer group", () => {
 		const inner = runCommand(
 			createCommandState(threeRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const firstGroupId = inner.selectedIds[0];
+		const firstGroupId = inner.selection.objectIds[0];
 
 		// Select the two children inside g1 and group them again: the LCA is g1,
 		// which is left holding a single child (the new group) and must be dissolved
 		// by cleanupGroups rather than survive as a pointless one-child wrapper.
 		const regrouped = runCommand(
-			{ ...inner, selectedIds: ["rect-1", "rect-2"] },
+			{ ...inner, selection: selectionOf(["rect-1", "rect-2"]) },
 			"group",
 		);
-		const newGroupId = regrouped.selectedIds[0];
+		const newGroupId = regrouped.selection.objectIds[0];
 		expect(newGroupId).not.toBe(firstGroupId);
 
 		expect(regrouped.objects[firstGroupId]).toBeUndefined();

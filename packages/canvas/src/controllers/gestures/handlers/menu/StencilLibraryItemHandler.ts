@@ -4,6 +4,7 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import type { Stencil } from "../../../ui/objects/Stencil";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
@@ -70,7 +71,7 @@ const addObjectToState = (
 			[objectState.id]: objectState,
 		},
 		rootIds: [...state.rootIds, objectState.id],
-		selectedIds: [objectState.id],
+		selection: { objectIds: [objectState.id], part: null },
 		commitVersion: state.commitVersion + 1,
 	};
 };
@@ -149,7 +150,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 				return {
 					...committed,
 					shapeDrawing: { preset, preview: null },
-					selectedIds: [],
+					selection: EMPTY_SELECTION,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
@@ -163,7 +164,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 				return {
 					...committed,
 					shapeDrawing: null,
-					selectedIds: [],
+					selection: EMPTY_SELECTION,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,

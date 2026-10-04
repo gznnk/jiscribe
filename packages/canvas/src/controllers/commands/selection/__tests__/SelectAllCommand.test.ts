@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import { reconcileObjectPartSelection } from "../../../selection/reconcileObjectPartSelection";
 import { SelectAllCommand } from "../SelectAllCommand";
@@ -29,8 +30,7 @@ const makeState = (params: {
 	({
 		rootIds: params.rootIds,
 		objects: params.objects,
-		selectedIds: ["stale"],
-		objectPartSelection: vertexPartSelection("x", 0),
+		selection: selectionOf(["stale"], vertexPartSelection(0)),
 		multiSelectGroup: null,
 		objectMenuOpenId: "x",
 	}) as unknown as CanvasControllerState;
@@ -42,7 +42,7 @@ describe("SelectAllCommand", () => {
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
 		});
 		const next = SelectAllCommand.execute(state, registries);
-		expect(next.selectedIds).toEqual(["a", "b"]);
+		expect(next.selection.objectIds).toEqual(["a", "b"]);
 	});
 
 	it("creates a multiSelectGroup for a multi-selection", () => {
@@ -61,13 +61,13 @@ describe("SelectAllCommand", () => {
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
 		});
 		const next = SelectAllCommand.execute(state, registries);
-		expect(next.selectedIds).not.toContain("stale");
+		expect(next.selection.objectIds).not.toContain("stale");
 		expect(next.objectMenuOpenId).toBeNull();
 		// The part selection is the reducer's to drop, which it does for every
 		// command result (reconcileObjectPartSelection).
 		expect(
-			reconcileObjectPartSelection(next, registries.objectPartKind)
-				.objectPartSelection,
+			reconcileObjectPartSelection(next, registries.objectPartKind).selection
+				.part,
 		).toBeNull();
 	});
 

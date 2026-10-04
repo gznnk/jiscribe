@@ -5,6 +5,7 @@ import { createTestState } from "./support/createTestState";
 import { twoRectsDoc } from "./support/fixtures";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import type { DocumentPropertyUpdate } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -108,7 +109,7 @@ describe("canvasReducer / DOCUMENT_PROPERTY_UPDATE", () => {
 
 	it("does not merge into a menu commit of the same name", () => {
 		let state = canvasReducer(
-			createTestState(twoRectsDoc, { selectedIds: ["rect-1"] }),
+			createTestState(twoRectsDoc, { selection: selectionOf(["rect-1"]) }),
 			{
 				type: "STYLE_PROPERTY_UPDATE",
 				property: "background",

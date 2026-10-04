@@ -1,18 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { getSelectedConnectorLabel } from "../getSelectedConnectorLabel";
 
 describe("getSelectedConnectorLabel", () => {
 	it("no connector selected (empty selection) → undefined", () => {
 		expect(
-			getSelectedConnectorLabel({ selectedIds: [], objects: {} }),
+			getSelectedConnectorLabel({ selection: selectionOf([]), objects: {} }),
 		).toBeUndefined();
 	});
 
 	it("a selected id exists but the target does not → undefined", () => {
 		expect(
-			getSelectedConnectorLabel({ selectedIds: ["missing"], objects: {} }),
+			getSelectedConnectorLabel({
+				selection: selectionOf(["missing"]),
+				objects: {},
+			}),
 		).toBeUndefined();
 	});
 
@@ -21,9 +25,9 @@ describe("getSelectedConnectorLabel", () => {
 		const objects = {
 			c1: { id: "c1", type: "connector", label },
 		} as unknown as Record<string, ObjectState>;
-		expect(getSelectedConnectorLabel({ selectedIds: ["c1"], objects })).toEqual(
-			label,
-		);
+		expect(
+			getSelectedConnectorLabel({ selection: selectionOf(["c1"]), objects }),
+		).toEqual(label);
 	});
 
 	it("a connector without a label → undefined", () => {
@@ -31,7 +35,7 @@ describe("getSelectedConnectorLabel", () => {
 			c1: { id: "c1", type: "connector" },
 		} as unknown as Record<string, ObjectState>;
 		expect(
-			getSelectedConnectorLabel({ selectedIds: ["c1"], objects }),
+			getSelectedConnectorLabel({ selection: selectionOf(["c1"]), objects }),
 		).toBeUndefined();
 	});
 });

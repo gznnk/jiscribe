@@ -47,7 +47,7 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { fill } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"fill",
@@ -80,7 +80,7 @@ const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { fillOpacity } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"fill",
@@ -121,7 +121,7 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { stroke } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -154,7 +154,7 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeWidth } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -194,7 +194,7 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeDashType } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -243,7 +243,7 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
 	const { strokeOpacity } = readSelectionShapeStyle(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 		objectShapeStyleDefaults,
 		"stroke",
@@ -286,7 +286,7 @@ const RadiusItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const cornerRadius = readSelectionCornerRadius(
-		canvasState.selectedIds,
+		canvasState.selection.objectIds,
 		canvasState.objects,
 	);
 

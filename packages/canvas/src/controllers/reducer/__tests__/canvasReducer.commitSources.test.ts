@@ -6,13 +6,14 @@ import { runCommands } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
 const canvasReducer = createCanvasReducer(createTestRegistries());
 
 const createState = (): CanvasControllerState =>
-	createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+	createTestState(twoRectsDoc, { selection: selectionOf(["rect-1"]) });
 
 /**
  * A test that surveys in one place whether each event source "records history".
@@ -74,7 +75,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("END_TEXT_EDIT records when the text changes on commit", () => {
 			const state = createTestState(twoRectsDoc, {
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				textEditState: {
 					kind: "shape",
 					objectId: "rect-1",
@@ -92,7 +93,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("cancelling END_TEXT_EDIT does not record and only clears textEditState", () => {
 			const state = createTestState(twoRectsDoc, {
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				textEditState: {
 					kind: "shape",
 					objectId: "rect-1",
@@ -110,7 +111,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("END_TEXT_EDIT does not record on commit if the text has not changed", () => {
 			let state = createTestState(twoRectsDoc, {
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				textEditState: {
 					kind: "shape",
 					objectId: "rect-1",
@@ -198,7 +199,7 @@ describe("canvasReducer (integration)", () => {
 			state = commitStrokeWidth(state, "4", true);
 			expect(state.history.past).toHaveLength(1);
 
-			state = { ...state, selectedIds: ["rect-2"] };
+			state = { ...state, selection: selectionOf(["rect-2"]) };
 			state = commitStrokeWidth(state, "5", true);
 			expect(state.history.past).toHaveLength(2);
 		});

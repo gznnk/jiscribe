@@ -99,7 +99,7 @@ export const startConnectorLabelEdit = (
 	const labelText = connectorState.label?.text ?? "";
 	const selectedState = {
 		...state,
-		selectedIds: [connectorId],
+		selection: { objectIds: [connectorId], part: null },
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,

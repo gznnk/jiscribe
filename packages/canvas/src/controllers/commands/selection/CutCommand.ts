@@ -19,7 +19,8 @@ export const CutCommand: ExecutableCommand = {
 
 	// Offered where Copy is, which it composes: not for a lone connector.
 	canExecute: (state) =>
-		state.selectedIds.length > 0 && getSelectedConnectorId(state) === null,
+		state.selection.objectIds.length > 0 &&
+		getSelectedConnectorId(state) === null,
 
 	execute: (state, registries) => {
 		// Drop the part selection before composing. Otherwise CopyCommand copies the
@@ -28,7 +29,7 @@ export const CutCommand: ExecutableCommand = {
 		const stateWithClipboard = CopyCommand.execute(
 			{
 				...state,
-				objectPartSelection: null,
+				selection: { ...state.selection, part: null },
 			},
 			registries,
 		);

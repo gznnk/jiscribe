@@ -69,20 +69,20 @@ const ROUTING_OPTIONS: RoutingOption[] = [
  */
 const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentRouting = getSelectedRouting({ objects, selectedIds });
+	const currentRouting = getSelectedRouting({ objects, selection });
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
-	if (isSelectedConnectorSelfLoop({ objects, selectedIds })) {
+	if (isSelectedConnectorSelfLoop({ objects, selection })) {
 		return null;
 	}
 

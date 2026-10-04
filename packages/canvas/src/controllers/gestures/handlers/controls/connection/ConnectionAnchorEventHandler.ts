@@ -25,6 +25,7 @@ import type {
 	DragStartSnapshot,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { EMPTY_SELECTION } from "../../../../selection/CanvasSelection";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -185,7 +186,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			connectorDraft: { kind: "create", connector },
 			edgeScrollEnabled: true,
 			// Clear any selection to avoid confusion
-			selectedIds: [],
+			selection: EMPTY_SELECTION,
 			multiSelectGroup: null,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,

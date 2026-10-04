@@ -8,7 +8,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * under root, so on its own it is always true.
  */
 export function isArrangeableSelection(state: CanvasControllerState): boolean {
-	const ids = state.selectedIds;
+	const ids = state.selection.objectIds;
 	if (ids.length === 0) {
 		return false;
 	}

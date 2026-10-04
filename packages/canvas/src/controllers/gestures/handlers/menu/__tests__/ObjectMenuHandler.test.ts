@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ObjectMenuHandler } from "../ObjectMenuHandler";
@@ -28,8 +29,7 @@ const makeState = (): CanvasControllerState =>
 		registries,
 		objects: { "rect-1": makeRect("rect-1") },
 		rootIds: ["rect-1"],
-		selectedIds: ["rect-1"],
-		objectPartSelection: vertexPartSelection("rect-1", 0),
+		selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 		multiSelectGroup: null,
 		textEditState: null,
 		objectMenuOpenId: null,
@@ -87,9 +87,7 @@ describe("ObjectMenuHandler", () => {
 			expect(fillOf(next)).toBe("#dc2626");
 			expect(next.commitVersion).toBe(6);
 			// Styling renumbers nothing, so what is picked below the object stays picked.
-			expect(next.objectPartSelection).toEqual(
-				vertexPartSelection("rect-1", 0),
-			);
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a doubleClick activates like a click (a rapid second press of a value-dependent toggle, e.g. bold → normal, arrives as doubleClick)", () => {
@@ -134,9 +132,7 @@ describe("ObjectMenuHandler", () => {
 			).toBe(4);
 			expect(next.commitVersion).toBe(5);
 			// Styling renumbers nothing, so what is picked below the object stays picked.
-			expect(next.objectPartSelection).toEqual(
-				vertexPartSelection("rect-1", 0),
-			);
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a dragEnd commits the final value (commitVersion bumped)", () => {
@@ -164,9 +160,7 @@ describe("ObjectMenuHandler", () => {
 			).toBe(7);
 			expect(next.commitVersion).toBe(6);
 			// Styling renumbers nothing, so what is picked below the object stays picked.
-			expect(next.objectPartSelection).toEqual(
-				vertexPartSelection("rect-1", 0),
-			);
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a doubleClick on the track commits like a click (two rapid track clicks pair up)", () => {

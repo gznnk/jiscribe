@@ -8,7 +8,7 @@ import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRe
  * part the click's address names, or nothing at all when it names no live part
  * of that object — a click beside the parts steps the selection back up to the
  * object level. The one path from a part's DOM address to
- * `state.objectPartSelection`, shared by the object click (ObjectEventHandler)
+ * `state.selection.part`, shared by the object click (ObjectEventHandler)
  * and the vertex handles (VertexControlHandler), so neither spells a kind.
  *
  * @param state - Current canvas controller state, with this click's object
@@ -41,21 +41,20 @@ export const applyPartClick = (
 		definition === undefined ||
 		!definition.has(object, address.partId)
 	) {
-		if (state.objectPartSelection === null) {
+		if (state.selection.part === null) {
 			return state;
 		}
 		return {
 			...state,
-			objectPartSelection: null,
+			selection: { ...state.selection, part: null },
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
 		};
 	}
 
-	const current = state.objectPartSelection;
+	const current = state.selection.part;
 	if (
 		current !== null &&
-		current.objectId === object.id &&
 		current.kind === address.kind &&
 		current.ranges.length === 1 &&
 		current.ranges[0].anchorId === address.partId &&
@@ -68,10 +67,12 @@ export const applyPartClick = (
 	// as it does on an object selection change.
 	return {
 		...state,
-		objectPartSelection: {
-			objectId: object.id,
-			kind: address.kind,
-			ranges: [{ anchorId: address.partId, focusId: address.partId }],
+		selection: {
+			...state.selection,
+			part: {
+				kind: address.kind,
+				ranges: [{ anchorId: address.partId, focusId: address.partId }],
+			},
 		},
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,

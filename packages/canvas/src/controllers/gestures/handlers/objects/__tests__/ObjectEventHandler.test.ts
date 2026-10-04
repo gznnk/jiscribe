@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { createTextSlotPartKindDefinition } from "../../../../selection/createTextSlotPartKindDefinition";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
@@ -62,8 +63,7 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 		registries,
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
-		selectedIds: ["rect-1"],
-		objectPartSelection: null,
+		selection: selectionOf(["rect-1"]),
 		multiSelectGroup: null,
 		textEditState: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -72,7 +72,7 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 				objects: { "rect-1": rect },
 				keyPoints: { "rect-1": makeKeyPoints(cx, cy) },
 				snapCandidates: { x: [], y: [] },
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				selectedIdsWithDescendants: new Set(["rect-1"]),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -127,8 +127,7 @@ const makeEditState = (
 			"rect-2": makeTextRect("rect-2", "other"),
 		},
 		rootIds: [editingId, "rect-2"],
-		selectedIds: [],
-		objectPartSelection: null,
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		textEditState: {
 			kind: "shape",
@@ -244,10 +243,10 @@ const makeSlotRecord = (id: string): ObjectState =>
 		text: { name: { text: "User" }, rows: { text: ["id: string"] } },
 	}) as unknown as ObjectState;
 
-/** State holding one record and one plain rect, with `selectedIds` / `objectPartSelection` given. */
+/** State holding one record and one plain rect, with `selection.objectIds` / `selection.part` given. */
 const makeSlotState = (
 	selectedIds: string[],
-	objectPartSelection: ObjectPartSelection | null,
+	part: ObjectPartSelection | null,
 ): CanvasControllerState =>
 	({
 		registries,
@@ -256,8 +255,7 @@ const makeSlotState = (
 			"rect-2": makeRect("rect-2", 0, 0),
 		},
 		rootIds: ["rec-1", "rect-2"],
-		selectedIds,
-		objectPartSelection,
+		selection: selectionOf(selectedIds, part),
 		multiSelectGroup: null,
 		textEditState: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -284,26 +282,23 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotClickEvent("rec-1", textSlotPart("rows")),
 			registries,
 		);
-		expect(next.objectPartSelection).toEqual({
-			objectId: "rec-1",
+		expect(next.selection.part).toEqual({
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "rows", focusId: "rows" }],
 		});
-		expect(next.selectedIds).toEqual(["rec-1"]);
+		expect(next.selection.objectIds).toEqual(["rec-1"]);
 	});
 
 	it("switches to the other slot on a click in it", () => {
 		const next = ObjectEventHandler.handle(
 			makeSlotState(["rec-1"], {
-				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
 			makeSlotClickEvent("rec-1", textSlotPart("name")),
 			registries,
 		);
-		expect(next.objectPartSelection).toEqual({
-			objectId: "rec-1",
+		expect(next.selection.part).toEqual({
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "name", focusId: "name" }],
 		});
@@ -311,7 +306,6 @@ describe("ObjectEventHandler - text slot selection", () => {
 
 	it("keeps the state identical when the same slot is clicked again", () => {
 		const state = makeSlotState(["rec-1"], {
-			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "rows", focusId: "rows" }],
 		});
@@ -326,7 +320,6 @@ describe("ObjectEventHandler - text slot selection", () => {
 
 	it("clears the slot on a click that names no slot (back to the object level)", () => {
 		const selected = makeSlotState(["rec-1"], {
-			objectId: "rec-1",
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "rows", focusId: "rows" }],
 		});
@@ -335,14 +328,14 @@ describe("ObjectEventHandler - text slot selection", () => {
 				selected,
 				makeSlotClickEvent("rec-1"),
 				registries,
-			).objectPartSelection,
+			).selection.part,
 		).toBeNull();
 		expect(
 			ObjectEventHandler.handle(
 				selected,
 				makeSlotClickEvent("rec-1", textSlotPart("unknown-part")),
 				registries,
-			).objectPartSelection,
+			).selection.part,
 		).toBeNull();
 	});
 
@@ -352,28 +345,26 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotClickEvent("rec-1", textSlotPart("rows")),
 			registries,
 		);
-		expect(next.selectedIds).toEqual(["rec-1"]);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.objectIds).toEqual(["rec-1"]);
+		expect(next.selection.part).toBeNull();
 	});
 
 	it("clears the slot when the selection moves to another object", () => {
 		const next = ObjectEventHandler.handle(
 			makeSlotState(["rec-1"], {
-				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
 			makeSlotClickEvent("rect-2"),
 			registries,
 		);
-		expect(next.selectedIds).toEqual(["rect-2"]);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.objectIds).toEqual(["rect-2"]);
+		expect(next.selection.part).toBeNull();
 	});
 
 	it("edits the selection instead of the slot on a modified click", () => {
 		const next = ObjectEventHandler.handle(
 			makeSlotState(["rec-1"], {
-				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
@@ -381,14 +372,13 @@ describe("ObjectEventHandler - text slot selection", () => {
 			registries,
 		);
 		// Ctrl toggles the record out of the selection; the slot goes with it.
-		expect(next.selectedIds).toEqual([]);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.objectIds).toEqual([]);
+		expect(next.selection.part).toBeNull();
 	});
 
 	it("closes an open ObjectMenu submenu when the slot changes or is dropped", () => {
 		const withSubmenu = {
 			...makeSlotState(["rec-1"], {
-				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
@@ -413,7 +403,6 @@ describe("ObjectEventHandler - text slot selection", () => {
 	it("closes an open ObjectMenu submenu when a double click opens the slot for editing", () => {
 		const withSubmenu = {
 			...makeSlotState(["rec-1"], {
-				objectId: "rec-1",
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
@@ -441,7 +430,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotClickEvent("rect-3", textSlotPart("body")),
 			registries,
 		);
-		expect(next.objectPartSelection).toBeNull();
+		expect(next.selection.part).toBeNull();
 	});
 });
 

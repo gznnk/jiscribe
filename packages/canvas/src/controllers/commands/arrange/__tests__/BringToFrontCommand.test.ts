@@ -4,12 +4,14 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { BringToFrontCommand } from "../BringToFrontCommand";
 
 const registries = createTestRegistries();
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 }): CanvasControllerState =>
@@ -25,7 +27,7 @@ describe("BringToFrontCommand", () => {
 	describe("selection at the root level", () => {
 		it("moves a single selection to the end of rootIds (the front)", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
@@ -36,7 +38,7 @@ describe("BringToFrontCommand", () => {
 		it("moves a multi-selection to the end preserving original z order, not selection order", () => {
 			const state = makeState({
 				// selected in order: frontmost c → backmost a
-				selectedIds: ["c", "a"],
+				selection: selectionOf(["c", "a"]),
 				objects: {
 					a: makeRect("a"),
 					b: makeRect("b"),
@@ -52,7 +54,7 @@ describe("BringToFrontCommand", () => {
 
 		it("does not change the order among unselected objects", () => {
 			const state = makeState({
-				selectedIds: ["b"],
+				selection: selectionOf(["b"]),
 				objects: {
 					a: makeRect("a"),
 					b: makeRect("b"),
@@ -67,7 +69,7 @@ describe("BringToFrontCommand", () => {
 
 		it("increments commitVersion", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
@@ -80,7 +82,7 @@ describe("BringToFrontCommand", () => {
 		it("moves a multi-selection to the end of childIds preserving original z order", () => {
 			const state = makeState({
 				// selected in order: frontmost child3 → backmost child1
-				selectedIds: ["child3", "child1"],
+				selection: selectionOf(["child3", "child1"]),
 				objects: {
 					group1: makeGroup("group1", ["child1", "child2", "child3"]),
 					child1: makeRect("child1", "group1"),

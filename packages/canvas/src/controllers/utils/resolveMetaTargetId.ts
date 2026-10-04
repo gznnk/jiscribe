@@ -8,10 +8,10 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * group names the group itself rather than its descendants, which carry notes of
  * their own.
  *
- * @param state - Only `selectedIds` is read; a selected connector is the sole selection like any other object
+ * @param state - Only `selection.objectIds` is read; a selected connector is the sole selection like any other object
  * @returns The object's id, or null while nothing or several things are selected
  */
 export const resolveMetaTargetId = (
-	state: Pick<CanvasControllerState, "selectedIds">,
+	state: Pick<CanvasControllerState, "selection">,
 ): string | null =>
-	state.selectedIds.length === 1 ? state.selectedIds[0] : null;
+	state.selection.objectIds.length === 1 ? state.selection.objectIds[0] : null;

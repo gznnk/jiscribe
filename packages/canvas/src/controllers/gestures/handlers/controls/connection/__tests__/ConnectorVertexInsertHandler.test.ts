@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { VertexControlHandler } from "../../vertex/VertexControlHandler";
 import { VertexInsertHandler } from "../../vertex/VertexInsertHandler";
@@ -40,15 +41,14 @@ const makeState = (points: Point[]): CanvasControllerState => {
 	return {
 		objects: { "conn-1": connector },
 		rootIds: ["conn-1"],
-		selectedIds: ["conn-1"],
-		objectPartSelection: null,
+		selection: selectionOf(["conn-1"]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "conn-1": connector },
 				keyPoints: {},
 				snapCandidates: null,
-				selectedIds: [],
+				selection: selectionOf([]),
 				selectedIdsWithDescendants: new Set(),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -297,7 +297,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			registries,
 		);
 		expect(next.textEditState).toBeUndefined();
-		expect(next.selectedIds).toEqual(["conn-1"]);
+		expect(next.selection.objectIds).toEqual(["conn-1"]);
 	});
 
 	it("a hover stack entry of another connector's label does not count as a label hit", () => {

@@ -72,7 +72,7 @@ const RESIZE_INTENT_ANCHOR = {
 const resolveTransformTarget = (
 	state: CanvasControllerState,
 ): TransformTarget | null => {
-	if (state.selectedIds.length > 1) {
+	if (state.selection.objectIds.length > 1) {
 		const multiSelectGroup = state.multiSelectGroup;
 		if (
 			!multiSelectGroup ||
@@ -88,10 +88,10 @@ const resolveTransformTarget = (
 			isGroupTarget: true,
 		};
 	}
-	if (state.selectedIds.length !== 1) {
+	if (state.selection.objectIds.length !== 1) {
 		return null;
 	}
-	const selectedId = state.selectedIds[0];
+	const selectedId = state.selection.objectIds[0];
 	const selectedObject = state.objects[selectedId];
 	if (
 		!selectedObject ||
@@ -145,7 +145,7 @@ const applyResizedFrame = (
 		// about the top-left does not leave proportional to the frame it was asked
 		// for (a rotated leaf sticks out further than its own box).
 		const recalculatedBounds = calcMultiSelectGroupBounds(
-			state.selectedIds,
+			state.selection.objectIds,
 			nextState.objects,
 			updatedGroup,
 		);
@@ -198,7 +198,7 @@ const applyStatedPosition = (
 	}
 	const offset = value - currentValue;
 	const { objects, multiSelectGroup } = moveSelection({
-		selectedIds: state.selectedIds,
+		selectedIds: state.selection.objectIds,
 		srcObjects: state.objects,
 		srcMultiSelectGroup: state.multiSelectGroup,
 		delta: property === "x" ? { x: offset, y: 0 } : { x: 0, y: offset },
@@ -208,7 +208,7 @@ const applyStatedPosition = (
 	// hangs from are left to re-derive (the nudge commands settle the same set).
 	return updateAffectedGroupBounds(
 		{ ...state, objects, multiSelectGroup },
-		state.selectedIds,
+		state.selection.objectIds,
 	);
 };
 

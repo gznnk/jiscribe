@@ -204,10 +204,10 @@ export const useViewportHandle = (
 			},
 
 			fitToSelection: (options) => {
-				const { objects, selectedIds, viewport } = canvasStateRef.current;
+				const { objects, selection, viewport } = canvasStateRef.current;
 				return applyFitted(
 					calcSelectionFitViewport(
-						selectedIds,
+						selection.objectIds,
 						objects,
 						{
 							width: viewport.width,

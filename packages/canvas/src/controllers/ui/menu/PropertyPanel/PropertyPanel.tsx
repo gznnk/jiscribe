@@ -284,7 +284,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 												<item.component
 													key={item.id}
 													objects={canvasState.objects}
-													selectedIds={canvasState.selectedIds}
+													selection={canvasState.selection}
 													multiSelectGroup={canvasState.multiSelectGroup}
 													onPropertyUpdate={onPropertyUpdate}
 													onTransformUpdate={onTransformUpdate}

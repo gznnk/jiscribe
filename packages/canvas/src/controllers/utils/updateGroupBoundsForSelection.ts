@@ -16,10 +16,10 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * (issue #160); ids naming nothing, and ids whose topmost ancestor is not a
  * group, are dropped by `findRootGroupId` rather than filtered here.
  *
- * @param state - The state holding the already-transformed objects; its `selectedIds` name what moved
+ * @param state - The state holding the already-transformed objects; its `selection.objectIds` name what moved
  * @returns `state` itself when nothing selected is a group or lives in one
  */
 export const updateGroupBoundsForSelection = (
 	state: CanvasControllerState,
 ): CanvasControllerState =>
-	updateGroupBoundsFromRoots(state, state.selectedIds);
+	updateGroupBoundsFromRoots(state, state.selection.objectIds);

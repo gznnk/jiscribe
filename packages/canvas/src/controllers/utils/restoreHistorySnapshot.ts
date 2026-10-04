@@ -82,14 +82,14 @@ export const restoreHistorySnapshot = (
 		registries.objectContentResizer,
 	);
 	const { selectedIds } = resolveRequestedSelection(
-		state.selectedIds,
+		state.selection.objectIds,
 		restoredState.objects,
 	);
 
 	return {
 		...restoredState,
 		...resetUiState(),
-		selectedIds,
+		selection: { objectIds: selectedIds, part: null },
 		// Rebuilt rather than carried: the objects it wraps may have moved or gone.
 		multiSelectGroup: createMultiSelectGroup(
 			selectedIds,

@@ -26,10 +26,11 @@ export const DuplicateCommand: ExecutableCommand = {
 	// Not offered for a lone connector: a connector is duplicated as part of the
 	// shapes it runs between (selectConnectorsInSelection), never on its own.
 	canExecute: (state) =>
-		state.selectedIds.length > 0 && getSelectedConnectorId(state) === null,
+		state.selection.objectIds.length > 0 &&
+		getSelectedConnectorId(state) === null,
 
 	execute: (state, registries) => {
-		const { selectedIds } = state;
+		const { objectIds: selectedIds } = state.selection;
 
 		// ── 1. Collect the objects to duplicate ─────────────────────────────────────
 		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
@@ -133,7 +134,7 @@ export const DuplicateCommand: ExecutableCommand = {
 			...state,
 			objects: mergedObjects,
 			rootIds: updatedRootIds,
-			selectedIds: newObjectIds,
+			selection: { objectIds: newObjectIds, part: null },
 			multiSelectGroup: createMultiSelectGroup(
 				newObjectIds,
 				mergedObjects,

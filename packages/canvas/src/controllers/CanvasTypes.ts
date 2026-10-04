@@ -7,7 +7,7 @@ import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorL
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
-import type { ObjectPartSelection } from "./selection/ObjectPartSelection";
+import type { CanvasSelection } from "./selection/CanvasSelection";
 import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connector/ConnectorState";
@@ -258,7 +258,7 @@ export type DragStartSnapshot = {
 	bboxes: Record<string, BoundingBox>;
 	/** Candidates over all objects; exclusions are passed to findSnap separately */
 	snapCandidates: SnapCandidates;
-	selectedIds: string[];
+	selectedIds: readonly string[];
 	/** Selected objects plus all descendants; the exclusion set for findSnap / buildSnapFeedback */
 	selectedIdsWithDescendants: ReadonlySet<string>;
 	/** null when there is no multi-selection */
@@ -420,14 +420,10 @@ export type CanvasControllerState = CanvasState & {
 	history: HistoryState;
 
 	/**
-	 * The selected objects' ids, in the order they were selected. Shapes, groups
-	 * and connectors alike, with one rule the writers keep: a connector is
-	 * selected on its own — one of them, never alongside a shape
-	 * (applyConnectorSelection / applyObjectSelection / resolveRequestedSelection).
-	 * Readers that need the connector therefore ask for it by that shape
-	 * (getSelectedConnectorId).
+	 * What the canvas is pointed at: the objects picked, and the parts picked one
+	 * level below them (see {@link CanvasSelection}).
 	 */
-	selectedIds: string[];
+	selection: CanvasSelection;
 
 	/** null when no gesture is in progress */
 	activeDrag: ActiveDrag | null;
@@ -556,7 +552,7 @@ export type CanvasControllerState = CanvasState & {
 		 * held at dragStart; every frame selects these plus the current hit set. Empty
 		 * for a plain marquee, which replaces the selection.
 		 */
-		baseIds: string[];
+		baseIds: readonly string[];
 	} | null;
 
 	/** null means all ObjectMenu sections are collapsed */
@@ -586,7 +582,7 @@ export type CanvasControllerState = CanvasState & {
 	propertyPanel: PropertyPanelState;
 
 	/**
-	 * Group state covering a multi-selection: while non-null every object in selectedIds is
+	 * Group state covering a multi-selection: while non-null every object in selection.objectIds is
 	 * treated as its child. null when the selection is not grouped.
 	 */
 	multiSelectGroup: GroupState | null;
@@ -634,17 +630,6 @@ export type CanvasControllerState = CanvasState & {
 	/** Set while dragging from a connection anchor; committed or discarded on dragEnd */
 	connectorDraft: ConnectorDraft | null;
 
-	/**
-	 * Sub-parts addressed one level below the object selection, in a namespace the
-	 * object's own type owns (`kind`) — the text slots of a
-	 * `features.text === "slots"` shape, the vertices of a polyline, a polygon or
-	 * a connector. Always valid where it is read: every reducer branch that
-	 * rewrites the selection or the objects drops a selection the state no longer
-	 * backs (reconcileObjectPartSelection), instead of every selection write
-	 * clearing it or every reader validating it.
-	 */
-	objectPartSelection: ObjectPartSelection | null;
-
 	/** Non-null only while snapping; cleared on dragEnd */
 	snapFeedback: SnapFeedback | null;
 
@@ -659,7 +644,7 @@ export type CanvasControllerState = CanvasState & {
 
 	/**
 	 * Previous Duplicate or Paste (both write it), for move-aware offset calculation: on the
-	 * next Duplicate or Paste, if selectedIds still equals newIds, an unmoved selection reuses
+	 * next Duplicate or Paste, if the selection still equals newIds, an unmoved selection reuses
 	 * `offset` and a moved one adopts the delta as the new offset.
 	 */
 	lastDuplicate: {

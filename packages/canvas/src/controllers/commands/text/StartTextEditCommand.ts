@@ -47,11 +47,11 @@ export const StartTextEditCommand: ExecutableCommand = {
 		}
 
 		// Single selection only
-		if (state.selectedIds.length !== 1) {
+		if (state.selection.objectIds.length !== 1) {
 			return false;
 		}
 
-		return canEditText(state.objects[state.selectedIds[0]]);
+		return canEditText(state.objects[state.selection.objectIds[0]]);
 	},
 
 	execute(state) {
@@ -79,7 +79,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 			};
 		}
 
-		const objectId = state.selectedIds[0];
+		const objectId = state.selection.objectIds[0];
 		const targetObject = state.objects[objectId];
 
 		if (!canEditText(targetObject)) {
@@ -91,9 +91,9 @@ export const StartTextEditCommand: ExecutableCommand = {
 		// (nothing picked, or a part of another kind). The editor opens on one slot,
 		// and in this version the selection is always one collapsed range, so that
 		// slot is the first of the ids it covers.
-		const { objectPartSelection } = state;
-		const slotId = isTextSlotSelection(objectPartSelection)
-			? collectSelectedPartIds(objectPartSelection)[0]
+		const { part } = state.selection;
+		const slotId = isTextSlotSelection(part)
+			? collectSelectedPartIds(part)[0]
 			: getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;

@@ -7,6 +7,7 @@ import type {
 	SnapEdge,
 } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { CanvasEventHandler } from "../CanvasEventHandler";
 
@@ -21,8 +22,7 @@ const makeState = (
 	({
 		objects: { a: makeTextRect("a", "old text") },
 		rootIds: ["a"],
-		selectedIds: ["a"],
-		objectPartSelection: null,
+		selection: selectionOf(["a"]),
 		multiSelectGroup: null,
 		shapeDrawing: null,
 		areaSelection: null,
@@ -119,7 +119,7 @@ describe("CanvasEventHandler", () => {
 					}
 				).text.body.text,
 			).toBe("edited text");
-			expect(nextState.selectedIds).toEqual([]);
+			expect(nextState.selection.objectIds).toEqual([]);
 		});
 	});
 
@@ -137,7 +137,7 @@ describe("CanvasEventHandler", () => {
 			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).not.toBeNull();
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 			expect(nextState.contextMenuPosition).toEqual({
 				clientX: 10,
 				clientY: 10,
@@ -156,7 +156,7 @@ describe("CanvasEventHandler", () => {
 			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).not.toBeNull();
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 			expect(nextState.viewport.minX).toBeCloseTo(-100);
 			expect(nextState.viewport.minY).toBeCloseTo(-50);
 		});
@@ -179,7 +179,7 @@ describe("CanvasEventHandler", () => {
 					}
 				).text.body.text,
 			).toBe("edited text");
-			expect(nextState.selectedIds).toEqual([]);
+			expect(nextState.selection.objectIds).toEqual([]);
 		});
 
 		it("a mouse click after its press does not re-clear on click (unchanged mouse path)", () => {
@@ -191,7 +191,7 @@ describe("CanvasEventHandler", () => {
 			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			// Mouse clears on pressed, not click; the selection here is untouched
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 		});
 	});
 
@@ -214,7 +214,7 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.textEditState).toBeNull();
 			// Pressed on the background, so the selection stays — as it does for a
 			// right click there (see "context menu selection" below).
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 		});
 	});
 
@@ -232,7 +232,7 @@ describe("CanvasEventHandler", () => {
 					b: makeTextRect("b", ""),
 				},
 				rootIds: ["a", "b"],
-				selectedIds: [],
+				selection: selectionOf([]),
 				textEditState: null,
 				activeDrag: { startSnapshot: { bboxes }, kind: "other" },
 				...overrides,
@@ -278,14 +278,14 @@ describe("CanvasEventHandler", () => {
 				makeEvent({ type: "drag", last: { x: 50, y: 50 } }),
 				registries,
 			);
-			expect(nextState.selectedIds).toEqual(["a", "b"]);
+			expect(nextState.selection.objectIds).toEqual(["a", "b"]);
 			expect(nextState.multiSelectGroup).not.toBeNull();
 			expect(nextState.areaSelection?.hitIds).toEqual(["a", "b"]);
 		});
 
 		it("an additive dragStart keeps the selection and records it as baseIds", () => {
 			const state = makeMarqueeState({
-				selectedIds: ["b"],
+				selection: selectionOf(["b"]),
 				multiSelectGroup: { id: "kept" },
 			} as Partial<CanvasControllerState>);
 			const nextState = CanvasEventHandler.handle(
@@ -299,13 +299,13 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 			expect(nextState.areaSelection?.baseIds).toEqual(["b"]);
-			expect(nextState.selectedIds).toEqual(["b"]);
+			expect(nextState.selection.objectIds).toEqual(["b"]);
 			expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
 		});
 
 		it("an additive drag selects the base plus the newly enclosed ids", () => {
 			const state = makeMarqueeState({
-				selectedIds: ["b"],
+				selection: selectionOf(["b"]),
 				areaSelection: {
 					startX: 0,
 					startY: 0,
@@ -321,14 +321,14 @@ describe("CanvasEventHandler", () => {
 				makeEvent({ type: "drag", last: { x: 25, y: 25 } }),
 				registries,
 			);
-			expect(nextState.selectedIds).toEqual(["b", "a"]);
+			expect(nextState.selection.objectIds).toEqual(["b", "a"]);
 			expect(nextState.areaSelection?.hitIds).toEqual(["a"]);
 			expect(nextState.multiSelectGroup).not.toBeNull();
 		});
 
 		it("an additive drag falls back to the base when the hit set empties", () => {
 			const state = makeMarqueeState({
-				selectedIds: ["b", "a"],
+				selection: selectionOf(["b", "a"]),
 				areaSelection: {
 					startX: 0,
 					startY: 0,
@@ -343,12 +343,12 @@ describe("CanvasEventHandler", () => {
 				makeEvent({ type: "drag", last: { x: 5, y: 5 } }),
 				registries,
 			);
-			expect(nextState.selectedIds).toEqual(["b"]);
+			expect(nextState.selection.objectIds).toEqual(["b"]);
 			expect(nextState.areaSelection?.hitIds).toEqual([]);
 			expect(nextState.multiSelectGroup).toBeNull();
 		});
 
-		it("an identical hit set early-outs, keeping selectedIds / multiSelectGroup by reference", () => {
+		it("an identical hit set early-outs, keeping the selection / multiSelectGroup by reference", () => {
 			const state = makeMarqueeState({
 				areaSelection: {
 					startX: 0,
@@ -369,7 +369,9 @@ describe("CanvasEventHandler", () => {
 				makeEvent({ type: "drag", last: { x: 55, y: 55 } }),
 				registries,
 			);
-			expect(secondFrame.selectedIds).toBe(firstFrame.selectedIds);
+			expect(secondFrame.selection.objectIds).toBe(
+				firstFrame.selection.objectIds,
+			);
 			expect(secondFrame.multiSelectGroup).toBe(firstFrame.multiSelectGroup);
 			expect(secondFrame.areaSelection?.hitIds).toBe(
 				firstFrame.areaSelection?.hitIds,
@@ -496,7 +498,7 @@ describe("CanvasEventHandler", () => {
 			}),
 			registries,
 		);
-		expect(nextState.selectedIds).toEqual(["a"]);
+		expect(nextState.selection.objectIds).toEqual(["a"]);
 		expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
 		expect(nextState.contextMenuPosition).toBeNull();
 		expect(nextState.objectMenuOpenId).toBeNull();
@@ -513,7 +515,7 @@ describe("CanvasEventHandler", () => {
 			makeState({
 				objects: { a: makeTextRect("a", ""), b: makeTextRect("b", "") },
 				rootIds: ["a", "b"],
-				selectedIds: ["b"],
+				selection: selectionOf(["b"]),
 				textEditState: null,
 				...overrides,
 			} as Partial<CanvasControllerState>);
@@ -537,7 +539,7 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 			expect(nextState.contextMenuPosition).toEqual({
 				clientX: 120,
 				clientY: 80,
@@ -546,7 +548,7 @@ describe("CanvasEventHandler", () => {
 
 		it("keeps a multi-selection that already contains the shape", () => {
 			const state = makeTwoRectState({
-				selectedIds: ["a", "b"],
+				selection: selectionOf(["a", "b"]),
 				multiSelectGroup: { id: "multi" },
 			} as Partial<CanvasControllerState>);
 
@@ -558,7 +560,7 @@ describe("CanvasEventHandler", () => {
 
 			// By reference: determineSelection reports no change, so nothing rebuilds
 			// the selection or its multiSelectGroup.
-			expect(nextState.selectedIds).toBe(state.selectedIds);
+			expect(nextState.selection.objectIds).toBe(state.selection.objectIds);
 			expect(nextState.multiSelectGroup).toBe(state.multiSelectGroup);
 			expect(nextState.contextMenuPosition).not.toBeNull();
 		});
@@ -572,7 +574,7 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			expect(nextState.selectedIds).toBe(state.selectedIds);
+			expect(nextState.selection.objectIds).toBe(state.selection.objectIds);
 			expect(nextState.contextMenuPosition).not.toBeNull();
 		});
 
@@ -589,7 +591,7 @@ describe("CanvasEventHandler", () => {
 					sibling: { ...makeTextRect("sibling", ""), parentId: "group" },
 				},
 				rootIds: ["group"],
-				selectedIds: [],
+				selection: selectionOf([]),
 			} as unknown as Partial<CanvasControllerState>);
 
 			const nextState = CanvasEventHandler.handle(
@@ -598,7 +600,7 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			expect(nextState.selectedIds).toEqual(["group"]);
+			expect(nextState.selection.objectIds).toEqual(["group"]);
 		});
 
 		it("replaces the selection even with an additive modifier held", () => {
@@ -610,7 +612,7 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 		});
 
 		it("selects a connector, clearing the shape selection", () => {
@@ -620,7 +622,7 @@ describe("CanvasEventHandler", () => {
 					line: { id: "line", type: "connector" },
 				},
 				rootIds: ["a", "line"],
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 			} as unknown as Partial<CanvasControllerState>);
 
 			const nextState = CanvasEventHandler.handle(
@@ -629,7 +631,7 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			expect(nextState.selectedIds).toEqual(["line"]);
+			expect(nextState.selection.objectIds).toEqual(["line"]);
 		});
 
 		it("selects an unselected shape on a touch long press too", () => {
@@ -643,7 +645,7 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.selection.objectIds).toEqual(["a"]);
 			expect(nextState.contextMenuPosition).toEqual({
 				clientX: 120,
 				clientY: 80,

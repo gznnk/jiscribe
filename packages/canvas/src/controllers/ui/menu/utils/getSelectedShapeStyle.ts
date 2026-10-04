@@ -30,7 +30,7 @@ const NOTHING_SELECTED: ResolvedShapeStyle = { ...SHAPE_STYLE_FALLBACK };
  * @returns The resolved style; SHAPE_STYLE_FALLBACK (whose `strokeDashType` is undefined) when nothing selected declares the group
  */
 export const getSelectedShapeStyle = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
 	styleGroup: ShapeStyleGroup,

@@ -25,11 +25,11 @@ type ConnectorControlsProps = {
 	objects: CanvasState["objects"];
 	zoom?: number;
 	/**
-	 * Parts picked below the object, `state.objectPartSelection` as it stands: a
+	 * What the canvas is pointed at, `state.selection` as it stands: a picked
 	 * waypoint of this very connector rings its handle, anything else leaves the
 	 * handles plain
 	 */
-	objectPartSelection?: CanvasControllerState["objectPartSelection"];
+	selection: CanvasControllerState["selection"];
 };
 
 /**
@@ -58,7 +58,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	connectorState,
 	objects,
 	zoom = 1,
-	objectPartSelection = null,
+	selection,
 }) => {
 	const resolved = useResolvedConnectorPoints(
 		connectorState,
@@ -91,7 +91,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const isOrthogonal = isConnectorDrawnOrthogonal(connectorState);
 	const waypoints = connectorState.points;
 	const selectedVertexIndex = readSelectedVertexIndex(
-		objectPartSelection,
+		selection,
 		connectorState.id,
 	);
 
