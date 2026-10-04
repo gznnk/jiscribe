@@ -145,13 +145,26 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   for want of anywhere to write it — `reconcileSelection` (renamed from
   `reconcileObjectPartSelection`) is the one net over both halves, so an editor
   can no longer outlive the object or slot it was opened on.
+- **For plugin authors: a sub-part's element carries its address as
+  `data-part="<kind>:<id>"`.** A text slot's element used to carry the bare slot
+  id; it now carries `textSlot:<slotId>`, built with `textSlotPart(slotId)`
+  (exported from `@jiscribe/canvas`), and a vertex handle `vertex:<index>`. One
+  path reads the address back for every kind (`applyPartClick`: parse, ask the
+  kind's `has`, write the pick), so no handler spells a kind of its own. A plugin
+  that writes `data-part={slotId}` on its own slot elements has to switch to
+  `textSlotPart`: with the bare id a click no longer picks the slot and a double
+  click opens the first slot instead. `BelowLabelHitArea` and the shipped shapes
+  are switched. A kind is an identifier (`/^[A-Za-z][\w-]*$/`), which
+  `ObjectPartKindRegistry.register` now enforces, so the first `:` of an address
+  is always the separator.
 - **For plugin authors: the selection is one nested value, `selection: { objectIds,
 part }`.** `CanvasControllerState` used to hold the object selection and the
   pick made one level below it as two fields that only made sense together, so a
   writer could move one and forget the other and only the reducer's safety net
   caught it. Nested, every writer states both in the same breath — and
   `reconcileSelection` is back to being the net it was meant to be, dropping a
-  part whose object is gone or whose ids have been renumbered.
+  part whose object is gone; an operation that renumbers a kind's ids (a vertex
+  inserted, a route reset) still clears the pick itself.
   `objectIds` is read-only, and `part` is non-null only while exactly one object
   is selected, which is why `ObjectPartSelection` no longer names its own object:
   its owner is `selection.objectIds[0]`. `ObjectMenuItemProps` and
