@@ -1,4 +1,5 @@
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { StyleIntentKind, StyleValueOf } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -70,11 +71,27 @@ export type StyleTable<TState extends ObjectState> = {
 export type ErasedStyleEntry = StyleEntry<ObjectState, unknown>;
 
 /**
+ * The stretch of text an open editor has selected, as the entries are handed it:
+ * which object and slot it lies in, and where it starts and ends.
+ *
+ * Offsets are UTF-16 code units of the slot's content as the editor draws it —
+ * a row-partitioned slot read as its rows joined by "\n" (`readRichTextSlot`),
+ * which is the body the editor's own `selectionStart` counts in.
+ */
+export type TextEditRange = {
+	/** The object being edited; an entry compares it against the target it was handed. */
+	objectId: string;
+	/** The slot being edited; a key of that object's `text`. */
+	slotId: string;
+	/** First selected offset. */
+	start: number;
+	/** First offset past the selection; always greater than `start`. */
+	end: number;
+};
+
+/**
  * What an entry is handed besides the object and the value: everything about the
  * walk it could not be told by its arguments.
- *
- * Text brings the rest of it (the range being edited, the text-style defaults,
- * the part kinds a pick is expanded through) when the text intents move over.
  */
 export type StyleContext = {
 	/**
@@ -86,4 +103,18 @@ export type StyleContext = {
 	selected: boolean;
 	/** Per-type stroke / fill defaults, so `read` answers with what the object is drawn with. */
 	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
+	/** Per-type text-style defaults, so a slot read answers with what it is drawn with. */
+	textStyleDefaults: ObjectTextStyleDefaultsRegistry;
+	/**
+	 * The stretch of text the open editor has selected, when a per-range write or
+	 * read is what the edit means; null otherwise — no open shape editor, a
+	 * collapsed selection, or a body written in a source language
+	 * (`features.text: "source"`), whose characters carry no styling of their own
+	 * and so takes the whole-slot write instead.
+	 *
+	 * The object it names is handed to the entry with the editor's draft already
+	 * grafted into that slot, so the offsets address the content the entry reads
+	 * (see resolveStyleTextEdit).
+	 */
+	textEditRange: TextEditRange | null;
 };

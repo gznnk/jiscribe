@@ -17,7 +17,7 @@ import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
  * lets one linger. The list grows as the remaining properties move over, and
  * takes this whole module with it.
  */
-type IntentStyleName = "fill";
+type IntentStyleName = "fill" | "fontColor";
 
 /**
  * Every name a system style property may carry, taken from the style groups the doc
@@ -68,7 +68,6 @@ export const SYSTEM_STYLE_PROPERTIES: Record<
 	text: new TextContentProperty(),
 	textAlign: new TextSlotStyleProperty("string"),
 	verticalAlign: new TextSlotStyleProperty("string"),
-	fontColor: new TextSlotStyleProperty("string"),
 	fontSize: new TextSlotStyleProperty("number"),
 	fontFamily: new TextSlotStyleProperty("string"),
 	fontWeight: new TextSlotStyleProperty("string"),

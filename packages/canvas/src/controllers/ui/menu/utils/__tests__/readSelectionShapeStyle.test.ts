@@ -5,6 +5,7 @@ import type {
 	ShapeStyleGroup,
 } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
@@ -64,7 +65,11 @@ const registriesOf = (
 			objectStyle.register(object.type, coreStyleTable(object.features));
 		}
 	}
-	return { objectStyle, objectShapeStyleDefaults: defaults };
+	return {
+		objectStyle,
+		objectShapeStyleDefaults: defaults,
+		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
+	};
 };
 
 /** The reader called with a state and registries built from the fixture at hand. */

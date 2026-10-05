@@ -6,6 +6,18 @@ import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { applyStyleIntent } from "../style/applyStyleIntent";
 import type { StyleIntentRegistries } from "../style/ObjectStyleRegistry";
+import type { StyleIntent } from "../style/StyleIntent";
+
+/**
+ * The property names the style tables answer for, each paired with the intent the
+ * menus' string value makes (IntentStyleName lists the same names, subtracting
+ * them from the handlers this registry demands). Grows as the remaining
+ * properties move over, and goes with the registry once the last one has.
+ */
+const INTENT_BY_PROPERTY: Record<string, (value: string) => StyleIntent> = {
+	fill: (value) => ({ kind: "fill", color: value }),
+	fontColor: (value) => ({ kind: "fontColor", color: value }),
+};
 
 /**
  * Per-canvas registry and dispatch entry for styleable property updates.
@@ -62,12 +74,9 @@ export class StylePropertyRegistry {
 		// Temporary: the properties moved to the style tables are answered there
 		// (ObjectStyleRegistry) rather than by a handler. This fork goes away with
 		// the whole registry, once the last property has moved over.
-		if (property === "fill") {
-			return applyStyleIntent(
-				state,
-				{ kind: "fill", color: value },
-				registries,
-			);
+		const intent = INTENT_BY_PROPERTY[property]?.(value);
+		if (intent !== undefined) {
+			return applyStyleIntent(state, intent, registries);
 		}
 		const handler = this.handlers.get(property) ?? this.extraFallback;
 		return handler.apply(state, property, value);

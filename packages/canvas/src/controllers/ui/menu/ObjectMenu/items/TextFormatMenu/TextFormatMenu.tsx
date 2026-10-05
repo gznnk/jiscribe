@@ -55,11 +55,8 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const textStyle = readSelectionTextStyle(
-		canvasState,
-		objectTextStyleDefaults,
-	);
+	const registries = useCanvasRegistries();
+	const textStyle = readSelectionTextStyle(canvasState, registries);
 	// Each button is its own toggle, so mixing is read per field. A field the
 	// selection disagrees about reads as off, so one press brings all of it on.
 	const fontWeight = selectionValueOr(textStyle.fontWeight, undefined);

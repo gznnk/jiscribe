@@ -1,5 +1,6 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { StyleTable } from "./StyleEntry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -55,4 +56,5 @@ export const createObjectStyleRegistry = (): ObjectStyleRegistry =>
 export type StyleIntentRegistries = {
 	objectStyle: ObjectStyleRegistry;
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
+	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 };

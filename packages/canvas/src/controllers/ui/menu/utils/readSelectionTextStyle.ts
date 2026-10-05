@@ -9,6 +9,8 @@ import { isTextStyleState } from "../../../../states/objects/base/TextStyleState
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
+import type { StyleIntentRegistries } from "../../../style/ObjectStyleRegistry";
+import { readStyleIntent } from "../../../style/readStyleIntent";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -80,17 +82,25 @@ const readSlotStyleField = <Key extends keyof TextSlotStyle>(
  * defaults (ObjectTextStyleDefaultsRegistry) — so a shape stating 14px and one
  * whose type defaults to 14px read as one value.
  *
+ * `fontColor` is the one field already answered by the style tables
+ * ({@link readStyleIntent}), which state every slot a write would reach rather
+ * than the first of each object; the rest follow as their intents move over, and
+ * this whole function goes with the last of them.
+ *
  * @param state - The current canvas controller state; the selection, the objects it names, and any open editor or picked slot are read
- * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, consulted per object by its own type
+ * @param registries - The canvas's style tables and defaults registries; the text-style defaults are consulted per object by its own type
  * @returns Every field of TextSlotStyle; each is `none` when nothing selected holds text
  */
 export const readSelectionTextStyle = (
 	state: CanvasControllerState,
-	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
+	registries: StyleIntentRegistries,
 ): SelectionTextStyle => {
-	const styles = collectSelectionTextStyles(state, textStyleDefaults);
+	const styles = collectSelectionTextStyles(
+		state,
+		registries.objectTextStyleDefaults,
+	);
 	return {
-		fontColor: readSlotStyleField(styles, "fontColor"),
+		fontColor: readStyleIntent(state, "fontColor", registries),
 		fontSize: readSlotStyleField(styles, "fontSize"),
 		fontFamily: readSlotStyleField(styles, "fontFamily"),
 		fontWeight: readSlotStyleField(styles, "fontWeight"),

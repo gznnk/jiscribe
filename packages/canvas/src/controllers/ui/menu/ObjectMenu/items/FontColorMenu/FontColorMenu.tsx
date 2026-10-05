@@ -47,11 +47,8 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const { fontColor } = readSelectionTextStyle(
-		canvasState,
-		objectTextStyleDefaults,
-	);
+	const registries = useCanvasRegistries();
+	const { fontColor } = readSelectionTextStyle(canvasState, registries);
 	const isMixed = isMixedSelectionValue(fontColor);
 	const currentColor =
 		selectionValueOr(fontColor, undefined) ?? TEXT_STYLE_FALLBACK.fontColor;
