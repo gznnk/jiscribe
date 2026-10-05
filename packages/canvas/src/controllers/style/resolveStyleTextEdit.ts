@@ -10,6 +10,7 @@ import {
 } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { resolveTextEdit } from "../utils/resolveTextEdit";
+import { resolveTextEditSelection } from "../utils/styleTextEditSelection";
 
 /**
  * The open shape editor as the style walks read it: which slot of which object it
@@ -32,9 +33,9 @@ export type StyleTextEdit = {
  * `textEditState` from, so writing a style and reporting it cannot disagree
  * about what is being edited.
  *
- * The `range` is null under the very conditions `resolveTextEditSelection`
- * finds none: a collapsed (or unreported) selection, and a body written in a
- * source language, whose characters carry no styling of their own.
+ * The `range` is `resolveTextEditSelection`'s answer, which owns the rule for
+ * when a stretch is one to style (a collapsed selection and a source-language
+ * body are not).
  *
  * @param state - The canvas state; its `textEditState` and the selection that owns it are read
  * @returns The edit, or null when no shape editor is open (a connector label is not one)
@@ -46,23 +47,21 @@ export const resolveStyleTextEdit = (
 	if (resolved?.kind !== "shape") {
 		return null;
 	}
-	const { object, slotId, text, selection } = resolved;
-	const isRanged =
-		selection !== undefined &&
-		selection.start < selection.end &&
-		object.features?.text !== "source";
+	const { object, slotId, text } = resolved;
+	const ranged = resolveTextEditSelection(state);
 	return {
 		objectId: object.id,
 		slotId,
 		draft: text,
-		range: isRanged
-			? {
-					objectId: object.id,
-					slotId,
-					start: selection.start,
-					end: selection.end,
-				}
-			: null,
+		range:
+			ranged === null
+				? null
+				: {
+						objectId: ranged.objectId,
+						slotId: ranged.slotId,
+						start: ranged.start,
+						end: ranged.end,
+					},
 	};
 };
 
