@@ -111,7 +111,7 @@ export interface ICanvasRegistries {
 	};
 	/**
 	 * Per-type style tables, read by the walkers that write a style
-	 * (applyStyleIntent) and report it (readStyleIntent): what a style intent
+	 * (applyStyleIntent) and report it (readSelectionStyle): what a style intent
 	 * means to the type it is addressed to.
 	 */
 	objectStyle: ObjectStyleRegistry;

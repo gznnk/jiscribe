@@ -27,7 +27,7 @@ import { combineSelectionValues } from "../ui/menu/utils/SelectionValue";
  * @param registries - The canvas's style tables and the defaults its entries resolve through
  * @returns `single` / `mixed` / `none`, the last meaning nothing the selection reaches takes the intent
  */
-export const readStyleIntent = <K extends StyleIntentKind>(
+export const readSelectionStyle = <K extends StyleIntentKind>(
 	state: CanvasControllerState,
 	kind: K,
 	registries: StyleIntentRegistries,

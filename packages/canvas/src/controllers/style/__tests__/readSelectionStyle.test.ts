@@ -2,7 +2,7 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
-import { readStyleIntent } from "../readStyleIntent";
+import { readSelectionStyle } from "../readSelectionStyle";
 import {
 	connectorOf,
 	editingStateOf,
@@ -18,23 +18,27 @@ import {
 
 const registries = registriesOf();
 
-describe("readStyleIntent", () => {
+describe("readSelectionStyle", () => {
 	it("nothing selected → none", () => {
-		expect(readStyleIntent(stateOf([], {}), "fill", registries)).toEqual({
+		expect(readSelectionStyle(stateOf([], {}), "fill", registries)).toEqual({
 			kind: "none",
 		});
 	});
 
 	it("nothing the selection reaches takes the intent → none", () => {
 		const c = connectorOf("c");
-		expect(readStyleIntent(stateOf(["c"], { c }), "fill", registries)).toEqual({
+		expect(
+			readSelectionStyle(stateOf(["c"], { c }), "fill", registries),
+		).toEqual({
 			kind: "none",
 		});
 	});
 
 	it("one object → its own value", () => {
 		const a = rectOf("a", { fill: "#f00" });
-		expect(readStyleIntent(stateOf(["a"], { a }), "fill", registries)).toEqual({
+		expect(
+			readSelectionStyle(stateOf(["a"], { a }), "fill", registries),
+		).toEqual({
 			kind: "single",
 			value: "#f00",
 		});
@@ -44,7 +48,7 @@ describe("readStyleIntent", () => {
 		const a = rectOf("a", { fill: "#f00" });
 		const b = ellipseOf("b", { fill: "#f00" });
 		expect(
-			readStyleIntent(stateOf(["a", "b"], { a, b }), "fill", registries),
+			readSelectionStyle(stateOf(["a", "b"], { a, b }), "fill", registries),
 		).toEqual({ kind: "single", value: "#f00" });
 	});
 
@@ -52,13 +56,15 @@ describe("readStyleIntent", () => {
 		const a = rectOf("a", { fill: "#f00" });
 		const b = ellipseOf("b", { fill: "#0f0" });
 		expect(
-			readStyleIntent(stateOf(["a", "b"], { a, b }), "fill", registries),
+			readSelectionStyle(stateOf(["a", "b"], { a, b }), "fill", registries),
 		).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
 	});
 
 	it("an object stating nothing → the shared last resort, not no value", () => {
 		const a = rectOf("a");
-		expect(readStyleIntent(stateOf(["a"], { a }), "fill", registries)).toEqual({
+		expect(
+			readSelectionStyle(stateOf(["a"], { a }), "fill", registries),
+		).toEqual({
 			kind: "single",
 			value: SHAPE_STYLE_FALLBACK.fill,
 		});
@@ -71,7 +77,7 @@ describe("readStyleIntent", () => {
 		// Writes nothing, so its type's default is what it draws
 		const b = ellipseOf("b");
 		expect(
-			readStyleIntent(
+			readSelectionStyle(
 				stateOf(["a", "b"], { a, b }),
 				"fill",
 				registriesOf(defaults),
@@ -81,7 +87,9 @@ describe("readStyleIntent", () => {
 
 	it("a field holding the wrong type reads as unset", () => {
 		const a = rectOf("a", { fill: 7 });
-		expect(readStyleIntent(stateOf(["a"], { a }), "fill", registries)).toEqual({
+		expect(
+			readSelectionStyle(stateOf(["a"], { a }), "fill", registries),
+		).toEqual({
 			kind: "single",
 			value: SHAPE_STYLE_FALLBACK.fill,
 		});
@@ -92,21 +100,21 @@ describe("readStyleIntent", () => {
 		const a = rectOf("a", { fill: "#f00" });
 		const b = ellipseOf("b", { fill: "#0f0" });
 		expect(
-			readStyleIntent(stateOf(["g"], { g, a, b }), "fill", registries),
+			readSelectionStyle(stateOf(["g"], { g, a, b }), "fill", registries),
 		).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
 	});
 
 	it("an intent no type has an entry for → none", () => {
 		const a = rectOf("a", { stroke: "#f00" });
 		expect(
-			readStyleIntent(stateOf(["a"], { a }), "stroke", registries),
+			readSelectionStyle(stateOf(["a"], { a }), "stroke", registries),
 		).toEqual({ kind: "none" });
 	});
 });
 
-describe("readStyleIntent on a text style", () => {
-	const readColor = (state: Parameters<typeof readStyleIntent>[0]) =>
-		readStyleIntent(state, "fontColor", registries);
+describe("readSelectionStyle on a text style", () => {
+	const readColor = (state: Parameters<typeof readSelectionStyle>[0]) =>
+		readSelectionStyle(state, "fontColor", registries);
 
 	it("nothing selected holds text → none", () => {
 		const a = rectOf("a", { fill: "#f00" });

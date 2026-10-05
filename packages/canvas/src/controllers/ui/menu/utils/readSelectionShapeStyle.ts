@@ -7,7 +7,7 @@ import type { SelectionValue } from "./SelectionValue";
 import { combineSelectionValues } from "./SelectionValue";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { StyleIntentRegistries } from "../../../style/ObjectStyleRegistry";
-import { readStyleIntent } from "../../../style/readStyleIntent";
+import { readSelectionStyle } from "../../../style/readSelectionStyle";
 
 /**
  * The dash a stroke nobody declared one for is drawn with. A resolved style
@@ -42,7 +42,7 @@ export type SelectionShapeStyle = {
  * as one value, not two.
  *
  * `fill` is the one field already answered by the style tables
- * ({@link readStyleIntent}); the rest follow as their intents move over, and
+ * ({@link readSelectionStyle}); the rest follow as their intents move over, and
  * this whole function goes with the last of them.
  *
  * @param state - The canvas state; a selected group contributes its descendants too, and a selected connector answers for itself on the rows it declares
@@ -90,7 +90,7 @@ export const readSelectionShapeStyle = (
 		// Read through the fill intent whatever `styleGroup` is, so this field is
 		// narrowed to the objects that declare a fill — the set a write reaches —
 		// rather than to whoever declares the group asked for.
-		fill: readStyleIntent(state, "fill", registries),
+		fill: readSelectionStyle(state, "fill", registries),
 		fillOpacity: combineSelectionValues(fillOpacities),
 	};
 };

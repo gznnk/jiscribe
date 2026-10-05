@@ -3,7 +3,7 @@ import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextS
 import type { SelectionValue } from "./SelectionValue";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { StyleIntentRegistries } from "../../../style/ObjectStyleRegistry";
-import { readStyleIntent } from "../../../style/readStyleIntent";
+import { readSelectionStyle } from "../../../style/readSelectionStyle";
 
 /**
  * What the selection says about each field of its typography. A field left
@@ -19,7 +19,7 @@ export type SelectionTextStyle = {
 
 /**
  * What the whole selection says about its text style: every field through its own
- * style intent ({@link readStyleIntent}), which states the value of every slot a
+ * style intent ({@link readSelectionStyle}), which states the value of every slot a
  * write would reach — the runs a selected stretch of an open editor covers
  * included — resolved through each object type's own text-style defaults, so a
  * shape stating 14px and one whose type defaults to 14px read as one value.
@@ -32,12 +32,12 @@ export const readSelectionTextStyle = (
 	state: CanvasControllerState,
 	registries: StyleIntentRegistries,
 ): SelectionTextStyle => ({
-	fontColor: readStyleIntent(state, "fontColor", registries),
-	fontSize: readStyleIntent(state, "fontSize", registries),
-	fontFamily: readStyleIntent(state, "fontFamily", registries),
-	fontWeight: readStyleIntent(state, "fontWeight", registries),
-	fontStyle: readStyleIntent(state, "fontStyle", registries),
-	textDecoration: readStyleIntent(state, "textDecoration", registries),
-	textAlign: readStyleIntent(state, "textAlign", registries),
-	verticalAlign: readStyleIntent(state, "verticalAlign", registries),
+	fontColor: readSelectionStyle(state, "fontColor", registries),
+	fontSize: readSelectionStyle(state, "fontSize", registries),
+	fontFamily: readSelectionStyle(state, "fontFamily", registries),
+	fontWeight: readSelectionStyle(state, "fontWeight", registries),
+	fontStyle: readSelectionStyle(state, "fontStyle", registries),
+	textDecoration: readSelectionStyle(state, "textDecoration", registries),
+	textAlign: readSelectionStyle(state, "textAlign", registries),
+	verticalAlign: readSelectionStyle(state, "verticalAlign", registries),
 });
