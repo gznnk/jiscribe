@@ -18,7 +18,7 @@ import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
-import type { TextEditFormat } from "../../../reducer/CanvasActions";
+import type { TextToggleIntentKind } from "../../../style/StyleIntent";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import {
@@ -33,10 +33,10 @@ import type { CaretTarget } from "../utils/measureCaretInSurface";
 import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
 /** Keys that toggle a format while held with the platform's command modifier. */
-const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
-	b: "bold",
-	i: "italic",
-	u: "underline",
+const FORMAT_KEYS: Record<string, TextToggleIntentKind | undefined> = {
+	b: "toggleBold",
+	i: "toggleItalic",
+	u: "toggleUnderline",
 };
 
 /**
@@ -44,10 +44,10 @@ const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
  * context menu and the mobile text toolbar. They would write markup of their own,
  * so each is answered with the editor's own formatting instead.
  */
-const FORMAT_INPUT_TYPES: Record<string, TextEditFormat | undefined> = {
-	formatBold: "bold",
-	formatItalic: "italic",
-	formatUnderline: "underline",
+const FORMAT_INPUT_TYPES: Record<string, TextToggleIntentKind | undefined> = {
+	formatBold: "toggleBold",
+	formatItalic: "toggleItalic",
+	formatUnderline: "toggleUnderline",
 };
 
 /** A stretch of the edited text, in UTF-16 offsets; what the editor reports and restores. */
@@ -93,8 +93,8 @@ type TextEditorProps = {
 	onChange: (text: RichText) => void;
 	/** What the editor has selected, reported on every edit and caret move. */
 	onSelectionChange?: (selection: TextSelection) => void;
-	/** A bold / italic / underline keystroke, to apply over the current selection. */
-	onToggleFormat?: (format: TextEditFormat) => void;
+	/** A bold / italic / underline keystroke, as the style intent it raises over the current selection. */
+	onToggleFormat?: (kind: TextToggleIntentKind) => void;
 	onEscape?: () => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
 	onCaretMove?: (caretWorldBox: BoundingBox) => void;

@@ -56,13 +56,11 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
-import type {
-	DocumentPropertyUpdate,
-	TextEditFormat,
-} from "./reducer/CanvasActions";
+import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
 import { isTextSlotSelection } from "./selection/textSlotPartKind";
+import type { TextToggleIntentKind } from "./style/StyleIntent";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -676,8 +674,8 @@ const CanvasComponent = ({
 		[dispatch],
 	);
 	const handleTextEditToggleFormat = useCallback(
-		(format: TextEditFormat) => {
-			dispatch({ type: "TOGGLE_TEXT_FORMAT", format });
+		(kind: TextToggleIntentKind) => {
+			dispatch({ type: "TOGGLE_TEXT_FORMAT", kind });
 		},
 		[dispatch],
 	);

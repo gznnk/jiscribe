@@ -48,6 +48,17 @@ export type StyleIntent =
 /** The name of one style intent, the key a type's StyleTable answers under. */
 export type StyleIntentKind = StyleIntent["kind"];
 
+/**
+ * The intents a keystroke in the text editor raises (TextEditor's Ctrl/Cmd+B/I/U
+ * and the browser's own formatBold / formatItalic / formatUnderline edits). Spelled
+ * in the intent vocabulary all the way from the keystroke, so nothing translates
+ * a "bold" into the field it flips twice.
+ */
+export type TextToggleIntentKind = Extract<
+	StyleIntentKind,
+	"toggleBold" | "toggleItalic" | "toggleUnderline"
+>;
+
 /** Everything an intent of one kind holds besides its name. */
 type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 	Extract<StyleIntent, { kind: K }>,

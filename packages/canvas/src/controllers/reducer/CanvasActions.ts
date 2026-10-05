@@ -12,6 +12,7 @@ import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
+import type { TextToggleIntentKind } from "../style/StyleIntent";
 
 /**
  * Gesture action - handles user gestures
@@ -152,19 +153,14 @@ export type UpdateTextEditSelectionAction = {
 };
 
 /**
- * The formats a keystroke can turn on and off over the selected text. Each is
- * carried by {@link ToggleTextFormatAction} and answered by the style intent that
- * flips it (canvasReducer), so a keystroke writes the same field the menus do.
- */
-export type TextEditFormat = "bold" | "italic" | "underline";
-
-/**
  * Toggle text format action - turns bold / italic / underline on or off over the
- * text the open editor has selected, leaving the rest of the slot as it is.
+ * text the open editor has selected, leaving the rest of the slot as it is. The
+ * keystroke names the style intent itself (TextToggleIntentKind), which the
+ * edited object's type answers for the way it does the menus' writes.
  */
 export type ToggleTextFormatAction = {
 	type: "TOGGLE_TEXT_FORMAT";
-	format: TextEditFormat;
+	kind: TextToggleIntentKind;
 };
 
 /**
