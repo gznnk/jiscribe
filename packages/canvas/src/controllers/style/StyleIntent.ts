@@ -49,6 +49,18 @@ export type StyleIntent =
 export type StyleIntentKind = StyleIntent["kind"];
 
 /**
+ * Which field each toggle flips: the one fact that makes a toggle one, stated
+ * once for the types (StyleValueOf, TextToggleIntentKind) and the entries
+ * (toggleRunOrSlot) alike. A toggle's value type is its field's, so the two
+ * cannot drift apart.
+ */
+export const TOGGLE_FLIPS = {
+	toggleBold: "fontWeight",
+	toggleItalic: "fontStyle",
+	toggleUnderline: "textDecoration",
+} as const satisfies Record<string, StyleIntentKind>;
+
+/**
  * The intents a keystroke in the text editor raises (TextEditor's Ctrl/Cmd+B/I/U
  * and the browser's own formatBold / formatItalic / formatUnderline edits). Spelled
  * in the intent vocabulary all the way from the keystroke, so nothing translates
@@ -56,7 +68,7 @@ export type StyleIntentKind = StyleIntent["kind"];
  */
 export type TextToggleIntentKind = Extract<
 	StyleIntentKind,
-	"toggleBold" | "toggleItalic" | "toggleUnderline"
+	keyof typeof TOGGLE_FLIPS
 >;
 
 /** Everything an intent of one kind holds besides its name. */
@@ -66,28 +78,19 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 >;
 
 /**
- * The value a toggle's entry works in: the field it flips — a CSS `font-weight`,
- * `font-style` or `text-decoration` — which is what its `read` reports and what
- * its `apply` computes for itself. `undefined` belongs to it twice over: a slot
- * setting none of those reads as unset, and the intent carries no value for the
- * walker to hand the entry (see toggleRunOrSlot).
- */
-export type ToggleStyleValue = string | undefined;
-
-/**
  * The value an intent of one kind carries: the sole field it holds besides
  * `kind`. What the entries of that kind apply and read, so the two sides cannot
  * disagree on the type.
  *
- * A kind carrying nothing is one of the toggles, whose entries work in
- * {@link ToggleStyleValue}: the intent names no value, but there is still a field
- * to read and write.
+ * A toggle carries none, but its entry still reads and writes the field it flips
+ * (TOGGLE_FLIPS), so it works in that field's value — with `undefined` added
+ * twice over: a slot setting no such field reads as unset, and the intent has no
+ * value for the walker to hand the entry.
  */
-export type StyleValueOf<K extends StyleIntentKind> = [
-	keyof StyleIntentPayload<K>,
-] extends [never]
-	? ToggleStyleValue
-	: StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
+export type StyleValueOf<K extends StyleIntentKind> =
+	K extends TextToggleIntentKind
+		? StyleValueOf<(typeof TOGGLE_FLIPS)[K]> | undefined
+		: StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
 
 /**
  * The value an intent carries, erased: the walkers look an entry up by a kind

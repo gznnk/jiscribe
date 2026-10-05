@@ -1,11 +1,17 @@
-import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
-
 import { resolveRangeEdit } from "./resolveRangeEdit";
 import { runOrSlot } from "./runOrSlot";
 import type { SlotsOf } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StyleEntry } from "../StyleEntry";
-import type { ToggleStyleValue } from "../StyleIntent";
+import type { StyleValueOf, TextToggleIntentKind } from "../StyleIntent";
+import { TOGGLE_FLIPS } from "../StyleIntent";
+
+/**
+ * The value a toggle's entry reads and writes: its flipped field's, unset
+ * included (StyleValueOf). Where the kind is still generic the compiler cannot
+ * see that `undefined` is already in it, which is why `toggle` spells it out.
+ */
+type ToggleValue<K extends TextToggleIntentKind> = StyleValueOf<K>;
 
 /**
  * The one value the places read agree on, or undefined when they do not — which
@@ -15,9 +21,7 @@ import type { ToggleStyleValue } from "../StyleIntent";
  *
  * @param values - What `read` reported, one entry per run the stretch covers; an empty list is unset too
  */
-const foldToggleValues = (
-	values: readonly ToggleStyleValue[],
-): ToggleStyleValue => {
+const foldToggleValues = <V>(values: readonly V[]): V | undefined => {
 	const [first, ...rest] = values;
 	return rest.every((value) => Object.is(value, first)) ? first : undefined;
 };
@@ -33,22 +37,30 @@ const foldToggleValues = (
  * emphasis (`features.text: "source"`) — it answers null and the object is left
  * as it stands. A keystroke is not a shape-wide write.
  *
- * @param field - The inline field flipped, read and written; one the text-style defaults answer for
+ * @param kind - The toggle; the field it flips is TOGGLE_FLIPS' answer, which fixes the value type too
  * @param options - `slotsOf`: which slots the read falls back to with no stretch selected (defaultSlotsOf for the core types); `toggle`: the value to write given what the stretch is drawn with now, undefined meaning the field is unset there
  * @returns The pair, writing only while a stretch of this object is selected and reporting the field as runOrSlot does
  * @template TState - The state the entry is written against
+ * @template K - The toggle, which decides the field and the value type
  */
-export const toggleRunOrSlot = <TState extends ObjectState>(
-	field: keyof InlineTextStyle,
+export const toggleRunOrSlot = <
+	TState extends ObjectState,
+	K extends TextToggleIntentKind,
+>(
+	kind: K,
 	{
 		slotsOf,
 		toggle,
 	}: {
 		slotsOf: SlotsOf<TState>;
-		toggle: (current: ToggleStyleValue) => string;
+		toggle: (
+			current: ToggleValue<K> | undefined,
+		) => NonNullable<ToggleValue<K>>;
 	},
-): StyleEntry<TState, ToggleStyleValue> => {
-	const styled = runOrSlot<TState, ToggleStyleValue>(field, { slotsOf });
+): StyleEntry<TState, ToggleValue<K>> => {
+	const styled = runOrSlot<TState, ToggleValue<K>>(TOGGLE_FLIPS[kind], {
+		slotsOf,
+	});
 
 	return {
 		// The intent carries no value of its own: the entry reads the current one

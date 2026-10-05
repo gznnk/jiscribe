@@ -42,17 +42,20 @@ export const textStyleTable = (
 		}),
 		...(accepts("fontWeight") && {
 			fontWeight: runOrSlot<ObjectState, string>("fontWeight", { slotsOf }),
-			toggleBold: toggleRunOrSlot<ObjectState>("fontWeight", {
+			toggleBold: toggleRunOrSlot<ObjectState, "toggleBold">("toggleBold", {
 				slotsOf,
 				toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 			}),
 		}),
 		...(accepts("fontStyle") && {
 			fontStyle: runOrSlot<ObjectState, string>("fontStyle", { slotsOf }),
-			toggleItalic: toggleRunOrSlot<ObjectState>("fontStyle", {
-				slotsOf,
-				toggle: (current) => (current === "italic" ? "normal" : "italic"),
-			}),
+			toggleItalic: toggleRunOrSlot<ObjectState, "toggleItalic">(
+				"toggleItalic",
+				{
+					slotsOf,
+					toggle: (current) => (current === "italic" ? "normal" : "italic"),
+				},
+			),
 		}),
 		...(accepts("textDecoration") && {
 			textDecoration: runOrSlot<ObjectState, string>("textDecoration", {
@@ -60,10 +63,13 @@ export const textStyleTable = (
 			}),
 			// The other decoration line is kept, which is why the toggle takes the
 			// value rather than a boolean.
-			toggleUnderline: toggleRunOrSlot<ObjectState>("textDecoration", {
-				slotsOf,
-				toggle: (current) => toggleTextDecorationToken(current, "underline"),
-			}),
+			toggleUnderline: toggleRunOrSlot<ObjectState, "toggleUnderline">(
+				"toggleUnderline",
+				{
+					slotsOf,
+					toggle: (current) => toggleTextDecorationToken(current, "underline"),
+				},
+			),
 		}),
 		// The alignments place the whole block, so they land on the slot even while
 		// a stretch of it is selected — there is nothing smaller to apply them to.
