@@ -11,9 +11,9 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
  * (StyleTable) — an intent names no field of any document.
  *
  * Every kind is declared here, the whole vocabulary in one place; which of them
- * a type actually answers for is what its table says. Only `fill` has entries so
- * far (coreStyleTable) — the rest are still written through
- * StylePropertyRegistry and move over one kind at a time.
+ * a type actually answers for is what its table says. Only `fill` and
+ * `fontColor` have entries so far (coreStyleTable) — the rest are still written
+ * through StylePropertyRegistry and move over one kind at a time.
  *
  * The three toggles carry no value: the entry reads the current one and flips it.
  */

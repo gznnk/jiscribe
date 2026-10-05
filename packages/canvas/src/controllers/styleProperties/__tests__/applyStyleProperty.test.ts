@@ -8,6 +8,7 @@ import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDo
 import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
@@ -52,6 +53,7 @@ styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 const styleRegistries: StyleIntentRegistries = {
 	objectStyle: createObjectStyleRegistry(),
 	objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
+	objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
 };
 for (const features of [
 	RectFeatures,

@@ -1,4 +1,6 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
@@ -9,10 +11,37 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
+import { coreStyleTable } from "../../../../style/coreStyleTable";
+import type { StyleIntentRegistries } from "../../../../style/ObjectStyleRegistry";
+import { createObjectStyleRegistry } from "../../../../style/ObjectStyleRegistry";
 import { readSelectionTextStyle } from "../readSelectionTextStyle";
 
+/**
+ * The reader's registries, with the style tables of every type these fixtures
+ * use wired the way applyObjectDefinition wires them (`fontColor` is answered
+ * there rather than off the first slot).
+ *
+ * @param textStyleDefaults - The per-type text-style defaults; an empty registry makes the resolution the identity
+ */
+const registriesOf = (
+	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
+): StyleIntentRegistries => {
+	const objectStyle = createObjectStyleRegistry();
+	for (const type of ["rect", "plain", "markdown"]) {
+		objectStyle.register(
+			type,
+			coreStyleTable({ type, geometry: "rect", text: "slots" }),
+		);
+	}
+	return {
+		objectStyle,
+		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
+		objectTextStyleDefaults: textStyleDefaults,
+	};
+};
+
 /** The types under test register no defaults, so the resolution is the identity here. */
-const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
+const registries = registriesOf(createObjectTextStyleDefaultsRegistry());
 
 const rect = (id: string, text?: TextSlots, type = "rect"): ObjectState =>
 	({
@@ -52,7 +81,7 @@ const editingState = (
 
 describe("readSelectionTextStyle", () => {
 	it("nothing selected → every field is none", () => {
-		const style = readSelectionTextStyle(makeState([], {}), textStyleDefaults);
+		const style = readSelectionTextStyle(makeState([], {}), registries);
 		expect(style.fontSize).toEqual({ kind: "none" });
 		expect(style.textAlign).toEqual({ kind: "none" });
 	});
@@ -60,16 +89,14 @@ describe("readSelectionTextStyle", () => {
 	it("nothing selected holds text → none", () => {
 		const objects = { a: rect("a") };
 		expect(
-			readSelectionTextStyle(makeState(["a"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(makeState(["a"], objects), registries).fontSize,
 		).toEqual({ kind: "none" });
 	});
 
 	it("one shape → its own slot's values", () => {
 		const objects = { a: rect("a", { body: { text: "hi", fontSize: 20 } }) };
 		expect(
-			readSelectionTextStyle(makeState(["a"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(makeState(["a"], objects), registries).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
 
@@ -79,7 +106,7 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo", fontSize: 20 } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a", "b"], objects), textStyleDefaults)
+			readSelectionTextStyle(makeState(["a", "b"], objects), registries)
 				.fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
@@ -91,7 +118,7 @@ describe("readSelectionTextStyle", () => {
 		};
 		const style = readSelectionTextStyle(
 			makeState(["a", "b"], objects),
-			textStyleDefaults,
+			registries,
 		);
 		expect(style.fontSize).toEqual({ kind: "mixed", values: [20, 12] });
 		expect(style.textAlign).toEqual({ kind: "single", value: "center" });
@@ -103,7 +130,7 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo" } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a", "b"], objects), textStyleDefaults)
+			readSelectionTextStyle(makeState(["a", "b"], objects), registries)
 				.fontWeight,
 		).toEqual({ kind: "single", value: undefined });
 	});
@@ -114,7 +141,7 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo" } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a", "b"], objects), textStyleDefaults)
+			readSelectionTextStyle(makeState(["a", "b"], objects), registries)
 				.fontWeight,
 		).toEqual({ kind: "mixed", values: ["bold", undefined] });
 	});
@@ -130,7 +157,7 @@ describe("readSelectionTextStyle", () => {
 		expect(
 			readSelectionTextStyle(
 				makeState(["stated", "defaulted"], objects),
-				defaults,
+				registriesOf(defaults),
 			).fontSize,
 		).toEqual({ kind: "single", value: 14 });
 	});
@@ -142,8 +169,7 @@ describe("readSelectionTextStyle", () => {
 			b: rect("b", { body: { text: "yo", fontSize: 12 } }),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["g"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(makeState(["g"], objects), registries).fontSize,
 		).toEqual({ kind: "mixed", values: [20, 12] });
 	});
 
@@ -160,7 +186,7 @@ describe("readSelectionTextStyle", () => {
 					kind: TEXT_SLOT_PART_KIND,
 					ranges: [{ anchorId: "rows", focusId: "rows" }],
 				}),
-				textStyleDefaults,
+				registries,
 			).fontSize,
 		).toEqual({ kind: "single", value: 12 });
 	});
@@ -173,8 +199,7 @@ describe("readSelectionTextStyle", () => {
 			}),
 		};
 		expect(
-			readSelectionTextStyle(makeState(["a"], objects), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(makeState(["a"], objects), registries).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
 });
@@ -191,7 +216,7 @@ describe("readSelectionTextStyle while a stretch of text is edited", () => {
 			// The draft the editor holds is what the offsets address.
 			readSelectionTextStyle(
 				editingState(a, [{ text: "hi", fontSize: 30 }, { text: "!" }]),
-				textStyleDefaults,
+				registries,
 			).fontSize,
 		).toEqual({ kind: "single", value: 30 });
 	});
@@ -204,8 +229,7 @@ describe("readSelectionTextStyle while a stretch of text is edited", () => {
 			text: { body: { text: "# Title", fontSize: 20 } },
 		} as unknown as ObjectState;
 		expect(
-			readSelectionTextStyle(editingState(a, "# Title"), textStyleDefaults)
-				.fontSize,
+			readSelectionTextStyle(editingState(a, "# Title"), registries).fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});
 });

@@ -50,11 +50,8 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const { fontSize } = readSelectionTextStyle(
-		canvasState,
-		objectTextStyleDefaults,
-	);
+	const registries = useCanvasRegistries();
+	const { fontSize } = readSelectionTextStyle(canvasState, registries);
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

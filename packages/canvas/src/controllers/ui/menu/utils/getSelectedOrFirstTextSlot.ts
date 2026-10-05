@@ -44,6 +44,11 @@ const withTypeStyleDefaults = (
  * on rather than off. The alignment stays the slot's, having no per-character
  * meaning.
  *
+ * `fontColor` no longer reads through here: it is answered by its own style
+ * intent, which states the value of every run a stretch covers rather than
+ * nothing (readStyleIntent). The field is still resolved into the slot below,
+ * which is what keeps this function one whole slot rather than a subset of it.
+ *
  * Every field is read through the object type's own text-style defaults
  * (ObjectTextStyleDefaultsRegistry), so what a menu shows is what the shape
  * draws even where the author set nothing — and a toggle reads its direction off
