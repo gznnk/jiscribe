@@ -12,7 +12,6 @@ import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
-import type { TextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
  * Gesture action - handles user gestures
@@ -144,13 +143,20 @@ export type UpdateTextEditAction = {
 
 /**
  * Update text edit selection action - records what the open editor has selected,
- * so styling can address that stretch of the text (toggleTextEditFormat).
+ * so styling can address that stretch of the text (resolveStyleTextEdit).
  */
 export type UpdateTextEditSelectionAction = {
 	type: "UPDATE_TEXT_EDIT_SELECTION";
 	/** UTF-16 offsets into the text being edited; collapsed (start === end) for a plain caret. */
 	selection: { start: number; end: number };
 };
+
+/**
+ * The formats a keystroke can turn on and off over the selected text. Each is
+ * carried by {@link ToggleTextFormatAction} and answered by the style intent that
+ * flips it (canvasReducer), so a keystroke writes the same field the menus do.
+ */
+export type TextEditFormat = "bold" | "italic" | "underline";
 
 /**
  * Toggle text format action - turns bold / italic / underline on or off over the

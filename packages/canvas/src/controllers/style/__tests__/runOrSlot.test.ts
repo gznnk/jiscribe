@@ -176,6 +176,17 @@ describe("runOrSlot with no stretch selected", () => {
 			});
 		});
 
+		it("keeps a field the slot's own type loaded onto it while stripping its runs", () => {
+			// A table cell carries `fill`; narrowed to the fields TextSlot names, a
+			// style change would clear every cell's background (TextSlots).
+			const a = textRectOf("a", {
+				"0_0": { text: [{ text: "id", fontColor: "#d33" }], fill: "#eef" },
+			} as unknown as TextSlots);
+			expect(slotsOf(entry.apply(a, null, "#00f", contextOf()))).toEqual({
+				"0_0": { text: "id", fill: "#eef", fontColor: "#00f" },
+			});
+		});
+
 		it("an object holding no text → null", () => {
 			expect(entry.apply(rectOf("a"), null, "#00f", contextOf())).toBeNull();
 		});

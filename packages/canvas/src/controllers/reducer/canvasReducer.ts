@@ -3,7 +3,7 @@ import {
 	richTextToPlain,
 } from "@jiscribe/doc/model/objects/types/text/RichText";
 
-import type { CanvasAction } from "./CanvasActions";
+import type { CanvasAction, TextEditFormat } from "./CanvasActions";
 import {
 	canApplyMetaProperty,
 	handleMetaPropertyUpdate,
@@ -20,6 +20,8 @@ import {
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { reconcileSelection } from "../selection/reconcileSelection";
+import { applyStyleIntent } from "../style/applyStyleIntent";
+import type { StyleIntent } from "../style/StyleIntent";
 import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
@@ -39,7 +41,17 @@ import {
 	canNavigateHistory,
 	restoreHistorySnapshot,
 } from "../utils/restoreHistorySnapshot";
-import { toggleTextEditFormat } from "../utils/toggleTextEditFormat";
+
+/**
+ * The intent each format keystroke stands for: the one place the editor's
+ * vocabulary (a format) meets the style layer's (an intent a type's table answers
+ * for). The three carry no value — the entry reads the current one and flips it.
+ */
+const TOGGLE_INTENT_BY_FORMAT: Record<TextEditFormat, StyleIntent> = {
+	bold: { kind: "toggleBold" },
+	italic: { kind: "toggleItalic" },
+	underline: { kind: "toggleUnderline" },
+};
 
 /**
  * Builds the root reducer for the canvas controller, closing over the canvas's
@@ -500,10 +512,10 @@ export const createCanvasReducer =
 			}
 
 			case "TOGGLE_TEXT_FORMAT": {
-				const styled = toggleTextEditFormat(
+				const styled = applyStyleIntent(
 					state,
-					action.format,
-					registries.objectTextStyleDefaults,
+					TOGGLE_INTENT_BY_FORMAT[action.format],
+					registries,
 				);
 				if (styled === state) {
 					return state;
@@ -512,9 +524,15 @@ export const createCanvasReducer =
 				// open), so the box it is measured into has to follow, and the change is
 				// its own undo entry rather than riding on the commit that ends the edit.
 				// One keystroke is one commit, which is why the commit is raised here and
-				// not in styleTextEditSelection, whose menu callers preview.
+				// not in the entry, whose menu callers preview (STYLE_PROPERTY_UPDATE).
 				const resizedResult = reconcileObjectContentSizes(
-					{ ...styled, commitVersion: state.commitVersion + 1 },
+					{
+						...styled,
+						// This path bypasses handleGesture, so flatten the COW view here
+						// (one-shot update, as the menu route does; #213).
+						objects: materializeObjects(styled.objects),
+						commitVersion: state.commitVersion + 1,
+					},
 					state,
 					registries.objectContentResizer,
 				);

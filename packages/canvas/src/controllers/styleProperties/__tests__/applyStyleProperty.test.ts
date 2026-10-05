@@ -525,7 +525,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		});
 	});
 
-	describe("text styling (stored per slot)", () => {
+	describe("text styling (answered by the style tables)", () => {
 		const slotsOf = (
 			state: CanvasControllerState,
 			id: string,
@@ -543,17 +543,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				text: { body: { text: "hello", ...style } },
 			}) as unknown as ObjectState;
 
-		/** A two-slot shape, standing in for a record. */
-		const keyedRect = (id: string, style: Record<string, unknown> = {}) =>
-			({
-				...rectObj(id),
-				text: {
-					name: { text: "User", ...style },
-					rows: { text: ["id"], ...style },
-				},
-			}) as unknown as ObjectState;
+		// What the fork itself owns is the reading of the menus' string value; where
+		// the write lands is the entries' business (style/__tests__).
 
-		it("writes into the slot rather than the object root", () => {
+		it("fontSize is converted to a number and written into the slot", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({
 				selection: selectionOf(["r1"]),
@@ -567,95 +560,46 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			expect("fontSize" in result.objects["r1"]).toBe(false);
 		});
 
-		it("writes into every slot while no single slot is selected", () => {
-			const r1 = keyedRect("r1");
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-			});
-			const result = applyStyleProperty(state, "fontWeight", "bold");
-			expect(slotsOf(result, "r1")).toEqual({
-				name: { text: "User", fontWeight: "bold" },
-				rows: { text: ["id"], fontWeight: "bold" },
-			});
-		});
-
-		it("writes fontStyle and textDecoration into the slot as strings", () => {
+		it("non-numeric fontSize -> returns the same reference", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({
 				selection: selectionOf(["r1"]),
 				objects: { r1 },
 			});
-			const italic = applyStyleProperty(state, "fontStyle", "italic");
-			expect(slotsOf(italic, "r1").body).toEqual({
-				text: "hello",
-				fontStyle: "italic",
+			expect(applyStyleProperty(state, "fontSize", "abc")).toBe(state);
+		});
+
+		it("textAlign is written into the slot, kept as its own value", () => {
+			const r1 = bodyRect("r1");
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
 			});
-			// The two decoration lines arrive as one space-separated value.
-			const decorated = applyStyleProperty(
+			const result = applyStyleProperty(state, "textAlign", "right");
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: "hello",
+				textAlign: "right",
+			});
+		});
+
+		it("the two decoration lines arrive as one space-separated value", () => {
+			const r1 = bodyRect("r1");
+			const state = makeState({
+				selection: selectionOf(["r1"]),
+				objects: { r1 },
+			});
+			const result = applyStyleProperty(
 				state,
 				"textDecoration",
 				"underline line-through",
 			);
-			expect(slotsOf(decorated, "r1").body).toEqual({
+			expect(slotsOf(result, "r1").body).toEqual({
 				text: "hello",
 				textDecoration: "underline line-through",
 			});
 		});
 
-		it("drops the property from the runs that overrode it, so the slot's value shows", () => {
-			const r1 = {
-				...rectObj("r1"),
-				text: {
-					body: {
-						text: [
-							{ text: "he", fontWeight: "bold", fontColor: "#d33" },
-							{ text: "llo" },
-						],
-					},
-				},
-			} as unknown as ObjectState;
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-			});
-
-			const result = applyStyleProperty(state, "fontWeight", "normal");
-
-			// The run keeps its color, and the text collapses back to a plain string
-			// once nothing is styled on its own.
-			expect(slotsOf(result, "r1").body).toEqual({
-				text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
-				fontWeight: "normal",
-			});
-		});
-
-		it("drops the property from the runs of a row too", () => {
-			const r1 = {
-				...rectObj("r1"),
-				text: {
-					rows: {
-						text: [
-							"id",
-							[{ text: "email", fontWeight: "bold", fontColor: "#d33" }],
-						],
-					},
-				},
-			} as unknown as ObjectState;
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-			});
-
-			const result = applyStyleProperty(state, "fontWeight", "normal");
-
-			expect(slotsOf(result, "r1").rows).toEqual({
-				text: ["id", [{ text: "email", fontColor: "#d33" }]],
-				fontWeight: "normal",
-			});
-		});
-
-		it("lands on the selected characters while an editor is open", () => {
+		it("an emphasis property lands on the selected characters while an editor is open", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({
 				selection: selectionOf(["r1"]),
@@ -666,111 +610,10 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					selection: { start: 0, end: 2 },
 				},
 			});
-
-			const result = applyStyleProperty(state, "fontColor", "#d33");
-
+			const result = applyStyleProperty(state, "fontWeight", "bold");
 			expect(slotsOf(result, "r1").body).toEqual({
-				text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
+				text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }],
 			});
-		});
-
-		it("styles the whole slot when the editor has nothing selected", () => {
-			const r1 = bodyRect("r1");
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-				textEditState: {
-					kind: "shape",
-					text: "hello",
-					selection: { start: 2, end: 2 },
-				},
-			});
-
-			const result = applyStyleProperty(state, "fontColor", "#d33");
-
-			expect(slotsOf(result, "r1").body).toEqual({
-				text: "hello",
-				fontColor: "#d33",
-			});
-		});
-
-		it("drops a whole-slot write's property from the open editor's draft too", () => {
-			// The draft carries the same per-run overrides the slot content is being
-			// stripped of; left in place, the next graft would write them back over
-			// the slot and the slot-wide value would never show.
-			const r1 = {
-				...rectObj("r1"),
-				text: {
-					body: { text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }] },
-				},
-			} as unknown as ObjectState;
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-				textEditState: {
-					kind: "shape",
-					text: [
-						{ text: "he", fontColor: "#d33", fontWeight: "bold" },
-						{ text: "llo!" },
-					],
-					selection: { start: 2, end: 2 },
-				},
-			});
-
-			const result = applyStyleProperty(state, "fontColor", "#00f");
-
-			// The written property leaves the draft's runs; the rest of their styling
-			// and the edited characters stay.
-			expect(result.textEditState).toMatchObject({
-				text: [{ text: "he", fontWeight: "bold" }, { text: "llo!" }],
-			});
-		});
-
-		it("styles the whole slot for a property no stretch of text can carry", () => {
-			const r1 = bodyRect("r1");
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-				textEditState: {
-					kind: "shape",
-					text: "hello",
-					selection: { start: 0, end: 2 },
-				},
-			});
-
-			const result = applyStyleProperty(state, "textAlign", "right");
-
-			expect(slotsOf(result, "r1").body).toEqual({
-				text: "hello",
-				textAlign: "right",
-			});
-		});
-
-		it("keeps the slot's content and its other styling", () => {
-			const r1 = bodyRect("r1", { textAlign: "right", fontSize: 12 });
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-			});
-			const result = applyStyleProperty(state, "fontSize", "24");
-			expect(slotsOf(result, "r1").body).toEqual({
-				text: "hello",
-				textAlign: "right",
-				fontSize: 24,
-			});
-		});
-
-		it("applies to every selected object and to group descendants", () => {
-			const g1 = groupObj("g1", ["r2"]);
-			const r1 = bodyRect("r1");
-			const r2 = bodyRect("r2");
-			const state = makeState({
-				selection: selectionOf(["r1", "g1"]),
-				objects: { g1, r1, r2 },
-			});
-			const result = applyStyleProperty(state, "fontColor", "#123456");
-			expect(slotsOf(result, "r1").body.fontColor).toBe("#123456");
-			expect(slotsOf(result, "r2").body.fontColor).toBe("#123456");
 		});
 
 		it("skips an object that holds no text at all", () => {
@@ -780,221 +623,6 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objects: { p1 },
 			});
 			expect(applyStyleProperty(state, "fontSize", "24")).toBe(state);
-		});
-
-		it("does not mutate the original slots (immutable)", () => {
-			const r1 = bodyRect("r1", { fontSize: 12 });
-			const state = makeState({
-				selection: selectionOf(["r1"]),
-				objects: { r1 },
-			});
-			applyStyleProperty(state, "fontSize", "24");
-			expect(slotsOf(state, "r1").body.fontSize).toBe(12);
-		});
-
-		describe("with a slot selected below the object", () => {
-			/** A record-like shape: two slots, addressable one by one (features.text = "slots"). */
-			const slotRect = (id: string, style: Record<string, unknown> = {}) =>
-				({
-					...rectObj(id),
-					features: { ...RectFeatures, text: "slots" },
-					text: {
-						name: { text: "User", ...style },
-						rows: { text: ["id"], ...style },
-					},
-				}) as unknown as ObjectState;
-
-			it("writes the selected slot only, leaving the others as they were", () => {
-				const r1 = slotRect("r1", { fontSize: 12 });
-				const state = makeState({
-					selection: selectionOf(["r1"], {
-						kind: TEXT_SLOT_PART_KIND,
-						ranges: [{ anchorId: "rows", focusId: "rows" }],
-					}),
-					objects: { r1 },
-				});
-				const result = applyStyleProperty(state, "fontSize", "24");
-				expect(slotsOf(result, "r1")).toEqual({
-					name: { text: "User", fontSize: 12 },
-					rows: { text: ["id"], fontSize: 24 },
-				});
-			});
-
-			it("does not carry the slot restriction into group descendants", () => {
-				// A group that itself holds slots: synthetic, but the only way one
-				// object can be both the slot's owner and a parent of descendants.
-				const g1 = {
-					...groupObj("g1", ["r1"]),
-					features: { ...GroupFeatures, text: "slots" },
-					text: { name: { text: "Group" }, rows: { text: ["a"] } },
-				} as unknown as ObjectState;
-				const r1 = slotRect("r1");
-				const state = makeState({
-					selection: selectionOf(["g1"], {
-						kind: TEXT_SLOT_PART_KIND,
-						ranges: [{ anchorId: "rows", focusId: "rows" }],
-					}),
-					objects: { g1, r1 },
-				});
-				const result = applyStyleProperty(state, "fontWeight", "bold");
-				expect(slotsOf(result, "g1").name.fontWeight).toBeUndefined();
-				expect(slotsOf(result, "g1").rows.fontWeight).toBe("bold");
-				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
-				expect(slotsOf(result, "r1").rows.fontWeight).toBe("bold");
-			});
-
-			it("leaves the text content property writing the first slot", () => {
-				const r1 = slotRect("r1");
-				const state = makeState({
-					selection: selectionOf(["r1"], {
-						kind: TEXT_SLOT_PART_KIND,
-						ranges: [{ anchorId: "rows", focusId: "rows" }],
-					}),
-					objects: { r1 },
-				});
-				const result = applyStyleProperty(state, "text", "Account");
-				expect(slotsOf(result, "r1")).toEqual({
-					name: { text: "Account" },
-					rows: { text: ["id"] },
-				});
-			});
-		});
-
-		describe("on slots carrying their type's own fields", () => {
-			// A table cell is a slot with `fill` on it, which survives a write only
-			// because the write copies the slot instead of rebuilding it from the fields
-			// TextSlot names (TextSlots). Narrowed to those, a style change would clear
-			// every cell's background colour with nothing reporting it.
-			const cellRect = (
-				id: string,
-				content: Record<string, unknown> = { text: "id" },
-			) =>
-				({
-					...rectObj(id),
-					features: { ...RectFeatures, text: "slots" },
-					text: {
-						"0_0": { ...content, fill: "#eef" },
-						"0_1": { text: "name", fill: "#fee" },
-					},
-				}) as unknown as ObjectState;
-
-			it("keeps them when a whole-slot property is written", () => {
-				const r1 = cellRect("r1");
-				const state = makeState({
-					selection: selectionOf(["r1"]),
-					objects: { r1 },
-				});
-				const result = applyStyleProperty(state, "textAlign", "center");
-				expect(slotsOf(result, "r1")).toEqual({
-					"0_0": { text: "id", fill: "#eef", textAlign: "center" },
-					"0_1": { text: "name", fill: "#fee", textAlign: "center" },
-				});
-			});
-
-			it("keeps them when an inline property strips the slot's runs", () => {
-				const r1 = cellRect("r1", {
-					text: [{ text: "id", fontWeight: "bold" }],
-				});
-				const state = makeState({
-					selection: selectionOf(["r1"]),
-					objects: { r1 },
-				});
-				const result = applyStyleProperty(state, "fontWeight", "normal");
-				expect(slotsOf(result, "r1")["0_0"]).toEqual({
-					text: "id",
-					fill: "#eef",
-					fontWeight: "normal",
-				});
-			});
-
-			it("keeps them when the write lands on the selected slot alone", () => {
-				const r1 = cellRect("r1");
-				const state = makeState({
-					selection: selectionOf(["r1"], {
-						kind: TEXT_SLOT_PART_KIND,
-						ranges: [{ anchorId: "0_1", focusId: "0_1" }],
-					}),
-					objects: { r1 },
-				});
-				const result = applyStyleProperty(state, "fontSize", "24");
-				expect(slotsOf(result, "r1")).toEqual({
-					"0_0": { text: "id", fill: "#eef" },
-					"0_1": { text: "name", fill: "#fee", fontSize: 24 },
-				});
-			});
-		});
-
-		describe("on a body written in a source language", () => {
-			/** A shape whose body is source text (features.text = "source"). */
-			const sourceRect = (id: string, style: Record<string, unknown> = {}) =>
-				({
-					...rectObj(id),
-					features: { ...RectFeatures, text: "source" },
-					text: { body: { text: "# Title", ...style } },
-				}) as unknown as ObjectState;
-
-			/** The same shape being edited with its first two characters selected. */
-			const editingSource = (r1: ObjectState): CanvasControllerState =>
-				makeState({
-					selection: selectionOf(["r1"]),
-					objects: { r1 },
-					textEditState: {
-						kind: "shape",
-						text: "# Title",
-						selection: { start: 0, end: 2 },
-					},
-				});
-
-			it("skips an emphasis property, the syntax carrying it instead", () => {
-				const r1 = sourceRect("r1");
-				const state = makeState({
-					selection: selectionOf(["r1"]),
-					objects: { r1 },
-				});
-				expect(applyStyleProperty(state, "fontWeight", "bold")).toBe(state);
-			});
-
-			it("writes a property the body does accept", () => {
-				const r1 = sourceRect("r1");
-				const state = makeState({
-					selection: selectionOf(["r1"]),
-					objects: { r1 },
-				});
-				const result = applyStyleProperty(state, "fontSize", "24");
-				expect(slotsOf(result, "r1").body).toEqual({
-					text: "# Title",
-					fontSize: 24,
-				});
-			});
-
-			it("writes the whole slot even with a stretch selected, the content staying a string", () => {
-				const result = applyStyleProperty(
-					editingSource(sourceRect("r1")),
-					"fontSize",
-					"24",
-				);
-				expect(slotsOf(result, "r1").body).toEqual({
-					text: "# Title",
-					fontSize: 24,
-				});
-			});
-
-			it("styles no stretch with an emphasis property either", () => {
-				const state = editingSource(sourceRect("r1"));
-				expect(applyStyleProperty(state, "fontWeight", "bold")).toBe(state);
-			});
-
-			it("writes an emphasis property onto the selected objects that accept it", () => {
-				const r1 = sourceRect("r1");
-				const r2 = bodyRect("r2");
-				const state = makeState({
-					selection: selectionOf(["r1", "r2"]),
-					objects: { r1, r2 },
-				});
-				const result = applyStyleProperty(state, "fontWeight", "bold");
-				expect(slotsOf(result, "r1").body).toEqual({ text: "# Title" });
-				expect(slotsOf(result, "r2").body.fontWeight).toBe("bold");
-			});
 		});
 	});
 
@@ -1064,6 +692,28 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objects: { r1 },
 			});
 			expect(applyStyleProperty(state, "text", "world")).toBe(state);
+		});
+
+		it("writes the first slot even with another one selected below the object", () => {
+			// The content is the shape's, not the picked slot's: only the styling
+			// follows the pick (defaultSlotsOf).
+			const r1 = {
+				...rectObj("r1"),
+				features: { ...RectFeatures, text: "slots" },
+				text: { name: { text: "User" }, rows: { text: ["id"] } },
+			} as unknown as ObjectState;
+			const state = makeState({
+				selection: selectionOf(["r1"], {
+					kind: TEXT_SLOT_PART_KIND,
+					ranges: [{ anchorId: "rows", focusId: "rows" }],
+				}),
+				objects: { r1 },
+			});
+			const result = applyStyleProperty(state, "text", "Account");
+			expect(slotsOf(result, "r1")).toEqual({
+				name: { text: "Account" },
+				rows: { text: ["id"] },
+			});
 		});
 	});
 

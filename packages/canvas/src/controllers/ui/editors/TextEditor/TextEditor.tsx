@@ -18,7 +18,7 @@ import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
-import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
+import type { TextEditFormat } from "../../../reducer/CanvasActions";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import {

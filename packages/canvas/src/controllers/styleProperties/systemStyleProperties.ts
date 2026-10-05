@@ -8,7 +8,6 @@ import { FeatureGatedStyleProperty } from "./FeatureGatedStyleProperty";
 import { LockAspectRatioProperty } from "./LockAspectRatioProperty";
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import { TextContentProperty } from "./TextContentProperty";
-import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
 
 /**
  * The names the style tables answer for instead (ObjectStyleRegistry, reached
@@ -16,8 +15,20 @@ import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
  * the exhaustive record neither demands a handler that nothing would reach nor
  * lets one linger. The list grows as the remaining properties move over, and
  * takes this whole module with it.
+ *
+ * The whole text group is in it now, which is why no name below is one of
+ * TEXT_SLOT_STYLE_KEYS.
  */
-type IntentStyleName = "fill" | "fontColor";
+type IntentStyleName =
+	| "fill"
+	| "fontColor"
+	| "fontSize"
+	| "fontFamily"
+	| "fontWeight"
+	| "fontStyle"
+	| "textDecoration"
+	| "textAlign"
+	| "verticalAlign";
 
 /**
  * Every name a system style property may carry, taken from the style groups the doc
@@ -50,10 +61,9 @@ type SystemStyleName = Exclude<
  * ExtraStyleProperties (see ObjectTypeDefinition.extraStyleProperties) instead.
  * Handlers are stateless, so the instances are shared across bundles.
  *
- * The text group lives in `state.text` as keyed slots, so a dot-path write would
- * flatten it; "text" (the content, written into the default slot) and the
- * styling properties (written into the selected slot, or every slot when none is
- * selected) have their own handlers instead of the flag gate.
+ * The text content lives in `state.text` as keyed slots, so a dot-path write
+ * would flatten it; "text" (written into the default slot) has its own handler
+ * instead of the flag gate.
  */
 export const SYSTEM_STYLE_PROPERTIES: Record<
 	SystemStyleName,
@@ -66,13 +76,6 @@ export const SYSTEM_STYLE_PROPERTIES: Record<
 	strokeOpacity: new FeatureGatedStyleProperty("stroke", "number"),
 	rx: new FeatureGatedStyleProperty("radius", "number"),
 	text: new TextContentProperty(),
-	textAlign: new TextSlotStyleProperty("string"),
-	verticalAlign: new TextSlotStyleProperty("string"),
-	fontSize: new TextSlotStyleProperty("number"),
-	fontFamily: new TextSlotStyleProperty("string"),
-	fontWeight: new TextSlotStyleProperty("string"),
-	fontStyle: new TextSlotStyleProperty("string"),
-	textDecoration: new TextSlotStyleProperty("string"),
 	startArrow: new FeatureGatedStyleProperty("arrow", "string"),
 	endArrow: new FeatureGatedStyleProperty("arrow", "string"),
 	lockAspectRatio: new LockAspectRatioProperty(),

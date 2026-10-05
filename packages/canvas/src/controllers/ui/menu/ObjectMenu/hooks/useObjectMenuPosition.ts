@@ -107,7 +107,7 @@ export function useObjectMenuPosition(
 			return false;
 		}
 		// A shape's text editor keeps the menu: its text items are how a stretch of
-		// the text being edited is styled (TextSlotStyleProperty), and the menu is
+		// the text being edited is styled (runOrSlot), and the menu is
 		// the only place the color and the size of one live. The menu itself never
 		// commits the edit — ObjectMenuHandler runs no commit, and the press does
 		// not even move the focus off the editing surface (TextEditorFocusScope) —

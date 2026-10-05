@@ -11,8 +11,8 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
  * (StyleTable) — an intent names no field of any document.
  *
  * Every kind is declared here, the whole vocabulary in one place; which of them
- * a type actually answers for is what its table says. Only `fill` and
- * `fontColor` have entries so far (coreStyleTable) — the rest are still written
+ * a type actually answers for is what its table says. Only `fill` and the
+ * typography have entries so far (coreStyleTable) — the rest are still written
  * through StylePropertyRegistry and move over one kind at a time.
  *
  * The three toggles carry no value: the entry reads the current one and flips it.
@@ -55,16 +55,28 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 >;
 
 /**
+ * The value a toggle's entry works in: the field it flips — a CSS `font-weight`,
+ * `font-style` or `text-decoration` — which is what its `read` reports and what
+ * its `apply` computes for itself. `undefined` belongs to it twice over: a slot
+ * setting none of those reads as unset, and the intent carries no value for the
+ * walker to hand the entry (see toggleRunOrSlot).
+ */
+export type ToggleStyleValue = string | undefined;
+
+/**
  * The value an intent of one kind carries: the sole field it holds besides
  * `kind`. What the entries of that kind apply and read, so the two sides cannot
  * disagree on the type.
  *
- * A kind carrying nothing (the toggles) yields `never`, which is the honest
- * reading — the stage that implements them decides how an entry spells "no
- * value".
+ * A kind carrying nothing is one of the toggles, whose entries work in
+ * {@link ToggleStyleValue}: the intent names no value, but there is still a field
+ * to read and write.
  */
-export type StyleValueOf<K extends StyleIntentKind> =
-	StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
+export type StyleValueOf<K extends StyleIntentKind> = [
+	keyof StyleIntentPayload<K>,
+] extends [never]
+	? ToggleStyleValue
+	: StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
 
 /**
  * The value an intent carries, erased: the walkers look an entry up by a kind

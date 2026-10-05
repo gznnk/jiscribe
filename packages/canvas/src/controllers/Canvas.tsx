@@ -56,7 +56,10 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
-import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
+import type {
+	DocumentPropertyUpdate,
+	TextEditFormat,
+} from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
 import { isTextSlotSelection } from "./selection/textSlotPartKind";
@@ -107,7 +110,6 @@ import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveTextEdit } from "./utils/resolveTextEdit";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {
 	// ── Document ──
