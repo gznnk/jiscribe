@@ -60,6 +60,7 @@ import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
 import { isTextSlotSelection } from "./selection/textSlotPartKind";
+import type { TextToggleIntentKind } from "./style/StyleIntent";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -107,7 +108,6 @@ import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveTextEdit } from "./utils/resolveTextEdit";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {
 	// ── Document ──
@@ -674,8 +674,8 @@ const CanvasComponent = ({
 		[dispatch],
 	);
 	const handleTextEditToggleFormat = useCallback(
-		(format: TextEditFormat) => {
-			dispatch({ type: "TOGGLE_TEXT_FORMAT", format });
+		(kind: TextToggleIntentKind) => {
+			dispatch({ type: "TOGGLE_TEXT_FORMAT", kind });
 		},
 		[dispatch],
 	);

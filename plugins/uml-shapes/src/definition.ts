@@ -49,7 +49,7 @@ const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
  * `textEditOverflow`, which both take the slot id (see calcRecordTextRegion).
  *
  * The `text` menu section keeps fontStyle / textAlignment: with no slot picked
- * a menu edit writes into every slot at once (TextSlotStyleProperty), so the
+ * a menu edit writes into every slot at once (defaultSlotsOf), so the
  * title band and the rows — the bulk of the box — change together; clicking one
  * slot first narrows the same edit to it.
  *

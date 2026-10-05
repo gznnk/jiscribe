@@ -8,6 +8,7 @@ import {
 	groupOf,
 	rectOf,
 	registriesOf,
+	sourceRectOf,
 	stateOf,
 	textRectOf,
 } from "./support/styleFixtures";
@@ -194,5 +195,90 @@ describe("applyStyleIntent while a shape editor is open", () => {
 		const a = textRectOf("a", { body: { text: "hello" } }, { fill: "#f00" });
 		const state = editingStateOf({ a }, "a", "hello!");
 		expect(paint(state, "#f00")).toBe(state);
+	});
+
+	it("a size lands on the selected characters alone", () => {
+		const a = textRectOf("a", { body: { text: "hello", fontSize: 12 } });
+		const result = applyStyleIntent(
+			editingStateOf({ a }, "a", "hello", { start: 0, end: 2 }),
+			{ kind: "fontSize", size: 24 },
+			registries,
+		);
+		expect(slotsOf(result.objects["a"]).body).toEqual({
+			text: [{ text: "he", fontSize: 24 }, { text: "llo" }],
+			fontSize: 12,
+		});
+	});
+
+	it("an alignment lands on the whole slot even with a stretch selected", () => {
+		// It places the whole block, so there is nothing smaller to apply it to.
+		const a = textRectOf("a", { body: { text: "hello" } });
+		const result = applyStyleIntent(
+			editingStateOf({ a }, "a", "hello", { start: 0, end: 2 }),
+			{ kind: "textAlign", align: "right" },
+			registries,
+		);
+		expect(slotsOf(result.objects["a"]).body).toEqual({
+			text: "hello",
+			textAlign: "right",
+		});
+	});
+});
+
+describe("applyStyleIntent for a format keystroke", () => {
+	const slotsOf = (object: unknown): TextSlots =>
+		(object as { text: TextSlots }).text;
+
+	const toggleBold = (state: Parameters<typeof applyStyleIntent>[0]) =>
+		applyStyleIntent(state, { kind: "toggleBold" }, registries);
+
+	it("styles the stretch the editor has selected and hands the draft back", () => {
+		const a = textRectOf("a", { body: { text: "hello" } });
+		const result = toggleBold(
+			editingStateOf({ a }, "a", "hello", { start: 0, end: 2 }),
+		);
+		expect(slotsOf(result.objects["a"]).body.text).toEqual([
+			{ text: "he", fontWeight: "bold" },
+			{ text: "llo" },
+		]);
+		// The draft carries the styling too, or the next keystroke would write the
+		// unstyled body back over the slot.
+		expect(result.textEditState).toMatchObject({
+			text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }],
+		});
+	});
+
+	it("styles the edited text, not the last committed one", () => {
+		const a = textRectOf("a", { body: { text: "hi" } });
+		const result = toggleBold(
+			editingStateOf({ a }, "a", "hi there", { start: 3, end: 8 }),
+		);
+		expect(slotsOf(result.objects["a"]).body.text).toEqual([
+			{ text: "hi " },
+			{ text: "there", fontWeight: "bold" },
+		]);
+	});
+
+	it("nothing selected in the editor → the same state", () => {
+		const a = textRectOf("a", { body: { text: "hello" } });
+		const collapsed = editingStateOf({ a }, "a", "hello", {
+			start: 2,
+			end: 2,
+		});
+		expect(toggleBold(collapsed)).toBe(collapsed);
+		const unreported = editingStateOf({ a }, "a", "hello");
+		expect(toggleBold(unreported)).toBe(unreported);
+	});
+
+	it("no editor open → the same state, a keystroke being no shape-wide write", () => {
+		const a = textRectOf("a", { body: { text: "hello" } });
+		const state = stateOf(["a"], { a });
+		expect(toggleBold(state)).toBe(state);
+	});
+
+	it("a source-language body → the same state, its own syntax carrying the emphasis", () => {
+		const a = sourceRectOf("a", { body: { text: "# Title" } });
+		const state = editingStateOf({ a }, "a", "# Title", { start: 0, end: 2 });
+		expect(toggleBold(state)).toBe(state);
 	});
 });

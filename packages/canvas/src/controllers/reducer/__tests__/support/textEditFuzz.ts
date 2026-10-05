@@ -17,6 +17,7 @@ import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { TextToggleIntentKind } from "../../../style/StyleIntent";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
@@ -66,7 +67,7 @@ type FuzzOp =
 	  }
 	| {
 			kind: "toggle";
-			format: "bold" | "italic" | "underline";
+			toggle: TextToggleIntentKind;
 			start: number;
 			end: number;
 	  }
@@ -260,7 +261,11 @@ const generateOp = (random: () => number, plain: string): FuzzOp => {
 		const end = start + randomInt(random, plain.length - start + 1);
 		return {
 			kind: "toggle",
-			format: pick(random, ["bold", "italic", "underline"] as const),
+			toggle: pick(random, [
+				"toggleBold",
+				"toggleItalic",
+				"toggleUnderline",
+			] as const),
 			start,
 			end,
 		};
@@ -448,7 +453,7 @@ export const runTextEditFuzzSession = (
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			dispatch({ type: "TOGGLE_TEXT_FORMAT", format: op.format });
+			dispatch({ type: "TOGGLE_TEXT_FORMAT", kind: op.toggle });
 		} else if (op.kind === "menu") {
 			dispatch({
 				type: "UPDATE_TEXT_EDIT_SELECTION",

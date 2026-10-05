@@ -191,7 +191,7 @@ describe("readSelectionTextStyle", () => {
 		).toEqual({ kind: "single", value: 12 });
 	});
 
-	it("only the first slot of a multi-slot shape has a say otherwise", () => {
+	it("every slot of a multi-slot shape has a say otherwise, the write reaching them all", () => {
 		const objects = {
 			a: rect("a", {
 				name: { text: "User", fontSize: 20 },
@@ -200,7 +200,7 @@ describe("readSelectionTextStyle", () => {
 		};
 		expect(
 			readSelectionTextStyle(makeState(["a"], objects), registries).fontSize,
-		).toEqual({ kind: "single", value: 20 });
+		).toEqual({ kind: "mixed", values: [20, 12] });
 	});
 });
 

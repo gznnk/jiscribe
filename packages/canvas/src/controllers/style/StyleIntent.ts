@@ -11,8 +11,8 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
  * (StyleTable) — an intent names no field of any document.
  *
  * Every kind is declared here, the whole vocabulary in one place; which of them
- * a type actually answers for is what its table says. Only `fill` and
- * `fontColor` have entries so far (coreStyleTable) — the rest are still written
+ * a type actually answers for is what its table says. Only `fill` and the
+ * typography have entries so far (coreStyleTable) — the rest are still written
  * through StylePropertyRegistry and move over one kind at a time.
  *
  * The three toggles carry no value: the entry reads the current one and flips it.
@@ -48,6 +48,29 @@ export type StyleIntent =
 /** The name of one style intent, the key a type's StyleTable answers under. */
 export type StyleIntentKind = StyleIntent["kind"];
 
+/**
+ * Which field each toggle flips: the one fact that makes a toggle one, stated
+ * once for the types (StyleValueOf, TextToggleIntentKind) and the entries
+ * (toggleRunOrSlot) alike. A toggle's value type is its field's, so the two
+ * cannot drift apart.
+ */
+export const TOGGLE_FLIPS = {
+	toggleBold: "fontWeight",
+	toggleItalic: "fontStyle",
+	toggleUnderline: "textDecoration",
+} as const satisfies Record<string, StyleIntentKind>;
+
+/**
+ * The intents a keystroke in the text editor raises (TextEditor's Ctrl/Cmd+B/I/U
+ * and the browser's own formatBold / formatItalic / formatUnderline edits). Spelled
+ * in the intent vocabulary all the way from the keystroke, so nothing translates
+ * a "bold" into the field it flips twice.
+ */
+export type TextToggleIntentKind = Extract<
+	StyleIntentKind,
+	keyof typeof TOGGLE_FLIPS
+>;
+
 /** Everything an intent of one kind holds besides its name. */
 type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 	Extract<StyleIntent, { kind: K }>,
@@ -59,12 +82,15 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
  * `kind`. What the entries of that kind apply and read, so the two sides cannot
  * disagree on the type.
  *
- * A kind carrying nothing (the toggles) yields `never`, which is the honest
- * reading — the stage that implements them decides how an entry spells "no
- * value".
+ * A toggle carries none, but its entry still reads and writes the field it flips
+ * (TOGGLE_FLIPS), so it works in that field's value — with `undefined` added
+ * twice over: a slot setting no such field reads as unset, and the intent has no
+ * value for the walker to hand the entry.
  */
 export type StyleValueOf<K extends StyleIntentKind> =
-	StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
+	K extends TextToggleIntentKind
+		? StyleValueOf<(typeof TOGGLE_FLIPS)[K]> | undefined
+		: StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
 
 /**
  * The value an intent carries, erased: the walkers look an entry up by a kind

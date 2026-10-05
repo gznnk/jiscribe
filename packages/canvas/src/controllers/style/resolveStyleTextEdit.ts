@@ -10,7 +10,6 @@ import {
 } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { resolveTextEdit } from "../utils/resolveTextEdit";
-import { resolveTextEditSelection } from "../utils/styleTextEditSelection";
 
 /**
  * The open shape editor as the style walks read it: which slot of which object it
@@ -33,9 +32,12 @@ export type StyleTextEdit = {
  * `textEditState` from, so writing a style and reporting it cannot disagree
  * about what is being edited.
  *
- * The `range` is `resolveTextEditSelection`'s answer, which owns the rule for
- * when a stretch is one to style (a collapsed selection and a source-language
- * body are not).
+ * This also owns the rule for when a selected stretch is one to style at all. A
+ * collapsed (or unreported) selection is not, there being no characters to
+ * address. Neither is any stretch of a body written in a source language
+ * (`features.text: "source"`): it is a plain string the shape renders itself, so
+ * a run laid over part of it would be dropped on save and never drawn, and the
+ * edit takes the whole slot instead.
  *
  * @param state - The canvas state; its `textEditState` and the selection that owns it are read
  * @returns The edit, or null when no shape editor is open (a connector label is not one)
@@ -47,21 +49,23 @@ export const resolveStyleTextEdit = (
 	if (resolved?.kind !== "shape") {
 		return null;
 	}
-	const { object, slotId, text } = resolved;
-	const ranged = resolveTextEditSelection(state);
+	const { object, slotId, text, selection } = resolved;
+	const isStyleableStretch =
+		selection !== undefined &&
+		selection.start < selection.end &&
+		object.features?.text !== "source";
 	return {
 		objectId: object.id,
 		slotId,
 		draft: text,
-		range:
-			ranged === null
-				? null
-				: {
-						objectId: ranged.objectId,
-						slotId: ranged.slotId,
-						start: ranged.start,
-						end: ranged.end,
-					},
+		range: isStyleableStretch
+			? {
+					objectId: object.id,
+					slotId,
+					start: selection.start,
+					end: selection.end,
+				}
+			: null,
 	};
 };
 

@@ -89,6 +89,31 @@ export const featuresWithText = (
 	text: ObjectFeatures["text"],
 ): ObjectFeatures => ({ ...RectFeatures, text });
 
+/**
+ * A type whose body is written in a source language, declared as one — so the
+ * table built for it is the one such a type really gets, rather than a rect's
+ * with an object claiming otherwise.
+ */
+export const SourceFeatures: ObjectFeatures = {
+	...RectFeatures,
+	type: "sourceRect",
+	text: "source",
+};
+
+/**
+ * A shape of {@link SourceFeatures}.
+ *
+ * @param id - The object id
+ * @param text - Its slots; a source body is a plain string and takes no emphasis styling
+ */
+export const sourceRectOf = (id: string, text: TextSlots): ObjectState =>
+	({
+		id,
+		type: SourceFeatures.type,
+		features: SourceFeatures,
+		text,
+	}) as unknown as ObjectState;
+
 /** A pick naming one text slot, the way a press on a slot stores it. */
 export const slotPickOf = (slotId: string): ObjectPartSelection => ({
 	kind: TEXT_SLOT_PART_KIND,
@@ -150,6 +175,7 @@ export const registriesOf = (
 		EllipseFeatures,
 		ConnectorFeatures,
 		GroupFeatures,
+		SourceFeatures,
 	]) {
 		objectStyle.register(features.type, coreStyleTable(features));
 	}

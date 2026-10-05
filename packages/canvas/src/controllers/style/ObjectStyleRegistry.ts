@@ -9,7 +9,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * Per-type style tables: which intents a type takes, and where each of them
  * lands in its data. Filled from every type's definition at bundle creation
  * (applyObjectDefinition registers `coreStyleTable(definition.features)`), and
- * read by the two walkers — applyStyleIntent and readStyleIntent — so writing
+ * read by the two walkers — applyStyleIntent and readSelectionStyle — so writing
  * and reporting a style consult the very same answer.
  *
  * A type absent from the registry, or one whose table leaves the kind out, takes

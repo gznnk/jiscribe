@@ -3,9 +3,6 @@ import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyl
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { CanvasSelection } from "../selection/CanvasSelection";
-import { collectSelectedPartIds } from "../selection/collectSelectedPartIds";
-import { isTextSlotSelection } from "../selection/textSlotPartKind";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
 
@@ -72,8 +69,8 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		value: string,
 	): CanvasControllerState {
-		const { selection, objects } = state;
-		const { objectIds: selectedIds } = selection;
+		const { objects } = state;
+		const { objectIds: selectedIds } = state.selection;
 		const path = property.split(".");
 
 		if (selectedIds.length === 0) {
@@ -90,7 +87,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			if (!obj) {
 				continue;
 			}
-			const updated = this.applyToObject(obj, property, path, value, selection);
+			const updated = this.applyToObject(obj, property, path, value);
 			if (updated === null) {
 				continue;
 			}
@@ -108,13 +105,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 					if (!descObj) {
 						continue;
 					}
-					const updated = this.applyToObject(
-						descObj,
-						property,
-						path,
-						value,
-						selection,
-					);
+					const updated = this.applyToObject(descObj, property, path, value);
 					if (updated === null) {
 						continue;
 					}
@@ -133,22 +124,17 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 
 	/**
 	 * Writes the coerced value into a supported object. The default is the dot-path
-	 * write; a property whose storage is not one path (text styling, which lives in
-	 * the slots) overrides this. Null means "does not apply" (skip).
+	 * write; a property whose storage is not one path (the text content, which lives
+	 * in the slots) overrides this. Null means "does not apply" (skip).
 	 *
 	 * @param obj - The object to write into; returned unchanged copies only
 	 * @param path - The property split on "." ("label.fill" → ["label", "fill"])
 	 * @param value - The value already coerced to the declared type
-	 * @param selectedSlotId - The text slot selected on this very object, undefined
-	 *   when none is (this object is not the slot's owner, nothing is selected one
-	 *   level below the object, or what is selected there is a part of another kind
-	 *   — a vertex). Only slot-storage handlers read it.
 	 */
 	protected writeValue(
 		obj: ObjectState,
 		path: readonly string[],
 		value: string | number | boolean,
-		_selectedSlotId: string | undefined,
 	): ObjectState | null {
 		return writeAtPath(
 			obj as unknown as Record<string, unknown>,
@@ -163,7 +149,6 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		path: readonly string[],
 		value: string,
-		selection: CanvasSelection,
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -173,15 +158,6 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		if (coerced === null) {
 			return null;
 		}
-		return this.writeValue(
-			obj,
-			path,
-			coerced,
-			// The write lands on one slot, and in this version the selection is always
-			// one collapsed range, so that slot is the first of the ids it covers.
-			isTextSlotSelection(selection.part) && selection.objectIds[0] === obj.id
-				? collectSelectedPartIds(selection.part)[0]
-				: undefined,
-		);
+		return this.writeValue(obj, path, coerced);
 	}
 }

@@ -1,6 +1,5 @@
 import { isString } from "@jiscribe/basic-validators";
 import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
-import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import {
 	clearInlineStyleFromRuns,
 	sliceRichText,
@@ -8,52 +7,12 @@ import {
 } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
+import { resolveRangeEdit } from "./resolveRangeEdit";
 import type { SlotsOf } from "./slotEntry";
 import { slotEntry } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
-import type { TextSlots } from "../../../states/objects/types/TextSlots";
-import {
-	readRichTextSlot,
-	writeRichTextSlot,
-} from "../../../states/objects/types/TextSlots";
-import type { StyleContext, StyleEntry } from "../StyleEntry";
-
-/** The stretch of one object's slot a per-range write or read acts on. */
-type ResolvedRange = {
-	slots: TextSlots;
-	slotId: string;
-	/** The slot's content as the editor draws it: a row-partitioned slot joined by "\n". */
-	content: RichText;
-	start: number;
-	end: number;
-};
-
-/**
- * The stretch `ctx` names on this very object, or null when the whole slot is
- * what the edit means — no stretch is being edited, it belongs to another
- * object, or the slot it names is gone.
- */
-const resolveRange = (
-	object: ObjectState,
-	ctx: StyleContext,
-): ResolvedRange | null => {
-	const range = ctx.textEditRange;
-	if (range === null || range.objectId !== object.id) {
-		return null;
-	}
-	const slots = (object as ObjectState & TextStyleState).text;
-	if (slots === undefined || slots[range.slotId] === undefined) {
-		return null;
-	}
-	return {
-		slots,
-		slotId: range.slotId,
-		content: readRichTextSlot(slots, range.slotId),
-		start: range.start,
-		end: range.end,
-	};
-};
+import { writeRichTextSlot } from "../../../states/objects/types/TextSlots";
+import type { StyleEntry } from "../StyleEntry";
 
 /**
  * An intent stored on the text slots that a stretch of characters may also carry
@@ -89,7 +48,7 @@ export const runOrSlot = <TState extends ObjectState, V>(
 
 	return {
 		apply: (object, pick, value, ctx) => {
-			const range = resolveRange(object, ctx);
+			const range = resolveRangeEdit(object, ctx);
 			if (range === null) {
 				return wholeSlot.apply(object, pick, value, ctx);
 			}
@@ -105,7 +64,7 @@ export const runOrSlot = <TState extends ObjectState, V>(
 			} as TState;
 		},
 		read: (object, pick, ctx) => {
-			const range = resolveRange(object, ctx);
+			const range = resolveRangeEdit(object, ctx);
 			if (range === null) {
 				return wholeSlot.read(object, pick, ctx);
 			}
