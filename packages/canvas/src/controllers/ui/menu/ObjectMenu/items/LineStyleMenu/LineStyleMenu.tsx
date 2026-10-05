@@ -1,4 +1,7 @@
-import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+import {
+	SHAPE_STYLE_FALLBACK,
+	UNDECLARED_STROKE_DASH,
+} from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
@@ -13,10 +16,7 @@ import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import {
-	readSelectionShapeStyle,
-	UNDECLARED_STROKE_DASH,
-} from "../../../utils/readSelectionShapeStyle";
+import { readSelectionShapeStyle } from "../../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -54,7 +54,6 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
 		canvasState,
 		registries,
-		"stroke",
 	);
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
 	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);

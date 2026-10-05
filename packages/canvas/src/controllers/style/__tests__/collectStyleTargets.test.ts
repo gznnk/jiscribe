@@ -79,7 +79,7 @@ describe("collectStyleTargets", () => {
 		]);
 	});
 
-	it("reaches the same objects, in the same order, as the menus' own walk", () => {
+	it("reaches the same objects, in the same order, as the first-match readers' walk", () => {
 		const objects = {
 			g: groupOf("g", ["a", "inner"]),
 			a: rectOf("a"),

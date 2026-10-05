@@ -1,3 +1,5 @@
+import { DEFAULT_ARROW } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
 import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
@@ -22,8 +24,8 @@ export const SwapArrowsCommand: ExecutableCommand = {
 		const connectorId = getSelectedConnectorId(state);
 		if (connectorId !== null) {
 			const connector = state.objects[connectorId] as ConnectorState;
-			const prev = connector.startArrow ?? "None";
-			const next = connector.endArrow ?? "None";
+			const prev = connector.startArrow ?? DEFAULT_ARROW;
+			const next = connector.endArrow ?? DEFAULT_ARROW;
 			return {
 				...state,
 				objects: {
@@ -50,8 +52,8 @@ export const SwapArrowsCommand: ExecutableCommand = {
 
 			if (obj.type === "polyline") {
 				const polyline = obj as PolylineState;
-				const prev = polyline.startArrow ?? "None";
-				const next = polyline.endArrow ?? "None";
+				const prev = polyline.startArrow ?? DEFAULT_ARROW;
+				const next = polyline.endArrow ?? DEFAULT_ARROW;
 				updatedObjects[id] = {
 					...polyline,
 					startArrow: next,

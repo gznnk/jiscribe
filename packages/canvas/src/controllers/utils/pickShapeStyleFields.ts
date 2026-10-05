@@ -1,10 +1,11 @@
 import { isNumber, isString } from "@jiscribe/basic-validators";
+import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import type { ResolvedShapeStyle } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
-/** A shape-style field: the set the stroke / fill defaults answer for. */
+/** A shape-style field: the set the shape-style defaults answer for. */
 export type ShapeStyleField = keyof ResolvedShapeStyle & string;
 
 /** The type each shape-style field carries, by which a state is held to it. */
@@ -18,10 +19,13 @@ const SHAPE_STYLE_FIELD_GUARDS: Record<
 	strokeOpacity: isNumber,
 	fill: isString,
 	fillOpacity: isNumber,
+	rx: isNumber,
+	startArrow: isArrowType,
+	endArrow: isArrowType,
 };
 
 /**
- * One object's stroke and fill fields, in the shape
+ * One object's shape-style fields, in the shape
  * `ObjectShapeStyleDefaultsRegistry.resolveShapeStyle` takes them: a field
  * holding the wrong type is dropped rather than passed on, so resolution takes
  * over for it the way it does for one left unset.

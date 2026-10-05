@@ -1,9 +1,6 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
-import type {
-	ObjectShapeStyleDefaultsRegistry,
-	ShapeStyleGroup,
-} from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
@@ -37,6 +34,15 @@ const rect = (
 		...extra,
 	}) as unknown as ObjectState;
 
+/** A line: stroke but no fill, so the face rows pass it by. */
+const line = (id: string, extra?: Record<string, unknown>): ObjectState =>
+	({
+		id,
+		type: "polyline",
+		features: { type: "polyline", geometry: "poly", stroke: true },
+		...extra,
+	}) as unknown as ObjectState;
+
 /** A shape whose type declares neither group, so it has no say. */
 const bareRect = (id: string): ObjectState =>
 	({
@@ -51,7 +57,7 @@ const group = (id: string, childIds: string[]): GroupState =>
 const shapeStyleDefaults = createObjectShapeStyleDefaultsRegistry();
 
 /**
- * The production wiring of the fill intent for these fixtures: every type they
+ * The production wiring of the style intents for these fixtures: every type they
  * use gets the table its own features derive (applyObjectDefinition does the
  * same with each ObjectTypeDefinition).
  */
@@ -76,18 +82,16 @@ const registriesOf = (
 const readStyle = (
 	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
-	defaults: ObjectShapeStyleDefaultsRegistry,
-	styleGroup: ShapeStyleGroup,
+	defaults: ObjectShapeStyleDefaultsRegistry = shapeStyleDefaults,
 ) =>
 	readSelectionShapeStyle(
 		{ selection: selectionOf(selectedIds), objects } as CanvasControllerState,
 		registriesOf(objects, defaults),
-		styleGroup,
 	);
 
 describe("readSelectionShapeStyle", () => {
 	it("nothing selected → every field is none", () => {
-		const style = readStyle([], {}, shapeStyleDefaults, "fill");
+		const style = readStyle([], {});
 		expect(style.fill).toEqual({ kind: "none" });
 		expect(style.stroke).toEqual({ kind: "none" });
 		expect(style.strokeWidth).toEqual({ kind: "none" });
@@ -96,16 +100,16 @@ describe("readSelectionShapeStyle", () => {
 		expect(style.strokeOpacity).toEqual({ kind: "none" });
 	});
 
-	it("nothing selected declares the group → none, even for a shape that is there", () => {
+	it("nothing selected declares a group → none, even for a shape that is there", () => {
 		const objects = { t: bareRect("t") };
-		expect(readStyle(["t"], objects, shapeStyleDefaults, "fill").fill).toEqual({
-			kind: "none",
-		});
+		const style = readStyle(["t"], objects);
+		expect(style.fill).toEqual({ kind: "none" });
+		expect(style.stroke).toEqual({ kind: "none" });
 	});
 
 	it("one shape → its own value", () => {
 		const objects = { a: rect("a", { fill: "#f00" }) };
-		expect(readStyle(["a"], objects, shapeStyleDefaults, "fill").fill).toEqual({
+		expect(readStyle(["a"], objects).fill).toEqual({
 			kind: "single",
 			value: "#f00",
 		});
@@ -116,9 +120,10 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fill: "#f00" }),
 			b: rect("b", { fill: "#f00" }),
 		};
-		expect(
-			readStyle(["a", "b"], objects, shapeStyleDefaults, "fill").fill,
-		).toEqual({ kind: "single", value: "#f00" });
+		expect(readStyle(["a", "b"], objects).fill).toEqual({
+			kind: "single",
+			value: "#f00",
+		});
 	});
 
 	it("two shapes disagreeing → mixed", () => {
@@ -126,9 +131,10 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fill: "#f00" }),
 			b: rect("b", { fill: "#0f0" }),
 		};
-		expect(
-			readStyle(["a", "b"], objects, shapeStyleDefaults, "fill").fill,
-		).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
+		expect(readStyle(["a", "b"], objects).fill).toEqual({
+			kind: "mixed",
+			values: ["#f00", "#0f0"],
+		});
 	});
 
 	it("mixing one field leaves the others alone", () => {
@@ -136,7 +142,7 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fill: "#f00", strokeWidth: 2 }),
 			b: rect("b", { fill: "#0f0", strokeWidth: 2 }),
 		};
-		const style = readStyle(["a", "b"], objects, shapeStyleDefaults, "fill");
+		const style = readStyle(["a", "b"], objects);
 		expect(style.fill).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
 		expect(style.strokeWidth).toEqual({ kind: "single", value: 2 });
 	});
@@ -149,9 +155,10 @@ describe("readSelectionShapeStyle", () => {
 			// Writes nothing, so its type's default is what it draws
 			defaulted: rect("defaulted", undefined, "plain"),
 		};
-		expect(
-			readStyle(["stated", "defaulted"], objects, defaults, "fill").fill,
-		).toEqual({ kind: "single", value: "#fff" });
+		expect(readStyle(["stated", "defaulted"], objects, defaults).fill).toEqual({
+			kind: "single",
+			value: "#fff",
+		});
 	});
 
 	it("auto stays a value of its own beside a color spelled out", () => {
@@ -159,9 +166,10 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fill: AUTO_COLOR }),
 			b: rect("b", { fill: "#ffffff" }),
 		};
-		expect(
-			readStyle(["a", "b"], objects, shapeStyleDefaults, "fill").fill,
-		).toEqual({ kind: "mixed", values: [AUTO_COLOR, "#ffffff"] });
+		expect(readStyle(["a", "b"], objects).fill).toEqual({
+			kind: "mixed",
+			values: [AUTO_COLOR, "#ffffff"],
+		});
 	});
 
 	it("a dash nobody declared reads as solid, not as a value of its own", () => {
@@ -169,10 +177,10 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { strokeDashType: "solid" }),
 			b: rect("b"),
 		};
-		expect(
-			readStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
-				.strokeDashType,
-		).toEqual({ kind: "single", value: "solid" });
+		expect(readStyle(["a", "b"], objects).strokeDashType).toEqual({
+			kind: "single",
+			value: "solid",
+		});
 	});
 
 	it("a dash stated on one of the two → mixed", () => {
@@ -180,16 +188,15 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { strokeDashType: "dashed" }),
 			b: rect("b"),
 		};
-		expect(
-			readStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
-				.strokeDashType,
-		).toEqual({ kind: "mixed", values: ["dashed", "solid"] });
+		expect(readStyle(["a", "b"], objects).strokeDashType).toEqual({
+			kind: "mixed",
+			values: ["dashed", "solid"],
+		});
 	});
 
 	it("an opacity nobody declared reads as the fallback, not as no value", () => {
 		const objects = { a: rect("a") };
-		const style = readStyle(["a"], objects, shapeStyleDefaults, "fill");
-		expect(style.fillOpacity).toEqual({
+		expect(readStyle(["a"], objects).fillOpacity).toEqual({
 			kind: "single",
 			value: SHAPE_STYLE_FALLBACK.fillOpacity,
 		});
@@ -200,7 +207,7 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fillOpacity: 0.4 }),
 			b: rect("b", { fillOpacity: 1 }),
 		};
-		const style = readStyle(["a", "b"], objects, shapeStyleDefaults, "fill");
+		const style = readStyle(["a", "b"], objects);
 		// The first shape's own opacity, not the fallback: the row's arrows step
 		// from it (PropertyNumberField).
 		expect(style.fillOpacity).toEqual({ kind: "mixed", values: [0.4, 1] });
@@ -212,12 +219,28 @@ describe("readSelectionShapeStyle", () => {
 
 	it("the two opacities are told apart", () => {
 		const objects = { a: rect("a", { strokeOpacity: 0.25 }) };
-		const style = readStyle(["a"], objects, shapeStyleDefaults, "stroke");
+		const style = readStyle(["a"], objects);
 		expect(style.strokeOpacity).toEqual({ kind: "single", value: 0.25 });
 		expect(style.fillOpacity).toEqual({
 			kind: "single",
 			value: SHAPE_STYLE_FALLBACK.fillOpacity,
 		});
+	});
+
+	it("each row is narrowed to the objects declaring that field's own group", () => {
+		const objects = {
+			a: line("a", { stroke: "#00f", fill: "#f00", fillOpacity: 0.5 }),
+			b: rect("b", { stroke: "#00f", fill: "#0f0" }),
+		};
+		const style = readStyle(["a", "b"], objects);
+		// The line declares no fill, so what it carries there is not drawn and has
+		// no say; the stroke rows hear from both.
+		expect(style.fill).toEqual({ kind: "single", value: "#0f0" });
+		expect(style.fillOpacity).toEqual({
+			kind: "single",
+			value: SHAPE_STYLE_FALLBACK.fillOpacity,
+		});
+		expect(style.stroke).toEqual({ kind: "single", value: "#00f" });
 	});
 
 	it("descendants of a selected group have their say", () => {
@@ -226,7 +249,7 @@ describe("readSelectionShapeStyle", () => {
 			a: rect("a", { fill: "#f00" }),
 			b: rect("b", { fill: "#0f0" }),
 		};
-		expect(readStyle(["g"], objects, shapeStyleDefaults, "fill").fill).toEqual({
+		expect(readStyle(["g"], objects).fill).toEqual({
 			kind: "mixed",
 			values: ["#f00", "#0f0"],
 		});
@@ -240,11 +263,13 @@ describe("readSelectionShapeStyle", () => {
 			stroke: "#00f",
 		} as unknown as ObjectState;
 		const objects = { a: rect("a", { stroke: "#f00" }), c: connector };
-		expect(
-			readStyle(["a", "c"], objects, shapeStyleDefaults, "stroke").stroke,
-		).toEqual({ kind: "mixed", values: ["#f00", "#00f"] });
-		expect(
-			readStyle(["c"], objects, shapeStyleDefaults, "stroke").stroke,
-		).toEqual({ kind: "single", value: "#00f" });
+		expect(readStyle(["a", "c"], objects).stroke).toEqual({
+			kind: "mixed",
+			values: ["#f00", "#00f"],
+		});
+		expect(readStyle(["c"], objects).stroke).toEqual({
+			kind: "single",
+			value: "#00f",
+		});
 	});
 });

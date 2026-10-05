@@ -8,8 +8,10 @@ import { collectDescendantIds } from "../../../utils/collectDescendantIds";
  *
  * The same walk the first-match readers take (getFirstSelectedWithProp,
  * getFirstSelectedWithStyleGroup), gathered rather than stopped at the first
- * match — telling one value from several is exactly the part a first-match
- * reader cannot answer.
+ * match. What it is for is holding those readers and the style walk
+ * (collectStyleTargets) to one reading of the selection: a plugin menu stating
+ * a style through the former must not be looking at a different set of objects
+ * from the one a write through the latter reaches.
  *
  * @param selectedIds - The selection, in the order the row states its values in; an id absent from `objects` is skipped
  * @param objects - Every object of the canvas, keyed by id

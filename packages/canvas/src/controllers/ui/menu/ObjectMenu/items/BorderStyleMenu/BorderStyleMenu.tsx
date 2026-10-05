@@ -1,4 +1,7 @@
-import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+import {
+	SHAPE_STYLE_FALLBACK,
+	UNDECLARED_STROKE_DASH,
+} from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
 import {
@@ -12,18 +15,12 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import {
-	DEFAULT_CORNER_RADIUS,
-	readSelectionCornerRadius,
-} from "../../../utils/readSelectionCornerRadius";
-import {
-	readSelectionShapeStyle,
-	UNDECLARED_STROKE_DASH,
-} from "../../../utils/readSelectionShapeStyle";
+import { readSelectionShapeStyle } from "../../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -74,13 +71,13 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
 		canvasState,
 		registries,
-		"stroke",
 	);
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
 	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
-	const cornerRadius = readSelectionCornerRadius(
-		canvasState.selection.objectIds,
-		canvasState.objects,
+	const cornerRadius = readSelectionStyle(
+		canvasState,
+		"cornerRadius",
+		registries,
 	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
@@ -147,7 +144,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								label={messages.menuCornerRadius}
 								value={selectionValueOrFirst(
 									cornerRadius,
-									DEFAULT_CORNER_RADIUS,
+									SHAPE_STYLE_FALLBACK.rx,
 								)}
 								isMixed={isMixedSelectionValue(cornerRadius)}
 								min={MIN_CORNER_RADIUS}

@@ -1,5 +1,9 @@
+import { ARROW_STYLE_KEYS } from "../model/objects/base/ArrowStyleDoc";
+import type { ArrowStyleDoc } from "../model/objects/base/ArrowStyleDoc";
 import { FILL_STYLE_KEYS } from "../model/objects/base/FillStyleDoc";
 import type { FillStyleDoc } from "../model/objects/base/FillStyleDoc";
+import { RADIUS_STYLE_KEYS } from "../model/objects/base/RadiusStyleDoc";
+import type { RadiusStyleDoc } from "../model/objects/base/RadiusStyleDoc";
 import { STROKE_STYLE_KEYS } from "../model/objects/base/StrokeStyleDoc";
 import type { StrokeStyleDoc } from "../model/objects/base/StrokeStyleDoc";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
@@ -9,42 +13,53 @@ import { SHAPE_STYLE_FALLBACK } from "../model/objects/utils/shapeStyleFallback"
 import type { ShapeStyleFallback } from "../model/objects/utils/shapeStyleFallback";
 
 /**
- * One of the two groups a shape's style fields fall into, named by the
+ * One of the two paint groups a selection can be searched by, named by the
  * ObjectFeatures flag that enables it: `"stroke"` covers StrokeStyleDoc (color,
- * width, dash), `"fill"` covers FillStyleDoc. The unit a type declares support
- * in, and the unit the style menus search the selection by.
+ * width, dash, opacity), `"fill"` covers FillStyleDoc. The unit the first-match
+ * readers go by (getFirstSelectedWithStyleGroup); the radius and the arrowheads
+ * are style groups of their own and have no such reader.
  */
 export type ShapeStyleGroup = "stroke" | "fill";
 
 /**
- * A type's stroke / fill defaults: whichever of the two style groups its
- * features enable, holding only the fields its creation defaults actually set.
+ * The shape-style fields one object may set, the four style groups flattened the
+ * way a doc and a state alike carry them. What every side that resolves a shape
+ * style hands over, and the shape a type's own defaults are held in.
  */
-export type ObjectShapeStyleDefaults = Readonly<
-	Partial<StrokeStyleDoc & FillStyleDoc>
+export type ShapeStyleDocFields = Partial<
+	StrokeStyleDoc & FillStyleDoc & RadiusStyleDoc & ArrowStyleDoc
 >;
 
 /**
- * One shape's stroke and fill with every step of the resolution already taken,
- * as {@link ObjectShapeStyleDefaultsRegistry.resolveShapeStyle} returns it. The
+ * A type's shape-style defaults: whichever of the style groups its features
+ * enable, holding only the fields its creation defaults actually set.
+ */
+export type ObjectShapeStyleDefaults = Readonly<ShapeStyleDocFields>;
+
+/**
+ * One shape's style fields with every step of the resolution already taken, as
+ * {@link ObjectShapeStyleDefaultsRegistry.resolveShapeStyle} returns it. The
  * colors may still be `"auto"`, which is the drawing side's to resolve against
  * the theme (resolveAutoColor). The dash alone stays optional: nobody declares a
- * solid one, so there is nothing to resolve an absent dash to.
+ * solid one, so there is nothing to resolve an absent dash to
+ * (UNDECLARED_STROKE_DASH is what a reader reports for it instead).
  */
 export type ResolvedShapeStyle = ShapeStyleFallback &
 	Pick<StrokeStyleDoc, "strokeDashType">;
 
 /**
- * The draw-time stroke / fill defaults of one type, read out of the creation
+ * The draw-time shape-style defaults of one type, read out of the creation
  * defaults it already declares (`ObjectDocDefinition.defaults`), so a type gets
  * its draw-time defaults from the same place its factory materializes them from
  * and the two cannot diverge.
  *
  * Only the groups the type's features enable are read: a stroke-only type
- * contributes no fill even where its defaults happen to state one. Values are
- * taken as they stand — the doc validator is what judges them.
+ * contributes no fill even where its defaults happen to state one, and an
+ * ellipse's `rx` — geometry rather than a corner radius — is left out for want
+ * of `features.radius`. Values are taken as they stand — the doc validator is
+ * what judges them.
  *
- * @param features - The type's feature flags; one enabling neither `stroke` nor `fill` yields undefined
+ * @param features - The type's feature flags; one enabling none of `stroke` / `fill` / `radius` / `arrow` yields undefined
  * @param defaults - The type's creation defaults (its `*_DOC_DEFAULTS`), undefined for a type that declares none
  * @returns The defaults, or undefined when nothing is declared — the value `register` is meant to be handed
  */
@@ -55,18 +70,20 @@ export const extractShapeStyleDefaults = (
 	if (defaults === undefined) {
 		return undefined;
 	}
-	// The creation defaults spell both style groups out flat on the doc, so they
-	// are read as the two groups' own fields.
+	// The creation defaults spell every style group out flat on the doc, so they
+	// are read as the groups' own fields.
 	const shapeDefaults: ObjectShapeStyleDefaults = defaults;
 	const style = pickDefined(shapeDefaults, [
 		...(features.stroke ? STROKE_STYLE_KEYS : []),
 		...(features.fill ? FILL_STYLE_KEYS : []),
+		...(features.radius ? RADIUS_STYLE_KEYS : []),
+		...(features.arrow ? ARROW_STYLE_KEYS : []),
 	]);
 	return Object.keys(style).length === 0 ? undefined : style;
 };
 
 /**
- * Per-type stroke / fill defaults: what a shape's style field falls back to when
+ * Per-type shape-style defaults: what a shape's style field falls back to when
  * the author left it unset. Registered from each type's own declaration
  * (`extractShapeStyleDefaults`) so the answer is the type's own, and read by
  * every side that draws or reports a shape style.
@@ -89,7 +106,7 @@ export class ObjectShapeStyleDefaultsRegistry {
 	}
 
 	/**
-	 * Registers whatever stroke / fill defaults a type's definition declares
+	 * Registers whatever shape-style defaults a type's definition declares
 	 * ({@link extractShapeStyleDefaults}); a definition declaring none leaves the
 	 * registry as it was.
 	 *
@@ -122,16 +139,20 @@ export class ObjectShapeStyleDefaultsRegistry {
 	}
 
 	/**
-	 * The stroke and fill one object is drawn with: its own set fields over its
-	 * type's defaults over the shared last resort (SHAPE_STYLE_FALLBACK).
+	 * The style one object is drawn with: its own set fields over its type's
+	 * defaults over the shared last resort (SHAPE_STYLE_FALLBACK).
+	 *
+	 * Every field is answered whatever the type's features say, the caller having
+	 * already decided which of them its shape has a say about (the style tables
+	 * gate the intents, the renderers read only what they draw).
 	 *
 	 * @param type - The object's type; one with nothing registered contributes no defaults
 	 * @param own - The object's own style fields; a field carrying undefined does not shadow the type's default
-	 * @returns Stroke color, width, fill and the two opacities always answered; the dash only where one side sets it
+	 * @returns Every field but the dash always answered; the dash only where one side sets it
 	 */
 	resolveShapeStyle(
 		type: ObjectType,
-		own: Readonly<Partial<StrokeStyleDoc & FillStyleDoc>>,
+		own: Readonly<ShapeStyleDocFields>,
 	): ResolvedShapeStyle {
 		const typeDefaults = this.get(type);
 		return {
@@ -150,6 +171,13 @@ export class ObjectShapeStyleDefaultsRegistry {
 				own.fillOpacity ??
 				typeDefaults?.fillOpacity ??
 				SHAPE_STYLE_FALLBACK.fillOpacity,
+			rx: own.rx ?? typeDefaults?.rx ?? SHAPE_STYLE_FALLBACK.rx,
+			startArrow:
+				own.startArrow ??
+				typeDefaults?.startArrow ??
+				SHAPE_STYLE_FALLBACK.startArrow,
+			endArrow:
+				own.endArrow ?? typeDefaults?.endArrow ?? SHAPE_STYLE_FALLBACK.endArrow,
 		};
 	}
 

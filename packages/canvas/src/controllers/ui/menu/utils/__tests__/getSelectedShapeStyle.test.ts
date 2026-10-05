@@ -27,11 +27,7 @@ describe("getSelectedShapeStyle", () => {
 	it("no selection → the shared fallback, with no dash", () => {
 		expect(getSelectedShapeStyle([], {}, shapeStyleDefaults, "stroke")).toEqual(
 			{
-				stroke: SHAPE_STYLE_FALLBACK.stroke,
-				strokeWidth: SHAPE_STYLE_FALLBACK.strokeWidth,
-				strokeOpacity: SHAPE_STYLE_FALLBACK.strokeOpacity,
-				fill: SHAPE_STYLE_FALLBACK.fill,
-				fillOpacity: SHAPE_STYLE_FALLBACK.fillOpacity,
+				...SHAPE_STYLE_FALLBACK,
 				strokeDashType: undefined,
 			},
 		);
@@ -49,12 +45,11 @@ describe("getSelectedShapeStyle", () => {
 		expect(
 			getSelectedShapeStyle(["a"], objects, shapeStyleDefaults, "stroke"),
 		).toEqual({
+			...SHAPE_STYLE_FALLBACK,
 			stroke: "#f00",
 			strokeWidth: 8,
 			strokeDashType: "dotted",
-			strokeOpacity: SHAPE_STYLE_FALLBACK.strokeOpacity,
 			fill: "#0f0",
-			fillOpacity: SHAPE_STYLE_FALLBACK.fillOpacity,
 		});
 	});
 
@@ -72,14 +67,7 @@ describe("getSelectedShapeStyle", () => {
 		};
 		expect(
 			getSelectedShapeStyle(["a"], objects, shapeStyleDefaults, "stroke"),
-		).toEqual({
-			stroke: SHAPE_STYLE_FALLBACK.stroke,
-			strokeWidth: SHAPE_STYLE_FALLBACK.strokeWidth,
-			strokeOpacity: SHAPE_STYLE_FALLBACK.strokeOpacity,
-			fill: SHAPE_STYLE_FALLBACK.fill,
-			fillOpacity: SHAPE_STYLE_FALLBACK.fillOpacity,
-			strokeDashType: undefined,
-		});
+		).toEqual({ ...SHAPE_STYLE_FALLBACK, strokeDashType: undefined });
 	});
 
 	it("falls to the type's own defaults when the document wrote nothing", () => {

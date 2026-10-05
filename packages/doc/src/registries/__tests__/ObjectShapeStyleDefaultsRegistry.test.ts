@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_ARROW } from "../../model/objects/base/ArrowStyleDoc";
 import {
 	DEFAULT_FILL,
 	DEFAULT_FILL_OPACITY,
 } from "../../model/objects/base/FillStyleDoc";
+import { DEFAULT_CORNER_RADIUS } from "../../model/objects/base/RadiusStyleDoc";
 import {
 	DEFAULT_STROKE_OPACITY,
 	DEFAULT_STROKE_WIDTH,
@@ -23,14 +25,20 @@ import {
 	extractShapeStyleDefaults,
 } from "../ObjectShapeStyleDefaultsRegistry";
 
-const styleless = { ...RectFeatures, stroke: false, fill: false } as const;
+const styleless = {
+	...RectFeatures,
+	stroke: false,
+	fill: false,
+	radius: false,
+} as const;
 
 describe("extractShapeStyleDefaults", () => {
-	it("takes both groups from a type whose features enable both", () => {
+	it("takes every enabled group from a type whose features enable them", () => {
 		expect(extractShapeStyleDefaults(RectFeatures, RECT_DOC_DEFAULTS)).toEqual({
 			stroke: AUTO_COLOR,
 			strokeWidth: 2,
 			fill: "transparent",
+			rx: 0,
 		});
 	});
 
@@ -43,7 +51,33 @@ describe("extractShapeStyleDefaults", () => {
 		expect(defaults).not.toHaveProperty("fill");
 	});
 
-	it("returns undefined for a type enabling neither group", () => {
+	it("takes the arrowheads from a type whose features enable them", () => {
+		expect(
+			extractShapeStyleDefaults(PolylineFeatures, {
+				...POLYLINE_DOC_DEFAULTS,
+				startArrow: "None",
+				endArrow: "FilledTriangle",
+			}),
+		).toEqual({
+			stroke: AUTO_COLOR,
+			strokeWidth: 2,
+			startArrow: "None",
+			endArrow: "FilledTriangle",
+		});
+	});
+
+	// An ellipse's `rx` is a radius of the shape itself rather than a rounded
+	// corner, and `features.radius` is what tells the two apart.
+	it("leaves rx out for a type that states one without declaring the radius", () => {
+		expect(
+			extractShapeStyleDefaults(
+				{ ...RectFeatures, radius: false },
+				{ ...RECT_DOC_DEFAULTS, rx: 32 },
+			),
+		).not.toHaveProperty("rx");
+	});
+
+	it("returns undefined for a type enabling no group at all", () => {
 		expect(
 			extractShapeStyleDefaults(styleless, RECT_DOC_DEFAULTS),
 		).toBeUndefined();
@@ -77,6 +111,9 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 			strokeOpacity: DEFAULT_STROKE_OPACITY,
 			fill: DEFAULT_FILL,
 			fillOpacity: DEFAULT_FILL_OPACITY,
+			rx: DEFAULT_CORNER_RADIUS,
+			startArrow: DEFAULT_ARROW,
+			endArrow: DEFAULT_ARROW,
 		});
 	});
 
@@ -100,6 +137,9 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 			strokeOpacity: DEFAULT_STROKE_OPACITY,
 			fill: "#ff0000",
 			fillOpacity: DEFAULT_FILL_OPACITY,
+			rx: DEFAULT_CORNER_RADIUS,
+			startArrow: DEFAULT_ARROW,
+			endArrow: DEFAULT_ARROW,
 		});
 	});
 
@@ -138,6 +178,33 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 		});
 		expect(style.fillOpacity).toBe(0);
 		expect(style.strokeOpacity).toBe(0.25);
+	});
+
+	it("answers square corners and bare ends while nobody declares any", () => {
+		const style = registry.resolveShapeStyle("rect", {});
+		expect(style.rx).toBe(DEFAULT_CORNER_RADIUS);
+		expect(style.startArrow).toBe(DEFAULT_ARROW);
+		expect(style.endArrow).toBe(DEFAULT_ARROW);
+	});
+
+	it("lets a registered type's radius and ends win over the last resort", () => {
+		const withRadius = createObjectShapeStyleDefaultsRegistry();
+		withRadius.register("rect", { rx: 8, endArrow: "FilledTriangle" });
+		const style = withRadius.resolveShapeStyle("rect", {});
+		expect(style.rx).toBe(8);
+		expect(style.endArrow).toBe("FilledTriangle");
+		expect(style.startArrow).toBe(DEFAULT_ARROW);
+	});
+
+	it("answers the object's own radius and ends, a radius of 0 included", () => {
+		const withRadius = createObjectShapeStyleDefaultsRegistry();
+		withRadius.register("rect", { rx: 8 });
+		const style = withRadius.resolveShapeStyle("rect", {
+			rx: 0,
+			startArrow: "Circle",
+		});
+		expect(style.rx).toBe(0);
+		expect(style.startArrow).toBe("Circle");
 	});
 });
 

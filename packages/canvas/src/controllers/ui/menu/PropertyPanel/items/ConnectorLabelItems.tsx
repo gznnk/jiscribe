@@ -11,6 +11,7 @@
 
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
+import { UNDECLARED_STROKE_DASH } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo } from "react";
 
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
@@ -25,7 +26,6 @@ import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
-import { UNDECLARED_STROKE_DASH } from "../../utils/readSelectionShapeStyle";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyDropdownTriggerLabel } from "../common/PropertyControlsStyled";
 import { PropertyDropdownField } from "../common/PropertyDropdownField";

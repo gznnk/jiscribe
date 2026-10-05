@@ -1,5 +1,7 @@
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 
@@ -26,15 +28,43 @@ const toStyleNumber = (value: string): number | undefined => {
  * A mapper returning undefined is a value nothing can be made of, which applies
  * nothing — the same answer the handlers' coercion gives.
  *
- * The transport is a string either way, so the two alignments are cast to their
- * union here rather than validated: nothing checked them on the handler side
- * either, the values coming from the menus' own parts.
+ * The transport is a string either way, so the dash, the two arrowheads and the
+ * two alignments are cast to their unions here rather than validated: nothing
+ * checked them on the handler side either, the values coming from the menus' own
+ * parts.
  */
 const INTENT_BY_PROPERTY: Record<
 	string,
 	(value: string) => StyleIntent | undefined
 > = {
 	fill: (value) => ({ kind: "fill", color: value }),
+	fillOpacity: (value) => {
+		const opacity = toStyleNumber(value);
+		return opacity === undefined ? undefined : { kind: "fillOpacity", opacity };
+	},
+	stroke: (value) => ({ kind: "stroke", color: value }),
+	strokeWidth: (value) => {
+		const width = toStyleNumber(value);
+		return width === undefined ? undefined : { kind: "strokeWidth", width };
+	},
+	strokeDashType: (value) => ({
+		kind: "strokeDashType",
+		dash: value as StrokeDashType,
+	}),
+	strokeOpacity: (value) => {
+		const opacity = toStyleNumber(value);
+		return opacity === undefined
+			? undefined
+			: { kind: "strokeOpacity", opacity };
+	},
+	// The menus' part is named after the field the radius is stored in, the intent
+	// after what it means.
+	rx: (value) => {
+		const radius = toStyleNumber(value);
+		return radius === undefined ? undefined : { kind: "cornerRadius", radius };
+	},
+	startArrow: (value) => ({ kind: "startArrow", arrow: value as ArrowType }),
+	endArrow: (value) => ({ kind: "endArrow", arrow: value as ArrowType }),
 	fontColor: (value) => ({ kind: "fontColor", color: value }),
 	fontSize: (value) => {
 		const size = toStyleNumber(value);

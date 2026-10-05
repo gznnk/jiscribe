@@ -86,10 +86,14 @@ describe("applyStyleIntent", () => {
 	});
 
 	it("an intent no type has an entry for → the same state", () => {
-		const a = rectOf("a", { stroke: "#000000" });
+		const a = rectOf("a", { lockAspectRatio: false });
 		const state = stateOf(["a"], { a });
 		expect(
-			applyStyleIntent(state, { kind: "stroke", color: "#ff0000" }, registries),
+			applyStyleIntent(
+				state,
+				{ kind: "lockAspectRatio", locked: true },
+				registries,
+			),
 		).toBe(state);
 	});
 
