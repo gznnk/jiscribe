@@ -6,8 +6,8 @@ import { resolveAutoColor } from "../../../../../../rendering/objects/utils/reso
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
-import { readSelectionShapeStyle } from "../../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -41,7 +41,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const registries = useCanvasRegistries();
-	const { fill } = readSelectionShapeStyle(canvasState, registries);
+	const fill = readSelectionStyle(canvasState, "fill", registries);
 	const isMixed = isMixedSelectionValue(fill);
 	const currentColor = selectionValueOr(fill, SHAPE_STYLE_FALLBACK.fill);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(

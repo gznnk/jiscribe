@@ -1,10 +1,13 @@
+import { isNumber } from "@jiscribe/basic-validators";
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo, useRef } from "react";
 
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
+import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
+import { selectionValueAs } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -40,15 +43,17 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const fontSize = selectionValueAs(
+		useSelectionStyle("label.fontSize"),
+		isNumber,
+		CONNECTOR_LABEL_DEFAULTS.fontSize,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
 	}
-
-	const fontSize = label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

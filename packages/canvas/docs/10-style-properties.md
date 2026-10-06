@@ -298,10 +298,15 @@ declares `ContainerExtraStyleProperties` in `src/schema/ContainerDoc.ts` and han
 it to `createFrameObjectDefinition` from `@jiscribe/canvas-sdk`.
 
 What a plugin can rely on today is that declaration and
-`getFirstSelectedPropValue` (`@jiscribe/canvas/unstable`) for reading its own value
-back in its menu rows. The style layer itself is internal: a type cannot yet
-replace a derived entry, which is what a shape whose storage differs from the core
-guess (a table's fill, which lives on the cells) needs. A declarative
+`useSelectionStyle(name)` (`@jiscribe/canvas/unstable`) for stating the value
+back in its own rows of either surface. The hook answers what the whole selection
+says — `single` / `mixed` / `none`, folded into something drawable by the
+`selectionValue*` helpers — over exactly the objects a write of the same name
+would reach. A declared name is one the engine knows nothing about, so its value
+arrives `unknown` and the row narrows it (`selectionValueAs` with a guard of its
+own). The style layer itself is internal: a type cannot yet replace a derived
+entry, which is what a shape whose storage differs from the core guess (a table's
+fill, which lives on the cells) needs. A declarative
 `ObjectTypeDefinition.style` override is planned for that and **is not available**.
 
 ## Adding a style

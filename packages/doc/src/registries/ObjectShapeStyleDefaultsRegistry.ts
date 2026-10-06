@@ -13,15 +13,6 @@ import { SHAPE_STYLE_FALLBACK } from "../model/objects/utils/shapeStyleFallback"
 import type { ShapeStyleFallback } from "../model/objects/utils/shapeStyleFallback";
 
 /**
- * One of the two paint groups a selection can be searched by, named by the
- * ObjectFeatures flag that enables it: `"stroke"` covers StrokeStyleDoc (color,
- * width, dash, opacity), `"fill"` covers FillStyleDoc. The unit the first-match
- * readers go by (getFirstSelectedWithStyleGroup); the radius and the arrowheads
- * are style groups of their own and have no such reader.
- */
-export type ShapeStyleGroup = "stroke" | "fill";
-
-/**
  * The shape-style fields one object may set, the four style groups flattened the
  * way a doc and a state alike carry them. What every side that resolves a shape
  * style hands over, and the shape a type's own defaults are held in.

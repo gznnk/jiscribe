@@ -23,6 +23,15 @@ const foldToggleValues = <V>(values: readonly V[]): V | undefined => {
 };
 
 /**
+ * The value type a toggle works in: its flipped field's. What
+ * `StyleIntentValueType<K>` reduces to for a toggle, spelled through TOGGLE_FLIPS
+ * so the compiler can see it while the kind is still generic.
+ */
+type ToggledValue<K extends TextToggleIntentKind> = StyleIntentValueType<
+	(typeof TOGGLE_FLIPS)[K]
+>;
+
+/**
  * A format the keyboard flips over the text an editor has selected: the entry
  * reads what those characters are drawn with, computes the opposite, and writes
  * it the way the menus write the same field (runOrSlot) — so a keystroke and a
@@ -49,18 +58,15 @@ export const toggleRunOrSlot = <
 		toggle,
 	}: {
 		slotsOf: SlotsOf<TState>;
-		// `undefined` is already in a toggle's value type (StyleIntentValueType),
-		// but with the kind still generic the compiler cannot see that, so it is
-		// spelled out here.
+		// The flipped field's value type already admits the unset `foldToggleValues`
+		// answers with, but with the kind still generic the compiler cannot see that,
+		// so it is spelled out here.
 		toggle: (
-			current: StyleIntentValueType<K> | undefined,
-		) => NonNullable<StyleIntentValueType<K>>;
+			current: ToggledValue<K> | undefined,
+		) => NonNullable<ToggledValue<K>>;
 	},
-): StyleEntry<TState, StyleIntentValueType<K>> => {
-	const styled = runOrSlot<TState, StyleIntentValueType<K>>(
-		TOGGLE_FLIPS[kind],
-		{ slotsOf },
-	);
+): StyleEntry<TState, ToggledValue<K>> => {
+	const styled = runOrSlot(TOGGLE_FLIPS[kind], { slotsOf });
 
 	return {
 		// The intent carries no value of its own: the entry reads the current one

@@ -44,6 +44,31 @@ const readAtPath = (
 	);
 
 /**
+ * Whether every parent on the way to the field is there — the same walk
+ * `writeAtPath` refuses to fabricate, asked as a question. A plain object is the
+ * only thing it merges into, so an array or a primitive is no parent either.
+ */
+const hasParentsOnPath = (
+	target: Record<string, unknown>,
+	path: readonly string[],
+): boolean => {
+	let parent: unknown = target;
+	for (const key of path.slice(0, -1)) {
+		if (
+			typeof parent !== "object" ||
+			parent === null ||
+			Array.isArray(parent)
+		) {
+			return false;
+		}
+		parent = (parent as Record<string, unknown>)[key];
+	}
+	return (
+		typeof parent === "object" && parent !== null && !Array.isArray(parent)
+	);
+};
+
+/**
  * An intent a shape declares for itself (ExtraStyleProperties): the engine knows
  * neither what it means nor what it is for, only where the declaration says it
  * lands and how to read the value.
@@ -55,7 +80,7 @@ const readAtPath = (
  *
  * @param path - The field written and read, a dotted name split up ("label.fill" → ["label", "fill"]); a nested write merges into the existing parent and answers null when there is none, so an extra under a part the object does not carry (a connector with no label) applies to nothing
  * @param valueType - What the transport string is read as (coerceStyleValue), as the declaration states it
- * @returns The pair, writing the value read and reporting the stored one per object — undefined where the object states nothing, the type declaring the field being what makes the intent reach it at all
+ * @returns The pair, writing the value read and reporting the stored one per object — undefined where the object states nothing, and no value at all where a parent on the path is missing, matching what `apply` would reach
  * @template TState - The state the entry is written against
  */
 export const extraField = <TState extends ObjectState>(
@@ -73,7 +98,14 @@ export const extraField = <TState extends ObjectState>(
 		}
 		return writeAtPath(fields, path, coerced) as TState | null;
 	},
-	read: (object) => [
-		readAtPath(object as unknown as Record<string, unknown>, path) as string,
-	],
+	read: (object) => {
+		const fields = object as unknown as Record<string, unknown>;
+		// No parent to merge into means a write applies to nothing, so the field is
+		// not one of this object's: a row states the value of exactly the objects a
+		// write would reach. The field's own absence is a value (unset).
+		if (!hasParentsOnPath(fields, path)) {
+			return [];
+		}
+		return [readAtPath(fields, path) as string];
+	},
 });

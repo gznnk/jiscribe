@@ -9,13 +9,13 @@ import {
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
 import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
-import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -73,12 +73,21 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	);
 
 	const registries = useCanvasRegistries();
-	const textStyle = readSelectionTextStyle(canvasState, registries);
-	const isTextAlignMixed = isMixedSelectionValue(textStyle.textAlign);
-	const textAlign = selectionValueOr(textStyle.textAlign, undefined) ?? "left";
-	const isVerticalAlignMixed = isMixedSelectionValue(textStyle.verticalAlign);
+	const selectionTextAlign = readSelectionStyle(
+		canvasState,
+		"textAlign",
+		registries,
+	);
+	const selectionVerticalAlign = readSelectionStyle(
+		canvasState,
+		"verticalAlign",
+		registries,
+	);
+	const isTextAlignMixed = isMixedSelectionValue(selectionTextAlign);
+	const textAlign = selectionValueOr(selectionTextAlign, undefined) ?? "left";
+	const isVerticalAlignMixed = isMixedSelectionValue(selectionVerticalAlign);
 	const verticalAlign =
-		selectionValueOr(textStyle.verticalAlign, undefined) ?? "middle";
+		selectionValueOr(selectionVerticalAlign, undefined) ?? "middle";
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

@@ -16,21 +16,18 @@ import { defaultSlotsOf } from "../entries/slotEntry";
 import { toggleRunOrSlot } from "../entries/toggleRunOrSlot";
 
 /** The three entries as textStyleTable builds them, so the toggles under test are the shipped ones. */
-const bold = toggleRunOrSlot<ObjectState, "toggleBold">("toggleBold", {
+const bold = toggleRunOrSlot("toggleBold", {
 	slotsOf: defaultSlotsOf,
 	toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 });
-const italic = toggleRunOrSlot<ObjectState, "toggleItalic">("toggleItalic", {
+const italic = toggleRunOrSlot("toggleItalic", {
 	slotsOf: defaultSlotsOf,
 	toggle: (current) => (current === "italic" ? "normal" : "italic"),
 });
-const underline = toggleRunOrSlot<ObjectState, "toggleUnderline">(
-	"toggleUnderline",
-	{
-		slotsOf: defaultSlotsOf,
-		toggle: (current) => toggleTextDecorationToken(current, "underline"),
-	},
-);
+const underline = toggleRunOrSlot("toggleUnderline", {
+	slotsOf: defaultSlotsOf,
+	toggle: (current) => toggleTextDecorationToken(current, "underline"),
+});
 
 const slotsOf = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;

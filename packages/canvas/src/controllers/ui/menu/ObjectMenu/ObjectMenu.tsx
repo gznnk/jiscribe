@@ -29,6 +29,8 @@ import type {
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
+import { SelectionStyleReaderContext } from "../../../style/SelectionStyleReaderContext";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { isTextAddressed } from "../utils/isTextAddressed";
 
@@ -180,6 +182,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	onOpenReference,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
+	const readStyle = useSelectionStyleReader(canvasState);
 	// Reported to the positioning hook, which holds the menu still while it is
 	// under the pointer — the flat format buttons resize an auto-sized text on
 	// every toggle, and the menu must not walk away between two presses.
@@ -245,7 +248,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				onPointerEnter={handlePointerEnter}
 				onPointerLeave={handlePointerLeave}
 			>
-				{sections}
+				<SelectionStyleReaderContext.Provider value={readStyle}>
+					{sections}
+				</SelectionStyleReaderContext.Provider>
 				{/* The way into the sidebar, after every per-type section. Not a
 				    section itself, so a custom menu cannot drop it and the "nothing
 				    to show" check above does not count it. */}

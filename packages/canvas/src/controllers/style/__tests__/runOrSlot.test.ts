@@ -8,12 +8,11 @@ import {
 	slotPickOf,
 	textRectOf,
 } from "./support/styleFixtures";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { runOrSlot } from "../entries/runOrSlot";
 import { defaultSlotsOf } from "../entries/slotEntry";
 
-const entry = runOrSlot<ObjectState, string>("fontColor", {
+const entry = runOrSlot("fontColor", {
 	slotsOf: defaultSlotsOf,
 });
 

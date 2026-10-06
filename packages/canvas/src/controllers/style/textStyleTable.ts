@@ -1,8 +1,6 @@
-import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { TextType } from "@jiscribe/doc/model/objects/types/text/TextType";
 import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType";
-import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 
 import { runOrSlot } from "./entries/runOrSlot";
 import type { SlotsOf } from "./entries/slotEntry";
@@ -37,54 +35,44 @@ export const textStyleTable = (
 	return {
 		...(textType !== undefined && { textContent: textContentEntry }),
 		...(accepts("fontColor") && {
-			fontColor: runOrSlot<ObjectState, string>("fontColor", { slotsOf }),
+			fontColor: runOrSlot("fontColor", { slotsOf }),
 		}),
 		...(accepts("fontSize") && {
-			fontSize: runOrSlot<ObjectState, number>("fontSize", { slotsOf }),
+			fontSize: runOrSlot("fontSize", { slotsOf }),
 		}),
 		...(accepts("fontFamily") && {
-			fontFamily: runOrSlot<ObjectState, string>("fontFamily", { slotsOf }),
+			fontFamily: runOrSlot("fontFamily", { slotsOf }),
 		}),
 		...(accepts("fontWeight") && {
-			fontWeight: runOrSlot<ObjectState, string>("fontWeight", { slotsOf }),
-			toggleBold: toggleRunOrSlot<ObjectState, "toggleBold">("toggleBold", {
+			fontWeight: runOrSlot("fontWeight", { slotsOf }),
+			toggleBold: toggleRunOrSlot("toggleBold", {
 				slotsOf,
 				toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 			}),
 		}),
 		...(accepts("fontStyle") && {
-			fontStyle: runOrSlot<ObjectState, string>("fontStyle", { slotsOf }),
-			toggleItalic: toggleRunOrSlot<ObjectState, "toggleItalic">(
-				"toggleItalic",
-				{
-					slotsOf,
-					toggle: (current) => (current === "italic" ? "normal" : "italic"),
-				},
-			),
+			fontStyle: runOrSlot("fontStyle", { slotsOf }),
+			toggleItalic: toggleRunOrSlot("toggleItalic", {
+				slotsOf,
+				toggle: (current) => (current === "italic" ? "normal" : "italic"),
+			}),
 		}),
 		...(accepts("textDecoration") && {
-			textDecoration: runOrSlot<ObjectState, string>("textDecoration", {
-				slotsOf,
-			}),
+			textDecoration: runOrSlot("textDecoration", { slotsOf }),
 			// The other decoration line is kept, which is why the toggle takes the
 			// value rather than a boolean.
-			toggleUnderline: toggleRunOrSlot<ObjectState, "toggleUnderline">(
-				"toggleUnderline",
-				{
-					slotsOf,
-					toggle: (current) => toggleTextDecorationToken(current, "underline"),
-				},
-			),
+			toggleUnderline: toggleRunOrSlot("toggleUnderline", {
+				slotsOf,
+				toggle: (current) => toggleTextDecorationToken(current, "underline"),
+			}),
 		}),
 		// The alignments place the whole block, so they land on the slot even while
 		// a stretch of it is selected — there is nothing smaller to apply them to.
 		...(accepts("textAlign") && {
-			textAlign: slotField<ObjectState, TextAlign>("textAlign", { slotsOf }),
+			textAlign: slotField("textAlign", { slotsOf }),
 		}),
 		...(accepts("verticalAlign") && {
-			verticalAlign: slotField<ObjectState, VerticalAlign>("verticalAlign", {
-				slotsOf,
-			}),
+			verticalAlign: slotField("verticalAlign", { slotsOf }),
 		}),
 	};
 };

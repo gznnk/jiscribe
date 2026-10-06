@@ -14,7 +14,7 @@ import { memo, useRef } from "react";
 
 import { HeaderColorPreviewIcon } from "./HeaderColorPreviewIcon";
 import { containerMessagesByLocale } from "../messages/containerMessages";
-import { getSelectedHeaderFill } from "../state/getSelectedHeaderFill";
+import { useSelectedHeaderFill } from "../state/useSelectedHeaderFill";
 
 const SECTION_ID = "header-color";
 
@@ -27,8 +27,6 @@ const SECTION_ID = "header-color";
  * canvas locale (`useCanvasLocale` + `resolveLocaleMessages`), not from core.
  */
 const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
-	objects,
-	selection,
 	openSectionId,
 	onPropertyUpdate,
 }) => {
@@ -36,7 +34,7 @@ const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentColor = getSelectedHeaderFill(selection.objectIds, objects);
+	const currentColor = useSelectedHeaderFill();
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

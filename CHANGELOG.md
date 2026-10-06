@@ -126,6 +126,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: one read API for the selection's style.** A row of the
+  floating menu or the properties sidebar states its value through
+  `useSelectionStyle(name)` (`@jiscribe/canvas/unstable`): what the whole
+  selection says about one style property — `single` / `mixed` / `none` — over
+  exactly the objects a write of the same name would reach, folded with the
+  `selectionValue*` helpers exported beside it. A name the engine owns comes back
+  typed; a name a shape declares for itself (`extraStyleProperties`) comes back
+  `unknown` for the row to narrow (`selectionValueAs`). The first-match readers
+  `getFirstSelectedWithProp` / `getFirstSelectedWithStyleGroup` /
+  `getFirstSelectedPropValue` / `getSelectedShapeStyle` and the `ShapeStyleGroup`
+  they were searched by are gone. What the user sees: a plugin row (a sticky's
+  paper color, a container's header color and band height) now stands for the
+  whole selection rather than its first shape, showing its default where the
+  selection disagrees.
 - **For plugin authors: a text edit is opened on the selection, not alongside
   it.** `textEditState` no longer names its own object or slot: it carries the
   draft and nothing else, and what is being edited is `selection` — the lone
@@ -214,6 +228,16 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **A style row states what the selection carries, and a style write lands
+  where the row said.** Reading and writing a style now take the same walk over
+  the selection, each property through its own entry on the shape's type, so the
+  two cannot disagree about who is addressed. Before, a row read the first shape
+  it found and the write reached every one: a record selected as a whole showed
+  its first slot's font color while the write recolored every slot; the stroke
+  rows were gated by one feature flag for all six fields; and a corner radius
+  or an arrowhead left unset showed a constant of the menu's rather than the
+  type's default. Now a disagreeing selection shows as mixed, and an unset value
+  shows as the type draws it.
 - **Delete on a connector's last waypoints does something again.** A connector's
   `points` holds only the waypoints between its endpoints, yet its vertex floor
   was the polyline's two, so with one or two waypoints left the key was claimed

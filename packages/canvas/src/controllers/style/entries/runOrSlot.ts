@@ -13,6 +13,10 @@ import { slotEntry } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { writeRichTextSlot } from "../../../states/objects/types/TextSlots";
 import type { StyleEntry } from "../StyleEntry";
+import type {
+	StyleIntentValueType,
+	TextSlotStyleIntentKind,
+} from "../StyleIntent";
 
 /**
  * An intent stored on the text slots that a stretch of characters may also carry
@@ -26,16 +30,20 @@ import type { StyleEntry } from "../StyleEntry";
  * stretches it was set on part of it, or the slot would change and nothing would
  * look different. The doc-ops apply the same rule (applyStyle).
  *
- * @param field - The inline field written and read
+ * @param field - The inline field written and read; its name is the intent's, and fixes the value type (StyleIntentValueType)
  * @param options - `slotsOf`: which slots the whole-slot write lands on (defaultSlotsOf for the core types)
  * @returns The pair, following `ctx.textEditRange` when it names the object at hand
  * @template TState - The state the entry is written against
- * @template V - The intent's value type; `field` is expected to carry it
+ * @template K - The field, which decides the value type
  */
-export const runOrSlot = <TState extends ObjectState, V>(
-	field: keyof InlineTextStyle,
+export const runOrSlot = <
+	TState extends ObjectState,
+	K extends TextSlotStyleIntentKind & keyof InlineTextStyle,
+>(
+	field: K,
 	{ slotsOf }: { slotsOf: SlotsOf<TState> },
-): StyleEntry<TState, V> => {
+): StyleEntry<TState, StyleIntentValueType<K>> => {
+	type V = StyleIntentValueType<K>;
 	const wholeSlot = slotEntry<TState, V>(field, slotsOf, (slot, value) => {
 		const inlineKeys = [field];
 		// A row-partitioned slot is stripped row by row, each row being a body of

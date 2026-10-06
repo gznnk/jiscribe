@@ -17,7 +17,6 @@ import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import { readSelectionShapeStyle } from "../../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -65,8 +64,14 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const registries = useCanvasRegistries();
-	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
+	const strokeWidth = readSelectionStyle(
 		canvasState,
+		"strokeWidth",
+		registries,
+	);
+	const strokeDashType = readSelectionStyle(
+		canvasState,
+		"strokeDashType",
 		registries,
 	);
 	const isDashMixed = isMixedSelectionValue(strokeDashType);

@@ -63,8 +63,10 @@ import {
 	commandPart,
 	togglePart,
 } from "../../../gestures/handlers/menu/utils/menuParts";
+import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { SelectionStyleReaderContext } from "../../../style/SelectionStyleReaderContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
@@ -206,6 +208,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
+	const readStyle = useSelectionStyleReader(canvasState);
 	const sections = usePropertyPanelSections(canvasState);
 	const { collapsedSectionIds } = canvasState.propertyPanel;
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
@@ -237,109 +240,111 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 			</PropertyPanelHeader>
 
 			<PropertyPanelBody>
-				<PropertyPanelOverlayHostContext.Provider value={overlayHost}>
-					{showsCanvasSection && (
-						<PropertyPanelAccordion
-							sectionId={CANVAS_SECTION_ID}
-							label={resolvePropertyPanelSectionLabel(
-								CANVAS_SECTION_ID,
-								CANVAS_SECTION_LABEL,
-								messages,
-								locale,
-							)}
-							isExpanded={!collapsedSectionIds.includes(CANVAS_SECTION_ID)}
-						>
-							<BackgroundItem
-								background={canvasState.background}
-								onDocumentUpdate={onDocumentUpdate}
-							/>
-							<ViewPaddingItem
-								view={canvasState.view}
-								onDocumentUpdate={onDocumentUpdate}
-							/>
-							<ViewOpenItem view={canvasState.view} />
-							<ViewScrollItem view={canvasState.view} />
-						</PropertyPanelAccordion>
-					)}
-					{!showsCanvasSection &&
-						sections.map((section) => {
-							const isExpanded = !collapsedSectionIds.includes(section.id);
-							return (
-								<PropertyPanelAccordion
-									key={section.id}
-									sectionId={section.id}
-									label={resolvePropertyPanelSectionLabel(
-										section.id,
-										section.label,
-										messages,
-										locale,
-									)}
-									isExpanded={isExpanded}
-								>
-									{section.items.map((item) => {
-										// A plugin row is handed the narrowed props, not the
-										// controller state the built-in rows read.
-										if (item.type === "custom") {
+				<SelectionStyleReaderContext.Provider value={readStyle}>
+					<PropertyPanelOverlayHostContext.Provider value={overlayHost}>
+						{showsCanvasSection && (
+							<PropertyPanelAccordion
+								sectionId={CANVAS_SECTION_ID}
+								label={resolvePropertyPanelSectionLabel(
+									CANVAS_SECTION_ID,
+									CANVAS_SECTION_LABEL,
+									messages,
+									locale,
+								)}
+								isExpanded={!collapsedSectionIds.includes(CANVAS_SECTION_ID)}
+							>
+								<BackgroundItem
+									background={canvasState.background}
+									onDocumentUpdate={onDocumentUpdate}
+								/>
+								<ViewPaddingItem
+									view={canvasState.view}
+									onDocumentUpdate={onDocumentUpdate}
+								/>
+								<ViewOpenItem view={canvasState.view} />
+								<ViewScrollItem view={canvasState.view} />
+							</PropertyPanelAccordion>
+						)}
+						{!showsCanvasSection &&
+							sections.map((section) => {
+								const isExpanded = !collapsedSectionIds.includes(section.id);
+								return (
+									<PropertyPanelAccordion
+										key={section.id}
+										sectionId={section.id}
+										label={resolvePropertyPanelSectionLabel(
+											section.id,
+											section.label,
+											messages,
+											locale,
+										)}
+										isExpanded={isExpanded}
+									>
+										{section.items.map((item) => {
+											// A plugin row is handed the narrowed props, not the
+											// controller state the built-in rows read.
+											if (item.type === "custom") {
+												return (
+													<item.component
+														key={item.id}
+														objects={canvasState.objects}
+														selection={canvasState.selection}
+														multiSelectGroup={canvasState.multiSelectGroup}
+														onPropertyUpdate={onPropertyUpdate}
+														onTransformUpdate={onTransformUpdate}
+													/>
+												);
+											}
+											const ItemComponent = ITEM_COMPONENTS[item.type];
 											return (
-												<item.component
-													key={item.id}
-													objects={canvasState.objects}
-													selection={canvasState.selection}
-													multiSelectGroup={canvasState.multiSelectGroup}
+												<ItemComponent
+													key={item.type}
+													canvasState={canvasState}
 													onPropertyUpdate={onPropertyUpdate}
 													onTransformUpdate={onTransformUpdate}
 												/>
 											);
-										}
-										const ItemComponent = ITEM_COMPONENTS[item.type];
-										return (
-											<ItemComponent
-												key={item.type}
-												canvasState={canvasState}
-												onPropertyUpdate={onPropertyUpdate}
-												onTransformUpdate={onTransformUpdate}
-											/>
-										);
-									})}
-								</PropertyPanelAccordion>
-							);
-						})}
-					{showsArrangeSection && (
-						<PropertyPanelAccordion
-							sectionId={ARRANGE_SECTION_ID}
-							label={resolvePropertyPanelSectionLabel(
-								ARRANGE_SECTION_ID,
-								ARRANGE_SECTION_LABEL,
-								messages,
-								locale,
-							)}
-							isExpanded={!collapsedSectionIds.includes(ARRANGE_SECTION_ID)}
-						>
-							<StackOrderItem canvasState={canvasState} />
-						</PropertyPanelAccordion>
-					)}
-					{showsMetaSection && (
-						<PropertyPanelAccordion
-							sectionId={META_SECTION_ID}
-							label={resolvePropertyPanelSectionLabel(
-								META_SECTION_ID,
-								META_SECTION_LABEL,
-								messages,
-								locale,
-							)}
-							isExpanded={!collapsedSectionIds.includes(META_SECTION_ID)}
-						>
-							<MetaNameItem
-								canvasState={canvasState}
-								onMetaUpdate={onMetaUpdate}
-							/>
-							<MetaDescriptionItem
-								canvasState={canvasState}
-								onMetaUpdate={onMetaUpdate}
-							/>
-						</PropertyPanelAccordion>
-					)}
-				</PropertyPanelOverlayHostContext.Provider>
+										})}
+									</PropertyPanelAccordion>
+								);
+							})}
+						{showsArrangeSection && (
+							<PropertyPanelAccordion
+								sectionId={ARRANGE_SECTION_ID}
+								label={resolvePropertyPanelSectionLabel(
+									ARRANGE_SECTION_ID,
+									ARRANGE_SECTION_LABEL,
+									messages,
+									locale,
+								)}
+								isExpanded={!collapsedSectionIds.includes(ARRANGE_SECTION_ID)}
+							>
+								<StackOrderItem canvasState={canvasState} />
+							</PropertyPanelAccordion>
+						)}
+						{showsMetaSection && (
+							<PropertyPanelAccordion
+								sectionId={META_SECTION_ID}
+								label={resolvePropertyPanelSectionLabel(
+									META_SECTION_ID,
+									META_SECTION_LABEL,
+									messages,
+									locale,
+								)}
+								isExpanded={!collapsedSectionIds.includes(META_SECTION_ID)}
+							>
+								<MetaNameItem
+									canvasState={canvasState}
+									onMetaUpdate={onMetaUpdate}
+								/>
+								<MetaDescriptionItem
+									canvasState={canvasState}
+									onMetaUpdate={onMetaUpdate}
+								/>
+							</PropertyPanelAccordion>
+						)}
+					</PropertyPanelOverlayHostContext.Provider>
+				</SelectionStyleReaderContext.Provider>
 			</PropertyPanelBody>
 		</PropertyPanelContainer>
 	);

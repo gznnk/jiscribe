@@ -30,7 +30,6 @@ import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
-import { readSelectionTextStyle } from "../../utils/readSelectionTextStyle";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -56,11 +55,15 @@ const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
 	const registries = useCanvasRegistries();
-	const textStyle = readSelectionTextStyle(canvasState, registries);
+	const selectionFontFamily = readSelectionStyle(
+		canvasState,
+		"fontFamily",
+		registries,
+	);
 	// An unset family draws in the default one, so that is the entry to mark active.
 	const fontFamily =
-		selectionValueOr(textStyle.fontFamily, undefined) ?? DEFAULT_FONT_FAMILY;
-	const isMixed = isMixedSelectionValue(textStyle.fontFamily);
+		selectionValueOr(selectionFontFamily, undefined) ?? DEFAULT_FONT_FAMILY;
+	const isMixed = isMixedSelectionValue(selectionFontFamily);
 
 	return (
 		<PropertyRow label={messages.menuFontFamily}>
@@ -91,7 +94,7 @@ const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { fontSize } = readSelectionTextStyle(canvasState, registries);
+	const fontSize = readSelectionStyle(canvasState, "fontSize", registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowSize}>
@@ -122,7 +125,7 @@ const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { fontColor } = readSelectionTextStyle(canvasState, registries);
+	const fontColor = readSelectionStyle(canvasState, "fontColor", registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -155,13 +158,21 @@ const TextFormatItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const textStyle = readSelectionTextStyle(canvasState, registries);
 	// Each button is its own toggle, so mixing is read per field: a selection that
 	// disagrees only about the weight still lights italic on the ones it agrees on.
 	// A field it disagrees about reads as off, so one press brings all of it on.
-	const fontWeight = selectionValueOr(textStyle.fontWeight, undefined);
-	const fontStyle = selectionValueOr(textStyle.fontStyle, undefined);
-	const textDecoration = selectionValueOr(textStyle.textDecoration, undefined);
+	const fontWeight = selectionValueOr(
+		readSelectionStyle(canvasState, "fontWeight", registries),
+		undefined,
+	);
+	const fontStyle = selectionValueOr(
+		readSelectionStyle(canvasState, "fontStyle", registries),
+		undefined,
+	);
+	const textDecoration = selectionValueOr(
+		readSelectionStyle(canvasState, "textDecoration", registries),
+		undefined,
+	);
 	const isBold = isBoldFontWeight(fontWeight);
 	const isItalic = fontStyle === "italic";
 	const isUnderline = hasTextDecorationToken(textDecoration, "underline");
@@ -222,10 +233,11 @@ const TextAlignItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const selectionTextAlign = readSelectionTextStyle(
+	const selectionTextAlign = readSelectionStyle(
 		canvasState,
+		"textAlign",
 		registries,
-	).textAlign;
+	);
 	const textAlign = selectionValueOr(selectionTextAlign, undefined) ?? "left";
 
 	return (
@@ -268,10 +280,11 @@ const VerticalAlignItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const selectionVerticalAlign = readSelectionTextStyle(
+	const selectionVerticalAlign = readSelectionStyle(
 		canvasState,
+		"verticalAlign",
 		registries,
-	).verticalAlign;
+	);
 	const verticalAlign =
 		selectionValueOr(selectionVerticalAlign, undefined) ?? "middle";
 
