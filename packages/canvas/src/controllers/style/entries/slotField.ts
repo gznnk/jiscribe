@@ -1,9 +1,11 @@
-import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-
 import type { SlotsOf } from "./slotEntry";
 import { slotEntry } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StyleEntry } from "../StyleEntry";
+import type {
+	StyleIntentValueType,
+	TextSlotStyleIntentKind,
+} from "../StyleIntent";
 
 /**
  * An intent stored as one field of the text slots — where a shape's typography
@@ -15,17 +17,20 @@ import type { StyleEntry } from "../StyleEntry";
  * slot's typography, InlineTextStyle) takes `runOrSlot` instead, which also has
  * to answer for the runs that override it.
  *
- * @param field - The slot field written and read; one the text-style defaults answer for
+ * @param field - The slot field written and read, one the text-style defaults answer for; its name is the intent's, and fixes the value type (StyleIntentValueType)
  * @param options - `slotsOf`: which slots the intent lands on (defaultSlotsOf for the core types)
  * @returns The pair, writing `value` as-is and reporting one value per addressed slot
  * @template TState - The state the entry is written against
- * @template V - The intent's value type; `field` is expected to carry it
+ * @template K - The field, which decides the value type
  */
-export const slotField = <TState extends ObjectState, V>(
-	field: keyof TextSlotStyle,
+export const slotField = <
+	TState extends ObjectState,
+	K extends TextSlotStyleIntentKind,
+>(
+	field: K,
 	{ slotsOf }: { slotsOf: SlotsOf<TState> },
-): StyleEntry<TState, V> =>
-	slotEntry<TState, V>(field, slotsOf, (slot, value) =>
+): StyleEntry<TState, StyleIntentValueType<K>> =>
+	slotEntry<TState, StyleIntentValueType<K>>(field, slotsOf, (slot, value) =>
 		Object.is((slot as Record<string, unknown>)[field], value)
 			? slot
 			: { ...slot, [field]: value },

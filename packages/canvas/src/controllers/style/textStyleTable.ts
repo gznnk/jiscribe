@@ -8,7 +8,6 @@ import { slotField } from "./entries/slotField";
 import { textContentEntry } from "./entries/textContentEntry";
 import { toggleRunOrSlot } from "./entries/toggleRunOrSlot";
 import type { StyleTable } from "./StyleEntry";
-import type { StyleIntentValueType } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isBoldFontWeight } from "../utils/isBoldFontWeight";
 import { toggleTextDecorationToken } from "../utils/toggleTextDecorationToken";
@@ -36,74 +35,44 @@ export const textStyleTable = (
 	return {
 		...(textType !== undefined && { textContent: textContentEntry }),
 		...(accepts("fontColor") && {
-			fontColor: runOrSlot<ObjectState, StyleIntentValueType<"fontColor">>(
-				"fontColor",
-				{ slotsOf },
-			),
+			fontColor: runOrSlot("fontColor", { slotsOf }),
 		}),
 		...(accepts("fontSize") && {
-			fontSize: runOrSlot<ObjectState, StyleIntentValueType<"fontSize">>(
-				"fontSize",
-				{ slotsOf },
-			),
+			fontSize: runOrSlot("fontSize", { slotsOf }),
 		}),
 		...(accepts("fontFamily") && {
-			fontFamily: runOrSlot<ObjectState, StyleIntentValueType<"fontFamily">>(
-				"fontFamily",
-				{ slotsOf },
-			),
+			fontFamily: runOrSlot("fontFamily", { slotsOf }),
 		}),
 		...(accepts("fontWeight") && {
-			fontWeight: runOrSlot<ObjectState, StyleIntentValueType<"fontWeight">>(
-				"fontWeight",
-				{ slotsOf },
-			),
-			toggleBold: toggleRunOrSlot<ObjectState, "toggleBold">("toggleBold", {
+			fontWeight: runOrSlot("fontWeight", { slotsOf }),
+			toggleBold: toggleRunOrSlot("toggleBold", {
 				slotsOf,
 				toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 			}),
 		}),
 		...(accepts("fontStyle") && {
-			fontStyle: runOrSlot<ObjectState, StyleIntentValueType<"fontStyle">>(
-				"fontStyle",
-				{ slotsOf },
-			),
-			toggleItalic: toggleRunOrSlot<ObjectState, "toggleItalic">(
-				"toggleItalic",
-				{
-					slotsOf,
-					toggle: (current) => (current === "italic" ? "normal" : "italic"),
-				},
-			),
+			fontStyle: runOrSlot("fontStyle", { slotsOf }),
+			toggleItalic: toggleRunOrSlot("toggleItalic", {
+				slotsOf,
+				toggle: (current) => (current === "italic" ? "normal" : "italic"),
+			}),
 		}),
 		...(accepts("textDecoration") && {
-			textDecoration: runOrSlot<
-				ObjectState,
-				StyleIntentValueType<"textDecoration">
-			>("textDecoration", { slotsOf }),
+			textDecoration: runOrSlot("textDecoration", { slotsOf }),
 			// The other decoration line is kept, which is why the toggle takes the
 			// value rather than a boolean.
-			toggleUnderline: toggleRunOrSlot<ObjectState, "toggleUnderline">(
-				"toggleUnderline",
-				{
-					slotsOf,
-					toggle: (current) => toggleTextDecorationToken(current, "underline"),
-				},
-			),
+			toggleUnderline: toggleRunOrSlot("toggleUnderline", {
+				slotsOf,
+				toggle: (current) => toggleTextDecorationToken(current, "underline"),
+			}),
 		}),
 		// The alignments place the whole block, so they land on the slot even while
 		// a stretch of it is selected — there is nothing smaller to apply them to.
 		...(accepts("textAlign") && {
-			textAlign: slotField<ObjectState, StyleIntentValueType<"textAlign">>(
-				"textAlign",
-				{ slotsOf },
-			),
+			textAlign: slotField("textAlign", { slotsOf }),
 		}),
 		...(accepts("verticalAlign") && {
-			verticalAlign: slotField<
-				ObjectState,
-				StyleIntentValueType<"verticalAlign">
-			>("verticalAlign", { slotsOf }),
+			verticalAlign: slotField("verticalAlign", { slotsOf }),
 		}),
 	};
 };
