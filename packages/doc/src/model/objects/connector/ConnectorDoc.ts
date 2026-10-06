@@ -45,7 +45,7 @@ export const CONNECTOR_DOC_DEFAULTS: Required<
 
 /**
  * Connector-specific styleable properties beyond the ObjectFeatures flags
- * (see ExtraStylePropertyRegistry). The `label.` prefix is a nested write path
+ * (see ExtraStylePropertyDescriptor). The `label.` prefix is a nested write path
  * into `connector.label`; a connector without a label ignores these (no-op).
  */
 export const ConnectorExtraStyleProperties = {

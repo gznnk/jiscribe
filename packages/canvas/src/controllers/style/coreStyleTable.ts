@@ -29,11 +29,10 @@ export type CoreStyleTableFacts = {
  * flags are read once, here, when the table is built, and never again by whoever
  * applies or reports a style.
  *
- * Every style is derived now; what still goes through StylePropertyRegistry is
- * the shapes' own ExtraStyleProperties. The declaration that lets a type whose
- * storage differs from the core guess (a table's fill, which lives on the cells)
- * replace an entry rather than name a property of its own comes with a later
- * stage.
+ * What a type adds to this is its own declarations (extraStyleTable), which name
+ * fields of their own. The declaration that lets a type whose storage differs
+ * from the core guess (a table's fill, which lives on the cells) replace an entry
+ * rather than name a field of its own comes with a later stage.
  *
  * @param features - The type's feature flags, as the object states carry them
  * @param facts - What the definition says beyond its flags (CoreStyleTableFacts)

@@ -20,7 +20,7 @@ const lockOf = (object: ObjectState): unknown =>
  * lock it was drawn with, since a drag on the group's handles reads the group's
  * own. The lock of a multi-selection is not an object's at all — it belongs to
  * the box drawn around the selection, which no entry can reach (see
- * StylePropertyRegistry).
+ * applyStyleProperty).
  */
 export const lockAspectRatioEntry: StyleEntry<ObjectState, boolean> = {
 	apply: (object, _pick, locked, ctx) => {

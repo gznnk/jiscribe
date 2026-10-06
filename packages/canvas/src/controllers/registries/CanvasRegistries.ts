@@ -26,7 +26,6 @@ import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandler
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import type { ObjectStyleRegistry } from "../style/ObjectStyleRegistry";
-import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
@@ -97,7 +96,6 @@ export type CanvasRegistries = {
 	 * lands in its data, so writing a style and reporting it read one answer.
 	 */
 	objectStyle: ObjectStyleRegistry;
-	styleProperty: StylePropertyRegistry;
 };
 
 /**

@@ -12,6 +12,7 @@ import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { applyStyleProperty } from "../../../../../style/applyStyleProperty";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -403,7 +404,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selection: selectionOf([connectorId]),
 			};
 
-			const dashed = registries.styleProperty.apply(
+			const dashed = applyStyleProperty(
 				selected,
 				"strokeDashType",
 				"dashed",
@@ -413,7 +414,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
 			).toBe("dashed");
 
-			const colored = registries.styleProperty.apply(
+			const colored = applyStyleProperty(
 				selected,
 				"stroke",
 				"#ff0000",
@@ -423,7 +424,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				"#ff0000",
 			);
 
-			const widened = registries.styleProperty.apply(
+			const widened = applyStyleProperty(
 				selected,
 				"strokeWidth",
 				"7",

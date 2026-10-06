@@ -54,21 +54,29 @@ export type StyleEntry<TState extends ObjectState, V> = {
 };
 
 /**
- * What one type answers for, by intent. A kind left out is one the type does not
- * take — the gate at its coarsest, before any entry is called.
- *
- * @template TState - The state the entries are written against
- */
-export type StyleTable<TState extends ObjectState> = {
-	[K in StyleIntentKind]?: StyleEntry<TState, StyleValueOf<K>>;
-};
-
-/**
  * An entry with its value type erased, the shape the walkers call one through:
  * they take it out of a table by a kind the intent carries at runtime, so the
  * value and the entry cannot be correlated statically.
  */
 export type ErasedStyleEntry = StyleEntry<ObjectState, unknown>;
+
+/**
+ * What one type answers for, by intent. A kind left out is one the type does not
+ * take — the gate at its coarsest, before any entry is called.
+ *
+ * The engine's own kinds are typed one by one, each entry bound to that intent's
+ * value type. Any other name is a shape's own (extraStyleTable), whose value is
+ * the transport string the declaration is read against rather than a type the
+ * engine knows, so those cannot be typed per kind and sit under the index
+ * signature instead.
+ *
+ * @template TState - The state the entries are written against
+ */
+export type StyleTable<TState extends ObjectState> = {
+	[K in StyleIntentKind]?: StyleEntry<TState, StyleValueOf<K>>;
+} & {
+	[extraKind: string]: ErasedStyleEntry | undefined;
+};
 
 /**
  * The stretch of text an open editor has selected, as the entries are handed it:

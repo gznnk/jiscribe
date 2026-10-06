@@ -38,7 +38,7 @@ export const IconFeatures = {
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
-/** Icon-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyRegistry). */
+/** Icon-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyDescriptor). */
 export const IconExtraStyleProperties = {
 	icon: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;

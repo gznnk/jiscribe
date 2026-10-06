@@ -7,8 +7,7 @@ import {
 	graftStyleTextEdit,
 	resolveStyleTextEdit,
 } from "./resolveStyleTextEdit";
-import type { ErasedStyleEntry } from "./StyleEntry";
-import type { StyleIntent } from "./StyleIntent";
+import type { ExtraStyleIntent, StyleIntent } from "./StyleIntent";
 import { styleIntentValue } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
@@ -64,13 +63,13 @@ const redraftTextEdit = (
  * wrote elsewhere on the object.
  *
  * @param state - The state to write into; its selection decides who is reached
- * @param intent - What to reflect, with its value
+ * @param intent - What to reflect, with its value; one of the engine's own kinds or a name a shape declared for itself (ExtraStyleIntent), the two being looked up in the same table
  * @param registries - The canvas's style tables and the defaults its entries resolve through
  * @returns The next state, or `state` itself (same reference) when no object changed
  */
 export const applyStyleIntent = (
 	state: CanvasControllerState,
-	intent: StyleIntent,
+	intent: StyleIntent | ExtraStyleIntent,
 	registries: StyleIntentRegistries,
 ): CanvasControllerState => {
 	const targets = collectStyleTargets(state);
@@ -90,8 +89,7 @@ export const applyStyleIntent = (
 		// Read through the view, so a target the walk has already written to — a
 		// group and a member of it can both be selected — is the one written again.
 		const current = updatedObjects[object.id];
-		const entry = registries.objectStyle.get(current.type)?.[intent.kind] as
-			ErasedStyleEntry | undefined;
+		const entry = registries.objectStyle.get(current.type)?.[intent.kind];
 		if (entry === undefined) {
 			continue;
 		}

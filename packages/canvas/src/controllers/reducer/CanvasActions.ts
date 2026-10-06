@@ -173,7 +173,7 @@ export type EndTextEditAction = {
 
 /**
  * Style property update action - a style property written through
- * StylePropertyRegistry with live preview and commit, from the inputs that fire
+ * applyStyleProperty with live preview and commit, from the inputs that fire
  * no gesture: the ObjectMenu's number input and keyboard-driven slider, and the
  * properties sidebar's callback-writing controls.
  */

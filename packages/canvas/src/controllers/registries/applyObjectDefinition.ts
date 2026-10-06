@@ -104,6 +104,7 @@ import { createTextSlotPartKindDefinition } from "../selection/createTextSlotPar
 import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
 import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
 import { coreStyleTable } from "../style/coreStyleTable";
+import { extraStyleTable } from "../style/extraStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
@@ -459,12 +460,15 @@ export const applyObjectDefinition = (
 	registries.objectComponent.register(type, definition.component);
 	registries.objectTextStyleDefaults.registerDefinition(type, definition);
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
-	registries.objectStyle.register(
-		type,
-		coreStyleTable(definition.features, {
+	// A shape's own declarations cannot shadow the derived entries: a name the
+	// engine's own vocabulary owns is refused here (extraStyleTable throws), so
+	// the spread order never decides anything.
+	registries.objectStyle.register(type, {
+		...coreStyleTable(definition.features, {
 			hasInsetTextRegion: hasInsetTextRegionType(definition),
 		}),
-	);
+		...extraStyleTable(type, definition.extraStyleProperties),
+	});
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {
 		registries.objectAutoHeight.register(type);
@@ -560,13 +564,6 @@ export const applyObjectDefinition = (
 	if (partKinds.length > 0) {
 		registries.objectPartKind.register(type, partKinds);
 	}
-	if (definition.extraStyleProperties) {
-		registries.styleProperty.registerExtras(
-			type,
-			definition.extraStyleProperties,
-		);
-	}
-
 	if (definition.factory) {
 		registries.objectFactory.register(type, definition.factory);
 	} else if (definition.stencils) {

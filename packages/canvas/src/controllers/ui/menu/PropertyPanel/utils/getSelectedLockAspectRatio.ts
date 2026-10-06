@@ -9,7 +9,7 @@ import { selectionValueOrFirst } from "../../utils/SelectionValue";
  *
  * A multi-selection locks the box drawn around it, so that box's own flag is the
  * answer and the members have no say — the same precedence the write follows
- * (StylePropertyRegistry). Otherwise the selected objects answer through the
+ * (applyStyleProperty). Otherwise the selected objects answer through the
  * style intent, a selection disagreeing showing the first of their values the way
  * it showed the first selected object's before.
  *

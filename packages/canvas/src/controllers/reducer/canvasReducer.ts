@@ -21,6 +21,8 @@ import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { reconcileSelection } from "../selection/reconcileSelection";
 import { applyStyleIntent } from "../style/applyStyleIntent";
+import { applyStyleProperty } from "../style/applyStyleProperty";
+import type { StyleIntent } from "../style/StyleIntent";
 import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
@@ -266,7 +268,9 @@ export const createCanvasReducer =
 				// (2) applyStylePropertyPart: via the gesture system (set: / slider:), from the
 				//     ObjectMenu's and the sidebar's buttons and sliders (ObjectMenuHandler /
 				//     PropertyPanelHandler). That path does not go through here.
-				const updated = registries.styleProperty.apply(
+				// Both read the name and the string into an intent the same way
+				// (applyStyleProperty); what differs is only the commit tail below.
+				const updated = applyStyleProperty(
 					state,
 					action.property,
 					action.value,
@@ -500,11 +504,11 @@ export const createCanvasReducer =
 			}
 
 			case "TOGGLE_TEXT_FORMAT": {
-				const styled = applyStyleIntent(
-					state,
-					{ kind: action.kind },
-					registries,
-				);
+				// Stated as an intent of the engine's own vocabulary: a kind alone does
+				// not say which, a shape's own intent being a kind and a value
+				// (ExtraStyleIntent).
+				const intent: StyleIntent = { kind: action.kind };
+				const styled = applyStyleIntent(state, intent, registries);
 				if (styled === state) {
 					return state;
 				}
