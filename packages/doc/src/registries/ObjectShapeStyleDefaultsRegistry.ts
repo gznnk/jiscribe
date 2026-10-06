@@ -40,12 +40,10 @@ export type ObjectShapeStyleDefaults = Readonly<ShapeStyleDocFields>;
  * One shape's style fields with every step of the resolution already taken, as
  * {@link ObjectShapeStyleDefaultsRegistry.resolveShapeStyle} returns it. The
  * colors may still be `"auto"`, which is the drawing side's to resolve against
- * the theme (resolveAutoColor). The dash alone stays optional: nobody declares a
- * solid one, so there is nothing to resolve an absent dash to
- * (UNDECLARED_STROKE_DASH is what a reader reports for it instead).
+ * the theme (resolveAutoColor). Resolving is a read: an undeclared dash reads as
+ * solid here and stays undeclared in the document.
  */
-export type ResolvedShapeStyle = ShapeStyleFallback &
-	Pick<StrokeStyleDoc, "strokeDashType">;
+export type ResolvedShapeStyle = ShapeStyleFallback;
 
 /**
  * The draw-time shape-style defaults of one type, read out of the creation
@@ -148,7 +146,7 @@ export class ObjectShapeStyleDefaultsRegistry {
 	 *
 	 * @param type - The object's type; one with nothing registered contributes no defaults
 	 * @param own - The object's own style fields; a field carrying undefined does not shadow the type's default
-	 * @returns Every field but the dash always answered; the dash only where one side sets it
+	 * @returns Every field answered
 	 */
 	resolveShapeStyle(
 		type: ObjectType,
@@ -161,7 +159,10 @@ export class ObjectShapeStyleDefaultsRegistry {
 				own.strokeWidth ??
 				typeDefaults?.strokeWidth ??
 				SHAPE_STYLE_FALLBACK.strokeWidth,
-			strokeDashType: own.strokeDashType ?? typeDefaults?.strokeDashType,
+			strokeDashType:
+				own.strokeDashType ??
+				typeDefaults?.strokeDashType ??
+				SHAPE_STYLE_FALLBACK.strokeDashType,
 			strokeOpacity:
 				own.strokeOpacity ??
 				typeDefaults?.strokeOpacity ??

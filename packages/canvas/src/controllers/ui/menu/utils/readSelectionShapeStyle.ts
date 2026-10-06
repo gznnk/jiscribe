@@ -11,7 +11,7 @@ export type SelectionShapeStyle = {
 	stroke: SelectionValue<string>;
 	/** Stroke width in pixels. */
 	strokeWidth: SelectionValue<number>;
-	/** Dash pattern, with an undeclared one read as `"solid"` (UNDECLARED_STROKE_DASH). */
+	/** Dash pattern, an undeclared one read as solid (SHAPE_STYLE_FALLBACK). */
 	strokeDashType: SelectionValue<StrokeDashType>;
 	/** How opaque the stroke is drawn, 0..1 as the document states it. */
 	strokeOpacity: SelectionValue<number>;

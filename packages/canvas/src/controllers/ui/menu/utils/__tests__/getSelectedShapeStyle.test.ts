@@ -28,7 +28,7 @@ describe("getSelectedShapeStyle", () => {
 		expect(getSelectedShapeStyle([], {}, shapeStyleDefaults, "stroke")).toEqual(
 			{
 				...SHAPE_STYLE_FALLBACK,
-				strokeDashType: undefined,
+				strokeDashType: SHAPE_STYLE_FALLBACK.strokeDashType,
 			},
 		);
 	});
@@ -67,7 +67,7 @@ describe("getSelectedShapeStyle", () => {
 		};
 		expect(
 			getSelectedShapeStyle(["a"], objects, shapeStyleDefaults, "stroke"),
-		).toEqual({ ...SHAPE_STYLE_FALLBACK, strokeDashType: undefined });
+		).toEqual(SHAPE_STYLE_FALLBACK);
 	});
 
 	it("falls to the type's own defaults when the document wrote nothing", () => {

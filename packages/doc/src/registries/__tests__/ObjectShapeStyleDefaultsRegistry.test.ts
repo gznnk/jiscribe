@@ -7,6 +7,7 @@ import {
 } from "../../model/objects/base/FillStyleDoc";
 import { DEFAULT_CORNER_RADIUS } from "../../model/objects/base/RadiusStyleDoc";
 import {
+	DEFAULT_STROKE_DASH,
 	DEFAULT_STROKE_OPACITY,
 	DEFAULT_STROKE_WIDTH,
 } from "../../model/objects/base/StrokeStyleDoc";
@@ -107,7 +108,7 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 		expect(registry.resolveShapeStyle("connector", {})).toEqual({
 			stroke: SHAPE_STYLE_FALLBACK.stroke,
 			strokeWidth: DEFAULT_STROKE_WIDTH,
-			strokeDashType: undefined,
+			strokeDashType: DEFAULT_STROKE_DASH,
 			strokeOpacity: DEFAULT_STROKE_OPACITY,
 			fill: DEFAULT_FILL,
 			fillOpacity: DEFAULT_FILL_OPACITY,
@@ -133,7 +134,7 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 		).toEqual({
 			stroke: AUTO_COLOR,
 			strokeWidth: 1,
-			strokeDashType: undefined,
+			strokeDashType: DEFAULT_STROKE_DASH,
 			strokeOpacity: DEFAULT_STROKE_OPACITY,
 			fill: "#ff0000",
 			fillOpacity: DEFAULT_FILL_OPACITY,
@@ -150,10 +151,10 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 		).toBe(4);
 	});
 
-	it("leaves the dash unset when neither side declares one", () => {
-		expect(
-			registry.resolveShapeStyle("rect", {}).strokeDashType,
-		).toBeUndefined();
+	it("reads an undeclared dash as solid", () => {
+		expect(registry.resolveShapeStyle("rect", {}).strokeDashType).toBe(
+			DEFAULT_STROKE_DASH,
+		);
 	});
 
 	it("answers the object's own dash", () => {

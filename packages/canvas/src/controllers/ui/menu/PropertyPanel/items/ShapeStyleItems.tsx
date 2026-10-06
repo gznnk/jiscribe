@@ -1,7 +1,4 @@
-import {
-	SHAPE_STYLE_FALLBACK,
-	UNDECLARED_STROKE_DASH,
-} from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
@@ -171,7 +168,10 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
 	const { strokeDashType } = readSelectionShapeStyle(canvasState, registries);
-	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
+	const dashType = selectionValueOr(
+		strokeDashType,
+		SHAPE_STYLE_FALLBACK.strokeDashType,
+	);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowType}>

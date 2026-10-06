@@ -1,7 +1,6 @@
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
-import { UNDECLARED_STROKE_DASH } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 
 import { objectField } from "./entries/objectField";
 import { defaultSlotsOf } from "./entries/slotEntry";
@@ -33,12 +32,7 @@ export const coreStyleTable = (
 	...(features.stroke && {
 		stroke: objectField<ObjectState, string>("stroke"),
 		strokeWidth: objectField<ObjectState, number>("strokeWidth"),
-		// The one field resolution can leave absent, so the entry is the place that
-		// names what an undeclared dash is reported as.
-		strokeDashType: objectField<ObjectState, StrokeDashType>(
-			"strokeDashType",
-			UNDECLARED_STROKE_DASH,
-		),
+		strokeDashType: objectField<ObjectState, StrokeDashType>("strokeDashType"),
 		strokeOpacity: objectField<ObjectState, number>("strokeOpacity"),
 	}),
 	// The intent is named after what it means, the field after the SVG attribute

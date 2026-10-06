@@ -1,4 +1,3 @@
-import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
@@ -70,29 +69,6 @@ describe("objectField", () => {
 			expect(
 				entry.read(rectOf("a", { fill: 7 }), null, withDefaults(defaults)),
 			).toEqual(["#fff"]);
-		});
-	});
-
-	// Resolution answers every field but the dash, which it leaves absent where
-	// nobody declares one — the one case an entry needs a value of its own.
-	describe("read of a field resolution can leave absent", () => {
-		const dash = objectField<ObjectState, StrokeDashType>(
-			"strokeDashType",
-			"solid",
-		);
-
-		it("nothing anywhere declares one → what the entry was built with", () => {
-			expect(dash.read(rectOf("a"), null, withDefaults())).toEqual(["solid"]);
-		});
-
-		it("the object's own dash wins over it", () => {
-			expect(
-				dash.read(
-					rectOf("a", { strokeDashType: "dotted" }),
-					null,
-					withDefaults(),
-				),
-			).toEqual(["dotted"]);
 		});
 	});
 });

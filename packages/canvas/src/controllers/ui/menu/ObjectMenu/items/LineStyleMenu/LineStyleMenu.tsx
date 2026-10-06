@@ -1,7 +1,4 @@
-import {
-	SHAPE_STYLE_FALLBACK,
-	UNDECLARED_STROKE_DASH,
-} from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
@@ -56,7 +53,10 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 		registries,
 	);
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
-	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
+	const dashType = selectionValueOr(
+		strokeDashType,
+		SHAPE_STYLE_FALLBACK.strokeDashType,
+	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
