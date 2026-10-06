@@ -9,7 +9,7 @@ import { memo } from "react";
 
 import { containerMessagesByLocale } from "../messages/containerMessages";
 import { CONTAINER_MIN_HEADER_HEIGHT } from "../schema/ContainerDoc";
-import { getSelectedHeaderHeight } from "../state/getSelectedHeaderHeight";
+import { useSelectedHeaderHeight } from "../state/useSelectedHeaderHeight";
 
 /**
  * Header band height row of the properties sidebar (container only), sitting
@@ -24,17 +24,16 @@ import { getSelectedHeaderHeight } from "../state/getSelectedHeaderHeight";
  * multi-selection has no single height to bound against.
  */
 const HeaderHeightPropertyComponent: React.FC<PropertyPanelItemProps> = ({
-	objects,
-	selection,
 	onPropertyUpdate,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
+	const headerHeight = useSelectedHeaderHeight();
 
 	return (
 		<PropertyRow label={messages.propertyRowHeader}>
 			<PropertyNumberField
-				value={getSelectedHeaderHeight(selection.objectIds, objects)}
+				value={headerHeight}
 				min={CONTAINER_MIN_HEADER_HEIGHT}
 				ariaLabel={messages.fieldHeaderHeight}
 				testId="property-field:headerHeight"

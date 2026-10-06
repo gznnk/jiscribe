@@ -38,6 +38,15 @@ describe("hasSelectedConnectorLabelText", () => {
 		).toBe(false);
 	});
 
+	it("is false when the selected id names no object", () => {
+		expect(
+			hasSelectedConnectorLabelText({
+				selection: selectionOf(["missing"]),
+				objects: {},
+			}),
+		).toBe(false);
+	});
+
 	it("is false when no connector is selected", () => {
 		expect(
 			hasSelectedConnectorLabelText({

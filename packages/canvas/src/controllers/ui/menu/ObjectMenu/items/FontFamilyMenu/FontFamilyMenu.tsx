@@ -5,8 +5,8 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
-import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -46,13 +46,16 @@ const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
 	);
 
 	const registries = useCanvasRegistries();
-	const textStyle = readSelectionTextStyle(canvasState, registries);
+	const selectionFontFamily = readSelectionStyle(
+		canvasState,
+		"fontFamily",
+		registries,
+	);
 	// An unset family draws in the default one, so that is the entry to mark
 	// active; a selection drawn in several marks none.
-	const fontFamily = isMixedSelectionValue(textStyle.fontFamily)
+	const fontFamily = isMixedSelectionValue(selectionFontFamily)
 		? undefined
-		: (selectionValueOr(textStyle.fontFamily, undefined) ??
-			DEFAULT_FONT_FAMILY);
+		: (selectionValueOr(selectionFontFamily, undefined) ?? DEFAULT_FONT_FAMILY);
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

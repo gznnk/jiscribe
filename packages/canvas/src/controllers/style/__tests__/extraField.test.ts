@@ -113,10 +113,24 @@ describe("extraField", () => {
 			]);
 		});
 
-		it("a nested field whose parent is absent reads as unset too", () => {
-			expect(labelFill.read(connectorOf("c"), null, contextOf())).toEqual([
-				undefined,
-			]);
+		it("a nested field whose parent is absent → no value, as a write reaches nothing", () => {
+			expect(labelFill.read(connectorOf("c"), null, contextOf())).toEqual([]);
+		});
+
+		it("a parent that is not a plain object → no value either", () => {
+			expect(
+				labelFill.read(connectorOf("c", { label: ["Yes"] }), null, contextOf()),
+			).toEqual([]);
+		});
+
+		it("a nested field the parent states nothing for reads as unset", () => {
+			expect(
+				labelFill.read(
+					connectorOf("c", { label: { text: "Yes" } }),
+					null,
+					contextOf(),
+				),
+			).toEqual([undefined]);
 		});
 	});
 });

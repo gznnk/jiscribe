@@ -233,7 +233,10 @@ CodeMirror の `EditorView`）。
 その隣に置く入力部品（`PropertyNumberField` / `PropertyColorField` など）、
 単体で 1 行になる `PropertyCheckbox`（セクションの左端から、ボックスと右側の
 ラベル）がある。キットに何があるかは `packages/canvas/src/unstable.ts` の export
-が正本。
+が正本。行が**述べる**値はキット唯一の読み取り API `useSelectionStyle(name)` から
+取る。そのプロパティについて選択全体が何を言っているかを、同名の書き込みが届くのと
+まったく同じ object について返すので、プラグインの行も組み込みの行と同じように
+mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参照）。
 書く前に知っておく規約は 2 つ:
 
 - 複数型のマージが行を突き合わせる鍵は `id` である。同じ行を出す型どうしは同じ
@@ -253,7 +256,8 @@ CodeMirror の `EditorView`）。
 `PropertyColorField` から `onPropertyUpdate` 経由で `headerFill` を書き、Fill
 セクションの本体色の下に並ぶ。`header-height` 行は `PropertyNumberField` から
 extra スタイルプロパティ `headerHeight` を書き、Layout セクションのサイズの下に
-並ぶ。文言はどちらもプラグイン自身の辞書から取る。
+並ぶ。現在値はどちらも `useSelectionStyle` で述べ、宣言したプロパティが返す
+untyped な値を自前で絞る。文言はどちらもプラグイン自身の辞書から取る。
 
 **i18n。**プラグインが足したコマンドは自分の `label` をロケール別に宣言する。
 プラグインが自分で描く文字列はプラグインが持つ辞書から取り、`useCanvasLocale` /

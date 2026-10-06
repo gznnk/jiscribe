@@ -1,8 +1,6 @@
-import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { TextType } from "@jiscribe/doc/model/objects/types/text/TextType";
 import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType";
-import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 
 import { runOrSlot } from "./entries/runOrSlot";
 import type { SlotsOf } from "./entries/slotEntry";
@@ -10,6 +8,7 @@ import { slotField } from "./entries/slotField";
 import { textContentEntry } from "./entries/textContentEntry";
 import { toggleRunOrSlot } from "./entries/toggleRunOrSlot";
 import type { StyleTable } from "./StyleEntry";
+import type { StyleIntentValueType } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isBoldFontWeight } from "../utils/isBoldFontWeight";
 import { toggleTextDecorationToken } from "../utils/toggleTextDecorationToken";
@@ -37,23 +36,38 @@ export const textStyleTable = (
 	return {
 		...(textType !== undefined && { textContent: textContentEntry }),
 		...(accepts("fontColor") && {
-			fontColor: runOrSlot<ObjectState, string>("fontColor", { slotsOf }),
+			fontColor: runOrSlot<ObjectState, StyleIntentValueType<"fontColor">>(
+				"fontColor",
+				{ slotsOf },
+			),
 		}),
 		...(accepts("fontSize") && {
-			fontSize: runOrSlot<ObjectState, number>("fontSize", { slotsOf }),
+			fontSize: runOrSlot<ObjectState, StyleIntentValueType<"fontSize">>(
+				"fontSize",
+				{ slotsOf },
+			),
 		}),
 		...(accepts("fontFamily") && {
-			fontFamily: runOrSlot<ObjectState, string>("fontFamily", { slotsOf }),
+			fontFamily: runOrSlot<ObjectState, StyleIntentValueType<"fontFamily">>(
+				"fontFamily",
+				{ slotsOf },
+			),
 		}),
 		...(accepts("fontWeight") && {
-			fontWeight: runOrSlot<ObjectState, string>("fontWeight", { slotsOf }),
+			fontWeight: runOrSlot<ObjectState, StyleIntentValueType<"fontWeight">>(
+				"fontWeight",
+				{ slotsOf },
+			),
 			toggleBold: toggleRunOrSlot<ObjectState, "toggleBold">("toggleBold", {
 				slotsOf,
 				toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 			}),
 		}),
 		...(accepts("fontStyle") && {
-			fontStyle: runOrSlot<ObjectState, string>("fontStyle", { slotsOf }),
+			fontStyle: runOrSlot<ObjectState, StyleIntentValueType<"fontStyle">>(
+				"fontStyle",
+				{ slotsOf },
+			),
 			toggleItalic: toggleRunOrSlot<ObjectState, "toggleItalic">(
 				"toggleItalic",
 				{
@@ -63,9 +77,10 @@ export const textStyleTable = (
 			),
 		}),
 		...(accepts("textDecoration") && {
-			textDecoration: runOrSlot<ObjectState, string>("textDecoration", {
-				slotsOf,
-			}),
+			textDecoration: runOrSlot<
+				ObjectState,
+				StyleIntentValueType<"textDecoration">
+			>("textDecoration", { slotsOf }),
 			// The other decoration line is kept, which is why the toggle takes the
 			// value rather than a boolean.
 			toggleUnderline: toggleRunOrSlot<ObjectState, "toggleUnderline">(
@@ -79,12 +94,16 @@ export const textStyleTable = (
 		// The alignments place the whole block, so they land on the slot even while
 		// a stretch of it is selected — there is nothing smaller to apply them to.
 		...(accepts("textAlign") && {
-			textAlign: slotField<ObjectState, TextAlign>("textAlign", { slotsOf }),
+			textAlign: slotField<ObjectState, StyleIntentValueType<"textAlign">>(
+				"textAlign",
+				{ slotsOf },
+			),
 		}),
 		...(accepts("verticalAlign") && {
-			verticalAlign: slotField<ObjectState, VerticalAlign>("verticalAlign", {
-				slotsOf,
-			}),
+			verticalAlign: slotField<
+				ObjectState,
+				StyleIntentValueType<"verticalAlign">
+			>("verticalAlign", { slotsOf }),
 		}),
 	};
 };

@@ -165,10 +165,25 @@ export { ObjectMenuSlider } from "./controllers/ui/menu/ObjectMenu/common/Object
 export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 
-export { getFirstSelectedWithProp } from "./controllers/ui/menu/utils/getFirstSelectedWithProp";
-export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/utils/getFirstSelectedWithStyleGroup";
-export { getFirstSelectedPropValue } from "./controllers/ui/menu/utils/getFirstSelectedPropValue";
-export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedShapeStyle";
+// The current value a row of either surface states (packages/canvas/docs/10-style-properties.md).
+// `useSelectionStyle(name)` answers what the whole selection says about one style
+// property — the value of exactly the objects a write of the same name would
+// reach, so a row cannot disagree with its own write. A name the engine owns
+// ("fill", "fontSize") comes back typed; a name a shape declares for itself
+// comes back `unknown`, the engine not knowing what the declaration holds, and
+// the row narrows it (selectionValueAs). The helpers fold the three cases into
+// something drawable, and SHAPE_STYLE_FALLBACK is the last resort a row shows
+// when nothing the selection reaches carries the property at all.
+export { useSelectionStyle } from "./controllers/style/SelectionStyleReaderContext";
+export type { SelectionValue } from "./controllers/ui/menu/utils/SelectionValue";
+export {
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueAs,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "./controllers/ui/menu/utils/SelectionValue";
+export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 
 // ---------------------------------------------------------------------------
 // Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)

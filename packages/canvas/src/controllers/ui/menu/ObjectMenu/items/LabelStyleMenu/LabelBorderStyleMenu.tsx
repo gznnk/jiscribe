@@ -1,3 +1,4 @@
+import { isNumber, isString } from "@jiscribe/basic-validators";
 import { memo, useRef } from "react";
 
 import {
@@ -5,11 +6,13 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
+import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
+import { selectionValueAs } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -27,6 +30,9 @@ const SECTION_ID = "label-border-style";
 
 const MIN_BORDER_WIDTH = 0;
 const MAX_BORDER_WIDTH = 12;
+
+/** What a label with no `strokeWidth` of its own is drawn with: no border. */
+const UNSET_BORDER_WIDTH = 0;
 
 /**
  * Label border style menu (same layout as the shape's Border Style).
@@ -47,16 +53,23 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel({ objects, selection });
+	// An unset width draws no border, which is the value the slider starts from.
+	const strokeWidth = selectionValueAs(
+		useSelectionStyle("label.strokeWidth"),
+		isNumber,
+		UNSET_BORDER_WIDTH,
+	);
+	const strokeDashType = selectionValueAs(
+		useSelectionStyle("label.strokeDashType"),
+		isString,
+		undefined,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
 	}
-
-	const strokeWidth = label.strokeWidth ?? 0;
-	const strokeDashType = label.strokeDashType;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

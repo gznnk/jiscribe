@@ -49,9 +49,9 @@ export const toggleRunOrSlot = <
 		toggle,
 	}: {
 		slotsOf: SlotsOf<TState>;
-		// `undefined` is already in a toggle's value type (StyleIntentValueType),
-		// but with the kind still generic the compiler cannot see that, so it is
-		// spelled out here.
+		// The flipped field's value type already admits the unset `foldToggleValues`
+		// answers with, but with the kind still generic the compiler cannot see that,
+		// so it is spelled out here.
 		toggle: (
 			current: StyleIntentValueType<K> | undefined,
 		) => NonNullable<StyleIntentValueType<K>>;

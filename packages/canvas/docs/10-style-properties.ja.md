@@ -272,11 +272,14 @@ export const ContainerExtraStyleProperties = {
 container プラグインは `src/schema/ContainerDoc.ts` で `ContainerExtraStyleProperties` を
 宣言し、`@jiscribe/canvas-sdk` の `createFrameObjectDefinition` へ渡す。
 
-現時点でプラグインが頼れるのは、その宣言と、メニューの行で自前の値を読み戻すための
-`getFirstSelectedPropValue`（`@jiscribe/canvas/unstable`）だけ。スタイル層自体は内部実装で、
-型が導出済みのエントリを差し替えることはまだできない — 格納先がコアの推測と違う図形
-（セルに `fill` を持つ表）が必要としているのはそれである。宣言面の
-`ObjectTypeDefinition.style` 上書きはそのために予定されており、**まだ無い**。
+現時点でプラグインが頼れるのは、その宣言と、両サーフェスの自前の行で値を述べるための
+`useSelectionStyle(name)`（`@jiscribe/canvas/unstable`）だけ。このフックは選択全体の答え
+（`single` / `mixed` / `none`。描ける形へ畳むのは `selectionValue*` ヘルパー）を、同名の
+書き込みが届くのとまったく同じ object について返す。宣言した名前はエンジンが何も知らない
+名前なので、値は `unknown` で来る。行の側で絞る（自前のガードと `selectionValueAs`）。
+スタイル層自体は内部実装で、型が導出済みのエントリを差し替えることはまだできない —
+格納先がコアの推測と違う図形（セルに `fill` を持つ表）が必要としているのはそれである。
+宣言面の `ObjectTypeDefinition.style` 上書きはそのために予定されており、**まだ無い**。
 
 ## スタイルを足すとき
 

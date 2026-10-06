@@ -8,7 +8,7 @@ import {
 import { memo } from "react";
 
 import { containerMessagesByLocale } from "../messages/containerMessages";
-import { getSelectedHeaderFill } from "../state/getSelectedHeaderFill";
+import { useSelectedHeaderFill } from "../state/useSelectedHeaderFill";
 
 /**
  * Header color row of the properties sidebar (container only), sitting under the
@@ -24,17 +24,16 @@ import { getSelectedHeaderFill } from "../state/getSelectedHeaderFill";
  * not by core.
  */
 const HeaderColorPropertyComponent: React.FC<PropertyPanelItemProps> = ({
-	objects,
-	selection,
 	onPropertyUpdate,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
+	const headerFill = useSelectedHeaderFill();
 
 	return (
 		<PropertyRow label={messages.propertyRowHeader}>
 			<PropertyColorField
-				value={getSelectedHeaderFill(selection.objectIds, objects)}
+				value={headerFill}
 				property="headerFill"
 				role="surface"
 				title={messages.menuHeaderColor}

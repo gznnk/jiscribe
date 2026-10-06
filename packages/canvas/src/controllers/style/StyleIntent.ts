@@ -1,6 +1,7 @@
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
+import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { TextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/TextVerticalBasis";
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 
@@ -85,6 +86,23 @@ export type TextToggleIntentKind = Extract<
 	keyof typeof TOGGLE_FLIPS
 >;
 
+/**
+ * The intents stored on a text slot, named after the field each of them is: the
+ * engine's vocabulary and a slot's typography (`TextSlotStyle`) agree on these
+ * eight names, so the set is their intersection rather than a second list to
+ * keep in step.
+ *
+ * What singles them out is that **unset is one of their values**: a slot neither
+ * setting the field nor having a type default for it is drawn with the reader's
+ * own last resort (TEXT_STYLE_FALLBACK), and two such slots agree rather than
+ * disagreeing — so `undefined` belongs in their value type
+ * (StyleIntentValueType) and the entries report it as the value it is.
+ */
+export type TextSlotStyleIntentKind = Extract<
+	StyleIntentKind,
+	keyof TextSlotStyle
+>;
+
 /** Everything an intent of one kind holds besides its name. */
 type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 	Extract<StyleIntent, { kind: K }>,
@@ -94,12 +112,17 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 /**
  * The type of the value an intent of one kind carries: the sole field it holds
  * besides `kind`. What the entries of that kind apply and read, so the two sides
- * cannot disagree on it.
+ * cannot disagree on it — and what a row reading the selection gets back
+ * (readSelectionStyle).
  *
- * A toggle carries none, but its entry still reads and writes the field it flips
- * (TOGGLE_FLIPS), so it works in that field's value — with `undefined` added
- * twice over: a slot setting no such field reads as unset, and the intent has no
- * value for the walker to hand the entry.
+ * A text-slot kind (TextSlotStyleIntentKind) carries `undefined` with it: unset
+ * is a value such a field really has, and the entry reports it rather than
+ * standing in a default of its own.
+ *
+ * A toggle carries no value, but its entry reads and writes the field it flips
+ * (TOGGLE_FLIPS), so it works in that field's value — which, every flipped field
+ * being a text-slot one, already admits the unset the toggle also has nothing to
+ * hand the entry.
  *
  * A name outside the engine's vocabulary is a shape's own (extraStyleTable),
  * whose entry works in the transport string and whose stored type the engine
@@ -107,10 +130,12 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
  */
 export type StyleIntentValueType<K extends string> =
 	K extends TextToggleIntentKind
-		? StyleIntentValueType<(typeof TOGGLE_FLIPS)[K]> | undefined
-		: K extends StyleIntentKind
-			? StyleIntentPayload<K>[keyof StyleIntentPayload<K>]
-			: unknown;
+		? StyleIntentValueType<(typeof TOGGLE_FLIPS)[K]>
+		: K extends TextSlotStyleIntentKind
+			? StyleIntentPayload<K>[keyof StyleIntentPayload<K>] | undefined
+			: K extends StyleIntentKind
+				? StyleIntentPayload<K>[keyof StyleIntentPayload<K>]
+				: unknown;
 
 /**
  * The value an intent carries, erased: the walkers look an entry up by a kind

@@ -9,7 +9,6 @@ import { readSelectionStyle } from "../../../../style/readSelectionStyle";
 import { DashedLineIcon } from "../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../icons/SolidLineIcon";
-import { readSelectionShapeStyle } from "../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -40,7 +39,7 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { fill } = readSelectionShapeStyle(canvasState, registries);
+	const fill = readSelectionStyle(canvasState, "fill", registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -68,7 +67,11 @@ const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { fillOpacity } = readSelectionShapeStyle(canvasState, registries);
+	const fillOpacity = readSelectionStyle(
+		canvasState,
+		"fillOpacity",
+		registries,
+	);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
@@ -104,7 +107,7 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { stroke } = readSelectionShapeStyle(canvasState, registries);
+	const stroke = readSelectionStyle(canvasState, "stroke", registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -132,7 +135,11 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { strokeWidth } = readSelectionShapeStyle(canvasState, registries);
+	const strokeWidth = readSelectionStyle(
+		canvasState,
+		"strokeWidth",
+		registries,
+	);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowWidth}>
@@ -167,7 +174,11 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { strokeDashType } = readSelectionShapeStyle(canvasState, registries);
+	const strokeDashType = readSelectionStyle(
+		canvasState,
+		"strokeDashType",
+		registries,
+	);
 	const dashType = selectionValueOr(
 		strokeDashType,
 		SHAPE_STYLE_FALLBACK.strokeDashType,
@@ -214,7 +225,11 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { strokeOpacity } = readSelectionShapeStyle(canvasState, registries);
+	const strokeOpacity = readSelectionStyle(
+		canvasState,
+		"strokeOpacity",
+		registries,
+	);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>

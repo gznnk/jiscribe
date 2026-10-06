@@ -6,8 +6,8 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
-import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOrFirst,
@@ -51,7 +51,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	);
 
 	const registries = useCanvasRegistries();
-	const { fontSize } = readSelectionTextStyle(canvasState, registries);
+	const fontSize = readSelectionStyle(canvasState, "fontSize", registries);
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

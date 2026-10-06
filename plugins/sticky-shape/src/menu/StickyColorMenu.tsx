@@ -4,9 +4,10 @@ import {
 	ObjectMenuButton,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
-	getSelectedShapeStyle,
+	SHAPE_STYLE_FALLBACK,
+	selectionValueOr,
 	useCanvasMessages,
-	useObjectShapeStyleDefaultsRegistry,
+	useSelectionStyle,
 	useSubmenuPosition,
 	setPart,
 	togglePart,
@@ -30,20 +31,15 @@ const SECTION_ID = "sticky-color";
  * plugin-owned one: every preset name is a key it already carries.
  */
 const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
-	objects,
-	selection,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const shapeStyleDefaults = useObjectShapeStyleDefaultsRegistry();
-	const currentColor = getSelectedShapeStyle(
-		selection.objectIds,
-		objects,
-		shapeStyleDefaults,
-		"fill",
-	).fill;
+	const currentColor = selectionValueOr(
+		useSelectionStyle("fill"),
+		SHAPE_STYLE_FALLBACK.fill,
+	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

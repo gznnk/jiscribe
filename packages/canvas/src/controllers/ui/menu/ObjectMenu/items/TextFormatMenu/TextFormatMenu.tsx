@@ -8,6 +8,7 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
@@ -18,7 +19,6 @@ import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../../icons/UnderlineIcon";
 import { isTextAddressed } from "../../../utils/isTextAddressed";
-import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
 import { selectionValueOr } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -56,12 +56,20 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 	);
 
 	const registries = useCanvasRegistries();
-	const textStyle = readSelectionTextStyle(canvasState, registries);
 	// Each button is its own toggle, so mixing is read per field. A field the
 	// selection disagrees about reads as off, so one press brings all of it on.
-	const fontWeight = selectionValueOr(textStyle.fontWeight, undefined);
-	const fontStyle = selectionValueOr(textStyle.fontStyle, undefined);
-	const textDecoration = selectionValueOr(textStyle.textDecoration, undefined);
+	const fontWeight = selectionValueOr(
+		readSelectionStyle(canvasState, "fontWeight", registries),
+		undefined,
+	);
+	const fontStyle = selectionValueOr(
+		readSelectionStyle(canvasState, "fontStyle", registries),
+		undefined,
+	);
+	const textDecoration = selectionValueOr(
+		readSelectionStyle(canvasState, "textDecoration", registries),
+		undefined,
+	);
 	const isBold = isBoldFontWeight(fontWeight);
 	const isItalic = fontStyle === "italic";
 	const isUnderline = hasTextDecorationToken(textDecoration, "underline");

@@ -9,11 +9,11 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import { readSelectionShapeStyle } from "../../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -48,8 +48,14 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const registries = useCanvasRegistries();
-	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
+	const strokeWidth = readSelectionStyle(
 		canvasState,
+		"strokeWidth",
+		registries,
+	);
+	const strokeDashType = readSelectionStyle(
+		canvasState,
+		"strokeDashType",
 		registries,
 	);
 	const isDashMixed = isMixedSelectionValue(strokeDashType);

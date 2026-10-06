@@ -1,10 +1,13 @@
+import { isString } from "@jiscribe/basic-validators";
 import { memo } from "react";
 
 import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
+import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
+import { selectionValueAs } from "../../../utils/SelectionValue";
 import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
@@ -20,15 +23,19 @@ const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	selection,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const isBold = isBoldFontWeight(
+		selectionValueAs(
+			useSelectionStyle("label.fontWeight"),
+			isString,
+			undefined,
+		),
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
 	}
-
-	const isBold = isBoldFontWeight(label.fontWeight);
 
 	return (
 		<ObjectMenuItemPositioner>

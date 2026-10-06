@@ -255,7 +255,12 @@ through `@jiscribe/canvas-sdk`): `PropertyRow` for the label column every row
 shares, input controls such as `PropertyNumberField` / `PropertyColorField` for the
 control beside it, and `PropertyCheckbox`, which is a row of its own (the box with
 its label to the right, from the section's left edge). The exports of
-`packages/canvas/src/unstable.ts` are the authority on what the kit holds. Two rules to know before writing one:
+`packages/canvas/src/unstable.ts` are the authority on what the kit holds. The
+value the row _states_ comes from the kit's one read API,
+`useSelectionStyle(name)`: it answers what the whole selection says about that
+property — over exactly the objects a write of the same name would reach — which
+is what lets a plugin row be mixed the way a built-in one is (see
+[Style System](./10-style-properties.md)). Two rules to know before writing one:
 
 - The `id` is what the multi-type merge matches the row by, so two types offering
   the same row must spell it the same way; a selection mixing types that spell it
@@ -276,7 +281,9 @@ only once the label has text. Omitted means always offered.
 `headerFill` through `onPropertyUpdate` from a `PropertyColorField`, sitting under
 the body color in the Fill section, and its `header-height` row states the
 `headerHeight` extra style property from a `PropertyNumberField` under the size in
-the Layout section; both take their wording from the plugin's own dictionary.
+the Layout section; both state their current value through `useSelectionStyle`,
+narrowing the untyped value a declared property comes back as, and take their
+wording from the plugin's own dictionary.
 
 **i18n.** A contributed command declares its own `label` per locale. Everything
 the plugin draws itself comes from a dictionary the plugin owns, resolved

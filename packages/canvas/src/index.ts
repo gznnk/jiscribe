@@ -248,7 +248,6 @@ export type {
 	ObjectShapeStyleDefaults,
 	ObjectShapeStyleDefaultsRegistry,
 	ResolvedShapeStyle,
-	ShapeStyleGroup,
 } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 export type {
 	ObjectTextEditOverflowResolver,

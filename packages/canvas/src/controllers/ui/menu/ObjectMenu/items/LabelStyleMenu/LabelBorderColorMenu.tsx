@@ -1,11 +1,14 @@
+import { isString } from "@jiscribe/basic-validators";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useRef } from "react";
 
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
+import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
+import { selectionValueAs } from "../../../utils/SelectionValue";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -35,15 +38,17 @@ const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const stroke = selectionValueAs(
+		useSelectionStyle("label.stroke"),
+		isString,
+		AUTO_COLOR,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
 	}
-
-	const stroke = label.stroke ?? AUTO_COLOR;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
