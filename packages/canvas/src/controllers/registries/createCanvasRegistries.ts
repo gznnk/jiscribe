@@ -26,7 +26,6 @@ import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandle
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import { createObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import { createObjectStyleRegistry } from "../style/ObjectStyleRegistry";
-import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
@@ -80,7 +79,6 @@ export const createCanvasRegistries = (
 		stencil: createStencilRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
 		objectStyle: createObjectStyleRegistry(),
-		styleProperty: createStylePropertyRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);

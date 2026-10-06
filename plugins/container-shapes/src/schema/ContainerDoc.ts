@@ -32,7 +32,7 @@ export const ContainerFeatures = {
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
-/** Container-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyRegistry). */
+/** Container-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyDescriptor). */
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
 	headerHeight: { valueType: "number" },

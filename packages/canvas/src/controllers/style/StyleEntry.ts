@@ -1,7 +1,7 @@
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
-import type { StyleIntentKind, StyleValueOf } from "./StyleIntent";
+import type { StyleIntentKind, StyleIntentValueType } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 
@@ -12,7 +12,7 @@ import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
  * both to be spelled.
  *
  * @template TState - The state the entry is written against, its own type's
- * @template V - The intent's value type (StyleValueOf)
+ * @template V - The intent's value type (StyleIntentValueType)
  */
 export type StyleEntry<TState extends ObjectState, V> = {
 	/**
@@ -54,21 +54,31 @@ export type StyleEntry<TState extends ObjectState, V> = {
 };
 
 /**
+ * An entry for a kind the engine does not know — a shape's own declaration
+ * (extraStyleTable) — so its value type is unknown here. Every entry of the
+ * engine's own kinds is assignable to it as well (StyleEntry's members are method
+ * signatures), which is what lets {@link StyleTable} hold the typed kinds and the
+ * open index signature in one intersection.
+ */
+export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
+
+/**
  * What one type answers for, by intent. A kind left out is one the type does not
  * take — the gate at its coarsest, before any entry is called.
+ *
+ * The engine's own kinds are typed one by one, each entry bound to that intent's
+ * value type. Any other name is a shape's own (extraStyleTable), whose value is
+ * the transport string the declaration is read against rather than a type the
+ * engine knows, so those cannot be typed per kind and sit under the index
+ * signature instead.
  *
  * @template TState - The state the entries are written against
  */
 export type StyleTable<TState extends ObjectState> = {
-	[K in StyleIntentKind]?: StyleEntry<TState, StyleValueOf<K>>;
+	[K in StyleIntentKind]?: StyleEntry<TState, StyleIntentValueType<K>>;
+} & {
+	[extraKind: string]: ExtraStyleEntry | undefined;
 };
-
-/**
- * An entry with its value type erased, the shape the walkers call one through:
- * they take it out of a table by a kind the intent carries at runtime, so the
- * value and the entry cannot be correlated statically.
- */
-export type ErasedStyleEntry = StyleEntry<ObjectState, unknown>;
 
 /**
  * The stretch of text an open editor has selected, as the entries are handed it:

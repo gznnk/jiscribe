@@ -4,8 +4,7 @@ import {
 	graftStyleTextEdit,
 	resolveStyleTextEdit,
 } from "./resolveStyleTextEdit";
-import type { ErasedStyleEntry } from "./StyleEntry";
-import type { StyleIntentKind, StyleValueOf } from "./StyleIntent";
+import type { StyleIntentValueType } from "./StyleIntent";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { SelectionValue } from "../ui/menu/utils/SelectionValue";
 import { combineSelectionValues } from "../ui/menu/utils/SelectionValue";
@@ -23,21 +22,20 @@ import { combineSelectionValues } from "../ui/menu/utils/SelectionValue";
  * out.
  *
  * @param state - The canvas state; its selection decides who is read
- * @param kind - The intent to report
+ * @param kind - The intent to report: one of the engine's own kinds, which fixes the value type, or a name a shape declared for itself, which cannot
  * @param registries - The canvas's style tables and the defaults its entries resolve through
  * @returns `single` / `mixed` / `none`, the last meaning nothing the selection reaches takes the intent
  */
-export const readSelectionStyle = <K extends StyleIntentKind>(
+export const readSelectionStyle = <K extends string>(
 	state: CanvasControllerState,
 	kind: K,
 	registries: StyleIntentRegistries,
-): SelectionValue<StyleValueOf<K>> => {
+): SelectionValue<StyleIntentValueType<K>> => {
 	const textEdit = resolveStyleTextEdit(state);
-	const values: StyleValueOf<K>[] = [];
+	const values: StyleIntentValueType<K>[] = [];
 
 	for (const { object, pick, selected } of collectStyleTargets(state)) {
-		const entry = registries.objectStyle.get(object.type)?.[kind] as
-			ErasedStyleEntry | undefined;
+		const entry = registries.objectStyle.get(object.type)?.[kind];
 		if (entry === undefined) {
 			continue;
 		}
@@ -51,7 +49,7 @@ export const readSelectionStyle = <K extends StyleIntentKind>(
 				shapeStyleDefaults: registries.objectShapeStyleDefaults,
 				textStyleDefaults: registries.objectTextStyleDefaults,
 				textEditRange: textEdit?.range ?? null,
-			}) as readonly StyleValueOf<K>[]),
+			}) as readonly StyleIntentValueType<K>[]),
 		);
 	}
 

@@ -160,7 +160,12 @@ export type ObjectTypeDefinition<
 
 	// --- Style ---
 
-	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
+	/**
+	 * Styleable properties beyond the ObjectFeatures flags, each landing in the
+	 * field its name states (`extraStyleTable` turns them into entries of this
+	 * type's style table, beside the ones its flags derive). A name the engine's
+	 * own style vocabulary owns is refused at registration.
+	 */
 	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
 
 	// --- Editor UI (StencilLibrary / ObjectMenu) ---

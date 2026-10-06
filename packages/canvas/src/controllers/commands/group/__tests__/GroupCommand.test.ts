@@ -7,6 +7,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { applyStyleProperty } from "../../../style/applyStyleProperty";
 import { GroupCommand } from "../GroupCommand";
 
 const registries = createTestRegistries();
@@ -64,7 +65,7 @@ describe("GroupCommand", () => {
 		expect(group.lockAspectRatio).toBe(true);
 		expect(next.multiSelectGroup).toBeNull();
 
-		const unlocked = registries.styleProperty.apply(
+		const unlocked = applyStyleProperty(
 			next,
 			"lockAspectRatio",
 			"false",

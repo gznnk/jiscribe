@@ -108,12 +108,12 @@ Guidance for when this asymmetry bothers you:
 - **Perfect symmetry is inherently unattainable.** Even if everything were nested, the key names would still **differ in meaning** — shape = body (`text`), connector = annotation (`label`) — so some asymmetry conceptually remains no matter what.
 
 **Nesting support in the styling UI (dot notation)**: The styling property-update plumbing
-(menu item → `STYLE_PROPERTY_UPDATE` or the ObjectMenu gesture `set:{property}:{value}` → `StylePropertyRegistry.apply`) carries
+(menu item → `STYLE_PROPERTY_UPDATE` or the ObjectMenu gesture `set:{property}:{value}` → `applyStyleProperty`) carries
 flat property names. Because the label's styling (`label.fill` / `label.stroke` / `label.fontColor`, …) is nested,
 it **rides on this plumbing as-is using dot-notation property names**.
-Both routes converge at the single point `StylePropertyRegistry.apply`; the `label.*` names are declared
-as connector-specific style properties (`ConnectorExtraStyleProperties`), and the shared write path
-interprets the dots as a nested merge into `connector.label` (a no-op while the label is unset). This is
+Both routes converge at the single point `applyStyleProperty`; the `label.*` names are declared
+as connector-specific style properties (`ConnectorExtraStyleProperties`), and the entry built from each
+declaration interprets the dots as a nested merge into `connector.label` (a no-op while the label is unset). This is
 a pragmatic compromise to reuse the shared UI (`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`) and the `commit`
 subtleties (live preview + a single history entry) without reimplementing them. Adding a dedicated
 action is rejected because it would duplicate these commit subtleties. What the style registry does not own takes a

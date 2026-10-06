@@ -16,7 +16,7 @@
 | `GESTURE`                   | ポインタ/ホイール由来のジェスチャー                                       | `handleGesture` → [ジェスチャシステム](./04-gesture-system.ja.md)                                                                      |
 | `COMMAND`                   | ショートカット/メニュー/ツールバーのコマンド（undo/redo 含む）            | `handleCommand` → [コマンドシステム](./05-command-system.ja.md)                                                                        |
 | `PASTE`                     | クリップボードデータの適用                                                | `handlePaste`                                                                                                                          |
-| `STYLE_PROPERTY_UPDATE`     | ObjectMenu / プロパティサイドバーのスタイル入力（プレビュー / コミット）  | `StylePropertyRegistry.apply` → [スタイルプロパティシステム](./10-style-properties.ja.md)                                              |
+| `STYLE_PROPERTY_UPDATE`     | ObjectMenu / プロパティサイドバーのスタイル入力（プレビュー / コミット）  | `applyStyleProperty` → [スタイルシステム](./10-style-properties.ja.md)                                                                 |
 | `TRANSFORM_PROPERTY_UPDATE` | プロパティサイドバーの枠の数値入力（プレビュー / コミット）               | `handleTransformPropertyUpdate` → 変形ドラッグと同じリサイズ / 回転ユーティリティ                                                      |
 | `DOCUMENT_PROPERTY_UPDATE`  | プロパティサイドバーのキャンバス節（プレビュー / コミット）               | `applyDocumentProperty` — `state.background` か `state.view` の 1 項目を書く（`mergeViewDoc` で正規化）。`null` で消してホストに任せる |
 | `META_PROPERTY_UPDATE`      | プロパティサイドバーのオブジェクトの `meta` 入力（プレビュー / コミット） | `handleMetaPropertyUpdate`                                                                                                             |

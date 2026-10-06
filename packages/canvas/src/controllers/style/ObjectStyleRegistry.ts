@@ -8,13 +8,13 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 /**
  * Per-type style tables: which intents a type takes, and where each of them
  * lands in its data. Filled from every type's definition at bundle creation
- * (applyObjectDefinition registers `coreStyleTable`), and
+ * (applyObjectDefinition composes `coreStyleTable` with `extraStyleTable`), and
  * read by the two walkers — applyStyleIntent and readSelectionStyle — so writing
  * and reporting a style consult the very same answer.
  *
  * A type absent from the registry, or one whose table leaves the kind out, takes
  * nothing for that intent: the walkers skip it rather than guessing a field
- * (fail-closed, as StylePropertyRegistry is).
+ * (fail-closed).
  */
 export class ObjectStyleRegistry {
 	private readonly tablesByType = new Map<

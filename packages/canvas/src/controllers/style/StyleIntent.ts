@@ -47,8 +47,24 @@ export type StyleIntent =
 export type StyleIntentKind = StyleIntent["kind"];
 
 /**
+ * A style edit addressed to a name the vocabulary above does not hold: one a
+ * shape declares for itself (ExtraStyleProperties), which reaches the types that
+ * declared it and no others.
+ *
+ * The engine knows nothing of what such a name means, so the value stays the
+ * transport string the surfaces carry and the declaring type's entry is what
+ * reads it (extraField).
+ */
+export type ExtraStyleIntent = {
+	/** The declared property name, dots and all ("label.fill"). */
+	kind: string;
+	/** The value as the surface spells it, unread. */
+	value: string;
+};
+
+/**
  * Which field each toggle flips: the one fact that makes a toggle one, stated
- * once for the types (StyleValueOf, TextToggleIntentKind) and the entries
+ * once for the types (StyleIntentValueType, TextToggleIntentKind) and the entries
  * (toggleRunOrSlot) alike. A toggle's value type is its field's, so the two
  * cannot drift apart.
  */
@@ -76,29 +92,37 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 >;
 
 /**
- * The value an intent of one kind carries: the sole field it holds besides
- * `kind`. What the entries of that kind apply and read, so the two sides cannot
- * disagree on the type.
+ * The type of the value an intent of one kind carries: the sole field it holds
+ * besides `kind`. What the entries of that kind apply and read, so the two sides
+ * cannot disagree on it.
  *
  * A toggle carries none, but its entry still reads and writes the field it flips
  * (TOGGLE_FLIPS), so it works in that field's value — with `undefined` added
  * twice over: a slot setting no such field reads as unset, and the intent has no
  * value for the walker to hand the entry.
+ *
+ * A name outside the engine's vocabulary is a shape's own (extraStyleTable),
+ * whose entry works in the transport string and whose stored type the engine
+ * does not know: `unknown`.
  */
-export type StyleValueOf<K extends StyleIntentKind> =
+export type StyleIntentValueType<K extends string> =
 	K extends TextToggleIntentKind
-		? StyleValueOf<(typeof TOGGLE_FLIPS)[K]> | undefined
-		: StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
+		? StyleIntentValueType<(typeof TOGGLE_FLIPS)[K]> | undefined
+		: K extends StyleIntentKind
+			? StyleIntentPayload<K>[keyof StyleIntentPayload<K>]
+			: unknown;
 
 /**
  * The value an intent carries, erased: the walkers look an entry up by a kind
  * they only know at runtime, so the value cannot be tied to the entry's type
  * statically (applyStyleIntent casts the entry to match).
  *
- * @param intent - The intent to read; the payload field is named differently per kind, and taken as the only one besides `kind`
+ * @param intent - The intent to read; the payload field is named differently per kind (`value` for a shape's own), and taken as the only one besides `kind`
  * @returns The payload value, or undefined for an intent carrying none (the toggles)
  */
-export const styleIntentValue = (intent: StyleIntent): unknown => {
+export const styleIntentValue = (
+	intent: StyleIntent | ExtraStyleIntent,
+): unknown => {
 	const { kind: _kind, ...payload } = intent;
 	return Object.values(payload)[0];
 };

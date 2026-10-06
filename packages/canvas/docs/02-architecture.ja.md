@@ -100,7 +100,7 @@ State を Props として受け取り SVG を描画するコンポーネント�
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                  | `controllers/gestures/registry/`       | ジェスチャーハンドラ・型別の `ObjectBehavior`                                                           |
 | `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` など                | `rendering/objects/registry/`          | 描画コンポーネント・編集テキスト領域・ヒットテスト / スナップ輪郭                                       |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry` など | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別プロパティサイドバーのセクション・型別 SelectionControl |
-| `StylePropertyRegistry`                                                                              | `controllers/styleProperties/`         | スタイルプロパティ（[スタイルプロパティシステム](./10-style-properties.ja.md)）                         |
+| `ObjectStyleRegistry`                                                                                | `controllers/style/`                   | 型別のスタイル表（[スタイルシステム](./10-style-properties.ja.md)）                                     |
 | `CommandRegistry`                                                                                    | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）                                               |
 
 型別のレジストリは形状タイプ（`"rect"`, `"ellipse"` など）をキーにするため、形状横断的な処理を `if (type === ...)` の分岐なしで型安全に書ける。

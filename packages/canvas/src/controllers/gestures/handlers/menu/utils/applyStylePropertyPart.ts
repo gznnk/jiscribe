@@ -1,11 +1,12 @@
 import type { MenuPart } from "./menuParts";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { applyStyleProperty } from "../../../../style/applyStyleProperty";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 
 /**
  * Applies a menu part that writes a style property of the selection — `set:` or
- * `slider:` — through StylePropertyRegistry, the same way from every surface that
+ * `slider:` — through applyStyleProperty, the same way from every surface that
  * carries such parts (the ObjectMenu and the properties sidebar).
  *
  * The React onChange route (STYLE_PROPERTY_UPDATE in canvasReducer) writes the
@@ -15,7 +16,7 @@ import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
  * @param state - State to write into, with the caller's own press dismiss already applied: a slider press returns from here
  * @param event - The gesture. `set:` acts on click / doubleClick only. `slider:` previews on pressed / dragStart / drag and commits on dragEnd / click / doubleClick, reading the value from `inputValue`; a slider event without one warns and changes nothing
  * @param part - `event.targetPart` already parsed (parseMenuPart); null and kinds other than `set` / `slider` are left to the caller
- * @param registries - Registries of the canvas; `styleProperty` resolves the property name
+ * @param registries - Registries of the canvas; its style tables are what resolve the property name
  * @returns The next state, or null when the part is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller); a write leaves the part picked below the object alone, styling never renumbering what it writes to. A style part on an event it does not act on returns `state` itself
  */
 export const applyStylePropertyPart = (
@@ -33,7 +34,7 @@ export const applyStylePropertyPart = (
 		if (event.type !== "click" && event.type !== "doubleClick") {
 			return state;
 		}
-		const newState = registries.styleProperty.apply(
+		const newState = applyStyleProperty(
 			state,
 			part.property,
 			part.value,
@@ -70,12 +71,7 @@ export const applyStylePropertyPart = (
 		event.type === "dragStart" ||
 		event.type === "drag"
 	) {
-		return registries.styleProperty.apply(
-			state,
-			property,
-			event.inputValue,
-			registries,
-		);
+		return applyStyleProperty(state, property, event.inputValue, registries);
 	}
 
 	// click / doubleClick: a press on the track jumps the thumb natively and lifts
@@ -88,7 +84,7 @@ export const applyStylePropertyPart = (
 		event.type === "click" ||
 		event.type === "doubleClick"
 	) {
-		const newState = registries.styleProperty.apply(
+		const newState = applyStyleProperty(
 			state,
 			property,
 			event.inputValue,
