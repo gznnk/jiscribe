@@ -68,7 +68,10 @@ const registriesOf = (
 	const objectStyle = createObjectStyleRegistry();
 	for (const object of Object.values(objects)) {
 		if (object.features) {
-			objectStyle.register(object.type, coreStyleTable(object.features));
+			objectStyle.register(
+				object.type,
+				coreStyleTable(object.features, { hasInsetTextRegion: false }),
+			);
 		}
 	}
 	return {

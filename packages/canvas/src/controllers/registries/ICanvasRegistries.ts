@@ -9,7 +9,6 @@ import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registr
 import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
-import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
@@ -50,11 +49,6 @@ export interface ICanvasRegistries {
 	 * switches the selection between a stated height and one following the text.
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
-	/**
-	 * Which types the switch between the two vertical text bases moves the body
-	 * of, needed by the command that switches the selection between them.
-	 */
-	objectTextVerticalBasis: ObjectTextVerticalBasisRegistry;
 	/**
 	 * Per-type, per-slot text-style defaults, needed by the pure tree wherever it
 	 * reads a

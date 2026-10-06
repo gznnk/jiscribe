@@ -30,7 +30,10 @@ const registriesOf = (
 	for (const type of ["rect", "plain", "markdown"]) {
 		objectStyle.register(
 			type,
-			coreStyleTable({ type, geometry: "rect", text: "slots" }),
+			coreStyleTable(
+				{ type, geometry: "rect", text: "slots" },
+				{ hasInsetTextRegion: false },
+			),
 		);
 	}
 	return {

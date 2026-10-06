@@ -4,7 +4,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { ToggleTextVerticalBasisCommand } from "../../commands/shape/ToggleTextVerticalBasisCommand";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { isSelectionTextVerticalBasisFrame } from "../../utils/textVerticalBasisSelection";
+import { readSelectionStyle } from "../../style/readSelectionStyle";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 const registries = createCanvasRegistries();
@@ -46,11 +46,20 @@ const basisOf = (
 
 describe("the vertical basis a body is placed against", () => {
 	it("is switchable exactly for the types whose region gives up part of the height", () => {
-		expect(registries.objectTextVerticalBasis.supports("ellipse")).toBe(true);
+		expect(
+			ToggleTextVerticalBasisCommand.canExecute(
+				controllerStateOf(shapeOf("e1", "ellipse")),
+				registries,
+			),
+		).toBe(true);
 		for (const type of ["rect", "text", "polygon", "connector", "group"]) {
-			expect(registries.objectTextVerticalBasis.supports(type), type).toBe(
-				false,
-			);
+			expect(
+				ToggleTextVerticalBasisCommand.canExecute(
+					controllerStateOf(shapeOf("o1", type)),
+					registries,
+				),
+				type,
+			).toBe(false);
 		}
 	});
 
@@ -102,12 +111,10 @@ describe("the vertical basis a body is placed against", () => {
 			shapeOf("e2", "ellipse"),
 		);
 
-		expect(
-			isSelectionTextVerticalBasisFrame(
-				state,
-				registries.objectTextVerticalBasis,
-			),
-		).toBe(false);
+		expect(readSelectionStyle(state, "textVerticalBasis", registries)).toEqual({
+			kind: "mixed",
+			values: ["frame", "region"],
+		});
 
 		const switched = ToggleTextVerticalBasisCommand.execute(state, registries);
 		expect(basisOf(switched, "e1")).toBe("frame");
@@ -121,6 +128,38 @@ describe("the vertical basis a body is placed against", () => {
 				registries,
 			),
 		).toBe(false);
+	});
+
+	describe("as the sidebar's segmented control reads it", () => {
+		const readBasis = (state: CanvasControllerState) =>
+			readSelectionStyle(state, "textVerticalBasis", registries);
+
+		it("nothing switchable in the selection → none", () => {
+			expect(readBasis(controllerStateOf(shapeOf("r1", "rect")))).toEqual({
+				kind: "none",
+			});
+		});
+
+		it("an absent field reads as the region basis", () => {
+			expect(readBasis(controllerStateOf(shapeOf("e1", "ellipse")))).toEqual({
+				kind: "single",
+				value: "region",
+			});
+		});
+
+		it("a switched ellipse reads as the frame basis", () => {
+			expect(
+				readBasis(controllerStateOf(shapeOf("e1", "ellipse", "frame"))),
+			).toEqual({ kind: "single", value: "frame" });
+		});
+
+		it("a rect mixed into the selection has no say", () => {
+			expect(
+				readBasis(
+					controllerStateOf(shapeOf("e1", "ellipse"), shapeOf("r1", "rect")),
+				),
+			).toEqual({ kind: "single", value: "region" });
+		});
 	});
 
 	describe("stated outright through the style property", () => {

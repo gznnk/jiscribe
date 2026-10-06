@@ -85,16 +85,48 @@ describe("applyStyleIntent", () => {
 		expect(fillOf(result.objects["b"])).toBe("#ff0000");
 	});
 
-	it("an intent no type has an entry for → the same state", () => {
-		const a = rectOf("a", { lockAspectRatio: false });
+	it("an intent this type has no entry for → the same state", () => {
+		// A box's region is its whole box, so the two vertical bases name one
+		// place and its table leaves the intent out.
+		const a = rectOf("a");
 		const state = stateOf(["a"], { a });
 		expect(
 			applyStyleIntent(
 				state,
-				{ kind: "lockAspectRatio", locked: true },
+				{ kind: "textVerticalBasis", basis: "frame" },
 				registries,
 			),
 		).toBe(state);
+	});
+
+	it("an intent that does not descend reaches the selected objects alone", () => {
+		// The lock belongs to the box a drag acts on, so a member of a selected
+		// group keeps the one it was drawn with (lockAspectRatioEntry).
+		const g = groupOf("g", ["a"]);
+		const a = rectOf("a");
+		const result = applyStyleIntent(
+			stateOf(["g"], { g, a }),
+			{ kind: "lockAspectRatio", locked: true },
+			registries,
+		);
+		expect(
+			(result.objects["g"] as unknown as { lockAspectRatio?: boolean })
+				.lockAspectRatio,
+		).toBe(true);
+		expect(result.objects["a"]).toBe(a);
+	});
+
+	it("the text content reaches the descendants of a selected group", () => {
+		const g = groupOf("g", ["a"]);
+		const a = textRectOf("a", { body: { text: "hello" } });
+		const result = applyStyleIntent(
+			stateOf(["g"], { g, a }),
+			{ kind: "textContent", text: "world" },
+			registries,
+		);
+		expect(
+			(result.objects["a"] as unknown as { text: TextSlots }).text.body,
+		).toEqual({ text: "world" });
 	});
 
 	it("the objects it was given are left as they were", () => {

@@ -2,8 +2,13 @@ import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { getSelectedLockAspectRatio } from "../getSelectedLockAspectRatio";
+
+// The real bundle, so the row reads the lock through the very table a write to it
+// would land on (applyObjectDefinition).
+const registries = createTestRegistries();
 
 const obj = (id: string, extra?: Record<string, unknown>): ObjectState =>
 	({ id, type: "rect", ...extra }) as unknown as ObjectState;
@@ -18,7 +23,7 @@ const state = (over: Partial<CanvasControllerState>): CanvasControllerState =>
 
 describe("getSelectedLockAspectRatio", () => {
 	it("no selection → false", () => {
-		expect(getSelectedLockAspectRatio(state({}))).toBe(false);
+		expect(getSelectedLockAspectRatio(state({}), registries)).toBe(false);
 	});
 
 	it("single selection with lockAspectRatio=true → true", () => {
@@ -26,7 +31,7 @@ describe("getSelectedLockAspectRatio", () => {
 			objects: { a: obj("a", { lockAspectRatio: true }) },
 			selection: selectionOf(["a"]),
 		});
-		expect(getSelectedLockAspectRatio(s)).toBe(true);
+		expect(getSelectedLockAspectRatio(s, registries)).toBe(true);
 	});
 
 	it("single selection where lockAspectRatio is not a boolean → false", () => {
@@ -34,7 +39,7 @@ describe("getSelectedLockAspectRatio", () => {
 			objects: { a: obj("a", { lockAspectRatio: "yes" }) },
 			selection: selectionOf(["a"]),
 		});
-		expect(getSelectedLockAspectRatio(s)).toBe(false);
+		expect(getSelectedLockAspectRatio(s, registries)).toBe(false);
 	});
 
 	it("prefers multiSelectGroup when present", () => {
@@ -45,13 +50,13 @@ describe("getSelectedLockAspectRatio", () => {
 				lockAspectRatio: true,
 			} as CanvasControllerState["multiSelectGroup"],
 		});
-		expect(getSelectedLockAspectRatio(s)).toBe(true);
+		expect(getSelectedLockAspectRatio(s, registries)).toBe(true);
 	});
 
 	it("false when multiSelectGroup has no lockAspectRatio", () => {
 		const s = state({
 			multiSelectGroup: {} as CanvasControllerState["multiSelectGroup"],
 		});
-		expect(getSelectedLockAspectRatio(s)).toBe(false);
+		expect(getSelectedLockAspectRatio(s, registries)).toBe(false);
 	});
 });

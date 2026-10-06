@@ -104,11 +104,31 @@ describe("readSelectionStyle", () => {
 		).toEqual({ kind: "mixed", values: ["#f00", "#0f0"] });
 	});
 
-	it("an intent no type has an entry for → none", () => {
-		const a = rectOf("a", { lockAspectRatio: true });
+	it("an intent this type has no entry for → none", () => {
+		// A box's region is its whole box, so the two vertical bases name one place
+		// and its table leaves the intent out.
+		const a = rectOf("a");
 		expect(
-			readSelectionStyle(stateOf(["a"], { a }), "lockAspectRatio", registries),
+			readSelectionStyle(
+				stateOf(["a"], { a }),
+				"textVerticalBasis",
+				registries,
+			),
 		).toEqual({ kind: "none" });
+	});
+
+	it("an intent that does not descend reads the selected objects alone", () => {
+		const g = groupOf("g", ["a"]);
+		const a = rectOf("a", { lockAspectRatio: true });
+		// The group carries no lock of its own, so its own reading is what answers
+		// (lockAspectRatioEntry).
+		expect(
+			readSelectionStyle(
+				stateOf(["g"], { g, a }),
+				"lockAspectRatio",
+				registries,
+			),
+		).toEqual({ kind: "single", value: false });
 	});
 });
 

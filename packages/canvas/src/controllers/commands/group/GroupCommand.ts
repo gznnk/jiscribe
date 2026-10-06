@@ -75,8 +75,10 @@ export const GroupCommand: ExecutableCommand = {
 		const newGroup = {
 			id: groupId,
 			type: "group",
-			// features must be stamped on creation: the style-property handlers read it
-			// directly to gate lockAspectRatio (an unstamped group ignores the toggle).
+			// features must be stamped on creation, as every object state carries its
+			// type's (ObjectState.features): the sides that read it off the object
+			// rather than through a registry would otherwise see a group declaring
+			// nothing.
 			features: GroupFeatures,
 			parentId: lcaId,
 			rotation: 0,

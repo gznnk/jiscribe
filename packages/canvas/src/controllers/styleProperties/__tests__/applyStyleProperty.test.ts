@@ -12,9 +12,7 @@ import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { coreStyleTable } from "../../style/coreStyleTable";
@@ -39,12 +37,9 @@ const ExtraShapeExtraStyleProperties = {
 	accentColor: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
-// Production-shaped registry: system handlers + the extras under test.
+// Production-shaped registry: the extras under test, the rest of the vocabulary
+// being answered by the style tables below.
 const styleRegistry = createStylePropertyRegistry();
-initializeStyleProperties(
-	styleRegistry,
-	createObjectTextVerticalBasisRegistry(),
-);
 styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
@@ -62,7 +57,10 @@ for (const features of [
 	GroupFeatures,
 	ExtraShapeFeatures,
 ]) {
-	styleRegistries.objectStyle.register(features.type, coreStyleTable(features));
+	styleRegistries.objectStyle.register(
+		features.type,
+		coreStyleTable(features, { hasInsetTextRegion: false }),
+	);
 }
 
 const applyStyleProperty = (

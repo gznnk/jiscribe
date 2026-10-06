@@ -106,7 +106,9 @@ const runCommand = (
 describe("switching the vertical basis of a shape whose document states no height", () => {
 	it("offers both switches on the one type that takes them", () => {
 		expect(registries.objectAutoHeight.supports("capped")).toBe(true);
-		expect(registries.objectTextVerticalBasis.supports("capped")).toBe(true);
+		expect(
+			registries.objectStyle.get("capped")?.textVerticalBasis,
+		).toBeDefined();
 	});
 
 	it("re-derives the height on the basis the switch just wrote", () => {

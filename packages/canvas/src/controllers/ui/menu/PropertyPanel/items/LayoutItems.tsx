@@ -136,7 +136,8 @@ const LockAspectRatioItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const isLocked = getSelectedLockAspectRatio(canvasState);
+	const registries = useCanvasRegistries();
+	const isLocked = getSelectedLockAspectRatio(canvasState, registries);
 
 	return (
 		<PropertyCheckbox

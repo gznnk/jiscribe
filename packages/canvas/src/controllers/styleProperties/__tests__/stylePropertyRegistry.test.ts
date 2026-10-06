@@ -6,7 +6,6 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { BUILTIN_OBJECT_DEFINITIONS } from "../../registries/applyObjectDefinition";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { SYSTEM_STYLE_PROPERTIES } from "../systemStyleProperties";
 
 const VALID_INPUT: Record<StyleValueType, string> = {
 	string: "test-value",
@@ -21,8 +20,8 @@ const EXPECTED_OUTPUT: Record<StyleValueType, string | number | boolean> = {
 };
 
 // The registry under test is taken from the real bundle wiring, so these tests
-// also guard that createCanvasRegistries registers the system handlers and
-// every ObjectTypeDefinition.extraStyleProperties declaration.
+// also guard that createCanvasRegistries registers every
+// ObjectTypeDefinition.extraStyleProperties declaration.
 const registries = createTestRegistries();
 const registry = registries.styleProperty;
 
@@ -71,6 +70,8 @@ describe("shape-declared extra properties (registry-driven)", () => {
 		const validValue = VALID_INPUT[descriptor.valueType];
 		const expected = EXPECTED_OUTPUT[descriptor.valueType];
 
+		// A name the engine's own style vocabulary already owns would be routed to
+		// the style tables instead of here, so this is the collision check too.
 		it(`${type} / ${property}: applied and coerced on the declaring shape`, () => {
 			const o1 = {
 				id: "o1",
@@ -122,16 +123,6 @@ describe("shape-declared extra properties (registry-driven)", () => {
 });
 
 describe("registry consistency", () => {
-	it("shape-declared property names do not shadow system properties", () => {
-		const systemNames = new Set<string>(Object.keys(SYSTEM_STYLE_PROPERTIES));
-		for (const { property } of EXTRA_DECLARATIONS) {
-			expect(
-				systemNames.has(property),
-				`"${property}" is declared as a shape extra but already exists as a system property`,
-			).toBe(false);
-		}
-	});
-
 	it("shapes declaring the same property name agree on its valueType", () => {
 		const seenValueTypes = new Map<string, StyleValueType>();
 		for (const { property, descriptor } of EXTRA_DECLARATIONS) {

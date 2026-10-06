@@ -10,8 +10,13 @@ const featuresOf = (groups: Partial<ObjectFeatures> = {}): ObjectFeatures => ({
 	...groups,
 });
 
-const kindsOf = (groups: Partial<ObjectFeatures>): string[] =>
-	Object.keys(coreStyleTable(featuresOf(groups))).sort();
+const kindsOf = (
+	groups: Partial<ObjectFeatures>,
+	hasInsetTextRegion = false,
+): string[] =>
+	Object.keys(
+		coreStyleTable(featuresOf(groups), { hasInsetTextRegion }),
+	).sort();
 
 describe("coreStyleTable", () => {
 	it("a type declaring no group answers for nothing", () => {
@@ -38,6 +43,17 @@ describe("coreStyleTable", () => {
 
 	it("the arrow group brings both ends", () => {
 		expect(kindsOf({ arrow: true })).toEqual(["endArrow", "startArrow"]);
+	});
+
+	it("the transform group brings the aspect-ratio lock", () => {
+		expect(kindsOf({ transform: true })).toEqual(["lockAspectRatio"]);
+	});
+
+	// The verdict is the definition's, not a flag's: a type whose region is its
+	// whole box names one place with both bases (hasInsetTextRegionType).
+	it("a region inset from the box brings the vertical basis", () => {
+		expect(kindsOf({ text: "body" }, true)).toContain("textVerticalBasis");
+		expect(kindsOf({ text: "body" }, false)).not.toContain("textVerticalBasis");
 	});
 
 	// Which text intents a body brings is textStyleTable's own business; what this

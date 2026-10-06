@@ -21,6 +21,7 @@ describe("textStyleTable", () => {
 			"fontStyle",
 			"fontWeight",
 			"textAlign",
+			"textContent",
 			"textDecoration",
 			"toggleBold",
 			"toggleItalic",
@@ -35,12 +36,14 @@ describe("textStyleTable", () => {
 
 	it("a source-language body takes the base fields and the alignments alone", () => {
 		// Its own syntax carries the emphasis, so neither those fields nor the
-		// toggles that flip them are answered for (textStyleKeysOf).
+		// toggles that flip them are answered for (textStyleKeysOf). The content is
+		// answered for by every type holding text.
 		expect(kindsOf("source")).toEqual([
 			"fontColor",
 			"fontFamily",
 			"fontSize",
 			"textAlign",
+			"textContent",
 			"verticalAlign",
 		]);
 	});

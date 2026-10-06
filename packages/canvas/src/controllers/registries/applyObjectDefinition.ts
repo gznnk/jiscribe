@@ -459,13 +459,15 @@ export const applyObjectDefinition = (
 	registries.objectComponent.register(type, definition.component);
 	registries.objectTextStyleDefaults.registerDefinition(type, definition);
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
-	registries.objectStyle.register(type, coreStyleTable(definition.features));
+	registries.objectStyle.register(
+		type,
+		coreStyleTable(definition.features, {
+			hasInsetTextRegion: hasInsetTextRegionType(definition),
+		}),
+	);
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {
 		registries.objectAutoHeight.register(type);
-	}
-	if (hasInsetTextRegionType(definition)) {
-		registries.objectTextVerticalBasis.register(type);
 	}
 	// A type whose doc may leave `height` out gets the shared derivation, which is
 	// inert for every object of it that states one — the two are mutually

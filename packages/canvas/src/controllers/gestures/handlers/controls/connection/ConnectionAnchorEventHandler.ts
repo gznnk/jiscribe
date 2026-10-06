@@ -157,8 +157,10 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		const connector: ConnectorState = {
 			id: connectorId,
 			type: "connector",
-			// features must be stamped on creation: the style-property handlers read it directly
-			// to gate style updates (a connector without it silently ignores stroke changes).
+			// features must be stamped on creation: the sides that read it off the
+			// object rather than through a registry gate on it (which rows the style
+			// menus offer, hit testing), so a connector without it is drawn but not
+			// offered its own stroke.
 			features: ConnectorFeatures,
 			// points holds only intermediate waypoints (endpoints are held by source/target). Empty on new creation since it is a straight line
 			points: [] as Point[],
