@@ -224,7 +224,7 @@ CodeMirror の `EditorView`）。
 **`propertyPanel` のカスタム行。**プラグインが自分で描く行は組み込みの行に混ぜる
 `{ type: "custom"; id; component }`（`PropertyPanelCustomItem`）で、ObjectMenu の
 カスタム項目と同じ形である。コンポーネントが受け取るのは `PropertyPanelItemProps`
-だけで、選択の切片と、スタイルを書く `onPropertyUpdate`・フレームの数値を書く
+だけで、選択の切片と、スタイルを書く `onStyleIntent`・フレームの数値を書く
 `onTransformUpdate` が入っている（どちらの型も
 `packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts` が正本）。
 組み込みの行が読むコントローラ state は渡らない。使ってよいのは
@@ -237,7 +237,9 @@ CodeMirror の `EditorView`）。
 取る。そのプロパティについて選択全体が何を言っているかを、同名の書き込みが届くのと
 まったく同じ object について返すので、プラグインの行も組み込みの行と同じように
 mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参照）。
-書く前に知っておく規約は 2 つ:
+書き込みはその鏡で、`onStyleIntent(intent, commit)` は名前と文字列ではなく述べられた
+編集そのものを取る。図形自身のプロパティは `{ kind, value }` と書く（宣言した名前と、
+エントリが読む transport の文字列）。書く前に知っておく規約は 2 つ:
 
 - 複数型のマージが行を突き合わせる鍵は `id` である。同じ行を出す型どうしは同じ
   綴りにすること。綴りが違う型が混ざった選択ではその行は落ちる（片方しか持たない
@@ -253,7 +255,7 @@ mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参
 文字があるときだけ出る。省略は常に出す。
 
 実例は `plugins/container-shapes` である。`header-fill` 行が
-`PropertyColorField` から `onPropertyUpdate` 経由で `headerFill` を書き、Fill
+`PropertyColorField` から `onStyleIntent` 経由で `headerFill` を書き、Fill
 セクションの本体色の下に並ぶ。`header-height` 行は `PropertyNumberField` から
 extra スタイルプロパティ `headerHeight` を書き、Layout セクションのサイズの下に
 並ぶ。現在値はどちらも `useSelectionStyle` で述べ、宣言したプロパティが返す

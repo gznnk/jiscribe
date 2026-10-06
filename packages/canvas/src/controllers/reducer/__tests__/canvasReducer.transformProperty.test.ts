@@ -371,9 +371,8 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 			expect(state.history.past).toHaveLength(1);
 
 			state = canvasReducer(state, {
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "width",
-				value: "60",
+				type: "STYLE_INTENT",
+				intent: { kind: "width", value: "60" },
 				commit: true,
 				coalesceHistory: true,
 			});

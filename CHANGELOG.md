@@ -140,6 +140,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   paper color, a container's header color and band height) now stands for the
   whole selection rather than its first shape, showing its default where the
   selection disagrees.
+- **For plugin authors: and one write API, its mirror.** A row writes through
+  `onStyleIntent(intent, commit)` (`StyleIntentUpdater`), which takes the edit
+  stated rather than a property name and a string: a name the engine owns goes as
+  its typed intent (`{ kind: "fontSize", size: 24 }`), a shape's own name as
+  `{ kind, value }` (`{ kind: "headerHeight", value: "32" }`). `StylePropertyUpdater`
+  and the `onPropertyUpdate` prop are gone; a widget that holds a name and a
+  string from the DOM reads it with `styleIntentOf(property, value)`, exported
+  beside `useSelectionStyle`.
 - **For plugin authors: a text edit is opened on the selection, not alongside
   it.** `textEditState` no longer names its own object or slot: it carries the
   draft and nothing else, and what is being edited is `selection` — the lone

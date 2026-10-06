@@ -104,8 +104,8 @@ export interface ICanvasRegistries {
 	 * Per-type style tables, read by the walkers that write a style
 	 * (applyStyleIntent) and report it (readSelectionStyle): what a style intent
 	 * means to the type it is addressed to. The whole bundle is handed to the
-	 * boundary that reads a property name into an intent (applyStyleProperty),
-	 * which takes the slice it needs (StyleIntentRegistries) structurally.
+	 * walkers' callers, each of which takes the slice it needs
+	 * (StyleIntentRegistries) structurally.
 	 */
 	objectStyle: ObjectStyleRegistry;
 }

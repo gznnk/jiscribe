@@ -200,18 +200,20 @@ UI が運ぶのはプロパティの**名前**と**文字列**。DOM の `data-p
 
 ```
 ObjectMenu の項目 / スライダー、サイドバーの色見本 ── ジェスチャー（set: / slider:）─→ applyStylePropertyPart ┐
-ObjectMenu の数値入力、サイドバーのコールバック   ── STYLE_PROPERTY_UPDATE ──────────→ canvasReducer          ┼─→ applyStyleProperty
-                                                                                                              ┘        │
-                                                                                                     INTENT_BY_PROPERTY │
-                                                                                                                        ↓
-                                                                                                             applyStyleIntent
+                                                                                          │ styleIntentOf       │
+ObjectMenu の数値入力、サイドバーのコールバック、エディタの打鍵 ── STYLE_INTENT ─────────→ canvasReducer       ┼─→ applyStyleIntent
+    └ プロパティが静的に決まる行は intent を直接組み、                                    ┘
+      名前と文字列しか持たない部品は styleIntentOf で読む
 ```
 
-スライダーは両経路にまたがる。ポインタ操作（ドラッグとトラックのクリック）は
-ジェスチャー経路、キーボード操作はジェスチャーを出さないので `STYLE_PROPERTY_UPDATE`。
+両経路の終点は `applyStyleIntent`。違うのは intent の出どころだけで、ジェスチャー経路は
+DOM から名前と文字列を受け取って読み、React 経路（`STYLE_INTENT`）は既に intent を
+運んでくる（名前と文字列しか持たない部品は `styleIntentOf` を通してから渡す）。
 
-`applyStyleProperty(state, property, value, registries)` が、名前と文字列を intent に
-読む唯一の場所:
+スライダーは両経路にまたがる。ポインタ操作（ドラッグとトラックのクリック）は
+ジェスチャー経路、キーボード操作はジェスチャーを出さないので `STYLE_INTENT`。
+
+`styleIntentOf(property, value)` が、名前と文字列を intent に読む唯一の場所:
 
 - `INTENT_BY_PROPERTY` が、エンジン自身の語彙の各名前と「その文字列が作る intent」を
   対応づける。`satisfies Record<SystemStyleName, StyleIntentMapper>` が付いていて、
@@ -224,23 +226,27 @@ ObjectMenu の数値入力、サイドバーのコールバック   ── STYLE
 - どのマッパーも知らない名前は `{ kind: property, value }` になり、受けるかどうかは
   型の表が決める
 
-キーボード経路は境界を通らない。`TOGGLE_TEXT_FORMAT` は打鍵の時点から
-`TextToggleIntentKind` を運び、直接 `applyStyleIntent` を呼ぶ。「太字」をフィールドへ
-読み替える処理が 2 箇所に無いようにするためである。
+トグルも React 経路のただの intent で、打鍵が名指す `TextToggleIntentKind` をそのまま
+`{ kind: "toggleBold" }` + `commit: true` として投げる。「太字」をフィールドへ読み替える
+処理が 2 箇所に無く、1 打鍵が 1 エントリになるのも変わらない（記録するのは
+`STYLE_INTENT` のコミット側の後処理）。
 
-### 唯一の例外
+### スタイルの書き込みではないもの
 
 複数選択の縦横比ロックは、選択の周りに描かれる枠（`createMultiSelectGroup`）の持ち物で、
 中のどの object のものでもない。文書のフィールドではなくセッション状態なので、
-`StyleEntry` では表せない。`applyStyleProperty` がその場合だけ `multiSelectGroup` へ
-書いて返る。報告する行も同じ優先順に従う（`getSelectedLockAspectRatio`）。
+`StyleEntry` では表せない。そのためどちらの経路にも乗らず、サイドバーの行は
+`toggleLockAspectRatio` コマンドを走らせる。複数選択なら枠自身のフラグを反転し、
+そうでなければ `lockAspectRatio` intent を適用する。報告する行も同じ優先順に従う
+（`getSelectedLockAspectRatio`）。kind は語彙の一部なのでマッパーは
+`INTENT_BY_PROPERTY` に残るが、ロックをプロパティ名で綴る UI はもう無い。
 
 ### 性能
 
 スライダーのドラッグは pointermove フレームごとに適用されるので、歩き手は #213 の
 `createCowObjects` ビューへ書く（全オブジェクトの map 展開ではなく変更数のオーダー）。
 materialize は従来どおりの分担で、ジェスチャー経路は `handleGesture` のイベント末尾の
-関門で平らにし、`handleGesture` を通らない `STYLE_PROPERTY_UPDATE` 経路は書き込みの
+関門で平らにし、`handleGesture` を通らない `STYLE_INTENT` 経路は書き込みの
 直後に平らにする。
 
 ## 図形が宣言するもの
@@ -289,7 +295,10 @@ container プラグインは `src/schema/ContainerDoc.ts` で `ContainerExtraSty
 | 既存スタイルの新しい格納先         | `{ apply, read }` の対を返すヘルパーを `entries/` に足し、必要な表から使う                                                                                                                                                    |
 | 1 つの図形だけが持つスタイル       | その図形の `…ExtraStyleProperties` へ 1 行（初回だけ定義の `extraStyleProperties` も）                                                                                                                                        |
 
-回帰の安全網: `style/__tests__/applyStyleProperty.test.ts` はレジストリ駆動で、実際の
+回帰の安全網: 読み替えは `style/__tests__/styleIntentOf.test.ts` が、適用側は
+名前と文字列を運ぶ唯一の経路の
+`gestures/handlers/menu/utils/__tests__/applyStylePropertyPart.test.ts` が見る。
+後者はレジストリ駆動で、実際の
 バンドル配線から図形宣言の extra を全て列挙し、gate・値の読み・ネスト書き込みを確かめる。
 同じ名前を宣言する図形が `valueType` で一致していることも見る。新しい宣言は自動で
 カバーされる。

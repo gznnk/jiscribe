@@ -221,19 +221,24 @@ DOM can hold in a `data-part` (`menuParts.ts`):
 
 ```
 ObjectMenu item / slider, sidebar swatch ── gesture (set: / slider:) ─→ applyStylePropertyPart ┐
-ObjectMenu number input, sidebar callback ── STYLE_PROPERTY_UPDATE ──→ canvasReducer           ┼─→ applyStyleProperty
-                                                                                               ┘        │
-                                                                                      INTENT_BY_PROPERTY │
-                                                                                                         ↓
-                                                                                              applyStyleIntent
+                                                                            │ styleIntentOf    │
+ObjectMenu number input, sidebar callback, editor keystroke ── STYLE_INTENT ─→ canvasReducer   ┼─→ applyStyleIntent
+    └ a row that knows its property states the intent outright;              ┘
+      a widget holding a name and a string reads it with styleIntentOf
 ```
+
+Both routes end at `applyStyleIntent`. What differs is where the intent comes
+from: the gesture route is handed a name and a string by the DOM and reads them,
+while the React route (`STYLE_INTENT`) carries an intent already — the surface
+that raised it having stated it, through `styleIntentOf` when all it held was a
+name and a string.
 
 The slider straddles both routes: pointer interaction (drag and track click) rides
 the gesture route, while keyboard interaction produces no gesture and so goes
-through `STYLE_PROPERTY_UPDATE`.
+through `STYLE_INTENT`.
 
-`applyStyleProperty(state, property, value, registries)` is the only place a name
-and a string are read into an intent:
+`styleIntentOf(property, value)` is the one place a name and a string are read
+into an intent:
 
 - `INTENT_BY_PROPERTY` maps each name of the engine's own vocabulary to the intent
   its string makes. It is `satisfies Record<SystemStyleName, StyleIntentMapper>`,
@@ -246,25 +251,30 @@ and a string are read into an intent:
 - A name no mapper knows becomes `{ kind: property, value }`, and the types' tables
   decide whether anything takes it.
 
-The keystroke route skips the boundary: `TOGGLE_TEXT_FORMAT` carries a
-`TextToggleIntentKind` from the keystroke itself and calls `applyStyleIntent`
-directly, so nothing translates a "bold" into the field it flips twice.
+A toggle is an ordinary intent on the React route: `{ kind: "toggleBold" }` with
+`commit: true`, raised from the keystroke itself (`TextToggleIntentKind`), so
+nothing translates a "bold" into the field it flips twice and one keystroke still
+lands one undo entry — the commit tail of `STYLE_INTENT` is what records it.
 
-### The one exception
+### What is not a style write
 
 A multi-selection's aspect-ratio lock belongs to the box drawn around the
 selection (`createMultiSelectGroup`), not to any object in it: session state
-rather than a document field, which no `StyleEntry` can express.
-`applyStyleProperty` writes `multiSelectGroup` for that case and returns. The row
-that reports it follows the same precedence (`getSelectedLockAspectRatio`).
+rather than a document field, which no `StyleEntry` can express. So it is not on
+either route — the sidebar's row runs the `toggleLockAspectRatio` command, which
+flips the box's own flag for a multi-selection and applies the
+`lockAspectRatio` intent otherwise. The row that reports it follows the same
+precedence (`getSelectedLockAspectRatio`). The mapper stays in
+`INTENT_BY_PROPERTY` because the kind is part of the vocabulary, but no surface
+spells the lock as a property any more.
 
 ### Performance
 
 Slider drags apply once per pointermove frame, so the walk writes through the #213
 `createCowObjects` view (O(changed) instead of an O(all objects) map spread).
 Materialization follows the standard split: the gesture route is flattened at
-`handleGesture`'s end-of-event choke point, and the `STYLE_PROPERTY_UPDATE` route,
-which bypasses `handleGesture`, materializes right after the write.
+`handleGesture`'s end-of-event choke point, and the `STYLE_INTENT` route, which
+bypasses `handleGesture`, materializes right after the write.
 
 ## What a shape declares
 
@@ -317,7 +327,10 @@ fill, which lives on the cells) needs. A declarative
 | A new storage shape for an existing style  | A helper in `entries/` returning the `{ apply, read }` pair, used by the table that needs it                                                                                                                                              |
 | A style belonging to one shape             | One entry in that shape's `…ExtraStyleProperties` (plus `extraStyleProperties` in its definition, first time only)                                                                                                                        |
 
-Regression safety: `style/__tests__/applyStyleProperty.test.ts` is
+Regression safety: `style/__tests__/styleIntentOf.test.ts` covers the
+translation, and the apply side of it —
+`gestures/handlers/menu/utils/__tests__/applyStylePropertyPart.test.ts`, the one
+route still carrying a name and a string — is
 registry-driven — it enumerates every shape-declared extra in the real bundle
 wiring and checks the gate, the value reading and the nested write, plus that the
 shapes declaring the same name agree on its `valueType`. A new declaration is

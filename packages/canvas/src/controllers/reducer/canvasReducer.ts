@@ -21,8 +21,6 @@ import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { reconcileSelection } from "../selection/reconcileSelection";
 import { applyStyleIntent } from "../style/applyStyleIntent";
-import { applyStyleProperty } from "../style/applyStyleProperty";
-import type { StyleIntent } from "../style/StyleIntent";
 import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
@@ -260,22 +258,19 @@ export const createCanvasReducer =
 				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
-			case "STYLE_PROPERTY_UPDATE": {
-				// Style property updates take two paths.
-				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React
-				//     onChange events — the ObjectMenu's number input and keyboard-driven slider, and
-				//     the properties sidebar's callback-writing controls — none of which fires a gesture.
+			case "STYLE_INTENT": {
+				// Style writes take two paths.
+				// (1) This case: dispatched from Canvas.tsx's onStyleIntent callback via React
+				//     onChange events — the ObjectMenu's number input and keyboard-driven slider, the
+				//     properties sidebar's callback-writing controls, and the editor's format
+				//     keystrokes — none of which fires a gesture.
 				// (2) applyStylePropertyPart: via the gesture system (set: / slider:), from the
 				//     ObjectMenu's and the sidebar's buttons and sliders (ObjectMenuHandler /
 				//     PropertyPanelHandler). That path does not go through here.
-				// Both read the name and the string into an intent the same way
-				// (applyStyleProperty); what differs is only the commit tail below.
-				const updated = applyStyleProperty(
-					state,
-					action.property,
-					action.value,
-					registries,
-				);
+				// Both end at the same apply; what differs is only the commit tail below. The
+				// intent arrives stated, a surface that holds a name and a string having read it
+				// through the shared styleIntentOf.
+				const updated = applyStyleIntent(state, action.intent, registries);
 				// This path bypasses handleGesture, so flatten the COW view here
 				// (one-shot update, same pattern as MoveCommands; #213).
 				const materialized = {
@@ -295,6 +290,9 @@ export const createCanvasReducer =
 						registries.objectContentResizer,
 					);
 				}
+				// The commit tail re-measures too (commitPropertyUpdate), which is what a
+				// committed toggle needs as much as a committed font size: the restyled
+				// body is drawn at a size the box has to follow.
 				return commitPropertyUpdate(
 					selectionResult,
 					state,
@@ -302,7 +300,7 @@ export const createCanvasReducer =
 						? buildPropertyCoalesceKey(
 								state,
 								STYLE_PROPERTY_COALESCE_PREFIX,
-								action.property,
+								action.intent.kind,
 							)
 						: null,
 					registries,
@@ -310,7 +308,7 @@ export const createCanvasReducer =
 			}
 
 			case "TRANSFORM_PROPERTY_UPDATE": {
-				// The sibling route to STYLE_PROPERTY_UPDATE for the geometry the style
+				// The sibling route to STYLE_INTENT for the geometry the style
 				// registry does not own; dispatched from the properties sidebar's
 				// number inputs, which fire no gesture (see TransformPropertyUpdateAction).
 				const updated = handleTransformPropertyUpdate(
@@ -503,38 +501,6 @@ export const createCanvasReducer =
 				};
 			}
 
-			case "TOGGLE_TEXT_FORMAT": {
-				// Stated as an intent of the engine's own vocabulary: a kind alone does
-				// not say which, a shape's own intent being a kind and a value
-				// (ExtraStyleIntent).
-				const intent: StyleIntent = { kind: action.kind };
-				const styled = applyStyleIntent(state, intent, registries);
-				if (styled === state) {
-					return state;
-				}
-				// The styling is written into the object right away (the session stays
-				// open), so the box it is measured into has to follow, and the change is
-				// its own undo entry rather than riding on the commit that ends the edit.
-				// One keystroke is one commit, which is why the commit is raised here and
-				// not in the entry, whose menu callers preview (STYLE_PROPERTY_UPDATE).
-				const resizedResult = reconcileObjectContentSizes(
-					{
-						...styled,
-						// This path bypasses handleGesture, so flatten the COW view here
-						// (one-shot update, as the menu route does; #213).
-						objects: materializeObjects(styled.objects),
-						commitVersion: state.commitVersion + 1,
-					},
-					state,
-					registries.objectContentResizer,
-				);
-				const selectionResult = reconcileSelection(
-					resizedResult,
-					registries.objectPartKind,
-				);
-				return recordHistoryIfNeeded(selectionResult, state);
-			}
-
 			case "END_TEXT_EDIT": {
 				if (!state.textEditState) {
 					return state;
@@ -638,7 +604,7 @@ const adoptDocumentState = (
 	},
 });
 
-/** Prefix of the coalesce key for consecutive style-property commits (ObjectMenu or sidebar) */
+/** Prefix of the coalesce key for consecutive style-intent commits (ObjectMenu or sidebar) */
 const STYLE_PROPERTY_COALESCE_PREFIX = "style-property";
 
 /** Prefix of the coalesce key for consecutive properties-sidebar transform commits */
@@ -653,7 +619,7 @@ const META_PROPERTY_COALESCE_PREFIX = "meta-property";
 /**
  * Builds the coalesce key for a property commit. The target identity is part of the
  * key, so a changed selection (or a different property) automatically becomes a
- * separate undo entry; the prefix keeps the two routes apart, since the same name
+ * separate undo entry; the prefix keeps the four routes apart, since the same name
  * can mean a different edit on each.
  */
 const buildPropertyCoalesceKey = (

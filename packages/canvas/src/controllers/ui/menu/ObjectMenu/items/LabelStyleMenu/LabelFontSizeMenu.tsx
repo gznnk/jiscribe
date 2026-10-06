@@ -5,9 +5,9 @@ import { memo, useRef } from "react";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
+import { selectionValueAs } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
-import { selectionValueAs } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -33,7 +33,7 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
 	selection,
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -80,7 +80,7 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							sliderMax={SLIDER_MAX_FONT_SIZE}
 							step={FONT_SIZE_STEP}
 							property="label.fontSize"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 					</FontSizeMenuWrapper>
 				</ObjectMenuDropdownPanel>

@@ -12,7 +12,7 @@ import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
-import { applyStyleProperty } from "../../../../../style/applyStyleProperty";
+import { applyStyleIntent } from "../../../../../style/applyStyleIntent";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -404,30 +404,27 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selection: selectionOf([connectorId]),
 			};
 
-			const dashed = applyStyleProperty(
+			const dashed = applyStyleIntent(
 				selected,
-				"strokeDashType",
-				"dashed",
+				{ kind: "strokeDashType", dash: "dashed" },
 				registries,
 			);
 			expect(
 				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
 			).toBe("dashed");
 
-			const colored = applyStyleProperty(
+			const colored = applyStyleIntent(
 				selected,
-				"stroke",
-				"#ff0000",
+				{ kind: "stroke", color: "#ff0000" },
 				registries,
 			);
 			expect((colored.objects[connectorId] as ConnectorState).stroke).toBe(
 				"#ff0000",
 			);
 
-			const widened = applyStyleProperty(
+			const widened = applyStyleIntent(
 				selected,
-				"strokeWidth",
-				"7",
+				{ kind: "strokeWidth", width: 7 },
 				registries,
 			);
 			expect((widened.objects[connectorId] as ConnectorState).strokeWidth).toBe(

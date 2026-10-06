@@ -8,7 +8,7 @@ import type {
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
-import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 /**
  * The controls the properties sidebar knows how to draw. Each names one row (or
@@ -107,7 +107,7 @@ export type PropertyPanelSelection = Pick<
 
 /**
  * States one number of the selection's transform frame, dispatching
- * TRANSFORM_PROPERTY_UPDATE. The sibling of {@link StylePropertyUpdater}
+ * TRANSFORM_PROPERTY_UPDATE. The sibling of {@link StyleIntentUpdater}
  * for the geometry the style-property registry does not own.
  *
  * @param property - Which of the frame's five numbers is being stated
@@ -186,6 +186,6 @@ export type PropertyPanelItemProps = {
 	selection: CanvasSelection;
 	/** The frame a multi-selection is transformed through; null while one object or nothing is selected. */
 	multiSelectGroup: GroupState | null;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 	onTransformUpdate: PropertyPanelTransformUpdater;
 };

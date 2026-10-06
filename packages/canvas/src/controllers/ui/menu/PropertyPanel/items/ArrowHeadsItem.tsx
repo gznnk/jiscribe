@@ -12,17 +12,17 @@ import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../style/readSelectionStyle";
+import type { SelectionValue } from "../../../../style/SelectionValue";
+import {
+	isMixedSelectionValue,
+	selectionValueOr,
+} from "../../../../style/SelectionValue";
 import { ArrowSwapIcon } from "../../../icons/ArrowSwapIcon";
 import { ArrowHeadIconPreview } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadIconPreview";
 import {
 	ArrowSelectorGrid,
 	ArrowTypeButton,
 } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadMenuStyled";
-import type { SelectionValue } from "../../utils/SelectionValue";
-import {
-	isMixedSelectionValue,
-	selectionValueOr,
-} from "../../utils/SelectionValue";
 import {
 	PropertyIconButton,
 	PropertyMixedLabel,

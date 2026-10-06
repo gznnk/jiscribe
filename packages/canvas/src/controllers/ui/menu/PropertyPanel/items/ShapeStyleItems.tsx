@@ -6,15 +6,15 @@ import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../style/readSelectionStyle";
-import { DashedLineIcon } from "../../../icons/DashedLineIcon";
-import { DottedLineIcon } from "../../../icons/DottedLineIcon";
-import { SolidLineIcon } from "../../../icons/SolidLineIcon";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
 	selectionValueOr,
 	selectionValueOrFirst,
-} from "../../utils/SelectionValue";
+} from "../../../../style/SelectionValue";
+import { DashedLineIcon } from "../../../icons/DashedLineIcon";
+import { DottedLineIcon } from "../../../icons/DottedLineIcon";
+import { SolidLineIcon } from "../../../icons/SolidLineIcon";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
@@ -35,7 +35,7 @@ const MAX_CORNER_RADIUS = 999;
 /** The face of the selected shape. */
 const FillItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -52,7 +52,7 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 				property="fill"
 				role="surface"
 				title={messages.menuBackgroundColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -63,7 +63,7 @@ export const FillItem = memo(FillItemComponent);
 /** How opaque the face is drawn, stated in percent over the document's 0..1. */
 const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -86,9 +86,8 @@ const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuFillOpacity}
 				testId="property-field:fillOpacity"
 				onUpdate={(percent, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"fillOpacity",
-						String(toOpacityValue(percent)),
+					onStyleIntent(
+						{ kind: "fillOpacity", opacity: toOpacityValue(percent) },
 						commit,
 						coalesceHistory,
 					)
@@ -103,7 +102,7 @@ export const FillOpacityItem = memo(FillOpacityItemComponent);
 /** The stroke of the selected shape, or of the selected connector. */
 const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -120,7 +119,7 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 				property="stroke"
 				role="ink"
 				title={messages.menuStrokeColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -131,7 +130,7 @@ export const StrokeColorItem = memo(StrokeColorItemComponent);
 /** How thick the stroke is drawn. 0 draws none. */
 const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -154,9 +153,8 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuBorderWidth}
 				testId="property-field:strokeWidth"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"strokeWidth",
-						String(value),
+					onStyleIntent(
+						{ kind: "strokeWidth", width: value },
 						commit,
 						coalesceHistory,
 					)
@@ -221,7 +219,7 @@ export const StrokeDashTypeItem = memo(StrokeDashTypeItemComponent);
 /** How opaque the stroke is drawn, stated in percent over the document's 0..1. */
 const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -247,9 +245,8 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuBorderOpacity}
 				testId="property-field:strokeOpacity"
 				onUpdate={(percent, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"strokeOpacity",
-						String(toOpacityValue(percent)),
+					onStyleIntent(
+						{ kind: "strokeOpacity", opacity: toOpacityValue(percent) },
 						commit,
 						coalesceHistory,
 					)
@@ -264,7 +261,7 @@ export const StrokeOpacityItem = memo(StrokeOpacityItemComponent);
 /** How far the corners are rounded. */
 const RadiusItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -284,7 +281,11 @@ const RadiusItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuCornerRadius}
 				testId="property-field:rx"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate("rx", String(value), commit, coalesceHistory)
+					onStyleIntent(
+						{ kind: "cornerRadius", radius: value },
+						commit,
+						coalesceHistory,
+					)
 				}
 			/>
 		</PropertyRow>

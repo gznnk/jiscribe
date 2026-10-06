@@ -12,7 +12,7 @@ import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
-import type { TextToggleIntentKind } from "../style/StyleIntent";
+import type { ExtraStyleIntent, StyleIntent } from "../style/StyleIntent";
 
 /**
  * Gesture action - handles user gestures
@@ -153,17 +153,6 @@ export type UpdateTextEditSelectionAction = {
 };
 
 /**
- * Toggle text format action - turns bold / italic / underline on or off over the
- * text the open editor has selected, leaving the rest of the slot as it is. The
- * keystroke names the style intent itself (TextToggleIntentKind), which the
- * edited object's type answers for the way it does the menus' writes.
- */
-export type ToggleTextFormatAction = {
-	type: "TOGGLE_TEXT_FORMAT";
-	kind: TextToggleIntentKind;
-};
-
-/**
  * End text edit action - ends text editing with commit or cancel
  */
 export type EndTextEditAction = {
@@ -172,19 +161,26 @@ export type EndTextEditAction = {
 };
 
 /**
- * Style property update action - a style property written through
- * applyStyleProperty with live preview and commit, from the inputs that fire
- * no gesture: the ObjectMenu's number input and keyboard-driven slider, and the
- * properties sidebar's callback-writing controls.
+ * Style intent action - states one style edit of the selection, with live
+ * preview and commit, from every surface that fires no gesture: the ObjectMenu's
+ * number input and keyboard-driven slider, the properties sidebar's
+ * callback-writing controls, and the text editor's own format keystrokes.
+ *
+ * The first of the four property routes, and the only one whose payload is
+ * already in the shape the layer below takes: the intent reaches
+ * `applyStyleIntent` as it stands, the names and strings the DOM carries having
+ * been read (styleIntentOf) by whoever held them. A toggle is an ordinary intent
+ * on this route — `{ kind: "toggleBold" }` with `commit: true` — so one
+ * keystroke lands one entry without a route of its own.
  */
-export type StylePropertyUpdateAction = {
-	type: "STYLE_PROPERTY_UPDATE";
-	property: string;
-	value: string;
-	/** true: recorded in history (blur/Enter), false: preview only */
+export type StyleIntentAction = {
+	type: "STYLE_INTENT";
+	/** What to reflect: one of the engine's own kinds with its value, or a name a shape declared for itself (ExtraStyleIntent). */
+	intent: StyleIntent | ExtraStyleIntent;
+	/** true: recorded in history (blur/Enter, a keystroke), false: preview only */
 	commit: boolean;
 	/**
-	 * true: merge this commit with the preceding one for the same property and
+	 * true: merge this commit with the preceding one for the same intent kind and
 	 * selection into a single undo entry (slider key repeat). Ignored when
 	 * `commit` is false. Omitted means every commit is its own entry.
 	 */
@@ -201,7 +197,7 @@ export type TransformProperty = "x" | "y" | "width" | "height" | "rotation";
  * Transform property update action - states one number of the selection's frame
  * outright, where the transform handles would have dragged it there.
  *
- * The sibling of {@link StylePropertyUpdateAction} for the geometry the style
+ * The sibling of {@link StyleIntentAction} for the geometry the style
  * registry does not own: the frame it edits is the selected object's, or the
  * multiSelectGroup's for a multi-selection, and the result matches the
  * corresponding drag (groups scale their children, connectors follow, a height
@@ -265,7 +261,7 @@ export type DocumentPropertyUpdate<
  * Document property update action - states a setting of the document itself,
  * which is what the properties sidebar offers while nothing is selected.
  *
- * The third property route beside {@link StylePropertyUpdateAction} and
+ * The third property route beside {@link StyleIntentAction} and
  * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
  * selection: it mirrors the headless `setBackground` / `setView` ops, down to
  * `null` meaning "drop the field and let the host decide" rather than "set it to
@@ -295,7 +291,7 @@ export type MetaProperty = "name" | "description";
 /**
  * Meta property update action - states one of the selected object's meta fields.
  *
- * The fourth property route beside {@link StylePropertyUpdateAction},
+ * The fourth property route beside {@link StyleIntentAction},
  * {@link TransformPropertyUpdateAction} and {@link DocumentPropertyUpdateAction}.
  * Its target is the one object the sidebar names — a single selected object, or
  * the selected connector — and never a selected group's descendants: a group
@@ -373,9 +369,8 @@ export type CanvasAction =
 	| RevertHistoryAction
 	| UpdateTextEditAction
 	| UpdateTextEditSelectionAction
-	| ToggleTextFormatAction
 	| EndTextEditAction
-	| StylePropertyUpdateAction
+	| StyleIntentAction
 	| TransformPropertyUpdateAction
 	| DocumentPropertyUpdateAction
 	| MetaPropertyUpdateAction

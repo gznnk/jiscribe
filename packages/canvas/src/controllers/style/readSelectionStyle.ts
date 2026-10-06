@@ -4,10 +4,10 @@ import {
 	graftStyleTextEdit,
 	resolveStyleTextEdit,
 } from "./resolveStyleTextEdit";
+import { combineSelectionValues } from "./SelectionValue";
 import type { StyleIntentValueType } from "./StyleIntent";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { SelectionValue } from "../ui/menu/utils/SelectionValue";
-import { combineSelectionValues } from "../ui/menu/utils/SelectionValue";
+import type { SelectionValue } from "./SelectionValue";
 
 /**
  * What the whole selection says about one style intent: every place the intent

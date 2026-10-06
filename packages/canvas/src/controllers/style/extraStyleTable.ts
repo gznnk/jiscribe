@@ -1,9 +1,9 @@
 import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
-import { isSystemStyleName } from "./applyStyleProperty";
 import { extraField } from "./entries/extraField";
 import type { ExtraStyleEntry, StyleTable } from "./StyleEntry";
+import { isSystemStyleName } from "./styleIntentOf";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
@@ -21,7 +21,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * @returns The extra half of the type's table
  * @throws When a declared name is one of the engine's own style names: such a
  *   name is read into the intent of that name at the boundary
- *   (applyStyleProperty), so the entry would never be reached and the shadowing
+ *   (styleIntentOf), so the entry would never be reached and the shadowing
  *   declaration would quietly do nothing
  */
 export const extraStyleTable = (

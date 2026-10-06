@@ -128,10 +128,10 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
   コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
 
 **スタイリング UI のネスト対応（ドット記法）**: スタイリングのプロパティ更新配管
-（メニュー項目 → `STYLE_PROPERTY_UPDATE` または ObjectMenu のジェスチャー `set:{property}:{value}` →
-`applyStyleProperty`）はフラットなプロパティ名を運ぶ。ラベルのスタイル（`label.fill` /
+（メニュー項目 → `STYLE_INTENT` または ObjectMenu のジェスチャー `set:{property}:{value}` →
+`applyStylePropertyPart`）はフラットなプロパティ名を運ぶ。ラベルのスタイル（`label.fill` /
 `label.stroke` / `label.fontColor` など）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
-2 経路とも収束点は `applyStyleProperty` の 1 か所。`label.*` は connector 固有の宣言
+2 経路とも収束点は `applyStyleIntent` の 1 か所。`label.*` は connector 固有の宣言
 （`ConnectorExtraStyleProperties`）として登録され、宣言から組まれたエントリがドットをネスト merge と
 解釈して `connector.label` へ書く（label 未設定時は no-op）。共有 UI
 （`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を

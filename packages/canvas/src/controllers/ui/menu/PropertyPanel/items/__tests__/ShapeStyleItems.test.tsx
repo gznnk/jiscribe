@@ -72,31 +72,30 @@ afterEach(() => {
 
 describe("StrokeWidthItem", () => {
 	it("steps from the agreed width", () => {
-		const onPropertyUpdate = vi.fn();
+		const onStyleIntent = vi.fn();
 		render(
 			<StrokeWidthItem
 				canvasState={stateOf(rect("a", 4), rect("b", 4))}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 				onTransformUpdate={vi.fn()}
 			/>,
 		);
 
 		stepUp();
 
-		expect(onPropertyUpdate).toHaveBeenCalledWith(
-			"strokeWidth",
-			"5",
+		expect(onStyleIntent).toHaveBeenCalledWith(
+			{ kind: "strokeWidth", width: 5 },
 			true,
 			true,
 		);
 	});
 
 	it("steps from a width of the selection, not from the row's own default, while the two disagree", () => {
-		const onPropertyUpdate = vi.fn();
+		const onStyleIntent = vi.fn();
 		render(
 			<StrokeWidthItem
 				canvasState={stateOf(rect("a", 4), rect("b", 8))}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 				onTransformUpdate={vi.fn()}
 			/>,
 		);
@@ -106,9 +105,8 @@ describe("StrokeWidthItem", () => {
 
 		stepUp();
 
-		expect(onPropertyUpdate).toHaveBeenCalledWith(
-			"strokeWidth",
-			"5",
+		expect(onStyleIntent).toHaveBeenCalledWith(
+			{ kind: "strokeWidth", width: 5 },
 			true,
 			true,
 		);

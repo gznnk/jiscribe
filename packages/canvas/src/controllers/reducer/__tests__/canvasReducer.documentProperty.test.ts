@@ -111,9 +111,8 @@ describe("canvasReducer / DOCUMENT_PROPERTY_UPDATE", () => {
 		let state = canvasReducer(
 			createTestState(twoRectsDoc, { selection: selectionOf(["rect-1"]) }),
 			{
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "background",
-				value: "#102030",
+				type: "STYLE_INTENT",
+				intent: { kind: "background", value: "#102030" },
 				commit: true,
 				coalesceHistory: true,
 			},

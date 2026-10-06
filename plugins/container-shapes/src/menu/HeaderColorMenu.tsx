@@ -28,7 +28,7 @@ const SECTION_ID = "header-color";
  */
 const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
@@ -61,7 +61,7 @@ const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
 						property="headerFill"
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</ObjectMenuDropdownPanel>
 			)}

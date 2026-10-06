@@ -6,11 +6,11 @@ import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuPart
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
-import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import {
 	ObjectMenuFontFamilyList,

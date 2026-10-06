@@ -87,6 +87,16 @@ export type TextToggleIntentKind = Extract<
 >;
 
 /**
+ * A toggle as an intent: the kind and nothing else. Spelled out because an
+ * object literal built from a `TextToggleIntentKind` is assignable to this
+ * three-member union but not to the whole StyleIntent one.
+ */
+export type TextToggleIntent = Extract<
+	StyleIntent,
+	{ kind: TextToggleIntentKind }
+>;
+
+/**
  * The intents stored on a text slot, named after the field each of them is: the
  * engine's vocabulary and a slot's typography (`TextSlotStyle`) agree on these
  * eight names, so the set is their intersection rather than a second list to

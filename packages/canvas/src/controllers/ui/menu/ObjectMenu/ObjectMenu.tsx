@@ -23,7 +23,7 @@ import {
 } from "./ObjectMenuStyled";
 import type {
 	ObjectMenuItem,
-	StylePropertyUpdater,
+	StyleIntentUpdater,
 	ObjectMenuSection,
 	OpenReferenceHandler,
 } from "./ObjectMenuTypes";
@@ -36,14 +36,14 @@ import { isTextAddressed } from "../utils/isTextAddressed";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 	onOpenReference?: OpenReferenceHandler;
 };
 
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
-	onPropertyUpdate: StylePropertyUpdater,
+	onStyleIntent: StyleIntentUpdater,
 	onOpenReference: OpenReferenceHandler | undefined,
 ): React.ReactNode => {
 	switch (item.type) {
@@ -54,7 +54,7 @@ const renderItem = (
 				<LineColorMenu
 					key="lineColor"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "lineStyle":
@@ -62,7 +62,7 @@ const renderItem = (
 				<LineStyleMenu
 					key="lineStyle"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "backgroundColor":
@@ -70,7 +70,7 @@ const renderItem = (
 				<BackgroundColorMenu
 					key="backgroundColor"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "borderColor":
@@ -78,7 +78,7 @@ const renderItem = (
 				<StrokeColorMenu
 					key="borderColor"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "borderStyle":
@@ -87,7 +87,7 @@ const renderItem = (
 					key="borderStyle"
 					canvasState={canvasState}
 					showRadius={item.radius}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "font":
@@ -96,11 +96,11 @@ const renderItem = (
 					<FontFamilyMenu canvasState={canvasState} />
 					<FontSizeMenu
 						canvasState={canvasState}
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 					<FontColorMenu
 						canvasState={canvasState}
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</React.Fragment>
 			);
@@ -136,7 +136,7 @@ const renderItem = (
 					objects={canvasState.objects}
 					selection={canvasState.selection}
 					openSectionId={canvasState.objectMenuOpenId}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 	}
@@ -178,7 +178,7 @@ const buildSystemSections = (
  */
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 	onOpenReference,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
@@ -228,7 +228,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 			}
 			renderedItemKeys.add(key);
 			sectionItems.push(
-				renderItem(item, canvasState, onPropertyUpdate, onOpenReference),
+				renderItem(item, canvasState, onStyleIntent, onOpenReference),
 			);
 		});
 		return (

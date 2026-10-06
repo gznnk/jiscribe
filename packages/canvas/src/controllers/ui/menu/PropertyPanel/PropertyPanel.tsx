@@ -71,13 +71,13 @@ import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
-import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 type PropertyPanelProps = {
 	/** The state the rows read: the draft-grafted objects, so a keystroke mid-edit shows here too. */
 	canvasState: CanvasControllerState;
 	/** Applies a style change; the same callback the ObjectMenu's own inputs are given. */
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 	/** States one number of the selection's transform frame. */
 	onTransformUpdate: PropertyPanelTransformUpdater;
 	/** States one of the document's own settings, for the Canvas section. */
@@ -201,7 +201,7 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  */
 const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 	onTransformUpdate,
 	onDocumentUpdate,
 	onMetaUpdate,
@@ -290,7 +290,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 														objects={canvasState.objects}
 														selection={canvasState.selection}
 														multiSelectGroup={canvasState.multiSelectGroup}
-														onPropertyUpdate={onPropertyUpdate}
+														onStyleIntent={onStyleIntent}
 														onTransformUpdate={onTransformUpdate}
 													/>
 												);
@@ -300,7 +300,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 												<ItemComponent
 													key={item.type}
 													canvasState={canvasState}
-													onPropertyUpdate={onPropertyUpdate}
+													onStyleIntent={onStyleIntent}
 													onTransformUpdate={onTransformUpdate}
 												/>
 											);

@@ -16,9 +16,11 @@ import { selectors } from "../../support/selectors";
  * the ones the reader compares against the unlocked case.
  */
 
-/** The row's `data-part` names the press that follows, so "true" is the unlocked row. */
-const LOCK_ON = selectors.propertyPanelSet("lockAspectRatio", "true");
-const LOCK_OFF = selectors.propertyPanelSet("lockAspectRatio", "false");
+/**
+ * One row whatever it is set to: the press runs `toggleLockAspectRatio`, which
+ * computes the state to move to, and `aria-checked` is what says where it is.
+ */
+const LOCK_ROW = selectors.propertyPanelCommand("toggleLockAspectRatio");
 
 /** Reads the shape's current frame size (width / height attributes). */
 async function sizeOf(
@@ -34,16 +36,17 @@ async function sizeOf(
 	}, id);
 }
 
-/** Presses the sidebar's lock row and leaves the sidebar closed again. */
+/** Brings the sidebar's lock row to the state asked for and leaves the sidebar closed again. */
 async function setLockFromSidebar(
 	canvas: CanvasDriver,
 	locked: boolean,
 ): Promise<void> {
 	await canvas.openPropertyPanel();
-	await canvas.page.click(locked ? LOCK_ON : LOCK_OFF);
-	await expect(
-		canvas.page.locator(locked ? LOCK_OFF : LOCK_ON),
-	).toHaveAttribute("aria-checked", String(locked));
+	const row = canvas.page.locator(LOCK_ROW);
+	if ((await row.getAttribute("aria-checked")) !== String(locked)) {
+		await row.click();
+	}
+	await expect(row).toHaveAttribute("aria-checked", String(locked));
 	await canvas.closePropertyPanel();
 }
 
@@ -117,21 +120,17 @@ test.describe("aspect ratio lock", () => {
 
 		// The marquee's multiSelectGroup defaults to lockAspectRatio=true and the
 		// new Ctrl+G group inherits it, so the row reads locked first.
-		const unlockRow = canvas.page.locator(LOCK_OFF);
-		await expect(unlockRow).toHaveAttribute("aria-checked", "true");
-		await unlockRow.click();
+		const row = canvas.page.locator(LOCK_ROW);
+		await expect(row).toHaveAttribute("aria-checked", "true");
+		await row.click();
 
-		// The row flips to the unlocked side once the write reaches state. With the
-		// bug, features were unstamped, the write was a no-op and nothing flipped.
-		const lockRow = canvas.page.locator(LOCK_ON);
-		await expect(lockRow).toHaveAttribute("aria-checked", "false");
+		// The row flips once the write reaches state. With the bug, features were
+		// unstamped, the write was a no-op and nothing flipped.
+		await expect(row).toHaveAttribute("aria-checked", "false");
 
 		// Press again to confirm it round-trips
-		await lockRow.click();
-		await expect(canvas.page.locator(LOCK_OFF)).toHaveAttribute(
-			"aria-checked",
-			"true",
-		);
+		await row.click();
+		await expect(row).toHaveAttribute("aria-checked", "true");
 	});
 
 	test("is not offered by the floating menu, which the sidebar replaced", async ({
@@ -140,12 +139,8 @@ test.describe("aspect ratio lock", () => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 300 });
 
 		await expect(canvas.page.locator(selectors.objectMenu)).toBeVisible();
-		for (const value of ["true", "false"]) {
-			await expect(
-				canvas.page.locator(
-					`${selectors.objectMenu} ${selectors.objectMenuSet("lockAspectRatio", value)}`,
-				),
-			).toHaveCount(0);
-		}
+		await expect(
+			canvas.page.locator(selectors.objectMenuCommand("toggleLockAspectRatio")),
+		).toHaveCount(0);
 	});
 });

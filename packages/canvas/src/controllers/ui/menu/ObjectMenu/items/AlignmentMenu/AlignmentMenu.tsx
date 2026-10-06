@@ -10,16 +10,16 @@ import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import {
+	isMixedSelectionValue,
+	selectionValueOr,
+} from "../../../../../style/SelectionValue";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
 import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
-import {
-	isMixedSelectionValue,
-	selectionValueOr,
-} from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {

@@ -17,14 +17,16 @@ import { useSelectedHeaderHeight } from "../state/useSelectedHeaderHeight";
  * (ContainerHeaderHeightControl), stated outright. Labelled "Header" like the
  * color row: the section says which aspect of the header the row states.
  *
- * Written as the `headerHeight` extra style property through `onPropertyUpdate`,
- * so the field's preview / commit / coalescing ride the style route unchanged.
+ * Written as the `headerHeight` extra style property through `onStyleIntent` —
+ * a name the engine does not own, so the intent is `{ kind, value }` with the
+ * value left as the transport string — so the field's preview / commit /
+ * coalescing ride the style route unchanged.
  * The lower bound is the drag's; the upper one is left to the drawing, which
  * clamps the band to the box (`calcContainerHeaderHeight`), since a
  * multi-selection has no single height to bound against.
  */
 const HeaderHeightPropertyComponent: React.FC<PropertyPanelItemProps> = ({
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
@@ -38,9 +40,8 @@ const HeaderHeightPropertyComponent: React.FC<PropertyPanelItemProps> = ({
 				ariaLabel={messages.fieldHeaderHeight}
 				testId="property-field:headerHeight"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"headerHeight",
-						String(value),
+					onStyleIntent(
+						{ kind: "headerHeight", value: String(value) },
 						commit,
 						coalesceHistory,
 					)

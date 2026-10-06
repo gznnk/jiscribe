@@ -7,11 +7,11 @@ import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuPart
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
-import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import {
 	isMixedSelectionValue,
 	selectionValueOrFirst,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -19,7 +19,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "font-size";
 const MIN_FONT_SIZE = 1;
@@ -31,7 +31,7 @@ const FONT_SIZE_STEP = 2;
 
 type FontSizeMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -40,7 +40,7 @@ type FontSizeMenuProps = {
  */
 const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -82,7 +82,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 							sliderMax={SLIDER_MAX_FONT_SIZE}
 							step={FONT_SIZE_STEP}
 							property="fontSize"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 					</FontSizeMenuWrapper>
 				</ObjectMenuDropdownPanel>

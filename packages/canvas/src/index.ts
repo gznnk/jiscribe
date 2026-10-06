@@ -196,7 +196,7 @@ export type {
 	CustomItem,
 	BuiltinItemKey,
 	ObjectMenuItemProps,
-	StylePropertyUpdater,
+	StyleIntentUpdater,
 	OpenReferencePayload,
 	OpenReferenceHandler,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";

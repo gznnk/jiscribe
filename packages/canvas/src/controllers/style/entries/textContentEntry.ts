@@ -9,7 +9,7 @@ import type { StyleEntry } from "../StyleEntry";
 
 /**
  * The text *content* of a shape, for the programmatic route a host has to it
- * (`onPropertyUpdate` / `set:text:…`) rather than for anything the canvas's own
+ * (`onStyleIntent` / `set:text:…`) rather than for anything the canvas's own
  * menus offer.
  *
  * It lands on the default slot — the first key, the same slot Enter-started

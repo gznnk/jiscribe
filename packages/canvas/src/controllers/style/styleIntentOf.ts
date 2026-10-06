@@ -9,11 +9,8 @@ import type { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/tex
 import { isTextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/TextVerticalBasis";
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 
-import { applyStyleIntent } from "./applyStyleIntent";
 import { coerceStyleValue } from "./coerceStyleValue";
-import type { StyleIntentRegistries } from "./ObjectStyleRegistry";
-import type { StyleIntent } from "./StyleIntent";
-import type { CanvasControllerState } from "../CanvasTypes";
+import type { ExtraStyleIntent, StyleIntent } from "./StyleIntent";
 
 /**
  * Every name a style property may carry that is not a shape's own declaration:
@@ -23,9 +20,12 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * `INTENT_BY_PROPERTY` is checked against it, so a field added to a group fails
  * to compile until it is given a mapper, and a name no group owns is refused.
  *
- * Of the transform group only `lockAspectRatio` is written this way: rotation and
- * the flips are moved through their own gestures and ops, never through a style
- * property, so listing them would demand mappers that nothing would reach.
+ * Of the transform group only `lockAspectRatio` is named here: rotation and the
+ * flips are moved through their own gestures and ops, never through a style
+ * property, so listing them would demand mappers that nothing would reach. No
+ * surface spells the lock as a property either — the sidebar's row runs
+ * `toggleLockAspectRatio` — but it stays part of the vocabulary, and so of this
+ * union.
  */
 type SystemStyleName =
 	| (typeof FILL_STYLE_KEYS)[number]
@@ -145,59 +145,30 @@ export const isSystemStyleName = (property: string): boolean =>
 	intentMapperOf(property) !== undefined;
 
 /**
- * The transport boundary of the style layer: the only place a property name and
- * a string value — the form the DOM carries them in (`set:fill:#f00`,
- * `slider:strokeWidth`) — are read into an intent and applied.
+ * The one reading of a property name and a string value — the form the DOM
+ * carries them in (`set:fill:#f00`, `slider:strokeWidth`, a color typed into a
+ * picker) — into the intent they state.
  *
- * Both surfaces that write a style come through here: the gesture route
- * (applyStylePropertyPart, for the parts the ObjectMenu and the properties
- * sidebar press) and the React one (STYLE_PROPERTY_UPDATE, for the inputs that
- * fire no gesture).
+ * Both surfaces that write a style end at `applyStyleIntent`, and this is what
+ * either of them calls when all it holds is a name and a string: the gesture
+ * route for a `set:` / `slider:` part (applyStylePropertyPart), and a widget of
+ * the React route that reads its value off the DOM. A row that knows its
+ * property statically states the intent outright instead and never comes here.
  *
  * A name the engine's own vocabulary does not own is a shape's own declaration,
  * and is passed on under that very name for the types' tables to answer
  * (extraStyleTable); a name nobody declares therefore applies to nothing
  * (fail-closed).
  *
- * @param state - The state to write into; its selection decides who is reached
- * @param property - The property name, as the menus' parts spell it
- * @param value - The value as a string, read into the intent's own type (INTENT_BY_PROPERTY) or handed to the shape's own entry as it stands
- * @param registries - The canvas's style tables and the defaults their entries resolve through
- * @returns The next state, or `state` itself (same reference) when nothing took the update
+ * @param property - The property name, as the menus' parts spell it; a name with dots in it is a shape's own write path (`label.fill`)
+ * @param value - The value as a string, read into the intent's own type (INTENT_BY_PROPERTY) or left as it stands for the shape's own entry to read
+ * @returns The intent to apply, or undefined for a value nothing can be made of (a string no number parses from) — which is the caller's cue to apply nothing
  * @throws For a `textVerticalBasis` value that is neither basis — the one property whose value has always been checked
  */
-export const applyStyleProperty = (
-	state: CanvasControllerState,
+export const styleIntentOf = (
 	property: string,
 	value: string,
-	registries: StyleIntentRegistries,
-): CanvasControllerState => {
-	// The lock of a multi-selection is the one intent that lands on the selection
-	// box rather than on an object: it belongs to the transient group drawn around
-	// the selection (`createMultiSelectGroup`) and no member of it carries the
-	// flag. Session state rather than a document field, so no StyleEntry can
-	// express it; it moves to the UI-boundary action that replaces this function's
-	// string argument with an intent.
-	const { multiSelectGroup } = state;
-	if (
-		property === "lockAspectRatio" &&
-		multiSelectGroup &&
-		state.selection.objectIds.length > 0
-	) {
-		return {
-			...state,
-			multiSelectGroup: {
-				...multiSelectGroup,
-				lockAspectRatio: value === "true",
-			},
-		};
-	}
+): StyleIntent | ExtraStyleIntent | undefined => {
 	const toIntent = intentMapperOf(property);
-	if (toIntent === undefined) {
-		return applyStyleIntent(state, { kind: property, value }, registries);
-	}
-	const intent = toIntent(value);
-	return intent === undefined
-		? state
-		: applyStyleIntent(state, intent, registries);
+	return toIntent === undefined ? { kind: property, value } : toIntent(value);
 };

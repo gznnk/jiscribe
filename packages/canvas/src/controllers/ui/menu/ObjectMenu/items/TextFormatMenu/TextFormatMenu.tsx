@@ -9,6 +9,7 @@ import {
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { selectionValueOr } from "../../../../../style/SelectionValue";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
@@ -19,7 +20,6 @@ import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../../icons/UnderlineIcon";
 import { isTextAddressed } from "../../../utils/isTextAddressed";
-import { selectionValueOr } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {

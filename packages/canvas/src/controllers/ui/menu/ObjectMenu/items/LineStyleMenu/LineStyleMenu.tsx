@@ -10,15 +10,15 @@ import {
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
-import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
-import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
-import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
-import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
 	selectionValueOrFirst,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
+import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
+import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
+import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -26,7 +26,7 @@ import {
 	ObjectMenuItemPositioner,
 	ObjectMenuButton,
 } from "../../ObjectMenuStyled";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "line-style";
 
@@ -37,12 +37,12 @@ const SLIDER_MAX_STROKE_WIDTH = 20;
 
 type LineStyleMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -119,7 +119,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 							max={MAX_STROKE_WIDTH}
 							sliderMax={SLIDER_MAX_STROKE_WIDTH}
 							property="strokeWidth"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 					</LineStyleMenuWrapper>
 				</ObjectMenuDropdownPanel>
