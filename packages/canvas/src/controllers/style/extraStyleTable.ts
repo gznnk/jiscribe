@@ -3,7 +3,7 @@ import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
 import { isSystemStyleName } from "./applyStyleProperty";
 import { extraField } from "./entries/extraField";
-import type { ErasedStyleEntry, StyleTable } from "./StyleEntry";
+import type { ExtraStyleEntry, StyleTable } from "./StyleEntry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
@@ -28,7 +28,7 @@ export const extraStyleTable = (
 	type: ObjectType,
 	extras: Record<string, ExtraStylePropertyDescriptor> | undefined,
 ): StyleTable<ObjectState> => {
-	const table: Record<string, ErasedStyleEntry> = {};
+	const table: Record<string, ExtraStyleEntry> = {};
 	for (const [property, descriptor] of Object.entries(extras ?? {})) {
 		if (isSystemStyleName(property)) {
 			throw new Error(

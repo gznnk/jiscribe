@@ -54,11 +54,13 @@ export type StyleEntry<TState extends ObjectState, V> = {
 };
 
 /**
- * An entry with its value type erased, the shape the walkers call one through:
- * they take it out of a table by a kind the intent carries at runtime, so the
- * value and the entry cannot be correlated statically.
+ * An entry for a kind the engine does not know — a shape's own declaration
+ * (extraStyleTable) — so its value type is unknown here. Every entry of the
+ * engine's own kinds is assignable to it as well (StyleEntry's members are method
+ * signatures), which is what lets {@link StyleTable} hold the typed kinds and the
+ * open index signature in one intersection.
  */
-export type ErasedStyleEntry = StyleEntry<ObjectState, unknown>;
+export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
 
 /**
  * What one type answers for, by intent. A kind left out is one the type does not
@@ -75,7 +77,7 @@ export type ErasedStyleEntry = StyleEntry<ObjectState, unknown>;
 export type StyleTable<TState extends ObjectState> = {
 	[K in StyleIntentKind]?: StyleEntry<TState, StyleValueOf<K>>;
 } & {
-	[extraKind: string]: ErasedStyleEntry | undefined;
+	[extraKind: string]: ExtraStyleEntry | undefined;
 };
 
 /**

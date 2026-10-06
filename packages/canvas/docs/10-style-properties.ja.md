@@ -76,9 +76,9 @@ type StyleEntry<TState extends ObjectState, V> = {
 
 `StyleTable<TState>` は「その型が何に答えるか」を kind ごとに持つ。キーが無いのが
 最も粗い gate で、その型はその intent を受けない。エンジン自身の kind は 1 つずつ
-型付けされ、それ以外のキーは図形自前のエントリとして `ErasedStyleEntry` の
-index signature に入る（歩き手は実行時にしか分からない kind で引くので、プラグインの
-値型は静的に運べない）。
+型付けされ、それ以外のキーは図形自前のエントリとして `ExtraStyleEntry` の
+index signature に入る（値型はエンジンが知らないので `unknown`。エンジン自身の
+エントリもこれに代入できるので、2 つの半分が 1 つの交差型に収まる）。
 
 `StyleContext` は、object と値以外にエントリへ渡されるもの:
 

@@ -83,8 +83,9 @@ drawn with and the menus hold no local constants.
 `StyleTable<TState>` is what one type answers for, by kind. A kind left out is the
 gate at its coarsest: the type does not take that intent. The engine's own kinds
 are typed one by one; any other key is a shape's own entry under an index
-signature of `ErasedStyleEntry` (the walkers look an entry up by a kind they only
-know at runtime, so a plugin's value type cannot be carried statically).
+signature of `ExtraStyleEntry`, whose value type is unknown to the engine (every
+engine entry is assignable to it too, which is what lets the two halves sit in
+one intersection).
 
 `StyleContext` is what an entry is handed besides the object and the value:
 
