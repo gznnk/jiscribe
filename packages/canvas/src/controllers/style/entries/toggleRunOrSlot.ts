@@ -10,14 +10,6 @@ import type {
 import { TOGGLE_FLIPS } from "../StyleIntent";
 
 /**
- * The type a toggle's entry reads and writes in: its flipped field's, unset
- * included (StyleIntentValueType). Where the kind is still generic the compiler
- * cannot see that `undefined` is already in it, which is why `toggle` spells it
- * out.
- */
-type ToggleValueType<K extends TextToggleIntentKind> = StyleIntentValueType<K>;
-
-/**
  * The one value the places read agree on, or undefined when they do not — which
  * is how a stretch mixing both ends up turning the format **on**: a mixed
  * reading is treated as unset, the same way the menus' rows read it
@@ -57,14 +49,18 @@ export const toggleRunOrSlot = <
 		toggle,
 	}: {
 		slotsOf: SlotsOf<TState>;
+		// `undefined` is already in a toggle's value type (StyleIntentValueType),
+		// but with the kind still generic the compiler cannot see that, so it is
+		// spelled out here.
 		toggle: (
-			current: ToggleValueType<K> | undefined,
-		) => NonNullable<ToggleValueType<K>>;
+			current: StyleIntentValueType<K> | undefined,
+		) => NonNullable<StyleIntentValueType<K>>;
 	},
-): StyleEntry<TState, ToggleValueType<K>> => {
-	const styled = runOrSlot<TState, ToggleValueType<K>>(TOGGLE_FLIPS[kind], {
-		slotsOf,
-	});
+): StyleEntry<TState, StyleIntentValueType<K>> => {
+	const styled = runOrSlot<TState, StyleIntentValueType<K>>(
+		TOGGLE_FLIPS[kind],
+		{ slotsOf },
+	);
 
 	return {
 		// The intent carries no value of its own: the entry reads the current one
