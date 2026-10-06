@@ -1,4 +1,5 @@
 ﻿import { ArrowTypes } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
@@ -11,11 +12,9 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
-import {
-	readSelectionArrowType,
-	UNSET_ARROW_TYPE,
-} from "../../../utils/readSelectionArrowType";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -43,18 +42,22 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
+	const registries = useCanvasRegistries();
 	const startRef = useRef<HTMLDivElement>(null);
 	const endRef = useRef<HTMLDivElement>(null);
 
 	const isStartOpen = canvasState.objectMenuOpenId === SECTION_ID_START;
 	const isEndOpen = canvasState.objectMenuOpenId === SECTION_ID_END;
 
-	const startArrow = readSelectionArrowType(canvasState, "startArrow");
-	const endArrow = readSelectionArrowType(canvasState, "endArrow");
+	const startArrow = readSelectionStyle(canvasState, "startArrow", registries);
+	const endArrow = readSelectionStyle(canvasState, "endArrow", registries);
 	const isStartMixed = isMixedSelectionValue(startArrow);
 	const isEndMixed = isMixedSelectionValue(endArrow);
-	const currentStart = selectionValueOr(startArrow, UNSET_ARROW_TYPE);
-	const currentEnd = selectionValueOr(endArrow, UNSET_ARROW_TYPE);
+	const currentStart = selectionValueOr(
+		startArrow,
+		SHAPE_STYLE_FALLBACK.startArrow,
+	);
+	const currentEnd = selectionValueOr(endArrow, SHAPE_STYLE_FALLBACK.endArrow);
 
 	const {
 		submenuRef: startSubmenuRef,

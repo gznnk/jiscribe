@@ -12,11 +12,12 @@ import { pickShapeStyleFields } from "../../../utils/pickShapeStyleFields";
 const NOTHING_SELECTED: ResolvedShapeStyle = { ...SHAPE_STYLE_FALLBACK };
 
 /**
- * The stroke and fill of the first selected object that declares `styleGroup`:
- * its own fields resolved through its type's defaults
+ * The style of the first selected object that declares `styleGroup`: its own
+ * fields resolved through its type's defaults
  * (ObjectShapeStyleDefaultsRegistry), so what is read is what the object draws.
- * The built-in menus state the whole selection instead, resolving each object
- * through this (readSelectionShapeStyle).
+ * For plugin menus that state one object's style; the built-in rows read the
+ * whole selection through the style intents instead (readSelectionStyle), which
+ * is what lets them tell one value from several.
  *
  * The object's own fields are read through `pickShapeStyleFields`, which is what
  * drops a field the state carries with the wrong type and lets resolution take

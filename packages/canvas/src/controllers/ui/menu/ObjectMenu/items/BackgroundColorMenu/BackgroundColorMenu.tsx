@@ -41,7 +41,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const registries = useCanvasRegistries();
-	const { fill } = readSelectionShapeStyle(canvasState, registries, "fill");
+	const { fill } = readSelectionShapeStyle(canvasState, registries);
 	const isMixed = isMixedSelectionValue(fill);
 	const currentColor = selectionValueOr(fill, SHAPE_STYLE_FALLBACK.fill);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(

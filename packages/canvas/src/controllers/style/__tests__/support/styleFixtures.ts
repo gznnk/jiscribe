@@ -21,7 +21,7 @@ import type { StyleIntentRegistries } from "../../ObjectStyleRegistry";
 import { createObjectStyleRegistry } from "../../ObjectStyleRegistry";
 import type { StyleContext, TextEditRange } from "../../StyleEntry";
 
-/** A rect: both style groups, so it takes the fill intent. */
+/** A rect: both paint groups and the radius, so it takes all of their intents. */
 export const rectOf = (
 	id: string,
 	own: Record<string, unknown> = {},
@@ -45,13 +45,23 @@ export const ellipseOf = (
 		...own,
 	}) as unknown as ObjectState;
 
-/** A connector: stroke but no fill, so the fill intent passes it by. */
-export const connectorOf = (id: string): ObjectState =>
+/**
+ * A connector: stroke and the two arrowheads but no fill, so the face intents
+ * pass it by.
+ *
+ * @param id - The object id
+ * @param own - Extra fields to load onto the object; its stroke is set either way
+ */
+export const connectorOf = (
+	id: string,
+	own: Record<string, unknown> = {},
+): ObjectState =>
 	({
 		id,
 		type: "connector",
 		features: ConnectorFeatures,
 		stroke: "#000000",
+		...own,
 	}) as unknown as ObjectState;
 
 /** A group: no style of its own, its members answering instead. */
@@ -64,8 +74,8 @@ export const groupOf = (id: string, childIds: string[]): ObjectState =>
 	}) as unknown as ObjectState;
 
 /**
- * A shape holding text slots. Its features are a rect's, so it takes the fill
- * intent as well as the text ones.
+ * A shape holding text slots. Its features are a rect's, so it takes the shape
+ * intents as well as the text ones.
  *
  * @param id - The object id
  * @param text - Its slots, keyed by slot id; the first key is the default slot

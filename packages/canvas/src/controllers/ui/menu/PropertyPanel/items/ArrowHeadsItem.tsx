@@ -1,5 +1,6 @@
 import { ArrowTypes } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
@@ -9,16 +10,14 @@ import {
 } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
+import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../style/readSelectionStyle";
 import { ArrowSwapIcon } from "../../../icons/ArrowSwapIcon";
 import { ArrowHeadIconPreview } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadIconPreview";
 import {
 	ArrowSelectorGrid,
 	ArrowTypeButton,
 } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadMenuStyled";
-import {
-	readSelectionArrowType,
-	UNSET_ARROW_TYPE,
-} from "../../utils/readSelectionArrowType";
 import type { SelectionValue } from "../../utils/SelectionValue";
 import {
 	isMixedSelectionValue,
@@ -48,7 +47,7 @@ const ArrowEndField: React.FC<{
 	messages: CanvasMessages;
 }> = ({ property, direction, title, arrowType, messages }) => {
 	const isMixed = isMixedSelectionValue(arrowType);
-	const current = selectionValueOr(arrowType, UNSET_ARROW_TYPE);
+	const current = selectionValueOr(arrowType, SHAPE_STYLE_FALLBACK[property]);
 
 	return (
 		<PropertyDropdownField
@@ -91,6 +90,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
+	const registries = useCanvasRegistries();
 
 	return (
 		<PropertyRow>
@@ -98,7 +98,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 				property="startArrow"
 				direction="start"
 				title={messages.menuStartArrow}
-				arrowType={readSelectionArrowType(canvasState, "startArrow")}
+				arrowType={readSelectionStyle(canvasState, "startArrow", registries)}
 				messages={messages}
 			/>
 			<PropertyIconButton
@@ -117,7 +117,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 				property="endArrow"
 				direction="end"
 				title={messages.menuEndArrow}
-				arrowType={readSelectionArrowType(canvasState, "endArrow")}
+				arrowType={readSelectionStyle(canvasState, "endArrow", registries)}
 				messages={messages}
 			/>
 		</PropertyRow>

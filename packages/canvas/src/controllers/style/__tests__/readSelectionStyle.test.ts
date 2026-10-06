@@ -105,9 +105,67 @@ describe("readSelectionStyle", () => {
 	});
 
 	it("an intent no type has an entry for → none", () => {
-		const a = rectOf("a", { stroke: "#f00" });
+		const a = rectOf("a", { lockAspectRatio: true });
 		expect(
-			readSelectionStyle(stateOf(["a"], { a }), "stroke", registries),
+			readSelectionStyle(stateOf(["a"], { a }), "lockAspectRatio", registries),
+		).toEqual({ kind: "none" });
+	});
+});
+
+describe("readSelectionStyle on the radius and the arrowheads", () => {
+	it("a shape declaring the radius → its own value", () => {
+		const a = rectOf("a", { rx: 8 });
+		expect(
+			readSelectionStyle(stateOf(["a"], { a }), "cornerRadius", registries),
+		).toEqual({ kind: "single", value: 8 });
+	});
+
+	it("a shape rounding nothing → square corners, not no value", () => {
+		const a = rectOf("a");
+		expect(
+			readSelectionStyle(stateOf(["a"], { a }), "cornerRadius", registries),
+		).toEqual({ kind: "single", value: SHAPE_STYLE_FALLBACK.rx });
+	});
+
+	it("a type with no corners to round has no say", () => {
+		// An ellipse's own `rx` is geometry, which is why it declares no radius.
+		const a = ellipseOf("a", { rx: 32 });
+		expect(
+			readSelectionStyle(stateOf(["a"], { a }), "cornerRadius", registries),
+		).toEqual({ kind: "none" });
+	});
+
+	it("an end nobody set reads as the bare mark", () => {
+		const c = connectorOf("c");
+		expect(
+			readSelectionStyle(stateOf(["c"], { c }), "endArrow", registries),
+		).toEqual({ kind: "single", value: SHAPE_STYLE_FALLBACK.endArrow });
+	});
+
+	it("the two ends are told apart", () => {
+		const c = connectorOf("c", { endArrow: "FilledTriangle" });
+		const state = stateOf(["c"], { c });
+		expect(readSelectionStyle(state, "endArrow", registries)).toEqual({
+			kind: "single",
+			value: "FilledTriangle",
+		});
+		expect(readSelectionStyle(state, "startArrow", registries)).toEqual({
+			kind: "single",
+			value: SHAPE_STYLE_FALLBACK.startArrow,
+		});
+	});
+
+	it("a mark outside the vocabulary reads as unset", () => {
+		const c = connectorOf("c", { endArrow: "Arrow" });
+		expect(
+			readSelectionStyle(stateOf(["c"], { c }), "endArrow", registries),
+		).toEqual({ kind: "single", value: SHAPE_STYLE_FALLBACK.endArrow });
+	});
+
+	it("a shape with no ends has no say", () => {
+		const a = rectOf("a");
+		expect(
+			readSelectionStyle(stateOf(["a"], { a }), "endArrow", registries),
 		).toEqual({ kind: "none" });
 	});
 });

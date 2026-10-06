@@ -5,17 +5,11 @@ import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../style/readSelectionStyle";
 import { DashedLineIcon } from "../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../icons/SolidLineIcon";
-import {
-	DEFAULT_CORNER_RADIUS,
-	readSelectionCornerRadius,
-} from "../../utils/readSelectionCornerRadius";
-import {
-	readSelectionShapeStyle,
-	UNDECLARED_STROKE_DASH,
-} from "../../utils/readSelectionShapeStyle";
+import { readSelectionShapeStyle } from "../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -46,7 +40,7 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { fill } = readSelectionShapeStyle(canvasState, registries, "fill");
+	const { fill } = readSelectionShapeStyle(canvasState, registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -74,11 +68,7 @@ const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { fillOpacity } = readSelectionShapeStyle(
-		canvasState,
-		registries,
-		"fill",
-	);
+	const { fillOpacity } = readSelectionShapeStyle(canvasState, registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
@@ -114,7 +104,7 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { stroke } = readSelectionShapeStyle(canvasState, registries, "stroke");
+	const { stroke } = readSelectionShapeStyle(canvasState, registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -142,11 +132,7 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { strokeWidth } = readSelectionShapeStyle(
-		canvasState,
-		registries,
-		"stroke",
-	);
+	const { strokeWidth } = readSelectionShapeStyle(canvasState, registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowWidth}>
@@ -181,12 +167,11 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { strokeDashType } = readSelectionShapeStyle(
-		canvasState,
-		registries,
-		"stroke",
+	const { strokeDashType } = readSelectionShapeStyle(canvasState, registries);
+	const dashType = selectionValueOr(
+		strokeDashType,
+		SHAPE_STYLE_FALLBACK.strokeDashType,
 	);
-	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowType}>
@@ -229,11 +214,7 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
-	const { strokeOpacity } = readSelectionShapeStyle(
-		canvasState,
-		registries,
-		"stroke",
-	);
+	const { strokeOpacity } = readSelectionShapeStyle(canvasState, registries);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
@@ -271,15 +252,17 @@ const RadiusItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const cornerRadius = readSelectionCornerRadius(
-		canvasState.selection.objectIds,
-		canvasState.objects,
+	const registries = useCanvasRegistries();
+	const cornerRadius = readSelectionStyle(
+		canvasState,
+		"cornerRadius",
+		registries,
 	);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowRadius}>
 			<PropertyNumberField
-				value={selectionValueOrFirst(cornerRadius, DEFAULT_CORNER_RADIUS)}
+				value={selectionValueOrFirst(cornerRadius, SHAPE_STYLE_FALLBACK.rx)}
 				isMixed={isMixedSelectionValue(cornerRadius)}
 				min={MIN_CORNER_RADIUS}
 				max={MAX_CORNER_RADIUS}

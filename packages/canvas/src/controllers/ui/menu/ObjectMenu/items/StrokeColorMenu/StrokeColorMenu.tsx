@@ -41,7 +41,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const registries = useCanvasRegistries();
-	const { stroke } = readSelectionShapeStyle(canvasState, registries, "stroke");
+	const { stroke } = readSelectionShapeStyle(canvasState, registries);
 	const isMixed = isMixedSelectionValue(stroke);
 	const currentColor = selectionValueOr(stroke, SHAPE_STYLE_FALLBACK.stroke);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
