@@ -7,6 +7,7 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
 import { runOrSlot } from "./entries/runOrSlot";
 import type { SlotsOf } from "./entries/slotEntry";
 import { slotField } from "./entries/slotField";
+import { textContentEntry } from "./entries/textContentEntry";
 import { toggleRunOrSlot } from "./entries/toggleRunOrSlot";
 import type { StyleTable } from "./StyleEntry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -20,6 +21,9 @@ import { toggleTextDecorationToken } from "../utils/toggleTextDecorationToken";
  * intents without anyone branching on the text type again. The three keystroke
  * toggles ride on the field each of them flips, and are gated with it.
  *
+ * The content itself is answered for by every type holding text, whatever fields
+ * that text accepts.
+ *
  * @param textType - The type's `ObjectFeatures.text`; one holding no text at all answers for nothing
  * @param slotsOf - Which slots a whole-slot write lands on; `defaultSlotsOf` for a type whose slots are the keys of its `text`
  * @returns The text half of the type's table; empty for a text type accepting none of the fields
@@ -31,6 +35,7 @@ export const textStyleTable = (
 	const keys = textStyleKeysOf(textType);
 	const accepts = (field: keyof TextSlotStyle): boolean => keys.includes(field);
 	return {
+		...(textType !== undefined && { textContent: textContentEntry }),
 		...(accepts("fontColor") && {
 			fontColor: runOrSlot<ObjectState, string>("fontColor", { slotsOf }),
 		}),

@@ -10,6 +10,7 @@ import {
 } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { readSelectionStyle } from "../../../../style/readSelectionStyle";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
@@ -30,7 +31,6 @@ import {
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
 import { readSelectionTextStyle } from "../../utils/readSelectionTextStyle";
-import { readSelectionTextVerticalBasis } from "../../utils/readSelectionTextVerticalBasis";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -338,17 +338,18 @@ export const TextLayoutItem = memo(TextLayoutItemComponent);
  * Which box the text is placed on: the region the shape's own outline leaves
  * clear, or its whole height. Two named segments rather than a switch, so both
  * choices are in view and the one in force is the lit one; a selection whose
- * switchable shapes disagree lights neither (see
- * `readSelectionTextVerticalBasis`).
+ * switchable shapes disagree lights neither, and one holding nothing the switch
+ * moves reports no value at all (textVerticalBasisEntry).
  */
 const TextVerticalBasisItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectTextVerticalBasis } = useCanvasRegistries();
-	const selectionBasis = readSelectionTextVerticalBasis(
+	const registries = useCanvasRegistries();
+	const selectionBasis = readSelectionStyle(
 		canvasState,
-		objectTextVerticalBasis,
+		"textVerticalBasis",
+		registries,
 	);
 	const basis = selectionValueOr(selectionBasis, "region");
 

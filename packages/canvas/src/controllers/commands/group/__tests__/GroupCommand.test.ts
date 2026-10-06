@@ -46,9 +46,9 @@ const makeState = (params: {
 
 describe("GroupCommand", () => {
 	// Regression guard: the created group must carry the shared GroupFeatures
-	// descriptor (the style-property handlers gate lockAspectRatio on
-	// features.transform), and the marquee's multiSelectGroup must not survive —
-	// stale, it swallows lockAspectRatio reads/writes meant for the real group.
+	// descriptor (its table, and with it the lock, is derived from the type's
+	// features), and the marquee's multiSelectGroup must not survive — stale, it
+	// swallows lockAspectRatio reads/writes meant for the real group.
 	it("stamps GroupFeatures and clears multiSelectGroup so lockAspectRatio hits the group", () => {
 		const state = makeState({
 			selection: selectionOf(["a", "b"]),

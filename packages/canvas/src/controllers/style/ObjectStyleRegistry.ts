@@ -8,7 +8,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 /**
  * Per-type style tables: which intents a type takes, and where each of them
  * lands in its data. Filled from every type's definition at bundle creation
- * (applyObjectDefinition registers `coreStyleTable(definition.features)`), and
+ * (applyObjectDefinition registers `coreStyleTable`), and
  * read by the two walkers — applyStyleIntent and readSelectionStyle — so writing
  * and reporting a style consult the very same answer.
  *

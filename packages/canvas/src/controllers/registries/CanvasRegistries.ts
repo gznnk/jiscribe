@@ -16,7 +16,6 @@ import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoH
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
-import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type {
 	Camera,
 	CanvasInitialSidebars,
@@ -57,11 +56,6 @@ export type CanvasRegistries = {
 	 * switch exactly where the parser accepts the result.
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
-	/**
-	 * Which types the switch between the two vertical text bases actually moves
-	 * the body of, so the canvas offers it only where it does something.
-	 */
-	objectTextVerticalBasis: ObjectTextVerticalBasisRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	/**

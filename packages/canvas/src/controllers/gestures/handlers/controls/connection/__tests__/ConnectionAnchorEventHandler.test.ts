@@ -384,9 +384,10 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 	};
 
 	// Regression guard for #167: a connector created via the gesture must carry the
-	// features descriptor. The style-property handlers read state.features directly to gate
-	// style updates, so a freshly created connector without it silently ignores every
-	// stroke change until a save/reload re-stamps features through the registry.
+	// features descriptor. The sides that read state.features directly gate on it
+	// (which rows the style menus offer), so a freshly created connector without it
+	// is offered no stroke control until a save/reload re-stamps features through
+	// the registry.
 	describe("a newly created connector is immediately style-editable (regression #167)", () => {
 		it("stamps the shared ConnectorFeatures descriptor (same reference, for memo stability)", () => {
 			const { state, connectorId } = createConnectorFromRect();
