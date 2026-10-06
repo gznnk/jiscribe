@@ -8,7 +8,6 @@ import {
 	stateOf,
 } from "./support/styleFixtures";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
-import { collectSelectionObjects } from "../../ui/menu/utils/collectSelectionObjects";
 import { collectStyleTargets } from "../collectStyleTargets";
 
 const partOf = (slotId: string) => ({
@@ -79,7 +78,7 @@ describe("collectStyleTargets", () => {
 		]);
 	});
 
-	it("reaches the same objects, in the same order, as the first-match readers' walk", () => {
+	it("walks in selection order, each group followed by its whole subtree before the next id", () => {
 		const objects = {
 			g: groupOf("g", ["a", "inner"]),
 			a: rectOf("a"),
@@ -88,11 +87,10 @@ describe("collectStyleTargets", () => {
 			c: connectorOf("c"),
 			lone: rectOf("lone"),
 		};
-		const selectedIds = ["g", "lone", "c"];
 		expect(
-			collectStyleTargets(stateOf(selectedIds, objects)).map(
-				(target) => target.object,
+			collectStyleTargets(stateOf(["g", "lone", "c"], objects)).map(
+				(target) => target.object.id,
 			),
-		).toEqual(collectSelectionObjects(selectedIds, objects));
+		).toEqual(["g", "a", "inner", "b", "lone", "c"]);
 	});
 });
