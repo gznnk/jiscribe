@@ -39,7 +39,7 @@ the SVG attribute `rx`).
 Three facts ride on the union:
 
 - `StyleIntentKind` — the kind alone, which is the key a table answers under.
-- `StyleValueOf<K>` — the value of one kind, derived as "the sole field besides
+- `StyleIntentValueType<K>` — the type of one kind's value, derived as "the sole field besides
   `kind`". `apply` and `read` of an entry are both bound to it, so the two sides
   cannot disagree on the type.
 - `TOGGLE_FLIPS` — which field each of the three keystroke toggles flips

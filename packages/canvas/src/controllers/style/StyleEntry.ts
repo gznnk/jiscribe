@@ -1,7 +1,7 @@
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
-import type { StyleIntentKind, StyleValueOf } from "./StyleIntent";
+import type { StyleIntentKind, StyleIntentValueType } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 
@@ -12,7 +12,7 @@ import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
  * both to be spelled.
  *
  * @template TState - The state the entry is written against, its own type's
- * @template V - The intent's value type (StyleValueOf)
+ * @template V - The intent's value type (StyleIntentValueType)
  */
 export type StyleEntry<TState extends ObjectState, V> = {
 	/**
@@ -75,7 +75,7 @@ export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
  * @template TState - The state the entries are written against
  */
 export type StyleTable<TState extends ObjectState> = {
-	[K in StyleIntentKind]?: StyleEntry<TState, StyleValueOf<K>>;
+	[K in StyleIntentKind]?: StyleEntry<TState, StyleIntentValueType<K>>;
 } & {
 	[extraKind: string]: ExtraStyleEntry | undefined;
 };

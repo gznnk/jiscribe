@@ -36,7 +36,7 @@ intent はどの文書のフィールドも名指さない。語彙と doc の�
 union には 3 つの事実が乗る:
 
 - `StyleIntentKind` — kind だけ。表が答えるキーになる
-- `StyleValueOf<K>` — ある kind の値。「`kind` 以外の唯一のフィールド」として導出する。
+- `StyleIntentValueType<K>` — ある kind の値の型。「`kind` 以外の唯一のフィールド」として導出する。
   エントリの `apply` と `read` は両方これに縛られるので、2 つが型で食い違えない
 - `TOGGLE_FLIPS` — 3 つのキーボードトグルがどのフィールドを反転するか
   （`toggleBold` → `fontWeight`）。トグルの値型はそのフィールドの値型なので、

@@ -3,15 +3,19 @@ import { runOrSlot } from "./runOrSlot";
 import type { SlotsOf } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StyleEntry } from "../StyleEntry";
-import type { StyleValueOf, TextToggleIntentKind } from "../StyleIntent";
+import type {
+	StyleIntentValueType,
+	TextToggleIntentKind,
+} from "../StyleIntent";
 import { TOGGLE_FLIPS } from "../StyleIntent";
 
 /**
- * The value a toggle's entry reads and writes: its flipped field's, unset
- * included (StyleValueOf). Where the kind is still generic the compiler cannot
- * see that `undefined` is already in it, which is why `toggle` spells it out.
+ * The type a toggle's entry reads and writes in: its flipped field's, unset
+ * included (StyleIntentValueType). Where the kind is still generic the compiler
+ * cannot see that `undefined` is already in it, which is why `toggle` spells it
+ * out.
  */
-type ToggleValue<K extends TextToggleIntentKind> = StyleValueOf<K>;
+type ToggleValueType<K extends TextToggleIntentKind> = StyleIntentValueType<K>;
 
 /**
  * The one value the places read agree on, or undefined when they do not — which
@@ -54,11 +58,11 @@ export const toggleRunOrSlot = <
 	}: {
 		slotsOf: SlotsOf<TState>;
 		toggle: (
-			current: ToggleValue<K> | undefined,
-		) => NonNullable<ToggleValue<K>>;
+			current: ToggleValueType<K> | undefined,
+		) => NonNullable<ToggleValueType<K>>;
 	},
-): StyleEntry<TState, ToggleValue<K>> => {
-	const styled = runOrSlot<TState, ToggleValue<K>>(TOGGLE_FLIPS[kind], {
+): StyleEntry<TState, ToggleValueType<K>> => {
+	const styled = runOrSlot<TState, ToggleValueType<K>>(TOGGLE_FLIPS[kind], {
 		slotsOf,
 	});
 

@@ -64,7 +64,7 @@ export type ExtraStyleIntent = {
 
 /**
  * Which field each toggle flips: the one fact that makes a toggle one, stated
- * once for the types (StyleValueOf, TextToggleIntentKind) and the entries
+ * once for the types (StyleIntentValueType, TextToggleIntentKind) and the entries
  * (toggleRunOrSlot) alike. A toggle's value type is its field's, so the two
  * cannot drift apart.
  */
@@ -92,19 +92,25 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 >;
 
 /**
- * The value an intent of one kind carries: the sole field it holds besides
- * `kind`. What the entries of that kind apply and read, so the two sides cannot
- * disagree on the type.
+ * The type of the value an intent of one kind carries: the sole field it holds
+ * besides `kind`. What the entries of that kind apply and read, so the two sides
+ * cannot disagree on it.
  *
  * A toggle carries none, but its entry still reads and writes the field it flips
  * (TOGGLE_FLIPS), so it works in that field's value — with `undefined` added
  * twice over: a slot setting no such field reads as unset, and the intent has no
  * value for the walker to hand the entry.
+ *
+ * A name outside the engine's vocabulary is a shape's own (extraStyleTable),
+ * whose entry works in the transport string and whose stored type the engine
+ * does not know: `unknown`.
  */
-export type StyleValueOf<K extends StyleIntentKind> =
+export type StyleIntentValueType<K extends string> =
 	K extends TextToggleIntentKind
-		? StyleValueOf<(typeof TOGGLE_FLIPS)[K]> | undefined
-		: StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
+		? StyleIntentValueType<(typeof TOGGLE_FLIPS)[K]> | undefined
+		: K extends StyleIntentKind
+			? StyleIntentPayload<K>[keyof StyleIntentPayload<K>]
+			: unknown;
 
 /**
  * The value an intent carries, erased: the walkers look an entry up by a kind
