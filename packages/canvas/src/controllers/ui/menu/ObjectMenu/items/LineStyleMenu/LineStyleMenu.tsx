@@ -8,8 +8,7 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -47,17 +46,8 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const registries = useCanvasRegistries();
-	const strokeWidth = readSelectionStyle(
-		canvasState,
-		"strokeWidth",
-		registries,
-	);
-	const strokeDashType = readSelectionStyle(
-		canvasState,
-		"strokeDashType",
-		registries,
-	);
+	const strokeWidth = useSelectionStyle("strokeWidth");
+	const strokeDashType = useSelectionStyle("strokeDashType");
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
 	const dashType = selectionValueOr(
 		strokeDashType,

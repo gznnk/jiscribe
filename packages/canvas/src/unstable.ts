@@ -193,7 +193,6 @@ export type { SelectionValue } from "./controllers/style/SelectionValue";
 export {
 	isMixedSelectionValue,
 	selectionMixedValues,
-	selectionValueAs,
 	selectionValueOr,
 	selectionValueOrFirst,
 } from "./controllers/style/SelectionValue";

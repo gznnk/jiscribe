@@ -5,14 +5,11 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
-import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueOr } from "../../../../../style/SelectionValue";
-import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -54,18 +51,19 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	);
 
 	// An unset width draws no border, which is the value the slider starts from.
-	const strokeWidth = selectionValueOr(
-		useSelectionStyle(CONNECTOR_STYLE, "label.strokeWidth"),
+	const { value: strokeWidth, hasLabelText } = useConnectorLabelStyle(
+		"label.strokeWidth",
 		UNSET_BORDER_WIDTH,
+		{ objects, selection },
 	);
-	const strokeDashType = selectionValueOr(
-		useSelectionStyle(CONNECTOR_STYLE, "label.strokeDashType"),
+	const { value: strokeDashType } = useConnectorLabelStyle(
+		"label.strokeDashType",
 		undefined,
+		{ objects, selection },
 	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!hasSelectedConnectorLabelText({ objects, selection })) {
+	if (!hasLabelText) {
 		return null;
 	}
 

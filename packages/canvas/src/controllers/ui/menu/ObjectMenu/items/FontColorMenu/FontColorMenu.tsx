@@ -5,8 +5,7 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -47,8 +46,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		isOpen,
 	);
 
-	const registries = useCanvasRegistries();
-	const fontColor = readSelectionStyle(canvasState, "fontColor", registries);
+	const fontColor = useSelectionStyle("fontColor");
 	const isMixed = isMixedSelectionValue(fontColor);
 	const currentColor = selectionValueOr(
 		fontColor,

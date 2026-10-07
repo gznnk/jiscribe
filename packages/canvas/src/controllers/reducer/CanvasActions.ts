@@ -197,8 +197,8 @@ export type TransformProperty = "x" | "y" | "width" | "height" | "rotation";
  * Transform property update action - states one number of the selection's frame
  * outright, where the transform handles would have dragged it there.
  *
- * The sibling of {@link StyleIntentAction} for the geometry the style
- * registry does not own: the frame it edits is the selected object's, or the
+ * The sibling of {@link StyleIntentAction} for the geometry no StyleIntent
+ * names: the frame it edits is the selected object's, or the
  * multiSelectGroup's for a multi-selection, and the result matches the
  * corresponding drag (groups scale their children, connectors follow, a height
  * stated by hand stops following the text).

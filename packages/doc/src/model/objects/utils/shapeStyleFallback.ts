@@ -13,11 +13,16 @@ import {
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
 
 /**
- * Every shape-style field, each of them required — so a field added to any of
- * the four Doc groups fails to compile here and in {@link ResolvedShapeStyle},
- * which builds on this, until it is given a last resort.
+ * One shape's style fields with every step of the resolution already taken, as
+ * `ObjectShapeStyleDefaultsRegistry.resolveShapeStyle` returns it: the four Doc
+ * groups flattened, each field required — so a field added to any of them fails
+ * to compile until {@link SHAPE_STYLE_FALLBACK} gives it a last resort.
+ *
+ * The colors may still be `"auto"`, which is the drawing side's to resolve
+ * against the theme (resolveAutoColor). Resolving is a read: an undeclared dash
+ * reads as solid here and stays undeclared in the document.
  */
-export type ShapeStyleFallback = Required<
+export type ResolvedShapeStyle = Required<
 	StrokeStyleDoc & FillStyleDoc & RadiusStyleDoc & ArrowStyleDoc
 >;
 
@@ -38,4 +43,4 @@ export const SHAPE_STYLE_FALLBACK = {
 	rx: DEFAULT_CORNER_RADIUS,
 	startArrow: DEFAULT_ARROW,
 	endArrow: DEFAULT_ARROW,
-} as const satisfies ShapeStyleFallback;
+} as const satisfies ResolvedShapeStyle;

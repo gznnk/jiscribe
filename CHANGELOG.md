@@ -134,7 +134,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `selectionValue*` helpers exported beside it. A name the engine owns comes back
   typed, and so does a name a shape declares for itself when the row reads it
   through the declaring table (`useSelectionStyle(table, name)`); read by its name
-  alone it comes back `unknown` for the row to narrow (`selectionValueAs`).
+  alone it comes back `unknown` for the row to narrow.
   `selectionValueOr` and `selectionValueOrFirst` take the row's default for an
   agreed `undefined` too, so a property carried but unset reads as that default.
   The first-match readers

@@ -300,7 +300,7 @@ export const CONTAINER_STYLE = {
 kind の書き込みが届くのとまったく同じ object について返す。kind の手前に表を渡すと
 （`useSelectionStyle(CONTAINER_STYLE, "headerFill")`）宣言から型が付くので、行の側で
 絞るものは無く、型の値型は 1 箇所で述べられる。名前だけで読むと値は `unknown` のままで、
-行が自前のガードと `selectionValueAs` で絞る。
+行が自前のガードで絞る。
 
 ## スタイルを足すとき
 

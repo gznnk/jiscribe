@@ -1,40 +1,20 @@
 import { ARROW_STYLE_KEYS } from "../model/objects/base/ArrowStyleDoc";
-import type { ArrowStyleDoc } from "../model/objects/base/ArrowStyleDoc";
 import { FILL_STYLE_KEYS } from "../model/objects/base/FillStyleDoc";
-import type { FillStyleDoc } from "../model/objects/base/FillStyleDoc";
 import { RADIUS_STYLE_KEYS } from "../model/objects/base/RadiusStyleDoc";
-import type { RadiusStyleDoc } from "../model/objects/base/RadiusStyleDoc";
 import { STROKE_STYLE_KEYS } from "../model/objects/base/StrokeStyleDoc";
-import type { StrokeStyleDoc } from "../model/objects/base/StrokeStyleDoc";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
 import type { ObjectType } from "../model/objects/types/ObjectType";
 import { pickDefined } from "../model/objects/utils/pickDefined";
 import { SHAPE_STYLE_FALLBACK } from "../model/objects/utils/shapeStyleFallback";
-import type { ShapeStyleFallback } from "../model/objects/utils/shapeStyleFallback";
+import type { ResolvedShapeStyle } from "../model/objects/utils/shapeStyleFallback";
 
 /**
- * The shape-style fields one object may set, the four style groups flattened the
- * way a doc and a state alike carry them. What every side that resolves a shape
- * style hands over, and the shape a type's own defaults are held in.
+ * The shape-style fields one object may set: whichever of the four style groups
+ * it carries, each optional. What every side that resolves a shape style hands
+ * over, and the shape a type's own defaults are held in — a type holding only
+ * the fields its creation defaults actually set.
  */
-export type ShapeStyleDocFields = Partial<
-	StrokeStyleDoc & FillStyleDoc & RadiusStyleDoc & ArrowStyleDoc
->;
-
-/**
- * A type's shape-style defaults: whichever of the style groups its features
- * enable, holding only the fields its creation defaults actually set.
- */
-export type ObjectShapeStyleDefaults = Readonly<ShapeStyleDocFields>;
-
-/**
- * One shape's style fields with every step of the resolution already taken, as
- * {@link ObjectShapeStyleDefaultsRegistry.resolveShapeStyle} returns it. The
- * colors may still be `"auto"`, which is the drawing side's to resolve against
- * the theme (resolveAutoColor). Resolving is a read: an undeclared dash reads as
- * solid here and stays undeclared in the document.
- */
-export type ResolvedShapeStyle = ShapeStyleFallback;
+export type ObjectShapeStyleDefaults = Readonly<Partial<ResolvedShapeStyle>>;
 
 /**
  * The draw-time shape-style defaults of one type, read out of the creation
@@ -141,7 +121,7 @@ export class ObjectShapeStyleDefaultsRegistry {
 	 */
 	resolveShapeStyle(
 		type: ObjectType,
-		own: Readonly<ShapeStyleDocFields>,
+		own: ObjectShapeStyleDefaults,
 	): ResolvedShapeStyle {
 		const typeDefaults = this.get(type);
 		return {

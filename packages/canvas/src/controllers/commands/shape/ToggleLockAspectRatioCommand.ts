@@ -1,7 +1,6 @@
-import { DEFAULT_LOCK_ASPECT_RATIO } from "../../../states/objects/base/TransformState";
 import { applyStyleIntent } from "../../style/applyStyleIntent";
+import { getSelectedLockAspectRatio } from "../../style/getSelectedLockAspectRatio";
 import { readSelectionStyle } from "../../style/readSelectionStyle";
-import { selectionValueOrFirst } from "../../style/SelectionValue";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -10,9 +9,8 @@ import type { ExecutableCommand } from "../CommandTypes";
  * A command rather than a style write because the lock of a multi-selection is
  * not an object's at all: it belongs to the transient box drawn around the
  * selection (`createMultiSelectGroup`), which is session state no `StyleEntry`
- * can express. Choosing between that box and the selected objects is the one
- * thing this has to do, and it follows the precedence the row reporting the lock
- * follows (`getSelectedLockAspectRatio`).
+ * can express. Which of the two is addressed is `getSelectedLockAspectRatio`'s
+ * answer, the same one the row reporting the lock draws.
  */
 export const ToggleLockAspectRatioCommand: ExecutableCommand = {
 	id: "toggleLockAspectRatio",
@@ -20,30 +18,19 @@ export const ToggleLockAspectRatioCommand: ExecutableCommand = {
 	category: "arrange",
 
 	canExecute: (state, registries) =>
-		(state.multiSelectGroup !== null && state.selection.objectIds.length > 0) ||
+		state.multiSelectGroup !== null ||
 		readSelectionStyle(state, "lockAspectRatio", registries).kind !== "none",
 
 	execute: (state, registries) => {
 		const { multiSelectGroup } = state;
-		if (multiSelectGroup !== null && state.selection.objectIds.length > 0) {
+		const locked = getSelectedLockAspectRatio(state, registries);
+		if (multiSelectGroup !== null) {
 			return {
 				...state,
-				multiSelectGroup: {
-					...multiSelectGroup,
-					lockAspectRatio: !(
-						multiSelectGroup.lockAspectRatio ?? DEFAULT_LOCK_ASPECT_RATIO
-					),
-				},
+				multiSelectGroup: { ...multiSelectGroup, lockAspectRatio: !locked },
 				commitVersion: state.commitVersion + 1,
 			};
 		}
-		// A selection whose objects disagree reads as the first of their values, so
-		// one press brings the whole selection onto the other one — the same reading
-		// the row shows.
-		const locked = selectionValueOrFirst(
-			readSelectionStyle(state, "lockAspectRatio", registries),
-			DEFAULT_LOCK_ASPECT_RATIO,
-		);
 		return {
 			...applyStyleIntent(
 				state,

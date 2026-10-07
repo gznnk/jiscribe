@@ -4,11 +4,11 @@ import type {
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
 import type { ObjectPartSelection } from "../../selection/ObjectPartSelection";
 import { isTextSlotSelection } from "../../selection/textSlotPartKind";
+import { textSlotsOf } from "../../utils/textSlotsOf";
 import type { StyleContext, StyleEntry } from "../StyleEntry";
 
 /**
@@ -39,7 +39,7 @@ export type SlotsOf<TState extends ObjectState> = (
  * @returns The addressed slot ids, always own keys of `object.text`
  */
 export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick) => {
-	const slots = (object as ObjectState & TextStyleState).text;
+	const slots = textSlotsOf(object);
 	if (slots === undefined) {
 		return [];
 	}
@@ -70,7 +70,7 @@ export const slotEntry = <TState extends ObjectState, V>(
 	writeSlot: (slot: TextSlot, value: V) => TextSlot,
 ): StyleEntry<TState, V> => ({
 	apply: (object, pick, value, ctx) => {
-		const slots = (object as ObjectState & TextStyleState).text;
+		const slots = textSlotsOf(object);
 		if (slots === undefined) {
 			return null;
 		}
@@ -95,7 +95,7 @@ export const slotEntry = <TState extends ObjectState, V>(
 		return changed ? ({ ...object, text: updatedSlots } as TState) : object;
 	},
 	read: (object, pick, ctx) => {
-		const slots = (object as ObjectState & TextStyleState).text;
+		const slots = textSlotsOf(object);
 		if (slots === undefined) {
 			return [];
 		}

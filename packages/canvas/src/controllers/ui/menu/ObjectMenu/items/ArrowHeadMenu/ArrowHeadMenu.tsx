@@ -12,8 +12,7 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -42,15 +41,14 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
 	const startRef = useRef<HTMLDivElement>(null);
 	const endRef = useRef<HTMLDivElement>(null);
 
 	const isStartOpen = canvasState.objectMenuOpenId === SECTION_ID_START;
 	const isEndOpen = canvasState.objectMenuOpenId === SECTION_ID_END;
 
-	const startArrow = readSelectionStyle(canvasState, "startArrow", registries);
-	const endArrow = readSelectionStyle(canvasState, "endArrow", registries);
+	const startArrow = useSelectionStyle("startArrow");
+	const endArrow = useSelectionStyle("endArrow");
 	const isStartMixed = isMixedSelectionValue(startArrow);
 	const isEndMixed = isMixedSelectionValue(endArrow);
 	const currentStart = selectionValueOr(

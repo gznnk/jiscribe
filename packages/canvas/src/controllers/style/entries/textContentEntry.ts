@@ -1,10 +1,10 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import {
 	getFirstTextSlotId,
 	readTextSlot,
 	writeTextSlot,
 } from "../../../states/objects/types/TextSlots";
+import { textSlotsOf } from "../../utils/textSlotsOf";
 import type { StyleEntry } from "../StyleEntry";
 
 /**
@@ -23,7 +23,7 @@ import type { StyleEntry } from "../StyleEntry";
  */
 export const textContentEntry: StyleEntry<ObjectState, string> = {
 	apply: (object, _pick, text) => {
-		const slots = (object as ObjectState & TextStyleState).text;
+		const slots = textSlotsOf(object);
 		const slotId = getFirstTextSlotId(slots);
 		if (slots === undefined || slotId === undefined) {
 			return null;
@@ -36,7 +36,7 @@ export const textContentEntry: StyleEntry<ObjectState, string> = {
 				} as ObjectState);
 	},
 	read: (object) => {
-		const slots = (object as ObjectState & TextStyleState).text;
+		const slots = textSlotsOf(object);
 		const slotId = getFirstTextSlotId(slots);
 		return slotId === undefined ? [] : [readTextSlot(slots, slotId)];
 	},

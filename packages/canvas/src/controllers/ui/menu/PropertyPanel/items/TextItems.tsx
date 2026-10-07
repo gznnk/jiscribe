@@ -9,19 +9,13 @@ import {
 	setPart,
 } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
 	selectionValueOr,
 	selectionValueOrFirst,
 } from "../../../../style/SelectionValue";
-import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
-import {
-	hasTextDecorationToken,
-	toggleTextDecorationToken,
-} from "../../../../utils/toggleTextDecorationToken";
 import { AlignBottomIcon } from "../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../icons/AlignLeftIcon";
@@ -32,6 +26,11 @@ import { BoldIcon } from "../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../icons/UnderlineIcon";
+import {
+	useSelectedTextAlign,
+	useSelectedVerticalAlign,
+} from "../../hooks/useSelectedAlign";
+import { useTextFormatToggles } from "../../hooks/useTextFormatToggles";
 import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
@@ -49,17 +48,10 @@ const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
 
 /** The face the selected text is drawn in, picked from the shipped set. */
-const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const FontFamilyItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
-	const registries = useCanvasRegistries();
-	const selectionFontFamily = readSelectionStyle(
-		canvasState,
-		"fontFamily",
-		registries,
-	);
+	const selectionFontFamily = useSelectionStyle("fontFamily");
 	// An unset family draws in the default one, so that is the entry to mark active.
 	const fontFamily = selectionValueOr(selectionFontFamily, DEFAULT_FONT_FAMILY);
 	const isMixed = isMixedSelectionValue(selectionFontFamily);
@@ -88,12 +80,10 @@ export const FontFamilyItem = memo(FontFamilyItemComponent);
 
 /** How large the selected text is drawn. */
 const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const fontSize = readSelectionStyle(canvasState, "fontSize", registries);
+	const fontSize = useSelectionStyle("fontSize");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowSize}>
@@ -120,12 +110,10 @@ export const FontSizeItem = memo(FontSizeItemComponent);
 
 /** The ink the selected text is drawn in. */
 const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const fontColor = readSelectionStyle(canvasState, "fontColor", registries);
+	const fontColor = useSelectionStyle("fontColor");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -150,33 +138,9 @@ export const FontColorItem = memo(FontColorItemComponent);
  * press should land on rather than a toggle command, so what it does is decided
  * against what the text is actually drawn with.
  */
-const TextFormatItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const TextFormatItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	// Each button is its own toggle, so mixing is read per field: a selection that
-	// disagrees only about the weight still lights italic on the ones it agrees on.
-	// A field it disagrees about reads as off, so one press brings all of it on.
-	const fontWeight = selectionValueOr(
-		readSelectionStyle(canvasState, "fontWeight", registries),
-		undefined,
-	);
-	const fontStyle = selectionValueOr(
-		readSelectionStyle(canvasState, "fontStyle", registries),
-		undefined,
-	);
-	const textDecoration = selectionValueOr(
-		readSelectionStyle(canvasState, "textDecoration", registries),
-		undefined,
-	);
-	const isBold = isBoldFontWeight(fontWeight);
-	const isItalic = fontStyle === "italic";
-	const isUnderline = hasTextDecorationToken(textDecoration, "underline");
-	const isStrikethrough = hasTextDecorationToken(
-		textDecoration,
-		"line-through",
-	);
+	const toggles = useTextFormatToggles();
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowStyle}>
@@ -184,37 +148,31 @@ const TextFormatItemComponent: React.FC<BuiltinItemProps> = ({
 				options={[
 					{
 						id: "bold",
-						part: setPart("fontWeight", isBold ? "normal" : "bold"),
+						part: toggles.bold.part,
 						title: messages.menuBold,
 						content: <BoldIcon title={messages.menuBold} />,
-						isActive: isBold,
+						isActive: toggles.bold.isActive,
 					},
 					{
 						id: "italic",
-						part: setPart("fontStyle", isItalic ? "normal" : "italic"),
+						part: toggles.italic.part,
 						title: messages.menuItalic,
 						content: <ItalicIcon title={messages.menuItalic} />,
-						isActive: isItalic,
+						isActive: toggles.italic.isActive,
 					},
 					{
 						id: "underline",
-						part: setPart(
-							"textDecoration",
-							toggleTextDecorationToken(textDecoration, "underline"),
-						),
+						part: toggles.underline.part,
 						title: messages.menuUnderline,
 						content: <UnderlineIcon title={messages.menuUnderline} />,
-						isActive: isUnderline,
+						isActive: toggles.underline.isActive,
 					},
 					{
 						id: "strikethrough",
-						part: setPart(
-							"textDecoration",
-							toggleTextDecorationToken(textDecoration, "line-through"),
-						),
+						part: toggles.strikethrough.part,
 						title: messages.menuStrikethrough,
 						content: <StrikethroughIcon title={messages.menuStrikethrough} />,
-						isActive: isStrikethrough,
+						isActive: toggles.strikethrough.isActive,
 					},
 				]}
 			/>
@@ -225,43 +183,35 @@ const TextFormatItemComponent: React.FC<BuiltinItemProps> = ({
 export const TextFormatItem = memo(TextFormatItemComponent);
 
 /** Where the text sits across the width of its region. */
-const TextAlignItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const TextAlignItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const selectionTextAlign = readSelectionStyle(
-		canvasState,
-		"textAlign",
-		registries,
-	);
-	const textAlign = selectionValueOr(selectionTextAlign, "left");
+	const textAlign = useSelectedTextAlign();
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowHorizontal}>
 			<PropertySegmentedControl
-				isMixed={isMixedSelectionValue(selectionTextAlign)}
+				isMixed={textAlign.isMixed}
 				options={[
 					{
 						id: "left",
 						part: setPart("textAlign", "left"),
 						title: messages.menuAlignLeft,
 						content: <AlignLeftIcon />,
-						isActive: textAlign === "left",
+						isActive: textAlign.value === "left",
 					},
 					{
 						id: "center",
 						part: setPart("textAlign", "center"),
 						title: messages.menuAlignCenter,
 						content: <AlignCenterIcon />,
-						isActive: textAlign === "center",
+						isActive: textAlign.value === "center",
 					},
 					{
 						id: "right",
 						part: setPart("textAlign", "right"),
 						title: messages.menuAlignRight,
 						content: <AlignRightIcon />,
-						isActive: textAlign === "right",
+						isActive: textAlign.value === "right",
 					},
 				]}
 			/>
@@ -272,43 +222,35 @@ const TextAlignItemComponent: React.FC<BuiltinItemProps> = ({
 export const TextAlignItem = memo(TextAlignItemComponent);
 
 /** Where the text sits down the height of its region. */
-const VerticalAlignItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const VerticalAlignItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const selectionVerticalAlign = readSelectionStyle(
-		canvasState,
-		"verticalAlign",
-		registries,
-	);
-	const verticalAlign = selectionValueOr(selectionVerticalAlign, "middle");
+	const verticalAlign = useSelectedVerticalAlign();
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowVertical}>
 			<PropertySegmentedControl
-				isMixed={isMixedSelectionValue(selectionVerticalAlign)}
+				isMixed={verticalAlign.isMixed}
 				options={[
 					{
 						id: "top",
 						part: setPart("verticalAlign", "top"),
 						title: messages.menuAlignTop,
 						content: <AlignTopIcon />,
-						isActive: verticalAlign === "top",
+						isActive: verticalAlign.value === "top",
 					},
 					{
 						id: "middle",
 						part: setPart("verticalAlign", "middle"),
 						title: messages.menuAlignMiddle,
 						content: <AlignMiddleIcon />,
-						isActive: verticalAlign === "middle",
+						isActive: verticalAlign.value === "middle",
 					},
 					{
 						id: "bottom",
 						part: setPart("verticalAlign", "bottom"),
 						title: messages.menuAlignBottom,
 						content: <AlignBottomIcon />,
-						isActive: verticalAlign === "bottom",
+						isActive: verticalAlign.value === "bottom",
 					},
 				]}
 			/>
@@ -350,16 +292,9 @@ export const TextLayoutItem = memo(TextLayoutItemComponent);
  * switchable shapes disagree lights neither, and one holding nothing the switch
  * moves reports no value at all (textVerticalBasisEntry).
  */
-const TextVerticalBasisItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const TextVerticalBasisItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const selectionBasis = readSelectionStyle(
-		canvasState,
-		"textVerticalBasis",
-		registries,
-	);
+	const selectionBasis = useSelectionStyle("textVerticalBasis");
 	const basis = selectionValueOr(selectionBasis, "region");
 
 	return (

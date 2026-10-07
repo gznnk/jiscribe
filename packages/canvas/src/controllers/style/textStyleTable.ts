@@ -22,18 +22,18 @@ import { toggleTextDecorationToken } from "../utils/toggleTextDecorationToken";
  * The content itself is answered for by every type holding text, whatever fields
  * that text accepts.
  *
- * @param textType - The type's `ObjectFeatures.text`; one holding no text at all answers for nothing
+ * @param textType - The type's `ObjectFeatures.text`, which is what decides the fields; only a type declaring one has a text half at all, so there is no "no text" case here
  * @param slotsOf - Which slots a whole-slot write lands on; `defaultSlotsOf` for a type whose slots are the keys of its `text`
- * @returns The text half of the type's table; empty for a text type accepting none of the fields
+ * @returns The text half of the type's table; the content alone for a text type accepting none of the fields
  */
 export const textStyleTable = (
-	textType: TextType | undefined,
+	textType: TextType,
 	slotsOf: SlotsOf<ObjectState>,
 ): StyleTable<ObjectState> => {
 	const keys = textStyleKeysOf(textType);
 	const accepts = (field: keyof TextSlotStyle): boolean => keys.includes(field);
 	return {
-		...(textType !== undefined && { textContent: textContentEntry }),
+		textContent: textContentEntry,
 		...(accepts("fontColor") && {
 			fontColor: runOrSlot("fontColor", { slotsOf }),
 		}),

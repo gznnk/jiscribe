@@ -4,10 +4,11 @@ import type { PropertyPanelTransformUpdater } from "../PropertyPanelTypes";
 
 /**
  * What every built-in sidebar row is handed. The whole controller state, the way
- * the ObjectMenu's own items take it: a row reads the selection's style through
- * the shared readers, which resolve a text slot against the open editor and the
- * per-type defaults. A plugin row gets the narrowed
- * {@link PropertyPanelItemProps} instead.
+ * the ObjectMenu's own items take it: it is what the rows state the things no
+ * style intent covers from — the transform frame and its two switches, the meta
+ * target, whether a command is available. The selection's style is read through
+ * the shared reader instead (useSelectionStyle), which both surfaces provide. A
+ * plugin row gets the narrowed {@link PropertyPanelItemProps} instead.
  */
 export type BuiltinItemProps = {
 	canvasState: CanvasControllerState;

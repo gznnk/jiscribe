@@ -67,26 +67,6 @@ export const selectionValueOr = <Value, Fallback>(
 		: fallback;
 
 /**
- * The one value the selection agrees on, once it turns out to be of the type the
- * row draws. For a kind a type declares for itself read by its name alone, which
- * comes back `unknown` — a row that holds the declaring table reads it typed
- * instead (useSelectionStyle) and needs no guard.
- *
- * @param selectionValue - What the selection says about the property
- * @param isValue - The guard the agreed value must pass; a value of another type falls back the way a disagreeing selection does, since the row has nothing to draw either way
- * @param fallback - Shown for `mixed`, for `none` and for a value the guard rejects; usually the row's own default
- * @returns The agreed value, or `fallback`
- */
-export const selectionValueAs = <Value, Fallback>(
-	selectionValue: SelectionValue<unknown>,
-	isValue: (value: unknown) => value is Value,
-	fallback: Fallback,
-): Value | Fallback =>
-	selectionValue.kind === "single" && isValue(selectionValue.value)
-		? selectionValue.value
-		: fallback;
-
-/**
  * A value the selection really carries: the one it agrees on, or the first of
  * the several it does not. What a row hands a control that steps from the value
  * it is given — a mixed row's arrows land on `value ± 1`, so the row's own

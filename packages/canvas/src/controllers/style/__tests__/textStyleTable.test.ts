@@ -47,8 +47,4 @@ describe("textStyleTable", () => {
 			"verticalAlign",
 		]);
 	});
-
-	it("a type holding no text answers for nothing", () => {
-		expect(kindsOf(undefined)).toEqual([]);
-	});
 });

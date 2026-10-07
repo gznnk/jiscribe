@@ -4,11 +4,8 @@ import { memo, useRef } from "react";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
-import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueOr } from "../../../../../style/SelectionValue";
-import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -38,14 +35,14 @@ const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const stroke = selectionValueOr(
-		useSelectionStyle(CONNECTOR_STYLE, "label.stroke"),
+	const { value: stroke, hasLabelText } = useConnectorLabelStyle(
+		"label.stroke",
 		AUTO_COLOR,
+		{ objects, selection },
 	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!hasSelectedConnectorLabelText({ objects, selection })) {
+	if (!hasLabelText) {
 		return null;
 	}
 

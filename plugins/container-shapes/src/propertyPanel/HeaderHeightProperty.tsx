@@ -19,8 +19,8 @@ import { useSelectedHeaderHeight } from "../state/useSelectedHeaderHeight";
  *
  * Written as the `headerHeight` style the container declares for itself
  * (CONTAINER_STYLE) through `onStyleIntent` — a kind the engine does not own, so
- * the intent is `{ kind, value }` with the value left as the transport string —
- * so the field's preview / commit / coalescing ride the style route unchanged.
+ * the intent is `{ kind, value }` — which keeps the field's preview / commit /
+ * coalescing on the style route unchanged.
  * The lower bound is the drag's; the upper one is left to the drawing, which
  * clamps the band to the box (`calcContainerHeaderHeight`), since a
  * multi-selection has no single height to bound against.
@@ -41,7 +41,7 @@ const HeaderHeightPropertyComponent: React.FC<PropertyPanelItemProps> = ({
 				testId="property-field:headerHeight"
 				onUpdate={(value, commit, coalesceHistory) =>
 					onStyleIntent(
-						{ kind: "headerHeight", value: String(value) },
+						{ kind: "headerHeight", value },
 						commit,
 						coalesceHistory,
 					)

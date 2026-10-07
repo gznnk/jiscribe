@@ -49,6 +49,19 @@ const toStyleNumber = (value: string): number | undefined => {
 };
 
 /**
+ * A mapper for an intent whose value is a number, which applies nothing for a
+ * string no number parses from.
+ *
+ * @param build - The intent the parsed number states; reached only for a string that parsed
+ */
+const numberIntent =
+	(build: (value: number) => StyleIntent): StyleIntentMapper =>
+	(value) => {
+		const parsed = toStyleNumber(value);
+		return parsed === undefined ? undefined : build(parsed);
+	};
+
+/**
  * The property names the engine's own style vocabulary owns, each paired with the
  * intent the menus' string value makes. Exhaustive over SystemStyleName, which is
  * what keeps every style field on exactly one route.
@@ -58,43 +71,31 @@ const toStyleNumber = (value: string): number | undefined => {
  *
  * The transport is a string either way, so the dash, the two arrowheads and the
  * two alignments are cast to their unions here rather than validated: the values
- * come from the menus' own parts. The basis is the exception, having always been
- * checked.
+ * come from the menus' own parts. The basis is the exception, and it throws: no
+ * surface outside the engine's own rows states it, so a value that is neither
+ * basis is a mistake in the engine rather than something to quietly apply
+ * nothing for.
  */
 const INTENT_BY_PROPERTY = {
 	fill: (value) => ({ kind: "fill", color: value }),
-	fillOpacity: (value) => {
-		const opacity = toStyleNumber(value);
-		return opacity === undefined ? undefined : { kind: "fillOpacity", opacity };
-	},
+	fillOpacity: numberIntent((opacity) => ({ kind: "fillOpacity", opacity })),
 	stroke: (value) => ({ kind: "stroke", color: value }),
-	strokeWidth: (value) => {
-		const width = toStyleNumber(value);
-		return width === undefined ? undefined : { kind: "strokeWidth", width };
-	},
+	strokeWidth: numberIntent((width) => ({ kind: "strokeWidth", width })),
 	strokeDashType: (value) => ({
 		kind: "strokeDashType",
 		dash: value as StrokeDashType,
 	}),
-	strokeOpacity: (value) => {
-		const opacity = toStyleNumber(value);
-		return opacity === undefined
-			? undefined
-			: { kind: "strokeOpacity", opacity };
-	},
+	strokeOpacity: numberIntent((opacity) => ({
+		kind: "strokeOpacity",
+		opacity,
+	})),
 	// The menus' part is named after the field the radius is stored in, the intent
 	// after what it means.
-	rx: (value) => {
-		const radius = toStyleNumber(value);
-		return radius === undefined ? undefined : { kind: "cornerRadius", radius };
-	},
+	rx: numberIntent((radius) => ({ kind: "cornerRadius", radius })),
 	startArrow: (value) => ({ kind: "startArrow", arrow: value as ArrowType }),
 	endArrow: (value) => ({ kind: "endArrow", arrow: value as ArrowType }),
 	fontColor: (value) => ({ kind: "fontColor", color: value }),
-	fontSize: (value) => {
-		const size = toStyleNumber(value);
-		return size === undefined ? undefined : { kind: "fontSize", size };
-	},
+	fontSize: numberIntent((size) => ({ kind: "fontSize", size })),
 	fontFamily: (value) => ({ kind: "fontFamily", family: value }),
 	fontWeight: (value) => ({ kind: "fontWeight", weight: value }),
 	fontStyle: (value) => ({ kind: "fontStyle", style: value }),
@@ -151,7 +152,7 @@ const intentMapperOf = (property: string): StyleIntentMapper | undefined =>
  * @param property - The property name, as the menus' parts spell it; a name with dots in it is a declared write path (`label.fill`)
  * @param value - The value as a string, read into the intent's own type (INTENT_BY_PROPERTY) or left as it stands for the declaring type's entry to read
  * @returns The intent to apply, or undefined for a value nothing can be made of (a string no number parses from) — which is the caller's cue to apply nothing
- * @throws For a `textVerticalBasis` value that is neither basis — the one property whose value has always been checked
+ * @throws For a `textVerticalBasis` value that is neither basis: only the engine's own rows state that property, so such a value is a mistake in the engine and is not quietly turned into applying nothing
  */
 export const styleIntentOf = (
 	property: string,

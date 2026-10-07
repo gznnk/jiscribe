@@ -335,8 +335,8 @@ A row states the value back through `useSelectionStyle`
 would reach. Passing the table ahead of the kind
 (`useSelectionStyle(CONTAINER_STYLE, "headerFill")`) types the answer from the
 declaration, so the row narrows nothing and the type's value type is stated once;
-read by name alone the value still arrives `unknown`, which `selectionValueAs`
-narrows with a guard of the row's own.
+read by name alone the value still arrives `unknown`, for the row to narrow with
+a guard of its own.
 
 ## Adding a style
 

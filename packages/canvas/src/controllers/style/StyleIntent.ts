@@ -125,14 +125,12 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 >;
 
 /**
- * The value type one text-slot kind works in: its payload, plus the unset such a
- * field really has (TextSlotStyleIntentKind). Spelled apart from
- * {@link StyleIntentValueType} so the toggles can reach it without that type
- * referring to itself — a recursive conditional in an overloaded signature is
- * more than the compiler will unfold (TS2589).
+ * The value an intent of one kind carries: the sole field its payload holds.
+ *
+ * @template K - The kind whose payload is read
  */
-type TextSlotStyleValueType<K extends TextSlotStyleIntentKind> =
-	StyleIntentPayload<K>[keyof StyleIntentPayload<K>] | undefined;
+type StyleIntentPayloadValue<K extends StyleIntentKind> =
+	StyleIntentPayload<K>[keyof StyleIntentPayload<K>];
 
 /**
  * The type of the value an intent of one kind carries: the sole field it holds
@@ -156,11 +154,11 @@ type TextSlotStyleValueType<K extends TextSlotStyleIntentKind> =
  */
 export type StyleIntentValueType<K extends string> =
 	K extends TextToggleIntentKind
-		? TextSlotStyleValueType<(typeof TOGGLE_FLIPS)[K]>
+		? StyleIntentPayloadValue<(typeof TOGGLE_FLIPS)[K]> | undefined
 		: K extends TextSlotStyleIntentKind
-			? TextSlotStyleValueType<K>
+			? StyleIntentPayloadValue<K> | undefined
 			: K extends StyleIntentKind
-				? StyleIntentPayload<K>[keyof StyleIntentPayload<K>]
+				? StyleIntentPayloadValue<K>
 				: unknown;
 
 /**

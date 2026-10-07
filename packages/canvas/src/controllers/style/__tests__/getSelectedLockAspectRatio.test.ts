@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
-import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../../CanvasTypes";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { getSelectedLockAspectRatio } from "../getSelectedLockAspectRatio";
 
-// The real bundle, so the row reads the lock through the very table a write to it
+// The real bundle, so the lock is read through the very table a write to it
 // would land on (applyObjectDefinition).
 const registries = createTestRegistries();
 
