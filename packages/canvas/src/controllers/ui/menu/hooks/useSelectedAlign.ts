@@ -1,5 +1,6 @@
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 
 import { useSelectionStyle } from "../../../style/SelectionStyleReaderContext";
 import {
@@ -15,23 +16,18 @@ type SelectedAlign<TAlign> = {
 	isMixed: boolean;
 };
 
-/** What a text with no `textAlign` of its own is drawn with, so that is the segment to light. */
-const UNSET_TEXT_ALIGN = "left";
-
-/** What a text with no `verticalAlign` of its own is drawn with. */
-const UNSET_VERTICAL_ALIGN = "middle";
-
 /**
  * Where the selected text sits across the width of its region, for the two
- * surfaces that offer it (AlignmentMenu, TextAlignItem) — one place for the
- * value unset is drawn with.
+ * surfaces that offer it (AlignmentMenu, TextAlignItem). A text whose type
+ * declares no alignment either reads as what the drawing falls back to
+ * (TEXT_STYLE_FALLBACK), so the lit segment is the one the text is drawn at.
  *
  * @returns The alignment in force and whether the selection disagrees
  */
 export const useSelectedTextAlign = (): SelectedAlign<TextAlign> => {
 	const textAlign = useSelectionStyle("textAlign");
 	return {
-		value: selectionValueOr(textAlign, UNSET_TEXT_ALIGN),
+		value: selectionValueOr(textAlign, TEXT_STYLE_FALLBACK.textAlign),
 		isMixed: isMixedSelectionValue(textAlign),
 	};
 };
@@ -45,7 +41,7 @@ export const useSelectedTextAlign = (): SelectedAlign<TextAlign> => {
 export const useSelectedVerticalAlign = (): SelectedAlign<VerticalAlign> => {
 	const verticalAlign = useSelectionStyle("verticalAlign");
 	return {
-		value: selectionValueOr(verticalAlign, UNSET_VERTICAL_ALIGN),
+		value: selectionValueOr(verticalAlign, TEXT_STYLE_FALLBACK.verticalAlign),
 		isMixed: isMixedSelectionValue(verticalAlign),
 	};
 };
