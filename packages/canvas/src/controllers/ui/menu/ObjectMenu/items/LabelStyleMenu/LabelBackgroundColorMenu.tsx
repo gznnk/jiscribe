@@ -38,11 +38,10 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const fill =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fill"),
-			undefined,
-		) ?? AUTO_COLOR;
+	const fill = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fill"),
+		AUTO_COLOR,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

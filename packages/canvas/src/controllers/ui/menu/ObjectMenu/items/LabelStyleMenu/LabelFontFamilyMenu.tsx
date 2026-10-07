@@ -41,11 +41,10 @@ const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	);
 
 	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fontFamily"),
-			undefined,
-		) ?? CONNECTOR_LABEL_DEFAULTS.fontFamily;
+	const fontFamily = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fontFamily"),
+		CONNECTOR_LABEL_DEFAULTS.fontFamily,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

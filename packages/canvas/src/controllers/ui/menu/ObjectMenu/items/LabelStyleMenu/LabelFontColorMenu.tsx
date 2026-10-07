@@ -37,11 +37,10 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const fontColor =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fontColor"),
-			undefined,
-		) ?? AUTO_COLOR;
+	const fontColor = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fontColor"),
+		AUTO_COLOR,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

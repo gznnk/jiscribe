@@ -61,8 +61,7 @@ const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({
 		registries,
 	);
 	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily =
-		selectionValueOr(selectionFontFamily, undefined) ?? DEFAULT_FONT_FAMILY;
+	const fontFamily = selectionValueOr(selectionFontFamily, DEFAULT_FONT_FAMILY);
 	const isMixed = isMixedSelectionValue(selectionFontFamily);
 
 	return (
@@ -99,10 +98,7 @@ const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyPanelRowSize}>
 			<PropertyNumberField
-				value={
-					selectionValueOrFirst(fontSize, undefined) ??
-					TEXT_STYLE_FALLBACK.fontSize
-				}
+				value={selectionValueOrFirst(fontSize, TEXT_STYLE_FALLBACK.fontSize)}
 				isMixed={isMixedSelectionValue(fontSize)}
 				min={MIN_FONT_SIZE}
 				max={MAX_FONT_SIZE}
@@ -134,10 +130,7 @@ const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
 			<PropertyColorField
-				value={
-					selectionValueOr(fontColor, undefined) ??
-					TEXT_STYLE_FALLBACK.fontColor
-				}
+				value={selectionValueOr(fontColor, TEXT_STYLE_FALLBACK.fontColor)}
 				mixedValues={selectionMixedValues(fontColor)?.map(
 					(mixedColor) => mixedColor ?? TEXT_STYLE_FALLBACK.fontColor,
 				)}
@@ -242,7 +235,7 @@ const TextAlignItemComponent: React.FC<BuiltinItemProps> = ({
 		"textAlign",
 		registries,
 	);
-	const textAlign = selectionValueOr(selectionTextAlign, undefined) ?? "left";
+	const textAlign = selectionValueOr(selectionTextAlign, "left");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowHorizontal}>
@@ -289,8 +282,7 @@ const VerticalAlignItemComponent: React.FC<BuiltinItemProps> = ({
 		"verticalAlign",
 		registries,
 	);
-	const verticalAlign =
-		selectionValueOr(selectionVerticalAlign, undefined) ?? "middle";
+	const verticalAlign = selectionValueOr(selectionVerticalAlign, "middle");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowVertical}>

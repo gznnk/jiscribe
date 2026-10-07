@@ -55,7 +55,7 @@ const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
 	// active; a selection drawn in several marks none.
 	const fontFamily = isMixedSelectionValue(selectionFontFamily)
 		? undefined
-		: (selectionValueOr(selectionFontFamily, undefined) ?? DEFAULT_FONT_FAMILY);
+		: selectionValueOr(selectionFontFamily, DEFAULT_FONT_FAMILY);
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

@@ -71,10 +71,10 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 					<FontSizeMenuWrapper>
 						<ObjectMenuSlider
 							label={messages.menuFontSize}
-							value={
-								selectionValueOrFirst(fontSize, undefined) ??
-								TEXT_STYLE_FALLBACK.fontSize
-							}
+							value={selectionValueOrFirst(
+								fontSize,
+								TEXT_STYLE_FALLBACK.fontSize,
+							)}
 							isMixed={isMixedSelectionValue(fontSize)}
 							min={MIN_FONT_SIZE}
 							max={MAX_FONT_SIZE}

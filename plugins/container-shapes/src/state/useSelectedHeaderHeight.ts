@@ -16,5 +16,5 @@ import { CONTAINER_STYLE } from "../style/containerStyle";
 export const useSelectedHeaderHeight = (): number =>
 	selectionValueOr(
 		useSelectionStyle(CONTAINER_STYLE, "headerHeight"),
-		undefined,
-	) ?? CONTAINER_HEADER_HEIGHT;
+		CONTAINER_HEADER_HEIGHT,
+	);
