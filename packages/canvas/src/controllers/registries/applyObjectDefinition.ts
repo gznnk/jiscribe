@@ -1,6 +1,6 @@
-import { ConnectorExtraStyleProperties } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
@@ -103,8 +103,8 @@ import {
 import { createTextSlotPartKindDefinition } from "../selection/createTextSlotPartKindDefinition";
 import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
 import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
+import { CONNECTOR_STYLE } from "../style/connectorStyle";
 import { coreStyleTable } from "../style/coreStyleTable";
-import { extraStyleTable } from "../style/extraStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
@@ -277,7 +277,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		// route: the endpoints are not among them, so there is no floor — a
 		// connector with no waypoint left is the straight route it started as.
 		partKinds: [createVertexPartKindDefinition<ConnectorState>(0)],
-		extraStyleProperties: ConnectorExtraStyleProperties,
+		style: CONNECTOR_STYLE,
 		menu: [
 			{
 				id: "arrowHead",
@@ -443,6 +443,45 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 };
 
 /**
+ * Refuses a declared style entry (`ObjectTypeDefinition.style`) that writes a
+ * field the type's doc cannot hold: the mapper passes exactly the fields
+ * `features` and `extraKeys` name between doc and state (FrameMapper), so such
+ * an entry would write state the next save drops.
+ *
+ * Only an entry stating what it writes is checked; the engine's own entries
+ * state nothing, their fields being vouched for by the very flags they are
+ * derived from (StyleEntry.fields).
+ *
+ * @param type - The type being registered; named in the error
+ * @param definition - Its whole definition: the fields its `features` imply (collectStyleKeys, plus the text group) and its `extraKeys` are what an entry may write
+ * @throws When an entry writes a field that is neither, naming the type, the kind and the field
+ */
+const checkDeclaredStyleFields = (
+	type: ObjectType,
+	definition: AnyObjectTypeDefinition,
+): void => {
+	if (definition.style === undefined) {
+		return;
+	}
+	const docFields = new Set<string>([
+		...collectStyleKeys(definition.features),
+		// The text group's own field, which collectStyleKeys leaves out because Doc
+		// and State disagree on where its styling sits (mapTextDocToState).
+		...(definition.features.text === undefined ? [] : ["text"]),
+		...(definition.extraKeys ?? []),
+	]);
+	for (const [kind, entry] of Object.entries(definition.style)) {
+		for (const field of entry?.fields ?? []) {
+			if (!docFields.has(field)) {
+				throw new Error(
+					`ObjectTypeDefinition "${type}": the style entry "${kind}" writes "${field}", which the type's doc does not hold (declare it in extraKeys)`,
+				);
+			}
+		}
+	}
+};
+
+/**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, text region, behavior, state validator,
  * menu, property panel), and optionally its factory / stencils.
@@ -460,14 +499,15 @@ export const applyObjectDefinition = (
 	registries.objectComponent.register(type, definition.component);
 	registries.objectTextStyleDefaults.registerDefinition(type, definition);
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
-	// A shape's own declarations cannot shadow the derived entries: a name the
-	// engine's own vocabulary owns is refused here (extraStyleTable throws), so
-	// the spread order never decides anything.
+	checkDeclaredStyleFields(type, definition);
+	// The type's own table comes last on purpose: a kind it declares replaces the
+	// one derived from its features, which is how a type whose storage differs
+	// from the core guess says where the edit lands.
 	registries.objectStyle.register(type, {
 		...coreStyleTable(definition.features, {
 			hasInsetTextRegion: hasInsetTextRegionType(definition),
 		}),
-		...extraStyleTable(type, definition.extraStyleProperties),
+		...definition.style,
 	});
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {

@@ -1,11 +1,11 @@
-import { isString } from "@jiscribe/basic-validators";
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo, useRef } from "react";
 
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueAs } from "../../../../../style/SelectionValue";
+import { selectionValueOr } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -41,11 +41,11 @@ const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	);
 
 	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily = selectionValueAs(
-		useSelectionStyle("label.fontFamily"),
-		isString,
-		CONNECTOR_LABEL_DEFAULTS.fontFamily,
-	);
+	const fontFamily =
+		selectionValueOr(
+			useSelectionStyle(CONNECTOR_STYLE, "label.fontFamily"),
+			undefined,
+		) ?? CONNECTOR_LABEL_DEFAULTS.fontFamily;
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

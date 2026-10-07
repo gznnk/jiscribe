@@ -1,9 +1,5 @@
 import { BELOW_LABEL_STYLE_DEFAULTS } from "@jiscribe/canvas-sdk/doc";
-import type {
-	CreateObjectType,
-	ExtraStylePropertyDescriptor,
-	ObjectFeatures,
-} from "@jiscribe/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** The icon drawn when `icon` is omitted: the one an architecture diagram places most. */
 export const DEFAULT_AWS_ICON_NAME = "service/amazon-ec2";
@@ -31,11 +27,6 @@ export const AwsIconFeatures = {
 	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
-
-/** The style properties of this shape that no ObjectFeatures flag covers. */
-export const AwsIconExtraStyleProperties = {
-	icon: { valueType: "string" },
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const AwsIconDocBrand: unique symbol;

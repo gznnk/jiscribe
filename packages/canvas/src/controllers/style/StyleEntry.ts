@@ -51,14 +51,24 @@ export type StyleEntry<TState extends ObjectState, V> = {
 		pick: ObjectPartSelection | null,
 		ctx: StyleContext,
 	): readonly V[];
+	/**
+	 * The top-level field(s) of the object this entry writes, checked at
+	 * registration against what the type's doc may hold (applyObjectDefinition) —
+	 * so an entry cannot write state the mapper then drops on save.
+	 *
+	 * Omitted means the entry writes nothing the document stores (the toggles,
+	 * which flip a field of the slots) or is one of the engine's own, whose fields
+	 * the type's `features` already vouch for.
+	 */
+	readonly fields?: readonly string[];
 };
 
 /**
- * An entry for a kind the engine does not know — a shape's own declaration
- * (extraStyleTable) — so its value type is unknown here. Every entry of the
- * engine's own kinds is assignable to it as well (StyleEntry's members are method
- * signatures), which is what lets {@link StyleTable} hold the typed kinds and the
- * open index signature in one intersection.
+ * An entry under a kind the engine does not own: one the declaring type names
+ * for itself, whose value type is that type's business and so `unknown` here.
+ * Every entry of the engine's own kinds is assignable to it as well (StyleEntry's
+ * members are method signatures), which is what lets {@link StyleTable} hold the
+ * typed kinds and the open index signature in one intersection.
  */
 export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
 
@@ -67,10 +77,11 @@ export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
  * take — the gate at its coarsest, before any entry is called.
  *
  * The engine's own kinds are typed one by one, each entry bound to that intent's
- * value type. Any other name is a shape's own (extraStyleTable), whose value is
- * the transport string the declaration is read against rather than a type the
- * engine knows, so those cannot be typed per kind and sit under the index
- * signature instead.
+ * value type. Any other name is a kind the declaring type owns
+ * (ObjectTypeDefinition.style), whose stored type the engine does not know, so
+ * those cannot be typed per kind and sit under the index signature instead — the
+ * read a plugin does through the table it declared is typed from that table
+ * rather than from here ({@link StyleEntryValueType}).
  *
  * @template TState - The state the entries are written against
  */
@@ -79,6 +90,18 @@ export type StyleTable<TState extends ObjectState> = {
 } & {
 	[extraKind: string]: ExtraStyleEntry | undefined;
 };
+
+/**
+ * The value type one entry works in, read off the entry itself. What a read
+ * through a declared table answers (readSelectionStyle / useSelectionStyle), so
+ * a type states what its own kind holds once — in the table — and the rows
+ * stating it back need no guard of their own.
+ *
+ * @template TEntry - The entry as the table holds it; a kind the table leaves
+ *   out contributes nothing (`never`), the absent entry matching no pair
+ */
+export type StyleEntryValueType<TEntry> =
+	TEntry extends StyleEntry<ObjectState, infer TValue> ? TValue : never;
 
 /**
  * The stretch of text an open editor has selected, as the entries are handed it:

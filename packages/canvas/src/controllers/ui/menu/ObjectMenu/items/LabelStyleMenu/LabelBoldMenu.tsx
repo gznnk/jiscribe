@@ -1,10 +1,10 @@
-import { isString } from "@jiscribe/basic-validators";
 import { memo } from "react";
 
 import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueAs } from "../../../../../style/SelectionValue";
+import { selectionValueOr } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
@@ -24,9 +24,8 @@ const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const isBold = isBoldFontWeight(
-		selectionValueAs(
-			useSelectionStyle("label.fontWeight"),
-			isString,
+		selectionValueOr(
+			useSelectionStyle(CONNECTOR_STYLE, "label.fontWeight"),
 			undefined,
 		),
 	);

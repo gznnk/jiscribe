@@ -6,14 +6,14 @@ import { IconPickerMenu } from "./menu/IconPickerMenu";
 import { Icon } from "./presentation/Icon";
 import { isKnownIconName } from "./schema/icon/resolveIconName";
 import type { IconDoc } from "./schema/IconDoc";
-import { IconExtraStyleProperties } from "./schema/IconDoc";
 import type { IconState } from "./state/IconState";
 import { IconStencils } from "./stencil/IconStencils";
+import { ICON_STYLE } from "./style/iconStyle";
 
 /**
  * The menu adds the icon picker to what features would derive on their own: `stroke`
  * without `fill` yields the line color and line style the icon is drawn with. The picker
- * writes `icon`, which the doc declares as an extra style property.
+ * writes `icon`, which the type declares in its own style table (ICON_STYLE).
  */
 export const lucideIconDefinition: ObjectTypeDefinition<IconDoc, IconState> =
 	createFrameObjectDefinition<IconDoc, IconState>({
@@ -24,7 +24,7 @@ export const lucideIconDefinition: ObjectTypeDefinition<IconDoc, IconState> =
 		isExtraStateValid: (state) =>
 			state.icon === undefined ||
 			(typeof state.icon === "string" && isKnownIconName(state.icon)),
-		extraStyleProperties: IconExtraStyleProperties,
+		style: ICON_STYLE,
 		stencils: IconStencils,
 		menu: [
 			{

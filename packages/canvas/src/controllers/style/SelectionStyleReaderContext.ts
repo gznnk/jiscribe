@@ -1,15 +1,17 @@
 import { createContext, useContext } from "react";
 
 import type { SelectionValue } from "./SelectionValue";
+import type { StyleEntryValueType, StyleTable } from "./StyleEntry";
 import type { StyleIntentValueType } from "./StyleIntent";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
  * Reports what the surrounding surface's selection says about one style intent —
  * `readSelectionStyle` bound to the state that surface is drawn for.
  */
-export type SelectionStyleReader = <K extends string>(
-	kind: K,
-) => SelectionValue<StyleIntentValueType<K>>;
+export type SelectionStyleReader = <TKind extends string>(
+	kind: TKind,
+) => SelectionValue<StyleIntentValueType<TKind>>;
 
 /**
  * Context that hands the rows of the floating menu and the properties sidebar a
@@ -34,19 +36,42 @@ export const SelectionStyleReaderContext =
  * built on it cannot disagree with the write behind it. Fold it into something
  * drawable with the `selectionValue*` helpers.
  *
- * @param kind - The style property to report: one of the engine's own names (`"fill"`, `"fontSize"`, …), which fixes the value type, or a name a shape declared for itself (`ExtraStyleProperties`), whose stored type the engine does not know and which therefore comes back `unknown` for the caller to narrow
+ * A row of a type that declared the property passes that type's table
+ * (`ObjectTypeDefinition.style`) ahead of the kind, which types the answer from
+ * the declaration — the table is read for its type alone, the walk still going
+ * through each target's own registered one.
+ *
+ * @param kind - The style property to report: one of the engine's own names (`"fill"`, `"fontSize"`, …), which fixes the value type, or a kind a type declared for itself, whose stored type the engine does not know and which therefore comes back `unknown` for the caller to narrow (selectionValueAs)
  * @returns `single` / `mixed` / `none` over that property's value type
  * @throws When rendered outside a `SelectionStyleReaderContext` provider; the
  *   rows of the floating menu and the properties sidebar are inside one
  */
-export const useSelectionStyle = <K extends string>(
-	kind: K,
-): SelectionValue<StyleIntentValueType<K>> => {
+export function useSelectionStyle<TKind extends string>(
+	kind: TKind,
+): SelectionValue<StyleIntentValueType<TKind>>;
+/**
+ * @param table - The table the kind is declared in, as its type hands it to `ObjectTypeDefinition.style`
+ * @param kind - The style property to report, a key of `table`
+ * @returns `single` / `mixed` / `none` over the value type that table's entry works in, so the row needs no guard of its own
+ */
+export function useSelectionStyle<
+	TTable extends StyleTable<ObjectState>,
+	TKind extends keyof TTable & string,
+>(
+	table: TTable,
+	kind: TKind,
+): SelectionValue<StyleEntryValueType<TTable[TKind]>>;
+export function useSelectionStyle(
+	kindOrTable: string | StyleTable<ObjectState>,
+	tableKind?: string,
+): SelectionValue<unknown> {
 	const readStyle = useContext(SelectionStyleReaderContext);
 	if (readStyle === null) {
 		throw new Error(
 			"useSelectionStyle: no SelectionStyleReaderContext provider above this component; a row reading the selection's style must be rendered inside the ObjectMenu or the properties sidebar",
 		);
 	}
-	return readStyle(kind);
-};
+	return readStyle(
+		typeof kindOrTable === "string" ? kindOrTable : (tableKind as string),
+	);
+}

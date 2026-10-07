@@ -131,8 +131,8 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 （メニュー項目 → `STYLE_INTENT` または ObjectMenu のジェスチャー `set:{property}:{value}` →
 `applyStylePropertyPart`）はフラットなプロパティ名を運ぶ。ラベルのスタイル（`label.fill` /
 `label.stroke` / `label.fontColor` など）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
-2 経路とも収束点は `applyStyleIntent` の 1 か所。`label.*` は connector 固有の宣言
-（`ConnectorExtraStyleProperties`）として登録され、宣言から組まれたエントリがドットをネスト merge と
+2 経路とも収束点は `applyStyleIntent` の 1 か所。`label.*` は connector 自前のスタイル表
+（`CONNECTOR_STYLE`）で宣言され、各エントリがドットをネスト merge と
 解釈して `connector.label` へ書く（label 未設定時は no-op）。共有 UI
 （`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を
 再実装せずに再利用するための割り切り。専用アクションを増やす案は、この commit 機微を二重持ちすることになるため

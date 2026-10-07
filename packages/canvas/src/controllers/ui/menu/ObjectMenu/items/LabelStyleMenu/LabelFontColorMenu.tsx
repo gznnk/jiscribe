@@ -1,12 +1,12 @@
-import { isString } from "@jiscribe/basic-validators";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useRef } from "react";
 
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueAs } from "../../../../../style/SelectionValue";
+import { selectionValueOr } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -37,11 +37,11 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const fontColor = selectionValueAs(
-		useSelectionStyle("label.fontColor"),
-		isString,
-		AUTO_COLOR,
-	);
+	const fontColor =
+		selectionValueOr(
+			useSelectionStyle(CONNECTOR_STYLE, "label.fontColor"),
+			undefined,
+		) ?? AUTO_COLOR;
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

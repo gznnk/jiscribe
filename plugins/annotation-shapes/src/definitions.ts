@@ -40,10 +40,6 @@ import type { CalloutDoc } from "./schema/callout/CalloutDoc";
 import { isCalloutTail } from "./schema/callout/CalloutDoc";
 import type { NoteDoc } from "./schema/note/NoteDoc";
 import {
-	GROUP_MARKER_DIRECTION_STYLE_PROPERTY,
-	GROUP_MARKER_TIP_STYLE_PROPERTIES,
-} from "./schema/shared/GroupMarkerFields";
-import {
 	calcCalloutTextRegion,
 	calcNoteTextRegion,
 } from "./schema/textRegions";
@@ -61,6 +57,10 @@ import { BracketIcon } from "./stencil/BracketIcon";
 import { BracketWithStemIcon } from "./stencil/BracketWithStemIcon";
 import { CalloutIcon } from "./stencil/CalloutIcon";
 import { NoteIcon } from "./stencil/NoteIcon";
+import {
+	GROUP_MARKER_DIRECTION_STYLE,
+	GROUP_MARKER_TIP_STYLE,
+} from "./style/groupMarkerStyle";
 
 /**
  * The label hangs off the tip, outside the geometry box, so `visualBounds` is
@@ -72,7 +72,7 @@ import { NoteIcon } from "./stencil/NoteIcon";
  * such a connector live while the tip is dragged. `menu` likewise stays derived
  * from the features: the tip handle covers both `direction` and `tipPosition`,
  * so neither needs a section (they stay reachable through `onStyleIntent`
- * via the extra style properties).
+ * via the type's own style table, GROUP_MARKER_TIP_STYLE).
  */
 export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 	createFrameObjectDefinition<BraceDoc, BraceState>({
@@ -90,7 +90,7 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 				handle: handleGroupMarkerTip,
 			},
 		],
-		extraStyleProperties: GROUP_MARKER_TIP_STYLE_PROPERTIES,
+		style: GROUP_MARKER_TIP_STYLE,
 		/**
 		 * One stencil, not one per direction: drag-drawing already picks the axis from
 		 * the drawn proportions (createGroupMarkerObjectFactory), so four palette entries would be
@@ -106,7 +106,7 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 /**
  * Same as the brace, except that the tip does not move: the handle only ever
  * re-attaches the bracket to another edge (handleGroupMarkerDirection), and
- * `tipPosition` is neither declared nor styleable: the bracket's doc definition
+ * `tipPosition` is in neither its doc nor its style table: the bracket's doc definition
  * leaves it out of `extraKeys`, so one written onto a bracket doc is refused by
  * doc-ops and dropped by the mapper rather than travelling as dead state.
  */
@@ -126,7 +126,7 @@ export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 				handle: handleGroupMarkerDirection,
 			},
 		],
-		extraStyleProperties: GROUP_MARKER_DIRECTION_STYLE_PROPERTY,
+		style: GROUP_MARKER_DIRECTION_STYLE,
 		/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
 		stencils: createTypeStencils({
 			objectType: "bracket",
@@ -154,7 +154,7 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 			handle: handleGroupMarkerTip,
 		},
 	],
-	extraStyleProperties: GROUP_MARKER_TIP_STYLE_PROPERTIES,
+	style: GROUP_MARKER_TIP_STYLE,
 	/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
 	stencils: createTypeStencils({
 		objectType: "bracketWithStem",

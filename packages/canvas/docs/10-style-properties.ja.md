@@ -42,9 +42,11 @@ union には 3 つの事実が乗る:
   （`toggleBold` → `fontWeight`）。トグルの値型はそのフィールドの値型なので、
   型とエントリの双方のためにここ 1 箇所で宣言する
 
-図形が自前で宣言した名前は union に入らない。`ExtraStyleIntent`
-（`{ kind: string; value: string }`）として運ばれ、値は輸送形の文字列のまま。
-エンジンはその名前の意味も型も知らないからである。
+型が自前で宣言した kind は union に入らない。`ExtraStyleIntent`
+（`{ kind: string; value: unknown }`）として運ばれる。エンジンはその kind の意味も型も
+知らないからである。値は、名前と文字列しか持たないサーフェスからなら輸送形の文字列
+（`styleIntentOf`）、宣言を持つサーフェスからなら型付きの値
+（`{ kind: "headerHeight", value: 32 }`）。読むのは宣言した型のエントリである。
 
 ## 層 2: 型ごとの表
 
@@ -66,6 +68,8 @@ type StyleEntry<TState extends ObjectState, V> = {
 		pick: ObjectPartSelection | null,
 		ctx: StyleContext,
 	): readonly V[];
+	/** このエントリが書く object 直下のフィールド。登録時の検査が見る */
+	readonly fields?: readonly string[];
 };
 ```
 
@@ -76,9 +80,12 @@ type StyleEntry<TState extends ObjectState, V> = {
 
 `StyleTable<TState>` は「その型が何に答えるか」を kind ごとに持つ。キーが無いのが
 最も粗い gate で、その型はその intent を受けない。エンジン自身の kind は 1 つずつ
-型付けされ、それ以外のキーは図形自前のエントリとして `ExtraStyleEntry` の
+型付けされ、それ以外のキーは宣言した型が持つエントリとして `ExtraStyleEntry` の
 index signature に入る（値型はエンジンが知らないので `unknown`。エンジン自身の
-エントリもこれに代入できるので、2 つの半分が 1 つの交差型に収まる）。
+エントリもこれに代入できるので、2 つの半分が 1 つの交差型に収まる）。エントリは
+**自分が書くフィールド**も述べる（`StyleEntry.fields`）。登録時にその型の Doc と
+突き合わせるのがこれで、エンジン自身のエントリは何も述べない — フィールドの保証は
+導出元のフラグ自身が持っているからである。
 
 `StyleContext` は、object と値以外にエントリへ渡されるもの:
 
@@ -91,7 +98,8 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 
 `ObjectStyleRegistry` が型別の表を持ち、バンドル生成時に埋まる。
 `applyObjectDefinition` が全型について
-`{ ...coreStyleTable(features, facts), ...extraStyleTable(type, extras) }` を登録する。
+`{ ...coreStyleTable(features, facts), ...definition.style }` を登録する。型自前の表が
+後ろなので、型が宣言した kind は導出されたエントリを置き換える。
 レジストリに無い型は何も受けない — 歩き手はフィールドを推測せず飛ばす（fail-closed）。
 
 ## 宣言から無料で得られる表
@@ -140,7 +148,7 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 | `slotField(field, { slotsOf })`              | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                                 |
 | `runOrSlot(field, { slotsOf })`              | 編集中に文字範囲が選ばれていればその範囲（`resolveRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
 | `toggleRunOrSlot(kind, { slotsOf, toggle })` | `TOGGLE_FLIPS` が名指すフィールド。選ばれた範囲にだけ当たる（キー 1 打は図形全体への書きではない）。現在の描画値を読んで反転し、`runOrSlot` と同じ経路で書く                                      |
-| `extraField(path, valueType)`                | 図形自前の宣言が名指すフィールド。ドットはネストへの path。輸送形の文字列は宣言の `valueType` でここで読む（境界はプラグインの語彙を知らない）                                                    |
+| `fieldEntry(path, valueType)`                | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                              |
 | `lockAspectRatioEntry`                       | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                          |
 | `textVerticalBasisEntry`                     | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                          |
 | `textContentEntry`                           | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                             |
@@ -175,7 +183,9 @@ index signature に入る（値型はエンジンが知らないので `unknown`
   `state` の同一参照を返す
 - `readSelectionStyle(state, kind, registries)` — 同じ道で読み、`single` / `mixed` /
   `none` に畳む（`combineSelectionValues`）。エンジン自身の kind を渡すと答えが型付き、
-  図形自前の名前を渡すと `SelectionValue<unknown>`
+  型自前の名前だけを渡すと `SelectionValue<unknown>`。その kind を宣言した表を手前に
+  渡すと（`readSelectionStyle(state, CONNECTOR_STYLE, "label.fill", registries)`）
+  宣言から型が付く。表は型のためだけに取り、歩きは各対象自身の登録済みの表を引く
 
 ### 編集中の下書き
 
@@ -249,43 +259,48 @@ materialize は従来どおりの分担で、ジェスチャー経路は `handle
 関門で平らにし、`handleGesture` を通らない `STYLE_INTENT` 経路は書き込みの
 直後に平らにする。
 
-## 図形が宣言するもの
+## 型が宣言するもの
 
-`ObjectFeatures` のフラグが覆わないスタイルは、図形の Doc の隣で
-`…ExtraStyleProperties` として宣言し、`ObjectTypeDefinition` の
-`extraStyleProperties` から配線する:
+`ObjectFeatures` のフラグが覆わないスタイル — あるいはフラグの示す格納先と実際が違う
+スタイル — は、その型自前の `StyleTable` として宣言し、`ObjectTypeDefinition.style`
+へ渡す:
 
 ```ts
-export const ContainerExtraStyleProperties = {
-	headerFill: { valueType: "string" },
-	headerHeight: { valueType: "number" },
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
+export const CONTAINER_STYLE = {
+	headerFill: fieldEntry("headerFill", "string"),
+	headerHeight: fieldEntry("headerHeight", "number"),
+} satisfies StyleTable<ContainerState>;
 ```
 
-`extraStyleTable` が各宣言を `extraField` のエントリに変え、宣言された名前のまま
-その型の表へ入れる。宣言の存在が gate そのもので、誰も宣言していない名前は何にも
+この表は導出された表の上に、**宣言が後ろになるよう**重ねられる。エンジン自身の語彙が
+持つ kind は拒否されるのではなく*置き換えられる*。格納先がコアの推測と違う型
+（セルに `fill` を持つ表）が必要としているのはそれである。語彙が持たない kind は
+その型だけのスタイルで、宣言の存在が gate そのもの。誰も宣言していない名前は何にも
 当たらない（fail-closed）。宣言された名前は選択のうち宣言している object
 — 選択グループの子孫も含む — にだけ当たる。名前のドットは書き込み path
 （`label.fill` は `connector.label` へ merge）。
 
-エンジン自身の語彙が持つ名前は**登録時に throw** し、型と名前を名指す。境界がその名前を
-自分の intent に読んでしまうので、エントリは一度も呼ばれず、宣言が黙って何もしない
-状態になるからである。
+エントリは自分が書くフィールドを述べ（`fields`。`fieldEntry` は path の根から埋める）、
+**その型の Doc が持てないフィールドを書くエントリは登録時に拒否する**。持てる名前は
+`extraKeys` と `features` が示すもの（`collectStyleKeys` と `text`）。この検査が無いと、
+エントリは mapper が Doc へ戻すときに落とす state を書けてしまい、保存するまで誰も
+気づかない。
 
 登録は `applyObjectDefinition` を通るので、`CanvasConfig.plugins` で足したプラグイン図形
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md) 参照）も同じ能力を得る。
-コネクターの宣言は `@jiscribe/doc` の `model/objects/connector/ConnectorDoc.ts`。
-container プラグインは `src/schema/ContainerDoc.ts` で `ContainerExtraStyleProperties` を
-宣言し、`@jiscribe/canvas-sdk` の `createFrameObjectDefinition` へ渡す。
+`fieldEntry` と `StyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
+差し替える型のために、エンジンが自分の表を組むヘルパー（`objectField` / `slotField` /
+`runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`）も並んでいる。コネクターの表は
+`controllers/style/connectorStyle.ts`（`CONNECTOR_STYLE`）。container プラグインは
+`src/style/containerStyle.ts` で `CONTAINER_STYLE` を宣言し、`@jiscribe/canvas-sdk` の
+`createFrameObjectDefinition` へ渡す。
 
-現時点でプラグインが頼れるのは、その宣言と、両サーフェスの自前の行で値を述べるための
-`useSelectionStyle(name)`（`@jiscribe/canvas/unstable`）だけ。このフックは選択全体の答え
-（`single` / `mixed` / `none`。描ける形へ畳むのは `selectionValue*` ヘルパー）を、同名の
-書き込みが届くのとまったく同じ object について返す。宣言した名前はエンジンが何も知らない
-名前なので、値は `unknown` で来る。行の側で絞る（自前のガードと `selectionValueAs`）。
-スタイル層自体は内部実装で、型が導出済みのエントリを差し替えることはまだできない —
-格納先がコアの推測と違う図形（セルに `fill` を持つ表）が必要としているのはそれである。
-宣言面の `ObjectTypeDefinition.style` 上書きはそのために予定されており、**まだ無い**。
+行が値を述べ返すのは `useSelectionStyle`（`@jiscribe/canvas/unstable`）。選択全体の答え
+（`single` / `mixed` / `none`。描ける形へ畳むのは `selectionValue*` ヘルパー）を、同じ
+kind の書き込みが届くのとまったく同じ object について返す。kind の手前に表を渡すと
+（`useSelectionStyle(CONTAINER_STYLE, "headerFill")`）宣言から型が付くので、行の側で
+絞るものは無く、型の値型は 1 箇所で述べられる。名前だけで読むと値は `unknown` のままで、
+行が自前のガードと `selectionValueAs` で絞る。
 
 ## スタイルを足すとき
 
@@ -293,12 +308,14 @@ container プラグインは `src/schema/ContainerDoc.ts` で `ContainerExtraSty
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | エンジン自身の語彙の新しいスタイル | `StyleIntent` への kind、それを有効にする宣言の下の `coreStyleTable` / `textStyleTable` へのエントリ、`INTENT_BY_PROPERTY` へのマッパー。`SystemStyleName` の `satisfies` があるので、どれか 1 つだけではコンパイルが通らない |
 | 既存スタイルの新しい格納先         | `{ apply, read }` の対を返すヘルパーを `entries/` に足し、必要な表から使う                                                                                                                                                    |
-| 1 つの図形だけが持つスタイル       | その図形の `…ExtraStyleProperties` へ 1 行（初回だけ定義の `extraStyleProperties` も）                                                                                                                                        |
+| 1 つの型だけが持つスタイル         | その型自前の `StyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `style` も）。根のフィールドは `extraKeys` に入れる                                                                                |
+| 導出エントリの格納先が違うとき     | その kind のまま型自前の表へエントリを書く。導出された方が置き換わる                                                                                                                                                          |
 
 回帰の安全網: 読み替えは `style/__tests__/styleIntentOf.test.ts` が、適用側は
 名前と文字列を運ぶ唯一の経路の
 `gestures/handlers/menu/utils/__tests__/applyStylePropertyPart.test.ts` が見る。
 後者はレジストリ駆動で、実際の
-バンドル配線から図形宣言の extra を全て列挙し、gate・値の読み・ネスト書き込みを確かめる。
-同じ名前を宣言する図形が `valueType` で一致していることも見る。新しい宣言は自動で
-カバーされる。
+バンドル配線から型が宣言した kind を全て列挙し、gate・ネスト書き込み・エントリが述べた
+フィールドを本当に書くことを確かめる。新しい宣言は自動でカバーされる。宣言した型が値を
+何として読むかはエントリ自身の担当（`style/__tests__/fieldEntry.test.ts`）で、登録時の
+検査にも専用のスイートがある（`registries/__tests__/applyObjectDefinition.style.test.ts`）。

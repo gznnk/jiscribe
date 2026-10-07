@@ -2,7 +2,9 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
+import { CONNECTOR_STYLE } from "../connectorStyle";
 import { readSelectionStyle } from "../readSelectionStyle";
+import type { SelectionValue } from "../SelectionValue";
 import {
 	connectorOf,
 	editingStateOf,
@@ -273,5 +275,42 @@ describe("readSelectionStyle on a text style", () => {
 		);
 		const state = editingStateOf({ a }, "a", "# Title", { start: 0, end: 2 });
 		expect(readColor(state)).toEqual({ kind: "single", value: "#f00" });
+	});
+
+	describe("through a table a type declared", () => {
+		it("reads the declared kind, typed from the declaration", () => {
+			const c = connectorOf("c", { label: { text: "Yes", fill: "#f00" } });
+			const fill: SelectionValue<string | undefined> = readSelectionStyle(
+				stateOf(["c"], { c }),
+				CONNECTOR_STYLE,
+				"label.fill",
+				registries,
+			);
+			expect(fill).toEqual({ kind: "single", value: "#f00" });
+		});
+
+		it("reads unset as the value it is, a label being there to write to", () => {
+			const c = connectorOf("c", { label: { text: "Yes" } });
+			expect(
+				readSelectionStyle(
+					stateOf(["c"], { c }),
+					CONNECTOR_STYLE,
+					"label.fill",
+					registries,
+				),
+			).toEqual({ kind: "single", value: undefined });
+		});
+
+		it("a type that declared nothing of the kind → none", () => {
+			const a = rectOf("a");
+			expect(
+				readSelectionStyle(
+					stateOf(["a"], { a }),
+					CONNECTOR_STYLE,
+					"label.fill",
+					registries,
+				),
+			).toEqual({ kind: "none" });
+		});
 	});
 });

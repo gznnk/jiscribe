@@ -169,17 +169,20 @@ export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/us
 // `useSelectionStyle(name)` answers what the whole selection says about one style
 // property — the value of exactly the objects a write of the same name would
 // reach, so a row cannot disagree with its own write. A name the engine owns
-// ("fill", "fontSize") comes back typed; a name a shape declares for itself
-// comes back `unknown`, the engine not knowing what the declaration holds, and
-// the row narrows it (selectionValueAs). The helpers fold the three cases into
-// something drawable, and SHAPE_STYLE_FALLBACK is the last resort a row shows
-// when nothing the selection reaches carries the property at all.
+// ("fill", "fontSize") comes back typed; a kind a type declares for itself comes
+// back `unknown` under that name alone, the engine not knowing what the
+// declaration holds, so a row of the declaring type passes its table instead —
+// `useSelectionStyle(CONTAINER_STYLE, "headerFill")` — and the answer is typed
+// from the declaration. The helpers fold the three cases into something
+// drawable, and SHAPE_STYLE_FALLBACK is the last resort a row shows when nothing
+// the selection reaches carries the property at all.
 //
 // A row writes through the mirror of that read: `onStyleIntent(intent, commit)`
 // (StyleIntentUpdater), where an engine name goes as its typed intent
-// (`{ kind: "fill", color }`) and a shape's own name as `{ kind, value }` with
-// the value left as the transport string. `styleIntentOf(property, value)` is
-// there for a widget that holds a name and a string from the DOM instead.
+// (`{ kind: "fill", color }`) and a type's own kind as `{ kind, value }`, the
+// value either typed as the declaration holds it or left as the transport
+// string. `styleIntentOf(property, value)` is there for a widget that holds a
+// name and a string from the DOM instead.
 export { useSelectionStyle } from "./controllers/style/SelectionStyleReaderContext";
 export type {
 	ExtraStyleIntent,
@@ -195,6 +198,31 @@ export {
 	selectionValueOrFirst,
 } from "./controllers/style/SelectionValue";
 export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+
+// What a type declares about its own styles (packages/canvas/docs/10-style-properties.md).
+// A type's table is `ObjectTypeDefinition.style`: one `{ apply, read }` pair per
+// intent kind, composed onto the ones its `features` derive — and a kind
+// declared there replaces the derived one, which is how a type whose storage
+// differs from the core guess (a table whose fill lives on its cells) says where
+// the edit lands. `fieldEntry(path, valueType)` is the entry for a field of the
+// type's own, dots being a path into a nested object; `objectField` / `slotField`
+// / `runOrSlot` / `toggleRunOrSlot` are the ones the engine builds its own
+// entries from, for a type replacing a derived kind, with `defaultSlotsOf` as
+// the slot answer the core types give. An entry stating a field the type's doc
+// cannot hold (`extraKeys`) is refused at registration.
+export { fieldEntry } from "./controllers/style/entries/fieldEntry";
+export { objectField } from "./controllers/style/entries/objectField";
+export { runOrSlot } from "./controllers/style/entries/runOrSlot";
+export { defaultSlotsOf } from "./controllers/style/entries/slotEntry";
+export type { SlotsOf } from "./controllers/style/entries/slotEntry";
+export { slotField } from "./controllers/style/entries/slotField";
+export { toggleRunOrSlot } from "./controllers/style/entries/toggleRunOrSlot";
+export type { StyleValueType } from "./controllers/style/coerceStyleValue";
+export type {
+	StyleContext,
+	StyleEntry,
+	StyleTable,
+} from "./controllers/style/StyleEntry";
 
 // ---------------------------------------------------------------------------
 // Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)

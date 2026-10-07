@@ -10,10 +10,10 @@ import { Container } from "./presentation/Container";
 import { HeaderColorProperty } from "./propertyPanel/HeaderColorProperty";
 import { HeaderHeightProperty } from "./propertyPanel/HeaderHeightProperty";
 import type { ContainerDoc } from "./schema/ContainerDoc";
-import { ContainerExtraStyleProperties } from "./schema/ContainerDoc";
 import { calcContainerTextRegion } from "./schema/textRegions";
 import type { ContainerState } from "./state/ContainerState";
 import { ContainerStencils } from "./stencil/ContainerStencils";
+import { CONTAINER_STYLE } from "./style/containerStyle";
 
 /**
  * `containerDefinition` has zero intentional omissions relative to the core
@@ -51,7 +51,7 @@ export const containerDefinition: ObjectTypeDefinition<
 			handle: handleContainerHeaderHeight,
 		},
 	],
-	extraStyleProperties: ContainerExtraStyleProperties,
+	style: CONTAINER_STYLE,
 	stencils: ContainerStencils,
 	propertyPanel: [
 		{

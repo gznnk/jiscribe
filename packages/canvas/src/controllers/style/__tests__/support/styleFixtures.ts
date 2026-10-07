@@ -16,6 +16,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import { CONNECTOR_STYLE } from "../../connectorStyle";
 import { coreStyleTable } from "../../coreStyleTable";
 import type { StyleIntentRegistries } from "../../ObjectStyleRegistry";
 import { createObjectStyleRegistry } from "../../ObjectStyleRegistry";
@@ -178,7 +179,7 @@ const INSET_TEXT_REGION_TYPES: readonly string[] = [EllipseFeatures.type];
 /**
  * The style wiring of every built-in type used by these fixtures, built the way
  * applyObjectDefinition builds it: each type's core table from its own
- * declarations.
+ * declarations, plus the table the type itself declares (the connector's label).
  *
  * @param shapeStyleDefaults - The defaults the shape `read`s resolve through; a fresh empty registry by default, so only SHAPE_STYLE_FALLBACK applies
  * @param textStyleDefaults - The defaults the slot `read`s resolve through; a fresh empty registry by default, so a field no slot sets reads as unset
@@ -195,12 +196,14 @@ export const registriesOf = (
 		GroupFeatures,
 		SourceFeatures,
 	]) {
-		objectStyle.register(
-			features.type,
-			coreStyleTable(features, {
+		objectStyle.register(features.type, {
+			...coreStyleTable(features, {
 				hasInsetTextRegion: INSET_TEXT_REGION_TYPES.includes(features.type),
 			}),
-		);
+			// The connector's own declarations ride along, as they do in the real
+			// wiring (applyObjectDefinition).
+			...(features.type === ConnectorFeatures.type ? CONNECTOR_STYLE : {}),
+		});
 	}
 	return {
 		objectStyle,

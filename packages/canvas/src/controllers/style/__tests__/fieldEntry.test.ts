@@ -2,15 +2,13 @@ import { describe, it, expect } from "vitest";
 
 import { connectorOf, contextOf, rectOf } from "./support/styleFixtures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { extraField } from "../entries/extraField";
+import { fieldEntry } from "../entries/fieldEntry";
+import type { ExtraStyleEntry } from "../StyleEntry";
 
-const accentColor = extraField<ObjectState>(["accentColor"], "string");
-const labelFill = extraField<ObjectState>(["label", "fill"], "string");
-const labelStrokeWidth = extraField<ObjectState>(
-	["label", "strokeWidth"],
-	"number",
-);
-const collapsed = extraField<ObjectState>(["collapsed"], "boolean");
+const accentColor = fieldEntry("accentColor", "string");
+const labelFill = fieldEntry("label.fill", "string");
+const labelStrokeWidth = fieldEntry(["label", "strokeWidth"], "number");
+const collapsed = fieldEntry("collapsed", "boolean");
 
 const fieldOf = (object: unknown, field: string): unknown =>
 	(object as Record<string, unknown>)[field];
@@ -18,7 +16,22 @@ const fieldOf = (object: unknown, field: string): unknown =>
 const labelOf = (object: unknown): Record<string, unknown> =>
 	(object as { label: Record<string, unknown> }).label;
 
-describe("extraField", () => {
+/**
+ * `apply` as the walkers reach it: through the table, where the value is
+ * untyped — which is how a value of the wrong type can arrive at all.
+ */
+const applyUntyped = (
+	entry: ExtraStyleEntry,
+	object: ObjectState,
+	value: unknown,
+): ObjectState | null => entry.apply(object, null, value, contextOf());
+
+describe("fieldEntry", () => {
+	it("states the field it writes, the root of the path", () => {
+		expect(accentColor.fields).toEqual(["accentColor"]);
+		expect(labelFill.fields).toEqual(["label"]);
+	});
+
 	describe("apply", () => {
 		it("writes the field the declaration names", () => {
 			const a = rectOf("a");
@@ -41,24 +54,44 @@ describe("extraField", () => {
 			expect(fieldOf(a, "accentColor")).toBe("auto");
 		});
 
-		it("reads the value as the declared number", () => {
+		it("reads a string as the declared number", () => {
 			const c = connectorOf("c", { label: { text: "Yes" } });
-			const updated = labelStrokeWidth.apply(c, null, "2", contextOf());
+			const updated = applyUntyped(labelStrokeWidth, c, "2");
+			expect(labelOf(updated).strokeWidth).toBe(2);
+		});
+
+		it("a value already of the declared type is taken as it stands", () => {
+			const c = connectorOf("c", { label: { text: "Yes" } });
+			const updated = labelStrokeWidth.apply(c, null, 2, contextOf());
 			expect(labelOf(updated).strokeWidth).toBe(2);
 		});
 
 		it("a string no number can be made of → applies to nothing", () => {
 			const c = connectorOf("c", { label: { text: "Yes" } });
-			expect(labelStrokeWidth.apply(c, null, "x", contextOf())).toBeNull();
+			expect(applyUntyped(labelStrokeWidth, c, "x")).toBeNull();
 		});
 
-		it('reads the value as the declared boolean, anything but "true" being false', () => {
+		it("a value of neither the declared type nor a string → applies to nothing", () => {
+			const a = rectOf("a");
+			expect(applyUntyped(accentColor, a, 7)).toBeNull();
+			expect(applyUntyped(accentColor, a, undefined)).toBeNull();
+			expect(applyUntyped(collapsed, a, 1)).toBeNull();
+		});
+
+		it('reads a string as the declared boolean, anything but "true" being false', () => {
+			const a = rectOf("a");
+			expect(fieldOf(applyUntyped(collapsed, a, "true"), "collapsed")).toBe(
+				true,
+			);
+			expect(fieldOf(applyUntyped(collapsed, a, "no"), "collapsed")).toBe(
+				false,
+			);
+		});
+
+		it("a declared boolean is also taken as the boolean it is", () => {
 			const a = rectOf("a");
 			expect(
-				fieldOf(collapsed.apply(a, null, "true", contextOf()), "collapsed"),
-			).toBe(true);
-			expect(
-				fieldOf(collapsed.apply(a, null, "no", contextOf()), "collapsed"),
+				fieldOf(collapsed.apply(a, null, false, contextOf()), "collapsed"),
 			).toBe(false);
 		});
 
