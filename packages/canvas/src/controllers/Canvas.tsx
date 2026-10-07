@@ -60,7 +60,10 @@ import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
 import { isTextSlotSelection } from "./selection/textSlotPartKind";
-import type { TextToggleIntentKind } from "./style/StyleIntent";
+import type {
+	TextToggleIntent,
+	TextToggleIntentKind,
+} from "./style/StyleIntent";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -82,7 +85,7 @@ import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type {
-	StylePropertyUpdater,
+	StyleIntentUpdater,
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -510,15 +513,9 @@ const CanvasComponent = ({
 	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleStylePropertyUpdate = useCallback<StylePropertyUpdater>(
-		(property, value, commit, coalesceHistory = false) => {
-			dispatch({
-				type: "STYLE_PROPERTY_UPDATE",
-				property,
-				value,
-				commit,
-				coalesceHistory,
-			});
+	const handleStyleIntent = useCallback<StyleIntentUpdater>(
+		(intent, commit, coalesceHistory = false) => {
+			dispatch({ type: "STYLE_INTENT", intent, commit, coalesceHistory });
 		},
 		[dispatch],
 	);
@@ -673,11 +670,14 @@ const CanvasComponent = ({
 		},
 		[dispatch],
 	);
+	// One keystroke is one commit, so the toggle rides the same action every other
+	// style write does — the editor only ever raises toggles, which carry no value.
 	const handleTextEditToggleFormat = useCallback(
 		(kind: TextToggleIntentKind) => {
-			dispatch({ type: "TOGGLE_TEXT_FORMAT", kind });
+			const intent: TextToggleIntent = { kind };
+			handleStyleIntent(intent, true);
 		},
-		[dispatch],
+		[handleStyleIntent],
 	);
 
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
@@ -884,7 +884,7 @@ const CanvasComponent = ({
 							>
 								<ObjectMenu
 									canvasState={menuCanvasState}
-									onPropertyUpdate={handleStylePropertyUpdate}
+									onStyleIntent={handleStyleIntent}
 									onOpenReference={handleOpenReference}
 								/>
 							</ScrollSyncedOverlay>
@@ -901,7 +901,7 @@ const CanvasComponent = ({
 					{state.propertyPanel.isOpen && (
 						<PropertyPanel
 							canvasState={propertyPanelState}
-							onPropertyUpdate={handleStylePropertyUpdate}
+							onStyleIntent={handleStyleIntent}
 							onTransformUpdate={handleTransformUpdate}
 							onDocumentUpdate={handleDocumentUpdate}
 							onMetaUpdate={handleMetaUpdate}

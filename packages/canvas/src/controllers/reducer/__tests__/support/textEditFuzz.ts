@@ -17,7 +17,11 @@ import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
-import type { TextToggleIntentKind } from "../../../style/StyleIntent";
+import type {
+	TextToggleIntent,
+	TextToggleIntentKind,
+} from "../../../style/StyleIntent";
+import { styleIntentOf } from "../../../style/styleIntentOf";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
@@ -453,18 +457,20 @@ export const runTextEditFuzzSession = (
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			dispatch({ type: "TOGGLE_TEXT_FORMAT", kind: op.toggle });
+			const toggle: TextToggleIntent = { kind: op.toggle };
+			dispatch({ type: "STYLE_INTENT", intent: toggle, commit: true });
 		} else if (op.kind === "menu") {
 			dispatch({
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			dispatch({
-				type: "STYLE_PROPERTY_UPDATE",
-				property: op.property,
-				value: op.value,
-				commit: op.commit,
-			});
+			const intent = styleIntentOf(op.property, op.value);
+			if (intent === undefined) {
+				throw new Error(
+					`the menu op states a value nothing reads: ${op.property}=${op.value}`,
+				);
+			}
+			dispatch({ type: "STYLE_INTENT", intent, commit: op.commit });
 			const coerced = op.property === "fontSize" ? Number(op.value) : op.value;
 			model.allowedRunValues[op.property].add(coerced);
 			if (op.start === op.end) {

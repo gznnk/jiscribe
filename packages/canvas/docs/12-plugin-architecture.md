@@ -246,7 +246,7 @@ built-in row kinds and, where none of them fits, rows of the type's own.
 `{ type: "custom"; id; component }` (`PropertyPanelCustomItem`) among the built-in
 ones, the same shape the ObjectMenu's custom item has. What the component receives
 is `PropertyPanelItemProps` and nothing else: the slice of the selection, plus
-`onPropertyUpdate` for a style property and `onTransformUpdate` for a number of the
+`onStyleIntent` for a style and `onTransformUpdate` for a number of the
 frame (both types live in
 `packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts`) —
 never the controller state the built-in rows read. What it may import is the
@@ -260,7 +260,11 @@ value the row _states_ comes from the kit's one read API,
 `useSelectionStyle(name)`: it answers what the whole selection says about that
 property — over exactly the objects a write of the same name would reach — which
 is what lets a plugin row be mixed the way a built-in one is (see
-[Style System](./10-style-properties.md)). Two rules to know before writing one:
+[Style System](./10-style-properties.md)). Writing is the mirror of it:
+`onStyleIntent(intent, commit)` takes the edit stated rather than a name and a
+string, and a shape's own property is stated as `{ kind, value }` — the declared
+name, and the value as the transport string its entry reads. Two rules to know
+before writing one:
 
 - The `id` is what the multi-type merge matches the row by, so two types offering
   the same row must spell it the same way; a selection mixing types that spell it
@@ -278,7 +282,7 @@ empty body. Core's own use is the connector's Label and Label border sections, o
 only once the label has text. Omitted means always offered.
 
 `plugins/container-shapes` is the worked example: its `header-fill` row states
-`headerFill` through `onPropertyUpdate` from a `PropertyColorField`, sitting under
+`headerFill` through `onStyleIntent` from a `PropertyColorField`, sitting under
 the body color in the Fill section, and its `header-height` row states the
 `headerHeight` extra style property from a `PropertyNumberField` under the size in
 the Layout section; both state their current value through `useSelectionStyle`,

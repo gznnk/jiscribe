@@ -71,7 +71,7 @@ import { NoteIcon } from "./stencil/NoteIcon";
  * `extraConnectPoints` anchor (`"tip"`), paired with the `geometryKey` that keeps
  * such a connector live while the tip is dragged. `menu` likewise stays derived
  * from the features: the tip handle covers both `direction` and `tipPosition`,
- * so neither needs a section (they stay reachable through `onPropertyUpdate`
+ * so neither needs a section (they stay reachable through `onStyleIntent`
  * via the extra style properties).
  */
 export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =

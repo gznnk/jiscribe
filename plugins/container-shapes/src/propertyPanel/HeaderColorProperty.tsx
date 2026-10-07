@@ -17,14 +17,14 @@ import { useSelectedHeaderFill } from "../state/useSelectedHeaderFill";
  *
  * The row is a plugin `custom` item, so it reads the selection off
  * PropertyPanelItemProps rather than the controller state the built-in rows take,
- * and writes `headerFill` through `onPropertyUpdate` — the same property and the
+ * and writes `headerFill` through `onStyleIntent` — the same property and the
  * same picker the ObjectMenu's HeaderColorMenu uses, so the two never disagree.
  *
  * Its wording is owned by this plugin (`useCanvasLocale` + `resolveLocaleMessages`),
  * not by core.
  */
 const HeaderColorPropertyComponent: React.FC<PropertyPanelItemProps> = ({
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
@@ -37,7 +37,7 @@ const HeaderColorPropertyComponent: React.FC<PropertyPanelItemProps> = ({
 				property="headerFill"
 				role="surface"
 				title={messages.menuHeaderColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);

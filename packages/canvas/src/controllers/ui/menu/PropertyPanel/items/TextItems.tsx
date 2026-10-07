@@ -11,6 +11,12 @@ import {
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../style/readSelectionStyle";
+import {
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "../../../../style/SelectionValue";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
@@ -30,12 +36,6 @@ import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
-import {
-	isMixedSelectionValue,
-	selectionMixedValues,
-	selectionValueOr,
-	selectionValueOrFirst,
-} from "../../utils/SelectionValue";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyDropdownTriggerLabel } from "../common/PropertyControlsStyled";
@@ -90,7 +90,7 @@ export const FontFamilyItem = memo(FontFamilyItemComponent);
 /** How large the selected text is drawn. */
 const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -109,7 +109,11 @@ const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuFontSize}
 				testId="property-field:fontSize"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate("fontSize", String(value), commit, coalesceHistory)
+					onStyleIntent(
+						{ kind: "fontSize", size: value },
+						commit,
+						coalesceHistory,
+					)
 				}
 			/>
 		</PropertyRow>
@@ -121,7 +125,7 @@ export const FontSizeItem = memo(FontSizeItemComponent);
 /** The ink the selected text is drawn in. */
 const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const registries = useCanvasRegistries();
@@ -140,7 +144,7 @@ const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
 				property="fontColor"
 				role="ink"
 				title={messages.menuFontColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);

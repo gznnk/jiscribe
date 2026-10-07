@@ -7,6 +7,7 @@ import { twoRectsDoc } from "./support/fixtures";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { readSelectionStyle } from "../../style/readSelectionStyle";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -53,24 +54,60 @@ describe("canvasReducer (integration)", () => {
 			expect(after.history.past).toHaveLength(1);
 		});
 
-		it("STYLE_PROPERTY_UPDATE records with commit:true and does not record with commit:false (preview)", () => {
+		it("STYLE_INTENT records with commit:true and does not record with commit:false (preview)", () => {
 			const state = createState();
 
 			const preview = canvasReducer(state, {
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "fill",
-				value: "#ff0000",
+				type: "STYLE_INTENT",
+				intent: { kind: "fill", color: "#ff0000" },
 				commit: false,
 			});
 			expect(preview.history.past).toHaveLength(0);
 
 			const committed = canvasReducer(state, {
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "fill",
-				value: "#ff0000",
+				type: "STYLE_INTENT",
+				intent: { kind: "fill", color: "#ff0000" },
 				commit: true,
 			});
 			expect(committed.history.past).toHaveLength(1);
+		});
+
+		it("a committed toggle lands one entry per keystroke and styles the stretch", () => {
+			// A toggle is the keyboard's own style write: it rides STYLE_INTENT with
+			// commit:true, so the entry is raised by the shared commit tail rather than
+			// by a route of its own.
+			const editing = createTestState(twoRectsDoc, {
+				selection: selectionOf(["rect-1"]),
+				textEditState: {
+					kind: "shape",
+					text: "hello",
+					// A stretch rather than a caret: a toggle writes nothing without one.
+					selection: { start: 0, end: 5 },
+				},
+			});
+			const registries = createTestRegistries();
+
+			const bolded = canvasReducer(editing, {
+				type: "STYLE_INTENT",
+				intent: { kind: "toggleBold" },
+				commit: true,
+			});
+			expect(bolded.history.past).toHaveLength(1);
+			expect(readSelectionStyle(bolded, "fontWeight", registries)).toEqual({
+				kind: "single",
+				value: "bold",
+			});
+
+			const unbolded = canvasReducer(bolded, {
+				type: "STYLE_INTENT",
+				intent: { kind: "toggleBold" },
+				commit: true,
+			});
+			expect(unbolded.history.past).toHaveLength(2);
+			expect(readSelectionStyle(unbolded, "fontWeight", registries)).toEqual({
+				kind: "single",
+				value: "normal",
+			});
 		});
 
 		it("END_TEXT_EDIT records when the text changes on commit", () => {
@@ -118,22 +155,22 @@ describe("canvasReducer (integration)", () => {
 			expect(state.textEditState).toBeNull();
 		});
 
-		it("STYLE_PROPERTY_UPDATE records only once even when preview → commit follow in sequence", () => {
+		it("STYLE_INTENT records only once even when preview → commit follow in sequence", () => {
 			let state = createState();
 			// Preview (commit:false) does not record
 			state = canvasReducer(state, {
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "fill",
-				value: "#ff0000",
+				type: "STYLE_INTENT",
+				intent: { kind: "fill", color: "#ff0000" },
 				commit: false,
 			});
 			expect(state.history.past).toHaveLength(0);
 
-			// Only on commit (commit:true) is one entry pushed (the preview is not double-counted)
+			// Only on commit (commit:true) is one entry pushed (the preview is not double-counted).
+			// The value is already in place, so this also guards that a commit of what the
+			// preview wrote is recorded rather than dropped as a no-op.
 			state = canvasReducer(state, {
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "fill",
-				value: "#ff0000",
+				type: "STYLE_INTENT",
+				intent: { kind: "fill", color: "#ff0000" },
 				commit: true,
 			});
 			expect(state.history.past).toHaveLength(1);
@@ -142,52 +179,51 @@ describe("canvasReducer (integration)", () => {
 
 	// The coalesce window is 1000ms of wall-clock time, so back-to-back dispatches
 	// in a test naturally fall inside it.
-	describe("STYLE_PROPERTY_UPDATE history coalescing", () => {
+	describe("STYLE_INTENT history coalescing", () => {
 		const commitStrokeWidth = (
 			state: CanvasControllerState,
-			value: string,
+			width: number,
 			coalesceHistory: boolean,
 		): CanvasControllerState =>
 			canvasReducer(state, {
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "strokeWidth",
-				value,
+				type: "STYLE_INTENT",
+				intent: { kind: "strokeWidth", width },
 				commit: true,
 				coalesceHistory,
 			});
 
 		it("merges consecutive coalescing commits into a single entry", () => {
 			let state = createState();
-			state = commitStrokeWidth(state, "4", true);
+			state = commitStrokeWidth(state, 4, true);
 			expect(state.history.past).toHaveLength(1);
 
-			state = commitStrokeWidth(state, "5", true);
-			state = commitStrokeWidth(state, "6", true);
+			state = commitStrokeWidth(state, 5, true);
+			state = commitStrokeWidth(state, 6, true);
 			expect(state.history.past).toHaveLength(1);
 		});
 
 		it("records one entry per commit without coalesceHistory", () => {
 			let state = createState();
-			state = commitStrokeWidth(state, "4", false);
-			state = commitStrokeWidth(state, "5", false);
-			state = commitStrokeWidth(state, "6", false);
+			state = commitStrokeWidth(state, 4, false);
+			state = commitStrokeWidth(state, 5, false);
+			state = commitStrokeWidth(state, 6, false);
 			expect(state.history.past).toHaveLength(3);
 		});
 
 		it("does not merge across a changed selection", () => {
 			let state = createState();
-			state = commitStrokeWidth(state, "4", true);
+			state = commitStrokeWidth(state, 4, true);
 			expect(state.history.past).toHaveLength(1);
 
 			state = { ...state, selection: selectionOf(["rect-2"]) };
-			state = commitStrokeWidth(state, "5", true);
+			state = commitStrokeWidth(state, 5, true);
 			expect(state.history.past).toHaveLength(2);
 		});
 
 		it("does not merge a coalescing commit into a preceding non-coalescing one", () => {
 			let state = createState();
-			state = commitStrokeWidth(state, "4", false);
-			state = commitStrokeWidth(state, "5", true);
+			state = commitStrokeWidth(state, 4, false);
+			state = commitStrokeWidth(state, 5, true);
 			expect(state.history.past).toHaveLength(2);
 		});
 	});

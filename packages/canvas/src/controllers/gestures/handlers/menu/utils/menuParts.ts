@@ -10,7 +10,7 @@ import type { DocumentProperty } from "../../../../reducer/CanvasActions";
  * - `toggle:{id}` — open / close the UI the id names (a menu section, a flyout,
  *   a sidebar accordion); UI state only, never the document
  * - `set:{property}:{value}` — write a style property outright
- *   (applyStyleProperty); the value may itself contain `:`
+ *   (applyStylePropertyPart); the value may itself contain `:`
  * - `slider:{property}` — a slider bound to a style property, whose value rides
  *   on the event (`inputValue`) rather than in the part
  * - `doc:{property}:{value}` — write one of the document's own settings
@@ -46,7 +46,7 @@ export const togglePart = (id: string): string => `${TOGGLE_PREFIX}${id}`;
 /**
  * The part of a button that writes one style property.
  *
- * @param property - Name resolved by applyStyleProperty (`fill`, `label.fontWeight`, …); must not contain `:`
+ * @param property - Name read into an intent by styleIntentOf (`fill`, `label.fontWeight`, …); must not contain `:`
  * @param value - The value as the intent or the shape's own declaration is read against; `:` inside it is preserved
  */
 export const setPart = (property: string, value: string): string =>
@@ -55,7 +55,7 @@ export const setPart = (property: string, value: string): string =>
 /**
  * The part of a slider bound to a style property.
  *
- * @param property - Name resolved by applyStyleProperty; must not contain `:`
+ * @param property - Name read into an intent by styleIntentOf; must not contain `:`
  */
 export const sliderPart = (property: string): string =>
 	`${SLIDER_PREFIX}${property}`;

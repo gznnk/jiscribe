@@ -55,7 +55,7 @@ export type GroupMarkerTipFields = GroupMarkerDirectionField &
 
 /**
  * Styleable descriptors for a marker with a movable tip, so a host can drive
- * both fields through `onPropertyUpdate` (there is no built-in menu section for
+ * both fields through `onStyleIntent` (there is no built-in menu section for
  * them yet).
  */
 export const GROUP_MARKER_TIP_STYLE_PROPERTIES = {

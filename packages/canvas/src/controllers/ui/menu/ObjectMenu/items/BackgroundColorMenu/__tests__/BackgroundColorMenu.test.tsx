@@ -78,7 +78,7 @@ describe("BackgroundColorMenu", () => {
 		render(
 			<BackgroundColorMenu
 				canvasState={stateOf(rect("a", GREEN), rect("b", GREEN))}
-				onPropertyUpdate={vi.fn()}
+				onStyleIntent={vi.fn()}
 			/>,
 		);
 
@@ -95,7 +95,7 @@ describe("BackgroundColorMenu", () => {
 					rect("b", BLUE),
 					rect("c", GREEN),
 				)}
-				onPropertyUpdate={vi.fn()}
+				onStyleIntent={vi.fn()}
 			/>,
 		);
 

@@ -6,9 +6,9 @@ import { resolveAutoColor } from "../../../../../../rendering/objects/utils/reso
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
+import { selectionValueAs } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
-import { selectionValueAs } from "../../../utils/SelectionValue";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -28,7 +28,7 @@ const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
 	selection,
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -73,7 +73,7 @@ const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 						// The label of the one selected connector is the whole target.
 						currentColorIsShared
 						property="label.stroke"
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</ObjectMenuDropdownPanel>
 			)}

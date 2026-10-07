@@ -7,11 +7,11 @@ import { selectors } from "../../support/selectors";
  * text, the width the text wraps in.
  *
  * Each writes through the gesture system like the floating menu's own buttons,
- * so a press lands one history entry, and the `data-part` it carries names the
- * state the *next* press moves to (`set:lockAspectRatio:false` while it is
- * locked). What they set is read off the shape rather than off the row: the
- * lock through the axis a typed width carries along, the layout switch through
- * the handles the block layout offers.
+ * so a press lands one history entry, and each carries a `command:` part: the
+ * canvas computes the state the press moves to, and the row's `aria-checked` is
+ * what says where it is now. What they set is read off the shape rather than off
+ * the row: the lock through the axis a typed width carries along, the layout
+ * switch through the handles the block layout offers.
  */
 
 /** The rectangle the layout tests draw: 200 x 130 at (100, 150). */
@@ -20,8 +20,7 @@ const RECT_TO = { x: 300, y: 280 };
 const RECT_WIDTH = "200";
 const RECT_HEIGHT = "130";
 
-const LOCK_ON = selectors.propertyPanelSet("lockAspectRatio", "true");
-const LOCK_OFF = selectors.propertyPanelSet("lockAspectRatio", "false");
+const LOCK = selectors.propertyPanelCommand("toggleLockAspectRatio");
 const AUTO_HEIGHT = selectors.propertyPanelCommand("toggleAutoHeight");
 const TEXT_LAYOUT = selectors.propertyPanelCommand("toggleTextLayout");
 
@@ -33,26 +32,16 @@ test.describe("Properties sidebar checkboxes", () => {
 		await canvas.openPropertyPanel();
 		const rect = canvas.objectById(id);
 
-		const unlocked = canvas.page.locator(LOCK_ON);
-		await expect(unlocked).toHaveAttribute("aria-checked", "false");
-		await unlocked.click();
-		// The part names the press that follows, so the locked row is the "false" one.
-		await expect(canvas.page.locator(LOCK_OFF)).toHaveAttribute(
-			"aria-checked",
-			"true",
-		);
+		const lock = canvas.page.locator(LOCK);
+		await expect(lock).toHaveAttribute("aria-checked", "false");
+		await lock.click();
+		await expect(lock).toHaveAttribute("aria-checked", "true");
 		// The press lands one entry of its own, which is what one undo takes back.
 		await canvas.undo();
-		await expect(canvas.page.locator(LOCK_ON)).toHaveAttribute(
-			"aria-checked",
-			"false",
-		);
+		await expect(lock).toHaveAttribute("aria-checked", "false");
 
-		await canvas.page.locator(LOCK_ON).click();
-		await expect(canvas.page.locator(LOCK_OFF)).toHaveAttribute(
-			"aria-checked",
-			"true",
-		);
+		await lock.click();
+		await expect(lock).toHaveAttribute("aria-checked", "true");
 		const width = canvas.page.locator(selectors.propertyPanelField("width"));
 		await width.fill("400");
 		await width.press("Enter");

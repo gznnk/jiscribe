@@ -58,14 +58,14 @@ afterEach(() => {
 describe("ObjectMenuColorPickerGrid", () => {
 	describe("writing through the callback (the document's own color)", () => {
 		it("writes nothing when the color picked is the one already set", () => {
-			const onPropertyUpdate = vi.fn();
+			const onStyleIntent = vi.fn();
 			render(
 				<ObjectMenuColorPickerGrid
 					currentColor={GREEN}
 					property="fill"
 					writesThroughCallback
 					currentColorIsShared
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>,
 			);
 
@@ -73,70 +73,74 @@ describe("ObjectMenuColorPickerGrid", () => {
 			// changes nothing and drops the redo stack with it.
 			click(pick(GREEN));
 
-			expect(onPropertyUpdate).not.toHaveBeenCalled();
+			expect(onStyleIntent).not.toHaveBeenCalled();
 		});
 
 		it("commits once when the color picked is another one", () => {
-			const onPropertyUpdate = vi.fn();
+			const onStyleIntent = vi.fn();
 			render(
 				<ObjectMenuColorPickerGrid
 					currentColor={GREEN}
 					property="fill"
 					writesThroughCallback
 					currentColorIsShared
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>,
 			);
 
 			click(pick(BLUE));
 
-			expect(onPropertyUpdate.mock.calls).toEqual([["fill", BLUE, true]]);
+			expect(onStyleIntent.mock.calls).toEqual([
+				[{ kind: "fill", color: BLUE }, true],
+			]);
 		});
 
 		it("writes nothing when Auto is picked while the color is already unset", () => {
-			const onPropertyUpdate = vi.fn();
+			const onStyleIntent = vi.fn();
 			render(
 				<ObjectMenuColorPickerGrid
 					currentColor={AUTO_COLOR}
 					property="fill"
 					writesThroughCallback
 					currentColorIsShared
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>,
 			);
 
 			click(pick(AUTO_COLOR));
 
-			expect(onPropertyUpdate).not.toHaveBeenCalled();
+			expect(onStyleIntent).not.toHaveBeenCalled();
 		});
 
 		it("commits once when Auto unsets a color that is set", () => {
-			const onPropertyUpdate = vi.fn();
+			const onStyleIntent = vi.fn();
 			render(
 				<ObjectMenuColorPickerGrid
 					currentColor={GREEN}
 					property="fill"
 					writesThroughCallback
 					currentColorIsShared
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>,
 			);
 
 			click(pick(AUTO_COLOR));
 
-			expect(onPropertyUpdate.mock.calls).toEqual([["fill", AUTO_COLOR, true]]);
+			expect(onStyleIntent.mock.calls).toEqual([
+				[{ kind: "fill", color: AUTO_COLOR }, true],
+			]);
 		});
 	});
 
 	describe("writing where the color shown stands for one of several targets", () => {
 		it("commits the color already shown, which is how a mixed selection is unified", () => {
-			const onPropertyUpdate = vi.fn();
+			const onStyleIntent = vi.fn();
 			render(
 				<ObjectMenuColorPickerGrid
 					currentColor={GREEN}
 					property="fill"
 					writesThroughCallback
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>,
 			);
 
@@ -144,7 +148,9 @@ describe("ObjectMenuColorPickerGrid", () => {
 			// alone, so a pick of it is no proof that the rest carry it.
 			click(pick(GREEN));
 
-			expect(onPropertyUpdate.mock.calls).toEqual([["fill", GREEN, true]]);
+			expect(onStyleIntent.mock.calls).toEqual([
+				[{ kind: "fill", color: GREEN }, true],
+			]);
 		});
 
 		it("originates a gesture from the swatch shown as picked", () => {
@@ -152,7 +158,7 @@ describe("ObjectMenuColorPickerGrid", () => {
 				<ObjectMenuColorPickerGrid
 					currentColor={GREEN}
 					property="fill"
-					onPropertyUpdate={vi.fn()}
+					onStyleIntent={vi.fn()}
 				/>,
 			);
 
@@ -167,7 +173,7 @@ describe("ObjectMenuColorPickerGrid", () => {
 					currentColor={GREEN}
 					property="fill"
 					currentColorIsShared
-					onPropertyUpdate={vi.fn()}
+					onStyleIntent={vi.fn()}
 				/>,
 			);
 
@@ -184,7 +190,7 @@ describe("ObjectMenuColorPickerGrid", () => {
 					currentColor={AUTO_COLOR}
 					property="fill"
 					currentColorIsShared
-					onPropertyUpdate={vi.fn()}
+					onStyleIntent={vi.fn()}
 				/>,
 			);
 

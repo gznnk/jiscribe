@@ -4,8 +4,9 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { ToggleTextVerticalBasisCommand } from "../../commands/shape/ToggleTextVerticalBasisCommand";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { applyStyleProperty } from "../../style/applyStyleProperty";
+import { applyStyleIntent } from "../../style/applyStyleIntent";
 import { readSelectionStyle } from "../../style/readSelectionStyle";
+import { styleIntentOf } from "../../style/styleIntentOf";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 const registries = createCanvasRegistries();
@@ -164,8 +165,12 @@ describe("the vertical basis a body is placed against", () => {
 	});
 
 	describe("stated outright through the style property", () => {
-		const applyBasis = (state: CanvasControllerState, value: string) =>
-			applyStyleProperty(state, "textVerticalBasis", value, registries);
+		const applyBasis = (state: CanvasControllerState, value: string) => {
+			const intent = styleIntentOf("textVerticalBasis", value);
+			return intent === undefined
+				? state
+				: applyStyleIntent(state, intent, registries);
+		};
 
 		it("places every switchable body on the box named, and leaves the rest alone", () => {
 			const state = controllerStateOf(

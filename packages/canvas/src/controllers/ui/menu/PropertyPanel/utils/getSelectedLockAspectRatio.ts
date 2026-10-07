@@ -2,14 +2,14 @@ import { DEFAULT_LOCK_ASPECT_RATIO } from "../../../../../states/objects/base/Tr
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { StyleIntentRegistries } from "../../../../style/ObjectStyleRegistry";
 import { readSelectionStyle } from "../../../../style/readSelectionStyle";
-import { selectionValueOrFirst } from "../../utils/SelectionValue";
+import { selectionValueOrFirst } from "../../../../style/SelectionValue";
 
 /**
  * Whether the Layout section's lock row is lit for the current selection.
  *
  * A multi-selection locks the box drawn around it, so that box's own flag is the
  * answer and the members have no say — the same precedence the write follows
- * (applyStyleProperty). Otherwise the selected objects answer through the
+ * (ToggleLockAspectRatioCommand). Otherwise the selected objects answer through the
  * style intent, a selection disagreeing showing the first of their values the way
  * it showed the first selected object's before.
  *

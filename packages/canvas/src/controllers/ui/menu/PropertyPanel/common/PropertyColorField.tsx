@@ -15,7 +15,7 @@ import { resolveAutoColor } from "../../../../../rendering/objects/utils/resolve
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { calcMixedColorSegments } from "../../../utils/calcMixedColorSegments";
 import { ObjectMenuColorPickerGrid } from "../../ObjectMenu/common/ObjectMenuColorPickerGrid";
-import type { StylePropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 
 type PropertyColorFieldProps = {
 	/** The color the selection is drawn with, already resolved through its type's defaults. */
@@ -34,7 +34,7 @@ type PropertyColorFieldProps = {
 	/** Which theme color `auto` follows: the shape's ink, its face, or the canvas surface. */
 	role: AutoColorRole;
 	/**
-	 * Whether the picker writes through `onPropertyUpdate` instead of the `set:`
+	 * Whether the picker writes through `onStyleIntent` instead of the `set:`
 	 * gesture (see ObjectMenuColorPickerGrid). Set by the row whose target is the
 	 * document rather than the selection.
 	 */
@@ -49,7 +49,7 @@ type PropertyColorFieldProps = {
 	currentColorIsShared?: boolean;
 	/** title / aria-label of the trigger. */
 	title: string;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -71,7 +71,7 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	writesThroughCallback = false,
 	currentColorIsShared = false,
 	title,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const isAuto = isAutoColor(value);
@@ -118,7 +118,7 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 				property={property}
 				writesThroughCallback={writesThroughCallback}
 				currentColorIsShared={currentColorIsShared}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyDropdownField>
 	);

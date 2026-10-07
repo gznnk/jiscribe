@@ -14,11 +14,11 @@ import {
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
-import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {

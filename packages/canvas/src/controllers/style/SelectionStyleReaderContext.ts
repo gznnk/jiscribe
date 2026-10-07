@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
+import type { SelectionValue } from "./SelectionValue";
 import type { StyleIntentValueType } from "./StyleIntent";
-import type { SelectionValue } from "../ui/menu/utils/SelectionValue";
 
 /**
  * Reports what the surrounding surface's selection says about one style intent —

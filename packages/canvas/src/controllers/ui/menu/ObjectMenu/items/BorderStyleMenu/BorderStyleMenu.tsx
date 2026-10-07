@@ -13,15 +13,15 @@ import {
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
-import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
-import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
-import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
-import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
 	selectionValueOrFirst,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
+import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
+import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
+import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -29,7 +29,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "border-style";
 
@@ -48,7 +48,7 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -58,7 +58,7 @@ type BorderStyleMenuProps = {
 const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,
 	showRadius = true,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -141,7 +141,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							max={MAX_STROKE_WIDTH}
 							sliderMax={SLIDER_MAX_STROKE_WIDTH}
 							property="strokeWidth"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 
 						{showRadius && (
@@ -156,7 +156,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								max={MAX_CORNER_RADIUS}
 								sliderMax={SLIDER_MAX_CORNER_RADIUS}
 								property="rx"
-								onPropertyUpdate={onPropertyUpdate}
+								onStyleIntent={onStyleIntent}
 							/>
 						)}
 					</BorderStyleMenuWrapper>

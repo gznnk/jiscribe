@@ -12,7 +12,7 @@ import { memo, useCallback } from "react";
 import { documentPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
-import type { StylePropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
@@ -39,13 +39,18 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 
-	// The picker speaks the style-property shape, so the sentinel it writes for
-	// Auto is translated here into the null the document route takes.
-	const handleColorUpdate = useCallback<StylePropertyUpdater>(
-		(_property, value, commit, coalesceHistory) => {
+	// The picker speaks the style shape, translated here: `background` is no name
+	// of the engine's own vocabulary, so what arrives is an extra-shaped intent
+	// carrying the CSS text, and the sentinel it writes for Auto becomes the null
+	// the document route takes.
+	const handleColorUpdate = useCallback<StyleIntentUpdater>(
+		(intent, commit, coalesceHistory) => {
+			if (!("value" in intent)) {
+				return;
+			}
 			onDocumentUpdate(
 				"background",
-				isAutoColor(value) ? null : value,
+				isAutoColor(intent.value) ? null : intent.value,
 				commit,
 				coalesceHistory,
 			);
@@ -63,7 +68,7 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 				// The document's own background is the whole target.
 				currentColorIsShared
 				title={messages.propertyPanelRowBackground}
-				onPropertyUpdate={handleColorUpdate}
+				onStyleIntent={handleColorUpdate}
 			/>
 		</PropertyRow>
 	);

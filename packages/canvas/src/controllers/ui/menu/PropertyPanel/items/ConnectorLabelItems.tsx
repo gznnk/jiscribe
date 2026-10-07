@@ -24,6 +24,7 @@ import { memo } from "react";
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
+import { selectionValueAs } from "../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../utils/hasSelectedConnectorLabelText";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../icons/BoldIcon";
@@ -34,7 +35,6 @@ import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
-import { selectionValueAs } from "../../utils/SelectionValue";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyDropdownTriggerLabel } from "../common/PropertyControlsStyled";
 import { PropertyDropdownField } from "../common/PropertyDropdownField";
@@ -98,7 +98,7 @@ export const ConnectorLabelFontFamilyItem = memo(
 const ConnectorLabelFontSizeItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
 	selection,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const fontSize = selectionValueAs(
@@ -120,9 +120,8 @@ const ConnectorLabelFontSizeItemComponent: React.FC<PropertyPanelItemProps> = ({
 				ariaLabel={messages.menuLabelFontSize}
 				testId="property-field:label.fontSize"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"label.fontSize",
-						String(value),
+					onStyleIntent(
+						{ kind: "label.fontSize", value: String(value) },
 						commit,
 						coalesceHistory,
 					)
@@ -139,7 +138,7 @@ export const ConnectorLabelFontSizeItem = memo(
 /** The ink the label's text is drawn in. */
 const ConnectorLabelFontColorItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
 	const fontColor = selectionValueAs(
 		useSelectionStyle("label.fontColor"),
@@ -158,7 +157,7 @@ const ConnectorLabelFontColorItemComponent: React.FC<
 				property="label.fontColor"
 				role="ink"
 				title={messages.menuLabelFontColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -215,7 +214,7 @@ export const ConnectorLabelStyleItem = memo(ConnectorLabelStyleItemComponent);
  */
 const ConnectorLabelBackgroundItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
 	const fill = selectionValueAs(
 		useSelectionStyle("label.fill"),
@@ -236,7 +235,7 @@ const ConnectorLabelBackgroundItemComponent: React.FC<
 				// The label of the one selected connector is the whole target.
 				currentColorIsShared
 				title={messages.menuLabelBackgroundColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -249,7 +248,7 @@ export const ConnectorLabelBackgroundItem = memo(
 /** The outline of the label's box; drawn only while its width is above 0. */
 const ConnectorLabelBorderColorItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
 	const stroke = selectionValueAs(
 		useSelectionStyle("label.stroke"),
@@ -270,7 +269,7 @@ const ConnectorLabelBorderColorItemComponent: React.FC<
 				// The label of the one selected connector is the whole target.
 				currentColorIsShared
 				title={messages.menuLabelBorderColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -283,7 +282,7 @@ export const ConnectorLabelBorderColorItem = memo(
 /** How thick the label's outline is drawn. 0 (the default) draws none. */
 const ConnectorLabelBorderWidthItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
 	const strokeWidth = selectionValueAs(
 		useSelectionStyle("label.strokeWidth"),
@@ -304,9 +303,8 @@ const ConnectorLabelBorderWidthItemComponent: React.FC<
 				ariaLabel={messages.menuBorderWidth}
 				testId="property-field:label.strokeWidth"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"label.strokeWidth",
-						String(value),
+					onStyleIntent(
+						{ kind: "label.strokeWidth", value: String(value) },
 						commit,
 						coalesceHistory,
 					)

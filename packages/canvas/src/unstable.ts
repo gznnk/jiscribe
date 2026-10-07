@@ -145,7 +145,7 @@ export { getResizeCursorForRotation } from "./controllers/ui/utils";
 //   - `command:{commandId}`    run a command
 //   - `slider:{property}`      slider (drag previews; dragEnd and a track click commit)
 // See packages/canvas/docs/04-gesture-system.md. Plugins should combine the shared parts
-// below or call `onPropertyUpdate`; writing `data-part` directly couples them to internals
+// below or call `onStyleIntent`; writing `data-part` directly couples them to internals
 // and is discouraged.
 
 export {
@@ -174,15 +174,26 @@ export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/us
 // the row narrows it (selectionValueAs). The helpers fold the three cases into
 // something drawable, and SHAPE_STYLE_FALLBACK is the last resort a row shows
 // when nothing the selection reaches carries the property at all.
+//
+// A row writes through the mirror of that read: `onStyleIntent(intent, commit)`
+// (StyleIntentUpdater), where an engine name goes as its typed intent
+// (`{ kind: "fill", color }`) and a shape's own name as `{ kind, value }` with
+// the value left as the transport string. `styleIntentOf(property, value)` is
+// there for a widget that holds a name and a string from the DOM instead.
 export { useSelectionStyle } from "./controllers/style/SelectionStyleReaderContext";
-export type { SelectionValue } from "./controllers/ui/menu/utils/SelectionValue";
+export type {
+	ExtraStyleIntent,
+	StyleIntent,
+} from "./controllers/style/StyleIntent";
+export { styleIntentOf } from "./controllers/style/styleIntentOf";
+export type { SelectionValue } from "./controllers/style/SelectionValue";
 export {
 	isMixedSelectionValue,
 	selectionMixedValues,
 	selectionValueAs,
 	selectionValueOr,
 	selectionValueOrFirst,
-} from "./controllers/ui/menu/utils/SelectionValue";
+} from "./controllers/style/SelectionValue";
 export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 
 // ---------------------------------------------------------------------------
@@ -191,7 +202,7 @@ export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 // A type declares its sidebar sections in `propertyPanel`, and a row it draws
 // itself is a `{ type: "custom"; id; component }` item among the built-in ones.
 // The component is handed PropertyPanelItemProps and nothing else: the selection
-// and the objects it names, plus `onPropertyUpdate` for a style property and
+// and the objects it names, plus `onStyleIntent` for a style property and
 // `onTransformUpdate` for one of the frame's five numbers. Build the row out of
 // the widgets below so it lines up with the built-in ones — PropertyRow supplies
 // the label column every row shares, except PropertyCheckbox, which is a row of

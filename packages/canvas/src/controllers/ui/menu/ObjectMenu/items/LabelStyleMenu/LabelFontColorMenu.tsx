@@ -6,9 +6,9 @@ import { resolveAutoColor } from "../../../../../../rendering/objects/utils/reso
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
+import { selectionValueAs } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
-import { selectionValueAs } from "../../../utils/SelectionValue";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -27,7 +27,7 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
 	selection,
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -67,7 +67,7 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 					<ObjectMenuColorPickerGrid
 						currentColor={fontColor}
 						property="label.fontColor"
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</ObjectMenuDropdownPanel>
 			)}

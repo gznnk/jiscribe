@@ -149,8 +149,8 @@ export const selectors = {
 		`${PROPERTY_PANEL} [data-part="toggle:${sectionId}"]`,
 
 	/**
-	 * A property-writing control inside the sidebar (a swatch, a segment, a
-	 * checkbox). Differs from `objectMenuSet` only in being scoped to the panel.
+	 * A property-writing control inside the sidebar (a swatch, a segment).
+	 * Differs from `objectMenuSet` only in being scoped to the panel.
 	 */
 	propertyPanelSet: (property: string, value: string) =>
 		`${PROPERTY_PANEL} [data-part="set:${property}:${value}"]`,
