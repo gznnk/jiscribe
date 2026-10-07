@@ -1,9 +1,28 @@
-import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+/**
+ * What a style value a type declares for itself is read as. The engine's own
+ * intents carry their types in the vocabulary (StyleIntent), so these three are
+ * the whole of what a declaration may name — and so the whole of what a
+ * transport string can be read into.
+ */
+export type StyleValueType = "string" | "number" | "boolean";
+
+/**
+ * The value type one {@link StyleValueType} names, which is what an entry
+ * declared with it works in (fieldEntry).
+ *
+ * @template TValueType - The declared type name
+ */
+export type StyleValueOfType<TValueType extends StyleValueType> =
+	TValueType extends "number"
+		? number
+		: TValueType extends "boolean"
+			? boolean
+			: string;
 
 /**
  * The one reading of a style value's transport form. Every value a menu part
  * carries is a string (`set:fontSize:24`), and what that string is read as is
- * whatever the receiving side declares: a shape's own `valueType` (extraField)
+ * whatever the receiving side declares: a type's own `valueType` (fieldEntry)
  * or the intent's own type at the boundary (styleIntentOf).
  *
  * @param valueType - The type to read the string as

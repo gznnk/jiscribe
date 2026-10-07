@@ -66,9 +66,9 @@ export const selectionValueOr = <Value>(
 
 /**
  * The one value the selection agrees on, once it turns out to be of the type the
- * row draws. For the properties a shape declares for itself
- * (ExtraStyleProperties), whose stored type the engine does not know and which
- * therefore come back `unknown`.
+ * row draws. For a kind a type declares for itself read by its name alone, which
+ * comes back `unknown` — a row that holds the declaring table reads it typed
+ * instead (useSelectionStyle) and needs no guard.
  *
  * @param selectionValue - What the selection says about the property
  * @param isValue - The guard the agreed value must pass; a value of another type falls back the way a disagreeing selection does, since the row has nothing to draw either way

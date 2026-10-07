@@ -319,7 +319,7 @@ test.describe("container palette / behavior", () => {
 		const before = await headerHeight();
 
 		// The plugin's `header-height` row: a custom item of the Layout section,
-		// written as the headerHeight extra style property.
+		// written as the headerHeight style the container declares for itself.
 		await canvas.openPropertyPanel();
 		const field = canvas.page.locator(
 			selectors.propertyPanelField("headerHeight"),

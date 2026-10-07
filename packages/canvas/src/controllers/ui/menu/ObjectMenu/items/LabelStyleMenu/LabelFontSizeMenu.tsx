@@ -1,11 +1,11 @@
-import { isNumber } from "@jiscribe/basic-validators";
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo, useRef } from "react";
 
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueAs } from "../../../../../style/SelectionValue";
+import { selectionValueOr } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -43,11 +43,11 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const fontSize = selectionValueAs(
-		useSelectionStyle("label.fontSize"),
-		isNumber,
-		CONNECTOR_LABEL_DEFAULTS.fontSize,
-	);
+	const fontSize =
+		selectionValueOr(
+			useSelectionStyle(CONNECTOR_STYLE, "label.fontSize"),
+			undefined,
+		) ?? CONNECTOR_LABEL_DEFAULTS.fontSize;
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

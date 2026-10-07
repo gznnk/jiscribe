@@ -1,4 +1,3 @@
-import { isNumber, isString } from "@jiscribe/basic-validators";
 import { memo, useRef } from "react";
 
 import {
@@ -6,8 +5,9 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueAs } from "../../../../../style/SelectionValue";
+import { selectionValueOr } from "../../../../../style/SelectionValue";
 import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -54,14 +54,13 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	);
 
 	// An unset width draws no border, which is the value the slider starts from.
-	const strokeWidth = selectionValueAs(
-		useSelectionStyle("label.strokeWidth"),
-		isNumber,
-		UNSET_BORDER_WIDTH,
-	);
-	const strokeDashType = selectionValueAs(
-		useSelectionStyle("label.strokeDashType"),
-		isString,
+	const strokeWidth =
+		selectionValueOr(
+			useSelectionStyle(CONNECTOR_STYLE, "label.strokeWidth"),
+			undefined,
+		) ?? UNSET_BORDER_WIDTH;
+	const strokeDashType = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.strokeDashType"),
 		undefined,
 	);
 

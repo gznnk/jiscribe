@@ -1,3 +1,4 @@
+import { isString } from "@jiscribe/basic-validators";
 import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
 import type {
 	ViewDoc,
@@ -41,11 +42,11 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 
 	// The picker speaks the style shape, translated here: `background` is no name
 	// of the engine's own vocabulary, so what arrives is an extra-shaped intent
-	// carrying the CSS text, and the sentinel it writes for Auto becomes the null
-	// the document route takes.
+	// whose value the engine does not type. The picker's is the CSS text, and the
+	// sentinel it writes for Auto becomes the null the document route takes.
 	const handleColorUpdate = useCallback<StyleIntentUpdater>(
 		(intent, commit, coalesceHistory) => {
-			if (!("value" in intent)) {
+			if (!("value" in intent) || !isString(intent.value)) {
 				return;
 			}
 			onDocumentUpdate(

@@ -1,5 +1,4 @@
 import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
-import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
@@ -255,30 +254,31 @@ describe("applyStylePropertyPart", () => {
 			});
 		});
 
-		describe("every built-in declaration (registry-driven)", () => {
-			const VALID_INPUT: Record<StyleValueType, string> = {
-				string: "test-value",
-				number: "7",
-				boolean: "true",
-			};
-
-			const EXPECTED_OUTPUT: Record<StyleValueType, string | number | boolean> =
-				{
-					string: "test-value",
-					number: 7,
-					boolean: true,
-				};
-
-			/** Every shape-declared extra property wired via BUILTIN_OBJECT_DEFINITIONS. */
-			const EXTRA_DECLARATIONS = Object.entries(
+		describe("every declared style entry (registry-driven)", () => {
+			/**
+			 * Every kind a built-in type declares in its own table, with the fields
+			 * the entry writes (StyleEntry.fields) — the real bundle wiring, so a new
+			 * declaration is covered without this suite being touched.
+			 */
+			const DECLARED_ENTRIES = Object.entries(
 				BUILTIN_OBJECT_DEFINITIONS,
 			).flatMap(([type, definition]) =>
-				Object.entries(definition.extraStyleProperties ?? {}).map(
-					([property, descriptor]) => ({ type, property, descriptor }),
-				),
+				Object.entries(definition.style ?? {}).map(([kind, entry]) => ({
+					type,
+					kind,
+					fields: entry?.fields ?? [],
+				})),
 			);
 
-			/** Pre-creates the parent chain for a dot-path property ("label.fill" → { label: {} }). */
+			/**
+			 * A string every declared type reads as a value of its own: a number parses
+			 * from it, and the other two take any string. What each type reads it as is
+			 * the entry's own business (fieldEntry's suite), so what is checked here is
+			 * that the part reached the entry at all.
+			 */
+			const PROBE_VALUE = "7";
+
+			/** Pre-creates the parent chain for a dot-path kind ("label.fill" → { label: {} }). */
 			const parentScaffold = (
 				path: readonly string[],
 			): Record<string, unknown> => {
@@ -296,16 +296,14 @@ describe("applyStylePropertyPart", () => {
 					object,
 				);
 
-			it("the wiring exposes at least one extra declaration (e.g. connector label.*)", () => {
-				expect(EXTRA_DECLARATIONS.length).toBeGreaterThan(0);
+			it("the wiring exposes at least one declared entry (e.g. connector label.*)", () => {
+				expect(DECLARED_ENTRIES.length).toBeGreaterThan(0);
 			});
 
-			for (const { type, property, descriptor } of EXTRA_DECLARATIONS) {
-				const path = property.split(".");
-				const validValue = VALID_INPUT[descriptor.valueType];
-				const expected = EXPECTED_OUTPUT[descriptor.valueType];
+			for (const { type, kind, fields } of DECLARED_ENTRIES) {
+				const path = kind.split(".");
 
-				it(`${type} / ${property}: applied and read as the declared type on the declaring shape`, () => {
+				it(`${type} / ${kind}: lands on the declaring shape, in the field the entry states`, () => {
 					const o1 = {
 						id: "o1",
 						type,
@@ -314,13 +312,16 @@ describe("applyStylePropertyPart", () => {
 					} as unknown as ObjectState;
 					const objects = written(
 						stateOf({ selection: selectionOf(["o1"]), objects: { o1 } }),
-						property,
-						validValue,
+						kind,
+						PROBE_VALUE,
 					);
-					expect(readAtPath(objects["o1"], path)).toBe(expected);
+					expect(readAtPath(objects["o1"], path)).toBeDefined();
+					// What the entry writes is what it said it would (the registration
+					// check holds the other half: that the type's doc may hold it).
+					expect(fields).toEqual([path[0]]);
 				});
 
-				it(`${type} / ${property}: no-op on a shape that does not declare it (rect)`, () => {
+				it(`${type} / ${kind}: no-op on a shape that does not declare it (rect)`, () => {
 					const o1 = {
 						id: "o1",
 						type: "rect",
@@ -331,11 +332,11 @@ describe("applyStylePropertyPart", () => {
 						selection: selectionOf(["o1"]),
 						objects: { o1 },
 					});
-					expect(written(state, property, validValue)).toBe(state.objects);
+					expect(written(state, kind, PROBE_VALUE)).toBe(state.objects);
 				});
 
 				if (path.length > 1) {
-					it(`${type} / ${property}: no-op when the parent object is missing`, () => {
+					it(`${type} / ${kind}: no-op when the parent object is missing`, () => {
 						const o1 = {
 							id: "o1",
 							type,
@@ -345,24 +346,10 @@ describe("applyStylePropertyPart", () => {
 							selection: selectionOf(["o1"]),
 							objects: { o1 },
 						});
-						expect(written(state, property, validValue)).toBe(state.objects);
+						expect(written(state, kind, PROBE_VALUE)).toBe(state.objects);
 					});
 				}
 			}
-
-			it("shapes declaring the same property name agree on its valueType", () => {
-				const seenValueTypes = new Map<string, StyleValueType>();
-				for (const { property, descriptor } of EXTRA_DECLARATIONS) {
-					const seen = seenValueTypes.get(property);
-					if (seen !== undefined) {
-						expect(
-							descriptor.valueType,
-							`"${property}" is declared with conflicting valueTypes across shapes`,
-						).toBe(seen);
-					}
-					seenValueTypes.set(property, descriptor.valueType);
-				}
-			});
 		});
 	});
 });

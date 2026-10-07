@@ -2289,7 +2289,7 @@
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"text": "シェイプ固有プロパティ：Doc の ExtraStyleProperties 宣言（宣言の存在が gate・fail-closed）",
+			"text": "シェイプ固有プロパティ：型自前の StyleTable 宣言（宣言の存在が gate・fail-closed）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",

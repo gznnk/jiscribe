@@ -10,8 +10,8 @@ import type { StyleEntry } from "../StyleEntry";
  * Only the shape-style fields are accepted: `read` resolves through
  * ObjectShapeStyleDefaultsRegistry, which is what makes an object stating
  * nothing report what it is drawn with, and that registry answers for those
- * fields alone (a shape's own extra color takes `extraField` instead, which has
- * no defaults to resolve through).
+ * fields alone (a color a type declares for itself takes `fieldEntry` instead,
+ * which has no defaults to resolve through).
  *
  * @param field - The field written and read; one the shape-style defaults answer for
  * @returns The pair, writing `value` as-is and reporting one value per object

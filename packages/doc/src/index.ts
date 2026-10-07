@@ -131,10 +131,6 @@ export {
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "./model/objects/types/text/TextType";
-export type {
-	ExtraStylePropertyDescriptor,
-	StyleValueType,
-} from "./model/objects/types/ExtraStyleProperty";
 export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
 // The box declaration a doc definition carries, for the types whose geometry does
 // not settle their box: a plugin author annotating one needs the shape of it.

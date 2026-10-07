@@ -1,5 +1,4 @@
 import { isEnum, isNumber } from "@jiscribe/basic-validators";
-import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc";
 
 /**
  * Directions a group marker can face. It faces *away* from what it groups, so
@@ -52,18 +51,3 @@ export type GroupMarkerTipPositionField = {
  */
 export type GroupMarkerTipFields = GroupMarkerDirectionField &
 	GroupMarkerTipPositionField;
-
-/**
- * Styleable descriptors for a marker with a movable tip, so a host can drive
- * both fields through `onStyleIntent` (there is no built-in menu section for
- * them yet).
- */
-export const GROUP_MARKER_TIP_STYLE_PROPERTIES = {
-	direction: { valueType: "string" },
-	tipPosition: { valueType: "number" },
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
-
-/** The same, for a marker whose tip is pinned to the middle of the span. */
-export const GROUP_MARKER_DIRECTION_STYLE_PROPERTY = {
-	direction: GROUP_MARKER_TIP_STYLE_PROPERTIES.direction,
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;

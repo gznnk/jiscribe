@@ -260,10 +260,13 @@ value the row _states_ comes from the kit's one read API,
 `useSelectionStyle(name)`: it answers what the whole selection says about that
 property — over exactly the objects a write of the same name would reach — which
 is what lets a plugin row be mixed the way a built-in one is (see
-[Style System](./10-style-properties.md)). Writing is the mirror of it:
-`onStyleIntent(intent, commit)` takes the edit stated rather than a name and a
-string, and a shape's own property is stated as `{ kind, value }` — the declared
-name, and the value as the transport string its entry reads. Two rules to know
+[Style System](./10-style-properties.md)). A row of a property its own type
+declared passes that type's table ahead of the kind
+(`useSelectionStyle(CONTAINER_STYLE, "headerFill")`), which types the answer from
+the declaration. Writing is the mirror of it: `onStyleIntent(intent, commit)`
+takes the edit stated rather than a name and a string, and a type's own kind is
+stated as `{ kind, value }` — the declared name, and the value either typed as
+the declaration holds it or left as the transport string. Two rules to know
 before writing one:
 
 - The `id` is what the multi-type merge matches the row by, so two types offering
@@ -281,13 +284,23 @@ the rows leave on their own, but the accordion heading would stay behind over an
 empty body. Core's own use is the connector's Label and Label border sections, offered
 only once the label has text. Omitted means always offered.
 
-`plugins/container-shapes` is the worked example: its `header-fill` row states
-`headerFill` through `onStyleIntent` from a `PropertyColorField`, sitting under
-the body color in the Fill section, and its `header-height` row states the
-`headerHeight` extra style property from a `PropertyNumberField` under the size in
-the Layout section; both state their current value through `useSelectionStyle`,
-narrowing the untyped value a declared property comes back as, and take their
-wording from the plugin's own dictionary.
+`plugins/container-shapes` is the worked example: it declares both of its own
+styles as a table of its own (`src/style/containerStyle.ts`), handed to
+`createFrameObjectDefinition` as `style`:
+
+```ts
+export const CONTAINER_STYLE = {
+	headerFill: fieldEntry("headerFill", "string"),
+	headerHeight: fieldEntry("headerHeight", "number"),
+} satisfies StyleTable<ContainerState>;
+```
+
+Its `header-fill` row states `headerFill` through `onStyleIntent` from a
+`PropertyColorField`, sitting under the body color in the Fill section, and its
+`header-height` row states `headerHeight` from a `PropertyNumberField` under the
+size in the Layout section; both state their current value through
+`useSelectionStyle(CONTAINER_STYLE, …)`, which types it from that declaration, and
+take their wording from the plugin's own dictionary.
 
 **i18n.** A contributed command declares its own `label` per locale. Everything
 the plugin draws itself comes from a dictionary the plugin owns, resolved

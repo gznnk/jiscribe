@@ -121,9 +121,9 @@ const INTENT_BY_PROPERTY = {
 
 /**
  * The mapper for one property name, or undefined for a name the engine's own
- * vocabulary does not own (a shape's own ExtraStyleProperty). Looked up through a
- * cast because the record is exhaustive by type rather than by index signature,
- * which is what makes a new style field a compile error.
+ * vocabulary does not own (a kind a type declares in its own style table).
+ * Looked up through a cast because the record is exhaustive by type rather than
+ * by index signature, which is what makes a new style field a compile error.
  *
  * @param property - The property name, as the menus' parts spell it
  */
@@ -131,18 +131,6 @@ const intentMapperOf = (property: string): StyleIntentMapper | undefined =>
 	(INTENT_BY_PROPERTY as Record<string, StyleIntentMapper | undefined>)[
 		property
 	];
-
-/**
- * Whether a name belongs to the engine's own style vocabulary rather than to a
- * shape's own declarations. The one place that knows, so a type declaring an
- * extra under a name the engine owns is refused where its table is built
- * (extraStyleTable) rather than registering an entry the boundary would never
- * reach.
- *
- * @param property - The property name, as a declaration or a menu part spells it
- */
-export const isSystemStyleName = (property: string): boolean =>
-	intentMapperOf(property) !== undefined;
 
 /**
  * The one reading of a property name and a string value — the form the DOM
@@ -155,13 +143,13 @@ export const isSystemStyleName = (property: string): boolean =>
  * the React route that reads its value off the DOM. A row that knows its
  * property statically states the intent outright instead and never comes here.
  *
- * A name the engine's own vocabulary does not own is a shape's own declaration,
- * and is passed on under that very name for the types' tables to answer
- * (extraStyleTable); a name nobody declares therefore applies to nothing
- * (fail-closed).
+ * A name the engine's own vocabulary does not own is a kind some type declares
+ * in its own table, and is passed on under that very name for the types' tables
+ * to answer (ObjectTypeDefinition.style); a name nobody declares therefore
+ * applies to nothing (fail-closed).
  *
- * @param property - The property name, as the menus' parts spell it; a name with dots in it is a shape's own write path (`label.fill`)
- * @param value - The value as a string, read into the intent's own type (INTENT_BY_PROPERTY) or left as it stands for the shape's own entry to read
+ * @param property - The property name, as the menus' parts spell it; a name with dots in it is a declared write path (`label.fill`)
+ * @param value - The value as a string, read into the intent's own type (INTENT_BY_PROPERTY) or left as it stands for the declaring type's entry to read
  * @returns The intent to apply, or undefined for a value nothing can be made of (a string no number parses from) — which is the caller's cue to apply nothing
  * @throws For a `textVerticalBasis` value that is neither basis — the one property whose value has always been checked
  */

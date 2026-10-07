@@ -48,19 +48,24 @@ export type StyleIntent =
 export type StyleIntentKind = StyleIntent["kind"];
 
 /**
- * A style edit addressed to a name the vocabulary above does not hold: one a
- * shape declares for itself (ExtraStyleProperties), which reaches the types that
- * declared it and no others.
+ * A style edit addressed to a kind the vocabulary above does not hold: one a
+ * type declares in its own table (ObjectTypeDefinition.style), which reaches the
+ * types that declared it and no others.
  *
- * The engine knows nothing of what such a name means, so the value stays the
- * transport string the surfaces carry and the declaring type's entry is what
- * reads it (extraField).
+ * The engine knows nothing of what such a kind means, so the declaring type's
+ * entry is what reads the value (fieldEntry).
  */
 export type ExtraStyleIntent = {
-	/** The declared property name, dots and all ("label.fill"). */
+	/** The declared kind, dots and all ("label.fill"). */
 	kind: string;
-	/** The value as the surface spells it, unread. */
-	value: string;
+	/**
+	 * The value, in whatever form the surface that raised it holds: the transport
+	 * string where all it had was a name and a string (styleIntentOf), or the
+	 * value already typed where the surface holds the declaration
+	 * (`{ kind: "headerHeight", value: 32 }`). The engine cannot tell which,
+	 * hence `unknown` — the entry reads it.
+	 */
+	value: unknown;
 };
 
 /**
@@ -120,6 +125,16 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
 >;
 
 /**
+ * The value type one text-slot kind works in: its payload, plus the unset such a
+ * field really has (TextSlotStyleIntentKind). Spelled apart from
+ * {@link StyleIntentValueType} so the toggles can reach it without that type
+ * referring to itself — a recursive conditional in an overloaded signature is
+ * more than the compiler will unfold (TS2589).
+ */
+type TextSlotStyleValueType<K extends TextSlotStyleIntentKind> =
+	StyleIntentPayload<K>[keyof StyleIntentPayload<K>] | undefined;
+
+/**
  * The type of the value an intent of one kind carries: the sole field it holds
  * besides `kind`. What the entries of that kind apply and read, so the two sides
  * cannot disagree on it — and what a row reading the selection gets back
@@ -134,15 +149,16 @@ type StyleIntentPayload<K extends StyleIntentKind> = Omit<
  * being a text-slot one, already admits the unset the toggle also has nothing to
  * hand the entry.
  *
- * A name outside the engine's vocabulary is a shape's own (extraStyleTable),
- * whose entry works in the transport string and whose stored type the engine
- * does not know: `unknown`.
+ * A name outside the engine's vocabulary is a kind its declaring type owns
+ * (ObjectTypeDefinition.style), whose stored type the engine does not know:
+ * `unknown`. A row holding that declaration reads it typed through the table
+ * instead (StyleEntryValueType).
  */
 export type StyleIntentValueType<K extends string> =
 	K extends TextToggleIntentKind
-		? StyleIntentValueType<(typeof TOGGLE_FLIPS)[K]>
+		? TextSlotStyleValueType<(typeof TOGGLE_FLIPS)[K]>
 		: K extends TextSlotStyleIntentKind
-			? StyleIntentPayload<K>[keyof StyleIntentPayload<K>] | undefined
+			? TextSlotStyleValueType<K>
 			: K extends StyleIntentKind
 				? StyleIntentPayload<K>[keyof StyleIntentPayload<K>]
 				: unknown;
@@ -152,7 +168,7 @@ export type StyleIntentValueType<K extends string> =
  * they only know at runtime, so the value cannot be tied to the entry's type
  * statically (applyStyleIntent casts the entry to match).
  *
- * @param intent - The intent to read; the payload field is named differently per kind (`value` for a shape's own), and taken as the only one besides `kind`
+ * @param intent - The intent to read; the payload field is named differently per kind (`value` for a type's own), and taken as the only one besides `kind`
  * @returns The payload value, or undefined for an intent carrying none (the toggles)
  */
 export const styleIntentValue = (

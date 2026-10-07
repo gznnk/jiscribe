@@ -164,10 +164,6 @@ export type { CreateObjectState } from "./states/objects/types/CreateObjectState
 export type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 export type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
 export type {
-	ExtraStylePropertyDescriptor,
-	StyleValueType,
-} from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
-export type {
 	ObjectFactory,
 	ObjectDimensions,
 } from "@jiscribe/doc/model/objects/types/ObjectFactory";

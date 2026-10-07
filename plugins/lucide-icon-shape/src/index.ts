@@ -38,6 +38,8 @@ export { createLucideStencilIcon } from "./stencil/createLucideStencilIcon";
 export { ICON_STENCIL_IDS, IconStencils } from "./stencil/IconStencils";
 export { lucideIconStencilCategory } from "./stencil/IconStencilCategory";
 
+export { ICON_STYLE } from "./style/iconStyle";
+
 export { lucideIconDefinition } from "./definition";
 export { lucideIconDocDefinition, lucideIconDocPlugin } from "./doc";
 export { lucideIconPlugin } from "./plugin";

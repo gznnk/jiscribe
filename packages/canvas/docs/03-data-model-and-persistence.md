@@ -111,9 +111,9 @@ Guidance for when this asymmetry bothers you:
 (menu item → `STYLE_INTENT` or the ObjectMenu gesture `set:{property}:{value}` → `applyStylePropertyPart`) carries
 flat property names. Because the label's styling (`label.fill` / `label.stroke` / `label.fontColor`, …) is nested,
 it **rides on this plumbing as-is using dot-notation property names**.
-Both routes converge at the single point `applyStyleIntent`; the `label.*` names are declared
-as connector-specific style properties (`ConnectorExtraStyleProperties`), and the entry built from each
-declaration interprets the dots as a nested merge into `connector.label` (a no-op while the label is unset). This is
+Both routes converge at the single point `applyStyleIntent`; the `label.*` kinds are declared
+in the connector's own style table (`CONNECTOR_STYLE`), and each entry interprets the dots as a
+nested merge into `connector.label` (a no-op while the label is unset). This is
 a pragmatic compromise to reuse the shared UI (`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`) and the `commit`
 subtleties (live preview + a single history entry) without reimplementing them. Adding a dedicated
 action is rejected because it would duplicate these commit subtleties. What the style registry does not own takes a

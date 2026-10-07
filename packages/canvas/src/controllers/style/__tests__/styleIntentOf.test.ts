@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { isSystemStyleName, styleIntentOf } from "../styleIntentOf";
+import { styleIntentOf } from "../styleIntentOf";
 
 describe("styleIntentOf (the one translation)", () => {
 	describe("the engine's own vocabulary becomes a typed intent", () => {
@@ -91,34 +91,6 @@ describe("styleIntentOf (the one translation)", () => {
 				kind: "notAProperty",
 				value: "x",
 			});
-		});
-	});
-
-	describe("isSystemStyleName", () => {
-		it("answers for the names the engine's own vocabulary owns", () => {
-			for (const property of [
-				"fill",
-				"strokeDashType",
-				"rx",
-				"fontWeight",
-				"startArrow",
-				"text",
-				"lockAspectRatio",
-				"textVerticalBasis",
-			]) {
-				expect(isSystemStyleName(property), property).toBe(true);
-			}
-		});
-
-		it("answers false for a shape's own name", () => {
-			for (const property of [
-				"headerFill",
-				"label.fill",
-				"fill.extra",
-				"notAProperty",
-			]) {
-				expect(isSystemStyleName(property), property).toBe(false);
-			}
 		});
 	});
 });

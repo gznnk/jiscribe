@@ -1,10 +1,6 @@
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
 import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
-import type {
-	CreateObjectType,
-	ExtraStylePropertyDescriptor,
-	ObjectFeatures,
-} from "@jiscribe/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** Default height of the title header band, in local (pre-transform) pixels. */
 export const CONTAINER_HEADER_HEIGHT = 28;
@@ -31,12 +27,6 @@ export const ContainerFeatures = {
 	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
-
-/** Container-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyDescriptor). */
-export const ContainerExtraStyleProperties = {
-	headerFill: { valueType: "string" },
-	headerHeight: { valueType: "number" },
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ContainerDocBrand: unique symbol;
