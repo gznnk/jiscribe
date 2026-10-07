@@ -38,11 +38,10 @@ const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const stroke =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.stroke"),
-			undefined,
-		) ?? AUTO_COLOR;
+	const stroke = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.stroke"),
+		AUTO_COLOR,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

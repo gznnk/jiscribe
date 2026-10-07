@@ -73,6 +73,10 @@ describe("selectionValueOr", () => {
 		expect(selectionValueOr({ kind: "mixed", values: [8, 3] }, 0)).toBe(0);
 		expect(selectionValueOr({ kind: "none" }, 0)).toBe(0);
 	});
+
+	it("falls back where the value agreed on is unset", () => {
+		expect(selectionValueOr({ kind: "single", value: undefined }, 0)).toBe(0);
+	});
 });
 
 describe("selectionValueOrFirst", () => {
@@ -86,6 +90,18 @@ describe("selectionValueOrFirst", () => {
 
 	it("falls back only where the selection carries no value at all", () => {
 		expect(selectionValueOrFirst({ kind: "none" }, 0)).toBe(0);
+	});
+
+	it("falls back where the value taken is unset, agreed on or first", () => {
+		expect(selectionValueOrFirst({ kind: "single", value: undefined }, 0)).toBe(
+			0,
+		);
+		expect(
+			selectionValueOrFirst({ kind: "mixed", values: [undefined, 3] }, 0),
+		).toBe(0);
+		expect(
+			selectionValueOrFirst({ kind: "mixed", values: [3, undefined] }, 0),
+		).toBe(3);
 	});
 });
 

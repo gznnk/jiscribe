@@ -84,10 +84,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		registries,
 	);
 	const isTextAlignMixed = isMixedSelectionValue(selectionTextAlign);
-	const textAlign = selectionValueOr(selectionTextAlign, undefined) ?? "left";
+	const textAlign = selectionValueOr(selectionTextAlign, "left");
 	const isVerticalAlignMixed = isMixedSelectionValue(selectionVerticalAlign);
-	const verticalAlign =
-		selectionValueOr(selectionVerticalAlign, undefined) ?? "middle";
+	const verticalAlign = selectionValueOr(selectionVerticalAlign, "middle");
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

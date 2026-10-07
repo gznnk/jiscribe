@@ -43,11 +43,10 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const fontSize =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fontSize"),
-			undefined,
-		) ?? CONNECTOR_LABEL_DEFAULTS.fontSize;
+	const fontSize = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fontSize"),
+		CONNECTOR_LABEL_DEFAULTS.fontSize,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

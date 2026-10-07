@@ -132,8 +132,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   selection says about one style property — `single` / `mixed` / `none` — over
   exactly the objects a write of the same name would reach, folded with the
   `selectionValue*` helpers exported beside it. A name the engine owns comes back
-  typed; a name a shape declares for itself (`extraStyleProperties`) comes back
-  `unknown` for the row to narrow (`selectionValueAs`). The first-match readers
+  typed, and so does a name a shape declares for itself when the row reads it
+  through the declaring table (`useSelectionStyle(table, name)`); read by its name
+  alone it comes back `unknown` for the row to narrow (`selectionValueAs`).
+  `selectionValueOr` and `selectionValueOrFirst` take the row's default for an
+  agreed `undefined` too, so a property carried but unset reads as that default.
+  The first-match readers
   `getFirstSelectedWithProp` / `getFirstSelectedWithStyleGroup` /
   `getFirstSelectedPropValue` / `getSelectedShapeStyle` and the `ShapeStyleGroup`
   they were searched by are gone. What the user sees: a plugin row (a sticky's

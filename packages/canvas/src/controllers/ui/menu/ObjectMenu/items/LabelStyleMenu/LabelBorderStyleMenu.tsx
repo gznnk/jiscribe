@@ -54,11 +54,10 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	);
 
 	// An unset width draws no border, which is the value the slider starts from.
-	const strokeWidth =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.strokeWidth"),
-			undefined,
-		) ?? UNSET_BORDER_WIDTH;
+	const strokeWidth = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.strokeWidth"),
+		UNSET_BORDER_WIDTH,
+	);
 	const strokeDashType = selectionValueOr(
 		useSelectionStyle(CONNECTOR_STYLE, "label.strokeDashType"),
 		undefined,

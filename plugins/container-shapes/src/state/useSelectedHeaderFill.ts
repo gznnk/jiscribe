@@ -17,5 +17,5 @@ import { CONTAINER_STYLE } from "../style/containerStyle";
 export const useSelectedHeaderFill = (): string =>
 	selectionValueOr(
 		useSelectionStyle(CONTAINER_STYLE, "headerFill"),
-		undefined,
-	) ?? CONTAINER_DOC_DEFAULTS.headerFill;
+		CONTAINER_DOC_DEFAULTS.headerFill,
+	);

@@ -50,19 +50,21 @@ export const combineSelectionValues = <Value>(
 };
 
 /**
- * The one value the selection agrees on, or the fallback for the two cases that
- * have none. Rows use it to keep drawing something while `isMixed` says the
+ * The one value the selection agrees on, or the fallback for the three cases
+ * that have none. Rows use it to keep drawing something while `isMixed` says the
  * drawn value is not what the selection is on.
  *
  * @param selectionValue - What the selection says about the property
- * @param fallback - Shown for both `mixed` and `none`; usually the row's own default
+ * @param fallback - Shown for `mixed`, for `none` and for an agreed `undefined` (the property carried but unset); usually the row's own default
  * @returns The agreed value, or `fallback`
  */
-export const selectionValueOr = <Value>(
+export const selectionValueOr = <Value, Fallback>(
 	selectionValue: SelectionValue<Value>,
-	fallback: Value,
-): Value =>
-	selectionValue.kind === "single" ? selectionValue.value : fallback;
+	fallback: Fallback,
+): Exclude<Value, undefined> | Fallback =>
+	selectionValue.kind === "single" && selectionValue.value !== undefined
+		? (selectionValue.value as Exclude<Value, undefined>)
+		: fallback;
 
 /**
  * The one value the selection agrees on, once it turns out to be of the type the
@@ -91,22 +93,19 @@ export const selectionValueAs = <Value, Fallback>(
  * constant there would step from a number nothing in the selection is near.
  *
  * @param selectionValue - What the selection says about the property
- * @param fallback - Shown for `none` alone; usually the row's own default
+ * @param fallback - Shown for `none`, and where the value taken is `undefined` (the property carried but unset); usually the row's own default
  * @returns The agreed value, the first of the differing ones, or `fallback`
  */
-export const selectionValueOrFirst = <Value>(
+export const selectionValueOrFirst = <Value, Fallback>(
 	selectionValue: SelectionValue<Value>,
-	fallback: Value,
-): Value => {
-	switch (selectionValue.kind) {
-		case "single":
-			return selectionValue.value;
-		case "mixed":
-			return selectionValue.values[0];
-		case "none":
-			return fallback;
-	}
-};
+	fallback: Fallback,
+): Exclude<Value, undefined> | Fallback =>
+	selectionValueOr(
+		selectionValue.kind === "mixed"
+			? { kind: "single", value: selectionValue.values[0] }
+			: selectionValue,
+		fallback,
+	);
 
 /**
  * Whether a row should draw itself as stating no single value.

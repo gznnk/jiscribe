@@ -60,11 +60,10 @@ const ConnectorLabelFontFamilyItemComponent: React.FC<
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
 	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fontFamily"),
-			undefined,
-		) ?? CONNECTOR_LABEL_DEFAULTS.fontFamily;
+	const fontFamily = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fontFamily"),
+		CONNECTOR_LABEL_DEFAULTS.fontFamily,
+	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	if (!hasSelectedConnectorLabelText({ objects, selection })) {
@@ -101,11 +100,10 @@ const ConnectorLabelFontSizeItemComponent: React.FC<PropertyPanelItemProps> = ({
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const fontSize =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fontSize"),
-			undefined,
-		) ?? CONNECTOR_LABEL_DEFAULTS.fontSize;
+	const fontSize = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fontSize"),
+		CONNECTOR_LABEL_DEFAULTS.fontSize,
+	);
 
 	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
@@ -140,11 +138,10 @@ const ConnectorLabelFontColorItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const fontColor =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fontColor"),
-			undefined,
-		) ?? AUTO_COLOR;
+	const fontColor = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fontColor"),
+		AUTO_COLOR,
+	);
 
 	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
@@ -215,11 +212,10 @@ const ConnectorLabelBackgroundItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const fill =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.fill"),
-			undefined,
-		) ?? AUTO_COLOR;
+	const fill = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.fill"),
+		AUTO_COLOR,
+	);
 
 	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
@@ -249,11 +245,10 @@ const ConnectorLabelBorderColorItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const stroke =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.stroke"),
-			undefined,
-		) ?? AUTO_COLOR;
+	const stroke = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.stroke"),
+		AUTO_COLOR,
+	);
 
 	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
@@ -283,11 +278,10 @@ const ConnectorLabelBorderWidthItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const strokeWidth =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.strokeWidth"),
-			undefined,
-		) ?? UNSET_BORDER_WIDTH;
+	const strokeWidth = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.strokeWidth"),
+		UNSET_BORDER_WIDTH,
+	);
 
 	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
@@ -322,11 +316,10 @@ const ConnectorLabelBorderTypeItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selection }) => {
 	const messages = useCanvasMessages();
-	const dashType =
-		selectionValueOr(
-			useSelectionStyle(CONNECTOR_STYLE, "label.strokeDashType"),
-			undefined,
-		) ?? SHAPE_STYLE_FALLBACK.strokeDashType;
+	const dashType = selectionValueOr(
+		useSelectionStyle(CONNECTOR_STYLE, "label.strokeDashType"),
+		SHAPE_STYLE_FALLBACK.strokeDashType,
+	);
 
 	if (!hasSelectedConnectorLabelText({ objects, selection })) {
 		return null;
