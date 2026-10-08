@@ -18,7 +18,7 @@ const tsconfigRootDir = fileURLToPath(new URL(".", import.meta.url));
 
 // @jiscribe/doc opens a "./*" wildcard subpath in its package.json for the canvas view
 // layers alone: they map every built-in Doc type one by one and so reach ~60 internal
-// modules no curated entry names. This pattern is what holds everyone else to the four
+// modules no curated entry names. This pattern is what holds everyone else to the five
 // curated entries; packages/canvas/src/** drops it again below.
 const docCuratedEntriesOnly = {
 	group: [
@@ -26,9 +26,10 @@ const docCuratedEntriesOnly = {
 		"!@jiscribe/doc/unstable",
 		"!@jiscribe/doc/png-source",
 		"!@jiscribe/doc/svg-source",
+		"!@jiscribe/doc/testing",
 	],
 	message:
-		"@jiscribe/doc has no deep import surface. Take it from @jiscribe/doc, ./unstable, ./png-source or ./svg-source.",
+		"@jiscribe/doc has no deep import surface. Take it from @jiscribe/doc, ./unstable, ./png-source, ./svg-source or ./testing.",
 };
 
 /**
