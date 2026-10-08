@@ -7,17 +7,14 @@ import {
 	graftStyleTextEdit,
 	resolveStyleTextEdit,
 } from "./resolveStyleTextEdit";
-import type { ExtraStyleIntent, StyleIntent } from "./StyleIntent";
+import { styleEntryOf } from "./styleEntryOf";
+import type { StyleIntent } from "./StyleIntent";
 import { styleIntentValue } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { TextStyleState } from "../../states/objects/base/TextStyleState";
-import type { TextSlots } from "../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { createCowObjects } from "../utils/cowObjects";
-
-const textOf = (object: ObjectState): TextSlots | undefined =>
-	(object as ObjectState & TextStyleState).text;
+import { textSlotsOf } from "../utils/textSlotsOf";
 
 /**
  * The draft the editor is handed back after a write landed on the object it is
@@ -37,7 +34,7 @@ const redraftTextEdit = (
 	textEdit: StyleTextEdit,
 ): Pick<CanvasControllerState, "textEditState"> | undefined => {
 	const { textEditState } = state;
-	const slots = textOf(edited);
+	const slots = textSlotsOf(edited);
 	if (textEditState?.kind !== "shape" || slots === undefined) {
 		return undefined;
 	}
@@ -63,13 +60,13 @@ const redraftTextEdit = (
  * wrote elsewhere on the object.
  *
  * @param state - The state to write into; its selection decides who is reached
- * @param intent - What to reflect, with its value; one of the engine's own kinds or a name a shape declared for itself (ExtraStyleIntent), the two being looked up in the same table
+ * @param intent - What to reflect, with its value; one of the core kinds or a name a shape declared for itself (ExtraStyleIntent), the two being looked up in the same table
  * @param registries - The canvas's style tables and the defaults its entries resolve through
  * @returns The next state, or `state` itself (same reference) when no object changed
  */
 export const applyStyleIntent = (
 	state: CanvasControllerState,
-	intent: StyleIntent | ExtraStyleIntent,
+	intent: StyleIntent,
 	registries: StyleIntentRegistries,
 ): CanvasControllerState => {
 	const targets = collectStyleTargets(state);
@@ -89,7 +86,10 @@ export const applyStyleIntent = (
 		// Read through the view, so a target the walk has already written to — a
 		// group and a member of it can both be selected — is the one written again.
 		const current = updatedObjects[object.id];
-		const entry = registries.objectStyle.get(current.type)?.[intent.kind];
+		const entry = styleEntryOf(
+			registries.objectStyle.get(current.type),
+			intent.kind,
+		);
 		if (entry === undefined) {
 			continue;
 		}
@@ -105,13 +105,13 @@ export const applyStyleIntent = (
 			continue;
 		}
 		if (isEdited) {
-			if (textOf(updated) !== textOf(grafted)) {
+			if (textSlotsOf(updated) !== textSlotsOf(grafted)) {
 				editedObject = updated;
 			} else if (grafted !== current) {
 				// The entry wrote elsewhere on the object (its fill, say) and left the
 				// slots as handed: the graft was not part of its answer, and committing
 				// the draft is the editor's own business.
-				updated = { ...updated, text: textOf(current) } as ObjectState;
+				updated = { ...updated, text: textSlotsOf(current) } as ObjectState;
 			}
 		}
 		updatedObjects[object.id] = updated;

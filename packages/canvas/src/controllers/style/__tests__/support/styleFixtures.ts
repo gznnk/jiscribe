@@ -22,29 +22,35 @@ import type { StyleIntentRegistries } from "../../ObjectStyleRegistry";
 import { createObjectStyleRegistry } from "../../ObjectStyleRegistry";
 import type { StyleContext, TextEditRange } from "../../StyleEntry";
 
+/**
+ * A state of one built-in type, carrying only what a style walk reads: an id, the
+ * type's name and the declarations its table is derived from.
+ *
+ * The one cast the object builders need: ObjectState is the union of the
+ * built-in states, and a bag naming those few fields is none of its members.
+ *
+ * @param features - The type whose declarations the object claims; its `type` is the object's too
+ * @param id - The object id
+ * @param own - Extra fields to load onto the object (its style fields, its slots, a `type` or `features` of its own)
+ */
+const objectOf = (
+	features: ObjectFeatures,
+	id: string,
+	own: Record<string, unknown> = {},
+): ObjectState =>
+	({ id, type: features.type, features, ...own }) as unknown as ObjectState;
+
 /** A rect: both paint groups and the radius, so it takes all of their intents. */
 export const rectOf = (
 	id: string,
 	own: Record<string, unknown> = {},
-): ObjectState =>
-	({
-		id,
-		type: "rect",
-		features: RectFeatures,
-		...own,
-	}) as unknown as ObjectState;
+): ObjectState => objectOf(RectFeatures, id, own);
 
 /** An ellipse, for a selection holding two types that both take the intent. */
 export const ellipseOf = (
 	id: string,
 	own: Record<string, unknown> = {},
-): ObjectState =>
-	({
-		id,
-		type: "ellipse",
-		features: EllipseFeatures,
-		...own,
-	}) as unknown as ObjectState;
+): ObjectState => objectOf(EllipseFeatures, id, own);
 
 /**
  * A connector: stroke and the two arrowheads but no fill, so the face intents
@@ -57,22 +63,11 @@ export const connectorOf = (
 	id: string,
 	own: Record<string, unknown> = {},
 ): ObjectState =>
-	({
-		id,
-		type: "connector",
-		features: ConnectorFeatures,
-		stroke: "#000000",
-		...own,
-	}) as unknown as ObjectState;
+	objectOf(ConnectorFeatures, id, { stroke: "#000000", ...own });
 
 /** A group: no style of its own, its members answering instead. */
 export const groupOf = (id: string, childIds: string[]): ObjectState =>
-	({
-		id,
-		type: "group",
-		features: GroupFeatures,
-		childIds,
-	}) as unknown as ObjectState;
+	objectOf(GroupFeatures, id, { childIds });
 
 /**
  * A shape holding text slots. Its features are a rect's, so it takes the shape
@@ -86,14 +81,7 @@ export const textRectOf = (
 	id: string,
 	text: TextSlots,
 	own: Record<string, unknown> = {},
-): ObjectState =>
-	({
-		id,
-		type: "rect",
-		features: RectFeatures,
-		text,
-		...own,
-	}) as unknown as ObjectState;
+): ObjectState => rectOf(id, { text, ...own });
 
 /** A rect's features with its text type replaced, for the types that hold a source-language body. */
 export const featuresWithText = (
@@ -118,12 +106,7 @@ export const SourceFeatures: ObjectFeatures = {
  * @param text - Its slots; a source body is a plain string and takes no emphasis styling
  */
 export const sourceRectOf = (id: string, text: TextSlots): ObjectState =>
-	({
-		id,
-		type: SourceFeatures.type,
-		features: SourceFeatures,
-		text,
-	}) as unknown as ObjectState;
+	objectOf(SourceFeatures, id, { text });
 
 /** A pick naming one text slot, the way a press on a slot stores it. */
 export const slotPickOf = (slotId: string): ObjectPartSelection => ({

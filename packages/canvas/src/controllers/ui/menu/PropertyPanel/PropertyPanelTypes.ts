@@ -108,7 +108,8 @@ export type PropertyPanelSelection = Pick<
 /**
  * States one number of the selection's transform frame, dispatching
  * TRANSFORM_PROPERTY_UPDATE. The sibling of {@link StyleIntentUpdater}
- * for the geometry the style-property registry does not own.
+ * for the geometry no StyleIntent names, and so no ObjectStyleRegistry table
+ * answers for.
  *
  * @param property - Which of the frame's five numbers is being stated
  * @param value - World units, `rotation` in degrees; the frame is the single selected object's or the multiSelectGroup's, and `x` / `y` name its top-left corner

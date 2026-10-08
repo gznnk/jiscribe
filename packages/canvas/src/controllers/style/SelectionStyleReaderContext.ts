@@ -41,7 +41,7 @@ export const SelectionStyleReaderContext =
  * the declaration — the table is read for its type alone, the walk still going
  * through each target's own registered one.
  *
- * @param kind - The style property to report: one of the engine's own names (`"fill"`, `"fontSize"`, …), which fixes the value type, or a kind a type declared for itself, whose stored type the engine does not know and which therefore comes back `unknown` for the caller to narrow (selectionValueAs)
+ * @param kind - The style property to report: one of the core names (`"fill"`, `"fontSize"`, …), which fixes the value type, or a kind a type declared for itself, whose stored type the engine does not know and which therefore comes back `unknown` for the caller to narrow with a guard of its own
  * @returns `single` / `mixed` / `none` over that property's value type
  * @throws When rendered outside a `SelectionStyleReaderContext` provider; the
  *   rows of the floating menu and the properties sidebar are inside one
@@ -65,13 +65,15 @@ export function useSelectionStyle(
 	kindOrTable: string | StyleTable<ObjectState>,
 	tableKind?: string,
 ): SelectionValue<unknown> {
+	// The declared-table signature only types the answer; the reader takes the
+	// kind either way.
+	const kind =
+		typeof kindOrTable === "string" ? kindOrTable : (tableKind as string);
 	const readStyle = useContext(SelectionStyleReaderContext);
 	if (readStyle === null) {
 		throw new Error(
 			"useSelectionStyle: no SelectionStyleReaderContext provider above this component; a row reading the selection's style must be rendered inside the ObjectMenu or the properties sidebar",
 		);
 	}
-	return readStyle(
-		typeof kindOrTable === "string" ? kindOrTable : (tableKind as string),
-	);
+	return readStyle(kind);
 }

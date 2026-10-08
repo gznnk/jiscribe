@@ -6,7 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import { defaultCanvasRegistries } from "../../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
+import { readSelectionStyle } from "../../../../../../style/readSelectionStyle";
+import { SelectionStyleReaderContext } from "../../../../../../style/SelectionStyleReaderContext";
 import { BackgroundColorMenu } from "../BackgroundColorMenu";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -36,7 +39,8 @@ const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 let container: HTMLDivElement | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
 
-const render = (element: React.ReactElement): HTMLDivElement => {
+/** Renders the menu for `canvasState`, under the reader the ObjectMenu provides. */
+const render = (canvasState: CanvasControllerState): HTMLDivElement => {
 	if (!container) {
 		container = document.createElement("div");
 		document.body.appendChild(container);
@@ -44,7 +48,18 @@ const render = (element: React.ReactElement): HTMLDivElement => {
 	}
 	const mounted = root;
 	act(() => {
-		mounted?.render(element);
+		mounted?.render(
+			<SelectionStyleReaderContext.Provider
+				value={(kind) =>
+					readSelectionStyle(canvasState, kind, defaultCanvasRegistries)
+				}
+			>
+				<BackgroundColorMenu
+					canvasState={canvasState}
+					onStyleIntent={vi.fn()}
+				/>
+			</SelectionStyleReaderContext.Provider>,
+		);
 	});
 	return container;
 };
@@ -75,12 +90,7 @@ afterEach(() => {
 
 describe("BackgroundColorMenu", () => {
 	it("shows the color the selection agrees on, and lets a pick of it write nothing", () => {
-		render(
-			<BackgroundColorMenu
-				canvasState={stateOf(rect("a", GREEN), rect("b", GREEN))}
-				onStyleIntent={vi.fn()}
-			/>,
-		);
+		render(stateOf(rect("a", GREEN), rect("b", GREEN)));
 
 		const circle = triggerIcon().querySelector("circle");
 		expect(circle?.style.fill).toBe("rgb(34, 197, 94)");
@@ -88,16 +98,7 @@ describe("BackgroundColorMenu", () => {
 	});
 
 	it("splits the icon between the selection's colors and leaves every swatch unpicked while they disagree", () => {
-		render(
-			<BackgroundColorMenu
-				canvasState={stateOf(
-					rect("a", GREEN),
-					rect("b", BLUE),
-					rect("c", GREEN),
-				)}
-				onStyleIntent={vi.fn()}
-			/>,
-		);
+		render(stateOf(rect("a", GREEN), rect("b", BLUE), rect("c", GREEN)));
 
 		// One slice per distinct color, in selection order, not the first shape's color alone.
 		const slices = Array.from(

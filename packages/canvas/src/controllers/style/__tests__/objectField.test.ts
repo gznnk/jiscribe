@@ -5,8 +5,9 @@ import { describe, it, expect } from "vitest";
 import { contextOf, rectOf } from "./support/styleFixtures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { objectField } from "../entries/objectField";
+import type { StyleTable } from "../StyleEntry";
 
-const entry = objectField<ObjectState, string>("fill");
+const entry = objectField("fill");
 
 /** The fill entry resolves through the shape-style defaults alone. */
 const withDefaults = (
@@ -70,5 +71,13 @@ describe("objectField", () => {
 				entry.read(rectOf("a", { fill: 7 }), null, withDefaults(defaults)),
 			).toEqual(["#fff"]);
 		});
+	});
+
+	it("the field decides the value type, so an intent of another one is refused", () => {
+		const table: StyleTable<ObjectState> = {
+			// @ts-expect-error cornerRadius carries a number; "fill" carries a color
+			cornerRadius: objectField("fill"),
+		};
+		expect(table.cornerRadius).toBeDefined();
 	});
 });

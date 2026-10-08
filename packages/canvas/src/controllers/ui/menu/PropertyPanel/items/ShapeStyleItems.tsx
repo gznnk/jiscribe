@@ -4,8 +4,7 @@ import { memo } from "react";
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -33,13 +32,9 @@ const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
 
 /** The face of the selected shape. */
-const FillItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onStyleIntent,
-}) => {
+const FillItemComponent: React.FC<BuiltinItemProps> = ({ onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const fill = readSelectionStyle(canvasState, "fill", registries);
+	const fill = useSelectionStyle("fill");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -62,16 +57,10 @@ export const FillItem = memo(FillItemComponent);
 
 /** How opaque the face is drawn, stated in percent over the document's 0..1. */
 const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const fillOpacity = readSelectionStyle(
-		canvasState,
-		"fillOpacity",
-		registries,
-	);
+	const fillOpacity = useSelectionStyle("fillOpacity");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
@@ -101,12 +90,10 @@ export const FillOpacityItem = memo(FillOpacityItemComponent);
 
 /** The stroke of the selected shape, or of the selected connector. */
 const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const stroke = readSelectionStyle(canvasState, "stroke", registries);
+	const stroke = useSelectionStyle("stroke");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -129,16 +116,10 @@ export const StrokeColorItem = memo(StrokeColorItemComponent);
 
 /** How thick the stroke is drawn. 0 draws none. */
 const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const strokeWidth = readSelectionStyle(
-		canvasState,
-		"strokeWidth",
-		registries,
-	);
+	const strokeWidth = useSelectionStyle("strokeWidth");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowWidth}>
@@ -167,16 +148,9 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 export const StrokeWidthItem = memo(StrokeWidthItemComponent);
 
 /** Solid, dashed or dotted. An unset value draws solid, so that is what reads active. */
-const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const strokeDashType = readSelectionStyle(
-		canvasState,
-		"strokeDashType",
-		registries,
-	);
+	const strokeDashType = useSelectionStyle("strokeDashType");
 	const dashType = selectionValueOr(
 		strokeDashType,
 		SHAPE_STYLE_FALLBACK.strokeDashType,
@@ -218,16 +192,10 @@ export const StrokeDashTypeItem = memo(StrokeDashTypeItemComponent);
 
 /** How opaque the stroke is drawn, stated in percent over the document's 0..1. */
 const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const strokeOpacity = readSelectionStyle(
-		canvasState,
-		"strokeOpacity",
-		registries,
-	);
+	const strokeOpacity = useSelectionStyle("strokeOpacity");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
@@ -259,17 +227,9 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 export const StrokeOpacityItem = memo(StrokeOpacityItemComponent);
 
 /** How far the corners are rounded. */
-const RadiusItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onStyleIntent,
-}) => {
+const RadiusItemComponent: React.FC<BuiltinItemProps> = ({ onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const cornerRadius = readSelectionStyle(
-		canvasState,
-		"cornerRadius",
-		registries,
-	);
+	const cornerRadius = useSelectionStyle("cornerRadius");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowRadius}>

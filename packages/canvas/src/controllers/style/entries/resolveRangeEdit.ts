@@ -1,9 +1,9 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
+import { textSlotsOf } from "../../utils/textSlotsOf";
 import type { StyleContext } from "../StyleEntry";
 
 /** The stretch of one object's slot a per-range write or read acts on. */
@@ -33,7 +33,7 @@ export const resolveRangeEdit = (
 	if (range === null || range.objectId !== object.id) {
 		return null;
 	}
-	const slots = (object as ObjectState & TextStyleState).text;
+	const slots = textSlotsOf(object);
 	if (slots === undefined || slots[range.slotId] === undefined) {
 		return null;
 	}

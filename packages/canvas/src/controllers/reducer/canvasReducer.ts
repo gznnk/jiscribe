@@ -299,7 +299,7 @@ export const createCanvasReducer =
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
 								state,
-								STYLE_PROPERTY_COALESCE_PREFIX,
+								STYLE_INTENT_COALESCE_PREFIX,
 								action.intent.kind,
 							)
 						: null,
@@ -308,8 +308,8 @@ export const createCanvasReducer =
 			}
 
 			case "TRANSFORM_PROPERTY_UPDATE": {
-				// The sibling route to STYLE_INTENT for the geometry the style
-				// registry does not own; dispatched from the properties sidebar's
+				// The sibling route to STYLE_INTENT for the geometry no StyleIntent
+				// names; dispatched from the properties sidebar's
 				// number inputs, which fire no gesture (see TransformPropertyUpdateAction).
 				const updated = handleTransformPropertyUpdate(
 					state,
@@ -605,7 +605,7 @@ const adoptDocumentState = (
 });
 
 /** Prefix of the coalesce key for consecutive style-intent commits (ObjectMenu or sidebar) */
-const STYLE_PROPERTY_COALESCE_PREFIX = "style-property";
+const STYLE_INTENT_COALESCE_PREFIX = "style-intent";
 
 /** Prefix of the coalesce key for consecutive properties-sidebar transform commits */
 const TRANSFORM_PROPERTY_COALESCE_PREFIX = "transform-property";

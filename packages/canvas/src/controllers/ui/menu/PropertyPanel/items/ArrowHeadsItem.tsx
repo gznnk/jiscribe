@@ -10,8 +10,7 @@ import {
 } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
-import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import type { SelectionValue } from "../../../../style/SelectionValue";
 import {
 	isMixedSelectionValue,
@@ -86,11 +85,10 @@ const ArrowEndField: React.FC<{
  * sidebar has no room for fifteen marks side by side, so each end shows what it
  * is set to and opens the grid.
  */
-const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
+	const startArrow = useSelectionStyle("startArrow");
+	const endArrow = useSelectionStyle("endArrow");
 
 	return (
 		<PropertyRow>
@@ -98,7 +96,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 				property="startArrow"
 				direction="start"
 				title={messages.menuStartArrow}
-				arrowType={readSelectionStyle(canvasState, "startArrow", registries)}
+				arrowType={startArrow}
 				messages={messages}
 			/>
 			<PropertyIconButton
@@ -117,7 +115,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 				property="endArrow"
 				direction="end"
 				title={messages.menuEndArrow}
-				arrowType={readSelectionStyle(canvasState, "endArrow", registries)}
+				arrowType={endArrow}
 				messages={messages}
 			/>
 		</PropertyRow>

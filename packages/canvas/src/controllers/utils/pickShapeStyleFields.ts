@@ -1,7 +1,7 @@
 import { isNumber, isString } from "@jiscribe/basic-validators";
 import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
-import type { ResolvedShapeStyle } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ResolvedShapeStyle } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 

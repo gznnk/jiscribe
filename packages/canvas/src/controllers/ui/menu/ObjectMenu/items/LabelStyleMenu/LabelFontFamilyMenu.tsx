@@ -3,11 +3,8 @@ import { memo, useRef } from "react";
 
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
-import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueOr } from "../../../../../style/SelectionValue";
-import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import {
 	ObjectMenuFontFamilyList,
@@ -41,14 +38,14 @@ const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	);
 
 	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily = selectionValueOr(
-		useSelectionStyle(CONNECTOR_STYLE, "label.fontFamily"),
+	const { value: fontFamily, hasLabelText } = useConnectorLabelStyle(
+		"label.fontFamily",
 		CONNECTOR_LABEL_DEFAULTS.fontFamily,
+		{ objects, selection },
 	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!hasSelectedConnectorLabelText({ objects, selection })) {
+	if (!hasLabelText) {
 		return null;
 	}
 

@@ -5,8 +5,7 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -40,8 +39,7 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const registries = useCanvasRegistries();
-	const stroke = readSelectionStyle(canvasState, "stroke", registries);
+	const stroke = useSelectionStyle("stroke");
 	const isMixed = isMixedSelectionValue(stroke);
 	const currentColor = selectionValueOr(stroke, SHAPE_STYLE_FALLBACK.stroke);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(

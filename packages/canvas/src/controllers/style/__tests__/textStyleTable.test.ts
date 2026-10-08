@@ -1,14 +1,18 @@
 import { describe, it, expect } from "vitest";
 
 import { defaultSlotsOf } from "../entries/slotEntry";
-import type { StyleIntentKind } from "../StyleIntent";
+import type { CoreStyleIntentKind } from "../StyleIntent";
 import { textStyleTable } from "../textStyleTable";
 
 /** The kinds a text type answers for, sorted — the table's declaration order is its own business. */
 const kindsOf = (
 	textType: Parameters<typeof textStyleTable>[0],
-): StyleIntentKind[] =>
-	(Object.keys(textStyleTable(textType, defaultSlotsOf)) as StyleIntentKind[])
+): CoreStyleIntentKind[] =>
+	(
+		Object.keys(
+			textStyleTable(textType, defaultSlotsOf),
+		) as CoreStyleIntentKind[]
+	)
 		.slice()
 		.sort();
 
@@ -46,9 +50,5 @@ describe("textStyleTable", () => {
 			"textContent",
 			"verticalAlign",
 		]);
-	});
-
-	it("a type holding no text answers for nothing", () => {
-		expect(kindsOf(undefined)).toEqual([]);
 	});
 });

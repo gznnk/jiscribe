@@ -3,11 +3,8 @@ import { memo, useRef } from "react";
 
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { CONNECTOR_STYLE } from "../../../../../style/connectorStyle";
-import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
-import { selectionValueOr } from "../../../../../style/SelectionValue";
-import { hasSelectedConnectorLabelText } from "../../../../../utils/hasSelectedConnectorLabelText";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -43,14 +40,14 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const fontSize = selectionValueOr(
-		useSelectionStyle(CONNECTOR_STYLE, "label.fontSize"),
+	const { value: fontSize, hasLabelText } = useConnectorLabelStyle(
+		"label.fontSize",
 		CONNECTOR_LABEL_DEFAULTS.fontSize,
+		{ objects, selection },
 	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!hasSelectedConnectorLabelText({ objects, selection })) {
+	if (!hasLabelText) {
 		return null;
 	}
 

@@ -11,12 +11,14 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
  * own type. Where it lands is the answer of whichever type is addressed
  * (StyleTable) — an intent names no field of any document.
  *
- * Every kind is declared here, the whole vocabulary in one place; which of them
- * a type actually answers for is what its table says (coreStyleTable).
+ * The core kinds, every one of them declared here: the vocabulary the engine
+ * derives from a type's features, and what the entries of `coreStyleTable` /
+ * `textStyleTable` answer for. Which of them a type actually answers for is what
+ * its table says.
  *
  * The three toggles carry no value: the entry reads the current one and flips it.
  */
-export type StyleIntent =
+export type CoreStyleIntent =
 	| { kind: "fill"; color: string }
 	| { kind: "fillOpacity"; opacity: number }
 	| { kind: "stroke"; color: string }
@@ -44,11 +46,11 @@ export type StyleIntent =
 	| { kind: "textVerticalBasis"; basis: TextVerticalBasis }
 	| { kind: "textContent"; text: string };
 
-/** The name of one style intent, the key a type's StyleTable answers under. */
-export type StyleIntentKind = StyleIntent["kind"];
+/** The name of one core style intent, the key a type's StyleTable answers under. */
+export type CoreStyleIntentKind = CoreStyleIntent["kind"];
 
 /**
- * A style edit addressed to a kind the vocabulary above does not hold: one a
+ * A style edit addressed to a kind the core vocabulary does not hold: one a
  * type declares in its own table (ObjectTypeDefinition.style), which reaches the
  * types that declared it and no others.
  *
@@ -69,6 +71,13 @@ export type ExtraStyleIntent = {
 };
 
 /**
+ * The whole of what a surface raises and `applyStyleIntent` takes: a core kind
+ * arrives as its own payload, a kind a type declared for itself as
+ * `{ kind, value }`.
+ */
+export type StyleIntent = CoreStyleIntent | ExtraStyleIntent;
+
+/**
  * Which field each toggle flips: the one fact that makes a toggle one, stated
  * once for the types (StyleIntentValueType, TextToggleIntentKind) and the entries
  * (toggleRunOrSlot) alike. A toggle's value type is its field's, so the two
@@ -78,7 +87,7 @@ export const TOGGLE_FLIPS = {
 	toggleBold: "fontWeight",
 	toggleItalic: "fontStyle",
 	toggleUnderline: "textDecoration",
-} as const satisfies Record<string, StyleIntentKind>;
+} as const satisfies Record<string, CoreStyleIntentKind>;
 
 /**
  * The intents a keystroke in the text editor raises (TextEditor's Ctrl/Cmd+B/I/U
@@ -87,23 +96,23 @@ export const TOGGLE_FLIPS = {
  * a "bold" into the field it flips twice.
  */
 export type TextToggleIntentKind = Extract<
-	StyleIntentKind,
+	CoreStyleIntentKind,
 	keyof typeof TOGGLE_FLIPS
 >;
 
 /**
  * A toggle as an intent: the kind and nothing else. Spelled out because an
  * object literal built from a `TextToggleIntentKind` is assignable to this
- * three-member union but not to the whole StyleIntent one.
+ * three-member union but not to the whole CoreStyleIntent one.
  */
 export type TextToggleIntent = Extract<
-	StyleIntent,
+	CoreStyleIntent,
 	{ kind: TextToggleIntentKind }
 >;
 
 /**
  * The intents stored on a text slot, named after the field each of them is: the
- * engine's vocabulary and a slot's typography (`TextSlotStyle`) agree on these
+ * core vocabulary and a slot's typography (`TextSlotStyle`) agree on these
  * eight names, so the set is their intersection rather than a second list to
  * keep in step.
  *
@@ -114,25 +123,23 @@ export type TextToggleIntent = Extract<
  * (StyleIntentValueType) and the entries report it as the value it is.
  */
 export type TextSlotStyleIntentKind = Extract<
-	StyleIntentKind,
+	CoreStyleIntentKind,
 	keyof TextSlotStyle
 >;
 
-/** Everything an intent of one kind holds besides its name. */
-type StyleIntentPayload<K extends StyleIntentKind> = Omit<
-	Extract<StyleIntent, { kind: K }>,
+/** Everything a core intent of one kind holds besides its name. */
+type CoreStyleIntentPayload<K extends CoreStyleIntentKind> = Omit<
+	Extract<CoreStyleIntent, { kind: K }>,
 	"kind"
 >;
 
 /**
- * The value type one text-slot kind works in: its payload, plus the unset such a
- * field really has (TextSlotStyleIntentKind). Spelled apart from
- * {@link StyleIntentValueType} so the toggles can reach it without that type
- * referring to itself — a recursive conditional in an overloaded signature is
- * more than the compiler will unfold (TS2589).
+ * The value a core intent of one kind carries: the sole field its payload holds.
+ *
+ * @template K - The kind whose payload is read
  */
-type TextSlotStyleValueType<K extends TextSlotStyleIntentKind> =
-	StyleIntentPayload<K>[keyof StyleIntentPayload<K>] | undefined;
+type CoreStyleIntentPayloadValue<K extends CoreStyleIntentKind> =
+	CoreStyleIntentPayload<K>[keyof CoreStyleIntentPayload<K>];
 
 /**
  * The type of the value an intent of one kind carries: the sole field it holds
@@ -149,18 +156,18 @@ type TextSlotStyleValueType<K extends TextSlotStyleIntentKind> =
  * being a text-slot one, already admits the unset the toggle also has nothing to
  * hand the entry.
  *
- * A name outside the engine's vocabulary is a kind its declaring type owns
+ * A name outside the core vocabulary is a kind its declaring type owns
  * (ObjectTypeDefinition.style), whose stored type the engine does not know:
  * `unknown`. A row holding that declaration reads it typed through the table
  * instead (StyleEntryValueType).
  */
 export type StyleIntentValueType<K extends string> =
 	K extends TextToggleIntentKind
-		? TextSlotStyleValueType<(typeof TOGGLE_FLIPS)[K]>
+		? CoreStyleIntentPayloadValue<(typeof TOGGLE_FLIPS)[K]> | undefined
 		: K extends TextSlotStyleIntentKind
-			? TextSlotStyleValueType<K>
-			: K extends StyleIntentKind
-				? StyleIntentPayload<K>[keyof StyleIntentPayload<K>]
+			? CoreStyleIntentPayloadValue<K> | undefined
+			: K extends CoreStyleIntentKind
+				? CoreStyleIntentPayloadValue<K>
 				: unknown;
 
 /**
@@ -171,9 +178,7 @@ export type StyleIntentValueType<K extends string> =
  * @param intent - The intent to read; the payload field is named differently per kind (`value` for a type's own), and taken as the only one besides `kind`
  * @returns The payload value, or undefined for an intent carrying none (the toggles)
  */
-export const styleIntentValue = (
-	intent: StyleIntent | ExtraStyleIntent,
-): unknown => {
+export const styleIntentValue = (intent: StyleIntent): unknown => {
 	const { kind: _kind, ...payload } = intent;
 	return Object.values(payload)[0];
 };

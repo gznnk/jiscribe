@@ -1,3 +1,5 @@
+import type { ResolvedShapeStyle } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ShapeStyleField } from "../../utils/pickShapeStyleFields";
 import { pickShapeStyleFields } from "../../utils/pickShapeStyleFields";
@@ -11,16 +13,20 @@ import type { StyleEntry } from "../StyleEntry";
  * ObjectShapeStyleDefaultsRegistry, which is what makes an object stating
  * nothing report what it is drawn with, and that registry answers for those
  * fields alone (a color a type declares for itself takes `fieldEntry` instead,
- * which has no defaults to resolve through).
+ * which has no defaults to resolve through). Naming the field is also what fixes
+ * the value type, so a field and an intent that disagree about it do not compile.
  *
- * @param field - The field written and read; one the shape-style defaults answer for
+ * @param field - The field written and read; one the shape-style defaults answer for, whose own type is the entry's value type
  * @returns The pair, writing `value` as-is and reporting one value per object
- * @template TState - The state the entry is written against
- * @template V - The intent's value type; `field` is expected to carry it
+ * @template TState - The state the entry is written against; `ObjectState` unless named, which is what a type writing its own state does
+ * @template F - The field, which decides the value type
  */
-export const objectField = <TState extends ObjectState, V>(
-	field: ShapeStyleField,
-): StyleEntry<TState, V> => ({
+export const objectField = <
+	TState extends ObjectState,
+	F extends ShapeStyleField,
+>(
+	field: F,
+): StyleEntry<TState, ResolvedShapeStyle[F]> => ({
 	apply: (object, _pick, value) =>
 		Object.is((object as unknown as Record<string, unknown>)[field], value)
 			? object
@@ -29,6 +35,6 @@ export const objectField = <TState extends ObjectState, V>(
 		ctx.shapeStyleDefaults.resolveShapeStyle(
 			object.type,
 			pickShapeStyleFields(object),
-		)[field] as V,
+		)[field],
 	],
 });

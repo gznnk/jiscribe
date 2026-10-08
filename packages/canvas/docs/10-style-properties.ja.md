@@ -14,11 +14,11 @@
 
 ## 層 1: intent
 
-`StyleIntent.ts` が語彙を 1 つの union で宣言する。「面を塗る」「線を太くする」
+`StyleIntent.ts` が core の語彙を 1 つの union で宣言する。「面を塗る」「線を太くする」
 「文字を赤くする」— 各 kind が自分の型で値を運ぶ:
 
 ```ts
-type StyleIntent =
+type CoreStyleIntent =
 	| { kind: "fill"; color: string }
 	| { kind: "strokeWidth"; width: number }
 	| { kind: "cornerRadius"; radius: number }
@@ -35,7 +35,7 @@ intent はどの文書のフィールドも名指さない。語彙と doc の�
 
 union には 3 つの事実が乗る:
 
-- `StyleIntentKind` — kind だけ。表が答えるキーになる
+- `CoreStyleIntentKind` — kind だけ。表が答えるキーになる
 - `StyleIntentValueType<K>` — ある kind の値の型。「`kind` 以外の唯一のフィールド」として導出する。
   エントリの `apply` と `read` は両方これに縛られるので、2 つが型で食い違えない
 - `TOGGLE_FLIPS` — 3 つのキーボードトグルがどのフィールドを反転するか
@@ -47,6 +47,7 @@ union には 3 つの事実が乗る:
 知らないからである。値は、名前と文字列しか持たないサーフェスからなら輸送形の文字列
 （`styleIntentOf`）、宣言を持つサーフェスからなら型付きの値
 （`{ kind: "headerHeight", value: 32 }`）。読むのは宣言した型のエントリである。
+2 つを合わせたものが `StyleIntent` で、`applyStyleIntent` が受けるのはこれである。
 
 ## 層 2: 型ごとの表
 
@@ -79,12 +80,12 @@ type StyleEntry<TState extends ObjectState, V> = {
 値であり、メニューはローカル定数を持たない。
 
 `StyleTable<TState>` は「その型が何に答えるか」を kind ごとに持つ。キーが無いのが
-最も粗い gate で、その型はその intent を受けない。エンジン自身の kind は 1 つずつ
+最も粗い gate で、その型はその intent を受けない。core の kind は 1 つずつ
 型付けされ、それ以外のキーは宣言した型が持つエントリとして `ExtraStyleEntry` の
-index signature に入る（値型はエンジンが知らないので `unknown`。エンジン自身の
+index signature に入る（値型はエンジンが知らないので `unknown`。core の
 エントリもこれに代入できるので、2 つの半分が 1 つの交差型に収まる）。エントリは
 **自分が書くフィールド**も述べる（`StyleEntry.fields`）。登録時にその型の Doc と
-突き合わせるのがこれで、エンジン自身のエントリは何も述べない — フィールドの保証は
+突き合わせるのがこれで、core のエントリは何も述べない — フィールドの保証は
 導出元のフラグ自身が持っているからである。
 
 `StyleContext` は、object と値以外にエントリへ渡されるもの:
@@ -182,7 +183,7 @@ index signature に入る（値型はエンジンが知らないので `unknown`
   その intent を受けない型、`apply` が null を返した対象はそのまま。何も変わらなければ
   `state` の同一参照を返す
 - `readSelectionStyle(state, kind, registries)` — 同じ道で読み、`single` / `mixed` /
-  `none` に畳む（`combineSelectionValues`）。エンジン自身の kind を渡すと答えが型付き、
+  `none` に畳む（`combineSelectionValues`）。core の kind を渡すと答えが型付き、
   型自前の名前だけを渡すと `SelectionValue<unknown>`。その kind を宣言した表を手前に
   渡すと（`readSelectionStyle(state, CONNECTOR_STYLE, "label.fill", registries)`）
   宣言から型が付く。表は型のためだけに取り、歩きは各対象自身の登録済みの表を引く
@@ -225,7 +226,7 @@ DOM から名前と文字列を受け取って読み、React 経路（`STYLE_INT
 
 `styleIntentOf(property, value)` が、名前と文字列を intent に読む唯一の場所:
 
-- `INTENT_BY_PROPERTY` が、エンジン自身の語彙の各名前と「その文字列が作る intent」を
+- `INTENT_BY_PROPERTY` が、core の語彙の各名前と「その文字列が作る intent」を
   対応づける。`satisfies Record<SystemStyleName, StyleIntentMapper>` が付いていて、
   `SystemStyleName` は doc のスタイルグループが宣言するキーの union（`*_STYLE_KEYS`）＋
   どのグループも持たない 3 つ（`text` / `lockAspectRatio` / `textVerticalBasis`）。
@@ -272,7 +273,7 @@ export const CONTAINER_STYLE = {
 } satisfies StyleTable<ContainerState>;
 ```
 
-この表は導出された表の上に、**宣言が後ろになるよう**重ねられる。エンジン自身の語彙が
+この表は導出された表の上に、**宣言が後ろになるよう**重ねられる。core の語彙が
 持つ kind は拒否されるのではなく*置き換えられる*。格納先がコアの推測と違う型
 （セルに `fill` を持つ表）が必要としているのはそれである。語彙が持たない kind は
 その型だけのスタイルで、宣言の存在が gate そのもの。誰も宣言していない名前は何にも
@@ -300,16 +301,16 @@ export const CONTAINER_STYLE = {
 kind の書き込みが届くのとまったく同じ object について返す。kind の手前に表を渡すと
 （`useSelectionStyle(CONTAINER_STYLE, "headerFill")`）宣言から型が付くので、行の側で
 絞るものは無く、型の値型は 1 箇所で述べられる。名前だけで読むと値は `unknown` のままで、
-行が自前のガードと `selectionValueAs` で絞る。
+行が自前のガードで絞る。
 
 ## スタイルを足すとき
 
-| ケース                             | 書くもの                                                                                                                                                                                                                      |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| エンジン自身の語彙の新しいスタイル | `StyleIntent` への kind、それを有効にする宣言の下の `coreStyleTable` / `textStyleTable` へのエントリ、`INTENT_BY_PROPERTY` へのマッパー。`SystemStyleName` の `satisfies` があるので、どれか 1 つだけではコンパイルが通らない |
-| 既存スタイルの新しい格納先         | `{ apply, read }` の対を返すヘルパーを `entries/` に足し、必要な表から使う                                                                                                                                                    |
-| 1 つの型だけが持つスタイル         | その型自前の `StyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `style` も）。根のフィールドは `extraKeys` に入れる                                                                                |
-| 導出エントリの格納先が違うとき     | その kind のまま型自前の表へエントリを書く。導出された方が置き換わる                                                                                                                                                          |
+| ケース                         | 書くもの                                                                                                                                                                                                                          |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| core の語彙の新しいスタイル    | `CoreStyleIntent` への kind、それを有効にする宣言の下の `coreStyleTable` / `textStyleTable` へのエントリ、`INTENT_BY_PROPERTY` へのマッパー。`SystemStyleName` の `satisfies` があるので、どれか 1 つだけではコンパイルが通らない |
+| 既存スタイルの新しい格納先     | `{ apply, read }` の対を返すヘルパーを `entries/` に足し、必要な表から使う                                                                                                                                                        |
+| 1 つの型だけが持つスタイル     | その型自前の `StyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `style` も）。根のフィールドは `extraKeys` に入れる                                                                                    |
+| 導出エントリの格納先が違うとき | その kind のまま型自前の表へエントリを書く。導出された方が置き換わる                                                                                                                                                              |
 
 回帰の安全網: 読み替えは `style/__tests__/styleIntentOf.test.ts` が、適用側は
 名前と文字列を運ぶ唯一の経路の

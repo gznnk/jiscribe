@@ -1,6 +1,7 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { collectCowChangedKeys, copyObjectsRecord } from "./cowObjects";
+import { textSlotsOf } from "./textSlotsOf";
 import { updateAffectedGroupBounds } from "./updateAffectedGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
@@ -88,7 +89,7 @@ const holdsSameContentInputs = (
 			(object as Partial<Dimensions>).width ||
 		(previousObject as TextStyleState).textVerticalBasis !==
 			(object as TextStyleState).textVerticalBasis ||
-		(previousObject as TextStyleState).text !== (object as TextStyleState).text
+		textSlotsOf(previousObject) !== textSlotsOf(object)
 	) {
 		return false;
 	}

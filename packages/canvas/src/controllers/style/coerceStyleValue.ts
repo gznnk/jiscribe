@@ -1,8 +1,8 @@
 /**
- * What a style value a type declares for itself is read as. The engine's own
- * intents carry their types in the vocabulary (StyleIntent), so these three are
- * the whole of what a declaration may name — and so the whole of what a
- * transport string can be read into.
+ * What a style value a type declares for itself is read as. The core intents
+ * carry their types in the vocabulary (CoreStyleIntent), so these three are the
+ * whole of what a declaration may name — and so the whole of what a transport
+ * string can be read into.
  */
 export type StyleValueType = "string" | "number" | "boolean";
 

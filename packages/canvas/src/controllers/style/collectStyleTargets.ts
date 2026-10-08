@@ -37,12 +37,12 @@ export const collectStyleTargets = (
 	const targets: StyleTarget[] = [];
 
 	for (const id of objectIds) {
-		const selected = objects[id];
-		if (!selected) {
+		const selectedObject = objects[id];
+		if (selectedObject === undefined) {
 			continue;
 		}
 		targets.push({
-			object: selected,
+			object: selectedObject,
 			// The part belongs to the sole selected object, so it is handed over
 			// only where the selection is that one object (the rule
 			// reconcileSelection keeps, restated rather than trusted).
@@ -51,7 +51,7 @@ export const collectStyleTargets = (
 		});
 		for (const descendantId of collectDescendantIds(id, objects)) {
 			const descendant = objects[descendantId];
-			if (descendant) {
+			if (descendant !== undefined) {
 				targets.push({ object: descendant, pick: null, selected: false });
 			}
 		}

@@ -11,8 +11,7 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -63,27 +62,14 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const registries = useCanvasRegistries();
-	const strokeWidth = readSelectionStyle(
-		canvasState,
-		"strokeWidth",
-		registries,
-	);
-	const strokeDashType = readSelectionStyle(
-		canvasState,
-		"strokeDashType",
-		registries,
-	);
+	const strokeWidth = useSelectionStyle("strokeWidth");
+	const strokeDashType = useSelectionStyle("strokeDashType");
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
 	const dashType = selectionValueOr(
 		strokeDashType,
 		SHAPE_STYLE_FALLBACK.strokeDashType,
 	);
-	const cornerRadius = readSelectionStyle(
-		canvasState,
-		"cornerRadius",
-		registries,
-	);
+	const cornerRadius = useSelectionStyle("cornerRadius");
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

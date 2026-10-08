@@ -15,12 +15,12 @@ Everything in this chapter lives in `controllers/style/`.
 
 ## Layer 1: the intent
 
-`StyleIntent.ts` declares the whole vocabulary in one union — "paint the face",
+`StyleIntent.ts` declares the core vocabulary in one union — "paint the face",
 "thicken the line", "redden the letters" — each kind carrying its value in its own
 type:
 
 ```ts
-type StyleIntent =
+type CoreStyleIntent =
 	| { kind: "fill"; color: string }
 	| { kind: "strokeWidth"; width: number }
 	| { kind: "cornerRadius"; radius: number }
@@ -38,7 +38,7 @@ the SVG attribute `rx`).
 
 Three facts ride on the union:
 
-- `StyleIntentKind` — the kind alone, which is the key a table answers under.
+- `CoreStyleIntentKind` — the kind alone, which is the key a table answers under.
 - `StyleIntentValueType<K>` — the type of one kind's value, derived as "the sole field besides
   `kind`". `apply` and `read` of an entry are both bound to it, so the two sides
   cannot disagree on the type.
@@ -52,6 +52,7 @@ neither what the kind means nor what type it holds. The value is the transport
 string where the surface held only a name and a string (`styleIntentOf`), and the
 value already typed where it holds the declaration
 (`{ kind: "headerHeight", value: 32 }`); the declaring type's entry reads it.
+The two together are `StyleIntent`, which is what `applyStyleIntent` takes.
 
 ## Layer 2: the per-type table
 
@@ -85,14 +86,14 @@ resolved through the type's defaults, so what is reported is what the object is
 drawn with and the menus hold no local constants.
 
 `StyleTable<TState>` is what one type answers for, by kind. A kind left out is the
-gate at its coarsest: the type does not take that intent. The engine's own kinds
-are typed one by one; any other key is a kind the declaring type owns, under an
+gate at its coarsest: the type does not take that intent. The core kinds are
+typed one by one; any other key is a kind the declaring type owns, under an
 index signature of `ExtraStyleEntry`, whose value type is unknown to the engine
-(every engine entry is assignable to it too, which is what lets the two halves sit
+(every core entry is assignable to it too, which is what lets the two halves sit
 in one intersection). An entry also states **which fields it writes**
 (`StyleEntry.fields`), which is what registration checks against the type's doc;
-the engine's own entries state none, their fields being vouched for by the very
-flags they are derived from.
+the core entries state none, their fields being vouched for by the very flags
+they are derived from.
 
 `StyleContext` is what an entry is handed besides the object and the value:
 
@@ -199,8 +200,8 @@ Both walkers take that walk:
   returns `state` itself.
 - `readSelectionStyle(state, kind, registries)` — reads every target the same way
   and folds the values into `single` / `mixed` / `none` (`combineSelectionValues`).
-  Passing one of the engine's own kinds types the answer; passing a declared kind
-  by name alone answers `SelectionValue<unknown>`, and passing the table it was
+  Passing one of the core kinds types the answer; passing a declared kind by
+  name alone answers `SelectionValue<unknown>`, and passing the table it was
   declared in ahead of it (`readSelectionStyle(state, CONNECTOR_STYLE,
 "label.fill", registries)`) types the answer from that declaration. The table is
   taken for its type alone; the walk still looks the entry up on each target's own
@@ -252,8 +253,8 @@ through `STYLE_INTENT`.
 `styleIntentOf(property, value)` is the one place a name and a string are read
 into an intent:
 
-- `INTENT_BY_PROPERTY` maps each name of the engine's own vocabulary to the intent
-  its string makes. It is `satisfies Record<SystemStyleName, StyleIntentMapper>`,
+- `INTENT_BY_PROPERTY` maps each name of the core vocabulary to the intent its
+  string makes. It is `satisfies Record<SystemStyleName, StyleIntentMapper>`,
   where `SystemStyleName` is the union of the keys the doc's style groups declare
   (`*_STYLE_KEYS`) plus the three no group owns (`text`, `lockAspectRatio`,
   `textVerticalBasis`) — so a field added to a group fails to compile until it is
@@ -302,8 +303,8 @@ export const CONTAINER_STYLE = {
 ```
 
 The table is composed over the derived one, **the declaration last**: a kind the
-engine's own vocabulary owns is _replaced_ rather than refused, which is what a
-type whose storage differs from the core guess (a table's fill, which lives on
+core vocabulary owns is _replaced_ rather than refused, which is what a type
+whose storage differs from the core guess (a table's fill, which lives on
 the cells) needs. A kind the vocabulary does not own is a style of that type
 alone: the declaration's existence **is** the gate, so a name nobody declares
 applies to nothing (fail-closed), and a declared name reaches the declaring
@@ -335,17 +336,17 @@ A row states the value back through `useSelectionStyle`
 would reach. Passing the table ahead of the kind
 (`useSelectionStyle(CONTAINER_STYLE, "headerFill")`) types the answer from the
 declaration, so the row narrows nothing and the type's value type is stated once;
-read by name alone the value still arrives `unknown`, which `selectionValueAs`
-narrows with a guard of the row's own.
+read by name alone the value still arrives `unknown`, for the row to narrow with
+a guard of its own.
 
 ## Adding a style
 
-| Case                                       | What to write                                                                                                                                                                                                                             |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A new style of the engine's own vocabulary | A kind in `StyleIntent`, an entry in `coreStyleTable` / `textStyleTable` under the declaration that enables it, and a mapper in `INTENT_BY_PROPERTY` — the `satisfies` over `SystemStyleName` makes any one of them alone a compile error |
-| A new storage shape for an existing style  | A helper in `entries/` returning the `{ apply, read }` pair, used by the table that needs it                                                                                                                                              |
-| A style belonging to one type              | One entry in that type's own `StyleTable` — `fieldEntry` for a field of its own (plus `style` in its definition, first time only), and its root field in `extraKeys`                                                                      |
-| A storage the derived entry gets wrong     | An entry under that very kind in the type's own table, which replaces the derived one                                                                                                                                                     |
+| Case                                      | What to write                                                                                                                                                                                                                                 |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A new style of the core vocabulary        | A kind in `CoreStyleIntent`, an entry in `coreStyleTable` / `textStyleTable` under the declaration that enables it, and a mapper in `INTENT_BY_PROPERTY` — the `satisfies` over `SystemStyleName` makes any one of them alone a compile error |
+| A new storage shape for an existing style | A helper in `entries/` returning the `{ apply, read }` pair, used by the table that needs it                                                                                                                                                  |
+| A style belonging to one type             | One entry in that type's own `StyleTable` — `fieldEntry` for a field of its own (plus `style` in its definition, first time only), and its root field in `extraKeys`                                                                          |
+| A storage the derived entry gets wrong    | An entry under that very kind in the type's own table, which replaces the derived one                                                                                                                                                         |
 
 Regression safety: `style/__tests__/styleIntentOf.test.ts` covers the
 translation, and the apply side of it —

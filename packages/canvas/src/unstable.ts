@@ -168,8 +168,8 @@ export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/us
 // The current value a row of either surface states (packages/canvas/docs/10-style-properties.md).
 // `useSelectionStyle(name)` answers what the whole selection says about one style
 // property — the value of exactly the objects a write of the same name would
-// reach, so a row cannot disagree with its own write. A name the engine owns
-// ("fill", "fontSize") comes back typed; a kind a type declares for itself comes
+// reach, so a row cannot disagree with its own write. A core name ("fill",
+// "fontSize") comes back typed; a kind a type declares for itself comes
 // back `unknown` under that name alone, the engine not knowing what the
 // declaration holds, so a row of the declaring type passes its table instead —
 // `useSelectionStyle(CONTAINER_STYLE, "headerFill")` — and the answer is typed
@@ -178,13 +178,15 @@ export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/us
 // the selection reaches carries the property at all.
 //
 // A row writes through the mirror of that read: `onStyleIntent(intent, commit)`
-// (StyleIntentUpdater), where an engine name goes as its typed intent
+// (StyleIntentUpdater), where a core name goes as its typed intent
 // (`{ kind: "fill", color }`) and a type's own kind as `{ kind, value }`, the
 // value either typed as the declaration holds it or left as the transport
 // string. `styleIntentOf(property, value)` is there for a widget that holds a
 // name and a string from the DOM instead.
 export { useSelectionStyle } from "./controllers/style/SelectionStyleReaderContext";
 export type {
+	CoreStyleIntent,
+	CoreStyleIntentKind,
 	ExtraStyleIntent,
 	StyleIntent,
 } from "./controllers/style/StyleIntent";
@@ -193,7 +195,6 @@ export type { SelectionValue } from "./controllers/style/SelectionValue";
 export {
 	isMixedSelectionValue,
 	selectionMixedValues,
-	selectionValueAs,
 	selectionValueOr,
 	selectionValueOrFirst,
 } from "./controllers/style/SelectionValue";

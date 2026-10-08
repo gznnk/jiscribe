@@ -3,13 +3,13 @@ import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText"
 
 import type { TextEditRange } from "./StyleEntry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import {
 	readRichTextSlot,
 	writeRichTextSlot,
 } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { resolveTextEdit } from "../utils/resolveTextEdit";
+import { textSlotsOf } from "../utils/textSlotsOf";
 
 /**
  * The open shape editor as the style walks read it: which slot of which object it
@@ -86,7 +86,7 @@ export const graftStyleTextEdit = (
 	object: ObjectState,
 	edit: StyleTextEdit,
 ): ObjectState => {
-	const slots = (object as ObjectState & TextStyleState).text;
+	const slots = textSlotsOf(object);
 	if (slots === undefined) {
 		return object;
 	}

@@ -162,10 +162,8 @@ export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDe
 // The stroke / fill defaults a type declares through its creation defaults, and
 // what one shape's style resolves to once type and last resort are folded in.
 export { extractShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
-export type {
-	ObjectShapeStyleDefaults,
-	ResolvedShapeStyle,
-} from "./registries/ObjectShapeStyleDefaultsRegistry";
+export type { ObjectShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
+export type { ResolvedShapeStyle } from "./model/objects/utils/shapeStyleFallback";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";

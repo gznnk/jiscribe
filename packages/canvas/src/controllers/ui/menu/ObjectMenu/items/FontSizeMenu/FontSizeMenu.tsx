@@ -5,8 +5,7 @@ import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOrFirst,
@@ -50,8 +49,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		isOpen,
 	);
 
-	const registries = useCanvasRegistries();
-	const fontSize = readSelectionStyle(canvasState, "fontSize", registries);
+	const fontSize = useSelectionStyle("fontSize");
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
