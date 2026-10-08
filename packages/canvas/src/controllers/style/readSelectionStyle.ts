@@ -30,7 +30,7 @@ import type { SelectionValue } from "./SelectionValue";
  * table.
  *
  * @param state - The canvas state; its selection decides who is read
- * @param kind - The intent to report: one of the engine's own kinds, which fixes the value type, or a kind a type declared for itself, which cannot
+ * @param kind - The intent to report: one of the core kinds, which fixes the value type, or a kind a type declared for itself, which cannot
  * @param registries - The canvas's style tables and the defaults its entries resolve through
  * @returns `single` / `mixed` / `none`, the last meaning nothing the selection reaches takes the intent
  */

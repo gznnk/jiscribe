@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { styleIntentOf } from "../styleIntentOf";
 
 describe("styleIntentOf (the one translation)", () => {
-	describe("the engine's own vocabulary becomes a typed intent", () => {
+	describe("the core vocabulary becomes a typed intent", () => {
 		it("a color is carried as it stands", () => {
 			expect(styleIntentOf("fill", "#123456")).toEqual({
 				kind: "fill",

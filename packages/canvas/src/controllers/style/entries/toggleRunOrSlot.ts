@@ -70,7 +70,7 @@ export const toggleRunOrSlot = <
 
 	return {
 		// The intent carries no value of its own: the entry reads the current one
-		// and flips it (StyleIntent).
+		// and flips it (CoreStyleIntent).
 		apply: (object, pick, _value, ctx) => {
 			if (resolveRangeEdit(object, ctx) === null) {
 				return null;
