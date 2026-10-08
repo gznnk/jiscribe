@@ -1,6 +1,6 @@
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
-import type { ExtraStyleIntent, StyleIntent } from "../../../style/StyleIntent";
+import type { StyleIntent } from "../../../style/StyleIntent";
 
 export type BuiltinItemKey =
 	| "arrowHead"
@@ -20,8 +20,8 @@ export type BuiltinItemKey =
  * properties-sidebar row (both surfaces are handed the same callback). The write
  * mirror of `useSelectionStyle`, which reads the same selection.
  *
- * @param intent - What the edit means, paired with its value: one of the engine's
- *   own kinds, typed (`{ kind: "fontSize", size: 24 }`), or a name the shape
+ * @param intent - What the edit means, paired with its value: one of the core
+ *   kinds, typed (`{ kind: "fontSize", size: 24 }`), or a name the shape
  *   declared for itself, whose value stays the transport string
  *   (`{ kind: "headerHeight", value: "32" }`). A row holding a property name and
  *   a string from the DOM reads it with `styleIntentOf` first
@@ -33,7 +33,7 @@ export type BuiltinItemKey =
  *   commit gets its own entry
  */
 export type StyleIntentUpdater = (
-	intent: StyleIntent | ExtraStyleIntent,
+	intent: StyleIntent,
 	commit: boolean,
 	coalesceHistory?: boolean,
 ) => void;

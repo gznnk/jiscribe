@@ -41,7 +41,7 @@ export const SelectionStyleReaderContext =
  * the declaration — the table is read for its type alone, the walk still going
  * through each target's own registered one.
  *
- * @param kind - The style property to report: one of the engine's own names (`"fill"`, `"fontSize"`, …), which fixes the value type, or a kind a type declared for itself, whose stored type the engine does not know and which therefore comes back `unknown` for the caller to narrow with a guard of its own
+ * @param kind - The style property to report: one of the core names (`"fill"`, `"fontSize"`, …), which fixes the value type, or a kind a type declared for itself, whose stored type the engine does not know and which therefore comes back `unknown` for the caller to narrow with a guard of its own
  * @returns `single` / `mixed` / `none` over that property's value type
  * @throws When rendered outside a `SelectionStyleReaderContext` provider; the
  *   rows of the floating menu and the properties sidebar are inside one

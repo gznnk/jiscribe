@@ -448,9 +448,9 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
  * `features` and `extraKeys` name between doc and state (FrameMapper), so such
  * an entry would write state the next save drops.
  *
- * Only an entry stating what it writes is checked; the engine's own entries
- * state nothing, their fields being vouched for by the very flags they are
- * derived from (StyleEntry.fields).
+ * Only an entry stating what it writes is checked; the core entries state
+ * nothing, their fields being vouched for by the very flags they are derived
+ * from (StyleEntry.fields).
  *
  * @param type - The type being registered; named in the error
  * @param definition - Its whole definition: the fields its `features` imply (collectStyleKeys, plus the text group) and its `extraKeys` are what an entry may write

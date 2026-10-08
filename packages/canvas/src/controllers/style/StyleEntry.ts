@@ -1,7 +1,7 @@
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
-import type { StyleIntentKind, StyleIntentValueType } from "./StyleIntent";
+import type { CoreStyleIntentKind, StyleIntentValueType } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 
@@ -57,16 +57,16 @@ export type StyleEntry<TState extends ObjectState, V> = {
 	 * so an entry cannot write state the mapper then drops on save.
 	 *
 	 * Omitted means the entry writes nothing the document stores (the toggles,
-	 * which flip a field of the slots) or is one of the engine's own, whose fields
+	 * which flip a field of the slots) or is one of the core kinds, whose fields
 	 * the type's `features` already vouch for.
 	 */
 	readonly fields?: readonly string[];
 };
 
 /**
- * An entry under a kind the engine does not own: one the declaring type names
- * for itself, whose value type is that type's business and so `unknown` here.
- * Every entry of the engine's own kinds is assignable to it as well (StyleEntry's
+ * An entry under a kind outside the core vocabulary: one the declaring type
+ * names for itself, whose value type is that type's business and so `unknown`
+ * here. Every entry of the core kinds is assignable to it as well (StyleEntry's
  * members are method signatures), which is what lets {@link StyleTable} hold the
  * typed kinds and the open index signature in one intersection.
  */
@@ -76,7 +76,7 @@ export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
  * What one type answers for, by intent. A kind left out is one the type does not
  * take — the gate at its coarsest, before any entry is called.
  *
- * The engine's own kinds are typed one by one, each entry bound to that intent's
+ * The core kinds are typed one by one, each entry bound to that intent's
  * value type. Any other name is a kind the declaring type owns
  * (ObjectTypeDefinition.style), whose stored type the engine does not know, so
  * those cannot be typed per kind and sit under the index signature instead — the
@@ -86,7 +86,7 @@ export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
  * @template TState - The state the entries are written against
  */
 export type StyleTable<TState extends ObjectState> = {
-	[K in StyleIntentKind]?: StyleEntry<TState, StyleIntentValueType<K>>;
+	[K in CoreStyleIntentKind]?: StyleEntry<TState, StyleIntentValueType<K>>;
 } & {
 	[extraKind: string]: ExtraStyleEntry | undefined;
 };

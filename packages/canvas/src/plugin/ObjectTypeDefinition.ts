@@ -168,12 +168,12 @@ export type ObjectTypeDefinition<
 	 * how a type whose storage differs from the core guess (a table whose fill
 	 * lives on its cells) says where the edit really lands.
 	 *
-	 * A kind the engine's own vocabulary does not hold is a style of this type
-	 * alone: it reaches the objects of the selection that declare it and no
-	 * others, the declaration being the gate (fail-closed). `fieldEntry(path,
-	 * valueType)` is the entry for a field of the type's own, dots in the path
-	 * being a write into a nested object. An entry stating a field the type's doc
-	 * cannot hold (`extraKeys`) is refused at registration.
+	 * A kind the core vocabulary does not hold is a style of this type alone: it
+	 * reaches the objects of the selection that declare it and no others, the
+	 * declaration being the gate (fail-closed). `fieldEntry(path, valueType)` is
+	 * the entry for a field of the type's own, dots in the path being a write into
+	 * a nested object. An entry stating a field the type's doc cannot hold
+	 * (`extraKeys`) is refused at registration.
 	 */
 	style?: StyleTable<TState>;
 

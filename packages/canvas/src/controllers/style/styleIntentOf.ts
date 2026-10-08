@@ -10,7 +10,7 @@ import { isTextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/Text
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 
 import { coerceStyleValue } from "./coerceStyleValue";
-import type { ExtraStyleIntent, StyleIntent } from "./StyleIntent";
+import type { CoreStyleIntent, StyleIntent } from "./StyleIntent";
 
 /**
  * Every name a style property may carry that is not a shape's own declaration:
@@ -40,7 +40,7 @@ type SystemStyleName =
 	| "textVerticalBasis";
 
 /** What the menus' string value is read as, before the intent it makes is applied. */
-type StyleIntentMapper = (value: string) => StyleIntent | undefined;
+type StyleIntentMapper = (value: string) => CoreStyleIntent | undefined;
 
 /** The number the string carries, or undefined when it does not parse. */
 const toStyleNumber = (value: string): number | undefined => {
@@ -55,16 +55,16 @@ const toStyleNumber = (value: string): number | undefined => {
  * @param build - The intent the parsed number states; reached only for a string that parsed
  */
 const numberIntent =
-	(build: (value: number) => StyleIntent): StyleIntentMapper =>
+	(build: (value: number) => CoreStyleIntent): StyleIntentMapper =>
 	(value) => {
 		const parsed = toStyleNumber(value);
 		return parsed === undefined ? undefined : build(parsed);
 	};
 
 /**
- * The property names the engine's own style vocabulary owns, each paired with the
- * intent the menus' string value makes. Exhaustive over SystemStyleName, which is
- * what keeps every style field on exactly one route.
+ * The property names the core style vocabulary owns, each paired with the intent
+ * the menus' string value makes. Exhaustive over SystemStyleName, which is what
+ * keeps every style field on exactly one route.
  *
  * A mapper returning undefined is a value nothing can be made of, which applies
  * nothing.
@@ -72,7 +72,7 @@ const numberIntent =
  * The transport is a string either way, so the dash, the two arrowheads and the
  * two alignments are cast to their unions here rather than validated: the values
  * come from the menus' own parts. The basis is the exception, and it throws: no
- * surface outside the engine's own rows states it, so a value that is neither
+ * surface outside the built-in rows states it, so a value that is neither
  * basis is a mistake in the engine rather than something to quietly apply
  * nothing for.
  */
@@ -121,8 +121,8 @@ const INTENT_BY_PROPERTY = {
 } satisfies Record<SystemStyleName, StyleIntentMapper>;
 
 /**
- * The mapper for one property name, or undefined for a name the engine's own
- * vocabulary does not own (a kind a type declares in its own style table).
+ * The mapper for one property name, or undefined for a name the core vocabulary
+ * does not own (a kind a type declares in its own style table).
  * Looked up through a cast because the record is exhaustive by type rather than
  * by index signature, which is what makes a new style field a compile error.
  *
@@ -144,20 +144,20 @@ const intentMapperOf = (property: string): StyleIntentMapper | undefined =>
  * the React route that reads its value off the DOM. A row that knows its
  * property statically states the intent outright instead and never comes here.
  *
- * A name the engine's own vocabulary does not own is a kind some type declares
- * in its own table, and is passed on under that very name for the types' tables
- * to answer (ObjectTypeDefinition.style); a name nobody declares therefore
- * applies to nothing (fail-closed).
+ * A name the core vocabulary does not own is a kind some type declares in its
+ * own table, and is passed on under that very name for the types' tables to
+ * answer (ObjectTypeDefinition.style); a name nobody declares therefore applies
+ * to nothing (fail-closed).
  *
  * @param property - The property name, as the menus' parts spell it; a name with dots in it is a declared write path (`label.fill`)
  * @param value - The value as a string, read into the intent's own type (INTENT_BY_PROPERTY) or left as it stands for the declaring type's entry to read
  * @returns The intent to apply, or undefined for a value nothing can be made of (a string no number parses from) — which is the caller's cue to apply nothing
- * @throws For a `textVerticalBasis` value that is neither basis: only the engine's own rows state that property, so such a value is a mistake in the engine and is not quietly turned into applying nothing
+ * @throws For a `textVerticalBasis` value that is neither basis: only the built-in rows state that property, so such a value is a mistake in the engine and is not quietly turned into applying nothing
  */
 export const styleIntentOf = (
 	property: string,
 	value: string,
-): StyleIntent | ExtraStyleIntent | undefined => {
+): StyleIntent | undefined => {
 	const toIntent = intentMapperOf(property);
 	return toIntent === undefined ? { kind: property, value } : toIntent(value);
 };

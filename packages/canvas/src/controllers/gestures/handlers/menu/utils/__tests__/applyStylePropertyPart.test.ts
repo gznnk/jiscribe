@@ -158,7 +158,7 @@ describe("applyStylePropertyPart", () => {
 		): CanvasControllerState["objects"] =>
 			apply(state, "click", setPart(property, value))?.objects ?? {};
 
-		describe("the engine's own vocabulary reaches the style tables", () => {
+		describe("the core vocabulary reaches the style tables", () => {
 			it("fill lands on a type that takes it", () => {
 				const a = rectOf("a", { fill: "#fff" });
 				const objects = written(

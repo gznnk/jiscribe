@@ -131,7 +131,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `useSelectionStyle(name)` (`@jiscribe/canvas/unstable`): what the whole
   selection says about one style property — `single` / `mixed` / `none` — over
   exactly the objects a write of the same name would reach, folded with the
-  `selectionValue*` helpers exported beside it. A name the engine owns comes back
+  `selectionValue*` helpers exported beside it. A core name comes back
   typed, and so does a name a shape declares for itself when the row reads it
   through the declaring table (`useSelectionStyle(table, name)`); read by its name
   alone it comes back `unknown` for the row to narrow.
@@ -146,7 +146,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   selection disagrees.
 - **For plugin authors: and one write API, its mirror.** A row writes through
   `onStyleIntent(intent, commit)` (`StyleIntentUpdater`), which takes the edit
-  stated rather than a property name and a string: a name the engine owns goes as
+  stated rather than a property name and a string: a core name goes as
   its typed intent (`{ kind: "fontSize", size: 24 }`), a shape's own name as
   `{ kind, value }` (`{ kind: "headerHeight", value: "32" }`). `StylePropertyUpdater`
   and the `onPropertyUpdate` prop are gone; a widget that holds a name and a
@@ -156,13 +156,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `ObjectTypeDefinition.extraStyleProperties` is now `style`, a `StyleTable`
   composed over the entries the type's `features` derive — so a kind declared
   there **replaces** the derived one, which is what a type whose storage differs
-  from the core guess (a table whose fill lives on its cells) needs; shadowing an
-  engine name no longer throws. `fieldEntry(path, valueType)` is the entry for a
+  from the core guess (a table whose fill lives on its cells) needs; shadowing a
+  core name no longer throws. `fieldEntry(path, valueType)` is the entry for a
   field of the type's own, dots being a path into a nested object, and it carries
   the field it writes: an entry writing one the type's doc cannot hold
   (`extraKeys` plus what its features imply) is refused at registration rather
   than writing state the next save drops. `fieldEntry` / `StyleTable` /
-  `StyleEntry` and the engine's own entry helpers are exported from
+  `StyleEntry` and the core entry helpers are exported from
   `@jiscribe/canvas/unstable`; `ExtraStylePropertyDescriptor` and `StyleValueType`
   are gone from `@jiscribe/doc`. A row reads its own kind typed from that
   declaration — `useSelectionStyle(CONTAINER_STYLE, "headerFill")` — instead of

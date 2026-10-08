@@ -41,8 +41,8 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 	const messages = useCanvasMessages();
 
 	// The picker speaks the style shape, translated here: `background` is no name
-	// of the engine's own vocabulary, so what arrives is an extra-shaped intent
-	// whose value the engine does not type. The picker's is the CSS text, and the
+	// of the core vocabulary, so what arrives is an extra-shaped intent whose
+	// value the engine does not type. The picker's is the CSS text, and the
 	// sentinel it writes for Auto becomes the null the document route takes.
 	const handleColorUpdate = useCallback<StyleIntentUpdater>(
 		(intent, commit, coalesceHistory) => {

@@ -12,7 +12,7 @@ import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
-import type { ExtraStyleIntent, StyleIntent } from "../style/StyleIntent";
+import type { StyleIntent } from "../style/StyleIntent";
 
 /**
  * Gesture action - handles user gestures
@@ -175,8 +175,8 @@ export type EndTextEditAction = {
  */
 export type StyleIntentAction = {
 	type: "STYLE_INTENT";
-	/** What to reflect: one of the engine's own kinds with its value, or a name a shape declared for itself (ExtraStyleIntent). */
-	intent: StyleIntent | ExtraStyleIntent;
+	/** What to reflect: one of the core kinds with its value, or a name a shape declared for itself (ExtraStyleIntent). */
+	intent: StyleIntent;
 	/** true: recorded in history (blur/Enter, a keystroke), false: preview only */
 	commit: boolean;
 	/**
