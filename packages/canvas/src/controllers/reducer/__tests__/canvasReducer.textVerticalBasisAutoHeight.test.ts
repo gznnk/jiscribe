@@ -38,6 +38,7 @@ const cappedFeatures = {
 	stroke: true,
 	fill: true,
 	text: "body",
+	textVerticalBasis: true,
 } as const;
 
 const cappedPlugin: CanvasPlugin = {

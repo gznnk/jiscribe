@@ -16,6 +16,7 @@ export const FileFeatures = {
 	stroke: true,
 	fill: true,
 	text: "body",
+	textVerticalBasis: true,
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

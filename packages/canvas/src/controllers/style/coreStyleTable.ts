@@ -9,20 +9,6 @@ import { textStyleTable } from "./textStyleTable";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
- * What a type declares about itself that its table is derived from, beyond the
- * feature flags: the one verdict a flag cannot carry, read off the whole
- * definition by its own predicate (hasInsetTextRegionType).
- */
-export type CoreStyleTableFacts = {
-	/**
-	 * Whether switching the type's `textVerticalBasis` moves its body at all. A
-	 * type whose region is its whole box names one place with both bases, so the
-	 * intent would be a control that does nothing.
-	 */
-	hasInsetTextRegion: boolean;
-};
-
-/**
  * The table a type gets for free, derived from what it already declares — so the
  * flags are read once, here, when the table is built, and never again by whoever
  * applies or reports a style.
@@ -33,12 +19,10 @@ export type CoreStyleTableFacts = {
  * which lives on the cells) says where the edit lands.
  *
  * @param features - The type's feature flags, as the object states carry them
- * @param facts - What the definition says beyond its flags (CoreStyleTableFacts)
  * @returns The type's table; empty for a type whose declarations enable nothing
  */
 export const coreStyleTable = (
 	features: ObjectFeatures,
-	facts: CoreStyleTableFacts,
 ): StyleTable<ObjectState> => ({
 	...(features.fill && {
 		fill: objectField("fill"),
@@ -66,7 +50,7 @@ export const coreStyleTable = (
 	// The core types spell their slots out as the keys of `text`, so the slots a
 	// write reaches are read off the object itself (defaultSlotsOf).
 	...(features.text && textStyleTable(features.text, defaultSlotsOf)),
-	...(facts.hasInsetTextRegion && {
+	...(features.textVerticalBasis && {
 		textVerticalBasis: textVerticalBasisEntry,
 	}),
 });

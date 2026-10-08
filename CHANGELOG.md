@@ -126,6 +126,24 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: a type declares `features.textVerticalBasis`.** The flag
+  says the type holds that field — its one body may be measured against the
+  shape's whole height rather than against the region the type declares — and is
+  what every side now reads: the style table offers the switch, the properties
+  sidebar shows the row, and the parser accepts the name in a document. A type
+  that does not declare it is told so by name when an AI writes the field
+  (`setExtraProps`, or `extraProps` on a creation), and a document holding it is
+  warned about and has it dropped on save, where before any single-body type took
+  it. Declare it only where the region gives up part of the box's height — a
+  cylinder's caps, a document's wavy foot, a container's header band — and the
+  parse-check suite (`@jiscribe/canvas-sdk/testing`) holds the declaration against
+  the region it is measured at, failing the author's own build on either half
+  without the other. Declaring it on a type with no single body to place
+  (`features.text` naming slots, or absent) is refused at registration. What the
+  user sees: an AWS frame no longer offers the switch. Its label is a title band
+  the doc layer has always held to be outside the box — which is why an AI write
+  of the field was already refused on it — and the frame basis only moved the
+  band down into the middle of the frame.
 - **For plugin authors: one read API for the selection's style.** A row of the
   floating menu or the properties sidebar states its value through
   `useSelectionStyle(name)` (`@jiscribe/canvas/unstable`): what the whole

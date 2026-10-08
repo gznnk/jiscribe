@@ -99,28 +99,24 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 
 `ObjectStyleRegistry` が型別の表を持ち、バンドル生成時に埋まる。
 `applyObjectDefinition` が全型について
-`{ ...coreStyleTable(features, facts), ...definition.style }` を登録する。型自前の表が
+`{ ...coreStyleTable(features), ...definition.style }` を登録する。型自前の表が
 後ろなので、型が宣言した kind は導出されたエントリを置き換える。
 レジストリに無い型は何も受けない — 歩き手はフィールドを推測せず飛ばす（fail-closed）。
 
 ## 宣言から無料で得られる表
 
-`coreStyleTable(features, facts)` は feature フラグを**組むときに 1 回だけ**読み、
+`coreStyleTable(features)` は feature フラグを**組むときに 1 回だけ**読み、
 以後どこもフラグを見ない:
 
-| 宣言                                 | 入るエントリ                                               |
-| ------------------------------------ | ---------------------------------------------------------- |
-| `features.fill`                      | `fill`, `fillOpacity`                                      |
-| `features.stroke`                    | `stroke`, `strokeWidth`, `strokeDashType`, `strokeOpacity` |
-| `features.radius`                    | `cornerRadius`（格納先は `rx`）                            |
-| `features.arrow`                     | `startArrow`, `endArrow`                                   |
-| `features.transform`                 | `lockAspectRatio`                                          |
-| `features.text`                      | `textStyleTable(features.text, defaultSlotsOf)`            |
-| `hasInsetTextRegionType(definition)` | `textVerticalBasis`                                        |
-
-最後の行はフラグでは運べない唯一の判断なので、定義全体を専用の述語で見る。テキスト
-領域が箱そのものの型は、どちらの基準でも同じ場所を指すため、この切り替えは何もしない
-コントロールになってしまう。
+| 宣言                         | 入るエントリ                                               |
+| ---------------------------- | ---------------------------------------------------------- |
+| `features.fill`              | `fill`, `fillOpacity`                                      |
+| `features.stroke`            | `stroke`, `strokeWidth`, `strokeDashType`, `strokeOpacity` |
+| `features.radius`            | `cornerRadius`（格納先は `rx`）                            |
+| `features.arrow`             | `startArrow`, `endArrow`                                   |
+| `features.transform`         | `lockAspectRatio`                                          |
+| `features.text`              | `textStyleTable(features.text, defaultSlotsOf)`            |
+| `features.textVerticalBasis` | `textVerticalBasis`                                        |
 
 `textStyleTable(textType, slotsOf)` は、型がテキストについて宣言する唯一のこと —
 そのテキストがどのフィールドを持ちうるか（`textStyleKeysOf`）— からテキスト半分を

@@ -153,13 +153,6 @@ export const editingStateOf = (
 	}) as unknown as CanvasControllerState;
 
 /**
- * Which of the fixture types the vertical-basis switch moves the body of, as the
- * real wiring answers it (`hasInsetTextRegionType`): the ellipse places its text
- * in the rect inscribed in it, while a box's region is its whole box.
- */
-const INSET_TEXT_REGION_TYPES: readonly string[] = [EllipseFeatures.type];
-
-/**
  * The style wiring of every built-in type used by these fixtures, built the way
  * applyObjectDefinition builds it: each type's core table from its own
  * declarations, plus the table the type itself declares (the connector's label).
@@ -180,9 +173,7 @@ export const registriesOf = (
 		SourceFeatures,
 	]) {
 		objectStyle.register(features.type, {
-			...coreStyleTable(features, {
-				hasInsetTextRegion: INSET_TEXT_REGION_TYPES.includes(features.type),
-			}),
+			...coreStyleTable(features),
 			// The connector's own declarations ride along, as they do in the real
 			// wiring (applyObjectDefinition).
 			...(features.type === ConnectorFeatures.type ? CONNECTOR_STYLE : {}),

@@ -196,9 +196,9 @@ describe("setExtraProps", () => {
 		);
 	});
 
-	it("sets the body placement every single-body type carries, undeclared", () => {
+	it("sets the body placement a type declaring the basis carries, undeclared", () => {
 		const doc = emptyDoc();
-		const id = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const id = docOps.addObject(doc, "ellipse", { x: 0, y: 0 });
 
 		expect(
 			docOps.setExtraProps(doc, id, { textVerticalBasis: "frame" }),
@@ -209,7 +209,7 @@ describe("setExtraProps", () => {
 
 	it("refuses a basis outside the two the format has", () => {
 		const doc = emptyDoc();
-		const id = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const id = docOps.addObject(doc, "ellipse", { x: 0, y: 0 });
 
 		expect(() =>
 			docOps.setExtraProps(doc, id, { textVerticalBasis: "outline" }),
@@ -223,10 +223,10 @@ describe("setExtraProps", () => {
 
 		expect(() =>
 			docOps.setExtraProps(doc, id, { textVerticalBasis: "frame" }),
-		).toThrow(/no properties of its own/);
+		).toThrow(/does not declare textVerticalBasis/);
 	});
 
-	it("refuses the placement on a body drawn outside its box, saying why", () => {
+	it("refuses the placement on a type that does not declare the basis, saying why", () => {
 		// Accepting it would write a knob nothing ever reads; the reason names the
 		// actual mismatch rather than pretending the property does not exist.
 		const belowLabelDocOps = createDocOps({
@@ -242,7 +242,7 @@ describe("setExtraProps", () => {
 
 		expect(() =>
 			belowLabelDocOps.setExtraProps(doc, id, { textVerticalBasis: "frame" }),
-		).toThrow(/draws its label outside its box/);
+		).toThrow(/does not declare textVerticalBasis/);
 		expect(readObject(doc, id).textVerticalBasis).toBeUndefined();
 	});
 

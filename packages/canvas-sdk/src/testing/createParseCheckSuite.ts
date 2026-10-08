@@ -1,9 +1,17 @@
 import type {
 	CanvasDocPlugin,
 	CanvasParseResult,
+	ObjectDocDefinition,
 	SemanticDiagnostic,
 } from "@jiscribe/doc";
-import { createCanvasParser, isMissingBounds } from "@jiscribe/doc";
+import {
+	calcFullBoxTextRegion,
+	createCanvasParser,
+	isMissingBounds,
+	isSingleBodyText,
+} from "@jiscribe/doc";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/unstable";
+import type { Dimensions } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 /** A doc as it is written in a test, before `JSON.stringify` hands it to the parser. */
@@ -60,6 +68,46 @@ const readDiagnostics = (
 	result: CanvasParseResult,
 ): readonly SemanticDiagnostic[] =>
 	"diagnostics" in result ? result.diagnostics : [];
+
+/**
+ * Boxes a declared text region is sampled at. Several rather than one because a
+ * type's inset can be taken from the shorter side or swap axes with the aspect
+ * ratio — a stadium's caps sit left and right while it is wider than tall and
+ * top and bottom once it is not — and the sample has to see both. The verdict is
+ * the boxes' conjunction, so a type inset at some sizes and not at others counts
+ * as not inset.
+ */
+const TEXT_REGION_PROBE_BOXES: readonly Dimensions[] = [
+	{ width: 200, height: 100 },
+	{ width: 100, height: 200 },
+	{ width: 140, height: 140 },
+];
+
+/**
+ * Whether the type gives up part of its own height to its outline: its declared
+ * region sits inside the box vertically at every sampled size — a cylinder's
+ * caps, a document's wavy foot, a container's header band. Only the vertical
+ * extent is read, that being the only one `textVerticalBasis` swaps, so a type
+ * inset on the sides alone counts as not inset. A type declaring no region is
+ * drawn with its whole box, which the two bases name alike.
+ */
+const insetsBodyVertically = (definition: ObjectDocDefinition): boolean => {
+	const textRegion = definition.textRegion ?? calcFullBoxTextRegion;
+	return TEXT_REGION_PROBE_BOXES.every((box) => {
+		const region = textRegion(box, BODY_TEXT_SLOT_ID);
+		if (region === null) {
+			return false;
+		}
+		const boxTop = -box.height / 2;
+		const boxBottom = box.height / 2;
+		const regionBottom = region.y + region.height;
+		return (
+			region.y >= boxTop &&
+			regionBottom <= boxBottom &&
+			(region.y > boxTop || regionBottom < boxBottom)
+		);
+	});
+};
 
 /** One box per type, laid out in a row, plus a connector chain over them. */
 const buildEveryTypeDoc = (types: readonly string[]): ParseCheckDoc => ({
@@ -161,6 +209,25 @@ export function createParseCheckSuite(params: ParseCheckSuiteParams): void {
 				.map(([type]) => type);
 
 			expect(undeclared).toEqual([]);
+		});
+
+		it("declares textVerticalBasis exactly where its region insets the body", () => {
+			// The declaration is what the style table, the sidebar and the AI write
+			// path all read, while the region is what the basis is applied to when
+			// the shape is drawn. A region reshaped for the outline's sake would
+			// otherwise leave the switch offered where it moves nothing, or withheld
+			// where it would have moved the body.
+			const disagreeing = Object.entries(plugin.objects ?? {})
+				.filter(
+					([, definition]) =>
+						definition !== undefined &&
+						isSingleBodyText(definition.features.text) &&
+						(definition.features.textVerticalBasis === true) !==
+							insetsBodyVertically(definition),
+				)
+				.map(([type]) => type);
+
+			expect(disagreeing).toEqual([]);
 		});
 
 		if (checkEveryRegisteredType) {

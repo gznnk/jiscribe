@@ -96,9 +96,6 @@
 			"fontFamily": {
 				"$ref": "#/$defs/TextStyle/properties/fontFamily"
 			},
-			"textVerticalBasis": {
-				"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-			},
 			"rotation": {
 				"$ref": "#/$defs/TransformStyle/properties/rotation"
 			},

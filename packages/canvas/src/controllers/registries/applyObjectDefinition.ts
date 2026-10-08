@@ -4,7 +4,6 @@ import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyle
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
-import { hasInsetTextRegionType } from "../../plugin/hasInsetTextRegionType";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
 import type {
 	AnyObjectTypeDefinition,
@@ -504,9 +503,7 @@ export const applyObjectDefinition = (
 	// one derived from its features, which is how a type whose storage differs
 	// from the core guess says where the edit lands.
 	registries.objectStyle.register(type, {
-		...coreStyleTable(definition.features, {
-			hasInsetTextRegion: hasInsetTextRegionType(definition),
-		}),
+		...coreStyleTable(definition.features),
 		...definition.style,
 	});
 	const supportsAutoHeight = supportsAutoHeightType(definition);

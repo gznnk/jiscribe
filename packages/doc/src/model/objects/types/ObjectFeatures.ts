@@ -20,6 +20,14 @@ export type ObjectFeatures = {
 	fill?: boolean;
 	/** How the type holds its text (see {@link TextType}); left out by a type holding none */
 	text?: TextType;
+	/**
+	 * Holds `textVerticalBasis` (TextVerticalBasis): its one body may be measured
+	 * against the shape's whole height rather than the region the type declares.
+	 * Declared only by a type whose region gives up part of that height — a
+	 * cylinder's caps, a document's wavy foot, a container's header band — since
+	 * on any other type the two bases name one place.
+	 */
+	textVerticalBasis?: boolean;
 	/** Corner radius styling (for rect) */
 	radius?: boolean;
 	/** Arrowhead ends (startArrow / endArrow) */

@@ -106,29 +106,25 @@ they are derived from.
 
 `ObjectStyleRegistry` holds the tables by type and is filled at bundle creation:
 `applyObjectDefinition` registers
-`{ ...coreStyleTable(features, facts), ...definition.style }` for every type —
+`{ ...coreStyleTable(features), ...definition.style }` for every type —
 the type's own table last, so a kind it declares replaces the derived one. A type
 absent from the registry takes nothing — the walkers skip it rather than guessing
 a field (fail-closed).
 
 ## The table a type gets for free
 
-`coreStyleTable(features, facts)` reads the feature flags **once**, when the table
+`coreStyleTable(features)` reads the feature flags **once**, when the table
 is built, and nothing reads them again afterwards:
 
-| Declaration                          | Entries                                                    |
-| ------------------------------------ | ---------------------------------------------------------- |
-| `features.fill`                      | `fill`, `fillOpacity`                                      |
-| `features.stroke`                    | `stroke`, `strokeWidth`, `strokeDashType`, `strokeOpacity` |
-| `features.radius`                    | `cornerRadius` (stored in `rx`)                            |
-| `features.arrow`                     | `startArrow`, `endArrow`                                   |
-| `features.transform`                 | `lockAspectRatio`                                          |
-| `features.text`                      | `textStyleTable(features.text, defaultSlotsOf)`            |
-| `hasInsetTextRegionType(definition)` | `textVerticalBasis`                                        |
-
-The last row is the one verdict a flag cannot carry, so it is read off the whole
-definition by its own predicate: a type whose text region is its whole box names
-one place with both bases, and the switch would be a control that does nothing.
+| Declaration                  | Entries                                                    |
+| ---------------------------- | ---------------------------------------------------------- |
+| `features.fill`              | `fill`, `fillOpacity`                                      |
+| `features.stroke`            | `stroke`, `strokeWidth`, `strokeDashType`, `strokeOpacity` |
+| `features.radius`            | `cornerRadius` (stored in `rx`)                            |
+| `features.arrow`             | `startArrow`, `endArrow`                                   |
+| `features.transform`         | `lockAspectRatio`                                          |
+| `features.text`              | `textStyleTable(features.text, defaultSlotsOf)`            |
+| `features.textVerticalBasis` | `textVerticalBasis`                                        |
 
 `textStyleTable(textType, slotsOf)` derives the text half from the one thing a
 type declares about its text — which fields it may carry at all

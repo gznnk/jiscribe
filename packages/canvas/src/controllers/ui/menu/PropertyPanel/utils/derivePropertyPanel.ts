@@ -1,6 +1,5 @@
 import { appendPropertyPanelItems } from "./appendPropertyPanelItems";
 import { createDefaultPropertyPanel } from "./createDefaultPropertyPanel";
-import { hasInsetTextRegionType } from "../../../../../plugin/hasInsetTextRegionType";
 import type { AnyObjectTypeDefinition } from "../../../../../plugin/ObjectTypeDefinition";
 import { supportsAutoHeightType } from "../../../../../plugin/supportsAutoHeightType";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
@@ -18,11 +17,11 @@ import type { PropertyPanelSection } from "../PropertyPanelTypes";
  * sidebar's merge drops individual rows a selected type lacks, so the switch can
  * sit beside the properties it belongs with without endangering them.
  *
- * The decision cannot live in `createDefaultPropertyPanel`, which sees `features`
- * alone: both predicates read the whole definition — the auto-height
- * implementation for one, the text region for the other.
+ * Appended after whichever sections were chosen, declared or derived, so a type
+ * stating its own sidebar still gets them. The auto-height verdict needs the
+ * whole definition besides, which `createDefaultPropertyPanel` does not see.
  *
- * @param definition - The type's UI definition; `propertyPanel` and `features` decide the sections, the rest only through the two predicates
+ * @param definition - The type's UI definition; `propertyPanel` and `features` decide the sections, the rest only through the auto-height predicate
  * @returns The sections in display order, auto-height appended before the vertical basis
  */
 export const derivePropertyPanel = (
@@ -39,7 +38,7 @@ export const derivePropertyPanel = (
 	}
 	// The basis governs what the vertical alignment in the text section is
 	// measured against, so it follows it.
-	if (hasInsetTextRegionType(definition)) {
+	if (definition.features.textVerticalBasis) {
 		sections = appendPropertyPanelItems(
 			sections,
 			PROPERTY_PANEL_SECTIONS.text,
