@@ -147,9 +147,22 @@ describe("validateDocKeys on the object itself", () => {
 				fontWeight: "bold",
 				fontStyle: "italic",
 				textDecoration: "underline",
-				textVerticalBasis: "frame",
 			}),
 		).toEqual([]);
+	});
+
+	it("holds the body placement only where the type declares the feature", () => {
+		expect(
+			validateWith(
+				{ ...RectFeatures, textVerticalBasis: true },
+				rectWith({ textVerticalBasis: "frame" }),
+			),
+		).toEqual([]);
+		expect(
+			keyPathsOf(
+				validateWith(RectFeatures, rectWith({ textVerticalBasis: "frame" })),
+			),
+		).toEqual([["textVerticalBasis"]]);
 	});
 
 	it("accepts the names the definition declares for the type, and only those", () => {

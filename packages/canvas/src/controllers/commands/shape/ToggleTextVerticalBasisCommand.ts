@@ -6,7 +6,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  * Switches the selected shapes between placing their body in the region their
  * own outline leaves clear and placing it on their whole height. Offered exactly
  * where the switch moves a body at all, which is what a type's table answering
- * for the intent says (hasInsetTextRegionType).
+ * for the intent says (`features.textVerticalBasis`).
  *
  * A shape with a stated height keeps it and only moves its text. One whose
  * document leaves the height out has it derived again on the new basis by the

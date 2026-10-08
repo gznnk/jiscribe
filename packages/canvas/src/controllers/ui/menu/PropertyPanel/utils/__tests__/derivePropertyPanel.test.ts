@@ -32,9 +32,9 @@ const rectLikeDefinition = (
 	}) as AnyObjectTypeDefinition;
 
 /**
- * A body inset from the top and bottom edge at every probed box, which is what
- * both switches ask for: a region the box holds (auto height) and one narrower
- * than the box (vertical basis).
+ * A body inset from the top and bottom edge, declaring the basis the inset makes
+ * worth switching, which is what both switches ask for: a region the box holds
+ * (auto height) and a declared basis (vertical basis).
  */
 const insetTextRegionOverrides: Partial<AnyObjectTypeDefinition> = {
 	features: {
@@ -44,6 +44,7 @@ const insetTextRegionOverrides: Partial<AnyObjectTypeDefinition> = {
 		stroke: true,
 		fill: true,
 		text: "body",
+		textVerticalBasis: true,
 	},
 	textRegion: (state) => ({
 		x: -state.width / 2,

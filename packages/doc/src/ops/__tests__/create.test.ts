@@ -644,15 +644,26 @@ describe("addObject with a type's own extraProps", () => {
 		).toThrow(/cannot be created programmatically/);
 	});
 
-	it("accepts the body placement every single-body type carries, undeclared", () => {
+	it("accepts the body placement a type declaring the basis carries, undeclared", () => {
 		const doc = emptyDoc();
-		const id = docOps.addObject(doc, "rect", {
+		const id = docOps.addObject(doc, "ellipse", {
 			x: 0,
 			y: 0,
 			extraProps: { textVerticalBasis: "frame" },
 		});
 		expect(readObject(doc, id).textVerticalBasis).toBe("frame");
 		expectValid(doc);
+	});
+
+	it("refuses it on a type that does not declare the basis, saying why", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			docOps.addObject(doc, "rect", {
+				x: 0,
+				y: 0,
+				extraProps: { textVerticalBasis: "frame" },
+			}),
+		).toThrow(/does not declare textVerticalBasis/);
 	});
 
 	it("refuses a name the call already takes as a parameter", () => {

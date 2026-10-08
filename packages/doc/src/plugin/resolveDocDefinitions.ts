@@ -1,11 +1,32 @@
 import { builtinObjectDocDefinitions } from "./builtinObjectDocDefinitions";
 import type { CanvasDocPlugin } from "./CanvasDocPlugin";
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
+import { isSingleBodyText } from "../model/objects/types/text/TextType";
 
 export type DocDefinitionsConfig = {
 	presetDefinitions?: Readonly<Partial<Record<string, ObjectDocDefinition>>>;
 	/** A full `CanvasPlugin` is assignable, its `objects` values being UI definitions that extend {@link ObjectDocDefinition}. */
 	plugins?: readonly CanvasDocPlugin[];
+};
+
+/**
+ * Refuses a type declaring `features.textVerticalBasis` without a single body to
+ * place: the basis says which box that one body's `verticalAlign` is measured
+ * against, and a type holding named slots or no text at all has no such body —
+ * the field would be accepted, written, and never read.
+ */
+const checkTextVerticalBasisFeature = (
+	type: string,
+	definition: ObjectDocDefinition,
+): void => {
+	if (
+		definition.features.textVerticalBasis === true &&
+		!isSingleBodyText(definition.features.text)
+	) {
+		throw new Error(
+			`ObjectDocDefinition "${type}": textVerticalBasis needs a single body text (features.text)`,
+		);
+	}
 };
 
 /**
@@ -20,6 +41,11 @@ export type DocDefinitionsConfig = {
  * shared between two plugins) is rejected rather than silently last-wins, so an
  * accidental duplicate fails loudly. Merge order is `presetDefinitions` → `plugins`
  * (declared order).
+ *
+ * @param config - The preset / plugin sources to merge; omit for the built-in set as-is
+ * @returns One definition per type, keyed by the `type` each was registered under
+ * @throws When two sources claim one type, or when a definition's own declarations
+ *   contradict each other ({@link checkTextVerticalBasisFeature})
  */
 export const resolveDocDefinitions = (
 	config: DocDefinitionsConfig | undefined,
@@ -45,6 +71,7 @@ export const resolveDocDefinitions = (
 	const originByType = new Map<string, string>();
 	const duplicateMessages: string[] = [];
 	sourcedDefinitions.forEach(({ type, definition, origin }) => {
+		checkTextVerticalBasisFeature(type, definition);
 		const firstOrigin = originByType.get(type);
 		if (firstOrigin !== undefined) {
 			duplicateMessages.push(

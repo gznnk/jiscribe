@@ -152,10 +152,6 @@ export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
 // diagnostics.
 export { isMissingBounds } from "./plugin/isMissingBounds";
 export type { BoundsDeclaration } from "./plugin/isMissingBounds";
-// Whether the same declaration gives up part of the box's height, which is what
-// decides whether switching `textVerticalBasis` moves the type's body at all.
-export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";
-export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
