@@ -4,7 +4,7 @@ import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
 import type { ObjectPartKindDefinition } from "../controllers/selection/ObjectPartKindRegistry";
-import type { StyleTable } from "../controllers/style/StyleEntry";
+import type { DeclaredStyleTable } from "../controllers/style/StyleEntry";
 import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
@@ -162,7 +162,7 @@ export type ObjectTypeDefinition<
 
 	/**
 	 * What this type answers for when a style is written or reported: an
-	 * `{ apply, read }` pair per intent kind ({@link StyleTable}). Composed onto
+	 * `{ apply, read }` pair per intent kind ({@link DeclaredStyleTable}). Composed onto
 	 * the entries derived from `features` (`coreStyleTable`) at registration,
 	 * these last — so a kind declared here **replaces** the derived one, which is
 	 * how a type whose storage differs from the core guess (a table whose fill
@@ -172,10 +172,11 @@ export type ObjectTypeDefinition<
 	 * reaches the objects of the selection that declare it and no others, the
 	 * declaration being the gate (fail-closed). `fieldEntry(path, valueType)` is
 	 * the entry for a field of the type's own, dots in the path being a write into
-	 * a nested object. An entry stating a field the type's doc cannot hold
-	 * (`extraKeys`) is refused at registration.
+	 * a nested object. Every entry states the fields it writes (`fields`), `[]`
+	 * when it writes nothing the document stores; an entry stating none, or a
+	 * field the type's doc cannot hold (`extraKeys`), is refused at registration.
 	 */
-	styleEntries?: StyleTable<TState>;
+	styleEntries?: DeclaredStyleTable<TState>;
 
 	// --- Editor UI (StencilLibrary / ObjectMenu) ---
 

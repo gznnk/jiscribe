@@ -447,13 +447,12 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
  * `features` and `extraKeys` name between doc and state (FrameMapper), so such
  * an entry would write state the next save drops.
  *
- * Only an entry stating what it writes is checked; the core entries state
- * nothing, their fields being vouched for by the very flags they are derived
- * from (StyleEntry.fields).
+ * A declared entry must state what it writes (DeclaredStyleEntry), so one
+ * stating nothing is refused rather than let through unchecked.
  *
  * @param type - The type being registered; named in the error
  * @param definition - Its whole definition: the fields its `features` imply (collectStyleKeys, plus the text group) and its `extraKeys` are what an entry may write
- * @throws When an entry writes a field that is neither, naming the type, the kind and the field
+ * @throws When an entry states no `fields`, naming the type and the kind; or when it writes a field that is neither, naming the type, the kind and the field
  */
 const checkDeclaredStyleFields = (
 	type: ObjectType,
@@ -470,7 +469,18 @@ const checkDeclaredStyleFields = (
 		...(definition.extraKeys ?? []),
 	]);
 	for (const [kind, entry] of Object.entries(definition.styleEntries)) {
-		for (const field of entry?.fields ?? []) {
+		if (entry === undefined) {
+			continue;
+		}
+		// Typed as required, but a definition from JavaScript or cast past the
+		// type can still leave it out.
+		const fields = entry.fields as readonly string[] | undefined;
+		if (fields === undefined) {
+			throw new Error(
+				`ObjectTypeDefinition "${type}": the style entry "${kind}" does not state the fields it writes (fields); state [] when it writes nothing the document stores`,
+			);
+		}
+		for (const field of fields) {
 			if (!docFields.has(field)) {
 				throw new Error(
 					`ObjectTypeDefinition "${type}": the style entry "${kind}" writes "${field}", which the type's doc does not hold (declare it in extraKeys)`,

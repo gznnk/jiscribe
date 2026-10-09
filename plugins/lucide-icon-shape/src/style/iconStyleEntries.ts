@@ -1,4 +1,4 @@
-import type { StyleTable } from "@jiscribe/canvas-sdk";
+import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
 import { fieldEntry } from "@jiscribe/canvas-sdk";
 
 import type { IconState } from "../state/IconState";
@@ -11,4 +11,4 @@ import type { IconState } from "../state/IconState";
  */
 export const ICON_STYLE_ENTRIES = {
 	icon: fieldEntry("icon", "string"),
-} satisfies StyleTable<IconState>;
+} satisfies DeclaredStyleTable<IconState>;

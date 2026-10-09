@@ -1,4 +1,4 @@
-import type { StyleTable } from "@jiscribe/canvas-sdk";
+import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
 import { fieldEntry } from "@jiscribe/canvas-sdk";
 
 import type { AwsGroupState } from "../state/AwsGroupState";
@@ -12,7 +12,7 @@ import type { AwsIconState } from "../state/AwsIconState";
  */
 export const AWS_ICON_STYLE_ENTRIES = {
 	icon: fieldEntry("icon", "string"),
-} satisfies StyleTable<AwsIconState>;
+} satisfies DeclaredStyleTable<AwsIconState>;
 
 /**
  * The same for a frame: `kind` is the one field a host can set without a menu of
@@ -21,4 +21,4 @@ export const AWS_ICON_STYLE_ENTRIES = {
  */
 export const AWS_GROUP_STYLE_ENTRIES = {
 	kind: fieldEntry("kind", "string"),
-} satisfies StyleTable<AwsGroupState>;
+} satisfies DeclaredStyleTable<AwsGroupState>;

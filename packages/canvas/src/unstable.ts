@@ -209,8 +209,10 @@ export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 // type's own, dots being a path into a nested object; `objectField` / `slotField`
 // / `runOrSlot` / `toggleRunOrSlot` are the ones the engine builds its own
 // entries from, for a type replacing a derived kind, with `defaultSlotsOf` as
-// the slot answer the core types give. An entry stating a field the type's doc
-// cannot hold (`extraKeys`) is refused at registration.
+// the slot answer the core types give. A declared table is a
+// `DeclaredStyleTable`: every entry states the fields it writes (`[]` for
+// nothing the doc stores), and one stating none, or a field the type's doc
+// cannot hold (`extraKeys`), is refused at registration.
 export { fieldEntry } from "./controllers/style/entries/fieldEntry";
 export { objectField } from "./controllers/style/entries/objectField";
 export { runOrSlot } from "./controllers/style/entries/runOrSlot";
@@ -220,6 +222,8 @@ export { slotField } from "./controllers/style/entries/slotField";
 export { toggleRunOrSlot } from "./controllers/style/entries/toggleRunOrSlot";
 export type { StyleValueType } from "./controllers/style/coerceStyleValue";
 export type {
+	DeclaredStyleEntry,
+	DeclaredStyleTable,
 	StyleContext,
 	StyleEntry,
 	StyleTable,

@@ -1,5 +1,5 @@
 import { fieldEntry } from "./entries/fieldEntry";
-import type { StyleTable } from "./StyleEntry";
+import type { DeclaredStyleTable } from "./StyleEntry";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 
 /**
@@ -25,4 +25,4 @@ export const CONNECTOR_STYLE_ENTRIES = {
 	"label.fontFamily": fieldEntry("label.fontFamily", "string"),
 	"label.fontSize": fieldEntry("label.fontSize", "number"),
 	"label.fontWeight": fieldEntry("label.fontWeight", "string"),
-} satisfies StyleTable<ConnectorState>;
+} satisfies DeclaredStyleTable<ConnectorState>;

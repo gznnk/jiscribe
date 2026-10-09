@@ -74,7 +74,7 @@ type StyleEntry<TState extends ObjectState, V> = {
 		pick: ObjectPartSelection | null,
 		ctx: StyleContext,
 	): readonly V[];
-	/** The object's own fields this entry writes, for the registration check. */
+	/** The object's own fields this entry writes, for the registration check; required of a declared entry. */
 	readonly fields?: readonly string[];
 };
 ```
@@ -91,9 +91,9 @@ typed one by one; any other key is a kind the declaring type owns, under an
 index signature of `ExtraStyleEntry`, whose value type is unknown to the engine
 (every core entry is assignable to it too, which is what lets the two halves sit
 in one intersection). An entry also states **which fields it writes**
-(`StyleEntry.fields`), which is what registration checks against the type's doc;
-the core entries state none, their fields being vouched for by the very flags
-they are derived from.
+(`StyleEntry.fields`), which is what registration checks against the type's doc.
+Only the engine's own core entries may leave it out, their fields being vouched
+for by the very flags they are derived from.
 
 `StyleContext` is what an entry is handed besides the object and the value:
 
@@ -288,14 +288,14 @@ bypasses `handleGesture`, materializes right after the write.
 ## What a type declares
 
 A style that no `ObjectFeatures` flag covers — or one whose storage differs from
-what the flags imply — is declared as the type's own `StyleTable`, handed to
+what the flags imply — is declared as the type's own `DeclaredStyleTable`, handed to
 `ObjectTypeDefinition.styleEntries`:
 
 ```ts
 export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
-} satisfies StyleTable<ContainerState>;
+} satisfies DeclaredStyleTable<ContainerState>;
 ```
 
 The table is composed over the derived one, **the declaration last**: a kind the
@@ -308,8 +308,11 @@ objects of the selection — descendants of a selected group included — and no
 others. Dots in the name are the write path (`label.fill` merges into
 `connector.label`).
 
-An entry states the fields it writes (`fields`, which `fieldEntry` fills from the
-root of its path), and **registration refuses one the type's doc cannot hold**:
+Every declared entry states the fields it writes (`fields`, which `fieldEntry`
+fills from the root of its path; `[]` when it writes nothing the document
+stores), and one stating none is refused at registration — `DeclaredStyleTable`
+makes it required at compile time. **Registration also refuses a field the
+type's doc cannot hold**:
 the admitted names are `extraKeys` plus the ones its `features` imply
 (`collectStyleKeys`, and `text`). Without that check an entry could write state
 the mapper drops on the way back to the document, which no one would see until a
@@ -317,7 +320,7 @@ save.
 
 Because registration flows through `applyObjectDefinition`, plugin shapes added
 via `CanvasConfig.plugins` (see [Plugin Architecture](./12-plugin-architecture.md))
-get the same capability: `fieldEntry` and `StyleTable` are exported from
+get the same capability: `fieldEntry` and `DeclaredStyleTable` are exported from
 `@jiscribe/canvas-sdk`, beside the helpers the engine builds its own entries from
 (`objectField` / `slotField` / `runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`)
 for a type replacing a derived kind. Connector's table is
@@ -341,7 +344,7 @@ a guard of its own.
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A new style of the core vocabulary        | A kind in `CoreStyleIntent`, an entry in `coreStyleTable` / `textStyleTable` under the declaration that enables it, and a mapper in `INTENT_BY_PROPERTY` — the `satisfies` over `SystemStyleName` makes any one of them alone a compile error |
 | A new storage shape for an existing style | A helper in `entries/` returning the `{ apply, read }` pair, used by the table that needs it                                                                                                                                                  |
-| A style belonging to one type             | One entry in that type's own `StyleTable` — `fieldEntry` for a field of its own (plus `styleEntries` in its definition, first time only), and its root field in `extraKeys`                                                                   |
+| A style belonging to one type             | One entry in that type's own `DeclaredStyleTable` — `fieldEntry` for a field of its own (plus `styleEntries` in its definition, first time only), and its root field in `extraKeys`                                                           |
 | A storage the derived entry gets wrong    | An entry under that very kind in the type's own table, which replaces the derived one                                                                                                                                                         |
 
 Regression safety: `style/__tests__/styleIntentOf.test.ts` covers the

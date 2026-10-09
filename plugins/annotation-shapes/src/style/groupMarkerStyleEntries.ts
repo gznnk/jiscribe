@@ -1,4 +1,4 @@
-import type { StyleTable } from "@jiscribe/canvas-sdk";
+import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
 import { fieldEntry } from "@jiscribe/canvas-sdk";
 
 import type { BraceState } from "../state/brace/BraceState";
@@ -17,9 +17,9 @@ import type { BracketState } from "../state/bracket/BracketState";
 export const GROUP_MARKER_TIP_STYLE_ENTRIES = {
 	direction: fieldEntry("direction", "string"),
 	tipPosition: fieldEntry("tipPosition", "number"),
-} satisfies StyleTable<BraceState>;
+} satisfies DeclaredStyleTable<BraceState>;
 
 /** The same, for a marker whose tip is pinned to the middle of the span. */
 export const GROUP_MARKER_DIRECTION_STYLE_ENTRIES = {
 	direction: GROUP_MARKER_TIP_STYLE_ENTRIES.direction,
-} satisfies StyleTable<BracketState>;
+} satisfies DeclaredStyleTable<BracketState>;
