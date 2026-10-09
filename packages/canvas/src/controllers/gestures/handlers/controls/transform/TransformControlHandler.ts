@@ -27,6 +27,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { commitEdit } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsForSelection } from "../../../../utils/updateGroupBoundsForSelection";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -398,9 +399,11 @@ export class TransformControlHandler extends ControlStrategy {
 		// On dragEnd, update the bounds of the selected objects and their parent groups
 		const nextState = updateGroupBoundsForSelection(draggedState);
 
-		return {
+		const closedState = {
 			...nextState,
 			edgeScrollEnabled: false, // Disable edge scrolling on drag end
 		};
+		// handleDrag hands `state` back only when it found nothing to write
+		return draggedState === state ? closedState : commitEdit(closedState);
 	}
 }

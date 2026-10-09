@@ -666,3 +666,24 @@ describe("ObjectEventHandler - snap during edge scroll", () => {
 		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
 	});
 });
+
+describe("ObjectEventHandler - commit", () => {
+	it("commits a move once, at its dragEnd", () => {
+		const state = { ...makeDragState(), commitVersion: 3 };
+
+		const dragged = ObjectEventHandler.handle(
+			state,
+			makeDragEvent({ x: 30, y: 12 }, false),
+			registries,
+		);
+		expect(dragged.commitVersion).toBe(3);
+
+		const ended = ObjectEventHandler.handle(
+			dragged,
+			{ ...makeDragEvent({ x: 30, y: 12 }, false), type: "dragEnd" },
+			registries,
+		);
+		expect(movedRect(ended)).toMatchObject({ cx: 30, cy: 12 });
+		expect(ended.commitVersion).toBe(4);
+	});
+});

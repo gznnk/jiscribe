@@ -6,6 +6,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { commitEdit } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -238,16 +239,13 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		connectorId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const nextState = this.handleDrag(
-			{ ...state },
-			event,
-			connectorId,
-			segmentIndex,
-		);
+		const nextState = this.handleDrag(state, event, connectorId, segmentIndex);
 
-		return {
+		const closedState = {
 			...nextState,
 			edgeScrollEnabled: false,
 		};
+		// handleDrag hands `state` back only when it found nothing to write
+		return nextState === state ? closedState : commitEdit(closedState);
 	}
 }

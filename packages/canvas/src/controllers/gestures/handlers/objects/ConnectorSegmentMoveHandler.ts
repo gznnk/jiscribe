@@ -5,6 +5,7 @@ import {
 	type ConnectorState,
 } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
+import { commitEdit } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
 	CanvasEvent,
@@ -139,10 +140,10 @@ export const ConnectorSegmentMoveHandler: GestureHandler = {
 			return beginConnectorReshape(state, connectorId);
 		}
 		if (event.type === "dragEnd") {
-			return {
-				...handleDrag(state, event, connectorId, segmentIndex),
-				edgeScrollEnabled: false,
-			};
+			const draggedState = handleDrag(state, event, connectorId, segmentIndex);
+			const closedState = { ...draggedState, edgeScrollEnabled: false };
+			// handleDrag hands `state` back only when it found no segment to move
+			return draggedState === state ? closedState : commitEdit(closedState);
 		}
 		return handleDrag(state, event, connectorId, segmentIndex);
 	},

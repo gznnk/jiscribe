@@ -26,6 +26,7 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../../../selection/CanvasSelection";
+import { commitEdit } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -416,15 +417,13 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			const { connectorId } = connectorDraft;
 			const original = state.activeDrag?.startSnapshot.objects[connectorId];
 
-			// If the endpoint has not effectively changed since the start, it is a no-op.
-			// Leaving objects as-is (during handleDrag the entity ends at final position = start position)
-			// avoids handleGesture's auto-commit detection (a change in the objects reference) so nothing is pushed to history.
 			const dragResult = this.handleDrag(state, event, registries);
 			const finalConnector = dragResult.objects[connectorId];
 
 			// Invariant guard: if committing the edit would make both ends free, discard the edit and revert.
 			// Normally unreachable since the UI (ConnectorControls) hides the owned-end handle, but this
 			// defensively guarantees a connector always has "at least one owned end".
+			// The document ends as it began, so nothing is committed.
 			if (
 				finalConnector?.type === "connector" &&
 				isFreeEndpointRef((finalConnector as ConnectorState).source) &&
@@ -441,6 +440,8 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				};
 			}
 
+			// If the endpoint has not effectively changed since the start, it is a
+			// no-op and nothing is committed.
 			const isNoOp =
 				original?.type === "connector" &&
 				finalConnector?.type === "connector" &&
@@ -457,13 +458,13 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				};
 			}
 
-			// If the endpoint changed, commit the entity update (commitVersion is auto-incremented
-			// by handleGesture detecting the objects change, so it is not incremented here).
-			return {
+			const closedState = {
 				...dragResult,
 				connectorDraft: null,
 				edgeScrollEnabled: false,
 			};
+			// handleDrag hands `state` back only when it found nothing to write to.
+			return dragResult === state ? closedState : commitEdit(closedState);
 		}
 
 		// Create mode: commit the drafted connector.
@@ -485,7 +486,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		}
 		const finalConnector = finalDraft.connector;
 
-		return {
+		return commitEdit({
 			...dragResult,
 			objects: {
 				...dragResult.objects,
@@ -496,7 +497,6 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			rootIds: [...dragResult.rootIds, finalConnector.id],
 			connectorDraft: null,
 			edgeScrollEnabled: false,
-			commitVersion: state.commitVersion + 1,
-		};
+		});
 	}
 }

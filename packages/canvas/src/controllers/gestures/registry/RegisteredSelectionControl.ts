@@ -11,6 +11,7 @@ import type {
 	SelectionControlEvent,
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
+import { commitEdit } from "../../utils/commitEdit";
 import { createCowObjects } from "../../utils/cowObjects";
 import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
 
@@ -78,10 +79,13 @@ class SelectionControlStrategy extends ControlStrategy {
 			return state;
 		}
 		const updated = this.applyDrag(state, event);
-		// dragEnd always releases edge scrolling, even when the drag was a no-op.
-		return event.type === "dragEnd"
-			? { ...updated, edgeScrollEnabled: false }
-			: updated;
+		if (event.type !== "dragEnd") {
+			return updated;
+		}
+		// dragEnd always releases edge scrolling, even when the drag was a no-op,
+		// and commits only when the definition returned an object for it.
+		const closedState = { ...updated, edgeScrollEnabled: false };
+		return updated === state ? closedState : commitEdit(closedState);
 	}
 
 	/**

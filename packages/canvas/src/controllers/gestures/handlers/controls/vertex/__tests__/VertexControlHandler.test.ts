@@ -173,6 +173,43 @@ describe("VertexControlHandler - handleDragEnd", () => {
 		// The frozen input state must be left untouched
 		expect(vertexAt(state, 0)).toEqual({ x: 0, y: 0 });
 	});
+
+	it("commits the moved vertex once", () => {
+		const state = {
+			...makeDragState([
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			]),
+			commitVersion: 3,
+		};
+		const event = {
+			...makeDragEvent({ x: 30, y: 12 }, false),
+			type: "dragEnd",
+		} as CanvasEvent;
+
+		const next = handler.handle(state, event, registries);
+
+		expect(next.commitVersion).toBe(4);
+	});
+
+	it("commits nothing for a vertex the poly does not have", () => {
+		const state = {
+			...makeDragState([
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			]),
+			commitVersion: 3,
+		};
+		const event = {
+			...makeDragEvent({ x: 30, y: 12 }, false, 5),
+			type: "dragEnd",
+		} as CanvasEvent;
+
+		const next = handler.handle(state, event, registries);
+
+		expect(next.objects).toBe(state.objects);
+		expect(next.commitVersion).toBe(3);
+	});
 });
 
 describe("VertexControlHandler - snapping against the edited poly", () => {

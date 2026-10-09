@@ -7,6 +7,7 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { VERTEX_PART_KIND } from "../../../../selection/createVertexPartKindDefinition";
+import { commitEdit } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -224,7 +225,8 @@ export class VertexControlHandler extends ControlStrategy {
 	): CanvasControllerState {
 		// Apply the drag-time state update to compute the final state.
 		// handleDrag never mutates its argument, so the state can be passed as is.
-		let nextState = this.handleDrag(state, event, objectId, vertexIndex);
+		const draggedState = this.handleDrag(state, event, objectId, vertexIndex);
+		let nextState = draggedState;
 
 		// If it belongs to a group, update the group's bounds
 		const updatedObject = nextState.objects[objectId];
@@ -232,9 +234,11 @@ export class VertexControlHandler extends ControlStrategy {
 			nextState = updateGroupBoundsFromRoot(nextState, updatedObject.parentId);
 		}
 
-		return {
+		const closedState = {
 			...nextState,
 			edgeScrollEnabled: false, // Disable edge scrolling on drag end
 		};
+		// handleDrag hands `state` back only when it found nothing to write
+		return draggedState === state ? closedState : commitEdit(closedState);
 	}
 }

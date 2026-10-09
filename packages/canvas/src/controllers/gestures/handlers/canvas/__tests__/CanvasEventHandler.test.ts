@@ -472,6 +472,48 @@ describe("CanvasEventHandler", () => {
 		});
 	});
 
+	describe("draw mode: dragEnd", () => {
+		const makeDrawEndState = (preview: {
+			startX: number;
+			startY: number;
+			endX: number;
+			endY: number;
+		}): CanvasControllerState =>
+			makeState({
+				textEditState: null,
+				shapeDrawing: { preset: { objectType: "rect" }, preview },
+				activeDrag: { startSnapshot: { snapCandidates: null }, kind: "other" },
+			} as unknown as Partial<CanvasControllerState>);
+
+		const drawEnd = makeEvent({ type: "dragEnd", last: { x: 0, y: 0 } });
+
+		it("commits the shape it places once", () => {
+			const state = makeDrawEndState({
+				startX: 100,
+				startY: 100,
+				endX: 180,
+				endY: 160,
+			});
+			const nextState = CanvasEventHandler.handle(state, drawEnd, registries);
+			expect(nextState.rootIds).toHaveLength(state.rootIds.length + 1);
+			expect(nextState.commitVersion).toBe(state.commitVersion + 1);
+		});
+
+		it("commits nothing for a drawing abandoned below the minimum size", () => {
+			const state = makeDrawEndState({
+				startX: 100,
+				startY: 100,
+				endX: 101,
+				endY: 101,
+			});
+			const nextState = CanvasEventHandler.handle(state, drawEnd, registries);
+			expect(nextState.objects).toBe(state.objects);
+			expect(nextState.rootIds).toBe(state.rootIds);
+			expect(nextState.shapeDrawing).toBeNull();
+			expect(nextState.commitVersion).toBe(state.commitVersion);
+		});
+	});
+
 	it("a press with an additive modifier keeps the selection but still closes menus", () => {
 		const state = makeState({
 			textEditState: null,

@@ -30,20 +30,16 @@ const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
 
 /**
  * Event types that close out a gesture: the copy-on-write objects view is
- * flattened, the drag bookkeeping is dropped, and whatever the handlers changed
- * in the document becomes one commit.
+ * flattened and the drag bookkeeping is dropped. Committing is not part of it —
+ * the handler that edited the document has already advanced `commitVersion`
+ * (see commitEdit).
  *
  * Not only ends of drags. A click and a double click are whole gestures of their
  * own (the recognizer emits exactly one of dragEnd / click / doubleClick per
- * release), and a handler that answers one with a document change — a style
- * swatch written through a copy-on-write view — would otherwise leave that edit
- * in state as it is: unmaterialized and, unless the handler bumped the version
- * itself, outside history and never saved. A handler that commits for itself
- * (applyStylePropertyPart, the stencil library's click placement) lands on the
- * same number, this taking `state`'s version rather than the one the handlers
- * left.
+ * release), and a handler can answer one by writing through a copy-on-write
+ * view (a style swatch), which history and persistence must not see as a view.
  */
-const EVENT_COMMIT_TYPES: readonly EventType[] = [
+const EVENT_CLOSE_OUT_TYPES: readonly EventType[] = [
 	"dragEnd",
 	"click",
 	"doubleClick",
@@ -53,7 +49,7 @@ const EVENT_COMMIT_TYPES: readonly EventType[] = [
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
  * Also manages the activeDrag lifecycle (opened on dragStart, dropped on dragEnd).
- * Automatically records history when commitVersion changes.
+ * Never advances commitVersion itself: the handlers that edit do (see commitEdit).
  *
  * Routing uses the canvas's own gesture handler registry, passed in via
  * `registries` (populated when its bundle is built by `createCanvasRegistries`).
@@ -231,23 +227,7 @@ export const handleGesture = (
 	}
 
 	// Close out the gesture
-	if (EVENT_COMMIT_TYPES.includes(canvasEvent.type)) {
-		// Whether the handlers touched the document at all.
-		// (connectors are also part of rootIds, so comparing rootIds detects them)
-		const hasDocChanges =
-			nextState.objects !== state.objects ||
-			nextState.rootIds !== state.rootIds;
-		// A gesture that moved `history` itself has already said what it means for
-		// history, and it never means an edit: the toolbar's undo and redo take a
-		// click, and restoring a snapshot rewrites the objects while deliberately
-		// leaving commitVersion alone (restoreHistorySnapshot). Committing that
-		// would record the undo as an edit of its own, leaving undo permanently
-		// available and one click from the document it just restored.
-		const restoredHistory = nextState.history !== state.history;
-		// Guards against phantom undo entries from a gesture that produced no doc
-		// change (a shape drawn below the minimum size threshold, or the click that
-		// merely moved the selection).
-		const commitsDocChange = hasDocChanges && !restoredHistory;
+	if (EVENT_CLOSE_OUT_TYPES.includes(canvasEvent.type)) {
 		// Flatten the per-frame COW view so history / persistence / the next
 		// gesture's snapshot only ever hold plain records (#213). No-op when plain.
 		const objects = materializeObjects(nextState.objects);
@@ -257,7 +237,6 @@ export const handleGesture = (
 		// new state reference per click. Every field below is already at its
 		// closed-out value when this is false.
 		const closesOutSomething =
-			commitsDocChange ||
 			objects !== nextState.objects ||
 			nextState.activeDrag !== null ||
 			nextState.snapFeedback !== null ||
@@ -270,7 +249,6 @@ export const handleGesture = (
 				activeDrag: null,
 				snapFeedback: null,
 				axisLockFeedback: null,
-				...(commitsDocChange ? { commitVersion: state.commitVersion + 1 } : {}),
 			};
 		}
 	}

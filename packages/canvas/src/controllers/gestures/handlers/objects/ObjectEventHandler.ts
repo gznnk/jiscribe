@@ -26,6 +26,7 @@ import type {
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { selectTextSlot } from "../../../selection/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
+import { commitEdit } from "../../../utils/commitEdit";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
@@ -309,10 +310,12 @@ function handleObjectDragEnd(
 	const resultState = handleObjectDrag(nextState, event, registries);
 
 	// Update the parent groups' bounding boxes
-	return updateAffectedGroupBounds(
+	const settledState = updateAffectedGroupBounds(
 		resultState,
 		resultState.selection.objectIds,
 	);
+	// handleObjectDrag hands its argument back only when there is no drag to apply
+	return resultState === nextState ? settledState : commitEdit(settledState);
 }
 
 /**

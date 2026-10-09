@@ -18,14 +18,11 @@ import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
 /**
- * The commit that closes out a gesture. A click that edits — a style swatch in
- * the object menu, a click-placed shape from the stencil library — has to land
- * in history exactly as a drag that edits does, and a click that edits nothing
- * has to leave no trace at all.
- *
- * The undo button is the counter-case, and the one reason the commit is not
- * simply "the objects changed": it rewrites the document on a click and must not
- * be recorded as an edit of its own.
+ * The close-out of a gesture (dragEnd / click / doubleClick). It flattens the
+ * copy-on-write view and drops the drag bookkeeping, and that is all: the
+ * version is advanced by the writer that edited (commitEdit), never by
+ * handleGesture, so a gesture whose handlers edit nothing — an undo included —
+ * leaves no history entry behind.
  */
 
 const emptyDoc: CanvasDoc = {
@@ -150,8 +147,8 @@ const isCowView = (objects: Record<string, ObjectState>): boolean =>
 const fillOf = (state: CanvasControllerState): string =>
 	(state.objects.r1 as unknown as { fill: string }).fill;
 
-describe("handleGesture - commit", () => {
-	it("commits a style swatch click once", () => {
+describe("handleGesture - close-out", () => {
+	it("materializes a style swatch click, whose version is the swatch's one advance", () => {
 		const registries = createTestRegistries();
 		const state = stateWithSelectedRect(registries);
 
@@ -162,23 +159,11 @@ describe("handleGesture - commit", () => {
 		);
 
 		expect(fillOf(next)).toBe(SWATCH_FILL);
+		expect(isCowView(next.objects)).toBe(false);
 		expect(next.commitVersion).toBe(state.commitVersion + 1);
 	});
 
-	it("materializes the copy-on-write view a style swatch click leaves behind", () => {
-		const registries = createTestRegistries();
-		const state = stateWithSelectedRect(registries);
-
-		const next = handleGesture(
-			state,
-			menuClick("object-menu", `set:fill:${SWATCH_FILL}`),
-			registries,
-		);
-
-		expect(isCowView(next.objects)).toBe(false);
-	});
-
-	it("commits a style toggle reached as a double click once, materialized", () => {
+	it("materializes a style toggle reached as a double click the same way", () => {
 		const registries = createTestRegistries();
 		const state = stateWithSelectedRect(registries);
 
@@ -189,11 +174,11 @@ describe("handleGesture - commit", () => {
 		);
 
 		expect(fillOf(next)).toBe(SWATCH_FILL);
-		expect(next.commitVersion).toBe(state.commitVersion + 1);
 		expect(isCowView(next.objects)).toBe(false);
+		expect(next.commitVersion).toBe(state.commitVersion + 1);
 	});
 
-	it("commits a click-placed stencil once", () => {
+	it("leaves a click-placed stencil at the one advance its placement made", () => {
 		const registries = createCanvasRegistries({ plugins: [clickPlacedPlugin] });
 		const state = stateWithSelectedRect(registries);
 
@@ -207,7 +192,7 @@ describe("handleGesture - commit", () => {
 		expect(next.commitVersion).toBe(state.commitVersion + 1);
 	});
 
-	it("leaves a click that changed nothing alone", () => {
+	it("returns the same state for a click that changed nothing", () => {
 		const registries = createTestRegistries();
 		const state = stateWithSelectedRect(registries);
 
@@ -220,7 +205,7 @@ describe("handleGesture - commit", () => {
 		expect(next).toBe(state);
 	});
 
-	it("does not commit a click that changed only what the menu shows", () => {
+	it("does not advance the version for a click that changed only what the menu shows", () => {
 		const registries = createTestRegistries();
 		const state = stateWithSelectedRect(registries);
 
@@ -235,7 +220,7 @@ describe("handleGesture - commit", () => {
 		expect(next.commitVersion).toBe(state.commitVersion);
 	});
 
-	it("does not record an undo click as an edit of its own", () => {
+	it("does not record a toolbar undo as an edit of its own", () => {
 		const registries = createTestRegistries();
 		const base = createInitialControllerState(docWithRect, registries);
 		const state: CanvasControllerState = {
@@ -261,7 +246,31 @@ describe("handleGesture - commit", () => {
 		expect(next.commitVersion).toBe(state.commitVersion);
 	});
 
-	it("still commits a drag once, at its end", () => {
+	it("does not record a toolbar redo as an edit of its own", () => {
+		const registries = createTestRegistries();
+		const base = createInitialControllerState(emptyDoc, registries);
+		const state: CanvasControllerState = {
+			...base,
+			history: {
+				past: [],
+				present: snapshotEmpty,
+				future: [snapshotWithRect],
+			},
+		};
+
+		const next = handleGesture(
+			state,
+			menuClick("toolbar", "command:redo"),
+			registries,
+		);
+
+		expect(Object.keys(next.objects)).toEqual(["r1"]);
+		expect(next.history.past).toEqual([snapshotEmpty]);
+		expect(next.history.future).toEqual([]);
+		expect(next.commitVersion).toBe(state.commitVersion);
+	});
+
+	it("closes out a drag at its end, with the version its writer advanced once", () => {
 		const registries = registriesWithControl(markObject);
 		const state = stateWithSelectedRect(registries);
 
@@ -277,7 +286,34 @@ describe("handleGesture - commit", () => {
 
 		const ended = handleGesture(dragged, controlGesture("dragEnd"), registries);
 		expect(ended.activeDrag).toBeNull();
-		expect(ended.commitVersion).toBe(state.commitVersion + 1);
+		expect(ended.snapFeedback).toBeNull();
+		expect(ended.axisLockFeedback).toBeNull();
 		expect(isCowView(ended.objects)).toBe(false);
+		expect(ended.commitVersion).toBe(state.commitVersion + 1);
+	});
+
+	it("never advances the version itself, even when the document changed during the gesture", () => {
+		// Writes on every drag frame but reports no change for the dragEnd, so no
+		// writer commits: whatever the drag frames left is materialized and stays
+		// uncommitted.
+		const writeOnDragOnly: SelectionControlDefinition["handle"] = (
+			context,
+			event,
+		) => (event.type === "drag" ? markObject(context, event) : null);
+		const registries = registriesWithControl(writeOnDragOnly);
+		const state = stateWithSelectedRect(registries);
+
+		const started = handleGesture(
+			state,
+			controlGesture("dragStart"),
+			registries,
+		);
+		const dragged = handleGesture(started, controlGesture("drag"), registries);
+		expect(dragged.objects.r1).not.toBe(state.objects.r1);
+
+		const ended = handleGesture(dragged, controlGesture("dragEnd"), registries);
+		expect(ended.activeDrag).toBeNull();
+		expect(isCowView(ended.objects)).toBe(false);
+		expect(ended.commitVersion).toBe(state.commitVersion);
 	});
 });
