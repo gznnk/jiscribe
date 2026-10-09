@@ -26,7 +26,7 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../../../selection/CanvasSelection";
-import { commitEdit } from "../../../../utils/commitEdit";
+import { commitEdit, commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -458,13 +458,13 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				};
 			}
 
+			const committedState = commitEditIfChanged(state, dragResult);
 			const closedState = {
-				...dragResult,
+				...committedState,
 				connectorDraft: null,
 				edgeScrollEnabled: false,
 			};
-			// handleDrag hands `state` back only when it found nothing to write to.
-			return dragResult === state ? closedState : commitEdit(closedState);
+			return closedState;
 		}
 
 		// Create mode: commit the drafted connector.

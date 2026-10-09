@@ -11,7 +11,7 @@ import type {
 	SelectionControlEvent,
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
-import { commitEdit } from "../../utils/commitEdit";
+import { commitEditIfChanged } from "../../utils/commitEdit";
 import { createCowObjects } from "../../utils/cowObjects";
 import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
 
@@ -84,8 +84,9 @@ class SelectionControlStrategy extends ControlStrategy {
 		}
 		// dragEnd always releases edge scrolling, even when the drag was a no-op,
 		// and commits only when the definition returned an object for it.
-		const closedState = { ...updated, edgeScrollEnabled: false };
-		return updated === state ? closedState : commitEdit(closedState);
+		const committedState = commitEditIfChanged(state, updated);
+		const closedState = { ...committedState, edgeScrollEnabled: false };
+		return closedState;
 	}
 
 	/**

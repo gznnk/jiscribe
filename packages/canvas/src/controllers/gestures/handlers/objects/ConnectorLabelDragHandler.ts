@@ -14,7 +14,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { applyLabelPlacement } from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
-import { commitEdit } from "../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
@@ -199,9 +199,9 @@ const handleDragEnd = (
 	if (isNoOp && isLiveAtStart) {
 		return { ...state, edgeScrollEnabled: false };
 	}
-	const closedState = { ...dragResult, edgeScrollEnabled: false };
-	// handleDrag hands `state` back only when it found no label to place
-	return dragResult === state ? closedState : commitEdit(closedState);
+	const committedState = commitEditIfChanged(state, dragResult);
+	const closedState = { ...committedState, edgeScrollEnabled: false };
+	return closedState;
 };
 
 /**

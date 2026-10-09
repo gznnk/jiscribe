@@ -9,7 +9,7 @@ import {
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
-import { commitEdit } from "../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
 	CanvasEvent,
@@ -201,9 +201,9 @@ export const ConnectorSegmentSlideHandler: GestureHandler = {
 				connectorId,
 				segmentIndex,
 			);
-			const closedState = { ...draggedState, edgeScrollEnabled: false };
-			// handleDrag hands `state` back only when it found no segment to slide
-			return draggedState === state ? closedState : commitEdit(closedState);
+			const committedState = commitEditIfChanged(state, draggedState);
+			const closedState = { ...committedState, edgeScrollEnabled: false };
+			return closedState;
 		}
 		return handleDrag(state, event, registries, connectorId, segmentIndex);
 	},
