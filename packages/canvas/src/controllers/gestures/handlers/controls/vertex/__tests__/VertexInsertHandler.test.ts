@@ -105,6 +105,28 @@ describe("VertexInsertHandler - handleDragEnd", () => {
 		// The frozen input state must be left untouched
 		expect(pointsOf(frozen)[1]).toEqual({ x: 50, y: 0 });
 	});
+
+	it("commits the inserted vertex once, at dragEnd only", () => {
+		const state = {
+			...makeState([
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			]),
+			commitVersion: 3,
+		};
+		const afterStart = handler.handle(
+			state,
+			makeEvent("dragStart", { x: 50, y: 0 }),
+		);
+		expect(afterStart.commitVersion).toBe(3);
+
+		const next = handler.handle(
+			afterStart,
+			makeEvent("dragEnd", { x: 60, y: 40 }),
+		);
+
+		expect(next.commitVersion).toBe(4);
+	});
 });
 
 describe("VertexInsertHandler - snapping against the edited poly", () => {

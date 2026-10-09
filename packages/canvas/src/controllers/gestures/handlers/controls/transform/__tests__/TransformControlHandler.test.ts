@@ -229,5 +229,32 @@ describe("TransformControlHandler", () => {
 				height: 100,
 			});
 		});
+
+		it("commits a resize once", () => {
+			const handler = new TransformControlHandler();
+			const state = { ...makeDragState(), commitVersion: 3 };
+
+			const next = handler.handle(
+				state,
+				makeDragEndEvent({ x: 150, y: 130 }),
+				registries,
+			);
+
+			expect(next.commitVersion).toBe(4);
+		});
+
+		it("commits nothing when there is no drag to apply", () => {
+			const handler = new TransformControlHandler();
+			const state = { ...makeDragState(), activeDrag: null, commitVersion: 3 };
+
+			const next = handler.handle(
+				state,
+				makeDragEndEvent({ x: 150, y: 130 }),
+				registries,
+			);
+
+			expect(next.objects).toBe(state.objects);
+			expect(next.commitVersion).toBe(3);
+		});
 	});
 });

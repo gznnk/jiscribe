@@ -112,7 +112,10 @@ export const restoreHistorySnapshot = (
 		// the measurement cache, and limitViewScroll notices the swapped objects and
 		// `view` and re-measures on the next view scroll.
 		scrollLimit: state.scrollLimit,
-		commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
+		// Not a new commit: this is a restoration, and nothing else on the way
+		// advances the version either (the gesture close-out never does), so a
+		// restore reached by a toolbar click is not recorded as an edit of its own.
+		commitVersion: state.commitVersion,
 		saveRequest: {
 			version: state.saveRequest.version + 1,
 			nonce: crypto.randomUUID(),

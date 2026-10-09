@@ -29,16 +29,27 @@ import { ZOOM } from "../../utils/zoom";
 const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
 
 /**
- * Event types that should close the drag in progress.
- * Add new event end types here as needed.
+ * Event types that close out a gesture: the copy-on-write objects view is
+ * flattened and the drag bookkeeping is dropped. Committing is not part of it —
+ * the handler that edited the document has already advanced `commitVersion`
+ * (see commitEdit).
+ *
+ * Not only ends of drags. A click and a double click are whole gestures of their
+ * own (the recognizer emits exactly one of dragEnd / click / doubleClick per
+ * release), and a handler can answer one by writing through a copy-on-write
+ * view (a style swatch), which history and persistence must not see as a view.
  */
-const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
+const EVENT_CLOSE_OUT_TYPES: readonly EventType[] = [
+	"dragEnd",
+	"click",
+	"doubleClick",
+] as const;
 
 /**
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
  * Also manages the activeDrag lifecycle (opened on dragStart, dropped on dragEnd).
- * Automatically records history when commitVersion changes.
+ * Never advances commitVersion itself: the handlers that edit do (see commitEdit).
  *
  * Routing uses the canvas's own gesture handler registry, passed in via
  * `registries` (populated when its bundle is built by `createCanvasRegistries`).
@@ -215,26 +226,31 @@ export const handleGesture = (
 		nextState = registries.gestureHandler.handle(nextState, event, registries);
 	}
 
-	// Drop the drag on event end
-	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
-		// Only commit if objects/rootIds actually changed.
-		// (connectors are also part of rootIds, so comparing rootIds detects them)
-		// Guards against phantom undo entries when a drag produces no doc change
-		// (e.g. shape drawn below the minimum size threshold).
-		const hasDocChanges =
-			nextState.objects !== state.objects ||
-			nextState.rootIds !== state.rootIds;
+	// Close out the gesture
+	if (EVENT_CLOSE_OUT_TYPES.includes(canvasEvent.type)) {
+		// Flatten the per-frame COW view so history / persistence / the next
+		// gesture's snapshot only ever hold plain records (#213). No-op when plain.
+		const objects = materializeObjects(nextState.objects);
 
-		nextState = {
-			...nextState,
-			// Flatten the per-frame COW view so history / persistence / the next
-			// gesture's snapshot only ever hold plain records (#213). No-op when plain.
-			objects: materializeObjects(nextState.objects),
-			activeDrag: null,
-			snapFeedback: null,
-			axisLockFeedback: null,
-			...(hasDocChanges ? { commitVersion: state.commitVersion + 1 } : {}),
-		};
+		// A click is the most frequent gesture there is and hardly any of them
+		// close anything out, so the rebuild is skipped rather than handing React a
+		// new state reference per click. Every field below is already at its
+		// closed-out value when this is false.
+		const closesOutSomething =
+			objects !== nextState.objects ||
+			nextState.activeDrag !== null ||
+			nextState.snapFeedback !== null ||
+			nextState.axisLockFeedback !== null;
+
+		if (closesOutSomething) {
+			nextState = {
+				...nextState,
+				objects,
+				activeDrag: null,
+				snapFeedback: null,
+				axisLockFeedback: null,
+			};
+		}
 	}
 
 	// Last, so it sees the camera every handler of this gesture has settled on

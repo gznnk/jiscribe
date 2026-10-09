@@ -44,9 +44,15 @@ A handler that produces a "change subject to persistence and undo" increments th
 previous state** (at the same time raising a save request: it advances `saveRequest`'s `version` and issues a
 fresh `nonce`; see [External Sync / VSCode Integration](./07-external-sync.md)).
 
-- For gestures, `handleGesture` advances `commitVersion` only when the doc actually
-  changed on `dragEnd`. This prevents ghost undo entries from being created by drags that
-  produce no doc change, such as "drawing was abandoned below the minimum size."
+- The writer that edits the document advances `commitVersion` itself (`commitEdit`),
+  and only when it wrote: a drag writer on its `dragEnd`, a command in its `execute`,
+  a click that edits on that click. `handleGesture`'s close-out (`dragEnd`, `click`,
+  `doubleClick` — see [Gesture System](./04-gesture-system.md)) only flattens the
+  copy-on-write view and drops the drag bookkeeping; it never advances the version.
+  So a gesture that produces no doc change — a drawing abandoned below the minimum
+  size, a click that merely moved the selection — leaves no ghost undo entry, and
+  undo / redo, which restore a snapshot without advancing it, are not recorded as
+  edits of their own.
 - `STYLE_INTENT` does not record history when `commit: false` (preview); it only
   advances `commitVersion` when `commit: true` (blur / Enter, a format keystroke). The other property actions
   (`TRANSFORM_PROPERTY_UPDATE` and the like) go through the same commit tail (`commitPropertyUpdate`),

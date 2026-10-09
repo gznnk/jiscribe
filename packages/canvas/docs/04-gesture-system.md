@@ -93,8 +93,15 @@ handler is a router delegating to sub-handlers inside its own folder.
 On `dragStart`, `handleGesture` opens the state's `activeDrag` (typed `ActiveDrag` in
 `controllers/CanvasTypes.ts`) and sets it back to `null` on `dragEnd`. `activeDrag.startSnapshot` holds the
 objects / keyPoints / snapCandidates, etc. at the start of the operation, and the drag's calculations are
-measured from it. If the doc has actually changed
-on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
+measured from it.
+
+`dragEnd`, `click` and `doubleClick` are the gesture close-out (`EVENT_CLOSE_OUT_TYPES`): each flattens the
+copy-on-write objects view and drops the drag bookkeeping. The close-out never advances `commitVersion`;
+the handler that edited the document does, at the event that completes the edit (`commitEdit` — see
+[State Update Flow](./06-state-update-flow.md)). A drag writer advances it on its `dragEnd`, a click that
+edits — a style swatch, a stencil placed by a click — on that click. A click is part of the close-out
+because it is a whole gesture of its own: the copy-on-write view a swatch writes through is flattened
+before history and persistence see it.
 
 `activeDrag.kind` (`DragKind`) says what the drag is doing. `handleGesture` opens every drag as
 `"other"`, so `activeDrag !== null` always means "a drag is under way". A handler whose drag needs to be

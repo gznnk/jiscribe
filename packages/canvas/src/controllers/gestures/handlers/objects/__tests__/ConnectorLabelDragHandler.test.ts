@@ -427,9 +427,10 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		});
 		expect(afterEnd.objects).not.toBe(afterStart.objects);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion + 1);
 	});
 
-	it("keeps the objects reference when the label ends where it started (no history entry)", () => {
+	it("keeps the objects reference and commits nothing when the label ends where it started", () => {
 		const state = stateWith(labeledConnector({ text: "Yes" }));
 		const afterStart = ConnectorLabelDragHandler.handle(
 			state,
@@ -449,6 +450,7 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 
 		expect(afterEnd.objects).toBe(afterDrag.objects);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion);
 	});
 
 	it("commits the final frame when the last drag frame held a different placement (Ctrl released before release)", () => {
@@ -476,6 +478,7 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		expect(labelOf(afterEnd)).toEqual({ text: "Yes" });
 		expect(labelOf(afterEnd)).not.toHaveProperty("offset");
 		expect(afterEnd.objects).not.toBe(afterDrag.objects);
+		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion + 1);
 	});
 
 	it("commits the final frame when a flick's last drag frame stayed off the line", () => {
@@ -503,5 +506,6 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		expect(labelOf(afterEnd)).toEqual({ text: "Yes" });
 		expect(labelOf(afterEnd)).not.toHaveProperty("offset");
 		expect(afterEnd.objects).not.toBe(afterDrag.objects);
+		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion + 1);
 	});
 });

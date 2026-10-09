@@ -152,6 +152,22 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(ended.edgeScrollEnabled).toBe(false);
 	});
 
+	it("commits the inserted waypoint once, at dragEnd only", () => {
+		const started = insertHandler.handle(
+			{ ...makeState([]), commitVersion: 3 },
+			insertEvent("dragStart", { x: 50, y: 50 }, 0),
+			registries,
+		);
+		expect(started.commitVersion).toBe(3);
+
+		const ended = insertHandler.handle(
+			started,
+			insertEvent("dragEnd", { x: 60, y: 60 }, 0),
+			registries,
+		);
+		expect(ended.commitVersion).toBe(4);
+	});
+
 	// Non-left buttons never reach the strategies: ControlEventHandler.supports
 	// requires button === 0, pinned by the routing-exclusivity test (#110).
 

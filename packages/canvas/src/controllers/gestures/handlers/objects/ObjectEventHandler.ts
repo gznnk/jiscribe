@@ -26,6 +26,7 @@ import type {
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { selectTextSlot } from "../../../selection/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
@@ -299,19 +300,12 @@ function handleObjectDragEnd(
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
-	// Disable edge scrolling
-	const nextState = {
-		...canvasState,
-		edgeScrollEnabled: false,
-	};
-
-	// Final drag handling
-	const resultState = handleObjectDrag(nextState, event, registries);
-
-	// Update the parent groups' bounding boxes
+	const closingState = { ...canvasState, edgeScrollEnabled: false };
+	const draggedState = handleObjectDrag(closingState, event, registries);
+	const committedState = commitEditIfChanged(closingState, draggedState);
 	return updateAffectedGroupBounds(
-		resultState,
-		resultState.selection.objectIds,
+		committedState,
+		committedState.selection.objectIds,
 	);
 }
 

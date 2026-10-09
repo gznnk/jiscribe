@@ -482,7 +482,7 @@ export type CanvasControllerState = CanvasState & {
 	};
 
 	/**
-	 * Incremented when a new edit is confirmed (dragEnd, command execution, etc.).
+	 * Advanced by the writer that confirms an edit of the document (commitEdit).
 	 * Internal signal read exclusively by recordHistoryIfNeeded.
 	 */
 	commitVersion: number;

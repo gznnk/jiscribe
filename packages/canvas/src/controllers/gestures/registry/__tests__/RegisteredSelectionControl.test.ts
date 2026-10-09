@@ -135,6 +135,42 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		expect(next).toBe(state);
 	});
 
+	it("commits once at dragEnd when the definition returns an object, never on drag", () => {
+		const { strategy } = createRegisteredSelectionControl(
+			"container",
+			markingDefinition(),
+		);
+		const state = { ...makeState(makeObject()), commitVersion: 3 };
+		const dragged = strategy.handle(
+			state,
+			makeEvent("drag"),
+			undefined as never,
+		);
+		expect(dragged.commitVersion).toBe(3);
+		const ended = strategy.handle(
+			dragged,
+			makeEvent("dragEnd"),
+			undefined as never,
+		);
+		expect(ended.commitVersion).toBe(4);
+	});
+
+	it("commits nothing at dragEnd when the definition reports no change", () => {
+		const { strategy } = createRegisteredSelectionControl(
+			"container",
+			noChangeDefinition(),
+		);
+		const state = { ...makeState(makeObject()), commitVersion: 3 };
+		const next = strategy.handle(
+			state,
+			makeEvent("dragEnd"),
+			undefined as never,
+		);
+		expect(next.objects).toBe(state.objects);
+		expect(next.edgeScrollEnabled).toBe(false);
+		expect(next.commitVersion).toBe(3);
+	});
+
 	it("still disables edge scrolling on dragEnd when a guard fails", () => {
 		const { strategy } = createRegisteredSelectionControl(
 			"container",

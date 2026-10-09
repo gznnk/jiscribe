@@ -9,6 +9,7 @@ import {
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
 	CanvasEvent,
@@ -193,10 +194,15 @@ export const ConnectorSegmentSlideHandler: GestureHandler = {
 			return beginConnectorReshape(state, connectorId);
 		}
 		if (event.type === "dragEnd") {
-			return {
-				...handleDrag(state, event, registries, connectorId, segmentIndex),
-				edgeScrollEnabled: false,
-			};
+			const closingState = { ...state, edgeScrollEnabled: false };
+			const draggedState = handleDrag(
+				closingState,
+				event,
+				registries,
+				connectorId,
+				segmentIndex,
+			);
+			return commitEditIfChanged(closingState, draggedState);
 		}
 		return handleDrag(state, event, registries, connectorId, segmentIndex);
 	},

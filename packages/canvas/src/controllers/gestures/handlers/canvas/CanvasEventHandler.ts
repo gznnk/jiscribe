@@ -7,6 +7,7 @@ import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { selectContextMenuTarget } from "./utils/selectContextMenuTarget";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
+import { commitEdit } from "../../../utils/commitEdit";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { getSelectedConnectorId } from "../../../utils/getSelectedConnectorId";
@@ -279,14 +280,15 @@ export const CanvasEventHandler: GestureHandler = {
 					nextState.shapeDrawing.preset.defaultOverrides,
 				);
 
+				// No doc below the minimum size: nothing is placed, so nothing is committed.
 				if (doc) {
 					const objectState = registries.objectMapper.toState(doc);
-					nextState = {
+					nextState = commitEdit({
 						...nextState,
 						objects: { ...nextState.objects, [objectState.id]: objectState },
 						rootIds: [...nextState.rootIds, objectState.id],
 						selection: { objectIds: [objectState.id], part: null },
-					};
+					});
 				}
 
 				return {

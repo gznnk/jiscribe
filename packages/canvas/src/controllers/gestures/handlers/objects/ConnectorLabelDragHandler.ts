@@ -14,6 +14,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { applyLabelPlacement } from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
@@ -157,8 +158,8 @@ const handleDrag = (
 
 /**
  * Applies the final frame and decides whether it deserves a history entry.
- * A drag that ends on its starting placement can leave the objects reference
- * untouched, so handleGesture's change detection records nothing.
+ * A drag that ends on its starting placement, live state included, commits
+ * nothing.
  */
 const handleDragEnd = (
 	state: CanvasControllerState,
@@ -166,7 +167,8 @@ const handleDragEnd = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const dragResult = handleDrag(state, event, registries);
+	const closingState = { ...state, edgeScrollEnabled: false };
+	const dragResult = handleDrag(closingState, event, registries);
 	const started = connectorId
 		? getLabeledConnector(state.activeDrag?.startSnapshot.objects[connectorId])
 		: null;
@@ -185,7 +187,7 @@ const handleDragEnd = (
 	// dragEnd frame: the final move can coalesce into the dragEnd frame, and the
 	// snap bypass can lift between the two (Ctrl released, or the last drag frame
 	// was one that edge-scrolled), so only the dragEnd frame reaches the snap. Dropping `dragResult` there would strand the label on the
-	// intermediate placement with no commitVersion bump — no history, no save,
+	// intermediate placement with no commit — no history, no save,
 	// and silent persistence on the next unrelated edit. So the shortcut is taken
 	// only when the live state is already back at the start; otherwise the
 	// dragEnd frame is committed even though it matches the start, at the cost of
@@ -195,10 +197,10 @@ const handleDragEnd = (
 		live !== null &&
 		isSamePlacement(started.label, live.label);
 
-	return {
-		...(isNoOp && isLiveAtStart ? state : dragResult),
-		edgeScrollEnabled: false,
-	};
+	if (isNoOp && isLiveAtStart) {
+		return closingState;
+	}
+	return commitEditIfChanged(closingState, dragResult);
 };
 
 /**

@@ -5,6 +5,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -234,19 +235,17 @@ export class VertexInsertHandler extends ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state.
-		// handleDrag never mutates its argument, so the state can be passed as is.
-		let nextState = this.handleDrag(state, event, objectId, segmentIndex);
-
-		// If it belongs to a group, update the group's bounds
-		const updatedObject = nextState.objects[objectId];
-		if (updatedObject?.parentId) {
-			nextState = updateGroupBoundsFromRoot(nextState, updatedObject.parentId);
-		}
-
-		return {
-			...nextState,
-			edgeScrollEnabled: false,
-		};
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
+			event,
+			objectId,
+			segmentIndex,
+		);
+		const committedState = commitEditIfChanged(closingState, draggedState);
+		const parentId = committedState.objects[objectId]?.parentId;
+		return parentId
+			? updateGroupBoundsFromRoot(committedState, parentId)
+			: committedState;
 	}
 }

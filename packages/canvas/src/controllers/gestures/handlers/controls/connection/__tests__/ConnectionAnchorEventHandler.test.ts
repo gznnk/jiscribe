@@ -279,12 +279,12 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			registries,
 		);
 
-		// The objects reference is unchanged = handleGesture's auto-commit check does not fire
 		expect(afterEnd.objects).toBe(state.objects);
 		expect(afterEnd.connectorDraft).toBeNull();
+		expect(afterEnd.commitVersion).toBe(state.commitVersion);
 	});
 
-	it("changes the objects reference for an edit that moves the endpoint (subject to commit)", () => {
+	it("commits an edit that moves the endpoint, once", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
@@ -313,6 +313,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			point: { x: 99, y: 99 },
 		});
 		expect(afterEnd.rootIds).toEqual(["c1"]);
+		expect(afterEnd.commitVersion).toBe(state.commitVersion + 1);
 	});
 
 	it("inserts a newly created connector at the end of rootIds (frontmost)", () => {
@@ -349,6 +350,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		expect(afterEnd.rootIds[0]).toBe("rect-1");
 		const newId = afterEnd.rootIds[1];
 		expect(afterEnd.objects[newId]?.type).toBe("connector");
+		expect(afterEnd.commitVersion).toBe(state.commitVersion + 1);
 	});
 
 	/**

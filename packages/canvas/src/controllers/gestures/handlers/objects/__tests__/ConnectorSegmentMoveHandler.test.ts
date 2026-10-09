@@ -519,6 +519,7 @@ describe("ConnectorSegmentMoveHandler - dragEnd", () => {
 		]);
 		expect(afterEnd.objects).not.toBe(afterStart.objects);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion + 1);
 	});
 
 	it("disables edge scrolling even on a segment it refuses to move", () => {
@@ -544,5 +545,6 @@ describe("ConnectorSegmentMoveHandler - dragEnd", () => {
 			{ x: 200, y: 0 },
 		]);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion);
 	});
 });

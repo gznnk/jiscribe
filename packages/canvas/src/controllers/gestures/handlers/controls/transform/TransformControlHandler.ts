@@ -27,6 +27,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsForSelection } from "../../../../utils/updateGroupBoundsForSelection";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -391,16 +392,14 @@ export class TransformControlHandler extends ControlStrategy {
 		anchorType: TransformAnchorType,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state.
-		// handleDrag never mutates its argument, so the state can be passed as is.
-		const draggedState = this.handleDrag(state, event, anchorType, registries);
-
-		// On dragEnd, update the bounds of the selected objects and their parent groups
-		const nextState = updateGroupBoundsForSelection(draggedState);
-
-		return {
-			...nextState,
-			edgeScrollEnabled: false, // Disable edge scrolling on drag end
-		};
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
+			event,
+			anchorType,
+			registries,
+		);
+		const committedState = commitEditIfChanged(closingState, draggedState);
+		return updateGroupBoundsForSelection(committedState);
 	}
 }
