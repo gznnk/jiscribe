@@ -6,7 +6,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { commitEdit } from "../../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -96,7 +96,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		if (event.type === "dragStart") {
 			return this.handleDragStart(state, event, connectorId, segmentIndex);
 		} else if (event.type === "drag") {
-			return this.handleDrag(state, event, connectorId, segmentIndex) ?? state;
+			return this.handleDrag(state, event, connectorId, segmentIndex);
 		} else if (event.type === "dragEnd") {
 			return this.handleDragEnd(state, event, connectorId, segmentIndex);
 		}
@@ -160,29 +160,27 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 
 	/**
 	 * Moves the inserted waypoint (index = segmentIndex).
-	 *
-	 * @returns The state with the waypoint moved, or null when there is no inserted waypoint to move
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		connectorId: string,
 		segmentIndex: number,
-	): CanvasControllerState | null {
+	): CanvasControllerState {
 		const dragStartSnapshot = state.activeDrag?.startSnapshot;
 		if (!dragStartSnapshot) {
-			return null;
+			return state;
 		}
 
 		// Get the starting state from the snapshot that already includes the waypoint inserted at dragStart.
 		const startConnector = dragStartSnapshot.objects[connectorId];
 		if (!isPoly(startConnector) || startConnector.type !== "connector") {
-			return null;
+			return state;
 		}
 
 		const insertedIndex = segmentIndex;
 		if (insertedIndex >= startConnector.points.length) {
-			return null;
+			return state;
 		}
 
 		// --- Snap correction between objects ---
@@ -241,15 +239,13 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		connectorId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
+		const closingState = { ...state, edgeScrollEnabled: false };
 		const draggedState = this.handleDrag(
-			state,
+			closingState,
 			event,
 			connectorId,
 			segmentIndex,
 		);
-		if (draggedState === null) {
-			return { ...state, edgeScrollEnabled: false };
-		}
-		return commitEdit({ ...draggedState, edgeScrollEnabled: false });
+		return commitEditIfChanged(closingState, draggedState);
 	}
 }

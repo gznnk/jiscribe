@@ -16,3 +16,18 @@ export const commitEdit = (
 	...state,
 	commitVersion: state.commitVersion + 1,
 });
+
+/**
+ * `commitEdit` for a drag's final step, which hands `state` itself back to say
+ * it wrote nothing (the convention every drag handler follows) and anything
+ * else to say it did. Commits only the latter, so a drag that found nothing to
+ * write leaves no history entry.
+ *
+ * @param state - The state the step was given
+ * @param result - What the step returned, compared to `state` by identity
+ * @returns `state` untouched, or `result` committed
+ */
+export const commitEditIfChanged = (
+	state: CanvasControllerState,
+	result: CanvasControllerState,
+): CanvasControllerState => (result === state ? state : commitEdit(result));

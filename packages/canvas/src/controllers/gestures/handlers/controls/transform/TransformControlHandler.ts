@@ -27,7 +27,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { commitEdit } from "../../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsForSelection } from "../../../../utils/updateGroupBoundsForSelection";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -78,8 +78,7 @@ export class TransformControlHandler extends ControlStrategy {
 		if (event.type === "dragStart") {
 			nextState = this.handleDragStart(nextState, event, anchorType);
 		} else if (event.type === "drag") {
-			nextState =
-				this.handleDrag(nextState, event, anchorType, registries) ?? nextState;
+			nextState = this.handleDrag(nextState, event, anchorType, registries);
 		} else if (event.type === "dragEnd") {
 			nextState = this.handleDragEnd(nextState, event, anchorType, registries);
 		}
@@ -129,15 +128,13 @@ export class TransformControlHandler extends ControlStrategy {
 
 	/**
 	 * Handles dragging on a transform-control anchor.
-	 *
-	 * @returns The state with the selection transformed, or null when there is no frame to transform
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 		registries: ICanvasRegistries,
-	): CanvasControllerState | null {
+	): CanvasControllerState {
 		// Rotation is handled separately
 		if (anchorType === "rotation") {
 			return handleRotationDrag(state, event, registries);
@@ -146,7 +143,7 @@ export class TransformControlHandler extends ControlStrategy {
 		// Common preprocessing for resize handling
 		const dragStartSnapshot = state.activeDrag?.startSnapshot;
 		if (!dragStartSnapshot) {
-			return null;
+			return state;
 		}
 
 		// Determine the target frame (multiSelectGroup for multi-selection, the selected object for single selection)
@@ -181,7 +178,7 @@ export class TransformControlHandler extends ControlStrategy {
 		}
 
 		if (!startFrame) {
-			return null;
+			return state;
 		}
 
 		// GroupState invariant: a group's width/height are divisors when scaling
@@ -228,7 +225,7 @@ export class TransformControlHandler extends ControlStrategy {
 		);
 
 		if (!resizeResult) {
-			return null;
+			return state;
 		}
 
 		// Snap correction
@@ -344,12 +341,12 @@ export class TransformControlHandler extends ControlStrategy {
 		} else {
 			// Single selection: update the selected object itself
 			if (!selectedId) {
-				return null;
+				return state;
 			}
 
 			const startObject = dragStartSnapshot.objects[selectedId];
 			if (!startObject) {
-				return null;
+				return state;
 			}
 
 			const updatedObject = {
@@ -395,15 +392,14 @@ export class TransformControlHandler extends ControlStrategy {
 		anchorType: TransformAnchorType,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state.
-		// handleDrag never mutates its argument, so the state can be passed as is.
-		const draggedState = this.handleDrag(state, event, anchorType, registries);
-		if (draggedState === null) {
-			return { ...state, edgeScrollEnabled: false };
-		}
-
-		// On dragEnd, update the bounds of the selected objects and their parent groups
-		const nextState = updateGroupBoundsForSelection(draggedState);
-		return commitEdit({ ...nextState, edgeScrollEnabled: false });
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
+			event,
+			anchorType,
+			registries,
+		);
+		const committedState = commitEditIfChanged(closingState, draggedState);
+		return updateGroupBoundsForSelection(committedState);
 	}
 }

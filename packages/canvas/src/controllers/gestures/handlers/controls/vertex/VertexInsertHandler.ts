@@ -5,7 +5,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
-import { commitEdit } from "../../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -68,7 +68,7 @@ export class VertexInsertHandler extends ControlStrategy {
 		if (event.type === "dragStart") {
 			return this.handleDragStart(state, event, objectId, segmentIndex);
 		} else if (event.type === "drag") {
-			return this.handleDrag(state, event, objectId, segmentIndex) ?? state;
+			return this.handleDrag(state, event, objectId, segmentIndex);
 		} else if (event.type === "dragEnd") {
 			return this.handleDragEnd(state, event, objectId, segmentIndex);
 		}
@@ -144,25 +144,23 @@ export class VertexInsertHandler extends ControlStrategy {
 	/**
 	 * Handles dragging on the vertex-insert control.
 	 * Moves the newly added vertex (at the segmentIndex + 1 position).
-	 *
-	 * @returns The state with the vertex moved, or null when there is no inserted vertex to move
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		objectId: string,
 		segmentIndex: number,
-	): CanvasControllerState | null {
+	): CanvasControllerState {
 		const dragStartSnapshot = state.activeDrag?.startSnapshot;
 		if (!dragStartSnapshot) {
-			return null;
+			return state;
 		}
 
 		// Get the start object from the start snapshot updated on dragStart
 		// (the state including the newly added vertex)
 		const startObject = dragStartSnapshot.objects[objectId];
 		if (!isPoly(startObject)) {
-			return null;
+			return state;
 		}
 
 		// The index of the newly added vertex is segmentIndex + 1
@@ -171,7 +169,7 @@ export class VertexInsertHandler extends ControlStrategy {
 		// Prevent writing to an out-of-range vertex index
 		// (always in range if a vertex was inserted on dragStart)
 		if (newVertexIndex >= startObject.points.length) {
-			return null;
+			return state;
 		}
 
 		// Snap correction
@@ -237,18 +235,17 @@ export class VertexInsertHandler extends ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state.
-		// handleDrag never mutates its argument, so the state can be passed as is.
-		const draggedState = this.handleDrag(state, event, objectId, segmentIndex);
-		if (draggedState === null) {
-			return { ...state, edgeScrollEnabled: false };
-		}
-
-		// If it belongs to a group, update the group's bounds
-		const parentId = draggedState.objects[objectId]?.parentId;
-		const settledState = parentId
-			? updateGroupBoundsFromRoot(draggedState, parentId)
-			: draggedState;
-		return commitEdit({ ...settledState, edgeScrollEnabled: false });
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
+			event,
+			objectId,
+			segmentIndex,
+		);
+		const committedState = commitEditIfChanged(closingState, draggedState);
+		const parentId = committedState.objects[objectId]?.parentId;
+		return parentId
+			? updateGroupBoundsFromRoot(committedState, parentId)
+			: committedState;
 	}
 }

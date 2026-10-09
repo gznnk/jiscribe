@@ -26,7 +26,7 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../../../selection/CanvasSelection";
-import { commitEdit } from "../../../../utils/commitEdit";
+import { commitEdit, commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -74,7 +74,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				? this.handleEditDragStart(state, event)
 				: this.handleCreateDragStart(state, event, registries);
 		} else if (event.type === "drag") {
-			return this.handleDrag(state, event, registries) ?? state; // shared by create/edit
+			return this.handleDrag(state, event, registries); // shared by create/edit
 		} else if (event.type === "dragEnd") {
 			return this.handleDragEnd(state, event, registries); // shared by create/edit
 		}
@@ -294,14 +294,12 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 	/**
 	 * Handles dragging from a connection anchor.
 	 * In edit mode, updates the entity (objects) directly; in create mode, updates the draft.
-	 *
-	 * @returns The state with the connector or draft updated, or null when there is nothing to update
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
-	): CanvasControllerState | null {
+	): CanvasControllerState {
 		// Determine which endpoint is being edited from targetPart
 		// Format: "anchor:<pos>" (create) or "endpoint:<source|target>" (edit)
 		const endpointToUpdate = getEditingEndpoint(event.targetPart);
@@ -311,7 +309,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		// function that only means anything mid-drag, not a recovery path.
 		const snapshot = state.activeDrag?.startSnapshot;
 		if (!snapshot) {
-			return null;
+			return state;
 		}
 
 		// Edit mode: rewrite the entity directly, like polyline vertex editing (no overlay).
@@ -320,7 +318,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			const { connectorId } = connectorDraft;
 			const baseConnector = snapshot.objects[connectorId];
 			if (!baseConnector || baseConnector.type !== "connector") {
-				return null;
+				return state;
 			}
 
 			const base = baseConnector as ConnectorState;
@@ -363,7 +361,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 		// Create mode: update the drafted connector (the entity does not exist yet).
 		if (connectorDraft?.kind !== "create") {
-			return null;
+			return state;
 		}
 
 		const updated = this.buildEditedConnector(
@@ -419,10 +417,8 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			const { connectorId } = connectorDraft;
 			const original = state.activeDrag?.startSnapshot.objects[connectorId];
 
-			const dragResult = this.handleDrag(state, event, registries);
-			if (dragResult === null) {
-				return { ...state, connectorDraft: null, edgeScrollEnabled: false };
-			}
+			const closingState = { ...state, edgeScrollEnabled: false };
+			const dragResult = this.handleDrag(closingState, event, registries);
 			const finalConnector = dragResult.objects[connectorId];
 
 			// Invariant guard: if committing the edit would make both ends free, discard the edit and revert.
@@ -463,11 +459,8 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				};
 			}
 
-			return commitEdit({
-				...dragResult,
-				connectorDraft: null,
-				edgeScrollEnabled: false,
-			});
+			const committedState = commitEditIfChanged(closingState, dragResult);
+			return { ...committedState, connectorDraft: null };
 		}
 
 		// Create mode: commit the drafted connector.
@@ -478,7 +471,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			};
 		}
 
-		const dragResult = this.handleDrag(state, event, registries) ?? state;
+		const dragResult = this.handleDrag(state, event, registries);
 		const finalDraft = dragResult.connectorDraft;
 		if (finalDraft?.kind !== "create") {
 			return {

@@ -11,7 +11,7 @@ import type {
 	SelectionControlEvent,
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
-import { commitEdit } from "../../utils/commitEdit";
+import { commitEditIfChanged } from "../../utils/commitEdit";
 import { createCowObjects } from "../../utils/cowObjects";
 import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
 
@@ -78,46 +78,45 @@ class SelectionControlStrategy extends ControlStrategy {
 		if (event.type !== "drag" && event.type !== "dragEnd") {
 			return state;
 		}
-		const updated = this.applyDrag(state, event);
 		if (event.type !== "dragEnd") {
-			return updated ?? state;
+			return this.applyDrag(state, event);
 		}
-		if (updated === null) {
-			return { ...state, edgeScrollEnabled: false };
-		}
-		return commitEdit({ ...updated, edgeScrollEnabled: false });
+		// dragEnd always releases edge scrolling, even when the drag was a no-op,
+		// and commits only when the definition returned an object for it.
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.applyDrag(closingState, event);
+		return commitEditIfChanged(closingState, draggedState);
 	}
 
 	/**
 	 * Builds the definition's context from the start snapshot and current frame,
 	 * then writes its result back via COW, with the ancestor group frames settled
-	 * around whatever the object's new box turned out to be.
+	 * around whatever the object's new box turned out to be. Returns the state
+	 * unchanged when a guard fails or the definition reports no change.
 	 *
 	 * The settling is core's because a definition cannot do it: it is handed its
 	 * own object and nothing else, so it can neither see the group it sits in nor
 	 * reach the pass that would recompute it (see reconcileGroupBounds).
-	 *
-	 * @returns The state with the object written back, or null when a guard fails or the definition reports no change
 	 */
 	private applyDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
-	): CanvasControllerState | null {
+	): CanvasControllerState {
 		const objectId = event.targetId;
 		if (!objectId) {
-			return null;
+			return state;
 		}
 		const snapshot = state.activeDrag?.startSnapshot;
 		if (!snapshot) {
-			return null;
+			return state;
 		}
 		const startObject = snapshot.objects[objectId];
 		if (!startObject || startObject.type !== this.objectType) {
-			return null;
+			return state;
 		}
 		const object = state.objects[objectId];
 		if (!object) {
-			return null;
+			return state;
 		}
 
 		const context: SelectionControlContext = { object, startObject };
@@ -131,7 +130,7 @@ class SelectionControlStrategy extends ControlStrategy {
 		};
 		const updatedObject = this.definition.handle(context, controlEvent);
 		if (!updatedObject) {
-			return null;
+			return state;
 		}
 
 		// COW view over the previous frame's map (rebased internally, #213)

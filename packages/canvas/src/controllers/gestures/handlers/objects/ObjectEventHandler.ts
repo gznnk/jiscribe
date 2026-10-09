@@ -26,7 +26,7 @@ import type {
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { selectTextSlot } from "../../../selection/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
-import { commitEdit } from "../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
@@ -49,18 +49,16 @@ import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 /**
  * Handles dragging an object.
  * Resolves each shape's moveByDelta dynamically via the registry.
- *
- * @returns The state with the selection moved, or null when there is no drag to apply
  */
 function handleObjectDrag(
 	canvasState: CanvasControllerState,
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
-): CanvasControllerState | null {
+): CanvasControllerState {
 	const { delta, mods } = event;
 	const dragStartSnapshot = canvasState.activeDrag?.startSnapshot;
 	if (!dragStartSnapshot) {
-		return null;
+		return canvasState;
 	}
 
 	const eventStartObjects = dragStartSnapshot.objects;
@@ -291,7 +289,7 @@ function handleObjectDragStart(
 	};
 
 	// Run the drag handling
-	return handleObjectDrag(nextState, event, registries) ?? nextState;
+	return handleObjectDrag(nextState, event, registries);
 }
 
 /**
@@ -302,17 +300,13 @@ function handleObjectDragEnd(
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
-	const draggedState = handleObjectDrag(canvasState, event, registries);
-	if (draggedState === null) {
-		return { ...canvasState, edgeScrollEnabled: false };
-	}
-
-	// Update the parent groups' bounding boxes
-	const settledState = updateAffectedGroupBounds(
-		draggedState,
-		draggedState.selection.objectIds,
+	const closingState = { ...canvasState, edgeScrollEnabled: false };
+	const draggedState = handleObjectDrag(closingState, event, registries);
+	const committedState = commitEditIfChanged(closingState, draggedState);
+	return updateAffectedGroupBounds(
+		committedState,
+		committedState.selection.objectIds,
 	);
-	return commitEdit({ ...settledState, edgeScrollEnabled: false });
 }
 
 /**
@@ -442,7 +436,7 @@ export const ObjectEventHandler: GestureHandler = {
 				registries,
 			);
 		} else if (event.type === "drag") {
-			return handleObjectDrag(nextState, event, registries) ?? nextState;
+			return handleObjectDrag(nextState, event, registries);
 		} else if (event.type === "dragEnd") {
 			return handleObjectDragEnd(nextState, event, registries);
 		}

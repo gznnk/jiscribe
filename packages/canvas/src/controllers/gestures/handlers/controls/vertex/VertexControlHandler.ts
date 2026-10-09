@@ -7,7 +7,7 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { VERTEX_PART_KIND } from "../../../../selection/createVertexPartKindDefinition";
-import { commitEdit } from "../../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -82,7 +82,7 @@ export class VertexControlHandler extends ControlStrategy {
 			return this.handleDragStart(state, objectId);
 		}
 		if (event.type === "drag") {
-			return this.handleDrag(state, event, objectId, vertexIndex) ?? state;
+			return this.handleDrag(state, event, objectId, vertexIndex);
 		}
 		if (event.type === "dragEnd") {
 			return this.handleDragEnd(state, event, objectId, vertexIndex);
@@ -127,28 +127,26 @@ export class VertexControlHandler extends ControlStrategy {
 
 	/**
 	 * Handles a drag on a vertex control.
-	 *
-	 * @returns The state with the vertex moved, or null when there is no vertex to move
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		objectId: string,
 		vertexIndex: number,
-	): CanvasControllerState | null {
+	): CanvasControllerState {
 		const dragStartSnapshot = state.activeDrag?.startSnapshot;
 		if (!dragStartSnapshot) {
-			return null;
+			return state;
 		}
 
 		const startObject = dragStartSnapshot.objects[objectId];
 		if (!isPoly(startObject)) {
-			return null;
+			return state;
 		}
 
 		// Prevent writing to an out-of-range vertex index
 		if (vertexIndex >= startObject.points.length) {
-			return null;
+			return state;
 		}
 
 		const startPoint = startObject.points[vertexIndex];
@@ -225,18 +223,17 @@ export class VertexControlHandler extends ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state.
-		// handleDrag never mutates its argument, so the state can be passed as is.
-		const draggedState = this.handleDrag(state, event, objectId, vertexIndex);
-		if (draggedState === null) {
-			return { ...state, edgeScrollEnabled: false };
-		}
-
-		// If it belongs to a group, update the group's bounds
-		const parentId = draggedState.objects[objectId]?.parentId;
-		const settledState = parentId
-			? updateGroupBoundsFromRoot(draggedState, parentId)
-			: draggedState;
-		return commitEdit({ ...settledState, edgeScrollEnabled: false });
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
+			event,
+			objectId,
+			vertexIndex,
+		);
+		const committedState = commitEditIfChanged(closingState, draggedState);
+		const parentId = committedState.objects[objectId]?.parentId;
+		return parentId
+			? updateGroupBoundsFromRoot(committedState, parentId)
+			: committedState;
 	}
 }

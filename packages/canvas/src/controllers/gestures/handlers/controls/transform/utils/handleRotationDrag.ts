@@ -27,17 +27,15 @@ const snapAngleToStepDeg = (degrees: number): number =>
 
 /**
  * Handles dragging on the rotation anchor (rotation handle).
- *
- * @returns The state with the selection rotated, or null when there is no frame to rotate
  */
 export function handleRotationDrag(
 	state: CanvasControllerState,
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
-): CanvasControllerState | null {
+): CanvasControllerState {
 	const dragStartSnapshot = state.activeDrag?.startSnapshot;
 	if (!dragStartSnapshot) {
-		return null;
+		return state;
 	}
 
 	// Determine the target frame (multiSelectGroup for multi-selection, the selected object for single selection)
@@ -61,7 +59,7 @@ export function handleRotationDrag(
 	}
 
 	if (!startFrame) {
-		return null;
+		return state;
 	}
 
 	// Cursor position in world space
@@ -126,12 +124,12 @@ export function handleRotationDrag(
 	} else {
 		// Single selection: rotate the selected object itself
 		if (!selectedId) {
-			return null;
+			return state;
 		}
 
 		const startObject = dragStartSnapshot.objects[selectedId];
 		if (!startObject) {
-			return null;
+			return state;
 		}
 
 		const updatedObject = {

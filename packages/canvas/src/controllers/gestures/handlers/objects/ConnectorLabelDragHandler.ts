@@ -14,7 +14,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { applyLabelPlacement } from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
-import { commitEdit } from "../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
@@ -91,23 +91,21 @@ const handleDragStart = (
  *
  * A near-zero offset snaps onto the line unless isSnapSuppressed says
  * otherwise, the same bypass the object-move and transform snaps use.
- *
- * @returns The state with the moved label, or null when there is no label placement to write
  */
 const handleDrag = (
 	state: CanvasControllerState,
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
-): CanvasControllerState | null => {
+): CanvasControllerState => {
 	const connectorId = event.targetId;
 	const snapshot = state.activeDrag?.startSnapshot;
 	if (!connectorId || !snapshot) {
-		return null;
+		return state;
 	}
 
 	const labeled = getLabeledConnector(snapshot.objects[connectorId]);
 	if (!labeled) {
-		return null;
+		return state;
 	}
 	const { connector, label } = labeled;
 
@@ -119,7 +117,7 @@ const handleDrag = (
 		registries.objectExtraConnectPoints,
 	);
 	if (!points) {
-		return null;
+		return state;
 	}
 
 	const grabbedAnchor = calcConnectorLabelAnchor(
@@ -128,7 +126,7 @@ const handleDrag = (
 		label.offset,
 	);
 	if (!grabbedAnchor) {
-		return null;
+		return state;
 	}
 
 	const rawPlacement = calcConnectorLabelPlacement(points, {
@@ -136,7 +134,7 @@ const handleDrag = (
 		y: event.last.y + grabbedAnchor.y - event.start.y,
 	});
 	if (!rawPlacement) {
-		return null;
+		return state;
 	}
 
 	const placement = isSnapSuppressed(event)
@@ -169,10 +167,8 @@ const handleDragEnd = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const dragResult = handleDrag(state, event, registries);
-	if (dragResult === null) {
-		return { ...state, edgeScrollEnabled: false };
-	}
+	const closingState = { ...state, edgeScrollEnabled: false };
+	const dragResult = handleDrag(closingState, event, registries);
 	const started = connectorId
 		? getLabeledConnector(state.activeDrag?.startSnapshot.objects[connectorId])
 		: null;
@@ -202,9 +198,9 @@ const handleDragEnd = (
 		isSamePlacement(started.label, live.label);
 
 	if (isNoOp && isLiveAtStart) {
-		return { ...state, edgeScrollEnabled: false };
+		return closingState;
 	}
-	return commitEdit({ ...dragResult, edgeScrollEnabled: false });
+	return commitEditIfChanged(closingState, dragResult);
 };
 
 /**
@@ -242,7 +238,7 @@ export const ConnectorLabelDragHandler: GestureHandler = {
 			return handleDragStart(state, event);
 		}
 		if (event.type === "drag") {
-			return handleDrag(state, event, registries) ?? state;
+			return handleDrag(state, event, registries);
 		}
 		return handleDragEnd(state, event, registries);
 	},

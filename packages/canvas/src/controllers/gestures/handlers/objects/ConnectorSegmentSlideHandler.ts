@@ -9,7 +9,7 @@ import {
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
-import { commitEdit } from "../../../utils/commitEdit";
+import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
 	CanvasEvent,
@@ -85,8 +85,6 @@ const resolveSegment = (
  * The segment geometry is re-derived from the snapshot on every frame rather than captured at
  * dragStart, because the drawn path changes as the vertices move; resolving against the pristine
  * snapshot keeps each frame an independent function of the cursor.
- *
- * @returns The state with the moved segment, or null when there is no segment to write
  */
 const handleDrag = (
 	state: CanvasControllerState,
@@ -94,11 +92,11 @@ const handleDrag = (
 	registries: ICanvasRegistries,
 	connectorId: string,
 	segmentIndex: number,
-): CanvasControllerState | null => {
+): CanvasControllerState => {
 	const snapshot = state.activeDrag?.startSnapshot;
 	const segment = resolveSegment(state, registries, connectorId, segmentIndex);
 	if (!snapshot || !segment) {
-		return null;
+		return state;
 	}
 
 	// --- Snap correction, restricted to the axis the segment can move along ---
@@ -196,20 +194,16 @@ export const ConnectorSegmentSlideHandler: GestureHandler = {
 			return beginConnectorReshape(state, connectorId);
 		}
 		if (event.type === "dragEnd") {
+			const closingState = { ...state, edgeScrollEnabled: false };
 			const draggedState = handleDrag(
-				state,
+				closingState,
 				event,
 				registries,
 				connectorId,
 				segmentIndex,
 			);
-			if (draggedState === null) {
-				return { ...state, edgeScrollEnabled: false };
-			}
-			return commitEdit({ ...draggedState, edgeScrollEnabled: false });
+			return commitEditIfChanged(closingState, draggedState);
 		}
-		return (
-			handleDrag(state, event, registries, connectorId, segmentIndex) ?? state
-		);
+		return handleDrag(state, event, registries, connectorId, segmentIndex);
 	},
 };
