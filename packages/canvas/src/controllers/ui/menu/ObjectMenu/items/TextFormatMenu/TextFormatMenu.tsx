@@ -2,24 +2,14 @@ import { memo, useRef } from "react";
 
 import { TextFormatMenuContent } from "./TextFormatMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import {
-	setPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
-import {
-	hasTextDecorationToken,
-	toggleTextDecorationToken,
-} from "../../../../../utils/toggleTextDecorationToken";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../../icons/UnderlineIcon";
+import { useTextFormatToggles } from "../../../hooks/useTextFormatToggles";
 import { isTextAddressed } from "../../../utils/isTextAddressed";
-import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
-import { selectionValueOr } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
@@ -55,56 +45,34 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const textStyle = readSelectionTextStyle(
-		canvasState,
-		objectTextStyleDefaults,
-	);
-	// Each button is its own toggle, so mixing is read per field. A field the
-	// selection disagrees about reads as off, so one press brings all of it on.
-	const fontWeight = selectionValueOr(textStyle.fontWeight, undefined);
-	const fontStyle = selectionValueOr(textStyle.fontStyle, undefined);
-	const textDecoration = selectionValueOr(textStyle.textDecoration, undefined);
-	const isBold = isBoldFontWeight(fontWeight);
-	const isItalic = fontStyle === "italic";
-	const isUnderline = hasTextDecorationToken(textDecoration, "underline");
-	const isStrikethrough = hasTextDecorationToken(
-		textDecoration,
-		"line-through",
-	);
+	const toggles = useTextFormatToggles();
 
 	const formatButtons = [
 		{
 			id: "bold",
-			isActive: isBold,
-			part: setPart("fontWeight", isBold ? "normal" : "bold"),
+			isActive: toggles.bold.isActive,
+			part: toggles.bold.part,
 			label: messages.menuBold,
 			icon: <BoldIcon title={messages.menuBold} />,
 		},
 		{
 			id: "italic",
-			isActive: isItalic,
-			part: setPart("fontStyle", isItalic ? "normal" : "italic"),
+			isActive: toggles.italic.isActive,
+			part: toggles.italic.part,
 			label: messages.menuItalic,
 			icon: <ItalicIcon title={messages.menuItalic} />,
 		},
 		{
 			id: "underline",
-			isActive: isUnderline,
-			part: setPart(
-				"textDecoration",
-				toggleTextDecorationToken(textDecoration, "underline"),
-			),
+			isActive: toggles.underline.isActive,
+			part: toggles.underline.part,
 			label: messages.menuUnderline,
 			icon: <UnderlineIcon title={messages.menuUnderline} />,
 		},
 		{
 			id: "strikethrough",
-			isActive: isStrikethrough,
-			part: setPart(
-				"textDecoration",
-				toggleTextDecorationToken(textDecoration, "line-through"),
-			),
+			isActive: toggles.strikethrough.isActive,
+			part: toggles.strikethrough.part,
 			label: messages.menuStrikethrough,
 			icon: <StrikethroughIcon title={messages.menuStrikethrough} />,
 		},

@@ -389,7 +389,8 @@ export const ObjectEventHandler: GestureHandler = {
 			// either shape). isTextStyleState is a loose guard that only checks whether
 			// the text attributes are consistent, so it also lets through shapes with no
 			// text at all (svg / polyline / polygon, etc.). Treat the same features.text
-			// used by the property-update side (TextSlotStyleProperty) as authoritative.
+			// the style tables gate the text intents with (textStyleTable) as
+			// authoritative.
 			const features = targetObject.features;
 			if (features?.text !== undefined && isTextStyleState(targetObject)) {
 				// The pressed element's [data-part] names the slot. It comes from the

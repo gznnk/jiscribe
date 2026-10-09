@@ -1,4 +1,5 @@
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import { DEFAULT_LOCK_ASPECT_RATIO } from "../../../../../../states/objects/base/TransformState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../../../../utils/buildSelectedIdsWithDescendants";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
@@ -30,7 +31,7 @@ const keepsProportion = (
 		return true;
 	}
 	if (state.multiSelectGroup) {
-		return state.multiSelectGroup.lockAspectRatio ?? false;
+		return state.multiSelectGroup.lockAspectRatio ?? DEFAULT_LOCK_ASPECT_RATIO;
 	}
 	return state.selection.objectIds.some((id) => {
 		const object = state.objects[id];

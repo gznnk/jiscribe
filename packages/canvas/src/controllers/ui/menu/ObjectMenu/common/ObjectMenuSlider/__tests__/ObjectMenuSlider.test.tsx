@@ -97,46 +97,50 @@ describe("ObjectMenuSlider", () => {
 	});
 
 	it("writes nothing when a mixed field is left empty", () => {
-		const onPropertyUpdate = vi.fn();
+		const onStyleIntent = vi.fn();
 		render(
 			<ObjectMenuSlider
 				value={4}
 				isMixed
 				property="strokeWidth"
 				max={20}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>,
 		);
 
 		blur(numberInput());
 		pressEnter(numberInput());
 
-		expect(onPropertyUpdate).not.toHaveBeenCalled();
+		expect(onStyleIntent).not.toHaveBeenCalled();
 		expect(numberInput().value).toBe("");
 	});
 
 	it("writes a number typed into a mixed field to the whole selection", () => {
-		const onPropertyUpdate = vi.fn();
+		const onStyleIntent = vi.fn();
 		render(
 			<ObjectMenuSlider
 				value={4}
 				isMixed
 				property="strokeWidth"
 				max={20}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>,
 		);
 
 		type(numberInput(), "7");
 		blur(numberInput());
 
-		expect(onPropertyUpdate).toHaveBeenNthCalledWith(
+		expect(onStyleIntent).toHaveBeenNthCalledWith(
 			1,
-			"strokeWidth",
-			"7",
+			{ kind: "strokeWidth", width: 7 },
+			false,
 			false,
 		);
-		expect(onPropertyUpdate).toHaveBeenLastCalledWith("strokeWidth", "7", true);
+		expect(onStyleIntent).toHaveBeenLastCalledWith(
+			{ kind: "strokeWidth", width: 7 },
+			true,
+			false,
+		);
 	});
 
 	it("puts the value back when the selection comes to agree", () => {

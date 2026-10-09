@@ -197,12 +197,10 @@ const STYLE_PROP_SOURCES: ReadonlyArray<{
 	{ feature: "fill", styleDef: "FillStyle", props: FILL_STYLE_KEYS },
 	{
 		// The content first, then the styling of it: "text" is the body, which the slot
-		// keys deliberately leave out (they are `Omit<TextSlot, "text">`). Last come
-		// the fields that place the body against the shape rather than style it
-		// (TEXT_BODY_KEYS), which sit on the object beside the slot's own.
+		// keys deliberately leave out (they are `Omit<TextSlot, "text">`).
 		feature: "text",
 		styleDef: "TextStyle",
-		props: ["text", ...TEXT_SLOT_STYLE_KEYS, ...TEXT_BODY_KEYS],
+		props: ["text", ...TEXT_SLOT_STYLE_KEYS],
 	},
 	{
 		feature: "transform",
@@ -210,6 +208,19 @@ const STYLE_PROP_SOURCES: ReadonlyArray<{
 		props: TRANSFORM_STYLE_KEYS,
 	},
 ];
+
+/**
+ * The fields that place the body against the shape rather than style it
+ * (TEXT_BODY_KEYS), which sit on the object beside the slot's own. Apart from
+ * {@link STYLE_PROP_SOURCES} because they follow their own feature
+ * (`features.textVerticalBasis`) rather than the text kind, and because the four
+ * groups there are what a box-compatible type has to enable in full
+ * ({@link isBoxShapeCompatible}) while this one is an axis of its $def.
+ */
+const TEXT_BODY_PROP_SOURCE = {
+	styleDef: "TextStyle",
+	props: TEXT_BODY_KEYS as readonly string[],
+} as const;
 
 function formatDefaultValue(value: unknown): string {
 	return typeof value === "string" ? JSON.stringify(value) : String(value);
@@ -369,24 +380,84 @@ function buildGeometryProps(
 }
 
 /**
- * $def names of the two structures the plain box shapes share through allOf: one
- * for the types that must state a height, one for those that may leave it out and
- * be sized from their text (see supportsAutoHeight). They differ in the `height`
- * entry of `required` and in its description; everything else is the same.
+ * $def names of the four structures the plain box shapes share through allOf, one
+ * per combination of the two axes: whether a height has to be stated (see
+ * supportsAutoHeight) and whether the type declares `features.textVerticalBasis`.
+ * The first decides the `height` entry of `required` and its description, the
+ * second whether the body placement is among the properties; everything else is
+ * the same. An axis has to be a separate $def rather than a property added by the
+ * concrete def, `additionalProperties: false` on the shared one leaving an allOf
+ * branch nothing to add through.
  */
 const BOX_SHAPE_DEF_NAMES = {
 	fixedHeight: "BoxShapeDoc",
 	autoHeight: "AutoHeightBoxShapeDoc",
+	fixedHeightWithTextBasis: "BoxShapeWithTextBasisDoc",
+	autoHeightWithTextBasis: "AutoHeightBoxShapeWithTextBasisDoc",
 } as const;
 
-/** The shared $def a box-compatible type extends, by whether it may omit its height. */
-const boxShapeDefName = (autoHeight: boolean): string =>
-	autoHeight ? BOX_SHAPE_DEF_NAMES.autoHeight : BOX_SHAPE_DEF_NAMES.fixedHeight;
+/** The four, each with the axes it stands for, so one can be built from its name. */
+const BOX_SHAPE_DEF_VARIANTS: ReadonlyArray<{
+	name: string;
+	autoHeight: boolean;
+	textVerticalBasis: boolean;
+}> = [
+	{
+		name: BOX_SHAPE_DEF_NAMES.fixedHeight,
+		autoHeight: false,
+		textVerticalBasis: false,
+	},
+	{
+		name: BOX_SHAPE_DEF_NAMES.autoHeight,
+		autoHeight: true,
+		textVerticalBasis: false,
+	},
+	{
+		name: BOX_SHAPE_DEF_NAMES.fixedHeightWithTextBasis,
+		autoHeight: false,
+		textVerticalBasis: true,
+	},
+	{
+		name: BOX_SHAPE_DEF_NAMES.autoHeightWithTextBasis,
+		autoHeight: true,
+		textVerticalBasis: true,
+	},
+];
 
-/** Shared style properties of a $def, as $refs into the style definitions. */
-function buildStyleRefProps(): Record<string, JsonSchemaNode> {
+/**
+ * The shared $def a box-compatible type extends.
+ *
+ * @param autoHeight - Whether it may omit its height and be sized from its text
+ * @param textVerticalBasis - Whether it declares the body placement (`features.textVerticalBasis`)
+ */
+const boxShapeDefName = (
+	autoHeight: boolean,
+	textVerticalBasis: boolean,
+): string => {
+	if (textVerticalBasis) {
+		return autoHeight
+			? BOX_SHAPE_DEF_NAMES.autoHeightWithTextBasis
+			: BOX_SHAPE_DEF_NAMES.fixedHeightWithTextBasis;
+	}
+	return autoHeight
+		? BOX_SHAPE_DEF_NAMES.autoHeight
+		: BOX_SHAPE_DEF_NAMES.fixedHeight;
+};
+
+/**
+ * Shared style properties of a $def, as $refs into the style definitions.
+ *
+ * @param textVerticalBasis - Whether to add the body placement (TEXT_BODY_PROP_SOURCE), which only a type declaring the feature holds
+ */
+function buildStyleRefProps(
+	textVerticalBasis: boolean,
+): Record<string, JsonSchemaNode> {
 	const properties: Record<string, JsonSchemaNode> = {};
-	for (const source of STYLE_PROP_SOURCES) {
+	const sources = [
+		...STYLE_PROP_SOURCES,
+		...(textVerticalBasis ? [TEXT_BODY_PROP_SOURCE] : []),
+	];
+	for (const source of sources) {
 		for (const prop of source.props) {
 			properties[prop] = {
 				$ref: `#/$defs/${source.styleDef}/properties/${prop}`,
@@ -400,10 +471,14 @@ function buildStyleRefProps(): Record<string, JsonSchemaNode> {
  * Assemble the $def a plain box shape extends (see isBoxShapeCompatible).
  *
  * @param autoHeight - Whether the shapes extending it may leave `height` out and be sized from their text
+ * @param textVerticalBasis - Whether they declare the body placement, which adds `textVerticalBasis` to the properties
  */
-function buildBoxShapeDef(autoHeight: boolean): JsonSchemaNode {
+function buildBoxShapeDef(
+	autoHeight: boolean,
+	textVerticalBasis: boolean,
+): JsonSchemaNode {
 	return {
-		description: `Shared structure of the plain box shapes${autoHeight ? " that size themselves from their text when no height is given" : " that always state a height"}: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins \`type\` with a const.`,
+		description: `Shared structure of the plain box shapes${autoHeight ? " that size themselves from their text when no height is given" : " that always state a height"}${textVerticalBasis ? " and measure their text against the region their own outline leaves clear" : ""}: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins \`type\` with a const.`,
 		type: "object",
 		required: buildRequiredProps("rect", autoHeight),
 		additionalProperties: false,
@@ -428,7 +503,7 @@ function buildBoxShapeDef(autoHeight: boolean): JsonSchemaNode {
 				type: "number",
 				minimum: 0,
 			},
-			...buildStyleRefProps(),
+			...buildStyleRefProps(textVerticalBasis),
 		},
 	};
 }
@@ -472,17 +547,21 @@ function isBoxShapeCompatible(
  *
  * @param type - The type name, pinned as the `type` const
  * @param description - AI-facing prose of the shape, shown as the $def's own description
- * @param autoHeight - Whether it may leave `height` out, which picks the shared $def it extends
+ * @param autoHeight - Whether it may leave `height` out, one of the two axes picking the shared $def it extends
+ * @param textVerticalBasis - Whether it declares the body placement, the other axis
  */
 function buildBoxShapeRefDef(
 	type: string,
 	description: string,
 	autoHeight: boolean,
+	textVerticalBasis: boolean,
 ): JsonSchemaNode {
 	return {
 		description,
 		type: "object",
-		allOf: [{ $ref: `#/$defs/${boxShapeDefName(autoHeight)}` }],
+		allOf: [
+			{ $ref: `#/$defs/${boxShapeDefName(autoHeight, textVerticalBasis)}` },
+		],
 		properties: {
 			type: {
 				description: `Must be "${type}".`,
@@ -522,7 +601,12 @@ function buildShapeDef(
 	const autoHeight = supportsAutoHeight(definition);
 
 	if (isBoxShapeCompatible(type, features, defaults)) {
-		return buildBoxShapeRefDef(type, description, autoHeight);
+		return buildBoxShapeRefDef(
+			type,
+			description,
+			autoHeight,
+			features.textVerticalBasis === true,
+		);
 	}
 
 	const properties: Record<string, JsonSchemaNode> = {
@@ -568,6 +652,7 @@ function buildShapeDef(
 		...STYLE_PROP_SOURCES.filter((source) => features[source.feature]).flatMap(
 			(source) => source.props,
 		),
+		...(features.textVerticalBasis ? TEXT_BODY_PROP_SOURCE.props : []),
 	]);
 	for (const [name, node] of Object.entries(overrides)) {
 		if (!generatedPropNames.has(name)) {
@@ -592,10 +677,11 @@ function buildShapeDef(
 		});
 	}
 
-	for (const source of STYLE_PROP_SOURCES) {
-		if (!features[source.feature]) {
-			continue;
-		}
+	const styleSources = [
+		...STYLE_PROP_SOURCES.filter((source) => features[source.feature]),
+		...(features.textVerticalBasis ? [TEXT_BODY_PROP_SOURCE] : []),
+	];
+	for (const source of styleSources) {
 		const sharedDef = handwrittenDefs[source.styleDef];
 		const sharedProps = sharedDef.properties as Record<string, JsonSchemaNode>;
 		for (const prop of source.props) {
@@ -767,8 +853,26 @@ export function generateSchema(
 	for (const defName of sharedStructureDefNames) {
 		defs[defName] = handwrittenDefs[defName];
 	}
-	defs[BOX_SHAPE_DEF_NAMES.fixedHeight] = buildBoxShapeDef(false);
-	defs[BOX_SHAPE_DEF_NAMES.autoHeight] = buildBoxShapeDef(true);
+	// Only the combinations some shape def extends: with four of them and the
+	// shipped set using three, publishing all four would put a structure in the
+	// schema that no shape has.
+	const extendedDefNames = new Set(
+		Object.values(defs).flatMap((def) =>
+			((def.allOf ?? []) as JsonSchemaNode[]).flatMap((branch) =>
+				typeof branch.$ref === "string"
+					? [branch.$ref.replace("#/$defs/", "")]
+					: [],
+			),
+		),
+	);
+	for (const variant of BOX_SHAPE_DEF_VARIANTS) {
+		if (extendedDefNames.has(variant.name)) {
+			defs[variant.name] = buildBoxShapeDef(
+				variant.autoHeight,
+				variant.textVerticalBasis,
+			);
+		}
+	}
 
 	const enumDefNames = [
 		"StrokeDashType",

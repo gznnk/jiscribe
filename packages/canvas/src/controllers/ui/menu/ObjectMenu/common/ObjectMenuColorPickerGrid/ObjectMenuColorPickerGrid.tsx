@@ -14,16 +14,21 @@ import {
 } from "./ObjectMenuColorPickerGridStyled";
 import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { styleIntentOf } from "../../../../../style/styleIntentOf";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuColorPickerGridProps = {
 	/** Currently selected color */
 	currentColor: string;
-	/** Property name (e.g. "fill", "stroke") */
+	/**
+	 * Property name (e.g. "fill", "stroke"). Kept as a name rather than an intent
+	 * because the swatches' `set:` parts are built from it, and because the picker
+	 * holds CSS text rather than a value of the property's own type.
+	 */
 	property: string;
 	/**
-	 * Whether a swatch and the Auto button write through `onPropertyUpdate`
+	 * Whether a swatch and the Auto button write through `onStyleIntent`
 	 * (committing at once) instead of through the `set:` gesture. Set by a picker
 	 * whose target is not the selection — the canvas background — since the
 	 * gesture route ends in the style registry, which only ever writes to
@@ -47,7 +52,7 @@ type ObjectMenuColorPickerGridProps = {
 	 * gznnk/jiscribe-private#288.
 	 */
 	currentColorIsShared?: boolean;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -69,7 +74,7 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	property,
 	writesThroughCallback = false,
 	currentColorIsShared = false,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const [inputValue, setInputValue] = useState(currentColor);
@@ -79,6 +84,18 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	inputValueRef.current = inputValue;
 	// Whether the user has made a valid edit that has not yet been committed.
 	const pendingCommit = useRef(false);
+
+	// The picker holds a property name and CSS text, so the name is read into the
+	// intent it states here, where the string is born.
+	const writeColor = useCallback(
+		(color: string, commitColor: boolean) => {
+			const intent = styleIntentOf(property, color);
+			if (intent !== undefined) {
+				onStyleIntent(intent, commitColor);
+			}
+		},
+		[property, onStyleIntent],
+	);
 
 	// Only treat it as an external change (preset, etc.) and reset the input when currentColor differs from the user's input.
 	// A commit:false preview also updates currentColor, but in that case it matches inputValue and is skipped.
@@ -99,18 +116,18 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 			setIsValid(valid);
 			if (valid) {
 				pendingCommit.current = true;
-				onPropertyUpdate(property, val, false);
+				writeColor(val, false);
 			}
 		},
-		[property, onPropertyUpdate],
+		[writeColor],
 	);
 
 	const commit = useCallback(() => {
 		if (isValid && pendingCommit.current) {
-			onPropertyUpdate(property, inputValue, true);
+			writeColor(inputValue, true);
 			pendingCommit.current = false;
 		}
-	}, [isValid, inputValue, property, onPropertyUpdate]);
+	}, [isValid, inputValue, writeColor]);
 
 	const handleBlur = useCallback(() => {
 		commit();
@@ -149,9 +166,7 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 			? {
 					"data-gesture": "none",
 					"data-part": setPart(property, value),
-					onClick: picked
-						? undefined
-						: () => onPropertyUpdate(property, value, true),
+					onClick: picked ? undefined : () => writeColor(value, true),
 				}
 			: {
 					"data-part": setPart(property, value),

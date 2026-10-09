@@ -1,21 +1,42 @@
 import type { MenuPart } from "./menuParts";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { applyStyleIntent } from "../../../../style/applyStyleIntent";
+import { styleIntentOf } from "../../../../style/styleIntentOf";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 
 /**
+ * Reflects what a part's name and string state, or leaves the state as it is for
+ * a value nothing can be made of.
+ */
+const applyPartValue = (
+	state: CanvasControllerState,
+	property: string,
+	value: string,
+	registries: ICanvasRegistries,
+): CanvasControllerState => {
+	const intent = styleIntentOf(property, value);
+	return intent === undefined
+		? state
+		: applyStyleIntent(state, intent, registries);
+};
+
+/**
  * Applies a menu part that writes a style property of the selection — `set:` or
- * `slider:` — through StylePropertyRegistry, the same way from every surface that
- * carries such parts (the ObjectMenu and the properties sidebar).
+ * `slider:` — the same way from every surface that carries such parts (the
+ * ObjectMenu and the properties sidebar): the part's name and string are read
+ * into an intent (styleIntentOf) and applied (applyStyleIntent).
  *
- * The React onChange route (STYLE_PROPERTY_UPDATE in canvasReducer) writes the
- * same properties without passing through here; logic both routes need has to be
- * added to each of them.
+ * The React onChange route (STYLE_INTENT in canvasReducer) ends at the same
+ * apply, having been handed the intent already — a widget holding a name and a
+ * string reads it through the same styleIntentOf before it dispatches. What is
+ * not shared is the commit tail: logic both routes need has to be added to each
+ * of them.
  *
  * @param state - State to write into, with the caller's own press dismiss already applied: a slider press returns from here
  * @param event - The gesture. `set:` acts on click / doubleClick only. `slider:` previews on pressed / dragStart / drag and commits on dragEnd / click / doubleClick, reading the value from `inputValue`; a slider event without one warns and changes nothing
  * @param part - `event.targetPart` already parsed (parseMenuPart); null and kinds other than `set` / `slider` are left to the caller
- * @param registries - Registries of the canvas; `styleProperty` resolves the property name
+ * @param registries - Registries of the canvas; its style tables are what answer the intent the part states
  * @returns The next state, or null when the part is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller); a write leaves the part picked below the object alone, styling never renumbering what it writes to. A style part on an event it does not act on returns `state` itself
  */
 export const applyStylePropertyPart = (
@@ -33,10 +54,11 @@ export const applyStylePropertyPart = (
 		if (event.type !== "click" && event.type !== "doubleClick") {
 			return state;
 		}
-		const newState = registries.styleProperty.apply(
+		const newState = applyPartValue(
 			state,
 			part.property,
 			part.value,
+			registries,
 		);
 		return {
 			...newState,
@@ -69,7 +91,7 @@ export const applyStylePropertyPart = (
 		event.type === "dragStart" ||
 		event.type === "drag"
 	) {
-		return registries.styleProperty.apply(state, property, event.inputValue);
+		return applyPartValue(state, property, event.inputValue, registries);
 	}
 
 	// click / doubleClick: a press on the track jumps the thumb natively and lifts
@@ -82,10 +104,11 @@ export const applyStylePropertyPart = (
 		event.type === "click" ||
 		event.type === "doubleClick"
 	) {
-		const newState = registries.styleProperty.apply(
+		const newState = applyPartValue(
 			state,
 			property,
 			event.inputValue,
+			registries,
 		);
 		return {
 			...newState,

@@ -3,7 +3,12 @@ import type {
 	CanvasParseResult,
 	SemanticDiagnostic,
 } from "@jiscribe/doc";
-import { createCanvasParser, isMissingBounds } from "@jiscribe/doc";
+import {
+	createCanvasParser,
+	isMissingBounds,
+	isSingleBodyText,
+} from "@jiscribe/doc";
+import { insetsBodyVertically } from "@jiscribe/doc/testing";
 import { describe, expect, it } from "vitest";
 
 /** A doc as it is written in a test, before `JSON.stringify` hands it to the parser. */
@@ -161,6 +166,25 @@ export function createParseCheckSuite(params: ParseCheckSuiteParams): void {
 				.map(([type]) => type);
 
 			expect(undeclared).toEqual([]);
+		});
+
+		it("declares textVerticalBasis exactly where its region insets the body", () => {
+			// The declaration is what the style table, the sidebar and the AI write
+			// path all read, while the region is what the basis is applied to when
+			// the shape is drawn. A region reshaped for the outline's sake would
+			// otherwise leave the switch offered where it moves nothing, or withheld
+			// where it would have moved the body.
+			const disagreeing = Object.entries(plugin.objects ?? {})
+				.filter(
+					([, definition]) =>
+						definition !== undefined &&
+						isSingleBodyText(definition.features.text) &&
+						(definition.features.textVerticalBasis === true) !==
+							insetsBodyVertically(definition),
+				)
+				.map(([type]) => type);
+
+			expect(disagreeing).toEqual([]);
 		});
 
 		if (checkEveryRegisteredType) {

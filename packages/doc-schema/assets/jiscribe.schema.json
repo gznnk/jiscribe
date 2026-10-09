@@ -506,9 +506,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -620,9 +617,6 @@
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -718,9 +712,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -732,6 +723,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -810,9 +804,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -832,7 +823,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -896,7 +887,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -912,7 +903,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -928,7 +919,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -960,7 +951,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -976,7 +967,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -1071,9 +1062,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1085,6 +1073,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1172,9 +1163,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1186,6 +1174,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1242,7 +1233,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -1258,7 +1249,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -1401,9 +1392,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1415,6 +1403,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1587,9 +1578,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1601,6 +1589,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1696,9 +1687,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1800,9 +1788,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1903,9 +1888,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2000,9 +1982,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2022,7 +2001,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2086,7 +2065,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2102,7 +2081,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2134,7 +2113,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2198,7 +2177,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2634,9 +2613,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2648,6 +2624,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -2739,9 +2718,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2830,9 +2806,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -2967,9 +2940,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3221,9 +3191,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3235,6 +3202,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -3325,9 +3295,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -4006,9 +3973,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -4102,8 +4066,98 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"AutoHeightBoxShapeWithTextBasisDoc": {
+			"description": "Shared structure of the plain box shapes that size themselves from their text when no height is given and measure their text against the region their own outline leaves clear: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"type": "string"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes.",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
+				"fill": {
+					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -4116,6 +4170,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},

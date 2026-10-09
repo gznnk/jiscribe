@@ -131,10 +131,6 @@ export {
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "./model/objects/types/text/TextType";
-export type {
-	ExtraStylePropertyDescriptor,
-	StyleValueType,
-} from "./model/objects/types/ExtraStyleProperty";
 export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
 // The box declaration a doc definition carries, for the types whose geometry does
 // not settle their box: a plugin author annotating one needs the shape of it.
@@ -156,21 +152,14 @@ export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
 // diagnostics.
 export { isMissingBounds } from "./plugin/isMissingBounds";
 export type { BoundsDeclaration } from "./plugin/isMissingBounds";
-// Whether the same declaration gives up part of the box's height, which is what
-// decides whether switching `textVerticalBasis` moves the type's body at all.
-export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";
-export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
 // The stroke / fill defaults a type declares through its creation defaults, and
 // what one shape's style resolves to once type and last resort are folded in.
 export { extractShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
-export type {
-	ObjectShapeStyleDefaults,
-	ResolvedShapeStyle,
-	ShapeStyleGroup,
-} from "./registries/ObjectShapeStyleDefaultsRegistry";
+export type { ObjectShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
+export type { ResolvedShapeStyle } from "./model/objects/utils/shapeStyleFallback";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";

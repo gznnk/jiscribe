@@ -6,7 +6,10 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import { defaultCanvasRegistries } from "../../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
+import { readSelectionStyle } from "../../../../../../style/readSelectionStyle";
+import { SelectionStyleReaderContext } from "../../../../../../style/SelectionStyleReaderContext";
 import { ArrowHeadMenu } from "../ArrowHeadMenu";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -33,7 +36,8 @@ const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 let container: HTMLDivElement | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
 
-const render = (element: React.ReactElement): void => {
+/** Renders the menu for `canvasState`, under the reader the ObjectMenu provides. */
+const render = (canvasState: CanvasControllerState): void => {
 	if (!container) {
 		container = document.createElement("div");
 		document.body.appendChild(container);
@@ -41,7 +45,15 @@ const render = (element: React.ReactElement): void => {
 	}
 	const mounted = root;
 	act(() => {
-		mounted?.render(element);
+		mounted?.render(
+			<SelectionStyleReaderContext.Provider
+				value={(kind) =>
+					readSelectionStyle(canvasState, kind, defaultCanvasRegistries)
+				}
+			>
+				<ArrowHeadMenu canvasState={canvasState} />
+			</SelectionStyleReaderContext.Provider>,
+		);
 	});
 };
 
@@ -69,12 +81,10 @@ afterEach(() => {
 describe("ArrowHeadMenu", () => {
 	it("draws the mark each end agrees on", () => {
 		render(
-			<ArrowHeadMenu
-				canvasState={stateOf(
-					line("a", "None", "FilledTriangle"),
-					line("b", "None", "FilledTriangle"),
-				)}
-			/>,
+			stateOf(
+				line("a", "None", "FilledTriangle"),
+				line("b", "None", "FilledTriangle"),
+			),
 		);
 
 		expect(triggerIcons().map(describeIcon)).toEqual([
@@ -85,12 +95,7 @@ describe("ArrowHeadMenu", () => {
 
 	it("draws three dots and no line for the end the selection disagrees about", () => {
 		render(
-			<ArrowHeadMenu
-				canvasState={stateOf(
-					line("a", "None", "FilledTriangle"),
-					line("b", "None", "Circle"),
-				)}
-			/>,
+			stateOf(line("a", "None", "FilledTriangle"), line("b", "None", "Circle")),
 		);
 
 		// The start agrees, so it keeps its preview; only the end falls back to the dots.

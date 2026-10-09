@@ -10,7 +10,8 @@ import {
 } from "./ObjectMenuSliderStyled";
 import { sliderPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import { styleIntentOf } from "../../../../../style/styleIntentOf";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {
 	/** The value the selection is on; while `isMixed`, one the selection carries (selectionValueOrFirst), which places the thumb. */
@@ -35,8 +36,13 @@ type ObjectMenuSliderProps = {
 	/** Slider drag increment. The number input stays free-form (no snapping). */
 	step?: number;
 	label?: string;
+	/**
+	 * The style property the slider writes. Kept as a name rather than an intent
+	 * because the track's `slider:` part is built from it, and the keyboard route
+	 * reads the name into an intent of its own (styleIntentOf).
+	 */
 	property: string;
-	onPropertyUpdate?: StylePropertyUpdater;
+	onStyleIntent?: StyleIntentUpdater;
 };
 
 const clamp = (value: number, lower: number, upper: number): number =>
@@ -64,7 +70,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	step = 1,
 	label = "Value",
 	property,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const trackMin = sliderMin ?? min;
@@ -90,13 +96,26 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	// keyboard-driven value previewed but not yet committed (null when there is none)
 	const uncommittedKeyboardValue = useRef<string | null>(null);
 
+	// The inputs hold a property name and the string the DOM wrote, so the name is
+	// read into the intent it states here — through the very function the gesture
+	// route reads the identical `slider:` part with.
+	const writeValue = useCallback(
+		(valueText: string, commit: boolean, coalesceHistory = false) => {
+			const intent = styleIntentOf(property, valueText);
+			if (intent !== undefined) {
+				onStyleIntent?.(intent, commit, coalesceHistory);
+			}
+		},
+		[property, onStyleIntent],
+	);
+
 	const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = Number.parseInt(e.target.value, 10);
 		setSliderValue(newValue);
 		setInputValue(String(newValue));
 		if (isKeyboardEditing.current) {
 			uncommittedKeyboardValue.current = String(newValue);
-			onPropertyUpdate?.(property, String(newValue), false);
+			writeValue(String(newValue), false);
 		}
 	};
 
@@ -125,7 +144,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 		isKeyboardEditing.current = false;
 		uncommittedKeyboardValue.current = null;
 		if (committedValue !== null) {
-			onPropertyUpdate?.(property, committedValue, true, true);
+			writeValue(committedValue, true, true);
 		}
 	};
 
@@ -138,7 +157,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 			const committedValue = clamp(parsedValue, min, max);
 			setSliderValue(clamp(committedValue, trackMin, trackMax));
 			pendingCommit.current = true;
-			onPropertyUpdate?.(property, String(committedValue), false);
+			writeValue(String(committedValue), false);
 		}
 	};
 
@@ -149,13 +168,13 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				const committedValue = clamp(parsedValue, min, max);
 				setSliderValue(clamp(committedValue, trackMin, trackMax));
 				setInputValue(String(committedValue));
-				onPropertyUpdate?.(property, String(committedValue), true);
+				writeValue(String(committedValue), true);
 				pendingCommit.current = false;
 			} else if (Number.isNaN(parsedValue)) {
 				setInputValue(agreedText);
 			}
 		},
-		[min, max, trackMin, trackMax, property, agreedText, onPropertyUpdate],
+		[min, max, trackMin, trackMax, agreedText, writeValue],
 	);
 
 	const handleNumberInputBlur = useCallback(() => {

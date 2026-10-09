@@ -9,7 +9,7 @@ import { memo } from "react";
 
 import { containerMessagesByLocale } from "../messages/containerMessages";
 import { CONTAINER_MIN_HEADER_HEIGHT } from "../schema/ContainerDoc";
-import { getSelectedHeaderHeight } from "../state/getSelectedHeaderHeight";
+import { useSelectedHeaderHeight } from "../state/useSelectedHeaderHeight";
 
 /**
  * Header band height row of the properties sidebar (container only), sitting
@@ -17,31 +17,31 @@ import { getSelectedHeaderHeight } from "../state/getSelectedHeaderHeight";
  * (ContainerHeaderHeightControl), stated outright. Labelled "Header" like the
  * color row: the section says which aspect of the header the row states.
  *
- * Written as the `headerHeight` extra style property through `onPropertyUpdate`,
- * so the field's preview / commit / coalescing ride the style route unchanged.
+ * Written as the `headerHeight` style the container declares for itself
+ * (CONTAINER_STYLE_ENTRIES) through `onStyleIntent` — a kind outside the core
+ * vocabulary, so the intent is `{ kind, value }` — which keeps the field's
+ * preview / commit / coalescing on the style route unchanged.
  * The lower bound is the drag's; the upper one is left to the drawing, which
  * clamps the band to the box (`calcContainerHeaderHeight`), since a
  * multi-selection has no single height to bound against.
  */
 const HeaderHeightPropertyComponent: React.FC<PropertyPanelItemProps> = ({
-	objects,
-	selection,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
+	const headerHeight = useSelectedHeaderHeight();
 
 	return (
 		<PropertyRow label={messages.propertyRowHeader}>
 			<PropertyNumberField
-				value={getSelectedHeaderHeight(selection.objectIds, objects)}
+				value={headerHeight}
 				min={CONTAINER_MIN_HEADER_HEIGHT}
 				ariaLabel={messages.fieldHeaderHeight}
 				testId="property-field:headerHeight"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"headerHeight",
-						String(value),
+					onStyleIntent(
+						{ kind: "headerHeight", value },
 						commit,
 						coalesceHistory,
 					)

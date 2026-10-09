@@ -224,7 +224,7 @@ CodeMirror の `EditorView`）。
 **`propertyPanel` のカスタム行。**プラグインが自分で描く行は組み込みの行に混ぜる
 `{ type: "custom"; id; component }`（`PropertyPanelCustomItem`）で、ObjectMenu の
 カスタム項目と同じ形である。コンポーネントが受け取るのは `PropertyPanelItemProps`
-だけで、選択の切片と、スタイルを書く `onPropertyUpdate`・フレームの数値を書く
+だけで、選択の切片と、スタイルを書く `onStyleIntent`・フレームの数値を書く
 `onTransformUpdate` が入っている（どちらの型も
 `packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts` が正本）。
 組み込みの行が読むコントローラ state は渡らない。使ってよいのは
@@ -233,8 +233,15 @@ CodeMirror の `EditorView`）。
 その隣に置く入力部品（`PropertyNumberField` / `PropertyColorField` など）、
 単体で 1 行になる `PropertyCheckbox`（セクションの左端から、ボックスと右側の
 ラベル）がある。キットに何があるかは `packages/canvas/src/unstable.ts` の export
-が正本。
-書く前に知っておく規約は 2 つ:
+が正本。行が**述べる**値はキット唯一の読み取り API `useSelectionStyle(name)` から
+取る。そのプロパティについて選択全体が何を言っているかを、同名の書き込みが届くのと
+まったく同じ object について返すので、プラグインの行も組み込みの行と同じように
+mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参照）。自前の型が
+宣言したプロパティの行は、kind の手前にその型の表を渡す
+（`useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")`）。宣言から型が付く。
+書き込みはその鏡で、`onStyleIntent(intent, commit)` は名前と文字列ではなく述べられた
+編集そのものを取る。型自身の kind は `{ kind, value }` と書く（宣言した名前と、
+宣言どおり型付けした値か transport の文字列）。書く前に知っておく規約は 2 つ:
 
 - 複数型のマージが行を突き合わせる鍵は `id` である。同じ行を出す型どうしは同じ
   綴りにすること。綴りが違う型が混ざった選択ではその行は落ちる（片方しか持たない
@@ -249,11 +256,22 @@ CodeMirror の `EditorView`）。
 上に残るためである。コア自身の用例はコネクターの「ラベル」「ラベルの枠線」セクションで、ラベルに
 文字があるときだけ出る。省略は常に出す。
 
-実例は `plugins/container-shapes` である。`header-fill` 行が
-`PropertyColorField` から `onPropertyUpdate` 経由で `headerFill` を書き、Fill
-セクションの本体色の下に並ぶ。`header-height` 行は `PropertyNumberField` から
-extra スタイルプロパティ `headerHeight` を書き、Layout セクションのサイズの下に
-並ぶ。文言はどちらもプラグイン自身の辞書から取る。
+実例は `plugins/container-shapes` である。自前のスタイル 2 つを自分の表
+（`src/style/containerStyleEntries.ts`）として宣言し、`createFrameObjectDefinition` の
+`styleEntries` へ渡す:
+
+```ts
+export const CONTAINER_STYLE_ENTRIES = {
+	headerFill: fieldEntry("headerFill", "string"),
+	headerHeight: fieldEntry("headerHeight", "number"),
+} satisfies StyleTable<ContainerState>;
+```
+
+`header-fill` 行が `PropertyColorField` から `onStyleIntent` 経由で `headerFill`
+を書き、Fill セクションの本体色の下に並ぶ。`header-height` 行は
+`PropertyNumberField` から `headerHeight` を書き、Layout セクションのサイズの下に
+並ぶ。現在値はどちらも `useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)` で述べ、宣言から型が
+付くので自前で絞るものは無い。文言はどちらもプラグイン自身の辞書から取る。
 
 **i18n。**プラグインが足したコマンドは自分の `label` をロケール別に宣言する。
 プラグインが自分で描く文字列はプラグインが持つ辞書から取り、`useCanvasLocale` /

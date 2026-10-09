@@ -8,6 +8,13 @@ import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 export const CORNER_RADIUS_MIN = 0;
 
 /**
+ * Radius the corners are drawn with when `rx` is omitted and the type declares
+ * no default of its own — square corners, which is what omitting the SVG
+ * attribute already produces.
+ */
+export const DEFAULT_CORNER_RADIUS = 0;
+
+/**
  * Radius style properties for objects (Document format).
  * Used for objects with rounded corners (e.g., rect).
  */

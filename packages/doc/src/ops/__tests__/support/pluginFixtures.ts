@@ -51,6 +51,7 @@ export const cappedDefinition: ObjectDocDefinition = {
 		type: "capped",
 		geometry: "rect",
 		text: "body",
+		textVerticalBasis: true,
 		transform: true,
 		connectable: true,
 	},
@@ -73,8 +74,8 @@ export const cappedDefinition: ObjectDocDefinition = {
 
 /**
  * A body-text shape whose label hangs below its outline, the way a pictogram's
- * does: its declared region lies outside the box, so a body placement
- * (`textVerticalBasis`) has nothing to move on it.
+ * does: its declared region lies outside the box, so it declares no
+ * `textVerticalBasis` and a body placement has nothing to move on it.
  */
 export const belowLabelDefinition: ObjectDocDefinition = {
 	features: {

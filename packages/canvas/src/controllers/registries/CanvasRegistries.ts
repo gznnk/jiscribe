@@ -16,7 +16,6 @@ import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoH
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
-import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type {
 	Camera,
 	CanvasInitialSidebars,
@@ -26,7 +25,7 @@ import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
-import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import type { ObjectStyleRegistry } from "../style/ObjectStyleRegistry";
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
@@ -56,11 +55,6 @@ export type CanvasRegistries = {
 	 * switch exactly where the parser accepts the result.
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
-	/**
-	 * Which types the switch between the two vertical text bases actually moves
-	 * the body of, so the canvas offers it only where it does something.
-	 */
-	objectTextVerticalBasis: ObjectTextVerticalBasisRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	/**
@@ -97,7 +91,11 @@ export type CanvasRegistries = {
 	propertyPanel: PropertyPanelRegistry;
 	stencil: StencilRegistry;
 	objectFactory: ObjectFactoryRegistry;
-	styleProperty: StylePropertyRegistry;
+	/**
+	 * Per-type style tables: which style intents a type takes and where each
+	 * lands in its data, so writing a style and reporting it read one answer.
+	 */
+	objectStyle: ObjectStyleRegistry;
 };
 
 /**

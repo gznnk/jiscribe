@@ -126,6 +126,65 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: a type declares `features.textVerticalBasis`.** The flag
+  says the type holds that field — its one body may be measured against the
+  shape's whole height rather than against the region the type declares — and is
+  what every side now reads: the style table offers the switch, the properties
+  sidebar shows the row, and the parser accepts the name in a document. A type
+  that does not declare it is told so by name when an AI writes the field
+  (`setExtraProps`, or `extraProps` on a creation), and a document holding it is
+  warned about and has it dropped on save, where before any single-body type took
+  it. Declare it only where the region gives up part of the box's height — a
+  cylinder's caps, a document's wavy foot, a container's header band — and the
+  parse-check suite (`@jiscribe/canvas-sdk/testing`) holds the declaration against
+  the region it is measured at, failing the author's own build on either half
+  without the other. Declaring it on a type with no single body to place
+  (`features.text` naming slots, or absent) is refused at registration. What the
+  user sees: an AWS frame no longer offers the switch. Its label is a title band
+  the doc layer has always held to be outside the box — which is why an AI write
+  of the field was already refused on it — and the frame basis only moved the
+  band down into the middle of the frame.
+- **For plugin authors: one read API for the selection's style.** A row of the
+  floating menu or the properties sidebar states its value through
+  `useSelectionStyle(name)` (`@jiscribe/canvas/unstable`): what the whole
+  selection says about one style property — `single` / `mixed` / `none` — over
+  exactly the objects a write of the same name would reach, folded with the
+  `selectionValue*` helpers exported beside it. A core name comes back
+  typed, and so does a name a shape declares for itself when the row reads it
+  through the declaring table (`useSelectionStyle(table, name)`); read by its name
+  alone it comes back `unknown` for the row to narrow.
+  `selectionValueOr` and `selectionValueOrFirst` take the row's default for an
+  agreed `undefined` too, so a property carried but unset reads as that default.
+  The first-match readers
+  `getFirstSelectedWithProp` / `getFirstSelectedWithStyleGroup` /
+  `getFirstSelectedPropValue` / `getSelectedShapeStyle` and the `ShapeStyleGroup`
+  they were searched by are gone. What the user sees: a plugin row (a sticky's
+  paper color, a container's header color and band height) now stands for the
+  whole selection rather than its first shape, showing its default where the
+  selection disagrees.
+- **For plugin authors: and one write API, its mirror.** A row writes through
+  `onStyleIntent(intent, commit)` (`StyleIntentUpdater`), which takes the edit
+  stated rather than a property name and a string: a core name goes as
+  its typed intent (`{ kind: "fontSize", size: 24 }`), a shape's own name as
+  `{ kind, value }` (`{ kind: "headerHeight", value: "32" }`). `StylePropertyUpdater`
+  and the `onPropertyUpdate` prop are gone; a widget that holds a name and a
+  string from the DOM reads it with `styleIntentOf(property, value)`, exported
+  beside `useSelectionStyle`.
+- **For plugin authors: a type declares its style table.**
+  `ObjectTypeDefinition.extraStyleProperties` is now `styleEntries`, a `StyleTable`
+  composed over the entries the type's `features` derive — so a kind declared
+  there **replaces** the derived one, which is what a type whose storage differs
+  from the core guess (a table whose fill lives on its cells) needs; shadowing a
+  core name no longer throws. `fieldEntry(path, valueType)` is the entry for a
+  field of the type's own, dots being a path into a nested object, and it carries
+  the field it writes: an entry writing one the type's doc cannot hold
+  (`extraKeys` plus what its features imply) is refused at registration rather
+  than writing state the next save drops. `fieldEntry` / `StyleTable` /
+  `StyleEntry` and the core entry helpers are exported from
+  `@jiscribe/canvas/unstable`; `ExtraStylePropertyDescriptor` and `StyleValueType`
+  are gone from `@jiscribe/doc`. A row reads its own kind typed from that
+  declaration — `useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")` — instead of
+  narrowing an `unknown` with a guard of its own.
 - **For plugin authors: a text edit is opened on the selection, not alongside
   it.** `textEditState` no longer names its own object or slot: it carries the
   draft and nothing else, and what is being edited is `selection` — the lone
@@ -214,6 +273,16 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **A style row states what the selection carries, and a style write lands
+  where the row said.** Reading and writing a style now take the same walk over
+  the selection, each property through its own entry on the shape's type, so the
+  two cannot disagree about who is addressed. Before, a row read the first shape
+  it found and the write reached every one: a record selected as a whole showed
+  its first slot's font color while the write recolored every slot; the stroke
+  rows were gated by one feature flag for all six fields; and a corner radius
+  or an arrowhead left unset showed a constant of the menu's rather than the
+  type's default. Now a disagreeing selection shows as mixed, and an unset value
+  shows as the type draws it.
 - **Delete on a connector's last waypoints does something again.** A connector's
   `points` holds only the waypoints between its endpoints, yet its vertex floor
   was the polyline's two, so with one or two waypoints left the key was claimed

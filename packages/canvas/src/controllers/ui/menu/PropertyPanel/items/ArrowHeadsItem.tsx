@@ -1,5 +1,6 @@
 import { ArrowTypes } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
@@ -9,21 +10,18 @@ import {
 } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
+import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
+import type { SelectionValue } from "../../../../style/SelectionValue";
+import {
+	isMixedSelectionValue,
+	selectionValueOr,
+} from "../../../../style/SelectionValue";
 import { ArrowSwapIcon } from "../../../icons/ArrowSwapIcon";
 import { ArrowHeadIconPreview } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadIconPreview";
 import {
 	ArrowSelectorGrid,
 	ArrowTypeButton,
 } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadMenuStyled";
-import {
-	readSelectionArrowType,
-	UNSET_ARROW_TYPE,
-} from "../../utils/readSelectionArrowType";
-import type { SelectionValue } from "../../utils/SelectionValue";
-import {
-	isMixedSelectionValue,
-	selectionValueOr,
-} from "../../utils/SelectionValue";
 import {
 	PropertyIconButton,
 	PropertyMixedLabel,
@@ -48,7 +46,7 @@ const ArrowEndField: React.FC<{
 	messages: CanvasMessages;
 }> = ({ property, direction, title, arrowType, messages }) => {
 	const isMixed = isMixedSelectionValue(arrowType);
-	const current = selectionValueOr(arrowType, UNSET_ARROW_TYPE);
+	const current = selectionValueOr(arrowType, SHAPE_STYLE_FALLBACK[property]);
 
 	return (
 		<PropertyDropdownField
@@ -87,10 +85,10 @@ const ArrowEndField: React.FC<{
  * sidebar has no room for fifteen marks side by side, so each end shows what it
  * is set to and opens the grid.
  */
-const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
+	const startArrow = useSelectionStyle("startArrow");
+	const endArrow = useSelectionStyle("endArrow");
 
 	return (
 		<PropertyRow>
@@ -98,7 +96,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 				property="startArrow"
 				direction="start"
 				title={messages.menuStartArrow}
-				arrowType={readSelectionArrowType(canvasState, "startArrow")}
+				arrowType={startArrow}
 				messages={messages}
 			/>
 			<PropertyIconButton
@@ -117,7 +115,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 				property="endArrow"
 				direction="end"
 				title={messages.menuEndArrow}
-				arrowType={readSelectionArrowType(canvasState, "endArrow")}
+				arrowType={endArrow}
 				messages={messages}
 			/>
 		</PropertyRow>

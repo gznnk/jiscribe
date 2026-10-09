@@ -5,14 +5,13 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { FontColorIcon } from "../../../../icons/FontColorIcon";
-import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
 	selectionValueOr,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -20,13 +19,13 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "font-color";
 
 type FontColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -37,7 +36,7 @@ type FontColorMenuProps = {
  */
 const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -47,14 +46,12 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const { fontColor } = readSelectionTextStyle(
-		canvasState,
-		objectTextStyleDefaults,
-	);
+	const fontColor = useSelectionStyle("fontColor");
 	const isMixed = isMixedSelectionValue(fontColor);
-	const currentColor =
-		selectionValueOr(fontColor, undefined) ?? TEXT_STYLE_FALLBACK.fontColor;
+	const currentColor = selectionValueOr(
+		fontColor,
+		TEXT_STYLE_FALLBACK.fontColor,
+	);
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -82,7 +79,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 					<ObjectMenuColorPickerGrid
 						currentColor={isMixed ? "" : currentColor}
 						property="fontColor"
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</ObjectMenuDropdownPanel>
 			)}

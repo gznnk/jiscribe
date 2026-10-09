@@ -83,8 +83,9 @@ const searchIcons = (query: string): { names: string[]; total: number } => {
 };
 
 /**
- * Icon picker (lucideIcon only). Writes the `icon` property, which the shape declares as
- * an extra style property so the update travels the same path as any other menu edit.
+ * Icon picker (lucideIcon only). Writes the `icon` property, which the shape declares in
+ * its own style table (ICON_STYLE_ENTRIES) so the update travels the same path as any other menu
+ * edit.
  *
  * The cells set the value through `data-part`, not an `onClick`. A press held for even a
  * moment never produces a click event on the button — the canvas captures the pointer, so

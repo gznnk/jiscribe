@@ -9,7 +9,6 @@ import type { TextStyleDoc } from "../base/TextStyleDoc";
 import type { ConnectorRouting } from "../types/ConnectorRouting";
 import type { CreateObjectType } from "../types/CreateObjectType";
 import type { EndpointRef } from "../types/EndpointRef";
-import type { ExtraStylePropertyDescriptor } from "../types/ExtraStyleProperty";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 import { AUTO_COLOR } from "../utils/autoColor";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
@@ -42,22 +41,6 @@ export const CONNECTOR_DOC_DEFAULTS: Required<
 	stroke: AUTO_COLOR,
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 };
-
-/**
- * Connector-specific styleable properties beyond the ObjectFeatures flags
- * (see ExtraStylePropertyRegistry). The `label.` prefix is a nested write path
- * into `connector.label`; a connector without a label ignores these (no-op).
- */
-export const ConnectorExtraStyleProperties = {
-	"label.fill": { valueType: "string" },
-	"label.stroke": { valueType: "string" },
-	"label.strokeWidth": { valueType: "number" },
-	"label.strokeDashType": { valueType: "string" },
-	"label.fontColor": { valueType: "string" },
-	"label.fontFamily": { valueType: "string" },
-	"label.fontSize": { valueType: "number" },
-	"label.fontWeight": { valueType: "string" },
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 /**
  * Annotation (label) attached to a connector.

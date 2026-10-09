@@ -5,11 +5,11 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -28,6 +28,9 @@ const SECTION_ID = "label-border-style";
 const MIN_BORDER_WIDTH = 0;
 const MAX_BORDER_WIDTH = 12;
 
+/** What a label with no `strokeWidth` of its own is drawn with: no border. */
+const UNSET_BORDER_WIDTH = 0;
+
 /**
  * Label border style menu (same layout as the shape's Border Style).
  * Handles solid/dashed/dotted (`label.strokeDashType`) and border width (`label.strokeWidth`).
@@ -37,7 +40,7 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
 	selection,
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -47,16 +50,22 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel({ objects, selection });
+	// An unset width draws no border, which is the value the slider starts from.
+	const { value: strokeWidth, hasLabelText } = useConnectorLabelStyle(
+		"label.strokeWidth",
+		UNSET_BORDER_WIDTH,
+		{ objects, selection },
+	);
+	const { value: strokeDashType } = useConnectorLabelStyle(
+		"label.strokeDashType",
+		undefined,
+		{ objects, selection },
+	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const strokeWidth = label.strokeWidth ?? 0;
-	const strokeDashType = label.strokeDashType;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -104,7 +113,7 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							min={MIN_BORDER_WIDTH}
 							max={MAX_BORDER_WIDTH}
 							property="label.strokeWidth"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 					</BorderStyleMenuWrapper>
 				</ObjectMenuDropdownPanel>

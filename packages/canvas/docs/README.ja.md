@@ -22,7 +22,7 @@ jiscribe 形式なので、VSCode 拡張か、canvas-examples（`apps/canvas-exa
 | 7   | [外部同期・VSCode 連携](./07-external-sync.ja.md)             | `useSyncExternalDoc` / `SYNC_EXTERNAL` と saveNonce 折り返し                                  |
 | 8   | [描画・テーマ](./08-rendering-and-theme.ja.md)                | rendering の純粋描画、色の使い分け、VSCode テーマトークン                                     |
 | 9   | [テスト](./09-testing.ja.md)                                  | ユニット / 結合（vitest）、E2E（Playwright）、循環依存チェック（madge）                       |
-| 10  | [スタイルプロパティシステム](./10-style-properties.ja.md)     | StylePropertyRegistry、feature gate / シェイプ宣言の 2 層宣言、ドット記法のネスト書き込み     |
+| 10  | [スタイルシステム](./10-style-properties.ja.md)               | StyleIntent、型別の `{ apply, read }` 表、2 本の歩き手、図形が自前のスタイルを宣言する方法    |
 | 11  | [図形の設計判断](./11-shape-design.ja.md)                     | 図形を新設・拡張するときの判断基準（ジオメトリの「ユーザー指定 / エンジン導出」切り分けなど） |
 | 12  | [プラグインアーキテクチャ](./12-plugin-architecture.ja.md)    | `CanvasPlugin` のコントリビューション、UI / headless の 2 面、公開面の階層、状態の所有権      |
 | 13  | [プラグインの作り方](./13-authoring-plugins.ja.md)            | 図形パッケージの構成、`@jiscribe/canvas-sdk`、リンタが強制する境界、配線チェックリスト        |

@@ -1,10 +1,6 @@
 import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
-import type {
-	CreateObjectType,
-	ExtraStylePropertyDescriptor,
-	ObjectFeatures,
-} from "@jiscribe/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** Side of the grid the icon drawings are authored on, and so the box a scale of 1 fills. */
 export const ICON_GRID_SIZE = 24;
@@ -37,11 +33,6 @@ export const IconFeatures = {
 	stroke: true,
 	connectable: true,
 } as const satisfies ObjectFeatures;
-
-/** Icon-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyRegistry). */
-export const IconExtraStyleProperties = {
-	icon: { valueType: "string" },
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const IconDocBrand: unique symbol;

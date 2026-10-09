@@ -18,7 +18,7 @@ const tsconfigRootDir = fileURLToPath(new URL(".", import.meta.url));
 
 // @jiscribe/doc opens a "./*" wildcard subpath in its package.json for the canvas view
 // layers alone: they map every built-in Doc type one by one and so reach ~60 internal
-// modules no curated entry names. This pattern is what holds everyone else to the four
+// modules no curated entry names. This pattern is what holds everyone else to the five
 // curated entries; packages/canvas/src/** drops it again below.
 const docCuratedEntriesOnly = {
 	group: [
@@ -26,9 +26,10 @@ const docCuratedEntriesOnly = {
 		"!@jiscribe/doc/unstable",
 		"!@jiscribe/doc/png-source",
 		"!@jiscribe/doc/svg-source",
+		"!@jiscribe/doc/testing",
 	],
 	message:
-		"@jiscribe/doc has no deep import surface. Take it from @jiscribe/doc, ./unstable, ./png-source or ./svg-source.",
+		"@jiscribe/doc has no deep import surface. Take it from @jiscribe/doc, ./unstable, ./png-source, ./svg-source or ./testing.",
 };
 
 /**
@@ -50,9 +51,9 @@ const docCuratedEntriesOnly = {
 const CONTROLLER_LAYERS = [
 	"messages",
 	"utils",
+	"style",
 	"behaviors",
 	"commands",
-	"styleProperties",
 	"gestures",
 	"reducer",
 	"hooks",
@@ -72,7 +73,12 @@ const controllerLayerFences = CONTROLLER_LAYERS.slice(0, -1).map(
 				{
 					patterns: [
 						{
-							group: CONTROLLER_LAYERS.slice(i + 1).map((up) => `**/${up}/**`),
+							// A layer name can recur inside a package path (`@jiscribe/doc/text/style/…`);
+							// the fences are about this package's own layers only.
+							group: [
+								...CONTROLLER_LAYERS.slice(i + 1).map((up) => `**/${up}/**`),
+								"!@jiscribe/**",
+							],
 							allowTypeImports: true,
 							message: `controllers/${layer} is below these layers and cannot import a value from them (types are allowed). Move the value down, or take it as a type.`,
 						},

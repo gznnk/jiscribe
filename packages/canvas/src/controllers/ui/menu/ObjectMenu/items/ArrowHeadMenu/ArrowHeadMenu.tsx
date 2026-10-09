@@ -1,4 +1,5 @@
 ﻿import { ArrowTypes } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
@@ -11,15 +12,12 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
-import {
-	readSelectionArrowType,
-	UNSET_ARROW_TYPE,
-} from "../../../utils/readSelectionArrowType";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
@@ -49,12 +47,15 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	const isStartOpen = canvasState.objectMenuOpenId === SECTION_ID_START;
 	const isEndOpen = canvasState.objectMenuOpenId === SECTION_ID_END;
 
-	const startArrow = readSelectionArrowType(canvasState, "startArrow");
-	const endArrow = readSelectionArrowType(canvasState, "endArrow");
+	const startArrow = useSelectionStyle("startArrow");
+	const endArrow = useSelectionStyle("endArrow");
 	const isStartMixed = isMixedSelectionValue(startArrow);
 	const isEndMixed = isMixedSelectionValue(endArrow);
-	const currentStart = selectionValueOr(startArrow, UNSET_ARROW_TYPE);
-	const currentEnd = selectionValueOr(endArrow, UNSET_ARROW_TYPE);
+	const currentStart = selectionValueOr(
+		startArrow,
+		SHAPE_STYLE_FALLBACK.startArrow,
+	);
+	const currentEnd = selectionValueOr(endArrow, SHAPE_STYLE_FALLBACK.endArrow);
 
 	const {
 		submenuRef: startSubmenuRef,

@@ -4,8 +4,8 @@ import { memo, useRef } from "react";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -24,7 +24,7 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
 	selection,
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -34,15 +34,16 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: fontColor, hasLabelText } = useConnectorLabelStyle(
+		"label.fontColor",
+		AUTO_COLOR,
+		{ objects, selection },
+	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const fontColor = label.fontColor ?? AUTO_COLOR;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -62,7 +63,7 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 					<ObjectMenuColorPickerGrid
 						currentColor={fontColor}
 						property="label.fontColor"
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</ObjectMenuDropdownPanel>
 			)}

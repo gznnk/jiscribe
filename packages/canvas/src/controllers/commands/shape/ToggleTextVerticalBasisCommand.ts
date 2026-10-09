@@ -1,13 +1,12 @@
-import type { TextPlacedObjectState } from "../../utils/textVerticalBasisSelection";
-import {
-	collectTextVerticalBasisIds,
-	isSelectionTextVerticalBasisFrame,
-} from "../../utils/textVerticalBasisSelection";
+import { applyStyleIntent } from "../../style/applyStyleIntent";
+import { readSelectionStyle } from "../../style/readSelectionStyle";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Switches the selected shapes between placing their body in the region their
- * own outline leaves clear and placing it on their whole height.
+ * own outline leaves clear and placing it on their whole height. Offered exactly
+ * where the switch moves a body at all, which is what a type's table answering
+ * for the intent says (`features.textVerticalBasis`).
  *
  * A shape with a stated height keeps it and only moves its text. One whose
  * document leaves the height out has it derived again on the new basis by the
@@ -15,7 +14,8 @@ import type { ExecutableCommand } from "../CommandTypes";
  * (`reconcileObjectContentSizes` → `calcAutoShapeHeight`), which is what keeps a
  * body switched onto the whole height inside the region its type keeps clear of
  * its own decoration. Switching back to the region removes the field rather than
- * writing `"region"` into it, that being the reading of its absence.
+ * writing `"region"` into it, that being the reading of its absence
+ * (textVerticalBasisEntry).
  */
 export const ToggleTextVerticalBasisCommand: ExecutableCommand = {
 	id: "toggleTextVerticalBasis",
@@ -23,31 +23,28 @@ export const ToggleTextVerticalBasisCommand: ExecutableCommand = {
 	category: "arrange",
 
 	canExecute: (state, registries) =>
-		collectTextVerticalBasisIds(state, registries.objectTextVerticalBasis)
-			.length > 0,
+		readSelectionStyle(state, "textVerticalBasis", registries).kind !== "none",
 
 	execute: (state, registries) => {
-		const ids = collectTextVerticalBasisIds(
-			state,
-			registries.objectTextVerticalBasis,
-		);
-		if (ids.length === 0) {
+		const current = readSelectionStyle(state, "textVerticalBasis", registries);
+		if (current.kind === "none") {
 			return state;
 		}
-		const toFrame = !isSelectionTextVerticalBasisFrame(
-			state,
-			registries.objectTextVerticalBasis,
-		);
-		const objects = { ...state.objects };
-		for (const id of ids) {
-			const { textVerticalBasis: _previousBasis, ...onRegion } = objects[
-				id
-			] as TextPlacedObjectState;
-			const switched: TextPlacedObjectState = toFrame
-				? { ...onRegion, textVerticalBasis: "frame" }
-				: onRegion;
-			objects[id] = switched;
-		}
-		return { ...state, objects, commitVersion: state.commitVersion + 1 };
+		// A selection whose switchable shapes disagree reads as "not yet", so the
+		// first press brings the whole selection to the frame basis and the second
+		// takes it back — which is what makes two presses of one button land
+		// somewhere predictable.
+		const basis =
+			current.kind === "single" && current.value === "frame"
+				? "region"
+				: "frame";
+		return {
+			...applyStyleIntent(
+				state,
+				{ kind: "textVerticalBasis", basis },
+				registries,
+			),
+			commitVersion: state.commitVersion + 1,
+		};
 	},
 };

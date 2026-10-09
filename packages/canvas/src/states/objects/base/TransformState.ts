@@ -2,11 +2,19 @@ import { isBoolean, isNumber } from "@jiscribe/basic-validators";
 import { isTransform, type Transform } from "@jiscribe/geometry";
 
 /**
+ * What an object leaving `lockAspectRatio` out resizes as: the two axes free of
+ * each other. The reading of an absent flag, stated once for every side that
+ * takes it — the style entry that writes the lock, the sidebar's row, and the
+ * resize gestures.
+ */
+export const DEFAULT_LOCK_ASPECT_RATIO: boolean = false;
+
+/**
  * Transform properties for objects in State layer.
  * Extends geometry's Transform with additional UI properties.
  */
 export type TransformState = Transform & {
-	/** Lock aspect ratio during resize. Default: false */
+	/** Lock aspect ratio during resize; absent means {@link DEFAULT_LOCK_ASPECT_RATIO}. */
 	lockAspectRatio?: boolean;
 	/** Minimum width during transformation. Optional. */
 	minWidth?: number;

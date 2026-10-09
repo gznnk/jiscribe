@@ -6,7 +6,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { defaultCanvasRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
+import { SelectionStyleReaderContext } from "../../../../../style/SelectionStyleReaderContext";
+import type { BuiltinItemProps } from "../BuiltinItemProps";
 import { StrokeWidthItem } from "../ShapeStyleItems";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -31,7 +35,11 @@ const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 let container: HTMLDivElement | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
 
-const render = (element: React.ReactElement): HTMLDivElement => {
+/** Renders the row for `canvasState`, under the reader the sidebar provides. */
+const render = (
+	canvasState: CanvasControllerState,
+	onStyleIntent: BuiltinItemProps["onStyleIntent"],
+): HTMLDivElement => {
 	if (!container) {
 		container = document.createElement("div");
 		document.body.appendChild(container);
@@ -39,7 +47,19 @@ const render = (element: React.ReactElement): HTMLDivElement => {
 	}
 	const mounted = root;
 	act(() => {
-		mounted?.render(element);
+		mounted?.render(
+			<SelectionStyleReaderContext.Provider
+				value={(kind) =>
+					readSelectionStyle(canvasState, kind, defaultCanvasRegistries)
+				}
+			>
+				<StrokeWidthItem
+					canvasState={canvasState}
+					onStyleIntent={onStyleIntent}
+					onTransformUpdate={vi.fn()}
+				/>
+			</SelectionStyleReaderContext.Provider>,
+		);
 	});
 	return container;
 };
@@ -72,43 +92,29 @@ afterEach(() => {
 
 describe("StrokeWidthItem", () => {
 	it("steps from the agreed width", () => {
-		const onPropertyUpdate = vi.fn();
-		render(
-			<StrokeWidthItem
-				canvasState={stateOf(rect("a", 4), rect("b", 4))}
-				onPropertyUpdate={onPropertyUpdate}
-				onTransformUpdate={vi.fn()}
-			/>,
-		);
+		const onStyleIntent = vi.fn();
+		render(stateOf(rect("a", 4), rect("b", 4)), onStyleIntent);
 
 		stepUp();
 
-		expect(onPropertyUpdate).toHaveBeenCalledWith(
-			"strokeWidth",
-			"5",
+		expect(onStyleIntent).toHaveBeenCalledWith(
+			{ kind: "strokeWidth", width: 5 },
 			true,
 			true,
 		);
 	});
 
 	it("steps from a width of the selection, not from the row's own default, while the two disagree", () => {
-		const onPropertyUpdate = vi.fn();
-		render(
-			<StrokeWidthItem
-				canvasState={stateOf(rect("a", 4), rect("b", 8))}
-				onPropertyUpdate={onPropertyUpdate}
-				onTransformUpdate={vi.fn()}
-			/>,
-		);
+		const onStyleIntent = vi.fn();
+		render(stateOf(rect("a", 4), rect("b", 8)), onStyleIntent);
 		const input = container?.querySelector("input");
 		// Drawn empty, since neither width is the selection's.
 		expect(input?.value).toBe("");
 
 		stepUp();
 
-		expect(onPropertyUpdate).toHaveBeenCalledWith(
-			"strokeWidth",
-			"5",
+		expect(onStyleIntent).toHaveBeenCalledWith(
+			{ kind: "strokeWidth", width: 5 },
 			true,
 			true,
 		);

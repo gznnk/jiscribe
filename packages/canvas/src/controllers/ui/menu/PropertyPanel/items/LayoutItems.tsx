@@ -2,18 +2,15 @@ import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { isSelectionAutoHeight } from "../../../../commands/shape/ToggleAutoHeightCommand";
-import {
-	commandPart,
-	setPart,
-} from "../../../../gestures/handlers/menu/utils/menuParts";
+import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { getSelectedLockAspectRatio } from "../../../../style/getSelectedLockAspectRatio";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
 import { PropertyPanelFieldGrid } from "../PropertyPanelStyled";
 import { getSelectedFrameValues } from "../utils/getSelectedFrameValues";
-import { getSelectedLockAspectRatio } from "../utils/getSelectedLockAspectRatio";
 
 /** A box may not be driven to zero, the floor the transform drag applies too. */
 const MIN_DIMENSION = 1;
@@ -136,12 +133,13 @@ const LockAspectRatioItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const isLocked = getSelectedLockAspectRatio(canvasState);
+	const registries = useCanvasRegistries();
+	const isLocked = getSelectedLockAspectRatio(canvasState, registries);
 
 	return (
 		<PropertyCheckbox
 			isOn={isLocked}
-			part={setPart("lockAspectRatio", isLocked ? "false" : "true")}
+			part={commandPart("toggleLockAspectRatio")}
 			label={messages.menuLockAspectRatio}
 			title={
 				isLocked ? messages.menuUnlockAspectRatio : messages.menuLockAspectRatio

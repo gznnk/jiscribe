@@ -18,8 +18,8 @@ import type { ExecutableCommand } from "../CommandTypes";
  * structural guard supplements this by checking value validity. isTextStyleState
  * alone is a loose guard that only checks the text attributes are internally
  * consistent, so it would also pass shapes with no text at all (svg / polyline /
- * polygon, etc.); this aligns on the same features.text criterion used by the
- * property-update side (TextSlotStyleProperty).
+ * polygon, etc.); this aligns on the same features.text criterion the style
+ * tables gate the text intents with (textStyleTable).
  */
 const canEditText = (
 	object: ObjectState | undefined,

@@ -3,8 +3,8 @@ import { memo, useRef } from "react";
 
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -30,7 +30,7 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
 	selection,
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -40,15 +40,16 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: fontSize, hasLabelText } = useConnectorLabelStyle(
+		"label.fontSize",
+		CONNECTOR_LABEL_DEFAULTS.fontSize,
+		{ objects, selection },
+	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const fontSize = label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -75,7 +76,7 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							sliderMax={SLIDER_MAX_FONT_SIZE}
 							step={FONT_SIZE_STEP}
 							property="label.fontSize"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 					</FontSizeMenuWrapper>
 				</ObjectMenuDropdownPanel>

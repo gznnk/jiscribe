@@ -12,6 +12,7 @@ import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { applyStyleIntent } from "../../../../../style/applyStyleIntent";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -384,9 +385,10 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 	};
 
 	// Regression guard for #167: a connector created via the gesture must carry the
-	// features descriptor. The style-property handlers read state.features directly to gate
-	// style updates, so a freshly created connector without it silently ignores every
-	// stroke change until a save/reload re-stamps features through the registry.
+	// features descriptor. The sides that read state.features directly gate on it
+	// (which rows the style menus offer), so a freshly created connector without it
+	// is offered no stroke control until a save/reload re-stamps features through
+	// the registry.
 	describe("a newly created connector is immediately style-editable (regression #167)", () => {
 		it("stamps the shared ConnectorFeatures descriptor (same reference, for memo stability)", () => {
 			const { state, connectorId } = createConnectorFromRect();
@@ -402,28 +404,28 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selection: selectionOf([connectorId]),
 			};
 
-			const dashed = registries.styleProperty.apply(
+			const dashed = applyStyleIntent(
 				selected,
-				"strokeDashType",
-				"dashed",
+				{ kind: "strokeDashType", dash: "dashed" },
+				registries,
 			);
 			expect(
 				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
 			).toBe("dashed");
 
-			const colored = registries.styleProperty.apply(
+			const colored = applyStyleIntent(
 				selected,
-				"stroke",
-				"#ff0000",
+				{ kind: "stroke", color: "#ff0000" },
+				registries,
 			);
 			expect((colored.objects[connectorId] as ConnectorState).stroke).toBe(
 				"#ff0000",
 			);
 
-			const widened = registries.styleProperty.apply(
+			const widened = applyStyleIntent(
 				selected,
-				"strokeWidth",
-				"7",
+				{ kind: "strokeWidth", width: 7 },
+				registries,
 			);
 			expect((widened.objects[connectorId] as ConnectorState).strokeWidth).toBe(
 				7,

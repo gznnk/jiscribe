@@ -11,24 +11,16 @@ import {
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
-import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
-import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
-import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import {
-	DEFAULT_CORNER_RADIUS,
-	readSelectionCornerRadius,
-} from "../../../utils/readSelectionCornerRadius";
-import {
-	readSelectionShapeStyle,
-	UNDECLARED_STROKE_DASH,
-} from "../../../utils/readSelectionShapeStyle";
+import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
 	selectionValueOrFirst,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
+import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
+import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
+import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -36,7 +28,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "border-style";
 
@@ -55,7 +47,7 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -65,24 +57,19 @@ type BorderStyleMenuProps = {
 const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,
 	showRadius = true,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
-	);
+	const strokeWidth = useSelectionStyle("strokeWidth");
+	const strokeDashType = useSelectionStyle("strokeDashType");
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
-	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
-	const cornerRadius = readSelectionCornerRadius(
-		canvasState.selection.objectIds,
-		canvasState.objects,
+	const dashType = selectionValueOr(
+		strokeDashType,
+		SHAPE_STYLE_FALLBACK.strokeDashType,
 	);
+	const cornerRadius = useSelectionStyle("cornerRadius");
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -140,7 +127,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							max={MAX_STROKE_WIDTH}
 							sliderMax={SLIDER_MAX_STROKE_WIDTH}
 							property="strokeWidth"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 
 						{showRadius && (
@@ -148,14 +135,14 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								label={messages.menuCornerRadius}
 								value={selectionValueOrFirst(
 									cornerRadius,
-									DEFAULT_CORNER_RADIUS,
+									SHAPE_STYLE_FALLBACK.rx,
 								)}
 								isMixed={isMixedSelectionValue(cornerRadius)}
 								min={MIN_CORNER_RADIUS}
 								max={MAX_CORNER_RADIUS}
 								sliderMax={SLIDER_MAX_CORNER_RADIUS}
 								property="rx"
-								onPropertyUpdate={onPropertyUpdate}
+								onStyleIntent={onStyleIntent}
 							/>
 						)}
 					</BorderStyleMenuWrapper>

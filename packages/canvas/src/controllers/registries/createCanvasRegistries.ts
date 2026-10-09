@@ -9,7 +9,6 @@ import {
 import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
 import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
-import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
 import { createObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
@@ -22,12 +21,11 @@ import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAuto
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
-import { createObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import { createObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
-import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import { createObjectStyleRegistry } from "../style/ObjectStyleRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
@@ -40,8 +38,7 @@ import { createStencilRegistry } from "../ui/objects/StencilRegistry";
  *
  * Wiring order:
  *   1. instantiate the empty registries,
- *   2. register the object-type-independent sets (gesture handlers, system
- *      style properties) — always all,
+ *   2. register the object-type-independent sets (the gesture handlers) — always all,
  *   3. apply the configured object types (default: every type),
  *   4. register the built-in commands followed by the plugins' own, optionally
  *      restricted by `config.commands`,
@@ -60,7 +57,6 @@ export const createCanvasRegistries = (
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectContentResizer: createObjectContentResizerRegistry(),
 		objectAutoHeight: createObjectAutoHeightRegistry(),
-		objectTextVerticalBasis: createObjectTextVerticalBasisRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
@@ -82,14 +78,10 @@ export const createCanvasRegistries = (
 		propertyPanel: createPropertyPanelRegistry(),
 		stencil: createStencilRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
-		styleProperty: createStylePropertyRegistry(),
+		objectStyle: createObjectStyleRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
-	initializeStyleProperties(
-		registries.styleProperty,
-		registries.objectTextVerticalBasis,
-	);
 
 	// Tracks which object types are already claimed and by whom, so a plugin
 	// colliding with a built-in or an earlier plugin throws instead of

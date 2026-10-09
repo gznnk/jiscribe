@@ -217,6 +217,7 @@ describe("createCanvasRegistries", () => {
 							stroke: true,
 							fill: true,
 							text: "body",
+							textVerticalBasis: true,
 						},
 						// A cap band the text stays below, as a cylinder has.
 						textRegion: ({ width, height }) => ({

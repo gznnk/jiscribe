@@ -4,24 +4,16 @@ import { memo } from "react";
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { DashedLineIcon } from "../../../icons/DashedLineIcon";
-import { DottedLineIcon } from "../../../icons/DottedLineIcon";
-import { SolidLineIcon } from "../../../icons/SolidLineIcon";
-import {
-	DEFAULT_CORNER_RADIUS,
-	readSelectionCornerRadius,
-} from "../../utils/readSelectionCornerRadius";
-import {
-	readSelectionShapeStyle,
-	UNDECLARED_STROKE_DASH,
-} from "../../utils/readSelectionShapeStyle";
+import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
 	selectionValueOr,
 	selectionValueOrFirst,
-} from "../../utils/SelectionValue";
+} from "../../../../style/SelectionValue";
+import { DashedLineIcon } from "../../../icons/DashedLineIcon";
+import { DottedLineIcon } from "../../../icons/DottedLineIcon";
+import { SolidLineIcon } from "../../../icons/SolidLineIcon";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
@@ -40,18 +32,9 @@ const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
 
 /** The face of the selected shape. */
-const FillItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onPropertyUpdate,
-}) => {
+const FillItemComponent: React.FC<BuiltinItemProps> = ({ onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { fill } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"fill",
-	);
+	const fill = useSelectionStyle("fill");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -64,7 +47,7 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 				property="fill"
 				role="surface"
 				title={messages.menuBackgroundColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -74,17 +57,10 @@ export const FillItem = memo(FillItemComponent);
 
 /** How opaque the face is drawn, stated in percent over the document's 0..1. */
 const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { fillOpacity } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"fill",
-	);
+	const fillOpacity = useSelectionStyle("fillOpacity");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
@@ -99,9 +75,8 @@ const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuFillOpacity}
 				testId="property-field:fillOpacity"
 				onUpdate={(percent, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"fillOpacity",
-						String(toOpacityValue(percent)),
+					onStyleIntent(
+						{ kind: "fillOpacity", opacity: toOpacityValue(percent) },
 						commit,
 						coalesceHistory,
 					)
@@ -115,17 +90,10 @@ export const FillOpacityItem = memo(FillOpacityItemComponent);
 
 /** The stroke of the selected shape, or of the selected connector. */
 const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { stroke } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
-	);
+	const stroke = useSelectionStyle("stroke");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
@@ -138,7 +106,7 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 				property="stroke"
 				role="ink"
 				title={messages.menuStrokeColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -148,17 +116,10 @@ export const StrokeColorItem = memo(StrokeColorItemComponent);
 
 /** How thick the stroke is drawn. 0 draws none. */
 const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { strokeWidth } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
-	);
+	const strokeWidth = useSelectionStyle("strokeWidth");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowWidth}>
@@ -173,9 +134,8 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuBorderWidth}
 				testId="property-field:strokeWidth"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"strokeWidth",
-						String(value),
+					onStyleIntent(
+						{ kind: "strokeWidth", width: value },
 						commit,
 						coalesceHistory,
 					)
@@ -188,18 +148,13 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 export const StrokeWidthItem = memo(StrokeWidthItemComponent);
 
 /** Solid, dashed or dotted. An unset value draws solid, so that is what reads active. */
-const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-}) => {
+const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { strokeDashType } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
+	const strokeDashType = useSelectionStyle("strokeDashType");
+	const dashType = selectionValueOr(
+		strokeDashType,
+		SHAPE_STYLE_FALLBACK.strokeDashType,
 	);
-	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowType}>
@@ -237,17 +192,10 @@ export const StrokeDashTypeItem = memo(StrokeDashTypeItemComponent);
 
 /** How opaque the stroke is drawn, stated in percent over the document's 0..1. */
 const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { strokeOpacity } = readSelectionShapeStyle(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
-	);
+	const strokeOpacity = useSelectionStyle("strokeOpacity");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
@@ -265,9 +213,8 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 				ariaLabel={messages.menuBorderOpacity}
 				testId="property-field:strokeOpacity"
 				onUpdate={(percent, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"strokeOpacity",
-						String(toOpacityValue(percent)),
+					onStyleIntent(
+						{ kind: "strokeOpacity", opacity: toOpacityValue(percent) },
 						commit,
 						coalesceHistory,
 					)
@@ -280,27 +227,25 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 export const StrokeOpacityItem = memo(StrokeOpacityItemComponent);
 
 /** How far the corners are rounded. */
-const RadiusItemComponent: React.FC<BuiltinItemProps> = ({
-	canvasState,
-	onPropertyUpdate,
-}) => {
+const RadiusItemComponent: React.FC<BuiltinItemProps> = ({ onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const cornerRadius = readSelectionCornerRadius(
-		canvasState.selection.objectIds,
-		canvasState.objects,
-	);
+	const cornerRadius = useSelectionStyle("cornerRadius");
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowRadius}>
 			<PropertyNumberField
-				value={selectionValueOrFirst(cornerRadius, DEFAULT_CORNER_RADIUS)}
+				value={selectionValueOrFirst(cornerRadius, SHAPE_STYLE_FALLBACK.rx)}
 				isMixed={isMixedSelectionValue(cornerRadius)}
 				min={MIN_CORNER_RADIUS}
 				max={MAX_CORNER_RADIUS}
 				ariaLabel={messages.menuCornerRadius}
 				testId="property-field:rx"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate("rx", String(value), commit, coalesceHistory)
+					onStyleIntent(
+						{ kind: "cornerRadius", radius: value },
+						commit,
+						coalesceHistory,
+					)
 				}
 			/>
 		</PropertyRow>

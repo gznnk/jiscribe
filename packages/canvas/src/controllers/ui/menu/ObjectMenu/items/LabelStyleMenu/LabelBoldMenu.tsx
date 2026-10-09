@@ -2,9 +2,9 @@ import { memo } from "react";
 
 import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
@@ -20,15 +20,17 @@ const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	selection,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: fontWeight, hasLabelText } = useConnectorLabelStyle(
+		"label.fontWeight",
+		undefined,
+		{ objects, selection },
+	);
+	const isBold = isBoldFontWeight(fontWeight);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const isBold = isBoldFontWeight(label.fontWeight);
 
 	return (
 		<ObjectMenuItemPositioner>

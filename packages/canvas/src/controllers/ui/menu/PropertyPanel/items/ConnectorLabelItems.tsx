@@ -2,6 +2,12 @@
  * The rows of the connector's Label and Label border sections: the text and the
  * box a label is drawn in, stated one property at a time under `label.*`.
  *
+ * Each row states its value through the style intent of the property's own name
+ * (useConnectorLabelStyle), the way the ObjectMenu's LabelStyleMenu does — so
+ * the two surfaces and the writes behind them cannot disagree. A label property
+ * is one the connector declares for itself, so the rows read it through that
+ * declaration (CONNECTOR_STYLE_ENTRIES), which is what types the value.
+ *
  * Every row returns null while the selected connector carries no label text —
  * there is nothing to style until a label exists — and the sections' own
  * `isShown` takes their headings away with them (see applyObjectDefinition).
@@ -11,21 +17,21 @@
 
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo } from "react";
 
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../icons/BoldIcon";
 import { DashedLineIcon } from "../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../icons/SolidLineIcon";
+import { useConnectorLabelStyle } from "../../hooks/useConnectorLabelStyle";
 import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
-import { UNDECLARED_STROKE_DASH } from "../../utils/readSelectionShapeStyle";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyDropdownTriggerLabel } from "../common/PropertyControlsStyled";
 import { PropertyDropdownField } from "../common/PropertyDropdownField";
@@ -41,21 +47,25 @@ const MAX_FONT_SIZE = 999;
 const MIN_BORDER_WIDTH = 0;
 const MAX_BORDER_WIDTH = 12;
 
+/** What a label with no `strokeWidth` of its own is drawn with: no border. */
+const UNSET_BORDER_WIDTH = 0;
+
 /** The face the label's text is drawn in, picked from the shipped set. */
 const ConnectorLabelFontFamilyItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selection }) => {
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
-	const label = getSelectedConnectorLabel({ objects, selection });
+	// An unset family draws in the default one, so that is the entry to mark active.
+	const { value: fontFamily, hasLabelText } = useConnectorLabelStyle(
+		"label.fontFamily",
+		CONNECTOR_LABEL_DEFAULTS.fontFamily,
+		{ objects, selection },
+	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily = label.fontFamily ?? CONNECTOR_LABEL_DEFAULTS.fontFamily;
 
 	return (
 		<PropertyRow label={messages.menuFontFamily}>
@@ -84,27 +94,30 @@ export const ConnectorLabelFontFamilyItem = memo(
 const ConnectorLabelFontSizeItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
 	selection,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: fontSize, hasLabelText } = useConnectorLabelStyle(
+		"label.fontSize",
+		CONNECTOR_LABEL_DEFAULTS.fontSize,
+		{ objects, selection },
+	);
 
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowSize}>
 			<PropertyNumberField
-				value={label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize}
+				value={fontSize}
 				min={MIN_FONT_SIZE}
 				max={MAX_FONT_SIZE}
 				ariaLabel={messages.menuLabelFontSize}
 				testId="property-field:label.fontSize"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"label.fontSize",
-						String(value),
+					onStyleIntent(
+						{ kind: "label.fontSize", value },
 						commit,
 						coalesceHistory,
 					)
@@ -121,22 +134,26 @@ export const ConnectorLabelFontSizeItem = memo(
 /** The ink the label's text is drawn in. */
 const ConnectorLabelFontColorItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: fontColor, hasLabelText } = useConnectorLabelStyle(
+		"label.fontColor",
+		AUTO_COLOR,
+		{ objects, selection },
+	);
 
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
 			<PropertyColorField
-				value={label.fontColor ?? AUTO_COLOR}
+				value={fontColor}
 				property="label.fontColor"
 				role="ink"
 				title={messages.menuLabelFontColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -155,13 +172,16 @@ const ConnectorLabelStyleItemComponent: React.FC<PropertyPanelItemProps> = ({
 	selection,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: fontWeight, hasLabelText } = useConnectorLabelStyle(
+		"label.fontWeight",
+		undefined,
+		{ objects, selection },
+	);
+	const isBold = isBoldFontWeight(fontWeight);
 
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const isBold = isBoldFontWeight(label.fontWeight);
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowStyle}>
@@ -189,24 +209,28 @@ export const ConnectorLabelStyleItem = memo(ConnectorLabelStyleItemComponent);
  */
 const ConnectorLabelBackgroundItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: fill, hasLabelText } = useConnectorLabelStyle(
+		"label.fill",
+		AUTO_COLOR,
+		{ objects, selection },
+	);
 
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowBackground}>
 			<PropertyColorField
-				value={label.fill ?? AUTO_COLOR}
+				value={fill}
 				property="label.fill"
 				role="canvas"
 				// The label of the one selected connector is the whole target.
 				currentColorIsShared
 				title={messages.menuLabelBackgroundColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -219,24 +243,28 @@ export const ConnectorLabelBackgroundItem = memo(
 /** The outline of the label's box; drawn only while its width is above 0. */
 const ConnectorLabelBorderColorItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: stroke, hasLabelText } = useConnectorLabelStyle(
+		"label.stroke",
+		AUTO_COLOR,
+		{ objects, selection },
+	);
 
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowColor}>
 			<PropertyColorField
-				value={label.stroke ?? AUTO_COLOR}
+				value={stroke}
 				property="label.stroke"
 				role="ink"
 				// The label of the one selected connector is the whole target.
 				currentColorIsShared
 				title={messages.menuLabelBorderColor}
-				onPropertyUpdate={onPropertyUpdate}
+				onStyleIntent={onStyleIntent}
 			/>
 		</PropertyRow>
 	);
@@ -249,26 +277,29 @@ export const ConnectorLabelBorderColorItem = memo(
 /** How thick the label's outline is drawn. 0 (the default) draws none. */
 const ConnectorLabelBorderWidthItemComponent: React.FC<
 	PropertyPanelItemProps
-> = ({ objects, selection, onPropertyUpdate }) => {
+> = ({ objects, selection, onStyleIntent }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: strokeWidth, hasLabelText } = useConnectorLabelStyle(
+		"label.strokeWidth",
+		UNSET_BORDER_WIDTH,
+		{ objects, selection },
+	);
 
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowWidth}>
 			<PropertyNumberField
-				value={label.strokeWidth ?? 0}
+				value={strokeWidth}
 				min={MIN_BORDER_WIDTH}
 				max={MAX_BORDER_WIDTH}
 				ariaLabel={messages.menuBorderWidth}
 				testId="property-field:label.strokeWidth"
 				onUpdate={(value, commit, coalesceHistory) =>
-					onPropertyUpdate(
-						"label.strokeWidth",
-						String(value),
+					onStyleIntent(
+						{ kind: "label.strokeWidth", value },
 						commit,
 						coalesceHistory,
 					)
@@ -287,13 +318,15 @@ const ConnectorLabelBorderTypeItemComponent: React.FC<
 	PropertyPanelItemProps
 > = ({ objects, selection }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel({ objects, selection });
+	const { value: dashType, hasLabelText } = useConnectorLabelStyle(
+		"label.strokeDashType",
+		SHAPE_STYLE_FALLBACK.strokeDashType,
+		{ objects, selection },
+	);
 
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const dashType = label.strokeDashType ?? UNDECLARED_STROKE_DASH;
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowType}>
