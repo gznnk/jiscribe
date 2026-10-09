@@ -5,7 +5,7 @@ import {
 	type ConnectorState,
 } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
-import { commitEditIfChanged } from "../../../utils/commitEdit";
+import { commitEdit } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
 	CanvasEvent,
@@ -31,21 +31,23 @@ const TARGET_PART_PREFIX = "segment-move:";
  *
  * Everything is derived from the drag-start snapshot rather than the live state, so each frame is
  * an independent function of the cursor and a snap correction never accumulates.
+ *
+ * @returns The state with the moved segment, or null when there is no segment to write
  */
 const handleDrag = (
 	state: CanvasControllerState,
 	event: CanvasEvent,
 	connectorId: string,
 	segmentIndex: number,
-): CanvasControllerState => {
+): CanvasControllerState | null => {
 	const snapshot = state.activeDrag?.startSnapshot;
 	const connector = snapshot?.objects[connectorId];
 	if (!snapshot || !isConnectorState(connector)) {
-		return state;
+		return null;
 	}
 	const ends = getConnectorSegmentEnds(connector, segmentIndex);
 	if (!ends) {
-		return state;
+		return null;
 	}
 
 	// --- Snap correction, on both axes and against both ends of the segment ---
@@ -82,7 +84,7 @@ const handleDrag = (
 
 	const translated = translateConnectorSegment(connector, segmentIndex, delta);
 	if (!translated) {
-		return state;
+		return null;
 	}
 	const updatedConnector: ConnectorState = { ...connector, ...translated };
 
@@ -141,10 +143,11 @@ export const ConnectorSegmentMoveHandler: GestureHandler = {
 		}
 		if (event.type === "dragEnd") {
 			const draggedState = handleDrag(state, event, connectorId, segmentIndex);
-			const committedState = commitEditIfChanged(state, draggedState);
-			const closedState = { ...committedState, edgeScrollEnabled: false };
-			return closedState;
+			if (draggedState === null) {
+				return { ...state, edgeScrollEnabled: false };
+			}
+			return commitEdit({ ...draggedState, edgeScrollEnabled: false });
 		}
-		return handleDrag(state, event, connectorId, segmentIndex);
+		return handleDrag(state, event, connectorId, segmentIndex) ?? state;
 	},
 };

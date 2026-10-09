@@ -126,7 +126,7 @@ describe("handleRotationDrag", () => {
 				makeDragEvent({ x: 100, y: 125 }),
 				registries,
 			);
-			expect(next.objects["rect-1"]).toMatchObject({ rotation: 90 });
+			expect(next?.objects["rect-1"]).toMatchObject({ rotation: 90 });
 		});
 
 		it("rounds the rotation to an integer", () => {
@@ -139,7 +139,7 @@ describe("handleRotationDrag", () => {
 				makeDragEvent({ x: 150, y: 25 }),
 				registries,
 			);
-			expect(next.objects["rect-1"]).toMatchObject({ rotation: 27 });
+			expect(next?.objects["rect-1"]).toMatchObject({ rotation: 27 });
 		});
 
 		it("normalizes negative angles into the 0-360 range", () => {
@@ -152,7 +152,7 @@ describe("handleRotationDrag", () => {
 				makeDragEvent({ x: 0, y: -75 }),
 				registries,
 			);
-			expect(next.objects["rect-1"]).toMatchObject({ rotation: 270 });
+			expect(next?.objects["rect-1"]).toMatchObject({ rotation: 270 });
 		});
 
 		it("keeps the center and size unchanged", () => {
@@ -164,7 +164,7 @@ describe("handleRotationDrag", () => {
 				makeDragEvent({ x: 100, y: 125 }),
 				registries,
 			);
-			expect(next.objects["rect-1"]).toMatchObject({
+			expect(next?.objects["rect-1"]).toMatchObject({
 				cx: 50,
 				cy: 25,
 				width: 100,
@@ -185,9 +185,9 @@ describe("handleRotationDrag", () => {
 				registries,
 			);
 
-			expect(next.objects["grp"]).toMatchObject({ rotation: 90 });
+			expect(next?.objects["grp"]).toMatchObject({ rotation: 90 });
 			// Child center (30, 25) rotated +90 about (50, 25) -> (50, 5)
-			const rotatedChild = next.objects["rect-a"] as unknown as {
+			const rotatedChild = next?.objects["rect-a"] as unknown as {
 				cx: number;
 				cy: number;
 				rotation: number;
@@ -220,14 +220,14 @@ describe("handleRotationDrag", () => {
 				registries,
 			);
 
-			expect(next.multiSelectGroup).toMatchObject({ rotation: 90 });
+			expect(next?.multiSelectGroup).toMatchObject({ rotation: 90 });
 			// Centers rotate +90 about the group center (50, 25)
-			const rotatedA = next.objects["rect-a"] as unknown as {
+			const rotatedA = next?.objects["rect-a"] as unknown as {
 				cx: number;
 				cy: number;
 				rotation: number;
 			};
-			const rotatedB = next.objects["rect-b"] as unknown as {
+			const rotatedB = next?.objects["rect-b"] as unknown as {
 				cx: number;
 				cy: number;
 				rotation: number;
@@ -258,7 +258,7 @@ describe("handleRotationDrag", () => {
 					makeDragEvent(cursorForRotation(rawDegrees), { shift: true }),
 					registries,
 				);
-				expect(next.objects["rect-1"]).toMatchObject({ rotation: snapped });
+				expect(next?.objects["rect-1"]).toMatchObject({ rotation: snapped });
 			},
 		);
 
@@ -273,7 +273,7 @@ describe("handleRotationDrag", () => {
 					makeDragEvent(cursorForRotation(rawDegrees)),
 					registries,
 				);
-				expect(next.objects["rect-1"]).toMatchObject({ rotation: rawDegrees });
+				expect(next?.objects["rect-1"]).toMatchObject({ rotation: rawDegrees });
 			},
 		);
 
@@ -298,8 +298,8 @@ describe("handleRotationDrag", () => {
 				registries,
 			);
 
-			expect(next.multiSelectGroup).toMatchObject({ rotation: 30 });
-			expect(next.objects["rect-a"]).toMatchObject({ rotation: 30 });
+			expect(next?.multiSelectGroup).toMatchObject({ rotation: 30 });
+			expect(next?.objects["rect-a"]).toMatchObject({ rotation: 30 });
 		});
 
 		it("snaps a selected group the same way", () => {
@@ -313,13 +313,13 @@ describe("handleRotationDrag", () => {
 				registries,
 			);
 
-			expect(next.objects["grp"]).toMatchObject({ rotation: 45 });
-			expect(next.objects["rect-a"]).toMatchObject({ rotation: 45 });
+			expect(next?.objects["grp"]).toMatchObject({ rotation: 45 });
+			expect(next?.objects["rect-a"]).toMatchObject({ rotation: 45 });
 		});
 	});
 
 	describe("guards", () => {
-		it("returns the state as is when no drag is open", () => {
+		it("returns null when no drag is open", () => {
 			const state = {
 				objects: { "rect-1": makeRect("rect-1", 50, 25) },
 				selection: selectionOf(["rect-1"]),
@@ -331,10 +331,10 @@ describe("handleRotationDrag", () => {
 					makeDragEvent({ x: 100, y: 125 }),
 					registries,
 				),
-			).toBe(state);
+			).toBeNull();
 		});
 
-		it("returns the state as is when the selected object is not a transformed frame", () => {
+		it("returns null when the selected object is not a transformed frame", () => {
 			const notFrame = { id: "text-1", type: "text" } as unknown as ObjectState;
 			const state = makeState({ "text-1": notFrame }, ["text-1"]);
 			expect(
@@ -343,7 +343,7 @@ describe("handleRotationDrag", () => {
 					makeDragEvent({ x: 100, y: 125 }),
 					registries,
 				),
-			).toBe(state);
+			).toBeNull();
 		});
 	});
 });
