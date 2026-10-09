@@ -1,7 +1,7 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StyleValueOfType, StyleValueType } from "../coerceStyleValue";
 import { coerceStyleValue } from "../coerceStyleValue";
-import type { StyleEntry } from "../StyleEntry";
+import type { DeclaredStyleEntry } from "../StyleEntry";
 
 /**
  * Immutably writes `value` at `path` ("label.fill" → ["label", "fill"]).
@@ -107,7 +107,7 @@ const readDeclaredValue = <TValueType extends StyleValueType>(
  * @param path - The field written and read: a dotted name ("label.fill"), split here, or its parts spelled out. A nested write merges into the existing parent and answers null when there is none, so a kind under a part the object does not carry (a connector with no label) applies to nothing
  * @param valueType - What the field holds, which fixes the entry's value type; an incoming value is read against it (readDeclaredValue)
  * @returns The pair, writing the value read and reporting the stored one per object — `undefined` where the object states nothing, and no value at all where a parent on the path is missing, matching what `apply` would reach
- * @template TState - The state the entry is written against; left out, it is written against every object, which is what a kind outside the core vocabulary needs (StyleTable)
+ * @template TState - The state the entry is written against; left out, it is written against every object, which is what a kind outside the core vocabulary needs (DeclaredStyleTable)
  * @template TValueType - The declared type, which fixes the value type
  */
 export const fieldEntry = <
@@ -116,7 +116,7 @@ export const fieldEntry = <
 >(
 	path: string | readonly string[],
 	valueType: TValueType,
-): StyleEntry<TState, StyleValueOfType<TValueType> | undefined> => {
+): DeclaredStyleEntry<TState, StyleValueOfType<TValueType> | undefined> => {
 	const parts = typeof path === "string" ? path.split(".") : path;
 	return {
 		// The root of the path is the one field a write touches, whatever depth it

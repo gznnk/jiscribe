@@ -4,7 +4,7 @@ import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition"
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { fieldEntry } from "../../style/entries/fieldEntry";
-import type { StyleEntry } from "../../style/StyleEntry";
+import type { DeclaredStyleEntry, StyleEntry } from "../../style/StyleEntry";
 import { applyObjectDefinition } from "../applyObjectDefinition";
 import { createTestRegistries } from "../createCanvasRegistries";
 
@@ -55,7 +55,8 @@ describe("applyObjectDefinition: style", () => {
 		const registries = createTestRegistries();
 		// A type whose face is not stored on the object itself states where the
 		// fill really lands (a table's, on its cells); the derived entry gives way.
-		const cellFill: StyleEntry<ObjectState, string> = {
+		const cellFill: DeclaredStyleEntry<ObjectState, string> = {
+			fields: [],
 			apply: (object) => object,
 			read: () => [],
 		};
@@ -95,5 +96,41 @@ describe("applyObjectDefinition: style", () => {
 		expect(
 			registries.objectStyle.get("connector")?.["label.fill"],
 		).toBeDefined();
+	});
+
+	it("refuses an entry that does not state the fields it writes", () => {
+		const registries = createTestRegistries();
+		// What a definition written in JavaScript, or cast past the type, can hand in.
+		const cellFill: StyleEntry<ObjectState, string> = {
+			apply: (object) => object,
+			read: () => [],
+		};
+		expect(() =>
+			applyObjectDefinition(
+				registries,
+				"table",
+				buildFakeDefinition("table", {
+					styleEntries: {
+						fill: cellFill as DeclaredStyleEntry<ObjectState, string>,
+					},
+				}),
+			),
+		).toThrow(/"table".*"fill".*does not state the fields it writes/);
+	});
+
+	it("takes an entry stating `fields: []`", () => {
+		const registries = createTestRegistries();
+		const cellFill: DeclaredStyleEntry<ObjectState, string> = {
+			fields: [],
+			apply: (object) => object,
+			read: () => [],
+		};
+		applyObjectDefinition(
+			registries,
+			"table",
+			buildFakeDefinition("table", { styleEntries: { fill: cellFill } }),
+		);
+
+		expect(registries.objectStyle.get("table")?.fill).toBe(cellFill);
 	});
 });

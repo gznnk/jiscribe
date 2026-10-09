@@ -179,7 +179,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   field of the type's own, dots being a path into a nested object, and it carries
   the field it writes: an entry writing one the type's doc cannot hold
   (`extraKeys` plus what its features imply) is refused at registration rather
-  than writing state the next save drops. `fieldEntry` / `StyleTable` /
+  than writing state the next save drops. A declared entry always states its
+  `fields`, `[]` when it writes nothing the document stores, and one stating
+  none is refused at registration too; `DeclaredStyleTable` /
+  `DeclaredStyleEntry` name that shape. `fieldEntry` / `StyleTable` /
   `StyleEntry` and the core entry helpers are exported from
   `@jiscribe/canvas/unstable`; `ExtraStylePropertyDescriptor` and `StyleValueType`
   are gone from `@jiscribe/doc`. A row reads its own kind typed from that

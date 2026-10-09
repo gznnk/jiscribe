@@ -292,8 +292,12 @@ styles as a table of its own (`src/style/containerStyleEntries.ts`), handed to
 export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
-} satisfies StyleTable<ContainerState>;
+} satisfies DeclaredStyleTable<ContainerState>;
 ```
+
+Every entry of a declared table states the fields it writes (`fields`, `[]`
+when it writes nothing the document stores), and one stating none is refused at
+registration; `fieldEntry` states it for you.
 
 Its `header-fill` row states `headerFill` through `onStyleIntent` from a
 `PropertyColorField`, sitting under the body color in the Fill section, and its

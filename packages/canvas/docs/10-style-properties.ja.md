@@ -69,7 +69,7 @@ type StyleEntry<TState extends ObjectState, V> = {
 		pick: ObjectPartSelection | null,
 		ctx: StyleContext,
 	): readonly V[];
-	/** このエントリが書く object 直下のフィールド。登録時の検査が見る */
+	/** このエントリが書く object 直下のフィールド。登録時の検査が見る。宣言するエントリでは必須 */
 	readonly fields?: readonly string[];
 };
 ```
@@ -85,8 +85,8 @@ type StyleEntry<TState extends ObjectState, V> = {
 index signature に入る（値型はエンジンが知らないので `unknown`。core の
 エントリもこれに代入できるので、2 つの半分が 1 つの交差型に収まる）。エントリは
 **自分が書くフィールド**も述べる（`StyleEntry.fields`）。登録時にその型の Doc と
-突き合わせるのがこれで、core のエントリは何も述べない — フィールドの保証は
-導出元のフラグ自身が持っているからである。
+突き合わせるのがこれで、省略してよいのはエンジン自身の core のエントリだけ —
+フィールドの保証は導出元のフラグ自身が持っているからである。
 
 `StyleContext` は、object と値以外にエントリへ渡されるもの:
 
@@ -259,14 +259,14 @@ materialize は従来どおりの分担で、ジェスチャー経路は `handle
 ## 型が宣言するもの
 
 `ObjectFeatures` のフラグが覆わないスタイル — あるいはフラグの示す格納先と実際が違う
-スタイル — は、その型自前の `StyleTable` として宣言し、`ObjectTypeDefinition.styleEntries`
+スタイル — は、その型自前の `DeclaredStyleTable` として宣言し、`ObjectTypeDefinition.styleEntries`
 へ渡す:
 
 ```ts
 export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
-} satisfies StyleTable<ContainerState>;
+} satisfies DeclaredStyleTable<ContainerState>;
 ```
 
 この表は導出された表の上に、**宣言が後ろになるよう**重ねられる。core の語彙が
@@ -277,15 +277,17 @@ export const CONTAINER_STYLE_ENTRIES = {
 — 選択グループの子孫も含む — にだけ当たる。名前のドットは書き込み path
 （`label.fill` は `connector.label` へ merge）。
 
-エントリは自分が書くフィールドを述べ（`fields`。`fieldEntry` は path の根から埋める）、
-**その型の Doc が持てないフィールドを書くエントリは登録時に拒否する**。持てる名前は
+宣言するエントリは必ず自分が書くフィールドを述べる（`fields`。`fieldEntry` は path の
+根から埋める。Doc に保存するものを何も書かないなら `[]`）。述べないエントリは登録時に
+拒否し、`DeclaredStyleTable` がコンパイル時にも必須にする。**加えて、その型の Doc が
+持てないフィールドを書くエントリも登録時に拒否する**。持てる名前は
 `extraKeys` と `features` が示すもの（`collectStyleKeys` と `text`）。この検査が無いと、
 エントリは mapper が Doc へ戻すときに落とす state を書けてしまい、保存するまで誰も
 気づかない。
 
 登録は `applyObjectDefinition` を通るので、`CanvasConfig.plugins` で足したプラグイン図形
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md) 参照）も同じ能力を得る。
-`fieldEntry` と `StyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
+`fieldEntry` と `DeclaredStyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
 差し替える型のために、エンジンが自分の表を組むヘルパー（`objectField` / `slotField` /
 `runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`）も並んでいる。コネクターの表は
 `controllers/style/connectorStyleEntries.ts`（`CONNECTOR_STYLE_ENTRIES`）。container プラグインは
@@ -305,7 +307,7 @@ kind の書き込みが届くのとまったく同じ object について返す�
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | core の語彙の新しいスタイル    | `CoreStyleIntent` への kind、それを有効にする宣言の下の `coreStyleTable` / `textStyleTable` へのエントリ、`INTENT_BY_PROPERTY` へのマッパー。`SystemStyleName` の `satisfies` があるので、どれか 1 つだけではコンパイルが通らない |
 | 既存スタイルの新しい格納先     | `{ apply, read }` の対を返すヘルパーを `entries/` に足し、必要な表から使う                                                                                                                                                        |
-| 1 つの型だけが持つスタイル     | その型自前の `StyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `styleEntries` も）。根のフィールドは `extraKeys` に入れる                                                                             |
+| 1 つの型だけが持つスタイル     | その型自前の `DeclaredStyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `styleEntries` も）。根のフィールドは `extraKeys` に入れる                                                                     |
 | 導出エントリの格納先が違うとき | その kind のまま型自前の表へエントリを書く。導出された方が置き換わる                                                                                                                                                              |
 
 回帰の安全網: 読み替えは `style/__tests__/styleIntentOf.test.ts` が、適用側は

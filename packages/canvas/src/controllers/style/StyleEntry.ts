@@ -56,9 +56,10 @@ export type StyleEntry<TState extends ObjectState, V> = {
 	 * registration against what the type's doc may hold (applyObjectDefinition) —
 	 * so an entry cannot write state the mapper then drops on save.
 	 *
-	 * Omitted means the entry writes nothing the document stores (the toggles,
-	 * which flip a field of the slots) or is one of the core kinds, whose fields
-	 * the type's `features` already vouch for.
+	 * Omitted only by the engine's own core entries, whose fields the type's
+	 * `features` already vouch for. An entry a type declares
+	 * ({@link DeclaredStyleEntry}) always states it, `[]` when it writes nothing
+	 * the document stores (the toggles, which flip a field of the slots).
 	 */
 	readonly fields?: readonly string[];
 };
@@ -89,6 +90,36 @@ export type StyleTable<TState extends ObjectState> = {
 	[K in CoreStyleIntentKind]?: StyleEntry<TState, StyleIntentValueType<K>>;
 } & {
 	[extraKind: string]: ExtraStyleEntry | undefined;
+};
+
+/**
+ * An entry as a type declares it (ObjectTypeDefinition.styleEntries): one that
+ * states the fields it writes, so registration can check them against the doc.
+ *
+ * @template TState - The state the entry is written against
+ * @template V - The intent's value type (StyleIntentValueType)
+ */
+export type DeclaredStyleEntry<TState extends ObjectState, V> = StyleEntry<
+	TState,
+	V
+> & {
+	readonly fields: readonly string[];
+};
+
+/**
+ * {@link StyleTable} as a type declares it: the same kinds, every entry a
+ * {@link DeclaredStyleEntry}. Assignable to StyleTable, which is what the reads
+ * through it take.
+ *
+ * @template TState - The state the entries are written against
+ */
+export type DeclaredStyleTable<TState extends ObjectState> = {
+	[K in CoreStyleIntentKind]?: DeclaredStyleEntry<
+		TState,
+		StyleIntentValueType<K>
+	>;
+} & {
+	[extraKind: string]: DeclaredStyleEntry<ObjectState, unknown> | undefined;
 };
 
 /**
