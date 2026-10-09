@@ -276,6 +276,15 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **A group's frame no longer goes stale when a shape inside it is edited by a
+  plugin's command or a selection control.** Whether a group kept its box
+  depended on _how_ an edit was made rather than on what it did — the same
+  change to a grouped shape settled the group when a built-in edit made it and
+  did not when a contributed command or a control's handles did — so the group's
+  outline, its handles and the width and height it reports could be left at the
+  size it used to be until the document was reloaded. What it cost in the
+  meantime was typing a size into the stale group, which scaled its children by
+  the wrong ratio.
 - **A style row states what the selection carries, and a style write lands
   where the row said.** Reading and writing a style now take the same walk over
   the selection, each property through its own entry on the shape's type, so the

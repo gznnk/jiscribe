@@ -38,9 +38,11 @@
 **`commitVersion` が前の state から変化していれば** 履歴を記録する（同時に `saveRequest` の `version` を進め、
 新しい `nonce` を振って保存要求を出す。[外部同期・VSCode 連携](./07-external-sync.ja.md) 参照）。
 
-- ジェスチャーの場合、`handleGesture` が `dragEnd` 時に doc が実際に変化したときだけ
-  `commitVersion` を進める。これにより「最小サイズ未満で描画をやめた」ような
-  doc 変化のないドラッグで幽霊 undo エントリが生まれるのを防ぐ。
+- ジェスチャーの場合、`handleGesture` が close-out（`dragEnd` / `click` /
+  `doubleClick`。[Gesture System](./04-gesture-system.ja.md) 参照）で doc が実際に
+  変化したときだけ `commitVersion` を進める。これにより「最小サイズ未満で描画を
+  やめた」「クリックで選択を動かしただけ」のような doc 変化のないジェスチャーで
+  幽霊 undo エントリが生まれるのを防ぐ。
 - `STYLE_INTENT` は `commit: false`（プレビュー）なら履歴を記録せず、
   `commit: true`（blur / Enter、書式の打鍵）でのみ `commitVersion` を進める。
   他のプロパティ系アクション（`TRANSFORM_PROPERTY_UPDATE` など）も同じコミット末尾

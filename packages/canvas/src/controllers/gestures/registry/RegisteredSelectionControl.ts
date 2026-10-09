@@ -12,6 +12,7 @@ import type {
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
 import { createCowObjects } from "../../utils/cowObjects";
+import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
 
 /**
  * data-part namespace for selection controls. Keeps them out of the built-in
@@ -85,8 +86,13 @@ class SelectionControlStrategy extends ControlStrategy {
 
 	/**
 	 * Builds the definition's context from the start snapshot and current frame,
-	 * then writes its result back via COW. Returns the state unchanged when a
-	 * guard fails or the definition reports no change.
+	 * then writes its result back via COW, with the ancestor group frames settled
+	 * around whatever the object's new box turned out to be. Returns the state
+	 * unchanged when a guard fails or the definition reports no change.
+	 *
+	 * The settling is core's because a definition cannot do it: it is handed its
+	 * own object and nothing else, so it can neither see the group it sits in nor
+	 * reach the pass that would recompute it (see reconcileGroupBounds).
 	 */
 	private applyDrag(
 		state: CanvasControllerState,
@@ -126,7 +132,7 @@ class SelectionControlStrategy extends ControlStrategy {
 		// COW view over the previous frame's map (rebased internally, #213)
 		const updatedObjects = createCowObjects(state.objects);
 		updatedObjects[objectId] = updatedObject as ObjectState;
-		return { ...state, objects: updatedObjects };
+		return reconcileGroupBounds({ ...state, objects: updatedObjects }, state);
 	}
 
 	/** The data-part segment after `${this.part}:`, or undefined when absent. */

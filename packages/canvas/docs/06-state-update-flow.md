@@ -45,8 +45,10 @@ previous state** (at the same time raising a save request: it advances `saveRequ
 fresh `nonce`; see [External Sync / VSCode Integration](./07-external-sync.md)).
 
 - For gestures, `handleGesture` advances `commitVersion` only when the doc actually
-  changed on `dragEnd`. This prevents ghost undo entries from being created by drags that
-  produce no doc change, such as "drawing was abandoned below the minimum size."
+  changed at the close-out (`dragEnd`, `click`, `doubleClick` — see
+  [Gesture System](./04-gesture-system.md)). This prevents ghost undo entries from
+  being created by gestures that produce no doc change, such as "drawing was
+  abandoned below the minimum size" or a click that merely moved the selection.
 - `STYLE_INTENT` does not record history when `commit: false` (preview); it only
   advances `commitVersion` when `commit: true` (blur / Enter, a format keystroke). The other property actions
   (`TRANSFORM_PROPERTY_UPDATE` and the like) go through the same commit tail (`commitPropertyUpdate`),

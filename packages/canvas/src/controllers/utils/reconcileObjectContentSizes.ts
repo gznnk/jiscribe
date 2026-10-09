@@ -200,6 +200,12 @@ export const reconcileObjectContentSizes = (
 	}
 	// A group's frame is cached, not derived on read, so a box that grew inside one
 	// leaves the ancestor outlines behind until they are recomputed here.
+	//
+	// Only for the boxes *this* pass moved, though. An edit that hands over an
+	// object whose box it derived itself never reaches this line at all — the
+	// resizer finds nothing to do, the early return above takes the state out by
+	// reference, and its groups go unsettled. `reconcileGroupBounds` is the pass
+	// that covers those (see updateAffectedGroupBounds for the whole picture).
 	return updateAffectedGroupBounds(
 		{ ...state, objects: resizedObjects },
 		resizedIds,
