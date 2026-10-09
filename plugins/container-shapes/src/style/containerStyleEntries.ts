@@ -8,13 +8,13 @@ import type { ContainerState } from "../state/ContainerState";
  * `ObjectFeatures` flag speaks for — its face is a second fill and its height a
  * number of its own.
  *
- * Handed to the type through `ObjectTypeDefinition.style` (definition.ts) and
+ * Handed to the type through `ObjectTypeDefinition.styleEntries` (definition.ts) and
  * read through by the rows that state these values (useSelectedHeaderFill /
  * useSelectedHeaderHeight), so one declaration types the write and the read
  * alike. Both fields are in the doc definition's `extraKeys`, which is what
  * registration checks an entry against.
  */
-export const CONTAINER_STYLE = {
+export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
 } satisfies StyleTable<ContainerState>;

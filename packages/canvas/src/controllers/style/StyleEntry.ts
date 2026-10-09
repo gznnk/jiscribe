@@ -78,7 +78,7 @@ export type ExtraStyleEntry = StyleEntry<ObjectState, unknown>;
  *
  * The core kinds are typed one by one, each entry bound to that intent's
  * value type. Any other name is a kind the declaring type owns
- * (ObjectTypeDefinition.style), whose stored type the engine does not know, so
+ * (ObjectTypeDefinition.styleEntries), whose stored type the engine does not know, so
  * those cannot be typed per kind and sit under the index signature instead — the
  * read a plugin does through the table it declared is typed from that table
  * rather than from here ({@link StyleEntryValueType}).

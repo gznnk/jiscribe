@@ -11,15 +11,15 @@ import type { BracketState } from "../state/bracket/BracketState";
  *
  * Both fields are in those types' `extraKeys`, which is what registration checks
  * the entries against; a marker whose tip is pinned takes
- * {@link GROUP_MARKER_DIRECTION_STYLE} instead, its doc holding no
+ * {@link GROUP_MARKER_DIRECTION_STYLE_ENTRIES} instead, its doc holding no
  * `tipPosition` at all.
  */
-export const GROUP_MARKER_TIP_STYLE = {
+export const GROUP_MARKER_TIP_STYLE_ENTRIES = {
 	direction: fieldEntry("direction", "string"),
 	tipPosition: fieldEntry("tipPosition", "number"),
 } satisfies StyleTable<BraceState>;
 
 /** The same, for a marker whose tip is pinned to the middle of the span. */
-export const GROUP_MARKER_DIRECTION_STYLE = {
-	direction: GROUP_MARKER_TIP_STYLE.direction,
+export const GROUP_MARKER_DIRECTION_STYLE_ENTRIES = {
+	direction: GROUP_MARKER_TIP_STYLE_ENTRIES.direction,
 } satisfies StyleTable<BracketState>;

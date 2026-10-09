@@ -24,7 +24,7 @@ import type { SelectionValue } from "./SelectionValue";
  * why two shapes drawn alike read as one value whether or not they both spell it
  * out.
  *
- * Handing the table a type declared (ObjectTypeDefinition.style) ahead of the
+ * Handing the table a type declared (ObjectTypeDefinition.styleEntries) ahead of the
  * kind is the same read, typed from that declaration: the table is taken for its
  * type alone, the walk still looking the entry up on each target's registered
  * table.

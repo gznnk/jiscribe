@@ -262,7 +262,7 @@ property — over exactly the objects a write of the same name would reach — w
 is what lets a plugin row be mixed the way a built-in one is (see
 [Style System](./10-style-properties.md)). A row of a property its own type
 declared passes that type's table ahead of the kind
-(`useSelectionStyle(CONTAINER_STYLE, "headerFill")`), which types the answer from
+(`useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")`), which types the answer from
 the declaration. Writing is the mirror of it: `onStyleIntent(intent, commit)`
 takes the edit stated rather than a name and a string, and a type's own kind is
 stated as `{ kind, value }` — the declared name, and the value either typed as
@@ -285,11 +285,11 @@ empty body. Core's own use is the connector's Label and Label border sections, o
 only once the label has text. Omitted means always offered.
 
 `plugins/container-shapes` is the worked example: it declares both of its own
-styles as a table of its own (`src/style/containerStyle.ts`), handed to
-`createFrameObjectDefinition` as `style`:
+styles as a table of its own (`src/style/containerStyleEntries.ts`), handed to
+`createFrameObjectDefinition` as `styleEntries`:
 
 ```ts
-export const CONTAINER_STYLE = {
+export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
 } satisfies StyleTable<ContainerState>;
@@ -299,7 +299,7 @@ Its `header-fill` row states `headerFill` through `onStyleIntent` from a
 `PropertyColorField`, sitting under the body color in the Fill section, and its
 `header-height` row states `headerHeight` from a `PropertyNumberField` under the
 size in the Layout section; both state their current value through
-`useSelectionStyle(CONTAINER_STYLE, …)`, which types it from that declaration, and
+`useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)`, which types it from that declaration, and
 take their wording from the plugin's own dictionary.
 
 **i18n.** A contributed command declares its own `label` per locale. Everything

@@ -6,7 +6,7 @@
  * (useConnectorLabelStyle), the way the ObjectMenu's LabelStyleMenu does — so
  * the two surfaces and the writes behind them cannot disagree. A label property
  * is one the connector declares for itself, so the rows read it through that
- * declaration (CONNECTOR_STYLE), which is what types the value.
+ * declaration (CONNECTOR_STYLE_ENTRIES), which is what types the value.
  *
  * Every row returns null while the selected connector carries no label text —
  * there is nothing to style until a label exists — and the sections' own

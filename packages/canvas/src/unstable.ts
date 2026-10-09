@@ -172,7 +172,7 @@ export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/us
 // "fontSize") comes back typed; a kind a type declares for itself comes
 // back `unknown` under that name alone, the engine not knowing what the
 // declaration holds, so a row of the declaring type passes its table instead —
-// `useSelectionStyle(CONTAINER_STYLE, "headerFill")` — and the answer is typed
+// `useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")` — and the answer is typed
 // from the declaration. The helpers fold the three cases into something
 // drawable, and SHAPE_STYLE_FALLBACK is the last resort a row shows when nothing
 // the selection reaches carries the property at all.
@@ -201,7 +201,7 @@ export {
 export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 
 // What a type declares about its own styles (packages/canvas/docs/10-style-properties.md).
-// A type's table is `ObjectTypeDefinition.style`: one `{ apply, read }` pair per
+// A type's table is `ObjectTypeDefinition.styleEntries`: one `{ apply, read }` pair per
 // intent kind, composed onto the ones its `features` derive — and a kind
 // declared there replaces the derived one, which is how a type whose storage
 // differs from the core guess (a table whose fill lives on its cells) says where

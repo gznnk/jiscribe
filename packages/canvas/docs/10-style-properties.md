@@ -106,7 +106,7 @@ they are derived from.
 
 `ObjectStyleRegistry` holds the tables by type and is filled at bundle creation:
 `applyObjectDefinition` registers
-`{ ...coreStyleTable(features), ...definition.style }` for every type —
+`{ ...coreStyleTable(features), ...definition.styleEntries }` for every type —
 the type's own table last, so a kind it declares replaces the derived one. A type
 absent from the registry takes nothing — the walkers skip it rather than guessing
 a field (fail-closed).
@@ -198,7 +198,7 @@ Both walkers take that walk:
   and folds the values into `single` / `mixed` / `none` (`combineSelectionValues`).
   Passing one of the core kinds types the answer; passing a declared kind by
   name alone answers `SelectionValue<unknown>`, and passing the table it was
-  declared in ahead of it (`readSelectionStyle(state, CONNECTOR_STYLE,
+  declared in ahead of it (`readSelectionStyle(state, CONNECTOR_STYLE_ENTRIES,
 "label.fill", registries)`) types the answer from that declaration. The table is
   taken for its type alone; the walk still looks the entry up on each target's own
   registered table.
@@ -289,10 +289,10 @@ bypasses `handleGesture`, materializes right after the write.
 
 A style that no `ObjectFeatures` flag covers — or one whose storage differs from
 what the flags imply — is declared as the type's own `StyleTable`, handed to
-`ObjectTypeDefinition.style`:
+`ObjectTypeDefinition.styleEntries`:
 
 ```ts
-export const CONTAINER_STYLE = {
+export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
 } satisfies StyleTable<ContainerState>;
@@ -321,8 +321,8 @@ get the same capability: `fieldEntry` and `StyleTable` are exported from
 `@jiscribe/canvas-sdk`, beside the helpers the engine builds its own entries from
 (`objectField` / `slotField` / `runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`)
 for a type replacing a derived kind. Connector's table is
-`controllers/style/connectorStyle.ts` (`CONNECTOR_STYLE`); the container plugin
-declares `CONTAINER_STYLE` in `src/style/containerStyle.ts` and hands it to
+`controllers/style/connectorStyleEntries.ts` (`CONNECTOR_STYLE_ENTRIES`); the container plugin
+declares `CONTAINER_STYLE_ENTRIES` in `src/style/containerStyleEntries.ts` and hands it to
 `createFrameObjectDefinition` from `@jiscribe/canvas-sdk`.
 
 A row states the value back through `useSelectionStyle`
@@ -330,7 +330,7 @@ A row states the value back through `useSelectionStyle`
 `single` / `mixed` / `none`, folded into something drawable by the
 `selectionValue*` helpers — over exactly the objects a write of the same kind
 would reach. Passing the table ahead of the kind
-(`useSelectionStyle(CONTAINER_STYLE, "headerFill")`) types the answer from the
+(`useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")`) types the answer from the
 declaration, so the row narrows nothing and the type's value type is stated once;
 read by name alone the value still arrives `unknown`, for the row to narrow with
 a guard of its own.
@@ -341,7 +341,7 @@ a guard of its own.
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A new style of the core vocabulary        | A kind in `CoreStyleIntent`, an entry in `coreStyleTable` / `textStyleTable` under the declaration that enables it, and a mapper in `INTENT_BY_PROPERTY` — the `satisfies` over `SystemStyleName` makes any one of them alone a compile error |
 | A new storage shape for an existing style | A helper in `entries/` returning the `{ apply, read }` pair, used by the table that needs it                                                                                                                                                  |
-| A style belonging to one type             | One entry in that type's own `StyleTable` — `fieldEntry` for a field of its own (plus `style` in its definition, first time only), and its root field in `extraKeys`                                                                          |
+| A style belonging to one type             | One entry in that type's own `StyleTable` — `fieldEntry` for a field of its own (plus `styleEntries` in its definition, first time only), and its root field in `extraKeys`                                                                   |
 | A storage the derived entry gets wrong    | An entry under that very kind in the type's own table, which replaces the derived one                                                                                                                                                         |
 
 Regression safety: `style/__tests__/styleIntentOf.test.ts` covers the

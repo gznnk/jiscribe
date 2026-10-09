@@ -37,7 +37,7 @@ export const SelectionStyleReaderContext =
  * drawable with the `selectionValue*` helpers.
  *
  * A row of a type that declared the property passes that type's table
- * (`ObjectTypeDefinition.style`) ahead of the kind, which types the answer from
+ * (`ObjectTypeDefinition.styleEntries`) ahead of the kind, which types the answer from
  * the declaration — the table is read for its type alone, the walk still going
  * through each target's own registered one.
  *
@@ -50,7 +50,7 @@ export function useSelectionStyle<TKind extends string>(
 	kind: TKind,
 ): SelectionValue<StyleIntentValueType<TKind>>;
 /**
- * @param table - The table the kind is declared in, as its type hands it to `ObjectTypeDefinition.style`
+ * @param table - The table the kind is declared in, as its type hands it to `ObjectTypeDefinition.styleEntries`
  * @param kind - The style property to report, a key of `table`
  * @returns `single` / `mixed` / `none` over the value type that table's entry works in, so the row needs no guard of its own
  */

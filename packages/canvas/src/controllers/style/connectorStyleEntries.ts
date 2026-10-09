@@ -10,12 +10,13 @@ import type { ConnectorState } from "../../states/objects/connector/ConnectorSta
  *
  * Each kind lands through the nested path its name spells, so a connector with
  * no label takes none of them (fieldEntry merges into an existing parent and
- * never fabricates one). Handed to the type through `ObjectTypeDefinition.style`
- * (applyObjectDefinition) and read through by the rows that state these values —
- * the ObjectMenu's LabelStyleMenu and the sidebar's ConnectorLabelItems — so one
- * declaration types the write and the read alike.
+ * never fabricates one). Handed to the type through
+ * `ObjectTypeDefinition.styleEntries` (applyObjectDefinition) and read through
+ * by the rows that state these values — the ObjectMenu's LabelStyleMenu and
+ * the sidebar's ConnectorLabelItems — so one declaration types the write and
+ * the read alike.
  */
-export const CONNECTOR_STYLE = {
+export const CONNECTOR_STYLE_ENTRIES = {
 	"label.fill": fieldEntry("label.fill", "string"),
 	"label.stroke": fieldEntry("label.stroke", "string"),
 	"label.strokeWidth": fieldEntry("label.strokeWidth", "number"),

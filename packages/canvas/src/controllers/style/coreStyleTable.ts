@@ -13,7 +13,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * flags are read once, here, when the table is built, and never again by whoever
  * applies or reports a style.
  *
- * What a type adds to this is its own table (ObjectTypeDefinition.style), which
+ * What a type adds to this is its own table (ObjectTypeDefinition.styleEntries), which
  * is composed over this one — so a kind it declares replaces the derived entry,
  * which is how a type whose storage differs from the core guess (a table's fill,
  * which lives on the cells) says where the edit lands.

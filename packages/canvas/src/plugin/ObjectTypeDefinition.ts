@@ -175,7 +175,7 @@ export type ObjectTypeDefinition<
 	 * a nested object. An entry stating a field the type's doc cannot hold
 	 * (`extraKeys`) is refused at registration.
 	 */
-	style?: StyleTable<TState>;
+	styleEntries?: StyleTable<TState>;
 
 	// --- Editor UI (StencilLibrary / ObjectMenu) ---
 

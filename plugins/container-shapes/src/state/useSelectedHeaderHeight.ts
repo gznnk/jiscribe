@@ -1,7 +1,7 @@
 import { selectionValueOr, useSelectionStyle } from "@jiscribe/canvas-sdk";
 
 import { CONTAINER_HEADER_HEIGHT } from "../schema/ContainerDoc";
-import { CONTAINER_STYLE } from "../style/containerStyle";
+import { CONTAINER_STYLE_ENTRIES } from "../style/containerStyleEntries";
 
 /**
  * The header band height the selection is drawn with, for the sidebar row that
@@ -15,6 +15,6 @@ import { CONTAINER_STYLE } from "../style/containerStyle";
  */
 export const useSelectedHeaderHeight = (): number =>
 	selectionValueOr(
-		useSelectionStyle(CONTAINER_STYLE, "headerHeight"),
+		useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerHeight"),
 		CONTAINER_HEADER_HEIGHT,
 	);
