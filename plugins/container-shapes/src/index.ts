@@ -27,7 +27,7 @@ export { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHei
 export { ContainerStencils } from "./stencil/ContainerStencils";
 export { containerStencilCategory } from "./stencil/ContainerStencilCategory";
 
-export { CONTAINER_STYLE } from "./style/containerStyle";
+export { CONTAINER_STYLE_ENTRIES } from "./style/containerStyleEntries";
 
 export { containerDefinition } from "./definition";
 export { containerDocDefinition, containerDocPlugin } from "./doc";

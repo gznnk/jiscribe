@@ -58,9 +58,9 @@ import { BracketWithStemIcon } from "./stencil/BracketWithStemIcon";
 import { CalloutIcon } from "./stencil/CalloutIcon";
 import { NoteIcon } from "./stencil/NoteIcon";
 import {
-	GROUP_MARKER_DIRECTION_STYLE,
-	GROUP_MARKER_TIP_STYLE,
-} from "./style/groupMarkerStyle";
+	GROUP_MARKER_DIRECTION_STYLE_ENTRIES,
+	GROUP_MARKER_TIP_STYLE_ENTRIES,
+} from "./style/groupMarkerStyleEntries";
 
 /**
  * The label hangs off the tip, outside the geometry box, so `visualBounds` is
@@ -72,7 +72,7 @@ import {
  * such a connector live while the tip is dragged. `menu` likewise stays derived
  * from the features: the tip handle covers both `direction` and `tipPosition`,
  * so neither needs a section (they stay reachable through `onStyleIntent`
- * via the type's own style table, GROUP_MARKER_TIP_STYLE).
+ * via the type's own style table, GROUP_MARKER_TIP_STYLE_ENTRIES).
  */
 export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 	createFrameObjectDefinition<BraceDoc, BraceState>({
@@ -90,7 +90,7 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 				handle: handleGroupMarkerTip,
 			},
 		],
-		style: GROUP_MARKER_TIP_STYLE,
+		styleEntries: GROUP_MARKER_TIP_STYLE_ENTRIES,
 		/**
 		 * One stencil, not one per direction: drag-drawing already picks the axis from
 		 * the drawn proportions (createGroupMarkerObjectFactory), so four palette entries would be
@@ -126,7 +126,7 @@ export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 				handle: handleGroupMarkerDirection,
 			},
 		],
-		style: GROUP_MARKER_DIRECTION_STYLE,
+		styleEntries: GROUP_MARKER_DIRECTION_STYLE_ENTRIES,
 		/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
 		stencils: createTypeStencils({
 			objectType: "bracket",
@@ -154,7 +154,7 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 			handle: handleGroupMarkerTip,
 		},
 	],
-	style: GROUP_MARKER_TIP_STYLE,
+	styleEntries: GROUP_MARKER_TIP_STYLE_ENTRIES,
 	/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
 	stencils: createTypeStencils({
 		objectType: "bracketWithStem",

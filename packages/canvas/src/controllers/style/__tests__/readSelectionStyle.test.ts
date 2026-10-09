@@ -2,7 +2,7 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
-import { CONNECTOR_STYLE } from "../connectorStyle";
+import { CONNECTOR_STYLE_ENTRIES } from "../connectorStyleEntries";
 import { readSelectionStyle } from "../readSelectionStyle";
 import type { SelectionValue } from "../SelectionValue";
 import {
@@ -282,7 +282,7 @@ describe("readSelectionStyle on a text style", () => {
 			const c = connectorOf("c", { label: { text: "Yes", fill: "#f00" } });
 			const fill: SelectionValue<string | undefined> = readSelectionStyle(
 				stateOf(["c"], { c }),
-				CONNECTOR_STYLE,
+				CONNECTOR_STYLE_ENTRIES,
 				"label.fill",
 				registries,
 			);
@@ -294,7 +294,7 @@ describe("readSelectionStyle on a text style", () => {
 			expect(
 				readSelectionStyle(
 					stateOf(["c"], { c }),
-					CONNECTOR_STYLE,
+					CONNECTOR_STYLE_ENTRIES,
 					"label.fill",
 					registries,
 				),
@@ -306,7 +306,7 @@ describe("readSelectionStyle on a text style", () => {
 			expect(
 				readSelectionStyle(
 					stateOf(["a"], { a }),
-					CONNECTOR_STYLE,
+					CONNECTOR_STYLE_ENTRIES,
 					"label.fill",
 					registries,
 				),

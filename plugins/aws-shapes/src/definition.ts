@@ -21,7 +21,10 @@ import type { AwsGroupState } from "./state/AwsGroupState";
 import type { AwsIconState } from "./state/AwsIconState";
 import { AwsGroupStencils } from "./stencil/AwsGroupStencils";
 import { AwsIconStencils } from "./stencil/AwsIconStencils";
-import { AWS_GROUP_STYLE, AWS_ICON_STYLE } from "./style/awsStyle";
+import {
+	AWS_GROUP_STYLE_ENTRIES,
+	AWS_ICON_STYLE_ENTRIES,
+} from "./style/awsStyleEntries";
 
 /**
  * The label hangs outside the box (below it), so without a declared
@@ -42,7 +45,7 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 		isExtraStateValid: (state) =>
 			state.icon === undefined ||
 			(typeof state.icon === "string" && isKnownAwsIconName(state.icon)),
-		style: AWS_ICON_STYLE,
+		styleEntries: AWS_ICON_STYLE_ENTRIES,
 		stencils: AwsIconStencils,
 		menu: [
 			{
@@ -74,7 +77,7 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 	// the default kind, so an unknown one is stopped at the state's door.
 	isExtraStateValid: (state) =>
 		state.kind === undefined || isAwsGroupKind(state.kind),
-	style: AWS_GROUP_STYLE,
+	styleEntries: AWS_GROUP_STYLE_ENTRIES,
 	stencils: AwsGroupStencils,
 	menu: [
 		{

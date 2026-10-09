@@ -13,7 +13,7 @@ import type { ContainerDoc } from "./schema/ContainerDoc";
 import { calcContainerTextRegion } from "./schema/textRegions";
 import type { ContainerState } from "./state/ContainerState";
 import { ContainerStencils } from "./stencil/ContainerStencils";
-import { CONTAINER_STYLE } from "./style/containerStyle";
+import { CONTAINER_STYLE_ENTRIES } from "./style/containerStyleEntries";
 
 /**
  * `containerDefinition` has zero intentional omissions relative to the core
@@ -51,7 +51,7 @@ export const containerDefinition: ObjectTypeDefinition<
 			handle: handleContainerHeaderHeight,
 		},
 	],
-	style: CONTAINER_STYLE,
+	styleEntries: CONTAINER_STYLE_ENTRIES,
 	stencils: ContainerStencils,
 	propertyPanel: [
 		{

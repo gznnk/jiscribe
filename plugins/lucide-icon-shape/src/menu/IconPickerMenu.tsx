@@ -84,7 +84,7 @@ const searchIcons = (query: string): { names: string[]; total: number } => {
 
 /**
  * Icon picker (lucideIcon only). Writes the `icon` property, which the shape declares in
- * its own style table (ICON_STYLE) so the update travels the same path as any other menu
+ * its own style table (ICON_STYLE_ENTRIES) so the update travels the same path as any other menu
  * edit.
  *
  * The cells set the value through `data-part`, not an `onClick`. A press held for even a

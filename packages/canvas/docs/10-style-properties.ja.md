@@ -99,7 +99,7 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 
 `ObjectStyleRegistry` が型別の表を持ち、バンドル生成時に埋まる。
 `applyObjectDefinition` が全型について
-`{ ...coreStyleTable(features), ...definition.style }` を登録する。型自前の表が
+`{ ...coreStyleTable(features), ...definition.styleEntries }` を登録する。型自前の表が
 後ろなので、型が宣言した kind は導出されたエントリを置き換える。
 レジストリに無い型は何も受けない — 歩き手はフィールドを推測せず飛ばす（fail-closed）。
 
@@ -181,7 +181,7 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 - `readSelectionStyle(state, kind, registries)` — 同じ道で読み、`single` / `mixed` /
   `none` に畳む（`combineSelectionValues`）。core の kind を渡すと答えが型付き、
   型自前の名前だけを渡すと `SelectionValue<unknown>`。その kind を宣言した表を手前に
-  渡すと（`readSelectionStyle(state, CONNECTOR_STYLE, "label.fill", registries)`）
+  渡すと（`readSelectionStyle(state, CONNECTOR_STYLE_ENTRIES, "label.fill", registries)`）
   宣言から型が付く。表は型のためだけに取り、歩きは各対象自身の登録済みの表を引く
 
 ### 編集中の下書き
@@ -259,11 +259,11 @@ materialize は従来どおりの分担で、ジェスチャー経路は `handle
 ## 型が宣言するもの
 
 `ObjectFeatures` のフラグが覆わないスタイル — あるいはフラグの示す格納先と実際が違う
-スタイル — は、その型自前の `StyleTable` として宣言し、`ObjectTypeDefinition.style`
+スタイル — は、その型自前の `StyleTable` として宣言し、`ObjectTypeDefinition.styleEntries`
 へ渡す:
 
 ```ts
-export const CONTAINER_STYLE = {
+export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
 } satisfies StyleTable<ContainerState>;
@@ -288,14 +288,14 @@ export const CONTAINER_STYLE = {
 `fieldEntry` と `StyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
 差し替える型のために、エンジンが自分の表を組むヘルパー（`objectField` / `slotField` /
 `runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`）も並んでいる。コネクターの表は
-`controllers/style/connectorStyle.ts`（`CONNECTOR_STYLE`）。container プラグインは
-`src/style/containerStyle.ts` で `CONTAINER_STYLE` を宣言し、`@jiscribe/canvas-sdk` の
+`controllers/style/connectorStyleEntries.ts`（`CONNECTOR_STYLE_ENTRIES`）。container プラグインは
+`src/style/containerStyleEntries.ts` で `CONTAINER_STYLE_ENTRIES` を宣言し、`@jiscribe/canvas-sdk` の
 `createFrameObjectDefinition` へ渡す。
 
 行が値を述べ返すのは `useSelectionStyle`（`@jiscribe/canvas/unstable`）。選択全体の答え
 （`single` / `mixed` / `none`。描ける形へ畳むのは `selectionValue*` ヘルパー）を、同じ
 kind の書き込みが届くのとまったく同じ object について返す。kind の手前に表を渡すと
-（`useSelectionStyle(CONTAINER_STYLE, "headerFill")`）宣言から型が付くので、行の側で
+（`useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")`）宣言から型が付くので、行の側で
 絞るものは無く、型の値型は 1 箇所で述べられる。名前だけで読むと値は `unknown` のままで、
 行が自前のガードで絞る。
 
@@ -305,7 +305,7 @@ kind の書き込みが届くのとまったく同じ object について返す�
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | core の語彙の新しいスタイル    | `CoreStyleIntent` への kind、それを有効にする宣言の下の `coreStyleTable` / `textStyleTable` へのエントリ、`INTENT_BY_PROPERTY` へのマッパー。`SystemStyleName` の `satisfies` があるので、どれか 1 つだけではコンパイルが通らない |
 | 既存スタイルの新しい格納先     | `{ apply, read }` の対を返すヘルパーを `entries/` に足し、必要な表から使う                                                                                                                                                        |
-| 1 つの型だけが持つスタイル     | その型自前の `StyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `style` も）。根のフィールドは `extraKeys` に入れる                                                                                    |
+| 1 つの型だけが持つスタイル     | その型自前の `StyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `styleEntries` も）。根のフィールドは `extraKeys` に入れる                                                                             |
 | 導出エントリの格納先が違うとき | その kind のまま型自前の表へエントリを書く。導出された方が置き換わる                                                                                                                                                              |
 
 回帰の安全網: 読み替えは `style/__tests__/styleIntentOf.test.ts` が、適用側は

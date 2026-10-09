@@ -238,7 +238,7 @@ CodeMirror の `EditorView`）。
 まったく同じ object について返すので、プラグインの行も組み込みの行と同じように
 mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参照）。自前の型が
 宣言したプロパティの行は、kind の手前にその型の表を渡す
-（`useSelectionStyle(CONTAINER_STYLE, "headerFill")`）。宣言から型が付く。
+（`useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")`）。宣言から型が付く。
 書き込みはその鏡で、`onStyleIntent(intent, commit)` は名前と文字列ではなく述べられた
 編集そのものを取る。型自身の kind は `{ kind, value }` と書く（宣言した名前と、
 宣言どおり型付けした値か transport の文字列）。書く前に知っておく規約は 2 つ:
@@ -257,11 +257,11 @@ mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参
 文字があるときだけ出る。省略は常に出す。
 
 実例は `plugins/container-shapes` である。自前のスタイル 2 つを自分の表
-（`src/style/containerStyle.ts`）として宣言し、`createFrameObjectDefinition` の
-`style` へ渡す:
+（`src/style/containerStyleEntries.ts`）として宣言し、`createFrameObjectDefinition` の
+`styleEntries` へ渡す:
 
 ```ts
-export const CONTAINER_STYLE = {
+export const CONTAINER_STYLE_ENTRIES = {
 	headerFill: fieldEntry("headerFill", "string"),
 	headerHeight: fieldEntry("headerHeight", "number"),
 } satisfies StyleTable<ContainerState>;
@@ -270,7 +270,7 @@ export const CONTAINER_STYLE = {
 `header-fill` 行が `PropertyColorField` から `onStyleIntent` 経由で `headerFill`
 を書き、Fill セクションの本体色の下に並ぶ。`header-height` 行は
 `PropertyNumberField` から `headerHeight` を書き、Layout セクションのサイズの下に
-並ぶ。現在値はどちらも `useSelectionStyle(CONTAINER_STYLE, …)` で述べ、宣言から型が
+並ぶ。現在値はどちらも `useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)` で述べ、宣言から型が
 付くので自前で絞るものは無い。文言はどちらもプラグイン自身の辞書から取る。
 
 **i18n。**プラグインが足したコマンドは自分の `label` をロケール別に宣言する。

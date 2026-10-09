@@ -102,7 +102,7 @@ import {
 import { createTextSlotPartKindDefinition } from "../selection/createTextSlotPartKindDefinition";
 import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
 import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
-import { CONNECTOR_STYLE } from "../style/connectorStyle";
+import { CONNECTOR_STYLE_ENTRIES } from "../style/connectorStyleEntries";
 import { coreStyleTable } from "../style/coreStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
@@ -276,7 +276,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		// route: the endpoints are not among them, so there is no floor — a
 		// connector with no waypoint left is the straight route it started as.
 		partKinds: [createVertexPartKindDefinition<ConnectorState>(0)],
-		style: CONNECTOR_STYLE,
+		styleEntries: CONNECTOR_STYLE_ENTRIES,
 		menu: [
 			{
 				id: "arrowHead",
@@ -442,7 +442,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 };
 
 /**
- * Refuses a declared style entry (`ObjectTypeDefinition.style`) that writes a
+ * Refuses a declared style entry (`ObjectTypeDefinition.styleEntries`) that writes a
  * field the type's doc cannot hold: the mapper passes exactly the fields
  * `features` and `extraKeys` name between doc and state (FrameMapper), so such
  * an entry would write state the next save drops.
@@ -459,7 +459,7 @@ const checkDeclaredStyleFields = (
 	type: ObjectType,
 	definition: AnyObjectTypeDefinition,
 ): void => {
-	if (definition.style === undefined) {
+	if (definition.styleEntries === undefined) {
 		return;
 	}
 	const docFields = new Set<string>([
@@ -469,7 +469,7 @@ const checkDeclaredStyleFields = (
 		...(definition.features.text === undefined ? [] : ["text"]),
 		...(definition.extraKeys ?? []),
 	]);
-	for (const [kind, entry] of Object.entries(definition.style)) {
+	for (const [kind, entry] of Object.entries(definition.styleEntries)) {
 		for (const field of entry?.fields ?? []) {
 			if (!docFields.has(field)) {
 				throw new Error(
@@ -504,7 +504,7 @@ export const applyObjectDefinition = (
 	// from the core guess says where the edit lands.
 	registries.objectStyle.register(type, {
 		...coreStyleTable(definition.features),
-		...definition.style,
+		...definition.styleEntries,
 	});
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {

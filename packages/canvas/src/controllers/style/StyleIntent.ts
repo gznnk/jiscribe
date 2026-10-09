@@ -51,7 +51,7 @@ export type CoreStyleIntentKind = CoreStyleIntent["kind"];
 
 /**
  * A style edit addressed to a kind the core vocabulary does not hold: one a
- * type declares in its own table (ObjectTypeDefinition.style), which reaches the
+ * type declares in its own table (ObjectTypeDefinition.styleEntries), which reaches the
  * types that declared it and no others.
  *
  * The engine knows nothing of what such a kind means, so the declaring type's
@@ -157,7 +157,7 @@ type CoreStyleIntentPayloadValue<K extends CoreStyleIntentKind> =
  * hand the entry.
  *
  * A name outside the core vocabulary is a kind its declaring type owns
- * (ObjectTypeDefinition.style), whose stored type the engine does not know:
+ * (ObjectTypeDefinition.styleEntries), whose stored type the engine does not know:
  * `unknown`. A row holding that declaration reads it typed through the table
  * instead (StyleEntryValueType).
  */

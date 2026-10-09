@@ -9,6 +9,6 @@ import type { IconState } from "../state/IconState";
  * field, and `icon` is in the doc definition's `extraKeys`, which is what
  * registration checks the entry against.
  */
-export const ICON_STYLE = {
+export const ICON_STYLE_ENTRIES = {
 	icon: fieldEntry("icon", "string"),
 } satisfies StyleTable<IconState>;

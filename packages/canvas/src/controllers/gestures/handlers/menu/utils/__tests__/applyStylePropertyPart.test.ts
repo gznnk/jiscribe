@@ -263,7 +263,7 @@ describe("applyStylePropertyPart", () => {
 			const DECLARED_ENTRIES = Object.entries(
 				BUILTIN_OBJECT_DEFINITIONS,
 			).flatMap(([type, definition]) =>
-				Object.entries(definition.style ?? {}).map(([kind, entry]) => ({
+				Object.entries(definition.styleEntries ?? {}).map(([kind, entry]) => ({
 					type,
 					kind,
 					fields: entry?.fields ?? [],

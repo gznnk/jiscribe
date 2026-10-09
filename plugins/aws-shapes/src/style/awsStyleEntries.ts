@@ -10,7 +10,7 @@ import type { AwsIconState } from "../state/AwsIconState";
  * field; `icon` is in the doc definition's `extraKeys`, which is what
  * registration checks the entry against.
  */
-export const AWS_ICON_STYLE = {
+export const AWS_ICON_STYLE_ENTRIES = {
 	icon: fieldEntry("icon", "string"),
 } satisfies StyleTable<AwsIconState>;
 
@@ -19,6 +19,6 @@ export const AWS_ICON_STYLE = {
  * its own, and the border colour, the line style and the corner badge all follow
  * from it (resolveAwsGroupStroke).
  */
-export const AWS_GROUP_STYLE = {
+export const AWS_GROUP_STYLE_ENTRIES = {
 	kind: fieldEntry("kind", "string"),
 } satisfies StyleTable<AwsGroupState>;

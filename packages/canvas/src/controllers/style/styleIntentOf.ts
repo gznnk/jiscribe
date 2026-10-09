@@ -146,7 +146,7 @@ const intentMapperOf = (property: string): StyleIntentMapper | undefined =>
  *
  * A name the core vocabulary does not own is a kind some type declares in its
  * own table, and is passed on under that very name for the types' tables to
- * answer (ObjectTypeDefinition.style); a name nobody declares therefore applies
+ * answer (ObjectTypeDefinition.styleEntries); a name nobody declares therefore applies
  * to nothing (fail-closed).
  *
  * @param property - The property name, as the menus' parts spell it; a name with dots in it is a declared write path (`label.fill`)

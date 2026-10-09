@@ -84,7 +84,10 @@ export {
 export { awsStencilCategory } from "./stencil/AwsIconStencilCategory";
 export { awsGroupStencilCategory } from "./stencil/AwsGroupStencilCategory";
 
-export { AWS_GROUP_STYLE, AWS_ICON_STYLE } from "./style/awsStyle";
+export {
+	AWS_GROUP_STYLE_ENTRIES,
+	AWS_ICON_STYLE_ENTRIES,
+} from "./style/awsStyleEntries";
 
 export { awsGroupDefinition, awsIconDefinition } from "./definition";
 export {

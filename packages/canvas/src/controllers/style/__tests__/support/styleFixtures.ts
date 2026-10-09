@@ -16,7 +16,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
-import { CONNECTOR_STYLE } from "../../connectorStyle";
+import { CONNECTOR_STYLE_ENTRIES } from "../../connectorStyleEntries";
 import { coreStyleTable } from "../../coreStyleTable";
 import type { StyleIntentRegistries } from "../../ObjectStyleRegistry";
 import { createObjectStyleRegistry } from "../../ObjectStyleRegistry";
@@ -176,7 +176,9 @@ export const registriesOf = (
 			...coreStyleTable(features),
 			// The connector's own declarations ride along, as they do in the real
 			// wiring (applyObjectDefinition).
-			...(features.type === ConnectorFeatures.type ? CONNECTOR_STYLE : {}),
+			...(features.type === ConnectorFeatures.type
+				? CONNECTOR_STYLE_ENTRIES
+				: {}),
 		});
 	}
 	return {

@@ -41,7 +41,7 @@ describe("applyObjectDefinition: style", () => {
 			"container",
 			buildFakeDefinition("container", {
 				extraKeys: ["headerFill"],
-				style: { headerFill },
+				styleEntries: { headerFill },
 			}),
 		);
 
@@ -62,7 +62,7 @@ describe("applyObjectDefinition: style", () => {
 		applyObjectDefinition(
 			registries,
 			"table",
-			buildFakeDefinition("table", { style: { fill: cellFill } }),
+			buildFakeDefinition("table", { styleEntries: { fill: cellFill } }),
 		);
 
 		expect(registries.objectStyle.get("table")?.fill).toBe(cellFill);
@@ -75,7 +75,7 @@ describe("applyObjectDefinition: style", () => {
 				registries,
 				"container",
 				buildFakeDefinition("container", {
-					style: { headerFill: fieldEntry("headerFill", "string") },
+					styleEntries: { headerFill: fieldEntry("headerFill", "string") },
 				}),
 			),
 		).toThrow(/"container".*"headerFill".*does not hold/);
@@ -88,7 +88,7 @@ describe("applyObjectDefinition: style", () => {
 			"connector",
 			buildFakeDefinition("connector", {
 				extraKeys: ["label"],
-				style: { "label.fill": fieldEntry("label.fill", "string") },
+				styleEntries: { "label.fill": fieldEntry("label.fill", "string") },
 			}),
 		);
 

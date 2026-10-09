@@ -171,7 +171,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   string from the DOM reads it with `styleIntentOf(property, value)`, exported
   beside `useSelectionStyle`.
 - **For plugin authors: a type declares its style table.**
-  `ObjectTypeDefinition.extraStyleProperties` is now `style`, a `StyleTable`
+  `ObjectTypeDefinition.extraStyleProperties` is now `styleEntries`, a `StyleTable`
   composed over the entries the type's `features` derive — so a kind declared
   there **replaces** the derived one, which is what a type whose storage differs
   from the core guess (a table whose fill lives on its cells) needs; shadowing a
@@ -183,7 +183,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `StyleEntry` and the core entry helpers are exported from
   `@jiscribe/canvas/unstable`; `ExtraStylePropertyDescriptor` and `StyleValueType`
   are gone from `@jiscribe/doc`. A row reads its own kind typed from that
-  declaration — `useSelectionStyle(CONTAINER_STYLE, "headerFill")` — instead of
+  declaration — `useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")` — instead of
   narrowing an `unknown` with a guard of its own.
 - **For plugin authors: a text edit is opened on the selection, not alongside
   it.** `textEditState` no longer names its own object or slot: it carries the

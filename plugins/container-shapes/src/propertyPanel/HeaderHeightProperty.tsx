@@ -18,7 +18,7 @@ import { useSelectedHeaderHeight } from "../state/useSelectedHeaderHeight";
  * color row: the section says which aspect of the header the row states.
  *
  * Written as the `headerHeight` style the container declares for itself
- * (CONTAINER_STYLE) through `onStyleIntent` — a kind outside the core
+ * (CONTAINER_STYLE_ENTRIES) through `onStyleIntent` — a kind outside the core
  * vocabulary, so the intent is `{ kind, value }` — which keeps the field's
  * preview / commit / coalescing on the style route unchanged.
  * The lower bound is the drag's; the upper one is left to the drawing, which
