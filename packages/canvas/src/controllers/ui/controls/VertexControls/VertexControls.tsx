@@ -4,6 +4,7 @@ import { Fragment, memo } from "react";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
 import { vertexPart } from "../../../gestures/handlers/utils/partAddress";
+import { SELECTED_HANDLE_STROKE_SCALE } from "../../utils/selectedHandleStrokeScale";
 
 const VERTEX_RING_RADIUS = 7;
 const VERTEX_RING_STROKE_WIDTH = 1.5;
@@ -73,7 +74,9 @@ const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 							cy={point.y}
 							r={adjustedVertexRadius}
 							strokeWidth={
-								isSelected ? adjustedStrokeWidth * 1.5 : adjustedStrokeWidth
+								isSelected
+									? adjustedStrokeWidth * SELECTED_HANDLE_STROKE_SCALE
+									: adjustedStrokeWidth
 							}
 							data-kind="control"
 							data-id={objectId}

@@ -184,7 +184,11 @@ export type {
 	RotateByGroupFunction,
 } from "./controllers/gestures/registry/ObjectBehaviorTypes";
 // What an ObjectMenu item and a sidebar row are handed as their `selection`.
-export type { CanvasSelection } from "./controllers/selection/CanvasSelection";
+export type {
+	CanvasSelection,
+	ObjectPartRange,
+	ObjectPartSelection,
+} from "./controllers/selection/CanvasSelection";
 export type {
 	ObjectMenuSection,
 	ObjectMenuItem,
@@ -207,11 +211,16 @@ export type {
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 export type {
+	SelectionControlClickEvent,
 	SelectionControlContext,
 	SelectionControlDefinition,
+	SelectionControlDragEvent,
 	SelectionControlEvent,
+	SelectionControlEventType,
 	SelectionControlProps,
+	SelectionControlResult,
 } from "./controllers/ui/controls/SelectionControlTypes";
+export { DEFAULT_SELECTION_CONTROL_EVENTS } from "./controllers/gestures/registry/RegisteredSelectionControl";
 export type { ObjectPartKindDefinition } from "./controllers/selection/partKinds/ObjectPartKindRegistry";
 // The `data-part` a text slot's element carries: a shape that draws one hit
 // region per slot marks each region with it, which is how a click picks that

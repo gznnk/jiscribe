@@ -119,8 +119,9 @@ const dragControl = (
 	return handleGesture(started, controlDrag("dragEnd"), registries);
 };
 
-const growOnDrag: SelectionControlDefinition["handle"] = (context) =>
-	growChild(context.startObject);
+const growOnDrag: SelectionControlDefinition["handle"] = (context) => ({
+	object: growChild(context.startObject),
+});
 
 describe("group bounds settle for contributed writers", () => {
 	it("a contributed command's already-derived box → the group frame follows", () => {
