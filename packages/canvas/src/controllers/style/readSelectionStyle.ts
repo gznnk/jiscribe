@@ -1,16 +1,16 @@
 import { collectStyleTargets } from "./collectStyleTargets";
-import type { StyleIntentRegistries } from "./ObjectStyleRegistry";
 import {
 	graftStyleTextEdit,
 	resolveStyleTextEdit,
 } from "./resolveStyleTextEdit";
 import { combineSelectionValues } from "./SelectionValue";
+import type { SelectionValue } from "./SelectionValue";
 import type { StyleEntryValueType, StyleTable } from "./StyleEntry";
 import { styleEntryOf } from "./styleEntryOf";
 import type { StyleIntentValueType } from "./StyleIntent";
+import type { StyleIntentRegistries } from "./StyleIntentRegistries";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { SelectionValue } from "./SelectionValue";
 
 /**
  * What the whole selection says about one style intent: every place the intent
@@ -86,6 +86,7 @@ export function readSelectionStyle(
 				selected,
 				shapeStyleDefaults: registries.objectShapeStyleDefaults,
 				textStyleDefaults: registries.objectTextStyleDefaults,
+				objectPartKind: registries.objectPartKind,
 				textEditRange: textEdit?.range ?? null,
 			}),
 		);

@@ -24,6 +24,7 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
 import { selectTextSlot } from "../../../selection/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
@@ -38,13 +39,76 @@ import { applyPartClick } from "../utils/applyPartClick";
 import { ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
-import { readTextSlotPart } from "../utils/partAddress";
+import { parsePartAddress, readTextSlotPart } from "../utils/partAddress";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
+
+/**
+ * Moves the focus of the active range (the last one) to the part a Shift-click
+ * landed on, its anchor staying where it is. Only a part of the kind already
+ * picked, on the object that is the whole selection, extends; anything else is
+ * no extension and is left to the object-level path.
+ *
+ * Not committed: a selection change is no edit of the document.
+ *
+ * @param state - Current canvas controller state
+ * @param object - The object the click landed on, as the entry from
+ *   `state.objects`
+ * @param targetPart - The pressed element's [data-part]; untrusted DOM text,
+ *   honored only once its kind is the picked one and its id passes that kind's
+ *   `has`
+ * @param objectPartKind - The registry the kind and the id are checked against
+ * @returns The state with the focus moved, `state` itself when the focus already
+ *   is that part, or null when the click is no extension
+ */
+const extendPartRange = (
+	state: CanvasControllerState,
+	object: ObjectState,
+	targetPart: string | undefined,
+	objectPartKind: ObjectPartKindRegistry,
+): CanvasControllerState | null => {
+	const { objectIds, part } = state.selection;
+	const address = parsePartAddress(targetPart);
+	if (
+		part === null ||
+		objectIds.length !== 1 ||
+		objectIds[0] !== object.id ||
+		address === null ||
+		address.kind !== part.kind
+	) {
+		return null;
+	}
+	const definition = objectPartKind.get(object.type, address.kind);
+	if (definition === undefined || !definition.has(object, address.partId)) {
+		return null;
+	}
+
+	const activeRange = part.ranges[part.ranges.length - 1];
+	if (activeRange.focusId === address.partId) {
+		return state;
+	}
+	// What the menu acts on moves with the range, so the open submenu closes just
+	// as it does on a plain part click (applyPartClick).
+	return {
+		...state,
+		selection: {
+			...state.selection,
+			part: {
+				kind: part.kind,
+				ranges: [
+					...part.ranges.slice(0, -1),
+					{ anchorId: activeRange.anchorId, focusId: address.partId },
+				],
+			},
+		},
+		objectMenuOpenId: null,
+		stencilLibraryOpenCategory: null,
+	};
+};
 
 /**
  * Handles dragging an object.
@@ -350,6 +414,21 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the click event
 		if (event.type === "click") {
+			// Shift over a part of the kind already picked grows that range. Left to
+			// applyObjectSelection it would instead deselect the object, which the
+			// modifier cannot mean while the pointer is aimed one level below it.
+			// Ctrl / Meta, with or without Shift, keep toggling the object.
+			if (event.mods.shift && !event.mods.ctrl && !event.mods.meta) {
+				const extended = extendPartRange(
+					nextState,
+					targetObject,
+					event.targetPart,
+					registries.objectPartKind,
+				);
+				if (extended !== null) {
+					return extended;
+				}
+			}
 			const afterClick = applyObjectSelection(
 				nextState,
 				targetObject,

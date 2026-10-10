@@ -5,7 +5,7 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
-import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
+import { readActivePartFocusId } from "../../selection/readActivePartFocusId";
 import { selectTextSlot } from "../../selection/selectTextSlot";
 import { isTextSlotSelection } from "../../selection/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
@@ -97,11 +97,10 @@ export const StartTextEditCommand: ExecutableCommand = {
 		// Enter carries no pointer position, so the slot already selected one level
 		// below the object decides, falling back to the first slot when none is
 		// (nothing picked, or a part of another kind). The editor opens on one slot,
-		// and in this version the selection is always one collapsed range, so that
-		// slot is the first of the ids it covers.
+		// so a range opens it on the slot the last gesture moved to.
 		const { part } = state.selection;
 		const slotId = isTextSlotSelection(part)
-			? collectSelectedPartIds(part)[0]
+			? readActivePartFocusId(part)
 			: getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;

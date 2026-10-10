@@ -9,6 +9,8 @@ import {
 	textRectOf,
 } from "./support/styleFixtures";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
+import { createObjectPartKindRegistry } from "../../selection/ObjectPartKindRegistry";
+import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { runOrSlot } from "../entries/runOrSlot";
 import { defaultSlotsOf } from "../entries/slotEntry";
 
@@ -173,6 +175,35 @@ describe("runOrSlot with no stretch selected", () => {
 				name: { text: "User" },
 				rows: { text: ["id"], fontColor: "#00f" },
 			});
+		});
+
+		it("writes every slot a picked range covers, from either end", () => {
+			const a = textRectOf("a", {
+				name: { text: "User" },
+				rows: { text: ["id"] },
+				operations: { text: ["save()"] },
+			});
+			const range = {
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "operations", focusId: "rows" }],
+			};
+			expect(slotsOf(entry.apply(a, range, "#00f", contextOf()))).toEqual({
+				name: { text: "User" },
+				rows: { text: ["id"], fontColor: "#00f" },
+				operations: { text: ["save()"], fontColor: "#00f" },
+			});
+		});
+
+		it("refuses a slot pick on a type no slot kind is registered for", () => {
+			const a = textRectOf("a", { name: { text: "User" } });
+			expect(() =>
+				entry.apply(
+					a,
+					slotPickOf("name"),
+					"#00f",
+					contextOf({ objectPartKind: createObjectPartKindRegistry() }),
+				),
+			).toThrow(/no "textSlot" part kind/);
 		});
 
 		it("keeps a field the slot's own type loaded onto it while stripping its runs", () => {

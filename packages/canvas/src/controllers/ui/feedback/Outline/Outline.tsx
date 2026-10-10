@@ -6,7 +6,7 @@ import { theme } from "../../../../theme/themeTokens";
 import {
 	SELECTION_OUTLINE_DASH_PATTERN,
 	SELECTION_OUTLINE_WIDTH,
-} from "../selectionOutline";
+} from "../utils/selectionOutline";
 
 type OutlineProps = {
 	frame: TransformedFrame;

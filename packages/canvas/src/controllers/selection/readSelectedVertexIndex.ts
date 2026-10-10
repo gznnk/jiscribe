@@ -1,6 +1,6 @@
 import type { CanvasSelection } from "./CanvasSelection";
-import { collectSelectedPartIds } from "./collectSelectedPartIds";
 import { VERTEX_PART_KIND } from "./createVertexPartKindDefinition";
+import { readActivePartFocusId } from "./readActivePartFocusId";
 
 /**
  * The vertex picked on one object, as the index into its `points` — the one
@@ -12,9 +12,9 @@ import { VERTEX_PART_KIND } from "./createVertexPartKindDefinition";
  *   reconcileSelection)
  * @param objectId - The object whose vertex is asked for; a pick on another
  *   object, or on a kind other than the vertices, names none
- * @returns The index, or null when no vertex of this object is picked. The first
- *   of the covered ids (collectSelectedPartIds) is the one read: every range
- *   written today is collapsed, so it is the only one
+ * @returns The index, or null when no vertex of this object is picked. Of
+ *   several picked vertices, the one read is the focus of the active range
+ *   (readActivePartFocusId)
  */
 export const readSelectedVertexIndex = (
 	selection: CanvasSelection,
@@ -28,5 +28,5 @@ export const readSelectedVertexIndex = (
 	) {
 		return null;
 	}
-	return Number(collectSelectedPartIds(part)[0]);
+	return Number(readActivePartFocusId(part));
 };

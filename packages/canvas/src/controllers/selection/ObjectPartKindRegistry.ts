@@ -1,4 +1,5 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import type { Rect } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
@@ -24,6 +25,37 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		 * index left over from an undo, a removed row).
 		 */
 		has: (object: TState, partId: string) => boolean;
+
+		/**
+		 * The part's box in the object's local coordinates, for the overlay that
+		 * draws a selected part; null for a part that occupies no area. Omitted = the
+		 * kind is never outlined (collectOutlinedPartRegions).
+		 */
+		region?: (object: TState, partId: string) => Rect | null;
+
+		/**
+		 * Every part id the object currently holds, in the order Tab walks them.
+		 * Omitted = the kind cannot be cycled through.
+		 */
+		list?: (object: TState) => readonly string[];
+
+		/**
+		 * The parts a range from `anchorPartId` to `focusPartId` covers, for a kind
+		 * whose parts are not laid out in one line — a table's cells, where the run is
+		 * the rectangle the two corners span rather than the slice of `list` between
+		 * them. Omitted = the linear default (collectObjectPartRange over `list`),
+		 * which is what a sequence of vertices or of tracks wants.
+		 *
+		 * Every returned id must be a part the object currently holds, given in the
+		 * type's own order — the order the writes and reads that follow walk them in.
+		 * An empty list is not an answer: a range covers at least the focus, which is
+		 * what an undecidable anchor collapses to.
+		 */
+		range?: (
+			object: TState,
+			anchorPartId: string,
+			focusPartId: string,
+		) => readonly string[];
 
 		/**
 		 * Removes the named parts and returns the changed object, or null to refuse

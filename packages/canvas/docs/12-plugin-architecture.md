@@ -329,6 +329,23 @@ A type whose `features.text` is `"slots"` is given the `"textSlot"` kind without
 declaring anything, its part ids being the keys of its own `text`; declaring
 `"textSlot"` yourself replaces that one rather than colliding with it.
 
+Three optional members bear on selection:
+
+- `region` — the part's box in the object's local coordinates. A kind that
+  declares it has a box drawn around every selected part, the owner's own
+  outline turning dashed. A part answering null is not outlined. While any box
+  is drawn the transform handles are hidden, since they would compete with it.
+  `vertex` declares none (a vertex has handles of its own), so it neither draws
+  a box nor hides the handles
+- `list` — every part id the object currently holds, in the order Tab walks them;
+  it is also the order the linear default resolves a Shift-click range in (the
+  run between the anchor and the focus)
+- `range` — the parts a range from an anchor to a focus covers, for a type whose
+  parts are not laid out in one line (a table's cells, where the run is the
+  rectangle the two corners span); omitted means the run over `list`. Every
+  returned id must pass `has`, in the type's own order, and the list may not be
+  empty — a range covers at least its focus
+
 A kind's name is an identifier (a letter, then letters, digits, `_` or `-`), so
 the first `:` separates it from the id in the `<kind>:<partId>` address a part's
 element carries in its `data-part`

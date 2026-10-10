@@ -606,7 +606,10 @@ export const applyObjectDefinition = (
 	const partKinds =
 		definition.features.text === "slots" &&
 		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
-			? [...declaredPartKinds, createTextSlotPartKindDefinition()]
+			? [
+					...declaredPartKinds,
+					createTextSlotPartKindDefinition(definition.textRegion),
+				]
 			: declaredPartKinds;
 	if (partKinds.length > 0) {
 		registries.objectPartKind.register(type, partKinds);

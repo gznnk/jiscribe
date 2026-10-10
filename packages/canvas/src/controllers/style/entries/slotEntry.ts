@@ -5,7 +5,7 @@ import type {
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
-import { collectSelectedPartIds } from "../../selection/collectSelectedPartIds";
+import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
 import type { ObjectPartSelection } from "../../selection/ObjectPartSelection";
 import { isTextSlotSelection } from "../../selection/textSlotPartKind";
 import { textSlotsOf } from "../../utils/textSlotsOf";
@@ -30,15 +30,17 @@ export type SlotsOf<TState extends ObjectState> = (
 ) => readonly string[];
 
 /**
- * The slots the core types address: the one picked below the object when a slot
- * is picked, otherwise every slot the object holds — which is what makes a text
- * style written with nothing picked reach the whole shape.
+ * The slots the core types address: every slot the picked ranges cover when a
+ * slot is picked, otherwise every slot the object holds — which is what makes a
+ * text style written with nothing picked reach the whole shape.
  *
  * @param object - The target; one holding no `text` yields nothing
  * @param pick - What is picked inside this object; a pick of another kind (a vertex) addresses every slot, as nothing does
- * @returns The addressed slot ids, always own keys of `object.text`
+ * @param ctx - The walk's context; its `objectPartKind` expands a slot pick through the type's `textSlot` definition (collectObjectPartIds)
+ * @returns The addressed slot ids in the order the ranges cover them, always own keys of `object.text`
+ * @throws When a slot is picked on a type no `textSlot` kind is registered for, which applyObjectDefinition always registers for a type taking slot picks
  */
-export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick) => {
+export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick, ctx) => {
 	const slots = textSlotsOf(object);
 	if (slots === undefined) {
 		return [];
@@ -46,7 +48,13 @@ export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick) => {
 	if (!isTextSlotSelection(pick)) {
 		return Object.keys(slots);
 	}
-	return collectSelectedPartIds(pick).filter((slotId) =>
+	const slotPart = ctx.objectPartKind.get(object.type, pick.kind);
+	if (slotPart === undefined) {
+		throw new Error(
+			`defaultSlotsOf: a text slot is picked on "${object.type}", which has no "${pick.kind}" part kind registered`,
+		);
+	}
+	return collectObjectPartIds(pick, slotPart, object).filter((slotId) =>
 		Object.prototype.hasOwnProperty.call(slots, slotId),
 	);
 };

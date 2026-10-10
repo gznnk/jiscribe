@@ -9,7 +9,7 @@ import {
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import { getFirstTextSlotId } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { collectSelectedPartIds } from "../selection/collectSelectedPartIds";
+import { readActivePartFocusId } from "../selection/readActivePartFocusId";
 import { isTextSlotSelection } from "../selection/textSlotPartKind";
 
 /**
@@ -103,7 +103,7 @@ export const resolveTextEdit = (
 	// stops doing so (reconcileSelection), so the fallback never stands in for a
 	// slot it could only guess at.
 	const slotId = isTextSlotSelection(part)
-		? collectSelectedPartIds(part)[0]
+		? readActivePartFocusId(part)
 		: getFirstTextSlotId(owner.text);
 	// hasOwnProperty rather than a lookup, as the slot part kind checks it
 	// (createTextSlotPartKindDefinition): "toString" names an Object.prototype

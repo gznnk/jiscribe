@@ -315,6 +315,7 @@ export type {
 	ObjectPartSelection,
 } from "./controllers/selection/ObjectPartSelection";
 export { isTextSlotSelection } from "./controllers/selection/textSlotPartKind";
-export { collectSelectedPartIds } from "./controllers/selection/collectSelectedPartIds";
+export { collectObjectPartIds } from "./controllers/selection/collectObjectPartIds";
+export { readActivePartFocusId } from "./controllers/selection/readActivePartFocusId";
 export { getSelectedConnectorId } from "./controllers/utils/getSelectedConnectorId";
 export type { ICanvasRegistries } from "./controllers/registries/ICanvasRegistries";

@@ -25,7 +25,9 @@ const rect: ObjectState = {
 } as unknown as ObjectState;
 
 const objectPartKind = createObjectPartKindRegistry();
-objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
+objectPartKind.register("record", [
+	createTextSlotPartKindDefinition(undefined),
+]);
 
 describe("selectTextSlot", () => {
 	it("picks the slot on a type that takes slot picks", () => {
