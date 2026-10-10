@@ -1,4 +1,3 @@
-import { readRangeEdit } from "./readRangeEdit";
 import { runOrSlotEntry } from "./runOrSlotEntry";
 import type { SlotsOf } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
@@ -8,6 +7,7 @@ import type {
 	TextToggleIntentKind,
 } from "../StyleIntent";
 import { TOGGLE_FLIPS } from "../StyleIntent";
+import { readRangeEdit } from "./utils/readRangeEdit";
 
 /**
  * The one value the places read agree on, or undefined when they do not — which

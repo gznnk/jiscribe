@@ -7,9 +7,6 @@ import {
 } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
-import { readRangeEdit } from "./readRangeEdit";
-import type { SlotsOf } from "./slotEntry";
-import { slotEntry } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { writeRichTextSlot } from "../../../states/objects/types/TextSlots";
 import type { StyleEntry } from "../StyleEntry";
@@ -17,6 +14,9 @@ import type {
 	StyleIntentValueType,
 	TextSlotStyleIntentKind,
 } from "../StyleIntent";
+import type { SlotsOf } from "./slotEntry";
+import { slotEntry } from "./slotEntry";
+import { readRangeEdit } from "./utils/readRangeEdit";
 
 /**
  * An intent stored on the text slots that a stretch of characters may also carry
