@@ -1,6 +1,6 @@
-import { applyConnectorSelection } from "./utils/applyConnectorSelection";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { applyConnectorSelection } from "../../../selection/writers/applyConnectorSelection";
 import type {
 	CanvasEvent,
 	GestureHandler,

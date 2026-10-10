@@ -1,6 +1,6 @@
 import { CopyCommand } from "./CopyCommand";
 import { DeleteCommand } from "./DeleteCommand";
-import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**

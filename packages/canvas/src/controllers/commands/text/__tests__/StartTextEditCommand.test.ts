@@ -6,9 +6,11 @@ import { createInitialControllerState } from "../../../reducer/createInitialCont
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
-import { createTextSlotPartKindDefinition } from "../../../selection/createTextSlotPartKindDefinition";
-import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import type { ObjectPartSelection } from "../../../selection/CanvasSelection";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "../../../selection/partKinds/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { StartTextEditCommand } from "../StartTextEditCommand";

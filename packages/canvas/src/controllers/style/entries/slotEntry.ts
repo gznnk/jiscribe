@@ -5,9 +5,9 @@ import type {
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
-import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
-import type { ObjectPartSelection } from "../../selection/ObjectPartSelection";
-import { isTextSlotSelection } from "../../selection/textSlotPartKind";
+import type { ObjectPartSelection } from "../../selection/CanvasSelection";
+import { isTextSlotSelection } from "../../selection/partKinds/textSlotPartKind";
+import { collectObjectPartIds } from "../../selection/readers/collectObjectPartIds";
 import { textSlotsOf } from "../../utils/textSlotsOf";
 import type { StyleContext, StyleEntry } from "../StyleEntry";
 

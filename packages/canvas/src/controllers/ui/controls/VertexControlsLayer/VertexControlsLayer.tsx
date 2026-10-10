@@ -3,7 +3,7 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
-import { readSelectedVertexIndex } from "../../../selection/readSelectedVertexIndex";
+import { readSelectedVertexIndex } from "../../../selection/readers/readSelectedVertexIndex";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 type VertexControlsLayerProps = {

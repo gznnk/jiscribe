@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../../../selection/partKinds/textSlotPartKind";
 import { isTextAddressed } from "../isTextAddressed";
 
 const makeState = (

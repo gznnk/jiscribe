@@ -5,7 +5,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
-import { reconcileSelection } from "../../../selection/reconcileSelection";
+import { reconcileSelection } from "../../../selection/writers/reconcileSelection";
 import { SelectAllCommand } from "../SelectAllCommand";
 
 const registries = createTestRegistries();

@@ -7,7 +7,7 @@ import { getPlatformShortcuts } from "../../commands/CommandUtils";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
 import { ZOOM } from "../../utils/zoom";
 import { createTestRegistries } from "../createCanvasRegistries";
 

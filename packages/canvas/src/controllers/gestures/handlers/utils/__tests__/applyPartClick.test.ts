@@ -4,11 +4,13 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
-import { createTextSlotPartKindDefinition } from "../../../../selection/createTextSlotPartKindDefinition";
-import { createVertexPartKindDefinition } from "../../../../selection/createVertexPartKindDefinition";
-import { createObjectPartKindRegistry } from "../../../../selection/ObjectPartKindRegistry";
-import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
+import type { ObjectPartSelection } from "../../../../selection/CanvasSelection";
+import { createObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "../../../../selection/partKinds/textSlotPartKind";
+import { createVertexPartKindDefinition } from "../../../../selection/partKinds/vertexPartKind";
 import { applyPartClick } from "../applyPartClick";
 import { textSlotPart, vertexPart } from "../partAddress";
 

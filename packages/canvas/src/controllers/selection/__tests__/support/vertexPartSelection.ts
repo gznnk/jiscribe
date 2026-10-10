@@ -1,5 +1,5 @@
-import { VERTEX_PART_KIND } from "../../createVertexPartKindDefinition";
-import type { ObjectPartSelection } from "../../ObjectPartSelection";
+import type { ObjectPartSelection } from "../../CanvasSelection";
+import { VERTEX_PART_KIND } from "../../partKinds/vertexPartKind";
 
 /**
  * The part selection a click on a vertex handle writes (VertexControlHandler):

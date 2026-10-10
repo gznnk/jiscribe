@@ -19,7 +19,9 @@ import {
 } from "./handlers/handleTransformPropertyUpdate";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
-import { reconcileSelection } from "../selection/reconcileSelection";
+import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
+import { reconcileSelection } from "../selection/writers/reconcileSelection";
+import { resolveRequestedSelection } from "../selection/writers/resolveRequestedSelection";
 import { applyStyleIntent } from "../style/applyStyleIntent";
 import {
 	applyDocumentProperty,
@@ -27,7 +29,6 @@ import {
 } from "../utils/applyDocumentProperty";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
-import { createMultiSelectGroup } from "../utils/createMultiSelectGroup";
 import {
 	reconcileConnectorVertices,
 	reconcileConnectorVerticesIfCommitted,
@@ -35,7 +36,6 @@ import {
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
 import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
-import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
 import {
 	canNavigateHistory,
 	restoreHistorySnapshot,

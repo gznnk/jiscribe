@@ -4,7 +4,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import { DeselectAllCommand } from "../DeselectAllCommand";
 
 const registries = createTestRegistries();

@@ -11,7 +11,7 @@ import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectC
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
+import type { ObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
 import type { ObjectStyleRegistry } from "../style/ObjectStyleRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 

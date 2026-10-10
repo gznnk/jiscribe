@@ -8,9 +8,11 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { createTextSlotPartKindDefinition } from "../../selection/createTextSlotPartKindDefinition";
-import type { ObjectPartSelection } from "../../selection/ObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
+import type { ObjectPartSelection } from "../../selection/CanvasSelection";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "../../selection/partKinds/textSlotPartKind";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 

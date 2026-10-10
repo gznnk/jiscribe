@@ -1,7 +1,7 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 
-import { getSelectedConnectorId } from "./getSelectedConnectorId";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { getSelectedConnectorId } from "../selection/readers/getSelectedConnectorId";
 
 /**
  * Whether the selected connector carries label text, which is what every row of

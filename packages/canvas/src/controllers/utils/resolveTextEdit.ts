@@ -9,8 +9,8 @@ import {
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import { getFirstTextSlotId } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { readActivePartFocusId } from "../selection/readActivePartFocusId";
-import { isTextSlotSelection } from "../selection/textSlotPartKind";
+import { isTextSlotSelection } from "../selection/partKinds/textSlotPartKind";
+import { readActivePartFocusId } from "../selection/readers/readActivePartFocusId";
 
 /**
  * The open editing session paired with what it is editing: the draft off

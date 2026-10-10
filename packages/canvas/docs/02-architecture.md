@@ -32,6 +32,7 @@ packages/canvas/src/
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc, etc.
 │   ├── registries/         # building and wiring the registry bundle (createCanvasRegistries, …)
+│   ├── selection/          # what is selected: the CanvasSelection model + partKinds/ / readers/ / writers/
 │   ├── ui/                 # UI control (transform controls, menus, icons) incl. StencilRegistry / ObjectMenuRegistry, among others
 │   └── utils/
 ├── rendering/              # pure rendering components + the Viewport type
@@ -50,6 +51,12 @@ validation), `plugin/` (`ObjectDocDefinition` / `CanvasDocPlugin` /
 (`createDocOps`), `text/` (text measurement) and `file/` (`.jis.png` / `.jis.svg`
 source embedding). Take all of it from `@jiscribe/doc` — see
 [`packages/doc/README.md`](../../doc/README.md).
+
+`controllers/selection/` keeps the selection model at its root (`CanvasSelection.ts`)
+and splits the rest by layer: `partKinds/` is what an object type declares about its
+parts (`ObjectPartKindRegistry`, the text-slot and vertex kinds), `readers/` derives
+values from a selection without changing it, and `writers/` turns one state into the
+next (including `reconcileSelection`, which drops a part the state no longer backs).
 
 For each shape there is a corresponding `states/objects/.../<shape>/`,
 `controllers/behaviors/...`, and `rendering/objects/...`. The list of core types is

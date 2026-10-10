@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { getSelectedConnectorId } from "../../../utils/getSelectedConnectorId";
+import { getSelectedConnectorId } from "../../../selection/readers/getSelectedConnectorId";
 import { ConnectorControls } from "../ConnectorControls";
 
 type ConnectorControlsLayerProps = Pick<

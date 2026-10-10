@@ -6,7 +6,7 @@ import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
-import { MULTI_SELECT_GROUP } from "../../../utils/createMultiSelectGroup";
+import { MULTI_SELECT_GROUP } from "../../../selection/readers/createMultiSelectGroup";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 

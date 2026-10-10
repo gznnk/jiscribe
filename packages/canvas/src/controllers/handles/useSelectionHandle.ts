@@ -6,7 +6,7 @@ import type { CanvasAction } from "../reducer/CanvasActions";
 import {
 	resolveRequestedSelection,
 	type ResolvedSelection,
-} from "../utils/resolveRequestedSelection";
+} from "../selection/writers/resolveRequestedSelection";
 
 /**
  * Imperative selection API exposed on the `selection` namespace of the Canvas

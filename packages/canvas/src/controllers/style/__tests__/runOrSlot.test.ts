@@ -9,8 +9,8 @@ import {
 	textRectOf,
 } from "./support/styleFixtures";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
-import { createObjectPartKindRegistry } from "../../selection/ObjectPartKindRegistry";
-import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
+import { createObjectPartKindRegistry } from "../../selection/partKinds/ObjectPartKindRegistry";
+import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
 import { runOrSlot } from "../entries/runOrSlot";
 import { defaultSlotsOf } from "../entries/slotEntry";
 

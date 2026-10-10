@@ -309,13 +309,13 @@ export type {
 	PlatformKeyBindings,
 } from "./controllers/commands/CommandTypes";
 export type { CanvasControllerState } from "./controllers/CanvasTypes";
-export type { CanvasSelection } from "./controllers/selection/CanvasSelection";
 export type {
+	CanvasSelection,
 	ObjectPartRange,
 	ObjectPartSelection,
-} from "./controllers/selection/ObjectPartSelection";
-export { isTextSlotSelection } from "./controllers/selection/textSlotPartKind";
-export { collectObjectPartIds } from "./controllers/selection/collectObjectPartIds";
-export { readActivePartFocusId } from "./controllers/selection/readActivePartFocusId";
-export { getSelectedConnectorId } from "./controllers/utils/getSelectedConnectorId";
+} from "./controllers/selection/CanvasSelection";
+export { isTextSlotSelection } from "./controllers/selection/partKinds/textSlotPartKind";
+export { collectObjectPartIds } from "./controllers/selection/readers/collectObjectPartIds";
+export { readActivePartFocusId } from "./controllers/selection/readers/readActivePartFocusId";
+export { getSelectedConnectorId } from "./controllers/selection/readers/getSelectedConnectorId";
 export type { ICanvasRegistries } from "./controllers/registries/ICanvasRegistries";

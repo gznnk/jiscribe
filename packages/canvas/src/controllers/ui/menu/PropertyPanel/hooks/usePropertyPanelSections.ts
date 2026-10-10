@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
-import { getSelectedConnectorId } from "../../../../utils/getSelectedConnectorId";
 import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";

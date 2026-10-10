@@ -99,9 +99,11 @@ import {
 	rotateByGroup as textRotateByGroup,
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
-import { createTextSlotPartKindDefinition } from "../selection/createTextSlotPartKindDefinition";
-import { createVertexPartKindDefinition } from "../selection/createVertexPartKindDefinition";
-import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "../selection/partKinds/textSlotPartKind";
+import { createVertexPartKindDefinition } from "../selection/partKinds/vertexPartKind";
 import { CONNECTOR_STYLE_ENTRIES } from "../style/connectorStyleEntries";
 import { coreStyleTable } from "../style/coreStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";

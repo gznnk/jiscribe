@@ -9,7 +9,7 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { readSelectedVertexIndex } from "../../../selection/readSelectedVertexIndex";
+import { readSelectedVertexIndex } from "../../../selection/readers/readSelectedVertexIndex";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 // Handle colors may hold var(--jiscribe-*), so they are applied via style

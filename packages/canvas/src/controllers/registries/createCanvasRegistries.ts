@@ -24,7 +24,7 @@ import { createObjectStateValidatorRegistry } from "../../states/registry/Object
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import { createObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
+import { createObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
 import { createObjectStyleRegistry } from "../style/ObjectStyleRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";

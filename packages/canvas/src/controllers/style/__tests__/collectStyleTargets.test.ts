@@ -7,7 +7,7 @@ import {
 	rectOf,
 	stateOf,
 } from "./support/styleFixtures";
-import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
 import { collectStyleTargets } from "../collectStyleTargets";
 
 const partOf = (slotId: string) => ({

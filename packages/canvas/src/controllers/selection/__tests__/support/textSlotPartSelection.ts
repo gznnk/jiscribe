@@ -1,5 +1,5 @@
-import type { ObjectPartSelection } from "../../ObjectPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../textSlotPartKind";
+import type { ObjectPartSelection } from "../../CanvasSelection";
+import { TEXT_SLOT_PART_KIND } from "../../partKinds/textSlotPartKind";
 
 /**
  * The part selection a slot click writes, and the one every open shape text edit

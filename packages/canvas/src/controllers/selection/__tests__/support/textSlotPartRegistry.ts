@@ -1,8 +1,8 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
-import { createTextSlotPartKindDefinition } from "../../createTextSlotPartKindDefinition";
-import { createObjectPartKindRegistry } from "../../ObjectPartKindRegistry";
-import type { ObjectPartKindRegistry } from "../../ObjectPartKindRegistry";
+import { createObjectPartKindRegistry } from "../../partKinds/ObjectPartKindRegistry";
+import type { ObjectPartKindRegistry } from "../../partKinds/ObjectPartKindRegistry";
+import { createTextSlotPartKindDefinition } from "../../partKinds/textSlotPartKind";
 
 /**
  * Declares the slot part for more types on a registry that already exists — the

@@ -2,7 +2,7 @@ import { isOrthogonalRouting } from "@jiscribe/doc/model/objects/types/Connector
 import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 
 import type { CanvasControllerState } from "../CanvasTypes";
-import { getSelectedConnectorId } from "./getSelectedConnectorId";
+import { getSelectedConnectorId } from "../selection/readers/getSelectedConnectorId";
 
 /**
  * Returns the current routing of the selected connector.

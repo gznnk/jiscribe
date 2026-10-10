@@ -1,10 +1,10 @@
 import { isTransformedFrame } from "@jiscribe/geometry";
 
 import type { ClipboardData } from "./ClipboardData";
-import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
+import { selectConnectorsInSelection } from "../../selection/readers/selectConnectorsInSelection";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
-import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import type { ExecutableCommand } from "../CommandTypes";
 

@@ -2,7 +2,7 @@ import { DEFAULT_ARROW } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
 
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
-import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 export const SwapArrowsCommand: ExecutableCommand = {
