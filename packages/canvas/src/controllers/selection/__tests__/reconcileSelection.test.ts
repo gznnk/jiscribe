@@ -74,9 +74,11 @@ const connector = (id: string): ObjectState =>
  * waypoints, and nothing else takes part at all.
  */
 const objectPartKind = createObjectPartKindRegistry();
-objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
+objectPartKind.register("record", [
+	createTextSlotPartKindDefinition(undefined),
+]);
 objectPartKind.register("table", [
-	createTextSlotPartKindDefinition(),
+	createTextSlotPartKindDefinition(undefined),
 	cellPartKind,
 ]);
 objectPartKind.register("connector", [createVertexPartKindDefinition(2)]);

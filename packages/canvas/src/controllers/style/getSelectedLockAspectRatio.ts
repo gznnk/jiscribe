@@ -1,6 +1,6 @@
-import type { StyleIntentRegistries } from "./ObjectStyleRegistry";
 import { readSelectionStyle } from "./readSelectionStyle";
 import { selectionValueOrFirst } from "./SelectionValue";
+import type { StyleIntentRegistries } from "./StyleIntentRegistries";
 import { DEFAULT_LOCK_ASPECT_RATIO } from "../../states/objects/base/TransformState";
 import type { CanvasControllerState } from "../CanvasTypes";
 

@@ -1,0 +1,1 @@
+export { ObjectPartOutline } from "./ObjectPartOutline";

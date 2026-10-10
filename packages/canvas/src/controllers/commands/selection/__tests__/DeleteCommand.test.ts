@@ -290,6 +290,41 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.execute(state, pinRegistries)).toBe(state);
 		});
 
+		it("removes every part a range covers, not only its focus", () => {
+			type TrackState = ObjectState & { items: string[] };
+			const trackRegistries = createTestRegistries();
+			let deletedPartIds: readonly string[] = [];
+			trackRegistries.objectPartKind.register<TrackState>("pin", [
+				{
+					kind: "track",
+					has: (object, partId) => Number(partId) < object.items.length,
+					list: (object) => object.items.map((_, index) => String(index)),
+					delete: (object, partIds) => {
+						deletedPartIds = partIds;
+						return { ...object, items: [] };
+					},
+				},
+			]);
+			const pin = {
+				id: "n",
+				type: "pin",
+				items: ["a", "b", "c", "d"],
+			} as unknown as TrackState;
+			const state = makeState({
+				selection: selectionOf(["n"], {
+					kind: "track",
+					ranges: [{ anchorId: "2", focusId: "0" }],
+				}),
+				objects: { n: pin },
+				rootIds: ["n"],
+			});
+
+			const next = DeleteCommand.execute(state, trackRegistries);
+
+			expect(deletedPartIds).toEqual(["0", "1", "2"]);
+			expect(next.selection.part).toBeNull();
+		});
+
 		it("is executable when there is a connector selection", () => {
 			const state = makeState({
 				objects: {},

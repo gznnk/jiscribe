@@ -1,6 +1,4 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { StyleTable } from "./StyleEntry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -47,15 +45,3 @@ export class ObjectStyleRegistry {
 
 export const createObjectStyleRegistry = (): ObjectStyleRegistry =>
 	new ObjectStyleRegistry();
-
-/**
- * The registries a style walk reads: the tables, plus the defaults an entry's
- * `read` resolves through. Declared as its own shape so the walkers take a slice
- * rather than the whole canvas bundle, which stays structurally assignable to it
- * (ICanvasRegistries).
- */
-export type StyleIntentRegistries = {
-	objectStyle: ObjectStyleRegistry;
-	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
-	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
-};

@@ -14,13 +14,15 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { createTextSlotPartRegistry } from "../../../selection/__tests__/support/textSlotPartRegistry";
+import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { CONNECTOR_STYLE_ENTRIES } from "../../connectorStyleEntries";
 import { coreStyleTable } from "../../coreStyleTable";
-import type { StyleIntentRegistries } from "../../ObjectStyleRegistry";
 import { createObjectStyleRegistry } from "../../ObjectStyleRegistry";
 import type { StyleContext, TextEditRange } from "../../StyleEntry";
+import type { StyleIntentRegistries } from "../../StyleIntentRegistries";
 
 /**
  * A state of one built-in type, carrying only what a style walk reads: an id, the
@@ -108,6 +110,14 @@ export const SourceFeatures: ObjectFeatures = {
 export const sourceRectOf = (id: string, text: TextSlots): ObjectState =>
 	objectOf(SourceFeatures, id, { text });
 
+/**
+ * The part kinds the fixtures' slot picks expand through: the slotted rects
+ * ({@link textRectOf}) stand in for a `features.text === "slots"` type, so rect
+ * is given the slot kind applyObjectDefinition registers for one.
+ */
+const slotPartKindsOf = (): ObjectPartKindRegistry =>
+	createTextSlotPartRegistry(RectFeatures.type);
+
 /** A pick naming one text slot, the way a press on a slot stores it. */
 export const slotPickOf = (slotId: string): ObjectPartSelection => ({
 	kind: TEXT_SLOT_PART_KIND,
@@ -185,13 +195,14 @@ export const registriesOf = (
 		objectStyle,
 		objectShapeStyleDefaults: shapeStyleDefaults,
 		objectTextStyleDefaults: textStyleDefaults,
+		objectPartKind: slotPartKindsOf(),
 	};
 };
 
 /**
  * The context one entry is called with, outside any walk.
  *
- * @param overrides - What this case cares about; the rest is a selected target, empty defaults registries and no open editor
+ * @param overrides - What this case cares about; the rest is a selected target, empty defaults registries, the slot kind on rect and no open editor
  */
 export const contextOf = (
 	overrides: Partial<StyleContext> = {},
@@ -199,6 +210,7 @@ export const contextOf = (
 	selected: true,
 	shapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 	textStyleDefaults: createObjectTextStyleDefaultsRegistry(),
+	objectPartKind: slotPartKindsOf(),
 	textEditRange: null,
 	...overrides,
 });

@@ -1,7 +1,6 @@
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { collectStyleTargets } from "./collectStyleTargets";
-import type { StyleIntentRegistries } from "./ObjectStyleRegistry";
 import type { StyleTextEdit } from "./resolveStyleTextEdit";
 import {
 	graftStyleTextEdit,
@@ -10,6 +9,7 @@ import {
 import { styleEntryOf } from "./styleEntryOf";
 import type { StyleIntent } from "./StyleIntent";
 import { styleIntentValue } from "./StyleIntent";
+import type { StyleIntentRegistries } from "./StyleIntentRegistries";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { readRichTextSlot } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -99,6 +99,7 @@ export const applyStyleIntent = (
 			selected,
 			shapeStyleDefaults: registries.objectShapeStyleDefaults,
 			textStyleDefaults: registries.objectTextStyleDefaults,
+			objectPartKind: registries.objectPartKind,
 			textEditRange: textEdit?.range ?? null,
 		});
 		if (updated === null || updated === grafted) {

@@ -59,7 +59,6 @@ import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import { isTextSlotSelection } from "./selection/textSlotPartKind";
 import type {
 	TextToggleIntent,
 	TextToggleIntentKind,
@@ -820,12 +819,11 @@ const CanvasComponent = ({
 									zoom={state.viewport.zoom}
 								/>
 								<TransformControlsLayer
-									selectedIds={state.selection.objectIds}
+									selection={state.selection}
 									objects={state.objects}
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={isTextSlotSelection(state.selection.part)}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer

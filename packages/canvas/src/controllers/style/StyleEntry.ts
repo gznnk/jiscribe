@@ -3,6 +3,7 @@ import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/O
 
 import type { CoreStyleIntentKind, StyleIntentValueType } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
 import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
 
 /**
@@ -169,6 +170,12 @@ export type StyleContext = {
 	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	/** Per-type text-style defaults, so a slot read answers with what it is drawn with. */
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry;
+	/**
+	 * Per-type part kinds, through which a `pick` is expanded into the parts its
+	 * ranges cover (collectObjectPartIds) — a range of slots reaching every slot
+	 * between its ends rather than its focus alone.
+	 */
+	objectPartKind: ObjectPartKindRegistry;
 	/**
 	 * The stretch of text the open editor has selected, when a per-range write or
 	 * read is what the edit means; null otherwise — no open shape editor, a

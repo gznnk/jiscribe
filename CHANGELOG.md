@@ -15,6 +15,26 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A Shift-click selects a run of compartments.** With one compartment of a
+  slot-based shape picked (a UML record's name, attributes or operations), a
+  Shift-click on another picks every compartment from the first to the one
+  clicked, each with a box of its own, and a style change such as a font color
+  lands on all of them. A plain click, or Tab, goes back to a single compartment;
+  Tab steps on from the end of the run it is moving towards.
+- **For plugin authors: a part kind says how its parts are outlined, walked and
+  spanned.** `ObjectPartKindDefinition` takes three optional members. `region`
+  gives a part's box in the object's local coordinates: a kind that declares it
+  has every selected part outlined, the owner's own outline turning dashed and
+  its transform handles hidden, while a kind without one (the built-in `vertex`)
+  looks as before. `list` gives every part id in the order Tab walks them, which
+  is also the order a Shift-click range is resolved over by default. `range` is
+  for a type whose parts are not laid out in one line, such as a table's cells:
+  it answers which parts a range from an anchor to a focus covers, every id
+  passing `has`, in the type's own order, and never empty. A reader turns the
+  stored ranges into ids through `collectObjectPartIds`, and finds the part the
+  active range ends on through `readActivePartFocusId`, both on
+  `@jiscribe/canvas/unstable`. The style walk resolves a slot pick the same way,
+  so `StyleContext` now carries the canvas's `objectPartKind` registry.
 - **For plugin authors: picking a vertex is a part selection too.** The separate
   single-vertex field is gone: a vertex handle now writes `selection.part` under
   the `vertex` kind, so the one channel carries every pick made one level
@@ -39,8 +59,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   rewrites the selection or the objects, through the kind's own `has`, so a
   selection the state no longer backs is already gone by the time anything reads
   it — the readers take `state.selection.part` as it stands, and each kind
-  answers for its own ids. Nothing the user does changes: every range written
-  today is a single slot.
+  answers for its own ids. A plain click and Tab write a single slot, and a
+  Shift-click grows the active range from its anchor.
 - **For plugin authors: a type declares the sub-parts of its own objects.**
   `ObjectTypeDefinition.partKinds` takes one entry per part-id namespace (`kind`),
   each stating `has` — whether an id still names a part of that object — and

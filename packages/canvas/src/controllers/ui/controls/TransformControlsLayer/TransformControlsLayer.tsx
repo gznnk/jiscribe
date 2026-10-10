@@ -5,21 +5,22 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { collectOutlinedPartRegions } from "../../../selection/collectOutlinedPartRegions";
 import { resolveTransformHandles } from "../ObjectTransformHandlesRegistry";
 import { TransformControls } from "../TransformControls";
 
 type TransformControlsLayerProps = {
-	selectedIds: readonly string[];
+	/**
+	 * What the canvas is pointed at, `state.selection` as it stands: the reducer
+	 * has already dropped a part no longer selectable (reconcileSelection), so a
+	 * stale part cannot keep the handles hidden
+	 */
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
 	zoom?: number;
 	isTextEditing: boolean;
-	/**
-	 * Whether a text slot is selected inside the object; a stale flag would keep the
-	 * handles hidden, which is why the reducer reconciles the selection it is read
-	 * from (reconcileSelection)
-	 */
-	isTextSlotSelected: boolean;
 	/** Kind of the drag in progress; null when none is */
 	activeDragKind: DragKind | null;
 };
@@ -33,12 +34,11 @@ type TransformControlsLayerProps = {
 const TransformControlsLayerComponent: React.FC<
 	TransformControlsLayerProps
 > = ({
-	selectedIds,
+	selection,
 	objects,
 	multiSelectGroup,
 	zoom = 1,
 	isTextEditing,
-	isTextSlotSelected,
 	activeDragKind,
 }) => {
 	const registries = useCanvasRegistries();
@@ -48,9 +48,14 @@ const TransformControlsLayerComponent: React.FC<
 		return null;
 	}
 
-	// Hidden while a slot is selected: resizing and rotating still act on the whole
-	// object, so handles on its frame would compete with the slot box for the eye.
-	if (isTextSlotSelected) {
+	// Hidden while an outlined part is selected: resizing and rotating still act on
+	// the whole object, so handles on its frame would compete with that part's box
+	// for the eye. A kind drawing no box leaves nothing to compete with
+	// (collectOutlinedPartRegions).
+	if (
+		collectOutlinedPartRegions(objects, registries.objectPartKind, selection)
+			.length > 0
+	) {
 		return null;
 	}
 
@@ -59,6 +64,8 @@ const TransformControlsLayerComponent: React.FC<
 	if (activeDragKind === "move") {
 		return null;
 	}
+
+	const selectedIds = selection.objectIds;
 
 	// No selection, or multiple selection: do not render controls
 	if (selectedIds.length === 0) {
