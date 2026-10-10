@@ -104,7 +104,7 @@ const dragEvent = (
 	type: EventType,
 	start: Point,
 	last: Point,
-	targetPart = "segment-slide:1",
+	targetAction = "segment-slide:1",
 	targetId = "c1",
 ): CanvasEvent =>
 	({
@@ -112,7 +112,7 @@ const dragEvent = (
 		target: null,
 		targetId,
 		targetKind: "connector",
-		targetPart,
+		targetAction,
 		start,
 		last,
 		delta: { x: last.x - start.x, y: last.y - start.y },
@@ -180,7 +180,7 @@ describe("ConnectorSegmentSlideHandler - supports", () => {
 
 		const onBareLine = {
 			...dragEvent("dragStart", { x: 0, y: 0 }, { x: 1, y: 1 }),
-			targetPart: undefined,
+			targetAction: undefined,
 		} as CanvasEvent;
 		expect(ConnectorSegmentSlideHandler.supports(onBareLine)).toBe(false);
 
@@ -282,14 +282,14 @@ describe("ConnectorSegmentSlideHandler - drag", () => {
 describe("ConnectorSegmentSlideHandler - segments it refuses", () => {
 	const refuses = (
 		state: CanvasControllerState,
-		targetPart: string,
+		targetAction: string,
 		last: Point = { x: 140, y: 500 },
 		targetId = "c1",
 	) =>
 		expect(
 			ConnectorSegmentSlideHandler.handle(
 				state,
-				dragEvent("drag", { x: 100, y: 40 }, last, targetPart, targetId),
+				dragEvent("drag", { x: 100, y: 40 }, last, targetAction, targetId),
 				registries,
 			),
 		).toBe(state);
@@ -333,14 +333,14 @@ describe("ConnectorSegmentSlideHandler - segments it refuses", () => {
 		refuses(stateWith(connectorOnMissingOwner()), "segment-slide:1");
 	});
 
-	it("leaves the state alone for a part carrying no usable index", () => {
+	it("leaves the state alone for an action carrying no usable index", () => {
 		const state = stateWith(orthogonalConnector());
-		for (const part of [
+		for (const action of [
 			"segment-slide:",
 			"segment-slide:abc",
 			"segment-slide:-1",
 		]) {
-			refuses(state, part);
+			refuses(state, action);
 		}
 	});
 

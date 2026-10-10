@@ -319,8 +319,8 @@ test.describe("record: selecting one text slot", () => {
 		);
 		// Matched on the property alone: each button carries the value its *next* press
 		// lands on, and the name slot ships bold and underlined.
-		const bold = canvas.page.locator('[data-part^="set:fontWeight:"]');
-		const italic = canvas.page.locator('[data-part^="set:fontStyle:"]');
+		const bold = canvas.page.locator('[data-action^="set:fontWeight:"]');
+		const italic = canvas.page.locator('[data-action^="set:fontStyle:"]');
 
 		// The whole object selected: the four stay behind the dropdown.
 		await canvas.selectAt(ATTRIBUTES_SPOT);

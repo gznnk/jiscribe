@@ -6,7 +6,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *
  * connector.spec covers creation and following, connector-follow-target covers following at both
  * ends, but dragging the endpoint handle of a selected connector
- * (data-id=<id> + data-part="endpoint:target") onto another shape to swap the connected shape was
+ * (data-id=<id> + data-action="endpoint:target") onto another shape to swap the connected shape was
  * uncovered. Reconnecting is the core operation that replaces the owner of an endpoint; when it
  * breaks, the line is left behind on the old shape. Guards, through changes / non-changes of
  * points, that after the swap the connector follows the new shape and not the old one, and that
@@ -61,7 +61,7 @@ async function reconnectTargetToC(canvas: CanvasDriver, connectorId: string) {
 	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
 		canvas.page.locator(
-			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
+			`[data-id="${connectorId}"][data-action="endpoint:target"]`,
 		),
 	).toBeVisible();
 	const pointsBefore = await canvas
@@ -69,7 +69,7 @@ async function reconnectTargetToC(canvas: CanvasDriver, connectorId: string) {
 		.getAttribute("points");
 	await dragControlTo(
 		canvas,
-		`[data-id="${connectorId}"][data-part="endpoint:target"]`,
+		`[data-id="${connectorId}"][data-action="endpoint:target"]`,
 		{
 			x: 830,
 			y: 490,
@@ -89,7 +89,7 @@ async function reconnectSourceToC(canvas: CanvasDriver, connectorId: string) {
 	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
 		canvas.page.locator(
-			`[data-id="${connectorId}"][data-part="endpoint:source"]`,
+			`[data-id="${connectorId}"][data-action="endpoint:source"]`,
 		),
 	).toBeVisible();
 	const pointsBefore = await canvas
@@ -97,7 +97,7 @@ async function reconnectSourceToC(canvas: CanvasDriver, connectorId: string) {
 		.getAttribute("points");
 	await dragControlTo(
 		canvas,
-		`[data-id="${connectorId}"][data-part="endpoint:source"]`,
+		`[data-id="${connectorId}"][data-action="endpoint:source"]`,
 		{
 			x: 830,
 			y: 490,

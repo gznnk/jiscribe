@@ -152,7 +152,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	}
 	await canvas.clickAt(best.mid);
 	await expect(
-		canvas.page.locator('[data-part="toggle:line-color"]'),
+		canvas.page.locator('[data-action="toggle:line-color"]'),
 	).toBeVisible();
 }
 
@@ -281,11 +281,11 @@ test.describe("self-loop connector (connecting a shape to itself)", () => {
 		// The connector ObjectMenu appears (checked through the line color toggle), but the routing
 		// switch is hidden.
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-color"]'),
+			canvas.page.locator('[data-action="toggle:line-color"]'),
 			"the connector ObjectMenu is shown",
 		).toBeVisible();
 		await expect(
-			canvas.page.locator('[data-part="toggle:connector-routing"]'),
+			canvas.page.locator('[data-action="toggle:connector-routing"]'),
 			"no routing switch menu appears for a self-loop",
 		).toHaveCount(0);
 	});
@@ -315,7 +315,7 @@ test.describe("self-loop connector (connecting a shape to itself)", () => {
 
 		await selectConnector(canvas, connectorId);
 		await canvas.openObjectMenu("connector-routing");
-		await canvas.page.click('[data-part="command:setRoutingStraight"]');
+		await canvas.page.click('[data-action="command:setRoutingStraight"]');
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
 				message: "straight routing draws a single direct line",
@@ -325,7 +325,7 @@ test.describe("self-loop connector (connecting a shape to itself)", () => {
 		// Drag the target end onto the source's own shape, turning it into a self-loop.
 		const targetHandle = await controlContentCenter(
 			canvas,
-			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
+			`[data-id="${connectorId}"][data-action="endpoint:target"]`,
 		);
 		await canvas.drag(targetHandle, { x: 400, y: 260 });
 		await expect
@@ -346,13 +346,13 @@ test.describe("self-loop connector (connecting a shape to itself)", () => {
 		// straight-only band or vertex-insert handle is offered.
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-move:"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-action^="segment-move:"]`,
 			),
 			"no free-move band on a line drawn at right angles",
 		).toHaveCount(0);
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-slide:"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-action^="segment-slide:"]`,
 			),
 			"the one-axis slide bands are there instead",
 		).not.toHaveCount(0);
@@ -360,7 +360,7 @@ test.describe("self-loop connector (connecting a shape to itself)", () => {
 		await selectConnector(canvas, connectorId);
 		await expect(
 			canvas.page.locator(
-				`[data-kind="control"][data-id="${connectorId}"][data-part^="waypoint-insert:"]`,
+				`[data-kind="control"][data-id="${connectorId}"][data-action^="waypoint-insert:"]`,
 			),
 			"no vertex-insert handles, which index a path the stored points do not describe",
 		).toHaveCount(0);

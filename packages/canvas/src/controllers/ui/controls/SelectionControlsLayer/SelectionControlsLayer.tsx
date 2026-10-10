@@ -41,10 +41,10 @@ const SelectionControlsLayerComponent: React.FC<
 		<>
 			{controls.map((control) => (
 				<control.Component
-					key={control.part}
+					key={control.action}
 					object={selectedObject}
 					zoom={zoom}
-					part={control.part}
+					action={control.action}
 				/>
 			))}
 		</>

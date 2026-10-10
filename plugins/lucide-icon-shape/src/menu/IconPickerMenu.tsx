@@ -6,8 +6,8 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
-	setPart,
-	togglePart,
+	setAction,
+	toggleAction,
 } from "@jiscribe/canvas-sdk";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 
@@ -28,7 +28,7 @@ import { DEFAULT_ICON_NAME } from "../schema/IconDoc";
 
 /**
  * Distinct from the toolbar category's id, which is also about icons: both render a
- * `toggle:{id}` part, and sharing the string would make the two indistinguishable to
+ * `toggle:{id}` action, and sharing the string would make the two indistinguishable to
  * anything selecting on it.
  */
 const SECTION_ID = "lucide-icon";
@@ -87,7 +87,7 @@ const searchIcons = (query: string): { names: string[]; total: number } => {
  * its own style table (ICON_STYLE_ENTRIES) so the update travels the same path as any other menu
  * edit.
  *
- * The cells set the value through `data-part`, not an `onClick`. A press held for even a
+ * The cells set the value through `data-action`, not an `onClick`. A press held for even a
  * moment never produces a click event on the button — the canvas captures the pointer, so
  * the `pointerup` lands elsewhere — which makes a React handler fire only for a press fast
  * enough to beat the capture. The value is declared the way the shared color swatches
@@ -130,7 +130,7 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuIcon}
 			>
 				<IconGlyph name={currentIcon} size={18} />
@@ -163,7 +163,7 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									key={name}
 									type="button"
 									selected={name === currentIcon}
-									data-part={setPart("icon", name)}
+									data-action={setAction("icon", name)}
 									title={name}
 								>
 									<IconGlyph name={name} size={18} />

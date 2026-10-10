@@ -59,10 +59,10 @@ const LIBRARY_SECTIONS = [
 ];
 
 /** Every toolbar category button, pinned presets excluded. */
-const CATEGORY_TOGGLES = '[data-id="stencil-category"][data-part^="toggle:"]';
+const CATEGORY_TOGGLES = '[data-id="stencil-category"][data-action^="toggle:"]';
 
 /** Every sidebar section header, in display order. */
-const LIBRARY_SECTION_HEADERS = `[data-kind="menu"][data-id="stencil-library-panel"] [data-part^="section:"]`;
+const LIBRARY_SECTION_HEADERS = `[data-kind="menu"][data-id="stencil-library-panel"] [data-action^="section:"]`;
 
 /** Preset ids of the stencil buttons under `scopeSelector`, in DOM order. */
 async function readPresetIds(
@@ -70,10 +70,10 @@ async function readPresetIds(
 	scopeSelector: string,
 ): Promise<string[]> {
 	return canvas.page
-		.locator(`${scopeSelector} [data-part^="item:"]`)
+		.locator(`${scopeSelector} [data-action^="item:"]`)
 		.evaluateAll((elements) =>
 			elements.map((element) =>
-				(element.getAttribute("data-part") ?? "").replace(/^item:/, ""),
+				(element.getAttribute("data-action") ?? "").replace(/^item:/, ""),
 			),
 		);
 }
@@ -308,7 +308,7 @@ test.describe("plugin coexistence", () => {
 			.locator(CATEGORY_TOGGLES)
 			.evaluateAll((elements) =>
 				elements.map((element) =>
-					(element.getAttribute("data-part") ?? "").slice("toggle:".length),
+					(element.getAttribute("data-action") ?? "").slice("toggle:".length),
 				),
 			);
 		expect(categoryIds).toEqual([FLYOUT_CATEGORY.id]);
@@ -323,7 +323,7 @@ test.describe("plugin coexistence", () => {
 			.locator(LIBRARY_SECTION_HEADERS)
 			.evaluateAll((elements) =>
 				elements.map((element) =>
-					(element.getAttribute("data-part") ?? "").slice("section:".length),
+					(element.getAttribute("data-action") ?? "").slice("section:".length),
 				),
 			);
 		expect(sectionIds).toEqual(LIBRARY_SECTIONS.map((section) => section.id));

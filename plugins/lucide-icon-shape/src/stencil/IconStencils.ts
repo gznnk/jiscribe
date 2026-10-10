@@ -38,7 +38,7 @@ const FLYOUT_ICON_NAMES = [
  * Preset id of the palette entry for one icon: the type name with the icon's own name
  * appended (`lucideIconFileText`). Prefixed because preset ids share one space across
  * every plugin a host applies, and bare names like `lock` are already taken by the
- * pictogram shapes; written as one word because the id travels inside a `data-part`
+ * pictogram shapes; written as one word because the id travels inside a `data-action`
  * whose own separator is the colon.
  */
 const stencilId = (name: string): string =>

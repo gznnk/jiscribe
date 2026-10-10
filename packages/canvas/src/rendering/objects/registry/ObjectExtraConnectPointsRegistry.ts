@@ -13,7 +13,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 export type ExtraConnectPoint = {
 	/**
 	 * Token stored in a connector's `{ kind: "connectPoint", id }` and echoed in
-	 * the DOM as `data-part="anchor:<id>"`. Must not collide with a built-in
+	 * the DOM as `data-action="anchor:<id>"`. Must not collide with a built-in
 	 * ConnectPointId (`topCenter` / …) or with `"center"`, and must stay stable
 	 * across releases: it is what a saved doc refers to.
 	 */

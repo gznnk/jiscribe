@@ -3,9 +3,9 @@ import { memo, useRef } from "react";
 
 import { RoutingMenuRow } from "./RoutingMenuStyled";
 import {
-	commandPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	toggleAction,
+} from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { getSelectedRouting } from "../../../../../utils/getSelectedRouting";
@@ -95,7 +95,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuConnectorRouting}
 			>
 				<CurrentIcon title={messages.menuConnectorRouting} />
@@ -111,7 +111,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							<ObjectMenuButton
 								key={routing}
 								isActive={routing === currentRouting}
-								data-part={commandPart(commandId)}
+								data-action={commandAction(commandId)}
 								title={messages[messageKey]}
 							>
 								<Icon title={messages[messageKey]} />

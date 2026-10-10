@@ -74,10 +74,14 @@ async function buildBentPolyline(canvas: CanvasDriver): Promise<string> {
 		{ x: 300, y: 300 },
 		{ x: 600, y: 300 },
 	);
-	await dragControl(canvas, `[data-id="${id}"][data-part="vertex-insert:0"]`, {
-		x: 450,
-		y: 420,
-	});
+	await dragControl(
+		canvas,
+		`[data-id="${id}"][data-action="vertex-insert:0"]`,
+		{
+			x: 450,
+			y: 420,
+		},
+	);
 	await expect.poll(() => vertexCount(canvas, id)).toBe(3);
 	return id;
 }

@@ -35,12 +35,12 @@ type ConnectorControlsProps = {
 /**
  * Renders the editing controls for a selected connector:
  * - Endpoint handles (source / target): drag to reconnect to a shape
- *   (data-id=<id> + data-part="endpoint:source|target" → ConnectionAnchorEventHandler)
+ *   (data-id=<id> + data-action="endpoint:source|target" → ConnectionAnchorEventHandler)
  * - Waypoint move handles: move existing waypoints
  *   (data-id=<id> + data-part="vertex:<i>" → reuses VertexControlHandler)
  * - Waypoint insert handles (lines drawn straight only): the midpoint of each segment of the resolved path
  *   [source, ...waypoints, target]. Drag to add a new waypoint
- *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
+ *   (data-id=<id> + data-action="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
  *
  * The two shapes are edited differently because a point means a different thing in each. Under
  * straight a point is a bend the user places and then moves freely, so it gets a handle; under
@@ -102,7 +102,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				<VertexInsertControls
 					objectId={connectorState.id}
 					points={resolved.points}
-					insertPartSubtype="waypoint-insert"
+					insertActionSubtype="waypoint-insert"
 					zoom={zoom}
 				/>
 			)}
@@ -126,7 +126,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
 					data-id={connectorState.id}
-					data-part="endpoint:source"
+					data-action="endpoint:source"
 					style={endpointHandleStyle}
 				/>
 			)}
@@ -140,7 +140,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
 					data-id={connectorState.id}
-					data-part="endpoint:target"
+					data-action="endpoint:target"
 					style={endpointHandleStyle}
 				/>
 			)}

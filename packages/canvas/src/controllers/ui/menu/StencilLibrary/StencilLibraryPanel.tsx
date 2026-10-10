@@ -47,7 +47,7 @@ const SEARCH_ICON_SIZE = 14;
  *
  * The panel is one gesture target (`data-kind="menu" data-id="stencil-library-panel"`)
  * handled by StencilLibraryPanelHandler: its section headers and close button carry
- * only a data-part. The stencil items keep their own `data-kind` / `data-id`
+ * only a data-action. The stencil items keep their own `data-kind` / `data-id`
  * ("stencil-library"), so click-to-draw and drag-to-place stay with
  * StencilLibraryItemHandler exactly as in the toolbar.
  *
@@ -108,7 +108,7 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 					type="button"
 					aria-label={messages.stencilLibraryClose}
 					title={messages.stencilLibraryClose}
-					data-part="close"
+					data-action="close"
 				>
 					<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
 				</StencilLibraryPanelCloseButton>
@@ -153,7 +153,7 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 								<StencilLibrarySectionHeader
 									type="button"
 									aria-expanded={isExpanded}
-									data-part={`section:${section.category.id}`}
+									data-action={`section:${section.category.id}`}
 								>
 									<StencilLibrarySectionChevron isExpanded={isExpanded}>
 										<ChevronRightIcon

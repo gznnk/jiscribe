@@ -20,14 +20,14 @@ const makeState = (): CanvasControllerState =>
 const makeEvent = (
 	type: "pressed" | "click",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	targetKind = "menu",
 ): CanvasEvent =>
 	({
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
@@ -72,7 +72,7 @@ describe("ContextMenuHandler", () => {
 		expect(next.contextMenuPosition).toEqual({ clientX: 100, clientY: 100 });
 	});
 
-	it("a click without a command part does nothing", () => {
+	it("a click without a command action does nothing", () => {
 		const state = makeState();
 		const next = ContextMenuHandler.handle(
 			state,

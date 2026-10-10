@@ -15,14 +15,14 @@ const makeState = (
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	targetKind = "menu",
 ): CanvasEvent =>
 	({
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;

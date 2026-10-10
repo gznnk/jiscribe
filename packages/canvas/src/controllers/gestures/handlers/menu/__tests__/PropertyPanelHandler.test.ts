@@ -25,7 +25,7 @@ const makeState = (
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick" | "drag" | "dragEnd",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	targetKind = "menu",
 	inputValue?: string,
 ): CanvasEvent =>
@@ -33,7 +33,7 @@ const makeEvent = (
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		inputValue,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -97,7 +97,7 @@ describe("PropertyPanelHandler", () => {
 		expect(next).toBe(state);
 	});
 
-	it("ignores a part that is not a command", () => {
+	it("ignores an action that is not a command", () => {
 		const state = makeState();
 		const next = PropertyPanelHandler.handle(
 			state,
@@ -146,7 +146,7 @@ describe("PropertyPanelHandler", () => {
 		it("ignores and warns about a value the setting does not take, and an unknown setting", () => {
 			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 			const state = makeState({ commitVersion: 3 });
-			for (const part of [
+			for (const action of [
 				"doc:view.open:fit-height",
 				"doc:view.scroll:none",
 				"doc:view.padding.top:-4",
@@ -156,7 +156,7 @@ describe("PropertyPanelHandler", () => {
 				expect(
 					PropertyPanelHandler.handle(
 						state,
-						makeEvent("click", "property-panel", part),
+						makeEvent("click", "property-panel", action),
 						registries,
 					),
 				).toBe(state);
@@ -205,7 +205,7 @@ describe("PropertyPanelHandler", () => {
 				strokeWidth: number;
 			};
 
-		it("a click on a set: part writes the selection's style and bumps commitVersion", () => {
+		it("a click on a set: action writes the selection's style and bumps commitVersion", () => {
 			const next = PropertyPanelHandler.handle(
 				makeStyledState(),
 				makeEvent("click", "property-panel", "set:fill:#dc2626"),

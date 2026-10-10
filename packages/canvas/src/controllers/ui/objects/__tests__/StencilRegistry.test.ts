@@ -22,7 +22,7 @@ describe("StencilRegistry", () => {
 		expect(registry.all().map((p) => p.id)).toEqual(["b", "a", "c"]);
 	});
 
-	it("refuses an id carrying the separator its own data-part uses", () => {
+	it("refuses an id carrying the separator its own data-action uses", () => {
 		const registry = createStencilRegistry();
 
 		// Registered, it would render a palette entry that clicks into nothing: the click

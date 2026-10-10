@@ -1,9 +1,9 @@
 import { memo, useRef } from "react";
 
 import {
-	setPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+	setAction,
+	toggleAction,
+} from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -71,7 +71,7 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuLabelBorderStyle}
 			>
 				<DashedCircleIcon title={messages.menuLabelBorderStyle} />
@@ -86,21 +86,21 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 						<BorderStyleSection>
 							<ObjectMenuButton
 								isActive={!strokeDashType || strokeDashType === "solid"}
-								data-part={setPart("label.strokeDashType", "solid")}
+								data-action={setAction("label.strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
 								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
-								data-part={setPart("label.strokeDashType", "dashed")}
+								data-action={setAction("label.strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
 								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
-								data-part={setPart("label.strokeDashType", "dotted")}
+								data-action={setAction("label.strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>
 								<DottedLineIcon title={messages.menuDottedLine} />

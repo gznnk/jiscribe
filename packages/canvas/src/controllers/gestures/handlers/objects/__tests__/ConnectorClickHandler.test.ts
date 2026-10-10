@@ -57,7 +57,7 @@ const makeEditState = (
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	last: Point = { x: 0, y: 0 },
 	pointerType?: string,
 ): CanvasEvent =>
@@ -65,7 +65,7 @@ const makeEvent = (
 		type,
 		targetKind: "connector",
 		targetId,
-		targetPart,
+		targetAction,
 		start: last,
 		last,
 		button: 0,
@@ -145,11 +145,11 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 	const dblclickAt = (
 		state: CanvasControllerState,
 		last: Point,
-		targetPart?: string,
+		targetAction?: string,
 	) =>
 		ConnectorClickHandler.handle(
 			state,
-			makeEvent("doubleClick", "c1", targetPart, last),
+			makeEvent("doubleClick", "c1", targetAction, last),
 			registries,
 		);
 

@@ -11,7 +11,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
  */
 
 const TAIL_HANDLE =
-	'[data-kind="control"][data-part="selection:callout:tailTip"]';
+	'[data-kind="control"][data-action="selection:callout:tailTip"]';
 
 /** Creates a callout by diagonal drag out of the annotation flyout and returns its new id. */
 async function createCallout(

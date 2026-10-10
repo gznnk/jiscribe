@@ -1,4 +1,4 @@
-import { setPart } from "../../../gestures/handlers/menu/utils/menuParts";
+import { setAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useSelectionStyle } from "../../../style/SelectionStyleReaderContext";
 import { selectionValueOr } from "../../../style/SelectionValue";
 import { isBoldFontWeight } from "../../../utils/isBoldFontWeight";
@@ -11,8 +11,8 @@ import {
 type TextFormatToggle = {
 	/** Whether the selected text is drawn with the format, so the button reads lit. */
 	isActive: boolean;
-	/** The part the press writes: the value the toggle should land on, not a toggle command. */
-	part: string;
+	/** The action the press writes: the value the toggle should land on, not a toggle command. */
+	action: string;
 };
 
 /** The four formats, named; the surfaces decide the order and the look. */
@@ -54,22 +54,22 @@ export const useTextFormatToggles = (): TextFormatToggles => {
 	return {
 		bold: {
 			isActive: isBold,
-			part: setPart("fontWeight", isBold ? "normal" : "bold"),
+			action: setAction("fontWeight", isBold ? "normal" : "bold"),
 		},
 		italic: {
 			isActive: isItalic,
-			part: setPart("fontStyle", isItalic ? "normal" : "italic"),
+			action: setAction("fontStyle", isItalic ? "normal" : "italic"),
 		},
 		underline: {
 			isActive: hasTextDecorationToken(textDecoration, "underline"),
-			part: setPart(
+			action: setAction(
 				"textDecoration",
 				toggleTextDecorationToken(textDecoration, "underline"),
 			),
 		},
 		strikethrough: {
 			isActive: hasTextDecorationToken(textDecoration, "line-through"),
-			part: setPart(
+			action: setAction(
 				"textDecoration",
 				toggleTextDecorationToken(textDecoration, "line-through"),
 			),

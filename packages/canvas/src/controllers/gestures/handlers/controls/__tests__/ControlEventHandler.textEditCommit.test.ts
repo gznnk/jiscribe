@@ -33,13 +33,13 @@ const makeEditState = (pendingText: string): CanvasControllerState =>
 		contextMenuPosition: { x: 1, y: 1 },
 	}) as unknown as CanvasControllerState;
 
-/** A press on a control part no strategy handles, so handle() only runs the shared preamble. */
+/** A press on a control action no strategy handles, so handle() only runs the shared preamble. */
 const makePressEvent = (pointerType?: string): CanvasEvent =>
 	({
 		type: "pressed",
 		targetKind: "control",
 		targetId: "rect-1",
-		targetPart: "rotate",
+		targetAction: "rotate",
 		button: 0,
 		pointerType,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },

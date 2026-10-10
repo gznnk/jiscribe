@@ -2,7 +2,7 @@
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { resolveCommandLabel } from "../../../../../commands/CommandUtils";
-import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../../../hooks/useCommandState";
 import { useCanvasLocale } from "../../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
@@ -40,7 +40,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 			<ObjectMenuButton
 				isActive={isGroup}
 				disabled={!enabled}
-				data-part={commandPart(commandId)}
+				data-action={commandAction(commandId)}
 			>
 				<GroupIcon title={resolveCommandLabel(command, messages, locale)} />
 			</ObjectMenuButton>

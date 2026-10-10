@@ -64,7 +64,7 @@ type ConnectionAnchorsProps = {
  *
  * Each anchor has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id=<objectId> + data-part="anchor:<anchorPosition>" for identifying which anchor was interacted with
+ * - data-id=<objectId> + data-action="anchor:<anchorPosition>" for identifying which anchor was interacted with
  */
 const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	objectId,
@@ -158,7 +158,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
 					data-id={objectId}
-					data-part={`anchor:${position}`}
+					data-action={`anchor:${position}`}
 					style={connectionAnchorStyle}
 				/>
 			))}

@@ -60,7 +60,7 @@ test.describe("polyline vertex editing", () => {
 		// Drag segment 0's midpoint handle down to insert a vertex in the middle
 		await dragControl(
 			canvas,
-			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			`[data-id="${id}"][data-action="vertex-insert:0"]`,
 			{ x: 450, y: 420 },
 		);
 
@@ -82,7 +82,7 @@ test.describe("polyline vertex editing", () => {
 		// First drag the midpoint to reach 3 points (the inserted vertex is index 1)
 		await dragControl(
 			canvas,
-			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			`[data-id="${id}"][data-action="vertex-insert:0"]`,
 			{ x: 450, y: 420 },
 		);
 		await expect.poll(() => vertexCount(canvas, id)).toBe(3);

@@ -41,7 +41,7 @@ const makeEvent = (
 		type,
 		targetKind: "control",
 		targetId: "obj-1",
-		targetPart: "selection:container:headerHeight",
+		targetAction: "selection:container:headerHeight",
 		button: 0,
 		start: { x: 0, y: 0 },
 		last: { x: 0, y: 0 },
@@ -231,7 +231,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		expect(next).toBe(state);
 	});
 
-	it("passes undefined subPart for an exact-match data-part", () => {
+	it("passes undefined subAction for an exact-match data-action", () => {
 		let received: SelectionControlEvent | undefined;
 		const { strategy } = createRegisteredSelectionControl("container", {
 			name: "headerHeight",
@@ -243,13 +243,13 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		});
 		strategy.handle(
 			makeState(makeObject()),
-			makeEvent("drag", { targetPart: "selection:container:headerHeight" }),
+			makeEvent("drag", { targetAction: "selection:container:headerHeight" }),
 			undefined as never,
 		);
-		expect(received?.subPart).toBeUndefined();
+		expect(received?.subAction).toBeUndefined();
 	});
 
-	it("parses the sub-segment after the control part into subPart", () => {
+	it("parses the sub-segment after the control action into subAction", () => {
 		let received: SelectionControlEvent | undefined;
 		const { strategy } = createRegisteredSelectionControl("container", {
 			name: "headerHeight",
@@ -261,9 +261,9 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		});
 		strategy.handle(
 			makeState(makeObject()),
-			makeEvent("drag", { targetPart: "selection:container:headerHeight:3" }),
+			makeEvent("drag", { targetAction: "selection:container:headerHeight:3" }),
 			undefined as never,
 		);
-		expect(received?.subPart).toBe("3");
+		expect(received?.subAction).toBe("3");
 	});
 });

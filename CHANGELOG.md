@@ -146,6 +146,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: what a press starts is a `data-action`, and
+  `data-part` only addresses a model part.** The one `data-part` attribute used
+  to carry both a part's address and everything else an element said about
+  itself; the two now travel apart. `data-part` (`event.targetPart`) holds only
+  the `textSlot:{slotId}` / `vertex:{index}` addresses a click turns into
+  `selection.part`, so `textSlotPart` is unchanged. Menu rows, stencil items and
+  control handles write `data-action` (`event.targetAction`) instead, with the
+  same strings as before. On `@jiscribe/canvas/unstable` the builders are renamed
+  `commandAction` / `toggleAction` / `setAction` / `sliderAction` (from
+  `commandPart` / `togglePart` / `setPart` / `sliderPart`); in `@jiscribe/canvas`,
+  `SelectionControlProps.part` becomes `action` and `SelectionControlEvent.subPart`
+  becomes `subAction`. A plugin's menu row or selection control renders
+  `data-action={...}` where it rendered `data-part={...}`.
+
 - **For plugin authors: a type declares `features.textVerticalBasis`.** The flag
   says the type holds that field — its one body may be measured against the
   shape's whole height rather than against the region the type declares — and is

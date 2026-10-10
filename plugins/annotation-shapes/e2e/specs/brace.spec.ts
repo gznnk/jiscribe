@@ -1,7 +1,7 @@
 import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-const TIP_HANDLE = '[data-kind="control"][data-part="selection:brace:tip"]';
+const TIP_HANDLE = '[data-kind="control"][data-action="selection:brace:tip"]';
 
 /** Reads the d attribute of the given brace's curve. */
 async function bracePathD(

@@ -40,7 +40,7 @@ const makeState = (): CanvasControllerState =>
 
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick" | "dragStart" | "drag" | "dragEnd",
-	targetPart: string | undefined,
+	targetAction: string | undefined,
 	inputValue?: string,
 	targetKind = "menu",
 	targetId = "object-menu",
@@ -49,7 +49,7 @@ const makeEvent = (
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		inputValue,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -204,7 +204,7 @@ describe("ObjectMenuHandler", () => {
 		});
 	});
 
-	describe("menu chrome (no part)", () => {
+	describe("menu chrome (no action)", () => {
 		it("a pressed closes the context menu; a click does nothing", () => {
 			const pressed = ObjectMenuHandler.handle(
 				makeState(),

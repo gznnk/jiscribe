@@ -283,7 +283,9 @@ export const CONTAINER_STYLE_ENTRIES = {
 
 **`selectionControls`。**プレーンな宣言（`SelectionControlDefinition`。ハンドルを
 描く `Component` と、ジェスチャーを解釈する `handle` の組）で、基底クラス継承は無い。`handle` に渡すのは自オブジェクトの情報（現フレーム + ジェスチャー開始
-スナップショット）とカーソルだけである。part の導出・スナップショットのガード・
+スナップショット）とカーソルだけである。ハンドルに付ける `data-action` の導出
+（`selection:<objectType>:<name>`。`Component` に `action` prop として渡り、末尾に足した
+`:<sub>` は `SelectionControlEvent.subAction` として戻る）・スナップショットのガード・
 COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わりする。
 
 **`partKinds`。**その型がオブジェクトを分割する部分 id の名前空間（`kind`）ごとに
@@ -295,6 +297,14 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 宣言している。`features.text` が `"slots"` の型には `"textSlot"` の種別が宣言なしで
 付き、部分 id は自分の `text` のキーになる。自分で `"textSlot"` を宣言すれば、
 衝突ではなくその既定を置き換える。
+
+部分を押せるようにするには、その要素の `data-part` に `<kind>:<partId>` の住所を
+書くだけでよい（`controllers/gestures/handlers/utils/partAddress.ts`。テキストスロットの
+組み立て関数は `@jiscribe/canvas` の `textSlotPart`）。`data-part` が運ぶのはこの住所
+だけで、押すと何かが始まる要素——メニューの行や選択コントロールのハンドル——は
+代わりに `data-action` を持つ。メニュー用の文字列は `@jiscribe/canvas/unstable` の
+`commandAction` / `toggleAction` / `setAction` / `sliderAction` で組む（文法は
+`04-gesture-system.ja.md`）。
 
 選択に関わる宣言は 3 つあり、どれも省略できる。
 

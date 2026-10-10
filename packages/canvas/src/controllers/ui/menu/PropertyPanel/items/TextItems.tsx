@@ -5,9 +5,9 @@ import { memo } from "react";
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { isSelectionTextBlock } from "../../../../commands/shape/ToggleTextLayoutCommand";
 import {
-	commandPart,
-	setPart,
-} from "../../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	setAction,
+} from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import {
@@ -148,28 +148,28 @@ const TextFormatItemComponent: React.FC<BuiltinItemProps> = () => {
 				options={[
 					{
 						id: "bold",
-						part: toggles.bold.part,
+						action: toggles.bold.action,
 						title: messages.menuBold,
 						content: <BoldIcon title={messages.menuBold} />,
 						isActive: toggles.bold.isActive,
 					},
 					{
 						id: "italic",
-						part: toggles.italic.part,
+						action: toggles.italic.action,
 						title: messages.menuItalic,
 						content: <ItalicIcon title={messages.menuItalic} />,
 						isActive: toggles.italic.isActive,
 					},
 					{
 						id: "underline",
-						part: toggles.underline.part,
+						action: toggles.underline.action,
 						title: messages.menuUnderline,
 						content: <UnderlineIcon title={messages.menuUnderline} />,
 						isActive: toggles.underline.isActive,
 					},
 					{
 						id: "strikethrough",
-						part: toggles.strikethrough.part,
+						action: toggles.strikethrough.action,
 						title: messages.menuStrikethrough,
 						content: <StrikethroughIcon title={messages.menuStrikethrough} />,
 						isActive: toggles.strikethrough.isActive,
@@ -194,21 +194,21 @@ const TextAlignItemComponent: React.FC<BuiltinItemProps> = () => {
 				options={[
 					{
 						id: "left",
-						part: setPart("textAlign", "left"),
+						action: setAction("textAlign", "left"),
 						title: messages.menuAlignLeft,
 						content: <AlignLeftIcon />,
 						isActive: textAlign.value === "left",
 					},
 					{
 						id: "center",
-						part: setPart("textAlign", "center"),
+						action: setAction("textAlign", "center"),
 						title: messages.menuAlignCenter,
 						content: <AlignCenterIcon />,
 						isActive: textAlign.value === "center",
 					},
 					{
 						id: "right",
-						part: setPart("textAlign", "right"),
+						action: setAction("textAlign", "right"),
 						title: messages.menuAlignRight,
 						content: <AlignRightIcon />,
 						isActive: textAlign.value === "right",
@@ -233,21 +233,21 @@ const VerticalAlignItemComponent: React.FC<BuiltinItemProps> = () => {
 				options={[
 					{
 						id: "top",
-						part: setPart("verticalAlign", "top"),
+						action: setAction("verticalAlign", "top"),
 						title: messages.menuAlignTop,
 						content: <AlignTopIcon />,
 						isActive: verticalAlign.value === "top",
 					},
 					{
 						id: "middle",
-						part: setPart("verticalAlign", "middle"),
+						action: setAction("verticalAlign", "middle"),
 						title: messages.menuAlignMiddle,
 						content: <AlignMiddleIcon />,
 						isActive: verticalAlign.value === "middle",
 					},
 					{
 						id: "bottom",
-						part: setPart("verticalAlign", "bottom"),
+						action: setAction("verticalAlign", "bottom"),
 						title: messages.menuAlignBottom,
 						content: <AlignBottomIcon />,
 						isActive: verticalAlign.value === "bottom",
@@ -274,7 +274,7 @@ const TextLayoutItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyCheckbox
 			isOn={isBlock}
-			part={commandPart("toggleTextLayout")}
+			action={commandAction("toggleTextLayout")}
 			label={messages.menuWrapTextInWidth}
 			title={
 				isBlock ? messages.menuFitWidthToText : messages.menuWrapTextInWidth
@@ -304,14 +304,14 @@ const TextVerticalBasisItemComponent: React.FC<BuiltinItemProps> = () => {
 				options={[
 					{
 						id: "region",
-						part: setPart("textVerticalBasis", "region"),
+						action: setAction("textVerticalBasis", "region"),
 						title: messages.menuTextBasisRegion,
 						content: messages.propertyPanelTextBasisRegion,
 						isActive: basis === "region",
 					},
 					{
 						id: "frame",
-						part: setPart("textVerticalBasis", "frame"),
+						action: setAction("textVerticalBasis", "frame"),
 						title: messages.menuTextBasisFrame,
 						content: messages.propertyPanelTextBasisFrame,
 						isActive: basis === "frame",

@@ -12,12 +12,12 @@ type PropertyCheckboxProps = {
 	/** Whether the selection is already in the state the box stands for. */
 	isOn: boolean;
 	/**
-	 * The `data-part` the press carries into the sidebar (PropertyPanelHandler):
+	 * The `data-action` the press carries into the sidebar (PropertyPanelHandler):
 	 * `set:{property}:{value}` for a flag written outright, `command:{commandId}`
 	 * for a flag the canvas computes the next state of, or
 	 * `doc:{property}:{value}` for a document setting.
 	 */
-	part: string;
+	action: string;
 	/**
 	 * Text beside the box. Names the state the box stands for ("Lock Aspect
 	 * Ratio") rather than the press that follows, so it does not change with
@@ -36,12 +36,12 @@ type PropertyCheckboxProps = {
  * row's full width from the section's left edge.
  *
  * Writes through the gesture system like the ObjectMenu's own toggles, so the
- * press lands one history entry. Carries only a data-part: the press resolves to
+ * press lands one history entry. Carries only a data-action: the press resolves to
  * the sidebar that contains it.
  */
 const PropertyCheckboxComponent: React.FC<PropertyCheckboxProps> = ({
 	isOn,
-	part,
+	action,
 	label,
 	title = label,
 }) => (
@@ -50,7 +50,7 @@ const PropertyCheckboxComponent: React.FC<PropertyCheckboxProps> = ({
 		role="checkbox"
 		aria-checked={isOn}
 		title={title}
-		data-part={part}
+		data-action={action}
 	>
 		<PropertyCheckboxBox isOn={isOn} aria-hidden="true">
 			{isOn && (

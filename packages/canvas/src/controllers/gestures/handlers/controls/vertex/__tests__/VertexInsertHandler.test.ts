@@ -53,7 +53,7 @@ const makeEvent = (
 		type,
 		targetKind: "control",
 		targetId: "poly-1",
-		targetPart: `vertex-insert:${segmentIndex}`,
+		targetAction: `vertex-insert:${segmentIndex}`,
 		button: 0,
 		last,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },

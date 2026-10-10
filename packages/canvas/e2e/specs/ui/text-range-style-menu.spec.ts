@@ -117,8 +117,8 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 			.poll(async () =>
 				canvas.page.evaluate(
 					(selector) =>
-						document.querySelector(selector)?.getAttribute("data-part"),
-					`${selectors.objectMenu} [data-part^="set:fontWeight:"]`,
+						document.querySelector(selector)?.getAttribute("data-action"),
+					`${selectors.objectMenu} [data-action^="set:fontWeight:"]`,
 				),
 			)
 			.toBe("set:fontWeight:bold");

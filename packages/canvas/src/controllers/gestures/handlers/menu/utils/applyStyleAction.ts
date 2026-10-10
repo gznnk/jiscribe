@@ -1,4 +1,4 @@
-import type { MenuPart } from "./menuParts";
+import type { MenuAction } from "./menuActions";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { applyStyleIntent } from "../../../../style/applyStyleIntent";
@@ -6,10 +6,10 @@ import { styleIntentOf } from "../../../../style/styleIntentOf";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 
 /**
- * Reflects what a part's name and string state, or leaves the state as it is for
+ * Reflects what an action's name and string state, or leaves the state as it is for
  * a value nothing can be made of.
  */
-const applyPartValue = (
+const applyActionValue = (
 	state: CanvasControllerState,
 	property: string,
 	value: string,
@@ -22,9 +22,9 @@ const applyPartValue = (
 };
 
 /**
- * Applies a menu part that writes a style property of the selection — `set:` or
- * `slider:` — the same way from every surface that carries such parts (the
- * ObjectMenu and the properties sidebar): the part's name and string are read
+ * Applies a menu action that writes a style property of the selection — `set:`
+ * or `slider:` — the same way from every surface that carries such actions (the
+ * ObjectMenu and the properties sidebar): the action's name and string are read
  * into an intent (styleIntentOf) and applied (applyStyleIntent).
  *
  * The React onChange route (STYLE_INTENT in canvasReducer) ends at the same
@@ -35,29 +35,29 @@ const applyPartValue = (
  *
  * @param state - State to write into, with the caller's own press dismiss already applied: a slider press returns from here
  * @param event - The gesture. `set:` acts on click / doubleClick only. `slider:` previews on pressed / dragStart / drag and commits on dragEnd / click / doubleClick, reading the value from `inputValue`; a slider event without one warns and changes nothing
- * @param part - `event.targetPart` already parsed (parseMenuPart); null and kinds other than `set` / `slider` are left to the caller
- * @param registries - Registries of the canvas; its style tables are what answer the intent the part states
- * @returns The next state, or null when the part is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller); a write leaves the part picked below the object alone, styling never renumbering what it writes to. A style part on an event it does not act on returns `state` itself
+ * @param action - `event.targetAction` already parsed (parseMenuAction); null and kinds other than `set` / `slider` are left to the caller
+ * @param registries - Registries of the canvas; its style tables are what answer the intent the action states
+ * @returns The next state, or null when the action is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller); a write leaves the part picked below the object alone, styling never renumbering what it writes to. A style action on an event it does not act on returns `state` itself
  */
-export const applyStylePropertyPart = (
+export const applyStyleAction = (
 	state: CanvasControllerState,
 	event: CanvasEvent,
-	part: MenuPart | null,
+	action: MenuAction | null,
 	registries: ICanvasRegistries,
 ): CanvasControllerState | null => {
-	if (part?.kind === "set") {
+	if (action?.kind === "set") {
 		// doubleClick activates like click (the ToolbarHandler pattern): the
 		// recognizer pairs any two rapid same-position clicks without comparing
-		// targets, so the second press of a toggle whose data-part changes with the
+		// targets, so the second press of a toggle whose data-action changes with the
 		// value (set:fontWeight:bold → set:fontWeight:normal) arrives as doubleClick
 		// and must still fire. Each pointerup emits exactly one of the two.
 		if (event.type !== "click" && event.type !== "doubleClick") {
 			return state;
 		}
-		const newState = applyPartValue(
+		const newState = applyActionValue(
 			state,
-			part.property,
-			part.value,
+			action.property,
+			action.value,
 			registries,
 		);
 		return {
@@ -66,18 +66,18 @@ export const applyStylePropertyPart = (
 		};
 	}
 
-	if (part?.kind !== "slider") {
+	if (action?.kind !== "slider") {
 		return null;
 	}
 
 	if (event.inputValue === undefined) {
-		console.warn("[applyStylePropertyPart] No input value found");
+		console.warn("[applyStyleAction] No input value found");
 		return state;
 	}
 
-	const { property } = part;
+	const { property } = action;
 	if (!property) {
-		console.warn("[applyStylePropertyPart] No property found in targetPart");
+		console.warn("[applyStyleAction] No property found in targetAction");
 		return state;
 	}
 
@@ -91,7 +91,7 @@ export const applyStylePropertyPart = (
 		event.type === "dragStart" ||
 		event.type === "drag"
 	) {
-		return applyPartValue(state, property, event.inputValue, registries);
+		return applyActionValue(state, property, event.inputValue, registries);
 	}
 
 	// click / doubleClick: a press on the track jumps the thumb natively and lifts
@@ -104,7 +104,7 @@ export const applyStylePropertyPart = (
 		event.type === "click" ||
 		event.type === "doubleClick"
 	) {
-		const newState = applyPartValue(
+		const newState = applyActionValue(
 			state,
 			property,
 			event.inputValue,

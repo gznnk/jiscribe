@@ -432,7 +432,7 @@ export const isConnectorLabelForeignObject = (
 	foreignObject: Element,
 ): boolean =>
 	foreignObject.getAttribute("data-kind") === "connector" &&
-	foreignObject.getAttribute("data-part") === "label";
+	foreignObject.getAttribute("data-action") === "label";
 
 /**
  * Builds the `<rect>` standing in for the label box's background and border,

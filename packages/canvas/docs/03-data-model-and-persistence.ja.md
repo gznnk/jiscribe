@@ -129,7 +129,7 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 
 **スタイリング UI のネスト対応（ドット記法）**: スタイリングのプロパティ更新配管
 （メニュー項目 → `STYLE_INTENT` または ObjectMenu のジェスチャー `set:{property}:{value}` →
-`applyStylePropertyPart`）はフラットなプロパティ名を運ぶ。ラベルのスタイル（`label.fill` /
+`applyStyleAction`）はフラットなプロパティ名を運ぶ。ラベルのスタイル（`label.fill` /
 `label.stroke` / `label.fontColor` など）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
 2 経路とも収束点は `applyStyleIntent` の 1 か所。`label.*` は connector 自前のスタイル表
 （`CONNECTOR_STYLE_ENTRIES`）で宣言され、各エントリがドットをネスト merge と

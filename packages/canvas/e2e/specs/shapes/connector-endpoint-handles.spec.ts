@@ -6,7 +6,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * endpoints.
  *
  * Selecting a connector puts a reconnect handle on each end
- * (data-id=<id> plus data-part="endpoint:source/target"). A handle offset from its endpoint
+ * (data-id=<id> plus data-action="endpoint:source/target"). A handle offset from its endpoint
  * turns into an interaction bug: grabbing the end of the line misses, or moves something else.
  *
  * Uses a multi-point route (with an elbow) and guards that the centers of the source and target
@@ -103,11 +103,11 @@ test.describe("connector endpoint editing handles", () => {
 		// The endpoint editing handles appear on both ends.
 		const sourceHandle = await controlContentCenter(
 			canvas,
-			`[data-id="${connectorId}"][data-part="endpoint:source"]`,
+			`[data-id="${connectorId}"][data-action="endpoint:source"]`,
 		);
 		const targetHandle = await controlContentCenter(
 			canvas,
-			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
+			`[data-id="${connectorId}"][data-action="endpoint:target"]`,
 		);
 
 		expect(

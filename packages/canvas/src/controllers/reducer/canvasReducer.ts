@@ -264,7 +264,7 @@ export const createCanvasReducer =
 				//     onChange events — the ObjectMenu's number input and keyboard-driven slider, the
 				//     properties sidebar's callback-writing controls, and the editor's format
 				//     keystrokes — none of which fires a gesture.
-				// (2) applyStylePropertyPart: via the gesture system (set: / slider:), from the
+				// (2) applyStyleAction: via the gesture system (set: / slider:), from the
 				//     ObjectMenu's and the sidebar's buttons and sliders (ObjectMenuHandler /
 				//     PropertyPanelHandler). That path does not go through here.
 				// Both end at the same apply; what differs is only the commit tail below. The

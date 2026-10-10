@@ -44,36 +44,45 @@ type Target = {
 	targetKind: string;
 	targetId: string;
 	targetPart?: string;
+	targetAction?: string;
 };
 
 const TARGETS: Target[] = [
 	{ targetKind: "canvas", targetId: "canvas" },
 	{ targetKind: "object", targetId: "a" },
 	{ targetKind: "connector", targetId: "c" },
-	{ targetKind: "control", targetId: "a", targetPart: "resize:topLeft" },
+	{ targetKind: "control", targetId: "a", targetAction: "resize:topLeft" },
 	{ targetKind: "control", targetId: "a", targetPart: "vertex:0" },
-	{ targetKind: "menu", targetId: "toolbar", targetPart: "command:zoomIn" },
-	{ targetKind: "menu", targetId: "context-menu", targetPart: "command:copy" },
-	{ targetKind: "menu", targetId: "object-menu", targetPart: "toggle:style" },
-	{ targetKind: "menu", targetId: "stencil-library", targetPart: "item:rect" },
+	{ targetKind: "menu", targetId: "toolbar", targetAction: "command:zoomIn" },
+	{
+		targetKind: "menu",
+		targetId: "context-menu",
+		targetAction: "command:copy",
+	},
+	{ targetKind: "menu", targetId: "object-menu", targetAction: "toggle:style" },
+	{
+		targetKind: "menu",
+		targetId: "stencil-library",
+		targetAction: "item:rect",
+	},
 	// Appended so the indices used below stay put.
-	{ targetKind: "connector", targetId: "c", targetPart: "label" },
-	{ targetKind: "connector", targetId: "c", targetPart: "segment-slide:1" },
+	{ targetKind: "connector", targetId: "c", targetAction: "label" },
+	{ targetKind: "connector", targetId: "c", targetAction: "segment-slide:1" },
 	{
 		targetKind: "menu",
 		targetId: "stencil-category",
-		targetPart: "toggle:basic",
+		targetAction: "toggle:basic",
 	},
-	{ targetKind: "connector", targetId: "c", targetPart: "segment-move:1" },
+	{ targetKind: "connector", targetId: "c", targetAction: "segment-move:1" },
 	{
 		targetKind: "menu",
 		targetId: "stencil-library-panel",
-		targetPart: "section:flowchart",
+		targetAction: "section:flowchart",
 	},
 	{
 		targetKind: "menu",
 		targetId: "property-panel",
-		targetPart: "command:togglePropertyPanel",
+		targetAction: "command:togglePropertyPanel",
 	},
 ];
 
@@ -220,7 +229,7 @@ const sweepSubExclusivity = (handlers: readonly GestureHandler[]): string[] => {
 				);
 				if (matches.length > 1) {
 					violations.push(
-						`${target.targetKind}/${target.targetId}/${target.targetPart} button=${button} ${type} -> ${matches.length} handlers`,
+						`${target.targetKind}/${target.targetId}/${target.targetPart ?? target.targetAction} button=${button} ${type} -> ${matches.length} handlers`,
 					);
 				}
 			}

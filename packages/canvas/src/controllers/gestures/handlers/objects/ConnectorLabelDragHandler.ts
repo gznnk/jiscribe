@@ -205,7 +205,7 @@ const handleDragEnd = (
 
 /**
  * Moves a connector's label along its path by dragging the label box itself
- * (`data-kind="connector" data-part="label"`), writing back `label.position`
+ * (`data-kind="connector" data-action="label"`), writing back `label.position`
  * (path-length ratio) and `label.offset` (perpendicular distance).
  *
  * Only drag gestures land here; click / doubleClick on the same box stay with
@@ -222,7 +222,7 @@ export const ConnectorLabelDragHandler: GestureHandler = {
 		return (
 			isPerTargetInteraction(event) &&
 			event.targetKind === "connector" &&
-			event.targetPart === "label" &&
+			event.targetAction === "label" &&
 			(event.type === "dragStart" ||
 				event.type === "drag" ||
 				event.type === "dragEnd")

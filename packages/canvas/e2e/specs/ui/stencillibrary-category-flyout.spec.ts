@@ -6,7 +6,7 @@ import { selectors } from "../../support/selectors";
  * Core behavior of the StencilLibrary category flyout (#184 option A).
  *
  * - Pressing a category button opens the flyout and reveals the shape items inside
- *   (the same `data-part="item:<presetId>"` contract as the pinned items).
+ *   (the same `data-action="item:<presetId>"` contract as the pinned items).
  * - Shapes in the flyout go through the existing StencilLibraryItemHandler as is, so a
  *   click enters drawing mode and a drag onto the canvas actually creates the shape.
  * - It closes on the pointerup that picks a shape, on an outside click, and on Escape.

@@ -1,7 +1,7 @@
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo, useRef } from "react";
 
-import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
@@ -55,7 +55,7 @@ const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuLabelFontSize}
 			>
 				<FontSizeIcon />

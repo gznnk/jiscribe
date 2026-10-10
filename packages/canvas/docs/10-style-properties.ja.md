@@ -199,14 +199,14 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 
 ## 輸送の境界
 
-UI が運ぶのはプロパティの**名前**と**文字列**。DOM の `data-part` に入るのがそれだけ
-だからである（`menuParts.ts`）:
+UI が運ぶのはプロパティの**名前**と**文字列**。DOM の `data-action` に入るのがそれだけ
+だからである（`menuActions.ts`）:
 
 - `set:{property}:{value}` — スタイルプロパティを直接書く。値自身に `:` を含んでよい
-- `slider:{property}` — 値は part ではなくイベント（`inputValue`）に乗るスライダー
+- `slider:{property}` — 値は action ではなくイベント（`inputValue`）に乗るスライダー
 
 ```
-ObjectMenu の項目 / スライダー、サイドバーの色見本 ── ジェスチャー（set: / slider:）─→ applyStylePropertyPart ┐
+ObjectMenu の項目 / スライダー、サイドバーの色見本 ── ジェスチャー（set: / slider:）─→ applyStyleAction ┐
                                                                                           │ styleIntentOf       │
 ObjectMenu の数値入力、サイドバーのコールバック、エディタの打鍵 ── STYLE_INTENT ─────────→ canvasReducer       ┼─→ applyStyleIntent
     └ プロパティが静的に決まる行は intent を直接組み、                                    ┘
@@ -312,7 +312,7 @@ kind の書き込みが届くのとまったく同じ object について返す�
 
 回帰の安全網: 読み替えは `style/__tests__/styleIntentOf.test.ts` が、適用側は
 名前と文字列を運ぶ唯一の経路の
-`gestures/handlers/menu/utils/__tests__/applyStylePropertyPart.test.ts` が見る。
+`gestures/handlers/menu/utils/__tests__/applyStyleAction.test.ts` が見る。
 後者はレジストリ駆動で、実際の
 バンドル配線から型が宣言した kind を全て列挙し、gate・ネスト書き込み・エントリが述べた
 フィールドを本当に書くことを確かめる。新しい宣言は自動でカバーされる。宣言した型が値を

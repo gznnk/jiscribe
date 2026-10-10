@@ -75,9 +75,9 @@ const triggerIcon = (): SVGSVGElement => {
 
 /** The swatches that write nothing, which is how the grid marks the color already shared. */
 const optedOutSwatches = (): string[] =>
-	Array.from(container?.querySelectorAll('[data-part^="set:fill:"]') ?? [])
+	Array.from(container?.querySelectorAll('[data-action^="set:fill:"]') ?? [])
 		.filter((element) => element.getAttribute("data-gesture") === "none")
-		.map((element) => element.getAttribute("data-part") ?? "");
+		.map((element) => element.getAttribute("data-action") ?? "");
 
 afterEach(() => {
 	act(() => {

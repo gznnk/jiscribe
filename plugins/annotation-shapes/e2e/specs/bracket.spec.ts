@@ -2,9 +2,9 @@ import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 const BRACKET_TIP_HANDLE =
-	'[data-kind="control"][data-part="selection:bracket:tip"]';
+	'[data-kind="control"][data-action="selection:bracket:tip"]';
 const STEM_TIP_HANDLE =
-	'[data-kind="control"][data-part="selection:bracketWithStem:tip"]';
+	'[data-kind="control"][data-action="selection:bracketWithStem:tip"]';
 
 /** Reads the d attribute of the given marker's path. */
 async function markerPathD(

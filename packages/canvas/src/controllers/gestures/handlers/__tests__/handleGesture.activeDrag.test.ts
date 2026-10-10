@@ -41,7 +41,7 @@ const stateWithSelectedRect = (): CanvasControllerState => {
 
 const dragGesture = (
 	type: "dragStart" | "dragEnd",
-	target: { targetKind: string; targetId?: string; targetPart?: string },
+	target: { targetKind: string; targetId?: string; targetAction?: string },
 ): Gesture =>
 	({
 		type,
@@ -84,7 +84,7 @@ describe("handleGesture - activeDrag", () => {
 			dragGesture("dragStart", {
 				targetKind: "control",
 				targetId: "transform",
-				targetPart: "resize:bottomRight",
+				targetAction: "resize:bottomRight",
 			}),
 			registries,
 		);

@@ -35,14 +35,14 @@ const openMenuState = (): CanvasControllerState => {
 const pressedOn = (
 	targetKind: string,
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 ): Gesture =>
 	({
 		type: "pressed",
 		button: 0,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as Gesture;
 

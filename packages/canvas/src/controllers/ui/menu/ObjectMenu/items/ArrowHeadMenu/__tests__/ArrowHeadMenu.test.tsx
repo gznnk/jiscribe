@@ -60,7 +60,8 @@ const render = (canvasState: CanvasControllerState): void => {
 /** The two end triggers, in the order they are laid out: start, then end. */
 const triggerIcons = (): SVGSVGElement[] =>
 	Array.from(
-		container?.querySelectorAll('[data-part^="toggle:arrow-head-"] svg') ?? [],
+		container?.querySelectorAll('[data-action^="toggle:arrow-head-"] svg') ??
+			[],
 	);
 
 /** How one trigger draws itself: the marks it holds and whether it drew a line. */

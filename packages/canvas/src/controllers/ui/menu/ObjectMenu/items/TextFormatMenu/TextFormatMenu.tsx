@@ -2,7 +2,7 @@ import { memo, useRef } from "react";
 
 import { TextFormatMenuContent } from "./TextFormatMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
@@ -51,28 +51,28 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		{
 			id: "bold",
 			isActive: toggles.bold.isActive,
-			part: toggles.bold.part,
+			action: toggles.bold.action,
 			label: messages.menuBold,
 			icon: <BoldIcon title={messages.menuBold} />,
 		},
 		{
 			id: "italic",
 			isActive: toggles.italic.isActive,
-			part: toggles.italic.part,
+			action: toggles.italic.action,
 			label: messages.menuItalic,
 			icon: <ItalicIcon title={messages.menuItalic} />,
 		},
 		{
 			id: "underline",
 			isActive: toggles.underline.isActive,
-			part: toggles.underline.part,
+			action: toggles.underline.action,
 			label: messages.menuUnderline,
 			icon: <UnderlineIcon title={messages.menuUnderline} />,
 		},
 		{
 			id: "strikethrough",
 			isActive: toggles.strikethrough.isActive,
-			part: toggles.strikethrough.part,
+			action: toggles.strikethrough.action,
 			label: messages.menuStrikethrough,
 			icon: <StrikethroughIcon title={messages.menuStrikethrough} />,
 		},
@@ -82,7 +82,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		<ObjectMenuButton
 			key={button.id}
 			isActive={button.isActive}
-			data-part={button.part}
+			data-action={button.action}
 			title={button.label}
 		>
 			{button.icon}
@@ -97,7 +97,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuTextFormat}
 			>
 				<BoldIcon title={messages.menuTextFormat} />

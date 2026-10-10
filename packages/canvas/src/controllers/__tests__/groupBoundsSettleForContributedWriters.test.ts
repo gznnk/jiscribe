@@ -26,8 +26,8 @@ import type { SelectionControlDefinition } from "../ui/controls/SelectionControl
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] } as unknown as CanvasDoc;
 
-/** The part the control below renders, which is what routes the gesture to it. */
-const CONTROL_PART = "selection:rect:probe";
+/** The action the control below renders, which is what routes the gesture to it. */
+const CONTROL_ACTION = "selection:rect:probe";
 
 /** The id of the contributed command registered below. */
 const COMMAND_ID = "probe.growChild";
@@ -98,7 +98,7 @@ const controlDrag = (type: "dragStart" | "dragEnd"): Gesture =>
 		button: 0,
 		targetKind: "control",
 		targetId: CHILD_ID,
-		targetPart: CONTROL_PART,
+		targetAction: CONTROL_ACTION,
 		start: { x: 100, y: 100 },
 		last: { x: 100, y: 200 },
 		clientLast: { x: 100, y: 200 },

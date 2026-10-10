@@ -4,9 +4,9 @@ import { memo, useRef } from "react";
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import {
-	setPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+	setAction,
+	toggleAction,
+} from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
@@ -62,7 +62,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuLineStyle}
 			>
 				<LineStyleIcon title={messages.menuLineStyle} />
@@ -77,21 +77,21 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 						<LineStyleSection>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "solid"}
-								data-part={setPart("strokeDashType", "solid")}
+								data-action={setAction("strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
 								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dashed"}
-								data-part={setPart("strokeDashType", "dashed")}
+								data-action={setAction("strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
 								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dotted"}
-								data-part={setPart("strokeDashType", "dotted")}
+								data-action={setAction("strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>
 								<DottedLineIcon title={messages.menuDottedLine} />

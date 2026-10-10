@@ -16,20 +16,20 @@ import { createCowObjects } from "../../utils/cowObjects";
 import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
 
 /**
- * data-part namespace for selection controls. Keeps them out of the built-in
+ * data-action namespace for selection controls. Keeps them out of the built-in
  * controls' flat namespace (resize: / rotation / vertex: …).
  */
 const SELECTION_CONTROL_NAMESPACE = "selection";
 
 /**
- * Extracts the object type from a selection-control data-part
- * (`selection:<objectType>:<name>[:<sub>…]`), or null for any other part.
+ * Extracts the object type from a selection-control data-action
+ * (`selection:<objectType>:<name>[:<sub>…]`), or null for any other action.
  * Gatekeeper for ControlEventHandler's registry fallback.
  */
 export const parseSelectionControlObjectType = (
-	targetPart: string,
+	targetAction: string,
 ): string | null => {
-	const [namespace, objectType] = targetPart.split(":");
+	const [namespace, objectType] = targetAction.split(":");
 	return namespace === SELECTION_CONTROL_NAMESPACE && objectType
 		? objectType
 		: null;
@@ -37,29 +37,29 @@ export const parseSelectionControlObjectType = (
 
 /**
  * Internal adapter wrapping a SelectionControlDefinition as a ControlStrategy so
- * ControlEventHandler can route to it. Owns the data-part format end to end
- * (`part` is what the control's Component must render, and supports() matches it
+ * ControlEventHandler can route to it. Owns the data-action format end to end
+ * (`action` is what the control's Component must render, and supports() matches it
  * exact or prefixed) and the whole state contract the definition is shielded
  * from: the dragStart UI reset, snapshot guards, and the COW write-back.
  */
 class SelectionControlStrategy extends ControlStrategy {
-	readonly part: string;
+	readonly action: string;
 
 	constructor(
 		private readonly objectType: ObjectType,
 		private readonly definition: SelectionControlDefinition,
 	) {
 		super();
-		this.part = `${SELECTION_CONTROL_NAMESPACE}:${objectType}:${definition.name}`;
+		this.action = `${SELECTION_CONTROL_NAMESPACE}:${objectType}:${definition.name}`;
 	}
 
 	supports(event: CanvasEvent): boolean {
-		if (event.targetKind !== "control" || !event.targetPart) {
+		if (event.targetKind !== "control" || !event.targetAction) {
 			return false;
 		}
 		return (
-			event.targetPart === this.part ||
-			event.targetPart.startsWith(`${this.part}:`)
+			event.targetAction === this.action ||
+			event.targetAction.startsWith(`${this.action}:`)
 		);
 	}
 
@@ -126,7 +126,7 @@ class SelectionControlStrategy extends ControlStrategy {
 			last: event.last,
 			delta: event.delta,
 			mods: event.mods,
-			subPart: this.parseSubPart(event.targetPart),
+			subAction: this.parseSubAction(event.targetAction),
 		};
 		const updatedObject = this.definition.handle(context, controlEvent);
 		if (!updatedObject) {
@@ -139,31 +139,31 @@ class SelectionControlStrategy extends ControlStrategy {
 		return reconcileGroupBounds({ ...state, objects: updatedObjects }, state);
 	}
 
-	/** The data-part segment after `${this.part}:`, or undefined when absent. */
-	private parseSubPart(targetPart: string | undefined): string | undefined {
-		const prefix = `${this.part}:`;
-		return targetPart?.startsWith(prefix)
-			? targetPart.slice(prefix.length)
+	/** The data-action segment after `${this.action}:`, or undefined when absent. */
+	private parseSubAction(targetAction: string | undefined): string | undefined {
+		const prefix = `${this.action}:`;
+		return targetAction?.startsWith(prefix)
+			? targetAction.slice(prefix.length)
 			: undefined;
 	}
 }
 
 /**
  * A selection control after registration: the definition's Component plus its
- * derived data-part and the routing strategy. Consumed by SelectionControlsLayer
- * (part / Component) and ControlEventHandler (strategy).
+ * derived data-action and the routing strategy. Consumed by SelectionControlsLayer
+ * (action / Component) and ControlEventHandler (strategy).
  */
 export type RegisteredSelectionControl = {
-	part: string;
+	action: string;
 	Component: FC<SelectionControlProps>;
 	strategy: ControlStrategy;
 };
 
-/** Derives the data-part and routing strategy for one control of the given type. */
+/** Derives the data-action and routing strategy for one control of the given type. */
 export const createRegisteredSelectionControl = (
 	objectType: ObjectType,
 	definition: SelectionControlDefinition,
 ): RegisteredSelectionControl => {
 	const strategy = new SelectionControlStrategy(objectType, definition);
-	return { part: strategy.part, Component: definition.Component, strategy };
+	return { action: strategy.action, Component: definition.Component, strategy };
 };

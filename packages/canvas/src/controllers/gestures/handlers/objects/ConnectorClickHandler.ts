@@ -19,7 +19,7 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
  * - No committed label: a double click anywhere on the line starts editing
  *   (there is no label box to aim at yet), and the label being created takes the
  *   clicked point as its placement (carried in textEditState until committed).
- * - Committed label: only a double click on the label box (targetPart "label")
+ * - Committed label: only a double click on the label box (targetAction "label")
  *   starts editing; a double click on the bare line just selects.
  *
  * While editing, the static label box is not rendered and the editor overlay
@@ -60,7 +60,7 @@ export const ConnectorClickHandler: GestureHandler = {
 				nextState,
 				connectorId,
 				event,
-				event.targetPart === "label",
+				event.targetAction === "label",
 				registries,
 			);
 		}

@@ -430,7 +430,7 @@ test.describe("connector label", () => {
 		await canvas.clickAt(mid);
 		await expect(
 			canvas.page.locator(
-				`[data-part="waypoint-insert:0"][data-id="${connectorId}"]`,
+				`[data-action="waypoint-insert:0"][data-id="${connectorId}"]`,
 			),
 		).toBeVisible();
 
@@ -486,7 +486,7 @@ test.describe("connector label", () => {
 		await canvas.clickAt(mid);
 		await expect(
 			canvas.page.locator(
-				`[data-part="waypoint-insert:0"][data-id="${connectorId}"]`,
+				`[data-action="waypoint-insert:0"][data-id="${connectorId}"]`,
 			),
 		).toBeVisible();
 

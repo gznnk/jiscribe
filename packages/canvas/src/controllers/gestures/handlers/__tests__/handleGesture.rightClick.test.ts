@@ -28,14 +28,14 @@ const clickOn = (
 	button: number,
 	targetKind: string,
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 ): Gesture =>
 	({
 		type: "click",
 		button,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		last: { x: 50, y: 50 },
 		clientLast: CLICK_CLIENT_POS,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },

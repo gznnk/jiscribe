@@ -33,7 +33,7 @@ const render = (element: React.ReactElement): HTMLDivElement => {
 
 /** The swatch (or the Auto button) writing `value`, found the way e2e finds it. */
 const pick = (value: string): HTMLElement => {
-	const element = container?.querySelector(`[data-part="set:fill:${value}"]`);
+	const element = container?.querySelector(`[data-action="set:fill:${value}"]`);
 	if (!(element instanceof HTMLElement)) {
 		throw new Error(`the picker did not render a swatch for ${value}`);
 	}

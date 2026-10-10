@@ -123,7 +123,7 @@ test.describe("styling a Markdown source body", () => {
 		// is the absence of the `set:` parts themselves.
 		await expect(
 			canvas.page.locator(
-				`${selectors.objectMenu} [data-part^="set:fontWeight:"]`,
+				`${selectors.objectMenu} [data-action^="set:fontWeight:"]`,
 			),
 		).toHaveCount(0);
 		await expect(
