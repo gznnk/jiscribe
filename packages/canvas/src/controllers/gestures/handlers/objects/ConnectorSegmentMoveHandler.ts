@@ -24,7 +24,7 @@ import {
 	translateConnectorSegment,
 } from "../utils/translateConnectorSegment";
 
-const TARGET_PART_PREFIX = "segment-move:";
+const TARGET_ACTION_PREFIX = "segment-move:";
 
 /**
  * Moves the segment by the distance the cursor has travelled and rewrites the connector.
@@ -96,14 +96,14 @@ const handleDrag = (
 /**
  * Handles dragging a segment of a straight connector anywhere on the canvas.
  *
- * Target: data-kind="connector", data-part="segment-move:<segmentIndex>", indexing the drawn path
+ * Target: data-kind="connector", data-action="segment-move:<segmentIndex>", indexing the drawn path
  * `[source, ...points, target]` (see ConnectorSegmentMoveHitAreas). Only the segments whose two ends
  * both have a coordinate of their own carry that band, so the drag is always a plain translation of
  * the pair (see isConnectorSegmentFreelyMovable).
  *
- * It stays exclusive of its siblings on the connector targetKind by the part it answers to:
+ * It stays exclusive of its siblings on the connector targetKind by the action it answers to:
  * "segment-move:" here, "segment-slide:" for the one-axis orthogonal drag
- * (ConnectorSegmentSlideHandler), "label" for ConnectorLabelDragHandler, and clicks on any part go to
+ * (ConnectorSegmentSlideHandler), "label" for ConnectorLabelDragHandler, and clicks on any action go to
  * ConnectorClickHandler (#110).
  */
 export const ConnectorSegmentMoveHandler: GestureHandler = {
@@ -111,7 +111,7 @@ export const ConnectorSegmentMoveHandler: GestureHandler = {
 		return (
 			isPerTargetInteraction(event) &&
 			event.targetKind === "connector" &&
-			!!event.targetPart?.startsWith(TARGET_PART_PREFIX) &&
+			!!event.targetAction?.startsWith(TARGET_ACTION_PREFIX) &&
 			(event.type === "dragStart" ||
 				event.type === "drag" ||
 				event.type === "dragEnd")
@@ -123,13 +123,13 @@ export const ConnectorSegmentMoveHandler: GestureHandler = {
 		event: CanvasEvent,
 	): CanvasControllerState {
 		const connectorId = event.targetId;
-		const targetPart = event.targetPart;
-		if (!connectorId || !targetPart) {
+		const targetAction = event.targetAction;
+		if (!connectorId || !targetAction) {
 			return state;
 		}
 
 		const segmentIndex = parseInt(
-			targetPart.slice(TARGET_PART_PREFIX.length),
+			targetAction.slice(TARGET_ACTION_PREFIX.length),
 			10,
 		);
 		if (isNaN(segmentIndex) || segmentIndex < 0) {

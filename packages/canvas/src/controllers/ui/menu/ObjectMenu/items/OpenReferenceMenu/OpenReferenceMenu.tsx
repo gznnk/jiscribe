@@ -19,7 +19,7 @@ type OpenReferenceMenuProps = {
  * Hands the selected object's `meta.reference` to the host.
  *
  * Wired through React `onClick` (opted out of the gesture system) rather than a
- * `data-part`: the gesture path ends in a pure state transition, which has
+ * `data-action`: the gesture path ends in a pure state transition, which has
  * nowhere to put a host callback.
  */
 const OpenReferenceMenuComponent: React.FC<OpenReferenceMenuProps> = ({

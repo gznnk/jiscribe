@@ -21,8 +21,8 @@ import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 /**
  * Handles vertex-insert control operations (adding a vertex to a segment).
  *
- * Target format: data-id=<objectId>, data-part="vertex-insert:<segmentIndex>"
- * Example: data-part="vertex-insert:0" (the segment between points[0] and points[1])
+ * Target format: data-id=<objectId>, data-action="vertex-insert:<segmentIndex>"
+ * Example: data-action="vertex-insert:0" (the segment between points[0] and points[1])
  *
  * Behavior:
  * - dragStart: add a new vertex to the specified segment
@@ -35,28 +35,28 @@ export class VertexInsertHandler extends ControlStrategy {
 			return false;
 		}
 
-		const targetPart = event.targetPart;
-		if (!targetPart) {
+		const targetAction = event.targetAction;
+		if (!targetAction) {
 			return false;
 		}
 
 		// Check whether it is a vertex-insert
-		return targetPart.startsWith("vertex-insert:");
+		return targetAction.startsWith("vertex-insert:");
 	}
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// targetId = objectId, targetPart = "vertex-insert:<segmentIndex>"
+		// targetId = objectId, targetAction = "vertex-insert:<segmentIndex>"
 		const objectId = event.targetId;
-		const targetPart = event.targetPart;
-		if (!objectId || !targetPart) {
+		const targetAction = event.targetAction;
+		if (!objectId || !targetAction) {
 			return state;
 		}
 
 		const segmentIndex = parseInt(
-			targetPart.slice("vertex-insert:".length),
+			targetAction.slice("vertex-insert:".length),
 			10,
 		);
 

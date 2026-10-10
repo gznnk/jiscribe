@@ -10,7 +10,7 @@ import {
 } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useCallback } from "react";
 
-import { documentPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { documentAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import type { StyleIntentUpdater } from "../../ObjectMenu/ObjectMenuTypes";
@@ -168,21 +168,21 @@ const ViewOpenItemComponent: React.FC<ViewModeItemProps> = ({ view }) => {
 				options={[
 					{
 						id: "none",
-						part: documentPart("view.open", null),
+						action: documentAction("view.open", null),
 						title: messages.propertyPanelViewOpenNoneTitle,
 						content: messages.propertyPanelViewOpenNone,
 						isActive: open === undefined,
 					},
 					{
 						id: "fit-width",
-						part: documentPart("view.open", "fit-width"),
+						action: documentAction("view.open", "fit-width"),
 						title: messages.propertyPanelViewOpenFitWidthTitle,
 						content: messages.propertyPanelViewOpenFitWidth,
 						isActive: open === "fit-width",
 					},
 					{
 						id: "fit-all",
-						part: documentPart("view.open", "fit-all"),
+						action: documentAction("view.open", "fit-all"),
 						title: messages.propertyPanelViewOpenFitAllTitle,
 						content: messages.propertyPanelViewOpenFitAll,
 						isActive: open === "fit-all",
@@ -207,7 +207,7 @@ const ViewScrollItemComponent: React.FC<ViewModeItemProps> = ({ view }) => {
 	return (
 		<PropertyCheckbox
 			isOn={isContent}
-			part={documentPart("view.scroll", isContent ? null : "content")}
+			action={documentAction("view.scroll", isContent ? null : "content")}
 			label={messages.propertyPanelViewScrollContent}
 		/>
 	);

@@ -30,8 +30,8 @@ const emptyDoc: CanvasDoc = {
 	root: [],
 } as unknown as CanvasDoc;
 
-/** The part the control below renders, which is what routes the gesture to it. */
-const CONTROL_PART = "selection:rect:probe";
+/** The action the control below renders, which is what routes the gesture to it. */
+const CONTROL_ACTION = "selection:rect:probe";
 
 /** The fill the swatch below writes, distinct from the rect's own. */
 const SWATCH_FILL = "#dc2626";
@@ -102,7 +102,7 @@ const controlGesture = (type: "dragStart" | "drag" | "dragEnd"): Gesture =>
 		button: 0,
 		targetKind: "control",
 		targetId: "r1",
-		targetPart: CONTROL_PART,
+		targetAction: CONTROL_ACTION,
 		start: { x: 100, y: 100 },
 		last: { x: 120, y: 120 },
 		clientLast: { x: 120, y: 120 },
@@ -115,12 +115,12 @@ const controlGesture = (type: "dragStart" | "drag" | "dragEnd"): Gesture =>
  * A click on a menu item.
  *
  * @param targetId - Which menu: `object-menu`, `stencil-library` or `toolbar`
- * @param targetPart - The item's data-part; undefined for the menu's own chrome
+ * @param targetAction - The item's data-action; undefined for the menu's own chrome
  * @param type - doubleClick for the second of two rapid presses
  */
 const menuClick = (
 	targetId: string,
-	targetPart: string | undefined,
+	targetAction: string | undefined,
 	type: "click" | "doubleClick" = "click",
 ): Gesture =>
 	({
@@ -128,7 +128,7 @@ const menuClick = (
 		button: 0,
 		targetKind: "menu",
 		targetId,
-		targetPart,
+		targetAction,
 		last: { x: 10, y: 10 },
 		clientLast: { x: 10, y: 10 },
 		delta: { x: 0, y: 0 },

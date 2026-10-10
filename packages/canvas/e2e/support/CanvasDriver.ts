@@ -361,15 +361,22 @@ export class CanvasDriver {
 				[...document.querySelectorAll(controlSelector)]
 					.map((el) => {
 						const id = el.getAttribute("data-id");
-						const part = el.getAttribute("data-part");
-						return id === null ? null : part === null ? id : `${id}/${part}`;
+						// Vertex handles address a model part; every other control
+						// carries an action.
+						const marker =
+							el.getAttribute("data-action") ?? el.getAttribute("data-part");
+						return id === null
+							? null
+							: marker === null
+								? id
+								: `${id}/${marker}`;
 					})
 					.filter((descriptor): descriptor is string => descriptor !== null),
 			selectors.control,
 		);
 	}
 
-	/** Whether a specific control is shown; the descriptor is "<data-id>/<data-part>". */
+	/** Whether a specific control is shown; the descriptor is "<data-id>/<data-action or data-part>". */
 	async isControlVisible(controlDescriptor: string): Promise<boolean> {
 		return (await this.visibleControlIds()).includes(controlDescriptor);
 	}
@@ -977,8 +984,8 @@ export class CanvasDriver {
 	 * Set a color by clicking a preset swatch in the color picker.
 	 *
 	 * @param sectionId - Color section to open, ignored when `open` is false
-	 * @param property - Style property the swatch writes, as it appears in the `set:` data-part
-	 * @param value - Swatch value to click, matched exactly against the `set:` data-part
+	 * @param property - Style property the swatch writes, as it appears in the `set:` data-action
+	 * @param value - Swatch value to click, matched exactly against the `set:` data-action
 	 * @param open - Open the section first; pass false when it is already open
 	 */
 	async pickColorSwatch(
@@ -998,7 +1005,7 @@ export class CanvasDriver {
 	 * A real pointer drag is used because the slider has to fire drag/dragEnd through the
 	 * native-pointer gesture path.
 	 *
-	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-action
 	 * @param dx - Screen-pixel distance from the slider's center; positive moves right, raising
 	 *   the value
 	 */
@@ -1019,7 +1026,7 @@ export class CanvasDriver {
 	 * Click an ObjectMenu slider track without dragging, the way a user jumps the thumb to a
 	 * position. The section must already be open.
 	 *
-	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-action
 	 * @param ratio - Horizontal position on the track, 0 (left end / lowest value) to 1 (right end)
 	 */
 	async clickSliderAt(property: string, ratio: number) {
@@ -1040,7 +1047,7 @@ export class CanvasDriver {
 	 * Each press is its own keydown/keyup pair, so presses within the history coalesce window
 	 * collapse into a single undo entry, just like a held key.
 	 *
-	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-action
 	 * @param key - Key name to press, e.g. "ArrowRight" / "Home" / "PageUp"
 	 * @param repeat - Number of presses, defaults to 1
 	 */
@@ -1074,7 +1081,7 @@ export class CanvasDriver {
 	 * The buttons are already on the menu itself while text is edited inline, and the submenu
 	 * stays open after a press, so it is only opened when they are absent.
 	 *
-	 * @param property - Style property the button writes, as it appears in the `set:` data-part
+	 * @param property - Style property the button writes, as it appears in the `set:` data-action
 	 * @param value - Value the button writes; the buttons carry the value the *next* press lands
 	 *   on, so a toggle-off names the cleared value ("normal" / "none")
 	 */
@@ -1083,7 +1090,7 @@ export class CanvasDriver {
 		value: string,
 	) {
 		const italicButton = this.page.locator(
-			`${selectors.objectMenu} [data-part^="set:fontStyle:"]`,
+			`${selectors.objectMenu} [data-action^="set:fontStyle:"]`,
 		);
 		if ((await italicButton.count()) === 0) {
 			await this.openObjectMenu("text-format");

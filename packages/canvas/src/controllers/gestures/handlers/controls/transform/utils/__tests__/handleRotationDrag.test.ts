@@ -86,7 +86,7 @@ const makeDragEvent = (
 		type: "drag",
 		targetKind: "control",
 		targetId: "transform",
-		targetPart: "rotation",
+		targetAction: "rotation",
 		button: 0,
 		last,
 		mods: { shift, alt: false, ctrl: false, meta: false },

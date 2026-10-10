@@ -112,7 +112,7 @@ const dragEvent = (
 	type: EventType,
 	start: Point,
 	last: Point,
-	targetPart = "segment-move:1",
+	targetAction = "segment-move:1",
 	targetId = "c1",
 ): CanvasEvent =>
 	({
@@ -120,7 +120,7 @@ const dragEvent = (
 		target: null,
 		targetId,
 		targetKind: "connector",
-		targetPart,
+		targetAction,
 		start,
 		last,
 		delta: { x: last.x - start.x, y: last.y - start.y },
@@ -211,7 +211,7 @@ describe("ConnectorSegmentMoveHandler - supports", () => {
 
 		const onBareLine = {
 			...dragEvent("dragStart", { x: 0, y: 0 }, { x: 1, y: 1 }),
-			targetPart: undefined,
+			targetAction: undefined,
 		} as CanvasEvent;
 		expect(ConnectorSegmentMoveHandler.supports(onBareLine)).toBe(false);
 
@@ -441,9 +441,9 @@ describe("ConnectorSegmentMoveHandler - segments it refuses", () => {
 		).toBe(state);
 	});
 
-	it("leaves the state alone for a part carrying no usable index", () => {
+	it("leaves the state alone for an action carrying no usable index", () => {
 		const state = stateWith(connectorWithVertices());
-		for (const part of [
+		for (const action of [
 			"segment-move:",
 			"segment-move:abc",
 			"segment-move:-1",
@@ -451,7 +451,7 @@ describe("ConnectorSegmentMoveHandler - segments it refuses", () => {
 			expect(
 				ConnectorSegmentMoveHandler.handle(
 					state,
-					dragEvent("drag", { x: 150, y: 0 }, { x: 160, y: 0 }, part),
+					dragEvent("drag", { x: 150, y: 0 }, { x: 160, y: 0 }, action),
 					registries,
 				),
 			).toBe(state);

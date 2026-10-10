@@ -5,15 +5,38 @@ export type GestureTarget = {
 	/** Value of the resolved element's data-kind attribute. */
 	kind: string;
 	/**
-	 * Nearest [data-part] at or below the [data-kind] element, distinguishing a
-	 * sub-area of the target (a connector's label box vs. its line, or which
-	 * text slot of a multi-slot shape was pressed). It is read separately from
-	 * the [data-kind] element so a shape that draws several hit regions can mark
-	 * them while still exposing exactly one [data-kind] element (the DOM
-	 * contract e2e's captureObjects counts on). Undefined when no [data-part]
-	 * is found at or below the target.
+	 * Nearest [data-part] at or below the [data-kind] element: the address of
+	 * the model part that was pressed (`textSlot:{slotId}` / `vertex:{index}`,
+	 * see parsePartAddress). It is read separately from the [data-kind] element
+	 * so a shape that draws several hit regions can mark them while still
+	 * exposing exactly one [data-kind] element (the DOM contract e2e's
+	 * captureObjects counts on). Undefined when no [data-part] is found at or
+	 * below the target.
 	 */
 	part?: string;
+	/**
+	 * Nearest [data-action] at or below the [data-kind] element: what pressing
+	 * this element starts (a menu command, a resize handle, a connector's label
+	 * box, ...). Resolved with the same rule as `part`. Undefined when no
+	 * [data-action] is found at or below the target.
+	 */
+	action?: string;
+};
+
+/**
+ * Reads `attribute` from its nearest carrier at or above `el`, counting the
+ * carrier only when it is `kindEl` or inside it: one above the [data-kind]
+ * element belongs to an unrelated outer widget.
+ */
+const readScopedAttribute = (
+	el: Element,
+	kindEl: Element,
+	attribute: string,
+): string | undefined => {
+	const carrierEl = el.closest(`[${attribute}]`);
+	return carrierEl && (carrierEl === kindEl || kindEl.contains(carrierEl))
+		? (carrierEl.getAttribute(attribute) ?? undefined)
+		: undefined;
 };
 
 /**
@@ -39,13 +62,8 @@ export const getGestureTarget = (el: Element): GestureTarget | null => {
 		return null;
 	}
 
-	// A [data-part] above the [data-kind] element belongs to an unrelated outer
-	// widget, so only one inside (or the element itself) counts.
-	const partEl = el.closest("[data-part]");
-	const part =
-		partEl && (partEl === kindEl || kindEl.contains(partEl))
-			? (partEl.getAttribute("data-part") ?? undefined)
-			: undefined;
+	const part = readScopedAttribute(el, kindEl, "data-part");
+	const action = readScopedAttribute(el, kindEl, "data-action");
 
-	return { id, kind, part };
+	return { id, kind, part, action };
 };

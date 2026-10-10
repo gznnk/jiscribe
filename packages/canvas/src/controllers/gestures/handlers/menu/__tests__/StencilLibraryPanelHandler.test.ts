@@ -22,14 +22,14 @@ const makeState = (
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	targetKind = "menu",
 ): CanvasEvent =>
 	({
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
@@ -123,7 +123,7 @@ describe("StencilLibraryPanelHandler", () => {
 		expect(next).toBe(state);
 	});
 
-	it("a click with a part it does not know is inert", () => {
+	it("a click with an action it does not know is inert", () => {
 		const state = makeState();
 		const next = StencilLibraryPanelHandler.handle(
 			state,

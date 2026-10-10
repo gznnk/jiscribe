@@ -8,7 +8,7 @@ The role of the rendering layer (`rendering/`) and the conventions for handling 
 
 Components under `rendering/` **receive State via Props and render SVG**. They neither hold nor
 change the document or canvas state, and they take no event handlers either: what can be interacted
-with is declared through the `data-kind` / `data-id` / `data-part` attributes, and the gesture system
+with is declared through the `data-kind` / `data-id` / `data-part` / `data-action` attributes, and the gesture system
 at the root receives it and dispatches it to handlers ([Gesture System](./04-gesture-system.md)).
 Local state confined to drawing is allowed (e.g. `CanvasView.tsx` keeps `useState` / `useLayoutEffect`
 to derive the grid-line color from the background as painted).

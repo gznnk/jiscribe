@@ -79,7 +79,7 @@ const dragEvent = (
 		target: null,
 		targetId,
 		targetKind: "connector",
-		targetPart: "label",
+		targetAction: "label",
 		start,
 		last,
 		delta: { x: last.x - start.x, y: last.y - start.y },
@@ -138,7 +138,7 @@ describe("ConnectorLabelDragHandler - supports", () => {
 	it("ignores the bare line, other kinds, and non-left buttons", () => {
 		const onLine = {
 			...dragEvent("dragStart", { x: 0, y: 0 }, { x: 1, y: 1 }),
-			targetPart: undefined,
+			targetAction: undefined,
 		} as CanvasEvent;
 		expect(ConnectorLabelDragHandler.supports(onLine)).toBe(false);
 

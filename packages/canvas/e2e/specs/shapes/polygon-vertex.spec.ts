@@ -53,7 +53,7 @@ test.describe("adding polygon vertices", () => {
 		// Drag segment 0's midpoint handle outward to insert one vertex
 		await dragControlBy(
 			canvas,
-			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			`[data-id="${id}"][data-action="vertex-insert:0"]`,
 			{ dx: 0, dy: 80 },
 		);
 

@@ -3,7 +3,7 @@ import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
-import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
@@ -51,7 +51,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon

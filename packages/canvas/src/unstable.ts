@@ -139,13 +139,13 @@ export { getResizeCursorForRotation } from "./controllers/ui/utils";
 // ---------------------------------------------------------------------------
 // ObjectMenu UI kit (packages/canvas/docs/12-plugin-architecture.md)
 // ---------------------------------------------------------------------------
-// Grammar ObjectMenuHandler resolves for `data-part` under `data-kind="menu"`:
+// Grammar ObjectMenuHandler resolves for `data-action` under `data-kind="menu"`:
 //   - `toggle:{sectionId}`     open/close a section
 //   - `set:{property}:{value}` update the selected object's property, committing at once
 //   - `command:{commandId}`    run a command
 //   - `slider:{property}`      slider (drag previews; dragEnd and a track click commit)
 // See packages/canvas/docs/04-gesture-system.md. Plugins should combine the shared parts
-// below or call `onStyleIntent`; writing `data-part` directly couples them to internals
+// below or call `onStyleIntent`; writing `data-action` directly couples them to internals
 // and is discouraged.
 
 export {
@@ -240,9 +240,9 @@ export type {
 // the widgets below so it lines up with the built-in ones — PropertyRow supplies
 // the label column every row shares, except PropertyCheckbox, which is a row of
 // its own from the section's left edge. The widgets that write do it either through
-// the callback (PropertyColorField) or through the same `data-part` grammar the
+// the callback (PropertyColorField) or through the same `data-action` grammar the
 // ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
-// `data-part` by hand is discouraged for the same reason as there.
+// `data-action` by hand is discouraged for the same reason as there.
 // Custom rows are dropped while a text slot is selected, since a plugin row has
 // no way to say it is slot-aware.
 // A section may also carry `isShown`, asked about the selection
@@ -267,15 +267,15 @@ export { PropertySegmentedControl } from "./controllers/ui/menu/PropertyPanel/co
 export type { PropertySegmentedOption } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export { PropertyCheckbox } from "./controllers/ui/menu/PropertyPanel/common/PropertyCheckbox";
 
-// The `data-part` grammar the menu targets are read by (command: / toggle: /
+// The `data-action` grammar the menu targets are read by (command: / toggle: /
 // set: / slider:). Build the strings with these rather than spelling the
 // prefixes, so a plugin's buttons and the core's are read by the same rule.
 export {
-	commandPart,
-	setPart,
-	sliderPart,
-	togglePart,
-} from "./controllers/gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	setAction,
+	sliderAction,
+	toggleAction,
+} from "./controllers/gestures/handlers/menu/utils/menuActions";
 
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";

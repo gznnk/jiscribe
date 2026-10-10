@@ -1,6 +1,6 @@
 /**
- * Selector constants built on the canvas DOM contract (data-kind / data-id / data-part, with
- * data-testid for test-only hooks). See "DOM structure and selectors" in e2e/README.md.
+ * Selector constants built on the canvas DOM contract (data-kind / data-id / data-action /
+ * data-part, with data-testid for test-only hooks). See "DOM structure and selectors" in e2e/README.md.
  */
 
 /**
@@ -46,7 +46,7 @@ const PROPERTY_PANEL = '[data-kind="menu"][data-id="property-panel"]';
 
 /**
  * Shared by the ObjectMenu-scoped selectors below. The container is the only
- * element of the menu carrying data-kind / data-id; its items carry data-part
+ * element of the menu carrying data-kind / data-id; its items carry data-action
  * alone and are found through the nearest [data-kind] ancestor at gesture time.
  */
 const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
@@ -54,7 +54,7 @@ const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
 /**
  * Shared by the toolbar-scoped selectors below. Scoping them matters because while
  * the sidebar is open every preset it lists is a second button with the same title
- * and data-part as the pinned one.
+ * and data-action as the pinned one.
  */
 const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
 
@@ -67,16 +67,16 @@ export const selectors = {
 
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector
-	 * because the buttons carry only data-part: that mirrors how the gesture
+	 * because the buttons carry only data-action: that mirrors how the gesture
 	 * system resolves them (the nearest [data-kind] ancestor supplies kind / id)
-	 * and keeps them apart from the `command:*` parts of the other menus.
+	 * and keeps them apart from the `command:*` actions of the other menus.
 	 */
 	toolbarCommand: (commandId: string) =>
-		`${TOOLBAR} [data-part="command:${commandId}"]`,
+		`${TOOLBAR} [data-action="command:${commandId}"]`,
 
 	/** StencilLibrary category button; the toggle that opens a flyout. */
 	categoryButton: (categoryId: string) =>
-		`[data-id="stencil-category"][data-part="toggle:${categoryId}"]`,
+		`[data-id="stencil-category"][data-action="toggle:${categoryId}"]`,
 
 	/** Category flyout, present only while open. */
 	categoryFlyout: (categoryId: string) =>
@@ -86,7 +86,8 @@ export const selectors = {
 	 * StencilLibrary shape item; pinned and in-flyout share this DOM contract, and
 	 * both live inside the toolbar, which is what scopes the sidebar's copy out.
 	 */
-	shapeItem: (presetId: string) => `${TOOLBAR} [data-part="item:${presetId}"]`,
+	shapeItem: (presetId: string) =>
+		`${TOOLBAR} [data-action="item:${presetId}"]`,
 
 	/**
 	 * Toolbar toggle that opens and closes the shape library sidebar. Present only
@@ -94,7 +95,7 @@ export const selectors = {
 	 * carrying the open state on aria-expanded. Written as a descendant selector for
 	 * the same reason as toolbarCommand.
 	 */
-	stencilLibraryToggle: `${TOOLBAR} [data-part="command:toggleStencilLibrary"]`,
+	stencilLibraryToggle: `${TOOLBAR} [data-action="command:toggleStencilLibrary"]`,
 
 	/**
 	 * The shape library sidebar itself. Mounted only while open, so closed it is
@@ -104,21 +105,21 @@ export const selectors = {
 	stencilLibraryPanel: STENCIL_LIBRARY_PANEL,
 
 	/** Close (x) button in the sidebar header. */
-	stencilLibraryPanelClose: `${STENCIL_LIBRARY_PANEL} [data-part="close"]`,
+	stencilLibraryPanelClose: `${STENCIL_LIBRARY_PANEL} [data-action="close"]`,
 
 	/**
 	 * Sidebar section header; the disclosure button carrying aria-expanded, whose
 	 * id is the category id the host declared.
 	 */
 	stencilLibrarySection: (sectionId: string) =>
-		`${STENCIL_LIBRARY_PANEL} [data-part="section:${sectionId}"]`,
+		`${STENCIL_LIBRARY_PANEL} [data-action="section:${sectionId}"]`,
 
 	/**
 	 * Shape item inside the sidebar. Same DOM contract as shapeItem, scoped to the
 	 * panel so it does not also match the pinned copy on the toolbar.
 	 */
 	stencilLibraryPanelItem: (presetId: string) =>
-		`${STENCIL_LIBRARY_PANEL} [data-part="item:${presetId}"]`,
+		`${STENCIL_LIBRARY_PANEL} [data-action="item:${presetId}"]`,
 
 	/** Search box of the sidebar; filtering collapses the sections into one grid. */
 	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
@@ -128,7 +129,7 @@ export const selectors = {
 	 * open state on aria-expanded. Scoped to the toolbar so it does not also match
 	 * the panel's own close button, which routes through the same command.
 	 */
-	propertyPanelToggle: `${TOOLBAR} [data-part="command:togglePropertyPanel"]`,
+	propertyPanelToggle: `${TOOLBAR} [data-action="command:togglePropertyPanel"]`,
 
 	/**
 	 * The properties sidebar itself. Mounted only while open, so closed it is
@@ -138,7 +139,7 @@ export const selectors = {
 	propertyPanel: PROPERTY_PANEL,
 
 	/** Close (x) button in the properties sidebar header. */
-	propertyPanelClose: `${PROPERTY_PANEL} [data-part="command:togglePropertyPanel"]`,
+	propertyPanelClose: `${PROPERTY_PANEL} [data-action="command:togglePropertyPanel"]`,
 
 	/**
 	 * Section header of the properties sidebar; the disclosure button carrying
@@ -146,25 +147,25 @@ export const selectors = {
 	 * toggles share the `toggle:` grammar.
 	 */
 	propertyPanelSection: (sectionId: string) =>
-		`${PROPERTY_PANEL} [data-part="toggle:${sectionId}"]`,
+		`${PROPERTY_PANEL} [data-action="toggle:${sectionId}"]`,
 
 	/**
 	 * A property-writing control inside the sidebar (a swatch, a segment).
 	 * Differs from `objectMenuSet` only in being scoped to the panel.
 	 */
 	propertyPanelSet: (property: string, value: string) =>
-		`${PROPERTY_PANEL} [data-part="set:${property}:${value}"]`,
+		`${PROPERTY_PANEL} [data-action="set:${property}:${value}"]`,
 
 	/**
 	 * A button of the Canvas section writing one of the document's own settings
-	 * (`doc:` part). An empty `value` is the button that drops the setting.
+	 * (`doc:` action). An empty `value` is the button that drops the setting.
 	 */
 	propertyPanelDocumentSet: (property: string, value: string) =>
-		`${PROPERTY_PANEL} [data-part="doc:${property}:${value}"]`,
+		`${PROPERTY_PANEL} [data-action="doc:${property}:${value}"]`,
 
 	/** A command button inside the sidebar (the Arrange section's stacking-order buttons). */
 	propertyPanelCommand: (commandId: string) =>
-		`${PROPERTY_PANEL} [data-part="command:${commandId}"]`,
+		`${PROPERTY_PANEL} [data-action="command:${commandId}"]`,
 
 	/**
 	 * A number field of the sidebar, found by its test-only hook: `x` / `y` /
@@ -184,7 +185,7 @@ export const selectors = {
 		`${PROPERTY_PANEL} div:has(> [data-testid="property-field:${name}"]) button[aria-label="${direction}"]`,
 
 	/**
-	 * Title row of the sidebar. Its first child rather than a data-part of its
+	 * Title row of the sidebar. Its first child rather than a data-action of its
 	 * own: it is the one place inside the panel a press reaches no control, which
 	 * is what a test of "pressing outside" needs.
 	 */
@@ -201,7 +202,7 @@ export const selectors = {
 	 * The open panel of a sidebar dropdown field, portalled to the sidebar's root.
 	 * Present only while open, so assert `toHaveCount(0)` for closed.
 	 */
-	propertyPanelDropdown: `${PROPERTY_PANEL} [data-part="panel"]`,
+	propertyPanelDropdown: `${PROPERTY_PANEL} [data-action="panel"]`,
 
 	/** Shape on the canvas (rect / ellipse / polyline and so on). */
 	object: "[data-kind=object]",
@@ -241,21 +242,22 @@ export const selectors = {
 			| "rotation",
 	) =>
 		handle === "rotation"
-			? `[data-id="transform"][data-part="rotation"]`
-			: `[data-id="transform"][data-part="resize:${handle}"]`,
+			? `[data-id="transform"][data-action="rotation"]`
+			: `[data-id="transform"][data-action="resize:${handle}"]`,
 
 	/** Connector creation anchor, drawn 20px outside the edge midpoint. */
-	createAnchor: (anchorId: AnchorId) => `[data-part="anchor:${anchorId}"]`,
+	createAnchor: (anchorId: AnchorId) => `[data-action="anchor:${anchorId}"]`,
 
 	/** The floating ObjectMenu container itself, not the buttons inside. */
 	objectMenu: OBJECT_MENU,
 
 	/** Toggle button that opens an ObjectMenu dropdown. */
-	objectMenuToggle: (sectionId: string) => `[data-part="toggle:${sectionId}"]`,
+	objectMenuToggle: (sectionId: string) =>
+		`[data-action="toggle:${sectionId}"]`,
 
 	/** ObjectMenu button that applies at once, such as a preset color or line style. */
 	objectMenuSet: (property: string, value: string) =>
-		`[data-part="set:${property}:${value}"]`,
+		`[data-action="set:${property}:${value}"]`,
 
 	/**
 	 * FontFamilyMenu entry, by CanvasFontFamilyId. Its own attribute rather than
@@ -266,10 +268,10 @@ export const selectors = {
 
 	/** ObjectMenu command button, such as bringToFront for z-order. */
 	objectMenuCommand: (commandId: string) =>
-		`${OBJECT_MENU} [data-part="command:${commandId}"]`,
+		`${OBJECT_MENU} [data-action="command:${commandId}"]`,
 
 	/** ObjectMenu slider; a range input whose value changes by dragging. */
-	objectMenuSlider: (property: string) => `[data-part="slider:${property}"]`,
+	objectMenuSlider: (property: string) => `[data-action="slider:${property}"]`,
 
 	/** CSS color text input in the color picker, committed with Enter. */
 	cssColorInput: CSS_COLOR_INPUT,
@@ -282,7 +284,7 @@ export const selectors = {
 	 * that belongs to the section instead of matching the outgoing one.
 	 */
 	objectMenuColorInput: (sectionId: string) =>
-		`div:has(> [data-part="toggle:${sectionId}"]) ${CSS_COLOR_INPUT}`,
+		`div:has(> [data-action="toggle:${sectionId}"]) ${CSS_COLOR_INPUT}`,
 
 	/** TEXTAREA shown while editing text. */
 	textEditor: '[data-testid="text-editor"]',
@@ -293,7 +295,7 @@ export const selectors = {
 
 	/** Context-menu command item, such as bring-to-front or duplicate. */
 	contextMenuCommand: (commandId: string) =>
-		`[data-id="context-menu"][data-part="command:${commandId}"]`,
+		`[data-id="context-menu"][data-action="command:${commandId}"]`,
 
 	/** Context-menu callback item, such as paste. */
 	contextMenuCallback: (id: string) =>

@@ -160,14 +160,14 @@ const stateWithConnectors = (
 const dragEvent = (
 	type: "dragStart" | "dragEnd",
 	targetId: string,
-	targetPart: string,
+	targetAction: string,
 	last: Point,
 ): CanvasEvent =>
 	({
 		type,
 		target: null,
 		targetId,
-		targetPart,
+		targetAction,
 		targetKind: "control",
 		start: { x: 0, y: 0 },
 		last,

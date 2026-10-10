@@ -43,7 +43,7 @@ type ConnectorSegmentMoveHitAreasProps = {
  * a segment adds a vertex (crosshair) and the rest of it moves the segment (move); the two are
  * distinguished by the cursor.
  *
- * Each band carries data-kind="connector", data-id=<id> and data-part="segment-move:<segmentIndex>",
+ * Each band carries data-kind="connector", data-id=<id> and data-action="segment-move:<segmentIndex>",
  * indexing the drawn path.
  */
 const ConnectorSegmentMoveHitAreasComponent: React.FC<
@@ -88,7 +88,7 @@ const ConnectorSegmentMoveHitAreasComponent: React.FC<
 					y2={end.y}
 					data-kind="connector"
 					data-id={id}
-					data-part={`segment-move:${segmentIndex}`}
+					data-action={`segment-move:${segmentIndex}`}
 					style={{
 						stroke: "transparent",
 						strokeWidth: LINE_HIT_STROKE_WIDTH,

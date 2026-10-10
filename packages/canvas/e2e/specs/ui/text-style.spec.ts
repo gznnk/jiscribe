@@ -101,7 +101,7 @@ test.describe("text styling through the ObjectMenu", () => {
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("700");
 
-		// On a second press the button's data-part flips to the normal side, which clears it.
+		// On a second press the button's data-action flips to the normal side, which clears it.
 		await canvas.setTextFormat("fontWeight", "normal");
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)

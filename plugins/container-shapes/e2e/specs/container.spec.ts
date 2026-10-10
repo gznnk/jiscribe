@@ -230,7 +230,7 @@ test.describe("container palette / behavior", () => {
 		// Selected right after creation, with the header height handle at the middle of that edge.
 		await expect(
 			canvas.page.locator(
-				'[data-kind="control"][data-part="selection:container:headerHeight"]',
+				'[data-kind="control"][data-action="selection:container:headerHeight"]',
 			),
 		).toBeVisible();
 

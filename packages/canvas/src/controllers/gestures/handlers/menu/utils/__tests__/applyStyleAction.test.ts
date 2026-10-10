@@ -13,8 +13,8 @@ import {
 	rectOf,
 } from "../../../../../style/__tests__/support/styleFixtures";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
-import { applyStylePropertyPart } from "../applyStylePropertyPart";
-import { parseMenuPart, setPart } from "../menuParts";
+import { applyStyleAction } from "../applyStyleAction";
+import { parseMenuAction, setAction } from "../menuActions";
 
 const registries = createTestRegistries();
 
@@ -47,13 +47,13 @@ type EventType =
 const apply = (
 	state: CanvasControllerState,
 	type: EventType,
-	targetPart: string | undefined,
+	targetAction: string | undefined,
 	inputValue?: string,
 ) =>
-	applyStylePropertyPart(
+	applyStyleAction(
 		state,
-		{ type, targetPart, inputValue } as unknown as CanvasEvent,
-		parseMenuPart(targetPart),
+		{ type, targetAction, inputValue } as unknown as CanvasEvent,
+		parseMenuAction(targetAction),
 		registries,
 	);
 
@@ -61,17 +61,17 @@ const apply = (
 const styledFieldsOf = (state: CanvasControllerState | null) =>
 	state?.objects["rect-1"] as unknown as { fill: string; strokeWidth: number };
 
-describe("applyStylePropertyPart", () => {
-	it("leaves every part that is not a style write to the caller", () => {
+describe("applyStyleAction", () => {
+	it("leaves every action that is not a style write to the caller", () => {
 		const state = makeState();
-		for (const part of [
+		for (const action of [
 			undefined,
 			"panel",
 			"command:group",
 			"toggle:style",
 			"doc:view.open:fit-all",
 		]) {
-			expect(apply(state, "click", part)).toBeNull();
+			expect(apply(state, "click", action)).toBeNull();
 		}
 	});
 
@@ -128,12 +128,12 @@ describe("applyStylePropertyPart", () => {
 		});
 	});
 
-	// The `set:` part is the one route that still carries a property name and a
+	// The `set:` action is the one route that still carries a property name and a
 	// string, so the cases that used to guard the boundary function live here: what
 	// the pair of styleIntentOf and applyStyleIntent reaches, and what it leaves
 	// alone. A `set:` click always returns a new state (commitVersion is bumped),
 	// so "nothing was written" is read off `objects` keeping its reference.
-	describe("what the intent a part states reaches", () => {
+	describe("what the intent an action states reaches", () => {
 		type MinState = Pick<
 			CanvasControllerState,
 			"selection" | "objects" | "multiSelectGroup" | "textEditState"
@@ -156,7 +156,7 @@ describe("applyStylePropertyPart", () => {
 			property: string,
 			value: string,
 		): CanvasControllerState["objects"] =>
-			apply(state, "click", setPart(property, value))?.objects ?? {};
+			apply(state, "click", setAction(property, value))?.objects ?? {};
 
 		describe("the core vocabulary reaches the style tables", () => {
 			it("fill lands on a type that takes it", () => {
@@ -274,7 +274,7 @@ describe("applyStylePropertyPart", () => {
 			 * A string every declared type reads as a value of its own: a number parses
 			 * from it, and the other two take any string. What each type reads it as is
 			 * the entry's own business (fieldEntry's suite), so what is checked here is
-			 * that the part reached the entry at all.
+			 * that the action reached the entry at all.
 			 */
 			const PROBE_VALUE = "7";
 

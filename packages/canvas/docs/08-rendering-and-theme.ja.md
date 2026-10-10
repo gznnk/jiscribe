@@ -8,7 +8,7 @@
 
 `rendering/` のコンポーネントは **State を Props で受け取り SVG を描画する**。ドキュメントやキャンバスの
 状態は持たず、書き換えもしない。イベントハンドラも受け取らない — 操作の対象は `data-kind` / `data-id` /
-`data-part` 属性で宣言し、それを受けてハンドラへ振り分けるのはルートの
+`data-part` / `data-action` 属性で宣言し、それを受けてハンドラへ振り分けるのはルートの
 [ジェスチャシステム](./04-gesture-system.ja.md)。描画に閉じた局所状態は持ってよい（例: `CanvasView.tsx` は
 描かれた背景色からグリッド線の色を導くために `useState` / `useLayoutEffect` を持つ）。
 依存の契約は `controllers` に依存しないこと（[アーキテクチャ](./02-architecture.ja.md) の禁止事項）。

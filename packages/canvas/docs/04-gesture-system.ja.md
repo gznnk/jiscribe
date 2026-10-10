@@ -75,7 +75,7 @@
 `inertialScrollEnd` は状態遷移として消費しどこにも渡さない）、
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
 自分が処理すべきイベントかを判定する。registry には `targetKind` ごとに 1 ハンドラだけを
-登録する（`controllers/registries/initializeGestureHandlerRegistry.ts`）。さらに細かい分岐（`targetId` / `data-part` / イベント種）が要る kind では、
+登録する（`controllers/registries/initializeGestureHandlerRegistry.ts`）。さらに細かい分岐（`targetId` / `data-action` / `data-part` / イベント種）が要る kind では、
 そのハンドラがルーターになり、同じフォルダ内のサブハンドラへ委譲する。
 
 | ハンドラ群  | 対象                                                                                                | 主なファイル                                                                                                                                                     |
@@ -112,7 +112,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 以上できる。そこでメニューの条件は `useLingeringFlag` を通し、隠すのは即時、戻すのはビューが
 `REAPPEAR_DELAY_MS` 静止してからにしている。これが受け渡しでのちらつきを防いでいる。
 
-## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part`
+## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part` / `data-action`
 
 キャンバス上の DOM 要素は `data-*` 属性でジェスチャーシステムと連携する。
 テキスト編集中の入力面やメニュー内の入力欄など、**ブラウザ標準動作をそのまま使いたい要素**を
@@ -140,37 +140,41 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、
 `controllers/gestures/recognizer/targeting/` に配置している。
 
-### `data-kind` / `data-id` / `data-part`
+### `data-kind` / `data-id` / `data-part` / `data-action`
 
 ジェスチャーの**対象を識別する**属性。`getGestureTarget` が `closest("[data-kind]")` で最も近い要素を探し、
-`{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。`part` はその要素
-**自身または配下**の最も近い `[data-part]` から読む。これにより、ヒット領域を複数描く図形でも
-`[data-kind]` 要素は 1 つに保てる（1 オブジェクト = 1 つの `data-kind="object"` 要素。e2e の
-`captureObjects` がこの契約に依存している）。
+`{ kind, id, part, action }` を解決してイベントの `targetKind` / `targetId` / `targetPart` / `targetAction` に
+載せる。`part` と `action` はそれぞれ、その要素**自身または配下**の最も近い `[data-part]` / `[data-action]`
+から読む。これにより、ヒット領域を複数描く図形でも `[data-kind]` 要素は 1 つに保てる（1 オブジェクト =
+1 つの `data-kind="object"` 要素。e2e の `captureObjects` がこの契約に依存している）。
 
-3 属性はそれぞれ 1 軸を担い、`kind`（粗）→ `part` 接頭辞（細）の 2 段ルーティングツリーを成す（issue #81）:
+各属性はそれぞれ 1 軸を担い、`kind`（粗）→ `action` 接頭辞または `part` の kind（細）の 2 段
+ルーティングツリーを成す（issue #81）:
 
-| 属性        | 意味                                     | 文法                                                                       |
-| ----------- | ---------------------------------------- | -------------------------------------------------------------------------- |
-| `data-kind` | **ドメイン** — registry のハンドラと 1:1 | ハンドラが `supports()` で名指す固定名（例: `object` / `canvas` / `menu`） |
-| `data-id`   | **識別子** — どのターゲットか            | 実体の UUID、またはシングルトン部品名。**パースしない（コロン禁止）**      |
-| `data-part` | **サブ要素** — ターゲット内のどの部品か  | `<subtype>[:<args...>]`。無印 = ターゲット本体そのもの                     |
+| 属性          | 意味                                        | 文法                                                                         |
+| ------------- | ------------------------------------------- | ---------------------------------------------------------------------------- |
+| `data-kind`   | **ドメイン** — registry のハンドラと 1:1    | ハンドラが `supports()` で名指す固定名（例: `object` / `canvas` / `menu`）   |
+| `data-id`     | **識別子** — どのターゲットか               | 実体の UUID、またはシングルトン部品名。**パースしない（コロン禁止）**        |
+| `data-part`   | **モデルの部分** — オブジェクトのどの部分か | `<kind>:<partId>`（`textSlot:{slotId}` / `vertex:{index}`）。無印 = 部分なし |
+| `data-action` | **アクション** — 押すと何が始まるか         | `<subtype>[:<args...>]`。無印 = ターゲット本体そのもの                       |
 
 原則:
 
-- ルーティングは `kind` → ハンドラ、`part` 接頭辞 → ストラテジ。`id` は lookup にだけ使い、決してパースしない
+- ルーティングは `kind` → ハンドラ、`action` 接頭辞（または `part` の kind）→ ストラテジ。`id` は lookup にだけ使い、決してパースしない
 - 実体のサブタイプ（rect / connector / …）は DOM に書かず `objects[id].type` で解決する
-- `part`（args 含む）は常に**サブ要素の識別子**であり、`id` が実体の識別子であることと対をなす。
-  動詞に見える part（`set:fill:red`）は「fill を赤にするボタン」という部品名であって、
-  part はコマンド伝達チャネルではない
+- `data-part` が運ぶのは**モデルの部分の住所だけ**。`parsePartAddress` が読める文字列で、クリックが
+  `selection.part` に変える。それ以外の自己申告——メニューのコマンド、リサイズハンドル、コネクターの
+  ラベルボックス——はすべて `data-action`。1 つの要素が持つのはどちらか片方まで
+- `action`（args 含む）は「押すと何が始まるか」で要素を名指す（`set:fill:red` / `resize:topLeft` /
+  `label`）。その押下を超えたコマンド伝達チャネルではない
 - `data-kind` はジェスチャーハンドラを持つ要素にだけ付ける。「インタラクティブだが
   ジェスチャー対象外」はハンドラ無しの kind ではなく `data-gesture="none"` で表現する
-- `menu` kind の part 文法（`command:` などの接頭辞とその意味）の正本は
-  `controllers/gestures/handlers/menu/utils/menuParts.ts` の 1 箇所。書く側は同ファイルの組み立て関数
-  （`commandPart` など。プラグイン向けに `@jiscribe/canvas/unstable` からも公開）で文字列を
-  組み、menu 系ハンドラは `parseMenuPart` で分解する。接頭辞をどこにも二度書かない
+- `menu` kind の action 文法（`command:` などの接頭辞とその意味）の正本は
+  `controllers/gestures/handlers/menu/utils/menuActions.ts` の 1 箇所。書く側は同ファイルの組み立て関数
+  （`commandAction` など。プラグイン向けに `@jiscribe/canvas/unstable` からも公開）で文字列を
+  組み、menu 系ハンドラは `parseMenuAction` で分解する。接頭辞をどこにも二度書かない
 
-例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
+例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-action="label"`。
 ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
 ラベルボックスのドラッグは経路上の移動（`label.position` / `label.offset`）になり、
 線から `SNAP_THRESHOLD_PX` 以内に落とすと `offset` は 0 に吸着する（Ctrl 押下で解除）。
@@ -186,7 +190,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 
 オブジェクト自身のサブ部品の part 文法——`<kind>:<partId>`。`kind` は `ObjectPartKindRegistry` が
 答える名前空間、`partId` はコアには不透明——の正本は
-`controllers/gestures/handlers/utils/partAddress.ts` で、`menu` kind が自分の正本を持つのと同じ形。
+`controllers/gestures/handlers/utils/partAddress.ts` で、`menu` kind の action が自分の正本を持つのと同じ形。
 書く側は kind ごとの組み立て関数（`textSlotPart`。プラグイン向けに `@jiscribe/canvas` からも公開。
 `vertexPart`）で住所を組み、クリック経路は `parsePartAddress` で分解する（`applyPartClick`）。
 ハンドラが kind を書くことはない。
@@ -194,7 +198,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 #### 移行（issue #81）— 完了
 
 上の文法は全面適用済み。menu 系 kind は `menu` に統合、control の id は実体 UUID（サブ要素は
-`part`）、ハンドラ無しのマーカー kind は撤去した——テスト用フックだけが必要な要素は
+`action` か `part`）、ハンドラ無しのマーカー kind は撤去した——テスト用フックだけが必要な要素は
 `data-kind` / `data-id` ではなく `data-testid` を使う。
 
 ### なぜトークン化したか
@@ -207,7 +211,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 ### 新しいインタラクティブ要素を追加するとき
 
 1. ブラウザ標準の操作で完結する要素 → `data-gesture="none"`
-2. ジェスチャー経由で値を伝えつつネイティブのポインタ挙動も必要 → `data-gesture="native-pointer"` + `data-part`（`data-kind` / `data-id` は、それを収める部品の容器が持つ）
+2. ジェスチャー経由で値を伝えつつネイティブのポインタ挙動も必要 → `data-gesture="native-pointer"` + `data-action`（`data-kind` / `data-id` は、それを収める部品の容器が持つ）
 3. スクロール可能で内部スクロールを優先したい → `data-gesture="native-wheel"`
 
 ## ホストページとジェスチャーを分け合う（`gestureHandling`）
@@ -244,7 +248,7 @@ const isActivation = event.type === "click" || event.type === "doubleClick";
 
 理由は前述の排他仕様。反復コマンドボタンには「ダブルクリック固有の意味」が無いため、
 `click` だけを拾うと連打時に 1 回おきにスキップする（2 回目が `doubleClick` として捨てられる）。
-ターゲットを比較しないので、押すたびに `data-part` が変わるトグル（`set:fontWeight:bold` →
+ターゲットを比較しないので、押すたびに `data-action` が変わるトグル（`set:fontWeight:bold` →
 `set:fontWeight:normal`）の 2 回目も `doubleClick` で届く。
 認識器の排他仕様はオブジェクト／テキスト系が依存しているので変えず、**消費側ハンドラで両者を
 等価に扱う**ことで「N 連打＝N 実行」を局所的・低リスクに実現する。

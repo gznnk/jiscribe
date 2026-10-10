@@ -32,7 +32,7 @@ const makeState = (): CanvasControllerState =>
 
 const makeEvent = (
 	type: "pressed" | "click",
-	targetPart: string | undefined,
+	targetAction: string | undefined,
 	targetKind = "menu",
 	targetId = "stencil-library",
 ): CanvasEvent =>
@@ -40,7 +40,7 @@ const makeEvent = (
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		button: 0,
 		last: { x: 100, y: 100 },
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -172,7 +172,7 @@ describe("StencilLibraryItemHandler", () => {
 				type: "dragStart",
 				targetKind: "menu",
 				targetId: "stencil-library",
-				targetPart: "item:rect",
+				targetAction: "item:rect",
 				button: 0,
 				last: { x: 100, y: 100 },
 				mods: { shift: false, alt: false, ctrl: false, meta: false },

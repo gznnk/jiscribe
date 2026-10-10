@@ -20,13 +20,14 @@ import {
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 /**
- * Extracts the preset ID from a targetPart.
+ * Extracts the preset ID from a targetAction.
  * Format: "item:<presetId>"
  *
  * Splitting is enough because a preset id holds no colon of its own — StencilRegistry
  * refuses one that does, rather than letting it reach here and resolve to nothing.
  */
-const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
+const parsePresetId = (targetAction: string): string =>
+	targetAction.split(":")[1];
 
 /**
  * Returns the half-size of the ghost shape for a preset.
@@ -97,11 +98,11 @@ export const StencilLibraryItemHandler: GestureHandler = {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		if (!event.targetPart) {
+		if (!event.targetAction) {
 			return nextState;
 		}
 
-		const presetId = parsePresetId(event.targetPart);
+		const presetId = parsePresetId(event.targetAction);
 		const preset = registries.stencil.get(presetId);
 		if (!preset) {
 			return nextState;

@@ -314,8 +314,10 @@ added to the core message keys.
 **`selectionControls`.** A plain declaration (`SelectionControlDefinition`: a
 `Component` that draws the handles, paired with a `handle` that interprets the
 gesture) — no base class. `handle` receives the object's own information (current frame plus the
-gesture-start snapshot) and the cursor, and nothing else; part derivation, snapshot
-guarding, copy-on-write write-back and edge-scroll release are handled by an
+gesture-start snapshot) and the cursor, and nothing else; deriving the
+`data-action` the handles carry (`selection:<objectType>:<name>`, handed to the
+`Component` as its `action` prop, with a `:<sub>` suffix read back as
+`SelectionControlEvent.subAction`), snapshot guarding, copy-on-write write-back and edge-scroll release are handled by an
 internal adapter.
 
 **`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
@@ -353,6 +355,12 @@ element carries in its `data-part`
 all a part takes to be pickable: core parses the address, checks it against the
 kind's `has` and writes the selection (`applyPartClick`). For text slots the
 builder is `textSlotPart`, exported from `@jiscribe/canvas`.
+
+`data-part` carries nothing but such addresses. An element whose press starts
+something — a menu row, a selection-control handle — carries a `data-action`
+instead, built for menus with `commandAction` / `toggleAction` / `setAction` /
+`sliderAction` from `@jiscribe/canvas/unstable` (the grammar is in
+`04-gesture-system.md`).
 
 ## What is not extensible yet
 

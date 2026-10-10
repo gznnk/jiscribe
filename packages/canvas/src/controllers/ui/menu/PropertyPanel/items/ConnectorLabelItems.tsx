@@ -20,7 +20,7 @@ import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo } from "react";
 
-import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { setAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../icons/BoldIcon";
@@ -189,7 +189,7 @@ const ConnectorLabelStyleItemComponent: React.FC<PropertyPanelItemProps> = ({
 				options={[
 					{
 						id: "bold",
-						part: setPart("label.fontWeight", isBold ? "normal" : "bold"),
+						action: setAction("label.fontWeight", isBold ? "normal" : "bold"),
 						title: messages.menuLabelBold,
 						content: <BoldIcon title={messages.menuLabelBold} />,
 						isActive: isBold,
@@ -334,21 +334,21 @@ const ConnectorLabelBorderTypeItemComponent: React.FC<
 				options={[
 					{
 						id: "solid",
-						part: setPart("label.strokeDashType", "solid"),
+						action: setAction("label.strokeDashType", "solid"),
 						title: messages.menuSolidLine,
 						content: <SolidLineIcon title={messages.menuSolidLine} />,
 						isActive: dashType === "solid",
 					},
 					{
 						id: "dashed",
-						part: setPart("label.strokeDashType", "dashed"),
+						action: setAction("label.strokeDashType", "dashed"),
 						title: messages.menuDashedLine,
 						content: <DashedLineIcon title={messages.menuDashedLine} />,
 						isActive: dashType === "dashed",
 					},
 					{
 						id: "dotted",
-						part: setPart("label.strokeDashType", "dotted"),
+						action: setAction("label.strokeDashType", "dotted"),
 						title: messages.menuDottedLine,
 						content: <DottedLineIcon title={messages.menuDottedLine} />,
 						isActive: dashType === "dotted",

@@ -15,8 +15,8 @@ type SelectionControlPillProps = {
 	rotation: number;
 	zoom: number;
 	objectId: string;
-	/** data-part value (the control's derived `selection:<objectType>:<name>`). */
-	part: string;
+	/** data-action value (the control's derived `selection:<objectType>:<name>`). */
+	action: string;
 	cursor: string;
 };
 
@@ -32,7 +32,7 @@ const SelectionControlPillComponent: React.FC<SelectionControlPillProps> = ({
 	rotation,
 	zoom,
 	objectId,
-	part,
+	action,
 	cursor,
 }) => {
 	const { handleDimensions } = useCanvasTheme();
@@ -51,7 +51,7 @@ const SelectionControlPillComponent: React.FC<SelectionControlPillProps> = ({
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id={objectId}
-				data-part={part}
+				data-action={action}
 				style={{
 					fill: theme.handleFill,
 					stroke: theme.handleAccent,

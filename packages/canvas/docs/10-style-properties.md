@@ -221,15 +221,15 @@ and never drawn, so the edit takes the whole slot instead.
 ## The transport boundary
 
 The surfaces carry a property **name** and a **string**, because that is what the
-DOM can hold in a `data-part` (`menuParts.ts`):
+DOM can hold in a `data-action` (`menuActions.ts`):
 
 - `set:{property}:{value}` — write a style property outright; the value may itself
   contain `:`
 - `slider:{property}` — a slider whose value rides on the event (`inputValue`)
-  rather than in the part
+  rather than in the action
 
 ```
-ObjectMenu item / slider, sidebar swatch ── gesture (set: / slider:) ─→ applyStylePropertyPart ┐
+ObjectMenu item / slider, sidebar swatch ── gesture (set: / slider:) ─→ applyStyleAction ┐
                                                                             │ styleIntentOf    │
 ObjectMenu number input, sidebar callback, editor keystroke ── STYLE_INTENT ─→ canvasReducer   ┼─→ applyStyleIntent
     └ a row that knows its property states the intent outright;              ┘
@@ -349,7 +349,7 @@ a guard of its own.
 
 Regression safety: `style/__tests__/styleIntentOf.test.ts` covers the
 translation, and the apply side of it —
-`gestures/handlers/menu/utils/__tests__/applyStylePropertyPart.test.ts`, the one
+`gestures/handlers/menu/utils/__tests__/applyStyleAction.test.ts`, the one
 route still carrying a name and a string — is
 registry-driven — it enumerates every kind the types declare in the real bundle
 wiring and checks the gate, the nested write and that the entry writes the field

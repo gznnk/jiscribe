@@ -3,7 +3,7 @@ import { memo, useRef } from "react";
 
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
@@ -55,7 +55,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuFontSize}
 			>
 				<FontSizeIcon />

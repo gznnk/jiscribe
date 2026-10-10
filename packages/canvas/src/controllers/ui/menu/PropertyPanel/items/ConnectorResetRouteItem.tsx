@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import { resolveCommandLabel } from "../../../../commands/CommandUtils";
 import { ResetConnectorRouteCommand } from "../../../../commands/connector/ResetConnectorRouteCommand";
-import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { hasSelectedConnectorShapedRoute } from "../../../../utils/hasSelectedConnectorShapedRoute";
@@ -38,7 +38,7 @@ const ConnectorResetRouteItemComponent: React.FC<PropertyPanelItemProps> = ({
 				type="button"
 				disabled={!hasSelectedConnectorShapedRoute({ objects, selection })}
 				title={label}
-				data-part={commandPart(ResetConnectorRouteCommand.id)}
+				data-action={commandAction(ResetConnectorRouteCommand.id)}
 			>
 				{label}
 			</PropertyCommandButton>

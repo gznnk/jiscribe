@@ -37,8 +37,8 @@ import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 /**
  * Handles transform-control operations (resize and rotation).
  *
- * Target format: data-id="transform", data-part="resize:<anchorType>" / "rotation"
- * Example: data-part="resize:bottomRight"
+ * Target format: data-id="transform", data-action="resize:<anchorType>" / "rotation"
+ * Example: data-action="resize:bottomRight"
  */
 export class TransformControlHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
@@ -46,13 +46,13 @@ export class TransformControlHandler extends ControlStrategy {
 			return false;
 		}
 
-		const targetPart = event.targetPart;
-		if (!targetPart) {
+		const targetAction = event.targetAction;
+		if (!targetAction) {
 			return false;
 		}
 
 		// Resize handles and the rotation handle of the transform frame
-		return targetPart.startsWith("resize:") || targetPart === "rotation";
+		return targetAction.startsWith("resize:") || targetAction === "rotation";
 	}
 
 	handle(
@@ -60,16 +60,16 @@ export class TransformControlHandler extends ControlStrategy {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		const targetPart = event.targetPart;
-		if (!targetPart) {
+		const targetAction = event.targetAction;
+		if (!targetAction) {
 			return state;
 		}
 
 		// Parse the anchor type from "resize:<anchorType>" / "rotation"
 		const anchorType = (
-			targetPart === "rotation"
+			targetAction === "rotation"
 				? "rotation"
-				: targetPart.slice("resize:".length)
+				: targetAction.slice("resize:".length)
 		) as TransformAnchorType;
 
 		// Route to the appropriate handler based on the gesture type

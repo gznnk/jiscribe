@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { resolveCommandLabel } from "../../../../commands/CommandUtils";
-import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../../hooks/useCommandState";
 import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
@@ -45,7 +45,7 @@ const StackOrderItemComponent: React.FC<
 						type="button"
 						disabled={!resolved.enabled}
 						title={label}
-						data-part={commandPart(commandId)}
+						data-action={commandAction(commandId)}
 					>
 						{label}
 					</PropertyCommandButton>

@@ -39,7 +39,7 @@ test.describe("icon picker", () => {
 		await canvas.page.click(selectors.objectMenuToggle("lucide-icon"));
 
 		const cells = canvas.page.locator(
-			`[data-testid="icon-picker-grid"] [data-part^="set:icon:"]`,
+			`[data-testid="icon-picker-grid"] [data-action^="set:icon:"]`,
 		);
 		// count() does not auto-wait, so it has to follow a wait for the panel: taken
 		// straight after the toggle click it reads 0 cells and the comparison below is
@@ -49,7 +49,7 @@ test.describe("icon picker", () => {
 		expect(commonCount).toBeGreaterThan(20);
 
 		await canvas.page.fill('[data-testid="icon-picker-search"]', "lock");
-		await expect(cells.first()).toHaveAttribute("data-part", "set:icon:lock");
+		await expect(cells.first()).toHaveAttribute("data-action", "set:icon:lock");
 		expect(await cells.count()).toBeLessThan(commonCount);
 	});
 });

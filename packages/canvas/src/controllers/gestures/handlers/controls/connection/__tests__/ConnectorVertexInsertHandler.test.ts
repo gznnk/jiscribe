@@ -16,14 +16,14 @@ const registries = createTestRegistries();
 /** A minimal event carrying only targetKind / targetId, for verifying supports(). */
 const controlEvent = (
 	targetId: string | undefined,
-	targetPart: string | undefined,
+	targetAction: string | undefined,
 	targetKind = "control",
 ): CanvasEvent =>
 	({
 		type: "dragStart",
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		button: 0,
 	}) as unknown as CanvasEvent;
 
@@ -68,7 +68,7 @@ const insertEvent = (
 		type,
 		targetKind: "control",
 		targetId: "conn-1",
-		targetPart: `waypoint-insert:${segmentIndex}`,
+		targetAction: `waypoint-insert:${segmentIndex}`,
 		button,
 		last,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -214,15 +214,21 @@ describe("ConnectorVertexInsertHandler.supports / routing conflicts", () => {
 		).toBe(false);
 	});
 
-	it("sibling handlers with confusing part subtypes do not steal waypoint-insert", () => {
+	it("sibling handlers with confusing action subtypes do not steal waypoint-insert", () => {
 		// ControlEventHandler routes to the first strategy whose supports() is true, so
 		// pin down that VertexInsertHandler / ConnectionAnchorEventHandler
 		// do not grab it by mistake.
 		const event = controlEvent("c", "waypoint-insert:0");
 		expect(vertexInsert.supports(event)).toBe(false);
 		expect(connectionAnchor.supports(event)).toBe(false);
-		// Reverse: this handler does not grab others' controls
-		expect(insertHandler.supports(controlEvent("c", "vertex:0"))).toBe(false);
+		// Reverse: this handler does not grab others' controls. A vertex handle
+		// addresses a model part, so its string arrives on targetPart, not
+		// targetAction.
+		const vertexHandleEvent = {
+			...controlEvent("c", undefined),
+			targetPart: "vertex:0",
+		} as CanvasEvent;
+		expect(insertHandler.supports(vertexHandleEvent)).toBe(false);
 	});
 });
 
@@ -265,13 +271,13 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 
 	/** doubleClick on the waypoint-insert handle, with a stubbed hover stack. */
 	const doubleClickEvent = (
-		hovered: { id: string; kind: string; part?: string }[],
+		hovered: { id: string; kind: string; action?: string }[],
 	): CanvasEvent =>
 		({
 			type: "doubleClick",
 			targetKind: "control",
 			targetId: "conn-1",
-			targetPart: "waypoint-insert:0",
+			targetAction: "waypoint-insert:0",
 			button: 0,
 			last: { x: 50, y: 50 },
 			getHovered: () => hovered,
@@ -293,7 +299,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 	it("with a committed label whose box is in the hover stack, opens the editor prefilled (the handle covers the default midpoint placement)", () => {
 		const next = insertHandler.handle(
 			makeLabeledState("Yes"),
-			doubleClickEvent([{ id: "conn-1", kind: "connector", part: "label" }]),
+			doubleClickEvent([{ id: "conn-1", kind: "connector", action: "label" }]),
 			registries,
 		);
 		expect(next.textEditState).toEqual({ kind: "connectorLabel", text: "Yes" });
@@ -313,7 +319,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 	it("a hover stack entry of another connector's label does not count as a label hit", () => {
 		const next = insertHandler.handle(
 			makeLabeledState("Yes"),
-			doubleClickEvent([{ id: "conn-2", kind: "connector", part: "label" }]),
+			doubleClickEvent([{ id: "conn-2", kind: "connector", action: "label" }]),
 			registries,
 		);
 		expect(next.textEditState).toBeUndefined();

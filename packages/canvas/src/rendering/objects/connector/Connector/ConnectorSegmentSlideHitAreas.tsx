@@ -99,7 +99,7 @@ const collectSegmentHitAreas = (
  * cutting-out. Selecting the connector first is not required, matching how its label already drags.
  *
  * Each band carries data-kind="connector", data-id=<id> and
- * data-part="segment-slide:<segmentIndex>", indexing the drawn path — the same shape of address the
+ * data-action="segment-slide:<segmentIndex>", indexing the drawn path — the same shape of address the
  * label uses. Straight routing names its segments differently, because dragging one there means
  * something else (see ConnectorSegmentMoveHitAreas).
  */
@@ -123,7 +123,7 @@ const ConnectorSegmentSlideHitAreasComponent: React.FC<
 					height={height}
 					data-kind="connector"
 					data-id={id}
-					data-part={`segment-slide:${segmentIndex}`}
+					data-action={`segment-slide:${segmentIndex}`}
 					style={{
 						fill: "transparent",
 						pointerEvents: disablePointerEvents ? "none" : "fill",

@@ -1,4 +1,4 @@
-import { parseMenuPart } from "./utils/menuParts";
+import { parseMenuAction } from "./utils/menuActions";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type {
 	CanvasEvent,
@@ -9,11 +9,11 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 /**
  * GestureHandler that processes interactions on the top toolbar.
  * Handles events with targetKind "menu" and targetId "toolbar". Only the bar
- * element carries those attributes; its buttons carry just data-part and resolve
+ * element carries those attributes; its buttons carry just data-action and resolve
  * their kind/id through closest(), so a press on the bar's empty area arrives
- * here with no targetPart and only dismisses the open menus.
+ * here with no targetAction and only dismisses the open menus.
  *
- * targetPart format:
+ * targetAction format:
  * - `command:{commandId}` → execute the command (canExecute is judged inside handleCommand)
  *
  * Actions (zoom, etc.) are consolidated into the command system and go through the same
@@ -48,9 +48,9 @@ export const ToolbarHandler: GestureHandler = {
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		const part = parseMenuPart(event.targetPart);
-		if (isActivation && part?.kind === "command") {
-			return handleCommand(nextState, part.commandId, registries);
+		const action = parseMenuAction(event.targetAction);
+		if (isActivation && action?.kind === "command") {
+			return handleCommand(nextState, action.commandId, registries);
 		}
 
 		return nextState;

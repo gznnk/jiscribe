@@ -77,7 +77,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	}
 	await canvas.clickAt(best.mid);
 	await expect(
-		canvas.page.locator('[data-part="toggle:connector-routing"]'),
+		canvas.page.locator('[data-action="toggle:connector-routing"]'),
 	).toBeVisible();
 }
 
@@ -88,7 +88,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
  */
 async function ensureRoutingMenuOpen(canvas: CanvasDriver) {
 	const anyOption = canvas.page.locator(
-		'[data-part="command:setRoutingStraight"]',
+		'[data-action="command:setRoutingStraight"]',
 	);
 	if (!(await anyOption.isVisible())) {
 		await canvas.openObjectMenu("connector-routing");
@@ -107,7 +107,7 @@ async function setRouting(
 	await ensureRoutingMenuOpen(canvas);
 	const commandId =
 		routing === "orthogonal" ? "setRoutingOrthogonal" : "setRoutingStraight";
-	await canvas.page.click(`[data-part="command:${commandId}"]`);
+	await canvas.page.click(`[data-action="command:${commandId}"]`);
 }
 
 /**
@@ -185,10 +185,10 @@ test.describe("switching connector routing (ObjectMenu)", () => {
 		await selectConnector(canvas, connectorId);
 
 		const orthogonalOption = canvas.page.locator(
-			'[data-part="command:setRoutingOrthogonal"]',
+			'[data-action="command:setRoutingOrthogonal"]',
 		);
 		const straightOption = canvas.page.locator(
-			'[data-part="command:setRoutingStraight"]',
+			'[data-action="command:setRoutingStraight"]',
 		);
 
 		// The active state shows up in the isActive style of ObjectMenuButton (border-color=accent,
@@ -209,7 +209,7 @@ test.describe("switching connector routing (ObjectMenu)", () => {
 		).not.toBe(straightBorderInitial);
 
 		// Switch to straight: confirm it applied through points, then that active moved to straight.
-		await canvas.page.click('[data-part="command:setRoutingStraight"]');
+		await canvas.page.click('[data-action="command:setRoutingStraight"]');
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
 				message: "the switch to straight is applied",

@@ -11,10 +11,12 @@ export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
 	/** Zoom level for keeping handle sizes visually constant. */
 	zoom: number;
 	/**
-	 * The data-part value to render on the handles (`selection:<objectType>:<name>`),
-	 * alongside data-kind="control" and data-id={object.id}.
+	 * The data-action value to render on the handles (`selection:<objectType>:<name>`),
+	 * alongside data-kind="control" and data-id={object.id}. A handle that stands
+	 * for one of several grips appends `:<sub>` to it, read back as
+	 * `SelectionControlEvent.subAction`.
 	 */
-	part: string;
+	action: string;
 };
 
 /** The control's own object, as of the current frame and the gesture-start snapshot. */
@@ -36,8 +38,8 @@ export type SelectionControlEvent = {
 	/** Movement from `start` to `last`. */
 	delta: Point;
 	mods: Mods;
-	/** data-part sub-segment after `selection:<type>:<name>:`, or undefined. */
-	subPart?: string;
+	/** data-action sub-segment after `selection:<type>:<name>:`, or undefined. */
+	subAction?: string;
 };
 
 /**
@@ -45,18 +47,18 @@ export type SelectionControlEvent = {
  * handler that interprets its events. Registered per object type via
  * `ObjectTypeDefinition.selectionControls`, rendered by `SelectionControlsLayer`
  * (single selection only), and routed by `ControlEventHandler` via the derived
- * data-part.
+ * data-action.
  */
 export type SelectionControlDefinition<
 	TState extends ObjectState = ObjectState,
 > = {
 	/**
 	 * Unique within the object type. Becomes the trailing segment of the control's
-	 * data-part (`selection:<objectType>:<name>`), so changing it shifts the DOM
-	 * contract (e2e selectors and any code matching on the part).
+	 * data-action (`selection:<objectType>:<name>`), so changing it shifts the DOM
+	 * contract (e2e selectors and any code matching on the action).
 	 */
 	name: string;
-	/** Renders the handles carrying the `part` prop as their data-part. */
+	/** Renders the handles carrying the `action` prop as their data-action. */
 	Component: FC<SelectionControlProps<TState>>;
 	/**
 	 * Maps the gesture-start object plus cursor to the updated object (full

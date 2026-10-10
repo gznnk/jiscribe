@@ -82,7 +82,7 @@ test.describe("position and order of a polyline vertex insertion", () => {
 		// Drag the midpoint handle to (450,420) to insert a vertex.
 		await dragControl(
 			canvas,
-			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			`[data-id="${id}"][data-action="vertex-insert:0"]`,
 			{ x: 450, y: 420 },
 		);
 

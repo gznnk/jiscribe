@@ -5,9 +5,9 @@ import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import {
-	commandPart,
-	setPart,
-} from "../../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	setAction,
+} from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
@@ -66,7 +66,7 @@ const ArrowEndField: React.FC<{
 					<ArrowTypeButton
 						key={type}
 						isActive={!isMixed && current === type}
-						data-part={setPart(property, type)}
+						data-action={setAction(property, type)}
 						title={messages.arrowTypeNames[type] ?? type}
 					>
 						<ArrowHeadIconPreview arrowType={type} direction={direction} />
@@ -101,7 +101,7 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = () => {
 			/>
 			<PropertyIconButton
 				type="button"
-				data-part={commandPart("swapArrows")}
+				data-action={commandAction("swapArrows")}
 				title={messages.menuSwapArrows}
 				aria-label={messages.menuSwapArrows}
 			>

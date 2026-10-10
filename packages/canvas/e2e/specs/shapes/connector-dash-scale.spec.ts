@@ -60,7 +60,7 @@ test.describe("connector dash scaling", () => {
 
 		await canvas.clickAt({ x: 610, y: 250 });
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-style"]'),
+			canvas.page.locator('[data-action="toggle:line-style"]'),
 		).toBeVisible();
 		await canvas.setStrokeDashType("line-style", "dashed");
 

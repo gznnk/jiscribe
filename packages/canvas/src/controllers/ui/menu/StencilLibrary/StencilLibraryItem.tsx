@@ -24,7 +24,7 @@ const StencilLibraryItemComponent: React.FC<StencilLibraryItemProps> = ({
 		<StencilLibraryButton
 			data-kind="menu"
 			data-id="stencil-library"
-			data-part={`item:${preset.id}`}
+			data-action={`item:${preset.id}`}
 			title={resolveStencilLabel(preset, messages, locale)}
 			isActive={isActive}
 		>

@@ -69,10 +69,10 @@ const calcPendingLabelPlacement = (
  * otherwise the double click just selects.
  *
  * Reached from two targets: the connector itself (ConnectorClickHandler, label
- * hit = targetPart "label") and the waypoint-insert handle sitting on the path
+ * hit = targetAction "label") and the waypoint-insert handle sitting on the path
  * (ConnectorVertexInsertHandler, label hit resolved from the hover stack — the
  * handle covers the box at the default midpoint placement, so the recognizer
- * pairs the clicks but the part cannot tell what is underneath).
+ * pairs the clicks but the pressed action cannot tell what is underneath).
  *
  * @param state Canvas state with any pending text edit already committed
  *   (both callers run under commitTextEditIfNeeded)

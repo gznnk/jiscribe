@@ -21,12 +21,12 @@ import type { GroupMarkerControlState } from "../state/shared/GroupMarkerControl
  * that edge — for a marker with no movable tip that is the middle of the edge,
  * since the position resolves to the default.
  *
- * data-kind="control" + data-id=<objectId> + data-part={part}
- * (part comes from the selectionControls registration via SelectionControlsLayer).
+ * data-kind="control" + data-id=<objectId> + data-action={action}
+ * (action comes from the selectionControls registration via SelectionControlsLayer).
  */
 const GroupMarkerTipControlComponent: React.FC<
 	SelectionControlProps<GroupMarkerControlState>
-> = ({ object, zoom, part }) => {
+> = ({ object, zoom, action }) => {
 	const { id, cx, cy, width, height, rotation, scaleX, scaleY } = object;
 
 	const direction = resolveGroupMarkerDirection(object);
@@ -56,7 +56,7 @@ const GroupMarkerTipControlComponent: React.FC<
 			rotation={rotation + (isVerticalGroupMarker(direction) ? 90 : 0)}
 			zoom={zoom}
 			objectId={id}
-			part={part}
+			action={action}
 			cursor="move"
 		/>
 	);

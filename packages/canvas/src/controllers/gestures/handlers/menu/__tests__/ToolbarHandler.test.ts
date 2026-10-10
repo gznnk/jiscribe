@@ -24,14 +24,14 @@ const makeState = (): CanvasControllerState =>
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	targetKind = "menu",
 ): CanvasEvent =>
 	({
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
@@ -88,7 +88,7 @@ describe("ToolbarHandler", () => {
 		expect(next.viewport.zoom).toBe(1);
 	});
 
-	it("a pressed on the bar's empty area (no targetPart) closes the category flyout", () => {
+	it("a pressed on the bar's empty area (no targetAction) closes the category flyout", () => {
 		const next = ToolbarHandler.handle(
 			makeState(),
 			makeEvent("pressed", "toolbar"),

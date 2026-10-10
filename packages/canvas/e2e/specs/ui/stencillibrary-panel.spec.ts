@@ -7,7 +7,7 @@ import { selectors } from "../../support/selectors";
  *
  * - The toolbar toggle opens and closes it, and carries the open state on
  *   aria-expanded.
- * - Its shape items are the same `data-part="item:<presetId>"` contract as the
+ * - Its shape items are the same `data-action="item:<presetId>"` contract as the
  *   toolbar's, routed to the same handler: a click enters drawing mode and a drag
  *   onto the canvas creates the shape.
  * - Unlike the category flyout the panel is persistent chrome: a click on the

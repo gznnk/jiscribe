@@ -140,7 +140,7 @@ const intentMapperOf = (property: string): StyleIntentMapper | undefined =>
  *
  * Both surfaces that write a style end at `applyStyleIntent`, and this is what
  * either of them calls when all it holds is a name and a string: the gesture
- * route for a `set:` / `slider:` part (applyStylePropertyPart), and a widget of
+ * route for a `set:` / `slider:` part (applyStyleAction), and a widget of
  * the React route that reads its value off the DOM. A row that knows its
  * property statically states the intent outright instead and never comes here.
  *

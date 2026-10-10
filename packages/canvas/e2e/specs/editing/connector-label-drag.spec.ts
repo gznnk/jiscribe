@@ -6,7 +6,7 @@ import { selectors } from "../../support/selectors";
  * e2e for dragging a connector label (issue #86).
  *
  * Grabbing and moving the label box itself
- * (foreignObject[data-kind=connector][data-part=label]) makes the drop point be
+ * (foreignObject[data-kind=connector][data-action=label]) makes the drop point be
  * solved back into {position (arc-length ratio), offset (perpendicular
  * distance)} on the route and written back to label. Only the label box position
  * is readable from the DOM, so the correctness of that inversion is checked by
@@ -311,7 +311,7 @@ test.describe("dragging a connector label", () => {
 	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 		const sourceHandle = canvas.page.locator(
-			`[data-id="${connectorId}"][data-part="endpoint:source"]`,
+			`[data-id="${connectorId}"][data-action="endpoint:source"]`,
 		);
 
 		await canvas.deselect();

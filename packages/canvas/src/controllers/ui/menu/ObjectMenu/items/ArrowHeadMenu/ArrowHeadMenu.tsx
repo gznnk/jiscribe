@@ -7,10 +7,10 @@ import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import { MixedArrowHeadIcon } from "./MixedArrowHeadIcon";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import {
-	commandPart,
-	setPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	setAction,
+	toggleAction,
+} from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
@@ -74,7 +74,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<ObjectMenuItemPositioner ref={startRef}>
 				<ObjectMenuButton
 					isActive={isStartOpen}
-					data-part={togglePart(SECTION_ID_START)}
+					data-action={toggleAction(SECTION_ID_START)}
 					title={messages.menuStartArrow}
 				>
 					{isStartMixed ? (
@@ -94,7 +94,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`start-${type}`}
 									isActive={!isStartMixed && currentStart === type}
-									data-part={setPart("startArrow", type)}
+									data-action={setAction("startArrow", type)}
 									title={messages.arrowTypeNames[type] ?? type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="start" />
@@ -107,7 +107,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 
 			{/* Swap Button */}
 			<ObjectMenuButton
-				data-part={commandPart("swapArrows")}
+				data-action={commandAction("swapArrows")}
 				title={messages.menuSwapArrows}
 			>
 				<ArrowSwapIcon fill="currentColor" width={24} height={24} />
@@ -117,7 +117,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<ObjectMenuItemPositioner ref={endRef}>
 				<ObjectMenuButton
 					isActive={isEndOpen}
-					data-part={togglePart(SECTION_ID_END)}
+					data-action={toggleAction(SECTION_ID_END)}
 					title={messages.menuEndArrow}
 				>
 					{isEndMixed ? (
@@ -137,7 +137,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`end-${type}`}
 									isActive={!isEndMixed && currentEnd === type}
-									data-part={setPart("endArrow", type)}
+									data-action={setAction("endArrow", type)}
 									title={messages.arrowTypeNames[type] ?? type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="end" />

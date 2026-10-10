@@ -96,7 +96,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	}
 	await canvas.clickAt(best.mid);
 	await expect(
-		canvas.page.locator('[data-part="toggle:connector-routing"]'),
+		canvas.page.locator('[data-action="toggle:connector-routing"]'),
 	).toBeVisible();
 }
 
@@ -132,7 +132,7 @@ test.describe("segment drag on an orthogonal connector", () => {
 		await selectConnector(canvas, connectorId);
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part="segment-slide:1"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-action="segment-slide:1"]`,
 			),
 		).toBeVisible();
 
@@ -357,10 +357,10 @@ test.describe("segment drag on an orthogonal connector", () => {
 
 		await selectConnector(canvas, connectorId);
 		await canvas.openObjectMenu("connector-routing");
-		await canvas.page.click('[data-part="command:setRoutingStraight"]');
+		await canvas.page.click('[data-action="command:setRoutingStraight"]');
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-slide:"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-action^="segment-slide:"]`,
 			),
 		).toHaveCount(0);
 
@@ -383,7 +383,7 @@ test.describe("segment drag on an orthogonal connector", () => {
 		await selectConnector(canvas, connectorId);
 
 		await canvas.openObjectMenu("connector-routing");
-		await canvas.page.click('[data-part="command:setRoutingStraight"]');
+		await canvas.page.click('[data-action="command:setRoutingStraight"]');
 
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
@@ -392,7 +392,7 @@ test.describe("segment drag on an orthogonal connector", () => {
 			.toBe(2);
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-slide:"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-action^="segment-slide:"]`,
 			),
 		).toHaveCount(0);
 	});

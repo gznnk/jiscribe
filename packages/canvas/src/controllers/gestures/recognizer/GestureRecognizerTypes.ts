@@ -35,7 +35,10 @@ export type GestureType =
 export type HoveredElement = {
 	id: string;
 	kind: string;
+	/** Nearest [data-part] within the element (a model part address); see GestureTarget. */
 	part?: string;
+	/** Nearest [data-action] within the element (what pressing it starts); see GestureTarget. */
+	action?: string;
 };
 
 export type ScrollDelta = {
@@ -69,7 +72,8 @@ export type Gesture = {
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
-	targetPart?: string; // Sub-area of the target ([data-part]), e.g. "label" for a connector's label box
+	targetPart?: string; // Model part address of the target ([data-part]), e.g. "textSlot:title"
+	targetAction?: string; // What pressing the target starts ([data-action]), e.g. "label" for a connector's label box
 	start: Point; // SVG coordinates
 	last: Point; // SVG coordinates
 	delta: Point; // SVG coordinates

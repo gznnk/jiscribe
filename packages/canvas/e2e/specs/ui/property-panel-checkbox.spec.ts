@@ -7,7 +7,7 @@ import { selectors } from "../../support/selectors";
  * text, the width the text wraps in.
  *
  * Each writes through the gesture system like the floating menu's own buttons,
- * so a press lands one history entry, and each carries a `command:` part: the
+ * so a press lands one history entry, and each carries a `command:` action: the
  * canvas computes the state the press moves to, and the row's `aria-checked` is
  * what says where it is now. What they set is read off the shape rather than off
  * the row: the lock through the axis a typed width carries along, the layout

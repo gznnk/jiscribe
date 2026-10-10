@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { setAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
@@ -36,7 +36,7 @@ const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
-				data-part={setPart("label.fontWeight", isBold ? "normal" : "bold")}
+				data-action={setAction("label.fontWeight", isBold ? "normal" : "bold")}
 				title={messages.menuLabelBold}
 			>
 				<BoldIcon />

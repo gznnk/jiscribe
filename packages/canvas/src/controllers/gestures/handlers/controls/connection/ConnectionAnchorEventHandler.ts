@@ -39,8 +39,8 @@ import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
  * Registered with ControlEventHandler as a ControlStrategy.
  *
  * Target format:
- * - create: data-id=<sourceObjectId>, data-part="anchor:<anchorPosition>"
- * - edit:   data-id=<connectorId>,    data-part="endpoint:<source|target>"
+ * - create: data-id=<sourceObjectId>, data-action="anchor:<anchorPosition>"
+ * - edit:   data-id=<connectorId>,    data-action="endpoint:<source|target>"
  */
 export class ConnectionAnchorEventHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
@@ -48,14 +48,14 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			return false;
 		}
 
-		const targetPart = event.targetPart;
-		if (!targetPart) {
+		const targetAction = event.targetAction;
+		if (!targetAction) {
 			return false;
 		}
 
-		// Support both anchor (create) and endpoint (edit) parts
+		// Support both anchor (create) and endpoint (edit) actions
 		return (
-			targetPart.startsWith("anchor:") || targetPart.startsWith("endpoint:")
+			targetAction.startsWith("anchor:") || targetAction.startsWith("endpoint:")
 		);
 	}
 
@@ -64,13 +64,13 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		if (!event.targetId || !event.targetPart) {
+		if (!event.targetId || !event.targetAction) {
 			return state;
 		}
 
 		// Handle based on the gesture type
 		if (event.type === "dragStart") {
-			return event.targetPart.startsWith("endpoint:")
+			return event.targetAction.startsWith("endpoint:")
 				? this.handleEditDragStart(state, event)
 				: this.handleCreateDragStart(state, event, registries);
 		} else if (event.type === "drag") {
@@ -129,9 +129,9 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// targetId = sourceObjectId, targetPart = "anchor:<anchorPosition>"
+		// targetId = sourceObjectId, targetAction = "anchor:<anchorPosition>"
 		const sourceObjectId = event.targetId ?? "";
-		const anchorPosition = event.targetPart?.slice("anchor:".length) ?? "";
+		const anchorPosition = event.targetAction?.slice("anchor:".length) ?? "";
 		const sourceObject = state.objects[sourceObjectId];
 
 		// A non-connectable source shows no anchors, so reaching here means a stale
@@ -207,9 +207,9 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// targetId = connectorId, targetPart = "endpoint:<source|target>"
+		// targetId = connectorId, targetAction = "endpoint:<source|target>"
 		const connectorId = event.targetId ?? "";
-		const endpoint = event.targetPart?.slice("endpoint:".length) as
+		const endpoint = event.targetAction?.slice("endpoint:".length) as
 			"source" | "target";
 
 		if (endpoint !== "source" && endpoint !== "target") {
@@ -300,9 +300,9 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// Determine which endpoint is being edited from targetPart
+		// Determine which endpoint is being edited from targetAction
 		// Format: "anchor:<pos>" (create) or "endpoint:<source|target>" (edit)
-		const endpointToUpdate = getEditingEndpoint(event.targetPart);
+		const endpointToUpdate = getEditingEndpoint(event.targetAction);
 		const { connectorDraft } = state;
 
 		// Every dragStart opens one (handleGesture), so this is the entry condition of a

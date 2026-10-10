@@ -12,7 +12,7 @@ import {
 	ColorSwatch,
 	ColorTextInput,
 } from "./ObjectMenuColorPickerGridStyled";
-import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { setAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { styleIntentOf } from "../../../../../style/styleIntentOf";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
@@ -23,7 +23,7 @@ type ObjectMenuColorPickerGridProps = {
 	currentColor: string;
 	/**
 	 * Property name (e.g. "fill", "stroke"). Kept as a name rather than an intent
-	 * because the swatches' `set:` parts are built from it, and because the picker
+	 * because the swatches' `set:` actions are built from it, and because the picker
 	 * holds CSS text rather than a value of the property's own type.
 	 */
 	property: string;
@@ -58,7 +58,7 @@ type ObjectMenuColorPickerGridProps = {
 /**
  * Color picker grid.
  * Displays preset color swatches (4×7 grid) and a CSS color text input.
- * Each swatch carries a `set:` data-part and updates the property through the
+ * Each swatch carries a `set:` data-action and updates the property through the
  * gesture system, resolved to the menu or sidebar that contains it, unless
  * `writesThroughCallback` opts the picker out of gestures entirely.
  * The swatch showing `currentColor` writes nothing where the pick is provably
@@ -152,24 +152,24 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	// The two routes a swatch (and the Auto button) can take. The gesture one
 	// keeps the `set:` grammar the floating menu is read by; the callback one
 	// opts out of gestures so no handler applies the write to the selection as
-	// well, and still carries data-part, which is what names the swatch.
+	// well, and still carries data-action, which is what names the swatch.
 	//
 	// The swatch already picked writes nothing on either route, where the picker
 	// is told the color stands for every target (currentColorIsShared): both
 	// routes commit unconditionally, and a commit of the color in place is
 	// recorded as a history entry that changes nothing, dropping the redo stack
 	// with it. The gesture route is stopped by opting the swatch out rather than
-	// by dropping its data-part, which e2e and the parts grammar still read.
+	// by dropping its data-action, which e2e and the actions grammar still read.
 	const buildPickProps = (value: string) => {
 		const picked = currentColorIsShared && isCurrentColor(value);
 		return writesThroughCallback
 			? {
 					"data-gesture": "none",
-					"data-part": setPart(property, value),
+					"data-action": setAction(property, value),
 					onClick: picked ? undefined : () => writeColor(value, true),
 				}
 			: {
-					"data-part": setPart(property, value),
+					"data-action": setAction(property, value),
 					"data-gesture": picked ? "none" : undefined,
 				};
 	};

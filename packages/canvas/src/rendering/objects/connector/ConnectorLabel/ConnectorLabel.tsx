@@ -80,12 +80,12 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 			width={width}
 			height={height}
 			// Treat as connector so a hit resolves to the parent connector.
-			// data-part marks this as the label box: with a committed label, only a
+			// data-action marks this as the label box: with a committed label, only a
 			// double click here (not on the bare line) starts editing, and a drag
 			// here moves the label along the path.
 			data-kind="connector"
 			data-id={id}
-			data-part="label"
+			data-action="label"
 			pointerEvents={disablePointerEvents ? "none" : "auto"}
 		>
 			<LabelBox

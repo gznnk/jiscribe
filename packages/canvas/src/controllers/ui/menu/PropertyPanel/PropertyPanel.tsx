@@ -60,9 +60,9 @@ import { isMetaSectionShown } from "./utils/isMetaSectionShown";
 import { resolvePropertyPanelSectionLabel } from "./utils/resolvePropertyPanelSectionLabel";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import {
-	commandPart,
-	togglePart,
-} from "../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	toggleAction,
+} from "../../../gestures/handlers/menu/utils/menuActions";
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
@@ -167,7 +167,7 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
 		<PropertyPanelSectionHeader
 			type="button"
 			aria-expanded={isExpanded}
-			data-part={togglePart(sectionId)}
+			data-action={toggleAction(sectionId)}
 		>
 			<PropertyPanelSectionChevron isExpanded={isExpanded}>
 				<ChevronRightIcon width={CHEVRON_SIZE} height={CHEVRON_SIZE} />
@@ -191,10 +191,10 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
  * handled by PropertyPanelHandler: everything inside it — its chrome, the
  * controls of every section, and the dropdowns portalled into it — carries only
- * a data-part. The close button routes through the command system like the
+ * a data-action. The close button routes through the command system like the
  * toolbar's own toggle; a selection's controls write through the same `set:` /
  * `slider:` / `command:` grammar the floating menu uses and land one history
- * entry; the Canvas section's buttons write the document through `doc:` parts.
+ * entry; the Canvas section's buttons write the document through `doc:` actions.
  * The fields that take typing opt out of gestures entirely.
  *
  * Open and collapse state are reducer state, so this component is render-only.
@@ -233,7 +233,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 					type="button"
 					aria-label={messages.propertyPanelClose}
 					title={messages.propertyPanelClose}
-					data-part={commandPart("togglePropertyPanel")}
+					data-action={commandAction("togglePropertyPanel")}
 				>
 					<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
 				</PropertyPanelCloseButton>

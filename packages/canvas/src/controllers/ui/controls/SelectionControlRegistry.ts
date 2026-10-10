@@ -22,16 +22,16 @@ export class SelectionControlRegistry {
 		controls: SelectionControlDefinition<TState>[],
 	): void {
 		const registered: RegisteredSelectionControl[] = [];
-		const parts = new Set<string>();
+		const actions = new Set<string>();
 		for (const control of controls) {
 			const entry = createRegisteredSelectionControl(
 				type,
 				control as unknown as SelectionControlDefinition,
 			);
-			if (parts.has(entry.part)) {
-				throw new Error(`Duplicate selection control part "${entry.part}"`);
+			if (actions.has(entry.action)) {
+				throw new Error(`Duplicate selection control action "${entry.action}"`);
 			}
-			parts.add(entry.part);
+			actions.add(entry.action);
 			registered.push(entry);
 		}
 		this.entries.set(type, registered);

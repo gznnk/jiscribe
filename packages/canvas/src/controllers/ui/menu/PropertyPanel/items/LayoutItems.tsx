@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { isSelectionAutoHeight } from "../../../../commands/shape/ToggleAutoHeightCommand";
-import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { getSelectedLockAspectRatio } from "../../../../style/getSelectedLockAspectRatio";
@@ -139,7 +139,7 @@ const LockAspectRatioItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyCheckbox
 			isOn={isLocked}
-			part={commandPart("toggleLockAspectRatio")}
+			action={commandAction("toggleLockAspectRatio")}
 			label={messages.menuLockAspectRatio}
 			title={
 				isLocked ? messages.menuUnlockAspectRatio : messages.menuLockAspectRatio
@@ -166,7 +166,7 @@ const AutoHeightItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyCheckbox
 			isOn={isAuto}
-			part={commandPart("toggleAutoHeight")}
+			action={commandAction("toggleAutoHeight")}
 			label={messages.menuAutoHeight}
 			title={isAuto ? messages.menuFixedHeight : messages.menuAutoHeight}
 		/>
