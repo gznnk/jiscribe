@@ -6,7 +6,7 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
-import { VERTEX_PART_KIND } from "../../../../../selection/createVertexPartKindDefinition";
+import { VERTEX_PART_KIND } from "../../../../../selection/partKinds/vertexPartKind";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { vertexPart } from "../../../utils/partAddress";
 import { calcSnapCandidates } from "../../../utils/snap/calcSnapCandidates";

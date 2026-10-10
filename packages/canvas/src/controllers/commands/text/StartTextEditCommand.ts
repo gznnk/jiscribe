@@ -5,11 +5,11 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
-import { readActivePartFocusId } from "../../selection/readActivePartFocusId";
-import { selectTextSlot } from "../../selection/selectTextSlot";
-import { isTextSlotSelection } from "../../selection/textSlotPartKind";
+import { isTextSlotSelection } from "../../selection/partKinds/textSlotPartKind";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
+import { readActivePartFocusId } from "../../selection/readers/readActivePartFocusId";
+import { selectTextSlot } from "../../selection/writers/selectTextSlot";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
-import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**

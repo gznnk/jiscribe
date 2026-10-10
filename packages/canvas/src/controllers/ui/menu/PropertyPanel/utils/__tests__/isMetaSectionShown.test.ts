@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
-import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../../../../selection/partKinds/textSlotPartKind";
 import { isMetaSectionShown } from "../isMetaSectionShown";
 
 /** A shape whose text lives in named slots, which is what a slot selection needs. */

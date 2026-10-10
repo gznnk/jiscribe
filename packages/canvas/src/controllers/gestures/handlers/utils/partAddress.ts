@@ -1,5 +1,5 @@
-import { VERTEX_PART_KIND } from "../../../selection/createVertexPartKindDefinition";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
+import { VERTEX_PART_KIND } from "../../../selection/partKinds/vertexPartKind";
 
 /**
  * The `data-part` grammar of an object's own sub-parts (`targetKind: "object"`

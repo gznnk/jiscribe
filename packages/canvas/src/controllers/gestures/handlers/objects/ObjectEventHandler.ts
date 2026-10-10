@@ -9,8 +9,6 @@ import type {
 	TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { applyObjectSelection } from "./utils/applyObjectSelection";
-import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
@@ -24,11 +22,13 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import type { ObjectPartKindRegistry } from "../../../selection/ObjectPartKindRegistry";
-import { selectTextSlot } from "../../../selection/selectTextSlot";
+import type { ObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
+import { createMultiSelectGroup } from "../../../selection/readers/createMultiSelectGroup";
+import { applyObjectSelection } from "../../../selection/writers/applyObjectSelection";
+import { determineSelection } from "../../../selection/writers/determineSelection";
+import { selectTextSlot } from "../../../selection/writers/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
-import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
 import type {

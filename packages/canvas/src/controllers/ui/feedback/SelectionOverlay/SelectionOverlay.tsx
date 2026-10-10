@@ -5,8 +5,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
-import { collectOutlinedPartRegions } from "../../../selection/collectOutlinedPartRegions";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
+import { collectOutlinedPartRegions } from "../../utils/collectOutlinedPartRegions";
 import { ObjectPartOutline } from "../ObjectPartOutline";
 import { Outline } from "../Outline";
 

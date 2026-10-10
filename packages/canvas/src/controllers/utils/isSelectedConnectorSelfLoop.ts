@@ -2,7 +2,7 @@ import { isSelfLoopConnector } from "@jiscribe/doc/model/objects/connector/isSel
 
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { getSelectedConnectorId } from "./getSelectedConnectorId";
+import { getSelectedConnectorId } from "../selection/readers/getSelectedConnectorId";
 
 /**
  * Whether the selected connector is a self-loop. Self-loops are orthogonal-only,

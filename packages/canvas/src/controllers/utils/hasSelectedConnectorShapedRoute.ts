@@ -1,6 +1,6 @@
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { getSelectedConnectorId } from "./getSelectedConnectorId";
+import { getSelectedConnectorId } from "../selection/readers/getSelectedConnectorId";
 
 /**
  * Whether the selected connector's route was shaped by hand, i.e. it carries

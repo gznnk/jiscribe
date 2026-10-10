@@ -8,8 +8,8 @@ import { roundToDecimal } from "@jiscribe/geometry";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import { collectConnectorPoints } from "../../utils/calcConnectorBoundingBox";
-import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**

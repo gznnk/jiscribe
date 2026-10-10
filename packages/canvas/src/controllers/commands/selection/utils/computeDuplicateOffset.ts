@@ -1,5 +1,5 @@
-import { getSelectionCenter } from "./getSelectionCenter";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { getSelectionCenter } from "../../../selection/readers/getSelectionCenter";
 
 /** Default offset used when the move-aware offset does not apply. */
 export const DUPLICATE_OFFSET = { x: 20, y: 20 };

@@ -2,8 +2,8 @@ import type { Point } from "@jiscribe/geometry";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import { materializeObjects } from "../../utils/cowObjects";
-import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { ExecutableCommand } from "../CommandTypes";

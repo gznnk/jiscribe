@@ -13,8 +13,8 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { reconcileSelection } from "../../selection/reconcileSelection";
-import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
+import { reconcileSelection } from "../../selection/writers/reconcileSelection";
 
 const registries = createTestRegistries();
 

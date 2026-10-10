@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { isTextSlotSelection } from "../../../selection/textSlotPartKind";
+import { isTextSlotSelection } from "../../../selection/partKinds/textSlotPartKind";
 
 /**
  * Whether the chrome (the ObjectMenu, the properties sidebar) takes text as its

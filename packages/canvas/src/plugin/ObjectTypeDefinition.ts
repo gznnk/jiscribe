@@ -3,7 +3,7 @@ import type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefiniti
 import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
-import type { ObjectPartKindDefinition } from "../controllers/selection/ObjectPartKindRegistry";
+import type { ObjectPartKindDefinition } from "../controllers/selection/partKinds/ObjectPartKindRegistry";
 import type { DeclaredStyleTable } from "../controllers/style/StyleEntry";
 import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";

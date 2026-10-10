@@ -1,12 +1,12 @@
 import { calcViewportToRevealHistoryChange } from "./calcViewportToRevealHistoryChange";
-import { createMultiSelectGroup } from "./createMultiSelectGroup";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
-import { resolveRequestedSelection } from "./resolveRequestedSelection";
 import { resolveScrollWallPadding } from "./resolveScrollWallPadding";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
+import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
+import { resolveRequestedSelection } from "../selection/writers/resolveRequestedSelection";
 
 /**
  * Whether undo, redo and revert should be offered right now — the enabled look

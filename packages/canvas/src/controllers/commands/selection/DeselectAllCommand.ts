@@ -1,8 +1,8 @@
-import type { ExecutableCommand } from "../CommandTypes";
 import {
 	clearAllSelection,
 	isSelectionClearable,
-} from "./utils/clearAllSelection";
+} from "../../selection/writers/clearAllSelection";
+import type { ExecutableCommand } from "../CommandTypes";
 
 export const DeselectAllCommand: ExecutableCommand = {
 	id: "deselectAll",

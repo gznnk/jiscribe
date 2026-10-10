@@ -6,7 +6,7 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
-import { collectOutlinedPartRegions } from "../../../selection/collectOutlinedPartRegions";
+import { collectOutlinedPartRegions } from "../../utils/collectOutlinedPartRegions";
 import { resolveTransformHandles } from "../ObjectTransformHandlesRegistry";
 import { TransformControls } from "../TransformControls";
 

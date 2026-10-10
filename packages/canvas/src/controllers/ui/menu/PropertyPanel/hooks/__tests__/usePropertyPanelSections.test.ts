@@ -4,7 +4,7 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
-import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../../../../selection/partKinds/textSlotPartKind";
 import { createPropertyPanelRegistry } from "../../PropertyPanelRegistry";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
 import { getPropertyPanelSections } from "../usePropertyPanelSections";

@@ -1,7 +1,7 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { applyConnectorSelection } from "../../../../selection/writers/applyConnectorSelection";
+import { applyObjectSelection } from "../../../../selection/writers/applyObjectSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
-import { applyConnectorSelection } from "../../objects/utils/applyConnectorSelection";
-import { applyObjectSelection } from "../../objects/utils/applyObjectSelection";
 
 /**
  * Right-click and long press never add to the selection: Ctrl+right-click

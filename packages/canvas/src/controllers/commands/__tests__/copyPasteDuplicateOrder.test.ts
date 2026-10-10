@@ -8,7 +8,7 @@ import { handlePaste } from "../../reducer/handlers/handlePaste";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
-import { reconcileSelection } from "../../selection/reconcileSelection";
+import { reconcileSelection } from "../../selection/writers/reconcileSelection";
 import type { ClipboardData } from "../selection/ClipboardData";
 import { CopyCommand } from "../selection/CopyCommand";
 

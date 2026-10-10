@@ -2,7 +2,7 @@ import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { ObjectStyleRegistry } from "./ObjectStyleRegistry";
-import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
+import type { ObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
 
 /**
  * The registries a style walk reads: the tables, the defaults an entry's

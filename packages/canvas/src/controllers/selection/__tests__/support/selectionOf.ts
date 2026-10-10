@@ -1,5 +1,7 @@
-import type { CanvasSelection } from "../../CanvasSelection";
-import type { ObjectPartSelection } from "../../ObjectPartSelection";
+import type {
+	CanvasSelection,
+	ObjectPartSelection,
+} from "../../CanvasSelection";
 
 /**
  * A selection to put in `CanvasControllerState.selection`, stated as a fixture

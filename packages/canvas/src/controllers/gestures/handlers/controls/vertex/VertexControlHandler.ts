@@ -6,7 +6,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { VERTEX_PART_KIND } from "../../../../selection/createVertexPartKindDefinition";
+import { VERTEX_PART_KIND } from "../../../../selection/partKinds/vertexPartKind";
 import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";

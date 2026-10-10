@@ -3,8 +3,8 @@ import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/O
 
 import type { CoreStyleIntentKind, StyleIntentValueType } from "./StyleIntent";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { ObjectPartKindRegistry } from "../selection/ObjectPartKindRegistry";
-import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
+import type { ObjectPartSelection } from "../selection/CanvasSelection";
+import type { ObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
 
 /**
  * How one type reflects one intent: where the edit lands in its own data, and

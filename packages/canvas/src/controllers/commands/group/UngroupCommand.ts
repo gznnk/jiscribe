@@ -1,5 +1,5 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
+import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
 import { updateGroupBounds } from "../../utils/updateGroupBounds";
 import type { ExecutableCommand } from "../CommandTypes";
 

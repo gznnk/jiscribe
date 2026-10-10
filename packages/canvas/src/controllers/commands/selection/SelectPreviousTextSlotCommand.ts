@@ -1,8 +1,8 @@
-import type { ExecutableCommand } from "../CommandTypes";
 import {
 	getTextSlotCycleTarget,
 	selectAdjacentTextSlot,
-} from "./utils/selectAdjacentTextSlot";
+} from "../../selection/writers/selectAdjacentTextSlot";
+import type { ExecutableCommand } from "../CommandTypes";
 
 export const SelectPreviousTextSlotCommand: ExecutableCommand = {
 	id: "selectPreviousTextSlot",

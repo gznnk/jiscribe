@@ -1,6 +1,6 @@
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { getSelectedConnectorId } from "../../utils/getSelectedConnectorId";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import { hasSelectedConnectorShapedRoute } from "../../utils/hasSelectedConnectorShapedRoute";
 import type { ExecutableCommand } from "../CommandTypes";
 

@@ -3,9 +3,9 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../selection/CanvasSelection";
-import { collectObjectPartIds } from "../../selection/collectObjectPartIds";
-import type { ObjectPartTarget } from "../../selection/resolveDeletableParts";
-import { resolveDeletableParts } from "../../selection/resolveDeletableParts";
+import { collectObjectPartIds } from "../../selection/readers/collectObjectPartIds";
+import type { ObjectPartTarget } from "../../selection/readers/resolveDeletableParts";
+import { resolveDeletableParts } from "../../selection/readers/resolveDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";

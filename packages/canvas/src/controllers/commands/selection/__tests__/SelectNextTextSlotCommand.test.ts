@@ -4,7 +4,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { registerTextSlotParts } from "../../../selection/__tests__/support/textSlotPartRegistry";
-import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import { SelectNextTextSlotCommand } from "../SelectNextTextSlotCommand";
 
 const registries = createTestRegistries();

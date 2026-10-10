@@ -42,7 +42,7 @@ export type { ResolveImage } from "./controllers/hooks/useDocImages";
 export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
 export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
 export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
-export type { ResolvedSelection } from "./controllers/utils/resolveRequestedSelection";
+export type { ResolvedSelection } from "./controllers/selection/writers/resolveRequestedSelection";
 export {
 	exportCanvasToPng,
 	exportCanvasToSvg,
@@ -212,7 +212,7 @@ export type {
 	SelectionControlEvent,
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
-export type { ObjectPartKindDefinition } from "./controllers/selection/ObjectPartKindRegistry";
+export type { ObjectPartKindDefinition } from "./controllers/selection/partKinds/ObjectPartKindRegistry";
 // The `data-part` a text slot's element carries: a shape that draws one hit
 // region per slot marks each region with it, which is how a click picks that
 // slot and a double click opens it for editing.

@@ -1,5 +1,5 @@
 import { isConnectorState } from "../../../states/objects/connector/ConnectorState";
-import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
+import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
 import type { ExecutableCommand } from "../CommandTypes";
 
 export const SelectAllCommand: ExecutableCommand = {

@@ -1,6 +1,6 @@
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ObjectPartSelection } from "../selection/ObjectPartSelection";
+import type { ObjectPartSelection } from "../selection/CanvasSelection";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 
 /** One object a style intent reaches, and how it is addressed. */

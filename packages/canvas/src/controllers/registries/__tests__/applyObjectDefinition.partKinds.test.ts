@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
-import type { ObjectPartKindDefinition } from "../../selection/ObjectPartKindRegistry";
-import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
+import type { ObjectPartKindDefinition } from "../../selection/partKinds/ObjectPartKindRegistry";
+import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
 import { applyObjectDefinition } from "../applyObjectDefinition";
 import { createTestRegistries } from "../createCanvasRegistries";
 

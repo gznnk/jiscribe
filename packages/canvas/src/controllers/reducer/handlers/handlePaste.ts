@@ -7,12 +7,12 @@ import {
 	DUPLICATE_OFFSET,
 	isLastDuplicateStillSelected,
 } from "../../commands/selection/utils/computeDuplicateOffset";
-import { getSelectionCenter } from "../../commands/selection/utils/getSelectionCenter";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
+import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
+import { getSelectionCenter } from "../../selection/readers/getSelectionCenter";
 import { calcObjectsBoundingBox } from "../../utils/calcObjectBoundingBox";
 import { calcVisibleWorldRect } from "../../utils/calcVisibleWorldRect";
 import { cloneObjects } from "../../utils/cloneObjects";
-import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import { updateGroupBoundsFromRoots } from "../../utils/updateGroupBoundsFromRoot";
 
 /**
