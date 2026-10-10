@@ -33,6 +33,7 @@ packages/canvas/src/
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc など
 │   ├── registries/         # レジストリのバンドルの生成と配線（createCanvasRegistries など）
 │   ├── selection/          # 何が選ばれているか。CanvasSelection モデル + partKinds/ / readers/ / writers/
+│   ├── style/              # スタイルの intent とその行き先。intent のモデル + intent/ / walk/ / tables/ / entries/
 │   ├── ui/                 # 変形コントロール・メニュー・アイコンなど UI 制御（StencilRegistry / ObjectMenuRegistry などを含む）
 │   └── utils/
 ├── rendering/              # 純粋な描画コンポーネント + Viewport 型
@@ -57,6 +58,12 @@ Doc モデルはこのパッケージには**無い**。canvas が依存する `
 テキストスロットと頂点の kind）、`readers/` は選択を変えずにそこから値を導くもの、
 `writers/` は状態から次の状態への遷移（状態が裏付けなくなったパーツを落とす
 `reconcileSelection` を含む）。
+
+`controllers/style/` も同じく直下にモデル（`StyleIntent.ts`・`StyleEntry.ts`・
+`SelectionValue.ts`）を置き、残りを役割で分ける。`intent/` はプロパティ名と文字列から
+intent を作るもの、`walk/` は書きと読みが共有する選択の歩き 1 本、`tables/` は型別の
+スタイル表、`entries/` は intent が型のデータのどこに着地するか（各エントリは
+`{ apply, read }` の対）→ [スタイルシステム](./10-style-properties.ja.md)。
 
 形状ごとに、`states/objects/.../<shape>/` と `controllers/behaviors/...`、
 `rendering/objects/...` が対応する。コアの型の一覧は `@jiscribe/doc` の
@@ -107,7 +114,7 @@ State を Props として受け取り SVG を描画するコンポーネント�
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                  | `controllers/gestures/registry/`       | ジェスチャーハンドラ・型別の `ObjectBehavior`                                                           |
 | `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` など                | `rendering/objects/registry/`          | 描画コンポーネント・編集テキスト領域・ヒットテスト / スナップ輪郭                                       |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry` など | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別プロパティサイドバーのセクション・型別 SelectionControl |
-| `ObjectStyleRegistry`                                                                                | `controllers/style/`                   | 型別のスタイル表（[スタイルシステム](./10-style-properties.ja.md)）                                     |
+| `ObjectStyleRegistry`                                                                                | `controllers/style/tables/`            | 型別のスタイル表（[スタイルシステム](./10-style-properties.ja.md)）                                     |
 | `CommandRegistry`                                                                                    | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）                                               |
 
 型別のレジストリは形状タイプ（`"rect"`, `"ellipse"` など）をキーにするため、形状横断的な処理を `if (type === ...)` の分岐なしで型安全に書ける。

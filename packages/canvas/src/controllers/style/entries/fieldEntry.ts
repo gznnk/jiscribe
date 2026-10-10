@@ -1,6 +1,9 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { StyleValueOfType, StyleValueType } from "../coerceStyleValue";
-import { coerceStyleValue } from "../coerceStyleValue";
+import type {
+	StyleValueOfType,
+	StyleValueType,
+} from "../intent/coerceStyleValue";
+import { coerceStyleValue } from "../intent/coerceStyleValue";
 import type { DeclaredStyleEntry } from "../StyleEntry";
 
 /**

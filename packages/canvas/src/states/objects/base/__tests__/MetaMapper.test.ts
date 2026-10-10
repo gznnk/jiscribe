@@ -1,8 +1,8 @@
 import type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 import { describe, expect, it } from "vitest";
 
-import { MetaMapper } from "../../../../states/objects/base/MetaMapper";
-import type { MetaState } from "../../../../states/objects/base/MetaState";
+import { MetaMapper } from "../MetaMapper";
+import type { MetaState } from "../MetaState";
 
 describe("MetaMapper", () => {
 	describe("toState", () => {

@@ -1,8 +1,8 @@
 import type { MenuAction } from "./menuActions";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { applyStyleIntent } from "../../../../style/applyStyleIntent";
-import { styleIntentOf } from "../../../../style/styleIntentOf";
+import { styleIntentOf } from "../../../../style/intent/styleIntentOf";
+import { applyStyleIntent } from "../../../../style/walk/applyStyleIntent";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 
 /**

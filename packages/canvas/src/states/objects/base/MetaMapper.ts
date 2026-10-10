@@ -1,6 +1,6 @@
 import type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 
-import type { MetaState } from "../../../states/objects/base/MetaState";
+import type { MetaState } from "./MetaState";
 import { rebrand } from "../utils/rebrand";
 
 /**

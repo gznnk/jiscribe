@@ -1,11 +1,8 @@
 import type { PolylineDoc } from "@jiscribe/doc/model/objects/primitives/polyline/PolylineDoc";
 import { describe, expect, it } from "vitest";
 
-import {
-	polylineToDoc,
-	polylineToState,
-} from "../../../../../states/objects/primitives/polyline/PolylineMapper";
-import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
+import { polylineToDoc, polylineToState } from "../PolylineMapper";
+import type { PolylineState } from "../PolylineState";
 
 describe("PolylineMapper", () => {
 	describe("polylineToState", () => {

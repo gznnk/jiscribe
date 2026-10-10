@@ -33,6 +33,7 @@ packages/canvas/src/
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc, etc.
 │   ├── registries/         # building and wiring the registry bundle (createCanvasRegistries, …)
 │   ├── selection/          # what is selected: the CanvasSelection model + partKinds/ / readers/ / writers/
+│   ├── style/              # style intents and where they land: the intent model + intent/ / walk/ / tables/ / entries/
 │   ├── ui/                 # UI control (transform controls, menus, icons) incl. StencilRegistry / ObjectMenuRegistry, among others
 │   └── utils/
 ├── rendering/              # pure rendering components + the Viewport type
@@ -57,6 +58,13 @@ and splits the rest by layer: `partKinds/` is what an object type declares about
 parts (`ObjectPartKindRegistry`, the text-slot and vertex kinds), `readers/` derives
 values from a selection without changing it, and `writers/` turns one state into the
 next (including `reconcileSelection`, which drops a part the state no longer backs).
+
+`controllers/style/` likewise keeps its model at the root (`StyleIntent.ts`,
+`StyleEntry.ts`, `SelectionValue.ts`) and splits the rest by role: `intent/` turns a
+property name and a string into an intent, `walk/` is the one walk over the selection
+that applying and reading share, `tables/` holds the per-type style tables, and
+`entries/` is where an intent lands in a type's data, each entry an `{ apply, read }`
+pair (see [Style System](./10-style-properties.md)).
 
 For each shape there is a corresponding `states/objects/.../<shape>/`,
 `controllers/behaviors/...`, and `rendering/objects/...`. The list of core types is
@@ -107,7 +115,7 @@ The main ones are below. The full set is the bundle each `<Canvas>` owns (`Canva
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                | `controllers/gestures/registry/`            | gesture handlers, per-type `ObjectBehavior`                                                                  |
 | `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry`, …                | `rendering/objects/registry/`               | render component, editable-text region, hit-test / snap outline                                              |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry`, … | `controllers/ui/...` (colocated per domain) | StencilLibrary presets, per-type ObjectMenu, per-type properties-sidebar sections, per-type SelectionControl |
-| `ObjectStyleRegistry`                                                                              | `controllers/style/`                        | per-type style tables (see [Style System](./10-style-properties.md))                                         |
+| `ObjectStyleRegistry`                                                                              | `controllers/style/tables/`                 | per-type style tables (see [Style System](./10-style-properties.md))                                         |
 | `CommandRegistry`                                                                                  | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))                                                      |
 
 Because each per-type registry keys off the shape type (`"rect"`, `"ellipse"`, …), cross-shape processing can be written type-safely without `if (type === ...)` branching.

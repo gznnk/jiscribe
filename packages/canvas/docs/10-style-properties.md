@@ -11,7 +11,8 @@ The two layers are `StyleIntent` (the meaning, with a typed value) and a per-typ
 writing and reporting, so a menu row and the write behind it can no longer
 disagree about who was addressed.
 
-Everything in this chapter lives in `controllers/style/`.
+Everything in this chapter lives in `controllers/style/`, except `useSelectionStyle`
+(`controllers/ui/menu/SelectionStyleReaderContext.ts`).
 
 ## Layer 1: the intent
 
@@ -324,7 +325,7 @@ get the same capability: `fieldEntry` and `DeclaredStyleTable` are exported from
 `@jiscribe/canvas-sdk`, beside the helpers the engine builds its own entries from
 (`objectField` / `slotField` / `runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`)
 for a type replacing a derived kind. Connector's table is
-`controllers/style/connectorStyleEntries.ts` (`CONNECTOR_STYLE_ENTRIES`); the container plugin
+`controllers/style/tables/connectorStyleEntries.ts` (`CONNECTOR_STYLE_ENTRIES`); the container plugin
 declares `CONTAINER_STYLE_ENTRIES` in `src/style/containerStyleEntries.ts` and hands it to
 `createFrameObjectDefinition` from `@jiscribe/canvas-sdk`.
 

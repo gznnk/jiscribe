@@ -4,7 +4,6 @@ import { memo } from "react";
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { setAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -14,6 +13,7 @@ import {
 import { DashedLineIcon } from "../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../icons/SolidLineIcon";
+import { useSelectionStyle } from "../../SelectionStyleReaderContext";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";

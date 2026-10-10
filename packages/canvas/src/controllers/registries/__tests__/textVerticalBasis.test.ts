@@ -4,9 +4,9 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { ToggleTextVerticalBasisCommand } from "../../commands/shape/ToggleTextVerticalBasisCommand";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { applyStyleIntent } from "../../style/applyStyleIntent";
-import { readSelectionStyle } from "../../style/readSelectionStyle";
-import { styleIntentOf } from "../../style/styleIntentOf";
+import { styleIntentOf } from "../../style/intent/styleIntentOf";
+import { applyStyleIntent } from "../../style/walk/applyStyleIntent";
+import { readSelectionStyle } from "../../style/walk/readSelectionStyle";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 const registries = createCanvasRegistries();

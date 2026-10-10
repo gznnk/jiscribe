@@ -1,11 +1,11 @@
 import { setAction } from "../../../gestures/handlers/menu/utils/menuActions";
-import { useSelectionStyle } from "../../../style/SelectionStyleReaderContext";
 import { selectionValueOr } from "../../../style/SelectionValue";
 import { isBoldFontWeight } from "../../../utils/isBoldFontWeight";
 import {
 	hasTextDecorationToken,
 	toggleTextDecorationToken,
 } from "../../../utils/toggleTextDecorationToken";
+import { useSelectionStyle } from "../SelectionStyleReaderContext";
 
 /** One of the four format buttons, as either surface draws it. */
 type TextFormatToggle = {

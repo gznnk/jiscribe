@@ -104,8 +104,8 @@ import {
 	TEXT_SLOT_PART_KIND,
 } from "../selection/partKinds/textSlotPartKind";
 import { createVertexPartKindDefinition } from "../selection/partKinds/vertexPartKind";
-import { CONNECTOR_STYLE_ENTRIES } from "../style/connectorStyleEntries";
-import { coreStyleTable } from "../style/coreStyleTable";
+import { CONNECTOR_STYLE_ENTRIES } from "../style/tables/connectorStyleEntries";
+import { coreStyleTable } from "../style/tables/coreStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,

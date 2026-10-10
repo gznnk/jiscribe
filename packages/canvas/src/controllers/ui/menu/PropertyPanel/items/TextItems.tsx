@@ -9,7 +9,6 @@ import {
 	setAction,
 } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
@@ -35,6 +34,7 @@ import {
 	ObjectMenuFontFamilyList,
 	usePreviewFonts,
 } from "../../ObjectMenu/common/ObjectMenuFontFamilyList";
+import { useSelectionStyle } from "../../SelectionStyleReaderContext";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyDropdownTriggerLabel } from "../common/PropertyControlsStyled";

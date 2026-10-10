@@ -8,8 +8,8 @@ import type { ObjectState } from "../../../../../../../states/objects/base/Objec
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
 import { defaultCanvasRegistries } from "../../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
-import { readSelectionStyle } from "../../../../../../style/readSelectionStyle";
-import { SelectionStyleReaderContext } from "../../../../../../style/SelectionStyleReaderContext";
+import { readSelectionStyle } from "../../../../../../style/walk/readSelectionStyle";
+import { SelectionStyleReaderContext } from "../../../../SelectionStyleReaderContext";
 import { ArrowHeadMenu } from "../ArrowHeadMenu";
 
 // Without this React treats every `act` below as unsupported and warns, the

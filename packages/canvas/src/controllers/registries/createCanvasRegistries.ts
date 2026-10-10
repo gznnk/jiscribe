@@ -25,7 +25,7 @@ import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import { createObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
-import { createObjectStyleRegistry } from "../style/ObjectStyleRegistry";
+import { createObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";

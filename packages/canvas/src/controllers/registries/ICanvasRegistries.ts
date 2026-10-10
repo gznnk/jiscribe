@@ -12,7 +12,7 @@ import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperReg
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
-import type { ObjectStyleRegistry } from "../style/ObjectStyleRegistry";
+import type { ObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**

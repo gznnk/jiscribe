@@ -183,14 +183,14 @@ export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/us
 // value either typed as the declaration holds it or left as the transport
 // string. `styleIntentOf(property, value)` is there for a widget that holds a
 // name and a string from the DOM instead.
-export { useSelectionStyle } from "./controllers/style/SelectionStyleReaderContext";
+export { useSelectionStyle } from "./controllers/ui/menu/SelectionStyleReaderContext";
 export type {
 	CoreStyleIntent,
 	CoreStyleIntentKind,
 	ExtraStyleIntent,
 	StyleIntent,
 } from "./controllers/style/StyleIntent";
-export { styleIntentOf } from "./controllers/style/styleIntentOf";
+export { styleIntentOf } from "./controllers/style/intent/styleIntentOf";
 export type { SelectionValue } from "./controllers/style/SelectionValue";
 export {
 	isMixedSelectionValue,
@@ -220,7 +220,7 @@ export { defaultSlotsOf } from "./controllers/style/entries/slotEntry";
 export type { SlotsOf } from "./controllers/style/entries/slotEntry";
 export { slotField } from "./controllers/style/entries/slotField";
 export { toggleRunOrSlot } from "./controllers/style/entries/toggleRunOrSlot";
-export type { StyleValueType } from "./controllers/style/coerceStyleValue";
+export type { StyleValueType } from "./controllers/style/intent/coerceStyleValue";
 export type {
 	DeclaredStyleEntry,
 	DeclaredStyleTable,

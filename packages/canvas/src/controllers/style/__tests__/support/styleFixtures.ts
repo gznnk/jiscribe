@@ -18,11 +18,11 @@ import { createTextSlotPartRegistry } from "../../../selection/__tests__/support
 import type { ObjectPartSelection } from "../../../selection/CanvasSelection";
 import type { ObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
-import { CONNECTOR_STYLE_ENTRIES } from "../../connectorStyleEntries";
-import { coreStyleTable } from "../../coreStyleTable";
-import { createObjectStyleRegistry } from "../../ObjectStyleRegistry";
 import type { StyleContext, TextEditRange } from "../../StyleEntry";
-import type { StyleIntentRegistries } from "../../StyleIntentRegistries";
+import { CONNECTOR_STYLE_ENTRIES } from "../../tables/connectorStyleEntries";
+import { coreStyleTable } from "../../tables/coreStyleTable";
+import { createObjectStyleRegistry } from "../../tables/ObjectStyleRegistry";
+import type { StyleIntentRegistries } from "../../walk/StyleIntentRegistries";
 
 /**
  * A state of one built-in type, carrying only what a style walk reads: an id, the

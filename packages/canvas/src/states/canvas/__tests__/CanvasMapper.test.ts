@@ -6,27 +6,24 @@ import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDo
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { describe, expect, it, beforeEach } from "vitest";
 
-import {
-	canvasToState,
-	canvasToDoc,
-} from "../../../states/canvas/CanvasMapper";
-import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../objects/base/ObjectState";
 import {
 	connectorToState,
 	connectorToDoc,
-} from "../../../states/objects/connector/ConnectorMapper";
+} from "../../objects/connector/ConnectorMapper";
 import {
 	groupToState,
 	groupToDoc,
-} from "../../../states/objects/primitives/group/GroupMapper";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+} from "../../objects/primitives/group/GroupMapper";
+import type { GroupState } from "../../objects/primitives/group/GroupState";
 import {
 	rectToState,
 	rectToDoc,
-} from "../../../states/objects/primitives/rect/RectMapper";
-import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
-import { createObjectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
+} from "../../objects/primitives/rect/RectMapper";
+import { createObjectContentResizerRegistry } from "../../registry/ObjectContentResizerRegistry";
+import { createObjectMapperRegistry } from "../../registry/ObjectMapperRegistry";
+import { canvasToState, canvasToDoc } from "../CanvasMapper";
+import type { CanvasState } from "../CanvasState";
 
 describe("CanvasMapper", () => {
 	const objectMapperRegistry = createObjectMapperRegistry();
