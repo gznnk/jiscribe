@@ -590,8 +590,8 @@ export type CanvasControllerState = CanvasState & {
 	/**
 	 * The open editing session's draft, null when not editing text. What is being
 	 * edited is `selection`, not named here, which is what keeps the two from
-	 * drifting apart. Read through resolveTextEdit, which pairs the draft with its
-	 * owner again.
+	 * drifting apart. Read through readOpenTextEdit, which pairs the draft with
+	 * its owner again.
 	 *
 	 * Three invariants every writer keeps:
 	 * - non-null means `selection.objectIds` holds exactly one id, the owner's
@@ -626,8 +626,8 @@ export type CanvasControllerState = CanvasState & {
 				 * What the editor currently has selected, in UTF-16 offsets of `text`.
 				 * Reported by the editor on every caret and selection change, and read
 				 * by the styling that applies to a stretch of the text rather than to the
-				 * whole slot (resolveStyleTextEdit). Collapsed (start === end) for a
-				 * plain caret, and absent until the editor has reported once.
+				 * whole slot (readOpenTextEditForStyle). Collapsed (start === end) for
+				 * a plain caret, and absent until the editor has reported once.
 				 */
 				selection?: { start: number; end: number };
 		  }

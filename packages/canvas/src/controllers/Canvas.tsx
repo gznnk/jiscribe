@@ -107,8 +107,8 @@ import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { readOpenTextEdit } from "./utils/readOpenTextEdit";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
-import { resolveTextEdit } from "./utils/resolveTextEdit";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 
 type CanvasProps = {
@@ -615,7 +615,7 @@ const CanvasComponent = ({
 	// the overlay hands its slot over to the editor).
 	const textEdit = useMemo(
 		() =>
-			resolveTextEdit({
+			readOpenTextEdit({
 				objects: state.objects,
 				selection: state.selection,
 				textEditState: state.textEditState,

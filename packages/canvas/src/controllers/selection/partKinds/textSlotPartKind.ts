@@ -28,7 +28,7 @@ export const TEXT_SLOT_PART_KIND = "textSlot";
  * @returns True only while a slot is picked; false when nothing is picked below
  *   the object, or what is picked is of another kind (a vertex)
  */
-export const isTextSlotSelection = (
+export const isTextSlotPart = (
 	part: ObjectPartSelection | null,
 ): part is ObjectPartSelection =>
 	part !== null && part.kind === TEXT_SLOT_PART_KIND;

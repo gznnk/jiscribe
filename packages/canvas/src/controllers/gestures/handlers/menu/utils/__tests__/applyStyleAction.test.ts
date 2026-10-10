@@ -130,7 +130,7 @@ describe("applyStyleAction", () => {
 
 	// The `set:` action is the one route that still carries a property name and a
 	// string, so the cases that used to guard the boundary function live here: what
-	// the pair of styleIntentOf and applyStyleIntent reaches, and what it leaves
+	// the pair of toStyleIntent and applyStyleIntent reaches, and what it leaves
 	// alone. A `set:` click always returns a new state (commitVersion is bumped),
 	// so "nothing was written" is read off `objects` keeping its reference.
 	describe("what the intent an action states reaches", () => {
@@ -273,8 +273,8 @@ describe("applyStyleAction", () => {
 			/**
 			 * A string every declared type reads as a value of its own: a number parses
 			 * from it, and the other two take any string. What each type reads it as is
-			 * the entry's own business (fieldEntry's suite), so what is checked here is
-			 * that the action reached the entry at all.
+			 * the entry's own business (declaredFieldEntry's suite), so what is
+			 * checked here is that the action reached the entry at all.
 			 */
 			const PROBE_VALUE = "7";
 

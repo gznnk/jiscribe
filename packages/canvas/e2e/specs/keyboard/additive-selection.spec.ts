@@ -7,9 +7,9 @@ import { test, expect } from "../../fixtures";
  * them" feature, but the existing tests only covered marquee selection
  * (basic-gestures) and grouping (group); adding to the selection with
  * Ctrl+click, and moving everything after a Ctrl+A select-all, were uncovered.
- * The selection model (the additive branch of determineSelection, and moving as
- * a unit through multiSelectGroup) is easy to break in a refactor, so it is
- * guarded through the observable "they move together" behavior.
+ * The selection model (the additive branch of determineClickSelection, and
+ * moving as a unit through multiSelectGroup) is easy to break in a refactor, so
+ * it is guarded through the observable "they move together" behavior.
  *
  * Any of Ctrl / Meta / Shift is additive (isAdditiveSelectionMod); Shift keeps
  * its axis-locking role once a drag starts, which is a different gesture. The

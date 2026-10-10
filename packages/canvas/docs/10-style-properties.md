@@ -50,7 +50,7 @@ Three facts ride on the union:
 A kind a type declares for itself is not in the union: it travels as
 `ExtraStyleIntent` (`{ kind: string; value: unknown }`), the engine knowing
 neither what the kind means nor what type it holds. The value is the transport
-string where the surface held only a name and a string (`styleIntentOf`), and the
+string where the surface held only a name and a string (`toStyleIntent`), and the
 value already typed where it holds the declaration
 (`{ kind: "headerHeight", value: 32 }`); the declaring type's entry reads it.
 The two together are `StyleIntent`, which is what `applyStyleIntent` takes.
@@ -150,18 +150,18 @@ text type again:
 Entries are not written by hand; a helper per storage shape returns the pair
 (`controllers/style/entries/`):
 
-| Helper                                       | Where the value lands                                                                                                                                                                                                                        |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectField(field)`                         | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                          |
-| `slotField(field, { slotsOf })`              | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                      |
-| `runOrSlot(field, { slotsOf })`              | The selected stretch of characters while an editor has one (`resolveRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                            |
-| `toggleRunOrSlot(kind, { slotsOf, toggle })` | The field `TOGGLE_FLIPS` names, on a selected stretch and nothing else: a keystroke is not a shape-wide write. It reads what the stretch is drawn with and writes the opposite through `runOrSlot`                                           |
-| `fieldEntry(path, valueType)`                | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing |
-| `lockAspectRatioEntry`                       | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                              |
-| `textVerticalBasisEntry`                     | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                       |
-| `textContentEntry`                           | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                           |
+| Helper                                            | Where the value lands                                                                                                                                                                                                                        |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`                         | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                          |
+| `slotFieldEntry(field, { slotsOf })`              | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                      |
+| `runOrSlotEntry(field, { slotsOf })`              | The selected stretch of characters while an editor has one (`readRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                               |
+| `toggleRunOrSlotEntry(kind, { slotsOf, toggle })` | The field `TOGGLE_FLIPS` names, on a selected stretch and nothing else: a keystroke is not a shape-wide write. It reads what the stretch is drawn with and writes the opposite through `runOrSlotEntry`                                      |
+| `declaredFieldEntry(path, valueType)`             | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing |
+| `lockAspectRatioEntry`                            | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                              |
+| `textVerticalBasisEntry`                          | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                       |
+| `textContentEntry`                                | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                           |
 
-`slotEntry` is the part `slotField` and the whole-slot half of `runOrSlot` share:
+`slotEntry` is the part `slotFieldEntry` and the whole-slot half of `runOrSlotEntry` share:
 which slots are reached, the same-reference contract, and reading each of them
 through the type's defaults.
 
@@ -199,7 +199,7 @@ Both walkers take that walk:
   and folds the values into `single` / `mixed` / `none` (`combineSelectionValues`).
   Passing one of the core kinds types the answer; passing a declared kind by
   name alone answers `SelectionValue<unknown>`, and passing the table it was
-  declared in ahead of it (`readSelectionStyle(state, CONNECTOR_STYLE_ENTRIES,
+  declared in ahead of it (`readSelectionStyle(state, CONNECTOR_STYLE_TABLE,
 "label.fill", registries)`) types the answer from that declaration. The table is
   taken for its type alone; the walk still looks the entry up on each target's own
   registered table.
@@ -209,12 +209,12 @@ Both walkers take that walk:
 The shape editor's draft is not committed to the slot until the session ends, so a
 write landing on the slot underneath it would be overwritten by the next
 keystroke. The walkers own that rule rather than the entries:
-`resolveStyleTextEdit` reports the open edit, the edited object is handed over with
+`readOpenTextEditForStyle` reports the open edit, the edited object is handed over with
 the draft **grafted** into the slot being edited, and the slot is read back into
 the draft afterwards. A graft the entry did not write to is dropped. No entry
 knows an editor exists; `StyleContext.textEditRange` carries the offsets alone.
 
-`resolveStyleTextEdit` also owns when a selected stretch is one to style at all: a
+`readOpenTextEditForStyle` also owns when a selected stretch is one to style at all: a
 collapsed (or unreported) selection is not, and neither is any stretch of a body
 written in a source language — a run laid over part of it would be dropped on save
 and never drawn, so the edit takes the whole slot instead.
@@ -231,23 +231,23 @@ DOM can hold in a `data-action` (`menuActions.ts`):
 
 ```
 ObjectMenu item / slider, sidebar swatch ── gesture (set: / slider:) ─→ applyStyleAction ┐
-                                                                            │ styleIntentOf    │
+                                                                            │ toStyleIntent    │
 ObjectMenu number input, sidebar callback, editor keystroke ── STYLE_INTENT ─→ canvasReducer   ┼─→ applyStyleIntent
     └ a row that knows its property states the intent outright;              ┘
-      a widget holding a name and a string reads it with styleIntentOf
+      a widget holding a name and a string reads it with toStyleIntent
 ```
 
 Both routes end at `applyStyleIntent`. What differs is where the intent comes
 from: the gesture route is handed a name and a string by the DOM and reads them,
 while the React route (`STYLE_INTENT`) carries an intent already — the surface
-that raised it having stated it, through `styleIntentOf` when all it held was a
+that raised it having stated it, through `toStyleIntent` when all it held was a
 name and a string.
 
 The slider straddles both routes: pointer interaction (drag and track click) rides
 the gesture route, while keyboard interaction produces no gesture and so goes
 through `STYLE_INTENT`.
 
-`styleIntentOf(property, value)` is the one place a name and a string are read
+`toStyleIntent(property, value)` is the one place a name and a string are read
 into an intent:
 
 - `INTENT_BY_PROPERTY` maps each name of the core vocabulary to the intent its
@@ -294,8 +294,8 @@ what the flags imply — is declared as the type's own `DeclaredStyleTable`, han
 
 ```ts
 export const CONTAINER_STYLE_ENTRIES = {
-	headerFill: fieldEntry("headerFill", "string"),
-	headerHeight: fieldEntry("headerHeight", "number"),
+	headerFill: declaredFieldEntry("headerFill", "string"),
+	headerHeight: declaredFieldEntry("headerHeight", "number"),
 } satisfies DeclaredStyleTable<ContainerState>;
 ```
 
@@ -309,7 +309,7 @@ objects of the selection — descendants of a selected group included — and no
 others. Dots in the name are the write path (`label.fill` merges into
 `connector.label`).
 
-Every declared entry states the fields it writes (`fields`, which `fieldEntry`
+Every declared entry states the fields it writes (`fields`, which `declaredFieldEntry`
 fills from the root of its path; `[]` when it writes nothing the document
 stores), and one stating none is refused at registration — `DeclaredStyleTable`
 makes it required at compile time. **Registration also refuses a field the
@@ -321,11 +321,11 @@ save.
 
 Because registration flows through `applyObjectDefinition`, plugin shapes added
 via `CanvasConfig.plugins` (see [Plugin Architecture](./12-plugin-architecture.md))
-get the same capability: `fieldEntry` and `DeclaredStyleTable` are exported from
+get the same capability: `declaredFieldEntry` and `DeclaredStyleTable` are exported from
 `@jiscribe/canvas-sdk`, beside the helpers the engine builds its own entries from
-(`objectField` / `slotField` / `runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`)
+(`objectFieldEntry` / `slotFieldEntry` / `runOrSlotEntry` / `toggleRunOrSlotEntry` / `defaultSlotsOf`)
 for a type replacing a derived kind. Connector's table is
-`controllers/style/tables/connectorStyleEntries.ts` (`CONNECTOR_STYLE_ENTRIES`); the container plugin
+`controllers/style/tables/connectorStyleTable.ts` (`CONNECTOR_STYLE_TABLE`); the container plugin
 declares `CONTAINER_STYLE_ENTRIES` in `src/style/containerStyleEntries.ts` and hands it to
 `createFrameObjectDefinition` from `@jiscribe/canvas-sdk`.
 
@@ -345,10 +345,10 @@ a guard of its own.
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A new style of the core vocabulary        | A kind in `CoreStyleIntent`, an entry in `coreStyleTable` / `textStyleTable` under the declaration that enables it, and a mapper in `INTENT_BY_PROPERTY` — the `satisfies` over `SystemStyleName` makes any one of them alone a compile error |
 | A new storage shape for an existing style | A helper in `entries/` returning the `{ apply, read }` pair, used by the table that needs it                                                                                                                                                  |
-| A style belonging to one type             | One entry in that type's own `DeclaredStyleTable` — `fieldEntry` for a field of its own (plus `styleEntries` in its definition, first time only), and its root field in `extraKeys`                                                           |
+| A style belonging to one type             | One entry in that type's own `DeclaredStyleTable` — `declaredFieldEntry` for a field of its own (plus `styleEntries` in its definition, first time only), and its root field in `extraKeys`                                                   |
 | A storage the derived entry gets wrong    | An entry under that very kind in the type's own table, which replaces the derived one                                                                                                                                                         |
 
-Regression safety: `style/__tests__/styleIntentOf.test.ts` covers the
+Regression safety: `style/__tests__/toStyleIntent.test.ts` covers the
 translation, and the apply side of it —
 `gestures/handlers/menu/utils/__tests__/applyStyleAction.test.ts`, the one
 route still carrying a name and a string — is
@@ -356,5 +356,5 @@ registry-driven — it enumerates every kind the types declare in the real bundl
 wiring and checks the gate, the nested write and that the entry writes the field
 it says it does. A new declaration is covered automatically; what each declared
 type reads its value as is the entry's own business
-(`style/__tests__/fieldEntry.test.ts`), and the registration check has its own
+(`style/__tests__/declaredFieldEntry.test.ts`), and the registration check has its own
 suite (`registries/__tests__/applyObjectDefinition.style.test.ts`).

@@ -14,7 +14,7 @@ import {
 } from "./ObjectMenuColorPickerGridStyled";
 import { setAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { styleIntentOf } from "../../../../../style/intent/styleIntentOf";
+import { toStyleIntent } from "../../../../../style/intent/toStyleIntent";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
@@ -89,7 +89,7 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	// intent it states here, where the string is born.
 	const writeColor = useCallback(
 		(color: string, commitColor: boolean) => {
-			const intent = styleIntentOf(property, color);
+			const intent = toStyleIntent(property, color);
 			if (intent !== undefined) {
 				onStyleIntent(intent, commitColor);
 			}

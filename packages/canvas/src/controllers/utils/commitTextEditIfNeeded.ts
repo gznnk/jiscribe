@@ -3,7 +3,7 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { applyLabelPlacement } from "./applyLabelPlacement";
-import { resolveTextEdit } from "./resolveTextEdit";
+import { readOpenTextEdit } from "./readOpenTextEdit";
 import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
@@ -155,19 +155,19 @@ export function commitTextEditIfNeeded(
 	if (!state.textEditState) {
 		return state;
 	}
-	const resolved = resolveTextEdit(state);
-	if (resolved === null) {
+	const openEdit = readOpenTextEdit(state);
+	if (openEdit === null) {
 		return state;
 	}
 
 	// Connectors update the nested label.text rather than a slot of state.text.
-	if (resolved.kind === "connectorLabel") {
+	if (openEdit.kind === "connectorLabel") {
 		return commitConnectorLabel(
 			state,
-			resolved.connector,
-			resolved.text,
-			resolved.placement,
+			openEdit.connector,
+			openEdit.text,
+			openEdit.placement,
 		);
 	}
-	return commitTextSlot(state, resolved.object, resolved.slotId, resolved.text);
+	return commitTextSlot(state, openEdit.object, openEdit.slotId, openEdit.text);
 }

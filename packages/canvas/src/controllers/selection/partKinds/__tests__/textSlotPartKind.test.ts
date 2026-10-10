@@ -5,14 +5,14 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { vertexPartSelection } from "../../__tests__/support/vertexPartSelection";
 import {
 	createTextSlotPartKindDefinition,
-	isTextSlotSelection,
+	isTextSlotPart,
 	TEXT_SLOT_PART_KIND,
 } from "../textSlotPartKind";
 
-describe("isTextSlotSelection", () => {
+describe("isTextSlotPart", () => {
 	it("holds for a pick of the slot kind", () => {
 		expect(
-			isTextSlotSelection({
+			isTextSlotPart({
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			}),
@@ -20,11 +20,11 @@ describe("isTextSlotSelection", () => {
 	});
 
 	it("does not hold while nothing is picked", () => {
-		expect(isTextSlotSelection(null)).toBe(false);
+		expect(isTextSlotPart(null)).toBe(false);
 	});
 
 	it("does not hold for a pick of another kind", () => {
-		expect(isTextSlotSelection(vertexPartSelection(0))).toBe(false);
+		expect(isTextSlotPart(vertexPartSelection(0))).toBe(false);
 	});
 });
 

@@ -100,7 +100,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 			expect(next.textEditState).toBeNull();
 			expect(next.selection).toEqual({ objectIds: ["rect-2"], part: null });
 			// The owner is the selection, so had the draft outlived the move it would
-			// have landed on rect-2 (resolveTextEdit cannot tell the two apart).
+			// have landed on rect-2 (readOpenTextEdit cannot tell the two apart).
 			expect(next.objects["rect-2"]).toBe(state.objects["rect-2"]);
 		});
 

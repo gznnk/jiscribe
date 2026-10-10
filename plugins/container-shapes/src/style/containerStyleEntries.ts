@@ -1,5 +1,5 @@
 import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
-import { fieldEntry } from "@jiscribe/canvas-sdk";
+import { declaredFieldEntry } from "@jiscribe/canvas-sdk";
 
 import type { ContainerState } from "../state/ContainerState";
 
@@ -15,6 +15,6 @@ import type { ContainerState } from "../state/ContainerState";
  * registration checks an entry against.
  */
 export const CONTAINER_STYLE_ENTRIES = {
-	headerFill: fieldEntry("headerFill", "string"),
-	headerHeight: fieldEntry("headerHeight", "number"),
+	headerFill: declaredFieldEntry("headerFill", "string"),
+	headerHeight: declaredFieldEntry("headerHeight", "number"),
 } satisfies DeclaredStyleTable<ContainerState>;

@@ -544,9 +544,9 @@ describe("ObjectEventHandler - text slot selection", () => {
 	});
 
 	it("selects the slot it opens for editing, even from an unselected record", () => {
-		// The click before the double click only selects the object (applyPartClick
-		// addresses a part only inside an already-whole selection), so without this
-		// the session would open over no slot at all.
+		// The click before the double click only selects the object
+		// (selectPartByClick addresses a part only inside an already-whole
+		// selection), so without this the session would open over no slot at all.
 		const next = ObjectEventHandler.handle(
 			makeSlotState([], null),
 			{

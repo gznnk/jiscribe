@@ -1,6 +1,6 @@
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
-import { resolveTextEdit } from "./resolveTextEdit";
+import { readOpenTextEdit } from "./readOpenTextEdit";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	readRichTextSlot,
@@ -35,24 +35,24 @@ export const graftTextEditDraft = (
 	contentResizer: ObjectContentResizerRegistry,
 ): Record<string, ObjectState> => {
 	const { objects } = state;
-	const resolved = resolveTextEdit(state);
-	if (resolved?.kind !== "shape") {
+	const openEdit = readOpenTextEdit(state);
+	if (openEdit?.kind !== "shape") {
 		return objects;
 	}
-	const { object: target, slotId } = resolved;
+	const { object: target, slotId } = openEdit;
 	if (target.text === undefined) {
 		return objects;
 	}
 
 	// The draft equals the committed body until the first keystroke (and again
 	// whenever it is typed back), so the identity is kept through both.
-	if (isSameRichText(readRichTextSlot(target.text, slotId), resolved.text)) {
+	if (isSameRichText(readRichTextSlot(target.text, slotId), openEdit.text)) {
 		return objects;
 	}
 
 	const grafted = {
 		...target,
-		text: writeRichTextSlot(target.text, slotId, resolved.text),
+		text: writeRichTextSlot(target.text, slotId, openEdit.text),
 	} as ObjectState;
 
 	const resizeToContent = contentResizer.get(grafted.type);

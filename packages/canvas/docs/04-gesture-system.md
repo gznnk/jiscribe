@@ -49,7 +49,7 @@ Key points:
   wherever it lands — per-target handlers reject it via `isPerTargetInteraction`, like middle/right
   buttons — and opens the context menu, mirroring the right-button click. Both
   select the shape (or connector) they landed on before opening the menu, through
-  the same `determineSelection` the left click uses, so the menu acts on what was
+  the same `determineClickSelection` the left click uses, so the menu acts on what was
   pointed at; a target already in the selection keeps the whole selection, and the
   background changes nothing (`selectContextMenuTarget`).
 - **Inertial scrolling**: A middle-/right-button pan released while still moving leaves a fling behind. The
@@ -193,14 +193,14 @@ A multi-slot shape uses the nested form instead: for example, the `<g data-kind=
 `record` shape (`plugins/uml-shapes/src/presentation/RecordBox.tsx`) wraps one rect per compartment the box
 has, each carrying that slot's part address as its `data-part` (`data-part="textSlot:name"`,
 `data-part="textSlot:attributes"`, and so on, built with `textSlotPart`). That address is how a click picks
-the slot it landed in (`applyPartClick`) and a double click resolves the one to edit (`resolveTextSlotId`
+the slot it landed in (`selectPartByClick`) and a double click resolves the one to edit (`resolveTextSlotId`
 checks the id against the keys of `state.text` and falls back to the first slot otherwise).
 
 The part grammar of an object's own sub-parts — `<kind>:<partId>`, where `kind` is a namespace
 `ObjectPartKindRegistry` answers for and `partId` is opaque to core — has one home,
 `controllers/gestures/handlers/utils/partAddress.ts`, the way the `menu` kind's actions have their own: writers
 build the address with its per-kind builder (`textSlotPart`, also exported through `@jiscribe/canvas` for
-plugins; `vertexPart`) and the click path takes it apart with `parsePartAddress` (`applyPartClick`), so no
+plugins; `vertexPart`) and the click path takes it apart with `parsePartAddress` (`selectPartByClick`), so no
 handler spells a kind.
 
 #### Migration (issue #81) — completed

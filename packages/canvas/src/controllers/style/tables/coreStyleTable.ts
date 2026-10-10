@@ -3,7 +3,7 @@ import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFea
 import { textStyleTable } from "./textStyleTable";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { lockAspectRatioEntry } from "../entries/lockAspectRatioEntry";
-import { objectField } from "../entries/objectField";
+import { objectFieldEntry } from "../entries/objectFieldEntry";
 import { defaultSlotsOf } from "../entries/slotEntry";
 import { textVerticalBasisEntry } from "../entries/textVerticalBasisEntry";
 import type { StyleTable } from "../StyleEntry";
@@ -25,23 +25,23 @@ export const coreStyleTable = (
 	features: ObjectFeatures,
 ): StyleTable<ObjectState> => ({
 	...(features.fill && {
-		fill: objectField("fill"),
-		fillOpacity: objectField("fillOpacity"),
+		fill: objectFieldEntry("fill"),
+		fillOpacity: objectFieldEntry("fillOpacity"),
 	}),
 	...(features.stroke && {
-		stroke: objectField("stroke"),
-		strokeWidth: objectField("strokeWidth"),
-		strokeDashType: objectField("strokeDashType"),
-		strokeOpacity: objectField("strokeOpacity"),
+		stroke: objectFieldEntry("stroke"),
+		strokeWidth: objectFieldEntry("strokeWidth"),
+		strokeDashType: objectFieldEntry("strokeDashType"),
+		strokeOpacity: objectFieldEntry("strokeOpacity"),
 	}),
 	// The intent is named after what it means, the field after the SVG attribute
 	// the radius has always been stored in.
 	...(features.radius && {
-		cornerRadius: objectField("rx"),
+		cornerRadius: objectFieldEntry("rx"),
 	}),
 	...(features.arrow && {
-		startArrow: objectField("startArrow"),
-		endArrow: objectField("endArrow"),
+		startArrow: objectFieldEntry("startArrow"),
+		endArrow: objectFieldEntry("endArrow"),
 	}),
 	// The lock rides on the transform the resize it governs acts on.
 	...(features.transform && {

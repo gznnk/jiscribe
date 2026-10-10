@@ -46,7 +46,7 @@ export const toggleAction = (id: string): string => `${TOGGLE_PREFIX}${id}`;
 /**
  * The action of a button that writes one style property.
  *
- * @param property - Name read into an intent by styleIntentOf (`fill`, `label.fontWeight`, …); must not contain `:`
+ * @param property - Name read into an intent by toStyleIntent (`fill`, `label.fontWeight`, …); must not contain `:`
  * @param value - The value as the intent or the shape's own declaration is read against; `:` inside it is preserved
  */
 export const setAction = (property: string, value: string): string =>
@@ -55,7 +55,7 @@ export const setAction = (property: string, value: string): string =>
 /**
  * The action of a slider bound to a style property.
  *
- * @param property - Name read into an intent by styleIntentOf; must not contain `:`
+ * @param property - Name read into an intent by toStyleIntent; must not contain `:`
  */
 export const sliderAction = (property: string): string =>
 	`${SLIDER_PREFIX}${property}`;

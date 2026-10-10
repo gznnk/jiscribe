@@ -1,5 +1,5 @@
 import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
-import { fieldEntry } from "@jiscribe/canvas-sdk";
+import { declaredFieldEntry } from "@jiscribe/canvas-sdk";
 
 import type { AwsGroupState } from "../state/AwsGroupState";
 import type { AwsIconState } from "../state/AwsIconState";
@@ -11,7 +11,7 @@ import type { AwsIconState } from "../state/AwsIconState";
  * registration checks the entry against.
  */
 export const AWS_ICON_STYLE_ENTRIES = {
-	icon: fieldEntry("icon", "string"),
+	icon: declaredFieldEntry("icon", "string"),
 } satisfies DeclaredStyleTable<AwsIconState>;
 
 /**
@@ -20,5 +20,5 @@ export const AWS_ICON_STYLE_ENTRIES = {
  * from it (resolveAwsGroupStroke).
  */
 export const AWS_GROUP_STYLE_ENTRIES = {
-	kind: fieldEntry("kind", "string"),
+	kind: declaredFieldEntry("kind", "string"),
 } satisfies DeclaredStyleTable<AwsGroupState>;

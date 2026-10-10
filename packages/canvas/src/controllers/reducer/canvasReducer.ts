@@ -21,7 +21,7 @@ import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
 import { reconcileSelection } from "../selection/writers/reconcileSelection";
-import { resolveRequestedSelection } from "../selection/writers/resolveRequestedSelection";
+import { selectRequestedIds } from "../selection/writers/selectRequestedIds";
 import { applyStyleIntent } from "../style/walk/applyStyleIntent";
 import {
 	applyDocumentProperty,
@@ -202,10 +202,7 @@ export const createCanvasReducer =
 				// Resolved against the state as it stands: a commit rewrites one
 				// object's text, never which ids the canvas holds, so what the request
 				// resolves to is the same before and after one.
-				const { selectedIds } = resolveRequestedSelection(
-					action.ids,
-					state.objects,
-				);
+				const { selectedIds } = selectRequestedIds(action.ids, state.objects);
 				// A request naming the selection already held moves nothing, so an open
 				// session stays open — `selection.part` and all, since a session over a
 				// type with slots dies the moment the slot is no longer named
@@ -269,7 +266,7 @@ export const createCanvasReducer =
 				//     PropertyPanelHandler). That path does not go through here.
 				// Both end at the same apply; what differs is only the commit tail below. The
 				// intent arrives stated, a surface that holds a name and a string having read it
-				// through the shared styleIntentOf.
+				// through the shared toStyleIntent.
 				const updated = applyStyleIntent(state, action.intent, registries);
 				// This path bypasses handleGesture, so flatten the COW view here
 				// (one-shot update, same pattern as MoveCommands; #213).

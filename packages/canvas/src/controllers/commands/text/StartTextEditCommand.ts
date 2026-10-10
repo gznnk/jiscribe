@@ -5,7 +5,7 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
-import { isTextSlotSelection } from "../../selection/partKinds/textSlotPartKind";
+import { isTextSlotPart } from "../../selection/partKinds/textSlotPartKind";
 import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import { readActivePartFocusId } from "../../selection/readers/readActivePartFocusId";
 import { selectTextSlot } from "../../selection/writers/selectTextSlot";
@@ -99,7 +99,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		// (nothing picked, or a part of another kind). The editor opens on one slot,
 		// so a range opens it on the slot the last gesture moved to.
 		const { part } = state.selection;
-		const slotId = isTextSlotSelection(part)
+		const slotId = isTextSlotPart(part)
 			? readActivePartFocusId(part)
 			: getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {

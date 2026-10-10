@@ -55,14 +55,14 @@ export type CoreStyleIntentKind = CoreStyleIntent["kind"];
  * types that declared it and no others.
  *
  * The engine knows nothing of what such a kind means, so the declaring type's
- * entry is what reads the value (fieldEntry).
+ * entry is what reads the value (declaredFieldEntry).
  */
 export type ExtraStyleIntent = {
 	/** The declared kind, dots and all ("label.fill"). */
 	kind: string;
 	/**
 	 * The value, in whatever form the surface that raised it holds: the transport
-	 * string where all it had was a name and a string (styleIntentOf), or the
+	 * string where all it had was a name and a string (toStyleIntent), or the
 	 * value already typed where the surface holds the declaration
 	 * (`{ kind: "headerHeight", value: 32 }`). The engine cannot tell which,
 	 * hence `unknown` — the entry reads it.
@@ -80,8 +80,8 @@ export type StyleIntent = CoreStyleIntent | ExtraStyleIntent;
 /**
  * Which field each toggle flips: the one fact that makes a toggle one, stated
  * once for the types (StyleIntentValueType, TextToggleIntentKind) and the entries
- * (toggleRunOrSlot) alike. A toggle's value type is its field's, so the two
- * cannot drift apart.
+ * (toggleRunOrSlotEntry) alike. A toggle's value type is its field's, so the
+ * two cannot drift apart.
  */
 export const TOGGLE_FLIPS = {
 	toggleBold: "fontWeight",

@@ -1,7 +1,7 @@
 import type { MenuAction } from "./menuActions";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { styleIntentOf } from "../../../../style/intent/styleIntentOf";
+import { toStyleIntent } from "../../../../style/intent/toStyleIntent";
 import { applyStyleIntent } from "../../../../style/walk/applyStyleIntent";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 
@@ -15,7 +15,7 @@ const applyActionValue = (
 	value: string,
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
-	const intent = styleIntentOf(property, value);
+	const intent = toStyleIntent(property, value);
 	return intent === undefined
 		? state
 		: applyStyleIntent(state, intent, registries);
@@ -25,11 +25,11 @@ const applyActionValue = (
  * Applies a menu action that writes a style property of the selection — `set:`
  * or `slider:` — the same way from every surface that carries such actions (the
  * ObjectMenu and the properties sidebar): the action's name and string are read
- * into an intent (styleIntentOf) and applied (applyStyleIntent).
+ * into an intent (toStyleIntent) and applied (applyStyleIntent).
  *
  * The React onChange route (STYLE_INTENT in canvasReducer) ends at the same
  * apply, having been handed the intent already — a widget holding a name and a
- * string reads it through the same styleIntentOf before it dispatches. What is
+ * string reads it through the same toStyleIntent before it dispatches. What is
  * not shared is the commit tail: logic both routes need has to be added to each
  * of them.
  *

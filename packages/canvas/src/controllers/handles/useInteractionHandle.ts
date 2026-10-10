@@ -7,7 +7,7 @@ import type {
 	DragKind,
 } from "../CanvasTypes";
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
-import { resolveTextEdit } from "../utils/resolveTextEdit";
+import { readOpenTextEdit } from "../utils/readOpenTextEdit";
 
 /** What the user is doing to the canvas at this instant. */
 export type CanvasInteractionStatus = {
@@ -83,11 +83,11 @@ export type CanvasInteractionHandle = {
 const resolveEditedObjectId = (
 	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
 ): string | null => {
-	const resolved = resolveTextEdit(state);
-	if (resolved === null) {
+	const openEdit = readOpenTextEdit(state);
+	if (openEdit === null) {
 		return null;
 	}
-	return resolved.kind === "shape" ? resolved.object.id : resolved.connector.id;
+	return openEdit.kind === "shape" ? openEdit.object.id : openEdit.connector.id;
 };
 
 /**
@@ -96,7 +96,7 @@ const resolveEditedObjectId = (
  *
  * @param state - The controller state to read; the transient interaction fields,
  *   plus the selection and the objects an open text edit is resolved against
- *   (resolveTextEdit), which are read and never written
+ *   (readOpenTextEdit), which are read and never written
  * @returns The status, derived fresh on every call
  */
 export const resolveInteractionStatus = (

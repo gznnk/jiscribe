@@ -540,7 +540,8 @@ describe("CanvasEventHandler", () => {
 
 	// A context-menu gesture selects what it landed on, so the menu acts on the
 	// pointed-at shape instead of on whatever was selected before. The decision
-	// itself comes from determineSelection, the same function the left click uses.
+	// itself comes from determineClickSelection, the same function the left click
+	// uses.
 	describe("context menu selection (right click / long press)", () => {
 		const makeTwoRectState = (
 			overrides: Partial<CanvasControllerState> = {},
@@ -591,8 +592,8 @@ describe("CanvasEventHandler", () => {
 				registries,
 			);
 
-			// By reference: determineSelection reports no change, so nothing rebuilds
-			// the selection or its multiSelectGroup.
+			// By reference: determineClickSelection reports no change, so nothing
+			// rebuilds the selection or its multiSelectGroup.
 			expect(nextState.selection.objectIds).toBe(state.selection.objectIds);
 			expect(nextState.multiSelectGroup).toBe(state.multiSelectGroup);
 			expect(nextState.contextMenuPosition).not.toBeNull();

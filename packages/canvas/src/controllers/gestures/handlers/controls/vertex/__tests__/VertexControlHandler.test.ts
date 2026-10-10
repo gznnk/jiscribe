@@ -330,7 +330,7 @@ describe("VertexControlHandler - picking a vertex", () => {
 		]);
 
 		// Nothing was picked, so the state is handed back as it stands rather than
-		// rewritten with the same null (applyPartClick).
+		// rewritten with the same null (selectPartByClick).
 		expect(handler.handle(state, clickEvent(7), registries)).toBe(state);
 
 		const picked = handler.handle(state, clickEvent(1), registries);

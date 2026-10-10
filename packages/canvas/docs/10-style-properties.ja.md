@@ -46,7 +46,7 @@ union には 3 つの事実が乗る:
 型が自前で宣言した kind は union に入らない。`ExtraStyleIntent`
 （`{ kind: string; value: unknown }`）として運ばれる。エンジンはその kind の意味も型も
 知らないからである。値は、名前と文字列しか持たないサーフェスからなら輸送形の文字列
-（`styleIntentOf`）、宣言を持つサーフェスからなら型付きの値
+（`toStyleIntent`）、宣言を持つサーフェスからなら型付きの値
 （`{ kind: "headerHeight", value: 32 }`）。読むのは宣言した型のエントリである。
 2 つを合わせたものが `StyleIntent` で、`applyStyleIntent` が受けるのはこれである。
 
@@ -140,18 +140,18 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 
 エントリは手で書かない。格納先ごとのヘルパーが対を返す（`controllers/style/entries/`）:
 
-| ヘルパー                                     | 値の落ちる先                                                                                                                                                                                      |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectField(field)`                         | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                         |
-| `slotField(field, { slotsOf })`              | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                                 |
-| `runOrSlot(field, { slotsOf })`              | 編集中に文字範囲が選ばれていればその範囲（`resolveRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
-| `toggleRunOrSlot(kind, { slotsOf, toggle })` | `TOGGLE_FLIPS` が名指すフィールド。選ばれた範囲にだけ当たる（キー 1 打は図形全体への書きではない）。現在の描画値を読んで反転し、`runOrSlot` と同じ経路で書く                                      |
-| `fieldEntry(path, valueType)`                | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                              |
-| `lockAspectRatioEntry`                       | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                          |
-| `textVerticalBasisEntry`                     | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                          |
-| `textContentEntry`                           | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                             |
+| ヘルパー                                          | 値の落ちる先                                                                                                                                                                                   |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`                         | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                      |
+| `slotFieldEntry(field, { slotsOf })`              | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                              |
+| `runOrSlotEntry(field, { slotsOf })`              | 編集中に文字範囲が選ばれていればその範囲（`readRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
+| `toggleRunOrSlotEntry(kind, { slotsOf, toggle })` | `TOGGLE_FLIPS` が名指すフィールド。選ばれた範囲にだけ当たる（キー 1 打は図形全体への書きではない）。現在の描画値を読んで反転し、`runOrSlotEntry` と同じ経路で書く                              |
+| `declaredFieldEntry(path, valueType)`             | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                           |
+| `lockAspectRatioEntry`                            | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                       |
+| `textVerticalBasisEntry`                          | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                       |
+| `textContentEntry`                                | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                          |
 
-`slotEntry` は `slotField` と `runOrSlot` のスロット半分が共有する部分 — どのスロットに
+`slotEntry` は `slotFieldEntry` と `runOrSlotEntry` のスロット半分が共有する部分 — どのスロットに
 当たるか、同一参照の契約、各スロットを型の既定値で読むこと。
 
 どのスロットに当たるかは型自身の答えで、`SlotsOf<TState>` として 1 回だけ渡す。コア型は
@@ -182,19 +182,19 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 - `readSelectionStyle(state, kind, registries)` — 同じ道で読み、`single` / `mixed` /
   `none` に畳む（`combineSelectionValues`）。core の kind を渡すと答えが型付き、
   型自前の名前だけを渡すと `SelectionValue<unknown>`。その kind を宣言した表を手前に
-  渡すと（`readSelectionStyle(state, CONNECTOR_STYLE_ENTRIES, "label.fill", registries)`）
+  渡すと（`readSelectionStyle(state, CONNECTOR_STYLE_TABLE, "label.fill", registries)`）
   宣言から型が付く。表は型のためだけに取り、歩きは各対象自身の登録済みの表を引く
 
 ### 編集中の下書き
 
 図形エディタの下書きはセッションが終わるまでスロットへコミットされないので、その下の
 スロットへ書いても次の打鍵で上書きされる。この規則はエントリではなく歩き手が持つ。
-`resolveStyleTextEdit` が編集中の情報を返し、編集中の object は下書きを対象スロットへ
+`readOpenTextEditForStyle` が編集中の情報を返し、編集中の object は下書きを対象スロットへ
 **graft** してからエントリへ渡し、終わったらそのスロットを下書きへ読み戻す。エントリが
 書かなかった graft は捨てる。エディタの存在はどのエントリも知らず、
 `StyleContext.textEditRange` が運ぶのはオフセットだけ。
 
-「選ばれた範囲がそもそもスタイルを当てる範囲か」も `resolveStyleTextEdit` が持つ。
+「選ばれた範囲がそもそもスタイルを当てる範囲か」も `readOpenTextEditForStyle` が持つ。
 崩れた（または未報告の）選択は範囲ではなく、ソース言語の本文の範囲も範囲ではない —
 その一部に run を載せても保存時に落ちて描かれないので、スロット全体への書きになる。
 
@@ -208,20 +208,20 @@ UI が運ぶのはプロパティの**名前**と**文字列**。DOM の `data-a
 
 ```
 ObjectMenu の項目 / スライダー、サイドバーの色見本 ── ジェスチャー（set: / slider:）─→ applyStyleAction ┐
-                                                                                          │ styleIntentOf       │
+                                                                                          │ toStyleIntent       │
 ObjectMenu の数値入力、サイドバーのコールバック、エディタの打鍵 ── STYLE_INTENT ─────────→ canvasReducer       ┼─→ applyStyleIntent
     └ プロパティが静的に決まる行は intent を直接組み、                                    ┘
-      名前と文字列しか持たない部品は styleIntentOf で読む
+      名前と文字列しか持たない部品は toStyleIntent で読む
 ```
 
 両経路の終点は `applyStyleIntent`。違うのは intent の出どころだけで、ジェスチャー経路は
 DOM から名前と文字列を受け取って読み、React 経路（`STYLE_INTENT`）は既に intent を
-運んでくる（名前と文字列しか持たない部品は `styleIntentOf` を通してから渡す）。
+運んでくる（名前と文字列しか持たない部品は `toStyleIntent` を通してから渡す）。
 
 スライダーは両経路にまたがる。ポインタ操作（ドラッグとトラックのクリック）は
 ジェスチャー経路、キーボード操作はジェスチャーを出さないので `STYLE_INTENT`。
 
-`styleIntentOf(property, value)` が、名前と文字列を intent に読む唯一の場所:
+`toStyleIntent(property, value)` が、名前と文字列を intent に読む唯一の場所:
 
 - `INTENT_BY_PROPERTY` が、core の語彙の各名前と「その文字列が作る intent」を
   対応づける。`satisfies Record<SystemStyleName, StyleIntentMapper>` が付いていて、
@@ -265,8 +265,8 @@ materialize は従来どおりの分担で、ジェスチャー経路は `handle
 
 ```ts
 export const CONTAINER_STYLE_ENTRIES = {
-	headerFill: fieldEntry("headerFill", "string"),
-	headerHeight: fieldEntry("headerHeight", "number"),
+	headerFill: declaredFieldEntry("headerFill", "string"),
+	headerHeight: declaredFieldEntry("headerHeight", "number"),
 } satisfies DeclaredStyleTable<ContainerState>;
 ```
 
@@ -278,7 +278,7 @@ export const CONTAINER_STYLE_ENTRIES = {
 — 選択グループの子孫も含む — にだけ当たる。名前のドットは書き込み path
 （`label.fill` は `connector.label` へ merge）。
 
-宣言するエントリは必ず自分が書くフィールドを述べる（`fields`。`fieldEntry` は path の
+宣言するエントリは必ず自分が書くフィールドを述べる（`fields`。`declaredFieldEntry` は path の
 根から埋める。Doc に保存するものを何も書かないなら `[]`）。述べないエントリは登録時に
 拒否し、`DeclaredStyleTable` がコンパイル時にも必須にする。**加えて、その型の Doc が
 持てないフィールドを書くエントリも登録時に拒否する**。持てる名前は
@@ -288,10 +288,10 @@ export const CONTAINER_STYLE_ENTRIES = {
 
 登録は `applyObjectDefinition` を通るので、`CanvasConfig.plugins` で足したプラグイン図形
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md) 参照）も同じ能力を得る。
-`fieldEntry` と `DeclaredStyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
-差し替える型のために、エンジンが自分の表を組むヘルパー（`objectField` / `slotField` /
-`runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`）も並んでいる。コネクターの表は
-`controllers/style/tables/connectorStyleEntries.ts`（`CONNECTOR_STYLE_ENTRIES`）。container プラグインは
+`declaredFieldEntry` と `DeclaredStyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
+差し替える型のために、エンジンが自分の表を組むヘルパー（`objectFieldEntry` / `slotFieldEntry` /
+`runOrSlotEntry` / `toggleRunOrSlotEntry` / `defaultSlotsOf`）も並んでいる。コネクターの表は
+`controllers/style/tables/connectorStyleTable.ts`（`CONNECTOR_STYLE_TABLE`）。container プラグインは
 `src/style/containerStyleEntries.ts` で `CONTAINER_STYLE_ENTRIES` を宣言し、`@jiscribe/canvas-sdk` の
 `createFrameObjectDefinition` へ渡す。
 
@@ -308,14 +308,14 @@ kind の書き込みが届くのとまったく同じ object について返す�
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | core の語彙の新しいスタイル    | `CoreStyleIntent` への kind、それを有効にする宣言の下の `coreStyleTable` / `textStyleTable` へのエントリ、`INTENT_BY_PROPERTY` へのマッパー。`SystemStyleName` の `satisfies` があるので、どれか 1 つだけではコンパイルが通らない |
 | 既存スタイルの新しい格納先     | `{ apply, read }` の対を返すヘルパーを `entries/` に足し、必要な表から使う                                                                                                                                                        |
-| 1 つの型だけが持つスタイル     | その型自前の `DeclaredStyleTable` へ 1 エントリ。自前のフィールドなら `fieldEntry`（初回だけ定義の `styleEntries` も）。根のフィールドは `extraKeys` に入れる                                                                     |
+| 1 つの型だけが持つスタイル     | その型自前の `DeclaredStyleTable` へ 1 エントリ。自前のフィールドなら `declaredFieldEntry`（初回だけ定義の `styleEntries` も）。根のフィールドは `extraKeys` に入れる                                                             |
 | 導出エントリの格納先が違うとき | その kind のまま型自前の表へエントリを書く。導出された方が置き換わる                                                                                                                                                              |
 
-回帰の安全網: 読み替えは `style/__tests__/styleIntentOf.test.ts` が、適用側は
+回帰の安全網: 読み替えは `style/__tests__/toStyleIntent.test.ts` が、適用側は
 名前と文字列を運ぶ唯一の経路の
 `gestures/handlers/menu/utils/__tests__/applyStyleAction.test.ts` が見る。
 後者はレジストリ駆動で、実際の
 バンドル配線から型が宣言した kind を全て列挙し、gate・ネスト書き込み・エントリが述べた
 フィールドを本当に書くことを確かめる。新しい宣言は自動でカバーされる。宣言した型が値を
-何として読むかはエントリ自身の担当（`style/__tests__/fieldEntry.test.ts`）で、登録時の
+何として読むかはエントリ自身の担当（`style/__tests__/declaredFieldEntry.test.ts`）で、登録時の
 検査にも専用のスイートがある（`registries/__tests__/applyObjectDefinition.style.test.ts`）。

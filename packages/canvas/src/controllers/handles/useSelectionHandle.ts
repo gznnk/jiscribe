@@ -4,9 +4,9 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import {
-	resolveRequestedSelection,
-	type ResolvedSelection,
-} from "../selection/writers/resolveRequestedSelection";
+	selectRequestedIds,
+	type RequestedSelection,
+} from "../selection/writers/selectRequestedIds";
 
 /**
  * Imperative selection API exposed on the `selection` namespace of the Canvas
@@ -27,9 +27,9 @@ export type CanvasSelectionHandle = {
 	 *   can only be selected on its own, so one asked for together with anything
 	 *   else is dropped
 	 * @returns What was applied and which requested ids were dropped
-	 *   (see {@link ResolvedSelection}); unknown ids never throw
+	 *   (see {@link RequestedSelection}); unknown ids never throw
 	 */
-	select(ids: readonly string[]): ResolvedSelection;
+	select(ids: readonly string[]): RequestedSelection;
 };
 
 /**
@@ -53,7 +53,7 @@ export const useSelectionHandle = (
 			select: (ids) => {
 				dispatch({ type: "SET_SELECTION", ids });
 				// The reducer resolves the same way, so this is what will be applied.
-				return resolveRequestedSelection(ids, canvasStateRef.current.objects);
+				return selectRequestedIds(ids, canvasStateRef.current.objects);
 			},
 		}),
 		[canvasStateRef, dispatch],

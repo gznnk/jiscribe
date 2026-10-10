@@ -248,7 +248,7 @@ describe("reconcileSelection", () => {
 
 	/**
 	 * The other half of what hangs off the selection. Every case here is a state
-	 * `resolveTextEdit` would throw on, so what this proves is that no state the
+	 * `readOpenTextEdit` would throw on, so what this proves is that no state the
 	 * reducer hands on can reach it.
 	 */
 	describe("an open text edit", () => {

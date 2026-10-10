@@ -8,7 +8,7 @@ export type StyleValueType = "string" | "number" | "boolean";
 
 /**
  * The value type one {@link StyleValueType} names, which is what an entry
- * declared with it works in (fieldEntry).
+ * declared with it works in (declaredFieldEntry).
  *
  * @template TValueType - The declared type name
  */
@@ -22,8 +22,9 @@ export type StyleValueOfType<TValueType extends StyleValueType> =
 /**
  * The one reading of a style value's transport form. Every value a menu part
  * carries is a string (`set:fontSize:24`), and what that string is read as is
- * whatever the receiving side declares: a type's own `valueType` (fieldEntry)
- * or the intent's own type at the boundary (styleIntentOf).
+ * whatever the receiving side declares: a type's own `valueType`
+ * (declaredFieldEntry) or the intent's own type at the boundary
+ * (toStyleIntent).
  *
  * @param valueType - The type to read the string as
  * @param value - The transport string, as the menus' parts spell it

@@ -45,7 +45,7 @@
   発火し、ジェスチャーを消費する（離しても click は出ない）。着地点を問わず CanvasEventHandler に
   ルーティングされ（per-target ハンドラは中/右ボタン同様 `isPerTargetInteraction` で拒否）、
   右クリック相当としてコンテキストメニューを開く。どちらも開く前に着地した図形
-  （またはコネクター）を選択する。判定は左クリックと同じ `determineSelection` なので、
+  （またはコネクター）を選択する。判定は左クリックと同じ `determineClickSelection` なので、
   メニューは指した対象に効く。既に選択に含まれる対象なら選択はそのまま保たれ、
   背景では何も変わらない（`selectContextMenuTarget`）。
 - **慣性スクロール**: 中／右ボタンのパンを動かしたまま離すと、view が滑り続ける。recognizer は
@@ -184,7 +184,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 （`plugins/uml-shapes/src/presentation/RecordBox.tsx`）の `<g data-kind="object">` は、その箱が持つ
 区画ごとの矩形を包み、各区画にそのスロットの部品住所を `data-part` として付ける
 （`data-part="textSlot:name"` / `data-part="textSlot:attributes"` など。`textSlotPart` で組む）。
-この住所からクリックした区画のスロットを選び（`applyPartClick`）、ダブルクリックした区画から
+この住所からクリックした区画のスロットを選び（`selectPartByClick`）、ダブルクリックした区画から
 編集スロットを解決する（`resolveTextSlotId` が id を `state.text` のキーと照合し、該当しなければ
 先頭のスロットに落とす）。
 
@@ -192,7 +192,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 答える名前空間、`partId` はコアには不透明——の正本は
 `controllers/gestures/handlers/utils/partAddress.ts` で、`menu` kind の action が自分の正本を持つのと同じ形。
 書く側は kind ごとの組み立て関数（`textSlotPart`。プラグイン向けに `@jiscribe/canvas` からも公開。
-`vertexPart`）で住所を組み、クリック経路は `parsePartAddress` で分解する（`applyPartClick`）。
+`vertexPart`）で住所を組み、クリック経路は `parsePartAddress` で分解する（`selectPartByClick`）。
 ハンドラが kind を書くことはない。
 
 #### 移行（issue #81）— 完了
