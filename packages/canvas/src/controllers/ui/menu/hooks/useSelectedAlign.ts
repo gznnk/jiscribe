@@ -2,11 +2,11 @@ import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 
-import { useSelectionStyle } from "../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
 } from "../../../style/SelectionValue";
+import { useSelectionStyle } from "../SelectionStyleReaderContext";
 
 /** Where the selected text sits, as an alignment row draws it. */
 type SelectedAlign<TAlign> = {

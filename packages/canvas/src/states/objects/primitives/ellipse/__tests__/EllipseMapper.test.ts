@@ -1,11 +1,8 @@
 import type { EllipseDoc } from "@jiscribe/doc/model/objects/primitives/ellipse/EllipseDoc";
 import { describe, expect, it } from "vitest";
 
-import {
-	ellipseToDoc,
-	ellipseToState,
-} from "../../../../../states/objects/primitives/ellipse/EllipseMapper";
-import type { EllipseState } from "../../../../../states/objects/primitives/ellipse/EllipseState";
+import { ellipseToDoc, ellipseToState } from "../EllipseMapper";
+import type { EllipseState } from "../EllipseState";
 
 describe("EllipseMapper", () => {
 	describe("ellipseToState", () => {

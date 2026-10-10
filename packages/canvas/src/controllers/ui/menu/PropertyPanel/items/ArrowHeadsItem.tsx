@@ -10,7 +10,6 @@ import {
 } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
-import { useSelectionStyle } from "../../../../style/SelectionStyleReaderContext";
 import type { SelectionValue } from "../../../../style/SelectionValue";
 import {
 	isMixedSelectionValue,
@@ -22,6 +21,7 @@ import {
 	ArrowSelectorGrid,
 	ArrowTypeButton,
 } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadMenuStyled";
+import { useSelectionStyle } from "../../SelectionStyleReaderContext";
 import {
 	PropertyIconButton,
 	PropertyMixedLabel,

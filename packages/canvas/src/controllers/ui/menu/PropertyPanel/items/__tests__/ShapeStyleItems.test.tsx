@@ -8,8 +8,8 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { defaultCanvasRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
-import { readSelectionStyle } from "../../../../../style/readSelectionStyle";
-import { SelectionStyleReaderContext } from "../../../../../style/SelectionStyleReaderContext";
+import { readSelectionStyle } from "../../../../../style/walk/readSelectionStyle";
+import { SelectionStyleReaderContext } from "../../../SelectionStyleReaderContext";
 import type { BuiltinItemProps } from "../BuiltinItemProps";
 import { StrokeWidthItem } from "../ShapeStyleItems";
 

@@ -7,7 +7,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
-import { applyStyleIntent } from "../../../style/applyStyleIntent";
+import { applyStyleIntent } from "../../../style/walk/applyStyleIntent";
 import { GroupCommand } from "../GroupCommand";
 
 const registries = createTestRegistries();

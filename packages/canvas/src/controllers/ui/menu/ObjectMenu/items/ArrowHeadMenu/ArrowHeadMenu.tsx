@@ -5,19 +5,19 @@ import { memo, useRef } from "react";
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import { MixedArrowHeadIcon } from "./MixedArrowHeadIcon";
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
 	commandAction,
 	setAction,
 	toggleAction,
 } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
 } from "../../../../../style/SelectionValue";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
+import { useSelectionStyle } from "../../../SelectionStyleReaderContext";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {

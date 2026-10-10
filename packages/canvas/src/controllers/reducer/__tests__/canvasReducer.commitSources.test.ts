@@ -7,7 +7,7 @@ import { twoRectsDoc } from "./support/fixtures";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { readSelectionStyle } from "../../style/readSelectionStyle";
+import { readSelectionStyle } from "../../style/walk/readSelectionStyle";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 

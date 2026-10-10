@@ -10,7 +10,8 @@
 （`StyleTable`）。選択を歩くのは 1 本で、書きと読みが同じ歩き手を使うため、
 メニューの行とその裏の書き込みが「誰に当たるか」で食い違うことはない。
 
-この章のものはすべて `controllers/style/` にある。
+この章のものは `useSelectionStyle`（`controllers/ui/menu/SelectionStyleReaderContext.ts`）を除き、
+すべて `controllers/style/` にある。
 
 ## 層 1: intent
 
@@ -290,7 +291,7 @@ export const CONTAINER_STYLE_ENTRIES = {
 `fieldEntry` と `DeclaredStyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
 差し替える型のために、エンジンが自分の表を組むヘルパー（`objectField` / `slotField` /
 `runOrSlot` / `toggleRunOrSlot` / `defaultSlotsOf`）も並んでいる。コネクターの表は
-`controllers/style/connectorStyleEntries.ts`（`CONNECTOR_STYLE_ENTRIES`）。container プラグインは
+`controllers/style/tables/connectorStyleEntries.ts`（`CONNECTOR_STYLE_ENTRIES`）。container プラグインは
 `src/style/containerStyleEntries.ts` で `CONTAINER_STYLE_ENTRIES` を宣言し、`@jiscribe/canvas-sdk` の
 `createFrameObjectDefinition` へ渡す。
 

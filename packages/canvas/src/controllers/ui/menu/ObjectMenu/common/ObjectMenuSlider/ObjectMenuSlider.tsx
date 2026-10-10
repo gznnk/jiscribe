@@ -10,7 +10,7 @@ import {
 } from "./ObjectMenuSliderStyled";
 import { sliderAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { styleIntentOf } from "../../../../../style/styleIntentOf";
+import { styleIntentOf } from "../../../../../style/intent/styleIntentOf";
 import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {

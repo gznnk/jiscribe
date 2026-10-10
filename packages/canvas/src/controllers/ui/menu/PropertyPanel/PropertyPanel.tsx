@@ -66,12 +66,12 @@ import {
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import { SelectionStyleReaderContext } from "../../../style/SelectionStyleReaderContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
 import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
 
 type PropertyPanelProps = {
 	/** The state the rows read: the draft-grafted objects, so a keystroke mid-edit shows here too. */

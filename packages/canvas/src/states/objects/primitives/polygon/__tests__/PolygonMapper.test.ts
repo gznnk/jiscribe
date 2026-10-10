@@ -1,11 +1,8 @@
 import type { PolygonDoc } from "@jiscribe/doc/model/objects/primitives/polygon/PolygonDoc";
 import { describe, expect, it } from "vitest";
 
-import {
-	polygonToDoc,
-	polygonToState,
-} from "../../../../../states/objects/primitives/polygon/PolygonMapper";
-import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
+import { polygonToDoc, polygonToState } from "../PolygonMapper";
+import type { PolygonState } from "../PolygonState";
 
 describe("PolygonMapper", () => {
 	describe("polygonToState", () => {

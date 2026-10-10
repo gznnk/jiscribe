@@ -17,11 +17,11 @@ import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { styleIntentOf } from "../../../style/intent/styleIntentOf";
 import type {
 	TextToggleIntent,
 	TextToggleIntentKind,
 } from "../../../style/StyleIntent";
-import { styleIntentOf } from "../../../style/styleIntentOf";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";

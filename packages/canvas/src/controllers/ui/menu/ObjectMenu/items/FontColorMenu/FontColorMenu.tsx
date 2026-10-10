@@ -1,17 +1,17 @@
 ﻿import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import { memo, useRef } from "react";
 
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
 	selectionValueOr,
 } from "../../../../../style/SelectionValue";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
+import { useSelectionStyle } from "../../../SelectionStyleReaderContext";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";

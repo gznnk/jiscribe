@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { useCanvasRegistries } from "../registries/CanvasRegistriesContext";
-import { readSelectionStyle } from "../style/readSelectionStyle";
-import type { SelectionStyleReader } from "../style/SelectionStyleReaderContext";
+import { readSelectionStyle } from "../style/walk/readSelectionStyle";
+import type { SelectionStyleReader } from "../ui/menu/SelectionStyleReaderContext";
 
 /**
  * The reader a surface hands the rows it draws (SelectionStyleReaderContext):

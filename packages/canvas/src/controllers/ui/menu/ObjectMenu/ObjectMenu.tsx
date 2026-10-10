@@ -30,8 +30,8 @@ import type {
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
-import { SelectionStyleReaderContext } from "../../../style/SelectionStyleReaderContext";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
+import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
 import { isTextAddressed } from "../utils/isTextAddressed";
 
 type ObjectMenuProps = {

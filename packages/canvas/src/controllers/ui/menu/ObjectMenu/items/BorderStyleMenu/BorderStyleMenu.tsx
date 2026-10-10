@@ -5,13 +5,12 @@ import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
 	setAction,
 	toggleAction,
 } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useSelectionStyle } from "../../../../../style/SelectionStyleReaderContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -21,6 +20,7 @@ import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
+import { useSelectionStyle } from "../../../SelectionStyleReaderContext";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";

@@ -22,7 +22,7 @@ import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
 import { reconcileSelection } from "../selection/writers/reconcileSelection";
 import { resolveRequestedSelection } from "../selection/writers/resolveRequestedSelection";
-import { applyStyleIntent } from "../style/applyStyleIntent";
+import { applyStyleIntent } from "../style/walk/applyStyleIntent";
 import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,

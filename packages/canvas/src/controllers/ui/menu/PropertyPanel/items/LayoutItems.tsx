@@ -5,7 +5,7 @@ import { isSelectionAutoHeight } from "../../../../commands/shape/ToggleAutoHeig
 import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { getSelectedLockAspectRatio } from "../../../../style/getSelectedLockAspectRatio";
+import { getSelectedLockAspectRatio } from "../../../../style/walk/getSelectedLockAspectRatio";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";

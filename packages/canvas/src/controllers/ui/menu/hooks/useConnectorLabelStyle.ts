@@ -1,9 +1,9 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { CONNECTOR_STYLE_ENTRIES } from "../../../style/connectorStyleEntries";
-import { useSelectionStyle } from "../../../style/SelectionStyleReaderContext";
 import { selectionValueOr } from "../../../style/SelectionValue";
 import type { StyleEntryValueType } from "../../../style/StyleEntry";
+import { CONNECTOR_STYLE_ENTRIES } from "../../../style/tables/connectorStyleEntries";
 import { hasSelectedConnectorLabelText } from "../../../utils/hasSelectedConnectorLabelText";
+import { useSelectionStyle } from "../SelectionStyleReaderContext";
 
 /** What one row of a connector's label sections needs before it draws itself. */
 type ConnectorLabelStyle<TValue> = {

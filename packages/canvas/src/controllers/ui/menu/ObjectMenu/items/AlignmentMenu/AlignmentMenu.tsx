@@ -1,7 +1,7 @@
 ﻿import { memo, useRef } from "react";
 
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
 	setAction,
 	toggleAction,

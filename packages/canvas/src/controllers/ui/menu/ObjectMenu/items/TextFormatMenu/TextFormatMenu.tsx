@@ -1,7 +1,7 @@
 import { memo, useRef } from "react";
 
 import { TextFormatMenuContent } from "./TextFormatMenuStyled";
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";

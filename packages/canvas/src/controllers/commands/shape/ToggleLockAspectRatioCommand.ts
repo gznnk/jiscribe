@@ -1,6 +1,6 @@
-import { applyStyleIntent } from "../../style/applyStyleIntent";
-import { getSelectedLockAspectRatio } from "../../style/getSelectedLockAspectRatio";
-import { readSelectionStyle } from "../../style/readSelectionStyle";
+import { applyStyleIntent } from "../../style/walk/applyStyleIntent";
+import { getSelectedLockAspectRatio } from "../../style/walk/getSelectedLockAspectRatio";
+import { readSelectionStyle } from "../../style/walk/readSelectionStyle";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
