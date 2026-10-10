@@ -24,8 +24,8 @@ import type {
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type { ObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { createMultiSelectGroup } from "../../../selection/readers/createMultiSelectGroup";
-import { applyObjectSelection } from "../../../selection/writers/applyObjectSelection";
-import { determineSelection } from "../../../selection/writers/determineSelection";
+import { determineClickSelection } from "../../../selection/writers/determineClickSelection";
+import { selectObjectByClick } from "../../../selection/writers/selectObjectByClick";
 import { selectTextSlot } from "../../../selection/writers/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
@@ -35,11 +35,11 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { applyPartClick } from "../utils/applyPartClick";
 import { ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { parsePartAddress, readTextSlotPart } from "../utils/partAddress";
+import { selectPartByClick } from "../utils/selectPartByClick";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -92,7 +92,7 @@ const extendPartRange = (
 		return state;
 	}
 	// What the menu acts on moves with the range, so the open submenu closes just
-	// as it does on a plain part click (applyPartClick).
+	// as it does on a plain part click (selectPartByClick).
 	return {
 		...state,
 		selection: {
@@ -293,7 +293,11 @@ function handleObjectDragStart(
 		selectedIds = canvasState.selection.objectIds;
 	} else {
 		// Not selected: apply hierarchical selection logic
-		const newSelection = determineSelection(targetObject, canvasState, mods);
+		const newSelection = determineClickSelection(
+			targetObject,
+			canvasState,
+			mods,
+		);
 		selectedIds = newSelection ?? canvasState.selection.objectIds;
 
 		// Create/update multiSelectGroup as the number of selected shapes increases
@@ -415,7 +419,7 @@ export const ObjectEventHandler: GestureHandler = {
 		// Handle the click event
 		if (event.type === "click") {
 			// Shift over a part of the kind already picked grows that range. Left to
-			// applyObjectSelection it would instead deselect the object, which the
+			// selectObjectByClick it would instead deselect the object, which the
 			// modifier cannot mean while the pointer is aimed one level below it.
 			// Ctrl / Meta, with or without Shift, keep toggling the object.
 			if (event.mods.shift && !event.mods.ctrl && !event.mods.meta) {
@@ -429,14 +433,15 @@ export const ObjectEventHandler: GestureHandler = {
 					return extended;
 				}
 			}
-			const afterClick = applyObjectSelection(
+			const afterClick = selectObjectByClick(
 				nextState,
 				targetObject,
 				event.mods,
 			);
 			// A click that leaves the selection as it was, on the object that is already
 			// the whole selection, addresses a part inside it instead. Any modifier
-			// belongs to selection editing, so it is left to applyObjectSelection alone.
+			// belongs to selection editing, so it is left to selectObjectByClick
+			// alone.
 			const addressesPart =
 				afterClick === nextState &&
 				!event.mods.ctrl &&
@@ -448,7 +453,7 @@ export const ObjectEventHandler: GestureHandler = {
 			if (!addressesPart) {
 				return afterClick;
 			}
-			return applyPartClick(
+			return selectPartByClick(
 				afterClick,
 				targetObject,
 				event.targetPart,
@@ -481,7 +486,7 @@ export const ObjectEventHandler: GestureHandler = {
 					// The slot being edited is the selection (see textEditState): the
 					// click that precedes the double-click only selects the object, and
 					// leaves the slot unselected unless the object already was the whole
-					// selection (applyPartClick).
+					// selection (selectPartByClick).
 					selection: selectTextSlot(
 						nextState.selection,
 						targetObject,

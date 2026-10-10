@@ -170,11 +170,12 @@ export type ObjectTypeDefinition<
 	 *
 	 * A kind the core vocabulary does not hold is a style of this type alone: it
 	 * reaches the objects of the selection that declare it and no others, the
-	 * declaration being the gate (fail-closed). `fieldEntry(path, valueType)` is
-	 * the entry for a field of the type's own, dots in the path being a write into
-	 * a nested object. Every entry states the fields it writes (`fields`), `[]`
-	 * when it writes nothing the document stores; an entry stating none, or a
-	 * field the type's doc cannot hold (`extraKeys`), is refused at registration.
+	 * declaration being the gate (fail-closed). `declaredFieldEntry(path,
+	 * valueType)` is the entry for a field of the type's own, dots in the path
+	 * being a write into a nested object. Every entry states the fields it writes
+	 * (`fields`), `[]` when it writes nothing the document stores; an entry
+	 * stating none, or a field the type's doc cannot hold (`extraKeys`), is
+	 * refused at registration.
 	 */
 	styleEntries?: DeclaredStyleTable<TState>;
 

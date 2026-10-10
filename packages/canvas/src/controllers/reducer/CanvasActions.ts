@@ -144,7 +144,7 @@ export type UpdateTextEditAction = {
 
 /**
  * Update text edit selection action - records what the open editor has selected,
- * so styling can address that stretch of the text (resolveStyleTextEdit).
+ * so styling can address that stretch of the text (readOpenTextEditForStyle).
  */
 export type UpdateTextEditSelectionAction = {
 	type: "UPDATE_TEXT_EDIT_SELECTION";
@@ -169,9 +169,9 @@ export type EndTextEditAction = {
  * The first of the four property routes, and the only one whose payload is
  * already in the shape the layer below takes: the intent reaches
  * `applyStyleIntent` as it stands, the names and strings the DOM carries having
- * been read (styleIntentOf) by whoever held them. A toggle is an ordinary intent
- * on this route — `{ kind: "toggleBold" }` with `commit: true` — so one
- * keystroke lands one entry without a route of its own.
+ * been read (toStyleIntent) by whoever held them. A toggle is an ordinary
+ * intent on this route — `{ kind: "toggleBold" }` with `commit: true` — so
+ * one keystroke lands one entry without a route of its own.
  */
 export type StyleIntentAction = {
 	type: "STYLE_INTENT";

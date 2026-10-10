@@ -19,7 +19,7 @@ import type { ObjectPartSelection } from "../../../selection/CanvasSelection";
 import type { ObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import type { StyleContext, TextEditRange } from "../../StyleEntry";
-import { CONNECTOR_STYLE_ENTRIES } from "../../tables/connectorStyleEntries";
+import { CONNECTOR_STYLE_TABLE } from "../../tables/connectorStyleTable";
 import { coreStyleTable } from "../../tables/coreStyleTable";
 import { createObjectStyleRegistry } from "../../tables/ObjectStyleRegistry";
 import type { StyleIntentRegistries } from "../../walk/StyleIntentRegistries";
@@ -143,7 +143,7 @@ export const stateOf = (
 
 /**
  * A state with a shape editor open on one object, which a session is always the
- * sole selected one of (resolveTextEdit).
+ * sole selected one of (readOpenTextEdit).
  *
  * @param objects - Every object, keyed by id
  * @param ownerId - The object being edited, which is also the selection
@@ -187,7 +187,7 @@ export const registriesOf = (
 			// The connector's own declarations ride along, as they do in the real
 			// wiring (applyObjectDefinition).
 			...(features.type === ConnectorFeatures.type
-				? CONNECTOR_STYLE_ENTRIES
+				? CONNECTOR_STYLE_TABLE
 				: {}),
 		});
 	}

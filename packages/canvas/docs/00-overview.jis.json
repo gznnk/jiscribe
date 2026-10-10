@@ -2251,7 +2251,7 @@
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"text": "applyStyleIntent：メニューの set:/slider: と STYLE_INTENT が同一経路で収束し、名前と文字列は styleIntentOf が intent に読む",
+			"text": "applyStyleIntent：メニューの set:/slider: と STYLE_INTENT が同一経路で収束し、名前と文字列は toStyleIntent が intent に読む",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",

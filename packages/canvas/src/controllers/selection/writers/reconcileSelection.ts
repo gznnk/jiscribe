@@ -4,7 +4,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ObjectPartSelection } from "../CanvasSelection";
 import type { ObjectPartKindRegistry } from "../partKinds/ObjectPartKindRegistry";
 import {
-	isTextSlotSelection,
+	isTextSlotPart,
 	TEXT_SLOT_PART_KIND,
 } from "../partKinds/textSlotPartKind";
 
@@ -53,9 +53,9 @@ const isTextEditOwnerLive = (
  * Whether a shape session still names the slot it is written back to. A type that
  * spells its text out as slots says which one in `selection.part`, so a part of
  * another kind — or none — leaves the session with no slot of its own, and
- * `resolveTextEdit` would fall back to the type's first one. A type holding one
- * body registers no slot kind and names nothing below itself, that body being the
- * slot.
+ * `readOpenTextEdit` would fall back to the type's first one. A type holding
+ * one body registers no slot kind and names nothing below itself, that body
+ * being the slot.
  */
 const isTextEditSlotAddressed = (
 	target: ObjectState | undefined,
@@ -67,7 +67,7 @@ const isTextEditSlotAddressed = (
 	}
 	return (
 		objectPartKind.get(target.type, TEXT_SLOT_PART_KIND) === undefined ||
-		isTextSlotSelection(part)
+		isTextSlotPart(part)
 	);
 };
 
@@ -77,9 +77,9 @@ const isTextEditSlotAddressed = (
  * The safety net every reducer branch that rewrites `selection` or `objects` runs
  * (the way `reconcileObjectContentSizes` is), and so the reason the readers may
  * take those invariants for granted instead of each validating them again:
- * `state.selection.part` is live wherever it is read, and `resolveTextEdit` can
- * throw on a session that does not pair with its selection rather than quietly
- * returning nothing.
+ * `state.selection.part` is live wherever it is read, and `readOpenTextEdit`
+ * can throw on a session that does not pair with its selection rather than
+ * quietly returning nothing.
  *
  * Two things are reconciled, both dropped whole rather than narrowed:
  * - the part selection, once its object is not the sole selection, is gone, does

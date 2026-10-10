@@ -1,7 +1,7 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { selectionValueOr } from "../../../style/SelectionValue";
 import type { StyleEntryValueType } from "../../../style/StyleEntry";
-import { CONNECTOR_STYLE_ENTRIES } from "../../../style/tables/connectorStyleEntries";
+import { CONNECTOR_STYLE_TABLE } from "../../../style/tables/connectorStyleTable";
 import { hasSelectedConnectorLabelText } from "../../../utils/hasSelectedConnectorLabelText";
 import { useSelectionStyle } from "../SelectionStyleReaderContext";
 
@@ -22,13 +22,13 @@ type ConnectorLabelStyle<TValue> = {
  * so a row reads before it returns and its hook order holds whichever way the
  * guard goes.
  *
- * @param kind - The property to read, as the connector declares it (CONNECTOR_STYLE_ENTRIES), which types the value
+ * @param kind - The property to read, as the connector declares it (CONNECTOR_STYLE_TABLE), which types the value
  * @param fallback - Drawn where the selection states no value of its own; usually what an unset property is drawn with
  * @param selection - The slice the row is handed (`{ objects, selection }`); anything but a lone connector carrying label text answers `hasLabelText: false`
  * @returns The value to draw and whether to draw the row
  */
 export const useConnectorLabelStyle = <
-	TKind extends keyof typeof CONNECTOR_STYLE_ENTRIES,
+	TKind extends keyof typeof CONNECTOR_STYLE_TABLE,
 	TFallback,
 >(
 	kind: TKind,
@@ -36,13 +36,13 @@ export const useConnectorLabelStyle = <
 	selection: Pick<CanvasControllerState, "objects" | "selection">,
 ): ConnectorLabelStyle<
 	| Exclude<
-			StyleEntryValueType<(typeof CONNECTOR_STYLE_ENTRIES)[TKind]>,
+			StyleEntryValueType<(typeof CONNECTOR_STYLE_TABLE)[TKind]>,
 			undefined
 	  >
 	| TFallback
 > => ({
 	value: selectionValueOr(
-		useSelectionStyle(CONNECTOR_STYLE_ENTRIES, kind),
+		useSelectionStyle(CONNECTOR_STYLE_TABLE, kind),
 		fallback,
 	),
 	hasLabelText: hasSelectedConnectorLabelText(selection),

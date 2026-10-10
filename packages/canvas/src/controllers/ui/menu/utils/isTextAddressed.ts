@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { isTextSlotSelection } from "../../../selection/partKinds/textSlotPartKind";
+import { isTextSlotPart } from "../../../selection/partKinds/textSlotPartKind";
 
 /**
  * Whether the chrome (the ObjectMenu, the properties sidebar) takes text as its
@@ -13,5 +13,4 @@ import { isTextSlotSelection } from "../../../selection/partKinds/textSlotPartKi
  * @returns True while either holds; false while nothing is selected
  */
 export const isTextAddressed = (state: CanvasControllerState): boolean =>
-	state.textEditState?.kind === "shape" ||
-	isTextSlotSelection(state.selection.part);
+	state.textEditState?.kind === "shape" || isTextSlotPart(state.selection.part);

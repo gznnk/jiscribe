@@ -262,13 +262,13 @@ mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参
 
 ```ts
 export const CONTAINER_STYLE_ENTRIES = {
-	headerFill: fieldEntry("headerFill", "string"),
-	headerHeight: fieldEntry("headerHeight", "number"),
+	headerFill: declaredFieldEntry("headerFill", "string"),
+	headerHeight: declaredFieldEntry("headerHeight", "number"),
 } satisfies DeclaredStyleTable<ContainerState>;
 ```
 
 宣言する表のエントリは、どれも自分が書くフィールドを述べる（`fields`。Doc に保存する
-ものを何も書かないなら `[]`）。述べないエントリは登録時に拒否する。`fieldEntry` は
+ものを何も書かないなら `[]`）。述べないエントリは登録時に拒否する。`declaredFieldEntry` は
 これを自分で埋める。
 
 `header-fill` 行が `PropertyColorField` から `onStyleIntent` 経由で `headerFill`

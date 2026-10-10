@@ -32,8 +32,8 @@ export const lockAspectRatioEntry: StyleEntry<ObjectState, boolean> = {
 			: ({ ...object, lockAspectRatio: locked } as ObjectState);
 	},
 	// A flag holding anything but a boolean reads as unset, the way a shape-style
-	// field of the wrong type does (objectField) — and the resize gestures read it
-	// the same way (dropAutoHeightOnResize).
+	// field of the wrong type does (objectFieldEntry) — and the resize gestures
+	// read it the same way (dropAutoHeightOnResize).
 	read: (object, _pick, ctx) => {
 		if (!ctx.selected) {
 			return [];

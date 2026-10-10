@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import { applyConnectorSelection } from "../../../selection/writers/applyConnectorSelection";
+import { selectConnectorAlone } from "../../../selection/writers/selectConnectorAlone";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -72,7 +72,7 @@ export const ConnectorClickHandler: GestureHandler = {
 
 		// A click selects the connector (clearing shape selection to enforce exclusivity)
 		if (event.type === "click" && connectorId) {
-			nextState = applyConnectorSelection(nextState, connectorId);
+			nextState = selectConnectorAlone(nextState, connectorId);
 		}
 
 		return nextState;

@@ -19,7 +19,7 @@ import { VERTEX_PART_KIND } from "../../../selection/partKinds/vertexPartKind";
  * The element that draws a part builds its address with the per-kind builder
  * below ({@link textSlotPart}, re-exported from `@jiscribe/canvas` for plugins;
  * {@link vertexPart}), and the click path takes it apart with
- * {@link parsePartAddress} (applyPartClick), so no reader spells a kind.
+ * {@link parsePartAddress} (selectPartByClick), so no reader spells a kind.
  */
 
 const PART_ADDRESS_SEPARATOR = ":";
@@ -66,8 +66,9 @@ export const parsePartAddress = (
 
 /**
  * The `data-part` one text slot's element carries: how a click picks that slot
- * (applyPartClick) and a double click opens it for editing (resolveTextSlotId).
- * A shape drawing one hit region per slot marks each region with it.
+ * (selectPartByClick) and a double click opens it for editing
+ * (resolveTextSlotId). A shape drawing one hit region per slot marks each
+ * region with it.
  *
  * @param slotId - Key of the shape's own `text`; an id the shape does not hold
  *   addresses nothing, so a click on it steps back up to the object
@@ -94,7 +95,7 @@ export const readTextSlotPart = (
 
 /**
  * The `data-part` one vertex handle carries: how a click picks that vertex
- * (applyPartClick) and a drag moves it (VertexControlHandler).
+ * (selectPartByClick) and a drag moves it (VertexControlHandler).
  *
  * @param index - Index into the object's `points`; a non-negative integer, since
  *   only the canonical decimal spelling names a vertex

@@ -2,7 +2,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasSelection } from "../CanvasSelection";
 import type { ObjectPartKindRegistry } from "../partKinds/ObjectPartKindRegistry";
 import {
-	isTextSlotSelection,
+	isTextSlotPart,
 	TEXT_SLOT_PART_KIND,
 } from "../partKinds/textSlotPartKind";
 
@@ -48,7 +48,7 @@ export const selectTextSlot = (
 	}
 	if (
 		isSameObject &&
-		isTextSlotSelection(part) &&
+		isTextSlotPart(part) &&
 		part.ranges.length === 1 &&
 		part.ranges[0].anchorId === slotId &&
 		part.ranges[0].focusId === slotId

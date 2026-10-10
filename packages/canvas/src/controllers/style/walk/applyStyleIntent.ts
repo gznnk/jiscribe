@@ -1,11 +1,11 @@
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { collectStyleTargets } from "./collectStyleTargets";
-import type { StyleTextEdit } from "./resolveStyleTextEdit";
+import type { StyleTextEdit } from "./readOpenTextEditForStyle";
 import {
 	graftStyleTextEdit,
-	resolveStyleTextEdit,
-} from "./resolveStyleTextEdit";
+	readOpenTextEditForStyle,
+} from "./readOpenTextEditForStyle";
 import type { StyleIntent } from "../StyleIntent";
 import { styleIntentValue } from "../StyleIntent";
 import type { StyleIntentRegistries } from "./StyleIntentRegistries";
@@ -53,11 +53,11 @@ const redraftTextEdit = (
  *
  * The object an editor is open on is handed over with the draft grafted into the
  * slot being edited, and that slot is read back into the draft afterwards
- * (resolveStyleTextEdit) — so a write lands on the text that is on screen and the
- * slot and the draft cannot end up saying different things, without any entry
- * knowing an editor exists. A graft the entry did not write to is dropped: with
- * the rest of its answer when it answered null, from its answer alone when it
- * wrote elsewhere on the object.
+ * (readOpenTextEditForStyle) — so a write lands on the text that is on screen
+ * and the slot and the draft cannot end up saying different things, without any
+ * entry knowing an editor exists. A graft the entry did not write to is
+ * dropped: with the rest of its answer when it answered null, from its answer
+ * alone when it wrote elsewhere on the object.
  *
  * @param state - The state to write into; its selection decides who is reached
  * @param intent - What to reflect, with its value; one of the core kinds or a name a shape declared for itself (ExtraStyleIntent), the two being looked up in the same table
@@ -77,7 +77,7 @@ export const applyStyleIntent = (
 	// Copy-on-write view instead of a full spread: slider drags apply once per
 	// pointermove frame (#213). handleGesture / the reducer materialize.
 	const updatedObjects = createCowObjects(state.objects);
-	const textEdit = resolveStyleTextEdit(state);
+	const textEdit = readOpenTextEditForStyle(state);
 	const value = styleIntentValue(intent);
 	let changed = false;
 	let editedObject: ObjectState | null = null;

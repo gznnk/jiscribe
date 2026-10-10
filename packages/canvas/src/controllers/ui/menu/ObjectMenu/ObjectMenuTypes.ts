@@ -24,7 +24,7 @@ export type BuiltinItemKey =
  *   kinds, typed (`{ kind: "fontSize", size: 24 }`), or a name the shape
  *   declared for itself, whose value stays the transport string
  *   (`{ kind: "headerHeight", value: "32" }`). A row holding a property name and
- *   a string from the DOM reads it with `styleIntentOf` first
+ *   a string from the DOM reads it with `toStyleIntent` first
  * @param commit - true records the change in history (blur / Enter / key release),
  *   false only previews it live
  * @param coalesceHistory - true merges this commit into the immediately preceding

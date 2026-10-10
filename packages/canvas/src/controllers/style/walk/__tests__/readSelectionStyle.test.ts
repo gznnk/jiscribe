@@ -15,7 +15,7 @@ import {
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
 import type { SelectionValue } from "../../SelectionValue";
-import { CONNECTOR_STYLE_ENTRIES } from "../../tables/connectorStyleEntries";
+import { CONNECTOR_STYLE_TABLE } from "../../tables/connectorStyleTable";
 import { readSelectionStyle } from "../readSelectionStyle";
 
 const registries = registriesOf();
@@ -282,7 +282,7 @@ describe("readSelectionStyle on a text style", () => {
 			const c = connectorOf("c", { label: { text: "Yes", fill: "#f00" } });
 			const fill: SelectionValue<string | undefined> = readSelectionStyle(
 				stateOf(["c"], { c }),
-				CONNECTOR_STYLE_ENTRIES,
+				CONNECTOR_STYLE_TABLE,
 				"label.fill",
 				registries,
 			);
@@ -294,7 +294,7 @@ describe("readSelectionStyle on a text style", () => {
 			expect(
 				readSelectionStyle(
 					stateOf(["c"], { c }),
-					CONNECTOR_STYLE_ENTRIES,
+					CONNECTOR_STYLE_TABLE,
 					"label.fill",
 					registries,
 				),
@@ -306,7 +306,7 @@ describe("readSelectionStyle on a text style", () => {
 			expect(
 				readSelectionStyle(
 					stateOf(["a"], { a }),
-					CONNECTOR_STYLE_ENTRIES,
+					CONNECTOR_STYLE_TABLE,
 					"label.fill",
 					registries,
 				),

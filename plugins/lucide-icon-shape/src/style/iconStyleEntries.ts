@@ -1,5 +1,5 @@
 import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
-import { fieldEntry } from "@jiscribe/canvas-sdk";
+import { declaredFieldEntry } from "@jiscribe/canvas-sdk";
 
 import type { IconState } from "../state/IconState";
 
@@ -10,5 +10,5 @@ import type { IconState } from "../state/IconState";
  * registration checks the entry against.
  */
 export const ICON_STYLE_ENTRIES = {
-	icon: fieldEntry("icon", "string"),
+	icon: declaredFieldEntry("icon", "string"),
 } satisfies DeclaredStyleTable<IconState>;

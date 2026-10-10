@@ -104,7 +104,7 @@ import {
 	TEXT_SLOT_PART_KIND,
 } from "../selection/partKinds/textSlotPartKind";
 import { createVertexPartKindDefinition } from "../selection/partKinds/vertexPartKind";
-import { CONNECTOR_STYLE_ENTRIES } from "../style/tables/connectorStyleEntries";
+import { CONNECTOR_STYLE_TABLE } from "../style/tables/connectorStyleTable";
 import { coreStyleTable } from "../style/tables/coreStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
@@ -278,7 +278,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		// route: the endpoints are not among them, so there is no floor — a
 		// connector with no waypoint left is the straight route it started as.
 		partKinds: [createVertexPartKindDefinition<ConnectorState>(0)],
-		styleEntries: CONNECTOR_STYLE_ENTRIES,
+		styleEntries: CONNECTOR_STYLE_TABLE,
 		menu: [
 			{
 				id: "arrowHead",

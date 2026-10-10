@@ -290,14 +290,14 @@ styles as a table of its own (`src/style/containerStyleEntries.ts`), handed to
 
 ```ts
 export const CONTAINER_STYLE_ENTRIES = {
-	headerFill: fieldEntry("headerFill", "string"),
-	headerHeight: fieldEntry("headerHeight", "number"),
+	headerFill: declaredFieldEntry("headerFill", "string"),
+	headerHeight: declaredFieldEntry("headerHeight", "number"),
 } satisfies DeclaredStyleTable<ContainerState>;
 ```
 
 Every entry of a declared table states the fields it writes (`fields`, `[]`
 when it writes nothing the document stores), and one stating none is refused at
-registration; `fieldEntry` states it for you.
+registration; `declaredFieldEntry` states it for you.
 
 Its `header-fill` row states `headerFill` through `onStyleIntent` from a
 `PropertyColorField`, sitting under the body color in the Fill section, and its
@@ -353,7 +353,7 @@ the first `:` separates it from the id in the `<kind>:<partId>` address a part's
 element carries in its `data-part`
 (`controllers/gestures/handlers/utils/partAddress.ts`). Marking the element is
 all a part takes to be pickable: core parses the address, checks it against the
-kind's `has` and writes the selection (`applyPartClick`). For text slots the
+kind's `has` and writes the selection (`selectPartByClick`). For text slots the
 builder is `textSlotPart`, exported from `@jiscribe/canvas`.
 
 `data-part` carries nothing but such addresses. An element whose press starts

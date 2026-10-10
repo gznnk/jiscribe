@@ -43,7 +43,7 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		 * The parts a range from `anchorPartId` to `focusPartId` covers, for a kind
 		 * whose parts are not laid out in one line — a table's cells, where the run is
 		 * the rectangle the two corners span rather than the slice of `list` between
-		 * them. Omitted = the linear default (collectObjectPartRange over `list`),
+		 * them. Omitted = the linear default (collectPartIdsBetween over `list`),
 		 * which is what a sequence of vertices or of tracks wants.
 		 *
 		 * Every returned id must be a part the object currently holds, given in the

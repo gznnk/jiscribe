@@ -4,7 +4,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { ToggleTextVerticalBasisCommand } from "../../commands/shape/ToggleTextVerticalBasisCommand";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { styleIntentOf } from "../../style/intent/styleIntentOf";
+import { toStyleIntent } from "../../style/intent/toStyleIntent";
 import { applyStyleIntent } from "../../style/walk/applyStyleIntent";
 import { readSelectionStyle } from "../../style/walk/readSelectionStyle";
 import { createCanvasRegistries } from "../createCanvasRegistries";
@@ -166,7 +166,7 @@ describe("the vertical basis a body is placed against", () => {
 
 	describe("stated outright through the style property", () => {
 		const applyBasis = (state: CanvasControllerState, value: string) => {
-			const intent = styleIntentOf("textVerticalBasis", value);
+			const intent = toStyleIntent("textVerticalBasis", value);
 			return intent === undefined
 				? state
 				: applyStyleIntent(state, intent, registries);

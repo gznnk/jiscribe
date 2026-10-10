@@ -1,8 +1,8 @@
 import { isTransformedFrame } from "@jiscribe/geometry";
 
 import type { ClipboardData } from "./ClipboardData";
+import { collectConnectorsAttachedToSelection } from "../../selection/readers/collectConnectorsAttachedToSelection";
 import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
-import { selectConnectorsInSelection } from "../../selection/readers/selectConnectorsInSelection";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
@@ -23,7 +23,8 @@ export const CopyCommand: ExecutableCommand = {
 	},
 
 	// Not offered for a lone connector: a connector is copied as part of the
-	// shapes it runs between (selectConnectorsInSelection), never on its own.
+	// shapes it runs between (collectConnectorsAttachedToSelection), never on its
+	// own.
 	canExecute: (state) =>
 		state.selection.objectIds.length > 0 &&
 		getSelectedConnectorId(state) === null,
@@ -43,7 +44,7 @@ export const CopyCommand: ExecutableCommand = {
 		}
 
 		// Copy only connectors whose both endpoints are within the selection (same test as DuplicateCommand)
-		const connectorIds = selectConnectorsInSelection(
+		const connectorIds = collectConnectorsAttachedToSelection(
 			getRootConnectorIds(state.objects, state.rootIds),
 			state.objects,
 			selectedIdsWithDescendants,

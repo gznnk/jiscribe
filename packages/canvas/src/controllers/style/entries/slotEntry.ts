@@ -6,7 +6,7 @@ import type {
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { ObjectPartSelection } from "../../selection/CanvasSelection";
-import { isTextSlotSelection } from "../../selection/partKinds/textSlotPartKind";
+import { isTextSlotPart } from "../../selection/partKinds/textSlotPartKind";
 import { collectObjectPartIds } from "../../selection/readers/collectObjectPartIds";
 import { textSlotsOf } from "../../utils/textSlotsOf";
 import type { StyleContext, StyleEntry } from "../StyleEntry";
@@ -45,7 +45,7 @@ export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick, ctx) => {
 	if (slots === undefined) {
 		return [];
 	}
-	if (!isTextSlotSelection(pick)) {
+	if (!isTextSlotPart(pick)) {
 		return Object.keys(slots);
 	}
 	const slotPart = ctx.objectPartKind.get(object.type, pick.kind);
@@ -63,7 +63,8 @@ export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick, ctx) => {
  * The pair for an intent stored on whole slots: `writeSlot` decides what one
  * slot's write does, and the rest — which slots are reached, the same-reference
  * contract, and reading each of them through the type's defaults — is shared by
- * every such intent (slotField, and the whole-slot half of runOrSlot).
+ * every such intent (slotFieldEntry, and the whole-slot half of
+ * runOrSlotEntry).
  *
  * @param field - The slot field written and read; one the text-style defaults answer for
  * @param slotsOf - Which slots the intent lands on

@@ -4,7 +4,7 @@ import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ObjectPartKindRegistry } from "../partKinds/ObjectPartKindRegistry";
 import {
-	isTextSlotSelection,
+	isTextSlotPart,
 	TEXT_SLOT_PART_KIND,
 } from "../partKinds/textSlotPartKind";
 import { collectObjectPartIds } from "../readers/collectObjectPartIds";
@@ -83,7 +83,7 @@ export const selectAdjacentTextSlot = (
 	// The object is the sole selection (getTextSlotCycleTarget), so a slot pick
 	// is its own.
 	const { part } = state.selection;
-	const coveredIndices = isTextSlotSelection(part)
+	const coveredIndices = isTextSlotPart(part)
 		? collectObjectPartIds(part, slotPart, target).map((slotId) =>
 				slotIds.indexOf(slotId),
 			)

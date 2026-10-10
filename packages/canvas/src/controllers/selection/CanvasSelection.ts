@@ -54,7 +54,7 @@ export type CanvasSelection = {
 	 * The selected objects' ids, in the order they were selected. Shapes, groups
 	 * and connectors alike, with one rule the writers keep: a connector is
 	 * selected on its own — one of them, never alongside a shape
-	 * (applyConnectorSelection / determineSelection / resolveRequestedSelection).
+	 * (selectConnectorAlone / determineClickSelection / selectRequestedIds).
 	 * Readers that need the connector therefore ask for it by that shape
 	 * (getSelectedConnectorId).
 	 */

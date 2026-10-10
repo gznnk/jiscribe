@@ -17,7 +17,7 @@ import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
-import { styleIntentOf } from "../../../style/intent/styleIntentOf";
+import { toStyleIntent } from "../../../style/intent/toStyleIntent";
 import type {
 	TextToggleIntent,
 	TextToggleIntentKind,
@@ -464,7 +464,7 @@ export const runTextEditFuzzSession = (
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			const intent = styleIntentOf(op.property, op.value);
+			const intent = toStyleIntent(op.property, op.value);
 			if (intent === undefined) {
 				throw new Error(
 					`the menu op states a value nothing reads: ${op.property}=${op.value}`,

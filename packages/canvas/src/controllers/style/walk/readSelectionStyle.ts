@@ -1,8 +1,8 @@
 import { collectStyleTargets } from "./collectStyleTargets";
 import {
 	graftStyleTextEdit,
-	resolveStyleTextEdit,
-} from "./resolveStyleTextEdit";
+	readOpenTextEditForStyle,
+} from "./readOpenTextEditForStyle";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { combineSelectionValues } from "../SelectionValue";
@@ -19,10 +19,10 @@ import { styleEntryOf } from "../tables/styleEntryOf";
  * The same walk `applyStyleIntent` writes along, so a row states the value of
  * exactly the objects a write would reach — the object an editor is open on
  * included, read with the draft grafted into the slot being edited
- * (resolveStyleTextEdit), which is what makes the rows follow the text on screen.
- * Values come out of `read` already resolved through the type's defaults, which is
- * why two shapes drawn alike read as one value whether or not they both spell it
- * out.
+ * (readOpenTextEditForStyle), which is what makes the rows follow the text on
+ * screen. Values come out of `read` already resolved through the type's
+ * defaults, which is why two shapes drawn alike read as one value whether or
+ * not they both spell it out.
  *
  * Handing the table a type declared (ObjectTypeDefinition.styleEntries) ahead of the
  * kind is the same read, typed from that declaration: the table is taken for its
@@ -69,7 +69,7 @@ export function readSelectionStyle(
 		? (kindOrRegistries as StyleIntentRegistries)
 		: (tableRegistries as StyleIntentRegistries);
 
-	const textEdit = resolveStyleTextEdit(state);
+	const textEdit = readOpenTextEditForStyle(state);
 	const values: unknown[] = [];
 
 	for (const { object, pick, selected } of collectStyleTargets(state)) {

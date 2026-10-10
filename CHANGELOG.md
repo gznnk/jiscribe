@@ -160,6 +160,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   becomes `subAction`. A plugin's menu row or selection control renders
   `data-action={...}` where it rendered `data-part={...}`.
 
+- **For plugin authors: the style entry factories and the text-slot guard are
+  renamed to say what they return.** On `@jiscribe/canvas/unstable` (and so
+  `@jiscribe/canvas-sdk`), `fieldEntry` becomes `declaredFieldEntry`,
+  `objectField` / `slotField` become `objectFieldEntry` / `slotFieldEntry`,
+  `runOrSlot` / `toggleRunOrSlot` become `runOrSlotEntry` /
+  `toggleRunOrSlotEntry`, `styleIntentOf` becomes `toStyleIntent`, and
+  `isTextSlotSelection` becomes `isTextSlotPart`. In `@jiscribe/canvas`, the
+  type `ResolvedSelection` (what `CanvasSelectionHandle.select` returns)
+  becomes `RequestedSelection`. Arguments and behaviour are unchanged; a type's
+  style table reads `declaredFieldEntry("headerFill", "string")` where it read
+  `fieldEntry(...)`.
+
 - **For plugin authors: a type declares `features.textVerticalBasis`.** The flag
   says the type holds that field — its one body may be measured against the
   shape's whole height rather than against the region the type declares — and is

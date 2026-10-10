@@ -2,10 +2,10 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { computeDuplicateOffset } from "./utils/computeDuplicateOffset";
+import { collectConnectorsAttachedToSelection } from "../../selection/readers/collectConnectorsAttachedToSelection";
 import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
 import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import { getSelectionCenter } from "../../selection/readers/getSelectionCenter";
-import { selectConnectorsInSelection } from "../../selection/readers/selectConnectorsInSelection";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { cloneObjects } from "../../utils/cloneObjects";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
@@ -24,7 +24,8 @@ export const DuplicateCommand: ExecutableCommand = {
 	},
 
 	// Not offered for a lone connector: a connector is duplicated as part of the
-	// shapes it runs between (selectConnectorsInSelection), never on its own.
+	// shapes it runs between (collectConnectorsAttachedToSelection), never on its
+	// own.
 	canExecute: (state) =>
 		state.selection.objectIds.length > 0 &&
 		getSelectedConnectorId(state) === null,
@@ -47,7 +48,7 @@ export const DuplicateCommand: ExecutableCommand = {
 		}
 
 		// Only duplicate connectors whose both endpoints are within the selection (same check as CopyCommand)
-		const connectorIds = selectConnectorsInSelection(
+		const connectorIds = collectConnectorsAttachedToSelection(
 			getRootConnectorIds(state.objects, state.rootIds),
 			state.objects,
 			selectedIdsWithDescendants,

@@ -20,7 +20,7 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { TextToggleIntentKind } from "../../../style/StyleIntent";
-import { resolveTextEdit } from "../../../utils/resolveTextEdit";
+import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
 import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
@@ -189,7 +189,7 @@ function renderTextEditor(
 
 type TextEditorLayerProps = {
 	textEditState: CanvasControllerState["textEditState"];
-	/** Who the session belongs to; the object and the slot are read off it (resolveTextEdit). */
+	/** Who the session belongs to; the object and the slot are read off it (readOpenTextEdit). */
 	selection: CanvasControllerState["selection"];
 	objects: CanvasControllerState["objects"];
 	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
@@ -222,8 +222,8 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	if (!textEditState) {
 		return null;
 	}
-	const resolved = resolveTextEdit({ textEditState, selection, objects });
-	if (resolved === null) {
+	const openEdit = readOpenTextEdit({ textEditState, selection, objects });
+	if (openEdit === null) {
 		return null;
 	}
 
@@ -235,12 +235,12 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		onToggleFormat,
 	};
 
-	if (resolved.kind === "connectorLabel") {
+	if (openEdit.kind === "connectorLabel") {
 		return renderConnectorLabelEditor(
-			resolved.connector,
+			openEdit.connector,
 			objects,
-			resolved.text,
-			resolved.placement,
+			openEdit.text,
+			openEdit.placement,
 			handlers,
 			registries.objectOutline,
 			registries.objectAnchorRegion,
@@ -249,17 +249,17 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	}
 
 	// Shapes with text also carry geometry (cx/cy/width...).
-	const geometryObject = resolved.object as typeof resolved.object &
+	const geometryObject = openEdit.object as typeof openEdit.object &
 		TransformedFrame;
 	return renderTextEditor(
 		geometryObject,
-		resolved.object.id,
-		resolved.slotId,
-		resolved.text,
+		openEdit.object.id,
+		openEdit.slotId,
+		openEdit.text,
 		handlers,
 		registries.objectTextStyleDefaults,
-		registries.objectTextRegion.get(resolved.object.type),
-		registries.objectTextEditOverflow.get(resolved.object.type),
+		registries.objectTextRegion.get(openEdit.object.type),
+		registries.objectTextEditOverflow.get(openEdit.object.type),
 	);
 };
 

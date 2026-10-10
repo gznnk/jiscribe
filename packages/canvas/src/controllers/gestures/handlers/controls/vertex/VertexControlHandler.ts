@@ -12,9 +12,9 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
-import { applyPartClick } from "../../utils/applyPartClick";
 import { applyAxisLock } from "../../utils/axisLock";
 import { parsePartAddress } from "../../utils/partAddress";
+import { selectPartByClick } from "../../utils/selectPartByClick";
 import { excludeCenterCandidates } from "../../utils/snap/excludeCenterCandidates";
 import {
 	buildSnapFeedback,
@@ -61,7 +61,7 @@ export class VertexControlHandler extends ControlStrategy {
 			if (!targetObject) {
 				return state;
 			}
-			return applyPartClick(
+			return selectPartByClick(
 				state,
 				targetObject,
 				targetPart,

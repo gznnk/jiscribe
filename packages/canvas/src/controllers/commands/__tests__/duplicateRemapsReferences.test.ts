@@ -13,8 +13,8 @@ import { selectionOf } from "../../selection/__tests__/support/selectionOf";
  * endpoint owners, group childIds, children's parentId — must point at the
  * fresh IDs, never back at the source objects. A single missed remap silently
  * aliases the copy to the original (moving one moves "both" ends of the other).
- * Spans DuplicateCommand, cloneObjects, and selectConnectorsInSelection through
- * the real handleCommand path.
+ * Spans DuplicateCommand, cloneObjects, and
+ * collectConnectorsAttachedToSelection through the real handleCommand path.
  */
 describe("duplicate deep-clones with all references remapped", () => {
 	it("a duplicated connector points at the duplicated shapes, never at the originals", () => {

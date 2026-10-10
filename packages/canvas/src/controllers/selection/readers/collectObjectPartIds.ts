@@ -1,4 +1,4 @@
-import { collectObjectPartRange } from "./collectObjectPartRange";
+import { collectPartIdsBetween } from "./collectPartIdsBetween";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ObjectPartSelection } from "../CanvasSelection";
 import type { ObjectPartKindDefinition } from "../partKinds/ObjectPartKindRegistry";
@@ -35,7 +35,7 @@ export const collectObjectPartIds = (
 			range.anchorId === range.focusId
 				? [range.anchorId]
 				: (part.range?.(object, range.anchorId, range.focusId) ??
-					collectObjectPartRange(
+					collectPartIdsBetween(
 						part.list?.(object) ?? [],
 						range.anchorId,
 						range.focusId,

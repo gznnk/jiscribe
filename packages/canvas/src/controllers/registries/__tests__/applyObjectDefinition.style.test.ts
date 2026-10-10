@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { fieldEntry } from "../../style/entries/fieldEntry";
+import { declaredFieldEntry } from "../../style/entries/declaredFieldEntry";
 import type { DeclaredStyleEntry, StyleEntry } from "../../style/StyleEntry";
 import { applyObjectDefinition } from "../applyObjectDefinition";
 import { createTestRegistries } from "../createCanvasRegistries";
@@ -31,7 +31,7 @@ const buildFakeDefinition = (
 		...own,
 	});
 
-const headerFill = fieldEntry("headerFill", "string");
+const headerFill = declaredFieldEntry("headerFill", "string");
 
 describe("applyObjectDefinition: style", () => {
 	it("registers a declared kind beside the derived ones", () => {
@@ -76,7 +76,9 @@ describe("applyObjectDefinition: style", () => {
 				registries,
 				"container",
 				buildFakeDefinition("container", {
-					styleEntries: { headerFill: fieldEntry("headerFill", "string") },
+					styleEntries: {
+						headerFill: declaredFieldEntry("headerFill", "string"),
+					},
 				}),
 			),
 		).toThrow(/"container".*"headerFill".*does not hold/);
@@ -89,7 +91,9 @@ describe("applyObjectDefinition: style", () => {
 			"connector",
 			buildFakeDefinition("connector", {
 				extraKeys: ["label"],
-				styleEntries: { "label.fill": fieldEntry("label.fill", "string") },
+				styleEntries: {
+					"label.fill": declaredFieldEntry("label.fill", "string"),
+				},
 			}),
 		);
 

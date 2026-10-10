@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { applyConnectorSelection } from "../../../../selection/writers/applyConnectorSelection";
-import { applyObjectSelection } from "../../../../selection/writers/applyObjectSelection";
+import { selectConnectorAlone } from "../../../../selection/writers/selectConnectorAlone";
+import { selectObjectByClick } from "../../../../selection/writers/selectObjectByClick";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 
 /**
@@ -42,14 +42,14 @@ export function selectContextMenuTarget(
 	// The two selectable kinds, matching ObjectEventHandler.supports (object) and
 	// ConnectorClickHandler.supports (connector).
 	if (event.targetKind === "object") {
-		return applyObjectSelection(
+		return selectObjectByClick(
 			state,
 			state.objects[targetId],
 			NON_ADDITIVE_MODS,
 		);
 	}
 	if (event.targetKind === "connector") {
-		return applyConnectorSelection(state, targetId);
+		return selectConnectorAlone(state, targetId);
 	}
 	return state;
 }

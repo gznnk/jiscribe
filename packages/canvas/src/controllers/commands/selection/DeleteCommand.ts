@@ -4,8 +4,8 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../selection/CanvasSelection";
 import { collectObjectPartIds } from "../../selection/readers/collectObjectPartIds";
-import type { ObjectPartTarget } from "../../selection/readers/resolveDeletableParts";
-import { resolveDeletableParts } from "../../selection/readers/resolveDeletableParts";
+import type { DeletableParts } from "../../selection/readers/readDeletableParts";
+import { readDeletableParts } from "../../selection/readers/readDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
@@ -18,12 +18,12 @@ import type { ExecutableCommand } from "../CommandTypes";
  * Validity is not asked about: the reducer has already dropped a selection
  * naming something gone (reconcileSelection), so every id here has passed
  * `has`. Whether the parts can be deleted at all is a separate question
- * (resolveDeletableParts).
+ * (readDeletableParts).
  */
 const resolveSelectedParts = (
 	state: CanvasControllerState,
 	registries: Pick<ICanvasRegistries, "objectPartKind">,
-): ObjectPartTarget | null => {
+): DeletableParts | null => {
 	const { objectIds, part } = state.selection;
 	if (part === null) {
 		return null;
@@ -74,7 +74,7 @@ export const DeleteCommand: ExecutableCommand = {
 		const target = resolveSelectedParts(state, registries);
 		if (
 			target !== null &&
-			resolveDeletableParts(state, target, registries) !== null
+			readDeletableParts(state, target, registries) !== null
 		) {
 			return true;
 		}
@@ -84,7 +84,7 @@ export const DeleteCommand: ExecutableCommand = {
 	execute: (state, registries) => {
 		const target = resolveSelectedParts(state, registries);
 		if (target !== null) {
-			const deletable = resolveDeletableParts(state, target, registries);
+			const deletable = readDeletableParts(state, target, registries);
 			if (deletable !== null) {
 				const deletedObject = deletable.part.delete(
 					deletable.object,

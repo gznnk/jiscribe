@@ -6,7 +6,7 @@ import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
-import { resolveRequestedSelection } from "../selection/writers/resolveRequestedSelection";
+import { selectRequestedIds } from "../selection/writers/selectRequestedIds";
 
 /**
  * Whether undo, redo and revert should be offered right now — the enabled look
@@ -81,7 +81,7 @@ export const restoreHistorySnapshot = (
 		mapper,
 		registries.objectContentResizer,
 	);
-	const { selectedIds } = resolveRequestedSelection(
+	const { selectedIds } = selectRequestedIds(
 		state.selection.objectIds,
 		restoredState.objects,
 	);

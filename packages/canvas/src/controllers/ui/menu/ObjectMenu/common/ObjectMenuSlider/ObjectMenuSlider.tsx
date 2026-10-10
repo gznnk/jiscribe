@@ -10,7 +10,7 @@ import {
 } from "./ObjectMenuSliderStyled";
 import { sliderAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { styleIntentOf } from "../../../../../style/intent/styleIntentOf";
+import { toStyleIntent } from "../../../../../style/intent/toStyleIntent";
 import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {
@@ -39,7 +39,7 @@ type ObjectMenuSliderProps = {
 	/**
 	 * The style property the slider writes. Kept as a name rather than an intent
 	 * because the track's `slider:` action is built from it, and the keyboard route
-	 * reads the name into an intent of its own (styleIntentOf).
+	 * reads the name into an intent of its own (toStyleIntent).
 	 */
 	property: string;
 	onStyleIntent?: StyleIntentUpdater;
@@ -101,7 +101,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	// route reads the identical `slider:` action with.
 	const writeValue = useCallback(
 		(valueText: string, commit: boolean, coalesceHistory = false) => {
-			const intent = styleIntentOf(property, valueText);
+			const intent = toStyleIntent(property, valueText);
 			if (intent !== undefined) {
 				onStyleIntent?.(intent, commit, coalesceHistory);
 			}

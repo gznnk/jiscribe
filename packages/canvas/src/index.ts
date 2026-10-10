@@ -42,7 +42,7 @@ export type { ResolveImage } from "./controllers/hooks/useDocImages";
 export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
 export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
 export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
-export type { ResolvedSelection } from "./controllers/selection/writers/resolveRequestedSelection";
+export type { RequestedSelection } from "./controllers/selection/writers/selectRequestedIds";
 export {
 	exportCanvasToPng,
 	exportCanvasToSvg,

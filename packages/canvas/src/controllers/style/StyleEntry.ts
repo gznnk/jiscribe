@@ -185,7 +185,7 @@ export type StyleContext = {
 	 *
 	 * The object it names is handed to the entry with the editor's draft already
 	 * grafted into that slot, so the offsets address the content the entry reads
-	 * (see resolveStyleTextEdit).
+	 * (see readOpenTextEditForStyle).
 	 */
 	textEditRange: TextEditRange | null;
 };
