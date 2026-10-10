@@ -320,6 +320,17 @@ gesture-start snapshot) and the cursor, and nothing else; deriving the
 `SelectionControlEvent.subAction`), snapshot guarding, copy-on-write write-back and edge-scroll release are handled by an
 internal adapter.
 
+`handle` is called only for the event kinds listed in `events`, which defaults to
+drag / dragEnd (`DEFAULT_SELECTION_CONTROL_EVENTS`). Listing `"click"` /
+`"doubleClick"` delivers presses that never moved as well; those events carry no
+`start` / `delta`. It returns `{ object?, selection? }`: `object` replaces the
+control's own object (committed at dragEnd for a drag, at once for a click), and
+`selection` is the part selection on that object (`null` clears it, omitted
+leaves it). A `selection` whose `kind` the type does not declare in `partKinds`
+is dropped, and a click that returns only a selection is not an edit. The part
+selection standing on the object reaches the `Component` as `selectedPart`, so a
+handle can draw itself selected.
+
 **`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
 divides its objects into, stating `has` — whether an id still names a part of
 that object — and `delete`. Core treats a part id as an opaque string and hands

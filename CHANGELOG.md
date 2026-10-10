@@ -146,6 +146,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **For plugin authors: a selection control can take a click and select a part
+  of its object.** `SelectionControlDefinition.handle` now returns
+  `{ object?, selection? }` instead of the object itself: `object` replaces the
+  control's own object as before, and `selection` sets (or, with `null`,
+  clears) the part selection on it, under a kind the type declares in
+  `partKinds`. An existing control returns `{ object: next }` where it returned
+  `next`. A definition lists the gestures it wants in `events` (`"click"`,
+  `"doubleClick"`, `"drag"`, `"dragEnd"`); left out, it gets the drag pair as
+  before (`DEFAULT_SELECTION_CONTROL_EVENTS`). A click event carries no `start`
+  or `delta`. The control's `Component` receives the part selection standing on
+  its object as `selectedPart`, so a handle can draw itself selected.
+
 - **For plugin authors: what a press starts is a `data-action`, and
   `data-part` only addresses a model part.** The one `data-part` attribute used
   to carry both a part's address and everything else an element said about

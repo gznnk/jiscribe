@@ -1,6 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
+	SelectionControlResult,
 } from "@jiscribe/canvas";
 import { PRECISION } from "@jiscribe/canvas-sdk";
 import {
@@ -23,7 +24,7 @@ import type { ContainerState } from "../state/ContainerState";
 export const handleContainerHeaderHeight = (
 	context: SelectionControlContext<ContainerState>,
 	event: SelectionControlEvent,
-): ContainerState => {
+): SelectionControlResult<ContainerState> => {
 	const startContainer = context.startObject;
 
 	const radians = degreesToRadians(startContainer.rotation);
@@ -54,5 +55,5 @@ export const handleContainerHeaderHeight = (
 		1,
 	);
 
-	return { ...startContainer, headerHeight: newHeaderHeight };
+	return { object: { ...startContainer, headerHeight: newHeaderHeight } };
 };

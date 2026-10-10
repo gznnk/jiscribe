@@ -57,9 +57,11 @@ let markCount = 0;
 const markObject: SelectionControlDefinition["handle"] = (context) => {
 	markCount += 1;
 	return {
-		...context.startObject,
-		width: 40 + markCount,
-	} as unknown as ObjectState;
+		object: {
+			...context.startObject,
+			width: 40 + markCount,
+		} as unknown as ObjectState,
+	};
 };
 
 /** A single selected rect, which every gesture below acts on. */

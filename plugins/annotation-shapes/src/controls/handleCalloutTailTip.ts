@@ -1,6 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
+	SelectionControlResult,
 } from "@jiscribe/canvas";
 import {
 	calcInverseAffineTransformedPoint,
@@ -24,7 +25,7 @@ const TAIL_POSITION_PRECISION = 4;
 export const handleCalloutTailTip = (
 	context: SelectionControlContext<CalloutState>,
 	event: SelectionControlEvent,
-): CalloutState => {
+): SelectionControlResult<CalloutState> => {
 	const startCallout = context.startObject;
 	const { width, height } = startCallout;
 
@@ -65,5 +66,5 @@ export const handleCalloutTailTip = (
 		TAIL_POSITION_PRECISION,
 	);
 
-	return { ...startCallout, tail: { side, position } };
+	return { object: { ...startCallout, tail: { side, position } } };
 };

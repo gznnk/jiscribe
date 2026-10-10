@@ -66,11 +66,12 @@ const makeSelectionControlRegistry = (): SelectionControlRegistry => {
 		{
 			name: "headerHeight",
 			Component: () => null,
-			handle: (context) =>
-				({
+			handle: (context) => ({
+				object: {
 					...context.startObject,
 					handledBy: "selection-control",
-				}) as unknown as ObjectState,
+				} as unknown as ObjectState,
+			}),
 		},
 	]);
 	return registry;

@@ -2,9 +2,15 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 
 type SelectionControlsLayerProps = {
-	selectedIds: readonly string[];
+	/**
+	 * `state.selection` as it stands. Its `part` reaches every control of the sole
+	 * selected object as `selectedPart` (reconcileSelection keeps it naming a part
+	 * that object still holds).
+	 */
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	isTextEditing: boolean;
@@ -19,8 +25,9 @@ type SelectionControlsLayerProps = {
  */
 const SelectionControlsLayerComponent: React.FC<
 	SelectionControlsLayerProps
-> = ({ selectedIds, objects, zoom = 1, isTextEditing }) => {
+> = ({ selection, objects, zoom = 1, isTextEditing }) => {
 	const registries = useCanvasRegistries();
+	const { objectIds: selectedIds } = selection;
 
 	// Do not render controls while text editing
 	if (isTextEditing || selectedIds.length !== 1) {
@@ -45,6 +52,7 @@ const SelectionControlsLayerComponent: React.FC<
 					object={selectedObject}
 					zoom={zoom}
 					action={control.action}
+					selectedPart={selection.part}
 				/>
 			))}
 		</>

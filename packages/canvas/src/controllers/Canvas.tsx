@@ -840,7 +840,7 @@ const CanvasComponent = ({
 									zoom={state.viewport.zoom}
 								/>
 								<SelectionControlsLayer
-									selectedIds={state.selection.objectIds}
+									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}

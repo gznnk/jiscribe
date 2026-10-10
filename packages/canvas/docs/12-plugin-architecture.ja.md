@@ -288,6 +288,15 @@ export const CONTAINER_STYLE_ENTRIES = {
 `:<sub>` は `SelectionControlEvent.subAction` として戻る）・スナップショットのガード・
 COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わりする。
 
+`handle` が呼ばれるのは `events` に挙げたイベント種だけで、省略すれば drag / dragEnd
+（`DEFAULT_SELECTION_CONTROL_EVENTS`）。`"click"` / `"doubleClick"` を挙げれば押しただけの
+操作も届き、そのイベントに `start` / `delta` は無い。戻り値は `{ object?, selection? }`
+で、`object` は自オブジェクトの置き換え（drag なら dragEnd で、クリックならその場で
+確定する）、`selection` は自オブジェクトの上の部分選択（`null` で解除、省略なら
+そのまま）。`selection` の `kind` は `partKinds` に宣言したものでなければ落とされる。
+選択だけを返したクリックは編集にならない。いま立っている部分選択は `Component` に
+`selectedPart` として渡るので、ハンドルは自分が選ばれていることを描ける。
+
 **`partKinds`。**その型がオブジェクトを分割する部分 id の名前空間（`kind`）ごとに
 `ObjectPartKindDefinition` を 1 つ宣言し、`has`（その id がまだそのオブジェクトの部分を
 指すか）と `delete` を述べる。core は部分 id を不透明な文字列として運び、型へ渡し
