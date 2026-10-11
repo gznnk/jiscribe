@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "./ConnectorRenderer";
+import { ObjectRenderBoundary } from "./ObjectRenderBoundary";
 import { resolveEndpointOwner } from "../../../connectors/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
@@ -28,7 +29,8 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
  * is the stacking order as-is.
  * - group → expand children recursively (a group's children never include a connector)
  * - connector → drawn by the dedicated ConnectorRenderer since it needs endpoint resolution
- * - otherwise → the component from the registry
+ * - otherwise → the component from the registry, each inside its own
+ *   ObjectRenderBoundary so one object's throw leaves the rest drawn
  */
 const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
@@ -87,14 +89,20 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 		// When text editing, add the isEditing prop
 		const isEditing = id === textEditObjectId;
 		result.push(
-			<ObjectComponent
+			<ObjectRenderBoundary
 				key={id}
-				{...objState}
-				isEditing={isEditing}
-				// Only the edited object receives the slot id; for the rest the prop
-				// stays undefined so starting/ending an edit does not break their memo.
-				editingSlotId={isEditing ? (textEditSlotId ?? undefined) : undefined}
-			/>,
+				objectId={id}
+				objectType={objState.type}
+				objectState={objState}
+			>
+				<ObjectComponent
+					{...objState}
+					isEditing={isEditing}
+					// Only the edited object receives the slot id; for the rest the prop
+					// stays undefined so starting/ending an edit does not break their memo.
+					editingSlotId={isEditing ? (textEditSlotId ?? undefined) : undefined}
+				/>
+			</ObjectRenderBoundary>,
 		);
 	};
 

@@ -6,15 +6,23 @@ import type { RecordSlotRegionsState } from "./calcRecordSlotRegions";
 
 /**
  * Places one text slot of a record. Registered per type, so display (TextOverlay)
- * and editing (TextEditor) resolve the same rectangle. A slot id with no region —
- * a compartment this box does not have — cannot reach here in practice (the slot
- * is resolved against `state.text`, the same key set the regions come from), so
- * it falls back to the title band rather than inventing a region.
+ * and editing (TextEditor) resolve the same rectangle.
+ *
+ * A slot id with no region — a compartment this box does not have — is an
+ * invariant broken upstream (the slot is resolved against `state.text`, the same
+ * key set the regions come from), so it throws rather than answering with another
+ * band, which would draw the text somewhere plausible and hide the breakage.
  */
 export const calcRecordTextRegion: ObjectTextRegionCalculator<
 	RecordSlotRegionsState
 > = (state, slotId) => {
 	const regions = calcRecordSlotRegions(state);
 	const bySlotId: Record<string, Rect | undefined> = regions;
-	return bySlotId[slotId] ?? regions.name;
+	const region = bySlotId[slotId];
+	if (region === undefined) {
+		throw new Error(
+			`calcRecordTextRegion: no "${slotId}" compartment on this record (it has ${Object.keys(regions).join(", ")})`,
+		);
+	}
+	return region;
 };

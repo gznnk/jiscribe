@@ -9,14 +9,21 @@ import { readCachedTableLayout } from "../layout/readCachedTableLayout";
  * editing (TextEditor) resolve the very same rectangle — the cell rect the rules
  * are drawn around.
  *
- * A slot id with no cell cannot reach here in practice (a slot is enumerated from
- * `state.text`, the same map the rects are keyed from), so it falls back to the
- * table's own box — what an unregistered type would have been given (see
- * calcTextRegion) — rather than inventing a cell.
+ * A slot id with no cell is an invariant broken upstream — a slot is enumerated
+ * from `state.text`, the same map the rects are keyed from, and that map is held
+ * to the grid (isValidTableGrid) — so it throws rather than answering with some
+ * other rectangle, which would draw the text somewhere plausible and hide the
+ * breakage as a layout bug.
  */
 export const calcTableTextRegion: ObjectTextRegionCalculator<
 	Dimensions & TableLayoutSource
 > = (state, slotId) => {
-	const { cellRects, width, height } = readCachedTableLayout(state);
-	return cellRects[slotId] ?? { x: -width / 2, y: -height / 2, width, height };
+	const { cellRects } = readCachedTableLayout(state);
+	const cellRect = cellRects[slotId];
+	if (cellRect === undefined) {
+		throw new Error(
+			`calcTableTextRegion: no cell "${slotId}" in a ${state.rows?.length ?? 0}x${state.columns?.length ?? 0} grid`,
+		);
+	}
+	return cellRect;
 };
