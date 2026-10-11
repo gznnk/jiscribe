@@ -378,6 +378,15 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **A shape whose renderer throws no longer takes the canvas down.** Each
+  object is drawn inside a boundary of its own: the one that threw is drawn as
+  nothing and named in a console warning with its type and id, while every other
+  object stays drawn, editable and saved. The failure is held against the state
+  that threw, so an undo or an outside correction draws the object again. For
+  plugin authors this is also what makes a thrown invariant the right answer to
+  data a shape cannot draw — the table's and the record's text region
+  calculators now throw for a slot they do not have, naming it, instead of
+  answering with some other rectangle.
 - **A group's frame no longer goes stale when a shape inside it is edited by a
   plugin's command or a selection control.** Whether a group kept its box
   depended on _how_ an edit was made rather than on what it did — the same

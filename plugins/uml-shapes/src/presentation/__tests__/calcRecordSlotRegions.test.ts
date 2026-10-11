@@ -299,21 +299,21 @@ describe("calcRecordTextRegion", () => {
 		);
 	});
 
-	it("falls back to the title band for an unknown slot id", () => {
+	it("throws for an unknown slot id, naming the compartments it has", () => {
 		const state = { width: 180, height: 100 };
-		expect(calcRecordTextRegion(state, "nope")).toEqual(
-			calcRecordSlotRegions(state).name,
+		expect(() => calcRecordTextRegion(state, "nope")).toThrow(
+			'calcRecordTextRegion: no "nope" compartment on this record (it has name)',
 		);
 	});
 
-	it("falls back to the title band for a compartment the box does not have", () => {
+	it("throws for a compartment the box does not have", () => {
 		const state = {
 			width: 180,
 			height: 100,
 			text: titleAndAttributes(""),
 		};
-		expect(calcRecordTextRegion(state, "operations")).toEqual(
-			calcRecordSlotRegions(state).name,
+		expect(() => calcRecordTextRegion(state, "operations")).toThrow(
+			'calcRecordTextRegion: no "operations" compartment on this record (it has name, attributes)',
 		);
 	});
 

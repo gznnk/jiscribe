@@ -64,17 +64,14 @@ describe("calcTableTextRegion", () => {
 		);
 	});
 
-	it("falls back to the table's own box for a slot id the grid has no cell for", () => {
+	it("throws for a slot id the grid has no cell for, naming the grid", () => {
 		const state = {
 			...tableOf([110, 90], [36], [["", ""]]),
 			width: 200,
 			height: 36,
 		};
-		expect(calcTableTextRegion(state, "r9c9")).toEqual({
-			x: -100,
-			y: -18,
-			width: 200,
-			height: 36,
-		});
+		expect(() => calcTableTextRegion(state, "r9c9")).toThrow(
+			'calcTableTextRegion: no cell "r9c9" in a 1x2 grid',
+		);
 	});
 });

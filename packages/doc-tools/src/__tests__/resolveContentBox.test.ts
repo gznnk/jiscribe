@@ -86,6 +86,15 @@ describe("resolveContentBox", () => {
 		).toEqual({ kind: "outside" });
 	});
 
+	it("reports outside for a slots type, whose cells and bands hold no single body", () => {
+		expect(
+			resolveContentBox({ type: "table", width: 200, height: 100 }),
+		).toEqual({ kind: "outside" });
+		expect(
+			resolveContentBox({ type: "record", width: 180, height: 100 }),
+		).toEqual({ kind: "outside" });
+	});
+
 	it("reports outside for a shipped shape that declares no region at all", () => {
 		expect(
 			resolveContentBox({ type: "lucideIcon", width: 64, height: 64 }),
