@@ -1,5 +1,5 @@
 import { runOrSlotEntry } from "./runOrSlotEntry";
-import type { SlotsOf } from "./slotEntry";
+import type { SlotIdsOf } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StyleEntry } from "../StyleEntry";
 import type {
@@ -43,7 +43,7 @@ type ToggledValue<K extends TextToggleIntentKind> = StyleIntentValueType<
  * as it stands. A keystroke is not a shape-wide write.
  *
  * @param kind - The toggle; the field it flips is TOGGLE_FLIPS' answer, which fixes the value type too
- * @param options - `slotsOf`: which slots the read falls back to with no stretch selected (defaultSlotsOf for the core types); `toggle`: the value to write given what the stretch is drawn with now, undefined meaning the field is unset there
+ * @param options - `slotIdsOf`: which slots the read falls back to with no stretch selected (selectedSlotIds for the core types); `toggle`: the value to write given what the stretch is drawn with now, undefined meaning the field is unset there
  * @returns The pair, writing only while a stretch of this object is selected and reporting the field as runOrSlotEntry does
  * @template TState - The state the entry is written against
  * @template K - The toggle, which decides the field and the value type
@@ -54,10 +54,10 @@ export const toggleRunOrSlotEntry = <
 >(
 	kind: K,
 	{
-		slotsOf,
+		slotIdsOf,
 		toggle,
 	}: {
-		slotsOf: SlotsOf<TState>;
+		slotIdsOf: SlotIdsOf<TState>;
 		// The flipped field's value type already admits the unset `foldToggleValues`
 		// answers with, but with the kind still generic the compiler cannot see that,
 		// so it is spelled out here.
@@ -66,7 +66,7 @@ export const toggleRunOrSlotEntry = <
 		) => NonNullable<ToggledValue<K>>;
 	},
 ): StyleEntry<TState, ToggledValue<K>> => {
-	const styled = runOrSlotEntry(TOGGLE_FLIPS[kind], { slotsOf });
+	const styled = runOrSlotEntry(TOGGLE_FLIPS[kind], { slotIdsOf });
 
 	return {
 		// The intent carries no value of its own: the entry reads the current one

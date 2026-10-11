@@ -8,14 +8,14 @@ import {
 	slotPickOf,
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
-import { defaultSlotsOf } from "../slotEntry";
+import { selectedSlotIds } from "../slotEntry";
 import { slotFieldEntry } from "../slotFieldEntry";
 
 const entry = slotFieldEntry("textAlign", {
-	slotsOf: defaultSlotsOf,
+	slotIdsOf: selectedSlotIds,
 });
 
-const slotsOf = (object: unknown): TextSlots =>
+const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;
 
 /** A two-slot shape, standing in for a record: one body and one row list. */
@@ -30,7 +30,7 @@ describe("slotFieldEntry", () => {
 		it("writes the field into the slot, leaving its content and the rest of its styling", () => {
 			const a = textRectOf("a", { body: { text: "hi", fontSize: 12 } });
 			const updated = entry.apply(a, null, "right", contextOf());
-			expect(slotsOf(updated).body).toEqual({
+			expect(readTextSlots(updated).body).toEqual({
 				text: "hi",
 				fontSize: 12,
 				textAlign: "right",
@@ -39,7 +39,7 @@ describe("slotFieldEntry", () => {
 
 		it("writes every slot while nothing is picked below the object", () => {
 			const updated = entry.apply(keyedRect(), null, "right", contextOf());
-			expect(slotsOf(updated)).toEqual({
+			expect(readTextSlots(updated)).toEqual({
 				name: { text: "User", textAlign: "right" },
 				rows: { text: ["id"], textAlign: "right" },
 			});
@@ -48,11 +48,11 @@ describe("slotFieldEntry", () => {
 		it("writes the picked slot alone, leaving the others as they were", () => {
 			const a = keyedRect();
 			const updated = entry.apply(a, slotPickOf("rows"), "right", contextOf());
-			expect(slotsOf(updated)).toEqual({
+			expect(readTextSlots(updated)).toEqual({
 				name: { text: "User" },
 				rows: { text: ["id"], textAlign: "right" },
 			});
-			expect(slotsOf(updated).name).toBe(slotsOf(a).name);
+			expect(readTextSlots(updated).name).toBe(readTextSlots(a).name);
 		});
 
 		it("keeps a field the slot's own type loaded onto it (a cell's fill)", () => {
@@ -61,7 +61,9 @@ describe("slotFieldEntry", () => {
 			const a = textRectOf("a", {
 				"0_0": { text: "id", fill: "#eef" },
 			} as unknown as TextSlots);
-			expect(slotsOf(entry.apply(a, null, "center", contextOf()))).toEqual({
+			expect(
+				readTextSlots(entry.apply(a, null, "center", contextOf())),
+			).toEqual({
 				"0_0": { text: "id", fill: "#eef", textAlign: "center" },
 			});
 		});
@@ -89,14 +91,14 @@ describe("slotFieldEntry", () => {
 			});
 			const updated = entry.apply(a, null, "right", contextOf());
 			expect(updated).not.toBe(a);
-			expect(slotsOf(updated).name).toBe(slotsOf(a).name);
-			expect(slotsOf(updated).rows.textAlign).toBe("right");
+			expect(readTextSlots(updated).name).toBe(readTextSlots(a).name);
+			expect(readTextSlots(updated).rows.textAlign).toBe("right");
 		});
 
 		it("leaves the object it was given as it was", () => {
 			const a = textRectOf("a", { body: { text: "hi" } });
 			entry.apply(a, null, "right", contextOf());
-			expect(slotsOf(a).body).toEqual({ text: "hi" });
+			expect(readTextSlots(a).body).toEqual({ text: "hi" });
 		});
 	});
 

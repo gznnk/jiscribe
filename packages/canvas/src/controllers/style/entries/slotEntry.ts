@@ -12,9 +12,9 @@ import { textSlotsOf } from "../../utils/textSlotsOf";
 import type { StyleContext, StyleEntry } from "../StyleEntry";
 
 /**
- * Which slots of one object an intent lands on. A type whose slots are not the
- * keys of `text` — or one that answers for a subset of them — hands its own in
- * when it builds its table.
+ * The ids of the slots of one object an intent lands on. A type whose slots are
+ * not the keys of `text` — or one that answers for a subset of them — hands its
+ * own in when it builds its table.
  *
  * @param object - The target, as the walk handed it over
  * @param pick - What is picked inside this object, null when the whole object is addressed
@@ -23,16 +23,16 @@ import type { StyleContext, StyleEntry } from "../StyleEntry";
  *   does not hold is skipped by the entry rather than written as a new slot
  * @template TState - The state the enclosing entry is written against
  */
-export type SlotsOf<TState extends ObjectState> = (
+export type SlotIdsOf<TState extends ObjectState> = (
 	object: TState,
 	pick: ObjectPartSelection | null,
 	ctx: StyleContext,
 ) => readonly string[];
 
 /**
- * The slots the core types address: every slot the picked ranges cover when a
- * slot is picked, otherwise every slot the object holds — which is what makes a
- * text style written with nothing picked reach the whole shape.
+ * The ids of the slots the core types address: every slot the picked ranges
+ * cover when a slot is picked, otherwise every slot the object holds — which is
+ * what makes a text style written with nothing picked reach the whole shape.
  *
  * @param object - The target; one holding no `text` yields nothing
  * @param pick - What is picked inside this object; a pick of another kind (a vertex) addresses every slot, as nothing does
@@ -40,7 +40,7 @@ export type SlotsOf<TState extends ObjectState> = (
  * @returns The addressed slot ids in the order the ranges cover them, always own keys of `object.text`
  * @throws When a slot is picked on a type no `textSlot` kind is registered for, which applyObjectDefinition always registers for a type taking slot picks
  */
-export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick, ctx) => {
+export const selectedSlotIds: SlotIdsOf<ObjectState> = (object, pick, ctx) => {
 	const slots = textSlotsOf(object);
 	if (slots === undefined) {
 		return [];
@@ -51,7 +51,7 @@ export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick, ctx) => {
 	const slotPart = ctx.objectPartKind.get(object.type, pick.kind);
 	if (slotPart === undefined) {
 		throw new Error(
-			`defaultSlotsOf: a text slot is picked on "${object.type}", which has no "${pick.kind}" part kind registered`,
+			`selectedSlotIds: a text slot is picked on "${object.type}", which has no "${pick.kind}" part kind registered`,
 		);
 	}
 	return collectObjectPartIds(pick, slotPart, object).filter((slotId) =>
@@ -67,7 +67,7 @@ export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick, ctx) => {
  * runOrSlotEntry).
  *
  * @param field - The slot field written and read; one the text-style defaults answer for
- * @param slotsOf - Which slots the intent lands on
+ * @param slotIdsOf - Which slots the intent lands on
  * @param writeSlot - One slot with the value reflected in it; copies the slot it is given rather than rebuilding it, so a type's own extra slot fields survive (TextSlots)
  * @returns The pair, writing every addressed slot and reporting one value per slot
  * @template TState - The state the entry is written against
@@ -75,7 +75,7 @@ export const defaultSlotsOf: SlotsOf<ObjectState> = (object, pick, ctx) => {
  */
 export const slotEntry = <TState extends ObjectState, V>(
 	field: keyof TextSlotStyle,
-	slotsOf: SlotsOf<TState>,
+	slotIdsOf: SlotIdsOf<TState>,
 	writeSlot: (slot: TextSlot, value: V) => TextSlot,
 ): StyleEntry<TState, V> => ({
 	apply: (object, pick, value, ctx) => {
@@ -83,7 +83,7 @@ export const slotEntry = <TState extends ObjectState, V>(
 		if (slots === undefined) {
 			return null;
 		}
-		const slotIds = slotsOf(object, pick, ctx);
+		const slotIds = slotIdsOf(object, pick, ctx);
 		if (slotIds.length === 0) {
 			return null;
 		}
@@ -109,7 +109,7 @@ export const slotEntry = <TState extends ObjectState, V>(
 			return [];
 		}
 		const values: V[] = [];
-		for (const slotId of slotsOf(object, pick, ctx)) {
+		for (const slotId of slotIdsOf(object, pick, ctx)) {
 			const slot = slots[slotId];
 			if (slot === undefined) {
 				continue;

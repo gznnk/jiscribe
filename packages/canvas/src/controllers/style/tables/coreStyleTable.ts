@@ -4,7 +4,7 @@ import { textStyleTable } from "./textStyleTable";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { lockAspectRatioEntry } from "../entries/lockAspectRatioEntry";
 import { objectFieldEntry } from "../entries/objectFieldEntry";
-import { defaultSlotsOf } from "../entries/slotEntry";
+import { selectedSlotIds } from "../entries/slotEntry";
 import { textVerticalBasisEntry } from "../entries/textVerticalBasisEntry";
 import type { StyleTable } from "../StyleEntry";
 
@@ -48,8 +48,8 @@ export const coreStyleTable = (
 		lockAspectRatio: lockAspectRatioEntry,
 	}),
 	// The core types spell their slots out as the keys of `text`, so the slots a
-	// write reaches are read off the object itself (defaultSlotsOf).
-	...(features.text && textStyleTable(features.text, defaultSlotsOf)),
+	// write reaches are read off the object itself (selectedSlotIds).
+	...(features.text && textStyleTable(features.text, selectedSlotIds)),
 	...(features.textVerticalBasis && {
 		textVerticalBasis: textVerticalBasisEntry,
 	}),

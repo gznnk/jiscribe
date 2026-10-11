@@ -12,27 +12,27 @@ import {
 	rectOf,
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
-import { defaultSlotsOf } from "../slotEntry";
+import { selectedSlotIds } from "../slotEntry";
 import { toggleRunOrSlotEntry } from "../toggleRunOrSlotEntry";
 
 /** The three entries as textStyleTable builds them, so the toggles under test are the shipped ones. */
 const bold = toggleRunOrSlotEntry("toggleBold", {
-	slotsOf: defaultSlotsOf,
+	slotIdsOf: selectedSlotIds,
 	toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 });
 const italic = toggleRunOrSlotEntry("toggleItalic", {
-	slotsOf: defaultSlotsOf,
+	slotIdsOf: selectedSlotIds,
 	toggle: (current) => (current === "italic" ? "normal" : "italic"),
 });
 const underline = toggleRunOrSlotEntry("toggleUnderline", {
-	slotsOf: defaultSlotsOf,
+	slotIdsOf: selectedSlotIds,
 	toggle: (current) => toggleTextDecorationToken(current, "underline"),
 });
 
-const slotsOf = (object: unknown): TextSlots =>
+const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;
 
-const bodyOf = (object: unknown) => slotsOf(object).body.text;
+const bodyOf = (object: unknown) => readTextSlots(object).body.text;
 
 /** The context of a walk whose editor has that stretch of `a`'s body slot selected. */
 const editing = (start: number, end: number, objectId = "a") =>

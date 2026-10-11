@@ -55,8 +55,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   to say it edited the document — the COMMAND path never advances `commitVersion`
   itself; `createTextSlotPartKindDefinition` and `TEXT_SLOT_PART_KIND`, so a type
   declaring its own `"textSlot"` kind can spread the derived one and add a `range`
-  or a `delete`; and `declaredTextStyleTable(textType, slotsOf)`, the text half of
-  the derived style table declared again over a type's own `slotsOf`, for a type
+  or a `delete`; and `declaredTextStyleTable(textType, slotIdsOf)`, the text half of
+  the derived style table declared again over a type's own `slotIdsOf`, for a type
   whose picks reach slots in a way core does not know (a table's rows and
   columns).
 - **A Shift-click selects a run of compartments.** With one compartment of a

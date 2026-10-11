@@ -1,4 +1,4 @@
-import type { SlotsOf } from "./slotEntry";
+import type { SlotIdsOf } from "./slotEntry";
 import { slotEntry } from "./slotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StyleEntry } from "../StyleEntry";
@@ -18,7 +18,7 @@ import type {
  * also has to answer for the runs that override it.
  *
  * @param field - The slot field written and read, one the text-style defaults answer for; its name is the intent's, and fixes the value type (StyleIntentValueType)
- * @param options - `slotsOf`: which slots the intent lands on (defaultSlotsOf for the core types)
+ * @param options - `slotIdsOf`: which slots the intent lands on (selectedSlotIds for the core types)
  * @returns The pair, writing `value` as-is and reporting one value per addressed slot
  * @template TState - The state the entry is written against
  * @template K - The field, which decides the value type
@@ -28,9 +28,9 @@ export const slotFieldEntry = <
 	K extends TextSlotStyleIntentKind,
 >(
 	field: K,
-	{ slotsOf }: { slotsOf: SlotsOf<TState> },
+	{ slotIdsOf }: { slotIdsOf: SlotIdsOf<TState> },
 ): StyleEntry<TState, StyleIntentValueType<K>> =>
-	slotEntry<TState, StyleIntentValueType<K>>(field, slotsOf, (slot, value) =>
+	slotEntry<TState, StyleIntentValueType<K>>(field, slotIdsOf, (slot, value) =>
 		Object.is((slot as Record<string, unknown>)[field], value)
 			? slot
 			: { ...slot, [field]: value },
