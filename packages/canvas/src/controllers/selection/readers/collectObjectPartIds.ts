@@ -13,20 +13,22 @@ import type { ObjectPartKindDefinition } from "../partKinds/ObjectPartKindRegist
  * (`range`) and every other kind takes the linear default over `list`.
  *
  * @param selection - The parts picked below the object; its `kind` must be the
- *   one `part` answers for, and its ends are taken as they stand (the reducer
+ *   one `partKind` answers for, and its ends are taken as they stand (the reducer
  *   has already dropped a selection naming something gone,
  *   reconcileSelection)
- * @param part - The definition registered for `(object.type, selection.kind)`
+ * @param partKind - The definition registered for `(object.type, selection.kind)`
  * @param object - The object the ids are resolved against: the owner of the
  *   pick, `CanvasSelection.objectIds[0]`
+ * @template TState - The object's state, so a type's own definition (typed on
+ *   it) is accepted without widening
  * @returns The covered ids, non-empty whenever `selection.ranges` is — a range
  *   whose anchor the type cannot place collapses to its focus rather than
  *   yielding nothing
  */
-export const collectObjectPartIds = (
+export const collectObjectPartIds = <TState extends ObjectState>(
 	selection: ObjectPartSelection,
-	part: ObjectPartKindDefinition,
-	object: ObjectState,
+	partKind: ObjectPartKindDefinition<TState>,
+	object: TState,
 ): readonly string[] => {
 	const collected: string[] = [];
 	const seen = new Set<string>();
@@ -34,9 +36,9 @@ export const collectObjectPartIds = (
 		const covered =
 			range.anchorId === range.focusId
 				? [range.anchorId]
-				: (part.range?.(object, range.anchorId, range.focusId) ??
+				: (partKind.range?.(object, range.anchorId, range.focusId) ??
 					collectPartIdsBetween(
-						part.list?.(object) ?? [],
+						partKind.list?.(object) ?? [],
 						range.anchorId,
 						range.focusId,
 					));

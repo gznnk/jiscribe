@@ -2,7 +2,7 @@ import { test, expect, selectors } from "@jiscribe/canvas/testing";
 import type { CanvasDriver } from "@jiscribe/canvas/testing";
 
 /**
- * All nine shipped plugins registered on one canvas. Each plugin's own e2e suite
+ * All ten shipped plugins registered on one canvas. Each plugin's own e2e suite
  * loads a harness holding that plugin alone, so nothing there can see what only
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice

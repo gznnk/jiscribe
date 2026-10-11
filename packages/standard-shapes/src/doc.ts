@@ -12,10 +12,11 @@ import { generalDocPlugin } from "@jiscribe/plugin-general-shapes/doc";
 import { lucideIconDocPlugin } from "@jiscribe/plugin-lucide-icon-shape/doc";
 import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
 import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
+import { tableDocPlugin } from "@jiscribe/plugin-table-shape/doc";
 import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
 
 /**
- * The nine doc plugins of the standard shape set, in the order a parser is given
+ * The ten doc plugins of the standard shape set, in the order a parser is given
  * them. The official JSON schema is generated from this same list, so a document one of
  * the two accepts is one the other accepts: a plugin registered in only one place
  * is how a host ends up with a document its own validators disagree about.
@@ -25,6 +26,7 @@ export const standardDocPlugins: readonly CanvasDocPlugin[] = [
 	containerDocPlugin,
 	markdownDocPlugin,
 	stickyDocPlugin,
+	tableDocPlugin,
 	umlDocPlugin,
 	generalDocPlugin,
 	annotationDocPlugin,

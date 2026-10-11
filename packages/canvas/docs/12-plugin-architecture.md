@@ -306,6 +306,31 @@ size in the Layout section; both state their current value through
 `useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)`, which types it from that declaration, and
 take their wording from the plugin's own dictionary.
 
+A declared kind replaces the one `features` derive, which is how a type keeps the
+core's entry and changes only where it lands. `plugins/table-shape` declares its
+text kinds again over its own answer to which slots a write reaches: the derived
+ones read a row or column pick as no slot pick and would write every cell, where
+the table's `tableSlotsOf` answers with the cells of the picked tracks.
+`declaredTextStyleTable(textType, slotsOf)` is the derived text half with that
+one argument changed, each entry stating `["text"]`:
+
+```ts
+const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
+	TableFeatures.text,
+	tableSlotsOf,
+) satisfies DeclaredStyleTable<TableState>;
+```
+
+**Commands.** A contributed command's `execute` is the whole of its transition,
+and that includes saying it edited the document: return the state through
+`commitEdit(state)` (from `@jiscribe/canvas/unstable`, so through
+`@jiscribe/canvas-sdk`). The reducer records a history entry and raises a save
+off the `commitVersion` it advances. The COMMAND path settles the ancestor group
+frames, the content-sized boxes and the part selection after `execute`, but never
+commits — a command that changes the document without `commitEdit` leaves
+nothing to undo and nothing saved. A command that only moves the selection
+returns its state as it is.
+
 **i18n.** A contributed command declares its own `label` per locale. Everything
 the plugin draws itself comes from a dictionary the plugin owns, resolved
 through `useCanvasLocale` / `resolveLocaleMessages`. Plugin vocabulary is never
@@ -340,7 +365,9 @@ whole. The built-in `vertex` kind is the worked example: polyline, polygon and
 connector each declare it with the vertex floor below which deletion is refused.
 A type whose `features.text` is `"slots"` is given the `"textSlot"` kind without
 declaring anything, its part ids being the keys of its own `text`; declaring
-`"textSlot"` yourself replaces that one rather than colliding with it.
+`"textSlot"` yourself replaces that one rather than colliding with it; spread
+`createTextSlotPartKindDefinition(textRegion)` to keep what core derives and add
+only what it cannot (the table adds a `range` and a `delete`).
 
 Three optional members bear on selection:
 

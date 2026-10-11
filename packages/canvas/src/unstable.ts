@@ -213,7 +213,10 @@ export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 // the core types give. A declared table is a `DeclaredStyleTable`: every entry
 // states the fields it writes (`[]` for nothing the doc stores), and one
 // stating none, or a field the type's doc cannot hold (`extraKeys`), is refused
-// at registration.
+// at registration. `declaredTextStyleTable(textType, slotsOf)` is the derived text
+// half declared again with the type's own `slotsOf` — a table answering a row pick
+// with that row's cells — so the type replaces which slots a write reaches and
+// keeps the core's entries.
 export { declaredFieldEntry } from "./controllers/style/entries/declaredFieldEntry";
 export { objectFieldEntry } from "./controllers/style/entries/objectFieldEntry";
 export { runOrSlotEntry } from "./controllers/style/entries/runOrSlotEntry";
@@ -221,6 +224,7 @@ export { defaultSlotsOf } from "./controllers/style/entries/slotEntry";
 export type { SlotsOf } from "./controllers/style/entries/slotEntry";
 export { slotFieldEntry } from "./controllers/style/entries/slotFieldEntry";
 export { toggleRunOrSlotEntry } from "./controllers/style/entries/toggleRunOrSlotEntry";
+export { declaredTextStyleTable } from "./controllers/style/tables/declaredTextStyleTable";
 export type { StyleValueType } from "./controllers/style/intent/coerceStyleValue";
 export type {
 	DeclaredStyleEntry,
@@ -310,12 +314,22 @@ export type {
 	PlatformKeyBindings,
 } from "./controllers/commands/CommandTypes";
 export type { CanvasControllerState } from "./controllers/CanvasTypes";
+// A command that edits the document says so itself: the reducer records history
+// and raises a save off `commitVersion`, and the COMMAND path does not advance it.
+export { commitEdit } from "./controllers/utils/commitEdit";
 export type {
 	CanvasSelection,
 	ObjectPartRange,
 	ObjectPartSelection,
 } from "./controllers/selection/CanvasSelection";
-export { isTextSlotPart } from "./controllers/selection/partKinds/textSlotPartKind";
+// The `"textSlot"` kind core registers for a slots type, for a type declaring it
+// itself to add what core cannot derive (a range that is not a slice of the slot
+// order, a Delete): spread the definition and add to it.
+export {
+	createTextSlotPartKindDefinition,
+	isTextSlotPart,
+	TEXT_SLOT_PART_KIND,
+} from "./controllers/selection/partKinds/textSlotPartKind";
 export { collectObjectPartIds } from "./controllers/selection/readers/collectObjectPartIds";
 export { readActivePartFocusId } from "./controllers/selection/readers/readActivePartFocusId";
 export { getSelectedConnectorId } from "./controllers/selection/readers/getSelectedConnectorId";
