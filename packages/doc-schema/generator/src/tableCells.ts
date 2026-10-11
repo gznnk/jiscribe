@@ -36,18 +36,28 @@ export const SPECIAL_TABLE_CELLS: Readonly<
 		guideTypeCell: "`connector` (in `root`)",
 		guideGeometry: "`source`,`target`,`points:[]`",
 	},
+	// The two point-geometry types say what their size comes from, which the
+	// generic cell below cannot: one measures a body of text, the other a grid.
+	text: {
+		guideGeometry:
+			'`x`,`y` (no `height`; `width` only with `textLayout: "block"`)',
+	},
+	table: {
+		guideGeometry: "`x`,`y` + `columns`,`rows`,`cells` (no `width`/`height`)",
+	},
 };
 
 /**
  * Geometry cell per geometry, in the ai-guide spelling (no spaces after the
  * commas). The geometries missing here (poly / none) belong only to types listed
  * in SPECIAL_TABLE_CELLS, which never reach this table; rect therefore doubles as
- * the fallback.
+ * the fallback. A point-geometry type names what its size is measured from
+ * there too, this cell knowing only that it is measured.
  */
 const GEOMETRY_CELLS: Readonly<Record<string, string>> = {
 	rect: "`x`,`y`,`width`,`height`",
 	ellipse: "`cx`,`cy`,`rx`,`ry`",
-	point: '`x`,`y` (no `height`; `width` only with `textLayout: "block"`)',
+	point: "`x`,`y` (no `width`/`height`: the size comes from the content)",
 };
 
 /** Derive the ai-guide "Required geometry" cell from features (special types excluded). */

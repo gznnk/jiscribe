@@ -27,6 +27,7 @@ import {
 } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
+import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 // The faces the shipped font stacks name. No other e2e harness loads them, which
 // is why the PNG export's font embedding — which embeds only what the page has
@@ -48,6 +49,7 @@ mountPluginHarness({
 		containerPlugin,
 		markdownPlugin,
 		stickyPlugin,
+		tablePlugin,
 		umlPlugin,
 		generalPlugin,
 		annotationPlugin,
@@ -66,7 +68,12 @@ mountPluginHarness({
 	stencilLibrarySections: [
 		{
 			...basicStencilCategory,
-			presetIds: [...basicStencilCategory.presetIds, "sticky", "markdown"],
+			presetIds: [
+				...basicStencilCategory.presetIds,
+				"sticky",
+				"markdown",
+				"table",
+			],
 		},
 		flowchartStencilCategory,
 		umlStencilCategory,

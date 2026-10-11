@@ -277,6 +277,28 @@ export const CONTAINER_STYLE_ENTRIES = {
 並ぶ。現在値はどちらも `useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)` で述べ、宣言から型が
 付くので自前で絞るものは無い。文言はどちらもプラグイン自身の辞書から取る。
 
+宣言した種別は `features` から導いた種別を置き換える。core のエントリをそのまま使い、
+書き込む先だけを変えるにはこれを使う。`plugins/table-shape` は文字系の種別を、
+書き込みが届くスロットの自前の答えで宣言し直している。導出のままでは行や列の pick を
+スロットの pick ではないと読み、全セルに書いてしまう。表の `tableSlotsOf` は、選んだ
+行・列のセルを答える。`declaredTextStyleTable(textType, slotsOf)` は導出の文字系の表を
+この引数だけ変えて返し、どのエントリも `["text"]` を書くフィールドとして述べる:
+
+```ts
+const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
+	TableFeatures.text,
+	tableSlotsOf,
+) satisfies DeclaredStyleTable<TableState>;
+```
+
+**コマンド。**プラグインが足したコマンドの `execute` は遷移のすべてを担い、
+Doc を編集したと述べることもそこに含む。返す状態を `commitEdit(state)`
+（`@jiscribe/canvas/unstable`、したがって `@jiscribe/canvas-sdk` から取れる）に通す。
+reducer は、これが進める `commitVersion` を見て履歴を積み、保存を起こす。COMMAND の
+経路は `execute` の後で祖先グループの枠・内容から決まる箱・部分選択を整えるが、commit は
+しない。`commitEdit` を通さずに Doc を変えたコマンドは、undo できず保存もされない。
+選択だけを動かすコマンドは状態をそのまま返す。
+
 **i18n。**プラグインが足したコマンドは自分の `label` をロケール別に宣言する。
 プラグインが自分で描く文字列はプラグインが持つ辞書から取り、`useCanvasLocale` /
 `resolveLocaleMessages` で解決する。core の文言キーにプラグインの語彙は足さない。
@@ -305,7 +327,9 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 実例で、polyline / polygon / connector がそれぞれ、削除を断る頂点数の下限とともに
 宣言している。`features.text` が `"slots"` の型には `"textSlot"` の種別が宣言なしで
 付き、部分 id は自分の `text` のキーになる。自分で `"textSlot"` を宣言すれば、
-衝突ではなくその既定を置き換える。
+衝突ではなくその既定を置き換える。core が導くものを残して足りない分だけ足すなら、
+`createTextSlotPartKindDefinition(textRegion)` を spread する（表は `range` と
+`delete` を足している）。
 
 部分を押せるようにするには、その要素の `data-part` に `<kind>:<partId>` の住所を
 書くだけでよい（`controllers/gestures/handlers/utils/partAddress.ts`。テキストスロットの

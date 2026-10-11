@@ -15,6 +15,50 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
+  it takes the same rich text, the same typography and the same in-place editing
+  every other shape's text does, and may carry a `fill` besides, painted over the
+  table's own `fill` (its background, the theme's surface by default). A table
+  stores no size: its width is the column widths summed, its height the resolved
+  row heights summed, and a row's `height` is a lower bound the text raises
+  rather than a box the text is clipped to. Cells are written as a dense grid —
+  one row per entry of `rows`, one cell per entry of `columns` — and a cell
+  carrying nothing but text may be written as that text alone. A text style set
+  from the menu lands on the picked cells, on every cell of a picked row or
+  column, or on every cell when nothing inside the table is picked.
+- **A table's column and row boundaries can be dragged.** Grabbing the rule
+  between two columns gives one of them the width the other loses, so the table's
+  own edges stay where they are however far the boundary is pushed — past a
+  column's minimum it simply stops. Rows trade the same way, with one asymmetry a
+  row's stored height forces: that height is a lower bound the text raises, so
+  dragging a boundary up stops at the text of the row above it, while dragging it
+  down past the text of the row below grows the table rather than clipping that
+  text.
+- **A table can be resized by its left and right edges**, the width change spread
+  over every column in the proportions it holds. A column never goes under its
+  minimum, and a table dragged narrower than its columns can be simply stops.
+  There are no handles on the height: a row's stored height is a lower bound its
+  text raises, so the height follows the cells and a row is given one by dragging
+  its boundary.
+- **A table's rows and columns can be selected, added and removed.** A grip
+  outside the top and left edges picks a whole column or row; clicking a cell
+  picks it, and Shift widens the pick to the block of cells between the two —
+  the rectangle they stand at opposite corners of, as a spreadsheet does it, not
+  the run of the cell order between them. Delete clears the picked cells' text,
+  or removes the picked row or column — never the last one left. A round `+`
+  stands at every boundary a track can go at, both outer edges included, and
+  clicking one inserts an empty track there and leaves it selected; Alt+Shift+arrow
+  inserts one beside the picked cell or track. The cells keep their contents as
+  the grid renumbers around an insertion, and one undo takes it back.
+- For plugin authors: `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`)
+  now exports `commitEdit`, which a contributed command returns its state through
+  to say it edited the document — the COMMAND path never advances `commitVersion`
+  itself; `createTextSlotPartKindDefinition` and `TEXT_SLOT_PART_KIND`, so a type
+  declaring its own `"textSlot"` kind can spread the derived one and add a `range`
+  or a `delete`; and `declaredTextStyleTable(textType, slotsOf)`, the text half of
+  the derived style table declared again over a type's own `slotsOf`, for a type
+  whose picks reach slots in a way core does not know (a table's rows and
+  columns).
 - **A Shift-click selects a run of compartments.** With one compartment of a
   slot-based shape picked (a UML record's name, attributes or operations), a
   Shift-click on another picks every compartment from the first to the one

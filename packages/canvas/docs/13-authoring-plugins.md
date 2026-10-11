@@ -8,7 +8,9 @@ belongs, and the wiring you must not forget.
 
 Every package under `plugins/` is a worked example. `sticky-shape` is the
 smallest complete one; `container-shapes` shows a type-specific selection control;
-`uml-shapes` shows multiple text slots.
+`uml-shapes` shows multiple text slots; `table-shape` shows part kinds of its own,
+selection controls that take clicks, contributed commands, and a box measured
+from the content rather than stored.
 
 ## Package layout
 
