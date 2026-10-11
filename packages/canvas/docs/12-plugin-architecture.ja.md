@@ -280,14 +280,14 @@ export const CONTAINER_STYLE_ENTRIES = {
 宣言した種別は `features` から導いた種別を置き換える。core のエントリをそのまま使い、
 書き込む先だけを変えるにはこれを使う。`plugins/table-shape` は文字系の種別を、
 書き込みが届くスロットの自前の答えで宣言し直している。導出のままでは行や列の pick を
-スロットの pick ではないと読み、全セルに書いてしまう。表の `tableSlotsOf` は、選んだ
-行・列のセルを答える。`declaredTextStyleTable(textType, slotsOf)` は導出の文字系の表を
+スロットの pick ではないと読み、全セルに書いてしまう。表の `tableSelectedSlotIds` は、選んだ
+行・列のセルの id を答える。`declaredTextStyleTable(textType, slotIdsOf)` は導出の文字系の表を
 この引数だけ変えて返し、どのエントリも `["text"]` を書くフィールドとして述べる:
 
 ```ts
 const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
 	TableFeatures.text,
-	tableSlotsOf,
+	tableSelectedSlotIds,
 ) satisfies DeclaredStyleTable<TableState>;
 ```
 

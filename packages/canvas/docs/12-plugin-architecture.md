@@ -306,18 +306,19 @@ size in the Layout section; both state their current value through
 `useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)`, which types it from that declaration, and
 take their wording from the plugin's own dictionary.
 
-A declared kind replaces the one `features` derive, which is how a type keeps the
-core's entry and changes only where it lands. `plugins/table-shape` declares its
-text kinds again over its own answer to which slots a write reaches: the derived
-ones read a row or column pick as no slot pick and would write every cell, where
-the table's `tableSlotsOf` answers with the cells of the picked tracks.
-`declaredTextStyleTable(textType, slotsOf)` is the derived text half with that
-one argument changed, each entry stating `["text"]`:
+A declared kind replaces the one `features` derive, which is how a type keeps
+the core's entry and changes only where it lands. `plugins/table-shape` declares
+its text kinds again over its own answer to which slots a write reaches: the
+derived ones read a row or column pick as no slot pick and would write every
+cell, where the table's `tableSelectedSlotIds` answers with the ids of
+the cells of the picked tracks. `declaredTextStyleTable(textType, slotIdsOf)` is
+the derived text half with that one argument changed, each entry stating
+`["text"]`:
 
 ```ts
 const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
 	TableFeatures.text,
-	tableSlotsOf,
+	tableSelectedSlotIds,
 ) satisfies DeclaredStyleTable<TableState>;
 ```
 

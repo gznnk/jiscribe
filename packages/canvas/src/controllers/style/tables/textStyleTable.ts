@@ -6,7 +6,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isBoldFontWeight } from "../../utils/isBoldFontWeight";
 import { toggleTextDecorationToken } from "../../utils/toggleTextDecorationToken";
 import { runOrSlotEntry } from "../entries/runOrSlotEntry";
-import type { SlotsOf } from "../entries/slotEntry";
+import type { SlotIdsOf } from "../entries/slotEntry";
 import { slotFieldEntry } from "../entries/slotFieldEntry";
 import { textContentEntry } from "../entries/textContentEntry";
 import { toggleRunOrSlotEntry } from "../entries/toggleRunOrSlotEntry";
@@ -23,56 +23,56 @@ import type { StyleTable } from "../StyleEntry";
  * that text accepts.
  *
  * @param textType - The type's `ObjectFeatures.text`, which is what decides the fields; only a type declaring one has a text half at all, so there is no "no text" case here
- * @param slotsOf - Which slots a whole-slot write lands on; `defaultSlotsOf` for a type whose slots are the keys of its `text`
+ * @param slotIdsOf - Which slots a whole-slot write lands on; `selectedSlotIds` for a type whose slots are the keys of its `text`
  * @returns The text half of the type's table; the content alone for a text type accepting none of the fields
  */
 export const textStyleTable = (
 	textType: TextType,
-	slotsOf: SlotsOf<ObjectState>,
+	slotIdsOf: SlotIdsOf<ObjectState>,
 ): StyleTable<ObjectState> => {
 	const keys = textStyleKeysOf(textType);
 	const accepts = (field: keyof TextSlotStyle): boolean => keys.includes(field);
 	return {
 		textContent: textContentEntry,
 		...(accepts("fontColor") && {
-			fontColor: runOrSlotEntry("fontColor", { slotsOf }),
+			fontColor: runOrSlotEntry("fontColor", { slotIdsOf }),
 		}),
 		...(accepts("fontSize") && {
-			fontSize: runOrSlotEntry("fontSize", { slotsOf }),
+			fontSize: runOrSlotEntry("fontSize", { slotIdsOf }),
 		}),
 		...(accepts("fontFamily") && {
-			fontFamily: runOrSlotEntry("fontFamily", { slotsOf }),
+			fontFamily: runOrSlotEntry("fontFamily", { slotIdsOf }),
 		}),
 		...(accepts("fontWeight") && {
-			fontWeight: runOrSlotEntry("fontWeight", { slotsOf }),
+			fontWeight: runOrSlotEntry("fontWeight", { slotIdsOf }),
 			toggleBold: toggleRunOrSlotEntry("toggleBold", {
-				slotsOf,
+				slotIdsOf,
 				toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 			}),
 		}),
 		...(accepts("fontStyle") && {
-			fontStyle: runOrSlotEntry("fontStyle", { slotsOf }),
+			fontStyle: runOrSlotEntry("fontStyle", { slotIdsOf }),
 			toggleItalic: toggleRunOrSlotEntry("toggleItalic", {
-				slotsOf,
+				slotIdsOf,
 				toggle: (current) => (current === "italic" ? "normal" : "italic"),
 			}),
 		}),
 		...(accepts("textDecoration") && {
-			textDecoration: runOrSlotEntry("textDecoration", { slotsOf }),
+			textDecoration: runOrSlotEntry("textDecoration", { slotIdsOf }),
 			// The other decoration line is kept, which is why the toggle takes the
 			// value rather than a boolean.
 			toggleUnderline: toggleRunOrSlotEntry("toggleUnderline", {
-				slotsOf,
+				slotIdsOf,
 				toggle: (current) => toggleTextDecorationToken(current, "underline"),
 			}),
 		}),
 		// The alignments place the whole block, so they land on the slot even while
 		// a stretch of it is selected — there is nothing smaller to apply them to.
 		...(accepts("textAlign") && {
-			textAlign: slotFieldEntry("textAlign", { slotsOf }),
+			textAlign: slotFieldEntry("textAlign", { slotIdsOf }),
 		}),
 		...(accepts("verticalAlign") && {
-			verticalAlign: slotFieldEntry("verticalAlign", { slotsOf }),
+			verticalAlign: slotFieldEntry("verticalAlign", { slotIdsOf }),
 		}),
 	};
 };

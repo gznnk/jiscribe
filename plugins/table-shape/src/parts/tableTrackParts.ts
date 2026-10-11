@@ -49,7 +49,7 @@ const calcTrackRegion = (
  * from the order this returns — even though a grip writes a single index today.
  *
  * What the two kinds do share is the cells: a style written over a track pick
- * lands on that track's cells (tableSlotsOf).
+ * lands on that track's cells (tableSelectedSlotIds).
  *
  * @param axis - Which direction the tracks run in; also the `kind` the definition registers under, the two being the same word (see TableAxis)
  * @returns A definition for {@link TABLE_TRACK_PART_DEFINITIONS}

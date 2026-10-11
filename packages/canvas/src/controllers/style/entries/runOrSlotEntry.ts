@@ -14,7 +14,7 @@ import type {
 	StyleIntentValueType,
 	TextSlotStyleIntentKind,
 } from "../StyleIntent";
-import type { SlotsOf } from "./slotEntry";
+import type { SlotIdsOf } from "./slotEntry";
 import { slotEntry } from "./slotEntry";
 import { readRangeEdit } from "./utils/readRangeEdit";
 
@@ -31,7 +31,7 @@ import { readRangeEdit } from "./utils/readRangeEdit";
  * look different. The doc-ops apply the same rule (applyStyle).
  *
  * @param field - The inline field written and read; its name is the intent's, and fixes the value type (StyleIntentValueType)
- * @param options - `slotsOf`: which slots the whole-slot write lands on (defaultSlotsOf for the core types)
+ * @param options - `slotIdsOf`: which slots the whole-slot write lands on (selectedSlotIds for the core types)
  * @returns The pair, following `ctx.textEditRange` when it names the object at hand
  * @template TState - The state the entry is written against
  * @template K - The field, which decides the value type
@@ -41,10 +41,10 @@ export const runOrSlotEntry = <
 	K extends TextSlotStyleIntentKind & keyof InlineTextStyle,
 >(
 	field: K,
-	{ slotsOf }: { slotsOf: SlotsOf<TState> },
+	{ slotIdsOf }: { slotIdsOf: SlotIdsOf<TState> },
 ): StyleEntry<TState, StyleIntentValueType<K>> => {
 	type V = StyleIntentValueType<K>;
-	const wholeSlot = slotEntry<TState, V>(field, slotsOf, (slot, value) => {
+	const wholeSlot = slotEntry<TState, V>(field, slotIdsOf, (slot, value) => {
 		const inlineKeys = [field];
 		// A row-partitioned slot is stripped row by row, each row being a body of
 		// its own.

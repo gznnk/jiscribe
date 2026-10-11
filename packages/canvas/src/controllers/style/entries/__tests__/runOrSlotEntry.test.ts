@@ -12,13 +12,13 @@ import {
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
 import { runOrSlotEntry } from "../runOrSlotEntry";
-import { defaultSlotsOf } from "../slotEntry";
+import { selectedSlotIds } from "../slotEntry";
 
 const entry = runOrSlotEntry("fontColor", {
-	slotsOf: defaultSlotsOf,
+	slotIdsOf: selectedSlotIds,
 });
 
-const slotsOf = (object: unknown): TextSlots =>
+const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;
 
 /** The context of a walk whose editor has the stretch of `a`'s body slot selected. */
@@ -30,7 +30,7 @@ describe("runOrSlotEntry with a stretch of text selected", () => {
 		it("styles those characters alone, leaving the slot's own styling", () => {
 			const a = textRectOf("a", { body: { text: "hello", fontSize: 12 } });
 			const updated = entry.apply(a, null, "#d33", editing(0, 2));
-			expect(slotsOf(updated).body).toEqual({
+			expect(readTextSlots(updated).body).toEqual({
 				text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
 				fontSize: 12,
 			});
@@ -40,7 +40,7 @@ describe("runOrSlotEntry with a stretch of text selected", () => {
 			const a = textRectOf("a", { body: { text: ["ab", "cd"] } });
 			// The rows read as "ab\ncd", which is what the offsets count in.
 			const updated = entry.apply(a, null, "#d33", editing(1, 4));
-			expect(slotsOf(updated).body.text).toEqual([
+			expect(readTextSlots(updated).body.text).toEqual([
 				[{ text: "a" }, { text: "b", fontColor: "#d33" }],
 				[{ text: "c", fontColor: "#d33" }, { text: "d" }],
 			]);
@@ -49,7 +49,7 @@ describe("runOrSlotEntry with a stretch of text selected", () => {
 		it("a range naming another object → the whole slot takes it", () => {
 			const a = textRectOf("a", { body: { text: "hello" } });
 			const updated = entry.apply(a, null, "#d33", editing(0, 2, "other"));
-			expect(slotsOf(updated).body).toEqual({
+			expect(readTextSlots(updated).body).toEqual({
 				text: "hello",
 				fontColor: "#d33",
 			});
@@ -63,7 +63,7 @@ describe("runOrSlotEntry with a stretch of text selected", () => {
 				"#d33",
 				contextOf({ textEditRange: rangeOf("a", 0, 2, "missing") }),
 			);
-			expect(slotsOf(updated).body).toEqual({
+			expect(readTextSlots(updated).body).toEqual({
 				text: "hello",
 				fontColor: "#d33",
 			});
@@ -136,7 +136,7 @@ describe("runOrSlotEntry with no stretch selected", () => {
 			const updated = entry.apply(a, null, "#00f", contextOf());
 			// The runs keep the rest of their styling; the stripped text collapses
 			// back to a plain string once nothing is styled on its own.
-			expect(slotsOf(updated).body).toEqual({
+			expect(readTextSlots(updated).body).toEqual({
 				text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }],
 				fontColor: "#00f",
 			});
@@ -147,7 +147,7 @@ describe("runOrSlotEntry with no stretch selected", () => {
 				body: { text: ["id", [{ text: "email", fontColor: "#d33" }]] },
 			});
 			const updated = entry.apply(a, null, "#00f", contextOf());
-			expect(slotsOf(updated).body).toEqual({
+			expect(readTextSlots(updated).body).toEqual({
 				text: ["id", "email"],
 				fontColor: "#00f",
 			});
@@ -158,7 +158,7 @@ describe("runOrSlotEntry with no stretch selected", () => {
 				name: { text: "User" },
 				rows: { text: ["id"] },
 			});
-			expect(slotsOf(entry.apply(a, null, "#00f", contextOf()))).toEqual({
+			expect(readTextSlots(entry.apply(a, null, "#00f", contextOf()))).toEqual({
 				name: { text: "User", fontColor: "#00f" },
 				rows: { text: ["id"], fontColor: "#00f" },
 			});
@@ -170,7 +170,7 @@ describe("runOrSlotEntry with no stretch selected", () => {
 				rows: { text: ["id"] },
 			});
 			expect(
-				slotsOf(entry.apply(a, slotPickOf("rows"), "#00f", contextOf())),
+				readTextSlots(entry.apply(a, slotPickOf("rows"), "#00f", contextOf())),
 			).toEqual({
 				name: { text: "User" },
 				rows: { text: ["id"], fontColor: "#00f" },
@@ -187,11 +187,13 @@ describe("runOrSlotEntry with no stretch selected", () => {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "operations", focusId: "rows" }],
 			};
-			expect(slotsOf(entry.apply(a, range, "#00f", contextOf()))).toEqual({
-				name: { text: "User" },
-				rows: { text: ["id"], fontColor: "#00f" },
-				operations: { text: ["save()"], fontColor: "#00f" },
-			});
+			expect(readTextSlots(entry.apply(a, range, "#00f", contextOf()))).toEqual(
+				{
+					name: { text: "User" },
+					rows: { text: ["id"], fontColor: "#00f" },
+					operations: { text: ["save()"], fontColor: "#00f" },
+				},
+			);
 		});
 
 		it("refuses a slot pick on a type no slot kind is registered for", () => {
@@ -212,7 +214,7 @@ describe("runOrSlotEntry with no stretch selected", () => {
 			const a = textRectOf("a", {
 				"0_0": { text: [{ text: "id", fontColor: "#d33" }], fill: "#eef" },
 			} as unknown as TextSlots);
-			expect(slotsOf(entry.apply(a, null, "#00f", contextOf()))).toEqual({
+			expect(readTextSlots(entry.apply(a, null, "#00f", contextOf()))).toEqual({
 				"0_0": { text: "id", fill: "#eef", fontColor: "#00f" },
 			});
 		});

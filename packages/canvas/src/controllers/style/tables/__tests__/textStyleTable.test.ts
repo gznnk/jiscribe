@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { defaultSlotsOf } from "../../entries/slotEntry";
+import { selectedSlotIds } from "../../entries/slotEntry";
 import type { CoreStyleIntentKind } from "../../StyleIntent";
 import { textStyleTable } from "../textStyleTable";
 
@@ -10,7 +10,7 @@ const kindsOf = (
 ): CoreStyleIntentKind[] =>
 	(
 		Object.keys(
-			textStyleTable(textType, defaultSlotsOf),
+			textStyleTable(textType, selectedSlotIds),
 		) as CoreStyleIntentKind[]
 	)
 		.slice()

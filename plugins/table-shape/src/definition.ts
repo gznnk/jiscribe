@@ -35,7 +35,7 @@ import { tableToDoc, tableToState } from "./state/TableMapper";
 import type { TableState } from "./state/TableState";
 import { isValidTableState } from "./state/validateTableState";
 import { TableStencils } from "./stencil/TableStencils";
-import { tableSlotsOf } from "./style/tableSlotsOf";
+import { tableSelectedSlotIds } from "./style/tableSelectedSlotIds";
 
 /**
  * The left and right handles alone. Dragging one distributes the width change
@@ -144,12 +144,12 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 
 /**
  * The text kinds, declared again over the table's own answer to which cells a
- * write reaches (tableSlotsOf): the derived ones read a row or column pick as no
- * slot pick and would write every cell.
+ * write reaches (tableSelectedSlotIds): the derived ones read a row or
+ * column pick as no slot pick and would write every cell.
  */
 const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
 	TableFeatures.text,
-	tableSlotsOf,
+	tableSelectedSlotIds,
 ) satisfies DeclaredStyleTable<TableState>;
 
 /**

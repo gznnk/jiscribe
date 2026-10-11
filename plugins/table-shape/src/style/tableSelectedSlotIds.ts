@@ -1,9 +1,9 @@
 import {
 	collectObjectPartIds,
-	defaultSlotsOf,
+	selectedSlotIds,
 	TEXT_SLOT_PART_KIND,
 } from "@jiscribe/canvas-sdk";
-import type { SlotsOf } from "@jiscribe/canvas-sdk";
+import type { SlotIdsOf } from "@jiscribe/canvas-sdk";
 
 import { collectTableTrackCellIds } from "../grid/collectTableTrackCellIds";
 import {
@@ -28,20 +28,24 @@ const toTableAxis = (kind: string): TableAxis | null => {
 /**
  * Which cells a whole-slot text style lands on: the picked cells, the cells of
  * the picked rows or columns, or every cell with nothing picked. Core's own answer
- * (defaultSlotsOf) knows the cells but not the tracks, and would read a row pick
+ * (selectedSlotIds) knows the cells but not the tracks, and would read a row pick
  * as no slot pick at all — every cell of the grid.
  *
  * @param object - The table the style is written to or read from
  * @param pick - What is picked inside it: cells (`"textSlot"`), whole rows or columns, or null for the table as a whole; a kind the table does not declare addresses every cell, as core's answer does
- * @param ctx - The style walk's context, handed on to `defaultSlotsOf` for a cell pick; a track pick is expanded through the table's own definitions (TABLE_TRACK_PART_DEFINITIONS)
+ * @param ctx - The style walk's context, handed on to `selectedSlotIds` for a cell pick; a track pick is expanded through the table's own definitions (TABLE_TRACK_PART_DEFINITIONS)
  * @returns Cell slot ids in the order the ranges cover them, track by track for a track pick; ids past the grid are left for the entry to skip
  */
-export const tableSlotsOf: SlotsOf<TableState> = (object, pick, ctx) => {
+export const tableSelectedSlotIds: SlotIdsOf<TableState> = (
+	object,
+	pick,
+	ctx,
+) => {
 	if (pick === null) {
 		return Object.keys(object.text);
 	}
 	if (pick.kind === TEXT_SLOT_PART_KIND) {
-		return defaultSlotsOf(object, pick, ctx);
+		return selectedSlotIds(object, pick, ctx);
 	}
 	const axis = toTableAxis(pick.kind);
 	if (axis === null) {

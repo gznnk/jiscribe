@@ -50,7 +50,7 @@ const labelEdit = (
 const textObj = (id: string, text: TextSlots) =>
 	({ id, type: "rect", text }) as unknown;
 
-const slotsOf = (state: CanvasControllerState, id: string): TextSlots =>
+const readTextSlots = (state: CanvasControllerState, id: string): TextSlots =>
 	(state.objects[id] as unknown as { text: TextSlots }).text;
 
 describe("commitTextEditIfNeeded", () => {
@@ -100,7 +100,7 @@ describe("commitTextEditIfNeeded", () => {
 		const result = commitTextEditIfNeeded(state);
 		expect(result.textEditState).toBeNull();
 		expect(result.commitVersion).toBe(4);
-		expect(slotsOf(result, "r1")).toEqual({ body: { text: "new text" } });
+		expect(readTextSlots(result, "r1")).toEqual({ body: { text: "new text" } });
 	});
 
 	it("keeps the edited slot's styling, only its content changing", () => {
@@ -112,7 +112,7 @@ describe("commitTextEditIfNeeded", () => {
 			...shapeEdit("r1", "body", "new text"),
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(slotsOf(result, "r1")).toEqual({
+		expect(readTextSlots(result, "r1")).toEqual({
 			body: { text: "new text", fontSize: 20, fontWeight: "bold" },
 		});
 	});
@@ -143,11 +143,11 @@ describe("commitTextEditIfNeeded", () => {
 			...shapeEdit("r1", "name", "Account"),
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(slotsOf(result, "r1")).toEqual({
+		expect(readTextSlots(result, "r1")).toEqual({
 			name: { text: "Account" },
 			rows: { text: ["id", "name"] },
 		});
-		expect(Object.keys(slotsOf(result, "r1"))).toEqual(["name", "rows"]);
+		expect(Object.keys(readTextSlots(result, "r1"))).toEqual(["name", "rows"]);
 	});
 
 	it("splits the edited text on newlines for a slot holding rows", () => {
@@ -160,7 +160,7 @@ describe("commitTextEditIfNeeded", () => {
 			...shapeEdit("r1", "rows", "id\nname"),
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(slotsOf(result, "r1").rows.text).toEqual(["id", "name"]);
+		expect(readTextSlots(result, "r1").rows.text).toEqual(["id", "name"]);
 	});
 
 	it("compares a row slot against its joined form, so an unchanged edit does not commit", () => {
@@ -426,7 +426,7 @@ describe("commitTextEditIfNeeded", () => {
 		const result = commitTextEditIfNeeded(state);
 		expect(result.textEditState).toBeNull();
 		expect(result.commitVersion).toBe(3);
-		expect(slotsOf(result, "r1")).toEqual({
+		expect(readTextSlots(result, "r1")).toEqual({
 			label: { text: "edited", fontSize: 12 },
 		});
 	});

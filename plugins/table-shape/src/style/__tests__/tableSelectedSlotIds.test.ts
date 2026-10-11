@@ -8,7 +8,7 @@ import { tablePlugin } from "../../plugin";
 import { tableCellSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
-import { tableSlotsOf } from "../tableSlotsOf";
+import { tableSelectedSlotIds } from "../tableSelectedSlotIds";
 
 /** A 2x3 grid of empty cells; only `text` and the axes are read. */
 const TABLE = (() => {
@@ -44,13 +44,15 @@ const pickOf = (
 	focusId: string = anchorId,
 ): ObjectPartSelection => ({ kind, ranges: [{ anchorId, focusId }] });
 
-describe("tableSlotsOf", () => {
+describe("tableSelectedSlotIds", () => {
 	it("reaches every cell with nothing picked", () => {
-		expect(tableSlotsOf(TABLE, null, ctx)).toEqual(Object.keys(TABLE.text));
+		expect(tableSelectedSlotIds(TABLE, null, ctx)).toEqual(
+			Object.keys(TABLE.text),
+		);
 	});
 
 	it("reaches the cells of a picked row alone", () => {
-		expect(tableSlotsOf(TABLE, pickOf("row", "1"), ctx)).toEqual([
+		expect(tableSelectedSlotIds(TABLE, pickOf("row", "1"), ctx)).toEqual([
 			"r1c0",
 			"r1c1",
 			"r1c2",
@@ -58,17 +60,18 @@ describe("tableSlotsOf", () => {
 	});
 
 	it("reaches the cells of every column a range covers, column by column", () => {
-		expect(tableSlotsOf(TABLE, pickOf("column", "2", "1"), ctx)).toEqual([
-			"r0c1",
-			"r1c1",
-			"r0c2",
-			"r1c2",
-		]);
+		expect(
+			tableSelectedSlotIds(TABLE, pickOf("column", "2", "1"), ctx),
+		).toEqual(["r0c1", "r1c1", "r0c2", "r1c2"]);
 	});
 
 	it("reaches the picked cells, a range being the rectangle its ends corner", () => {
 		expect(
-			tableSlotsOf(TABLE, pickOf(TEXT_SLOT_PART_KIND, "r0c0", "r1c1"), ctx),
+			tableSelectedSlotIds(
+				TABLE,
+				pickOf(TEXT_SLOT_PART_KIND, "r0c0", "r1c1"),
+				ctx,
+			),
 		).toEqual(["r0c0", "r0c1", "r1c0", "r1c1"]);
 	});
 

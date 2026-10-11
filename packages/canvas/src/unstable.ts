@@ -209,19 +209,19 @@ export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 // field of the type's own, dots being a path into a nested object;
 // `objectFieldEntry` / `slotFieldEntry` / `runOrSlotEntry` /
 // `toggleRunOrSlotEntry` are the ones the engine builds its own entries from,
-// for a type replacing a derived kind, with `defaultSlotsOf` as the slot answer
+// for a type replacing a derived kind, with `selectedSlotIds` as the slot answer
 // the core types give. A declared table is a `DeclaredStyleTable`: every entry
 // states the fields it writes (`[]` for nothing the doc stores), and one
 // stating none, or a field the type's doc cannot hold (`extraKeys`), is refused
-// at registration. `declaredTextStyleTable(textType, slotsOf)` is the derived text
-// half declared again with the type's own `slotsOf` — a table answering a row pick
+// at registration. `declaredTextStyleTable(textType, slotIdsOf)` is the derived text
+// half declared again with the type's own `slotIdsOf` — a table answering a row pick
 // with that row's cells — so the type replaces which slots a write reaches and
 // keeps the core's entries.
 export { declaredFieldEntry } from "./controllers/style/entries/declaredFieldEntry";
 export { objectFieldEntry } from "./controllers/style/entries/objectFieldEntry";
 export { runOrSlotEntry } from "./controllers/style/entries/runOrSlotEntry";
-export { defaultSlotsOf } from "./controllers/style/entries/slotEntry";
-export type { SlotsOf } from "./controllers/style/entries/slotEntry";
+export { selectedSlotIds } from "./controllers/style/entries/slotEntry";
+export type { SlotIdsOf } from "./controllers/style/entries/slotEntry";
 export { slotFieldEntry } from "./controllers/style/entries/slotFieldEntry";
 export { toggleRunOrSlotEntry } from "./controllers/style/entries/toggleRunOrSlotEntry";
 export { declaredTextStyleTable } from "./controllers/style/tables/declaredTextStyleTable";

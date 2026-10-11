@@ -124,10 +124,10 @@ is built, and nothing reads them again afterwards:
 | `features.radius`            | `cornerRadius` (stored in `rx`)                            |
 | `features.arrow`             | `startArrow`, `endArrow`                                   |
 | `features.transform`         | `lockAspectRatio`                                          |
-| `features.text`              | `textStyleTable(features.text, defaultSlotsOf)`            |
+| `features.text`              | `textStyleTable(features.text, selectedSlotIds)`           |
 | `features.textVerticalBasis` | `textVerticalBasis`                                        |
 
-`textStyleTable(textType, slotsOf)` derives the text half from the one thing a
+`textStyleTable(textType, slotIdsOf)` derives the text half from the one thing a
 type declares about its text — which fields it may carry at all
 (`textStyleKeysOf`). A body written in a source language sets its emphasis through
 its own syntax, so it is left out of those intents without anyone branching on the
@@ -150,23 +150,23 @@ text type again:
 Entries are not written by hand; a helper per storage shape returns the pair
 (`controllers/style/entries/`):
 
-| Helper                                            | Where the value lands                                                                                                                                                                                                                        |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectFieldEntry(field)`                         | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                          |
-| `slotFieldEntry(field, { slotsOf })`              | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                      |
-| `runOrSlotEntry(field, { slotsOf })`              | The selected stretch of characters while an editor has one (`readRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                               |
-| `toggleRunOrSlotEntry(kind, { slotsOf, toggle })` | The field `TOGGLE_FLIPS` names, on a selected stretch and nothing else: a keystroke is not a shape-wide write. It reads what the stretch is drawn with and writes the opposite through `runOrSlotEntry`                                      |
-| `declaredFieldEntry(path, valueType)`             | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing |
-| `lockAspectRatioEntry`                            | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                              |
-| `textVerticalBasisEntry`                          | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                       |
-| `textContentEntry`                                | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                           |
+| Helper                                              | Where the value lands                                                                                                                                                                                                                        |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`                           | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                          |
+| `slotFieldEntry(field, { slotIdsOf })`              | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                      |
+| `runOrSlotEntry(field, { slotIdsOf })`              | The selected stretch of characters while an editor has one (`readRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                               |
+| `toggleRunOrSlotEntry(kind, { slotIdsOf, toggle })` | The field `TOGGLE_FLIPS` names, on a selected stretch and nothing else: a keystroke is not a shape-wide write. It reads what the stretch is drawn with and writes the opposite through `runOrSlotEntry`                                      |
+| `declaredFieldEntry(path, valueType)`               | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing |
+| `lockAspectRatioEntry`                              | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                              |
+| `textVerticalBasisEntry`                            | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                       |
+| `textContentEntry`                                  | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                           |
 
 `slotEntry` is the part `slotFieldEntry` and the whole-slot half of `runOrSlotEntry` share:
 which slots are reached, the same-reference contract, and reading each of them
 through the type's defaults.
 
 Which slots an intent lands on is the type's own answer, handed in once as
-`SlotsOf<TState>`. The core types use `defaultSlotsOf`: the slot picked below the
+`SlotIdsOf<TState>`. The core types use `selectedSlotIds`: the slot picked below the
 object when one is picked, otherwise every slot the object holds — which is what
 makes a text style written with nothing picked reach the whole shape. A type whose
 slots are not the keys of its `text` hands in its own.
@@ -323,7 +323,7 @@ Because registration flows through `applyObjectDefinition`, plugin shapes added
 via `CanvasConfig.plugins` (see [Plugin Architecture](./12-plugin-architecture.md))
 get the same capability: `declaredFieldEntry` and `DeclaredStyleTable` are exported from
 `@jiscribe/canvas-sdk`, beside the helpers the engine builds its own entries from
-(`objectFieldEntry` / `slotFieldEntry` / `runOrSlotEntry` / `toggleRunOrSlotEntry` / `defaultSlotsOf`)
+(`objectFieldEntry` / `slotFieldEntry` / `runOrSlotEntry` / `toggleRunOrSlotEntry` / `selectedSlotIds`)
 for a type replacing a derived kind. Connector's table is
 `controllers/style/tables/connectorStyleTable.ts` (`CONNECTOR_STYLE_TABLE`); the container plugin
 declares `CONTAINER_STYLE_ENTRIES` in `src/style/containerStyleEntries.ts` and hands it to

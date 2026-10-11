@@ -15,8 +15,10 @@ const contentResizer = createTestRegistries().objectContentResizer;
 const textObj = (id: string, text: TextSlots): ObjectState =>
 	({ id, type: "rect", text }) as unknown as ObjectState;
 
-const slotsOf = (objects: Record<string, ObjectState>, id: string): TextSlots =>
-	(objects[id] as unknown as { text: TextSlots }).text;
+const readTextSlots = (
+	objects: Record<string, ObjectState>,
+	id: string,
+): TextSlots => (objects[id] as unknown as { text: TextSlots }).text;
 
 type GraftInput = Parameters<typeof graftTextEditDraft>[0];
 
@@ -101,14 +103,16 @@ describe("graftTextEditDraft", () => {
 		);
 
 		expect(grafted).not.toBe(objects);
-		expect(slotsOf(grafted, "r1").name).toEqual({
+		expect(readTextSlots(grafted, "r1").name).toEqual({
 			text: "User\nAccount",
 			fontSize: 20,
 		});
 		// Objects other than the edited one, and the edited object's other slots,
 		// keep their identity so their memoized components bail out.
 		expect(grafted.r2).toBe(objects.r2);
-		expect(slotsOf(grafted, "r1").rows).toBe(slotsOf(objects, "r1").rows);
+		expect(readTextSlots(grafted, "r1").rows).toBe(
+			readTextSlots(objects, "r1").rows,
+		);
 		expect(objects.r1).not.toBe(grafted.r1);
 	});
 
@@ -122,8 +126,10 @@ describe("graftTextEditDraft", () => {
 			contentResizer,
 		);
 
-		expect(slotsOf(grafted, "r1").rows.text).toEqual(["id", "name"]);
-		expect(slotsOf(grafted, "r1").name).toBe(slotsOf(objects, "r1").name);
+		expect(readTextSlots(grafted, "r1").rows.text).toEqual(["id", "name"]);
+		expect(readTextSlots(grafted, "r1").name).toBe(
+			readTextSlots(objects, "r1").name,
+		);
 	});
 
 	it("re-measures the box of an object whose size is derived from its text", () => {
@@ -173,7 +179,7 @@ describe("graftTextEditDraft", () => {
 		);
 
 		expect(seenTypes).toEqual([]);
-		expect(slotsOf(grafted, "r1").name.text).toBe("Account");
+		expect(readTextSlots(grafted, "r1").name.text).toBe("Account");
 	});
 
 	it("throws for an object whose text is not the keyed normal form", () => {

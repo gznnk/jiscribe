@@ -137,7 +137,7 @@ describe("applyStyleIntent", () => {
 });
 
 describe("applyStyleIntent while a shape editor is open", () => {
-	const slotsOf = (object: unknown): TextSlots =>
+	const readTextSlots = (object: unknown): TextSlots =>
 		(object as { text: TextSlots }).text;
 
 	const colorText = (
@@ -155,7 +155,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 			}),
 			"#d33",
 		);
-		expect(slotsOf(result.objects["a"]).body.text).toEqual([
+		expect(readTextSlots(result.objects["a"]).body.text).toEqual([
 			{ text: "hello" },
 			{ text: "!", fontColor: "#d33" },
 		]);
@@ -187,7 +187,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 		const result = colorText(state, "#00f");
 		// The slot takes the draft on the way, so it holds the typed characters and
 		// the run styling the write did not strip.
-		expect(slotsOf(result.objects["a"]).body).toEqual({
+		expect(readTextSlots(result.objects["a"]).body).toEqual({
 			text: [{ text: "he", fontWeight: "bold" }, { text: "llo!" }],
 			fontColor: "#00f",
 		});
@@ -208,7 +208,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 			editingStateOf({ a }, "a", "# Title", { start: 0, end: 2 }),
 			"#d33",
 		);
-		expect(slotsOf(result.objects["a"]).body).toEqual({
+		expect(readTextSlots(result.objects["a"]).body).toEqual({
 			text: "# Title",
 			fontColor: "#d33",
 		});
@@ -221,7 +221,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 		const state = editingStateOf({ a }, "a", "hello!");
 		const result = paint(state, "#0f0");
 		expect(fillOf(result.objects["a"])).toBe("#0f0");
-		expect(slotsOf(result.objects["a"])).toBe(slotsOf(a));
+		expect(readTextSlots(result.objects["a"])).toBe(readTextSlots(a));
 		expect(result.textEditState).toBe(state.textEditState);
 	});
 
@@ -240,7 +240,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 			{ kind: "fontSize", size: 24 },
 			registries,
 		);
-		expect(slotsOf(result.objects["a"]).body).toEqual({
+		expect(readTextSlots(result.objects["a"]).body).toEqual({
 			text: [{ text: "he", fontSize: 24 }, { text: "llo" }],
 			fontSize: 12,
 		});
@@ -254,7 +254,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 			{ kind: "textAlign", align: "right" },
 			registries,
 		);
-		expect(slotsOf(result.objects["a"]).body).toEqual({
+		expect(readTextSlots(result.objects["a"]).body).toEqual({
 			text: "hello",
 			textAlign: "right",
 		});
@@ -262,7 +262,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 });
 
 describe("applyStyleIntent for a format keystroke", () => {
-	const slotsOf = (object: unknown): TextSlots =>
+	const readTextSlots = (object: unknown): TextSlots =>
 		(object as { text: TextSlots }).text;
 
 	const toggleBold = (state: Parameters<typeof applyStyleIntent>[0]) =>
@@ -273,7 +273,7 @@ describe("applyStyleIntent for a format keystroke", () => {
 		const result = toggleBold(
 			editingStateOf({ a }, "a", "hello", { start: 0, end: 2 }),
 		);
-		expect(slotsOf(result.objects["a"]).body.text).toEqual([
+		expect(readTextSlots(result.objects["a"]).body.text).toEqual([
 			{ text: "he", fontWeight: "bold" },
 			{ text: "llo" },
 		]);
@@ -289,7 +289,7 @@ describe("applyStyleIntent for a format keystroke", () => {
 		const result = toggleBold(
 			editingStateOf({ a }, "a", "hi there", { start: 3, end: 8 }),
 		);
-		expect(slotsOf(result.objects["a"]).body.text).toEqual([
+		expect(readTextSlots(result.objects["a"]).body.text).toEqual([
 			{ text: "hi " },
 			{ text: "there", fontWeight: "bold" },
 		]);

@@ -4,7 +4,7 @@ import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import { contextOf, textRectOf } from "../../__tests__/support/styleFixtures";
 import { textContentEntry } from "../textContentEntry";
 
-const slotsOf = (object: unknown): TextSlots =>
+const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;
 
 describe("textContentEntry", () => {
@@ -12,7 +12,10 @@ describe("textContentEntry", () => {
 		it("writes the first slot, keeping its styling", () => {
 			const a = textRectOf("a", { body: { text: "hello", fontSize: 12 } });
 			const updated = textContentEntry.apply(a, null, "world", contextOf());
-			expect(slotsOf(updated).body).toEqual({ text: "world", fontSize: 12 });
+			expect(readTextSlots(updated).body).toEqual({
+				text: "world",
+				fontSize: 12,
+			});
 		});
 
 		it("writes only the first slot of a multi-slot shape, key order kept", () => {
@@ -21,7 +24,7 @@ describe("textContentEntry", () => {
 				rows: { text: ["id"] },
 			});
 			const updated = textContentEntry.apply(a, null, "Account", contextOf());
-			expect(slotsOf(updated)).toEqual({
+			expect(readTextSlots(updated)).toEqual({
 				name: { text: "Account" },
 				rows: { text: ["id"] },
 			});
@@ -30,7 +33,7 @@ describe("textContentEntry", () => {
 		it("splits on newlines when the first slot holds rows", () => {
 			const a = textRectOf("a", { rows: { text: ["id"] } });
 			const updated = textContentEntry.apply(a, null, "id\nemail", contextOf());
-			expect(slotsOf(updated).rows).toEqual({ text: ["id", "email"] });
+			expect(readTextSlots(updated).rows).toEqual({ text: ["id", "email"] });
 		});
 
 		it("the content already there → the object itself", () => {
@@ -51,13 +54,13 @@ describe("textContentEntry", () => {
 				"world",
 				contextOf({ selected: false }),
 			);
-			expect(slotsOf(updated).body).toEqual({ text: "world" });
+			expect(readTextSlots(updated).body).toEqual({ text: "world" });
 		});
 
 		it("leaves the object it was given as it was", () => {
 			const a = textRectOf("a", { body: { text: "hello" } });
 			textContentEntry.apply(a, null, "world", contextOf());
-			expect(slotsOf(a).body).toEqual({ text: "hello" });
+			expect(readTextSlots(a).body).toEqual({ text: "hello" });
 		});
 	});
 
