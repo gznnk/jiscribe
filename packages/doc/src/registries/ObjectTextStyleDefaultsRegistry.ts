@@ -36,18 +36,18 @@ const textStyleDefaultKeys = (
  * fields rather than one map keyed by slot id, so that neither kind has to
  * reserve an id the other could not then be a slot of.
  *
- * A root-form type (`"body"` / `"source"`) declares `bySlot` under the one key
+ * A root-form type (`"body"` / `"source"`) declares `byTextSlot` under the one key
  * every single-text shape holds ({@link BODY_TEXT_SLOT_ID}). A `"slots"` type
- * declares `bySlot` for the slots of its own fixed set, a slot left out
+ * declares `byTextSlot` for the slots of its own fixed set, a slot left out
  * contributing no defaults; one whose slot set is not fixed — a table's cells are
- * one per row × column, so there is no list of ids — declares `everySlot`
+ * one per row × column, so there is no list of ids — declares `everyTextSlot`
  * instead, which every slot without its own entry falls back to.
  */
 export type ObjectTextSlotStyleDefaults = Readonly<{
 	/** Defaults of the slots the type names, keyed by slot id. */
-	bySlot?: Readonly<Record<string, TextSlotStyle>>;
+	byTextSlot?: Readonly<Record<string, TextSlotStyle>>;
 	/** Defaults every slot without an entry of its own falls back to. */
-	everySlot?: TextSlotStyle;
+	everyTextSlot?: TextSlotStyle;
 }>;
 
 /**
@@ -63,7 +63,7 @@ export type ObjectTextSlotStyleDefaults = Readonly<{
  * in its creation defaults contributes nothing. A `"slots"` type styles each slot
  * on its own, which no flat doc field can hold, so it declares them itself
  * (`ObjectDocDefinition.textSlotStyleDefaults`; the record's
- * RECORD_SLOT_STYLE_DEFAULTS_BY_ID under `bySlot`).
+ * RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID under `byTextSlot`).
  *
  * @param features - The type's feature flags; one with no text at all yields undefined
  * @param defaults - The type's creation defaults (its `*_DOC_DEFAULTS`); read for a root-form type only, undefined for a type that declares none
@@ -88,35 +88,36 @@ export const extractTextSlotStyleDefaults = (
 		);
 		return Object.keys(bodyStyle).length === 0
 			? undefined
-			: { bySlot: { [BODY_TEXT_SLOT_ID]: bodyStyle } };
+			: { byTextSlot: { [BODY_TEXT_SLOT_ID]: bodyStyle } };
 	}
 	if (features.text !== "slots" || slotStyleDefaults === undefined) {
 		return undefined;
 	}
 	const styleKeys = textStyleDefaultKeys(features.text);
-	const bySlot: Record<string, TextSlotStyle> = {};
+	const byTextSlot: Record<string, TextSlotStyle> = {};
 	for (const [slotId, slotDefaults] of Object.entries(
-		slotStyleDefaults.bySlot ?? {},
+		slotStyleDefaults.byTextSlot ?? {},
 	)) {
 		const style = pickDefined(slotDefaults, styleKeys);
 		if (Object.keys(style).length > 0) {
-			bySlot[slotId] = style;
+			byTextSlot[slotId] = style;
 		}
 	}
-	const everySlotStyle =
-		slotStyleDefaults.everySlot === undefined
+	const everyTextSlotStyle =
+		slotStyleDefaults.everyTextSlot === undefined
 			? undefined
-			: pickDefined(slotStyleDefaults.everySlot, styleKeys);
-	const everySlot =
-		everySlotStyle !== undefined && Object.keys(everySlotStyle).length > 0
-			? everySlotStyle
+			: pickDefined(slotStyleDefaults.everyTextSlot, styleKeys);
+	const everyTextSlot =
+		everyTextSlotStyle !== undefined &&
+		Object.keys(everyTextSlotStyle).length > 0
+			? everyTextSlotStyle
 			: undefined;
-	if (Object.keys(bySlot).length === 0 && everySlot === undefined) {
+	if (Object.keys(byTextSlot).length === 0 && everyTextSlot === undefined) {
 		return undefined;
 	}
 	return {
-		...(Object.keys(bySlot).length > 0 && { bySlot }),
-		...(everySlot !== undefined && { everySlot }),
+		...(Object.keys(byTextSlot).length > 0 && { byTextSlot }),
+		...(everyTextSlot !== undefined && { everyTextSlot }),
 	};
 };
 
@@ -127,7 +128,7 @@ export const extractTextSlotStyleDefaults = (
  * every side that draws, edits, measures or reports a text style.
  *
  * A type registered here contributes nothing to what is saved: the resolution
- * happens per read (`resolveSlotStyle`) and never writes back into the doc or
+ * happens per read (`resolveTextSlotStyle`) and never writes back into the doc or
  * the state, so a field the author omitted stays omitted on the next save.
  *
  * A type or slot absent from the registry resolves to the slot's own fields
@@ -175,11 +176,11 @@ export class ObjectTextStyleDefaultsRegistry {
 	 * through either field of {@link ObjectTextSlotStyleDefaults}.
 	 *
 	 * @param type - The object type the slot belongs to
-	 * @param slotId - Which slot; a root-form type's single slot is BODY_TEXT_SLOT_ID. Its own entry in `bySlot` wins over `everySlot`
+	 * @param slotId - Which slot; a root-form type's single slot is BODY_TEXT_SLOT_ID. Its own entry in `byTextSlot` wins over `everyTextSlot`
 	 */
 	get(type: ObjectType, slotId: string): TextSlotStyle | undefined {
 		const defaults = this.defaultsByType.get(type);
-		return defaults?.bySlot?.[slotId] ?? defaults?.everySlot;
+		return defaults?.byTextSlot?.[slotId] ?? defaults?.everyTextSlot;
 	}
 
 	/**
@@ -191,7 +192,7 @@ export class ObjectTextStyleDefaultsRegistry {
 	 * @param slot - The slot, or its style half; undefined yields the slot's defaults alone
 	 * @returns A style object; a field neither side sets stays absent
 	 */
-	resolveSlotStyle(
+	resolveTextSlotStyle(
 		type: ObjectType,
 		slotId: string,
 		slot: TextSlot | TextSlotStyle | undefined,

@@ -70,7 +70,7 @@ const describeTextSlot = (
 	id: string,
 	measurement: TextSlotMeasurement,
 ): string => {
-	const head = `text slot "${measurement.slotId}" of "${id}": ${describeTextSlotSize(measurement)}`;
+	const head = `text slot "${measurement.textSlotId}" of "${id}": ${describeTextSlotSize(measurement)}`;
 	if (!measurement.isOverflowing) {
 		return `${head}; it fits`;
 	}

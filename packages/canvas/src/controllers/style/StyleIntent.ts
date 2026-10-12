@@ -80,7 +80,7 @@ export type StyleIntent = CoreStyleIntent | ExtraStyleIntent;
 /**
  * Which field each toggle flips: the one fact that makes a toggle one, stated
  * once for the types (StyleIntentValueType, TextToggleIntentKind) and the entries
- * (toggleRunOrSlotEntry) alike. A toggle's value type is its field's, so the
+ * (toggleRunOrTextSlotEntry) alike. A toggle's value type is its field's, so the
  * two cannot drift apart.
  */
 export const TOGGLE_FLIPS = {

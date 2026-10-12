@@ -26,11 +26,11 @@ export { recordToDoc, recordToState } from "./state/RecordMapper";
 export { isValidRecordState } from "./state/validateRecordState";
 
 export { RecordBox } from "./presentation/RecordBox";
-export { calcRecordSlotRegions } from "./presentation/calcRecordSlotRegions";
+export { calcRecordTextSlotRegions } from "./presentation/calcRecordTextSlotRegions";
 export type {
-	RecordSlotRegions,
-	RecordSlotRegionsState,
-} from "./presentation/calcRecordSlotRegions";
+	RecordTextSlotRegions,
+	RecordTextSlotRegionsState,
+} from "./presentation/calcRecordTextSlotRegions";
 export { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
 
 export { UmlPackageBox } from "./presentation/UmlPackageBox";

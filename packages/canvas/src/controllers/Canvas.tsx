@@ -628,7 +628,8 @@ const CanvasComponent = ({
 			: textEdit.kind === "shape"
 				? textEdit.object.id
 				: textEdit.connector.id;
-	const textEditSlotId = textEdit?.kind === "shape" ? textEdit.slotId : null;
+	const editingTextSlotId =
+		textEdit?.kind === "shape" ? textEdit.textSlotId : null;
 
 	// The menu is anchored below the drawn extent, which during a text edit is the
 	// draft-grafted box (a keystroke regrows an auto-sized text before commit), so
@@ -796,7 +797,7 @@ const CanvasComponent = ({
 								svgRef={svgRef}
 								isContentHidden={isContentHidden}
 								textEditObjectId={textEditObjectId}
-								textEditSlotId={textEditSlotId}
+								editingTextSlotId={editingTextSlotId}
 								isDrawMode={!!state.shapeDrawing}
 								visibleObjectIds={visibleObjectIds}
 								showGrid={grid?.show}

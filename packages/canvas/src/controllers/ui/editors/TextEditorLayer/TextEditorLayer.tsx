@@ -146,7 +146,7 @@ function renderTextEditor(
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
 ): React.ReactElement {
 	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
-	const style = textStyleDefaults.resolveSlotStyle(
+	const style = textStyleDefaults.resolveTextSlotStyle(
 		target.type,
 		slotId,
 		target.text?.[slotId],
@@ -254,7 +254,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	return renderTextEditor(
 		geometryObject,
 		openEdit.object.id,
-		openEdit.slotId,
+		openEdit.textSlotId,
 		openEdit.text,
 		handlers,
 		registries.objectTextStyleDefaults,

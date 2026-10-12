@@ -82,7 +82,9 @@ describe("collectDocFontRequests", () => {
 
 	it("resolves a slot through the type's own defaults", () => {
 		const registry = createObjectTextStyleDefaultsRegistry();
-		registry.register("sticky", { bySlot: { body: { fontWeight: "bold" } } });
+		registry.register("sticky", {
+			byTextSlot: { body: { fontWeight: "bold" } },
+		});
 		const objects = { a: shape("a", { body: { text: "note" } }, "sticky") };
 
 		const requests = collectDocFontRequests(objects, registry);

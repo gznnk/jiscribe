@@ -16,7 +16,7 @@ const textlessFeatures = { ...TextFeatures, text: undefined } as const;
 
 /** A two-slot type's declaration, the shape a `"slots"` type with named slots registers. */
 const SLOT_STYLE_DEFAULTS = {
-	bySlot: {
+	byTextSlot: {
 		name: {
 			textAlign: "center",
 			fontWeight: "bold",
@@ -31,7 +31,7 @@ describe("extractTextSlotStyleDefaults", () => {
 		expect(
 			extractTextSlotStyleDefaults(TextFeatures, TEXT_DOC_DEFAULTS),
 		).toEqual({
-			bySlot: {
+			byTextSlot: {
 				[BODY_TEXT_SLOT_ID]: {
 					textAlign: "left",
 					verticalAlign: "top",
@@ -49,7 +49,7 @@ describe("extractTextSlotStyleDefaults", () => {
 			TEXT_DOC_DEFAULTS,
 		);
 		expect(TEXT_DOC_DEFAULTS.fontFamily).not.toBeUndefined();
-		expect(defaults?.bySlot?.[BODY_TEXT_SLOT_ID]).not.toHaveProperty(
+		expect(defaults?.byTextSlot?.[BODY_TEXT_SLOT_ID]).not.toHaveProperty(
 			"fontFamily",
 		);
 	});
@@ -62,7 +62,7 @@ describe("extractTextSlotStyleDefaults", () => {
 				SLOT_STYLE_DEFAULTS,
 			),
 		).toEqual({
-			bySlot: {
+			byTextSlot: {
 				name: { textAlign: "center", fontWeight: "bold" },
 				rows: { textAlign: "left" },
 			},
@@ -72,9 +72,9 @@ describe("extractTextSlotStyleDefaults", () => {
 	it("drops a slot whose declaration sets no style field", () => {
 		expect(
 			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
-				bySlot: { name: { textAlign: "center" }, rows: {} },
+				byTextSlot: { name: { textAlign: "center" }, rows: {} },
 			}),
-		).toEqual({ bySlot: { name: { textAlign: "center" } } });
+		).toEqual({ byTextSlot: { name: { textAlign: "center" } } });
 	});
 
 	it("returns undefined for a slots type that declares no per-slot defaults", () => {
@@ -106,15 +106,15 @@ describe("extractTextSlotStyleDefaults", () => {
 	});
 });
 
-describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
+describe("ObjectTextStyleDefaultsRegistry.resolveTextSlotStyle", () => {
 	const registry = createObjectTextStyleDefaultsRegistry();
 	registry.register("text", {
-		bySlot: {
+		byTextSlot: {
 			[BODY_TEXT_SLOT_ID]: { textAlign: "left", verticalAlign: "top" },
 		},
 	});
 	registry.register("record", {
-		bySlot: {
+		byTextSlot: {
 			name: { textAlign: "center", fontWeight: "bold" },
 			attributes: { textAlign: "left" },
 		},
@@ -122,7 +122,9 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 
 	it("fills a registered slot's defaults into what the slot leaves unset", () => {
 		expect(
-			registry.resolveSlotStyle("text", BODY_TEXT_SLOT_ID, { text: "hello" }),
+			registry.resolveTextSlotStyle("text", BODY_TEXT_SLOT_ID, {
+				text: "hello",
+			}),
 		).toEqual({
 			textAlign: "left",
 			verticalAlign: "top",
@@ -131,7 +133,7 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 
 	it("lets an explicit slot value win over the slot's default", () => {
 		expect(
-			registry.resolveSlotStyle("text", BODY_TEXT_SLOT_ID, {
+			registry.resolveTextSlotStyle("text", BODY_TEXT_SLOT_ID, {
 				text: "hello",
 				textAlign: "right",
 			}),
@@ -140,7 +142,7 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 
 	it("is not shadowed by a key the slot carries as undefined", () => {
 		expect(
-			registry.resolveSlotStyle("text", BODY_TEXT_SLOT_ID, {
+			registry.resolveTextSlotStyle("text", BODY_TEXT_SLOT_ID, {
 				text: "hello",
 				textAlign: undefined,
 			}),
@@ -149,16 +151,16 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 
 	it("answers each slot of a multi-slot type with that slot's own defaults", () => {
 		expect(
-			registry.resolveSlotStyle("record", "name", { text: "User" }),
+			registry.resolveTextSlotStyle("record", "name", { text: "User" }),
 		).toEqual({ textAlign: "center", fontWeight: "bold" });
 		expect(
-			registry.resolveSlotStyle("record", "attributes", { text: [] }),
+			registry.resolveTextSlotStyle("record", "attributes", { text: [] }),
 		).toEqual({ textAlign: "left" });
 	});
 
 	it("yields the slot's own fields alone for a slot the type does not declare", () => {
 		expect(
-			registry.resolveSlotStyle("record", "operations", {
+			registry.resolveTextSlotStyle("record", "operations", {
 				text: [],
 				fontSize: 20,
 			}),
@@ -167,7 +169,7 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 
 	it("yields the slot's own fields alone for an unregistered type", () => {
 		expect(
-			registry.resolveSlotStyle("rect", BODY_TEXT_SLOT_ID, {
+			registry.resolveTextSlotStyle("rect", BODY_TEXT_SLOT_ID, {
 				text: "hello",
 				fontSize: 20,
 			}),
@@ -176,13 +178,15 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 
 	it("drops the content, so the result is styling only", () => {
 		expect(
-			registry.resolveSlotStyle("text", BODY_TEXT_SLOT_ID, { text: "hello" }),
+			registry.resolveTextSlotStyle("text", BODY_TEXT_SLOT_ID, {
+				text: "hello",
+			}),
 		).not.toHaveProperty("text");
 	});
 
 	it("yields the slot's defaults alone when there is no slot", () => {
 		expect(
-			registry.resolveSlotStyle("text", BODY_TEXT_SLOT_ID, undefined),
+			registry.resolveTextSlotStyle("text", BODY_TEXT_SLOT_ID, undefined),
 		).toEqual({
 			textAlign: "left",
 			verticalAlign: "top",
@@ -191,23 +195,23 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 
 	it("yields nothing when neither side has anything to say", () => {
 		expect(
-			registry.resolveSlotStyle("rect", BODY_TEXT_SLOT_ID, undefined),
+			registry.resolveTextSlotStyle("rect", BODY_TEXT_SLOT_ID, undefined),
 		).toEqual({});
 	});
 });
 
-describe("ObjectTextStyleDefaultsRegistry.get on an everySlot declaration", () => {
+describe("ObjectTextStyleDefaultsRegistry.get on an everyTextSlot declaration", () => {
 	const registry = createObjectTextStyleDefaultsRegistry();
 	registry.register("table", {
-		bySlot: { r0c0: { fontWeight: "bold" } },
-		everySlot: { fontColor: "auto" },
+		byTextSlot: { r0c0: { fontWeight: "bold" } },
+		everyTextSlot: { fontColor: "auto" },
 	});
 
-	it("answers a slot id the type never named with the everySlot defaults", () => {
+	it("answers a slot id the type never named with the everyTextSlot defaults", () => {
 		expect(registry.get("table", "r3c7")).toEqual({ fontColor: "auto" });
 	});
 
-	it("lets a slot's own entry win over everySlot", () => {
+	it("lets a slot's own entry win over everyTextSlot", () => {
 		expect(registry.get("table", "r0c0")).toEqual({ fontWeight: "bold" });
 	});
 
@@ -216,34 +220,34 @@ describe("ObjectTextStyleDefaultsRegistry.get on an everySlot declaration", () =
 	});
 });
 
-describe("extractTextSlotStyleDefaults on an everySlot declaration", () => {
+describe("extractTextSlotStyleDefaults on an everyTextSlot declaration", () => {
 	it("keeps both kinds, each narrowed to the style fields", () => {
 		expect(
 			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
-				bySlot: { r0c0: { fontWeight: "bold" } },
-				everySlot: { fontColor: "auto", fontFamily: "Noto Sans JP" },
+				byTextSlot: { r0c0: { fontWeight: "bold" } },
+				everyTextSlot: { fontColor: "auto", fontFamily: "Noto Sans JP" },
 			}),
 		).toEqual({
-			bySlot: { r0c0: { fontWeight: "bold" } },
+			byTextSlot: { r0c0: { fontWeight: "bold" } },
 			// The family is left out of defaults, as it is for a named slot.
-			everySlot: { fontColor: "auto" },
+			everyTextSlot: { fontColor: "auto" },
 		});
 	});
 
-	it("drops everySlot when its declaration sets no style field", () => {
+	it("drops everyTextSlot when its declaration sets no style field", () => {
 		expect(
 			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
-				bySlot: { r0c0: { fontWeight: "bold" } },
-				everySlot: {},
+				byTextSlot: { r0c0: { fontWeight: "bold" } },
+				everyTextSlot: {},
 			}),
-		).toEqual({ bySlot: { r0c0: { fontWeight: "bold" } } });
+		).toEqual({ byTextSlot: { r0c0: { fontWeight: "bold" } } });
 	});
 
 	it("returns undefined when a slots type declares both empty", () => {
 		expect(
 			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
-				bySlot: {},
-				everySlot: {},
+				byTextSlot: {},
+				everyTextSlot: {},
 			}),
 		).toBeUndefined();
 	});
@@ -274,7 +278,7 @@ describe("extractTextSlotStyleDefaults for a source type", () => {
 		expect(
 			extractTextSlotStyleDefaults(sourceFeatures, TEXT_DOC_DEFAULTS),
 		).toEqual({
-			bySlot: {
+			byTextSlot: {
 				[BODY_TEXT_SLOT_ID]: {
 					textAlign: "left",
 					verticalAlign: "top",

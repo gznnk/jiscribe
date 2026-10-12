@@ -15,7 +15,7 @@ type CanvasViewProps = {
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
 	/** Slot the open editor targets, so only that slot's text is hidden (see ObjectsRenderer). */
-	textEditSlotId?: string | null;
+	editingTextSlotId?: string | null;
 	isDrawMode?: boolean;
 	/**
 	 * Hides the drawn scene while leaving it laid out (default false). Set while
@@ -56,7 +56,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 	svgRef,
 	children,
 	textEditObjectId,
-	textEditSlotId,
+	editingTextSlotId,
 	isDrawMode = false,
 	isContentHidden = false,
 	visibleObjectIds,
@@ -117,7 +117,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 					objects={objects}
 					rootIds={rootIds}
 					textEditObjectId={textEditObjectId}
-					textEditSlotId={textEditSlotId}
+					editingTextSlotId={editingTextSlotId}
 					visibleObjectIds={visibleObjectIds}
 				/>
 				{/* Overlay layers injected from parent. These are control UI

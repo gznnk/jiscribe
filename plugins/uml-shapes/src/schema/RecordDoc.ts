@@ -12,16 +12,16 @@ import type {
 } from "@jiscribe/doc";
 
 /** Slot holding the box stereotype (<<interface>> / <<abstract>>). */
-export const RECORD_STEREOTYPE_SLOT_ID = "stereotype";
+export const RECORD_STEREOTYPE_TEXT_SLOT_ID = "stereotype";
 
 /** Slot holding the box title (class / entity / concept name). */
-export const RECORD_NAME_SLOT_ID = "name";
+export const RECORD_NAME_TEXT_SLOT_ID = "name";
 
 /** Slot holding the attribute rows (fields, properties, ER columns). */
-export const RECORD_ATTRIBUTES_SLOT_ID = "attributes";
+export const RECORD_ATTRIBUTES_TEXT_SLOT_ID = "attributes";
 
 /** Slot holding the operation rows (methods, behaviors). */
-export const RECORD_OPERATIONS_SLOT_ID = "operations";
+export const RECORD_OPERATIONS_TEXT_SLOT_ID = "operations";
 
 /**
  * Every slot a record may hold, in the order their compartments stack from the
@@ -30,37 +30,37 @@ export const RECORD_OPERATIONS_SLOT_ID = "operations";
  * stereotyped interface, a two-compartment DTO and a name-only box are written
  * from the one slot set.
  */
-export const RECORD_SLOT_IDS = [
-	RECORD_STEREOTYPE_SLOT_ID,
-	RECORD_NAME_SLOT_ID,
-	RECORD_ATTRIBUTES_SLOT_ID,
-	RECORD_OPERATIONS_SLOT_ID,
+export const RECORD_TEXT_SLOT_IDS = [
+	RECORD_STEREOTYPE_TEXT_SLOT_ID,
+	RECORD_NAME_TEXT_SLOT_ID,
+	RECORD_ATTRIBUTES_TEXT_SLOT_ID,
+	RECORD_OPERATIONS_TEXT_SLOT_ID,
 ] as const;
 
-/** One of the record's slot ids (see RECORD_SLOT_IDS). */
-export type RecordSlotId = (typeof RECORD_SLOT_IDS)[number];
+/** One of the record's slot ids (see RECORD_TEXT_SLOT_IDS). */
+export type RecordTextSlotId = (typeof RECORD_TEXT_SLOT_IDS)[number];
 
 /**
  * The slots whose content is a list of rows rather than one string. Splits the
  * slot set the way the validators and the mapper need it: the slots left out here
  * (stereotype, name) are the text bands at the top of the box.
  */
-export const RECORD_LIST_SLOT_IDS = [
-	RECORD_ATTRIBUTES_SLOT_ID,
-	RECORD_OPERATIONS_SLOT_ID,
+export const RECORD_LIST_TEXT_SLOT_IDS = [
+	RECORD_ATTRIBUTES_TEXT_SLOT_ID,
+	RECORD_OPERATIONS_TEXT_SLOT_ID,
 ] as const;
 
-/** One of the row-holding slot ids (see RECORD_LIST_SLOT_IDS). */
-export type RecordListSlotId = (typeof RECORD_LIST_SLOT_IDS)[number];
+/** One of the row-holding slot ids (see RECORD_LIST_TEXT_SLOT_IDS). */
+export type RecordListTextSlotId = (typeof RECORD_LIST_TEXT_SLOT_IDS)[number];
 
 /**
  * Whether a key names a slot of the record. Takes any string so a key read off an
  * untrusted document or state can be tested against the closed set.
  *
- * @param value - Any key; only the ids in RECORD_SLOT_IDS match
+ * @param value - Any key; only the ids in RECORD_TEXT_SLOT_IDS match
  */
-export const isRecordSlotId = (value: string): value is RecordSlotId =>
-	(RECORD_SLOT_IDS as readonly string[]).includes(value);
+export const isRecordTextSlotId = (value: string): value is RecordTextSlotId =>
+	(RECORD_TEXT_SLOT_IDS as readonly string[]).includes(value);
 
 /**
  * Whether a key names a row-holding slot, i.e. a compartment rather than one of
@@ -68,8 +68,10 @@ export const isRecordSlotId = (value: string): value is RecordSlotId =>
  *
  * @param value - Any key; a band's id, and a key that is no slot at all, return false
  */
-export const isRecordListSlotId = (value: string): value is RecordListSlotId =>
-	(RECORD_LIST_SLOT_IDS as readonly string[]).includes(value);
+export const isRecordListTextSlotId = (
+	value: string,
+): value is RecordListTextSlotId =>
+	(RECORD_LIST_TEXT_SLOT_IDS as readonly string[]).includes(value);
 
 /** Default type size; the band metrics below are derived from it. */
 export const RECORD_FONT_SIZE = 14;
@@ -104,7 +106,7 @@ export const RECORD_BAND_PADDING_Y_TOTAL = 7;
 /**
  * Height of one text band (the stereotype, the title) holding one line at the
  * default type size. A band follows its slot — a larger `fontSize`, a newline, or
- * text too long for the width grows it (see calcRecordSlotRegions) — so this is
+ * text too long for the width grows it (see calcRecordTextSlotRegions) — so this is
  * the height a freshly created record shows, and the unit a stencil's height sums
  * one term of per band it starts with.
  */
@@ -134,9 +136,9 @@ export const calcRecordListHeight = (
  * placement the rows compartments keep as is — they are the bulk of the box, so
  * the shared values are theirs (left, packed to the top). The two text bands at
  * the top override the placement below; which slot gets which is
- * RECORD_SLOT_STYLE_DEFAULTS_BY_ID.
+ * RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID.
  */
-export const RECORD_SLOT_STYLE_DEFAULTS = {
+export const RECORD_TEXT_SLOT_STYLE_DEFAULTS = {
 	textAlign: "left",
 	verticalAlign: "top",
 	fontColor: AUTO_COLOR,
@@ -153,31 +155,31 @@ export const RECORD_SLOT_STYLE_DEFAULTS = {
  * it — so a record written as `{"name":{"text":"User"}}` renders like one dropped
  * from the toolbar without gaining the fields it never wrote.
  */
-export const RECORD_SLOT_STYLE_DEFAULTS_BY_ID = {
+export const RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID = {
 	/** Centered over the title, and left at the body weight so the `<<interface>>` line reads as the title's caption rather than a second title. */
-	[RECORD_STEREOTYPE_SLOT_ID]: {
-		...RECORD_SLOT_STYLE_DEFAULTS,
+	[RECORD_STEREOTYPE_TEXT_SLOT_ID]: {
+		...RECORD_TEXT_SLOT_STYLE_DEFAULTS,
 		textAlign: "center",
 		verticalAlign: "middle",
 	},
 	/** Centered and bold, as UML draws a type name. */
-	[RECORD_NAME_SLOT_ID]: {
-		...RECORD_SLOT_STYLE_DEFAULTS,
+	[RECORD_NAME_TEXT_SLOT_ID]: {
+		...RECORD_TEXT_SLOT_STYLE_DEFAULTS,
 		textAlign: "center",
 		verticalAlign: "middle",
 		fontWeight: "bold",
 	},
 	/** The shared values as they are: the compartments are what they were chosen for. */
-	[RECORD_ATTRIBUTES_SLOT_ID]: RECORD_SLOT_STYLE_DEFAULTS,
+	[RECORD_ATTRIBUTES_TEXT_SLOT_ID]: RECORD_TEXT_SLOT_STYLE_DEFAULTS,
 	/** The shared values as they are, the attribute compartment's twin. */
-	[RECORD_OPERATIONS_SLOT_ID]: RECORD_SLOT_STYLE_DEFAULTS,
-} as const satisfies Record<RecordSlotId, Omit<TextSlot, "text">>;
+	[RECORD_OPERATIONS_TEXT_SLOT_ID]: RECORD_TEXT_SLOT_STYLE_DEFAULTS,
+} as const satisfies Record<RecordTextSlotId, Omit<TextSlot, "text">>;
 
 /**
  * A record: a titled box, optionally captioned with a stereotype, over one or two
  * compartments of rows (a UML class or interface, an ER entity, an ontology
  * concept with its properties). Its text is a set of slots keyed by slot id
- * (see RECORD_SLOT_IDS) rather than the single body other shapes take; the string
+ * (see RECORD_TEXT_SLOT_IDS) rather than the single body other shapes take; the string
  * form is not valid here (see validateRecordDoc).
  *
  * Adopts rect geometry (x/y/width/height) so it reuses Frame-based transforms and
@@ -247,12 +249,12 @@ export const RECORD_DOC_DEFAULTS: Omit<RecordDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: {
-		name: { text: "", ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name },
+		name: { text: "", ...RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID.name },
 		// `as RichText[]` keeps `as const` from typing the empty rows as a readonly
 		// tuple, which no longer overlaps RecordTextDoc.
 		attributes: {
 			text: [] as RichText[],
-			...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes,
+			...RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID.attributes,
 		},
 	},
 } as const as RecordDoc;

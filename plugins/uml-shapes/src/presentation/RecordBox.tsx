@@ -2,13 +2,16 @@ import { textSlotPart } from "@jiscribe/canvas";
 import { createFrameObject } from "@jiscribe/canvas-sdk";
 import type { Rect } from "@jiscribe/geometry";
 
-import { calcRecordSlotRegions } from "./calcRecordSlotRegions";
+import { calcRecordTextSlotRegions } from "./calcRecordTextSlotRegions";
 import {
 	RecordCompartment,
 	RecordDivider,
 	RecordOutline,
 } from "./RecordBoxStyled";
-import { isRecordListSlotId, RECORD_SLOT_IDS } from "../schema/RecordDoc";
+import {
+	isRecordListTextSlotId,
+	RECORD_TEXT_SLOT_IDS,
+} from "../schema/RecordDoc";
 import type { RecordState } from "../state/RecordState";
 
 /**
@@ -38,10 +41,10 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 
 	const { width, height } = state;
 	const regions: Record<string, Rect | undefined> =
-		calcRecordSlotRegions(state);
+		calcRecordTextSlotRegions(state);
 	// Top to bottom: the canonical slot order, minus the compartments this box
 	// does not have.
-	const compartments = RECORD_SLOT_IDS.flatMap((slotId) => {
+	const compartments = RECORD_TEXT_SLOT_IDS.flatMap((slotId) => {
 		const region = regions[slotId];
 		return region === undefined ? [] : [{ slotId, region }];
 	});
@@ -50,7 +53,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 	// compartments take one — and the title always being present keeps the line
 	// off the box's own top edge.
 	const dividedCompartments = compartments.filter(({ slotId }) =>
-		isRecordListSlotId(slotId),
+		isRecordListTextSlotId(slotId),
 	);
 
 	return (

@@ -204,13 +204,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   is now stated on `TextSlots` and held by a test.
 - **For plugin authors, a breaking change:**
   `ObjectDocDefinition.textSlotStyleDefaults` is now
-  `{ bySlot?, everySlot? }` rather than one map keyed by slot id. A type whose
-  slot set is not fixed — a table's cells are one per row × column, so there is
-  no list of ids — declares `everySlot`, which every slot without an entry of its
-  own falls back to; a type that names its slots declares `bySlot` as before,
-  wrapped in that field. The two are separate because one map keyed by slot id
-  had to reserve an id for "every slot", which then could not be the name of a
-  real slot in any document of the type.
+  `{ byTextSlot?, everyTextSlot? }` rather than one map keyed by slot id. A type
+  whose slot set is not fixed — a table's cells are one per row × column, so
+  there is no list of ids — declares `everyTextSlot`, which every slot without an
+  entry of its own falls back to; a type that names its slots declares
+  `byTextSlot` as before, wrapped in that field. The two are separate because
+  one map keyed by slot id had to reserve an id for "every slot", which then
+  could not be the name of a real slot in any document of the type.
 
 ### Changed
 
@@ -250,9 +250,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **For plugin authors: the style entry factories and the text-slot guard are
   renamed to say what they return.** On `@jiscribe/canvas/unstable` (and so
   `@jiscribe/canvas-sdk`), `fieldEntry` becomes `declaredFieldEntry`,
-  `objectField` / `slotField` become `objectFieldEntry` / `slotFieldEntry`,
-  `runOrSlot` / `toggleRunOrSlot` become `runOrSlotEntry` /
-  `toggleRunOrSlotEntry`, `styleIntentOf` becomes `toStyleIntent`, and
+  `objectField` / `slotField` become `objectFieldEntry` / `textSlotFieldEntry`,
+  `runOrSlot` / `toggleRunOrSlot` become `runOrTextSlotEntry` /
+  `toggleRunOrTextSlotEntry`, `styleIntentOf` becomes `toStyleIntent`, and
   `isTextSlotSelection` becomes `isTextSlotPart`. In `@jiscribe/canvas`, the
   type `ResolvedSelection` (what `CanvasSelectionHandle.select` returns)
   becomes `RequestedSelection`. Arguments and behaviour are unchanged; a type's
@@ -416,6 +416,14 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
   real half-size, `createDoc` reads its `position` as the center for every
   geometry, and `calcPointDocDrawnTopLeft` / `calcPointDocCenter` read that
   conversion off a document's own transform fields.
+- **For plugin authors: names that hold a text slot say `textSlot`.**
+  `ObjectTextStyleDefaultsRegistry.resolveSlotStyle` becomes
+  `resolveTextSlotStyle`, and `TextSlotMeasurement.slotId` (what
+  `CanvasHandle.measure.textSlot` returns) becomes `textSlotId`. On
+  `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`),
+  `FrameTextOverlayProps.slotId` becomes `textSlotId` and
+  `TextEditable.editingSlotId` becomes `editingTextSlotId`. Arguments and
+  behaviour are unchanged.
 
 ### Fixed
 

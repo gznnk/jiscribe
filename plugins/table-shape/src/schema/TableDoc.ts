@@ -21,7 +21,7 @@ import type { Prettify } from "../../../../packages/utility-types/src";
  * (see {@link TableCell}) paints over it.
  *
  * `text: "slots"` describes the **state**, where each cell is one text slot
- * keyed by {@link tableCellSlotId}. The doc spells the same cells out as a grid
+ * keyed by {@link tableCellTextSlotId}. The doc spells the same cells out as a grid
  * (`cells`) instead of a keyed map, so that a table reads as a table in the
  * file; the mapper is what moves between the two forms.
  */
@@ -129,7 +129,7 @@ export const TABLE_CELL_FONT_SIZE = 14;
 /**
  * What every cell's omitted typography resolves to. One value for all of them
  * rather than a map keyed by cell id, the cells being as many as the grid is
- * wide and tall (see the `everySlot` entry in the doc definition).
+ * wide and tall (see the `everyTextSlot` entry in the doc definition).
  *
  * `fontColor` is `AUTO_COLOR` so cell text follows the theme; left unset it
  * would resolve to the shared fallback's literal black and stay black on a dark
@@ -158,14 +158,14 @@ export const TABLE_CELL_STYLE_DEFAULTS = {
  * @param column - Column index, 0-based from the left
  * @returns The slot id, e.g. `r0c2` for the third cell of the first row
  */
-export const tableCellSlotId = (row: number, column: number): string =>
+export const tableCellTextSlotId = (row: number, column: number): string =>
 	`r${row}c${column}`;
 
-/** The grammar {@link tableCellSlotId} writes, and the only spelling read back. */
-const TABLE_CELL_SLOT_ID_PATTERN = /^r(\d+)c(\d+)$/;
+/** The grammar {@link tableCellTextSlotId} writes, and the only spelling read back. */
+const TABLE_CELL_TEXT_SLOT_ID_PATTERN = /^r(\d+)c(\d+)$/;
 
 /**
- * The grid position one cell id names — the inverse of {@link tableCellSlotId},
+ * The grid position one cell id names — the inverse of {@link tableCellTextSlotId},
  * for the operations that have to move a cell when a row or a column is inserted
  * ahead of it.
  *
@@ -176,10 +176,10 @@ const TABLE_CELL_SLOT_ID_PATTERN = /^r(\d+)c(\d+)$/;
  * @param slotId - A cell's slot id as `state.text` keys it, e.g. `r0c2`
  * @returns The 0-based position, or null when the id is not a cell id at all
  */
-export const parseTableCellSlotId = (
+export const parseTableCellTextSlotId = (
 	slotId: string,
 ): { row: number; column: number } | null => {
-	const matched = TABLE_CELL_SLOT_ID_PATTERN.exec(slotId);
+	const matched = TABLE_CELL_TEXT_SLOT_ID_PATTERN.exec(slotId);
 	return matched === null
 		? null
 		: { row: Number(matched[1]), column: Number(matched[2]) };
@@ -194,14 +194,14 @@ export const parseTableCellSlotId = (
  * @param columnCount - Number of columns; 0 yields an empty list
  * @returns Freshly built ids the caller may keep
  */
-export const tableCellSlotIds = (
+export const tableCellTextSlotIds = (
 	rowCount: number,
 	columnCount: number,
 ): string[] => {
 	const ids: string[] = [];
 	for (let row = 0; row < rowCount; row++) {
 		for (let column = 0; column < columnCount; column++) {
-			ids.push(tableCellSlotId(row, column));
+			ids.push(tableCellTextSlotId(row, column));
 		}
 	}
 	return ids;

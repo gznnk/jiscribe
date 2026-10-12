@@ -1,4 +1,4 @@
-import { runOrSlotEntry } from "./runOrSlotEntry";
+import { runOrTextSlotEntry } from "./runOrTextSlotEntry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StyleEntry } from "../StyleEntry";
 import type {
@@ -33,7 +33,7 @@ type ToggledValue<K extends TextToggleIntentKind> = StyleIntentValueType<
 /**
  * A format the keyboard flips over the text an editor has selected: the entry
  * reads what those characters are drawn with, computes the opposite, and writes
- * it the way the menus write the same field (runOrSlotEntry) — so a keystroke
+ * it the way the menus write the same field (runOrTextSlotEntry) — so a keystroke
  * and a menu press cannot disagree about what "bold" is.
  *
  * `apply` acts on a selected stretch and nothing else: with no stretch to flip —
@@ -43,11 +43,11 @@ type ToggledValue<K extends TextToggleIntentKind> = StyleIntentValueType<
  *
  * @param kind - The toggle; the field it flips is TOGGLE_FLIPS' answer, which fixes the value type too
  * @param options - `toggle`: the value to write given what the stretch is drawn with now, undefined meaning the field is unset there
- * @returns The pair, writing only while a stretch of this object is selected and reporting the field as runOrSlotEntry does
+ * @returns The pair, writing only while a stretch of this object is selected and reporting the field as runOrTextSlotEntry does
  * @template TState - The state the entry is written against
  * @template K - The toggle, which decides the field and the value type
  */
-export const toggleRunOrSlotEntry = <
+export const toggleRunOrTextSlotEntry = <
 	TState extends ObjectState,
 	K extends TextToggleIntentKind,
 >(
@@ -63,7 +63,7 @@ export const toggleRunOrSlotEntry = <
 		) => NonNullable<ToggledValue<K>>;
 	},
 ): StyleEntry<TState, ToggledValue<K>> => {
-	const styled = runOrSlotEntry<TState, (typeof TOGGLE_FLIPS)[K]>(
+	const styled = runOrTextSlotEntry<TState, (typeof TOGGLE_FLIPS)[K]>(
 		TOGGLE_FLIPS[kind],
 	);
 

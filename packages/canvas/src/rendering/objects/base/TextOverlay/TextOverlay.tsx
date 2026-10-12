@@ -15,7 +15,7 @@ export type TextEditable = {
 	 * Which slot that editor targets, so a multi-slot shape blanks only that one
 	 * and keeps drawing the rest. Omitted = the whole object counts as editing.
 	 */
-	editingSlotId?: string;
+	editingTextSlotId?: string;
 };
 
 type TextOverlayProps = {

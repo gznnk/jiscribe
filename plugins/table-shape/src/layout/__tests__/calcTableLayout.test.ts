@@ -6,7 +6,10 @@ import {
 } from "@jiscribe/canvas-sdk/doc";
 import { describe, expect, it } from "vitest";
 
-import { TABLE_CELL_FONT_SIZE, tableCellSlotId } from "../../schema/TableDoc";
+import {
+	TABLE_CELL_FONT_SIZE,
+	tableCellTextSlotId,
+} from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import { calcTableFrameSize } from "../calcTableFrameSize";
 import { calcTableLayout } from "../calcTableLayout";
@@ -32,7 +35,7 @@ const cellsOf = (rows: string[][]): Record<string, TableCell> => {
 	const cells: Record<string, TableCell> = {};
 	rows.forEach((row, rowIndex) => {
 		row.forEach((text, columnIndex) => {
-			cells[tableCellSlotId(rowIndex, columnIndex)] = { text };
+			cells[tableCellTextSlotId(rowIndex, columnIndex)] = { text };
 		});
 	});
 	return cells;
@@ -60,7 +63,7 @@ describe("calcTableLayout", () => {
 			tableOf([120, 120], [undefined], [["", ""]]),
 		);
 		expect(height).toBe(cellHeightOf(1));
-		expect(cellRects[tableCellSlotId(0, 0)].height).toBe(cellHeightOf(1));
+		expect(cellRects[tableCellTextSlotId(0, 0)].height).toBe(cellHeightOf(1));
 	});
 
 	it("a row with no stored height is exactly as tall as its text", () => {

@@ -10,7 +10,7 @@ import { calcFullBoxTextRegion, calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import {
 	RECORD_DOC_DEFAULTS,
-	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
+	RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID,
 	RecordFeatures,
 } from "./schema/RecordDoc";
 import { calcUmlPackageTextRegion } from "./schema/textRegions";
@@ -42,7 +42,7 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	validateExtra: validateRecordTextFields,
 	// Resolved per read, so a document keeps whichever of these it wrote itself
 	// and nothing more (ObjectTextStyleDefaultsRegistry).
-	textSlotStyleDefaults: { bySlot: RECORD_SLOT_STYLE_DEFAULTS_BY_ID },
+	textSlotStyleDefaults: { byTextSlot: RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID },
 });
 
 export const umlPackageDocDefinition: ObjectDocDefinition =

@@ -12,16 +12,16 @@ import {
 	rectOf,
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
-import { toggleRunOrSlotEntry } from "../toggleRunOrSlotEntry";
+import { toggleRunOrTextSlotEntry } from "../toggleRunOrTextSlotEntry";
 
 /** The three entries as textStyleTable builds them, so the toggles under test are the shipped ones. */
-const bold = toggleRunOrSlotEntry("toggleBold", {
+const bold = toggleRunOrTextSlotEntry("toggleBold", {
 	toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 });
-const italic = toggleRunOrSlotEntry("toggleItalic", {
+const italic = toggleRunOrTextSlotEntry("toggleItalic", {
 	toggle: (current) => (current === "italic" ? "normal" : "italic"),
 });
-const underline = toggleRunOrSlotEntry("toggleUnderline", {
+const underline = toggleRunOrTextSlotEntry("toggleUnderline", {
 	toggle: (current) => toggleTextDecorationToken(current, "underline"),
 });
 
@@ -34,7 +34,7 @@ const bodyOf = (object: unknown) => readTextSlots(object).body.text;
 const editing = (start: number, end: number, objectId = "a") =>
 	contextOf({ textEditRange: rangeOf(objectId, start, end) });
 
-describe("toggleRunOrSlotEntry", () => {
+describe("toggleRunOrTextSlotEntry", () => {
 	it("styles the selected characters alone", () => {
 		const a = textRectOf("a", { body: { text: "hello" } });
 		expect(bodyOf(bold.apply(a, null, undefined, editing(0, 2)))).toEqual([
@@ -64,7 +64,7 @@ describe("toggleRunOrSlotEntry", () => {
 	it("turns the format off when the type's default is what the text is drawn with", () => {
 		const boldByDefault = createObjectTextStyleDefaultsRegistry();
 		boldByDefault.register("rect", {
-			bySlot: { [BODY_TEXT_SLOT_ID]: { fontWeight: "bold" } },
+			byTextSlot: { [BODY_TEXT_SLOT_ID]: { fontWeight: "bold" } },
 		});
 		const a = textRectOf("a", { body: { text: "hello" } });
 		const ctx = {
@@ -132,7 +132,7 @@ describe("toggleRunOrSlotEntry", () => {
 	});
 
 	describe("read", () => {
-		it("reports the field the toggle flips, as runOrSlotEntry does", () => {
+		it("reports the field the toggle flips, as runOrTextSlotEntry does", () => {
 			const a = textRectOf("a", {
 				body: { text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }] },
 			});

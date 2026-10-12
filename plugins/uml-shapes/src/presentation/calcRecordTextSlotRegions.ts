@@ -9,11 +9,11 @@ import {
 	RECORD_BAND_PADDING_X,
 	RECORD_BAND_PADDING_Y_TOTAL,
 	RECORD_LIST_PADDING_Y,
-	RECORD_NAME_SLOT_ID,
-	RECORD_SLOT_IDS,
-	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
+	RECORD_NAME_TEXT_SLOT_ID,
+	RECORD_TEXT_SLOT_IDS,
+	RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID,
 } from "../schema/RecordDoc";
-import type { RecordSlotId } from "../schema/RecordDoc";
+import type { RecordTextSlotId } from "../schema/RecordDoc";
 
 /**
  * What the region split reads off the state: the untransformed box size plus the
@@ -22,13 +22,13 @@ import type { RecordSlotId } from "../schema/RecordDoc";
  * than the record's own set, so the registry's calculator type still accepts it
  * (see ObjectTextRegionCalculator).
  */
-export type RecordSlotRegionsState = Dimensions & {
+export type RecordTextSlotRegionsState = Dimensions & {
 	/** The shape's text slots, keyed by slot id; absent is read as a title-only box. */
 	text?: Record<string, TextSlot>;
 };
 
 /** The record's compartments, keyed by slot id, top to bottom. */
-export type RecordSlotRegions = {
+export type RecordTextSlotRegions = {
 	/** Stereotype band above the title; absent when the box does not have one. */
 	stereotype?: Rect;
 	/** Title band; a record always has one, at the top unless a stereotype band sits over it. */
@@ -40,11 +40,11 @@ export type RecordSlotRegions = {
 };
 
 /** The font a slot is drawn with: its own, falling back to that slot id's defaults. */
-const slotFont = (
-	slotId: RecordSlotId,
+const textSlotFont = (
+	slotId: RecordTextSlotId,
 	slot: TextSlot | undefined,
 ): TextMeasureFont => {
-	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
+	const styleDefaults = RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
 	return {
 		fontSize: slot?.fontSize ?? styleDefaults.fontSize,
 		fontFamily: slot?.fontFamily ?? styleDefaults.fontFamily,
@@ -62,14 +62,14 @@ const slotFont = (
  */
 const calcBandHeight = (
 	width: number,
-	slotId: RecordSlotId,
+	slotId: RecordTextSlotId,
 	slot: TextSlot | undefined,
 ): number => {
 	const text = isRichText(slot?.text) ? slot.text : "";
 	return (
 		calcVisualTextHeight(
 			text,
-			slotFont(slotId, slot),
+			textSlotFont(slotId, slot),
 			width - RECORD_BAND_PADDING_X * 2,
 		) + RECORD_BAND_PADDING_Y_TOTAL
 	);
@@ -83,11 +83,11 @@ const calcBandHeight = (
  * row's worth.
  */
 const calcListHeight = (
-	slotId: RecordSlotId,
+	slotId: RecordTextSlotId,
 	rows: readonly RichText[],
 	slot: TextSlot | undefined,
 ): number => {
-	const font = slotFont(slotId, slot);
+	const font = textSlotFont(slotId, slot);
 	const rowsHeight = rows.reduce(
 		(total, row) => total + calcVisualTextHeight(row, font),
 		0,
@@ -104,9 +104,9 @@ const calcListHeight = (
  * too long for the width wraps and overflows rather than widening the
  * compartment's share.
  */
-const calcSlotHeight = (
+const calcTextSlotHeight = (
 	width: number,
-	slotId: RecordSlotId,
+	slotId: RecordTextSlotId,
 	slot: TextSlot | undefined,
 ): number => {
 	const content = slot?.text;
@@ -131,14 +131,14 @@ const calcSlotHeight = (
  * @param state - Untransformed box size plus the slots the compartments are derived from; a height too small for the upper compartments shrinks them in order rather than producing a negative region
  * @returns One region per slot the state has, always with a non-negative height
  */
-export const calcRecordSlotRegions = (
-	state: RecordSlotRegionsState,
-): RecordSlotRegions => {
+export const calcRecordTextSlotRegions = (
+	state: RecordTextSlotRegionsState,
+): RecordTextSlotRegions => {
 	const { width, height } = state;
 	const left = -width / 2;
-	const presentSlotIds = RECORD_SLOT_IDS.filter(
+	const presentSlotIds = RECORD_TEXT_SLOT_IDS.filter(
 		(slotId) =>
-			slotId === RECORD_NAME_SLOT_ID || state.text?.[slotId] !== undefined,
+			slotId === RECORD_NAME_TEXT_SLOT_ID || state.text?.[slotId] !== undefined,
 	);
 
 	const placed: Record<string, Rect> = {};
@@ -149,7 +149,7 @@ export const calcRecordSlotRegions = (
 		const slotHeight = isLast
 			? remaining
 			: Math.min(
-					calcSlotHeight(width, slotId, state.text?.[slotId]),
+					calcTextSlotHeight(width, slotId, state.text?.[slotId]),
 					remaining,
 				);
 		placed[slotId] = { x: left, y: top, width, height: slotHeight };
@@ -159,5 +159,5 @@ export const calcRecordSlotRegions = (
 
 	// `name` is spelled out because the type has it required, `placed` being keyed
 	// by the slot ids this box happens to have.
-	return { ...placed, name: placed[RECORD_NAME_SLOT_ID] };
+	return { ...placed, name: placed[RECORD_NAME_TEXT_SLOT_ID] };
 };

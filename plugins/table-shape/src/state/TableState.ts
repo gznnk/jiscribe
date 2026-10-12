@@ -21,7 +21,7 @@ declare const TableStateBrand: unique symbol;
  * table with nothing added — while this type says what a slot of *this* shape
  * holds.
  *
- * The cell ids in `text` are exactly `tableCellSlotIds(rows.length,
+ * The cell ids in `text` are exactly `tableCellTextSlotIds(rows.length,
  * columns.length)`, no more and no fewer. Everything that adds or removes a row
  * or a column goes through `rewriteTableGrid`, which keeps that true by
  * construction rather than by each caller splicing the map correctly.

@@ -3,7 +3,10 @@ import { TEXT_SLOT_PART_KIND } from "@jiscribe/canvas-sdk";
 
 import { parseTableTrackPartId, tableTrackPartId } from "./tableTrack";
 import type { TableAxis } from "./tableTrack";
-import { parseTableCellSlotId, tableCellSlotId } from "../schema/TableDoc";
+import {
+	parseTableCellTextSlotId,
+	tableCellTextSlotId,
+} from "../schema/TableDoc";
 
 /** Where an index lands once a track has been inserted at `at`. */
 const shiftIndex = (index: number, at: number): number =>
@@ -17,13 +20,13 @@ const remapPartId = (
 	at: number,
 ): string => {
 	if (kind === TEXT_SLOT_PART_KIND) {
-		const cell = parseTableCellSlotId(partId);
+		const cell = parseTableCellTextSlotId(partId);
 		if (cell === null) {
 			return partId;
 		}
 		return axis === "row"
-			? tableCellSlotId(shiftIndex(cell.row, at), cell.column)
-			: tableCellSlotId(cell.row, shiftIndex(cell.column, at));
+			? tableCellTextSlotId(shiftIndex(cell.row, at), cell.column)
+			: tableCellTextSlotId(cell.row, shiftIndex(cell.column, at));
 	}
 	if (kind !== axis) {
 		return partId;
@@ -35,7 +38,7 @@ const remapPartId = (
 /**
  * The same selection, on the same parts, after a track has been inserted at
  * `at`. Cell ids and track ids are positional
- * ({@link import("../schema/TableDoc").tableCellSlotId},
+ * ({@link import("../schema/TableDoc").tableCellTextSlotId},
  * {@link tableTrackPartId}), so an insertion renames every part behind it and a
  * selection left as written would silently slide one track along.
  *

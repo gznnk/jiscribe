@@ -6,7 +6,7 @@ import type { Dimensions } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { calcTableTextRegion } from "../../presentation/calcTableTextRegion";
-import { tableCellSlotId } from "../../schema/TableDoc";
+import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import { calcTableFrameSize } from "../calcTableFrameSize";
 import { calcTableLayout } from "../calcTableLayout";
@@ -33,7 +33,7 @@ const makeTable = (): Dimensions & TableLayoutSource => {
 	const text: Record<string, TableCell> = {};
 	for (let row = 0; row < 3; row++) {
 		for (let column = 0; column < 4; column++) {
-			text[tableCellSlotId(row, column)] = { text: `r${row}c${column}` };
+			text[tableCellTextSlotId(row, column)] = { text: `r${row}c${column}` };
 		}
 	}
 	return {

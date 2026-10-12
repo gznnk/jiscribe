@@ -11,7 +11,7 @@ import type { Rect } from "@jiscribe/geometry";
 import {
 	TABLE_CELL_STYLE_DEFAULTS,
 	TABLE_DOC_DEFAULTS,
-	tableCellSlotId,
+	tableCellTextSlotId,
 } from "../schema/TableDoc";
 import type {
 	TableCell,
@@ -32,7 +32,7 @@ export type TableLayoutSource = {
 	columns?: readonly TableColumnDoc[];
 	/** The rows, top to bottom; each height is a lower bound the cells may push past. */
 	rows?: readonly TableRowDoc[];
-	/** The cells, keyed by {@link tableCellSlotId}; a key the grid has no cell for measures as empty. */
+	/** The cells, keyed by {@link tableCellTextSlotId}; a key the grid has no cell for measures as empty. */
 	text?: Record<string, TableCell>;
 	/** Rule width in px; absent resolves the same way the drawing does (the type's defaults, then SHAPE_STYLE_FALLBACK). */
 	strokeWidth?: number;
@@ -40,7 +40,7 @@ export type TableLayoutSource = {
 
 /**
  * The whole geometry of one table, in the shape's local coordinates (origin at
- * its center, top-left based rects) — the same space `calcRecordSlotRegions`
+ * its center, top-left based rects) — the same space `calcRecordTextSlotRegions`
  * answers in.
  *
  * Single source of the table's geometry: the drawing (Table), the text
@@ -65,7 +65,7 @@ export type TableLayout = {
 	 */
 	readonly rowEdgeYs: readonly number[];
 	/**
-	 * One rect per cell of the grid, keyed by {@link tableCellSlotId} in row-major
+	 * One rect per cell of the grid, keyed by {@link tableCellTextSlotId} in row-major
 	 * order. Neighbours share an edge exactly, so the rects tile the table with no
 	 * gap and no overlap.
 	 */
@@ -128,7 +128,7 @@ const calcRowHeight = (
 			Math.max(
 				tallest,
 				calcCellTextHeight(
-					cells?.[tableCellSlotId(rowIndex, columnIndex)],
+					cells?.[tableCellTextSlotId(rowIndex, columnIndex)],
 					column.width - strokeWidth,
 				),
 			),
@@ -225,7 +225,7 @@ export const calcTableLayout = (state: TableLayoutSource): TableLayout => {
 	const cellRects: Record<string, Rect> = {};
 	rows.forEach((_, rowIndex) => {
 		columns.forEach((column, columnIndex) => {
-			cellRects[tableCellSlotId(rowIndex, columnIndex)] = {
+			cellRects[tableCellTextSlotId(rowIndex, columnIndex)] = {
 				x: columnEdgeXs[columnIndex],
 				y: rowEdgeYs[rowIndex],
 				width: column.width,

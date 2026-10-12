@@ -13,8 +13,8 @@ import type { StyleEntry } from "../StyleEntry";
  * The pair for an intent stored on whole slots: `writeSlot` decides what one
  * slot's write does, and the rest — which slots are reached (resolveTextSlotIds), the same-reference
  * contract, and reading each of them through the type's defaults — is shared by
- * every such intent (slotFieldEntry, and the whole-slot half of
- * runOrSlotEntry).
+ * every such intent (textSlotFieldEntry, and the whole-slot half of
+ * runOrTextSlotEntry).
  *
  * @param field - The slot field written and read; one the text-style defaults answer for
  * @param writeSlot - One slot with the value reflected in it; copies the slot it is given rather than rebuilding it, so a type's own extra slot fields survive (TextSlots)
@@ -22,7 +22,7 @@ import type { StyleEntry } from "../StyleEntry";
  * @template TState - The state the entry is written against
  * @template V - The intent's value type; `field` is expected to carry it
  */
-export const slotEntry = <TState extends ObjectState, V>(
+export const textSlotEntry = <TState extends ObjectState, V>(
 	field: keyof TextSlotStyle,
 	writeSlot: (slot: TextSlot, value: V) => TextSlot,
 ): StyleEntry<TState, V> => ({
@@ -67,7 +67,7 @@ export const slotEntry = <TState extends ObjectState, V>(
 			// (TEXT_STYLE_FALLBACK) is what such a slot is drawn with, and two slots
 			// leaving it unset agree rather than disagreeing.
 			values.push(
-				ctx.textStyleDefaults.resolveSlotStyle(object.type, slotId, slot)[
+				ctx.textStyleDefaults.resolveTextSlotStyle(object.type, slotId, slot)[
 					field
 				] as V,
 			);

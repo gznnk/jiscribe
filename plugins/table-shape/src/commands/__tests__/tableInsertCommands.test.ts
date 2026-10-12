@@ -11,7 +11,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { tablePlugin } from "../../plugin";
-import { tableCellSlotId } from "../../schema/TableDoc";
+import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
 import { TABLE_INSERT_COMMANDS } from "../tableInsertCommands";
@@ -24,7 +24,7 @@ const cellsOf = (rows: string[][]): Record<string, TableCell> => {
 	const cells: Record<string, TableCell> = {};
 	rows.forEach((row, rowIndex) => {
 		row.forEach((text, columnIndex) => {
-			cells[tableCellSlotId(rowIndex, columnIndex)] = { text };
+			cells[tableCellTextSlotId(rowIndex, columnIndex)] = { text };
 		});
 	});
 	return cells;
@@ -107,7 +107,7 @@ const readGrid = (state: TableState): string[][] =>
 	state.rows.map((_row, rowIndex) =>
 		state.columns.map(
 			(_column, columnIndex) =>
-				state.text[tableCellSlotId(rowIndex, columnIndex)].text as string,
+				state.text[tableCellTextSlotId(rowIndex, columnIndex)].text as string,
 		),
 	);
 

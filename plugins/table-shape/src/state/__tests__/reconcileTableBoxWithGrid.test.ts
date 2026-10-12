@@ -6,7 +6,10 @@ import { describe, expect, it } from "vitest";
 
 import { calcTableFrameSize } from "../../layout/calcTableFrameSize";
 import { readCachedTableLayout } from "../../layout/readCachedTableLayout";
-import { TABLE_MIN_COLUMN_WIDTH, tableCellSlotId } from "../../schema/TableDoc";
+import {
+	TABLE_MIN_COLUMN_WIDTH,
+	tableCellTextSlotId,
+} from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import { reconcileTableBoxWithGrid } from "../reconcileTableBoxWithGrid";
 import type { TableState } from "../TableState";
@@ -29,7 +32,7 @@ const cellsOf = (rows: string[][]): Record<string, TableCell> => {
 	const cells: Record<string, TableCell> = {};
 	rows.forEach((row, rowIndex) => {
 		row.forEach((text, columnIndex) => {
-			cells[tableCellSlotId(rowIndex, columnIndex)] = { text };
+			cells[tableCellTextSlotId(rowIndex, columnIndex)] = { text };
 		});
 	});
 	return cells;

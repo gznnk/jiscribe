@@ -5,14 +5,14 @@ import { normalizeRichText } from "@jiscribe/doc";
 
 import type { RecordState, RecordTextState } from "./RecordState";
 import {
-	isRecordListSlotId,
-	RECORD_NAME_SLOT_ID,
-	RECORD_SLOT_IDS,
+	isRecordListTextSlotId,
+	RECORD_NAME_TEXT_SLOT_ID,
+	RECORD_TEXT_SLOT_IDS,
 	RecordFeatures,
 } from "../schema/RecordDoc";
 import type {
 	RecordDoc,
-	RecordSlotId,
+	RecordTextSlotId,
 	RecordTextDoc,
 } from "../schema/RecordDoc";
 
@@ -22,7 +22,7 @@ import type {
  * was written as. An absent slot is the title's empty band (see
  * {@link normalizeRecordText}); no other band is materialized.
  */
-const normalizeBandSlot = (
+const normalizeBandTextSlot = (
 	value: TextSlot<RichText> | undefined,
 ): TextSlot<RichText> => {
 	if (value === undefined) {
@@ -35,15 +35,15 @@ const normalizeBandSlot = (
  * A compartment slot's rows. The array is always fresh, so records created from
  * the same doc defaults never share one.
  */
-const normalizeListSlot = (
+const normalizeListTextSlot = (
 	value: TextSlot<RichText[]>,
 ): TextSlot<RichText[]> => ({ ...value, text: [...value.text] });
 
 /**
  * Puts the slots into the record's normal form: the title always present, every
- * written slot's content canonical, and the keys in RECORD_SLOT_IDS order.
+ * written slot's content canonical, and the keys in RECORD_TEXT_SLOT_IDS order.
  * Typography is deliberately left alone — omitted styling is resolved per read
- * against RECORD_SLOT_STYLE_DEFAULTS_BY_ID (ObjectTextStyleDefaultsRegistry), so
+ * against RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID (ObjectTextStyleDefaultsRegistry), so
  * a field the author never wrote is not materialized here and does not appear in
  * the document the next save writes.
  *
@@ -62,21 +62,21 @@ const normalizeRecordText = (
 ): RecordTextState => {
 	const slots: Partial<RecordTextDoc> = text ?? {};
 	const normalized: Partial<
-		Record<RecordSlotId, TextSlot<RichText | RichText[]>>
+		Record<RecordTextSlotId, TextSlot<RichText | RichText[]>>
 	> = {};
-	for (const slotId of RECORD_SLOT_IDS) {
-		if (isRecordListSlotId(slotId)) {
+	for (const slotId of RECORD_TEXT_SLOT_IDS) {
+		if (isRecordListTextSlotId(slotId)) {
 			const rows = slots[slotId];
 			if (rows !== undefined) {
-				normalized[slotId] = normalizeListSlot(rows);
+				normalized[slotId] = normalizeListTextSlot(rows);
 			}
 			continue;
 		}
 		const band = slots[slotId];
-		if (band === undefined && slotId !== RECORD_NAME_SLOT_ID) {
+		if (band === undefined && slotId !== RECORD_NAME_TEXT_SLOT_ID) {
 			continue;
 		}
-		normalized[slotId] = normalizeBandSlot(band);
+		normalized[slotId] = normalizeBandTextSlot(band);
 	}
 	return normalized as RecordTextState;
 };

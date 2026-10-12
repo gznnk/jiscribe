@@ -57,7 +57,7 @@ describe("readOpenTextEdit", () => {
 		expect(openEdit).toEqual({
 			kind: "shape",
 			object: slotted,
-			slotId: "rows",
+			textSlotId: "rows",
 			text: "Account",
 			selection: { start: 0, end: 2 },
 		});
@@ -73,7 +73,7 @@ describe("readOpenTextEdit", () => {
 		expect(openEdit).toEqual({
 			kind: "shape",
 			object: singleBody,
-			slotId: "body",
+			textSlotId: "body",
 			text: "hi",
 		});
 	});

@@ -75,7 +75,7 @@ const unknownTypeNote = (summaries: readonly ObjectSummary[]): string => {
 };
 
 /** How the getText result sentence names the text it read; with no slot given it is the body */
-const slotLabel = (id: string, slot: string | undefined): string =>
+const textSlotLabel = (id: string, slot: string | undefined): string =>
 	slot === undefined ? `"${id}"` : `slot "${slot}" of "${id}"`;
 
 /** How a result sentence names a connector end: the id for an end attached to a shape, the coordinates for a free one */
@@ -156,8 +156,8 @@ const applyDocRead = (
 		case "getText": {
 			const text = docOps.getText(doc, op.id, op.slot);
 			return text === ""
-				? `${slotLabel(op.id, op.slot)} holds no text: its text is empty, not missing`
-				: `the text of ${slotLabel(op.id, op.slot)} is "${text}"`;
+				? `${textSlotLabel(op.id, op.slot)} holds no text: its text is empty, not missing`
+				: `the text of ${textSlotLabel(op.id, op.slot)} is "${text}"`;
 		}
 		case "getZOrder": {
 			const { index, total } = docOps.getZOrder(doc, op.id);
@@ -411,8 +411,8 @@ const applyDocChange = (
 			const written = op.entries
 				.map(({ id, text, slot }) =>
 					text === ""
-						? `${slotLabel(id, slot)} cleared`
-						: `${slotLabel(id, slot)} to "${text}"`,
+						? `${textSlotLabel(id, slot)} cleared`
+						: `${textSlotLabel(id, slot)} to "${text}"`,
 				)
 				.join(", ");
 			return `set the text of ${op.entries.length} object(s): ${written}`;
@@ -420,14 +420,14 @@ const applyDocChange = (
 		case "setTextStyle": {
 			const { kind: _kind, id, ...params } = op;
 			docOps.setInlineTextStyle(draftDoc, id, params);
-			return `styled ${matchLabel(params.match, params.occurrence)} in ${slotLabel(id, params.slot)}`;
+			return `styled ${matchLabel(params.match, params.occurrence)} in ${textSlotLabel(id, params.slot)}`;
 		}
 		case "setTextStyles": {
 			docOps.setInlineTextStyles(draftDoc, op.entries);
 			const styled = op.entries
 				.map(
 					({ id, match, occurrence, slot }) =>
-						`${matchLabel(match, occurrence)} in ${slotLabel(id, slot)}`,
+						`${matchLabel(match, occurrence)} in ${textSlotLabel(id, slot)}`,
 				)
 				.join(", ");
 			return `styled ${op.entries.length} stretch(es) of text: ${styled}`;

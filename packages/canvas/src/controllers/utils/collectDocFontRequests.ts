@@ -53,7 +53,10 @@ const buildFaceKey = (face: DocFontFace): string =>
  */
 export const collectDocFontRequests = (
 	objects: Record<string, ObjectState>,
-	textStyleDefaults: Pick<ObjectTextStyleDefaultsRegistry, "resolveSlotStyle">,
+	textStyleDefaults: Pick<
+		ObjectTextStyleDefaultsRegistry,
+		"resolveTextSlotStyle"
+	>,
 ): DocFontRequest[] => {
 	const entryByFaceKey = new Map<
 		string,
@@ -96,7 +99,7 @@ export const collectDocFontRequests = (
 	};
 
 	const addSlot = (type: ObjectType, slotId: string, slot: TextSlot): void => {
-		const style = textStyleDefaults.resolveSlotStyle(type, slotId, slot);
+		const style = textStyleDefaults.resolveTextSlotStyle(type, slotId, slot);
 		const face: DocFontFace = {
 			fontStyle: style.fontStyle ?? TEXT_STYLE_FALLBACK.fontStyle,
 			fontWeight: style.fontWeight ?? TEXT_STYLE_FALLBACK.fontWeight,

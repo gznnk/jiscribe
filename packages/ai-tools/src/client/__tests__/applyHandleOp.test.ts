@@ -157,7 +157,7 @@ describe("applyHandleOp (measuring)", () => {
 			{ kind: "measureText", id: "rect-1" },
 			createFakeHandleControl({
 				measureText: () => ({
-					slotId: "body",
+					textSlotId: "body",
 					bounds: { x: 10, y: 20, width: 120, height: 40 },
 					textSize: { width: 96, height: 36 },
 					regionSize: { width: 120, height: 40 },
@@ -181,7 +181,7 @@ describe("applyHandleOp (measuring)", () => {
 			{ kind: "measureText", id: "rect-1" },
 			createFakeHandleControl({
 				measureText: () => ({
-					slotId: "body",
+					textSlotId: "body",
 					bounds: { x: 10, y: 20, width: 120, height: 40 },
 					textSize: { width: 180, height: 54 },
 					regionSize: { width: 120, height: 40 },

@@ -169,5 +169,10 @@ export function commitTextEditIfNeeded(
 			openEdit.placement,
 		);
 	}
-	return commitTextSlot(state, openEdit.object, openEdit.slotId, openEdit.text);
+	return commitTextSlot(
+		state,
+		openEdit.object,
+		openEdit.textSlotId,
+		openEdit.text,
+	);
 }

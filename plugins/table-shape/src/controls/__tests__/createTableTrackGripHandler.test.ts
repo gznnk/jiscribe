@@ -4,7 +4,7 @@ import type {
 } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
-import { tableCellSlotId } from "../../schema/TableDoc";
+import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
 import { createTableTrackGripHandler } from "../createTableTrackGripHandler";
@@ -17,7 +17,7 @@ const emptyCells = (
 	const cells: Record<string, TableCell> = {};
 	for (let row = 0; row < rowCount; row++) {
 		for (let column = 0; column < columnCount; column++) {
-			cells[tableCellSlotId(row, column)] = { text: "" };
+			cells[tableCellTextSlotId(row, column)] = { text: "" };
 		}
 	}
 	return cells;

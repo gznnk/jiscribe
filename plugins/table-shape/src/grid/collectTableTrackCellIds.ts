@@ -1,6 +1,6 @@
 import { countTableTracks, parseTableTrackPartId } from "./tableTrack";
 import type { TableAxis } from "./tableTrack";
-import { tableCellSlotId } from "../schema/TableDoc";
+import { tableCellTextSlotId } from "../schema/TableDoc";
 import type { TableState } from "../state/TableState";
 
 /**
@@ -30,8 +30,8 @@ export const collectTableTrackCellIds = (
 		for (let cross = 0; cross < crossCount; cross++) {
 			cellIds.push(
 				axis === "row"
-					? tableCellSlotId(index, cross)
-					: tableCellSlotId(cross, index),
+					? tableCellTextSlotId(index, cross)
+					: tableCellTextSlotId(cross, index),
 			);
 		}
 	}
