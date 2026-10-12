@@ -4,6 +4,7 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../../../selection/__tests__/support/textSlotPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/partKinds/textSlotPartKind";
 import { objectFieldEntry } from "../../../../../style/entries/objectFieldEntry";
 import { createObjectStyleRegistry } from "../../../../../style/tables/ObjectStyleRegistry";
@@ -442,7 +443,7 @@ describe("getPropertyPanelSections", () => {
 	it("keeps only the text section while a shape's text is being edited", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
-			selection: selectionOf(["r-1"]),
+			selection: selectionOf(["r-1"], textSlotPartSelection("body")),
 			textEditState: { kind: "shape" },
 		} as unknown as Partial<CanvasControllerState>);
 
@@ -472,10 +473,10 @@ describe("getPropertyPanelSections", () => {
 		]);
 	});
 
-	it("keeps it while the type's one body is being edited, nothing picked", () => {
+	it("keeps it while the type's one body is being edited, the body picked", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "filled-rect") },
-			selection: selectionOf(["r-1"]),
+			selection: selectionOf(["r-1"], textSlotPartSelection("body")),
 			textEditState: { kind: "shape" },
 		} as unknown as Partial<CanvasControllerState>);
 

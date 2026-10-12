@@ -6,6 +6,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { registerTextSlotParts } from "../../../../selection/__tests__/support/textSlotPartRegistry";
+import { textSlotPartSelection } from "../../../../selection/__tests__/support/textSlotPartSelection";
 import type { ObjectPartSelection } from "../../../../selection/CanvasSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/partKinds/textSlotPartKind";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -125,7 +126,7 @@ const makeEditState = (
 			"rect-2": makeTextRect("rect-2", "other"),
 		},
 		rootIds: [editingId, "rect-2"],
-		selection: selectionOf([editingId]),
+		selection: selectionOf([editingId], textSlotPartSelection("body")),
 		multiSelectGroup: null,
 		textEditState: { kind: "shape", text: pendingText },
 		commitVersion: 5,
@@ -172,10 +173,10 @@ describe("ObjectEventHandler - text edit commit", () => {
 		);
 		// The pending text was committed by the pressed and prefilled again — not lost.
 		expect(afterDouble.textEditState).toEqual({ kind: "shape", text: "new" });
-		// A rect holds one body, which is no part, so nothing is picked below it.
+		// The rect's one body is the slot being edited, picked like any other.
 		expect(afterDouble.selection).toEqual({
 			objectIds: ["rect-1"],
-			part: null,
+			part: textSlotPartSelection("body"),
 		});
 		expect(afterDouble.commitVersion).toBe(6);
 	});
@@ -601,17 +602,24 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.objectMenuOpenId).toBeNull();
 	});
 
-	it("does not select a slot on a shape whose text is not slot-based", () => {
+	it("picks the body of a one-body shape only through an element addressing it", () => {
 		const state = {
 			...makeSlotState(["rect-3"], null),
 			objects: { "rect-3": makeTextRect("rect-3", "hello") },
 		} as CanvasControllerState;
-		const next = ObjectEventHandler.handle(
-			state,
-			makeSlotClickEvent("rect-3", textSlotPart("body")),
-			registries,
-		);
-		expect(next.selection.part).toBeNull();
+		// No shipped one-body shape marks an element so; the kind is registered all
+		// the same, so an address that names the body is honored.
+		expect(
+			ObjectEventHandler.handle(
+				state,
+				makeSlotClickEvent("rect-3", textSlotPart("body")),
+				registries,
+			).selection.part,
+		).toEqual(textSlotPartSelection("body"));
+		expect(
+			ObjectEventHandler.handle(state, makeSlotClickEvent("rect-3"), registries)
+				.selection.part,
+		).toBeNull();
 	});
 });
 

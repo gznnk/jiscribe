@@ -4,11 +4,9 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { selectionOf } from "../../__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../__tests__/support/textSlotPartSelection";
 import { vertexPartSelection } from "../../__tests__/support/vertexPartSelection";
-import { createObjectPartKindRegistry } from "../../partKinds/ObjectPartKindRegistry";
-import { createTextSlotPartKindDefinition } from "../../partKinds/textSlotPartKind";
 import { selectTextSlot } from "../selectTextSlot";
 
-/** A record-like shape, the one type here that takes a slot pick. */
+/** A record-like shape spelling its text out as slots. */
 const record: ObjectState = {
 	id: "rec-1",
 	type: "record",
@@ -16,7 +14,7 @@ const record: ObjectState = {
 	text: { name: { text: "User" }, rows: { text: ["id"] } },
 } as unknown as ObjectState;
 
-/** A shape holding one body, which is no part of its own. */
+/** A shape holding one body, picked as its `body` slot. */
 const rect: ObjectState = {
 	id: "rect-1",
 	type: "rect",
@@ -24,16 +22,9 @@ const rect: ObjectState = {
 	text: { body: { text: "hi" } },
 } as unknown as ObjectState;
 
-const objectPartKind = createObjectPartKindRegistry();
-objectPartKind.register("record", [
-	createTextSlotPartKindDefinition(undefined),
-]);
-
 describe("selectTextSlot", () => {
-	it("picks the slot on a type that takes slot picks", () => {
-		expect(
-			selectTextSlot(selectionOf([]), record, "rows", objectPartKind),
-		).toEqual({
+	it("picks the slot on a type with slots", () => {
+		expect(selectTextSlot(selectionOf([]), record, "rows")).toEqual({
 			objectIds: ["rec-1"],
 			part: textSlotPartSelection("rows"),
 		});
@@ -45,46 +36,48 @@ describe("selectTextSlot", () => {
 				selectionOf(["rec-1"], textSlotPartSelection("name")),
 				record,
 				"rows",
-				objectPartKind,
 			),
 		).toEqual({ objectIds: ["rec-1"], part: textSlotPartSelection("rows") });
 	});
 
 	it("hands the selection over unchanged when it already names that slot", () => {
 		const selection = selectionOf(["rec-1"], textSlotPartSelection("rows"));
-		expect(selectTextSlot(selection, record, "rows", objectPartKind)).toBe(
-			selection,
-		);
+		expect(selectTextSlot(selection, record, "rows")).toBe(selection);
 	});
 
 	it("keeps the id list reference while only the pick moves", () => {
 		const selection = selectionOf(["rec-1"], textSlotPartSelection("name"));
-		expect(
-			selectTextSlot(selection, record, "rows", objectPartKind).objectIds,
-		).toBe(selection.objectIds);
-	});
-
-	it("picks nothing below a type holding one body", () => {
-		expect(
-			selectTextSlot(selectionOf([]), rect, "body", objectPartKind),
-		).toEqual({ objectIds: ["rect-1"], part: null });
-	});
-
-	it("drops a pick of another kind left on the same object", () => {
-		expect(
-			selectTextSlot(
-				selectionOf(["rect-1"], vertexPartSelection(0)),
-				rect,
-				"body",
-				objectPartKind,
-			),
-		).toEqual({ objectIds: ["rect-1"], part: null });
-	});
-
-	it("hands over unchanged when a one-body object is already the whole selection", () => {
-		const selection = selectionOf(["rect-1"]);
-		expect(selectTextSlot(selection, rect, "body", objectPartKind)).toBe(
-			selection,
+		expect(selectTextSlot(selection, record, "rows").objectIds).toBe(
+			selection.objectIds,
 		);
+	});
+
+	it("picks the body slot of a type holding one body", () => {
+		expect(selectTextSlot(selectionOf([]), rect, "body")).toEqual({
+			objectIds: ["rect-1"],
+			part: textSlotPartSelection("body"),
+		});
+	});
+
+	it("replaces a pick of another kind left on the same object", () => {
+		const selection = selectionOf(["rect-1"], vertexPartSelection(0));
+		const next = selectTextSlot(selection, rect, "body");
+		expect(next).toEqual({
+			objectIds: ["rect-1"],
+			part: textSlotPartSelection("body"),
+		});
+		expect(next.objectIds).toBe(selection.objectIds);
+	});
+
+	it("picks the body when a one-body object is the whole selection with nothing picked", () => {
+		expect(selectTextSlot(selectionOf(["rect-1"]), rect, "body")).toEqual({
+			objectIds: ["rect-1"],
+			part: textSlotPartSelection("body"),
+		});
+	});
+
+	it("hands over unchanged when a one-body object's body is already picked", () => {
+		const selection = selectionOf(["rect-1"], textSlotPartSelection("body"));
+		expect(selectTextSlot(selection, rect, "body")).toBe(selection);
 	});
 });

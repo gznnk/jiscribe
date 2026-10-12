@@ -68,7 +68,7 @@ describe("applyObjectDefinition: partKinds", () => {
 		);
 	});
 
-	it("leaves a type whose text is one body without the kind", () => {
+	it("gives a one-body type the textSlot kind too, naming its body alone", () => {
 		const registries = createTestRegistries();
 		applyObjectDefinition(
 			registries,
@@ -76,8 +76,23 @@ describe("applyObjectDefinition: partKinds", () => {
 			buildFakeDefinition("note", "body"),
 		);
 
+		const part = registries.objectPartKind.get("note", TEXT_SLOT_PART_KIND);
+		const note = { text: { body: { text: "hi" } } } as never;
+		expect(part?.has(note, "body")).toBe(true);
+		expect(part?.has(note, "title")).toBe(false);
+		expect(part?.list?.(note)).toEqual(["body"]);
+	});
+
+	it("gives a type holding no text no textSlot kind", () => {
+		const registries = createTestRegistries();
+		applyObjectDefinition(
+			registries,
+			"marker",
+			buildFakeDefinition("marker", undefined),
+		);
+
 		expect(
-			registries.objectPartKind.get("note", TEXT_SLOT_PART_KIND),
+			registries.objectPartKind.get("marker", TEXT_SLOT_PART_KIND),
 		).toBeUndefined();
 	});
 

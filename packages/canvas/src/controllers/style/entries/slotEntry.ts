@@ -38,7 +38,7 @@ export type SlotIdsOf<TState extends ObjectState> = (
  * @param pick - What is picked inside this object; a pick of another kind (a vertex) addresses every slot, as nothing does
  * @param ctx - The walk's context; its `objectPartKind` expands a slot pick through the type's `textSlot` definition (collectObjectPartIds)
  * @returns The addressed slot ids in the order the ranges cover them, always own keys of `object.text`
- * @throws When a slot is picked on a type no `textSlot` kind is registered for, which applyObjectDefinition always registers for a type taking slot picks
+ * @throws When a slot is picked on a type no `textSlot` kind is registered for, which applyObjectDefinition registers for every text-holding type
  */
 export const selectedSlotIds: SlotIdsOf<ObjectState> = (object, pick, ctx) => {
 	const slots = textSlotsOf(object);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { resolveInteractionStatus } from "../useInteractionHandle";
 
 /**
@@ -38,7 +39,7 @@ const dragOf = (kind: string): StatusInput["activeDrag"] =>
 /** A session open on r1's body slot: the draft, plus the selection that owns it. */
 const textEdit: Partial<StatusInput> = {
 	textEditState: { kind: "shape", text: "" },
-	selection: { objectIds: ["r1"], part: null },
+	selection: { objectIds: ["r1"], part: textSlotPartSelection("body") },
 };
 
 const armedTool = {

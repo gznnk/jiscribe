@@ -2,11 +2,11 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { isTextSlotPart } from "../../../../selection/partKinds/textSlotPartKind";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
 import type { ObjectStyleRegistry } from "../../../../style/tables/ObjectStyleRegistry";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { getAddressedDeclaredKinds } from "../../utils/getAddressedDeclaredKinds";
-import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
@@ -102,14 +102,14 @@ const collectSelectionSections = (
  *
  * While a text slot is selected the sections are narrowed to the text items, so the
  * menu never offers an action that the slot cannot receive. Doing it here keeps every
- * `features.text === "slots"` type covered without each definition opting in. An item
+ * text-holding type covered without each definition opting in. An item
  * whose every style kind the type declares itself in `styleEntries` stays as well,
  * the type having answered where that kind lands under a pick
  * (filterTextSlotMenuSections). A pick of another sort (a vertex) leaves them alone,
  * the menu still acting on the object.
  *
- * An open text editor narrows them the same way, for the same reason read the other
- * way round: what the menu offers there has to be something a stretch of the text
+ * An open text editor narrows them the same way, through the slot it keeps picked
+ * (see `textEditState`), for the same reason read the other way round: what the menu offers there has to be something a stretch of the text
  * being edited can take, and reshaping or restacking the shape mid-edit is not it.
  *
  * @param state - The current canvas controller state
@@ -123,7 +123,7 @@ export const getMenuSections = (
 	objectStyleRegistry: ObjectStyleRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
-	if (!isTextAddressed(state)) {
+	if (!isTextSlotPart(state.selection.part)) {
 		return sections;
 	}
 	return filterTextSlotMenuSections(
@@ -142,14 +142,11 @@ export const useMenuSections = (
 	enabled: boolean,
 ): ObjectMenuSection[] => {
 	const { selection, objects } = state;
-	// The editing session itself is not read, only whether one is open on a shape:
-	// the item set is narrowed while it is (getMenuSections).
-	const isEditingShapeText = state.textEditState?.kind === "shape";
 	const { objectMenu, objectStyle } = useCanvasRegistries();
 
 	return useMemo(
 		() => (enabled ? getMenuSections(state, objectMenu, objectStyle) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[enabled, selection, isEditingShapeText, objects, objectMenu, objectStyle],
+		[enabled, selection, objects, objectMenu, objectStyle],
 	);
 };

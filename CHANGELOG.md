@@ -105,19 +105,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   so a Delete right after goes to that vertex rather than to the whole shape, and
   Escape drops the vertex first and the shape on the next press.
 - **For plugin authors: picking a text slot is one case of a general part
-  selection.** What was a slot-only field is now `selection.part`, a
-  channel over the part kinds a type declares: the `kind` the ids belong to, and
-  a list of ranges, each a fixed `anchorId` and a
-  moving `focusId` — the model a DOM `Selection` keeps, so a later gesture can
-  grow the active range or add another without the stored form changing again. A
-  type that spells its text out as slots takes part with no declaration of its
-  own: the `"textSlot"` kind is registered for it, its part ids being the keys of
-  its own `text`. The reducer reconciles the channel after every action that
-  rewrites the selection or the objects, through the kind's own `has`, so a
-  selection the state no longer backs is already gone by the time anything reads
-  it — the readers take `state.selection.part` as it stands, and each kind
-  answers for its own ids. A plain click and Tab write a single slot, and a
-  Shift-click grows the active range from its anchor.
+  selection.** What was a slot-only field is now `selection.part`, a channel
+  over the part kinds a type declares: the `kind` the ids belong to, and a list
+  of ranges, each a fixed `anchorId` and a moving `focusId` — the model a DOM
+  `Selection` keeps, so a later gesture can grow the active range or add another
+  without the stored form changing again. A type that spells its text out as
+  slots takes part with no declaration of its own: the `"textSlot"` kind is
+  registered for it, its part ids being the keys of its own `text`. So is every
+  other type holding text, a single body included, whose one part id is `body`.
+  The reducer reconciles the channel after every action that rewrites the
+  selection or the objects, through the kind's own `has`, so a selection the
+  state no longer backs is already gone by the time anything reads it — the
+  readers take `state.selection.part` as it stands, and each kind answers for
+  its own ids. A plain click and Tab write a single slot, and a Shift-click
+  grows the active range from its anchor.
 - **For plugin authors: a type declares the sub-parts of its own objects.**
   `ObjectTypeDefinition.partKinds` takes one entry per part-id namespace (`kind`),
   each stating `has` — whether an id still names a part of that object — and
@@ -203,6 +204,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Editing the text of a one-body shape looks and steps out like editing a
+  compartment.** While a rectangle's, a sticky note's or any other single-text
+  shape's text is edited, its text area is outlined and the shape's own outline
+  turns dashed, as a UML record's compartment already was. Escape now takes three
+  presses there too: the first leaves the editor, the second drops the outline
+  around the text (the menu and the sidebar narrowed to text controls until
+  then), the third deselects the shape.
 - **For plugin authors: a selection control can take a click and select a part
   of its object.** `SelectionControlDefinition.handle` now returns
   `{ object?, selection? }` instead of the object itself: `object` replaces the
@@ -314,9 +322,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **For plugin authors: a text edit is opened on the selection, not alongside
   it.** `textEditState` no longer names its own object or slot: it carries the
   draft and nothing else, and what is being edited is `selection` — the lone
-  selected object, with the slot as its `textSlot` part where the type has slots
-  to pick (a type holding one body picks nothing below itself, so that body is
-  the slot). Inside the canvas the two halves are paired again in one place,
+  selected object, with the slot as its `textSlot` part whatever the type's
+  text shape (a type holding one body has its `body` picked). Inside the canvas
+  the two halves are paired again in one place,
   `resolveTextEdit`, which throws rather than returning null when they do not pair
   up (a session with no owner is a bug, not an empty editor). Three things the
   user sees follow from the owner being in one place. A double click on a
@@ -333,7 +341,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   multi-selection left to return to. A slot that disappears under an open editor
   now closes it, the draft being discarded for want of anywhere to write it —
   `reconcileSelection` (renamed from `reconcileObjectPartSelection`) is the one
-  net over both halves, and it closes a session over a slot type the moment
+  net over both halves, and it closes a shape session the moment
   `selection.part` stops naming a slot, so an editor can no longer outlive the
   object or slot it was opened on.
 - **For plugin authors: a sub-part's element carries its address as
@@ -344,8 +352,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   kind's `has`, write the pick), so no handler spells a kind of its own. A plugin
   that writes `data-part={slotId}` on its own slot elements has to switch to
   `textSlotPart`: with the bare id a click no longer picks the slot and a double
-  click opens the first slot instead. `BelowLabelHitArea` and the shipped shapes
-  are switched. A kind is an identifier (`/^[A-Za-z][\w-]*$/`), which
+  click opens the first slot instead. The shipped shapes are switched, and
+  `BelowLabelHitArea` writes no `data-part` at all: a click on a hanging label
+  selects the shape rather than picking its body, and a double click still opens
+  that body. A kind is an identifier (`/^[A-Za-z][\w-]*$/`), which
   `ObjectPartKindRegistry.register` now enforces, so the first `:` of an address
   is always the separator.
 - **For plugin authors: the selection is one nested value, `selection: { objectIds,

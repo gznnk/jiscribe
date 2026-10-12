@@ -25,7 +25,7 @@ const slotShape = (id: string): ObjectState =>
 		text: { name: { text: "User" }, rows: { text: ["id: string"] } },
 	}) as unknown as ObjectState;
 
-/** A shape holding one body: it declares no part kind, so it picks nothing below itself. */
+/** A shape holding one body, picked below itself as its `body` slot. */
 const singleBodyShape = (id: string): ObjectState =>
 	({
 		id,
@@ -70,8 +70,8 @@ const connector = (id: string): ObjectState =>
 	}) as unknown as ObjectState;
 
 /**
- * The registry every case here reconciles against: "record" takes part the way
- * applyObjectDefinition makes every `features.text === "slots"` type take part,
+ * The registry every case here reconciles against: "record" and "rect" take part
+ * the way applyObjectDefinition makes every text-holding type take part,
  * "table" takes both that and cells of its own, "connector" declares its
  * waypoints, and nothing else takes part at all.
  */
@@ -79,6 +79,7 @@ const objectPartKind = createObjectPartKindRegistry();
 objectPartKind.register("record", [
 	createTextSlotPartKindDefinition(undefined),
 ]);
+objectPartKind.register("rect", [createTextSlotPartKindDefinition(undefined)]);
 objectPartKind.register("table", [
 	createTextSlotPartKindDefinition(undefined),
 	cellPartKind,
@@ -146,16 +147,28 @@ describe("reconcileSelection", () => {
 	});
 
 	it("clears the selection when the object's type registers no such kind", () => {
-		const singleSlotRect = {
-			id: "rect-1",
-			type: "rect",
-			features: { text: "body" },
-			text: { body: { text: "hello" } },
-		} as unknown as ObjectState;
 		const state = makeState(
-			{ "rect-1": singleSlotRect },
+			{ "c-1": connector("c-1") },
+			["c-1"],
+			textSlot("body"),
+		);
+		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
+	});
+
+	it("keeps the body picked on a one-body shape", () => {
+		const state = makeState(
+			{ "rect-1": singleBodyShape("rect-1") },
 			["rect-1"],
 			textSlot("body"),
+		);
+		expect(reconcileSelection(state, objectPartKind)).toBe(state);
+	});
+
+	it("clears a slot a one-body shape does not hold", () => {
+		const state = makeState(
+			{ "rect-1": singleBodyShape("rect-1") },
+			["rect-1"],
+			textSlot("title"),
 		);
 		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
 	});
@@ -260,12 +273,26 @@ describe("reconcileSelection", () => {
 			expect(reconcileSelection(state, objectPartKind)).toBe(state);
 		});
 
-		it("survives on a one-body shape, which picks nothing below itself", () => {
+		it("survives on a one-body shape while its body is picked", () => {
+			const state = editing(
+				makeState(
+					{ "rect-1": singleBodyShape("rect-1") },
+					["rect-1"],
+					textSlot("body"),
+				),
+				{ kind: "shape", text: "edited" },
+			);
+			expect(reconcileSelection(state, objectPartKind)).toBe(state);
+		});
+
+		it("is discarded on a one-body shape that picks nothing, as on a slot type", () => {
 			const state = editing(
 				makeState({ "rect-1": singleBodyShape("rect-1") }, ["rect-1"], null),
 				{ kind: "shape", text: "edited" },
 			);
-			expect(reconcileSelection(state, objectPartKind)).toBe(state);
+			const after = reconcileSelection(state, objectPartKind);
+			expect(after.selection).toBe(state.selection);
+			expect(after.textEditState).toBeNull();
 		});
 
 		it("is discarded on a slot type that picks nothing, which names no slot", () => {
@@ -299,8 +326,8 @@ describe("reconcileSelection", () => {
 			expect(after.textEditState).toBeNull();
 		});
 
-		it("is discarded when a one-body shape's owner is gone, with no part to catch it", () => {
-			const state = editing(makeState({}, ["rect-1"], null), {
+		it("is discarded when a one-body shape's owner is gone", () => {
+			const state = editing(makeState({}, ["rect-1"], textSlot("body")), {
 				kind: "shape",
 				text: "edited",
 			});

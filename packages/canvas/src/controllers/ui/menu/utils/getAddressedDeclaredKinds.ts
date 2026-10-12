@@ -8,12 +8,12 @@ const NO_KINDS: ReadonlySet<string> = new Set();
  * (ObjectStyleRegistry.declaredKinds): what decides which non-text controls the
  * text-slot narrowing keeps (filterTextSlotMenuSections).
  *
- * The addressed object is `selection.objectIds[0]` in both cases isTextAddressed
- * holds: a picked part belongs to the sole selected object (CanvasSelection.part),
- * and an open shape text edit leaves exactly its owner selected
- * (CanvasControllerState.textEditState), part or no part.
+ * The addressed object is `selection.objectIds[0]` whenever a text slot is
+ * picked: the picked text slot belongs to the sole selected object
+ * (CanvasSelection.part), an open shape text edit included
+ * (CanvasControllerState.textEditState).
  *
- * @param state - The current canvas controller state; meant to be read while isTextAddressed holds
+ * @param state - The current canvas controller state; meant to be read while a text slot is picked (isTextSlotPart)
  * @param objectStyleRegistry - Per-canvas ObjectStyleRegistry the declared kinds are read from
  * @returns Empty when the selection does not hold exactly one object that is still in `objects`
  */

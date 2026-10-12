@@ -5,6 +5,7 @@ import { twoRectsDoc } from "./support/fixtures";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -87,7 +88,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 		/** rect-1 mid-edit on its body slot, the draft already typed into. */
 		const editingState = (): CanvasControllerState =>
 			createState({
-				selection: selectionOf(["rect-1"]),
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: { kind: "shape", text: "typed" },
 			});
 
@@ -123,7 +124,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 
 		it("records nothing when the draft was never changed", () => {
 			const state = createState({
-				selection: selectionOf(["rect-1"]),
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: { kind: "shape", text: "" },
 			});
 

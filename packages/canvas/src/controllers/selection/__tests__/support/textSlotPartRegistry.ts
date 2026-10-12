@@ -11,7 +11,7 @@ import { createTextSlotPartKindDefinition } from "../../partKinds/textSlotPartKi
  *
  * @param registry - The bundle's own ObjectPartKindRegistry, written in place
  * @param types - The object types to declare slots for, as applyObjectDefinition
- *   would for a `features.text === "slots"` definition
+ *   would for a definition with `features.text`
  */
 export const registerTextSlotParts = (
 	registry: ObjectPartKindRegistry,
@@ -24,12 +24,12 @@ export const registerTextSlotParts = (
 
 /**
  * A part registry holding the very slot definition applyObjectDefinition
- * registers for a `features.text === "slots"` type, for each named type. Tests
+ * registers for a type with `features.text`, for each named type. Tests
  * that only need a slot selection to resolve build one of these instead of a
  * whole canvas bundle.
  *
  * @param types - The object types to declare slots for; a type left out has no
- *   parts at all, which is how core sees a `features.text: "body"` shape
+ *   parts at all, which is how core sees a type holding no text
  * @returns A fresh registry, with no text-region calculator (so a slot's region
  *   is the object's whole box)
  */

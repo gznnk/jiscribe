@@ -5,6 +5,7 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { moveCommands } from "../MoveCommands";
 
@@ -178,7 +179,7 @@ describe("moveCommands", () => {
 
 		it("is not executable while editing text, prioritizing caret movement", () => {
 			const state = makeState({
-				selection: selectionOf(["a"]),
+				selection: selectionOf(["a"], textSlotPartSelection("body")),
 				objects: { a: makeRect("a", 0, 0) },
 				textEditState: { kind: "shape", text: "" },
 			});

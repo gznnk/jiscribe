@@ -75,7 +75,20 @@ describe("StartTextEditCommand", () => {
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
 		const after = StartTextEditCommand.execute(state, registries);
 		expect(after.textEditState).toMatchObject({ kind: "shape" });
-		// A rect holds one body rather than slots, so there is no part to pick.
+		// The one body is the slot being edited, picked like any other.
+		expect(after.selection).toEqual({
+			objectIds: ["rect-1"],
+			part: textSlotPartSelection("body"),
+		});
+	});
+
+	it("keeps the selection reference when the rect's body is already picked", () => {
+		const state = deepFreezeState({
+			...createInitialControllerState(doc, registries),
+			selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
+		});
+		const after = StartTextEditCommand.execute(state, registries);
+		expect(after.textEditState).toMatchObject({ kind: "shape" });
 		expect(after.selection).toBe(state.selection);
 	});
 

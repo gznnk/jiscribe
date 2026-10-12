@@ -333,8 +333,9 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 返すだけなので、`"3"` や `"cell:2,1"` の意味を知っているのは型だけである。省略すれば
 そのオブジェクトは不可分で、Delete は全体の削除へ落ちる。組み込みの `vertex` が
 実例で、polyline / polygon / connector がそれぞれ、削除を断る頂点数の下限とともに
-宣言している。`features.text` が `"slots"` の型には `"textSlot"` の種別が宣言なしで
-付き、部分 id は自分の `text` のキーになる。自分で `"textSlot"` を宣言すれば、
+宣言している。`features.text` を持つ型には `"textSlot"` の種別が宣言なしで
+付き、部分 id は自分の `text` のキーになる（1 ボディの型なら `body` だけで、テキスト
+編集中はこのスロットが選ばれている）。自分で `"textSlot"` を宣言すれば、
 衝突ではなくその既定を置き換える。core が導くものを残して足りない分だけ足すなら、
 `createTextSlotPartKindDefinition(textRegion)` を spread する（表は `range` と
 `delete` を足している）。

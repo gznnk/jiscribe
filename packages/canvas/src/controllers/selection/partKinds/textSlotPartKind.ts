@@ -9,8 +9,9 @@ import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 
 /**
- * The part-id namespace of the text slots a `features.text === "slots"` type
- * spells out, with part ids spelled as the slot keys of the object's `text`.
+ * The part-id namespace of the text slots a text-holding type holds — several
+ * for `features.text === "slots"`, the one `body` otherwise — with part ids
+ * spelled as the slot keys of the object's `text`.
  * The kind half of the `data-part` its slot elements carry, which `textSlotPart`
  * builds.
  */
@@ -42,8 +43,8 @@ const holdsSlot = (slots: TextSlots | undefined, partId: string): boolean =>
 	slots !== undefined && Object.prototype.hasOwnProperty.call(slots, partId);
 
 /**
- * The `textSlot` part definition every `features.text === "slots"` type gets,
- * with part ids spelled as the keys of the object's own `text` — the id half of
+ * The `textSlot` part definition every type with `features.text` gets, with
+ * part ids spelled as the keys of the object's own `text` — the id half of
  * the `data-part` its slot elements carry (textSlotPart). Nothing in it is
  * per-type but the text region, which is why applyObjectDefinition registers it
  * without the type saying anything.
