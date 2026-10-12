@@ -246,8 +246,10 @@ mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参
 - 複数型のマージが行を突き合わせる鍵は `id` である。同じ行を出す型どうしは同じ
   綴りにすること。綴りが違う型が混ざった選択ではその行は落ちる（片方しか持たない
   組み込みの行種が落ちるのと同じ）
-- テキストスロット選択中はカスタム行が落ちる。プラグインの行には「スロット対応で
-  ある」と申告する手段が無いためで、ObjectMenu がカスタム項目に課すのと同じ規則
+- テキストスロットを選んでいる間と図形の文字を編集している間、サイドバーに残るのは
+  文字系の行と、行が扱うスタイル種別をすべて型が `styleEntries` で自ら宣言している
+  組み込みの行（後述）だけ。カスタム行は何を書くかを申告できないので落ちる。ObjectMenu
+  も項目を同じ規則で絞る
 
 **`propertyPanel` のセクション表示。**セクションは `isShown(selection)` を持てる。
 描く前に、行が読むのと同じ選択の切片（`PropertyPanelSelection`）を渡して
@@ -282,14 +284,20 @@ export const CONTAINER_STYLE_ENTRIES = {
 書き込みが届くスロットの自前の答えで宣言し直している。導出のままでは行や列の pick を
 スロットの pick ではないと読み、全セルに書いてしまう。表の `tableSelectedSlotIds` は、選んだ
 行・列のセルの id を答える。`declaredTextStyleTable(textType, slotIdsOf)` は導出の文字系の表を
-この引数だけ変えて返し、どのエントリも `["text"]` を書くフィールドとして述べる:
+この引数だけ変えて返し、どのエントリも `["text"]` を書くフィールドとして述べる。
+`fill` のような core の種別も同じように宣言し直せば、pick で書き先を振り分けられる
+（表は何も選んでいなければ自分の背景へ、選んでいればそのセルの `fill` へ書く）:
 
 ```ts
-const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
-	TableFeatures.text,
-	tableSelectedSlotIds,
-) satisfies DeclaredStyleTable<TableState>;
+const TABLE_STYLE_ENTRIES = {
+	...declaredTextStyleTable(TableFeatures.text, tableSelectedSlotIds),
+	fill: tableFillEntry,
+} satisfies DeclaredStyleTable<TableState>;
 ```
+
+core の種別を宣言することは、テキストスロットを選んでいる間もその操作を残すことにも
+なる。pick のもとでの書き先を型が答えているからで、セルを選んでいても背景色はメニューと
+サイドバーに残り、導出のままの `fillOpacity` の行は消える。
 
 **コマンド。**プラグインが足したコマンドの `execute` は遷移のすべてを担い、
 Doc を編集したと述べることもそこに含む。返す状態を `commitEdit(state)`
@@ -365,7 +373,7 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 | インタラクションの調整       | スナップ閾値などが定数でハードコードされている。エッジスクロールとパン/ズームも外部から無効化できない                                                                                           |
 | コマンドのショートカット     | プラグインはコマンドを追加でき（`CanvasPlugin.commands`）、既存コマンドと同じバインドを名乗ることもできるが、そのコマンド自身のショートカットを付け替える・外すことはできない                   |
 | ObjectMenu の項目種          | 組み込みの項目種は switch 固定で、データ駆動なのは `custom` コンポーネント項目だけ                                                                                                              |
-| プロパティサイドバーの項目種 | 組み込みの項目種は固定の引き当てで、データ駆動なのは `custom` コンポーネント行だけ。その行は「スロット対応」と申告できない                                                                      |
+| プロパティサイドバーの項目種 | 組み込みの項目種は固定の引き当てで、データ駆動なのは `custom` コンポーネント行だけ。その行はテキストスロット選択中は落ちる                                                                      |
 
 一方で**できること**: 独自の doc スキーマ・検証・描画・ステンシル・メニュー・
 プロパティサイドバーのセクション・スタイルプロパティ・輪郭/スナップ挙動・

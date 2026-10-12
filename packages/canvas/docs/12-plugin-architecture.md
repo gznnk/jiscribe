@@ -273,9 +273,10 @@ before writing one:
   the same row must spell it the same way; a selection mixing types that spell it
   differently drops it, exactly as a built-in kind only one of them offers is
   dropped.
-- Custom rows are dropped while a text slot is selected, since a plugin row has
-  no way to say it is slot-aware — the same rule the ObjectMenu applies to its
-  custom items.
+- While a text slot is picked or a shape's text is being edited, the sidebar
+  keeps its text rows and every built-in row whose style kinds the type declares
+  itself in `styleEntries` (below), and drops custom rows, which cannot say what
+  they edit — the same rule the ObjectMenu applies to its items.
 
 **`propertyPanel` section visibility.** A section may carry
 `isShown(selection)`, asked before it is drawn with the slice of the selection
@@ -313,14 +314,21 @@ derived ones read a row or column pick as no slot pick and would write every
 cell, where the table's `tableSelectedSlotIds` answers with the ids of
 the cells of the picked tracks. `declaredTextStyleTable(textType, slotIdsOf)` is
 the derived text half with that one argument changed, each entry stating
-`["text"]`:
+`["text"]`. A core kind such as `fill` can be declared again the same way to
+route it by the pick: the table's `fill` writes its own background with nothing
+picked and the picked cells' `fill` otherwise:
 
 ```ts
-const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
-	TableFeatures.text,
-	tableSelectedSlotIds,
-) satisfies DeclaredStyleTable<TableState>;
+const TABLE_STYLE_ENTRIES = {
+	...declaredTextStyleTable(TableFeatures.text, tableSelectedSlotIds),
+	fill: tableFillEntry,
+} satisfies DeclaredStyleTable<TableState>;
 ```
+
+Declaring a core kind is also what keeps its controls while a text slot is
+picked: the type has said where the kind lands under a pick, so the background
+color stays in the menu and the sidebar with a cell picked, while the derived
+`fillOpacity` row goes.
 
 **Commands.** A contributed command's `execute` is the whole of its transition,
 and that includes saying it edited the document: return the state through
@@ -413,7 +421,7 @@ Honest limits, so you do not design against something that is not there.
 | Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |
 | Command shortcuts                | A plugin contributes commands (`CanvasPlugin.commands`) and can claim a binding an existing command also holds, but it cannot rebind or unbind that command's own shortcut                |
 | ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                      |
-| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one cannot say it is text-slot-aware                                                             |
+| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one is dropped while a text slot is picked                                                       |
 
 What _is_ fully available: adding shape types with their own doc schema, validation,
 rendering, stencils, menus, properties-sidebar sections, style properties,

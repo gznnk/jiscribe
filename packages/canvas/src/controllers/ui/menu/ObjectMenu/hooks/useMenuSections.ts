@@ -3,7 +3,9 @@ import { useMemo } from "react";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
+import type { ObjectStyleRegistry } from "../../../../style/tables/ObjectStyleRegistry";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { getAddressedDeclaredKinds } from "../../utils/getAddressedDeclaredKinds";
 import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
@@ -100,8 +102,11 @@ const collectSelectionSections = (
  *
  * While a text slot is selected the sections are narrowed to the text items, so the
  * menu never offers an action that the slot cannot receive. Doing it here keeps every
- * `features.text === "slots"` type covered without each definition opting in. A pick
- * of another sort (a vertex) leaves them alone, the menu still acting on the object.
+ * `features.text === "slots"` type covered without each definition opting in. An item
+ * whose every style kind the type declares itself in `styleEntries` stays as well,
+ * the type having answered where that kind lands under a pick
+ * (filterTextSlotMenuSections). A pick of another sort (a vertex) leaves them alone,
+ * the menu still acting on the object.
  *
  * An open text editor narrows them the same way, for the same reason read the other
  * way round: what the menu offers there has to be something a stretch of the text
@@ -109,17 +114,22 @@ const collectSelectionSections = (
  *
  * @param state - The current canvas controller state
  * @param objectMenuRegistry - Per-canvas ObjectMenuRegistry, asked once per concrete type in the selection
+ * @param objectStyleRegistry - Per-canvas ObjectStyleRegistry; read only while text is addressed, for the kinds the addressed type declares
  * @returns The sections in display order
  */
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
+	objectStyleRegistry: ObjectStyleRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
 	if (!isTextAddressed(state)) {
 		return sections;
 	}
-	return filterTextSlotMenuSections(sections);
+	return filterTextSlotMenuSections(
+		sections,
+		getAddressedDeclaredKinds(state, objectStyleRegistry),
+	);
 };
 
 /**
@@ -135,11 +145,11 @@ export const useMenuSections = (
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
-	const { objectMenu } = useCanvasRegistries();
+	const { objectMenu, objectStyle } = useCanvasRegistries();
 
 	return useMemo(
-		() => (enabled ? getMenuSections(state, objectMenu) : []),
+		() => (enabled ? getMenuSections(state, objectMenu, objectStyle) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[enabled, selection, isEditingShapeText, objects, objectMenu],
+		[enabled, selection, isEditingShapeText, objects, objectMenu, objectStyle],
 	);
 };

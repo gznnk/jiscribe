@@ -182,14 +182,13 @@ export const registriesOf = (
 		GroupFeatures,
 		SourceFeatures,
 	]) {
-		objectStyle.register(features.type, {
-			...coreStyleTable(features),
+		objectStyle.register(
+			features.type,
+			coreStyleTable(features),
 			// The connector's own declarations ride along, as they do in the real
 			// wiring (applyObjectDefinition).
-			...(features.type === ConnectorFeatures.type
-				? CONNECTOR_STYLE_TABLE
-				: {}),
-		});
+			features.type === ConnectorFeatures.type ? CONNECTOR_STYLE_TABLE : {},
+		);
 	}
 	return {
 		objectStyle,

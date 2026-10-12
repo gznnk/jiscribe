@@ -35,6 +35,7 @@ import { tableToDoc, tableToState } from "./state/TableMapper";
 import type { TableState } from "./state/TableState";
 import { isValidTableState } from "./state/validateTableState";
 import { TableStencils } from "./stencil/TableStencils";
+import { tableFillEntry } from "./style/tableFillEntries";
 import { tableSelectedSlotIds } from "./style/tableSelectedSlotIds";
 
 /**
@@ -146,23 +147,31 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
  * The text kinds, declared again over the table's own answer to which cells a
  * write reaches (tableSelectedSlotIds): the derived ones read a row or
  * column pick as no slot pick and would write every cell.
+ *
+ * Fill is declared again as well, to follow the selection the same way: the
+ * table's own background with nothing picked inside it, the picked cells'
+ * `fill` otherwise (tableFillEntry). Declaring it is also what keeps the fill
+ * controls in the menu and the sidebar while a cell is picked. Its opacity is
+ * left derived: the background's alone, so the narrowing hides its row under a
+ * cell pick, and under a row or column pick the row edits the table's own.
  */
-const TABLE_STYLE_ENTRIES = declaredTextStyleTable(
-	TableFeatures.text,
-	tableSelectedSlotIds,
-) satisfies DeclaredStyleTable<TableState>;
+const TABLE_STYLE_ENTRIES = {
+	...declaredTextStyleTable(TableFeatures.text, tableSelectedSlotIds),
+	fill: tableFillEntry,
+} satisfies DeclaredStyleTable<TableState>;
 
 /**
  * `createFrameObjectDefinition` is not used here for the reason its doc half is
  * not (see ./doc): it is built around a stored box. The mapper and the content
  * resizer are the two halves that replace it.
  *
- * The menu is declared rather than derived: a table takes the stroke items for
- * its rules and the text items for its cells, and nothing else the features would
- * offer. A text edit from the menu lands on the picked cells, the cells of the
- * picked rows or columns, or every cell with nothing picked
- * ({@link TABLE_STYLE_ENTRIES}). Reshaping the grid is in neither section: it
- * belongs to the keys, the grips and the `+` badges.
+ * The menu is declared rather than derived: a table takes the background, the
+ * stroke items for its rules and the text items for its cells, and nothing else
+ * the features would offer. A text edit from the menu lands on the picked cells,
+ * the cells of the picked rows or columns, or every cell with nothing picked; a
+ * background lands on the picked cells, or on the table's own background with
+ * nothing picked ({@link TABLE_STYLE_ENTRIES}). Reshaping the grid is in neither
+ * section: it belongs to the keys, the grips and the `+` badges.
  */
 export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	...tableDocDefinition,
@@ -180,7 +189,11 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	menu: [
 		{
 			id: "style",
-			items: [{ type: "borderColor" }, { type: "borderStyle", radius: false }],
+			items: [
+				{ type: "backgroundColor" },
+				{ type: "borderColor" },
+				{ type: "borderStyle", radius: false },
+			],
 		},
 		{
 			id: "text",
