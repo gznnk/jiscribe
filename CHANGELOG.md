@@ -211,6 +211,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `byTextSlot` as before, wrapped in that field. The two are separate because
   one map keyed by slot id had to reserve an id for "every slot", which then
   could not be the name of a real slot in any document of the type.
+- **For plugin authors: a type says how far its connection-anchor dots sit off
+  its edges.** `connectionAnchorOffsets` answers per anchor id — the four edge
+  ids and any `extraConnectPoints` id — in screen px, for a type whose own
+  controls occupy the band the dots would otherwise land in (the table's grips
+  and `+` badges, whose top and left dots now stand past them). Every anchor it
+  leaves out keeps the theme's `connectionAnchorOffset`, and only the dots move:
+  where a connector attaches is unchanged. It is one object for the type or a
+  function asked per object, like `transformHandles`; `ConnectionAnchorOffsets`,
+  `ObjectConnectionAnchorOffsetsDeclaration` and
+  `ObjectConnectionAnchorOffsetsCalculator` are exported from `@jiscribe/canvas`.
 
 ### Changed
 

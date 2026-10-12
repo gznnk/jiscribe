@@ -9,6 +9,7 @@ import {
 	calcOutwardVector,
 	type AnchorFrame,
 } from "../../../../connectors/calcConnectPoint";
+import type { ConnectionAnchorOffsets } from "../../../../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
@@ -48,6 +49,12 @@ type ConnectionAnchorsProps = {
 	 */
 	extraConnectPoints?: readonly ExtraConnectPoint[] | null;
 	/**
+	 * Per-anchor dot distances in screen px, keyed by anchor id (from
+	 * ObjectConnectionAnchorOffsetsRegistry). Anchors it leaves out sit at the
+	 * theme's `connectionAnchorOffset`.
+	 */
+	connectionAnchorOffsets?: ConnectionAnchorOffsets | null;
+	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
 	 */
@@ -72,6 +79,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	outline,
 	anchorRegion,
 	extraConnectPoints,
+	connectionAnchorOffsets,
 	zoom = 1,
 }) => {
 	const { rotation, scaleX, scaleY } = frame;
@@ -80,7 +88,13 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	// Adjust sizes based on zoom level to maintain consistent visual size
 	const adjustedAnchorRadius = handleDimensions.anchorRadius / zoom;
 	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
-	const adjustedOffset = handleDimensions.connectionAnchorOffset / zoom;
+	const resolveAdjustedOffset = (anchorId: string): number =>
+		(connectionAnchorOffsets?.[anchorId] ??
+			handleDimensions.connectionAnchorOffset) / zoom;
+	const topOffset = resolveAdjustedOffset("topCenter");
+	const rightOffset = resolveAdjustedOffset("rightCenter");
+	const bottomOffset = resolveAdjustedOffset("bottomCenter");
+	const leftOffset = resolveAdjustedOffset("leftCenter");
 
 	// Anchors sit where a connector would attach (outline + anchor region aware);
 	// the outward-normal offset below is applied on top.
@@ -102,23 +116,23 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	const signY = calcNonZeroSign(scaleY);
 
 	const topCenterAnchor = {
-		x: topEdge.x + signY * Math.sin(radians) * adjustedOffset,
-		y: topEdge.y - signY * Math.cos(radians) * adjustedOffset,
+		x: topEdge.x + signY * Math.sin(radians) * topOffset,
+		y: topEdge.y - signY * Math.cos(radians) * topOffset,
 	};
 
 	const rightCenterAnchor = {
-		x: rightEdge.x + signX * Math.cos(radians) * adjustedOffset,
-		y: rightEdge.y + signX * Math.sin(radians) * adjustedOffset,
+		x: rightEdge.x + signX * Math.cos(radians) * rightOffset,
+		y: rightEdge.y + signX * Math.sin(radians) * rightOffset,
 	};
 
 	const bottomCenterAnchor = {
-		x: bottomEdge.x - signY * Math.sin(radians) * adjustedOffset,
-		y: bottomEdge.y + signY * Math.cos(radians) * adjustedOffset,
+		x: bottomEdge.x - signY * Math.sin(radians) * bottomOffset,
+		y: bottomEdge.y + signY * Math.cos(radians) * bottomOffset,
 	};
 
 	const leftCenterAnchor = {
-		x: leftEdge.x - signX * Math.cos(radians) * adjustedOffset,
-		y: leftEdge.y - signX * Math.sin(radians) * adjustedOffset,
+		x: leftEdge.x - signX * Math.cos(radians) * leftOffset,
+		y: leftEdge.y - signX * Math.sin(radians) * leftOffset,
 	};
 
 	// A declared point is pushed off along its own declared outward direction, so
@@ -126,11 +140,12 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	const extraAnchors = (extraConnectPoints ?? []).map((extraConnectPoint) => {
 		const edge = calcExtraConnectPoint(frame, extraConnectPoint);
 		const outward = calcOutwardVector(frame, extraConnectPoint.direction);
+		const extraOffset = resolveAdjustedOffset(extraConnectPoint.id);
 		return {
 			position: extraConnectPoint.id,
 			point: {
-				x: edge.x + outward.x * adjustedOffset,
-				y: edge.y + outward.y * adjustedOffset,
+				x: edge.x + outward.x * extraOffset,
+				y: edge.y + outward.y * extraOffset,
 			},
 		};
 	});

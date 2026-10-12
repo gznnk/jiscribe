@@ -245,7 +245,7 @@ export const selectors = {
 			? `[data-id="transform"][data-action="rotation"]`
 			: `[data-id="transform"][data-action="resize:${handle}"]`,
 
-	/** Connector creation anchor, drawn 20px outside the edge midpoint. */
+	/** Connector creation anchor, drawn 20px outside the edge midpoint unless its type declares another distance. */
 	createAnchor: (anchorId: AnchorId) => `[data-action="anchor:${anchorId}"]`,
 
 	/** The floating ObjectMenu container itself, not the buttons inside. */

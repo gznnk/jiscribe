@@ -1,4 +1,5 @@
 import type {
+	ConnectionAnchorOffsets,
 	ObjectPartKindDefinition,
 	ObjectTypeDefinition,
 	ObjectTransformHandles,
@@ -20,6 +21,7 @@ import { TableColumnInsertControl } from "./controls/TableColumnInsertControl";
 import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
 import { TableRowGripControl } from "./controls/TableRowGripControl";
 import { TableRowInsertControl } from "./controls/TableRowInsertControl";
+import { CONNECTION_ANCHOR_OFFSET_PAST_GRIPS } from "./controls/TableTrackGrip";
 import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
@@ -52,6 +54,16 @@ import { tableFillEntry } from "./style/tableFillEntries";
  * itself (ObjectTransformHandlesRegistry).
  */
 const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
+
+/**
+ * The connection-anchor dots on the top and left edges pushed out past the
+ * grips and insert badges lining them; the right and bottom edges carry no
+ * control and keep the theme's distance.
+ */
+const TABLE_CONNECTION_ANCHOR_OFFSETS: ConnectionAnchorOffsets = {
+	topCenter: CONNECTION_ANCHOR_OFFSET_PAST_GRIPS,
+	leftCenter: CONNECTION_ANCHOR_OFFSET_PAST_GRIPS,
+};
 
 /**
  * Six controls: a boundary, a grip and an insert badge per axis. One registration
@@ -178,6 +190,7 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	selectionControls: TABLE_SELECTION_CONTROLS,
 	partKinds: TABLE_PARTS,
 	transformHandles: TABLE_TRANSFORM_HANDLES,
+	connectionAnchorOffsets: TABLE_CONNECTION_ANCHOR_OFFSETS,
 	stencils: TableStencils,
 	styleEntries: TABLE_STYLE_ENTRIES,
 	menu: [

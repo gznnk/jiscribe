@@ -1,3 +1,4 @@
+import { darkCanvasTheme } from "@jiscribe/canvas";
 import {
 	canvasThemeCssVars as theme,
 	useCanvasTheme,
@@ -26,6 +27,28 @@ export const GRIP_GAP = 7;
 
 /** Distance from the table's edge to the grip's centre line, in screen px; the insert badges sit on it too. */
 export const GRIP_OFFSET = GRIP_GAP + GRIP_THICKNESS / 2;
+
+/**
+ * Radius of the canvas's connection-anchor dots, in screen px, read off the
+ * built-in theme because an offset calculator is pure and is not handed the
+ * host's; a host theme with a larger radius narrows the clearance below.
+ */
+const CONNECTION_ANCHOR_RADIUS = darkCanvasTheme.handleDimensions.anchorRadius;
+
+/** Clearance between the grips' outer side and a connection-anchor dot's edge, in screen px. */
+const CONNECTION_ANCHOR_GRIP_CLEARANCE = 10;
+
+/**
+ * Distance from the table's edge to a connection-anchor dot's centre on the two
+ * edges the grips and insert badges line (top and left), in screen px. The
+ * badges stand on the grips' centre line and are no wider than them, so clearing
+ * the grips clears the badges too.
+ */
+export const CONNECTION_ANCHOR_OFFSET_PAST_GRIPS =
+	GRIP_GAP +
+	GRIP_THICKNESS +
+	CONNECTION_ANCHOR_RADIUS +
+	CONNECTION_ANCHOR_GRIP_CLEARANCE;
 
 type TableTrackGripProps = {
 	/** The grip's centre line's start, in world coordinates; already offset clear of the table's edge. */

@@ -55,6 +55,9 @@ export function CanvasProviders({
 							objectOutline={registries.objectOutline}
 							objectAnchorRegion={registries.objectAnchorRegion}
 							objectExtraConnectPoints={registries.objectExtraConnectPoints}
+							objectConnectionAnchorOffsets={
+								registries.objectConnectionAnchorOffsets
+							}
 							objectGeometryKey={registries.objectGeometryKey}
 							objectSvgDefs={registries.objectSvgDefs}
 						>

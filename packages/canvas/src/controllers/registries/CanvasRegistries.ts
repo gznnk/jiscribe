@@ -6,6 +6,7 @@ import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/O
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
+import type { ObjectConnectionAnchorOffsetsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
@@ -74,6 +75,7 @@ export type CanvasRegistries = {
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	objectConnectionAnchorOffsets: ObjectConnectionAnchorOffsetsRegistry;
 	objectGeometryKey: ObjectGeometryKeyRegistry;
 	objectVisualBounds: ObjectVisualBoundsRegistry;
 	objectSvgDefs: ObjectSvgDefsRegistry;
