@@ -33,6 +33,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   carrying nothing but text may be written as that text alone. A text style set
   from the menu lands on the picked cells, on every cell of a picked row or
   column, or on every cell when nothing inside the table is picked.
+- **A table's cells can be given a background from the Fill control.** The one
+  Fill control in the menu and the sidebar follows the selection: with cells, a
+  row or a column picked it paints those cells, and with the table alone
+  selected it paints the table's own background. Picked cells that disagree
+  show as mixed, and the transparent swatch clears a cell so the table's
+  background shows through again.
 - **A table's column and row boundaries can be dragged.** Grabbing the rule
   between two columns gives one of them the width the other loses, so the table's
   own edges stay where they are however far the boundary is pushed — past a
@@ -297,6 +303,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   are gone from `@jiscribe/doc`. A row reads its own kind typed from that
   declaration — `useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")` — instead of
   narrowing an `unknown` with a guard of its own.
+- **For plugin authors: a core kind a type redeclares in `styleEntries` stays in
+  the menu and the sidebar while a text slot is picked.** Picking a text slot,
+  or editing a shape's text, used to narrow both to their text controls alone.
+  A built-in control whose every style kind the picked object's type declares
+  itself now stays as well, since the type has said where that kind lands under
+  a pick — the table's background color with a cell picked is the case it
+  exists for. Types that declare no core kind narrow exactly as before, and
+  custom items and rows are still dropped.
 - **For plugin authors: a text edit is opened on the selection, not alongside
   it.** `textEditState` no longer names its own object or slot: it carries the
   draft and nothing else, and what is being edited is `selection` — the lone

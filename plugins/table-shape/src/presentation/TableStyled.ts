@@ -14,7 +14,7 @@ import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * Background of the whole table, under every cell: what a cell with no `fill`
- * of its own shows. `pointer-events: none` leaves every hit to the cells above
+ * of its own, or a transparent one, shows. `pointer-events: none` leaves every hit to the cells above
  * it, which carry the data-part a click is resolved by.
  */
 export const TableBody = styled.rect<FillPaintProps>`

@@ -5,6 +5,8 @@ import { filterTextSlotMenuSections } from "../filterTextSlotMenuSections";
 
 const CustomItemComponent = (): null => null;
 
+const NO_KINDS: ReadonlySet<string> = new Set();
+
 describe("filterTextSlotMenuSections", () => {
 	it("keeps the text items and drops every other builtin", () => {
 		const sections: ObjectMenuSection[] = [
@@ -27,7 +29,7 @@ describe("filterTextSlotMenuSections", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterTextSlotMenuSections(sections)).toEqual([
+		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([
 			{
 				id: "text",
 				items: [
@@ -50,7 +52,7 @@ describe("filterTextSlotMenuSections", () => {
 			},
 		];
 
-		expect(filterTextSlotMenuSections(sections)).toEqual([
+		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([
 			{ id: "text", items: [{ type: "font" }] },
 		]);
 	});
@@ -62,7 +64,7 @@ describe("filterTextSlotMenuSections", () => {
 			{ id: "arrowHead", items: [{ type: "arrowHead" }] },
 		];
 
-		expect(filterTextSlotMenuSections(sections)).toEqual([
+		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([
 			{ id: "text", items: [{ type: "textAlignment" }] },
 		]);
 	});
@@ -73,6 +75,69 @@ describe("filterTextSlotMenuSections", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterTextSlotMenuSections(sections)).toEqual([]);
+		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([]);
+	});
+
+	it("keeps an item whose every kind the addressed type declares", () => {
+		const sections: ObjectMenuSection[] = [
+			{
+				id: "style",
+				items: [
+					{ type: "backgroundColor" },
+					{ type: "borderColor" },
+					{ type: "borderStyle", radius: false },
+				],
+			},
+			{ id: "text", items: [{ type: "font" }] },
+		];
+
+		expect(filterTextSlotMenuSections(sections, new Set(["fill"]))).toEqual([
+			{ id: "style", items: [{ type: "backgroundColor" }] },
+			{ id: "text", items: [{ type: "font" }] },
+		]);
+	});
+
+	it("drops an item only some of whose kinds the type declares", () => {
+		const sections: ObjectMenuSection[] = [
+			{
+				id: "style",
+				items: [{ type: "borderStyle", radius: true }, { type: "arrowHead" }],
+			},
+		];
+
+		expect(
+			filterTextSlotMenuSections(
+				sections,
+				new Set(["strokeWidth", "startArrow"]),
+			),
+		).toEqual([]);
+	});
+
+	it("keeps a multi-kind item once every kind is declared", () => {
+		const sections: ObjectMenuSection[] = [
+			{ id: "line", items: [{ type: "lineStyle" }] },
+		];
+
+		expect(
+			filterTextSlotMenuSections(
+				sections,
+				new Set(["strokeWidth", "strokeDashType"]),
+			),
+		).toEqual(sections);
+	});
+
+	it("drops custom items and items editing no style whatever is declared", () => {
+		const sections: ObjectMenuSection[] = [
+			{
+				id: "style",
+				items: [{ type: "custom", id: "fill", component: CustomItemComponent }],
+			},
+			{ id: "system-group", items: [{ type: "group" }] },
+			{ id: "reference", items: [{ type: "openReference" }] },
+		];
+
+		expect(
+			filterTextSlotMenuSections(sections, new Set(["fill", "group"])),
+		).toEqual([]);
 	});
 });

@@ -64,6 +64,58 @@ export async function cellCenter(
 }
 
 /**
+ * The color one cell's own surface is painted with, read off the computed style
+ * of the rect its `data-part` names — the paint comes from emotion CSS, not an
+ * SVG attribute.
+ *
+ * @param canvas - The driver for the page under test
+ * @param objectId - The table's object id
+ * @param cellId - The cell's slot id (`r0c1`)
+ * @returns The computed `fill`, browser-normalized; `rgba(0, 0, 0, 0)` for a cell painting nothing of its own. Throws when the cell is not drawn
+ */
+export async function cellFillColor(
+	canvas: CanvasDriver,
+	objectId: string,
+	cellId: string,
+): Promise<string> {
+	return canvas.page.evaluate(
+		([id, part]) => {
+			const cell = document.querySelector(
+				`[data-kind="object"][data-id="${id}"] [data-part="textSlot:${part}"]`,
+			);
+			if (cell === null) {
+				throw new Error(`no cell ${part} on ${id}`);
+			}
+			return getComputedStyle(cell).fill;
+		},
+		[objectId, cellId] as const,
+	);
+}
+
+/**
+ * The color the table's own background is painted with — the rect the table
+ * draws first, under every cell (TableBody).
+ *
+ * @param canvas - The driver for the page under test
+ * @param objectId - The table's object id
+ * @returns The computed `fill`, browser-normalized; throws when the table draws no rect at all
+ */
+export async function tableBodyFillColor(
+	canvas: CanvasDriver,
+	objectId: string,
+): Promise<string> {
+	return canvas.page.evaluate((id) => {
+		const body = document.querySelector(
+			`[data-kind="object"][data-id="${id}"] rect`,
+		);
+		if (body === null) {
+			throw new Error(`object ${id} draws no rect`);
+		}
+		return getComputedStyle(body).fill;
+	}, objectId);
+}
+
+/**
  * How many cells the table draws, which is its grid's size — rows times columns,
  * counted off the drawing rather than the state.
  *

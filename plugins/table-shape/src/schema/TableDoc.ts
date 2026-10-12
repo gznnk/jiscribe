@@ -44,13 +44,22 @@ export const TableFeatures = {
  * slot with `{ ...slot }` and so preserves it; `tableCellFill.test.ts` is what
  * holds that true.
  */
+/**
+ * What a cell with no `fill` of its own paints, and what the Fill control reads
+ * such a cell as: nothing, so the table's body shows through (see
+ * {@link TableCell}).
+ */
+export const UNFILLED_CELL_FILL = "transparent";
+
 export type TableCell = Prettify<
 	TextSlot<RichText> & {
 		/**
 		 * Cell background: any CSS color, or `"auto"` to follow the theme's shape
-		 * surface. Omitted paints nothing of the cell's own, which is not the same as
-		 * a color that happens to paint nothing — the table's own `fill` shows
-		 * through instead (Table).
+		 * surface. Omitted paints nothing of the cell's own, so the table's own
+		 * `fill` shows through (Table), and a `"transparent"` cell draws the same.
+		 * The two stay apart in the document only: the Fill control reads an
+		 * omitted cell as `"transparent"` and clears a cell by writing that, never
+		 * by taking the field away (tableFillEntry).
 		 */
 		fill?: string;
 	}

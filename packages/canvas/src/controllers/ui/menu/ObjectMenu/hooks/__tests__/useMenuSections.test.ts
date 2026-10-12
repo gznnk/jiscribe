@@ -5,6 +5,8 @@ import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../../../selection/CanvasSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/partKinds/textSlotPartKind";
+import { objectFieldEntry } from "../../../../../style/entries/objectFieldEntry";
+import { createObjectStyleRegistry } from "../../../../../style/tables/ObjectStyleRegistry";
 import { createObjectMenuRegistry } from "../../ObjectMenuRegistry";
 import type { ObjectMenuSection } from "../../ObjectMenuTypes";
 import { getMenuSections } from "../useMenuSections";
@@ -45,26 +47,43 @@ const RECORD_SECTIONS: ObjectMenuSection[] = [
 	},
 ];
 
-const makeState = (part: ObjectPartSelection | null): CanvasControllerState =>
+const makeState = (
+	part: ObjectPartSelection | null,
+	type = "record",
+): CanvasControllerState =>
 	({
-		objects: { "rec-1": slotShape("rec-1") },
+		objects: { "rec-1": { ...slotShape("rec-1"), type } },
 		selection: selectionOf(["rec-1"], part),
 	}) as unknown as CanvasControllerState;
 
+const NAME_SLOT_PICK: ObjectPartSelection = {
+	kind: TEXT_SLOT_PART_KIND,
+	ranges: [{ anchorId: "name", focusId: "name" }],
+};
+
 const registry = createObjectMenuRegistry();
 registry.register("record", RECORD_SECTIONS);
+// The same menu, from a type that says where a fill lands under a pick.
+registry.register("filled-record", RECORD_SECTIONS);
+
+const styleRegistry = createObjectStyleRegistry();
+styleRegistry.register("record", {}, {});
+styleRegistry.register(
+	"filled-record",
+	{},
+	{ fill: objectFieldEntry<ObjectState, "fill">("fill") },
+);
 
 describe("getMenuSections", () => {
 	it("returns every registered section while no slot is selected", () => {
-		expect(getMenuSections(makeState(null), registry)).toEqual(RECORD_SECTIONS);
+		expect(getMenuSections(makeState(null), registry, styleRegistry)).toEqual(
+			RECORD_SECTIONS,
+		);
 	});
 
 	it("keeps only the text items once a slot is selected", () => {
-		const state = makeState({
-			kind: TEXT_SLOT_PART_KIND,
-			ranges: [{ anchorId: "name", focusId: "name" }],
-		});
-		expect(getMenuSections(state, registry)).toEqual([
+		const state = makeState(NAME_SLOT_PICK);
+		expect(getMenuSections(state, registry, styleRegistry)).toEqual([
 			{
 				id: "text",
 				items: [
@@ -74,5 +93,32 @@ describe("getMenuSections", () => {
 				],
 			},
 		]);
+	});
+
+	it("keeps an item whose kind the picked object's type declares", () => {
+		const state = makeState(NAME_SLOT_PICK, "filled-record");
+		expect(getMenuSections(state, registry, styleRegistry)).toEqual([
+			{ id: "style", items: [{ type: "backgroundColor" }] },
+			{
+				id: "text",
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
+			},
+		]);
+	});
+
+	it("keeps it while the type's one body is being edited, nothing picked", () => {
+		const state = {
+			...makeState(null, "filled-record"),
+			textEditState: { kind: "shape" },
+		} as unknown as CanvasControllerState;
+		expect(
+			getMenuSections(state, registry, styleRegistry).map(
+				(section) => section.id,
+			),
+		).toEqual(["style", "text"]);
 	});
 });

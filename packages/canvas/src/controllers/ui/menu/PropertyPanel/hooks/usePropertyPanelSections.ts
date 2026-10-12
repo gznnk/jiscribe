@@ -3,7 +3,9 @@ import { useMemo } from "react";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
+import type { ObjectStyleRegistry } from "../../../../style/tables/ObjectStyleRegistry";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { getAddressedDeclaredKinds } from "../../utils/getAddressedDeclaredKinds";
 import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
@@ -16,24 +18,7 @@ import {
 	ensurePropertyPanelItems,
 	propertyPanelItemKey,
 } from "../utils/appendPropertyPanelItems";
-
-/**
- * Narrows the sections down to the rows a selected text slot can receive: the
- * text section's built-in rows, the one section a slot can take anything from.
- * Custom rows go with the other sections, since a plugin row has no way to say
- * it is slot-aware. A section left empty is dropped so no accordion header
- * survives on its own.
- */
-const filterTextSlotSections = (
-	sections: PropertyPanelSection[],
-): PropertyPanelSection[] =>
-	sections
-		.filter((section) => section.id === PROPERTY_PANEL_SECTIONS.text.id)
-		.map((section) => ({
-			...section,
-			items: section.items.filter((item) => item.type !== "custom"),
-		}))
-		.filter((section) => section.items.length > 0);
+import { filterTextSlotPropertyPanelSections } from "../utils/filterTextSlotPropertyPanelSections";
 
 /**
  * Collects the sidebar sections of the current selection, before any slot
@@ -125,8 +110,9 @@ const filterShownSections = (
 /**
  * Computes the sidebar sections to display from the current selection.
  *
- * While a text slot is selected the sections are narrowed to the text one and
- * its custom rows go with them (filterTextSlotSections), so the panel never
+ * While a text slot is selected the sections are narrowed to the text rows, plus
+ * the rows whose every style kind the type declares itself in `styleEntries`, and
+ * every custom row goes (filterTextSlotPropertyPanelSections), so the panel never
  * offers a control the slot cannot receive — the same narrowing the ObjectMenu
  * does, and for the same reason an open text editor narrows them too: what is
  * offered there has to be something a stretch of the text being edited can take,
@@ -139,16 +125,17 @@ const filterShownSections = (
  *
  * @param state - The current canvas controller state; the selection, the objects it names and the text focus are read
  * @param propertyPanelRegistry - Per-canvas PropertyPanelRegistry, asked once per concrete type in the selection
+ * @param objectStyleRegistry - Per-canvas ObjectStyleRegistry; read only while text is addressed, for the kinds the addressed type declares
  * @returns The sections in display order; empty when nothing is selected, the selected types share nothing, or every section turned the selection down
  */
 export const getPropertyPanelSections = (
 	state: CanvasControllerState,
 	propertyPanelRegistry: PropertyPanelRegistry,
+	objectStyleRegistry: ObjectStyleRegistry,
 ): PropertyPanelSection[] => {
 	const sections = collectSelectionSections(state, propertyPanelRegistry);
 	if (!isTextAddressed(state)) {
-		// This path alone: the branch below hands a selected slot the text section
-		// and nothing else, and the box the lock governs is not the slot's.
+		// This path alone: the box the lock governs is not a selected slot's.
 		return filterShownSections(
 			holdsOwnAspectRatioLock(state)
 				? ensurePropertyPanelItems(sections, PROPERTY_PANEL_SECTIONS.layout, {
@@ -158,7 +145,13 @@ export const getPropertyPanelSections = (
 			state,
 		);
 	}
-	return filterShownSections(filterTextSlotSections(sections), state);
+	return filterShownSections(
+		filterTextSlotPropertyPanelSections(
+			sections,
+			getAddressedDeclaredKinds(state, objectStyleRegistry),
+		),
+		state,
+	);
 };
 
 /**
@@ -175,11 +168,11 @@ export const usePropertyPanelSections = (
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the section set is narrowed while it is (getPropertyPanelSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
-	const { propertyPanel } = useCanvasRegistries();
+	const { propertyPanel, objectStyle } = useCanvasRegistries();
 
 	return useMemo(
-		() => getPropertyPanelSections(state, propertyPanel),
+		() => getPropertyPanelSections(state, propertyPanel, objectStyle),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[selection, isEditingShapeText, objects, propertyPanel],
+		[selection, isEditingShapeText, objects, propertyPanel, objectStyle],
 	);
 };
