@@ -442,7 +442,7 @@ test.describe("record (a box with compartments)", () => {
 		await canvas.replaceTextAt(NAME_SPOT, "A\nB\nC\nD\nE");
 		await expect.poll(() => canvas.textEditorText()).toBe("A\nB\nC\nD\nE");
 
-		// The band stops at the box's bottom edge (the clamp in calcRecordSlotRegions).
+		// The band stops at the box's bottom edge (the clamp in calcRecordTextSlotRegions).
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
 				message: "the band tops out at the box height",
@@ -532,7 +532,7 @@ test.describe("record (a box with compartments)", () => {
 	}) => {
 		// The stencils write nothing but the text (see RecordStencils) and the mapper
 		// fills nothing in, so what makes the title bold and centered over left-aligned
-		// rows is the draw-time resolution alone (RECORD_SLOT_STYLE_DEFAULTS_BY_ID
+		// rows is the draw-time resolution alone (RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID
 		// through ObjectTextStyleDefaultsRegistry). A record an AI wrote as
 		// `{"name":{"text":"Object"}}` is the same case.
 		await createRecord(canvas, RECORD_FROM, RECORD_TO);

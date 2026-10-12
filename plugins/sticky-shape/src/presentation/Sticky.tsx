@@ -50,7 +50,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 	// Hand-drawn shapes have to resolve the type's own text-style defaults
 	// themselves; createFrameObject does it for the shapes that go through it, and
 	// the editing surface does it either way (issue #8).
-	const style = useObjectTextStyleDefaultsRegistry().resolveSlotStyle(
+	const style = useObjectTextStyleDefaultsRegistry().resolveTextSlotStyle(
 		type,
 		BODY_TEXT_SLOT_ID,
 		bodySlot,

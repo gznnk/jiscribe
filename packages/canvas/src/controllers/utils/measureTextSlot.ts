@@ -28,7 +28,7 @@ const OVERFLOW_TOLERANCE = 0.5;
 /** How one text slot is laid out inside the box the shape draws for it. */
 export type TextSlotMeasurement = {
 	/** Which slot was measured; a key of the shape's `text`. */
-	slotId: string;
+	textSlotId: string;
 	/**
 	 * World-space bounds of the region the slot is drawn in. Rotation is
 	 * flattened into an upright box (see calcTransformedRectBounds).
@@ -80,7 +80,7 @@ export const measureTextSlot = (
 		objectTextRegion: Pick<ObjectTextRegionRegistry, "get">;
 		objectTextStyleDefaults: Pick<
 			ObjectTextStyleDefaultsRegistry,
-			"resolveSlotStyle"
+			"resolveTextSlotStyle"
 		>;
 	},
 ): TextSlotMeasurement | null => {
@@ -104,7 +104,7 @@ export const measureTextSlot = (
 		height: Math.abs(region.height),
 	};
 	const font = resolveTextObjectFont(
-		registries.objectTextStyleDefaults.resolveSlotStyle(
+		registries.objectTextStyleDefaults.resolveTextSlotStyle(
 			object.type,
 			slotId,
 			slot,
@@ -126,7 +126,7 @@ export const measureTextSlot = (
 	};
 
 	return {
-		slotId,
+		textSlotId: slotId,
 		bounds: convertBoundingBoxToRect(calcTransformedRectBounds(region, object)),
 		textSize,
 		regionSize,

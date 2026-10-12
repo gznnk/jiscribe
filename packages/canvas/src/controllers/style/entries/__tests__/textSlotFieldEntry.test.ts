@@ -8,9 +8,9 @@ import {
 	slotPickOf,
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
-import { slotFieldEntry } from "../slotFieldEntry";
+import { textSlotFieldEntry } from "../textSlotFieldEntry";
 
-const entry = slotFieldEntry("textAlign");
+const entry = textSlotFieldEntry("textAlign");
 
 const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;
@@ -22,7 +22,7 @@ const keyedRect = (style: Record<string, unknown> = {}) =>
 		rows: { text: ["id"], ...style },
 	});
 
-describe("slotFieldEntry", () => {
+describe("textSlotFieldEntry", () => {
 	describe("apply", () => {
 		it("writes the field into the slot, leaving its content and the rest of its styling", () => {
 			const a = textRectOf("a", { body: { text: "hi", fontSize: 12 } });
@@ -119,7 +119,7 @@ describe("slotFieldEntry", () => {
 		it("a slot stating nothing → its type's default for that very slot", () => {
 			const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
 			textStyleDefaults.register("rect", {
-				bySlot: { rows: { textAlign: "center" } },
+				byTextSlot: { rows: { textAlign: "center" } },
 			});
 			const a = textRectOf("a", {
 				name: { text: "User" },

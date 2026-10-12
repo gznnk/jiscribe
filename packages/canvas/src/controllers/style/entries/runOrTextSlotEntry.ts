@@ -14,7 +14,7 @@ import type {
 	StyleIntentValueType,
 	TextSlotStyleIntentKind,
 } from "../StyleIntent";
-import { slotEntry } from "./slotEntry";
+import { textSlotEntry } from "./textSlotEntry";
 import { readRangeEdit } from "./utils/readRangeEdit";
 
 /**
@@ -34,14 +34,14 @@ import { readRangeEdit } from "./utils/readRangeEdit";
  * @template TState - The state the entry is written against
  * @template K - The field, which decides the value type
  */
-export const runOrSlotEntry = <
+export const runOrTextSlotEntry = <
 	TState extends ObjectState,
 	K extends TextSlotStyleIntentKind & keyof InlineTextStyle,
 >(
 	field: K,
 ): StyleEntry<TState, StyleIntentValueType<K>> => {
 	type V = StyleIntentValueType<K>;
-	const wholeSlot = slotEntry<TState, V>(field, (slot, value) => {
+	const wholeSlot = textSlotEntry<TState, V>(field, (slot, value) => {
 		const inlineKeys = [field];
 		// A row-partitioned slot is stripped row by row, each row being a body of
 		// its own.
@@ -65,7 +65,7 @@ export const runOrSlotEntry = <
 			});
 			return {
 				...object,
-				text: writeRichTextSlot(range.slots, range.slotId, styled),
+				text: writeRichTextSlot(range.textSlots, range.textSlotId, styled),
 			} as TState;
 		},
 		read: (object, pick, ctx) => {
@@ -73,10 +73,10 @@ export const runOrSlotEntry = <
 			if (range === null) {
 				return wholeSlot.read(object, pick, ctx);
 			}
-			const base = ctx.textStyleDefaults.resolveSlotStyle(
+			const base = ctx.textStyleDefaults.resolveTextSlotStyle(
 				object.type,
-				range.slotId,
-				range.slots[range.slotId],
+				range.textSlotId,
+				range.textSlots[range.textSlotId],
 			);
 			const covered = sliceRichText(range.content, range.start, range.end);
 			// One value per run the stretch covers, so a stretch styled in two colors

@@ -9,7 +9,7 @@ import { isSingleBodyText } from "../../model/objects/types/text/TextType";
 import { DocOperationError } from "../errors";
 
 /** Slot objects of a `text: "slots"` doc, keyed by slot id. */
-export const readSlots = (
+export const readTextSlots = (
 	object: ObjectRecord,
 ): Record<string, unknown> | null => {
 	const slots = object.text;
@@ -24,7 +24,7 @@ export const readSlots = (
  *
  * @param action - The verb the failure message reads with ("write" / "style" / "read")
  */
-export const requireSlotId = (
+export const requireTextSlotId = (
 	object: ObjectRecord,
 	id: string,
 	textSlotIds: readonly string[],
@@ -89,7 +89,7 @@ export const readObjectText = (
 	if (textType !== "slots") {
 		return null;
 	}
-	const slots = readSlots(object);
+	const slots = readTextSlots(object);
 	return slots === null
 		? ""
 		: Object.values(slots).map(readTextField).join("\n");

@@ -51,7 +51,7 @@ const resolveBodyFont = (
 	resolveDocBodyFont(
 		object,
 		extractTextSlotStyleDefaults(definition.features, definition.defaults)
-			?.bySlot?.[BODY_TEXT_SLOT_ID],
+			?.byTextSlot?.[BODY_TEXT_SLOT_ID],
 	);
 
 /**

@@ -40,6 +40,6 @@ doc フィールドは 1 つ増えるごとに、AI 生成時に整合を取る�
 
 具体例:
 
-- record の name 帯: doc フィールドを持たず導出（`calcRecordSlotRegions`）
+- record の name 帯: doc フィールドを持たず導出（`calcRecordTextSlotRegions`）
 - container の header: `headerHeight` doc フィールド + divider ドラッグ
   （`handleContainerHeaderHeight`）。未指定時はデフォルト値で描画

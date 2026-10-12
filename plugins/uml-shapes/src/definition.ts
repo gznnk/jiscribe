@@ -18,7 +18,7 @@ import { RecordBox } from "./presentation/RecordBox";
 import { UmlComponentBox } from "./presentation/UmlComponentBox";
 import { UmlPackageBox } from "./presentation/UmlPackageBox";
 import { umlPackageOutline } from "./presentation/umlPackageOutline";
-import { isRecordListSlotId } from "./schema/RecordDoc";
+import { isRecordListTextSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
 import { calcUmlPackageTextRegion } from "./schema/textRegions";
 import type { UmlComponentDoc } from "./schema/UmlComponentDoc";
@@ -34,14 +34,14 @@ import { UmlPackageIcon } from "./stencil/UmlPackageIcon";
 
 /**
  * A text band (the title, the stereotype above it) is sized from its own text
- * (calcRecordSlotRegions), so it follows the draft while it is typed and the
+ * (calcRecordTextSlotRegions), so it follows the draft while it is typed and the
  * editor may grow with it, down to the box's bottom edge. A row compartment stays
  * `"scroll"`: its region already follows the draft where it can, and letting the
  * editor pass it would spill over the compartment below.
  */
 const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
 	slotId,
-) => (isRecordListSlotId(slotId) ? "scroll" : "grow");
+) => (isRecordListTextSlotId(slotId) ? "scroll" : "grow");
 
 /**
  * The record's text slots need no declaration here: the keys of `state.text`

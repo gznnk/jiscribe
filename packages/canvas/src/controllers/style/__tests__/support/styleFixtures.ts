@@ -234,4 +234,4 @@ export const rangeOf = (
 	start: number,
 	end: number,
 	slotId = BODY_TEXT_SLOT_ID,
-): TextEditRange => ({ objectId, slotId, start, end });
+): TextEditRange => ({ objectId, textSlotId: slotId, start, end });

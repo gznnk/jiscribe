@@ -35,7 +35,8 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 	// same resolution the editing surface and the reducer's re-measure make.
 	const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 	const style = useMemo(
-		() => textStyleDefaults.resolveSlotStyle(type, BODY_TEXT_SLOT_ID, bodySlot),
+		() =>
+			textStyleDefaults.resolveTextSlotStyle(type, BODY_TEXT_SLOT_ID, bodySlot),
 		[textStyleDefaults, type, bodySlot],
 	);
 
@@ -111,7 +112,7 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
  * bands are children of the single `[data-kind]` group, which is what the
  * gesture layer resolves a target to (see getGestureTarget).
  *
- * `editingSlotId` is ignored: the type has a single slot, so an open editor can
+ * `editingTextSlotId` is ignored: the type has a single slot, so an open editor can
  * only be over that one.
  */
 export const Text = memo(TextComponent);

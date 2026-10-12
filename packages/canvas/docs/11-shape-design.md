@@ -46,6 +46,6 @@ track the range of shape sizes (from a small frame to a screen-covering zone).
 
 Concrete examples:
 
-- The record's name band: no doc field, derived (`calcRecordSlotRegions`)
+- The record's name band: no doc field, derived (`calcRecordTextSlotRegions`)
 - The container's header: the `headerHeight` doc field plus divider dragging
   (`handleContainerHeaderHeight`); rendered with a default value when unspecified

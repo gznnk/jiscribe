@@ -4,9 +4,9 @@ import { type ObjectRecord, requireObject } from "./utils/objectAccess";
 import { type DocDefinitions, isConnectorObject } from "./utils/objectGeometry";
 import {
 	readConnectorLabelText,
-	readSlots,
+	readTextSlots,
 	readTextField,
-	requireSlotId,
+	requireTextSlotId,
 } from "./utils/textFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { InlineTextStyle } from "../model/objects/types/text/InlineTextStyle";
@@ -110,7 +110,7 @@ const planTextWrite = (
 		);
 	}
 
-	const slots = readSlots(object);
+	const slots = readTextSlots(object);
 	const textSlotIds = slots === null ? [] : Object.keys(slots);
 	if (slots === null || textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
@@ -118,7 +118,7 @@ const planTextWrite = (
 	return {
 		kind: "slot",
 		slot: slots[
-			requireSlotId(object, id, textSlotIds, slot, "write")
+			requireTextSlotId(object, id, textSlotIds, slot, "write")
 		] as Record<string, unknown>,
 		text,
 	};
@@ -260,13 +260,13 @@ export const getText = (
 		);
 	}
 
-	const slots = readSlots(object);
+	const slots = readTextSlots(object);
 	const textSlotIds = slots === null ? [] : Object.keys(slots);
 	if (slots === null || textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
 	return readTextField(
-		slots[requireSlotId(object, id, textSlotIds, slot, "read")],
+		slots[requireTextSlotId(object, id, textSlotIds, slot, "read")],
 	);
 };
 
@@ -501,11 +501,11 @@ const resolveTextTarget = (
 			`${id} ("${object.type}") holds no text that can be styled`,
 		);
 	}
-	const slots = readSlots(object);
+	const slots = readTextSlots(object);
 	if (slots === null) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
-	const targetSlotId = requireSlotId(
+	const targetSlotId = requireTextSlotId(
 		object,
 		id,
 		Object.keys(slots),

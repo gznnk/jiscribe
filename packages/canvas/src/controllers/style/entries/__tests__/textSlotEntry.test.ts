@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import { createObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { contextOf, textRectOf } from "../../__tests__/support/styleFixtures";
-import { slotEntry } from "../slotEntry";
+import { textSlotEntry } from "../textSlotEntry";
 
-const entry = slotEntry<ReturnType<typeof textRectOf>, string>(
+const entry = textSlotEntry<ReturnType<typeof textRectOf>, string>(
 	"textAlign",
 	(slot, value) => ({ ...slot, textAlign: value as "left" }),
 );
@@ -20,7 +20,7 @@ const bandPick = { kind: "band", ranges: [{ anchorId: "0", focusId: "0" }] };
 const keyedRect = () =>
 	textRectOf("a", { name: { text: "User" }, rows: { text: ["id"] } });
 
-describe("slotEntry", () => {
+describe("textSlotEntry", () => {
 	it("writes the slots the picked kind reaches, and no other", () => {
 		const updated = entry.apply(
 			keyedRect(),

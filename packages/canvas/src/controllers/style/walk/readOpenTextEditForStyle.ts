@@ -20,7 +20,7 @@ export type StyleTextEdit = {
 	/** The object being edited. */
 	objectId: string;
 	/** The slot being edited; a key of that object's `text`. */
-	slotId: string;
+	textSlotId: string;
 	/** The draft body the editor draws, which the committed slot does not yet hold. */
 	draft: RichText;
 	/** The selected stretch, null when the edit is not a per-range one (see `StyleContext.textEditRange`). */
@@ -49,19 +49,19 @@ export const readOpenTextEditForStyle = (
 	if (openEdit?.kind !== "shape") {
 		return null;
 	}
-	const { object, slotId, text, selection } = openEdit;
+	const { object, textSlotId, text, selection } = openEdit;
 	const isStyleableStretch =
 		selection !== undefined &&
 		selection.start < selection.end &&
 		object.features?.text !== "source";
 	return {
 		objectId: object.id,
-		slotId,
+		textSlotId,
 		draft: text,
 		range: isStyleableStretch
 			? {
 					objectId: object.id,
-					slotId,
+					textSlotId,
 					start: selection.start,
 					end: selection.end,
 				}
@@ -90,11 +90,11 @@ export const graftStyleTextEdit = (
 	if (slots === undefined) {
 		return object;
 	}
-	if (isSameRichText(readRichTextSlot(slots, edit.slotId), edit.draft)) {
+	if (isSameRichText(readRichTextSlot(slots, edit.textSlotId), edit.draft)) {
 		return object;
 	}
 	return {
 		...object,
-		text: writeRichTextSlot(slots, edit.slotId, edit.draft),
+		text: writeRichTextSlot(slots, edit.textSlotId, edit.draft),
 	} as ObjectState;
 };

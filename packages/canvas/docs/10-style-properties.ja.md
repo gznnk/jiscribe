@@ -140,18 +140,18 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 
 エントリは手で書かない。格納先ごとのヘルパーが対を返す（`controllers/style/entries/`）:
 
-| ヘルパー                                 | 値の落ちる先                                                                                                                                                                                   |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectFieldEntry(field)`                | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                      |
-| `slotFieldEntry(field)`                  | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                              |
-| `runOrSlotEntry(field)`                  | 編集中に文字範囲が選ばれていればその範囲（`readRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
-| `toggleRunOrSlotEntry(kind, { toggle })` | `TOGGLE_FLIPS` が名指すフィールド。選ばれた範囲にだけ当たる（キー 1 打は図形全体への書きではない）。現在の描画値を読んで反転し、`runOrSlotEntry` と同じ経路で書く                              |
-| `declaredFieldEntry(path, valueType)`    | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                           |
-| `lockAspectRatioEntry`                   | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                       |
-| `textVerticalBasisEntry`                 | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                       |
-| `textContentEntry`                       | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                          |
+| ヘルパー                                     | 値の落ちる先                                                                                                                                                                                   |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`                    | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                      |
+| `textSlotFieldEntry(field)`                  | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                              |
+| `runOrTextSlotEntry(field)`                  | 編集中に文字範囲が選ばれていればその範囲（`readRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
+| `toggleRunOrTextSlotEntry(kind, { toggle })` | `TOGGLE_FLIPS` が名指すフィールド。選ばれた範囲にだけ当たる（キー 1 打は図形全体への書きではない）。現在の描画値を読んで反転し、`runOrTextSlotEntry` と同じ経路で書く                          |
+| `declaredFieldEntry(path, valueType)`        | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                           |
+| `lockAspectRatioEntry`                       | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                       |
+| `textVerticalBasisEntry`                     | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                       |
+| `textContentEntry`                           | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                          |
 
-`slotEntry` は `slotFieldEntry` と `runOrSlotEntry` のスロット半分が共有する部分 — どのスロットに
+`textSlotEntry` は `textSlotFieldEntry` と `runOrTextSlotEntry` のスロット半分が共有する部分 — どのスロットに
 当たるか、同一参照の契約、各スロットを型の既定値で読むこと。
 
 どのスロットに当たるかは型ではなく、選ばれた part kind の答え。`resolveTextSlotIds(object, pick, ctx)`
@@ -290,8 +290,8 @@ export const CONTAINER_STYLE_ENTRIES = {
 登録は `applyObjectDefinition` を通るので、`CanvasConfig.plugins` で足したプラグイン図形
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md) 参照）も同じ能力を得る。
 `declaredFieldEntry` と `DeclaredStyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
-差し替える型のために、エンジンが自分の表を組むヘルパー（`objectFieldEntry` / `slotFieldEntry` /
-`runOrSlotEntry` / `toggleRunOrSlotEntry` / `resolveTextSlotIds`）も並んでいる。コネクターの表は
+差し替える型のために、エンジンが自分の表を組むヘルパー（`objectFieldEntry` / `textSlotFieldEntry` /
+`runOrTextSlotEntry` / `toggleRunOrTextSlotEntry` / `resolveTextSlotIds`）も並んでいる。コネクターの表は
 `controllers/style/tables/connectorStyleTable.ts`（`CONNECTOR_STYLE_TABLE`）。container プラグインは
 `src/style/containerStyleEntries.ts` で `CONTAINER_STYLE_ENTRIES` を宣言し、`@jiscribe/canvas-sdk` の
 `createFrameObjectDefinition` へ渡す。

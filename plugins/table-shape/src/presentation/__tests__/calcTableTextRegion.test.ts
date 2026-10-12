@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { calcTableLayout } from "../../layout/calcTableLayout";
 import type { TableLayoutSource } from "../../layout/calcTableLayout";
-import { tableCellSlotId } from "../../schema/TableDoc";
+import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import { calcTableTextRegion } from "../calcTableTextRegion";
 
@@ -23,7 +23,7 @@ const cellsOf = (rows: string[][]): Record<string, TableCell> => {
 	const cells: Record<string, TableCell> = {};
 	rows.forEach((row, rowIndex) => {
 		row.forEach((text, columnIndex) => {
-			cells[tableCellSlotId(rowIndex, columnIndex)] = { text };
+			cells[tableCellTextSlotId(rowIndex, columnIndex)] = { text };
 		});
 	});
 	return cells;

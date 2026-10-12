@@ -8,7 +8,10 @@ import { describe, expect, it } from "vitest";
 
 import { calcTableLayout } from "../../layout/calcTableLayout";
 import type { TableLayoutSource } from "../../layout/calcTableLayout";
-import { TABLE_CELL_FONT_SIZE, tableCellSlotId } from "../../schema/TableDoc";
+import {
+	TABLE_CELL_FONT_SIZE,
+	tableCellTextSlotId,
+} from "../../schema/TableDoc";
 import type { TableCell, TableRowDoc } from "../../schema/TableDoc";
 import { calcTableRowBoundaryDrag } from "../calcTableRowBoundaryDrag";
 
@@ -28,7 +31,7 @@ const TWO_LINE_TEXT = "aaaaaa aaaaaa";
 const cellsOf = (texts: string[]): Record<string, TableCell> => {
 	const cells: Record<string, TableCell> = {};
 	texts.forEach((text, rowIndex) => {
-		cells[tableCellSlotId(rowIndex, 0)] = { text };
+		cells[tableCellTextSlotId(rowIndex, 0)] = { text };
 	});
 	return cells;
 };

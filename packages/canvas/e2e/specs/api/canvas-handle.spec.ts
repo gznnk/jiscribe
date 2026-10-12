@@ -387,7 +387,7 @@ test.describe("canvas handle / measure", () => {
 				? null
 				: {
 						fallback,
-						named: h.measure.textSlot(id, fallback.slotId),
+						named: h.measure.textSlot(id, fallback.textSlotId),
 						unknown: h.measure.textSlot(id, "no-such-slot"),
 					};
 		}, rect);

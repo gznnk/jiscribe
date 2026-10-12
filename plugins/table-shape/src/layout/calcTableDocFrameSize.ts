@@ -1,7 +1,7 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcTableFrameSize } from "./calcTableFrameSize";
-import { mapCellsToSlots } from "../schema/mapCellsToSlots";
+import { mapCellsToTextSlots } from "../schema/mapCellsToTextSlots";
 import type {
 	TableCellDoc,
 	TableColumnDoc,
@@ -39,7 +39,7 @@ export const calcTableDocFrameSize = (doc: TableDocLayoutSource): Dimensions =>
 		columns: doc.columns,
 		rows: doc.rows,
 		strokeWidth: doc.strokeWidth,
-		text: mapCellsToSlots(
+		text: mapCellsToTextSlots(
 			doc.cells ?? [],
 			doc.rows?.length ?? 0,
 			doc.columns?.length ?? 0,

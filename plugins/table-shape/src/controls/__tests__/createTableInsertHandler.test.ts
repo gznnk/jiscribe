@@ -8,7 +8,7 @@ import {
 } from "@jiscribe/canvas-sdk/doc";
 import { describe, expect, it } from "vitest";
 
-import { tableCellSlotId } from "../../schema/TableDoc";
+import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
 import { createTableInsertHandler } from "../createTableInsertHandler";
@@ -25,7 +25,7 @@ const addressedCells = (
 	const cells: Record<string, TableCell> = {};
 	for (let row = 0; row < rowCount; row++) {
 		for (let column = 0; column < columnCount; column++) {
-			const id = tableCellSlotId(row, column);
+			const id = tableCellTextSlotId(row, column);
 			cells[id] = { text: id };
 		}
 	}
@@ -72,15 +72,19 @@ describe("createTableInsertHandler", () => {
 
 		expect(result?.object?.rows).toHaveLength(3);
 		// The row that was second is now third, its cells renumbered with it.
-		expect(result?.object?.text?.[tableCellSlotId(2, 0)]?.text).toBe("r1c0");
-		expect(result?.object?.text?.[tableCellSlotId(1, 0)]?.text).toBe("");
+		expect(result?.object?.text?.[tableCellTextSlotId(2, 0)]?.text).toBe(
+			"r1c0",
+		);
+		expect(result?.object?.text?.[tableCellTextSlotId(1, 0)]?.text).toBe("");
 	});
 
 	it("inserts a column at the boundary the badge stands on", () => {
 		const result = handleColumnInsert(context, clickOn("0"));
 
 		expect(result?.object?.columns).toHaveLength(4);
-		expect(result?.object?.text?.[tableCellSlotId(0, 1)]?.text).toBe("r0c0");
+		expect(result?.object?.text?.[tableCellTextSlotId(0, 1)]?.text).toBe(
+			"r0c0",
+		);
 	});
 
 	it("takes the outer edges, which is where a first or last track is added", () => {

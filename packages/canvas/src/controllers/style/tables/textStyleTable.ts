@@ -5,10 +5,10 @@ import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isBoldFontWeight } from "../../utils/isBoldFontWeight";
 import { toggleTextDecorationToken } from "../../utils/toggleTextDecorationToken";
-import { runOrSlotEntry } from "../entries/runOrSlotEntry";
-import { slotFieldEntry } from "../entries/slotFieldEntry";
+import { runOrTextSlotEntry } from "../entries/runOrTextSlotEntry";
 import { textContentEntry } from "../entries/textContentEntry";
-import { toggleRunOrSlotEntry } from "../entries/toggleRunOrSlotEntry";
+import { textSlotFieldEntry } from "../entries/textSlotFieldEntry";
+import { toggleRunOrTextSlotEntry } from "../entries/toggleRunOrTextSlotEntry";
 import type { StyleTable } from "../StyleEntry";
 
 /**
@@ -32,41 +32,41 @@ export const textStyleTable = (textType: TextType): StyleTable<ObjectState> => {
 	return {
 		textContent: textContentEntry,
 		...(accepts("fontColor") && {
-			fontColor: runOrSlotEntry("fontColor"),
+			fontColor: runOrTextSlotEntry("fontColor"),
 		}),
 		...(accepts("fontSize") && {
-			fontSize: runOrSlotEntry("fontSize"),
+			fontSize: runOrTextSlotEntry("fontSize"),
 		}),
 		...(accepts("fontFamily") && {
-			fontFamily: runOrSlotEntry("fontFamily"),
+			fontFamily: runOrTextSlotEntry("fontFamily"),
 		}),
 		...(accepts("fontWeight") && {
-			fontWeight: runOrSlotEntry("fontWeight"),
-			toggleBold: toggleRunOrSlotEntry("toggleBold", {
+			fontWeight: runOrTextSlotEntry("fontWeight"),
+			toggleBold: toggleRunOrTextSlotEntry("toggleBold", {
 				toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 			}),
 		}),
 		...(accepts("fontStyle") && {
-			fontStyle: runOrSlotEntry("fontStyle"),
-			toggleItalic: toggleRunOrSlotEntry("toggleItalic", {
+			fontStyle: runOrTextSlotEntry("fontStyle"),
+			toggleItalic: toggleRunOrTextSlotEntry("toggleItalic", {
 				toggle: (current) => (current === "italic" ? "normal" : "italic"),
 			}),
 		}),
 		...(accepts("textDecoration") && {
-			textDecoration: runOrSlotEntry("textDecoration"),
+			textDecoration: runOrTextSlotEntry("textDecoration"),
 			// The other decoration line is kept, which is why the toggle takes the
 			// value rather than a boolean.
-			toggleUnderline: toggleRunOrSlotEntry("toggleUnderline", {
+			toggleUnderline: toggleRunOrTextSlotEntry("toggleUnderline", {
 				toggle: (current) => toggleTextDecorationToken(current, "underline"),
 			}),
 		}),
 		// The alignments place the whole block, so they land on the slot even while
 		// a stretch of it is selected — there is nothing smaller to apply them to.
 		...(accepts("textAlign") && {
-			textAlign: slotFieldEntry("textAlign"),
+			textAlign: textSlotFieldEntry("textAlign"),
 		}),
 		...(accepts("verticalAlign") && {
-			verticalAlign: slotFieldEntry("verticalAlign"),
+			verticalAlign: textSlotFieldEntry("verticalAlign"),
 		}),
 	};
 };

@@ -10,7 +10,7 @@ import type { StateRecord } from "@jiscribe/canvas-sdk";
 import { isRichText, isTextRows, isTextSlot } from "@jiscribe/doc";
 
 import {
-	tableCellSlotIds,
+	tableCellTextSlotIds,
 	TABLE_MIN_COLUMN_WIDTH,
 	TABLE_MIN_ROW_HEIGHT,
 	TableFeatures,
@@ -87,7 +87,7 @@ const isValidTableGrid = (o: StateRecord): boolean => {
 	if (!isObject(text)) {
 		return false;
 	}
-	const cellIds = tableCellSlotIds(o.rows.length, o.columns.length);
+	const cellIds = tableCellTextSlotIds(o.rows.length, o.columns.length);
 	const keys = Object.keys(text);
 	if (keys.length !== cellIds.length) {
 		return false;

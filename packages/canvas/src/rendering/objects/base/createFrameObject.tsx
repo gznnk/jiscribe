@@ -65,7 +65,7 @@ type FrameRenderState = ObjectState &
  */
 export type FrameTextOverlayProps = {
 	/** Which slot is being drawn: a key of `state.text`. Single-slot shapes ignore it. */
-	slotId: string;
+	textSlotId: string;
 	/** Text region left edge in local coordinates (shape center as origin). */
 	x: number;
 	/** Text region top edge in local coordinates (shape center as origin). */
@@ -126,7 +126,7 @@ export type FrameTextOverlayRenderer = (
  * single body slot, a "slots" type draws one overlay per key of `state.text` (the
  * authority on which slots the shape has). Each overlay is placed by the type's calculator in
  * ObjectTextRegionRegistry via `calcTextRegion` (unregistered = full bbox).
- * Editing blanks only the slot the editor is over (`editingSlotId`), so a
+ * Editing blanks only the slot the editor is over (`editingTextSlotId`), so a
  * multi-slot shape keeps showing the rest.
  *
  * `renderTextOverlay` swaps out how the text is drawn while keeping every shared
@@ -146,34 +146,41 @@ export const createFrameObject = <TState extends FrameRenderState>(
 ): React.FC<TState & TextEditable> => {
 	// One overlay of one slot, as a component (keyed by slot id) rather than a
 	// render helper, so the joined body below can live in a per-slot useMemo.
-	const SlotOverlay: React.FC<{
+	const TextSlotOverlay: React.FC<{
 		state: TState;
-		slotId: string;
-		slot: TextSlot;
+		textSlotId: string;
+		textSlot: TextSlot;
 		/** The shape's SVG transform matrix, already built by FrameObject. */
 		transform: string;
 		/** True while the in-place editor is open on this very slot. */
 		isEditing: boolean;
-	}> = ({ state, slotId, slot, transform, isEditing }) => {
+	}> = ({ state, textSlotId, textSlot, transform, isEditing }) => {
 		const textRegionCalculator = useObjectTextRegionRegistry().get(state.type);
 		const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 
-		const textRegion = calcTextRegion(state, slotId, textRegionCalculator);
+		const textRegion = calcTextRegion(state, textSlotId, textRegionCalculator);
 		// The type's own defaults for this slot stand in for whatever the slot
 		// leaves unset, the same resolution the editing surface and text
 		// measurement make.
-		const style = textStyleDefaults.resolveSlotStyle(state.type, slotId, slot);
+		const style = textStyleDefaults.resolveTextSlotStyle(
+			state.type,
+			textSlotId,
+			textSlot,
+		);
 		// The single body the slot draws as (the rows form is "\n"-joined, see
 		// readRichTextSlot). Joining builds a fresh value, so it is held per slot
 		// keyed on the content: a re-render that did not touch this slot's text
 		// passes the same `text` identity on and keeps TextOverlay's memo intact.
 		const text = useMemo<RichText>(
-			() => (isTextRows(slot.text) ? joinRichTextLines(slot.text) : slot.text),
-			[slot.text],
+			() =>
+				isTextRows(textSlot.text)
+					? joinRichTextLines(textSlot.text)
+					: textSlot.text,
+			[textSlot.text],
 		);
 
 		const overlayProps: FrameTextOverlayProps = {
-			slotId,
+			textSlotId,
 			x: textRegion.x,
 			y: textRegion.y,
 			width: textRegion.width,
@@ -213,7 +220,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeOpacity,
 			text,
 			isEditing = false,
-			editingSlotId,
+			editingTextSlotId,
 		} = props;
 
 		const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
@@ -228,7 +235,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			},
 		);
 
-		// Subscribed to, never read: `draw` and SlotOverlay measure text while they
+		// Subscribed to, never read: `draw` and TextSlotOverlay measure text while they
 		// render, and a context change is what gets past this component's memo when
 		// a face lands after the first paint.
 		useFontsLoadedNonceContext();
@@ -257,7 +264,8 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		// Only the slot the editor is over must go blank; a caller that names no
 		// slot is editing the shape as a whole.
 		const isEditingSlot = (slotId: string): boolean =>
-			isEditing && (editingSlotId === undefined || editingSlotId === slotId);
+			isEditing &&
+			(editingTextSlotId === undefined || editingTextSlotId === slotId);
 
 		// A root-form shape addresses its one slot by name rather than enumerating,
 		// so a malformed multi-slot state cannot overlap-draw; a missing body slot
@@ -268,21 +276,21 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			<>
 				{draw(props, shape)}
 				{isSingleBodyText(textType) && bodySlot !== undefined && (
-					<SlotOverlay
+					<TextSlotOverlay
 						state={props}
-						slotId={BODY_TEXT_SLOT_ID}
-						slot={bodySlot}
+						textSlotId={BODY_TEXT_SLOT_ID}
+						textSlot={bodySlot}
 						transform={transformAttr}
 						isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
 					/>
 				)}
 				{textType === "slots" &&
 					Object.entries(text ?? {}).map(([slotId, slot]) => (
-						<SlotOverlay
+						<TextSlotOverlay
 							key={slotId}
 							state={props}
-							slotId={slotId}
-							slot={slot}
+							textSlotId={slotId}
+							textSlot={slot}
 							transform={transformAttr}
 							isEditing={isEditingSlot(slotId)}
 						/>

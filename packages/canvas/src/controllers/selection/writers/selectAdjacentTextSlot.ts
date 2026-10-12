@@ -15,7 +15,7 @@ import { collectObjectPartIds } from "../readers/collectObjectPartIds";
 /** What a Tab step walks: the object, its `textSlot` definition and the slot order that definition lists. */
 type TextSlotCycle = {
 	target: ObjectState & TextStyleState;
-	slotPart: ObjectPartKindDefinition;
+	textSlotPart: ObjectPartKindDefinition;
 	textSlotIds: readonly string[];
 };
 
@@ -51,14 +51,14 @@ export const getTextSlotCycle = (
 	) {
 		return null;
 	}
-	const slotPart = objectPartKind.get(target.type, TEXT_SLOT_PART_KIND);
-	if (slotPart === undefined) {
+	const textSlotPart = objectPartKind.get(target.type, TEXT_SLOT_PART_KIND);
+	if (textSlotPart === undefined) {
 		throw new Error(
 			`getTextSlotCycle: no "${TEXT_SLOT_PART_KIND}" part kind is registered for "${target.type}", which holds text`,
 		);
 	}
-	const textSlotIds = slotPart.list?.(target) ?? [];
-	return textSlotIds.length > 1 ? { target, slotPart, textSlotIds } : null;
+	const textSlotIds = textSlotPart.list?.(target) ?? [];
+	return textSlotIds.length > 1 ? { target, textSlotPart, textSlotIds } : null;
 };
 
 /**
@@ -90,13 +90,13 @@ export const selectAdjacentTextSlot = (
 	if (cycle === null) {
 		return state;
 	}
-	const { target, slotPart, textSlotIds } = cycle;
+	const { target, textSlotPart, textSlotIds } = cycle;
 
 	// The object is the sole selection (getTextSlotCycle), so a slot pick
 	// is its own.
 	const { part } = state.selection;
 	const coveredIndices = isTextSlotPart(part)
-		? collectObjectPartIds(part, slotPart, target).map((slotId) =>
+		? collectObjectPartIds(part, textSlotPart, target).map((slotId) =>
 				textSlotIds.indexOf(slotId),
 			)
 		: [];

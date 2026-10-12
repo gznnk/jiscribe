@@ -39,7 +39,7 @@ export const graftTextEditDraft = (
 	if (openEdit?.kind !== "shape") {
 		return objects;
 	}
-	const { object: target, slotId } = openEdit;
+	const { object: target, textSlotId: slotId } = openEdit;
 	if (target.text === undefined) {
 		return objects;
 	}

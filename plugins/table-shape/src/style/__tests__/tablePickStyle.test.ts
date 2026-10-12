@@ -9,7 +9,7 @@ import type { ICanvasRegistries, StyleContext } from "@jiscribe/canvas-sdk";
 import { describe, expect, it } from "vitest";
 
 import { tablePlugin } from "../../plugin";
-import { tableCellSlotId } from "../../schema/TableDoc";
+import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
 
@@ -18,7 +18,7 @@ const TABLE = (() => {
 	const text: Record<string, TableCell> = {};
 	for (let row = 0; row < 2; row++) {
 		for (let column = 0; column < 3; column++) {
-			text[tableCellSlotId(row, column)] = { text: "" };
+			text[tableCellTextSlotId(row, column)] = { text: "" };
 		}
 	}
 	return {

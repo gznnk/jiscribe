@@ -11,9 +11,9 @@ import {
 	slotPickOf,
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
-import { runOrSlotEntry } from "../runOrSlotEntry";
+import { runOrTextSlotEntry } from "../runOrTextSlotEntry";
 
-const entry = runOrSlotEntry("fontColor");
+const entry = runOrTextSlotEntry("fontColor");
 
 const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;
@@ -22,7 +22,7 @@ const readTextSlots = (object: unknown): TextSlots =>
 const editing = (start: number, end: number, objectId = "a") =>
 	contextOf({ textEditRange: rangeOf(objectId, start, end) });
 
-describe("runOrSlotEntry with a stretch of text selected", () => {
+describe("runOrTextSlotEntry with a stretch of text selected", () => {
 	describe("apply", () => {
 		it("styles those characters alone, leaving the slot's own styling", () => {
 			const a = textRectOf("a", { body: { text: "hello", fontSize: 12 } });
@@ -95,7 +95,7 @@ describe("runOrSlotEntry with a stretch of text selected", () => {
 		it("an unstyled stretch of a slot stating nothing → its type's default", () => {
 			const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
 			textStyleDefaults.register("rect", {
-				bySlot: { body: { fontColor: "#222" } },
+				byTextSlot: { body: { fontColor: "#222" } },
 			});
 			const a = textRectOf("a", { body: { text: "hello" } });
 			expect(
@@ -119,7 +119,7 @@ describe("runOrSlotEntry with a stretch of text selected", () => {
 	});
 });
 
-describe("runOrSlotEntry with no stretch selected", () => {
+describe("runOrTextSlotEntry with no stretch selected", () => {
 	describe("apply", () => {
 		it("writes the slot and drops the property from the runs that overrode it", () => {
 			const a = textRectOf("a", {

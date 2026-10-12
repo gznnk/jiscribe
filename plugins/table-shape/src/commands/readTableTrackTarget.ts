@@ -13,7 +13,7 @@ import type {
 
 import { countTableTracks, parseTableTrackPartId } from "../grid/tableTrack";
 import type { TableAxis } from "../grid/tableTrack";
-import { parseTableCellSlotId, TableFeatures } from "../schema/TableDoc";
+import { parseTableCellTextSlotId, TableFeatures } from "../schema/TableDoc";
 import type { TableState } from "../state/TableState";
 
 /** The table a grid command acts on, and the tracks the live selection names on it. */
@@ -55,7 +55,7 @@ const collectReferencedTrackIndices = (
 	}
 	return partIds
 		.map((partId) => {
-			const cell = parseTableCellSlotId(partId);
+			const cell = parseTableCellTextSlotId(partId);
 			if (cell === null) {
 				return null;
 			}

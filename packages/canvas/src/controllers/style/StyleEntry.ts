@@ -147,7 +147,7 @@ export type TextEditRange = {
 	/** The object being edited; an entry compares it against the target it was handed. */
 	objectId: string;
 	/** The slot being edited; a key of that object's `text`. */
-	slotId: string;
+	textSlotId: string;
 	/** First selected offset. */
 	start: number;
 	/** First offset past the selection; always greater than `start`. */

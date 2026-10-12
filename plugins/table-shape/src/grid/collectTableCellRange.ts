@@ -1,4 +1,7 @@
-import { parseTableCellSlotId, tableCellSlotId } from "../schema/TableDoc";
+import {
+	parseTableCellTextSlotId,
+	tableCellTextSlotId,
+} from "../schema/TableDoc";
 import type { TableState } from "../state/TableState";
 
 /**
@@ -28,8 +31,8 @@ export const collectTableCellRange = (
 	anchorCellId: string,
 	focusCellId: string,
 ): string[] => {
-	const anchor = parseTableCellSlotId(anchorCellId);
-	const focus = parseTableCellSlotId(focusCellId);
+	const anchor = parseTableCellTextSlotId(anchorCellId);
+	const focus = parseTableCellTextSlotId(focusCellId);
 	if (anchor === null || focus === null) {
 		return [focusCellId];
 	}
@@ -42,7 +45,7 @@ export const collectTableCellRange = (
 			column <= lastColumn;
 			column++
 		) {
-			const cellId = tableCellSlotId(row, column);
+			const cellId = tableCellTextSlotId(row, column);
 			if (Object.prototype.hasOwnProperty.call(state.text, cellId)) {
 				cellIds.push(cellId);
 			}

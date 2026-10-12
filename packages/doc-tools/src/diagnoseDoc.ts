@@ -96,7 +96,7 @@ const resolveBodyStyleDefaults = (
 		definition.features,
 		definition.defaults,
 		definition.textSlotStyleDefaults,
-	)?.bySlot?.[BODY_TEXT_SLOT_ID];
+	)?.byTextSlot?.[BODY_TEXT_SLOT_ID];
 
 /**
  * The font the object's body is drawn with: what the document sets, over what

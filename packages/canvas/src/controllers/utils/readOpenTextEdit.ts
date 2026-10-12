@@ -21,7 +21,7 @@ export type OpenTextEdit =
 			/** The shape being edited, as it stands in the `objects` map that was read. */
 			object: ObjectState & TextStyleState;
 			/** The slot being edited; a key of `object.text`. */
-			slotId: string;
+			textSlotId: string;
 			/** The draft body, styling included (see `textEditState`). */
 			text: RichText;
 			/** What the editor has selected, in UTF-16 offsets of `text`; absent until it has reported once. */
@@ -113,7 +113,7 @@ export const readOpenTextEdit = (
 	return {
 		kind: "shape",
 		object: owner,
-		slotId,
+		textSlotId: slotId,
 		text: textEditState.text,
 		selection: textEditState.selection,
 	};

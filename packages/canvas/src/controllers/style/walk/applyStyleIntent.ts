@@ -38,7 +38,7 @@ const redraftTextEdit = (
 	if (textEditState?.kind !== "shape" || slots === undefined) {
 		return undefined;
 	}
-	const content = readRichTextSlot(slots, textEdit.slotId);
+	const content = readRichTextSlot(slots, textEdit.textSlotId);
 	if (isSameRichText(content, textEdit.draft)) {
 		return undefined;
 	}

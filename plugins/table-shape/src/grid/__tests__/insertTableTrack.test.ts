@@ -4,7 +4,10 @@ import {
 } from "@jiscribe/canvas-sdk/doc";
 import { describe, expect, it } from "vitest";
 
-import { tableCellSlotId, tableCellSlotIds } from "../../schema/TableDoc";
+import {
+	tableCellTextSlotId,
+	tableCellTextSlotIds,
+} from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
 import { insertTableTrack } from "../insertTableTrack";
@@ -18,7 +21,7 @@ const cellsOf = (rows: string[][]): Record<string, TableCell> => {
 	const cells: Record<string, TableCell> = {};
 	rows.forEach((row, rowIndex) => {
 		row.forEach((text, columnIndex) => {
-			cells[tableCellSlotId(rowIndex, columnIndex)] = { text };
+			cells[tableCellTextSlotId(rowIndex, columnIndex)] = { text };
 		});
 	});
 	return cells;
@@ -29,7 +32,7 @@ const readGrid = (state: TableState): string[][] =>
 	state.rows.map((_row, rowIndex) =>
 		state.columns.map(
 			(_column, columnIndex) =>
-				state.text[tableCellSlotId(rowIndex, columnIndex)].text as string,
+				state.text[tableCellTextSlotId(rowIndex, columnIndex)].text as string,
 		),
 	);
 
@@ -70,7 +73,7 @@ describe("insertTableTrack", () => {
 			["r1c0", "r1c1", "r1c2"],
 		]);
 		// The key set is the invariant: exactly the grid's ids, in row-major order.
-		expect(Object.keys(inserted.text)).toEqual(tableCellSlotIds(3, 3));
+		expect(Object.keys(inserted.text)).toEqual(tableCellTextSlotIds(3, 3));
 	});
 
 	it("renumbers every cell right of an inserted column", () => {
@@ -81,7 +84,7 @@ describe("insertTableTrack", () => {
 			["r0c0", "", "r0c1", "r0c2"],
 			["r1c0", "", "r1c1", "r1c2"],
 		]);
-		expect(Object.keys(inserted.text)).toEqual(tableCellSlotIds(2, 4));
+		expect(Object.keys(inserted.text)).toEqual(tableCellTextSlotIds(2, 4));
 	});
 
 	it("keeps the rows' stored bounds with the rows they belong to", () => {
@@ -139,6 +142,6 @@ describe("insertTableTrack", () => {
 
 		expect(table.rows).toHaveLength(2);
 		expect(table.columns).toHaveLength(3);
-		expect(Object.keys(table.text)).toEqual(tableCellSlotIds(2, 3));
+		expect(Object.keys(table.text)).toEqual(tableCellTextSlotIds(2, 3));
 	});
 });

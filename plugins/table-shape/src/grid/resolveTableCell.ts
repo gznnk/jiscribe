@@ -1,10 +1,10 @@
-import { tableCellSlotId } from "../schema/TableDoc";
+import { tableCellTextSlotId } from "../schema/TableDoc";
 import type { TableCell } from "../schema/TableDoc";
 import type { TableState } from "../state/TableState";
 
 /**
  * One cell of a table, or an empty one for a position the grid claims and
- * `state.text` has no entry at — the same reading mapCellsToSlots gives a
+ * `state.text` has no entry at — the same reading mapCellsToTextSlots gives a
  * document that came up short, so a grid rebuilt from a state can never be left
  * holding `undefined`.
  *
@@ -17,4 +17,4 @@ export const resolveTableCell = (
 	state: TableState,
 	row: number,
 	column: number,
-): TableCell => state.text[tableCellSlotId(row, column)] ?? { text: "" };
+): TableCell => state.text[tableCellTextSlotId(row, column)] ?? { text: "" };

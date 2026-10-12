@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { TableCell } from "../../schema/TableDoc";
-import { tableCellSlotIds } from "../../schema/TableDoc";
+import { tableCellTextSlotIds } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
 import { collectTableCellRange } from "../collectTableCellRange";
 
 /** A grid of empty cells; only `text` is read, the box playing no part in a range. */
 const makeTable = (rowCount: number, columnCount: number): TableState => {
 	const text: Record<string, TableCell> = {};
-	for (const cellId of tableCellSlotIds(rowCount, columnCount)) {
+	for (const cellId of tableCellTextSlotIds(rowCount, columnCount)) {
 		text[cellId] = { text: "" };
 	}
 	return { id: "t-1", type: "table", text } as unknown as TableState;

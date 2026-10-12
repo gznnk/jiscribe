@@ -59,7 +59,7 @@ const makeState = (
 		selection: selectionOf(["rec-1"], part),
 	}) as unknown as CanvasControllerState;
 
-const NAME_SLOT_PICK: ObjectPartSelection = {
+const NAME_TEXT_SLOT_PICK: ObjectPartSelection = {
 	kind: TEXT_SLOT_PART_KIND,
 	ranges: [{ anchorId: "name", focusId: "name" }],
 };
@@ -96,7 +96,7 @@ describe("getMenuSections", () => {
 	});
 
 	it("keeps only the text items once a slot is selected", () => {
-		const state = makeState(NAME_SLOT_PICK);
+		const state = makeState(NAME_TEXT_SLOT_PICK);
 		expect(getMenuSections(state, registry, partKindRegistry)).toEqual([
 			{
 				id: "text",
@@ -110,7 +110,7 @@ describe("getMenuSections", () => {
 	});
 
 	it("keeps an item whose every kind the picked kind receives", () => {
-		const state = makeState(NAME_SLOT_PICK, "filled-record");
+		const state = makeState(NAME_TEXT_SLOT_PICK, "filled-record");
 		expect(getMenuSections(state, registry, partKindRegistry)).toEqual([
 			{ id: "style", items: [{ type: "backgroundColor" }] },
 			{
@@ -126,7 +126,7 @@ describe("getMenuSections", () => {
 
 	it("keeps it while the picked slot is being edited", () => {
 		const state = {
-			...makeState(NAME_SLOT_PICK, "filled-record"),
+			...makeState(NAME_TEXT_SLOT_PICK, "filled-record"),
 			textEditState: { kind: "shape" },
 		} as unknown as CanvasControllerState;
 		expect(

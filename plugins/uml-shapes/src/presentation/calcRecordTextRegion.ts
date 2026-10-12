@@ -1,8 +1,8 @@
 import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
 import type { Rect } from "@jiscribe/geometry";
 
-import { calcRecordSlotRegions } from "./calcRecordSlotRegions";
-import type { RecordSlotRegionsState } from "./calcRecordSlotRegions";
+import { calcRecordTextSlotRegions } from "./calcRecordTextSlotRegions";
+import type { RecordTextSlotRegionsState } from "./calcRecordTextSlotRegions";
 
 /**
  * Places one text slot of a record. Registered per type, so display (TextOverlay)
@@ -14,9 +14,9 @@ import type { RecordSlotRegionsState } from "./calcRecordSlotRegions";
  * band, which would draw the text somewhere plausible and hide the breakage.
  */
 export const calcRecordTextRegion: ObjectTextRegionCalculator<
-	RecordSlotRegionsState
+	RecordTextSlotRegionsState
 > = (state, slotId) => {
-	const regions = calcRecordSlotRegions(state);
+	const regions = calcRecordTextSlotRegions(state);
 	const bySlotId: Record<string, Rect | undefined> = regions;
 	const region = bySlotId[slotId];
 	if (region === undefined) {

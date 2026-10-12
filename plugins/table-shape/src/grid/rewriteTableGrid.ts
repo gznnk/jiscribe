@@ -1,5 +1,5 @@
 import { calcTableFrameSize } from "../layout/calcTableFrameSize";
-import { tableCellSlotId } from "../schema/TableDoc";
+import { tableCellTextSlotId } from "../schema/TableDoc";
 import type {
 	TableCell,
 	TableColumnDoc,
@@ -10,7 +10,7 @@ import type { TableState } from "../state/TableState";
 
 /**
  * The state with a new grid on it: the tracks as given, `text` rebuilt from
- * `cellAt` so its keys are exactly `tableCellSlotIds(rows.length,
+ * `cellAt` so its keys are exactly `tableCellTextSlotIds(rows.length,
  * columns.length)`, and the box re-derived from the result.
  *
  * **The one place a track is added or removed.** The grid's invariant — the key
@@ -40,7 +40,7 @@ export const rewriteTableGrid = (
 	const text: Record<string, TableCell> = {};
 	for (let row = 0; row < rows.length; row++) {
 		for (let column = 0; column < columns.length; column++) {
-			text[tableCellSlotId(row, column)] = cellAt(row, column);
+			text[tableCellTextSlotId(row, column)] = cellAt(row, column);
 		}
 	}
 	const rewritten: TableState = { ...state, rows, columns, text };

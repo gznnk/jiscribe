@@ -13,8 +13,8 @@ import {
 
 import type { TableState } from "./TableState";
 import { calcTableFrameSize } from "../layout/calcTableFrameSize";
-import { mapCellsToSlots } from "../schema/mapCellsToSlots";
-import { tableCellSlotId, TableFeatures } from "../schema/TableDoc";
+import { mapCellsToTextSlots } from "../schema/mapCellsToTextSlots";
+import { tableCellTextSlotId, TableFeatures } from "../schema/TableDoc";
 import type {
 	TableCell,
 	TableCellDoc,
@@ -60,13 +60,13 @@ const isTextOnlyCell = (cell: TableCell): boolean =>
 	cell.fill === undefined &&
 	TEXT_SLOT_STYLE_KEYS.every((key) => cell[key] === undefined);
 
-/** The inverse of {@link mapCellsToSlots}, folding every unstyled cell to its text. */
-const mapSlotsToCells = (state: TableState): TableCellDoc[][] => {
+/** The inverse of {@link mapCellsToTextSlots}, folding every unstyled cell to its text. */
+const mapTextSlotsToCells = (state: TableState): TableCellDoc[][] => {
 	const cells: TableCellDoc[][] = [];
 	for (let row = 0; row < state.rows.length; row++) {
 		const rowCells: TableCellDoc[] = [];
 		for (let column = 0; column < state.columns.length; column++) {
-			const cell = state.text[tableCellSlotId(row, column)];
+			const cell = state.text[tableCellTextSlotId(row, column)];
 			if (cell === undefined) {
 				rowCells.push("");
 				continue;
@@ -103,7 +103,11 @@ export const tableToState: ObjectMapperType<TableDoc, TableState>["toState"] = (
 ) => {
 	const columns = cloneColumns(doc.columns);
 	const rows = cloneRows(doc.rows);
-	const text = mapCellsToSlots(doc.cells, doc.rows.length, doc.columns.length);
+	const text = mapCellsToTextSlots(
+		doc.cells,
+		doc.rows.length,
+		doc.columns.length,
+	);
 	const transform = mapTransformDocToState(doc);
 	const size = calcTableFrameSize({
 		columns,
@@ -158,6 +162,6 @@ export const tableToDoc: ObjectMapperType<TableDoc, TableState>["toDoc"] = (
 		y: roundDocCoordinate(drawnTopLeft.y),
 		columns: cloneColumns(state.columns),
 		rows: cloneRows(state.rows),
-		cells: mapSlotsToCells(state),
+		cells: mapTextSlotsToCells(state),
 	} as TableDoc;
 };

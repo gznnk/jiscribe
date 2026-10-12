@@ -1,6 +1,6 @@
 import { isRichText, normalizeRichText } from "@jiscribe/doc";
 
-import { tableCellSlotId } from "./TableDoc";
+import { tableCellTextSlotId } from "./TableDoc";
 import type { TableCell, TableCellDoc } from "./TableDoc";
 
 /**
@@ -33,7 +33,7 @@ const normalizeCell = (cell: TableCellDoc | undefined): TableCell => {
  * @param columnCount - Columns the axes claim, likewise `columns.length`
  * @returns A fresh map, one entry per grid position, its key order row-major
  */
-export const mapCellsToSlots = (
+export const mapCellsToTextSlots = (
 	cells: readonly (readonly TableCellDoc[])[],
 	rowCount: number,
 	columnCount: number,
@@ -41,7 +41,9 @@ export const mapCellsToSlots = (
 	const slots: Record<string, TableCell> = {};
 	for (let row = 0; row < rowCount; row++) {
 		for (let column = 0; column < columnCount; column++) {
-			slots[tableCellSlotId(row, column)] = normalizeCell(cells[row]?.[column]);
+			slots[tableCellTextSlotId(row, column)] = normalizeCell(
+				cells[row]?.[column],
+			);
 		}
 	}
 	return slots;

@@ -14,7 +14,7 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	 * Slot of `textEditObjectId` the editor is over. Passed on so a multi-slot
 	 * shape hides only that slot's text while the editor covers it.
 	 */
-	textEditSlotId?: string | null;
+	editingTextSlotId?: string | null;
 	/**
 	 * Viewport culling (issue #212): when set, only these IDs are rendered.
 	 * Omit to render the full tree — required for paths that need every object
@@ -36,7 +36,7 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
 	rootIds,
 	textEditObjectId,
-	textEditSlotId,
+	editingTextSlotId,
 	visibleObjectIds,
 }) => {
 	const objectComponentRegistry = useObjectComponentRegistry();
@@ -100,7 +100,9 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 					isEditing={isEditing}
 					// Only the edited object receives the slot id; for the rest the prop
 					// stays undefined so starting/ending an edit does not break their memo.
-					editingSlotId={isEditing ? (textEditSlotId ?? undefined) : undefined}
+					editingTextSlotId={
+						isEditing ? (editingTextSlotId ?? undefined) : undefined
+					}
 				/>
 			</ObjectRenderBoundary>,
 		);

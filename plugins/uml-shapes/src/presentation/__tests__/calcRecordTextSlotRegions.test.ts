@@ -5,10 +5,10 @@ import { describe, it, expect } from "vitest";
 import {
 	calcRecordListHeight,
 	RECORD_BAND_HEIGHT,
-	RECORD_SLOT_STYLE_DEFAULTS,
+	RECORD_TEXT_SLOT_STYLE_DEFAULTS,
 } from "../../schema/RecordDoc";
-import { calcRecordSlotRegions } from "../calcRecordSlotRegions";
 import { calcRecordTextRegion } from "../calcRecordTextRegion";
+import { calcRecordTextSlotRegions } from "../calcRecordTextSlotRegions";
 
 /**
  * A text band's slot (the stereotype, the title). Its height is derived through
@@ -19,14 +19,14 @@ import { calcRecordTextRegion } from "../calcRecordTextRegion";
  * wrapping cases below are written against.
  */
 const bandSlot = (text: string, style: Partial<TextSlot> = {}): TextSlot => ({
-	...RECORD_SLOT_STYLE_DEFAULTS,
+	...RECORD_TEXT_SLOT_STYLE_DEFAULTS,
 	...style,
 	text,
 });
 
 /** A compartment slot holding the given rows. */
 const listSlot = (rows: string[], style: Partial<TextSlot> = {}): TextSlot => ({
-	...RECORD_SLOT_STYLE_DEFAULTS,
+	...RECORD_TEXT_SLOT_STYLE_DEFAULTS,
 	...style,
 	text: rows,
 });
@@ -43,9 +43,9 @@ const titleAndAttributes = (
 /** Height of one line of text at the given size, without the band's padding. */
 const lineHeightOf = (fontSize: number): number => fontSize * TEXT_LINE_HEIGHT;
 
-describe("calcRecordSlotRegions", () => {
+describe("calcRecordTextSlotRegions", () => {
 	it("gives the band the whole box when the title is the only slot", () => {
-		const regions = calcRecordSlotRegions({ width: 180, height: 100 });
+		const regions = calcRecordTextSlotRegions({ width: 180, height: 100 });
 		expect(regions.name).toEqual({
 			x: -90,
 			y: -50,
@@ -57,7 +57,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("puts the title band across the top and the compartment under it", () => {
-		const { name, attributes } = calcRecordSlotRegions({
+		const { name, attributes } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 100,
 			text: titleAndAttributes(""),
@@ -77,7 +77,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("a one-line title at the default size keeps the default band height", () => {
-		const { name } = calcRecordSlotRegions({
+		const { name } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 100,
 			text: titleAndAttributes("User"),
@@ -86,7 +86,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("a larger fontSize grows the band by that line height", () => {
-		const { name, attributes } = calcRecordSlotRegions({
+		const { name, attributes } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 200,
 			text: titleAndAttributes("User", { fontSize: 28 }),
@@ -100,7 +100,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("an authored newline in the title adds a line to the band", () => {
-		const { name } = calcRecordSlotRegions({
+		const { name } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 200,
 			text: titleAndAttributes("User\nAccount"),
@@ -111,7 +111,7 @@ describe("calcRecordSlotRegions", () => {
 	it("a title too long for the width wraps and grows the band", () => {
 		// Two 10-character words: 21 characters = 176.4px, past the 168px the box
 		// leaves, and the word boundary puts the second word on its own line.
-		const { name } = calcRecordSlotRegions({
+		const { name } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 200,
 			text: titleAndAttributes("aaaaaaaaaa aaaaaaaaaa"),
@@ -120,7 +120,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("the same title in a wider box stays on one line", () => {
-		const { name } = calcRecordSlotRegions({
+		const { name } = calcRecordTextSlotRegions({
 			width: 400,
 			height: 200,
 			text: titleAndAttributes("aaaaaaaaaa aaaaaaaaaa"),
@@ -129,7 +129,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("leaves no gap and no overlap between the compartments", () => {
-		const { name, attributes } = calcRecordSlotRegions({
+		const { name, attributes } = calcRecordTextSlotRegions({
 			width: 120,
 			height: 90,
 			text: titleAndAttributes(""),
@@ -139,7 +139,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("shrinks the band rather than giving the compartment a negative height", () => {
-		const { name, attributes } = calcRecordSlotRegions({
+		const { name, attributes } = calcRecordTextSlotRegions({
 			width: 120,
 			height: 10,
 			text: titleAndAttributes(""),
@@ -149,7 +149,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("clamps a grown band to the box height too", () => {
-		const { name, attributes } = calcRecordSlotRegions({
+		const { name, attributes } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 40,
 			text: titleAndAttributes("User\nAccount\nRecord"),
@@ -159,16 +159,17 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("stacks the stereotype above the title and the compartments below both", () => {
-		const { stereotype, name, attributes, operations } = calcRecordSlotRegions({
-			width: 180,
-			height: 200,
-			text: {
-				stereotype: bandSlot("<<interface>>"),
-				name: bandSlot("Repository"),
-				attributes: listSlot(["id: string"]),
-				operations: listSlot(["save()"]),
-			},
-		});
+		const { stereotype, name, attributes, operations } =
+			calcRecordTextSlotRegions({
+				width: 180,
+				height: 200,
+				text: {
+					stereotype: bandSlot("<<interface>>"),
+					name: bandSlot("Repository"),
+					attributes: listSlot(["id: string"]),
+					operations: listSlot(["save()"]),
+				},
+			});
 		expect(stereotype).toEqual({
 			x: -90,
 			y: -100,
@@ -197,7 +198,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("sizes a middle compartment to its rows and leaves the rest to the bottom one", () => {
-		const { name, attributes, operations } = calcRecordSlotRegions({
+		const { name, attributes, operations } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 200,
 			text: {
@@ -218,7 +219,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("a larger fontSize on a compartment grows its share of the box", () => {
-		const { attributes, operations } = calcRecordSlotRegions({
+		const { attributes, operations } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 300,
 			text: {
@@ -240,7 +241,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("keeps an empty middle compartment one row tall", () => {
-		const { attributes } = calcRecordSlotRegions({
+		const { attributes } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 200,
 			text: {
@@ -253,7 +254,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("takes the compartments in order, leaving the bottom one nothing when the box runs out", () => {
-		const { name, attributes, operations } = calcRecordSlotRegions({
+		const { name, attributes, operations } = calcRecordTextSlotRegions({
 			width: 180,
 			height: 60,
 			text: {
@@ -268,7 +269,7 @@ describe("calcRecordSlotRegions", () => {
 	});
 
 	it("never lets the compartments overrun the box, whatever they ask for", () => {
-		const regions = calcRecordSlotRegions({
+		const regions = calcRecordTextSlotRegions({
 			width: 180,
 			height: 45,
 			text: {
@@ -292,7 +293,7 @@ describe("calcRecordTextRegion", () => {
 			height: 100,
 			text: titleAndAttributes(""),
 		};
-		const regions = calcRecordSlotRegions(state);
+		const regions = calcRecordTextSlotRegions(state);
 		expect(calcRecordTextRegion(state, "name")).toEqual(regions.name);
 		expect(calcRecordTextRegion(state, "attributes")).toEqual(
 			regions.attributes,
@@ -323,7 +324,7 @@ describe("calcRecordTextRegion", () => {
 			height: 200,
 			text: titleAndAttributes("User\nAccount"),
 		};
-		const regions = calcRecordSlotRegions(state);
+		const regions = calcRecordTextSlotRegions(state);
 		expect(calcRecordTextRegion(state, "attributes")).toEqual(
 			regions.attributes,
 		);
