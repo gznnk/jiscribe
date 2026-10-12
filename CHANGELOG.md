@@ -13,6 +13,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Security
+
+- **A long `markdown` card no longer stalls the page.** `@jiscribe/markdown`
+  renders with markdown-it's `linkify` on, and markdown-it 15.0.0 spent
+  quadratic time there, so a few hundred KB of text could block the event loop
+  for tens of seconds. It is now on 15.0.2.
+
 ### Added
 
 - **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
