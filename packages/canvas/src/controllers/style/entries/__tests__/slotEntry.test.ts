@@ -1,29 +1,45 @@
 import { describe, expect, it } from "vitest";
 
-import { createTestRegistries } from "../../../registries/createCanvasRegistries";
-import {
-	contextOf,
-	rectOf,
-	slotPickOf,
-} from "../../__tests__/support/styleFixtures";
-import { selectedSlotIds } from "../slotEntry";
+import type { TextSlots } from "../../../../states/objects/types/TextSlots";
+import { createObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
+import { contextOf, textRectOf } from "../../__tests__/support/styleFixtures";
+import { slotEntry } from "../slotEntry";
 
-// The bundle applyObjectDefinition built, rather than a hand-made registry: the
-// rect's textSlot kind is the one it registers for every text-holding type.
-const { objectPartKind } = createTestRegistries();
+const entry = slotEntry<ReturnType<typeof textRectOf>, string>(
+	"textAlign",
+	(slot, value) => ({ ...slot, textAlign: value as "left" }),
+);
 
-describe("selectedSlotIds", () => {
-	it("resolves a rect's body pick through the registered textSlot kind", () => {
-		const rect = rectOf("a", { text: { body: { text: "hi" } } });
-		expect(
-			selectedSlotIds(rect, slotPickOf("body"), contextOf({ objectPartKind })),
-		).toEqual(["body"]);
+/** A kind of the rect's own whose every pick reaches the `rows` slot alone. */
+const objectPartKind = createObjectPartKindRegistry();
+objectPartKind.register("rect", [
+	{ kind: "band", has: () => true, slotIds: () => ["rows"] },
+]);
+const bandPick = { kind: "band", ranges: [{ anchorId: "0", focusId: "0" }] };
+
+const keyedRect = () =>
+	textRectOf("a", { name: { text: "User" }, rows: { text: ["id"] } });
+
+describe("slotEntry", () => {
+	it("writes the slots the picked kind reaches, and no other", () => {
+		const updated = entry.apply(
+			keyedRect(),
+			bandPick,
+			"right",
+			contextOf({ objectPartKind }),
+		);
+		const slots = (updated as unknown as { text: TextSlots }).text;
+		expect(slots.rows.textAlign).toBe("right");
+		expect(slots.name.textAlign).toBeUndefined();
 	});
 
-	it("addresses the rect's body with nothing picked, as before", () => {
-		const rect = rectOf("a", { text: { body: { text: "hi" } } });
-		expect(selectedSlotIds(rect, null, contextOf({ objectPartKind }))).toEqual([
-			"body",
+	it("reads the slots the picked kind reaches, one value per slot", () => {
+		expect(
+			entry.read(keyedRect(), bandPick, contextOf({ objectPartKind })),
+		).toEqual([undefined]);
+		expect(entry.read(keyedRect(), null, contextOf())).toEqual([
+			undefined,
+			undefined,
 		]);
 	});
 });

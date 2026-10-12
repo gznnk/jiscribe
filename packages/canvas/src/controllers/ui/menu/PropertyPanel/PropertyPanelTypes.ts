@@ -57,7 +57,7 @@ export type PropertyPanelBuiltinItem = { type: PropertyPanelBuiltinItemKey };
  *
  * The id is what the multi-type merge matches the row by, so two types offering
  * the same row have to spell it the same way. A row that is not slot-aware needs
- * no opt-out: the text-slot narrowing drops every custom row.
+ * no opt-out: the narrowing under a picked part drops every custom row.
  */
 export type PropertyPanelCustomItem = {
 	type: "custom";

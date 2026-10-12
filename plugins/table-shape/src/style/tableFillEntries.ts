@@ -1,7 +1,6 @@
-import { objectFieldEntry } from "@jiscribe/canvas-sdk";
+import { objectFieldEntry, resolveSlotIds } from "@jiscribe/canvas-sdk";
 import type { DeclaredStyleEntry } from "@jiscribe/canvas-sdk";
 
-import { tableSelectedSlotIds } from "./tableSelectedSlotIds";
 import type { TableCell } from "../schema/TableDoc";
 import { UNFILLED_CELL_FILL } from "../schema/TableDoc";
 import type { TableState } from "../state/TableState";
@@ -12,7 +11,8 @@ const tableBackgroundFillEntry = objectFieldEntry<TableState, "fill">("fill");
 /**
  * Fill, following the selection: with nothing picked inside the table it is the
  * table's own background, as derived; with cells, rows or columns picked it is
- * the `fill` of those cells (tableSelectedSlotIds), each read on its own so cells
+ * the `fill` of those cells (resolveSlotIds, which asks the picked kind), each
+ * read on its own so cells
  * that disagree report as mixed.
  *
  * A cell is never given its `fill` back to omitted from here: the transparent
@@ -23,7 +23,7 @@ export const tableFillEntry: DeclaredStyleEntry<TableState, string> = {
 		if (pick === null) {
 			return tableBackgroundFillEntry.apply(table, pick, color, ctx);
 		}
-		const cellIds = tableSelectedSlotIds(table, pick, ctx);
+		const cellIds = resolveSlotIds(table, pick, ctx);
 		if (cellIds.length === 0) {
 			return null;
 		}
@@ -44,7 +44,7 @@ export const tableFillEntry: DeclaredStyleEntry<TableState, string> = {
 			return tableBackgroundFillEntry.read(table, pick, ctx);
 		}
 		const fills: string[] = [];
-		for (const cellId of tableSelectedSlotIds(table, pick, ctx)) {
+		for (const cellId of resolveSlotIds(table, pick, ctx)) {
 			const cell = table.text[cellId];
 			if (cell !== undefined) {
 				fills.push(cell.fill ?? UNFILLED_CELL_FILL);

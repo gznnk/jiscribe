@@ -36,7 +36,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **A table's cells can be given a background from the Fill control.** The one
   Fill control in the menu and the sidebar follows the selection: with cells, a
   row or a column picked it paints those cells, and with the table alone
-  selected it paints the table's own background. Picked cells that disagree
+  selected it paints the table's own background. With cells, a row or a column
+  picked, the menu and the sidebar offer what reaches those cells — their text
+  and their background — and nothing else. Picked cells that disagree
   show as mixed, and the transparent swatch clears a cell so the table's
   background shows through again.
 - **A table's column and row boundaries can be dragged.** Grabbing the rule
@@ -68,10 +70,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   to say it edited the document — the COMMAND path never advances `commitVersion`
   itself; `createTextSlotPartKindDefinition` and `TEXT_SLOT_PART_KIND`, so a type
   declaring its own `"textSlot"` kind can spread the derived one and add a `range`
-  or a `delete`; and `declaredTextStyleTable(textType, slotIdsOf)`, the text half of
-  the derived style table declared again over a type's own `slotIdsOf`, for a type
-  whose picks reach slots in a way core does not know (a table's rows and
-  columns).
+  or a `delete`; and `resolveSlotIds(object, pick, ctx)` with
+  `TEXT_STYLE_INTENT_KINDS`, the slots a pick reaches as its kind declares them
+  and the text kinds a part reaching text receives, for a type's own entry that
+  writes where a pick reaches (a table's cell fill) and for its part kinds'
+  `styleIntentKinds`.
 - **A Shift-click selects a run of compartments.** With one compartment of a
   slot-based shape picked (a UML record's name, attributes or operations), a
   Shift-click on another picks every compartment from the first to the one
@@ -87,7 +90,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   is also the order a Shift-click range is resolved over by default. `range` is
   for a type whose parts are not laid out in one line, such as a table's cells:
   it answers which parts a range from an anchor to a focus covers, every id
-  passing `has`, in the type's own order, and never empty. A reader turns the
+  passing `has`, in the type's own order, and never empty. Two more say what a
+  pick of the kind is styled through: `slotIds` names the text slots the picked
+  parts reach, which the core text entries write and read (a table row reaches
+  its cells; omitted, every slot), and `styleIntentKinds` names the style kinds a pick
+  receives, which the ObjectMenu and the sidebar narrow to while one is picked,
+  dropping custom items and the system and Meta sections with the rest (omitted,
+  as for `vertex`, the object stays the subject of every control). The
+  `"textSlot"` kind core registers declares its own slots and the text kinds. A reader turns the
   stored ranges into ids through `collectObjectPartIds`, and finds the part the
   active range ends on through `readActivePartFocusId`, both on
   `@jiscribe/canvas/unstable`. The style walk resolves a slot pick the same way,
@@ -311,14 +321,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   are gone from `@jiscribe/doc`. A row reads its own kind typed from that
   declaration — `useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")` — instead of
   narrowing an `unknown` with a guard of its own.
-- **For plugin authors: a core kind a type redeclares in `styleEntries` stays in
-  the menu and the sidebar while a text slot is picked.** Picking a text slot,
-  or editing a shape's text, used to narrow both to their text controls alone.
-  A built-in control whose every style kind the picked object's type declares
-  itself now stays as well, since the type has said where that kind lands under
-  a pick — the table's background color with a cell picked is the case it
-  exists for. Types that declare no core kind narrow exactly as before, and
-  custom items and rows are still dropped.
+- **For plugin authors: the menu and the sidebar narrow to what the picked part
+  receives.** Picking a text slot, or editing a shape's text, used to narrow both
+  to their text controls alone, whatever the type. They now keep the built-in
+  controls whose every style kind the picked part kind declares in its
+  `styleIntentKinds` — the text kinds for core's `"textSlot"`, so a type adding
+  nothing narrows exactly as before, and the text kinds and `fill` for a table's
+  cells, rows and columns, which is what keeps its background color there.
+  Custom items and rows are still dropped.
 - **For plugin authors: a text edit is opened on the selection, not alongside
   it.** `textEditState` no longer names its own object or slot: it carries the
   draft and nothing else, and what is being edited is `selection` — the lone

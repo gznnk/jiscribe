@@ -4,7 +4,8 @@ import { TextFormatMenuContent } from "./TextFormatMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { isTextSlotPart } from "../../../../../selection/partKinds/textSlotPartKind";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { readPickedStyleIntentKinds } from "../../../../../selection/readers/readPickedStyleIntentKinds";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
@@ -29,8 +30,8 @@ type TextFormatMenuProps = {
  * Each button coordinates with the gesture system via data attributes, writing
  * the value the press should land on rather than a toggle command.
  *
- * While the focus is on text — a slot selected below the object, or an inline edit
- * session — the four buttons are laid out flat in the menu itself: formatting is the
+ * While a picked part narrows the menu — a slot selected below the object, an
+ * inline edit session, a table row (readPickedStyleIntentKinds) — the four buttons are laid out flat in the menu itself: formatting is the
  * main thing the menu is there for at that moment, and a dropdown would cost a press
  * per toggle.
  */
@@ -38,6 +39,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
+	const { objectPartKind } = useCanvasRegistries();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -89,7 +91,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		</ObjectMenuButton>
 	);
 
-	if (isTextSlotPart(canvasState.selection.part)) {
+	if (readPickedStyleIntentKinds(canvasState, objectPartKind) !== null) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}
 

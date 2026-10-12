@@ -5,9 +5,12 @@ import type { GroupState } from "../../../../../../states/objects/primitives/gro
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../../../selection/__tests__/support/textSlotPartSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../../../selection/partKinds/textSlotPartKind";
-import { objectFieldEntry } from "../../../../../style/entries/objectFieldEntry";
-import { createObjectStyleRegistry } from "../../../../../style/tables/ObjectStyleRegistry";
+import { createObjectPartKindRegistry } from "../../../../../selection/partKinds/ObjectPartKindRegistry";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "../../../../../selection/partKinds/textSlotPartKind";
+import { TEXT_STYLE_INTENT_KINDS } from "../../../../../style/StyleIntent";
 import { createPropertyPanelRegistry } from "../../PropertyPanelRegistry";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
 import { getPropertyPanelSections } from "../usePropertyPanelSections";
@@ -116,12 +119,38 @@ registry.register("box", BOX_SECTIONS);
 // The rect's sections, from a type that says where a fill lands under a pick.
 registry.register("filled-rect", RECT_SECTIONS);
 
-const styleRegistry = createObjectStyleRegistry();
-styleRegistry.register(
-	"filled-rect",
-	{},
-	{ fill: objectFieldEntry<ObjectState, "fill">("fill") },
-);
+// The slot kind applyObjectDefinition gives every text-holding type, and one
+// whose pick receives the fill as well.
+const coreTextSlot = createTextSlotPartKindDefinition(undefined);
+const partKindRegistry = createObjectPartKindRegistry();
+for (const type of ["rect", "ellipse", "container", "badge", "gauge", "box"]) {
+	partKindRegistry.register(type, [coreTextSlot]);
+}
+// A table-like type whose whole rows receive the text and the fill of their
+// cells, but not the background's opacity.
+registry.register("grid", [
+	{
+		id: "fill",
+		label: "Fill",
+		items: [{ type: "fill" }, { type: "fillOpacity" }],
+	},
+	{ id: "line", label: "Line", items: [{ type: "strokeColor" }] },
+	{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
+]);
+partKindRegistry.register("grid", [
+	coreTextSlot,
+	{
+		kind: "row",
+		has: () => true,
+		styleIntentKinds: new Set([...TEXT_STYLE_INTENT_KINDS, "fill"]),
+	},
+]);
+partKindRegistry.register("filled-rect", [
+	{
+		...coreTextSlot,
+		styleIntentKinds: new Set([...TEXT_STYLE_INTENT_KINDS, "fill"]),
+	},
+]);
 
 /** A shape holding one named text slot, so a slot selection can resolve against it. */
 const shape = (id: string, type: string): ObjectState =>
@@ -152,7 +181,7 @@ const stateOf = (
 describe("getPropertyPanelSections", () => {
 	it("offers nothing while nothing is selected", () => {
 		expect(
-			getPropertyPanelSections(stateOf({}), registry, styleRegistry),
+			getPropertyPanelSections(stateOf({}), registry, partKindRegistry),
 		).toEqual([]);
 	});
 
@@ -162,7 +191,7 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["r-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
 			RECT_SECTIONS,
 		);
 	});
@@ -173,7 +202,7 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["c-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
 			LINE_SECTIONS,
 		);
 	});
@@ -187,15 +216,17 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["r-1", "e-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual([
-			{
-				id: "layout",
-				label: "Layout",
-				items: [{ type: "position" }, { type: "size" }],
-			},
-			{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
-			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
-		]);
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
+			[
+				{
+					id: "layout",
+					label: "Layout",
+					items: [{ type: "position" }, { type: "size" }],
+				},
+				{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
+				{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
+			],
+		);
 	});
 
 	it("drops a section a selected type does not offer at all", () => {
@@ -207,7 +238,7 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["r-1", "c-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
 			[],
 		);
 	});
@@ -223,7 +254,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, styleRegistry).map(
+			getPropertyPanelSections(state, registry, partKindRegistry).map(
 				(section) => section.id,
 			),
 		).toEqual(["layout", "fill", "text"]);
@@ -238,13 +269,15 @@ describe("getPropertyPanelSections", () => {
 			}),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual([
-			{
-				id: "text",
-				label: "Text",
-				items: [{ type: "fontSize" }, { type: "textAlign" }],
-			},
-		]);
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
+			[
+				{
+					id: "text",
+					label: "Text",
+					items: [{ type: "fontSize" }, { type: "textAlign" }],
+				},
+			],
+		);
 	});
 
 	it("keeps a plugin's custom row beside the built-in ones", () => {
@@ -253,7 +286,7 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["k-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
 			CONTAINER_SECTIONS,
 		);
 	});
@@ -267,7 +300,7 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["k-1", "k-2"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
 			CONTAINER_SECTIONS,
 		);
 	});
@@ -281,9 +314,9 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["k-1", "b-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual([
-			{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
-		]);
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
+			[{ id: "fill", label: "Fill", items: [{ type: "fill" }] }],
+		);
 	});
 
 	it("drops the custom rows of the text section once a slot is selected", () => {
@@ -295,9 +328,9 @@ describe("getPropertyPanelSections", () => {
 			}),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual([
-			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
-		]);
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
+			[{ id: "text", label: "Text", items: [{ type: "fontSize" }] }],
+		);
 	});
 
 	it("keeps a section whose isShown accepts the selection", () => {
@@ -307,7 +340,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, styleRegistry).map(
+			getPropertyPanelSections(state, registry, partKindRegistry).map(
 				(section) => section.id,
 			),
 		).toEqual(["fill", "gauge"]);
@@ -323,7 +356,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, styleRegistry).map(
+			getPropertyPanelSections(state, registry, partKindRegistry).map(
 				(section) => section.id,
 			),
 		).toEqual(["fill"]);
@@ -339,17 +372,17 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["r-1", "e-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)[0]).toEqual(
-			{
-				id: "layout",
-				label: "Layout",
-				items: [
-					{ type: "position" },
-					{ type: "size" },
-					{ type: "lockAspectRatio" },
-				],
-			},
-		);
+		expect(
+			getPropertyPanelSections(state, registry, partKindRegistry)[0],
+		).toEqual({
+			id: "layout",
+			label: "Layout",
+			items: [
+				{ type: "position" },
+				{ type: "size" },
+				{ type: "lockAspectRatio" },
+			],
+		});
 	});
 
 	it("offers the aspect-ratio lock to a selected group", () => {
@@ -363,7 +396,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, styleRegistry)[0].items,
+			getPropertyPanelSections(state, registry, partKindRegistry)[0].items,
 		).toContainEqual({
 			type: "lockAspectRatio",
 		});
@@ -379,13 +412,15 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["r-1", "c-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual([
-			{
-				id: "layout",
-				label: "Layout",
-				items: [{ type: "lockAspectRatio" }],
-			},
-		]);
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
+			[
+				{
+					id: "layout",
+					label: "Layout",
+					items: [{ type: "lockAspectRatio" }],
+				},
+			],
+		);
 	});
 
 	it("leaves the aspect-ratio lock where it is when the selected types carry it", () => {
@@ -399,7 +434,7 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry, styleRegistry)[0].items,
+			getPropertyPanelSections(state, registry, partKindRegistry)[0].items,
 		).toEqual([
 			{ type: "position" },
 			{ type: "size" },
@@ -413,7 +448,7 @@ describe("getPropertyPanelSections", () => {
 			selection: selectionOf(["r-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
 			RECT_SECTIONS,
 		);
 	});
@@ -431,13 +466,15 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["r-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual([
-			{
-				id: "text",
-				label: "Text",
-				items: [{ type: "fontSize" }, { type: "textAlign" }],
-			},
-		]);
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
+			[
+				{
+					id: "text",
+					label: "Text",
+					items: [{ type: "fontSize" }, { type: "textAlign" }],
+				},
+			],
+		);
 	});
 
 	it("keeps only the text section while a shape's text is being edited", () => {
@@ -448,13 +485,13 @@ describe("getPropertyPanelSections", () => {
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(
-			getPropertyPanelSections(state, registry, styleRegistry).map(
+			getPropertyPanelSections(state, registry, partKindRegistry).map(
 				(section) => section.id,
 			),
 		).toEqual(["text"]);
 	});
 
-	it("keeps a row whose kind the picked object's type declares", () => {
+	it("keeps a row whose every kind the picked kind receives", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "filled-rect") },
 			selection: selectionOf(["r-1"], {
@@ -463,14 +500,16 @@ describe("getPropertyPanelSections", () => {
 			}),
 		});
 
-		expect(getPropertyPanelSections(state, registry, styleRegistry)).toEqual([
-			{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
-			{
-				id: "text",
-				label: "Text",
-				items: [{ type: "fontSize" }, { type: "textAlign" }],
-			},
-		]);
+		expect(getPropertyPanelSections(state, registry, partKindRegistry)).toEqual(
+			[
+				{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
+				{
+					id: "text",
+					label: "Text",
+					items: [{ type: "fontSize" }, { type: "textAlign" }],
+				},
+			],
+		);
 	});
 
 	it("keeps it while the type's one body is being edited, the body picked", () => {
@@ -481,9 +520,28 @@ describe("getPropertyPanelSections", () => {
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(
-			getPropertyPanelSections(state, registry, styleRegistry).map(
+			getPropertyPanelSections(state, registry, partKindRegistry).map(
 				(section) => section.id,
 			),
 		).toEqual(["fill", "text"]);
+	});
+
+	it("narrows under a pick of any kind declaring what it receives, a row's fill kept and its opacity hidden", () => {
+		const state = stateOf({
+			objects: { "g-1": shape("g-1", "grid") },
+			selection: selectionOf(["g-1"], {
+				kind: "row",
+				ranges: [{ anchorId: "0", focusId: "0" }],
+			}),
+		});
+
+		expect(
+			getPropertyPanelSections(state, registry, partKindRegistry).map(
+				(section) => [section.id, section.items.map((item) => item.type)],
+			),
+		).toEqual([
+			["fill", ["fill"]],
+			["text", ["fontSize"]],
+		]);
 	});
 });

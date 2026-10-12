@@ -2,6 +2,7 @@ import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { TEXT_STYLE_INTENT_KINDS } from "../../../style/StyleIntent";
 import { vertexPartSelection } from "../../__tests__/support/vertexPartSelection";
 import {
 	createTextSlotPartKindDefinition,
@@ -110,5 +111,21 @@ describe("createTextSlotPartKindDefinition", () => {
 			text: { name: { text: "User" } },
 		} as unknown as ObjectState;
 		expect(part.region?.(unplaced, "name")).toBeNull();
+	});
+});
+
+describe("createTextSlotPartKindDefinition: what a pick receives", () => {
+	const part = createTextSlotPartKindDefinition(undefined);
+
+	it("receives the text kinds and nothing else", () => {
+		expect(part.styleIntentKinds).toBe(TEXT_STYLE_INTENT_KINDS);
+	});
+
+	it("reaches the very slots the pick covers, in their order", () => {
+		const anyObject = {} as ObjectState;
+		expect(part.slotIds?.(anyObject, ["rows", "name"])).toEqual([
+			"rows",
+			"name",
+		]);
 	});
 });

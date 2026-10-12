@@ -12,11 +12,8 @@ import {
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
 import { runOrSlotEntry } from "../runOrSlotEntry";
-import { selectedSlotIds } from "../slotEntry";
 
-const entry = runOrSlotEntry("fontColor", {
-	slotIdsOf: selectedSlotIds,
-});
+const entry = runOrSlotEntry("fontColor");
 
 const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;
@@ -205,7 +202,7 @@ describe("runOrSlotEntry with no stretch selected", () => {
 					"#00f",
 					contextOf({ objectPartKind: createObjectPartKindRegistry() }),
 				),
-			).toThrow(/no "textSlot" part kind/);
+			).toThrow(/"textSlot" is picked on "rect"/);
 		});
 
 		it("keeps a field the slot's own type loaded onto it while stripping its runs", () => {

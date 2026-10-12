@@ -1,18 +1,14 @@
 import { describe, it, expect } from "vitest";
 
-import { selectedSlotIds } from "../../entries/slotEntry";
 import type { CoreStyleIntentKind } from "../../StyleIntent";
+import { TEXT_STYLE_INTENT_KINDS } from "../../StyleIntent";
 import { textStyleTable } from "../textStyleTable";
 
 /** The kinds a text type answers for, sorted — the table's declaration order is its own business. */
 const kindsOf = (
 	textType: Parameters<typeof textStyleTable>[0],
 ): CoreStyleIntentKind[] =>
-	(
-		Object.keys(
-			textStyleTable(textType, selectedSlotIds),
-		) as CoreStyleIntentKind[]
-	)
+	(Object.keys(textStyleTable(textType)) as CoreStyleIntentKind[])
 		.slice()
 		.sort();
 
@@ -50,5 +46,12 @@ describe("textStyleTable", () => {
 			"textContent",
 			"verticalAlign",
 		]);
+	});
+
+	it("holds no kind TEXT_STYLE_INTENT_KINDS leaves out, and a body holds them all", () => {
+		expect(kindsOf("body")).toEqual([...TEXT_STYLE_INTENT_KINDS].sort());
+		for (const kind of kindsOf("source")) {
+			expect(TEXT_STYLE_INTENT_KINDS.has(kind)).toBe(true);
+		}
 	});
 });

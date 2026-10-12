@@ -2,26 +2,41 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { ObjectPartKindRegistry } from "../partKinds/ObjectPartKindRegistry";
+import type {
+	ObjectPartKindDefinition,
+	ObjectPartKindRegistry,
+} from "../partKinds/ObjectPartKindRegistry";
 import {
 	isTextSlotPart,
 	TEXT_SLOT_PART_KIND,
 } from "../partKinds/textSlotPartKind";
 import { collectObjectPartIds } from "../readers/collectObjectPartIds";
 
+/** What a Tab step walks: the object, its `textSlot` definition and the slot order that definition lists. */
+type TextSlotCycle = {
+	target: ObjectState & TextStyleState;
+	slotPart: ObjectPartKindDefinition;
+	slotIds: readonly string[];
+};
+
 /**
- * The object whose slots Tab / Shift+Tab walk through: the sole selection, when
- * it spells its text out as slots. Returning the object rather than a boolean
- * lets the command's availability check and its execution share one resolution.
+ * The slots Tab / Shift+Tab walk through: those of the sole selection, when its
+ * `textSlot` kind lists more than one — a one-body type has nowhere to step to.
+ * Returning the resolution rather than a boolean lets the command's availability
+ * check and its execution share it.
  *
  * @param state - The current canvas controller state
- * @returns The selected object, narrowed to one carrying `text`, or null when
- *   the selection does not qualify — including during any drag, where the
- *   selection must not move (same guard as the other selection commands)
+ * @param objectPartKind - Per-canvas registry of part kinds, which answers the slot order (`list`)
+ * @returns The cycle, or null when the selection does not qualify — including
+ *   during any drag, where the selection must not move (same guard as the other
+ *   selection commands), and a `textSlot` kind declared without `list`
+ * @throws When the selected object holds text yet no `textSlot` kind is
+ *   registered for its type, which applyObjectDefinition always does
  */
-export const getTextSlotCycleTarget = (
+export const getTextSlotCycle = (
 	state: CanvasControllerState,
-): (ObjectState & TextStyleState) | null => {
+	objectPartKind: ObjectPartKindRegistry,
+): TextSlotCycle | null => {
 	if (state.activeDrag !== null) {
 		return null;
 	}
@@ -29,13 +44,21 @@ export const getTextSlotCycleTarget = (
 		return null;
 	}
 	const target = state.objects[state.selection.objectIds[0]];
-	if (target === undefined || target.features?.text !== "slots") {
+	if (
+		target === undefined ||
+		!isTextStyleState(target) ||
+		target.text === undefined
+	) {
 		return null;
 	}
-	if (!isTextStyleState(target) || target.text === undefined) {
-		return null;
+	const slotPart = objectPartKind.get(target.type, TEXT_SLOT_PART_KIND);
+	if (slotPart === undefined) {
+		throw new Error(
+			`getTextSlotCycle: no "${TEXT_SLOT_PART_KIND}" part kind is registered for "${target.type}", which holds text`,
+		);
 	}
-	return target;
+	const slotIds = slotPart.list?.(target) ?? [];
+	return slotIds.length > 1 ? { target, slotPart, slotIds } : null;
 };
 
 /**
@@ -54,33 +77,22 @@ export const getTextSlotCycleTarget = (
  * @param objectPartKind - Per-canvas registry of part kinds, which answers both
  *   the slot order and what the picked ranges cover
  * @returns A new state with `selection.part` moved and any open ObjectMenu submenu
- *   closed, or the input state when the selection does not qualify, or the
- *   object's slot definition lists no slot (a `textSlot` kind a type declares
- *   without `list` cannot be cycled through)
- * @throws When the object spells its text out as slots yet no `textSlot` kind is
- *   registered for its type, which applyObjectDefinition always does
+ *   closed, or the input state when the selection does not qualify
+ *   (getTextSlotCycle)
+ * @throws As getTextSlotCycle does
  */
 export const selectAdjacentTextSlot = (
 	state: CanvasControllerState,
 	step: 1 | -1,
 	objectPartKind: ObjectPartKindRegistry,
 ): CanvasControllerState => {
-	const target = getTextSlotCycleTarget(state);
-	if (target === null) {
+	const cycle = getTextSlotCycle(state, objectPartKind);
+	if (cycle === null) {
 		return state;
 	}
-	const slotPart = objectPartKind.get(target.type, TEXT_SLOT_PART_KIND);
-	if (slotPart === undefined) {
-		throw new Error(
-			`selectAdjacentTextSlot: no "${TEXT_SLOT_PART_KIND}" part kind is registered for the slotted type "${target.type}"`,
-		);
-	}
-	const slotIds = slotPart.list?.(target) ?? [];
-	if (slotIds.length === 0) {
-		return state;
-	}
+	const { target, slotPart, slotIds } = cycle;
 
-	// The object is the sole selection (getTextSlotCycleTarget), so a slot pick
+	// The object is the sole selection (getTextSlotCycle), so a slot pick
 	// is its own.
 	const { part } = state.selection;
 	const coveredIndices = isTextSlotPart(part)

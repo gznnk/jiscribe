@@ -12,20 +12,16 @@ import {
 	rectOf,
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
-import { selectedSlotIds } from "../slotEntry";
 import { toggleRunOrSlotEntry } from "../toggleRunOrSlotEntry";
 
 /** The three entries as textStyleTable builds them, so the toggles under test are the shipped ones. */
 const bold = toggleRunOrSlotEntry("toggleBold", {
-	slotIdsOf: selectedSlotIds,
 	toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 });
 const italic = toggleRunOrSlotEntry("toggleItalic", {
-	slotIdsOf: selectedSlotIds,
 	toggle: (current) => (current === "italic" ? "normal" : "italic"),
 });
 const underline = toggleRunOrSlotEntry("toggleUnderline", {
-	slotIdsOf: selectedSlotIds,
 	toggle: (current) => toggleTextDecorationToken(current, "underline"),
 });
 

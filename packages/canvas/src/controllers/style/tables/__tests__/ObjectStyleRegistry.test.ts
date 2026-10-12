@@ -1,74 +1,39 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { declaredFieldEntry } from "../../entries/declaredFieldEntry";
 import { objectFieldEntry } from "../../entries/objectFieldEntry";
 import type { StyleTable } from "../../StyleEntry";
 import { createObjectStyleRegistry } from "../ObjectStyleRegistry";
 
-const derivedFill = objectFieldEntry<ObjectState, "fill">("fill");
-const derivedStroke = objectFieldEntry<ObjectState, "stroke">("stroke");
-const declaredFill = objectFieldEntry<ObjectState, "fill">("fill");
-const headerHeight = declaredFieldEntry("headerHeight", "number");
-
-const DERIVED: StyleTable<ObjectState> = {
-	fill: derivedFill,
-	stroke: derivedStroke,
+const FILL_TABLE: StyleTable<ObjectState> = {
+	fill: objectFieldEntry<ObjectState, "fill">("fill"),
+};
+const STROKE_TABLE: StyleTable<ObjectState> = {
+	stroke: objectFieldEntry<ObjectState, "stroke">("stroke"),
 };
 
 describe("ObjectStyleRegistry", () => {
-	it("composes the tables, a declared kind replacing the derived one", () => {
+	it("answers the table registered for a type, as it was handed over", () => {
 		const registry = createObjectStyleRegistry();
-		registry.register("fixture", DERIVED, { fill: declaredFill });
+		registry.register("fixture", FILL_TABLE);
 
-		const table = registry.get("fixture");
-		expect(table?.fill).toBe(declaredFill);
-		expect(table?.stroke).toBe(derivedStroke);
+		expect(registry.get("fixture")).toBe(FILL_TABLE);
+		expect(registry.get("unknown")).toBeUndefined();
 	});
 
-	it("names the kinds the type declared, core and extra alike, and no derived one", () => {
+	it("replaces the table when a type is registered again", () => {
 		const registry = createObjectStyleRegistry();
-		registry.register("fixture", DERIVED, {
-			fill: declaredFill,
-			headerHeight,
-		});
+		registry.register("fixture", FILL_TABLE);
+		registry.register("fixture", STROKE_TABLE);
 
-		expect([...registry.declaredKinds("fixture")].sort()).toEqual([
-			"fill",
-			"headerHeight",
-		]);
+		expect(registry.get("fixture")).toBe(STROKE_TABLE);
 	});
 
-	it("leaves out a kind declared as undefined", () => {
+	it("forgets every table on clear", () => {
 		const registry = createObjectStyleRegistry();
-		registry.register("fixture", DERIVED, { fill: undefined });
-
-		expect(registry.declaredKinds("fixture").size).toBe(0);
-		expect(registry.get("fixture")?.fill).toBeUndefined();
-	});
-
-	it("answers no kind for a type that declared nothing or is not registered", () => {
-		const registry = createObjectStyleRegistry();
-		registry.register("fixture", DERIVED, {});
-
-		expect(registry.declaredKinds("fixture").size).toBe(0);
-		expect(registry.declaredKinds("unknown").size).toBe(0);
-	});
-
-	it("replaces the declared kinds when a type is registered again", () => {
-		const registry = createObjectStyleRegistry();
-		registry.register("fixture", DERIVED, { fill: declaredFill });
-		registry.register("fixture", DERIVED, { headerHeight });
-
-		expect([...registry.declaredKinds("fixture")]).toEqual(["headerHeight"]);
-	});
-
-	it("forgets the declared kinds on clear", () => {
-		const registry = createObjectStyleRegistry();
-		registry.register("fixture", DERIVED, { fill: declaredFill });
+		registry.register("fixture", FILL_TABLE);
 		registry.clear();
 
-		expect(registry.declaredKinds("fixture").size).toBe(0);
 		expect(registry.get("fixture")).toBeUndefined();
 	});
 });

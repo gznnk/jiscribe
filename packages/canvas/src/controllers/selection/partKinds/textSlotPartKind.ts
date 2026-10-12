@@ -7,6 +7,7 @@ import { calcTextRegion } from "../../../rendering/objects/utils/calcTextRegion"
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
+import { TEXT_STYLE_INTENT_KINDS } from "../../style/StyleIntent";
 
 /**
  * The part-id namespace of the text slots a text-holding type holds — several
@@ -49,6 +50,9 @@ const holdsSlot = (slots: TextSlots | undefined, partId: string): boolean =>
  * per-type but the text region, which is why applyObjectDefinition registers it
  * without the type saying anything.
  *
+ * A pick of it receives the text kinds alone (TEXT_STYLE_INTENT_KINDS), and
+ * reaches the slots it covers.
+ *
  * @param textRegion - The type's own `ObjectTypeDefinition.textRegion`;
  *   undefined for a type that registers none, whose slots then each take the
  *   whole box (the fallback calcTextRegion applies). Passing the definition's
@@ -75,4 +79,8 @@ export const createTextSlotPartKindDefinition = (
 		}
 		return calcTextRegion(object, partId, textRegion);
 	},
+
+	styleIntentKinds: TEXT_STYLE_INTENT_KINDS,
+
+	slotIds: (_object, partIds) => partIds,
 });

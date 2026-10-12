@@ -31,7 +31,6 @@ export {
 export type { TableAxis } from "./grid/tableTrack";
 
 export { TABLE_TRACK_PART_DEFINITIONS } from "./parts/tableTrackParts";
-export { tableSelectedSlotIds } from "./style/tableSelectedSlotIds";
 
 export { TABLE_INSERT_COMMANDS } from "./commands/tableInsertCommands";
 export { readTableInsertTarget } from "./commands/readTableInsertTarget";

@@ -16,7 +16,7 @@ import type { StyleEntry } from "../StyleEntry";
  * editing opens — through `writeTextSlot`, so the other slots, the key order, the
  * slot's styling and its content kind (rows split on "\n") all survive. The slot
  * picked below the object has no say: the content is the shape's, and only its
- * styling follows a pick (selectedSlotIds).
+ * styling follows a pick (resolveSlotIds).
  *
  * The descendants of a selected group are written too, the content being as much
  * theirs as the selected shape's.
