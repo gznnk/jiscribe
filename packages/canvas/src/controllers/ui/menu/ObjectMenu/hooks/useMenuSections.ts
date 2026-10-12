@@ -2,15 +2,14 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { isTextSlotPart } from "../../../../selection/partKinds/textSlotPartKind";
+import type { ObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
-import type { ObjectStyleRegistry } from "../../../../style/tables/ObjectStyleRegistry";
+import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
-import { getAddressedDeclaredKinds } from "../../utils/getAddressedDeclaredKinds";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
-import { filterTextSlotMenuSections } from "../utils/filterTextSlotMenuSections";
+import { filterMenuSectionsForPickedPart } from "../utils/filterMenuSectionsForPickedPart";
 
 const itemKey = (item: ObjectMenuItem): string =>
 	item.type === "custom" ? item.id : item.type;
@@ -100,13 +99,12 @@ const collectSelectionSections = (
 /**
  * Computes the menu sections to display from the current selection.
  *
- * While a text slot is selected the sections are narrowed to the text items, so the
- * menu never offers an action that the slot cannot receive. Doing it here keeps every
- * text-holding type covered without each definition opting in. An item
- * whose every style kind the type declares itself in `styleEntries` stays as well,
- * the type having answered where that kind lands under a pick
- * (filterTextSlotMenuSections). A pick of another sort (a vertex) leaves them alone,
- * the menu still acting on the object.
+ * While a part is picked whose kind declares what it receives (`styleIntentKinds`), the
+ * sections are narrowed to the items raising only that, so the menu never offers
+ * an action the part cannot receive: the text items under a text slot, which
+ * every text-holding type is given without opting in (filterMenuSectionsForPickedPart).
+ * A pick of a kind declaring nothing (a vertex) leaves them alone, the menu still
+ * acting on the object.
  *
  * An open text editor narrows them the same way, through the slot it keeps picked
  * (see `textEditState`), for the same reason read the other way round: what the menu offers there has to be something a stretch of the text
@@ -114,22 +112,22 @@ const collectSelectionSections = (
  *
  * @param state - The current canvas controller state
  * @param objectMenuRegistry - Per-canvas ObjectMenuRegistry, asked once per concrete type in the selection
- * @param objectStyleRegistry - Per-canvas ObjectStyleRegistry; read only while text is addressed, for the kinds the addressed type declares
+ * @param objectPartKindRegistry - Per-canvas ObjectPartKindRegistry, asked for what the picked kind receives (readPickedPartStyleIntentKinds)
  * @returns The sections in display order
  */
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
-	objectStyleRegistry: ObjectStyleRegistry,
+	objectPartKindRegistry: ObjectPartKindRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
-	if (!isTextSlotPart(state.selection.part)) {
-		return sections;
-	}
-	return filterTextSlotMenuSections(
-		sections,
-		getAddressedDeclaredKinds(state, objectStyleRegistry),
+	const styleIntentKinds = readPickedPartStyleIntentKinds(
+		state,
+		objectPartKindRegistry,
 	);
+	return styleIntentKinds === null
+		? sections
+		: filterMenuSectionsForPickedPart(sections, styleIntentKinds);
 };
 
 /**
@@ -142,11 +140,11 @@ export const useMenuSections = (
 	enabled: boolean,
 ): ObjectMenuSection[] => {
 	const { selection, objects } = state;
-	const { objectMenu, objectStyle } = useCanvasRegistries();
+	const { objectMenu, objectPartKind } = useCanvasRegistries();
 
 	return useMemo(
-		() => (enabled ? getMenuSections(state, objectMenu, objectStyle) : []),
+		() => (enabled ? getMenuSections(state, objectMenu, objectPartKind) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[enabled, selection, objects, objectMenu, objectStyle],
+		[enabled, selection, objects, objectMenu, objectPartKind],
 	);
 };

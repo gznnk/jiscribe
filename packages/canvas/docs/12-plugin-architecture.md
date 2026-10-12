@@ -273,10 +273,11 @@ before writing one:
   the same row must spell it the same way; a selection mixing types that spell it
   differently drops it, exactly as a built-in kind only one of them offers is
   dropped.
-- While a text slot is picked or a shape's text is being edited, the sidebar
-  keeps its text rows and every built-in row whose style kinds the type declares
-  itself in `styleEntries` (below), and drops custom rows, which cannot say what
-  they edit — the same rule the ObjectMenu applies to its items.
+- While a part is picked whose kind declares the style kinds it receives
+  (`styleIntentKinds`, under `partKinds` below) — a text slot, including the one a
+  shape's open text editor keeps picked — the sidebar keeps the built-in rows
+  raising only those kinds, and drops custom rows, which cannot say what they
+  edit — the same rule the ObjectMenu applies to its items.
 
 **`propertyPanel` section visibility.** A section may carry
 `isShown(selection)`, asked before it is drawn with the slice of the selection
@@ -307,28 +308,21 @@ size in the Layout section; both state their current value through
 `useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)`, which types it from that declaration, and
 take their wording from the plugin's own dictionary.
 
-A declared kind replaces the one `features` derive, which is how a type keeps
-the core's entry and changes only where it lands. `plugins/table-shape` declares
-its text kinds again over its own answer to which slots a write reaches: the
-derived ones read a row or column pick as no slot pick and would write every
-cell, where the table's `tableSelectedSlotIds` answers with the ids of
-the cells of the picked tracks. `declaredTextStyleTable(textType, slotIdsOf)` is
-the derived text half with that one argument changed, each entry stating
-`["text"]`. A core kind such as `fill` can be declared again the same way to
-route it by the pick: the table's `fill` writes its own background with nothing
-picked and the picked cells' `fill` otherwise:
+A declared kind replaces the one `features` derive, which is how a type changes
+where a core kind lands. `plugins/table-shape` declares `fill` again to route it
+by the pick: its own background with nothing picked, the `fill` of the cells the
+pick reaches otherwise (`resolveTextSlotIds`, the same answer the text entries ask —
+see `textSlotIds` under `partKinds` below):
 
 ```ts
 const TABLE_STYLE_ENTRIES = {
-	...declaredTextStyleTable(TableFeatures.text, tableSelectedSlotIds),
 	fill: tableFillEntry,
 } satisfies DeclaredStyleTable<TableState>;
 ```
 
-Declaring a core kind is also what keeps its controls while a text slot is
-picked: the type has said where the kind lands under a pick, so the background
-color stays in the menu and the sidebar with a cell picked, while the derived
-`fillOpacity` row goes.
+Which slots a text style reaches is not a table's to declare: the core text
+entries already follow the picked kind's `textSlotIds`, so the table declares no text
+kind of its own.
 
 **Commands.** A contributed command's `execute` is the whole of its transition,
 and that includes saying it edited the document: return the state through
@@ -377,7 +371,8 @@ declaring anything, its part ids being the keys of its own `text` (`body` alone
 for a one-body type, which is the slot its open text editor keeps picked); declaring
 `"textSlot"` yourself replaces that one rather than colliding with it; spread
 `createTextSlotPartKindDefinition(textRegion)` to keep what core derives and add
-only what it cannot (the table adds a `range` and a `delete`).
+only what it cannot (the table adds a `range`, a `delete` and the fill to its
+`styleIntentKinds`).
 
 Three optional members bear on selection:
 
@@ -395,6 +390,27 @@ Three optional members bear on selection:
   rectangle the two corners span); omitted means the run over `list`. Every
   returned id must pass `has`, in the type's own order, and the list may not be
   empty — a range covers at least its focus
+
+Two more bear on styling a pick:
+
+- `styleIntentKinds` — the style kinds a pick of this kind receives, core kinds and the
+  type's own alike. Declared, the picked kind is what the ObjectMenu and the
+  sidebar answer to: they keep the built-in controls raising only these kinds,
+  drop the rest and every custom item, and hide the system sections and the
+  Meta section. Omitted, a pick of the kind leaves the object the subject of
+  every control (`vertex`). The `"textSlot"` kind core gives declares the text
+  kinds (`TEXT_STYLE_INTENT_KINDS`)
+- `textSlotIds` — the text slots a pick of this kind reaches, handed the ids it
+  covers with its ranges already expanded. The text entries write and read those
+  slots (`resolveTextSlotIds`); omitted, a pick reaches every slot. The `"textSlot"`
+  kind answers with the picked slots themselves
+
+The table's `row` and `column` declare both: a track pick receives the text kinds
+and `fill`, as a cell pick does, and reaches the cells the tracks run through —
+so a color or a bold chosen with a row picked lands on that row's cells, and the
+menu offers the text and background controls, without the table declaring any
+text style kind of its own. `fillOpacity` is not among them, being the table
+background's alone, so its row is hidden under any pick.
 
 A kind's name is an identifier (a letter, then letters, digits, `_` or `-`), so
 the first `:` separates it from the id in the `<kind>:<partId>` address a part's
@@ -422,7 +438,7 @@ Honest limits, so you do not design against something that is not there.
 | Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |
 | Command shortcuts                | A plugin contributes commands (`CanvasPlugin.commands`) and can claim a binding an existing command also holds, but it cannot rebind or unbind that command's own shortcut                |
 | ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                      |
-| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one is dropped while a text slot is picked                                                       |
+| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one is dropped while a picked part narrows the sidebar (`styleIntentKinds`)                      |
 
 What _is_ fully available: adding shape types with their own doc schema, validation,
 rendering, stencils, menus, properties-sidebar sections, style properties,

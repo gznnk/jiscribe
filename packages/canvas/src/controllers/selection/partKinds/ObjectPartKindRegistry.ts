@@ -68,6 +68,28 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		 * declares a deletion that always refuses (`() => null`).
 		 */
 		delete?: (object: TState, partIds: readonly string[]) => TState | null;
+
+		/**
+		 * The style intent kinds a pick of this kind receives, core kinds
+		 * (CoreStyleIntentKind) and a type's own alike. Declared, the ObjectMenu and
+		 * the properties sidebar narrow to the controls raising nothing outside it
+		 * while one is picked (readPickedPartStyleIntentKinds); omitted = a pick of this
+		 * kind leaves the object the subject of every control (the vertices).
+		 */
+		styleIntentKinds?: ReadonlySet<string>;
+
+		/**
+		 * Maps part ids of this kind to the ids of the text slots they contain — a
+		 * table row to its cells — which is where the text entries write and read
+		 * under a pick of this kind (resolveTextSlotIds). Handed the ids the pick
+		 * covers, ranges already expanded (collectObjectPartIds); an id it returns
+		 * that `object.text` does not hold is dropped by the caller. Omitted = a pick
+		 * of this kind reaches every text slot of the object.
+		 */
+		textSlotIds?: (
+			object: TState,
+			partIds: readonly string[],
+		) => readonly string[];
 	};
 
 /** A kind as an identifier: a letter, then letters, digits, `_` or `-`. */

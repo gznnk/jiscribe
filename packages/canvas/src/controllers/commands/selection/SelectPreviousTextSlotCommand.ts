@@ -1,5 +1,5 @@
 import {
-	getTextSlotCycleTarget,
+	getTextSlotCycle,
 	selectAdjacentTextSlot,
 } from "../../selection/writers/selectAdjacentTextSlot";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -12,7 +12,8 @@ export const SelectPreviousTextSlotCommand: ExecutableCommand = {
 		default: [{ code: "Tab", shift: true }],
 	},
 
-	canExecute: (state) => getTextSlotCycleTarget(state) !== null,
+	canExecute: (state, registries) =>
+		getTextSlotCycle(state, registries.objectPartKind) !== null,
 
 	execute: (state, registries) =>
 		selectAdjacentTextSlot(state, -1, registries.objectPartKind),

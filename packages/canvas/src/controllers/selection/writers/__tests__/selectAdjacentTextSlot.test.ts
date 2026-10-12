@@ -5,7 +5,7 @@ import { selectionOf } from "../../__tests__/support/selectionOf";
 import { createTextSlotPartRegistry } from "../../__tests__/support/textSlotPartRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../partKinds/textSlotPartKind";
 import {
-	getTextSlotCycleTarget,
+	getTextSlotCycle,
 	selectAdjacentTextSlot,
 } from "../selectAdjacentTextSlot";
 
@@ -35,29 +35,35 @@ const baseState = (
 const selectedSlotId = (state: CanvasControllerState): string | undefined =>
 	state.selection.part?.ranges[0].anchorId;
 
-/** The registry a canvas holds once "record" has been applied. */
-const objectPartKind = createTextSlotPartRegistry("record");
+/** The registry a canvas holds once "record" and "rect" have been applied. */
+const objectPartKind = createTextSlotPartRegistry("record", "rect");
 
-describe("getTextSlotCycleTarget", () => {
-	it("returns the sole selected object when it spells its text out as slots", () => {
-		expect(getTextSlotCycleTarget(baseState({}))?.id).toBe("rec-1");
+describe("getTextSlotCycle", () => {
+	it("returns the sole selected object and its slot order when it lists several slots", () => {
+		const cycle = getTextSlotCycle(baseState({}), objectPartKind);
+		expect(cycle?.target.id).toBe("rec-1");
+		expect(cycle?.textSlotIds).toEqual(["name", "attributes", "operations"]);
 	});
 
 	it("returns null for a multiple selection", () => {
 		expect(
-			getTextSlotCycleTarget(
+			getTextSlotCycle(
 				baseState({ selection: selectionOf(["rec-1", "rec-2"]) }),
+				objectPartKind,
 			),
 		).toBeNull();
 	});
 
 	it("returns null when nothing is selected", () => {
 		expect(
-			getTextSlotCycleTarget(baseState({ selection: selectionOf([]) })),
+			getTextSlotCycle(
+				baseState({ selection: selectionOf([]) }),
+				objectPartKind,
+			),
 		).toBeNull();
 	});
 
-	it("returns null for a shape whose text is a single body", () => {
+	it("returns null for a shape whose text is a single body, its one slot having nowhere to step to", () => {
 		const state = baseState({
 			objects: {
 				"rect-1": {
@@ -69,15 +75,19 @@ describe("getTextSlotCycleTarget", () => {
 			} as never,
 			selection: selectionOf(["rect-1"], {
 				kind: TEXT_SLOT_PART_KIND,
-				ranges: [{ anchorId: "operations", focusId: "operations" }],
+				ranges: [{ anchorId: "body", focusId: "body" }],
 			}),
 		});
-		expect(getTextSlotCycleTarget(state)).toBeNull();
+		expect(getTextSlotCycle(state, objectPartKind)).toBeNull();
+		expect(selectAdjacentTextSlot(state, 1, objectPartKind)).toBe(state);
 	});
 
 	it("returns null during a drag", () => {
 		expect(
-			getTextSlotCycleTarget(baseState({ activeDrag: { foo: 1 } as never })),
+			getTextSlotCycle(
+				baseState({ activeDrag: { foo: 1 } as never }),
+				objectPartKind,
+			),
 		).toBeNull();
 	});
 });
@@ -172,10 +182,10 @@ describe("selectAdjacentTextSlot", () => {
 		).toBe("operations");
 	});
 
-	it("refuses a slotted type no slot kind is registered for", () => {
+	it("refuses a text-holding type no slot kind is registered for", () => {
 		expect(() =>
 			selectAdjacentTextSlot(baseState({}), 1, createTextSlotPartRegistry()),
-		).toThrow(/no "textSlot" part kind/);
+		).toThrow(/no "textSlot" part kind is registered for "record"/);
 	});
 
 	it("closes an open ObjectMenu submenu, which no longer acts on the slot walked away from", () => {

@@ -1,6 +1,8 @@
 import type { ObjectPartKindDefinition } from "@jiscribe/canvas";
 import type { Rect } from "@jiscribe/geometry";
 
+import { TABLE_CELL_STYLE_INTENT_KINDS } from "./tableCellStyleIntentKinds";
+import { collectTableTrackCellIds } from "../grid/collectTableTrackCellIds";
 import { removeTableTracks } from "../grid/removeTableTracks";
 import {
 	countTableTracks,
@@ -48,8 +50,9 @@ const calcTrackRegion = (
  * `list` is declared so a range of tracks is expressible at all — core builds one
  * from the order this returns — even though a grip writes a single index today.
  *
- * What the two kinds do share is the cells: a style written over a track pick
- * lands on that track's cells (tableSelectedSlotIds).
+ * What the two kinds do share is the cells: a track pick receives what a cell
+ * pick does (TABLE_CELL_STYLE_INTENT_KINDS), and a style written over it lands on that
+ * track's cells (`textSlotIds`).
  *
  * @param axis - Which direction the tracks run in; also the `kind` the definition registers under, the two being the same word (see TableAxis)
  * @returns A definition for {@link TABLE_TRACK_PART_DEFINITIONS}
@@ -84,6 +87,11 @@ const createTableTrackPartDefinition = (
 				.map(parseTableTrackPartId)
 				.filter((index): index is number => index !== null),
 		),
+
+	styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
+
+	textSlotIds: (object, partIds) =>
+		collectTableTrackCellIds(object, axis, partIds),
 });
 
 /**

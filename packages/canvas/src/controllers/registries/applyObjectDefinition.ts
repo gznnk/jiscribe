@@ -511,14 +511,13 @@ export const applyObjectDefinition = (
 	registries.objectTextStyleDefaults.registerDefinition(type, definition);
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
 	checkDeclaredStyleFields(type, definition);
-	// A kind the type declares replaces the one derived from its features, which
-	// is how a type whose storage differs from the core guess says where the edit
-	// lands (ObjectStyleRegistry.register).
-	registries.objectStyle.register(
-		type,
-		coreStyleTable(definition.features),
-		definition.styleEntries ?? {},
-	);
+	// The type's own table comes last on purpose: a kind it declares replaces the
+	// one derived from its features, which is how a type whose storage differs
+	// from the core guess says where the edit lands.
+	registries.objectStyle.register(type, {
+		...coreStyleTable(definition.features),
+		...definition.styleEntries,
+	});
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {
 		registries.objectAutoHeight.register(type);

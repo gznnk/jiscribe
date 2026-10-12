@@ -7,7 +7,6 @@ import type {
 import {
 	createFrameBehavior,
 	createTextSlotPartKindDefinition,
-	declaredTextStyleTable,
 } from "@jiscribe/canvas-sdk";
 import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
 
@@ -25,18 +24,17 @@ import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
+import { TABLE_CELL_STYLE_INTENT_KINDS } from "./parts/tableCellStyleIntentKinds";
 import { TABLE_TRACK_PART_DEFINITIONS } from "./parts/tableTrackParts";
 import { calcTableTextRegion } from "./presentation/calcTableTextRegion";
 import { Table } from "./presentation/Table";
 import type { TableDoc } from "./schema/TableDoc";
-import { TableFeatures } from "./schema/TableDoc";
 import { reconcileTableBoxWithGrid } from "./state/reconcileTableBoxWithGrid";
 import { tableToDoc, tableToState } from "./state/TableMapper";
 import type { TableState } from "./state/TableState";
 import { isValidTableState } from "./state/validateTableState";
 import { TableStencils } from "./stencil/TableStencils";
 import { tableFillEntry } from "./style/tableFillEntries";
-import { tableSelectedSlotIds } from "./style/tableSelectedSlotIds";
 
 /**
  * The left and right handles alone. Dragging one distributes the width change
@@ -124,8 +122,9 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
  * that steps into a shape writes it, Tab walks it, the text style menu reads it.
  * A `"cell"` kind would be a second name for the same thing, selected by nobody.
  *
- * What is declared here is the two things core cannot derive — what Delete means
- * over a cell range, and what the range between two cells is — so
+ * What is declared here is the three things core cannot derive — what Delete
+ * means over a cell range, what the range between two cells is, and that a cell
+ * pick receives the fill on top of the text (TABLE_CELL_STYLE_INTENT_KINDS) — so
  * `createTextSlotPartKindDefinition` is spread for the rest and only those added (a
  * declared `"textSlot"` replaces the derived one). Emptying is not removing,
  * which is why rows and cells are separate kinds at all: Delete over a row grip
@@ -140,23 +139,18 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 		...createTextSlotPartKindDefinition(calcTableTextRegion),
 		range: collectTableCellRange,
 		delete: clearTableCells,
+		styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
 	},
 ];
 
 /**
- * The text kinds, declared again over the table's own answer to which cells a
- * write reaches (tableSelectedSlotIds): the derived ones read a row or
- * column pick as no slot pick and would write every cell.
- *
- * Fill is declared again as well, to follow the selection the same way: the
- * table's own background with nothing picked inside it, the picked cells'
- * `fill` otherwise (tableFillEntry). Declaring it is also what keeps the fill
- * controls in the menu and the sidebar while a cell is picked. Its opacity is
- * left derived: the background's alone, so the narrowing hides its row under a
- * cell pick, and under a row or column pick the row edits the table's own.
+ * Fill is declared again, to follow the selection: the table's own background
+ * with nothing picked inside it, the cells the pick reaches otherwise
+ * (tableFillEntry). Its opacity is left derived: the background's alone, which
+ * is why no cell pick receives it (TABLE_CELL_STYLE_INTENT_KINDS) and the narrowing
+ * hides its row under one.
  */
 const TABLE_STYLE_ENTRIES = {
-	...declaredTextStyleTable(TableFeatures.text, tableSelectedSlotIds),
 	fill: tableFillEntry,
 } satisfies DeclaredStyleTable<TableState>;
 
@@ -167,10 +161,10 @@ const TABLE_STYLE_ENTRIES = {
  *
  * The menu is declared rather than derived: a table takes the background, the
  * stroke items for its rules and the text items for its cells, and nothing else
- * the features would offer. A text edit from the menu lands on the picked cells,
- * the cells of the picked rows or columns, or every cell with nothing picked; a
- * background lands on the picked cells, or on the table's own background with
- * nothing picked ({@link TABLE_STYLE_ENTRIES}). Reshaping the grid is in neither
+ * the features would offer. A text edit or a background from the menu lands on
+ * the picked cells or the cells of the picked rows or columns (each kind's
+ * `textSlotIds`); with nothing picked, a text edit lands on every cell and a
+ * background on the table's own ({@link TABLE_STYLE_ENTRIES}). Reshaping the grid is in neither
  * section: it belongs to the keys, the grips and the `+` badges.
  */
 export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {

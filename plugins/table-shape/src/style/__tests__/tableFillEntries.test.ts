@@ -4,6 +4,7 @@ import { TEXT_SLOT_PART_KIND } from "@jiscribe/canvas-sdk";
 import type { ICanvasRegistries, StyleContext } from "@jiscribe/canvas-sdk";
 import { describe, expect, it } from "vitest";
 
+import { tableDefinition } from "../../definition";
 import { tablePlugin } from "../../plugin";
 import { tableCellSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
@@ -129,14 +130,9 @@ describe("the table's fill entry", () => {
 	});
 });
 
-// What keeps the fill controls in the menu and the sidebar under a cell pick,
-// and the opacity row out of them: the background's alone, derived.
-describe("the table's declared fill kinds", () => {
-	it("declares fill and leaves fill opacity derived", () => {
-		const declaredKinds = registries.objectStyle.declaredKinds("table");
-
-		expect(declaredKinds.has("fill")).toBe(true);
-		expect(declaredKinds.has("fillOpacity")).toBe(false);
+describe("the table's fill kinds", () => {
+	it("declares fill alone and leaves fill opacity derived, the background's", () => {
+		expect(Object.keys(tableDefinition.styleEntries ?? {})).toEqual(["fill"]);
 		expect(tableStyle?.fillOpacity).toBeDefined();
 	});
 });

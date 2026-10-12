@@ -114,3 +114,30 @@ describe("TABLE_TRACK_PART_DEFINITIONS", () => {
 		expect(columnPart.delete?.(oneColumn, ["0"])).toBeNull();
 	});
 });
+
+describe("TABLE_TRACK_PART_DEFINITIONS: the cells a track pick reaches", () => {
+	it("reaches a row's cells along it, track by track", () => {
+		expect(rowPart.textSlotIds?.(makeTable(), ["1", "0"])).toEqual([
+			"r1c0",
+			"r1c1",
+			"r1c2",
+			"r0c0",
+			"r0c1",
+			"r0c2",
+		]);
+	});
+
+	it("reaches a column's cells down it", () => {
+		expect(columnPart.textSlotIds?.(makeTable(), ["2"])).toEqual([
+			"r0c2",
+			"r1c2",
+		]);
+	});
+
+	it("receives the fill beside the text, as a cell pick does", () => {
+		expect(rowPart.styleIntentKinds).toBe(columnPart.styleIntentKinds);
+		expect(rowPart.styleIntentKinds?.has("fill")).toBe(true);
+		expect(rowPart.styleIntentKinds?.has("fontWeight")).toBe(true);
+		expect(rowPart.styleIntentKinds?.has("fillOpacity")).toBe(false);
+	});
+});

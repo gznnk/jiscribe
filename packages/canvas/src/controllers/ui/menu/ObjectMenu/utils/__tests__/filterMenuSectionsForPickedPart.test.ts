@@ -1,13 +1,20 @@
 import { describe, expect, it } from "vitest";
 
+import { TEXT_STYLE_INTENT_KINDS } from "../../../../../style/StyleIntent";
 import type { ObjectMenuSection } from "../../ObjectMenuTypes";
-import { filterTextSlotMenuSections } from "../filterTextSlotMenuSections";
+import { filterMenuSectionsForPickedPart } from "../filterMenuSectionsForPickedPart";
 
 const CustomItemComponent = (): null => null;
 
-const NO_KINDS: ReadonlySet<string> = new Set();
+/** What a text slot pick receives (createTextSlotPartKindDefinition). */
+const TEXT_KINDS = TEXT_STYLE_INTENT_KINDS;
+/** What a table cell pick receives: the text and the fill. */
+const TEXT_AND_FILL_KINDS: ReadonlySet<string> = new Set([
+	...TEXT_STYLE_INTENT_KINDS,
+	"fill",
+]);
 
-describe("filterTextSlotMenuSections", () => {
+describe("filterMenuSectionsForPickedPart", () => {
 	it("keeps the text items and drops every other builtin", () => {
 		const sections: ObjectMenuSection[] = [
 			{
@@ -29,7 +36,7 @@ describe("filterTextSlotMenuSections", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
 			{
 				id: "text",
 				items: [
@@ -52,7 +59,7 @@ describe("filterTextSlotMenuSections", () => {
 			},
 		];
 
-		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
 			{ id: "text", items: [{ type: "font" }] },
 		]);
 	});
@@ -64,7 +71,7 @@ describe("filterTextSlotMenuSections", () => {
 			{ id: "arrowHead", items: [{ type: "arrowHead" }] },
 		];
 
-		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
 			{ id: "text", items: [{ type: "textAlignment" }] },
 		]);
 	});
@@ -75,10 +82,10 @@ describe("filterTextSlotMenuSections", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterTextSlotMenuSections(sections, NO_KINDS)).toEqual([]);
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([]);
 	});
 
-	it("keeps an item whose every kind the addressed type declares", () => {
+	it("keeps an item whose every kind the picked kind receives", () => {
 		const sections: ObjectMenuSection[] = [
 			{
 				id: "style",
@@ -91,13 +98,15 @@ describe("filterTextSlotMenuSections", () => {
 			{ id: "text", items: [{ type: "font" }] },
 		];
 
-		expect(filterTextSlotMenuSections(sections, new Set(["fill"]))).toEqual([
+		expect(
+			filterMenuSectionsForPickedPart(sections, TEXT_AND_FILL_KINDS),
+		).toEqual([
 			{ id: "style", items: [{ type: "backgroundColor" }] },
 			{ id: "text", items: [{ type: "font" }] },
 		]);
 	});
 
-	it("drops an item only some of whose kinds the type declares", () => {
+	it("drops an item only some of whose kinds the picked kind receives", () => {
 		const sections: ObjectMenuSection[] = [
 			{
 				id: "style",
@@ -106,27 +115,27 @@ describe("filterTextSlotMenuSections", () => {
 		];
 
 		expect(
-			filterTextSlotMenuSections(
+			filterMenuSectionsForPickedPart(
 				sections,
 				new Set(["strokeWidth", "startArrow"]),
 			),
 		).toEqual([]);
 	});
 
-	it("keeps a multi-kind item once every kind is declared", () => {
+	it("keeps a multi-kind item once every kind is received", () => {
 		const sections: ObjectMenuSection[] = [
 			{ id: "line", items: [{ type: "lineStyle" }] },
 		];
 
 		expect(
-			filterTextSlotMenuSections(
+			filterMenuSectionsForPickedPart(
 				sections,
 				new Set(["strokeWidth", "strokeDashType"]),
 			),
 		).toEqual(sections);
 	});
 
-	it("drops custom items and items editing no style whatever is declared", () => {
+	it("drops custom items and items raising no style kind whatever is received", () => {
 		const sections: ObjectMenuSection[] = [
 			{
 				id: "style",
@@ -137,7 +146,18 @@ describe("filterTextSlotMenuSections", () => {
 		];
 
 		expect(
-			filterTextSlotMenuSections(sections, new Set(["fill", "group"])),
+			filterMenuSectionsForPickedPart(sections, new Set(["fill", "group"])),
 		).toEqual([]);
+	});
+
+	it("drops the text items under a pick receiving none of the text kinds", () => {
+		const sections: ObjectMenuSection[] = [
+			{ id: "style", items: [{ type: "backgroundColor" }] },
+			{ id: "text", items: [{ type: "font" }, { type: "textFormat" }] },
+		];
+
+		expect(
+			filterMenuSectionsForPickedPart(sections, new Set(["fill"])),
+		).toEqual([{ id: "style", items: [{ type: "backgroundColor" }] }]);
 	});
 });

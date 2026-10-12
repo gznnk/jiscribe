@@ -209,22 +209,22 @@ export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 // field of the type's own, dots being a path into a nested object;
 // `objectFieldEntry` / `slotFieldEntry` / `runOrSlotEntry` /
 // `toggleRunOrSlotEntry` are the ones the engine builds its own entries from,
-// for a type replacing a derived kind, with `selectedSlotIds` as the slot answer
-// the core types give. A declared table is a `DeclaredStyleTable`: every entry
-// states the fields it writes (`[]` for nothing the doc stores), and one
-// stating none, or a field the type's doc cannot hold (`extraKeys`), is refused
-// at registration. `declaredTextStyleTable(textType, slotIdsOf)` is the derived text
-// half declared again with the type's own `slotIdsOf` — a table answering a row pick
-// with that row's cells — so the type replaces which slots a write reaches and
-// keeps the core's entries.
+// for a type replacing a derived kind. A declared table is a `DeclaredStyleTable`:
+// every entry states the fields it writes (`[]` for nothing the doc stores), and
+// one stating none, or a field the type's doc cannot hold (`extraKeys`), is
+// refused at registration. Which slots a text write reaches is not the table's
+// to say but the picked part kind's (`ObjectPartKindDefinition.textSlotIds`):
+// `resolveTextSlotIds(object, pick, ctx)` is that answer, for an entry of the type's
+// own that writes into the slots a pick reaches (a table's cell fill), and
+// `TEXT_STYLE_INTENT_KINDS` the kinds a part reaching text lists in its
+// `styleIntentKinds`.
 export { declaredFieldEntry } from "./controllers/style/entries/declaredFieldEntry";
 export { objectFieldEntry } from "./controllers/style/entries/objectFieldEntry";
 export { runOrSlotEntry } from "./controllers/style/entries/runOrSlotEntry";
-export { selectedSlotIds } from "./controllers/style/entries/slotEntry";
-export type { SlotIdsOf } from "./controllers/style/entries/slotEntry";
 export { slotFieldEntry } from "./controllers/style/entries/slotFieldEntry";
 export { toggleRunOrSlotEntry } from "./controllers/style/entries/toggleRunOrSlotEntry";
-export { declaredTextStyleTable } from "./controllers/style/tables/declaredTextStyleTable";
+export { resolveTextSlotIds } from "./controllers/style/entries/utils/resolveTextSlotIds";
+export { TEXT_STYLE_INTENT_KINDS } from "./controllers/style/StyleIntent";
 export type { StyleValueType } from "./controllers/style/intent/coerceStyleValue";
 export type {
 	DeclaredStyleEntry,
@@ -248,8 +248,8 @@ export type {
 // the callback (PropertyColorField) or through the same `data-action` grammar the
 // ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
 // `data-action` by hand is discouraged for the same reason as there.
-// Custom rows are dropped while a text slot is selected, since a plugin row has
-// no way to say it is slot-aware.
+// Custom rows are dropped while a picked part narrows the sidebar (its kind's
+// `styleIntentKinds`), since a plugin row has no way to say what it raises.
 // A section may also carry `isShown`, asked about the selection
 // (PropertyPanelSelection) before the section is drawn: a section whose every row
 // would return null uses it to take its heading away with them.

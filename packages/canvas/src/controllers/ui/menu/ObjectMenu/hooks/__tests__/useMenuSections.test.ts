@@ -4,9 +4,12 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../../../selection/CanvasSelection";
-import { TEXT_SLOT_PART_KIND } from "../../../../../selection/partKinds/textSlotPartKind";
-import { objectFieldEntry } from "../../../../../style/entries/objectFieldEntry";
-import { createObjectStyleRegistry } from "../../../../../style/tables/ObjectStyleRegistry";
+import { createObjectPartKindRegistry } from "../../../../../selection/partKinds/ObjectPartKindRegistry";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "../../../../../selection/partKinds/textSlotPartKind";
+import { TEXT_STYLE_INTENT_KINDS } from "../../../../../style/StyleIntent";
 import { createObjectMenuRegistry } from "../../ObjectMenuRegistry";
 import type { ObjectMenuSection } from "../../ObjectMenuTypes";
 import { getMenuSections } from "../useMenuSections";
@@ -66,24 +69,35 @@ registry.register("record", RECORD_SECTIONS);
 // The same menu, from a type that says where a fill lands under a pick.
 registry.register("filled-record", RECORD_SECTIONS);
 
-const styleRegistry = createObjectStyleRegistry();
-styleRegistry.register("record", {}, {});
-styleRegistry.register(
-	"filled-record",
-	{},
-	{ fill: objectFieldEntry<ObjectState, "fill">("fill") },
-);
+const coreTextSlot = createTextSlotPartKindDefinition(undefined);
+const partKindRegistry = createObjectPartKindRegistry();
+// A vertex-like kind beside the slots, declaring no style kinds.
+partKindRegistry.register("record", [
+	coreTextSlot,
+	{ kind: "vertex", has: () => true },
+]);
+partKindRegistry.register("filled-record", [
+	{
+		...coreTextSlot,
+		styleIntentKinds: new Set([...TEXT_STYLE_INTENT_KINDS, "fill"]),
+	},
+]);
+
+const VERTEX_PICK: ObjectPartSelection = {
+	kind: "vertex",
+	ranges: [{ anchorId: "0", focusId: "0" }],
+};
 
 describe("getMenuSections", () => {
 	it("returns every registered section while no slot is selected", () => {
-		expect(getMenuSections(makeState(null), registry, styleRegistry)).toEqual(
-			RECORD_SECTIONS,
-		);
+		expect(
+			getMenuSections(makeState(null), registry, partKindRegistry),
+		).toEqual(RECORD_SECTIONS);
 	});
 
 	it("keeps only the text items once a slot is selected", () => {
 		const state = makeState(NAME_SLOT_PICK);
-		expect(getMenuSections(state, registry, styleRegistry)).toEqual([
+		expect(getMenuSections(state, registry, partKindRegistry)).toEqual([
 			{
 				id: "text",
 				items: [
@@ -95,9 +109,9 @@ describe("getMenuSections", () => {
 		]);
 	});
 
-	it("keeps an item whose kind the picked object's type declares", () => {
+	it("keeps an item whose every kind the picked kind receives", () => {
 		const state = makeState(NAME_SLOT_PICK, "filled-record");
-		expect(getMenuSections(state, registry, styleRegistry)).toEqual([
+		expect(getMenuSections(state, registry, partKindRegistry)).toEqual([
 			{ id: "style", items: [{ type: "backgroundColor" }] },
 			{
 				id: "text",
@@ -116,9 +130,15 @@ describe("getMenuSections", () => {
 			textEditState: { kind: "shape" },
 		} as unknown as CanvasControllerState;
 		expect(
-			getMenuSections(state, registry, styleRegistry).map(
+			getMenuSections(state, registry, partKindRegistry).map(
 				(section) => section.id,
 			),
 		).toEqual(["style", "text"]);
+	});
+
+	it("leaves every section under a pick of a kind declaring no style kinds", () => {
+		expect(
+			getMenuSections(makeState(VERTEX_PICK), registry, partKindRegistry),
+		).toEqual(RECORD_SECTIONS);
 	});
 });

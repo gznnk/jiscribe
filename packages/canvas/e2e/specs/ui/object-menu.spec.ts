@@ -124,7 +124,11 @@ test.describe("styling through the ObjectMenu", () => {
 		await expect(fontSize).toBeVisible();
 		await expect(backgroundColor).toHaveCount(0);
 
+		// Leaving the editor keeps the body picked, so the menu stays narrowed until
+		// the pick is dropped by a second Escape.
 		await canvas.cancelText();
+		await expect(backgroundColor).toHaveCount(0);
+		await canvas.pressEscape();
 		await expect(backgroundColor).toBeVisible();
 	});
 
@@ -160,7 +164,9 @@ test.describe("styling through the ObjectMenu", () => {
 		await expect(underline).toBeVisible();
 		await expect(strikethrough).toBeVisible();
 
+		// The body stays picked after the editor closes (see the test above).
 		await canvas.cancelText();
+		await canvas.pressEscape();
 		await expect(textFormatToggle).toBeVisible();
 		await expect(bold).toHaveCount(0);
 	});

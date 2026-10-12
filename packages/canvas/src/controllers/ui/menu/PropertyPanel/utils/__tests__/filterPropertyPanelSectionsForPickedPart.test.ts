@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import { TEXT_STYLE_INTENT_KINDS } from "../../../../../style/StyleIntent";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
-import { filterTextSlotPropertyPanelSections } from "../filterTextSlotPropertyPanelSections";
+import { filterPropertyPanelSectionsForPickedPart } from "../filterPropertyPanelSectionsForPickedPart";
 
 const CustomRow = (): null => null;
 
-const NO_KINDS: ReadonlySet<string> = new Set();
+/** What a pick receives: the text kinds, which a text slot pick receives alone, and `extraKinds`. */
+const textAnd = (...extraKinds: string[]): ReadonlySet<string> =>
+	new Set([...TEXT_STYLE_INTENT_KINDS, ...extraKinds]);
 
 const SECTIONS: PropertyPanelSection[] = [
 	{
@@ -43,9 +46,11 @@ const SECTIONS: PropertyPanelSection[] = [
 	},
 ];
 
-describe("filterTextSlotPropertyPanelSections", () => {
-	it("keeps the text rows alone when the type declares nothing", () => {
-		expect(filterTextSlotPropertyPanelSections(SECTIONS, NO_KINDS)).toEqual([
+describe("filterPropertyPanelSectionsForPickedPart", () => {
+	it("keeps the text rows alone under a pick receiving the text kinds alone", () => {
+		expect(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, textAnd()),
+		).toEqual([
 			{
 				id: "text",
 				label: "Text",
@@ -54,9 +59,9 @@ describe("filterTextSlotPropertyPanelSections", () => {
 		]);
 	});
 
-	it("keeps a row whose kind the type declares, and only that row of its section", () => {
+	it("keeps a row whose kind the pick receives, and only that row of its section (a table cell: fill, not its opacity)", () => {
 		expect(
-			filterTextSlotPropertyPanelSections(SECTIONS, new Set(["fill"])).map(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, textAnd("fill")).map(
 				(section) => [section.id, section.items.map((item) => item.type)],
 			),
 		).toEqual([
@@ -65,9 +70,9 @@ describe("filterTextSlotPropertyPanelSections", () => {
 		]);
 	});
 
-	it("keeps a row naming two kinds only once both are declared", () => {
+	it("keeps a row naming two kinds only once both are received", () => {
 		const arrowIds = (kinds: string[]): string[] =>
-			filterTextSlotPropertyPanelSections(SECTIONS, new Set(kinds)).map(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, textAnd(...kinds)).map(
 				(section) => section.id,
 			);
 
@@ -75,22 +80,33 @@ describe("filterTextSlotPropertyPanelSections", () => {
 		expect(arrowIds(["startArrow", "endArrow"])).toEqual(["arrow", "text"]);
 	});
 
-	it("drops custom rows and the frame rows whatever is declared", () => {
+	it("drops custom rows and the frame rows whatever is received", () => {
 		expect(
-			filterTextSlotPropertyPanelSections(
+			filterPropertyPanelSectionsForPickedPart(
 				SECTIONS,
-				new Set(["position", "size", "rotation", "header-fill"]),
+				textAnd("position", "size", "rotation", "header-fill"),
 			).map((section) => section.id),
 		).toEqual(["text"]);
 	});
 
 	it("keeps the label of a section that survives", () => {
 		expect(
-			filterTextSlotPropertyPanelSections(SECTIONS, new Set(["stroke"]))[0],
+			filterPropertyPanelSectionsForPickedPart(
+				SECTIONS,
+				new Set(["stroke"]),
+			)[0],
 		).toEqual({
 			id: "stroke",
 			label: "Border",
 			items: [{ type: "strokeColor" }],
 		});
+	});
+
+	it("drops the text rows under a pick receiving none of the text kinds", () => {
+		expect(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, new Set(["fill"])).map(
+				(section) => section.id,
+			),
+		).toEqual(["fill"]);
 	});
 });

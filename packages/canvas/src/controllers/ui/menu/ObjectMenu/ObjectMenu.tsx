@@ -31,7 +31,8 @@ import type {
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
-import { isTextSlotPart } from "../../../selection/partKinds/textSlotPartKind";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { readPickedPartStyleIntentKinds } from "../../../selection/readers/readPickedPartStyleIntentKinds";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
 type ObjectMenuProps = {
@@ -183,6 +184,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const readStyle = useSelectionStyleReader(canvasState);
+	const { objectPartKind } = useCanvasRegistries();
 	// Reported to the positioning hook, which holds the menu still while it is
 	// under the pointer — the flat format buttons resize an auto-sized text on
 	// every toggle, and the menu must not walk away between two presses.
@@ -199,11 +201,12 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
-	// None of the system sections acts on a text slot, so they all go while one is
-	// selected — and likewise while an editor is open, where the menu is there to
-	// style the text being edited.
+	// None of the system sections acts on a picked part, so they all go while one
+	// narrows the menu (readPickedPartStyleIntentKinds) — and likewise while an editor is
+	// open, where the menu is there to style the text being edited.
 	const showSystemSections =
-		shouldRender && !isTextSlotPart(canvasState.selection.part);
+		shouldRender &&
+		readPickedPartStyleIntentKinds(canvasState, objectPartKind) === null;
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
 		: [];

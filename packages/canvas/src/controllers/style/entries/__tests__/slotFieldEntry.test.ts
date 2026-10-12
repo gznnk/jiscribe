@@ -8,12 +8,9 @@ import {
 	slotPickOf,
 	textRectOf,
 } from "../../__tests__/support/styleFixtures";
-import { selectedSlotIds } from "../slotEntry";
 import { slotFieldEntry } from "../slotFieldEntry";
 
-const entry = slotFieldEntry("textAlign", {
-	slotIdsOf: selectedSlotIds,
-});
+const entry = slotFieldEntry("textAlign");
 
 const readTextSlots = (object: unknown): TextSlots =>
 	(object as { text: TextSlots }).text;

@@ -127,6 +127,30 @@ export type TextSlotStyleIntentKind = Extract<
 	keyof TextSlotStyle
 >;
 
+/**
+ * Every kind the text half of a type's table can answer for (textStyleTable),
+ * whatever its text type: the typography, the keystroke toggles and the content.
+ * What a pick of a text slot receives (createTextSlotPartKindDefinition), and the
+ * kinds a part reaching text declares among its own (`styleIntentKinds`). A
+ * `"source"` type answers for fewer of them, its menu offering none of the rest
+ * to begin with.
+ */
+export const TEXT_STYLE_INTENT_KINDS: ReadonlySet<CoreStyleIntentKind> =
+	new Set<CoreStyleIntentKind>([
+		"textContent",
+		"fontColor",
+		"fontSize",
+		"fontFamily",
+		"fontWeight",
+		"toggleBold",
+		"fontStyle",
+		"toggleItalic",
+		"textDecoration",
+		"toggleUnderline",
+		"textAlign",
+		"verticalAlign",
+	]);
+
 /** Everything a core intent of one kind holds besides its name. */
 type CoreStyleIntentPayload<K extends CoreStyleIntentKind> = Omit<
 	Extract<CoreStyleIntent, { kind: K }>,
