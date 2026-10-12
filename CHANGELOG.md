@@ -437,6 +437,12 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **Tab no longer moves an open text edit to the next cell.** Pressing Tab
+  while editing a table cell (or any slot of a multi-slot shape) took the focus
+  off the editor and, on the next Tab, walked the selection on to the next
+  slot with the draft still attached, so the editor showed up over another cell
+  holding the first cell's text. The editor now keeps Tab and Shift+Tab to
+  itself, and the slot walk refuses to move while an edit is open.
 - **A shape whose renderer throws no longer takes the canvas down.** Each
   object is drawn inside a boundary of its own: the one that threw is drawn as
   nothing and named in a console warning with its type and id, while every other
