@@ -17,6 +17,7 @@ import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
 import { toStyleIntent } from "../../../style/intent/toStyleIntent";
 import type {
 	TextToggleIntent,
@@ -229,7 +230,7 @@ const openSession = (scenario: FuzzScenario): CanvasControllerState => {
 	} as CanvasControllerState["objects"][string];
 	const objects = { ...base.objects, [OBJECT_ID]: seeded };
 	return createTestState(doc, {
-		selection: selectionOf([OBJECT_ID]),
+		selection: selectionOf([OBJECT_ID], textSlotPartSelection(SLOT_ID)),
 		objects,
 		textEditState: {
 			kind: "shape",

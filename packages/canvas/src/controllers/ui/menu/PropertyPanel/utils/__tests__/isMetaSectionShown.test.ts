@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../../../selection/__tests__/support/textSlotPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/partKinds/textSlotPartKind";
 import { isMetaSectionShown } from "../isMetaSectionShown";
 
@@ -64,7 +65,7 @@ describe("isMetaSectionShown", () => {
 
 	it("hides it while a shape's text is being edited", () => {
 		const state = makeState({
-			selection: selectionOf(["rect-1"]),
+			selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 			textEditState: { kind: "shape", text: [] },
 		});
 

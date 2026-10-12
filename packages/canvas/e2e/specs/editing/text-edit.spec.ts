@@ -25,6 +25,25 @@ function displayTextOf(canvas: CanvasDriver) {
 	return canvas.page.locator("foreignObject > div > div").first();
 }
 
+/**
+ * Whether each outline rect in the selection overlay is dashed, in drawing order:
+ * the object's own outline first, a picked part's box after it.
+ */
+async function selectionOutlines(canvas: CanvasDriver): Promise<boolean[]> {
+	return canvas.page.evaluate(() =>
+		[...document.querySelectorAll('[data-layer="selection-overlay"] rect')].map(
+			(rect) => rect.getAttribute("stroke-dasharray") !== null,
+		),
+	);
+}
+
+/** How many resize/rotation handles are on screen; they all carry data-id="transform". */
+async function transformHandleCount(canvas: CanvasDriver): Promise<number> {
+	const controlIds = await canvas.visibleControlIds();
+	return controlIds.filter((controlId) => controlId.startsWith("transform/"))
+		.length;
+}
+
 test.describe("text editing", () => {
 	test("edits on double click and commits on an outside click", async ({
 		canvas,
@@ -46,6 +65,32 @@ test.describe("text editing", () => {
 		await canvas.cancelText();
 
 		await expect(canvas.page.locator("body")).not.toContainText("Discarded");
+	});
+
+	test("outlines the body while it is edited, and steps out one Escape at a time", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+		await canvas.deselect();
+		await canvas.typeTextAt({ x: 500, y: 260 }, "Kept out");
+
+		// The body is picked like a compartment: its own box over a dashed outline.
+		await expect.poll(() => selectionOutlines(canvas)).toEqual([true, false]);
+		expect(await transformHandleCount(canvas)).toBe(0);
+
+		// The first Escape leaves the editor, the body staying picked.
+		await canvas.cancelText();
+		expect(await selectionOutlines(canvas)).toEqual([true, false]);
+		expect(await transformHandleCount(canvas)).toBe(0);
+
+		// The second drops the body, back to the shape alone.
+		await canvas.pressEscape();
+		await expect.poll(() => selectionOutlines(canvas)).toEqual([false]);
+		expect(await transformHandleCount(canvas)).toBeGreaterThan(0);
+
+		// The third deselects it.
+		await canvas.pressEscape();
+		await expect.poll(() => canvas.hasAnyControl()).toBe(false);
 	});
 
 	test("accepts multi-line text", async ({ canvas }) => {

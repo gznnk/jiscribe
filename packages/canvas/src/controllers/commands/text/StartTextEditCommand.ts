@@ -55,7 +55,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return canEditText(state.objects[state.selection.objectIds[0]]);
 	},
 
-	execute(state, registries) {
+	execute(state) {
 		// When a connector is selected, start editing its label (label.text).
 		const connectorId = getSelectedConnectorId(state);
 		if (connectorId !== null) {
@@ -112,12 +112,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 			// The slot being edited is the selection (see textEditState), so the one
 			// the fallback picked is written there too; a slot already selected keeps
 			// the reference.
-			selection: selectTextSlot(
-				state.selection,
-				targetObject,
-				slotId,
-				registries.objectPartKind,
-			),
+			selection: selectTextSlot(state.selection, targetObject, slotId),
 			textEditState: {
 				kind: "shape",
 				text: readRichTextSlot(targetObject.text, slotId),

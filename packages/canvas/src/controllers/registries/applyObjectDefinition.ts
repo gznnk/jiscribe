@@ -601,13 +601,14 @@ export const applyObjectDefinition = (
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
-	// A type spelling its text out as slots takes part in slot selection without
-	// declaring anything: the ids are the keys of its `text`, so there is nothing
-	// per type to say. Declaring `"textSlot"` itself replaces that default rather
-	// than colliding with it (the rule `menu` and `propertyPanel` already follow).
+	// A type holding text takes part in slot selection without declaring
+	// anything, one body or several: the ids are the keys of its `text`, so there
+	// is nothing per type to say. Declaring `"textSlot"` itself replaces that
+	// default rather than colliding with it (the rule `menu` and `propertyPanel`
+	// already follow).
 	const declaredPartKinds = definition.partKinds ?? [];
 	const partKinds =
-		definition.features.text === "slots" &&
+		definition.features.text !== undefined &&
 		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
 			? [
 					...declaredPartKinds,

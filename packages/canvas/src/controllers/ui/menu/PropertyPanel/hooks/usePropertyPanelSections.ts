@@ -2,11 +2,11 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { isTextSlotPart } from "../../../../selection/partKinds/textSlotPartKind";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
 import type { ObjectStyleRegistry } from "../../../../style/tables/ObjectStyleRegistry";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { getAddressedDeclaredKinds } from "../../utils/getAddressedDeclaredKinds";
-import { isTextAddressed } from "../../utils/isTextAddressed";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
@@ -114,7 +114,8 @@ const filterShownSections = (
  * the rows whose every style kind the type declares itself in `styleEntries`, and
  * every custom row goes (filterTextSlotPropertyPanelSections), so the panel never
  * offers a control the slot cannot receive — the same narrowing the ObjectMenu
- * does, and for the same reason an open text editor narrows them too: what is
+ * does, and for the same reason an open text editor narrows them too (through the
+ * slot it keeps picked, see `textEditState`): what is
  * offered there has to be something a stretch of the text being edited can take,
  * and reshaping the shape mid-edit is not it.
  *
@@ -123,7 +124,7 @@ const filterShownSections = (
  * the row as soon as one selected type lacks it (a `point` shape has no size to
  * hold in proportion, so the default panel gives it none).
  *
- * @param state - The current canvas controller state; the selection, the objects it names and the text focus are read
+ * @param state - The current canvas controller state; the selection and the objects it names are read
  * @param propertyPanelRegistry - Per-canvas PropertyPanelRegistry, asked once per concrete type in the selection
  * @param objectStyleRegistry - Per-canvas ObjectStyleRegistry; read only while text is addressed, for the kinds the addressed type declares
  * @returns The sections in display order; empty when nothing is selected, the selected types share nothing, or every section turned the selection down
@@ -134,7 +135,7 @@ export const getPropertyPanelSections = (
 	objectStyleRegistry: ObjectStyleRegistry,
 ): PropertyPanelSection[] => {
 	const sections = collectSelectionSections(state, propertyPanelRegistry);
-	if (!isTextAddressed(state)) {
+	if (!isTextSlotPart(state.selection.part)) {
 		// This path alone: the box the lock governs is not a selected slot's.
 		return filterShownSections(
 			holdsOwnAspectRatioLock(state)
@@ -165,14 +166,11 @@ export const usePropertyPanelSections = (
 	state: CanvasControllerState,
 ): PropertyPanelSection[] => {
 	const { selection, objects } = state;
-	// The editing session itself is not read, only whether one is open on a shape:
-	// the section set is narrowed while it is (getPropertyPanelSections).
-	const isEditingShapeText = state.textEditState?.kind === "shape";
 	const { propertyPanel, objectStyle } = useCanvasRegistries();
 
 	return useMemo(
 		() => getPropertyPanelSections(state, propertyPanel, objectStyle),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[selection, isEditingShapeText, objects, propertyPanel, objectStyle],
+		[selection, objects, propertyPanel, objectStyle],
 	);
 };

@@ -8,6 +8,7 @@ import type {
 } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../../selection/__tests__/support/textSlotPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { CanvasEventHandler } from "../CanvasEventHandler";
 
@@ -22,7 +23,7 @@ const makeState = (
 	({
 		objects: { a: makeTextRect("a", "old text") },
 		rootIds: ["a"],
-		selection: selectionOf(["a"]),
+		selection: selectionOf(["a"], textSlotPartSelection("body")),
 		multiSelectGroup: null,
 		shapeDrawing: null,
 		areaSelection: null,

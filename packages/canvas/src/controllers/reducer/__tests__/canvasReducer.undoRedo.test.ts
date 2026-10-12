@@ -5,6 +5,7 @@ import { createTestState } from "./support/createTestState";
 import { runCommands } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 
 // Start with rect-1 selected (cx=5, cy=5)
 const createState = (): CanvasControllerState =>
@@ -65,6 +66,7 @@ describe("canvasReducer (integration)", () => {
 			// Reproduce a state where an editing session has started
 			state = {
 				...state,
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: { kind: "shape", text: "editing" },
 			};
 

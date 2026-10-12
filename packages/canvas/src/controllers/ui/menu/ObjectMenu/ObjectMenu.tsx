@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useRef, useState } from "react";
 
+import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
 import { useMenuSections } from "./hooks/useMenuSections";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import { AlignmentMenu } from "./items/AlignmentMenu";
@@ -30,9 +31,8 @@ import type {
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
+import { isTextSlotPart } from "../../../selection/partKinds/textSlotPartKind";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
-import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
-import { isTextAddressed } from "../utils/isTextAddressed";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
@@ -202,7 +202,8 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// None of the system sections acts on a text slot, so they all go while one is
 	// selected — and likewise while an editor is open, where the menu is there to
 	// style the text being edited.
-	const showSystemSections = shouldRender && !isTextAddressed(canvasState);
+	const showSystemSections =
+		shouldRender && !isTextSlotPart(canvasState.selection.part);
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
 		: [];

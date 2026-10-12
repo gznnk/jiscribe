@@ -6,8 +6,8 @@ import { VERTEX_PART_KIND } from "../../../selection/partKinds/vertexPartKind";
  * and `"control"`): `<kind>:<partId>`, naming one part of one object the way
  * `data-id` names the object itself.
  *
- * - `textSlot:{slotId}` — one text slot of a `features.text === "slots"` shape,
- *   the id spelled as a key of the object's own `text`
+ * - `textSlot:{slotId}` — one text slot of a text-holding shape, the id spelled
+ *   as a key of the object's own `text`
  * - `vertex:{index}` — one vertex of a poly-geometry shape, the id spelled as
  *   the decimal index into its `points`
  *

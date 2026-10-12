@@ -111,12 +111,17 @@ export const sourceRectOf = (id: string, text: TextSlots): ObjectState =>
 	objectOf(SourceFeatures, id, { text });
 
 /**
- * The part kinds the fixtures' slot picks expand through: the slotted rects
- * ({@link textRectOf}) stand in for a `features.text === "slots"` type, so rect
- * is given the slot kind applyObjectDefinition registers for one.
+ * The part kinds the fixtures' slot picks expand through: the slot kind
+ * applyObjectDefinition registers for every text-holding type, given to each
+ * one the fixtures build (the slotted rects of {@link textRectOf} stand in for
+ * a `features.text === "slots"` type).
  */
 const slotPartKindsOf = (): ObjectPartKindRegistry =>
-	createTextSlotPartRegistry(RectFeatures.type);
+	createTextSlotPartRegistry(
+		RectFeatures.type,
+		EllipseFeatures.type,
+		SourceFeatures.type,
+	);
 
 /** A pick naming one text slot, the way a press on a slot stores it. */
 export const slotPickOf = (slotId: string): ObjectPartSelection => ({
@@ -142,11 +147,12 @@ export const stateOf = (
 	}) as CanvasControllerState;
 
 /**
- * A state with a shape editor open on one object, which a session is always the
- * sole selected one of (readOpenTextEdit).
+ * A state with a shape editor open on one object's body, which a session is
+ * always the sole selected one of, its slot picked below it (readOpenTextEdit).
  *
  * @param objects - Every object, keyed by id
- * @param ownerId - The object being edited, which is also the selection
+ * @param ownerId - The object being edited, which is also the selection; its
+ *   `body` slot is the one picked
  * @param draft - The body the editor holds, which the committed slot need not match
  * @param selection - What the editor has selected, omitted for an editor that has not reported one
  */
@@ -157,7 +163,7 @@ export const editingStateOf = (
 	selection?: { start: number; end: number },
 ): CanvasControllerState =>
 	({
-		selection: selectionOf([ownerId]),
+		selection: selectionOf([ownerId], slotPickOf(BODY_TEXT_SLOT_ID)),
 		objects,
 		textEditState: { kind: "shape", text: draft, selection },
 	}) as unknown as CanvasControllerState;

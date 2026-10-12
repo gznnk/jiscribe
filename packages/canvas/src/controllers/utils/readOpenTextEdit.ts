@@ -7,7 +7,6 @@ import {
 	type TextStyleState,
 } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
-import { getFirstTextSlotId } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { isTextSlotPart } from "../selection/partKinds/textSlotPartKind";
 import { readActivePartFocusId } from "../selection/readers/readActivePartFocusId";
@@ -49,12 +48,11 @@ export type OpenTextEdit =
  * @returns null when no session is open; otherwise the draft with its owner
  * @throws When the state breaks one of the invariants `textEditState` documents
  *   — the owner is not a lone selected object, a shape session's object holds no
- *   slot to edit, a label session's owner is no connector. Unreachable for a
+ *   slot to edit or its `selection.part` is no textSlot pick naming a slot the
+ *   object holds, a label session's owner is no connector. Unreachable for a
  *   state the reducer has handed on, which closes such a session on the way out
  *   (`reconcileSelection`); returning null instead would make the editor vanish
- *   with nothing to trace it back to. A session over a type with slots whose
- *   `selection.part` no longer names one is closed there too, rather than being
- *   caught here: the fallback below cannot tell which slot was meant
+ *   with nothing to trace it back to
  */
 export const readOpenTextEdit = (
 	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
@@ -97,21 +95,16 @@ export const readOpenTextEdit = (
 			`Shape text edit is open over an object holding no text slots: ${objectId}`,
 		);
 	}
-	// The fallback is for the types that pick nothing below themselves: one
-	// holding a single body, which is the slot. A type spelling its text out as
-	// slots always names the one being edited, the reducer closing a session that
-	// stops doing so (reconcileSelection), so the fallback never stands in for a
-	// slot it could only guess at.
-	const slotId = isTextSlotPart(part)
-		? readActivePartFocusId(part)
-		: getFirstTextSlotId(owner.text);
+	if (!isTextSlotPart(part)) {
+		throw new Error(
+			`Shape text edit is open over ${objectId} with no text slot picked below it`,
+		);
+	}
+	const slotId = readActivePartFocusId(part);
 	// hasOwnProperty rather than a lookup, as the slot part kind checks it
 	// (createTextSlotPartKindDefinition): "toString" names an Object.prototype
 	// member on every slot map, and a slot is not that.
-	if (
-		slotId === undefined ||
-		!Object.prototype.hasOwnProperty.call(owner.text, slotId)
-	) {
+	if (!Object.prototype.hasOwnProperty.call(owner.text, slotId)) {
 		throw new Error(
 			`Shape text edit is open on a slot ${objectId} does not hold: ${slotId}`,
 		);

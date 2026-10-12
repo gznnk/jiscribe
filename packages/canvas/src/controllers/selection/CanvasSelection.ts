@@ -62,9 +62,9 @@ export type CanvasSelection = {
 
 	/**
 	 * Sub-parts addressed one level below the object selection, in a namespace the
-	 * object's own type owns (`kind`) — the text slots of a
-	 * `features.text === "slots"` shape, the vertices of a polyline, a polygon or
-	 * a connector. Non-null only while `objectIds` holds exactly one id, which is
+	 * object's own type owns (`kind`) — the text slots of a text-holding shape
+	 * (its one `body` included), the vertices of a polyline, a polygon or a
+	 * connector. Non-null only while `objectIds` holds exactly one id, which is
 	 * the object the parts belong to. Always valid where it is read: every reducer
 	 * branch that rewrites the selection or the objects drops a part the state no
 	 * longer backs (reconcileSelection), instead of every reader

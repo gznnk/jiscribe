@@ -110,9 +110,9 @@ describe("getMenuSections", () => {
 		]);
 	});
 
-	it("keeps it while the type's one body is being edited, nothing picked", () => {
+	it("keeps it while the picked slot is being edited", () => {
 		const state = {
-			...makeState(null, "filled-record"),
+			...makeState(NAME_SLOT_PICK, "filled-record"),
 			textEditState: { kind: "shape" },
 		} as unknown as CanvasControllerState;
 		expect(

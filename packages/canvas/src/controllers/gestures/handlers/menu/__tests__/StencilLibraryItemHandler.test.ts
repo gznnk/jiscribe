@@ -5,6 +5,7 @@ import { clickPlacedPlugin } from "../../../../__tests__/support/clickPlacedPlug
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../../selection/__tests__/support/textSlotPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { StencilLibraryItemHandler } from "../StencilLibraryItemHandler";
 
@@ -102,7 +103,7 @@ describe("StencilLibraryItemHandler", () => {
 			...makeState(),
 			objects: { "rect-1": edited },
 			rootIds: ["rect-1"],
-			selection: selectionOf(["rect-1"]),
+			selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 			textEditState: { kind: "shape", text: "typed" },
 		} as CanvasControllerState;
 

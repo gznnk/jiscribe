@@ -17,7 +17,7 @@ const slotted: ObjectState = {
 	text: { name: { text: "User" }, rows: { text: ["id"] } },
 } as unknown as ObjectState;
 
-/** A shape holding one body rather than slots, so it takes no pick below itself. */
+/** A shape holding one body rather than slots, picked as its `body` slot. */
 const singleBody: ObjectState = {
 	id: "rect-1",
 	type: "rect",
@@ -63,11 +63,12 @@ describe("readOpenTextEdit", () => {
 		});
 	});
 
-	it("falls back to the object's one body where nothing is picked below it", () => {
-		// A `features.text: "body"` type registers no slot kind, so its selection
-		// stays at the object and its sole slot is the one being edited.
+	it("resolves a one-body shape's session through its body pick", () => {
 		const openEdit = readOpenTextEdit(
-			input({ kind: "shape", text: "hi" }, selectionOf(["rect-1"])),
+			input(
+				{ kind: "shape", text: "hi" },
+				selectionOf(["rect-1"], textSlotPartSelection("body")),
+			),
 		);
 		expect(openEdit).toEqual({
 			kind: "shape",
@@ -75,16 +76,6 @@ describe("readOpenTextEdit", () => {
 			slotId: "body",
 			text: "hi",
 		});
-	});
-
-	it("falls back to the one body for a pick of another kind too", () => {
-		const openEdit = readOpenTextEdit(
-			input(
-				{ kind: "shape", text: "hi" },
-				selectionOf(["rect-1"], vertexPartSelection(0)),
-			),
-		);
-		expect(openEdit).toMatchObject({ slotId: "body" });
 	});
 
 	it("resolves a connector label session to the selected connector", () => {
@@ -138,6 +129,24 @@ describe("readOpenTextEdit", () => {
 					input({ kind: "shape", text: "x" }, selectionOf(["c1"])),
 				),
 			).toThrow(/no text slots/);
+		});
+
+		it("a shape session with no text slot picked, whatever the type's text shape", () => {
+			for (const objectId of ["rec-1", "rect-1"]) {
+				expect(() =>
+					readOpenTextEdit(
+						input({ kind: "shape", text: "x" }, selectionOf([objectId])),
+					),
+				).toThrow(new RegExp(`${objectId} with no text slot picked`));
+				expect(() =>
+					readOpenTextEdit(
+						input(
+							{ kind: "shape", text: "x" },
+							selectionOf([objectId], vertexPartSelection(0)),
+						),
+					),
+				).toThrow(new RegExp(`${objectId} with no text slot picked`));
+			}
 		});
 
 		it("a slot the object does not hold", () => {

@@ -7,6 +7,7 @@ import { twoRectsDoc } from "./support/fixtures";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { readSelectionStyle } from "../../style/walk/readSelectionStyle";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
@@ -77,7 +78,7 @@ describe("canvasReducer (integration)", () => {
 			// commit:true, so the entry is raised by the shared commit tail rather than
 			// by a route of its own.
 			const editing = createTestState(twoRectsDoc, {
-				selection: selectionOf(["rect-1"]),
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: {
 					kind: "shape",
 					text: "hello",
@@ -112,7 +113,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("END_TEXT_EDIT records when the text changes on commit", () => {
 			const state = createTestState(twoRectsDoc, {
-				selection: selectionOf(["rect-1"]),
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: { kind: "shape", text: "hello" },
 			});
 			const after = canvasReducer(state, {
@@ -125,7 +126,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("cancelling END_TEXT_EDIT does not record and only clears textEditState", () => {
 			const state = createTestState(twoRectsDoc, {
-				selection: selectionOf(["rect-1"]),
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: { kind: "shape", text: "hello" },
 			});
 			const after = canvasReducer(state, {
@@ -138,7 +139,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("END_TEXT_EDIT does not record on commit if the text has not changed", () => {
 			let state = createTestState(twoRectsDoc, {
-				selection: selectionOf(["rect-1"]),
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: { kind: "shape", text: "hello" },
 			});
 			// First time: the text changes, so it is recorded

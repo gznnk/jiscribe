@@ -78,7 +78,8 @@ export function useObjectMenuPosition(
 	// Measure menu dimensions from DOM when it renders or selection changes.
 	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
 	// width must be re-measured then too or the centering uses the stale width;
-	// opening and closing a text editor narrows it the same way.
+	// opening a text editor picks the slot and narrows it the same way, and the
+	// editor's own box moves the menu while it is open.
 	const { objectIds: selectedIds, part } = selection;
 	const selectedIdsString = selectedIds.slice().sort().join(",");
 	const partKey =

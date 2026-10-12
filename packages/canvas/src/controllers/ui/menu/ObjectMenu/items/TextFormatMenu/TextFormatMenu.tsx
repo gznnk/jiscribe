@@ -4,12 +4,12 @@ import { TextFormatMenuContent } from "./TextFormatMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { isTextSlotPart } from "../../../../../selection/partKinds/textSlotPartKind";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../../icons/UnderlineIcon";
 import { useTextFormatToggles } from "../../../hooks/useTextFormatToggles";
-import { isTextAddressed } from "../../../utils/isTextAddressed";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
@@ -89,7 +89,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		</ObjectMenuButton>
 	);
 
-	if (isTextAddressed(canvasState)) {
+	if (isTextSlotPart(canvasState.selection.part)) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}
 

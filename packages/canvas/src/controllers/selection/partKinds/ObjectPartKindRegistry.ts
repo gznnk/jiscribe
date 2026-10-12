@@ -8,8 +8,8 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * vertices of a polyline, the cells of a table. Core knows nothing of what an
  * id means: it carries the id around and hands it back to the type through this
  * definition. A type declares these through `ObjectTypeDefinition.partKinds`, one
- * entry per `kind`; a `features.text === "slots"` type is given the `"textSlot"`
- * kind on top of what it declares (applyObjectDefinition).
+ * entry per `kind`; a type with `features.text` is given the `"textSlot"` kind
+ * on top of what it declares (applyObjectDefinition).
  */
 export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 	{
