@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { TEXT_STYLE_INTENT_KINDS } from "../../../../../style/StyleIntent";
 import type { ObjectMenuSection } from "../../ObjectMenuTypes";
-import { filterMenuSectionsByPick } from "../filterMenuSectionsByPick";
+import { filterMenuSectionsForPickedPart } from "../filterMenuSectionsForPickedPart";
 
 const CustomItemComponent = (): null => null;
 
@@ -14,7 +14,7 @@ const TEXT_AND_FILL_KINDS: ReadonlySet<string> = new Set([
 	"fill",
 ]);
 
-describe("filterMenuSectionsByPick", () => {
+describe("filterMenuSectionsForPickedPart", () => {
 	it("keeps the text items and drops every other builtin", () => {
 		const sections: ObjectMenuSection[] = [
 			{
@@ -36,7 +36,7 @@ describe("filterMenuSectionsByPick", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterMenuSectionsByPick(sections, TEXT_KINDS)).toEqual([
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
 			{
 				id: "text",
 				items: [
@@ -59,7 +59,7 @@ describe("filterMenuSectionsByPick", () => {
 			},
 		];
 
-		expect(filterMenuSectionsByPick(sections, TEXT_KINDS)).toEqual([
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
 			{ id: "text", items: [{ type: "font" }] },
 		]);
 	});
@@ -71,7 +71,7 @@ describe("filterMenuSectionsByPick", () => {
 			{ id: "arrowHead", items: [{ type: "arrowHead" }] },
 		];
 
-		expect(filterMenuSectionsByPick(sections, TEXT_KINDS)).toEqual([
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
 			{ id: "text", items: [{ type: "textAlignment" }] },
 		]);
 	});
@@ -82,7 +82,7 @@ describe("filterMenuSectionsByPick", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterMenuSectionsByPick(sections, TEXT_KINDS)).toEqual([]);
+		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([]);
 	});
 
 	it("keeps an item whose every kind the picked kind receives", () => {
@@ -98,7 +98,9 @@ describe("filterMenuSectionsByPick", () => {
 			{ id: "text", items: [{ type: "font" }] },
 		];
 
-		expect(filterMenuSectionsByPick(sections, TEXT_AND_FILL_KINDS)).toEqual([
+		expect(
+			filterMenuSectionsForPickedPart(sections, TEXT_AND_FILL_KINDS),
+		).toEqual([
 			{ id: "style", items: [{ type: "backgroundColor" }] },
 			{ id: "text", items: [{ type: "font" }] },
 		]);
@@ -113,7 +115,7 @@ describe("filterMenuSectionsByPick", () => {
 		];
 
 		expect(
-			filterMenuSectionsByPick(
+			filterMenuSectionsForPickedPart(
 				sections,
 				new Set(["strokeWidth", "startArrow"]),
 			),
@@ -126,7 +128,7 @@ describe("filterMenuSectionsByPick", () => {
 		];
 
 		expect(
-			filterMenuSectionsByPick(
+			filterMenuSectionsForPickedPart(
 				sections,
 				new Set(["strokeWidth", "strokeDashType"]),
 			),
@@ -144,7 +146,7 @@ describe("filterMenuSectionsByPick", () => {
 		];
 
 		expect(
-			filterMenuSectionsByPick(sections, new Set(["fill", "group"])),
+			filterMenuSectionsForPickedPart(sections, new Set(["fill", "group"])),
 		).toEqual([]);
 	});
 
@@ -154,8 +156,8 @@ describe("filterMenuSectionsByPick", () => {
 			{ id: "text", items: [{ type: "font" }, { type: "textFormat" }] },
 		];
 
-		expect(filterMenuSectionsByPick(sections, new Set(["fill"]))).toEqual([
-			{ id: "style", items: [{ type: "backgroundColor" }] },
-		]);
+		expect(
+			filterMenuSectionsForPickedPart(sections, new Set(["fill"])),
+		).toEqual([{ id: "style", items: [{ type: "backgroundColor" }] }]);
 	});
 });

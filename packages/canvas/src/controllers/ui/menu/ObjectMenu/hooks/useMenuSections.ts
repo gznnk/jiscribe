@@ -4,12 +4,12 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import type { ObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
-import { readPickedStyleIntentKinds } from "../../../../selection/readers/readPickedStyleIntentKinds";
+import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
-import { filterMenuSectionsByPick } from "../utils/filterMenuSectionsByPick";
+import { filterMenuSectionsForPickedPart } from "../utils/filterMenuSectionsForPickedPart";
 
 const itemKey = (item: ObjectMenuItem): string =>
 	item.type === "custom" ? item.id : item.type;
@@ -102,7 +102,7 @@ const collectSelectionSections = (
  * While a part is picked whose kind declares what it receives (`styleIntentKinds`), the
  * sections are narrowed to the items raising only that, so the menu never offers
  * an action the part cannot receive: the text items under a text slot, which
- * every text-holding type is given without opting in (filterMenuSectionsByPick).
+ * every text-holding type is given without opting in (filterMenuSectionsForPickedPart).
  * A pick of a kind declaring nothing (a vertex) leaves them alone, the menu still
  * acting on the object.
  *
@@ -112,7 +112,7 @@ const collectSelectionSections = (
  *
  * @param state - The current canvas controller state
  * @param objectMenuRegistry - Per-canvas ObjectMenuRegistry, asked once per concrete type in the selection
- * @param objectPartKindRegistry - Per-canvas ObjectPartKindRegistry, asked for what the picked kind receives (readPickedStyleIntentKinds)
+ * @param objectPartKindRegistry - Per-canvas ObjectPartKindRegistry, asked for what the picked kind receives (readPickedPartStyleIntentKinds)
  * @returns The sections in display order
  */
 export const getMenuSections = (
@@ -121,13 +121,13 @@ export const getMenuSections = (
 	objectPartKindRegistry: ObjectPartKindRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
-	const pickedIntentKinds = readPickedStyleIntentKinds(
+	const styleIntentKinds = readPickedPartStyleIntentKinds(
 		state,
 		objectPartKindRegistry,
 	);
-	return pickedIntentKinds === null
+	return styleIntentKinds === null
 		? sections
-		: filterMenuSectionsByPick(sections, pickedIntentKinds);
+		: filterMenuSectionsForPickedPart(sections, styleIntentKinds);
 };
 
 /**

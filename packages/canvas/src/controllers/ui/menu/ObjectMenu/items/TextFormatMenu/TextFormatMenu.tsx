@@ -5,7 +5,7 @@ import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { readPickedStyleIntentKinds } from "../../../../../selection/readers/readPickedStyleIntentKinds";
+import { readPickedPartStyleIntentKinds } from "../../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
@@ -31,7 +31,7 @@ type TextFormatMenuProps = {
  * the value the press should land on rather than a toggle command.
  *
  * While a picked part narrows the menu — a slot selected below the object, an
- * inline edit session, a table row (readPickedStyleIntentKinds) — the four buttons are laid out flat in the menu itself: formatting is the
+ * inline edit session, a table row (readPickedPartStyleIntentKinds) — the four buttons are laid out flat in the menu itself: formatting is the
  * main thing the menu is there for at that moment, and a dropdown would cost a press
  * per toggle.
  */
@@ -91,7 +91,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		</ObjectMenuButton>
 	);
 
-	if (readPickedStyleIntentKinds(canvasState, objectPartKind) !== null) {
+	if (readPickedPartStyleIntentKinds(canvasState, objectPartKind) !== null) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}
 

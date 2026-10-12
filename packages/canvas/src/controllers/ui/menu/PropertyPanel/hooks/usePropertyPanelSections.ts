@@ -4,7 +4,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import type { ObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
-import { readPickedStyleIntentKinds } from "../../../../selection/readers/readPickedStyleIntentKinds";
+import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
@@ -17,7 +17,7 @@ import {
 	ensurePropertyPanelItems,
 	propertyPanelItemKey,
 } from "../utils/appendPropertyPanelItems";
-import { filterPropertyPanelSectionsByPick } from "../utils/filterPropertyPanelSectionsByPick";
+import { filterPropertyPanelSectionsForPickedPart } from "../utils/filterPropertyPanelSectionsForPickedPart";
 
 /**
  * Collects the sidebar sections of the current selection, before any slot
@@ -111,7 +111,7 @@ const filterShownSections = (
  *
  * While a part is picked whose kind declares what it receives (`styleIntentKinds`), the
  * sections are narrowed to the rows raising only that, and every custom row goes
- * (filterPropertyPanelSectionsByPick), so the panel never offers a control the
+ * (filterPropertyPanelSectionsForPickedPart), so the panel never offers a control the
  * part cannot receive — the same narrowing the ObjectMenu
  * does, and for the same reason an open text editor narrows them too (through the
  * slot it keeps picked, see `textEditState`): what is
@@ -125,7 +125,7 @@ const filterShownSections = (
  *
  * @param state - The current canvas controller state; the selection and the objects it names are read
  * @param propertyPanelRegistry - Per-canvas PropertyPanelRegistry, asked once per concrete type in the selection
- * @param objectPartKindRegistry - Per-canvas ObjectPartKindRegistry, asked for what the picked kind receives (readPickedStyleIntentKinds)
+ * @param objectPartKindRegistry - Per-canvas ObjectPartKindRegistry, asked for what the picked kind receives (readPickedPartStyleIntentKinds)
  * @returns The sections in display order; empty when nothing is selected, the selected types share nothing, or every section turned the selection down
  */
 export const getPropertyPanelSections = (
@@ -134,11 +134,11 @@ export const getPropertyPanelSections = (
 	objectPartKindRegistry: ObjectPartKindRegistry,
 ): PropertyPanelSection[] => {
 	const sections = collectSelectionSections(state, propertyPanelRegistry);
-	const pickedIntentKinds = readPickedStyleIntentKinds(
+	const styleIntentKinds = readPickedPartStyleIntentKinds(
 		state,
 		objectPartKindRegistry,
 	);
-	if (pickedIntentKinds === null) {
+	if (styleIntentKinds === null) {
 		// This path alone: the box the lock governs is not a picked part's.
 		return filterShownSections(
 			holdsOwnAspectRatioLock(state)
@@ -150,7 +150,7 @@ export const getPropertyPanelSections = (
 		);
 	}
 	return filterShownSections(
-		filterPropertyPanelSectionsByPick(sections, pickedIntentKinds),
+		filterPropertyPanelSectionsForPickedPart(sections, styleIntentKinds),
 		state,
 	);
 };

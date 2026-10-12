@@ -82,5 +82,5 @@ export const createTextSlotPartKindDefinition = (
 
 	styleIntentKinds: TEXT_STYLE_INTENT_KINDS,
 
-	slotIds: (_object, partIds) => partIds,
+	textSlotIds: (_object, partIds) => partIds,
 });

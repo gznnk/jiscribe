@@ -32,7 +32,7 @@ import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
-import { readPickedStyleIntentKinds } from "../../../selection/readers/readPickedStyleIntentKinds";
+import { readPickedPartStyleIntentKinds } from "../../../selection/readers/readPickedPartStyleIntentKinds";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
 type ObjectMenuProps = {
@@ -202,11 +202,11 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
 	// None of the system sections acts on a picked part, so they all go while one
-	// narrows the menu (readPickedStyleIntentKinds) — and likewise while an editor is
+	// narrows the menu (readPickedPartStyleIntentKinds) — and likewise while an editor is
 	// open, where the menu is there to style the text being edited.
 	const showSystemSections =
 		shouldRender &&
-		readPickedStyleIntentKinds(canvasState, objectPartKind) === null;
+		readPickedPartStyleIntentKinds(canvasState, objectPartKind) === null;
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
 		: [];

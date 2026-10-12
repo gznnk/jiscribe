@@ -13,7 +13,7 @@ const entry = slotEntry<ReturnType<typeof textRectOf>, string>(
 /** A kind of the rect's own whose every pick reaches the `rows` slot alone. */
 const objectPartKind = createObjectPartKindRegistry();
 objectPartKind.register("rect", [
-	{ kind: "band", has: () => true, slotIds: () => ["rows"] },
+	{ kind: "band", has: () => true, textSlotIds: () => ["rows"] },
 ]);
 const bandPick = { kind: "band", ranges: [{ anchorId: "0", focusId: "0" }] };
 

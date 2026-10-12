@@ -117,7 +117,7 @@ describe("TABLE_TRACK_PART_DEFINITIONS", () => {
 
 describe("TABLE_TRACK_PART_DEFINITIONS: the cells a track pick reaches", () => {
 	it("reaches a row's cells along it, track by track", () => {
-		expect(rowPart.slotIds?.(makeTable(), ["1", "0"])).toEqual([
+		expect(rowPart.textSlotIds?.(makeTable(), ["1", "0"])).toEqual([
 			"r1c0",
 			"r1c1",
 			"r1c2",
@@ -128,7 +128,10 @@ describe("TABLE_TRACK_PART_DEFINITIONS: the cells a track pick reaches", () => {
 	});
 
 	it("reaches a column's cells down it", () => {
-		expect(columnPart.slotIds?.(makeTable(), ["2"])).toEqual(["r0c2", "r1c2"]);
+		expect(columnPart.textSlotIds?.(makeTable(), ["2"])).toEqual([
+			"r0c2",
+			"r1c2",
+		]);
 	});
 
 	it("receives the fill beside the text, as a cell pick does", () => {

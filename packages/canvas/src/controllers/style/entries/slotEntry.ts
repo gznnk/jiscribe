@@ -3,7 +3,7 @@ import type {
 	TextSlotStyle,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
-import { resolveSlotIds } from "./utils/resolveSlotIds";
+import { resolveTextSlotIds } from "./utils/resolveTextSlotIds";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { textSlotsOf } from "../../utils/textSlotsOf";
@@ -11,7 +11,7 @@ import type { StyleEntry } from "../StyleEntry";
 
 /**
  * The pair for an intent stored on whole slots: `writeSlot` decides what one
- * slot's write does, and the rest — which slots are reached (resolveSlotIds), the same-reference
+ * slot's write does, and the rest — which slots are reached (resolveTextSlotIds), the same-reference
  * contract, and reading each of them through the type's defaults — is shared by
  * every such intent (slotFieldEntry, and the whole-slot half of
  * runOrSlotEntry).
@@ -31,13 +31,13 @@ export const slotEntry = <TState extends ObjectState, V>(
 		if (slots === undefined) {
 			return null;
 		}
-		const slotIds = resolveSlotIds(object, pick, ctx);
-		if (slotIds.length === 0) {
+		const textSlotIds = resolveTextSlotIds(object, pick, ctx);
+		if (textSlotIds.length === 0) {
 			return null;
 		}
 		const updatedSlots: TextSlots = { ...slots };
 		let changed = false;
-		for (const slotId of slotIds) {
+		for (const slotId of textSlotIds) {
 			const slot = slots[slotId];
 			if (slot === undefined) {
 				continue;
@@ -57,7 +57,7 @@ export const slotEntry = <TState extends ObjectState, V>(
 			return [];
 		}
 		const values: V[] = [];
-		for (const slotId of resolveSlotIds(object, pick, ctx)) {
+		for (const slotId of resolveTextSlotIds(object, pick, ctx)) {
 			const slot = slots[slotId];
 			if (slot === undefined) {
 				continue;

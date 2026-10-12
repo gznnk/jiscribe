@@ -1,5 +1,5 @@
-import type { BuiltinControlStyleIntentKinds } from "../../utils/isReceivedByPick";
-import { isReceivedByPick } from "../../utils/isReceivedByPick";
+import type { BuiltinControlStyleIntentKinds } from "../../utils/isControlWithinStyleIntentKinds";
+import { isControlWithinStyleIntentKinds } from "../../utils/isControlWithinStyleIntentKinds";
 import type { BuiltinItemKey, ObjectMenuSection } from "../ObjectMenuTypes";
 
 /**
@@ -30,11 +30,11 @@ const BUILTIN_ITEM_STYLE_INTENT_KINDS = {
  * Sections left empty are removed so no divider survives on its own.
  *
  * @param sections - The selection's sections before narrowing
- * @param pickedIntentKinds - What the picked kind receives (readPickedStyleIntentKinds)
+ * @param styleIntentKinds - What the picked kind receives (readPickedPartStyleIntentKinds)
  */
-export const filterMenuSectionsByPick = (
+export const filterMenuSectionsForPickedPart = (
 	sections: ObjectMenuSection[],
-	pickedIntentKinds: ReadonlySet<string>,
+	styleIntentKinds: ReadonlySet<string>,
 ): ObjectMenuSection[] =>
 	sections
 		.map((section) => ({
@@ -42,9 +42,9 @@ export const filterMenuSectionsByPick = (
 			items: section.items.filter(
 				(item) =>
 					item.type !== "custom" &&
-					isReceivedByPick(
+					isControlWithinStyleIntentKinds(
 						BUILTIN_ITEM_STYLE_INTENT_KINDS[item.type],
-						pickedIntentKinds,
+						styleIntentKinds,
 					),
 			),
 		}))

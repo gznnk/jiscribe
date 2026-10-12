@@ -1,7 +1,7 @@
 import { createCanvasRegistries } from "@jiscribe/canvas";
 import type { ObjectPartSelection } from "@jiscribe/canvas";
 import {
-	resolveSlotIds,
+	resolveTextSlotIds,
 	TEXT_SLOT_PART_KIND,
 	TEXT_STYLE_INTENT_KINDS,
 } from "@jiscribe/canvas-sdk";
@@ -50,13 +50,15 @@ const pickOf = (
 	focusId: string = anchorId,
 ): ObjectPartSelection => ({ kind, ranges: [{ anchorId, focusId }] });
 
-describe("the cells a pick of the table reaches (resolveSlotIds)", () => {
+describe("the cells a pick of the table reaches (resolveTextSlotIds)", () => {
 	it("reaches every cell with nothing picked", () => {
-		expect(resolveSlotIds(TABLE, null, ctx)).toEqual(Object.keys(TABLE.text));
+		expect(resolveTextSlotIds(TABLE, null, ctx)).toEqual(
+			Object.keys(TABLE.text),
+		);
 	});
 
 	it("reaches the cells of a picked row alone", () => {
-		expect(resolveSlotIds(TABLE, pickOf("row", "1"), ctx)).toEqual([
+		expect(resolveTextSlotIds(TABLE, pickOf("row", "1"), ctx)).toEqual([
 			"r1c0",
 			"r1c1",
 			"r1c2",
@@ -64,7 +66,7 @@ describe("the cells a pick of the table reaches (resolveSlotIds)", () => {
 	});
 
 	it("reaches the cells of every column a range covers, column by column", () => {
-		expect(resolveSlotIds(TABLE, pickOf("column", "2", "1"), ctx)).toEqual([
+		expect(resolveTextSlotIds(TABLE, pickOf("column", "2", "1"), ctx)).toEqual([
 			"r0c1",
 			"r1c1",
 			"r0c2",
@@ -74,7 +76,11 @@ describe("the cells a pick of the table reaches (resolveSlotIds)", () => {
 
 	it("reaches the picked cells, a range being the rectangle its ends corner", () => {
 		expect(
-			resolveSlotIds(TABLE, pickOf(TEXT_SLOT_PART_KIND, "r0c0", "r1c1"), ctx),
+			resolveTextSlotIds(
+				TABLE,
+				pickOf(TEXT_SLOT_PART_KIND, "r0c0", "r1c1"),
+				ctx,
+			),
 		).toEqual(["r0c0", "r0c1", "r1c0", "r1c1"]);
 	});
 

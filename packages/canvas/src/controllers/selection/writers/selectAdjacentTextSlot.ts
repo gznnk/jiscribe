@@ -16,7 +16,7 @@ import { collectObjectPartIds } from "../readers/collectObjectPartIds";
 type TextSlotCycle = {
 	target: ObjectState & TextStyleState;
 	slotPart: ObjectPartKindDefinition;
-	slotIds: readonly string[];
+	textSlotIds: readonly string[];
 };
 
 /**
@@ -57,8 +57,8 @@ export const getTextSlotCycle = (
 			`getTextSlotCycle: no "${TEXT_SLOT_PART_KIND}" part kind is registered for "${target.type}", which holds text`,
 		);
 	}
-	const slotIds = slotPart.list?.(target) ?? [];
-	return slotIds.length > 1 ? { target, slotPart, slotIds } : null;
+	const textSlotIds = slotPart.list?.(target) ?? [];
+	return textSlotIds.length > 1 ? { target, slotPart, textSlotIds } : null;
 };
 
 /**
@@ -90,14 +90,14 @@ export const selectAdjacentTextSlot = (
 	if (cycle === null) {
 		return state;
 	}
-	const { target, slotPart, slotIds } = cycle;
+	const { target, slotPart, textSlotIds } = cycle;
 
 	// The object is the sole selection (getTextSlotCycle), so a slot pick
 	// is its own.
 	const { part } = state.selection;
 	const coveredIndices = isTextSlotPart(part)
 		? collectObjectPartIds(part, slotPart, target).map((slotId) =>
-				slotIds.indexOf(slotId),
+				textSlotIds.indexOf(slotId),
 			)
 		: [];
 	const currentIndex =
@@ -110,8 +110,8 @@ export const selectAdjacentTextSlot = (
 		currentIndex === -1
 			? step === 1
 				? 0
-				: slotIds.length - 1
-			: (currentIndex + step + slotIds.length) % slotIds.length;
+				: textSlotIds.length - 1
+			: (currentIndex + step + textSlotIds.length) % textSlotIds.length;
 
 	return {
 		...state,
@@ -119,7 +119,9 @@ export const selectAdjacentTextSlot = (
 			...state.selection,
 			part: {
 				kind: TEXT_SLOT_PART_KIND,
-				ranges: [{ anchorId: slotIds[nextIndex], focusId: slotIds[nextIndex] }],
+				ranges: [
+					{ anchorId: textSlotIds[nextIndex], focusId: textSlotIds[nextIndex] },
+				],
 			},
 		},
 		objectMenuOpenId: null,

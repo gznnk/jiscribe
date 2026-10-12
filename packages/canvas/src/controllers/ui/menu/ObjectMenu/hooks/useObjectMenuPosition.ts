@@ -76,7 +76,7 @@ export function useObjectMenuPosition(
 	});
 
 	// Measure menu dimensions from DOM when it renders or selection changes.
-	// Slot selection changes the item set (see filterMenuSectionsByPick), so the
+	// Slot selection changes the item set (see filterMenuSectionsForPickedPart), so the
 	// width must be re-measured then too or the centering uses the stale width;
 	// opening a text editor picks the slot and narrows it the same way, and the
 	// editor's own box moves the menu while it is open.

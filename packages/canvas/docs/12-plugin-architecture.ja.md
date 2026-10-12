@@ -282,8 +282,8 @@ export const CONTAINER_STYLE_ENTRIES = {
 宣言した種別は `features` から導いた種別を置き換える。core の種別の書き込む先を型が
 変えるにはこれを使う。`plugins/table-shape` は `fill` を宣言し直し、pick で書き先を
 振り分けている（何も選んでいなければ自分の背景へ、選んでいれば pick が届くセルの
-`fill` へ。届くセルは文字系のエントリと同じ `resolveSlotIds` の答えで、後述の
-`partKinds` の `slotIds` 参照）:
+`fill` へ。届くセルは文字系のエントリと同じ `resolveTextSlotIds` の答えで、後述の
+`partKinds` の `textSlotIds` 参照）:
 
 ```ts
 const TABLE_STYLE_ENTRIES = {
@@ -292,7 +292,7 @@ const TABLE_STYLE_ENTRIES = {
 ```
 
 文字スタイルがどのスロットに届くかは、表が宣言するものではない。core の文字系の
-エントリが選ばれた種別の `slotIds` に従うので、表は文字系の種別を 1 つも宣言しない。
+エントリが選ばれた種別の `textSlotIds` に従うので、表は文字系の種別を 1 つも宣言しない。
 
 **コマンド。**プラグインが足したコマンドの `execute` は遷移のすべてを担い、
 Doc を編集したと述べることもそこに含む。返す状態を `commitEdit(state)`
@@ -365,9 +365,9 @@ pick へのスタイルに関わる宣言がさらに 2 つある。
   Meta セクションを隠す。省略すれば、この種別の pick のもとでも全操作の主語は
   オブジェクトのまま（`vertex`）。core が付ける `"textSlot"` は文字系の種別
   （`TEXT_STYLE_INTENT_KINDS`）を宣言している
-- `slotIds` — この種別の pick が届くテキストスロット。範囲を展開済みの、pick が覆う
+- `textSlotIds` — この種別の pick が届くテキストスロット。範囲を展開済みの、pick が覆う
   id を受け取る。文字系のエントリはこのスロットに書き、ここから読む
-  （`resolveSlotIds`）。省略すれば pick は全スロットに届く。`"textSlot"` は選ばれた
+  （`resolveTextSlotIds`）。省略すれば pick は全スロットに届く。`"textSlot"` は選ばれた
   スロットそのものを答える
 
 表の `row` / `column` は両方を宣言する。トラックの pick はセルの pick と同じく文字系の

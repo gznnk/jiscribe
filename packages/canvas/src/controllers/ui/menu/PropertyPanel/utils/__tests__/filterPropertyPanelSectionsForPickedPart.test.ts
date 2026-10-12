@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { TEXT_STYLE_INTENT_KINDS } from "../../../../../style/StyleIntent";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
-import { filterPropertyPanelSectionsByPick } from "../filterPropertyPanelSectionsByPick";
+import { filterPropertyPanelSectionsForPickedPart } from "../filterPropertyPanelSectionsForPickedPart";
 
 const CustomRow = (): null => null;
 
@@ -46,9 +46,11 @@ const SECTIONS: PropertyPanelSection[] = [
 	},
 ];
 
-describe("filterPropertyPanelSectionsByPick", () => {
+describe("filterPropertyPanelSectionsForPickedPart", () => {
 	it("keeps the text rows alone under a pick receiving the text kinds alone", () => {
-		expect(filterPropertyPanelSectionsByPick(SECTIONS, textAnd())).toEqual([
+		expect(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, textAnd()),
+		).toEqual([
 			{
 				id: "text",
 				label: "Text",
@@ -59,7 +61,7 @@ describe("filterPropertyPanelSectionsByPick", () => {
 
 	it("keeps a row whose kind the pick receives, and only that row of its section (a table cell: fill, not its opacity)", () => {
 		expect(
-			filterPropertyPanelSectionsByPick(SECTIONS, textAnd("fill")).map(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, textAnd("fill")).map(
 				(section) => [section.id, section.items.map((item) => item.type)],
 			),
 		).toEqual([
@@ -70,7 +72,7 @@ describe("filterPropertyPanelSectionsByPick", () => {
 
 	it("keeps a row naming two kinds only once both are received", () => {
 		const arrowIds = (kinds: string[]): string[] =>
-			filterPropertyPanelSectionsByPick(SECTIONS, textAnd(...kinds)).map(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, textAnd(...kinds)).map(
 				(section) => section.id,
 			);
 
@@ -80,7 +82,7 @@ describe("filterPropertyPanelSectionsByPick", () => {
 
 	it("drops custom rows and the frame rows whatever is received", () => {
 		expect(
-			filterPropertyPanelSectionsByPick(
+			filterPropertyPanelSectionsForPickedPart(
 				SECTIONS,
 				textAnd("position", "size", "rotation", "header-fill"),
 			).map((section) => section.id),
@@ -89,7 +91,10 @@ describe("filterPropertyPanelSectionsByPick", () => {
 
 	it("keeps the label of a section that survives", () => {
 		expect(
-			filterPropertyPanelSectionsByPick(SECTIONS, new Set(["stroke"]))[0],
+			filterPropertyPanelSectionsForPickedPart(
+				SECTIONS,
+				new Set(["stroke"]),
+			)[0],
 		).toEqual({
 			id: "stroke",
 			label: "Border",
@@ -99,7 +104,7 @@ describe("filterPropertyPanelSectionsByPick", () => {
 
 	it("drops the text rows under a pick receiving none of the text kinds", () => {
 		expect(
-			filterPropertyPanelSectionsByPick(SECTIONS, new Set(["fill"])).map(
+			filterPropertyPanelSectionsForPickedPart(SECTIONS, new Set(["fill"])).map(
 				(section) => section.id,
 			),
 		).toEqual(["fill"]);

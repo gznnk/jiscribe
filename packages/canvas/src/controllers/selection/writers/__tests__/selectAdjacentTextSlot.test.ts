@@ -42,7 +42,7 @@ describe("getTextSlotCycle", () => {
 	it("returns the sole selected object and its slot order when it lists several slots", () => {
 		const cycle = getTextSlotCycle(baseState({}), objectPartKind);
 		expect(cycle?.target.id).toBe("rec-1");
-		expect(cycle?.slotIds).toEqual(["name", "attributes", "operations"]);
+		expect(cycle?.textSlotIds).toEqual(["name", "attributes", "operations"]);
 	});
 
 	it("returns null for a multiple selection", () => {

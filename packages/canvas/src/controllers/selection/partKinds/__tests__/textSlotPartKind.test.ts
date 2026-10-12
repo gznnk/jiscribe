@@ -123,7 +123,7 @@ describe("createTextSlotPartKindDefinition: what a pick receives", () => {
 
 	it("reaches the very slots the pick covers, in their order", () => {
 		const anyObject = {} as ObjectState;
-		expect(part.slotIds?.(anyObject, ["rows", "name"])).toEqual([
+		expect(part.textSlotIds?.(anyObject, ["rows", "name"])).toEqual([
 			"rows",
 			"name",
 		]);

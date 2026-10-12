@@ -52,7 +52,7 @@ const calcTrackRegion = (
  *
  * What the two kinds do share is the cells: a track pick receives what a cell
  * pick does (TABLE_CELL_STYLE_INTENT_KINDS), and a style written over it lands on that
- * track's cells (`slotIds`).
+ * track's cells (`textSlotIds`).
  *
  * @param axis - Which direction the tracks run in; also the `kind` the definition registers under, the two being the same word (see TableAxis)
  * @returns A definition for {@link TABLE_TRACK_PART_DEFINITIONS}
@@ -90,7 +90,8 @@ const createTableTrackPartDefinition = (
 
 	styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
 
-	slotIds: (object, partIds) => collectTableTrackCellIds(object, axis, partIds),
+	textSlotIds: (object, partIds) =>
+		collectTableTrackCellIds(object, axis, partIds),
 });
 
 /**

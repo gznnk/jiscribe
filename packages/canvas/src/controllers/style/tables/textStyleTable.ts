@@ -20,7 +20,7 @@ import type { StyleTable } from "../StyleEntry";
  *
  * The content itself is answered for by every type holding text, whatever fields
  * that text accepts. Which slots a write lands on is the picked kind's answer
- * (resolveSlotIds), not the type's. Every kind it can hold is in
+ * (resolveTextSlotIds), not the type's. Every kind it can hold is in
  * TEXT_STYLE_INTENT_KINDS.
  *
  * @param textType - The type's `ObjectFeatures.text`, which is what decides the fields; only a type declaring one has a text half at all, so there is no "no text" case here

@@ -70,7 +70,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   to say it edited the document — the COMMAND path never advances `commitVersion`
   itself; `createTextSlotPartKindDefinition` and `TEXT_SLOT_PART_KIND`, so a type
   declaring its own `"textSlot"` kind can spread the derived one and add a `range`
-  or a `delete`; and `resolveSlotIds(object, pick, ctx)` with
+  or a `delete`; and `resolveTextSlotIds(object, pick, ctx)` with
   `TEXT_STYLE_INTENT_KINDS`, the slots a pick reaches as its kind declares them
   and the text kinds a part reaching text receives, for a type's own entry that
   writes where a pick reaches (a table's cell fill) and for its part kinds'
@@ -91,7 +91,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   for a type whose parts are not laid out in one line, such as a table's cells:
   it answers which parts a range from an anchor to a focus covers, every id
   passing `has`, in the type's own order, and never empty. Two more say what a
-  pick of the kind is styled through: `slotIds` names the text slots the picked
+  pick of the kind is styled through: `textSlotIds` names the text slots the picked
   parts reach, which the core text entries write and read (a table row reaches
   its cells; omitted, every slot), and `styleIntentKinds` names the style kinds a pick
   receives, which the ObjectMenu and the sidebar narrow to while one is picked,

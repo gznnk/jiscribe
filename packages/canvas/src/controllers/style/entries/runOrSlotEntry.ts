@@ -30,7 +30,7 @@ import { readRangeEdit } from "./utils/readRangeEdit";
  * look different. The doc-ops apply the same rule (applyStyle).
  *
  * @param field - The inline field written and read; its name is the intent's, and fixes the value type (StyleIntentValueType)
- * @returns The pair, following `ctx.textEditRange` when it names the object at hand, and writing the slots the pick reaches (resolveSlotIds) otherwise
+ * @returns The pair, following `ctx.textEditRange` when it names the object at hand, and writing the slots the pick reaches (resolveTextSlotIds) otherwise
  * @template TState - The state the entry is written against
  * @template K - The field, which decides the value type
  */

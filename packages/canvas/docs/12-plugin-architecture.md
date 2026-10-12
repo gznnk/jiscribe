@@ -311,8 +311,8 @@ take their wording from the plugin's own dictionary.
 A declared kind replaces the one `features` derive, which is how a type changes
 where a core kind lands. `plugins/table-shape` declares `fill` again to route it
 by the pick: its own background with nothing picked, the `fill` of the cells the
-pick reaches otherwise (`resolveSlotIds`, the same answer the text entries ask —
-see `slotIds` under `partKinds` below):
+pick reaches otherwise (`resolveTextSlotIds`, the same answer the text entries ask —
+see `textSlotIds` under `partKinds` below):
 
 ```ts
 const TABLE_STYLE_ENTRIES = {
@@ -321,7 +321,7 @@ const TABLE_STYLE_ENTRIES = {
 ```
 
 Which slots a text style reaches is not a table's to declare: the core text
-entries already follow the picked kind's `slotIds`, so the table declares no text
+entries already follow the picked kind's `textSlotIds`, so the table declares no text
 kind of its own.
 
 **Commands.** A contributed command's `execute` is the whole of its transition,
@@ -400,9 +400,9 @@ Two more bear on styling a pick:
   Meta section. Omitted, a pick of the kind leaves the object the subject of
   every control (`vertex`). The `"textSlot"` kind core gives declares the text
   kinds (`TEXT_STYLE_INTENT_KINDS`)
-- `slotIds` — the text slots a pick of this kind reaches, handed the ids it
+- `textSlotIds` — the text slots a pick of this kind reaches, handed the ids it
   covers with its ranges already expanded. The text entries write and read those
-  slots (`resolveSlotIds`); omitted, a pick reaches every slot. The `"textSlot"`
+  slots (`resolveTextSlotIds`); omitted, a pick reaches every slot. The `"textSlot"`
   kind answers with the picked slots themselves
 
 The table's `row` and `column` declare both: a track pick receives the text kinds

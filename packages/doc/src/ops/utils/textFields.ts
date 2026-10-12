@@ -27,14 +27,15 @@ export const readSlots = (
 export const requireSlotId = (
 	object: ObjectRecord,
 	id: string,
-	slotIds: readonly string[],
+	textSlotIds: readonly string[],
 	slot: string | undefined,
 	action: string,
 ): string => {
-	const targetSlotId = slot ?? (slotIds.length === 1 ? slotIds[0] : undefined);
-	if (targetSlotId === undefined || !slotIds.includes(targetSlotId)) {
+	const targetSlotId =
+		slot ?? (textSlotIds.length === 1 ? textSlotIds[0] : undefined);
+	if (targetSlotId === undefined || !textSlotIds.includes(targetSlotId)) {
 		throw new DocOperationError(
-			`${id} ("${object.type}") needs the slot to ${action}: ${slotIds.join(" / ")}`,
+			`${id} ("${object.type}") needs the slot to ${action}: ${textSlotIds.join(" / ")}`,
 		);
 	}
 	return targetSlotId;

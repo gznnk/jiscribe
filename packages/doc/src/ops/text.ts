@@ -111,16 +111,15 @@ const planTextWrite = (
 	}
 
 	const slots = readSlots(object);
-	const slotIds = slots === null ? [] : Object.keys(slots);
-	if (slots === null || slotIds.length === 0) {
+	const textSlotIds = slots === null ? [] : Object.keys(slots);
+	if (slots === null || textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
 	return {
 		kind: "slot",
-		slot: slots[requireSlotId(object, id, slotIds, slot, "write")] as Record<
-			string,
-			unknown
-		>,
+		slot: slots[
+			requireSlotId(object, id, textSlotIds, slot, "write")
+		] as Record<string, unknown>,
 		text,
 	};
 };
@@ -262,11 +261,13 @@ export const getText = (
 	}
 
 	const slots = readSlots(object);
-	const slotIds = slots === null ? [] : Object.keys(slots);
-	if (slots === null || slotIds.length === 0) {
+	const textSlotIds = slots === null ? [] : Object.keys(slots);
+	if (slots === null || textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
-	return readTextField(slots[requireSlotId(object, id, slotIds, slot, "read")]);
+	return readTextField(
+		slots[requireSlotId(object, id, textSlotIds, slot, "read")],
+	);
 };
 
 /**

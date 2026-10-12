@@ -1,5 +1,5 @@
-import type { BuiltinControlStyleIntentKinds } from "../../utils/isReceivedByPick";
-import { isReceivedByPick } from "../../utils/isReceivedByPick";
+import type { BuiltinControlStyleIntentKinds } from "../../utils/isControlWithinStyleIntentKinds";
+import { isControlWithinStyleIntentKinds } from "../../utils/isControlWithinStyleIntentKinds";
 import type {
 	PropertyPanelBuiltinItemKey,
 	PropertyPanelSection,
@@ -46,11 +46,11 @@ const BUILTIN_ROW_STYLE_INTENT_KINDS = {
  * empty is dropped so no accordion header survives on its own.
  *
  * @param sections - The selection's sections before narrowing
- * @param pickedIntentKinds - What the picked kind receives (readPickedStyleIntentKinds)
+ * @param styleIntentKinds - What the picked kind receives (readPickedPartStyleIntentKinds)
  */
-export const filterPropertyPanelSectionsByPick = (
+export const filterPropertyPanelSectionsForPickedPart = (
 	sections: PropertyPanelSection[],
-	pickedIntentKinds: ReadonlySet<string>,
+	styleIntentKinds: ReadonlySet<string>,
 ): PropertyPanelSection[] =>
 	sections
 		.map((section) => ({
@@ -58,9 +58,9 @@ export const filterPropertyPanelSectionsByPick = (
 			items: section.items.filter(
 				(item) =>
 					item.type !== "custom" &&
-					isReceivedByPick(
+					isControlWithinStyleIntentKinds(
 						BUILTIN_ROW_STYLE_INTENT_KINDS[item.type],
-						pickedIntentKinds,
+						styleIntentKinds,
 					),
 			),
 		}))

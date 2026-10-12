@@ -17,7 +17,7 @@ import type {
  * also has to answer for the runs that override it.
  *
  * @param field - The slot field written and read, one the text-style defaults answer for; its name is the intent's, and fixes the value type (StyleIntentValueType)
- * @returns The pair, writing `value` as-is and reporting one value per addressed slot (resolveSlotIds)
+ * @returns The pair, writing `value` as-is and reporting one value per addressed slot (resolveTextSlotIds)
  * @template TState - The state the entry is written against
  * @template K - The field, which decides the value type
  */

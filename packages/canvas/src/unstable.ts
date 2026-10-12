@@ -213,8 +213,8 @@ export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 // every entry states the fields it writes (`[]` for nothing the doc stores), and
 // one stating none, or a field the type's doc cannot hold (`extraKeys`), is
 // refused at registration. Which slots a text write reaches is not the table's
-// to say but the picked part kind's (`ObjectPartKindDefinition.slotIds`):
-// `resolveSlotIds(object, pick, ctx)` is that answer, for an entry of the type's
+// to say but the picked part kind's (`ObjectPartKindDefinition.textSlotIds`):
+// `resolveTextSlotIds(object, pick, ctx)` is that answer, for an entry of the type's
 // own that writes into the slots a pick reaches (a table's cell fill), and
 // `TEXT_STYLE_INTENT_KINDS` the kinds a part reaching text lists in its
 // `styleIntentKinds`.
@@ -223,7 +223,7 @@ export { objectFieldEntry } from "./controllers/style/entries/objectFieldEntry";
 export { runOrSlotEntry } from "./controllers/style/entries/runOrSlotEntry";
 export { slotFieldEntry } from "./controllers/style/entries/slotFieldEntry";
 export { toggleRunOrSlotEntry } from "./controllers/style/entries/toggleRunOrSlotEntry";
-export { resolveSlotIds } from "./controllers/style/entries/utils/resolveSlotIds";
+export { resolveTextSlotIds } from "./controllers/style/entries/utils/resolveTextSlotIds";
 export { TEXT_STYLE_INTENT_KINDS } from "./controllers/style/StyleIntent";
 export type { StyleValueType } from "./controllers/style/intent/coerceStyleValue";
 export type {

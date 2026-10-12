@@ -154,8 +154,8 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 `slotEntry` は `slotFieldEntry` と `runOrSlotEntry` のスロット半分が共有する部分 — どのスロットに
 当たるか、同一参照の契約、各スロットを型の既定値で読むこと。
 
-どのスロットに当たるかは型ではなく、選ばれた part kind の答え。`resolveSlotIds(object, pick, ctx)`
-が pick の kind に `slotIds`（`ObjectPartKindDefinition`）を問う — テキストスロットの pick なら
+どのスロットに当たるかは型ではなく、選ばれた part kind の答え。`resolveTextSlotIds(object, pick, ctx)`
+が pick の kind に `textSlotIds`（`ObjectPartKindDefinition`）を問う — テキストスロットの pick なら
 選んだスロット、表の行の pick ならその行のセル。何も選んでいないとき、また宣言の無い kind
 （vertex）の pick では object が持つ全スロット — これが「何も選ばずに文字スタイルを書くと
 図形全体に当たる」の正体。
@@ -291,7 +291,7 @@ export const CONTAINER_STYLE_ENTRIES = {
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md) 参照）も同じ能力を得る。
 `declaredFieldEntry` と `DeclaredStyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
 差し替える型のために、エンジンが自分の表を組むヘルパー（`objectFieldEntry` / `slotFieldEntry` /
-`runOrSlotEntry` / `toggleRunOrSlotEntry` / `resolveSlotIds`）も並んでいる。コネクターの表は
+`runOrSlotEntry` / `toggleRunOrSlotEntry` / `resolveTextSlotIds`）も並んでいる。コネクターの表は
 `controllers/style/tables/connectorStyleTable.ts`（`CONNECTOR_STYLE_TABLE`）。container プラグインは
 `src/style/containerStyleEntries.ts` で `CONTAINER_STYLE_ENTRIES` を宣言し、`@jiscribe/canvas-sdk` の
 `createFrameObjectDefinition` へ渡す。

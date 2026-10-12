@@ -1,4 +1,4 @@
-import { objectFieldEntry, resolveSlotIds } from "@jiscribe/canvas-sdk";
+import { objectFieldEntry, resolveTextSlotIds } from "@jiscribe/canvas-sdk";
 import type { DeclaredStyleEntry } from "@jiscribe/canvas-sdk";
 
 import type { TableCell } from "../schema/TableDoc";
@@ -11,7 +11,7 @@ const tableBackgroundFillEntry = objectFieldEntry<TableState, "fill">("fill");
 /**
  * Fill, following the selection: with nothing picked inside the table it is the
  * table's own background, as derived; with cells, rows or columns picked it is
- * the `fill` of those cells (resolveSlotIds, which asks the picked kind), each
+ * the `fill` of those cells (resolveTextSlotIds, which asks the picked kind), each
  * read on its own so cells
  * that disagree report as mixed.
  *
@@ -23,7 +23,7 @@ export const tableFillEntry: DeclaredStyleEntry<TableState, string> = {
 		if (pick === null) {
 			return tableBackgroundFillEntry.apply(table, pick, color, ctx);
 		}
-		const cellIds = resolveSlotIds(table, pick, ctx);
+		const cellIds = resolveTextSlotIds(table, pick, ctx);
 		if (cellIds.length === 0) {
 			return null;
 		}
@@ -44,7 +44,7 @@ export const tableFillEntry: DeclaredStyleEntry<TableState, string> = {
 			return tableBackgroundFillEntry.read(table, pick, ctx);
 		}
 		const fills: string[] = [];
-		for (const cellId of resolveSlotIds(table, pick, ctx)) {
+		for (const cellId of resolveTextSlotIds(table, pick, ctx)) {
 			const cell = table.text[cellId];
 			if (cell !== undefined) {
 				fills.push(cell.fill ?? UNFILLED_CELL_FILL);

@@ -11,7 +11,7 @@ import type { ObjectPartKindRegistry } from "../partKinds/ObjectPartKindRegistry
  * @param objectPartKind - Per-canvas registry of part kinds, asked for the picked kind under the owner's type
  * @returns The declared kinds, or null when nothing is picked, the owner is not in `objects`, or the kind declares none (a vertex) — the object then stays the subject of every control
  */
-export const readPickedStyleIntentKinds = (
+export const readPickedPartStyleIntentKinds = (
 	state: Pick<CanvasControllerState, "selection" | "objects">,
 	objectPartKind: ObjectPartKindRegistry,
 ): ReadonlySet<string> | null => {

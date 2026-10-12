@@ -163,7 +163,7 @@ const TABLE_STYLE_ENTRIES = {
  * stroke items for its rules and the text items for its cells, and nothing else
  * the features would offer. A text edit or a background from the menu lands on
  * the picked cells or the cells of the picked rows or columns (each kind's
- * `slotIds`); with nothing picked, a text edit lands on every cell and a
+ * `textSlotIds`); with nothing picked, a text edit lands on every cell and a
  * background on the table's own ({@link TABLE_STYLE_ENTRIES}). Reshaping the grid is in neither
  * section: it belongs to the keys, the grips and the `+` badges.
  */

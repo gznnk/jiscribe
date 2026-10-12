@@ -166,7 +166,7 @@ which slots are reached, the same-reference contract, and reading each of them
 through the type's defaults.
 
 Which slots an intent lands on is the picked part kind's answer, not the type's:
-`resolveSlotIds(object, pick, ctx)` asks the kind of the pick for its `slotIds`
+`resolveTextSlotIds(object, pick, ctx)` asks the kind of the pick for its `textSlotIds`
 (`ObjectPartKindDefinition`) — the picked slots for a text slot pick, a table row's
 cells for a row pick — and reaches every slot the object holds with nothing picked
 or under a kind declaring none (a vertex), which is what makes a text style written
@@ -324,7 +324,7 @@ Because registration flows through `applyObjectDefinition`, plugin shapes added
 via `CanvasConfig.plugins` (see [Plugin Architecture](./12-plugin-architecture.md))
 get the same capability: `declaredFieldEntry` and `DeclaredStyleTable` are exported from
 `@jiscribe/canvas-sdk`, beside the helpers the engine builds its own entries from
-(`objectFieldEntry` / `slotFieldEntry` / `runOrSlotEntry` / `toggleRunOrSlotEntry` / `resolveSlotIds`)
+(`objectFieldEntry` / `slotFieldEntry` / `runOrSlotEntry` / `toggleRunOrSlotEntry` / `resolveTextSlotIds`)
 for a type replacing a derived kind. Connector's table is
 `controllers/style/tables/connectorStyleTable.ts` (`CONNECTOR_STYLE_TABLE`); the container plugin
 declares `CONTAINER_STYLE_ENTRIES` in `src/style/containerStyleEntries.ts` and hands it to

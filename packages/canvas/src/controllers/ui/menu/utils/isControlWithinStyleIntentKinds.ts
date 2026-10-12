@@ -14,19 +14,21 @@ export type BuiltinControlStyleIntentKinds =
 /**
  * Whether a builtin control stays while a part is picked: every kind it raises
  * is one the picked kind receives. The one rule both surfaces narrow by
- * (filterMenuSectionsByPick, filterPropertyPanelSectionsByPick).
+ * (filterMenuSectionsForPickedPart, filterPropertyPanelSectionsForPickedPart).
  *
- * @param controlKinds - What the control raises; an empty list is never kept
- * @param pickedIntentKinds - What the picked kind receives (readPickedStyleIntentKinds)
+ * @param controlStyleIntentKinds - What the control raises; an empty list is never kept
+ * @param styleIntentKinds - What the picked kind receives (readPickedPartStyleIntentKinds)
  */
-export const isReceivedByPick = (
-	controlKinds: BuiltinControlStyleIntentKinds,
-	pickedIntentKinds: ReadonlySet<string>,
+export const isControlWithinStyleIntentKinds = (
+	controlStyleIntentKinds: BuiltinControlStyleIntentKinds,
+	styleIntentKinds: ReadonlySet<string>,
 ): boolean => {
 	const raisedKinds =
-		controlKinds === "text" ? [...TEXT_STYLE_INTENT_KINDS] : controlKinds;
+		controlStyleIntentKinds === "text"
+			? [...TEXT_STYLE_INTENT_KINDS]
+			: controlStyleIntentKinds;
 	return (
 		raisedKinds.length > 0 &&
-		raisedKinds.every((kind) => pickedIntentKinds.has(kind))
+		raisedKinds.every((kind) => styleIntentKinds.has(kind))
 	);
 };

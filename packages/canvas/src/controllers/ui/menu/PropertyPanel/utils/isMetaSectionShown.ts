@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
-import { readPickedStyleIntentKinds } from "../../../../selection/readers/readPickedStyleIntentKinds";
+import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
 
 /**
@@ -14,14 +14,14 @@ import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
  * (getPropertyPanelSections), and the object's own note is not that.
  *
  * @param state - The selection channels and the picked part are read
- * @param objectPartKind - Per-canvas registry of part kinds, asked whether the picked kind narrows the panel (readPickedStyleIntentKinds)
+ * @param objectPartKind - Per-canvas registry of part kinds, asked whether the picked kind narrows the panel (readPickedPartStyleIntentKinds)
  * @returns True while a single object, or a connector, is selected and no picked part narrows the panel
  */
 export const isMetaSectionShown = (
 	state: CanvasControllerState,
 	objectPartKind: ObjectPartKindRegistry,
 ): boolean => {
-	if (readPickedStyleIntentKinds(state, objectPartKind) !== null) {
+	if (readPickedPartStyleIntentKinds(state, objectPartKind) !== null) {
 		return false;
 	}
 	return resolveMetaTargetId(state) !== null;
