@@ -1,3 +1,5 @@
+import type { Point } from "@jiscribe/geometry";
+
 import { copyObjectsRecord } from "./cowObjects";
 import { updateGroupBounds } from "./updateGroupBounds";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -72,8 +74,11 @@ export function updateAffectedGroupBounds(
 	// map still held as a copy-on-write view, and spreading one pays a Proxy trap
 	// per key for the identical result.
 	const updatedObjects = copyObjectsRecord(state.objects);
+	// Leaf points do not move during the pass (only group frames are written), so
+	// a deeper group's points stay valid for its ancestors.
+	const pointCache = new Map<string, Point[]>();
 	for (const groupId of sortedGroupIds) {
-		const updatedGroup = updateGroupBounds(updatedObjects, groupId);
+		const updatedGroup = updateGroupBounds(updatedObjects, groupId, pointCache);
 		if (updatedGroup) {
 			updatedObjects[groupId] = updatedGroup;
 		}

@@ -80,6 +80,21 @@ describe("reconcileObjectContentSizes", () => {
 		);
 	});
 
+	it("calls no resizer when the object map is the one it was", () => {
+		// Every pan and zoom frame: the gesture rewrote nothing under the objects.
+		const registry = createObjectContentResizerRegistry();
+		let calls = 0;
+		registry.register("text", (object) => {
+			calls++;
+			return object;
+		});
+		const previous = stateOf([textObject("t1", "hello")]);
+		const state = { ...previous };
+
+		expect(reconcileObjectContentSizes(state, previous, registry)).toBe(state);
+		expect(calls).toBe(0);
+	});
+
 	it("leaves a stale box alone while the slots say nothing moved", () => {
 		const state = stateOf([withStaleBox(textObject("t1", "hello"))]);
 

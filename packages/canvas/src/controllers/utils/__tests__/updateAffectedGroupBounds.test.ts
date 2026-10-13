@@ -95,6 +95,22 @@ describe("updateAffectedGroupBounds", () => {
 		expect(updatedOuter.cx).toBeCloseTo(50);
 	});
 
+	it("an ancestor still encloses a sibling subtree that was not affected", () => {
+		const r1 = rect("r1", 50, 50, "innerA");
+		const r2 = rect("r2", 150, 50, "innerB");
+		const innerA = group("innerA", ["r1"], "outer");
+		const innerB = group("innerB", ["r2"], "outer");
+		const outer = group("outer", ["innerA", "innerB"]);
+		const state = makeState({ r1, r2, innerA, innerB, outer });
+		const result = updateAffectedGroupBounds(state, ["r1"]);
+		const updatedOuter = result.objects["outer"] as unknown as {
+			cx: number;
+			width: number;
+		};
+		expect(updatedOuter.cx).toBeCloseTo(100);
+		expect(updatedOuter.width).toBeCloseTo(120);
+	});
+
 	it("the original state.objects is not mutated (immutable)", () => {
 		const r1 = rect("r1", 100, 100, "g1");
 		const g1 = group("g1", ["r1"]);

@@ -76,6 +76,9 @@ const holdsSameContentInputs = (
 	previousObject: ObjectState | undefined,
 	object: ObjectState,
 ): boolean => {
+	if (previousObject === object) {
+		return true;
+	}
 	if (
 		previousObject === undefined ||
 		previousObject.type !== object.type ||
@@ -148,6 +151,10 @@ export const reconcileObjectContentSizes = (
 	contentResizer: ObjectContentResizerRegistry,
 	forceRemeasure = false,
 ): CanvasControllerState => {
+	if (!forceRemeasure && state.objects === previousState.objects) {
+		return state;
+	}
+
 	// A family now resolving to a face that was not loaded yet invalidates every
 	// measurement at once, so the narrowed set says nothing about what needs
 	// re-measuring and the full scan is the only correct pass.

@@ -6,7 +6,10 @@ import type {
 } from "../../rendering/objects/ResolvedImagesContext";
 import { UNRESOLVED_IMAGE } from "../../rendering/objects/ResolvedImagesContext";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { collectStateImageSources } from "../utils/collectStateImageSources";
+import {
+	collectStateImageSources,
+	holdsSameImageSources,
+} from "../utils/collectStateImageSources";
 
 /**
  * Host implementation that turns an image object's `src` into its bytes.
@@ -52,6 +55,12 @@ export const useDocImages = (
 	// by src alone, and the counter below is what announces a change to them.
 	const resolvedBySrcRef = useRef(new Map<string, ResolvedImage>());
 	const [resolvedNonce, setResolvedNonce] = useState(0);
+	// What the resolving effect last scanned, so a drag frame that wrote no image
+	// src skips the O(all objects) scan.
+	const lastScanRef = useRef<{
+		objects: Record<string, ObjectState>;
+		hasResolver: boolean;
+	} | null>(null);
 
 	// Declared before the resolving effect so that a remount (StrictMode, a
 	// re-keyed canvas) has cleared the entries before the next resolution starts.
@@ -63,12 +72,23 @@ export const useDocImages = (
 				}
 			}
 			resolvedBySrcRef.current.clear();
+			lastScanRef.current = null;
 		},
 		[],
 	);
 
 	const hasResolver = resolveImage !== undefined;
 	useEffect(() => {
+		const lastScan = lastScanRef.current;
+		lastScanRef.current = { objects, hasResolver };
+		if (
+			lastScan !== null &&
+			lastScan.hasResolver === hasResolver &&
+			holdsSameImageSources(objects, lastScan.objects)
+		) {
+			return;
+		}
+
 		const resolvedBySrc = resolvedBySrcRef.current;
 		const sources = collectStateImageSources(objects);
 		const wantedSources = new Set(sources);
