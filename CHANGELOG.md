@@ -55,14 +55,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   There are no handles on the height: a row's stored height is a lower bound its
   text raises, so the height follows the cells and a row is given one by dragging
   its boundary.
-- **A table's rows and columns can be selected, added and removed.** A grip
-  outside the top and left edges picks a whole column or row; clicking a cell
+- **A table's rows and columns can be selected, added and removed.** Headings
+  along the top and left edges, lettered and numbered as a spreadsheet's are,
+  pick a whole column or row; clicking a cell
   picks it, and Shift widens the pick to the block of cells between the two —
   the rectangle they stand at opposite corners of, as a spreadsheet does it, not
   the run of the cell order between them. Delete clears the picked cells' text,
   or removes the picked row or column — never the last one left. A round `+`
-  stands at every boundary a track can go at, both outer edges included, and
-  clicking one inserts an empty track there and leaves it selected; Alt+Shift+arrow
+  outside the right and bottom edges stands at every boundary a track can go
+  at, both outer edges included, and clicking one inserts an empty track there
+  and leaves it selected, once per press however fast they come; Alt+Shift+arrow
   inserts one beside the picked cell or track. The cells keep their contents as
   the grid renumbers around an insertion, and one undo takes it back.
 - For plugin authors: `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`)

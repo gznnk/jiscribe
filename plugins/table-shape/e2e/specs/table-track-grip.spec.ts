@@ -8,20 +8,16 @@ import {
 	selectionOutlines,
 	tableOutlineRect,
 	trackGrip,
+	trackGripFace,
+	trackGripLabel,
 } from "../support/tableDom";
 
 /**
  * How far a transform handle reaches outside the edge it sits on, in client px
- * (the theme's `anchorRadius`). A grip has to start beyond it, the selection
- * controls being drawn over the transform ones.
+ * (the theme's `anchorRadius`). A grip's pressable region has to stop beyond
+ * it, the selection controls being drawn over the transform ones.
  */
 const HANDLE_REACH = 4;
-
-/**
- * How far each end of a grip stops short of its track's boundary, in client px:
- * the insert badge's radius (5) plus 3 px of clearance.
- */
-const GRIP_END_INSET = 8;
 
 /**
  * The grips that select a whole row or a whole column, in a real browser. Two
@@ -41,8 +37,8 @@ async function gripFill(
 	axis: "rowGrip" | "columnGrip",
 	trackIndex: number,
 ): Promise<string> {
-	return trackGrip(canvas, axis, trackIndex).evaluate(
-		(grip) => getComputedStyle(grip).fill,
+	return trackGripFace(canvas, axis, trackIndex).evaluate(
+		(face) => getComputedStyle(face).fill,
 	);
 }
 
@@ -62,40 +58,74 @@ test.describe("table track grips", () => {
 		await expect(trackGrip(canvas, "columnGrip", 2)).toHaveCount(0);
 	});
 
-	test("stands outside the table, clear of the handles on its edges", async ({
+	test("heads each track as a spreadsheet does, rows numbered and columns lettered", async ({
+		canvas,
+	}) => {
+		await canvas.placeShape("Table");
+
+		for (const [axis, trackIndex, label] of [
+			["rowGrip", 0, "1"],
+			["rowGrip", 1, "2"],
+			["columnGrip", 0, "A"],
+			["columnGrip", 1, "B"],
+		] as const) {
+			await expect(trackGripLabel(canvas, axis, trackIndex)).toHaveText(label);
+		}
+	});
+
+	test("abuts the table, with only the pressable region kept off the width handle", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
 		const box = await tableOutlineRect(canvas, id);
 
+		const rowFace = await trackGripFace(canvas, "rowGrip", 0).boundingBox();
 		const rowGrip = await trackGrip(canvas, "rowGrip", 0).boundingBox();
+		const columnFace = await trackGripFace(
+			canvas,
+			"columnGrip",
+			0,
+		).boundingBox();
 		const columnGrip = await trackGrip(canvas, "columnGrip", 0).boundingBox();
-		if (rowGrip === null || columnGrip === null) {
+		if (
+			rowFace === null ||
+			rowGrip === null ||
+			columnFace === null ||
+			columnGrip === null
+		) {
 			throw new Error("no grips drawn");
 		}
 
-		// Wholly outside the table's own edges, and past the width handle's reach,
-		// so a press on one never lands on the other.
-		expect(rowGrip.x + rowGrip.width).toBeLessThan(box.x - HANDLE_REACH);
-		expect(columnGrip.y + columnGrip.height).toBeLessThan(box.y - HANDLE_REACH);
+		// The drawn cells run up to the table's edges, as a sheet's headings do.
+		expect(Math.abs(rowFace.x + rowFace.width - box.x)).toBeLessThanOrEqual(1);
+		expect(
+			Math.abs(columnFace.y + columnFace.height - box.y),
+		).toBeLessThanOrEqual(1);
+		// The left edge carries a width handle, so the row grip's pressable region
+		// stops short of its reach; the top edge carries none and the column's
+		// reaches the edge.
+		expect(rowGrip.x + rowGrip.width).toBeLessThanOrEqual(box.x - HANDLE_REACH);
+		expect(
+			Math.abs(columnGrip.y + columnGrip.height - box.y),
+		).toBeLessThanOrEqual(1);
 	});
 
-	test("stops short of both its boundaries, leaving room for the insert badges", async ({
+	test("runs the length of its track, meeting the next grip at the boundary", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
 		const box = await tableOutlineRect(canvas, id);
 
 		const columnGrip = await trackGrip(canvas, "columnGrip", 0).boundingBox();
-		if (columnGrip === null) {
+		const nextGrip = await trackGrip(canvas, "columnGrip", 1).boundingBox();
+		if (columnGrip === null || nextGrip === null) {
 			throw new Error("no grip drawn");
 		}
 
-		// A fresh table's columns are each half its width. Its rows are too short
-		// to spend the full inset, which is capped at a quarter of the track, so
-		// only a column pins it.
+		// A fresh table's columns are each half its width.
+		expect(Math.abs(columnGrip.width - box.width / 2)).toBeLessThanOrEqual(1);
 		expect(
-			Math.abs(columnGrip.width - (box.width / 2 - 2 * GRIP_END_INSET)),
+			Math.abs(nextGrip.x - (columnGrip.x + columnGrip.width)),
 		).toBeLessThanOrEqual(1);
 	});
 

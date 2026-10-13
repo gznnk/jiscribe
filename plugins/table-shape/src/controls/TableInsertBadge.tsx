@@ -5,16 +5,23 @@ import {
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { GRIP_OFFSET } from "./TableTrackGrip";
+/**
+ * How big the badge is drawn, in screen px, measured from its centre. A button
+ * rather than a heading, so smaller than the grips are thick.
+ */
+export const INSERT_BADGE_RADIUS = 6;
 
 /**
- * How big the badge is drawn, in screen px, measured from its centre. Half the
- * grip's thickness, so badges and grips read as one strip.
+ * Gap between the table's edge and the near side of a badge, in screen px. Wider
+ * than the transform frame's anchor radius (4), because the width handles sit on
+ * the left and right edges at the table's mid-height and the selection controls
+ * are drawn after the transform ones (SelectionControlsLayer) — a badge reaching
+ * that far would take the press meant for a handle.
  */
-export const INSERT_BADGE_RADIUS = 5;
+const INSERT_BADGE_GAP = 7;
 
-/** Distance from the table's edge to a badge's centre, in screen px: the grips' centre line. */
-export const INSERT_BADGE_OFFSET = GRIP_OFFSET;
+/** Distance from the table's edge to a badge's centre, in screen px. */
+export const INSERT_BADGE_OFFSET = INSERT_BADGE_GAP + INSERT_BADGE_RADIUS;
 
 /** Half the length of each arm of the `+`, as a share of the badge's radius. */
 const PLUS_ARM_RATIO = 0.5;
@@ -31,11 +38,11 @@ type TableInsertBadgeProps = {
 };
 
 /**
- * The `+` offered at one boundary: a round button just outside the table, in the
- * gap between the grips of the two tracks either side, clicking which inserts a
- * track there (createTableInsertHandler). One stands at
- * every rule and at the two outer edges, so the first and the last track can be
- * added as readily as the ones between.
+ * The `+` offered at one boundary: a round button just outside the table, on the
+ * edge opposite the grips, clicking which inserts a track there
+ * (createTableInsertHandler). One stands at every rule and at the two outer
+ * edges, so the first and the last track can be added as readily as the ones
+ * between.
  *
  * Drawn upright whatever the table's rotation. Its position follows the
  * transform, but a button is read as a button rather than as part of the drawing,

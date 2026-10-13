@@ -11,10 +11,12 @@ import type { TableAxis } from "../grid/tableTrack";
 import type { TableState } from "../state/TableState";
 
 /**
- * Builds the handler behind one axis's `+` badges. A click inserts an empty track
+ * Builds the handler behind one axis's `+` badges. A press inserts an empty track
  * at the boundary the badge stands on, the same rewrite the four insert commands
  * run (insertTableTrack) — the commands act on what is selected, this on what was
- * pointed at.
+ * pointed at. A doubleClick counts as a press like a click does: it is what the
+ * recognizer calls the second of two quick presses, and a run of presses on one
+ * badge means one insertion each.
  *
  * The click leaves the inserted track selected, which is the one selection that
  * cannot come out stale: the grid renumbers behind an insertion, so a cell or
@@ -28,7 +30,7 @@ import type { TableState } from "../state/TableState";
  * two edges included, so the bound is the track count itself rather than one less.
  *
  * @param axis - Which direction the inserted track runs in; also the part kind the click leaves selected
- * @returns A handler for the definition's `handle`, to be paired with `events: ["click"]`
+ * @returns A handler for the definition's `handle`, to be paired with `events: ["click", "doubleClick"]`
  */
 export const createTableInsertHandler =
 	(axis: TableAxis) =>
@@ -36,7 +38,7 @@ export const createTableInsertHandler =
 		context: SelectionControlContext<TableState>,
 		event: SelectionControlEvent,
 	): SelectionControlResult<TableState> | null => {
-		if (event.type !== "click") {
+		if (event.type !== "click" && event.type !== "doubleClick") {
 			return null;
 		}
 		const at = parseTableBoundaryIndex(event.subAction);

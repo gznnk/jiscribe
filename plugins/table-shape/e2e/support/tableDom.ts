@@ -142,7 +142,7 @@ export async function cellCount(
  * @param canvas - The driver for the page under test
  * @param axis - Which strip of grips to look in: the rows down the left or the columns across the top
  * @param trackIndex - The track's 0-based index, which is the part's trailing segment
- * @returns A locator for the grip's rect, which may match nothing when the table is not the sole selection
+ * @returns A locator for the grip's pressable rect (the drawn cell is `trackGripFace`), which may match nothing when the table is not the sole selection
  */
 export function trackGrip(
 	canvas: CanvasDriver,
@@ -151,6 +151,44 @@ export function trackGrip(
 ) {
 	return canvas.page.locator(
 		`[data-kind="control"][data-action="selection:table:${axis}:${trackIndex}"]`,
+	);
+}
+
+/**
+ * The drawn cell of one track's grip: the painted rect behind the pressable one
+ * `trackGrip` finds, which carries the fill and abuts the table.
+ *
+ * @param canvas - The driver for the page under test
+ * @param axis - Which strip of grips to look in
+ * @param trackIndex - The track's 0-based index
+ * @returns A locator for the cell's rect, resolved relative to the control that names the track
+ */
+export function trackGripFace(
+	canvas: CanvasDriver,
+	axis: "rowGrip" | "columnGrip",
+	trackIndex: number,
+) {
+	// SVG elements sit in their own namespace, which a bare XPath name never matches.
+	return trackGrip(canvas, axis, trackIndex).locator(
+		"xpath=../preceding-sibling::*[local-name()='g'][1]/*[local-name()='rect']",
+	);
+}
+
+/**
+ * The heading drawn on one track's grip: `1`, `2`… for rows, `A`, `B`… for columns.
+ *
+ * @param canvas - The driver for the page under test
+ * @param axis - Which strip of grips to look in
+ * @param trackIndex - The track's 0-based index
+ * @returns A locator for the text element, resolved relative to the control that names the track
+ */
+export function trackGripLabel(
+	canvas: CanvasDriver,
+	axis: "rowGrip" | "columnGrip",
+	trackIndex: number,
+) {
+	return trackGrip(canvas, axis, trackIndex).locator(
+		"xpath=../preceding-sibling::*[local-name()='text'][1]",
 	);
 }
 
@@ -179,7 +217,7 @@ export async function clickTrackGrip(
  * The `+` badge offered at one boundary, by the `data-action` its control gives it.
  *
  * @param canvas - The driver for the page under test
- * @param axis - Which strip of badges to look in: the rows down the left or the columns across the top
+ * @param axis - Which strip of badges to look in: the rows down the right or the columns along the bottom
  * @param at - The insertion position, 0-based; the badges number one more than the tracks, the outer edges included
  * @returns A locator for the badge's circle, which may match nothing when the table is not the sole selection
  */
