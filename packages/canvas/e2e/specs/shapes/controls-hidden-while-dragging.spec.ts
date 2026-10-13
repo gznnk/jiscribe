@@ -8,6 +8,9 @@ import { selectors } from "../../support/selectors";
  * - "move" hides both the transform frame and the connection anchors
  * - "transform" hides the anchors only — the handle being dragged has to stay
  *
+ * A polyline's vertex and midpoint handles hide on both kinds as well, and stay
+ * through a drag of one of them ("other").
+ *
  * A type's own selection controls hide on both kinds too; this harness registers
  * no type that has any, so the table plugin's suite pins that
  * (table-controls-hidden-while-dragging).
@@ -76,5 +79,67 @@ test.describe("selection controls hidden while dragging", () => {
 		);
 
 		await expect(anchor).toHaveCount(1);
+	});
+
+	test("hides a polyline's vertex and midpoint handles while it is moved", async ({
+		canvas,
+	}) => {
+		// Horizontal polyline, selected by the draw; its midpoint handle sits at
+		// (450,300), so the move is grabbed a quarter of the way along instead.
+		const id = await canvas.drawShape(
+			"Polyline",
+			{ x: 300, y: 300 },
+			{ x: 600, y: 300 },
+		);
+		const vertex = canvas.page.locator(
+			`[data-id="${id}"][data-part="vertex:0"]`,
+		);
+		const midpoint = canvas.page.locator(
+			`[data-id="${id}"][data-action="vertex-insert:0"]`,
+		);
+		await expect(vertex).toHaveCount(1);
+		await expect(midpoint).toHaveCount(1);
+
+		await canvas.dragInspecting(
+			{ x: 375, y: 300 },
+			{ x: 475, y: 400 },
+			async () => {
+				await expect(vertex).toHaveCount(0);
+				await expect(midpoint).toHaveCount(0);
+			},
+		);
+
+		await expect(vertex).toHaveCount(1);
+		await expect(midpoint).toHaveCount(1);
+	});
+
+	test("keeps a polyline's handles while a vertex is dragged", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Polyline",
+			{ x: 300, y: 300 },
+			{ x: 600, y: 300 },
+		);
+		const otherVertex = canvas.page.locator(
+			`[data-id="${id}"][data-part="vertex:0"]`,
+		);
+		const dragged = await canvas.page
+			.locator(`[data-id="${id}"][data-part="vertex:1"]`)
+			.boundingBox();
+		if (dragged === null) {
+			throw new Error("no vertex handle");
+		}
+
+		await canvas.dragInspecting(
+			canvas.toContent({
+				x: dragged.x + dragged.width / 2,
+				y: dragged.y + dragged.height / 2,
+			}),
+			{ x: 600, y: 420 },
+			async () => {
+				await expect(otherVertex).toHaveCount(1);
+			},
+		);
 	});
 });

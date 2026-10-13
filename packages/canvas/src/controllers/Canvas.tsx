@@ -839,6 +839,7 @@ const CanvasComponent = ({
 									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
+									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<SelectionControlsLayer
 									selection={state.selection}
