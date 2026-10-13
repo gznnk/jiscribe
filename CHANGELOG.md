@@ -62,7 +62,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Delete can remove several at once; clicking a cell
   picks it, and Shift widens the pick to the block of cells between the two —
   the rectangle they stand at opposite corners of, as a spreadsheet does it, not
-  the run of the cell order between them. Delete clears the picked cells' text,
+  the run of the cell order between them — while Ctrl- or Cmd-clicking a cell
+  adds it to the pick or takes it back out, even from the middle of such a
+  block, so cells apart from one another can be picked together. Delete clears the picked cells' text,
   or removes the picked row or column — never the last one left. A round `+`
   outside the right and bottom edges stands at every boundary a track can go
   at, both outer edges included, and clicking one inserts an empty track there
@@ -90,7 +92,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Shift-click on another picks every compartment from the first to the one
   clicked, each with a box of its own, and a style change such as a font color
   lands on all of them. A plain click, or Tab, goes back to a single compartment;
-  Tab steps on from the end of the run it is moving towards.
+  Tab steps on from the end of the run it is moving towards. A Ctrl- or
+  Cmd-click on a compartment adds it to the pick or takes it back out, where it
+  used to deselect the shape; with no compartment picked it still does.
+- **For plugin authors: a part kind says whether its parts can be picked apart
+  from one another.** `ObjectPartKindDefinition.multiPick: true` lets a Ctrl- or
+  Cmd-click on a part of the picked kind add it to the pick as a range of its
+  own, or take it out — a range it sat inside is broken into the parts it still
+  covers, as the kind's `range` or `list` reads it. Omitted, as for `vertex`,
+  the click toggles the object as before. The `"textSlot"` kind core registers
+  (and `createTextSlotPartKindDefinition()`) declares it, and so do the table's
+  row and column kinds.
 - **For plugin authors: a part kind says how its parts are outlined, walked and
   spanned.** `ObjectPartKindDefinition` takes four optional members. `region`
   gives a part's box in the object's local coordinates: a kind that declares it

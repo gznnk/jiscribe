@@ -67,6 +67,15 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		) => readonly string[];
 
 		/**
+		 * Whether several parts of this kind can be picked at once, apart from one
+		 * another: true lets a Ctrl / Meta-click on a part of the picked kind add it
+		 * to the pick or take it out (togglePartByClick). Omitted or false = a pick
+		 * of this kind is one part or one Shift range (the vertices), and a
+		 * Ctrl / Meta-click toggles the object as a whole instead.
+		 */
+		multiPick?: boolean;
+
+		/**
 		 * Removes the named parts and returns the changed object, or null to refuse
 		 * this one deletion while keeping the state as it stands (a polyline already
 		 * at its vertex floor). Every id is guaranteed to have passed `has`.

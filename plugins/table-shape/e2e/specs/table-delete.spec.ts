@@ -75,6 +75,27 @@ test.describe("table delete", () => {
 		expect(await tableExists(canvas, id)).toBe(true);
 	});
 
+	test("empties only the cells Ctrl-clicks picked apart from one another", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await fillCell(canvas, id, "r0c0", "clear first");
+		await fillCell(canvas, id, "r0c1", "keep right");
+		await fillCell(canvas, id, "r1c0", "keep below");
+		await fillCell(canvas, id, "r1c1", "clear second");
+
+		await pickCell(canvas, id, "r0c0", "r0c1");
+		await canvas.ctrlClickAt(await cellCenter(canvas, id, "r1c1"));
+		await canvas.deleteSelection();
+
+		await expect(canvas.page.getByText("clear first")).toHaveCount(0);
+		await expect(canvas.page.getByText("clear second")).toHaveCount(0);
+		// The two cells between them, which a range over the diagonal would take.
+		await expect(canvas.page.getByText("keep right").first()).toBeVisible();
+		await expect(canvas.page.getByText("keep below").first()).toBeVisible();
+		expect(await cellCount(canvas, id)).toBe(4);
+	});
+
 	test("removes the row a grip selected, and only that row", async ({
 		canvas,
 	}) => {

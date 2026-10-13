@@ -18,8 +18,9 @@ export type ObjectPartRange = {
  * Ranges rather than a set of ids: the set is what a reader derives through the
  * kind, which alone knows what lies between two of its parts
  * (collectObjectPartIds), while the ends are what the gestures need — Shift
- * grows the last range from its anchor (ObjectEventHandler); no gesture adds a
- * second range yet, and Ctrl keeps toggling the object. Storing the set would
+ * grows the last range from its anchor (ObjectEventHandler), and Ctrl / Meta
+ * add a part as a range of its own or take one out, for a kind declaring
+ * `multiPick` (togglePartByClick). Storing the set would
  * lose those ends, the way a DOM `Selection` would lose them if it kept the
  * covered nodes instead of its `Range`s. A reader acting on one part
  * alone takes the active range's focus (readActivePartFocusId).

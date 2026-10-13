@@ -51,6 +51,15 @@ async function shiftClickCell(
 	await canvas.shiftClickAt(await cellCenter(canvas, objectId, cellId));
 }
 
+/** Ctrl-clicks the middle of one cell, which adds it to the pick or takes it out. */
+async function ctrlClickCell(
+	canvas: CanvasDriver,
+	objectId: string,
+	cellId: string,
+): Promise<void> {
+	await canvas.ctrlClickAt(await cellCenter(canvas, objectId, cellId));
+}
+
 test.describe("table cell selection", () => {
 	test("outlines the one cell a click lands in, in place of the table's own outline", async ({
 		canvas,
@@ -92,6 +101,29 @@ test.describe("table cell selection", () => {
 			"r1c0",
 			"r1c1",
 		]);
+	});
+
+	test("adds a cell apart from the picked one on a Ctrl-click", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await clickCell(canvas, id, "r0c0");
+		await ctrlClickCell(canvas, id, "r1c1");
+
+		// Two cells on a diagonal, which no single range reaches. Outlined at all,
+		// they also say the table stayed the selection rather than toggled out.
+		expect(await selectedCellIds(canvas, id)).toEqual(["r0c0", "r1c1"]);
+	});
+
+	test("takes one cell out of a Shift rectangle on a Ctrl-click", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await clickCell(canvas, id, "r0c0");
+		await shiftClickCell(canvas, id, "r1c1");
+		await ctrlClickCell(canvas, id, "r0c1");
+
+		expect(await selectedCellIds(canvas, id)).toEqual(["r0c0", "r1c0", "r1c1"]);
 	});
 
 	test("collapses back to one cell on a plain click", async ({ canvas }) => {

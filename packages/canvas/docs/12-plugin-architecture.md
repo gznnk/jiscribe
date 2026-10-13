@@ -394,7 +394,7 @@ Either way core wraps the registered kind's `region` / `regions` with the
 whole-box fallback and the vertical basis, so a slot is outlined where it is
 drawn and edited.
 
-Four optional members bear on selection:
+Five optional members bear on selection:
 
 - `region` — the part's box in the object's local coordinates. A kind that
   declares it has a box drawn around every selected part, in place of the
@@ -414,6 +414,11 @@ Four optional members bear on selection:
   rectangle the two corners span); omitted means the run over `list`. Every
   returned id must pass `has`, in the type's own order, and the list may not be
   empty — a range covers at least its focus
+- `multiPick` — true lets a Ctrl / Meta-click on a part of the picked kind add
+  it to the pick as a range of its own or take it out, a range it sat inside
+  being broken into the parts it still covers (through `range` or `list`);
+  omitted means a Ctrl / Meta-click toggles the owner as a whole. The
+  `"textSlot"` kind declares it, `vertex` does not
 
 Two more bear on styling a pick:
 

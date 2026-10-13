@@ -58,8 +58,9 @@ export function createTextSlotPartKindDefinition<
  * `ObjectTypeDefinition.partKinds`) to place its slots or to add what core cannot
  * derive.
  *
- * A pick of it receives the text kinds alone (TEXT_STYLE_INTENT_KINDS), and
- * reaches the slots it covers.
+ * A pick of it receives the text kinds alone (TEXT_STYLE_INTENT_KINDS),
+ * reaches the slots it covers, and takes slots apart from one another
+ * (`multiPick`).
  *
  * The calculators go on `region` / `regions` as given. Registration wraps them
  * (placeTextSlotRegions), which is where the full-box fallback and the vertical
@@ -99,6 +100,8 @@ export function createTextSlotPartKindDefinition<
 		// The key order is the order the type stacks its slots in (see the mappers),
 		// which is what Tab walks and a range runs along.
 		list: (object) => Object.keys(readTextSlots(object) ?? {}),
+
+		multiPick: true,
 
 		styleIntentKinds: TEXT_STYLE_INTENT_KINDS,
 

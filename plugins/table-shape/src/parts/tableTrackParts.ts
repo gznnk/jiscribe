@@ -72,6 +72,8 @@ const createTableTrackPartDefinition = (
 			tableTrackPartId(index),
 		),
 
+	multiPick: true,
+
 	region: (object, partId) => {
 		const index = parseTableTrackPartId(partId);
 		return index === null || index >= countTableTracks(object, axis)

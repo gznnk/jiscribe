@@ -454,7 +454,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 		["Meta", { meta: true }],
 		["Ctrl + Shift", { ctrl: true, shift: true }],
 	] as const)(
-		"toggles the record out instead of extending on a %s click",
+		"adds the slot to the pick instead of extending on a %s click",
 		(_label, mods) => {
 			const next = ObjectEventHandler.handle(
 				makeSlotState(["rec-1"], {
@@ -464,10 +464,39 @@ describe("ObjectEventHandler - text slot selection", () => {
 				makeSlotClickEvent("rec-1", textSlotPart("rows"), mods),
 				registries,
 			);
-			expect(next.selection.objectIds).toEqual([]);
-			expect(next.selection.part).toBeNull();
+			expect(next.selection.objectIds).toEqual(["rec-1"]);
+			expect(next.selection.part).toEqual({
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [
+					{ anchorId: "name", focusId: "name" },
+					{ anchorId: "rows", focusId: "rows" },
+				],
+			});
 		},
 	);
+
+	it("takes the last picked slot out on a Ctrl click, leaving the record selected", () => {
+		const next = ObjectEventHandler.handle(
+			makeSlotState(["rec-1"], {
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "name", focusId: "name" }],
+			}),
+			makeSlotClickEvent("rec-1", textSlotPart("name"), { ctrl: true }),
+			registries,
+		);
+		expect(next.selection.objectIds).toEqual(["rec-1"]);
+		expect(next.selection.part).toBeNull();
+	});
+
+	it("toggles the record out on a Ctrl click over a slot while no slot is picked", () => {
+		const next = ObjectEventHandler.handle(
+			makeSlotState(["rec-1"], null),
+			makeSlotClickEvent("rec-1", textSlotPart("rows"), { ctrl: true }),
+			registries,
+		);
+		expect(next.selection.objectIds).toEqual([]);
+		expect(next.selection.part).toBeNull();
+	});
 
 	it("leaves a Shift click naming no live slot to the object-level path", () => {
 		const next = ObjectEventHandler.handle(

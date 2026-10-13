@@ -46,6 +46,7 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
+import { togglePartByClick } from "../utils/togglePartByClick";
 
 /**
  * Moves the focus of the active range (the last one) to the part a Shift-click
@@ -418,11 +419,23 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the click event
 		if (event.type === "click") {
-			// Shift over a part of the kind already picked grows that range. Left to
-			// selectObjectByClick it would instead deselect the object, which the
-			// modifier cannot mean while the pointer is aimed one level below it.
-			// Ctrl / Meta, with or without Shift, keep toggling the object.
-			if (event.mods.shift && !event.mods.ctrl && !event.mods.meta) {
+			// Over a part of the kind already picked, Shift grows that range and
+			// Ctrl / Meta (with or without Shift) toggle the part, for a kind that
+			// takes several (`multiPick`). Left to selectObjectByClick they would
+			// instead deselect the object, which the modifier cannot mean while the
+			// pointer is aimed one level below it. Any other modified click keeps
+			// toggling the object.
+			if (event.mods.ctrl || event.mods.meta) {
+				const toggled = togglePartByClick(
+					nextState,
+					targetObject,
+					event.targetPart,
+					registries.objectPartKind,
+				);
+				if (toggled !== null) {
+					return toggled;
+				}
+			} else if (event.mods.shift) {
 				const extended = extendPartRange(
 					nextState,
 					targetObject,
