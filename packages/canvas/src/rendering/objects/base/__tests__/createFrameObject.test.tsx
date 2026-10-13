@@ -17,15 +17,25 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+	createTextSlotPartKindDefinition,
+	placeTextSlotRegions,
+} from "../../../../controllers/selection/partKinds/textSlotPartKind";
 import type { FillStyleState } from "../../../../states/objects/base/FillStyleState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { theme } from "../../../../theme/themeTokens";
 import { FontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
+import { createObjectPartKindRegistry } from "../../registry/ObjectPartKindRegistry";
+import type { ObjectPartKindRegistry } from "../../registry/ObjectPartKindRegistry";
+import { ObjectPartKindRegistryContext } from "../../registry/ObjectPartKindRegistryContext";
 import { ObjectShapeStyleDefaultsRegistryContext } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { createFrameObject } from "../createFrameObject";
-import type { FrameShapeProps } from "../createFrameObject";
+import type {
+	FrameShapeProps,
+	FrameTextOverlayProps,
+} from "../createFrameObject";
 import type * as TextOverlayModule from "../TextOverlay";
 
 /**
@@ -39,6 +49,10 @@ import type * as TextOverlayModule from "../TextOverlay";
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const overlayRenderCount = vi.hoisted(() => ({ value: 0 }));
+/** The props each slot's overlay last rendered with, keyed by slot id. */
+const overlayPropsBySlotId = vi.hoisted(
+	() => new Map<string, FrameTextOverlayProps>(),
+);
 
 // Stands in for the real overlay only to count its renders, keeping the memo it
 // is wrapped in: what is asserted is that a nonce-driven re-render of the parent
@@ -48,8 +62,9 @@ vi.mock("../TextOverlay", async (importOriginal) => {
 	const { memo } = await import("react");
 	return {
 		...actual,
-		TextOverlay: memo(() => {
+		TextOverlay: memo((props: FrameTextOverlayProps) => {
 			overlayRenderCount.value += 1;
+			overlayPropsBySlotId.set(props.textSlotId, props);
 			return null;
 		}),
 	};
@@ -85,12 +100,14 @@ const probeState: ProbeState = {
 const renderFrameShape = (options?: {
 	state?: ProbeState;
 	shapeStyleDefaults?: ObjectShapeStyleDefaultsRegistry;
+	partKinds?: ObjectPartKindRegistry;
 }) => {
 	const drawCount = { value: 0 };
 	const drawnShape: { value: FrameShapeProps | null } = { value: null };
 	const state = options?.state ?? probeState;
 	const shapeStyleDefaults =
 		options?.shapeStyleDefaults ?? createObjectShapeStyleDefaultsRegistry();
+	const partKinds = options?.partKinds ?? createObjectPartKindRegistry();
 	const FrameShape = createFrameObject<ProbeState>((drawState, shape) => {
 		drawCount.value += 1;
 		drawnShape.value = shape;
@@ -115,11 +132,13 @@ const renderFrameShape = (options?: {
 			act(() =>
 				root.render(
 					<ObjectShapeStyleDefaultsRegistryContext value={shapeStyleDefaults}>
-						<FontsLoadedNonceContext value={nonce}>
-							<svg>
-								<FrameShape {...state} />
-							</svg>
-						</FontsLoadedNonceContext>
+						<ObjectPartKindRegistryContext value={partKinds}>
+							<FontsLoadedNonceContext value={nonce}>
+								<svg>
+									<FrameShape {...state} />
+								</svg>
+							</FontsLoadedNonceContext>
+						</ObjectPartKindRegistryContext>
 					</ObjectShapeStyleDefaultsRegistryContext>,
 				),
 			);
@@ -140,6 +159,7 @@ const registryFor = (
 describe("createFrameObject", () => {
 	beforeEach(() => {
 		overlayRenderCount.value = 0;
+		overlayPropsBySlotId.clear();
 	});
 
 	it("re-runs draw when the fonts-loaded nonce moves", () => {
@@ -248,6 +268,52 @@ describe("createFrameObject", () => {
 
 		expect(shape.drawCount.value).toBeGreaterThan(0);
 		expect(overlayRenderCount.value).toBe(overlaysBefore);
+		shape.unmount();
+	});
+
+	it("asks a slots type's text slot kind for its regions once per render, however many slots it has", () => {
+		const cellRegion = (column: number) => ({
+			x: -50 + column * 25,
+			y: -25,
+			width: 25,
+			height: 50,
+		});
+		const regions = vi.fn(() => ({
+			c0: cellRegion(0),
+			c1: cellRegion(1),
+			c2: cellRegion(2),
+			c3: cellRegion(3),
+		}));
+		const partKinds = createObjectPartKindRegistry();
+		partKinds.register("table", [
+			placeTextSlotRegions(
+				"table",
+				createTextSlotPartKindDefinition({ regions }),
+			),
+		]);
+		const shape = renderFrameShape({
+			state: {
+				...probeState,
+				type: "table",
+				features: { type: "table", geometry: "rect", text: "slots" },
+				text: {
+					c0: { text: "a" },
+					c1: { text: "b" },
+					c2: { text: "c" },
+					c3: { text: "d" },
+				},
+			},
+			partKinds,
+		});
+
+		shape.render(0);
+		expect(regions).toHaveBeenCalledTimes(1);
+		expect(overlayPropsBySlotId.get("c2")).toMatchObject(cellRegion(2));
+		expect(overlayPropsBySlotId.get("c3")).toMatchObject(cellRegion(3));
+
+		// A face landing re-measures: the regions are asked again, once.
+		shape.render(1);
+		expect(regions).toHaveBeenCalledTimes(2);
 		shape.unmount();
 	});
 });

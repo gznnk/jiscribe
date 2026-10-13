@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import type { ObjectPartKindDefinition } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
+import { createObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { ObjectPartKindDefinition } from "../../partKinds/ObjectPartKindRegistry";
-import { createObjectPartKindRegistry } from "../../partKinds/ObjectPartKindRegistry";
 import type { DeletableParts } from "../readDeletableParts";
 import { readDeletableParts } from "../readDeletableParts";
 

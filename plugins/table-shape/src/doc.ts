@@ -9,7 +9,6 @@ import {
 	numberOverride,
 	type PointObjectSizeCalculator,
 } from "@jiscribe/canvas-sdk/doc";
-import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 import type {
 	CanvasDocPlugin,
 	ObjectDocBoundsCalculator,
@@ -66,11 +65,6 @@ const calcTableDocBounds: ObjectDocBoundsCalculator = (doc) => {
  * measurement to the stored corner for the doc-ops to measure a saved table by
  * ({@link calcTableDocBounds}).
  *
- * `textRegion` says the box does not hold the text, the same answer the record
- * gives: the box is divided into cells each sized from its own text, so no width
- * or height can make a cell overflow — there is nothing for the headless overflow
- * check to measure.
- *
  * The cell defaults are declared as `everyTextSlot` rather than per slot: a table's
  * slots are its cells, as many as the grid is wide and tall, so there is no fixed
  * set of ids to key them by.
@@ -83,7 +77,6 @@ export const tableDocDefinition: ObjectDocDefinition = {
 		measureTableSize,
 	),
 	bounds: calcTableDocBounds,
-	textRegion: calcOutsideBoxTextRegion,
 	extraKeys: TABLE_EXTRA_KEYS,
 	description:
 		'A grid of cells. `x` / `y` are the top-left of the grid; its width is the column widths summed and its height the resolved row heights summed, so neither is stored. A row\'s `height` is a lower bound: the row is drawn as tall as its tallest cell\'s text needs, never clipping it. `cells` is dense — exactly one row per entry of "rows" and one cell per entry of "columns" — and a cell carrying nothing but text may be written as that text alone. The table has a shape-wide `fill` (its background, theme-following by default), and each cell may carry its own `fill` painted over it. Typography stays per cell, so there are no shape-wide text fields.',

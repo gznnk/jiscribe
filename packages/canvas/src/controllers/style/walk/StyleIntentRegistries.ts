@@ -1,7 +1,7 @@
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
-import type { ObjectPartKindRegistry } from "../../selection/partKinds/ObjectPartKindRegistry";
+import type { ObjectPartKindRegistry } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectStyleRegistry } from "../tables/ObjectStyleRegistry";
 
 /**

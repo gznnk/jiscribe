@@ -20,7 +20,7 @@ const registries = createTestRegistries();
 // No built-in type spells its text out as slots, so "rect" is handed the kind
 // applyObjectDefinition would have given such a type.
 registries.objectPartKind.register("rect", [
-	createTextSlotPartKindDefinition(undefined),
+	createTextSlotPartKindDefinition(),
 ]);
 
 const canvasReducer = createCanvasReducer(registries);

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { createObjectPartKindRegistry } from "../../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../../../selection/__tests__/support/textSlotPartSelection";
-import { createObjectPartKindRegistry } from "../../../../../selection/partKinds/ObjectPartKindRegistry";
 import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
@@ -121,7 +121,7 @@ registry.register("filled-rect", RECT_SECTIONS);
 
 // The slot kind applyObjectDefinition gives every text-holding type, and one
 // whose pick receives the fill as well.
-const coreTextSlot = createTextSlotPartKindDefinition(undefined);
+const coreTextSlot = createTextSlotPartKindDefinition();
 const partKindRegistry = createObjectPartKindRegistry();
 for (const type of ["rect", "ellipse", "container", "badge", "gauge", "box"]) {
 	partKindRegistry.register(type, [coreTextSlot]);

@@ -1,5 +1,5 @@
+import type { ObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import type { ObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
 import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
 

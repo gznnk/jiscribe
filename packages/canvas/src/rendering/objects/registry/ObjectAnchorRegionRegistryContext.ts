@@ -9,7 +9,7 @@ import {
  * Rendering-layer context that distributes the per-canvas
  * `ObjectAnchorRegionRegistry` to the connector renderer and connection-anchor
  * dots (handed down separately from the controllers-layer bundle for the same
- * reason as ObjectTextRegionRegistryContext).
+ * reason as ObjectComponentRegistryContext).
  *
  * The default is a fresh empty registry, so rendering without a Provider falls
  * back to bounding-box anchor regions. `Canvas` always provides the canvas's

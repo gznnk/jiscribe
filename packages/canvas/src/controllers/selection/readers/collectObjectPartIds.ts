@@ -1,7 +1,7 @@
 import { collectPartIdsBetween } from "./collectPartIdsBetween";
+import type { ObjectPartKindDefinition } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ObjectPartSelection } from "../CanvasSelection";
-import type { ObjectPartKindDefinition } from "../partKinds/ObjectPartKindRegistry";
 
 /**
  * Every part id the selection covers, in the type's own order, ranges in order,

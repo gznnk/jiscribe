@@ -85,9 +85,11 @@ export type { TextSlots } from "./states/objects/types/TextSlots";
 // (the sticky's shadowed paper, say): the same two derivations createFrameObject
 // makes internally. `calcTextRegion` is the seam the in-place editor also goes
 // through, so a renderer that places text itself must use it or the text jumps
-// on entering edit mode.
+// on entering edit mode. Both region readers take the type's registered
+// `"textSlot"` part kind (`objectPartKind.get(type, TEXT_SLOT_PART_KIND)`).
 export {
 	calcTextRegion,
+	calcTextSlotRegions,
 	calcFullTextRegion,
 } from "./rendering/objects/utils/calcTextRegion";
 export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform";
@@ -322,9 +324,10 @@ export type {
 	ObjectPartRange,
 	ObjectPartSelection,
 } from "./controllers/selection/CanvasSelection";
-// The `"textSlot"` kind core registers for a slots type, for a type declaring it
-// itself to add what core cannot derive (a range that is not a slice of the slot
-// order, a Delete): spread the definition and add to it.
+// The `"textSlot"` kind core registers for a type holding text, for a type
+// declaring it itself to place its slots (`region` / `regions`) or to add what
+// core cannot derive (a range that is not a slice of the slot order, a Delete):
+// spread the definition and add to it.
 export {
 	createTextSlotPartKindDefinition,
 	isTextSlotPart,

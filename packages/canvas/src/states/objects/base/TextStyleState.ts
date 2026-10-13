@@ -18,8 +18,8 @@ export type TextStyleState = {
 	 */
 	text?: TextSlots;
 	/**
-	 * Box the body's `verticalAlign` is measured against, applied by
-	 * `calcTextRegion`; absent = the type's own declared region, which is what
+	 * Box the body's `verticalAlign` is measured against, applied by the
+	 * registered `"textSlot"` part kind (placeTextSlotRegions); absent = the type's own declared region, which is what
 	 * every document written before the field existed means. Only a root-form
 	 * type (`features.text: "body"` / `"source"`) ever carries it — the mapper
 	 * sets it in that branch alone, a slot having no shape-wide box to be placed

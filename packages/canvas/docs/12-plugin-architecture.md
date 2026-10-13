@@ -78,12 +78,26 @@ as `CanvasPlugin`, with `ObjectDocDefinition` as the value of `objects`.
 headless half of a type: what the parse layer needs to know the type exists, validate
 its doc and create it from a doc (`features`, `validateDoc` and so on), plus the
 metadata the schema and AI-docs generator reads. That type is the authority on which
-fields exist. `ObjectTypeDefinition` adds the UI-layer contracts to it and takes over
-exactly one field, `textRegion`, with the renderer's calculator type — a doc
-declaration may answer "the box does not hold the text" with `null`, which a renderer
-has no use for. Everything else carries over, which is why a full `CanvasPlugin` is
-**structurally assignable** to `CanvasDocPlugin` — one `plugins` array feeds both
-`<Canvas>` and the parser.
+fields exist. `ObjectTypeDefinition` adds the UI-layer contracts to it and carries
+every doc field over untouched — `textRegion` included — which is why a full
+`CanvasPlugin` is **structurally assignable** to `CanvasDocPlugin`: one `plugins`
+array feeds both `<Canvas>` and the parser.
+
+The doc's `textRegion` is the headless answer (the overflow checks, the
+auto-height verdict) and may say "the box does not hold the text" with `null`, so
+it is not what the canvas draws with. A type places its text on the canvas through
+the `"textSlot"` part kind's `region` (`(state, slotId) => Rect`, one slot at a
+time) or `regions` (`(state) => Record<slotId, Rect>`, every slot in one call),
+built with `createTextSlotPartKindDefinition({ region })` /
+`createTextSlotPartKindDefinition({ regions })` and declared in `partKinds`;
+`createFrameObjectDefinition({ textRegion })` builds the former for you. The frame
+renderer asks the kind's `regions` once per render for every slot rather than once
+per slot, so a type whose one slot cannot be placed without laying out the rest
+(the table's cells, the record's compartments) lays itself out once. Both answer
+in local coordinates (origin at the shape center, top-left based), and `regions`
+must hold every key of `state.text`. Registration wraps whichever kind is
+registered so the whole box stands in where it declares neither and the object's
+`textVerticalBasis` goes on top; a kind declaring both is refused when built.
 
 The split exists so a consumer that only validates documents never loads React.
 The VSCode extension's diagnostics provider and the MCP server both parse
@@ -370,11 +384,14 @@ Every type with a `features.text` is given the `"textSlot"` kind without
 declaring anything, its part ids being the keys of its own `text` (`body` alone
 for a one-body type, which is the slot its open text editor keeps picked); declaring
 `"textSlot"` yourself replaces that one rather than colliding with it; spread
-`createTextSlotPartKindDefinition(textRegion)` to keep what core derives and add
+`createTextSlotPartKindDefinition()` to keep what core derives and add
 only what it cannot (the table adds a `range`, a `delete` and the fill to its
-`styleIntentKinds`).
+`styleIntentKinds`), and pass it `region` / `regions` to place the slots.
+Either way core wraps the registered kind's `region` / `regions` with the
+whole-box fallback and the vertical basis, so a slot is outlined where it is
+drawn and edited.
 
-Three optional members bear on selection:
+Four optional members bear on selection:
 
 - `region` — the part's box in the object's local coordinates. A kind that
   declares it has a box drawn around every selected part, the owner's own
@@ -382,6 +399,10 @@ Three optional members bear on selection:
   is drawn the transform handles are hidden, since they would compete with it.
   `vertex` declares none (a vertex has handles of its own), so it neither draws
   a box nor hides the handles
+- `regions` — every part's box in one call, keyed by part id, in the same
+  coordinates as `region`, for a kind whose one part cannot be placed without
+  laying out the rest (the table's cells); a kind declaring both answers the
+  same boxes from each
 - `list` — every part id the object currently holds, in the order Tab walks them;
   it is also the order the linear default resolves a Shift-click range in (the
   run between the anchor and the focus)

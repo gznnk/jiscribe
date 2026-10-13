@@ -1,11 +1,11 @@
+import type {
+	ObjectPartKindDefinition,
+	ObjectPartKindRegistry,
+} from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type {
-	ObjectPartKindDefinition,
-	ObjectPartKindRegistry,
-} from "../partKinds/ObjectPartKindRegistry";
 import {
 	isTextSlotPart,
 	TEXT_SLOT_PART_KIND,

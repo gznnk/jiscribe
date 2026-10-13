@@ -68,9 +68,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - For plugin authors: `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`)
   now exports `commitEdit`, which a contributed command returns its state through
   to say it edited the document — the COMMAND path never advances `commitVersion`
-  itself; `createTextSlotPartKindDefinition` and `TEXT_SLOT_PART_KIND`, so a type
+  itself; `createTextSlotPartKindDefinition()` and `TEXT_SLOT_PART_KIND`, so a type
   declaring its own `"textSlot"` kind can spread the derived one and add a `range`
-  or a `delete`; and `resolveTextSlotIds(object, pick, ctx)` with
+  or a `delete`, and pass it `{ region }` or `{ regions }` to place the slots;
+  and `resolveTextSlotIds(object, pick, ctx)` with
   `TEXT_STYLE_INTENT_KINDS`, the slots a pick reaches as its kind declares them
   and the text kinds a part reaching text receives, for a type's own entry that
   writes where a pick reaches (a table's cell fill) and for its part kinds'
@@ -82,11 +83,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   lands on all of them. A plain click, or Tab, goes back to a single compartment;
   Tab steps on from the end of the run it is moving towards.
 - **For plugin authors: a part kind says how its parts are outlined, walked and
-  spanned.** `ObjectPartKindDefinition` takes three optional members. `region`
+  spanned.** `ObjectPartKindDefinition` takes four optional members. `region`
   gives a part's box in the object's local coordinates: a kind that declares it
   has every selected part outlined, the owner's own outline turning dashed and
   its transform handles hidden, while a kind without one (the built-in `vertex`)
-  looks as before. `list` gives every part id in the order Tab walks them, which
+  looks as before. `regions` gives every part's box in one call, for a kind
+  whose one part cannot be placed without laying out the rest. `list` gives every part id in the order Tab walks them, which
   is also the order a Shift-click range is resolved over by default. `range` is
   for a type whose parts are not laid out in one line, such as a table's cells:
   it answers which parts a range from an anchor to a focus covers, every id
@@ -211,6 +213,30 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `byTextSlot` as before, wrapped in that field. The two are separate because
   one map keyed by slot id had to reserve an id for "every slot", which then
   could not be the name of a real slot in any document of the type.
+- **For plugin authors, a breaking change: a type places its text through its
+  `"textSlot"` part kind.** `ObjectTypeDefinition` no longer takes a `textRegion`
+  of its own (v0.11.0 had one): the `textRegion` it carries is the doc
+  definition's, inherited untouched, which is what the headless checks and the
+  auto-height verdict read. Where the canvas draws, edits and outlines a slot is
+  the `"textSlot"` part kind's `region` (one slot at a time) or `regions` (every
+  slot in one call, keyed by slot id), built with
+  `createTextSlotPartKindDefinition({ region })` /
+  `createTextSlotPartKindDefinition({ regions })` and declared in `partKinds`; a
+  kind given both is refused. `createFrameObjectDefinition({ textRegion })` keeps
+  working, and builds that kind for you (declaring a `"textSlot"` kind in
+  `partKinds` next to it is refused). A hand-written definition that declared
+  `textRegion` declares the part kind instead. Registration wraps whichever
+  `"textSlot"` kind is registered so a slot it does not place takes the whole box
+  and the object's `textVerticalBasis` goes on top, and the frame renderer asks
+  the kind's `regions` once per render rather than once per slot — so a type
+  whose one slot cannot be placed without laying out the rest (the table's
+  cells, the record's compartments, now `calcTableTextSlotRegions` /
+  `calcRecordTextSlotRegions`) lays itself out once.
+  `ObjectPartKindDefinition.regions` is new for that. `ObjectTextRegionRegistry`
+  and `CanvasRegistries.objectTextRegion` are gone; `calcTextRegion` and the new
+  `calcTextSlotRegions` on `@jiscribe/canvas/unstable` take the registered
+  `"textSlot"` part kind instead of the calculators. `@jiscribe/plugin-uml-shapes`
+  no longer exports `calcRecordTextRegion`.
 
 ### Changed
 

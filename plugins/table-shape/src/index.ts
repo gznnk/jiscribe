@@ -45,7 +45,7 @@ export { calcTableLayout } from "./layout/calcTableLayout";
 export type { TableLayout, TableLayoutSource } from "./layout/calcTableLayout";
 export { calcTableFrameSize } from "./layout/calcTableFrameSize";
 export { distributeTableWidthToColumns } from "./layout/distributeTableWidthToColumns";
-export { calcTableTextRegion } from "./presentation/calcTableTextRegion";
+export { calcTableTextSlotRegions } from "./presentation/calcTableTextSlotRegions";
 export { Table } from "./presentation/Table";
 
 export {

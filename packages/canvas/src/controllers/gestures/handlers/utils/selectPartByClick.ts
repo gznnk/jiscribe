@@ -1,7 +1,7 @@
 import { parsePartAddress } from "./partAddress";
+import type { ObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { ObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 
 /**
  * Moves the part selection to where a click landed inside one object: the single

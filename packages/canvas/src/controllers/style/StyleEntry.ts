@@ -2,9 +2,9 @@ import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { CoreStyleIntentKind, StyleIntentValueType } from "./StyleIntent";
+import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ObjectPartSelection } from "../selection/CanvasSelection";
-import type { ObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
 
 /**
  * How one type reflects one intent: where the edit lands in its own data, and

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
-import { createObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
 import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
@@ -29,7 +29,7 @@ const keyedRect = () =>
  */
 const objectPartKind = createObjectPartKindRegistry();
 objectPartKind.register("rect", [
-	createTextSlotPartKindDefinition(undefined),
+	createTextSlotPartKindDefinition(),
 	{
 		kind: "band",
 		has: () => true,

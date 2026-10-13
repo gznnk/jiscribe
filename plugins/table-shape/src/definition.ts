@@ -26,7 +26,7 @@ import { collectTableCellRange } from "./grid/collectTableCellRange";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
 import { TABLE_CELL_STYLE_INTENT_KINDS } from "./parts/tableCellStyleIntentKinds";
 import { TABLE_TRACK_PART_DEFINITIONS } from "./parts/tableTrackParts";
-import { calcTableTextRegion } from "./presentation/calcTableTextRegion";
+import { calcTableTextSlotRegions } from "./presentation/calcTableTextSlotRegions";
 import { Table } from "./presentation/Table";
 import type { TableDoc } from "./schema/TableDoc";
 import { reconcileTableBoxWithGrid } from "./state/reconcileTableBoxWithGrid";
@@ -122,7 +122,8 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
  * that steps into a shape writes it, Tab walks it, the text style menu reads it.
  * A `"cell"` kind would be a second name for the same thing, selected by nobody.
  *
- * What is declared here is the three things core cannot derive — what Delete
+ * What is declared here is the four things core cannot derive — where the cells
+ * are (every cell rect in one layout pass, calcTableTextSlotRegions), what Delete
  * means over a cell range, what the range between two cells is, and that a cell
  * pick receives the fill on top of the text (TABLE_CELL_STYLE_INTENT_KINDS) — so
  * `createTextSlotPartKindDefinition` is spread for the rest and only those added (a
@@ -136,7 +137,9 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 	TABLE_TRACK_PART_DEFINITIONS.row,
 	TABLE_TRACK_PART_DEFINITIONS.column,
 	{
-		...createTextSlotPartKindDefinition(calcTableTextRegion),
+		...createTextSlotPartKindDefinition<TableState>({
+			regions: calcTableTextSlotRegions,
+		}),
 		range: collectTableCellRange,
 		delete: clearTableCells,
 		styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
@@ -173,7 +176,6 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	stateValidator: isValidTableState,
 	contentResizer: (state) => reconcileTableBoxWithGrid(state as TableState),
 	component: Table,
-	textRegion: calcTableTextRegion,
 	behavior: createFrameBehavior<TableState>(),
 	selectionControls: TABLE_SELECTION_CONTROLS,
 	partKinds: TABLE_PARTS,

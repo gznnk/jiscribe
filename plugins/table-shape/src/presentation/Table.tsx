@@ -14,7 +14,7 @@ import type { TableState } from "../state/TableState";
 /**
  * Table presentation: a grid of cells under the rules that divide them. Shared
  * Frame logic (transform, color resolution, per-cell text overlays placed by
- * calcTableTextRegion, memo) lives in createFrameObject; here we draw the body,
+ * calcTableTextSlotRegions, memo) lives in createFrameObject; here we draw the body,
  * the cells and the linework. The wrapping <g> carries the object's data-kind/data-id, and
  * each cell carries its cell id as its `data-part` address (textSlotPart), so a
  * click picks the cell it lands in and a double click resolves to the

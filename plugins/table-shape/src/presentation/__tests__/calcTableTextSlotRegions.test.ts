@@ -8,7 +8,7 @@ import { calcTableLayout } from "../../layout/calcTableLayout";
 import type { TableLayoutSource } from "../../layout/calcTableLayout";
 import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
-import { calcTableTextRegion } from "../calcTableTextRegion";
+import { calcTableTextSlotRegions } from "../calcTableTextSlotRegions";
 
 // Text measurement is offered, never inferred, and measuring with nothing offered
 // throws (see @jiscribe/canvas-sdk/doc). A table's rows are sized from their own
@@ -29,11 +29,7 @@ const cellsOf = (rows: string[][]): Record<string, TableCell> => {
 	return cells;
 };
 
-/**
- * A table whose rules are 1px wide, so every cell of a 120px column wraps at
- * 120 - 1 - 6 * 2 = 107px — 12 characters at the estimate's 8.4px each, which is
- * what the wrapping cases below are written against.
- */
+/** A table whose rules are 1px wide. */
 const tableOf = (
 	columnWidths: number[],
 	rowHeights: (number | undefined)[],
@@ -45,8 +41,8 @@ const tableOf = (
 	strokeWidth: 1,
 });
 
-describe("calcTableTextRegion", () => {
-	it("returns the rect of the cell the slot id names", () => {
+describe("calcTableTextSlotRegions", () => {
+	it("answers the rect of every cell, keyed by the cell's slot id", () => {
 		const state = {
 			...tableOf(
 				[110, 90],
@@ -59,19 +55,9 @@ describe("calcTableTextRegion", () => {
 			width: 200,
 			height: 61,
 		};
-		expect(calcTableTextRegion(state, "r1c1")).toEqual(
-			calcTableLayout(state).cellRects.r1c1,
-		);
-	});
+		const regions = calcTableTextSlotRegions(state);
 
-	it("throws for a slot id the grid has no cell for, naming the grid", () => {
-		const state = {
-			...tableOf([110, 90], [36], [["", ""]]),
-			width: 200,
-			height: 36,
-		};
-		expect(() => calcTableTextRegion(state, "r9c9")).toThrow(
-			'calcTableTextRegion: no cell "r9c9" in a 1x2 grid',
-		);
+		expect(Object.keys(regions)).toEqual(["r0c0", "r0c1", "r1c0", "r1c1"]);
+		expect(regions.r1c1).toEqual(calcTableLayout(state).cellRects.r1c1);
 	});
 });

@@ -11,12 +11,13 @@ import {
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
-import type { ObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import { calcTextRegion } from "../../rendering/objects/utils/calcTextRegion";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import { resolveTextObjectFont } from "../../states/objects/primitives/text/resolveTextObjectFont";
 import { readRichTextSlot } from "../../states/objects/types/TextSlots";
+import { TEXT_SLOT_PART_KIND } from "../selection/partKinds/textSlotPartKind";
 
 /**
  * Slack allowed before the text counts as outgrowing its region, in local px.
@@ -69,15 +70,16 @@ export type TextSlotMeasurement = {
  * @param object - The object whose slot is measured; one that is not frame-based
  *   (a connector, a poly shape) has no text region and yields null
  * @param slotId - Key of the object's `text`; an absent key yields null
- * @param registries - The canvas's region calculators and per-type text-style
- *   defaults, i.e. the two lookups the drawn overlay resolves its box through
+ * @param registries - The canvas's part kinds, whose `"textSlot"` kind places
+ *   the slot, and per-type text-style defaults, i.e. the two lookups the drawn
+ *   overlay resolves its box through
  * @returns The measurement, or null when the object holds no such slot
  */
 export const measureTextSlot = (
 	object: ObjectState,
 	slotId: string,
 	registries: {
-		objectTextRegion: Pick<ObjectTextRegionRegistry, "get">;
+		objectPartKind: Pick<ObjectPartKindRegistry, "get">;
 		objectTextStyleDefaults: Pick<
 			ObjectTextStyleDefaultsRegistry,
 			"resolveTextSlotStyle"
@@ -95,7 +97,7 @@ export const measureTextSlot = (
 	const region = calcTextRegion(
 		object,
 		slotId,
-		registries.objectTextRegion.get(object.type),
+		registries.objectPartKind.get(object.type, TEXT_SLOT_PART_KIND),
 	);
 	// A flipped shape carries the flip in scaleX/scaleY, but a calculator may
 	// also hand back a negative extent; either way the text has the same room.

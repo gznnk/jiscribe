@@ -10,6 +10,7 @@ import type {
 } from "@jiscribe/geometry";
 
 import { getAncestors } from "./utils/getAncestors";
+import type { ObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import {
@@ -22,7 +23,6 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import type { ObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { createMultiSelectGroup } from "../../../selection/readers/createMultiSelectGroup";
 import { determineClickSelection } from "../../../selection/writers/determineClickSelection";
 import { selectObjectByClick } from "../../../selection/writers/selectObjectByClick";

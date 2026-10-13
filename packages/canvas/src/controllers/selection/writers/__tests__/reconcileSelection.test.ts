@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import {
+	createObjectPartKindRegistry,
+	type ObjectPartKindDefinition,
+} from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { selectionOf } from "../../__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../__tests__/support/vertexPartSelection";
 import type { ObjectPartSelection } from "../../CanvasSelection";
-import {
-	createObjectPartKindRegistry,
-	type ObjectPartKindDefinition,
-} from "../../partKinds/ObjectPartKindRegistry";
 import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
@@ -76,12 +76,10 @@ const connector = (id: string): ObjectState =>
  * waypoints, and nothing else takes part at all.
  */
 const objectPartKind = createObjectPartKindRegistry();
-objectPartKind.register("record", [
-	createTextSlotPartKindDefinition(undefined),
-]);
-objectPartKind.register("rect", [createTextSlotPartKindDefinition(undefined)]);
+objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
+objectPartKind.register("rect", [createTextSlotPartKindDefinition()]);
 objectPartKind.register("table", [
-	createTextSlotPartKindDefinition(undefined),
+	createTextSlotPartKindDefinition(),
 	cellPartKind,
 ]);
 objectPartKind.register("connector", [createVertexPartKindDefinition(2)]);

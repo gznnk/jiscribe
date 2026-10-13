@@ -34,6 +34,15 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		region?: (object: TState, partId: string) => Rect | null;
 
 		/**
+		 * The box of every part of this kind the object holds, in one call: part id
+		 * → box, in the same coordinates as `region`. For a kind whose one part
+		 * cannot be placed without laying out the rest (a table's cells). A kind
+		 * declaring both answers the same boxes from each; omitted = the boxes are
+		 * asked of `region` one part at a time.
+		 */
+		regions?: (object: TState) => Readonly<Record<string, Rect>>;
+
+		/**
 		 * Every part id the object currently holds, in the order Tab walks them.
 		 * Omitted = the kind cannot be cycled through.
 		 */
@@ -91,6 +100,15 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 			partIds: readonly string[],
 		) => readonly string[];
 	};
+
+/**
+ * The part-id namespace of the text slots a text-holding type holds — several
+ * for `features.text === "slots"`, the one `body` otherwise — with part ids
+ * spelled as the slot keys of the object's `text`.
+ * The kind half of the `data-part` its slot elements carry, which `textSlotPart`
+ * builds.
+ */
+export const TEXT_SLOT_PART_KIND = "textSlot";
 
 /** A kind as an identifier: a letter, then letters, digits, `_` or `-`. */
 const KIND_IDENTIFIER = /^[A-Za-z][\w-]*$/;

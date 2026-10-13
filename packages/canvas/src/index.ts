@@ -221,7 +221,7 @@ export type {
 	SelectionControlResult,
 } from "./controllers/ui/controls/SelectionControlTypes";
 export { DEFAULT_SELECTION_CONTROL_EVENTS } from "./controllers/gestures/registry/RegisteredSelectionControl";
-export type { ObjectPartKindDefinition } from "./controllers/selection/partKinds/ObjectPartKindRegistry";
+export type { ObjectPartKindDefinition } from "./rendering/objects/registry/ObjectPartKindRegistry";
 // The `data-part` a text slot's element carries: a shape that draws one hit
 // region per slot marks each region with it, which is how a click picks that
 // slot and a double click opens it for editing.
@@ -236,7 +236,13 @@ export type {
 	CanvasFontFamily,
 	CanvasFontFamilyId,
 } from "@jiscribe/doc/text/style/fontFamilies";
-export type { ObjectTextRegionCalculator } from "./rendering/objects/registry/ObjectTextRegionRegistry";
+// Where a type places its text slots: the calculators the `"textSlot"` part
+// kind takes (`createTextSlotPartKindDefinition({ region | regions })`).
+export type {
+	ObjectTextRegionCalculator,
+	ObjectTextSlotRegionsCalculator,
+	TextSlotRegionCalculators,
+} from "./controllers/selection/partKinds/ObjectTextRegionCalculatorTypes";
 // Per-type, per-slot text-style defaults: the registry a canvas resolves an
 // unset text style through, reachable as
 // `CanvasRegistries["objectTextStyleDefaults"]`.

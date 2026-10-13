@@ -10,13 +10,13 @@ import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
+import type { ObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { createTextSlotPartRegistry } from "../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../selection/CanvasSelection";
-import type { ObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import type { StyleContext, TextEditRange } from "../../StyleEntry";
 import { CONNECTOR_STYLE_TABLE } from "../../tables/connectorStyleTable";

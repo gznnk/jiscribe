@@ -13,7 +13,7 @@ import type {
  * ObjectTypeDefinition).
  *
  * The two switches the features cannot answer for are not here: auto height is
- * offered per type by `supportsAutoHeightType` and inserted at registration
+ * offered per type by `supportsAutoHeight` and inserted at registration
  * (applyObjectDefinition), and the text-layout switch belongs to the `text` type
  * alone, which declares it. Neither has a counterpart in the ObjectMenu.
  *

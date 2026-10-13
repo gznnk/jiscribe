@@ -5,7 +5,7 @@ import {
 import type { Dimensions } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { calcTableTextRegion } from "../../presentation/calcTableTextRegion";
+import { calcTableTextSlotRegions } from "../../presentation/calcTableTextSlotRegions";
 import { tableCellTextSlotId } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
 import { calcTableFrameSize } from "../calcTableFrameSize";
@@ -92,13 +92,12 @@ describe("readCachedTableLayout", () => {
 		expect(measurerCount).toBe(12);
 	});
 
-	it("is what every cell's region reads, so a frame measures its cells once", () => {
+	it("is what the cells' regions read, so placing them twice measures the cells once", () => {
 		const table = makeTable();
 		measurerCount = 0;
 
-		for (const slotId of Object.keys(table.text ?? {})) {
-			calcTableTextRegion(table, slotId);
-		}
+		calcTableTextSlotRegions(table);
+		calcTableTextSlotRegions(table);
 
 		expect(measurerCount).toBe(12);
 	});

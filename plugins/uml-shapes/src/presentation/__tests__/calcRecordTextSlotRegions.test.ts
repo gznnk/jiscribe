@@ -7,7 +7,6 @@ import {
 	RECORD_BAND_HEIGHT,
 	RECORD_TEXT_SLOT_STYLE_DEFAULTS,
 } from "../../schema/RecordDoc";
-import { calcRecordTextRegion } from "../calcRecordTextRegion";
 import { calcRecordTextSlotRegions } from "../calcRecordTextSlotRegions";
 
 /**
@@ -284,50 +283,13 @@ describe("calcRecordTextSlotRegions", () => {
 			(regions.operations?.height ?? 0);
 		expect(total).toBe(45);
 	});
-});
-
-describe("calcRecordTextRegion", () => {
-	it("returns the compartment matching the slot id", () => {
-		const state = {
-			width: 180,
-			height: 100,
-			text: titleAndAttributes(""),
-		};
-		const regions = calcRecordTextSlotRegions(state);
-		expect(calcRecordTextRegion(state, "name")).toEqual(regions.name);
-		expect(calcRecordTextRegion(state, "attributes")).toEqual(
-			regions.attributes,
-		);
-	});
-
-	it("throws for an unknown slot id, naming the compartments it has", () => {
-		const state = { width: 180, height: 100 };
-		expect(() => calcRecordTextRegion(state, "nope")).toThrow(
-			'calcRecordTextRegion: no "nope" compartment on this record (it has name)',
-		);
-	});
-
-	it("throws for a compartment the box does not have", () => {
-		const state = {
-			width: 180,
-			height: 100,
-			text: titleAndAttributes(""),
-		};
-		expect(() => calcRecordTextRegion(state, "operations")).toThrow(
-			'calcRecordTextRegion: no "operations" compartment on this record (it has name, attributes)',
-		);
-	});
 
 	it("places the compartment under the band the title actually needs", () => {
-		const state = {
+		const regions = calcRecordTextSlotRegions({
 			width: 180,
 			height: 200,
 			text: titleAndAttributes("User\nAccount"),
-		};
-		const regions = calcRecordTextSlotRegions(state);
-		expect(calcRecordTextRegion(state, "attributes")).toEqual(
-			regions.attributes,
-		);
+		});
 		expect(regions.attributes?.y).toBe(-100 + regions.name.height);
 	});
 });

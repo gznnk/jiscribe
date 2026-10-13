@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { createObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type { ObjectPartSelection } from "../../../../selection/CanvasSelection";
-import { createObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
 import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
@@ -40,9 +40,7 @@ const rect = (id: string): ObjectState =>
 
 /** The registry every case here is checked against, as applyObjectDefinition builds it. */
 const objectPartKind = createObjectPartKindRegistry();
-objectPartKind.register("record", [
-	createTextSlotPartKindDefinition(undefined),
-]);
+objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
 objectPartKind.register("polyline", [createVertexPartKindDefinition(2)]);
 
 const makeState = (

@@ -1,12 +1,12 @@
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
+import type { ObjectPartKindDefinition } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
+import { createObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { createTextSlotPartRegistry } from "../../../selection/__tests__/support/textSlotPartRegistry";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
-import type { ObjectPartKindDefinition } from "../../../selection/partKinds/ObjectPartKindRegistry";
-import { createObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import { collectOutlinedPartRegions } from "../collectOutlinedPartRegions";
 
