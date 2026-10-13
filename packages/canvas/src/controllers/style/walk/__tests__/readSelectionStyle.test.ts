@@ -16,7 +16,10 @@ import {
 } from "../../__tests__/support/styleFixtures";
 import type { SelectionValue } from "../../SelectionValue";
 import { CONNECTOR_STYLE_TABLE } from "../../tables/connectorStyleTable";
-import { readSelectionStyle } from "../readSelectionStyle";
+import {
+	createSelectionStyleReader,
+	readSelectionStyle,
+} from "../readSelectionStyle";
 
 const registries = registriesOf();
 
@@ -312,5 +315,49 @@ describe("readSelectionStyle on a text style", () => {
 				),
 			).toEqual({ kind: "none" });
 		});
+	});
+});
+
+describe("createSelectionStyleReader", () => {
+	const groupState = () => {
+		const a = rectOf("a", { fill: "#f00", stroke: "#000" });
+		const b = ellipseOf("b", { fill: "#0f0", stroke: "#000" });
+		const g = groupOf("g", ["a", "b"]);
+		return stateOf(["g"], { g, a, b });
+	};
+
+	it("answers every kind as readSelectionStyle does", () => {
+		const state = groupState();
+		const read = createSelectionStyleReader(state, registries);
+		for (const kind of ["fill", "stroke", "strokeWidth", "fontSize"]) {
+			expect(read(kind)).toEqual(readSelectionStyle(state, kind, registries));
+		}
+	});
+
+	it("hands back the same answer when a kind is asked again", () => {
+		const read = createSelectionStyleReader(groupState(), registries);
+		expect(read("fill")).toBe(read("fill"));
+	});
+
+	it("walks the selection once however many kinds are asked", () => {
+		const state = groupState();
+		let groupReads = 0;
+		const objects = new Proxy(state.objects, {
+			get(target, key, receiver) {
+				if (key === "g") {
+					groupReads++;
+				}
+				return Reflect.get(target, key, receiver);
+			},
+		});
+		const read = createSelectionStyleReader({ ...state, objects }, registries);
+
+		read("fill");
+		const readsForOneKind = groupReads;
+		read("stroke");
+		read("strokeWidth");
+
+		expect(readsForOneKind).toBeGreaterThan(0);
+		expect(groupReads).toBe(readsForOneKind);
 	});
 });

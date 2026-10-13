@@ -43,7 +43,7 @@ export type StyleTextEdit = {
  * @returns The edit, or null when no shape editor is open (a connector label is not one)
  */
 export const readOpenTextEditForStyle = (
-	state: CanvasControllerState,
+	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
 ): StyleTextEdit | null => {
 	const openEdit = readOpenTextEdit(state);
 	if (openEdit?.kind !== "shape") {

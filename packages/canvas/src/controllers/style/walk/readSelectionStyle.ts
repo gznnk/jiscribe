@@ -1,8 +1,10 @@
 import { collectStyleTargets } from "./collectStyleTargets";
+import type { StyleTarget } from "./collectStyleTargets";
 import {
 	graftStyleTextEdit,
 	readOpenTextEditForStyle,
 } from "./readOpenTextEditForStyle";
+import type { StyleTextEdit } from "./readOpenTextEditForStyle";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { combineSelectionValues } from "../SelectionValue";
@@ -69,10 +71,78 @@ export function readSelectionStyle(
 		? (kindOrRegistries as StyleIntentRegistries)
 		: (tableRegistries as StyleIntentRegistries);
 
-	const textEdit = readOpenTextEditForStyle(state);
+	return readStyleOverTargets(
+		collectStyleTargets(state),
+		readOpenTextEditForStyle(state),
+		kind,
+		registries,
+	);
+}
+
+/** The fields of the state a selection's style is read from. */
+export type SelectionStyleSource = Pick<
+	CanvasControllerState,
+	"objects" | "selection" | "textEditState"
+>;
+
+/** {@link readSelectionStyle} bound to one state, asked for one kind at a time. */
+export type SelectionStyleRead = <TKind extends string>(
+	kind: TKind,
+) => SelectionValue<StyleIntentValueType<TKind>>;
+
+/**
+ * Binds {@link readSelectionStyle} to one state, walking the selection once and
+ * keeping each kind's answer, so the rows of a surface asking for a kind each
+ * do not walk it again per row.
+ *
+ * @param source - What the walk reads; the reader answers for these references only, so make a new one when any of them changes
+ * @param registries - The canvas's style tables and the defaults its entries resolve through
+ * @returns The reader; the walk runs on its first call, and asking for a kind again returns the same `SelectionValue` object
+ */
+export const createSelectionStyleReader = (
+	source: SelectionStyleSource,
+	registries: StyleIntentRegistries,
+): SelectionStyleRead => {
+	let walked: {
+		targets: StyleTarget[];
+		textEdit: StyleTextEdit | null;
+	} | null = null;
+	const valueByKind = new Map<string, SelectionValue<unknown>>();
+
+	function read<TKind extends string>(
+		kind: TKind,
+	): SelectionValue<StyleIntentValueType<TKind>>;
+	function read(kind: string): SelectionValue<unknown> {
+		const known = valueByKind.get(kind);
+		if (known !== undefined) {
+			return known;
+		}
+		walked ??= {
+			targets: collectStyleTargets(source),
+			textEdit: readOpenTextEditForStyle(source),
+		};
+		const value = readStyleOverTargets(
+			walked.targets,
+			walked.textEdit,
+			kind,
+			registries,
+		);
+		valueByKind.set(kind, value);
+		return value;
+	}
+	return read;
+};
+
+/** Folds what `kind` reads on every target, the open edit grafted onto its own object. */
+function readStyleOverTargets(
+	targets: readonly StyleTarget[],
+	textEdit: StyleTextEdit | null,
+	kind: string,
+	registries: StyleIntentRegistries,
+): SelectionValue<unknown> {
 	const values: unknown[] = [];
 
-	for (const { object, pick, selected } of collectStyleTargets(state)) {
+	for (const { object, pick, selected } of targets) {
 		const entry = styleEntryOf(registries.objectStyle.get(object.type), kind);
 		if (entry === undefined) {
 			continue;

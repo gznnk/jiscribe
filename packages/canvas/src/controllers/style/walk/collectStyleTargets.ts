@@ -30,7 +30,7 @@ export type StyleTarget = {
  * @returns The targets; no object appears twice unless the selection names both a group and a member of it, the map being a tree
  */
 export const collectStyleTargets = (
-	state: CanvasControllerState,
+	state: Pick<CanvasControllerState, "selection" | "objects">,
 ): StyleTarget[] => {
 	const { selection, objects } = state;
 	const { objectIds, part } = selection;
