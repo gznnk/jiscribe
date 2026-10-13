@@ -544,4 +544,38 @@ describe("getPropertyPanelSections", () => {
 			["text", ["fontSize"]],
 		]);
 	});
+
+	it("keeps a custom row naming the picked kind, and drops it under a kind it does not name", () => {
+		const tableRegistry = createPropertyPanelRegistry();
+		tableRegistry.register("grid", [
+			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
+			{
+				id: "insert",
+				label: "Insert",
+				items: [
+					{
+						type: "custom",
+						id: "insert-rows",
+						component: BadgeRow,
+						pickedPartKinds: ["row"],
+					},
+				],
+			},
+		]);
+		const sectionIdsUnder = (kind: string, partId: string): string[] =>
+			getPropertyPanelSections(
+				stateOf({
+					objects: { "g-1": shape("g-1", "grid") },
+					selection: selectionOf(["g-1"], {
+						kind,
+						ranges: [{ anchorId: partId, focusId: partId }],
+					}),
+				}),
+				tableRegistry,
+				partKindRegistry,
+			).map((section) => section.id);
+
+		expect(sectionIdsUnder("row", "0")).toEqual(["text", "insert"]);
+		expect(sectionIdsUnder(TEXT_SLOT_PART_KIND, "body")).toEqual(["text"]);
+	});
 });

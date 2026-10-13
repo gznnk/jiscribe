@@ -57,7 +57,8 @@ export type PropertyPanelBuiltinItem = { type: PropertyPanelBuiltinItemKey };
  *
  * The id is what the multi-type merge matches the row by, so two types offering
  * the same row have to spell it the same way. A row that is not slot-aware needs
- * no opt-out: the narrowing under a picked part drops every custom row.
+ * no opt-out: the narrowing under a picked part drops every custom row that does
+ * not name the picked kind in `pickedPartKinds`.
  */
 export type PropertyPanelCustomItem = {
 	type: "custom";
@@ -65,6 +66,13 @@ export type PropertyPanelCustomItem = {
 	id: string;
 	/** Drawn with {@link PropertyPanelItemProps}; return null to leave the row out for this selection. */
 	component: React.ComponentType<PropertyPanelItemProps>;
+	/**
+	 * The picked part kinds (`selection.part.kind`) under which the row survives the
+	 * narrowing a picked part applies (`ObjectPartKindDefinition.styleIntentKinds`).
+	 * Omitted or empty = dropped under every such pick. Says nothing about the
+	 * object selection with no part picked, where the row is drawn either way.
+	 */
+	pickedPartKinds?: readonly string[];
 };
 
 /**

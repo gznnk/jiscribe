@@ -261,7 +261,11 @@ mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参
 - 受け取るスタイル種別（後述の `partKinds` の `styleIntentKinds`）を宣言した種別の部分を
   選んでいる間 — テキストスロットがそれで、図形の文字の編集中に選ばれているスロットも
   含む — サイドバーに残るのは、扱う種別がすべてその中にある組み込みの行だけ。カスタム行は
-  何を書くかを申告できないので落ちる。ObjectMenu も項目を同じ規則で絞る
+  何を書くかを申告できないので落ちる。ObjectMenu も項目を同じ規則で絞る。部分選択に
+  向けたカスタム行は、残る部分の種別を `pickedPartKinds` に並べる（表の挿入行なら
+  `row` / `column` / `textSlot`）。ボタンでコマンドを走らせるなら、組み込みの
+  「重ね順」セクションと同じく `PropertyCommandGrid` / `PropertyCommandButton`・
+  `resolveCommandLabel`・`commandAction` で組む
 
 **`propertyPanel` のセクション表示。**セクションは `isShown(selection)` を持てる。
 描く前に、行が読むのと同じ選択の切片（`PropertyPanelSelection`）を渡して

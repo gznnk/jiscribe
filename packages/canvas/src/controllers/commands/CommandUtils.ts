@@ -168,6 +168,10 @@ export const formatShortcutTokens = (binding: KeyBinding): string[] => {
 /**
  * Display label of a command: the host override (`messages.commandLabels[id]`)
  * first, then the label the command itself carries, resolved for `locale`.
+ *
+ * @param command - The command to name; `id` keys the host override, `label` is the fallback (a plain string is used as is)
+ * @param messages - The active message set (useCanvasMessages), host overrides already applied
+ * @param locale - BCP 47 tag a dictionary `label` is resolved against (exact tag, then language subtag, then `en`)
  */
 export const resolveCommandLabel = (
 	command: Pick<Command, "id" | "label">,

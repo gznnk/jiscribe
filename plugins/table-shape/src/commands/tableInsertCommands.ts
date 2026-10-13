@@ -126,15 +126,35 @@ const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
 	},
 });
 
+/** The commands of one axis's specs, in spec order. */
+const createTableInsertCommandsAlong = (axis: TableAxis): Command[] =>
+	TABLE_INSERT_COMMAND_SPECS.filter((spec) => spec.axis === axis).map(
+		createTableInsertCommand,
+	);
+
+/**
+ * The insertions along each axis, `"before"` first: what the properties sidebar
+ * offers for a picked row, column or cell (TableInsertProperty).
+ */
+export const TABLE_INSERT_COMMANDS_BY_AXIS: Readonly<
+	Record<TableAxis, readonly Command[]>
+> = {
+	row: createTableInsertCommandsAlong("row"),
+	column: createTableInsertCommandsAlong("column"),
+};
+
 /**
  * The table's command contributions, wired in through `CanvasPlugin.commands`:
  * insert a row above or below, a column left or right, relative to the row,
  * column or cell selection standing on the table.
  *
  * Insertion is deliberately absent from the type's ObjectMenu — the menu carries
- * what styles a table, and reshaping the grid belongs to the keys, the grips and
- * the `+` badges. Removal has no command at all: Delete over a picked row or
- * column takes it (the part definitions' `delete`).
+ * what styles a table, and reshaping the grid belongs to the keys, the grips, the
+ * `+` badges and the properties sidebar's Insert section. Removal has no command
+ * at all: Delete over a picked row or column takes it (the part definitions'
+ * `delete`).
  */
-export const TABLE_INSERT_COMMANDS: readonly Command[] =
-	TABLE_INSERT_COMMAND_SPECS.map(createTableInsertCommand);
+export const TABLE_INSERT_COMMANDS: readonly Command[] = [
+	...TABLE_INSERT_COMMANDS_BY_AXIS.row,
+	...TABLE_INSERT_COMMANDS_BY_AXIS.column,
+];

@@ -251,7 +251,7 @@ export type {
 // ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
 // `data-action` by hand is discouraged for the same reason as there.
 // Custom rows are dropped while a picked part narrows the sidebar (its kind's
-// `styleIntentKinds`), since a plugin row has no way to say what it raises.
+// `styleIntentKinds`), unless the row names that kind in `pickedPartKinds`.
 // A section may also carry `isShown`, asked about the selection
 // (PropertyPanelSelection) before the section is drawn: a section whose every row
 // would return null uses it to take its heading away with them.
@@ -265,6 +265,9 @@ export type {
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 
+// The sections a type omitting `propertyPanel` is registered with, for a
+// declaration that only adds to them.
+export { createDefaultPropertyPanel } from "./controllers/ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
 export { PropertyRow } from "./controllers/ui/menu/PropertyPanel/common/PropertyRow";
 export { PropertyNumberField } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
 export type { PropertyNumberUpdater } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
@@ -273,6 +276,14 @@ export { PropertyDropdownField } from "./controllers/ui/menu/PropertyPanel/commo
 export { PropertySegmentedControl } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export type { PropertySegmentedOption } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export { PropertyCheckbox } from "./controllers/ui/menu/PropertyPanel/common/PropertyCheckbox";
+// Command buttons, the way the Arrange section draws stacking order: a button
+// per command, named by its label (resolveCommandLabel), run through
+// `data-action={commandAction(id)}`, two to a row inside the grid.
+export {
+	PropertyCommandButton,
+	PropertyCommandGrid,
+} from "./controllers/ui/menu/PropertyPanel/common/PropertyControlsStyled";
+export { resolveCommandLabel } from "./controllers/commands/CommandUtils";
 
 // The `data-action` grammar the menu targets are read by (command: / toggle: /
 // set: / slider:). Build the strings with these rather than spelling the

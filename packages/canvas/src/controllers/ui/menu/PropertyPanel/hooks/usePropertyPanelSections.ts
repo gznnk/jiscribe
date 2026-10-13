@@ -110,10 +110,10 @@ const filterShownSections = (
  * Computes the sidebar sections to display from the current selection.
  *
  * While a part is picked whose kind declares what it receives (`styleIntentKinds`), the
- * sections are narrowed to the rows raising only that, and every custom row goes
- * (filterPropertyPanelSectionsForPickedPart), so the panel never offers a control the
- * part cannot receive — the same narrowing the ObjectMenu
- * does, and for the same reason an open text editor narrows them too (through the
+ * sections are narrowed to the rows raising only that, and every custom row not
+ * naming the picked kind goes (filterPropertyPanelSectionsForPickedPart), so the
+ * panel never offers a control the part cannot receive — the same narrowing the
+ * ObjectMenu does, and for the same reason an open text editor narrows them too (through the
  * slot it keeps picked, see `textEditState`): what is
  * offered there has to be something a stretch of the text being edited can take,
  * and reshaping the shape mid-edit is not it.
@@ -138,7 +138,8 @@ export const getPropertyPanelSections = (
 		state,
 		objectPartKindRegistry,
 	);
-	if (styleIntentKinds === null) {
+	const pickedPart = state.selection.part;
+	if (styleIntentKinds === null || pickedPart === null) {
 		// This path alone: the box the lock governs is not a picked part's.
 		return filterShownSections(
 			holdsOwnAspectRatioLock(state)
@@ -150,7 +151,11 @@ export const getPropertyPanelSections = (
 		);
 	}
 	return filterShownSections(
-		filterPropertyPanelSectionsForPickedPart(sections, styleIntentKinds),
+		filterPropertyPanelSectionsForPickedPart(
+			sections,
+			pickedPart.kind,
+			styleIntentKinds,
+		),
 		state,
 	);
 };

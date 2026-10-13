@@ -6,6 +6,7 @@ import type {
 	SelectionControlDefinition,
 } from "@jiscribe/canvas";
 import {
+	createDefaultPropertyPanel,
 	createFrameBehavior,
 	createTextSlotPartKindDefinition,
 } from "@jiscribe/canvas-sdk";
@@ -33,6 +34,10 @@ import { TABLE_CELL_STYLE_INTENT_KINDS } from "./parts/tableCellStyleIntentKinds
 import { TABLE_TRACK_PART_DEFINITIONS } from "./parts/tableTrackParts";
 import { calcTableTextSlotRegions } from "./presentation/calcTableTextSlotRegions";
 import { Table } from "./presentation/Table";
+import {
+	TABLE_INSERT_PICKED_PART_KINDS,
+	TableInsertProperty,
+} from "./propertyPanel/TableInsertProperty";
 import type { TableDoc } from "./schema/TableDoc";
 import { reconcileTableBoxWithGrid } from "./state/reconcileTableBoxWithGrid";
 import { tableToDoc, tableToState } from "./state/TableMapper";
@@ -194,7 +199,14 @@ const TABLE_STYLE_ENTRIES = {
  * the picked cells or the cells of the picked rows or columns (each kind's
  * `textSlotIds`); with nothing picked, a text edit lands on every cell and a
  * background on the table's own ({@link TABLE_STYLE_ENTRIES}). Reshaping the grid is in neither
- * section: it belongs to the keys, the grips and the `+` badges.
+ * section: it belongs to the keys, the grips, the `+` badges and the sidebar's
+ * Insert section.
+ *
+ * `propertyPanel` is the sections `createDefaultPropertyPanel` derives from
+ * `TableFeatures`, with an Insert section added after them. It is offered
+ * only while a row, column or cell is picked, where the narrowing keeps its row
+ * (`pickedPartKinds`); with the table selected as a whole there is nowhere to
+ * insert next to, so the section's `isShown` takes its heading away.
  */
 export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	...tableDocDefinition,
@@ -209,6 +221,22 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	connectionAnchorOffsets: calcTableConnectionAnchorOffsets,
 	stencils: TableStencils,
 	styleEntries: TABLE_STYLE_ENTRIES,
+	propertyPanel: [
+		...createDefaultPropertyPanel(tableDocDefinition.features),
+		{
+			id: "table-insert",
+			label: { en: "Insert", ja: "挿入" },
+			isShown: ({ selection }) => selection.part !== null,
+			items: [
+				{
+					type: "custom",
+					id: "table-insert",
+					component: TableInsertProperty,
+					pickedPartKinds: TABLE_INSERT_PICKED_PART_KINDS,
+				},
+			],
+		},
+	],
 	menu: [
 		{
 			id: "style",

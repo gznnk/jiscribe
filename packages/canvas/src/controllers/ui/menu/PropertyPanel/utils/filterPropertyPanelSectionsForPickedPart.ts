@@ -41,27 +41,31 @@ const BUILTIN_ROW_STYLE_INTENT_KINDS = {
 /**
  * Narrows the sidebar sections down to the rows a picked part receives: a row
  * whose every style kind is one the picked kind declares (`styleIntentKinds`) — the
- * text rows under a text slot, the fill too under a table cell. Custom rows are
- * dropped, since a plugin row has no way to say what it raises. A section left
- * empty is dropped so no accordion header survives on its own.
+ * text rows under a text slot, the fill too under a table cell. A custom row
+ * stays only when it names the picked kind in `pickedPartKinds`, since it has no
+ * other way to say it applies. A section left empty is dropped so no accordion
+ * header survives on its own.
  *
  * @param sections - The selection's sections before narrowing
+ * @param pickedPartKind - The picked part's kind (`selection.part.kind`), matched against each custom row's `pickedPartKinds`
  * @param styleIntentKinds - What the picked kind receives (readPickedPartStyleIntentKinds)
  */
 export const filterPropertyPanelSectionsForPickedPart = (
 	sections: PropertyPanelSection[],
+	pickedPartKind: string,
 	styleIntentKinds: ReadonlySet<string>,
 ): PropertyPanelSection[] =>
 	sections
 		.map((section) => ({
 			...section,
-			items: section.items.filter(
-				(item) =>
-					item.type !== "custom" &&
-					isControlWithinStyleIntentKinds(
-						BUILTIN_ROW_STYLE_INTENT_KINDS[item.type],
-						styleIntentKinds,
-					),
-			),
+			items: section.items.filter((item) => {
+				if (item.type === "custom") {
+					return item.pickedPartKinds?.includes(pickedPartKind) ?? false;
+				}
+				return isControlWithinStyleIntentKinds(
+					BUILTIN_ROW_STYLE_INTENT_KINDS[item.type],
+					styleIntentKinds,
+				);
+			}),
 		}))
 		.filter((section) => section.items.length > 0);

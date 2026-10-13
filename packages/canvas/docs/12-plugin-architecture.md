@@ -291,7 +291,11 @@ before writing one:
   (`styleIntentKinds`, under `partKinds` below) — a text slot, including the one a
   shape's open text editor keeps picked — the sidebar keeps the built-in rows
   raising only those kinds, and drops custom rows, which cannot say what they
-  edit — the same rule the ObjectMenu applies to its items.
+  edit — the same rule the ObjectMenu applies to its items. A custom row that
+  applies to a pick names the picked kinds it stays under in `pickedPartKinds`
+  (the table's Insert row: `row`, `column`, `textSlot`); its buttons run commands
+  the way the built-in Arrange section does, with `PropertyCommandGrid` /
+  `PropertyCommandButton`, `resolveCommandLabel` and `commandAction`.
 
 **`propertyPanel` section visibility.** A section may carry
 `isShown(selection)`, asked before it is drawn with the slice of the selection
