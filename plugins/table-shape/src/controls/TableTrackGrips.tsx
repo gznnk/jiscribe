@@ -18,7 +18,7 @@ import type { TableState } from "../state/TableState";
 type TableTrackGripsProps = {
 	/** The table the grips stand beside; its transform and layout are what they are placed from. */
 	object: TableState;
-	/** Canvas zoom, which every screen-px measurement here is divided by. */
+	/** Canvas zoom, passed through to each grip for the screen-px reach of the transform handles. */
 	zoom: number;
 	/** The control's `data-action`; each grip appends its own track index to it. */
 	action: string;
@@ -69,7 +69,7 @@ const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 	// The edge the tracks start from, and the coordinate the whole strip of
 	// grips is centred on: just outside it.
 	const edge = axis === "row" ? columnEdgeXs[0] : rowEdgeYs[0];
-	const lead = edge - GRIP_OFFSET / zoom;
+	const lead = edge - GRIP_OFFSET;
 	const toWorld = (across: number, along: number): Point =>
 		axis === "row"
 			? calcAffineTransformedPoint(

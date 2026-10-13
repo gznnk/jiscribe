@@ -115,7 +115,7 @@ export type ObjectTypeDefinition<
 	 * `extraConnectPoints` declares — local-space ids, so an entry stays on its
 	 * edge through rotation and flips. Moves only the dots: where a connector
 	 * attaches is unchanged. One object for the whole type, or a function asked
-	 * per object. Omitted = the theme's distance everywhere (see
+	 * per object and zoom. Omitted = the theme's distance everywhere (see
 	 * ObjectConnectionAnchorOffsetsRegistry).
 	 */
 	connectionAnchorOffsets?: ObjectConnectionAnchorOffsetsDeclaration<TState>;

@@ -31,7 +31,7 @@ const HANDLE_REACH = 4;
  * where the same cells picked as cells would only be emptied.
  */
 
-/** The grip's resolved fill, which is inverted while its track is the selected part. */
+/** The grip's resolved fill, which is tinted while its track is the selected part. */
 async function gripFill(
 	canvas: CanvasDriver,
 	axis: "rowGrip" | "columnGrip",

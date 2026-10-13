@@ -1,6 +1,7 @@
 import { darkCanvasTheme } from "@jiscribe/canvas";
 import {
 	canvasThemeCssVars as theme,
+	SELECTION_OUTLINE_WIDTH,
 	useCanvasTheme,
 } from "@jiscribe/canvas-sdk";
 import type { Point } from "@jiscribe/geometry";
@@ -10,21 +11,28 @@ import { calcSegmentPlacement } from "./calcSegmentPlacement";
 import { INSERT_BADGE_OFFSET, INSERT_BADGE_RADIUS } from "./TableInsertBadge";
 
 /**
- * How thick a grip is drawn, in screen px: the height of a column's heading and
+ * How thick a grip is drawn, in world units, so it grows and shrinks with the
+ * table it heads at any zoom: the height of a column's heading and
  * the width of a row's. Enough to carry a three-digit row number upright
  * (GRIP_LABEL_FONT_SIZE) and still read as a margin beside the table rather than
  * as another row of it.
  */
-export const GRIP_THICKNESS = 18;
+export const GRIP_THICKNESS = 22;
 
-/** Size of the heading's text, in screen px. */
+/**
+ * A selected grip's face: the accent faded into the surface. The full accent
+ * filling a whole row of headings is louder than the selection it stands for.
+ */
+const SELECTED_GRIP_FILL = `color-mix(in srgb, ${theme.handleAccent} 18%, ${theme.surface})`;
+
+/** Size of the heading's text, in world units like the grip it sits on. */
 const GRIP_LABEL_FONT_SIZE = 10;
 
 /** The heading's face: the canvas's own UI sans, not the document's text font, a heading being chrome rather than content. */
 const GRIP_LABEL_FONT_FAMILY = "Arial, Helvetica, sans-serif";
 
 /**
- * Distance from the table's edge to the grip's centre line, in screen px. The
+ * Distance from the table's edge to the grip's centre line, in world units. The
  * grips abut the table the way a spreadsheet's headings do, so it is half the
  * thickness and nothing more.
  */
@@ -41,13 +49,25 @@ const CONNECTION_ANCHOR_RADIUS = darkCanvasTheme.handleDimensions.anchorRadius;
 const CONNECTION_ANCHOR_CONTROL_CLEARANCE = 10;
 
 /**
- * Distance from the table's edge to a connection-anchor dot's centre, in screen
- * px, on every edge: the grips line the top and left, the insert badges the
- * bottom and right, and the one distance clears whichever of the two reaches
- * further.
+ * Distance from the table's edge to the connection-anchor dot on an edge the
+ * insert badges stand on (bottom and right), in screen px.
  */
-export const CONNECTION_ANCHOR_OFFSET_PAST_CONTROLS =
-	Math.max(GRIP_THICKNESS, INSERT_BADGE_OFFSET + INSERT_BADGE_RADIUS) +
+export const CONNECTION_ANCHOR_OFFSET_PAST_BADGES =
+	INSERT_BADGE_OFFSET +
+	INSERT_BADGE_RADIUS +
+	CONNECTION_ANCHOR_RADIUS +
+	CONNECTION_ANCHOR_CONTROL_CLEARANCE;
+
+/**
+ * Distance from the table's edge to the connection-anchor dot on an edge the
+ * grips line (top and left), in screen px. The grips are sized in world units,
+ * so how far they reach on screen is read at the zoom asked about.
+ *
+ * @param zoom - Canvas zoom (1 = 100%)
+ * @returns The distance for the top and left dots
+ */
+export const calcConnectionAnchorOffsetPastGrips = (zoom: number): number =>
+	GRIP_THICKNESS * zoom +
 	CONNECTION_ANCHOR_RADIUS +
 	CONNECTION_ANCHOR_CONTROL_CLEARANCE;
 
@@ -70,7 +90,7 @@ type TableTrackGripProps = {
 	 * pressable.
 	 */
 	clearsEdgeHandle: boolean;
-	/** Canvas zoom, which the thickness and the text are divided by so the grip stays the same size on screen at any zoom. */
+	/** Canvas zoom, which the transform handle's reach is divided by when the pressable region stops short of it. */
 	zoom: number;
 	/** The table the grip belongs to, as `data-id`. */
 	objectId: string;
@@ -78,7 +98,7 @@ type TableTrackGripProps = {
 	action: string;
 	/** The heading drawn on the grip: the row's number or the column's letters (formatTableTrackLabel). */
 	label: string;
-	/** Whether this track is the selected part; fills the cell with the accent and inverts the label so it stays legible, the border staying as it is. */
+	/** Whether this track is the selected part; tints the cell with the accent and inks the label in it, the border staying as it is. */
 	selected: boolean;
 };
 
@@ -93,7 +113,7 @@ type TableTrackGripProps = {
  * the rotation, for the same reason the insert badge is (TableInsertBadge): a
  * heading is read as a heading rather than as part of the drawing.
  *
- * The drawn cell and the pressable region are two elements. The width handles
+ * The drawn cell and the pressable region are separate elements. The width handles
  * sit on the left and right edges at the table's mid-height, and the selection
  * controls are drawn after the transform ones (SelectionControlsLayer), so a
  * cell abutting that edge would take the press meant for the handle. The cell
@@ -116,9 +136,9 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 }) => {
 	const { handleDimensions } = useCanvasTheme();
 	const { transform, length } = calcSegmentPlacement(from, to);
-	const thickness = GRIP_THICKNESS / zoom;
-	const fill = selected ? theme.handleAccent : theme.handleFill;
-	const ink = selected ? theme.handleFill : theme.handleAccent;
+	const thickness = GRIP_THICKNESS;
+	const fill = selected ? SELECTED_GRIP_FILL : theme.surface;
+	const ink = selected ? theme.handleAccent : theme.foregroundMuted;
 	const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
 
 	// The placed group's +y axis is the centre line turned a quarter turn
@@ -131,10 +151,14 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 		? (handleDimensions.anchorRadius + handleDimensions.anchorStrokeWidth) /
 			zoom
 		: 0;
-	const hitThickness = thickness - handleReach;
+	const hitThickness = Math.max(thickness - handleReach, 0);
 	const hitY = tableOnPositiveSide
 		? -thickness / 2
 		: -thickness / 2 + handleReach;
+	// The border leaves out the side against the table, where it would be
+	// drawn over the selection outline.
+	const tableSideY = tableOnPositiveSide ? thickness / 2 : -thickness / 2;
+	const borderPath = `M ${-length / 2} ${tableSideY} V ${-tableSideY} H ${length / 2} V ${tableSideY}`;
 
 	return (
 		<>
@@ -144,8 +168,15 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 					y={-thickness / 2}
 					width={length}
 					height={thickness}
-					strokeWidth={handleDimensions.anchorStrokeWidth / zoom}
-					style={{ fill, stroke: theme.handleAccent, pointerEvents: "none" }}
+					style={{ fill, pointerEvents: "none" }}
+				/>
+				<path
+					d={borderPath}
+					fill="none"
+					// World units, not divided by the zoom: the selection outline it
+					// abuts scales with the content, and the two read as one line weight.
+					strokeWidth={SELECTION_OUTLINE_WIDTH}
+					style={{ stroke: theme.borderSubtle, pointerEvents: "none" }}
 				/>
 			</g>
 			<text
@@ -153,7 +184,7 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 				y={mid.y}
 				textAnchor="middle"
 				dominantBaseline="central"
-				fontSize={GRIP_LABEL_FONT_SIZE / zoom}
+				fontSize={GRIP_LABEL_FONT_SIZE}
 				fontFamily={GRIP_LABEL_FONT_FAMILY}
 				style={{ fill: ink, pointerEvents: "none", userSelect: "none" }}
 			>

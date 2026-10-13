@@ -28,12 +28,15 @@ export type ConnectionAnchorOffsets = Readonly<
  * @param state - The shape's state, untransformed (local width / height). The
  *   theme is not passed in: values are absolute screen px, not deltas from the
  *   theme default.
+ * @param zoom - Canvas zoom (1 = 100%), for a type whose controls are sized in
+ *   world units and so reach further on screen the further it is zoomed in;
+ *   multiply a world length by it to get the screen px to return
  * @returns Only the anchors to move; return a shared constant when the answer
- *   does not depend on the state, so the dots' memo holds.
+ *   depends on neither argument, so the dots' memo holds.
  */
 export type ObjectConnectionAnchorOffsetsCalculator<
 	TState extends ObjectState = ObjectState & Dimensions,
-> = (state: TState) => ConnectionAnchorOffsets;
+> = (state: TState, zoom: number) => ConnectionAnchorOffsets;
 
 /**
  * What a type declares as its dot distances, for a type whose own controls sit
@@ -72,14 +75,16 @@ export class ObjectConnectionAnchorOffsetsRegistry {
 	 * asked of it.
 	 *
 	 * @param object - The shape the dots are drawn on; only its type and whatever that type's own function reads are looked at
+	 * @param zoom - Canvas zoom (1 = 100%), handed to the type's function form; the object form ignores it
 	 * @returns The type's offsets, or undefined when it registered none — which means the theme's distance for every dot
 	 */
 	resolve(
 		object: ObjectState & Dimensions,
+		zoom: number,
 	): ConnectionAnchorOffsets | undefined {
 		const declaration = this.declarations.get(object.type);
 		return typeof declaration === "function"
-			? declaration(object)
+			? declaration(object, zoom)
 			: declaration;
 	}
 

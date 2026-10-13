@@ -297,6 +297,10 @@ export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessage
 // (see theme/CanvasTheme.ts).
 export { theme as canvasThemeCssVars } from "./theme/themeTokens";
 
+// The selection outline's stroke width, for a plugin control drawn against that
+// outline and meant to read as the same weight of line.
+export { SELECTION_OUTLINE_WIDTH } from "./controllers/ui/feedback/utils/selectionOutline";
+
 // The scrollbar the canvas's own scrollable panels wear (the text editor, the shortcut
 // help). A plugin panel that scrolls has no other way to match them, and a default
 // browser scrollbar next to a custom one is exactly the kind of seam a plugin should not

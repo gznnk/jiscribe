@@ -246,9 +246,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and `+` badges, whose top and left dots now stand past them). Every anchor it
   leaves out keeps the theme's `connectionAnchorOffset`, and only the dots move:
   where a connector attaches is unchanged. It is one object for the type or a
-  function asked per object, like `transformHandles`; `ConnectionAnchorOffsets`,
+  function asked per object and zoom, like `transformHandles` — the zoom being
+  for controls sized in world units, which reach further on screen the further
+  the canvas is zoomed in; `ConnectionAnchorOffsets`,
   `ObjectConnectionAnchorOffsetsDeclaration` and
   `ObjectConnectionAnchorOffsetsCalculator` are exported from `@jiscribe/canvas`.
+  `@jiscribe/canvas/unstable` also exports `SELECTION_OUTLINE_WIDTH`, for a
+  control drawn against the selection outline at the same line weight.
 
 ### Changed
 

@@ -5,10 +5,6 @@ import { memo, useMemo } from "react";
 import { calcEdgeAnchorPoint } from "../../../../connectors/calcConnectPoint";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { useObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistryContext";
-import type {
-	ConnectionAnchorOffsets,
-	ObjectConnectionAnchorOffsetsRegistry,
-} from "../../../../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
 import { useObjectConnectionAnchorOffsetsRegistry } from "../../../../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistryContext";
 import type {
 	ExtraConnectPoint,
@@ -47,15 +43,12 @@ type ResolvedAnchorGeometry = {
 	anchorRegion: Rect | null;
 	/** The anchors the object's type declares beyond the edge ones (null = none). */
 	extraConnectPoints: readonly ExtraConnectPoint[] | null;
-	/** Per-anchor dot distances the object's type declares (null = theme default for every dot). */
-	connectionAnchorOffsets: ConnectionAnchorOffsets | null;
 };
 
 const EMPTY_ANCHOR_GEOMETRY: ResolvedAnchorGeometry = {
 	outline: null,
 	anchorRegion: null,
 	extraConnectPoints: null,
-	connectionAnchorOffsets: null,
 };
 
 const resolveAnchorGeometry = (
@@ -63,7 +56,6 @@ const resolveAnchorGeometry = (
 	outlineRegistry: ObjectOutlineRegistry,
 	anchorRegionRegistry: ObjectAnchorRegionRegistry,
 	extraConnectPointsRegistry: ObjectExtraConnectPointsRegistry,
-	connectionAnchorOffsetsRegistry: ObjectConnectionAnchorOffsetsRegistry,
 ): ResolvedAnchorGeometry => {
 	if (!obj || !isTransformedFrame(obj)) {
 		return EMPTY_ANCHOR_GEOMETRY;
@@ -72,8 +64,6 @@ const resolveAnchorGeometry = (
 		outline: outlineRegistry.get(obj.type)?.(obj) ?? null,
 		anchorRegion: anchorRegionRegistry.get(obj.type)?.(obj) ?? null,
 		extraConnectPoints: extraConnectPointsRegistry.get(obj.type)?.(obj) ?? null,
-		connectionAnchorOffsets:
-			connectionAnchorOffsetsRegistry.resolve(obj) ?? null,
 	};
 };
 
@@ -142,14 +132,12 @@ const ConnectionAnchorsLayerComponent: React.FC<
 				outlineRegistry,
 				anchorRegionRegistry,
 				extraConnectPointsRegistry,
-				connectionAnchorOffsetsRegistry,
 			),
 		[
 			selectedObject,
 			outlineRegistry,
 			anchorRegionRegistry,
 			extraConnectPointsRegistry,
-			connectionAnchorOffsetsRegistry,
 		],
 	);
 	const targetGeometry = useMemo(
@@ -159,15 +147,25 @@ const ConnectionAnchorsLayerComponent: React.FC<
 				outlineRegistry,
 				anchorRegionRegistry,
 				extraConnectPointsRegistry,
-				connectionAnchorOffsetsRegistry,
 			),
 		[
 			targetObject,
 			outlineRegistry,
 			anchorRegionRegistry,
 			extraConnectPointsRegistry,
-			connectionAnchorOffsetsRegistry,
 		],
+	);
+
+	// Apart from the geometry because it alone also follows the zoom: a type
+	// whose controls are sized in world units answers per zoom, and folding it in
+	// would re-ask every calculator above on each step of a wheel zoom.
+	const selectedConnectionAnchorOffsets = useMemo(
+		() =>
+			selectedObject && isTransformedFrame(selectedObject)
+				? (connectionAnchorOffsetsRegistry.resolve(selectedObject, zoom) ??
+					null)
+				: null,
+		[selectedObject, zoom, connectionAnchorOffsetsRegistry],
 	);
 
 	// Do not render anchors while text editing
@@ -218,7 +216,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 					outline={selectedGeometry.outline}
 					anchorRegion={selectedGeometry.anchorRegion}
 					extraConnectPoints={selectedGeometry.extraConnectPoints}
-					connectionAnchorOffsets={selectedGeometry.connectionAnchorOffsets}
+					connectionAnchorOffsets={selectedConnectionAnchorOffsets}
 					zoom={zoom}
 				/>
 			)}

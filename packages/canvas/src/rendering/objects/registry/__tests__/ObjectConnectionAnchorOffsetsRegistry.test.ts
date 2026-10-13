@@ -28,20 +28,27 @@ describe("ObjectConnectionAnchorOffsetsRegistry", () => {
 		const registry = createObjectConnectionAnchorOffsetsRegistry();
 		registry.register("table", tableOffsets);
 
-		expect(registry.resolve(tableState)).toBe(tableOffsets);
+		expect(registry.resolve(tableState, 1)).toBe(tableOffsets);
 	});
 
 	it("resolves a function declaration by asking it for the object", () => {
 		const registry = createObjectConnectionAnchorOffsetsRegistry();
 		registry.register("table", (state) => ({ topCenter: state.width / 10 }));
 
-		expect(registry.resolve(tableState)).toEqual({ topCenter: 24 });
+		expect(registry.resolve(tableState, 1)).toEqual({ topCenter: 24 });
+	});
+
+	it("hands the zoom to a function declaration", () => {
+		const registry = createObjectConnectionAnchorOffsetsRegistry();
+		registry.register("table", (_state, zoom) => ({ topCenter: 18 * zoom }));
+
+		expect(registry.resolve(tableState, 2.5)).toEqual({ topCenter: 45 });
 	});
 
 	it("resolves to undefined for a type that declared nothing", () => {
 		const registry = createObjectConnectionAnchorOffsetsRegistry();
 
-		expect(registry.resolve(tableState)).toBeUndefined();
+		expect(registry.resolve(tableState, 1)).toBeUndefined();
 	});
 
 	it("lets a later registration replace the earlier one", () => {
