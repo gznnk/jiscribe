@@ -31,6 +31,7 @@ const makeContext = (
 ): SelectionControlContext<ContainerState> => ({
 	object: container,
 	startObject: container,
+	selectedPart: null,
 });
 
 const makeEvent = (

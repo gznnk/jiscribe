@@ -1,7 +1,12 @@
 import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-import { cellCenter, cellCount, clickTrackGrip } from "../support/tableDom";
+import {
+	cellCenter,
+	cellCount,
+	clickInsertBadge,
+	clickTrackGrip,
+} from "../support/tableDom";
 
 /**
  * What the Delete key means over a table, which depends entirely on what is
@@ -99,6 +104,35 @@ test.describe("table delete", () => {
 		await expect.poll(async () => cellCount(canvas, id)).toBe(2);
 		await expect(canvas.page.getByText("first column").first()).toBeVisible();
 		expect(await tableExists(canvas, id)).toBe(true);
+	});
+
+	test("removes every row a Ctrl-click added to the pick, at once", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		// Four rows of two columns.
+		await clickInsertBadge(canvas, "rowInsert", 2);
+		await clickInsertBadge(canvas, "rowInsert", 3);
+		await expect.poll(async () => cellCount(canvas, id)).toBe(8);
+		for (const [cellId, text] of [
+			["r0c0", "row one"],
+			["r1c0", "row two"],
+			["r2c0", "row three"],
+			["r3c0", "row four"],
+		] as const) {
+			await fillCell(canvas, id, cellId, text);
+		}
+		await canvas.selectAt(await cellCenter(canvas, id, "r0c1"));
+
+		await clickTrackGrip(canvas, "rowGrip", 0);
+		await clickTrackGrip(canvas, "rowGrip", 2, "ctrl");
+		await canvas.deleteSelection();
+
+		await expect.poll(async () => cellCount(canvas, id)).toBe(4);
+		await expect(canvas.page.getByText("row one")).toHaveCount(0);
+		await expect(canvas.page.getByText("row three")).toHaveCount(0);
+		await expect(canvas.page.getByText("row two").first()).toBeVisible();
+		await expect(canvas.page.getByText("row four").first()).toBeVisible();
 	});
 
 	test("deletes the whole table when nothing inside it is picked", async ({

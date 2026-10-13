@@ -52,6 +52,7 @@ const table = {
 const context: SelectionControlContext<TableState> = {
 	object: table,
 	startObject: table,
+	selectedPart: null,
 };
 
 const MODS = { shift: false, alt: false, ctrl: false, meta: false };

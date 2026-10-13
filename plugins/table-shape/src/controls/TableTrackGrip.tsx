@@ -98,16 +98,17 @@ type TableTrackGripProps = {
 	action: string;
 	/** The heading drawn on the grip: the row's number or the column's letters (formatTableTrackLabel). */
 	label: string;
-	/** Whether this track is the selected part; tints the cell with the accent and inks the label in it, the border staying as it is. */
+	/** Whether this track is among the selected parts; tints the cell with the accent and inks the label in it, the border staying as it is. */
 	selected: boolean;
 };
 
 /**
  * One row's or one column's grip: a heading cell laid against the track it
  * stands for, abutting the table's edge, lettered or numbered as a spreadsheet
- * heads its columns and rows. Clicking it selects that whole track
- * (createTableTrackGripHandler), which is a different selection from the track's
- * cells and is what makes Delete mean "remove this row".
+ * heads its columns and rows. Clicking it selects that whole track, and Shift or
+ * Ctrl / Meta grow or trim a pick of several (createTableTrackGripHandler); a
+ * different selection from the tracks' cells, and what makes Delete mean
+ * "remove these rows".
  *
  * The cell follows the table's transform; the label is drawn upright whatever
  * the rotation, for the same reason the insert badge is (TableInsertBadge): a

@@ -48,7 +48,7 @@ const calcTrackRegion = (
  * could not mean both.
  *
  * `list` is declared so a range of tracks is expressible at all — core builds one
- * from the order this returns — even though a grip writes a single index today.
+ * from the order this returns, for the run a Shift-click on a grip spans.
  *
  * What the two kinds do share is the cells: a track pick receives what a cell
  * pick does (TABLE_CELL_STYLE_INTENT_KINDS), and a style written over it lands on that

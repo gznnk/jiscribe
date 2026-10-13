@@ -43,12 +43,12 @@ const remapPartId = (
  * selection left as written would silently slide one track along.
  *
  * Only the axis that grew moves: a column selection is untouched by an inserted
- * row, and a cell selection moves in one of its two coordinates. The inserted
- * track is never selected — what was picked stays picked, wherever the insertion
- * pushed it.
+ * row, and a cell selection moves in one of its two coordinates.
  *
- * Both ends of every range move, the anchor as readily as the focus: a range is
- * the pair, and moving one end alone would widen or narrow what is picked.
+ * Each end of every range moves on its own, the anchor as readily as the focus.
+ * An insertion before a range slides it along whole; one inside it, between its
+ * two ends, widens it over the inserted track, as a spreadsheet's range
+ * reference grows when a row is inserted within it.
  *
  * @param selection - The live selection, already known to stand on the table being inserted into; a kind the table has no parts for is returned untouched
  * @param axis - The direction the inserted track runs in, which is the coordinate that moves

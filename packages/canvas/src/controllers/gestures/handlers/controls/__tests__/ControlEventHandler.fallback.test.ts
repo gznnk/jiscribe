@@ -17,6 +17,7 @@ const makeContainer = (): ObjectState =>
 const makeState = (): CanvasControllerState =>
 	({
 		objects: { "container-1": makeContainer() },
+		selection: { objectIds: ["container-1"], part: null },
 		activeDrag: {
 			startSnapshot: { objects: { "container-1": makeContainer() } },
 			kind: "other",

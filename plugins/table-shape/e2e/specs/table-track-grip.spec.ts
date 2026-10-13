@@ -3,6 +3,8 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 import {
 	cellCenter,
+	cellCount,
+	clickInsertBadge,
 	clickTrackGrip,
 	drawnTextWeight,
 	partOutlineRects,
@@ -213,5 +215,65 @@ test.describe("table track grips", () => {
 		await expect.poll(() => drawnTextWeight(canvas, "top left")).toBe("700");
 		await expect.poll(() => drawnTextWeight(canvas, "top right")).toBe("700");
 		expect(await drawnTextWeight(canvas, "bottom left")).toBe("400");
+	});
+
+	test("runs a pick of rows from the one picked to the one Shift-clicked", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		// Read before the insertions, each of which leaves its new row picked.
+		const unselectedFill = await gripFill(canvas, "rowGrip", 0);
+		// Four rows, the badges at the bottom edge appending one each.
+		await clickInsertBadge(canvas, "rowInsert", 2);
+		await clickInsertBadge(canvas, "rowInsert", 3);
+		await expect.poll(async () => cellCount(canvas, id)).toBe(8);
+
+		await clickTrackGrip(canvas, "rowGrip", 0);
+		await clickTrackGrip(canvas, "rowGrip", 2, "shift");
+
+		await expect
+			.poll(async () => (await partOutlineRects(canvas)).length)
+			.toBe(3);
+		for (const trackIndex of [0, 1, 2]) {
+			expect(await gripFill(canvas, "rowGrip", trackIndex)).not.toBe(
+				unselectedFill,
+			);
+		}
+		expect(await gripFill(canvas, "rowGrip", 3)).toBe(unselectedFill);
+
+		// The anchor stays where the pick began, so a second Shift-click narrows it.
+		await clickTrackGrip(canvas, "rowGrip", 1, "shift");
+
+		await expect
+			.poll(async () => (await partOutlineRects(canvas)).length)
+			.toBe(2);
+		expect(await gripFill(canvas, "rowGrip", 2)).toBe(unselectedFill);
+	});
+
+	test("adds a column to the pick with Ctrl, and takes it back out", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const unselectedFill = await gripFill(canvas, "columnGrip", 0);
+		await clickInsertBadge(canvas, "columnInsert", 2);
+		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
+
+		await clickTrackGrip(canvas, "columnGrip", 0);
+		await clickTrackGrip(canvas, "columnGrip", 2, "ctrl");
+
+		await expect
+			.poll(async () => (await partOutlineRects(canvas)).length)
+			.toBe(2);
+		expect(await gripFill(canvas, "columnGrip", 0)).not.toBe(unselectedFill);
+		expect(await gripFill(canvas, "columnGrip", 1)).toBe(unselectedFill);
+		expect(await gripFill(canvas, "columnGrip", 2)).not.toBe(unselectedFill);
+
+		await clickTrackGrip(canvas, "columnGrip", 0, "ctrl");
+
+		await expect
+			.poll(async () => (await partOutlineRects(canvas)).length)
+			.toBe(1);
+		expect(await gripFill(canvas, "columnGrip", 0)).toBe(unselectedFill);
+		expect(await gripFill(canvas, "columnGrip", 2)).not.toBe(unselectedFill);
 	});
 });

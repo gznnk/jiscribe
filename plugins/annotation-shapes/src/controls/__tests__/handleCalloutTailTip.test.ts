@@ -29,6 +29,7 @@ const makeContext = (
 ): SelectionControlContext<CalloutState> => ({
 	object: callout,
 	startObject: callout,
+	selectedPart: null,
 });
 
 const makeEvent = (

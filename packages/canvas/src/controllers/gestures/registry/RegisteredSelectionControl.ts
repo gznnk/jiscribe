@@ -57,6 +57,18 @@ const isOfferedEventType = (
 };
 
 /**
+ * Whether the object is the whole object selection — the only case a part
+ * selection can stand on it (SelectionControlsLayer draws controls for it alone).
+ */
+const isSoleSelection = (
+	state: CanvasControllerState,
+	objectId: string,
+): boolean => {
+	const { objectIds } = state.selection;
+	return objectIds.length === 1 && objectIds[0] === objectId;
+};
+
+/**
  * Internal adapter wrapping a SelectionControlDefinition as a ControlStrategy so
  * ControlEventHandler can route to it. Owns the data-action format end to end
  * (`action` is what the control's Component must render, and supports() matches it
@@ -136,7 +148,13 @@ class SelectionControlStrategy extends ControlStrategy {
 			return state;
 		}
 
-		const context: SelectionControlContext = { object, startObject };
+		const context: SelectionControlContext = {
+			object,
+			startObject,
+			selectedPart: isSoleSelection(state, objectId)
+				? state.selection.part
+				: null,
+		};
 		const subAction = this.parseSubAction(event.targetAction);
 		const controlEvent: SelectionControlEvent =
 			type === "drag" || type === "dragEnd"
@@ -208,9 +226,7 @@ class SelectionControlStrategy extends ControlStrategy {
 		part: ObjectPartSelection | null,
 	): CanvasControllerState {
 		const { selection } = state;
-		const isSoleSelection =
-			selection.objectIds.length === 1 && selection.objectIds[0] === objectId;
-		if (!isSoleSelection || selection.part === part) {
+		if (!isSoleSelection(state, objectId) || selection.part === part) {
 			return state;
 		}
 		return { ...state, selection: { ...selection, part } };

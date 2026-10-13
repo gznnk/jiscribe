@@ -52,6 +52,7 @@ const makeContext = (
 ): SelectionControlContext<TableState> => ({
 	object: table,
 	startObject: table,
+	selectedPart: null,
 });
 
 /** A drag of `worldDelta` from the table's center, carrying `subAction` as the boundary. */

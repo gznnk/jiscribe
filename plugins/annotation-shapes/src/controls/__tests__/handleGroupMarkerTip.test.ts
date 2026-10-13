@@ -49,7 +49,7 @@ const dragTo = (x: number, y: number): SelectionControlEvent => ({
 
 const drag = (state: BraceState, x: number, y: number): BraceState => {
 	const { object } = handleGroupMarkerTip(
-		{ object: state, startObject: state },
+		{ object: state, startObject: state, selectedPart: null },
 		dragTo(x, y),
 	);
 	if (!object) {
@@ -113,7 +113,7 @@ describe("handleGroupMarkerDirection", () => {
 	const dragBracket = (x: number, y: number): BracketState => {
 		const state = bracketState();
 		const { object } = handleGroupMarkerDirection(
-			{ object: state, startObject: state },
+			{ object: state, startObject: state, selectedPart: null },
 			dragTo(x, y),
 		);
 		if (!object) {

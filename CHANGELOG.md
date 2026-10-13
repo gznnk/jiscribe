@@ -57,7 +57,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   its boundary.
 - **A table's rows and columns can be selected, added and removed.** Headings
   along the top and left edges, lettered and numbered as a spreadsheet's are,
-  pick a whole column or row; clicking a cell
+  pick a whole column or row — Shift-clicking another heading runs the pick to
+  it, and Ctrl- or Cmd-clicking one adds it to the pick or takes it back out, so
+  Delete can remove several at once; clicking a cell
   picks it, and Shift widens the pick to the block of cells between the two —
   the rectangle they stand at opposite corners of, as a spreadsheet does it, not
   the run of the cell order between them. Delete clears the picked cells' text,
@@ -67,6 +69,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and leaves it selected, once per press however fast they come; Alt+Shift+arrow
   inserts one beside the picked cell or track. The cells keep their contents as
   the grid renumbers around an insertion, and one undo takes it back.
+- For plugin authors: a selection control's `handle` is told what is already
+  picked on its object. `SelectionControlContext.selectedPart` carries the part
+  selection standing there — the same value the `Component` draws from as
+  `selectedPart` — so a click read with `event.mods` can grow or trim the pick
+  rather than only replace it.
 - For plugin authors: `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`)
   now exports `commitEdit`, which a contributed command returns its state through
   to say it edited the document — the COMMAND path never advances `commitVersion`

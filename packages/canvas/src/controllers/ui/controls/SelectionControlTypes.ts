@@ -35,7 +35,10 @@ export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
 	selectedPart: ObjectPartSelection | null;
 };
 
-/** The control's own object, as of the current frame and the gesture-start snapshot. */
+/**
+ * The control's own object, as of the current frame and the gesture-start
+ * snapshot, and the part selection standing on it.
+ */
 export type SelectionControlContext<TState extends ObjectState = ObjectState> =
 	{
 		/** The control's object in the current frame. */
@@ -45,6 +48,14 @@ export type SelectionControlContext<TState extends ObjectState = ObjectState> =
 		 * click, nothing having moved.
 		 */
 		startObject: TState;
+		/**
+		 * The part selection standing on this object in the current frame, or null
+		 * when none is or the object is no longer the sole selection — the value the
+		 * `Component` drew from as `SelectionControlProps.selectedPart`, so a
+		 * modifier click can grow or trim what is already picked. Its `kind` may be
+		 * any the type declares, not only the one this control writes.
+		 */
+		selectedPart: ObjectPartSelection | null;
 	};
 
 /** What every selection-control event carries, whichever kind it is. */

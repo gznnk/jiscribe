@@ -194,24 +194,35 @@ export function trackGripLabel(
 }
 
 /**
- * Clicks one track's grip at its middle, which selects the whole track.
+ * Clicks one track's grip at its middle, which selects the whole track — or,
+ * with a modifier held, grows or trims the tracks already picked.
  *
  * @param canvas - The driver for the page under test
  * @param axis - Which strip of grips to click in
  * @param trackIndex - The track's 0-based index; throws when the table is not selected and the grips are not drawn
+ * @param modifier - The key held through the click: `"shift"` runs the pick to this track, `"ctrl"` adds it or takes it out; omitted for a plain click
  */
 export async function clickTrackGrip(
 	canvas: CanvasDriver,
 	axis: "rowGrip" | "columnGrip",
 	trackIndex: number,
+	modifier?: "shift" | "ctrl",
 ): Promise<void> {
 	const box = await trackGrip(canvas, axis, trackIndex).boundingBox();
 	if (box === null) {
 		throw new Error(`no ${axis} ${trackIndex}`);
 	}
-	await canvas.clickAt(
-		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
-	);
+	const point = canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
+	if (modifier === "shift") {
+		await canvas.shiftClickAt(point);
+	} else if (modifier === "ctrl") {
+		await canvas.ctrlClickAt(point);
+	} else {
+		await canvas.clickAt(point);
+	}
 }
 
 /**

@@ -48,6 +48,16 @@ describe("remapTablePartSelectionForInsert", () => {
 		expect(moved.ranges).toEqual([{ anchorId: "r3c0", focusId: "r2c0" }]);
 	});
 
+	it("widens a range over a track inserted between its ends", () => {
+		const moved = remapTablePartSelectionForInsert(
+			{ kind: "row", ranges: [{ anchorId: "1", focusId: "3" }] },
+			"row",
+			2,
+		);
+
+		expect(moved.ranges).toEqual([{ anchorId: "1", focusId: "4" }]);
+	});
+
 	it("moves a track selection of the axis that grew", () => {
 		expect(
 			collapsedIds(

@@ -395,5 +395,39 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			);
 			expect(next).toBe(state);
 		});
+
+		/** Runs a click through a control recording the context it is handed. */
+		const receivedSelectedPart = (
+			state: CanvasControllerState,
+		): ObjectPartSelection | null | undefined => {
+			let received: SelectionControlContext | undefined;
+			createRegisteredSelectionControl("container", {
+				name: "headerHeight",
+				events: ["click"],
+				Component: () => null,
+				handle: (context: SelectionControlContext) => {
+					received = context;
+					return null;
+				},
+			}).strategy.handle(state, makeEvent("click"), undefined as never);
+			return received?.selectedPart;
+		};
+
+		it("hands the definition the part standing on its object", () => {
+			const state = {
+				...makeState(makeObject()),
+				selection: { objectIds: ["obj-1"], part: tailPart },
+			};
+			expect(receivedSelectedPart(state)).toBe(tailPart);
+			expect(receivedSelectedPart(makeState(makeObject()))).toBeNull();
+		});
+
+		it("hands the definition no part when its object is not the sole selection", () => {
+			const state = {
+				...makeState(makeObject()),
+				selection: { objectIds: ["obj-1", "obj-2"], part: tailPart },
+			};
+			expect(receivedSelectedPart(state)).toBeNull();
+		});
 	});
 });
