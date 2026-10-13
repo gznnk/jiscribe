@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { createObjectPartKindRegistry } from "../../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../../../selection/CanvasSelection";
-import { createObjectPartKindRegistry } from "../../../../../selection/partKinds/ObjectPartKindRegistry";
 import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
@@ -69,7 +69,7 @@ registry.register("record", RECORD_SECTIONS);
 // The same menu, from a type that says where a fill lands under a pick.
 registry.register("filled-record", RECORD_SECTIONS);
 
-const coreTextSlot = createTextSlotPartKindDefinition(undefined);
+const coreTextSlot = createTextSlotPartKindDefinition();
 const partKindRegistry = createObjectPartKindRegistry();
 // A vertex-like kind beside the slots, declaring no style kinds.
 partKindRegistry.register("record", [

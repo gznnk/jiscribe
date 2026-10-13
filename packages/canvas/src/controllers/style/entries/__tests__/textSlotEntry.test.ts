@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
-import { createObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { contextOf, textRectOf } from "../../__tests__/support/styleFixtures";
 import { textSlotEntry } from "../textSlotEntry";
 

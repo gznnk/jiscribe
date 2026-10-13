@@ -1,7 +1,8 @@
+import { supportsAutoHeight } from "@jiscribe/doc";
+
 import { appendPropertyPanelItems } from "./appendPropertyPanelItems";
 import { createDefaultPropertyPanel } from "./createDefaultPropertyPanel";
 import type { AnyObjectTypeDefinition } from "../../../../../plugin/ObjectTypeDefinition";
-import { supportsAutoHeightType } from "../../../../../plugin/supportsAutoHeightType";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type { PropertyPanelSection } from "../PropertyPanelTypes";
 
@@ -29,7 +30,7 @@ export const derivePropertyPanel = (
 ): PropertyPanelSection[] => {
 	let sections =
 		definition.propertyPanel ?? createDefaultPropertyPanel(definition.features);
-	if (supportsAutoHeightType(definition)) {
+	if (supportsAutoHeight(definition)) {
 		sections = appendPropertyPanelItems(
 			sections,
 			PROPERTY_PANEL_SECTIONS.layout,

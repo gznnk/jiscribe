@@ -74,11 +74,23 @@ UI への寄与は任意である。どのフィールドがあるかはこの�
 headless 半分である。パース層がその型を知り、doc を検証し、doc から生成するのに
 要るもの（`features` / `validateDoc` など）と、スキーマ・AI ドキュメントの生成器が
 読むメタデータを持つ。どのフィールドがあるかはこの型定義が正本。
-`ObjectTypeDefinition` はこれに UI 層の契約を足したもので、`textRegion` だけは
-描画側の計算関数の型に差し替えている（doc 側の宣言は「箱が文字を持たない」を
-`null` で答えられるが、描画側にはその答えの使い道が無い）。それ以外はそのまま
-引き継いでおり、だから `CanvasPlugin` は `CanvasDocPlugin` に**構造的に代入できる**
-— 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
+`ObjectTypeDefinition` はこれに UI 層の契約を足したもので、doc のフィールドは
+`textRegion` も含めてそのまま引き継ぐ。だから `CanvasPlugin` は `CanvasDocPlugin` に
+**構造的に代入できる** — 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
+
+doc の `textRegion` は headless の答え（はみ出し検査・高さ自動の判定）で、「箱が
+文字を持たない」を `null` で答えられるので、キャンバスが文字を描く位置ではない。
+キャンバス上の置き場所は `"textSlot"` 部分種別の `region`（`(state, slotId) => Rect`。
+1 スロットずつ）か `regions`（`(state) => Record<slotId, Rect>`。全スロットを 1 回で）
+で宣言する。`createTextSlotPartKindDefinition({ region })` /
+`createTextSlotPartKindDefinition({ regions })` で作って `partKinds` に置き、
+`createFrameObjectDefinition({ textRegion })` なら前者を代わりに作る。枠の描画は
+種別の `regions` を描画 1 回につき 1 度だけ呼んで全スロットの領域を受け取る（スロット
+ごとには呼ばない）ので、1 つのスロットを置くのに全体のレイアウトが要る型（表のセル、
+record の区画）もレイアウトは 1 回で済む。どちらもローカル座標（原点は図形の中心、
+左上基準）で答え、`regions` は `state.text` の全キーを含まなければならない。登録時に
+core は登録する種別を包み、どちらも宣言しなければ箱全体を当て、その上にオブジェクトの
+`textVerticalBasis` を掛ける。両方を宣言した種別は作る時点で拒否する。
 
 分けてある理由は、ドキュメントを検証するだけの消費者に React を読ませないため。
 VSCode 拡張の診断も MCP サーバーも Node プロセスで `.jis` をパースする。
@@ -334,8 +346,11 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 付き、部分 id は自分の `text` のキーになる（1 ボディの型なら `body` だけで、テキスト
 編集中はこのスロットが選ばれている）。自分で `"textSlot"` を宣言すれば、
 衝突ではなくその既定を置き換える。core が導くものを残して足りない分だけ足すなら、
-`createTextSlotPartKindDefinition(textRegion)` を spread する（表は `range` と
-`delete` を足し、`styleIntentKinds` に fill を足している）。
+`createTextSlotPartKindDefinition()` を spread する（表は `range` と
+`delete` を足し、`styleIntentKinds` に fill を足している）。スロットの置き場所は
+`region` / `regions` として渡す。どちらの場合も、登録する種別の `region` / `regions`
+は core が箱全体への代替と垂直基準で包むので、スロットは描かれ編集される位置に
+枠が出る。
 
 部分を押せるようにするには、その要素の `data-part` に `<kind>:<partId>` の住所を
 書くだけでよい（`controllers/gestures/handlers/utils/partAddress.ts`。テキストスロットの
@@ -345,13 +360,16 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 `commandAction` / `toggleAction` / `setAction` / `sliderAction` で組む（文法は
 `04-gesture-system.ja.md`）。
 
-選択に関わる宣言は 3 つあり、どれも省略できる。
+選択に関わる宣言は 4 つあり、どれも省略できる。
 
 - `region` — 部分のオブジェクトローカル座標での矩形。宣言した種別は、選ばれた部分
   ごとに枠が描かれ、持ち主の枠は破線になる。null を返した部分は枠を描かない。
   枠が 1 つでも描かれている間は、それと競う transform のハンドルが隠れる。
   `vertex` は宣言しない（頂点には自前のハンドルがある）ので、枠もハンドルの隠れも
   起きない
+- `regions` — 全部分の矩形を 1 回で返す（部分 id がキー、座標は `region` と同じ）。
+  1 つの部分を置くのに全体のレイアウトが要る種別（表のセル）向け。両方を宣言した
+  種別は、どちらからも同じ矩形を答える
 - `list` — その時点の全部分 id。Tab が巡る順序で、Shift クリックで伸ばした範囲の
   既定の解決（アンカーとフォーカスの間の区間）もこの順序で取る
 - `range` — アンカーとフォーカスから範囲に含まれる部分を返す。部分が一列に並ばない

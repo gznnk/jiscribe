@@ -1,3 +1,5 @@
+import { supportsAutoHeight } from "@jiscribe/doc";
+import { calcEllipseTextRegion } from "@jiscribe/doc/model/objects/primitives/ellipse/calcEllipseTextRegion";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
@@ -9,7 +11,6 @@ import type {
 	AnyObjectTypeDefinition,
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
-import { supportsAutoHeightType } from "../../plugin/supportsAutoHeightType";
 import { Connector } from "../../rendering/objects/connector/Connector";
 import { Ellipse } from "../../rendering/objects/primitives/Ellipse";
 import { Image } from "../../rendering/objects/primitives/Image";
@@ -101,6 +102,7 @@ import {
 } from "../behaviors/primitives/TextController";
 import {
 	createTextSlotPartKindDefinition,
+	placeTextSlotRegions,
 	TEXT_SLOT_PART_KIND,
 } from "../selection/partKinds/textSlotPartKind";
 import { createVertexPartKindDefinition } from "../selection/partKinds/vertexPartKind";
@@ -164,11 +166,11 @@ const TEXT_BLOCK_TRANSFORM_HANDLES: ObjectTransformHandles = {
  * Data-only description of every built-in object type. `createCanvasRegistries`
  * applies a chosen subset of these to a fresh bundle, ahead of the plugins'.
  *
- * Each entry spreads its headless definition, so a built-in's `textRegion` comes
- * from `builtinObjectDocDefinitions` — the ellipse's inscribed rect, the box
- * itself for the other two. The plugins' UI definitions declare theirs again
- * instead, their doc-side declaration being allowed to say "not in the box at
- * all", which a renderer cannot use (see createFrameObjectDefinition).
+ * Each entry spreads its headless definition, so a built-in's doc `textRegion`
+ * comes from `builtinObjectDocDefinitions`. Where the canvas draws the text is
+ * the `"textSlot"` part kind's: the ellipse declares its inscribed rect there
+ * (the same calculator as its doc one), and rect and text take the whole box,
+ * which is what an undeclared kind gives.
  */
 export const BUILTIN_OBJECT_DEFINITIONS: Record<
 	ObjectType,
@@ -189,6 +191,11 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		stateValidator: isValidEllipseState,
 		component: Ellipse,
 		behavior: createFrameBehavior<EllipseState>(),
+		partKinds: [
+			createTextSlotPartKindDefinition<EllipseState>({
+				region: calcEllipseTextRegion,
+			}),
+		],
 		stencils: EllipseStencils,
 	}),
 
@@ -494,7 +501,7 @@ const checkDeclaredStyleFields = (
 
 /**
  * Registers a single object type described by `definition` across all registries
- * in the given bundle (mapper, component, text region, behavior, state validator,
+ * in the given bundle (mapper, component, part kinds, behavior, state validator,
  * menu, property panel), and optionally its factory / stencils.
  */
 export const applyObjectDefinition = (
@@ -518,8 +525,8 @@ export const applyObjectDefinition = (
 		...coreStyleTable(definition.features),
 		...definition.styleEntries,
 	});
-	const supportsAutoHeight = supportsAutoHeightType(definition);
-	if (supportsAutoHeight) {
+	const mayLeaveHeightOut = supportsAutoHeight(definition);
+	if (mayLeaveHeightOut) {
 		registries.objectAutoHeight.register(type);
 	}
 	// A type whose doc may leave `height` out gets the shared derivation, which is
@@ -528,7 +535,7 @@ export const applyObjectDefinition = (
 	// (`geometry: "point"`) and an auto-height one storing a rect.
 	const resizeToContent =
 		definition.contentResizer ??
-		(supportsAutoHeight
+		(mayLeaveHeightOut
 			? (state, context) =>
 					resizeAutoHeightStateToContent(
 						state,
@@ -556,9 +563,6 @@ export const applyObjectDefinition = (
 	}
 	if (definition.svgDefs) {
 		registries.objectSvgDefs.register(type, definition.svgDefs);
-	}
-	if (definition.textRegion) {
-		registries.objectTextRegion.register(type, definition.textRegion);
 	}
 	if (definition.textEditOverflow) {
 		registries.objectTextEditOverflow.register(
@@ -610,14 +614,17 @@ export const applyObjectDefinition = (
 	// anything, one body or several: the ids are the keys of its `text`, so there
 	// is nothing per type to say. Declaring `"textSlot"` itself replaces that
 	// default rather than colliding with it (the rule `menu` and `propertyPanel`
-	// already follow).
-	const declaredPartKinds = definition.partKinds ?? [];
+	// already follow). Whichever is registered is placed here, so every reader of
+	// a slot's box gets the fallback and the vertical basis from one spot.
+	const declaredPartKinds = (definition.partKinds ?? []).map((part) =>
+		part.kind === TEXT_SLOT_PART_KIND ? placeTextSlotRegions(type, part) : part,
+	);
 	const partKinds =
 		definition.features.text !== undefined &&
 		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
 			? [
 					...declaredPartKinds,
-					createTextSlotPartKindDefinition(definition.textRegion),
+					placeTextSlotRegions(type, createTextSlotPartKindDefinition()),
 				]
 			: declaredPartKinds;
 	if (partKinds.length > 0) {

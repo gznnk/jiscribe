@@ -14,16 +14,16 @@ import type { ObjectGeometryKeyRegistry } from "./ObjectGeometryKeyRegistry";
 import { ObjectGeometryKeyRegistryContext } from "./ObjectGeometryKeyRegistryContext";
 import type { ObjectOutlineRegistry } from "./ObjectOutlineRegistry";
 import { ObjectOutlineRegistryContext } from "./ObjectOutlineRegistryContext";
+import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
+import { ObjectPartKindRegistryContext } from "./ObjectPartKindRegistryContext";
 import { ObjectShapeStyleDefaultsRegistryContext } from "./ObjectShapeStyleDefaultsRegistryContext";
 import type { ObjectSvgDefsRegistry } from "./ObjectSvgDefsRegistry";
 import { ObjectSvgDefsRegistryContext } from "./ObjectSvgDefsRegistryContext";
-import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
-import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryContext";
 import { ObjectTextStyleDefaultsRegistryContext } from "./ObjectTextStyleDefaultsRegistryContext";
 
 type RenderingRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;
-	objectTextRegion: ObjectTextRegionRegistry;
+	objectPartKind: ObjectPartKindRegistry;
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectOutline: ObjectOutlineRegistry;
@@ -43,7 +43,7 @@ type RenderingRegistriesProviderProps = {
  */
 export function RenderingRegistriesProvider({
 	objectComponent,
-	objectTextRegion,
+	objectPartKind,
 	objectTextStyleDefaults,
 	objectShapeStyleDefaults,
 	objectOutline,
@@ -56,7 +56,7 @@ export function RenderingRegistriesProvider({
 }: RenderingRegistriesProviderProps) {
 	return (
 		<ObjectComponentRegistryContext value={objectComponent}>
-			<ObjectTextRegionRegistryContext value={objectTextRegion}>
+			<ObjectPartKindRegistryContext value={objectPartKind}>
 				<ObjectTextStyleDefaultsRegistryContext value={objectTextStyleDefaults}>
 					<ObjectShapeStyleDefaultsRegistryContext
 						value={objectShapeStyleDefaults}
@@ -80,7 +80,7 @@ export function RenderingRegistriesProvider({
 						</ObjectOutlineRegistryContext>
 					</ObjectShapeStyleDefaultsRegistryContext>
 				</ObjectTextStyleDefaultsRegistryContext>
-			</ObjectTextRegionRegistryContext>
+			</ObjectPartKindRegistryContext>
 		</ObjectComponentRegistryContext>
 	);
 }

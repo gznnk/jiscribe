@@ -54,8 +54,9 @@ Doc モデルはこのパッケージには**無い**。canvas が依存する `
 [`packages/doc/README.md`](../../doc/README.md)。
 
 `controllers/selection/` は直下に選択のモデル（`CanvasSelection.ts`）を置き、残りを層で
-分ける。`partKinds/` は型がパーツについて宣言するもの（`ObjectPartKindRegistry`・
-テキストスロットと頂点の kind）、`readers/` は選択を変えずにそこから値を導くもの、
+分ける。`partKinds/` は型がパーツについて宣言するもの（テキストスロットと頂点の
+kind。それを登録する `ObjectPartKindRegistry` は、描画層がテキストスロットの置き場所を
+そこから引くため、描画層のレジストリと並べて置く）、`readers/` は選択を変えずにそこから値を導くもの、
 `writers/` は状態から次の状態への遷移（状態が裏付けなくなったパーツを落とす
 `reconcileSelection` を含む）。
 
@@ -112,7 +113,8 @@ State を Props として受け取り SVG を描画するコンポーネント�
 | `ObjectFactoryRegistry` / `ObjectDocValidatorRegistry` など                                          | `@jiscribe/doc` の `plugin/`           | 型別 ObjectFactory（Doc / bounds 生成）、Doc バリデータ                                                 |
 | `ObjectMapperRegistry` / `ObjectStateValidatorRegistry` など                                         | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ                                                      |
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                  | `controllers/gestures/registry/`       | ジェスチャーハンドラ・型別の `ObjectBehavior`                                                           |
-| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` など                | `rendering/objects/registry/`          | 描画コンポーネント・編集テキスト領域・ヒットテスト / スナップ輪郭                                       |
+| `ObjectComponentRegistry` / `ObjectOutlineRegistry` など                                             | `rendering/objects/registry/`          | 描画コンポーネント・ヒットテスト / スナップ輪郭                                                         |
+| `ObjectPartKindRegistry`                                                                             | `rendering/objects/registry/`          | 型別の部分種別（頂点・セル・テキストスロットとその置き場所）                                            |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry` など | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別プロパティサイドバーのセクション・型別 SelectionControl |
 | `ObjectStyleRegistry`                                                                                | `controllers/style/tables/`            | 型別のスタイル表（[スタイルシステム](./10-style-properties.ja.md)）                                     |
 | `CommandRegistry`                                                                                    | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）                                               |
@@ -203,7 +205,7 @@ graph TD
 
 `@jiscribe/doc` の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `theme/`（`theme` トークン）への直接参照はほぼ全域から存在するため、図では省略している。
 
-**`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、`@jiscribe/doc` の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、rendering の component/textRegion/outline 契約など）ため、`plugin` はこのパッケージの3レイヤーと doc パッケージのすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。`ui` のプロパティパネル導出（`derivePropertyPanel`）も `plugin` の判定関数を値で使う。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
+**`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、`@jiscribe/doc` の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、`selection` の部分種別（テキストスロットの置き場所を含む）、rendering の component/outline 契約など）ため、`plugin` はこのパッケージの3レイヤーと doc パッケージのすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。`ui` のプロパティパネル導出（`derivePropertyPanel`）も `plugin` の判定関数を値で使う。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
 
 これは意図的に、具象的な import 循環には**なっていない**: `plugin` から canvas の他レイヤーへの import はすべて型のみで、その先のモジュールが `plugin` を import し返すことはない。`plugin` を値で使うのは `registries/applyObjectDefinition` や `ui` の `derivePropertyPanel` など別のファイルで、`plugin` が型を取りに行くモジュールからは import されない。そのため madge `dep:check` はフォルダ同士が相互参照していても green のまま。`applyObjectDefinition`（実行時の配線）を `plugin` ではなく `registries` に置いていることがこれを保っている。
 

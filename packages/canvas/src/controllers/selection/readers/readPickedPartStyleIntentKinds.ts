@@ -1,5 +1,5 @@
+import type { ObjectPartKindRegistry } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { ObjectPartKindRegistry } from "../partKinds/ObjectPartKindRegistry";
 
 /**
  * The style intent kinds the part picked below the object receives, as its kind

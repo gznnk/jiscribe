@@ -16,7 +16,9 @@ type ProbeState = { id: string; type: string; text: string };
 /** Stands in for a shape's component: draws its text, or throws on "boom". */
 const Probe = ({ state }: { state: ProbeState }) => {
 	if (state.text === "boom") {
-		throw new Error('calcTableTextRegion: no cell "r9c9" in a 1x2 grid');
+		throw new Error(
+			'The "textSlot" part kind of type "table" answers no region for text slot "r9c9" (it answers r0c0, r0c1)',
+		);
 	}
 	return <g data-drawn={state.id} />;
 };
@@ -80,7 +82,7 @@ describe("ObjectRenderBoundary", () => {
 
 		expect(warn).toHaveBeenCalledTimes(1);
 		expect(warn).toHaveBeenCalledWith(
-			'[Canvas] table t-1 could not be drawn: calcTableTextRegion: no cell "r9c9" in a 1x2 grid',
+			'[Canvas] table t-1 could not be drawn: The "textSlot" part kind of type "table" answers no region for text slot "r9c9" (it answers r0c0, r0c1)',
 		);
 	});
 

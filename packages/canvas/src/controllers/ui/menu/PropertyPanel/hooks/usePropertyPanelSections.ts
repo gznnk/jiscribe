@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
+import type { ObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import type { ObjectPartKindRegistry } from "../../../../selection/partKinds/ObjectPartKindRegistry";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
 import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";

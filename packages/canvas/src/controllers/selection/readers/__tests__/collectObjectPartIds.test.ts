@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import type { ObjectPartKindDefinition } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ObjectPartSelection } from "../../CanvasSelection";
-import type { ObjectPartKindDefinition } from "../../partKinds/ObjectPartKindRegistry";
 import { collectObjectPartIds } from "../collectObjectPartIds";
 
 /** A shape whose parts are the four cells of a 2x2 grid, keyed r<row>c<column>. */

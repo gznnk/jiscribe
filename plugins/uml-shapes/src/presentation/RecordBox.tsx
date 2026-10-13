@@ -17,7 +17,7 @@ import type { RecordState } from "../state/RecordState";
 /**
  * Record presentation: a title band, optionally under a stereotype line, over one
  * or two compartments of rows. Shared Frame logic (transform, color resolution,
- * per-slot text overlays placed by calcRecordTextRegion, memo) lives in
+ * per-slot text overlays placed by calcRecordTextSlotRegions, memo) lives in
  * createFrameObject; here we draw the compartments and the linework. The wrapping
  * <g> carries the object's data-kind/data-id, and each compartment carries its
  * slot's address as data-part (textSlotPart), so a click picks the compartment it

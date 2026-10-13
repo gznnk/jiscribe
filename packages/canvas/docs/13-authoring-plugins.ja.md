@@ -138,10 +138,17 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`） | 「箱いっぱいに描くので文字を下へ吊る」機構一式                  |
 | `createParseCheckSuite`（`/testing`）                                                                                    | 図形パッケージが毎回書く parse-check テスト                     |
 
-下ラベルの部材は 3 つで 1 組である。領域を型の `textRegion` に、bounds を
-`visualBounds` に登録する。後者が無いと zoom-to-fit とエクスポートの viewBox が
+下ラベルの部材は 3 つで 1 組である。領域を `createFrameObjectDefinition` の
+`textRegion`（ラベルを置くテキストスロットの部分種別になる）に、bounds を
+`visualBounds` に渡す。後者が無いと zoom-to-fit とエクスポートの viewBox が
 ラベルを切り落とす。ヒットエリアは図形自身の `data-kind="object"` グループの中に
 置き、ラベルを掴めるようにする。
+
+スロット同士を並べてレイアウトする型（表のセル、record の区画）は、`"textSlot"` の
+部分種別を自分で宣言し、`createTextSlotPartKindDefinition({ regions })` を
+`partKinds` に置く。全スロットの領域を 1 回で答える関数で、描画は描画 1 回につき
+1 度だけ呼ぶ。種別が取るのは `region` か `regions` のどちらか一方
+（[プラグインアーキテクチャ](./12-plugin-architecture.ja.md)参照）。
 
 `createFrameObject` を通さず手描きするなら、それが解決していたものは自分で解決する
 （sticky が実例）。特に色は `resolveAutoColor(fill, "surface")` で解決し、**結果は

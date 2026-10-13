@@ -55,7 +55,9 @@ source embedding). Take all of it from `@jiscribe/doc` — see
 
 `controllers/selection/` keeps the selection model at its root (`CanvasSelection.ts`)
 and splits the rest by layer: `partKinds/` is what an object type declares about its
-parts (`ObjectPartKindRegistry`, the text-slot and vertex kinds), `readers/` derives
+parts (the text-slot and vertex kinds; the `ObjectPartKindRegistry` they are
+registered in sits with the rendering registries, since the renderers place text
+slots through it), `readers/` derives
 values from a selection without changing it, and `writers/` turns one state into the
 next (including `reconcileSelection`, which drops a part the state no longer backs).
 
@@ -113,7 +115,8 @@ The main ones are below. The full set is the bundle each `<Canvas>` owns (`Canva
 | `ObjectFactoryRegistry` / `ObjectDocValidatorRegistry`, …                                          | `@jiscribe/doc`, `plugin/`                  | per-type shape factory (create Doc / bounds), Doc validator                                                  |
 | `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`, …                                         | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                                                             |
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                | `controllers/gestures/registry/`            | gesture handlers, per-type `ObjectBehavior`                                                                  |
-| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry`, …                | `rendering/objects/registry/`               | render component, editable-text region, hit-test / snap outline                                              |
+| `ObjectComponentRegistry` / `ObjectOutlineRegistry`, …                                             | `rendering/objects/registry/`               | render component, hit-test / snap outline                                                                    |
+| `ObjectPartKindRegistry`                                                                           | `rendering/objects/registry/`               | per-type part kinds: vertices, cells, the text slots and where each is placed                                |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry`, … | `controllers/ui/...` (colocated per domain) | StencilLibrary presets, per-type ObjectMenu, per-type properties-sidebar sections, per-type SelectionControl |
 | `ObjectStyleRegistry`                                                                              | `controllers/style/tables/`                 | per-type style tables (see [Style System](./10-style-properties.md))                                         |
 | `CommandRegistry`                                                                                  | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))                                                      |
@@ -204,7 +207,7 @@ graph TD
 
 Direct references to `@jiscribe/doc` types/constants (`EndpointRef`, `AUTO_COLOR`, …) and to `theme/` (the `theme` token object) exist from nearly everywhere, so they are omitted from the graph.
 
-**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `@jiscribe/doc`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/outline contracts from `rendering`, and so on), so `plugin` depends on all three layers of this package plus the doc package. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries), and `ui`'s properties-panel derivation (`derivePropertyPanel`) calls `plugin`'s predicates as values. At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
+**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `@jiscribe/doc`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, part kinds (the text slots' placement among them) from `selection`, component/outline contracts from `rendering`, and so on), so `plugin` depends on all three layers of this package plus the doc package. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries), and `ui`'s properties-panel derivation (`derivePropertyPanel`) calls `plugin`'s predicates as values. At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
 
 It is deliberately **not** a concrete import cycle: every import `plugin` makes into the other layers of this package is type-only, and none of the modules it reaches imports `plugin` back. The files that use `plugin` as values (`registries/applyObjectDefinition`, `ui`'s `derivePropertyPanel`, …) are different files, which no module `plugin` takes types from imports. So madge `dep:check` stays green even though the folders reference each other. Keeping `applyObjectDefinition` (the runtime wiring) in `registries` rather than `plugin` is what preserves this.
 

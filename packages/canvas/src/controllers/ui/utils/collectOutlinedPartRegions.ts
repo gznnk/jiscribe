@@ -1,8 +1,8 @@
 import type { Rect } from "@jiscribe/geometry";
 
+import type { ObjectPartKindRegistry } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasSelection } from "../../selection/CanvasSelection";
-import type { ObjectPartKindRegistry } from "../../selection/partKinds/ObjectPartKindRegistry";
 import { collectObjectPartIds } from "../../selection/readers/collectObjectPartIds";
 
 /** A selected part together with the box drawn around it. */

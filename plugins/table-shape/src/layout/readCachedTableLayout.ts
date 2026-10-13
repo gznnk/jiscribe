@@ -14,10 +14,10 @@ const tableLayoutCache = new WeakMap<TableLayoutSource, TableLayout>();
 /**
  * The layout of one table, read from the cache and computed into it on a miss, so
  * the same object is laid out once however many readers ask: the frame renderer
- * asking for every cell's region in turn (calcTableTextRegion), the controls laying
+ * placing every cell (calcTableTextSlotRegions), the in-place editor and the slot
+ * outline placing one cell each through the same calculator, the controls laying
  * their strips beside the same table. A drag makes a new object per move and so
- * computes once per move; without the cache every cell's region re-measured every
- * cell, and a table dragged in cells² measurements.
+ * computes once per move.
  *
  * @param source - The tracks, the cells and the rule width; matched by identity, so a state spread from another with the grid untouched is still computed anew
  * @returns The same layout object for the same source until writeTableLayoutCache replaces it

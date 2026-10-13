@@ -1,8 +1,8 @@
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
+import { createObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
-import { createObjectPartKindRegistry } from "../../../selection/partKinds/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import {
 	contextOf,

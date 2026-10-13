@@ -12,13 +12,14 @@ import type { ConnectorLabelPlacement } from "../../../../connectors/label/calcC
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
-import type { ObjectTextRegionCalculator } from "../../../../rendering/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectPartKindDefinition } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import type { TextToggleIntentKind } from "../../../style/StyleIntent";
 import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
@@ -131,7 +132,7 @@ function renderConnectorLabelEditor(
  * @param handlers - Input and exit handlers
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, so a field
  *   the slot leaves unset is drawn with the same value the overlay uses
- * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
+ * @param textSlotKind - The `"textSlot"` part kind registered for the type, which places the slot. Omitted = full bbox
  * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
  * @returns The text editor
  */
@@ -142,10 +143,10 @@ function renderTextEditor(
 	richText: RichText,
 	handlers: EditorHandlers,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
-	textRegionCalculator?: ObjectTextRegionCalculator,
+	textSlotKind?: ObjectPartKindDefinition,
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
 ): React.ReactElement {
-	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
+	const textRegion = calcTextRegion(target, slotId, textSlotKind);
 	const style = textStyleDefaults.resolveTextSlotStyle(
 		target.type,
 		slotId,
@@ -258,7 +259,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		openEdit.text,
 		handlers,
 		registries.objectTextStyleDefaults,
-		registries.objectTextRegion.get(openEdit.object.type),
+		registries.objectPartKind.get(openEdit.object.type, TEXT_SLOT_PART_KIND),
 		registries.objectTextEditOverflow.get(openEdit.object.type),
 	);
 };

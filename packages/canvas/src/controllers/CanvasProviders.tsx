@@ -28,7 +28,7 @@ type CanvasProvidersProps = {
 
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, locale,
- * messages, the registry bundle, its three rendering registries, the
+ * messages, the registry bundle, its rendering registries, the
  * fonts-loaded counter, the resolved images, and the viewport element ref) into one node, so
  * Canvas.tsx renders its tree without the deep provider nesting.
  */
@@ -49,7 +49,7 @@ export function CanvasProviders({
 					<CanvasRegistriesContext value={registries}>
 						<RenderingRegistriesProvider
 							objectComponent={registries.objectComponent}
-							objectTextRegion={registries.objectTextRegion}
+							objectPartKind={registries.objectPartKind}
 							objectTextStyleDefaults={registries.objectTextStyleDefaults}
 							objectShapeStyleDefaults={registries.objectShapeStyleDefaults}
 							objectOutline={registries.objectOutline}

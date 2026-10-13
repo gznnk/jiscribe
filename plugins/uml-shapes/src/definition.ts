@@ -5,6 +5,7 @@ import type {
 import {
 	createFrameBehavior,
 	createFrameObjectDefinition,
+	createTextSlotPartKindDefinition,
 	createTypeStencils,
 } from "@jiscribe/canvas-sdk";
 
@@ -13,7 +14,7 @@ import {
 	umlComponentDocDefinition,
 	umlPackageDocDefinition,
 } from "./doc";
-import { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
+import { calcRecordTextSlotRegions } from "./presentation/calcRecordTextSlotRegions";
 import { RecordBox } from "./presentation/RecordBox";
 import { UmlComponentBox } from "./presentation/UmlComponentBox";
 import { UmlPackageBox } from "./presentation/UmlPackageBox";
@@ -45,8 +46,9 @@ const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
 
 /**
  * The record's text slots need no declaration here: the keys of `state.text`
- * are the authority, and the per-type contributions are `textRegion` and
- * `textEditOverflow`, which both take the slot id (see calcRecordTextRegion).
+ * are the authority, and the per-type contributions are the `"textSlot"` part
+ * kind's `regions`, which places every compartment in one call
+ * (calcRecordTextSlotRegions), and `textEditOverflow`, which takes the slot id.
  *
  * The `text` menu section keeps fontStyle / textAlignment: with no slot picked
  * a menu edit writes into every slot at once (resolveTextSlotIds), so the
@@ -62,9 +64,13 @@ export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 	mapper: { toDoc: recordToDoc, toState: recordToState },
 	stateValidator: isValidRecordState,
 	component: RecordBox,
-	textRegion: calcRecordTextRegion,
 	textEditOverflow: resolveRecordTextEditOverflow,
 	behavior: createFrameBehavior<RecordState>(),
+	partKinds: [
+		createTextSlotPartKindDefinition<RecordState>({
+			regions: calcRecordTextSlotRegions,
+		}),
+	],
 	stencils: RecordStencils,
 	menu: [
 		{

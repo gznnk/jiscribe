@@ -61,17 +61,24 @@ export type ObjectDocDefinition = {
 	bounds?: ObjectDocBoundsCalculator;
 
 	/**
-	 * Where the type lays its text out, given a doc of it: the rectangle the
-	 * rendering layer's `textRegion` resolves, answerable with no rendering layer
-	 * present. The single declaration of the shape's text region — the UI
-	 * definition registers the same calculator, so a headless overflow check
-	 * (`@jiscribe/doc-tools`) and the canvas can never disagree about it.
+	 * Where the type lays one text slot out, given a doc of it: the rectangle the
+	 * canvas places that slot in, answerable with no rendering layer present. A
+	 * declaration for any text form — the one `body` of a `"body"` / `"source"`
+	 * type, a cell or a band of a `"slots"` type — the headless counterpart of the
+	 * `"textSlot"` part kind's `region` on the canvas side, which the UI
+	 * definition builds from the same calculator wherever it can, so a headless
+	 * check (`@jiscribe/doc-tools`) and the canvas do not disagree about it.
 	 *
-	 * `null` from the calculator means the box does not hold the text (a label
-	 * drawn outside the outline, bands sized from their own text); omitting the
-	 * field means the type has not declared one at all, which a checker reports
-	 * rather than guessing at. Declaring a rectangle is also what lets a document
-	 * leave the type's `height` out and have it follow the text
+	 * Today's readers ask for the body alone (the overflow check, the content box,
+	 * {@link import("./supportsAutoHeight").supportsAutoHeight}), and each gates on
+	 * `features.text` itself, so a `"slots"` type may leave this out until a
+	 * reader asks for its slots.
+	 *
+	 * `null` from the calculator means the box does not hold that slot (a label
+	 * drawn outside the outline); omitting the field means the type has not
+	 * declared one at all, which a checker reports rather than guessing at.
+	 * Declaring a rectangle is also what lets a document leave the type's
+	 * `height` out and have it follow the text
 	 * ({@link import("./supportsAutoHeight").supportsAutoHeight}), so a
 	 * `geometry: "rect"` type's declaration decides the shape of its schema too.
 	 * Every type holding a single body (`features.text: "body"` / `"source"`)

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
-import type { ObjectPartKindDefinition } from "../../selection/partKinds/ObjectPartKindRegistry";
+import type { ObjectPartKindDefinition } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
 import { applyObjectDefinition } from "../applyObjectDefinition";
 import { createTestRegistries } from "../createCanvasRegistries";
@@ -63,9 +63,13 @@ describe("applyObjectDefinition: partKinds", () => {
 			}),
 		);
 
-		expect(registries.objectPartKind.get("record", TEXT_SLOT_PART_KIND)).toBe(
-			declared,
+		const registered = registries.objectPartKind.get(
+			"record",
+			TEXT_SLOT_PART_KIND,
 		);
+		expect(registered?.has).toBe(declared.has);
+		// Registration attaches the region the type's text regions place.
+		expect(registered?.region).toBeDefined();
 	});
 
 	it("gives a one-body type the textSlot kind too, naming its body alone", () => {

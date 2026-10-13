@@ -4,8 +4,10 @@
 // draws and the editor edits in).
 //
 // `record` is absent: its box is divided into bands each sized from their own
-// text, so it declares `calcOutsideBoxTextRegion` instead. `umlComponent` draws
-// over the whole box and declares `calcFullBoxTextRegion`.
+// text, so its doc definition declares no region and its UI definition places
+// every band at once with the `"textSlot"` part kind's `regions`
+// (calcRecordTextSlotRegions).
+// `umlComponent` draws over the whole box and declares `calcFullBoxTextRegion`.
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import { calcUmlPackageTabHeight } from "./UmlPackageDoc";

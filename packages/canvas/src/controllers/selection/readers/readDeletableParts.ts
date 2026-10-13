@@ -1,7 +1,7 @@
+import type { ObjectPartKindDefinition } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
-import type { ObjectPartKindDefinition } from "../partKinds/ObjectPartKindRegistry";
 
 /**
  * The parts a deletion is asked to remove, named inside one object. It is the

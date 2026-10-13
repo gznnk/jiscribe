@@ -1,3 +1,4 @@
+import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { describe, it, expect } from "vitest";
 
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
@@ -159,6 +160,9 @@ describe("createCanvasRegistries", () => {
 							fill: true,
 							text: "body",
 						},
+						// The box holds the text, which is what lets a document leave
+						// `height` out (supportsAutoHeight).
+						textRegion: calcFullBoxTextRegion,
 						validateDoc: () => [],
 						mapper: {
 							toDoc: (state) => ({ id: state.id, type: "boxy" }),
@@ -195,7 +199,7 @@ describe("createCanvasRegistries", () => {
 				},
 			]);
 			// The box holds its text and nothing denies it, so the type may leave
-			// `height` out and gets the switch (supportsAutoHeightType) — in the
+			// `height` out and gets the switch (supportsAutoHeight) — in the
 			// sidebar, which is the only place it is offered.
 			expect(
 				registries.propertyPanel

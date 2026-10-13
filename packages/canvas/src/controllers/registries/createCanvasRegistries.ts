@@ -15,8 +15,8 @@ import { createObjectConnectionAnchorOffsetsRegistry } from "../../rendering/obj
 import { createObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { createObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import { createObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import { createObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
-import { createObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import { createObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
@@ -25,7 +25,6 @@ import { createObjectStateValidatorRegistry } from "../../states/registry/Object
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import { createObjectPartKindRegistry } from "../selection/partKinds/ObjectPartKindRegistry";
 import { createObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
@@ -59,7 +58,6 @@ export const createCanvasRegistries = (
 		objectContentResizer: createObjectContentResizerRegistry(),
 		objectAutoHeight: createObjectAutoHeightRegistry(),
 		objectComponent: createObjectComponentRegistry(),
-		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
 		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),

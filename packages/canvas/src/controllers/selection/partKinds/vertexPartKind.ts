@@ -1,6 +1,6 @@
 import type { Poly } from "@jiscribe/doc/model/objects/types/Poly";
 
-import type { ObjectPartKindDefinition } from "./ObjectPartKindRegistry";
+import type { ObjectPartKindDefinition } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /** The part-id namespace of the vertices a poly-geometry type stores in `points`. */

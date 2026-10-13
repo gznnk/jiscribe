@@ -20,7 +20,7 @@ import type { RecordTextSlotId } from "../schema/RecordDoc";
  * slots, whose key set decides which compartments the box has and whose content
  * sizes them. Typed as the open slot map every text-bearing state carries rather
  * than the record's own set, so the registry's calculator type still accepts it
- * (see ObjectTextRegionCalculator).
+ * (see ObjectTextSlotRegionsCalculator).
  */
 export type RecordTextSlotRegionsState = Dimensions & {
 	/** The shape's text slots, keyed by slot id; absent is read as a title-only box. */
@@ -118,9 +118,9 @@ const calcTextSlotHeight = (
 /**
  * Splits the box into its compartments, in local coordinates (origin at the shape
  * center, top-left based). Single source of the record's geometry: the drawing
- * (RecordBox) and the text placement (calcRecordTextRegion, which both the
- * overlays and the in-place editor go through) read it, so a hit region can never
- * drift from the text drawn in it.
+ * (RecordBox) and the text placement (the `"textSlot"` part kind's `regions`,
+ * which both the overlays and the in-place editor go through) read it, so a hit
+ * region can never drift from the text drawn in it.
  *
  * Which compartments exist comes from the slot keys — `name` always, the rest
  * only where the state has them. Stacking rule: each compartment but the bottom

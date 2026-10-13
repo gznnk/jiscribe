@@ -1,8 +1,11 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
-import { createObjectPartKindRegistry } from "../../partKinds/ObjectPartKindRegistry";
-import type { ObjectPartKindRegistry } from "../../partKinds/ObjectPartKindRegistry";
-import { createTextSlotPartKindDefinition } from "../../partKinds/textSlotPartKind";
+import { createObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
+import type { ObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
+import {
+	createTextSlotPartKindDefinition,
+	placeTextSlotRegions,
+} from "../../partKinds/textSlotPartKind";
 
 /**
  * Declares the slot part for more types on a registry that already exists — the
@@ -18,7 +21,9 @@ export const registerTextSlotParts = (
 	...types: ObjectType[]
 ): void => {
 	for (const type of types) {
-		registry.register(type, [createTextSlotPartKindDefinition(undefined)]);
+		registry.register(type, [
+			placeTextSlotRegions(type, createTextSlotPartKindDefinition()),
+		]);
 	}
 };
 
@@ -30,8 +35,8 @@ export const registerTextSlotParts = (
  *
  * @param types - The object types to declare slots for; a type left out has no
  *   parts at all, which is how core sees a type holding no text
- * @returns A fresh registry, with no text-region calculator (so a slot's region
- *   is the object's whole box)
+ * @returns A fresh registry, whose kinds place no slot of their own (so a slot's
+ *   region is the object's whole box)
  */
 export const createTextSlotPartRegistry = (
 	...types: ObjectType[]

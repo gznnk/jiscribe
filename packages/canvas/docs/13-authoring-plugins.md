@@ -140,10 +140,18 @@ the full list):
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS` (`/doc`) | the "drawing fills the box, so the caption hangs underneath" trio          |
 | `createParseCheckSuite` (`/testing`)                                                                                    | the parse-check test every shape package writes                            |
 
-The below-label parts go together: register the region as the type's `textRegion`
-and the bounds as its `visualBounds` — without the latter, zoom-to-fit and the
+The below-label parts go together: pass the region as `createFrameObjectDefinition`'s
+`textRegion` (which builds the text slot part kind placing the label) and the bounds
+as its `visualBounds` — without the latter, zoom-to-fit and the
 export viewBox crop the label away — and place the hit area inside the shape's own
 `data-kind="object"` group so the label can be grabbed.
+
+A type whose slots are laid out against each other (a table's cells, a record's
+compartments) declares the `"textSlot"` part kind itself, with
+`createTextSlotPartKindDefinition({ regions })` in `partKinds`: one call answering
+every slot's region, which the renderer makes once per render. A kind takes
+`region` or `regions`, not both (see
+[Plugin Architecture](./12-plugin-architecture.md)).
 
 A shape that hand-draws instead of going through `createFrameObject` has to redo
 what that helper resolved (the sticky is the example). Colors above all: resolve

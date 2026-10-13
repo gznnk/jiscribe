@@ -23,7 +23,7 @@ import type {
  * The fields of a table state the grid is derived from: the tracks, the cells
  * filling them, and the rule width the cells give room to (the document-shaped
  * twin is TableDocLayoutSource). Every field is optional so a calculator declared
- * over this type stays assignable to the registry's `ObjectTextRegionCalculator`
+ * over this type stays assignable to the registry's `ObjectTextSlotRegionsCalculator`
  * (see there); a source missing the tracks lays out as an empty grid rather than
  * throwing.
  */
@@ -44,7 +44,7 @@ export type TableLayoutSource = {
  * answers in.
  *
  * Single source of the table's geometry: the drawing (Table), the text
- * placement (calcTableTextRegion, which the overlays and the in-place editor both
+ * placement (calcTableTextSlotRegions, which the overlays and the in-place editor both
  * go through), the outer size the content resizer stores (calcTableFrameSize) and
  * connector attachment all read it, so a rule, a hit region and the text drawn in
  * it cannot drift apart. Read-only throughout: one layout object is shared by

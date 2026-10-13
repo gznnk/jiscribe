@@ -6,7 +6,7 @@
 // presentation / state / stencil.
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
-import { calcFullBoxTextRegion, calcOutsideBoxTextRegion } from "@jiscribe/doc";
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
 
 import {
 	RECORD_DOC_DEFAULTS,
@@ -32,9 +32,11 @@ import { validateRecordTextFields } from "./schema/validateRecordTextFields";
 const RECT_GEOMETRY_NOTE =
 	"Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs.";
 
+// No `textRegion`: a record's bands are each sized from their own text, which is
+// placed on the canvas side, every band at once (the `"textSlot"` part kind's
+// `regions`, calcRecordTextSlotRegions).
 export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: RecordFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	defaults: RECORD_DOC_DEFAULTS,
 	// The schema $def is a handwritten template (text is a slotted object), so
 	// only summary is consumed — it fills the generated doc tables.
@@ -42,7 +44,9 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	validateExtra: validateRecordTextFields,
 	// Resolved per read, so a document keeps whichever of these it wrote itself
 	// and nothing more (ObjectTextStyleDefaultsRegistry).
-	textSlotStyleDefaults: { byTextSlot: RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID },
+	textSlotStyleDefaults: {
+		byTextSlot: RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID,
+	},
 });
 
 export const umlPackageDocDefinition: ObjectDocDefinition =

@@ -6,7 +6,7 @@ import {
 	BODY_TEXT_SLOT_ID,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/text/TextType";
-import type { TransformedFrame } from "@jiscribe/geometry";
+import type { Rect, TransformedFrame } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 import type React from "react";
 import type { ReactNode } from "react";
@@ -18,10 +18,11 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { useFontsLoadedNonceContext } from "../FontsLoadedNonceContext";
+import { TEXT_SLOT_PART_KIND } from "../registry/ObjectPartKindRegistry";
+import { useObjectPartKindRegistry } from "../registry/ObjectPartKindRegistryContext";
 import { useObjectShapeStyleDefaultsRegistry } from "../registry/ObjectShapeStyleDefaultsRegistryContext";
-import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
-import { calcTextRegion } from "../utils/calcTextRegion";
+import { calcTextRegion, calcTextSlotRegions } from "../utils/calcTextRegion";
 import { createSvgTransform } from "../utils/createSvgTransform";
 import { getStrokeDasharray } from "../utils/getStrokeDasharray";
 import { resolveAutoColor } from "../utils/resolveAutoColor";
@@ -56,7 +57,7 @@ type FrameRenderState = ObjectState &
 
 /**
  * The placed, style-resolved text box handed to a custom overlay renderer:
- * the region from ObjectTextRegionRegistry, the shape's transform, and the
+ * the region the type's `"textSlot"` part kind places it in, the shape's transform, and the
  * typography the slot is drawn with — the slot's own fields over the shape
  * type's defaults (ObjectTextStyleDefaultsRegistry), so a renderer never sees an
  * unset field the type had an answer for. Most renderers pass these straight
@@ -124,8 +125,10 @@ export type FrameTextOverlayRenderer = (
  *
  * Text follows `features.text`: a root-form type ("body" / "source") draws its
  * single body slot, a "slots" type draws one overlay per key of `state.text` (the
- * authority on which slots the shape has). Each overlay is placed by the type's calculator in
- * ObjectTextRegionRegistry via `calcTextRegion` (unregistered = full bbox).
+ * authority on which slots the shape has). Each overlay is placed by the type's
+ * registered `"textSlot"` part kind (unregistered = full bbox): the body via
+ * `calcTextRegion`, the slots via `calcTextSlotRegions` once per render, so a
+ * kind declaring `regions` lays its slots out once rather than once per slot.
  * Editing blanks only the slot the editor is over (`editingTextSlotId`), so a
  * multi-slot shape keeps showing the rest.
  *
@@ -150,15 +153,15 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		state: TState;
 		textSlotId: string;
 		textSlot: TextSlot;
+		/** The slot's region in local coordinates, already placed by FrameObject (calcTextRegion / calcTextSlotRegions). */
+		textRegion: Rect;
 		/** The shape's SVG transform matrix, already built by FrameObject. */
 		transform: string;
 		/** True while the in-place editor is open on this very slot. */
 		isEditing: boolean;
-	}> = ({ state, textSlotId, textSlot, transform, isEditing }) => {
-		const textRegionCalculator = useObjectTextRegionRegistry().get(state.type);
+	}> = ({ state, textSlotId, textSlot, textRegion, transform, isEditing }) => {
 		const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 
-		const textRegion = calcTextRegion(state, textSlotId, textRegionCalculator);
 		// The type's own defaults for this slot stand in for whatever the slot
 		// leaves unset, the same resolution the editing surface and text
 		// measurement make.
@@ -235,16 +238,28 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			},
 		);
 
-		// Subscribed to, never read: `draw` and TextSlotOverlay measure text while they
-		// render, and a context change is what gets past this component's memo when
-		// a face lands after the first paint.
-		useFontsLoadedNonceContext();
+		// Read only as a memo key below: `draw` and the slot regions measure text,
+		// and a context change is what gets past this component's memo when a face
+		// lands after the first paint.
+		const fontsLoadedNonce = useFontsLoadedNonceContext();
+		const textSlotKind = useObjectPartKindRegistry().get(
+			props.type,
+			TEXT_SLOT_PART_KIND,
+		);
 
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 		// The features.text gate matches the one used by the text-edit gesture and
 		// property-update side: unset draws no overlay, a root form draws its one
 		// named slot, "slots" enumerates state.text.
 		const textType = props.features?.text;
+		const textSlotRegions = useMemo(
+			() =>
+				textType === "slots"
+					? calcTextSlotRegions(props, textSlotKind)
+					: undefined,
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+			[props, textSlotKind, textType, fontsLoadedNonce],
+		);
 
 		const shape: FrameShapeProps = {
 			"data-kind": "object",
@@ -280,17 +295,19 @@ export const createFrameObject = <TState extends FrameRenderState>(
 						state={props}
 						textSlotId={BODY_TEXT_SLOT_ID}
 						textSlot={bodySlot}
+						textRegion={calcTextRegion(props, BODY_TEXT_SLOT_ID, textSlotKind)}
 						transform={transformAttr}
 						isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
 					/>
 				)}
-				{textType === "slots" &&
+				{textSlotRegions !== undefined &&
 					Object.entries(text ?? {}).map(([slotId, slot]) => (
 						<TextSlotOverlay
 							key={slotId}
 							state={props}
 							textSlotId={slotId}
 							textSlot={slot}
+							textRegion={textSlotRegions[slotId]}
 							transform={transformAttr}
 							isEditing={isEditingSlot(slotId)}
 						/>
