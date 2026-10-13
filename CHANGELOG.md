@@ -471,6 +471,14 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **An AI reaching for a table's text is told where it lives.** A type
+  declaring keyed text slots but keeping its text in properties of its own
+  answered a text write, read or inline style with `has no text slot` — close to
+  untrue for a table full of cells, and no hint of what to do instead. It now
+  says the type keeps its text in properties of its own, that the type's
+  description names them, and that they are read and written as the type's own
+  properties. The table, whose text is its `cells`, is the type this reaches
+  today.
 - **Tab no longer moves an open text edit to the next cell.** Pressing Tab
   while editing a table cell (or any slot of a multi-slot shape) took the focus
   off the editor and, on the next Tab, walked the selection on to the next
