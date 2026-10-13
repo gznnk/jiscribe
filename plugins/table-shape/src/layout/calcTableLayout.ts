@@ -48,7 +48,7 @@ export type TableLayoutSource = {
  * go through), the outer size the content resizer stores (calcTableFrameSize) and
  * connector attachment all read it, so a rule, a hit region and the text drawn in
  * it cannot drift apart. Read-only throughout: one layout object is shared by
- * every reader of the same state (readCachedTableLayout), so a write would reach
+ * every reader of the same grid (readCachedTableLayout), so a write would reach
  * them all.
  */
 export type TableLayout = {

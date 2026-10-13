@@ -47,7 +47,7 @@ const makeTable = (): Dimensions & TableLayoutSource => {
 };
 
 describe("readCachedTableLayout", () => {
-	it("computes once per state object and hands the same layout back", () => {
+	it("computes once per grid and hands the same layout back", () => {
 		const table = makeTable();
 		measurerCount = 0;
 
@@ -58,18 +58,55 @@ describe("readCachedTableLayout", () => {
 		expect(measurerCount).toBe(12);
 	});
 
-	it("computes anew for another object, even one holding the same grid", () => {
+	it("hands the same layout to another object holding the same grid, as a moved table is", () => {
 		const table = makeTable();
-		readCachedTableLayout(table);
+		const held = readCachedTableLayout(table);
 		measurerCount = 0;
 
-		const moved = readCachedTableLayout({ ...table });
+		const moved = { ...table, cx: 500, cy: 300, rotation: 45 };
 
-		expect(measurerCount).toBe(12);
-		expect(moved).toEqual(readCachedTableLayout(table));
+		expect(readCachedTableLayout(moved)).toBe(held);
+		expect(measurerCount).toBe(0);
 	});
 
-	it("keeps one entry per object, so reading another table evicts nothing", () => {
+	it.each([
+		[
+			"text",
+			(table: ReturnType<typeof makeTable>) => ({
+				...table,
+				text: { ...table.text },
+			}),
+		],
+		[
+			"rows",
+			(table: ReturnType<typeof makeTable>) => ({
+				...table,
+				rows: [...(table.rows ?? [])],
+			}),
+		],
+		[
+			"strokeWidth",
+			(table: ReturnType<typeof makeTable>) => ({ ...table, strokeWidth: 2 }),
+		],
+		[
+			"columns",
+			(table: ReturnType<typeof makeTable>) => ({
+				...table,
+				columns: [...(table.columns ?? [])],
+			}),
+		],
+	])("computes anew once the %s are replaced", (_, replace) => {
+		const table = makeTable();
+		const held = readCachedTableLayout(table);
+		measurerCount = 0;
+
+		const replaced = readCachedTableLayout(replace(table));
+
+		expect(replaced).not.toBe(held);
+		expect(measurerCount).toBe(12);
+	});
+
+	it("keeps one entry per grid, so reading another table evicts nothing", () => {
 		const table = makeTable();
 		const other = makeTable();
 		const held = readCachedTableLayout(table);
@@ -104,7 +141,7 @@ describe("readCachedTableLayout", () => {
 });
 
 describe("writeTableLayoutCache", () => {
-	it("replaces what the same object hands back", () => {
+	it("replaces what the same object hands back, as a font finishing to load needs", () => {
 		const table = makeTable();
 		const stale = readCachedTableLayout(table);
 		const fresh = calcTableLayout(table);
