@@ -8,6 +8,10 @@ import { selectors } from "../../support/selectors";
  * - "move" hides both the transform frame and the connection anchors
  * - "transform" hides the anchors only — the handle being dragged has to stay
  *
+ * A type's own selection controls hide on both kinds too; this harness registers
+ * no type that has any, so the table plugin's suite pins that
+ * (table-controls-hidden-while-dragging).
+ *
  * The ObjectMenu was already hidden for every drag; it is asserted here because
  * its gate moved from the drag's start snapshot onto the same field.
  */

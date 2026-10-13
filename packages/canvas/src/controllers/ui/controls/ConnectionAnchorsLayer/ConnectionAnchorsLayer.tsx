@@ -22,6 +22,7 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import type { ConnectorDraft, DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { isConnectableObject } from "../../../utils/isConnectableObject";
+import { isObjectBeingMovedOrTransformed } from "../../utils/isObjectBeingMovedOrTransformed";
 import { ConnectionAnchors } from "../ConnectionAnchors";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
 
@@ -177,10 +178,8 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	// Hidden while the selection is moved or transformed: the dots would just ride along
 	// the geometry being changed. A connection drag ("other") keeps them, since the anchor
 	// being dragged from is one of them.
-	const isShapeBeingMovedOrTransformed =
-		activeDragKind === "move" || activeDragKind === "transform";
 	const showSourceAnchors =
-		!isShapeBeingMovedOrTransformed &&
+		!isObjectBeingMovedOrTransformed(activeDragKind) &&
 		selectedObject != null &&
 		isConnectableObject(selectedObject, registries.objectMapper) &&
 		isTransformedFrame(selectedObject);

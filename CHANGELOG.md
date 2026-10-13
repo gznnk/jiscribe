@@ -226,6 +226,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **A shape's own selection controls are hidden while it is moved or resized**,
+  as the connection anchors already were: a table's row and column headings and
+  its `+` badges, or a container's header handle, no longer trail the shape
+  through a drag. A drag of one of the controls themselves keeps them drawn.
 - **Editing the text of a one-body shape looks and steps out like editing a
   compartment.** While a rectangle's, a sticky note's or any other single-text
   shape's text is edited, its text area is outlined and the shape's own outline

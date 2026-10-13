@@ -845,6 +845,7 @@ const CanvasComponent = ({
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
+									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
 								<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
