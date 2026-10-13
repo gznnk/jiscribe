@@ -22,10 +22,10 @@ type TableInsertBadgesProps = {
 };
 
 /**
- * One `+` per boundary of one axis, laid just outside the table's leading edge on
- * the grips' centre line, in the gaps the grips leave at their ends: rows down the
- * left, columns across the top. Shared by both axes because the two differ only
- * in which layout edges the badges run along and which coordinate stays fixed.
+ * One `+` per boundary of one axis, laid just outside the table's trailing edge,
+ * opposite the grips (TableTrackGrips): rows down the right, columns along the
+ * bottom. Shared by both axes because the two differ only in which layout edges
+ * the badges run along and which coordinate stays fixed.
  *
  * Every edge of the layout gets one, the outer two included — `columnEdgeXs` and
  * `rowEdgeYs` hold one more value than there are tracks, and those are exactly the
@@ -51,16 +51,23 @@ const TableInsertBadgesComponent: React.FC<TableInsertBadgesProps> = ({
 
 	const edges = axis === "row" ? rowEdgeYs : columnEdgeXs;
 	// The coordinate the whole row of badges sits at: clear of the edge the tracks
-	// start from, on the outside.
-	const lead =
-		(axis === "row" ? columnEdgeXs[0] : rowEdgeYs[0]) -
-		INSERT_BADGE_OFFSET / zoom;
+	// end at, on the outside.
+	const trailEdges = axis === "row" ? columnEdgeXs : rowEdgeYs;
+	const trail = trailEdges[trailEdges.length - 1] + INSERT_BADGE_OFFSET / zoom;
 	const toWorld = (along: number): Point =>
 		axis === "row"
-			? calcAffineTransformedPoint(lead, along, scaleX, scaleY, radians, cx, cy)
+			? calcAffineTransformedPoint(
+					trail,
+					along,
+					scaleX,
+					scaleY,
+					radians,
+					cx,
+					cy,
+				)
 			: calcAffineTransformedPoint(
 					along,
-					lead,
+					trail,
 					scaleX,
 					scaleY,
 					radians,

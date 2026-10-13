@@ -26,6 +26,7 @@ const baseState = (
 		},
 		selection: selectionOf(["rec-1"]),
 		activeDrag: null,
+		textEditState: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -63,6 +64,21 @@ describe("SelectPreviousTextSlotCommand", () => {
 		expect(
 			SelectPreviousTextSlotCommand.canExecute(
 				baseState({ selection: selectionOf(["rec-1", "rec-2"]) }),
+				registries,
+			),
+		).toBe(false);
+	});
+
+	it("is not executable while a text edit is open, so the draft stays on the slot being edited", () => {
+		expect(
+			SelectPreviousTextSlotCommand.canExecute(
+				baseState({
+					selection: selectionOf(["rec-1"], {
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "name", focusId: "name" }],
+					}),
+					textEditState: { kind: "shape", text: { text: "User" } } as never,
+				}),
 				registries,
 			),
 		).toBe(false);

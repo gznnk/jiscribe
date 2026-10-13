@@ -540,6 +540,15 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			onEscape();
 			return;
 		}
+		// Tab stays in the editor. The browser's default would move the focus to
+		// the next control while the session stays open, and from there the next
+		// Tab reaches the canvas shortcuts, which walk the selection to the next
+		// slot of a multi-slot shape (a table cell) and drag the open draft along.
+		if (e.key === "Tab") {
+			e.preventDefault();
+			e.stopPropagation();
+			return;
+		}
 		// The surface has the focus, so these never reach the canvas-wide keyboard
 		// handling; they are also the browser's own defaults on an editable element,
 		// which writes markup of its own and has to be prevented. The selection is

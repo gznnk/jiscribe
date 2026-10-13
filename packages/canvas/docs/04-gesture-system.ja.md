@@ -99,7 +99,9 @@ COW ビューは履歴と永続化に届く前に平坦化される。
 `activeDrag.kind`（`DragKind`）はそのドラッグが何をしているかを表す。`handleGesture` が全ドラッグを
 `"other"` で開くので、`activeDrag !== null` は常に「ドラッグ中」を意味する。区別が必要なハンドラは
 自分の `dragStart` で kind を上書きする（例: `ObjectEventHandler` が `"move"`、`TransformControlHandler` が
-`"transform"`）。UI はこれを見て、移動中は変形フレームと接続アンカーを、変形中は接続アンカーを隠す。
+`"transform"`）。UI はこれを見て、移動中は変形フレームを、移動中と変形中は接続アンカー・頂点ハンドル・
+型固有のセレクションコントロールを隠す（`controllers/ui/utils/isObjectBeingMovedOrTransformed.ts`）。
+それらのコントロール自身のドラッグは `"other"` のままなので隠れない。
 ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のドロップダウンが開いている間
 （`objectMenuOpenId !== null`）はスライダーを使えるようにドラッグ中でも隠さない
 （`controllers/ui/menu/ObjectMenu/hooks/useObjectMenuPosition.ts`）。

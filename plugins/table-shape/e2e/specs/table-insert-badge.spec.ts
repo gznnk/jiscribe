@@ -8,8 +8,14 @@ import {
 	drawnTextCenter,
 	insertBadge,
 	tableOutlineRect,
-	trackGrip,
 } from "../support/tableDom";
+
+/**
+ * How far a transform handle reaches outside the edge it sits on, in client px
+ * (the theme's `anchorRadius`). The row badges line the right edge, where the
+ * width handle sits, and have to start beyond it.
+ */
+const HANDLE_REACH = 4;
 
 /**
  * The `+` offered at every boundary, in a real browser. Two things only a browser
@@ -41,7 +47,7 @@ test.describe("table insert badges", () => {
 		await expect(insertBadge(canvas, "rowInsert", 3)).toHaveCount(0);
 	});
 
-	test("stands on the grips' centre line, in the gap between two grips", async ({
+	test("stands outside the edge opposite the grips, on the boundary", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
@@ -51,33 +57,16 @@ test.describe("table insert badges", () => {
 			"columnInsert",
 			1,
 		).boundingBox();
-		const leftGrip = await trackGrip(canvas, "columnGrip", 0).boundingBox();
-		const rightGrip = await trackGrip(canvas, "columnGrip", 1).boundingBox();
 		const rowBadge = await insertBadge(canvas, "rowInsert", 1).boundingBox();
-		const upperGrip = await trackGrip(canvas, "rowGrip", 0).boundingBox();
-		if (
-			columnBadge === null ||
-			leftGrip === null ||
-			rightGrip === null ||
-			rowBadge === null ||
-			upperGrip === null
-		) {
-			throw new Error("no badge or grip");
+		if (columnBadge === null || rowBadge === null) {
+			throw new Error("no badge");
 		}
 
-		// One strip per edge: the badge shares the grips' centre line.
-		expect(
-			Math.abs(
-				columnBadge.y +
-					columnBadge.height / 2 -
-					(leftGrip.y + leftGrip.height / 2),
-			),
-		).toBeLessThanOrEqual(1);
-		expect(
-			Math.abs(
-				rowBadge.x + rowBadge.width / 2 - (upperGrip.x + upperGrip.width / 2),
-			),
-		).toBeLessThanOrEqual(1);
+		// Columns' badges below the table, rows' to its right: wholly outside the
+		// edge, and past the width handle's reach on the right, so a press on one
+		// never lands on the handle.
+		expect(columnBadge.y).toBeGreaterThan(box.y + box.height);
+		expect(rowBadge.x).toBeGreaterThan(box.x + box.width + HANDLE_REACH);
 		// On the inner rule, which a 2x2 table draws down its middle and across it.
 		expect(
 			Math.abs(columnBadge.x + columnBadge.width / 2 - (box.x + box.width / 2)),
@@ -85,16 +74,6 @@ test.describe("table insert badges", () => {
 		expect(
 			Math.abs(rowBadge.y + rowBadge.height / 2 - (box.y + box.height / 2)),
 		).toBeLessThanOrEqual(1);
-		// Clear of the grips either side rather than over them: the selection
-		// controls are drawn in registration order, so an overlap would give the
-		// press to whichever came last. Asserted on the columns, a fresh table's
-		// rows being short enough that their grips' inset is capped.
-		expect(
-			columnBadge.x - (leftGrip.x + leftGrip.width),
-		).toBeGreaterThanOrEqual(2);
-		expect(
-			rightGrip.x - (columnBadge.x + columnBadge.width),
-		).toBeGreaterThanOrEqual(2);
 	});
 
 	test("inserts a column at the boundary the badge stands on", async ({
@@ -114,6 +93,25 @@ test.describe("table insert badges", () => {
 		const after = await tableOutlineRect(canvas, id);
 		expect(after.width).toBeCloseTo(before.box.width + before.cell.width, 0);
 		expect(after.x).toBeCloseTo(before.box.x, 0);
+	});
+
+	test("inserts once per press of a rapid run, the second press arriving as a double click", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const badge = await insertBadge(canvas, "columnInsert", 1).boundingBox();
+		if (badge === null) {
+			throw new Error("no badge");
+		}
+
+		// The badge stays put across the insertion (the new column goes to its
+		// right), so both presses of the pair land on it.
+		await canvas.page.mouse.dblclick(
+			badge.x + badge.width / 2,
+			badge.y + badge.height / 2,
+		);
+
+		await expect.poll(async () => cellCount(canvas, id)).toBe(8);
 	});
 
 	test("adds a first row from the badge on the outer edge", async ({

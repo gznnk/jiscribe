@@ -6,6 +6,8 @@ import type { ObjectAnchorRegionRegistry } from "./ObjectAnchorRegionRegistry";
 import { ObjectAnchorRegionRegistryContext } from "./ObjectAnchorRegionRegistryContext";
 import type { ObjectComponentRegistry } from "./ObjectComponentRegistry";
 import { ObjectComponentRegistryContext } from "./ObjectComponentRegistryContext";
+import type { ObjectConnectionAnchorOffsetsRegistry } from "./ObjectConnectionAnchorOffsetsRegistry";
+import { ObjectConnectionAnchorOffsetsRegistryContext } from "./ObjectConnectionAnchorOffsetsRegistryContext";
 import type { ObjectExtraConnectPointsRegistry } from "./ObjectExtraConnectPointsRegistry";
 import { ObjectExtraConnectPointsRegistryContext } from "./ObjectExtraConnectPointsRegistryContext";
 import type { ObjectGeometryKeyRegistry } from "./ObjectGeometryKeyRegistry";
@@ -27,6 +29,7 @@ type RenderingRegistriesProviderProps = {
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	objectConnectionAnchorOffsets: ObjectConnectionAnchorOffsetsRegistry;
 	objectGeometryKey: ObjectGeometryKeyRegistry;
 	objectSvgDefs: ObjectSvgDefsRegistry;
 	children: ReactNode;
@@ -46,6 +49,7 @@ export function RenderingRegistriesProvider({
 	objectOutline,
 	objectAnchorRegion,
 	objectExtraConnectPoints,
+	objectConnectionAnchorOffsets,
 	objectGeometryKey,
 	objectSvgDefs,
 	children,
@@ -62,11 +66,15 @@ export function RenderingRegistriesProvider({
 								<ObjectExtraConnectPointsRegistryContext
 									value={objectExtraConnectPoints}
 								>
-									<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
-										<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
-											{children}
-										</ObjectSvgDefsRegistryContext>
-									</ObjectGeometryKeyRegistryContext>
+									<ObjectConnectionAnchorOffsetsRegistryContext
+										value={objectConnectionAnchorOffsets}
+									>
+										<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
+											<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
+												{children}
+											</ObjectSvgDefsRegistryContext>
+										</ObjectGeometryKeyRegistryContext>
+									</ObjectConnectionAnchorOffsetsRegistryContext>
 								</ObjectExtraConnectPointsRegistryContext>
 							</ObjectAnchorRegionRegistryContext>
 						</ObjectOutlineRegistryContext>

@@ -55,14 +55,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   There are no handles on the height: a row's stored height is a lower bound its
   text raises, so the height follows the cells and a row is given one by dragging
   its boundary.
-- **A table's rows and columns can be selected, added and removed.** A grip
-  outside the top and left edges picks a whole column or row; clicking a cell
+- **A table's rows and columns can be selected, added and removed.** Headings
+  along the top and left edges, lettered and numbered as a spreadsheet's are,
+  pick a whole column or row; clicking a cell
   picks it, and Shift widens the pick to the block of cells between the two —
   the rectangle they stand at opposite corners of, as a spreadsheet does it, not
   the run of the cell order between them. Delete clears the picked cells' text,
   or removes the picked row or column — never the last one left. A round `+`
-  stands at every boundary a track can go at, both outer edges included, and
-  clicking one inserts an empty track there and leaves it selected; Alt+Shift+arrow
+  outside the right and bottom edges stands at every boundary a track can go
+  at, both outer edges included, and clicking one inserts an empty track there
+  and leaves it selected, once per press however fast they come; Alt+Shift+arrow
   inserts one beside the picked cell or track. The cells keep their contents as
   the grid renumbers around an insertion, and one undo takes it back.
 - For plugin authors: `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`)
@@ -237,9 +239,25 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `calcTextSlotRegions` on `@jiscribe/canvas/unstable` take the registered
   `"textSlot"` part kind instead of the calculators. `@jiscribe/plugin-uml-shapes`
   no longer exports `calcRecordTextRegion`.
+- **For plugin authors: a type says how far its connection-anchor dots sit off
+  its edges.** `connectionAnchorOffsets` answers per anchor id — the four edge
+  ids and any `extraConnectPoints` id — in screen px, for a type whose own
+  controls occupy the band the dots would otherwise land in (the table's grips
+  and `+` badges, whose top and left dots now stand past them). Every anchor it
+  leaves out keeps the theme's `connectionAnchorOffset`, and only the dots move:
+  where a connector attaches is unchanged. It is one object for the type or a
+  function asked per object, like `transformHandles`; `ConnectionAnchorOffsets`,
+  `ObjectConnectionAnchorOffsetsDeclaration` and
+  `ObjectConnectionAnchorOffsetsCalculator` are exported from `@jiscribe/canvas`.
 
 ### Changed
 
+- **A shape's own selection controls are hidden while it is moved or resized**,
+  as the connection anchors already were: a table's row and column headings and
+  its `+` badges, a container's header handle, and a polyline's or polygon's
+  vertex and midpoint handles no longer trail the shape through a drag. A drag of
+  one of the controls themselves, such as moving or adding a vertex, keeps them
+  drawn.
 - **Editing the text of a one-body shape looks and steps out like editing a
   compartment.** While a rectangle's, a sticky note's or any other single-text
   shape's text is edited, its text area is outlined and the shape's own outline
@@ -453,6 +471,12 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **Tab no longer moves an open text edit to the next cell.** Pressing Tab
+  while editing a table cell (or any slot of a multi-slot shape) took the focus
+  off the editor and, on the next Tab, walked the selection on to the next
+  slot with the draft still attached, so the editor showed up over another cell
+  holding the first cell's text. The editor now keeps Tab and Shift+Tab to
+  itself, and the slot walk refuses to move while an edit is open.
 - **A shape whose renderer throws no longer takes the canvas down.** Each
   object is drawn inside a boundary of its own: the one that threw is drawn as
   nothing and named in a console warning with its type and id, while every other

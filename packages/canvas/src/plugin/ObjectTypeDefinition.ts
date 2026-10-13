@@ -11,6 +11,7 @@ import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/Object
 import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectConnectionAnchorOffsetsDeclaration } from "../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
 import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
@@ -103,6 +104,21 @@ export type ObjectTypeDefinition<
 	 * midpoints only (see ObjectExtraConnectPointsRegistry).
 	 */
 	extraConnectPoints?: ObjectExtraConnectPointsCalculator;
+
+	/**
+	 * How far each connection-anchor dot shown on the selected shape sits off
+	 * its edge (or off an extra point's declared position), for a type whose own
+	 * controls occupy the band the dots would land in. Values are screen px,
+	 * divided by zoom like the theme's `handleDimensions.connectionAnchorOffset`,
+	 * which every anchor left out keeps. Keys are the edge anchor ids
+	 * (`topCenter` / `rightCenter` / `bottomCenter` / `leftCenter`) and the ids
+	 * `extraConnectPoints` declares — local-space ids, so an entry stays on its
+	 * edge through rotation and flips. Moves only the dots: where a connector
+	 * attaches is unchanged. One object for the whole type, or a function asked
+	 * per object. Omitted = the theme's distance everywhere (see
+	 * ObjectConnectionAnchorOffsetsRegistry).
+	 */
+	connectionAnchorOffsets?: ObjectConnectionAnchorOffsetsDeclaration<TState>;
 
 	/**
 	 * Key over whatever `outline` / `anchorRegion` / `extraConnectPoints` read beyond the frame fields

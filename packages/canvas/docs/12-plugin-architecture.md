@@ -371,7 +371,9 @@ control's own object (committed at dragEnd for a drag, at once for a click), and
 leaves it). A `selection` whose `kind` the type does not declare in `partKinds`
 is dropped, and a click that returns only a selection is not an edit. The part
 selection standing on the object reaches the `Component` as `selectedPart`, so a
-handle can draw itself selected.
+handle can draw itself selected. The `Component` is not rendered while the
+object is being moved or resized through a transform handle (as the connection
+anchors are not); a control's own drag keeps it drawn.
 
 **`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
 divides its objects into, stating `has` — whether an id still names a part of

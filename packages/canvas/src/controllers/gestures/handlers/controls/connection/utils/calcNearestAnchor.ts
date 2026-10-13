@@ -31,8 +31,9 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
  * px. Comfortably wider than the dots drawn for them
  * (`handleDimensions.anchorRadius` = 4) so the whole dot is grabbable, and well
  * inside the distance the source handles sit off the shape
- * (`connectionAnchorOffset` = 20) so the named anchors do not swallow the free
- * positions next to them.
+ * (`connectionAnchorOffset` = 20; a type may declare a larger distance but
+ * never a smaller one, see ObjectConnectionAnchorOffsetsRegistry) so the named
+ * anchors do not swallow the free positions next to them.
  */
 export const NAMED_ANCHOR_SNAP_PX = 12;
 

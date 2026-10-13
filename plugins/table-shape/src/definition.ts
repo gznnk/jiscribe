@@ -1,4 +1,5 @@
 import type {
+	ConnectionAnchorOffsets,
 	ObjectPartKindDefinition,
 	ObjectTypeDefinition,
 	ObjectTransformHandles,
@@ -20,6 +21,7 @@ import { TableColumnInsertControl } from "./controls/TableColumnInsertControl";
 import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
 import { TableRowGripControl } from "./controls/TableRowGripControl";
 import { TableRowInsertControl } from "./controls/TableRowInsertControl";
+import { CONNECTION_ANCHOR_OFFSET_PAST_CONTROLS } from "./controls/TableTrackGrip";
 import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
@@ -54,6 +56,17 @@ import { tableFillEntry } from "./style/tableFillEntries";
 const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
 
 /**
+ * Every connection-anchor dot pushed out past the control lining its edge: the
+ * grips on the top and left, the insert badges on the bottom and right.
+ */
+const TABLE_CONNECTION_ANCHOR_OFFSETS: ConnectionAnchorOffsets = {
+	topCenter: CONNECTION_ANCHOR_OFFSET_PAST_CONTROLS,
+	leftCenter: CONNECTION_ANCHOR_OFFSET_PAST_CONTROLS,
+	bottomCenter: CONNECTION_ANCHOR_OFFSET_PAST_CONTROLS,
+	rightCenter: CONNECTION_ANCHOR_OFFSET_PAST_CONTROLS,
+};
+
+/**
  * Six controls: a boundary, a grip and an insert badge per axis. One registration
  * covers every boundary or track of its axis — each handle appends its own index
  * to the control's `data-action`, and the handler reads it back off the event's
@@ -74,7 +87,11 @@ const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
  *
  * The grips write no object at all, only the part selection, so a click on one is
  * never a document change. A `+` badge is the one control here that changes the
- * document on a click, which the adapter commits on the spot.
+ * document on a click, which the adapter commits on the spot. It takes a
+ * doubleClick as well, each press being one insertion: the recognizer reports a
+ * second press within the double-click window as a doubleClick instead of a
+ * click, so a badge taking clicks alone would drop every other press of a
+ * rapid run.
  */
 const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	{
@@ -101,13 +118,13 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	},
 	{
 		name: "rowInsert",
-		events: ["click"],
+		events: ["click", "doubleClick"],
 		Component: TableRowInsertControl,
 		handle: createTableInsertHandler(TABLE_ROW_PART_KIND),
 	},
 	{
 		name: "columnInsert",
-		events: ["click"],
+		events: ["click", "doubleClick"],
 		Component: TableColumnInsertControl,
 		handle: createTableInsertHandler(TABLE_COLUMN_PART_KIND),
 	},
@@ -180,6 +197,7 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	selectionControls: TABLE_SELECTION_CONTROLS,
 	partKinds: TABLE_PARTS,
 	transformHandles: TABLE_TRANSFORM_HANDLES,
+	connectionAnchorOffsets: TABLE_CONNECTION_ANCHOR_OFFSETS,
 	stencils: TableStencils,
 	styleEntries: TABLE_STYLE_ENTRIES,
 	menu: [

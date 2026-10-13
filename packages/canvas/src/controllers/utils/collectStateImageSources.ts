@@ -1,3 +1,4 @@
+import { collectCowChangedKeys } from "./cowObjects";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isImageState } from "../../states/objects/primitives/image/ImageState";
 
@@ -24,4 +25,32 @@ export const collectStateImageSources = (
 		}
 	}
 	return [...sources];
+};
+
+const imageSourceOf = (object: ObjectState | undefined): string | undefined =>
+	object !== undefined && isImageState(object) ? object.src : undefined;
+
+/**
+ * Whether two object maps are known to name the same image files, decided from
+ * the IDs a copy-on-write view wrote alone — what lets a drag frame skip
+ * {@link collectStateImageSources}' full scan.
+ *
+ * @param objects - The newer map
+ * @param previousObjects - The map last scanned
+ * @returns true only when every written ID keeps its `src` (or stays a non-image); false when an image src changed, appeared or disappeared, and also when the maps share no backing Record and only a full scan could tell
+ */
+export const holdsSameImageSources = (
+	objects: Record<string, ObjectState>,
+	previousObjects: Record<string, ObjectState>,
+): boolean => {
+	const changedIds = collectCowChangedKeys(objects, previousObjects);
+	if (changedIds === null) {
+		return false;
+	}
+	for (const id of changedIds) {
+		if (imageSourceOf(objects[id]) !== imageSourceOf(previousObjects[id])) {
+			return false;
+		}
+	}
+	return true;
 };

@@ -106,8 +106,10 @@ before history and persistence see it.
 `activeDrag.kind` (`DragKind`) says what the drag is doing. `handleGesture` opens every drag as
 `"other"`, so `activeDrag !== null` always means "a drag is under way". A handler whose drag needs to be
 told apart overwrites the kind in its own `dragStart` — e.g. `ObjectEventHandler` sets `"move"` and
-`TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame and the
-connection anchors while a selection is moved, and the anchors while it is transformed. The ObjectMenu
+`TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame while a
+selection is moved, and the connection anchors, the vertex handles and a type's own selection controls
+while it is moved or transformed (`controllers/ui/utils/isObjectBeingMovedOrTransformed.ts`); a drag of
+one of those controls stays `"other"` and keeps them. The ObjectMenu
 hides for any kind of drag, except while one of its dropdowns is open (`objectMenuOpenId !== null`), so
 its sliders stay usable mid-drag (`controllers/ui/menu/ObjectMenu/hooks/useObjectMenuPosition.ts`).
 

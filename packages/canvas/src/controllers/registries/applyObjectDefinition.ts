@@ -582,6 +582,12 @@ export const applyObjectDefinition = (
 			definition.extraConnectPoints,
 		);
 	}
+	if (definition.connectionAnchorOffsets) {
+		registries.objectConnectionAnchorOffsets.register(
+			type,
+			definition.connectionAnchorOffsets,
+		);
+	}
 	if (definition.geometryKey) {
 		registries.objectGeometryKey.register(type, definition.geometryKey);
 	}

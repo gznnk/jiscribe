@@ -13,7 +13,7 @@ export const ZoomToFitCommand: ExecutableCommand = {
 		default: [{ code: "Digit0", ctrl: true }],
 	},
 
-	canExecute: (state) => Object.keys(state.objects).length > 0,
+	canExecute: (state) => state.rootIds.length > 0,
 
 	execute: (state, registries) => {
 		const fitted = calcFitViewport(

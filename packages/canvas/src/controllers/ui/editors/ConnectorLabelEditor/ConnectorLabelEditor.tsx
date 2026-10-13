@@ -127,6 +127,13 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 			e.preventDefault();
 			e.stopPropagation();
 			onEscape();
+			return;
+		}
+		// Tab stays in the editor rather than moving the focus off an open session
+		// (as in TextEditor).
+		if (e.key === "Tab") {
+			e.preventDefault();
+			e.stopPropagation();
 		}
 	};
 

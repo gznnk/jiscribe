@@ -38,6 +38,9 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		objects,
+		rootIds: Object.values(objects)
+			.filter((object) => object.parentId === undefined)
+			.map((object) => object.id),
 		viewport: {
 			minX: 0,
 			minY: 0,

@@ -1,5 +1,6 @@
 export { calcTableLocalDragDelta } from "./calcTableLocalDragDelta";
 export { calcSegmentPlacement } from "./calcSegmentPlacement";
+export { formatTableTrackLabel } from "./formatTableTrackLabel";
 export type { SegmentPlacement } from "./calcSegmentPlacement";
 export { handleTableColumnBoundary } from "./handleTableColumnBoundary";
 export { createTableInsertHandler } from "./createTableInsertHandler";

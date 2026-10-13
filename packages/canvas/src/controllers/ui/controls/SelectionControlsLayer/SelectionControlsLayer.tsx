@@ -1,8 +1,10 @@
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { isObjectBeingMovedOrTransformed } from "../../utils/isObjectBeingMovedOrTransformed";
 
 type SelectionControlsLayerProps = {
 	/**
@@ -14,6 +16,8 @@ type SelectionControlsLayerProps = {
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	isTextEditing: boolean;
+	/** Kind of the drag in progress; null when none is */
+	activeDragKind: DragKind | null;
 };
 
 /**
@@ -22,15 +26,24 @@ type SelectionControlsLayerProps = {
  * handle). Single selection only; the built-in transform/vertex/connector
  * layers stay separate because they key on capabilities or controller state
  * rather than the object type.
+ *
+ * Hidden while the object is moved or resized through a transform handle, as
+ * the connection anchors are: the controls would only trail the shape, and none
+ * of them is what is being dragged. A control's own drag opens as `"other"`
+ * (the adapter sets no kind), so it keeps its handles through it.
  */
 const SelectionControlsLayerComponent: React.FC<
 	SelectionControlsLayerProps
-> = ({ selection, objects, zoom = 1, isTextEditing }) => {
+> = ({ selection, objects, zoom = 1, isTextEditing, activeDragKind }) => {
 	const registries = useCanvasRegistries();
 	const { objectIds: selectedIds } = selection;
 
 	// Do not render controls while text editing
 	if (isTextEditing || selectedIds.length !== 1) {
+		return null;
+	}
+
+	if (isObjectBeingMovedOrTransformed(activeDragKind)) {
 		return null;
 	}
 

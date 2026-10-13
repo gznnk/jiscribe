@@ -7,27 +7,13 @@ import {
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { INSERT_BADGE_RADIUS } from "./TableInsertBadge";
+import { formatTableTrackLabel } from "./formatTableTrackLabel";
 import { GRIP_OFFSET, TableTrackGrip } from "./TableTrackGrip";
 import { parseTableTrackPartId, tableTrackPartId } from "../grid/tableTrack";
 import type { TableAxis } from "../grid/tableTrack";
 import { readCachedTableLayout } from "../layout/readCachedTableLayout";
 import { TABLE_TRACK_PART_DEFINITIONS } from "../parts/tableTrackParts";
 import type { TableState } from "../state/TableState";
-
-/**
- * Clearance between a grip's end and the edge of the insert badge on the
- * boundary next to it, in screen px.
- */
-const GRIP_BADGE_CLEARANCE = 3;
-
-/**
- * How far each end of a grip stops short of its boundary, in screen px: room for
- * the badge standing on that boundary plus the clearance. Capped at a quarter of
- * the track on a track too short to spend it, where the grip then runs under the
- * badge's edge rather than vanishing.
- */
-const GRIP_END_INSET = INSERT_BADGE_RADIUS + GRIP_BADGE_CLEARANCE;
 
 type TableTrackGripsProps = {
 	/** The table the grips stand beside; its transform and layout are what they are placed from. */
@@ -43,10 +29,12 @@ type TableTrackGripsProps = {
 };
 
 /**
- * One grip per track, laid just outside the table's leading edge: rows down the
- * left, columns across the top. Each stops short of both its boundaries, leaving
- * the gaps the insert badges stand in on the same centre line (TableInsertBadges). Shared by both axes because the two differ only
- * in which layout edges run along the bar and which stay fixed.
+ * One grip per track, laid against the table's leading edge like a
+ * spreadsheet's headings: rows numbered down the left, columns lettered across
+ * the top. Each runs the full length of its track, so neighbours abut as the
+ * headings of a sheet do and only their borders part them; the insert badges
+ * stand on the opposite edge (TableInsertBadges). Shared by both axes because the two differ
+ * only in which layout edges run along the bar and which stay fixed.
  *
  * The grips are placed from the layout rather than from the state's box, so they
  * stand beside the drawn grid even on the render before the content resizer has
@@ -78,16 +66,24 @@ const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 	);
 
 	const edges = axis === "row" ? rowEdgeYs : columnEdgeXs;
-	// The coordinate the whole strip of grips sits at: clear of the edge the
-	// tracks start from, on the outside.
-	const lead =
-		(axis === "row" ? columnEdgeXs[0] : rowEdgeYs[0]) - GRIP_OFFSET / zoom;
-	const toWorld = (along: number): Point =>
+	// The edge the tracks start from, and the coordinate the whole strip of
+	// grips is centred on: just outside it.
+	const edge = axis === "row" ? columnEdgeXs[0] : rowEdgeYs[0];
+	const lead = edge - GRIP_OFFSET / zoom;
+	const toWorld = (across: number, along: number): Point =>
 		axis === "row"
-			? calcAffineTransformedPoint(lead, along, scaleX, scaleY, radians, cx, cy)
+			? calcAffineTransformedPoint(
+					across,
+					along,
+					scaleX,
+					scaleY,
+					radians,
+					cx,
+					cy,
+				)
 			: calcAffineTransformedPoint(
 					along,
-					lead,
+					across,
 					scaleX,
 					scaleY,
 					radians,
@@ -99,15 +95,19 @@ const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 		<>
 			{edges.slice(0, -1).map((start, index) => {
 				const end = edges[index + 1];
-				const inset = Math.min(GRIP_END_INSET / zoom, (end - start) / 4);
 				return (
 					<TableTrackGrip
 						key={`${axis}-${index}`}
-						from={toWorld(start + inset)}
-						to={toWorld(end - inset)}
+						from={toWorld(lead, start)}
+						to={toWorld(lead, end)}
+						edgeMid={toWorld(edge, (start + end) / 2)}
+						// The width handles sit on the left and right edges
+						// (TABLE_TRANSFORM_HANDLES), which only the rows' strip shares.
+						clearsEdgeHandle={axis === "row"}
 						zoom={zoom}
 						objectId={id}
 						action={`${action}:${tableTrackPartId(index)}`}
+						label={formatTableTrackLabel(axis, index)}
 						selected={selectedIndices.has(index)}
 					/>
 				);

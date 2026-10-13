@@ -5,7 +5,7 @@ import { TableInsertBadges } from "./TableInsertBadges";
 import type { TableState } from "../state/TableState";
 
 /**
- * The `+` buttons for columns: one above every vertical rule and one above each
+ * The `+` buttons for columns: one below every vertical rule and one below each
  * of the table's own left and right edges. Clicking one inserts a column there
  * (createTableInsertHandler).
  */

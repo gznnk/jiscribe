@@ -119,7 +119,7 @@ describe("createTableInsertHandler", () => {
 		expect(handleRowInsert(context, clickOn(undefined))).toBeNull();
 	});
 
-	it("answers nothing but a click", () => {
+	it("takes a doubleClick as one more press, the second of a rapid pair", () => {
 		expect(
 			handleRowInsert(context, {
 				type: "doubleClick",
@@ -127,7 +127,10 @@ describe("createTableInsertHandler", () => {
 				mods: MODS,
 				subAction: "1",
 			}),
-		).toBeNull();
+		).toEqual(handleRowInsert(context, clickOn("1")));
+	});
+
+	it("answers nothing to a drag", () => {
 		expect(
 			handleRowInsert(context, {
 				type: "dragEnd",

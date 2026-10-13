@@ -267,6 +267,11 @@ export type {
 export type { ObjectOutlineCalculator } from "./rendering/objects/registry/ObjectOutlineRegistry";
 export type { ObjectAnchorRegionCalculator } from "./rendering/objects/registry/ObjectAnchorRegionRegistry";
 export type {
+	ConnectionAnchorOffsets,
+	ObjectConnectionAnchorOffsetsCalculator,
+	ObjectConnectionAnchorOffsetsDeclaration,
+} from "./rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
+export type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsCalculator,
 } from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";

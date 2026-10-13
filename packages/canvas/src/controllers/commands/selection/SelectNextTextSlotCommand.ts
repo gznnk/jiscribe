@@ -12,7 +12,10 @@ export const SelectNextTextSlotCommand: ExecutableCommand = {
 		default: [{ code: "Tab" }],
 	},
 
+	// Disabled while a text edit is open: the draft is bound to the slot
+	// `selection.part` names and would follow a step to another slot.
 	canExecute: (state, registries) =>
+		state.textEditState === null &&
 		getTextSlotCycle(state, registries.objectPartKind) !== null,
 
 	execute: (state, registries) =>
