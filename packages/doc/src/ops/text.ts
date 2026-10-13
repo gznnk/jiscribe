@@ -49,6 +49,21 @@ const setConnectorLabelText = (object: ObjectRecord, text: string): void => {
 };
 
 /**
+ * The refusal for a `"slots"` type whose doc has no `text` map: its text lives in
+ * properties of its own (a table's `cells`), which the text ops do not reach.
+ *
+ * @param action - The verb the refused op performs, as it reads after "to be"
+ */
+const textKeptInOwnPropertiesError = (
+	object: ObjectRecord,
+	id: string,
+	action: "set" | "read" | "styled",
+): DocOperationError =>
+	new DocOperationError(
+		`${id} ("${object.type}") holds no text under \`text\` to be ${action}: this type keeps its text in properties of its own, which its description names and which are read and written as the type's own properties`,
+	);
+
+/**
  * Where one rewrite will be written, resolved while nothing has been mutated yet.
  * The new content is built at write time rather than here, so two rewrites of the
  * same object stack the way two separate calls would.
@@ -111,8 +126,11 @@ const planTextWrite = (
 	}
 
 	const slots = readTextSlots(object);
-	const textSlotIds = slots === null ? [] : Object.keys(slots);
-	if (slots === null || textSlotIds.length === 0) {
+	if (slots === null) {
+		throw textKeptInOwnPropertiesError(object, id, "set");
+	}
+	const textSlotIds = Object.keys(slots);
+	if (textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
 	return {
@@ -261,8 +279,11 @@ export const getText = (
 	}
 
 	const slots = readTextSlots(object);
-	const textSlotIds = slots === null ? [] : Object.keys(slots);
-	if (slots === null || textSlotIds.length === 0) {
+	if (slots === null) {
+		throw textKeptInOwnPropertiesError(object, id, "read");
+	}
+	const textSlotIds = Object.keys(slots);
+	if (textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
 	return readTextField(
@@ -503,7 +524,7 @@ const resolveTextTarget = (
 	}
 	const slots = readTextSlots(object);
 	if (slots === null) {
-		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
+		throw textKeptInOwnPropertiesError(object, id, "styled");
 	}
 	const targetSlotId = requireTextSlotId(
 		object,

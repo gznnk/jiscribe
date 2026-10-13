@@ -41,6 +41,21 @@ export const cardDefinition: ObjectDocDefinition = {
 };
 
 /**
+ * A `text: "slots"` type keeping its text in a `cells` grid of its own rather than
+ * under `text`, the way the table plugin's does (which a doc test cannot import).
+ */
+export const cellGridDefinition: ObjectDocDefinition = {
+	features: {
+		type: "cell-grid",
+		geometry: "rect",
+		text: "slots",
+		connectable: true,
+	},
+	extraKeys: ["cells"],
+	validateDoc: () => [],
+};
+
+/**
  * A body-text shape whose declared region gives up a quarter of the height at
  * the top and nothing at the bottom, the way a cylinder's cap does. Off-centre
  * on purpose: it is the one shape of region on which the two vertical bases
