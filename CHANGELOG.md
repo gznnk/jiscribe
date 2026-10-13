@@ -280,6 +280,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   edited — the shape's own outline, which used to turn dashed around it, is no
   longer drawn, so a body that fills the shape is not boxed twice. The transform handles stay
   hidden as before; a part with no box keeps the shape's outline.
+- **A picked part's box is tinted inside as well as outlined**, with the
+  selection accent faded to a wash, so a run of cells reads as one pick rather
+  than as outlines tracing the table's rules. While the part's text is edited
+  the box is outlined only.
 - **A shape's own selection controls are hidden while it is moved or resized**,
   as the connection anchors already were: a table's row and column headings and
   its `+` badges, a container's header handle, and a polyline's or polygon's

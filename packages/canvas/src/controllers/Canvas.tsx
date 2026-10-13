@@ -813,6 +813,7 @@ const CanvasComponent = ({
 									selection={state.selection}
 									objects={draftObjects}
 									multiSelectGroup={state.multiSelectGroup}
+									isTextEditing={!!state.textEditState}
 								/>
 								<ConnectorControlsLayer
 									selection={state.selection}

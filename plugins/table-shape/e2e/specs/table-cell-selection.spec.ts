@@ -156,4 +156,30 @@ test.describe("table cell selection", () => {
 			canvas.page.locator(selectors.transformControl("leftCenter")),
 		).toHaveCount(0);
 	});
+
+	test("tints a picked cell's box, and outlines it only while its text is edited", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const cell = await cellRect(canvas, id, "r0c0");
+		await canvas.page.mouse.dblclick(
+			cell.x + cell.width / 2,
+			cell.y + cell.height / 2,
+		);
+		await canvas.waitForTextEditor();
+
+		const outline = canvas.page.locator(selectors.partOutline);
+		await expect(outline).toHaveCount(1);
+		expect(
+			await outline.evaluate((element) => getComputedStyle(element).fill),
+		).toBe("none");
+
+		await canvas.page.keyboard.press("Escape");
+		await expect(canvas.textEditorSurface()).toHaveCount(0);
+
+		await expect(outline).toHaveCount(1);
+		expect(
+			await outline.evaluate((element) => getComputedStyle(element).fill),
+		).not.toBe("none");
+	});
 });

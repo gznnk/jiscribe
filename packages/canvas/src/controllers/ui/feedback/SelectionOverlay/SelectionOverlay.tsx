@@ -20,6 +20,8 @@ type SelectionOverlayProps = {
 	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
+	/** Whether a text edit is open; a picked part's box is then outlined only, not tinted (ObjectPartOutline). */
+	isTextEditing: boolean;
 };
 
 /**
@@ -35,6 +37,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	selection,
 	objects,
 	multiSelectGroup,
+	isTextEditing,
 }) => {
 	const { objectPartKind } = useCanvasRegistries();
 
@@ -84,7 +87,12 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 				)}
 			{partOwner &&
 				outlinedParts.map(({ partId, region }) => (
-					<ObjectPartOutline key={partId} object={partOwner} region={region} />
+					<ObjectPartOutline
+						key={partId}
+						object={partOwner}
+						region={region}
+						filled={!isTextEditing}
+					/>
 				))}
 		</g>
 	);
