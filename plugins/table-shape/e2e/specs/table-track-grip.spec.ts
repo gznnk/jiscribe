@@ -5,7 +5,7 @@ import {
 	cellCenter,
 	clickTrackGrip,
 	drawnTextWeight,
-	selectionOutlines,
+	partOutlineRects,
 	tableOutlineRect,
 	trackGrip,
 	trackGripFace,
@@ -137,36 +137,35 @@ test.describe("table track grips", () => {
 
 		await clickTrackGrip(canvas, "rowGrip", 1);
 
-		const outlines = await selectionOutlines(canvas);
-		// The table's own box, then the band the row covers: the full width, half
-		// the height, sitting on the lower half.
-		expect(outlines).toHaveLength(2);
-		expect(outlines[1].width).toBeCloseTo(outlines[0].width, 6);
-		expect(outlines[1].height).toBeCloseTo(outlines[0].height / 2, 6);
-		expect(outlines[1].y).toBeCloseTo(
-			outlines[0].y + outlines[0].height / 2,
-			6,
-		);
+		const table = await tableOutlineRect(canvas, id);
+		const outlines = await partOutlineRects(canvas);
+		// The band the row covers: the full width, half the height, sitting on the
+		// lower half.
+		expect(outlines).toHaveLength(1);
+		expect(outlines[0].width).toBeCloseTo(table.width, 0);
+		expect(outlines[0].height).toBeCloseTo(table.height / 2, 0);
+		expect(outlines[0].y).toBeCloseTo(table.y + table.height / 2, 0);
 
 		expect(await gripFill(canvas, "rowGrip", 1)).not.toBe(unselectedFill);
 		// The other grip of the strip is left as it was.
 		expect(await gripFill(canvas, "rowGrip", 0)).toBe(unselectedFill);
-		// The table itself stays the object selection, so its outline is still there.
+		// The table itself stays the object selection.
 		expect((await canvas.captureObjects()).some((o) => o.id === id)).toBe(true);
 	});
 
 	test("selects a whole column, replacing a row selection rather than adding to it", async ({
 		canvas,
 	}) => {
-		await canvas.placeShape("Table");
+		const id = await canvas.placeShape("Table");
 		await clickTrackGrip(canvas, "rowGrip", 0);
 		await clickTrackGrip(canvas, "columnGrip", 1);
 
-		const outlines = await selectionOutlines(canvas);
-		expect(outlines).toHaveLength(2);
-		expect(outlines[1].width).toBeCloseTo(outlines[0].width / 2, 6);
-		expect(outlines[1].height).toBeCloseTo(outlines[0].height, 6);
-		expect(outlines[1].x).toBeCloseTo(outlines[0].x + outlines[0].width / 2, 6);
+		const table = await tableOutlineRect(canvas, id);
+		const outlines = await partOutlineRects(canvas);
+		expect(outlines).toHaveLength(1);
+		expect(outlines[0].width).toBeCloseTo(table.width / 2, 0);
+		expect(outlines[0].height).toBeCloseTo(table.height, 0);
+		expect(outlines[0].x).toBeCloseTo(table.x + table.width / 2, 0);
 	});
 
 	test("puts the width handles away while a track is the operated target", async ({

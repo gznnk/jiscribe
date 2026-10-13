@@ -228,6 +228,15 @@ export const selectors = {
 	/** Every handle shown on selection. */
 	control: "[data-kind=control]",
 
+	/**
+	 * Every outline the selection overlay draws: an object's frame, or the box of a
+	 * part picked inside it, which replaces its owner's (SelectionOverlay).
+	 */
+	selectionOutline: '[data-layer="selection-overlay"] rect',
+
+	/** Only the outlines boxing a picked part (a text slot, a cell, a row). */
+	partOutline: '[data-testid="part-outline"]',
+
 	/** Resize and rotation handles. */
 	transformControl: (
 		handle:

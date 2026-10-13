@@ -5,8 +5,9 @@ import {
 	cellCount,
 	cellRect,
 	clickInsertBadge,
+	partOutlineRects,
 	selectedCellIds,
-	selectionOutlines,
+	tableOutlineRect,
 } from "../support/tableDom";
 
 /**
@@ -51,7 +52,7 @@ async function shiftClickCell(
 }
 
 test.describe("table cell selection", () => {
-	test("outlines the one cell a click lands in, inside the table's own outline", async ({
+	test("outlines the one cell a click lands in, in place of the table's own outline", async ({
 		canvas,
 	}) => {
 		// Placed and left selected, which is when a click addresses a cell rather
@@ -59,13 +60,13 @@ test.describe("table cell selection", () => {
 		const id = await canvas.placeShape("Table");
 		await clickCell(canvas, id, "r0c0");
 
-		const outlines = await selectionOutlines(canvas);
-		// The table's own box first, the cell's second (SelectionOverlay).
-		expect(outlines).toHaveLength(2);
-		expect(outlines[1].width).toBeCloseTo(outlines[0].width / 2, 6);
-		expect(outlines[1].height).toBeCloseTo(outlines[0].height / 2, 6);
-		expect(outlines[1].x).toBeCloseTo(outlines[0].x, 6);
-		expect(outlines[1].y).toBeCloseTo(outlines[0].y, 6);
+		const table = await tableOutlineRect(canvas, id);
+		const outlines = await partOutlineRects(canvas);
+		expect(outlines).toHaveLength(1);
+		expect(outlines[0].width).toBeCloseTo(table.width / 2, 0);
+		expect(outlines[0].height).toBeCloseTo(table.height / 2, 0);
+		expect(outlines[0].x).toBeCloseTo(table.x, 0);
+		expect(outlines[0].y).toBeCloseTo(table.y, 0);
 	});
 
 	test("widens to the rectangle between the anchor and a Shift-clicked cell", async ({
@@ -99,14 +100,12 @@ test.describe("table cell selection", () => {
 		await shiftClickCell(canvas, id, "r1c1");
 		await clickCell(canvas, id, "r1c0");
 
-		const outlines = await selectionOutlines(canvas);
-		expect(outlines).toHaveLength(2);
+		const table = await tableOutlineRect(canvas, id);
+		const outlines = await partOutlineRects(canvas);
+		expect(outlines).toHaveLength(1);
 		// The lower-left cell: the bottom half of the box, on its left.
-		expect(outlines[1].x).toBeCloseTo(outlines[0].x, 6);
-		expect(outlines[1].y).toBeCloseTo(
-			outlines[0].y + outlines[0].height / 2,
-			6,
-		);
+		expect(outlines[0].x).toBeCloseTo(table.x, 0);
+		expect(outlines[0].y).toBeCloseTo(table.y + table.height / 2, 0);
 	});
 
 	test("puts the width handles away while cells are the operated target", async ({

@@ -396,8 +396,8 @@ drawn and edited.
 Four optional members bear on selection:
 
 - `region` — the part's box in the object's local coordinates. A kind that
-  declares it has a box drawn around every selected part, the owner's own
-  outline turning dashed. A part answering null is not outlined. While any box
+  declares it has a box drawn around every selected part, in place of the
+  owner's own outline. A part answering null is not outlined. While any box
   is drawn the transform handles are hidden, since they would compete with it.
   `vertex` declares none (a vertex has handles of its own), so it neither draws
   a box nor hides the handles

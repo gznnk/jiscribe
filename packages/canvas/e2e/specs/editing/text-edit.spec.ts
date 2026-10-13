@@ -25,18 +25,6 @@ function displayTextOf(canvas: CanvasDriver) {
 	return canvas.page.locator("foreignObject > div > div").first();
 }
 
-/**
- * Whether each outline rect in the selection overlay is dashed, in drawing order:
- * the object's own outline first, a picked part's box after it.
- */
-async function selectionOutlines(canvas: CanvasDriver): Promise<boolean[]> {
-	return canvas.page.evaluate(() =>
-		[...document.querySelectorAll('[data-layer="selection-overlay"] rect')].map(
-			(rect) => rect.getAttribute("stroke-dasharray") !== null,
-		),
-	);
-}
-
 /** How many resize/rotation handles are on screen; they all carry data-id="transform". */
 async function transformHandleCount(canvas: CanvasDriver): Promise<number> {
 	const controlIds = await canvas.visibleControlIds();
@@ -74,18 +62,19 @@ test.describe("text editing", () => {
 		await canvas.deselect();
 		await canvas.typeTextAt({ x: 500, y: 260 }, "Kept out");
 
-		// The body is picked like a compartment: its own box over a dashed outline.
-		await expect.poll(() => selectionOutlines(canvas)).toEqual([true, false]);
+		// The body is picked like a compartment, its box drawn alone: the shape's
+		// outline just outside it would double it.
+		await expect.poll(() => canvas.selectionOutlineKinds()).toEqual(["part"]);
 		expect(await transformHandleCount(canvas)).toBe(0);
 
 		// The first Escape leaves the editor, the body staying picked.
 		await canvas.cancelText();
-		expect(await selectionOutlines(canvas)).toEqual([true, false]);
+		expect(await canvas.selectionOutlineKinds()).toEqual(["part"]);
 		expect(await transformHandleCount(canvas)).toBe(0);
 
 		// The second drops the body, back to the shape alone.
 		await canvas.pressEscape();
-		await expect.poll(() => selectionOutlines(canvas)).toEqual([false]);
+		await expect.poll(() => canvas.selectionOutlineKinds()).toEqual(["object"]);
 		expect(await transformHandleCount(canvas)).toBeGreaterThan(0);
 
 		// The third deselects it.

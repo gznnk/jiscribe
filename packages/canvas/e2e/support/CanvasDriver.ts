@@ -352,6 +352,24 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * What each selection outline boxes, in drawing order: a picked part, or an
+	 * object (selectors.selectionOutline). Read off the attributes rather than by
+	 * visibility, an outline being a fill-less rect.
+	 */
+	async selectionOutlineKinds(): Promise<("part" | "object")[]> {
+		return this.page.evaluate(
+			({ outlineSelector, partOutlineSelector }) =>
+				[...document.querySelectorAll(outlineSelector)].map((outline) =>
+					outline.matches(partOutlineSelector) ? "part" : "object",
+				),
+			{
+				outlineSelector: selectors.selectionOutline,
+				partOutlineSelector: selectors.partOutline,
+			},
+		);
+	}
+
+	/**
 	 * data-id list of the currently shown controls (selection handles, connection anchors).
 	 * Controls are mounted only while visible, so this is exactly the visible set.
 	 */

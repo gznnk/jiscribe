@@ -3,24 +3,16 @@ import { memo } from "react";
 
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { theme } from "../../../../theme/themeTokens";
-import {
-	SELECTION_OUTLINE_DASH_PATTERN,
-	SELECTION_OUTLINE_WIDTH,
-} from "../utils/selectionOutline";
+import { SELECTION_OUTLINE_WIDTH } from "../utils/selectionOutline";
 
 type OutlineProps = {
 	frame: TransformedFrame;
-	/** Draws the outline dashed, marking the object as the context of a selection that sits inside it */
-	dashed?: boolean;
 };
 
 /**
  * Renders a selection outline around a transformed frame.
  */
-const OutlineComponent: React.FC<OutlineProps> = ({
-	frame,
-	dashed = false,
-}) => {
+const OutlineComponent: React.FC<OutlineProps> = ({ frame }) => {
 	const { cx, cy, width, height, scaleX, scaleY, rotation } = frame;
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
@@ -33,9 +25,6 @@ const OutlineComponent: React.FC<OutlineProps> = ({
 			transform={transformAttr}
 			fill="none"
 			strokeWidth={SELECTION_OUTLINE_WIDTH}
-			strokeDasharray={
-				dashed ? SELECTION_OUTLINE_DASH_PATTERN.join(" ") : undefined
-			}
 			pointerEvents="none"
 			// The color may hold var(--jiscribe-*), so it is applied via style.
 			style={{ stroke: theme.handleAccent }}

@@ -277,9 +277,7 @@ test.describe("text", () => {
 
 		// The outline is decoration with pointerEvents: none and no data-kind, so it
 		// is counted rather than asserted visible, and matched against the box.
-		const outlines = canvas.page.locator(
-			'[data-layer="selection-overlay"] rect',
-		);
+		const outlines = canvas.page.locator(selectors.selectionOutline);
 		await expect(outlines).toHaveCount(1);
 		const box = await textBoxOf(canvas, id);
 		expect(Number(await outlines.getAttribute("width"))).toBeCloseTo(box.width);

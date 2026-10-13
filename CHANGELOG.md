@@ -252,6 +252,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **A picked part's box is drawn in place of its shape's selection outline.**
+  With a text slot, a cell, a row or a column picked — and while one is being
+  edited — the shape's own outline, which used to turn dashed around it, is no
+  longer drawn, so a body that fills the shape is not boxed twice. The transform handles stay
+  hidden as before; a part with no box keeps the shape's outline.
 - **A shape's own selection controls are hidden while it is moved or resized**,
   as the connection anchors already were: a table's row and column headings and
   its `+` badges, a container's header handle, and a polyline's or polygon's

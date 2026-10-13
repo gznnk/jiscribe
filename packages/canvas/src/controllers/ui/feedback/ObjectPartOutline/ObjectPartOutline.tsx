@@ -15,10 +15,10 @@ type ObjectPartOutlineProps = {
 };
 
 /**
- * Outlines one sub-part inside its object, drawn on top of the object's own
- * selection outline to show that the selection has stepped one level in. The box
- * is the type's own answer for that part, so a text slot's outline sits exactly
- * where the slot's text is drawn.
+ * Outlines one sub-part inside its object, in place of the object's own selection
+ * outline (SelectionOverlay), to show that the selection has stepped one level in.
+ * The box is the type's own answer for that part, so a text slot's outline sits
+ * exactly where the slot's text is drawn.
  */
 const ObjectPartOutlineComponent: React.FC<ObjectPartOutlineProps> = ({
 	object,
@@ -38,6 +38,8 @@ const ObjectPartOutlineComponent: React.FC<ObjectPartOutlineProps> = ({
 			height={region.height}
 			transform={createSvgTransform(scaleX, scaleY, rotation, cx, cy)}
 			fill="none"
+			// Tells a part's box from an object outline, which is drawn the same way.
+			data-testid="part-outline"
 			strokeWidth={SELECTION_OUTLINE_WIDTH}
 			pointerEvents="none"
 			// The color may hold var(--jiscribe-*), so it is applied via style.

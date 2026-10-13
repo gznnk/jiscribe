@@ -1,3 +1,4 @@
+import { selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 /**
@@ -307,25 +308,24 @@ export async function drawnTextWeight(
 }
 
 /**
- * Every box the selection overlay draws, in order: the selected object's own
- * outline first, then one per selected sub-part (SelectionOverlay). Read off the
- * attributes rather than by visibility, an outline being a fill-less rect.
+ * The boxes the selection overlay draws around selected sub-parts, one per part
+ * (SelectionOverlay). The table's own outline is not among them: it is left out
+ * while a part is outlined, so compare against tableOutlineRect instead.
  *
  * @param canvas - The driver for the page under test
- * @returns The boxes in the object's local coordinates, as the overlay writes them
+ * @returns The boxes' client rects, in the order the overlay draws them; empty
+ *   while only the table itself is selected
  */
-export async function selectionOutlines(
+export async function partOutlineRects(
 	canvas: CanvasDriver,
 ): Promise<ClientRect[]> {
-	return canvas.page.evaluate(() =>
-		[...document.querySelectorAll('[data-layer="selection-overlay"] rect')].map(
-			(rect) => ({
-				x: Number(rect.getAttribute("x")),
-				y: Number(rect.getAttribute("y")),
-				width: Number(rect.getAttribute("width")),
-				height: Number(rect.getAttribute("height")),
+	return canvas.page.evaluate(
+		(partOutlineSelector) =>
+			[...document.querySelectorAll(partOutlineSelector)].map((outline) => {
+				const box = outline.getBoundingClientRect();
+				return { x: box.x, y: box.y, width: box.width, height: box.height };
 			}),
-		),
+		selectors.partOutline,
 	);
 }
 
@@ -374,35 +374,35 @@ export async function selectedCellIds(
 	canvas: CanvasDriver,
 	objectId: string,
 ): Promise<string[]> {
-	return canvas.page.evaluate((id) => {
-		const cells = [
-			...document.querySelectorAll(
-				`[data-kind="object"][data-id="${id}"] [data-part^="textSlot:r"]`,
-			),
-		].map((cell) => ({
-			cellId: (cell.getAttribute("data-part") ?? "").replace("textSlot:", ""),
-			box: cell.getBoundingClientRect(),
-		}));
-		// The object's own outline comes first, the sub-parts after (SelectionOverlay).
-		return [
-			...document.querySelectorAll('[data-layer="selection-overlay"] rect'),
-		]
-			.slice(1)
-			.map((outline) => {
-				const box = outline.getBoundingClientRect();
-				const x = box.x + box.width / 2;
-				const y = box.y + box.height / 2;
-				const found = cells.find(
-					(cell) =>
-						x >= cell.box.x &&
-						x <= cell.box.x + cell.box.width &&
-						y >= cell.box.y &&
-						y <= cell.box.y + cell.box.height,
-				);
-				if (found === undefined) {
-					throw new Error(`a selection outline sits over no cell of ${id}`);
-				}
-				return found.cellId;
-			});
-	}, objectId);
+	return canvas.page.evaluate(
+		({ id, partOutlineSelector }) => {
+			const cells = [
+				...document.querySelectorAll(
+					`[data-kind="object"][data-id="${id}"] [data-part^="textSlot:r"]`,
+				),
+			].map((cell) => ({
+				cellId: (cell.getAttribute("data-part") ?? "").replace("textSlot:", ""),
+				box: cell.getBoundingClientRect(),
+			}));
+			return [...document.querySelectorAll(partOutlineSelector)].map(
+				(outline) => {
+					const box = outline.getBoundingClientRect();
+					const x = box.x + box.width / 2;
+					const y = box.y + box.height / 2;
+					const found = cells.find(
+						(cell) =>
+							x >= cell.box.x &&
+							x <= cell.box.x + cell.box.width &&
+							y >= cell.box.y &&
+							y <= cell.box.y + cell.box.height,
+					);
+					if (found === undefined) {
+						throw new Error(`a selection outline sits over no cell of ${id}`);
+					}
+					return found.cellId;
+				},
+			);
+		},
+		{ id: objectId, partOutlineSelector: selectors.partOutline },
+	);
 }

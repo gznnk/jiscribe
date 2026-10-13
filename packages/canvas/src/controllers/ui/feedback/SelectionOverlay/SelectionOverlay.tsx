@@ -26,10 +26,10 @@ type SelectionOverlayProps = {
  * Renders selection outlines for all selected objects and their descendants.
  * For multiple selection, also renders an outline for the multiSelectGroup bounding box.
  * Groups now have cached bounding frames, so no calculation is needed.
- * While parts of an object are selected, the outline of the object holding them turns
- * dashed: the solid boxes are the parts being operated on, the dashed one the selection
- * they sit inside. Which parts get a box, and which box, is collectOutlinedPartRegions'
- * answer.
+ * While parts of an object are selected, their boxes are drawn alone: the object's
+ * outline just outside them would double a box that fills the object (a body slot).
+ * Which parts get a box, and which box, is collectOutlinedPartRegions' answer; a
+ * part with no box keeps the object outlines.
  */
 const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	selection,
@@ -58,29 +58,26 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	);
 	// The part is only ever live on a sole selection, so that is its owner.
 	const partOwner = objects[selectedIds[0]];
+	const drawsObjectOutlines = outlinedParts.length === 0;
 
 	return (
 		<g data-layer="selection-overlay">
-			{Array.from(uniqueIds).map((id) => {
-				const obj = objects[id];
-				if (!obj) {
-					return null;
-				}
+			{drawsObjectOutlines &&
+				Array.from(uniqueIds).map((id) => {
+					const obj = objects[id];
+					if (!obj) {
+						return null;
+					}
 
-				if (!isTransformedFrame(obj)) {
-					return null;
-				}
+					if (!isTransformedFrame(obj)) {
+						return null;
+					}
 
-				return (
-					<Outline
-						key={id}
-						frame={obj}
-						dashed={outlinedParts.length > 0 && partOwner?.id === id}
-					/>
-				);
-			})}
+					return <Outline key={id} frame={obj} />;
+				})}
 			{/* For multiple selection, show bounding box outline of the virtual group */}
-			{selectedIds.length > 1 &&
+			{drawsObjectOutlines &&
+				selectedIds.length > 1 &&
 				multiSelectGroup &&
 				isTransformedFrame(multiSelectGroup) && (
 					<Outline key="multi-select-group" frame={multiSelectGroup} />

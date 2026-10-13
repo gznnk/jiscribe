@@ -1,4 +1,4 @@
-import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
+import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 import {
@@ -36,10 +36,8 @@ const EDGE_TOLERANCE_PX = 1.5;
  * descendant, and a group's is the union of the rest, so the tallest is it.
  */
 async function groupOutlineRect(canvas: CanvasDriver): Promise<ClientRect> {
-	return canvas.page.evaluate(() => {
-		const outlines = [
-			...document.querySelectorAll('[data-layer="selection-overlay"] rect'),
-		];
+	return canvas.page.evaluate((outlineSelector) => {
+		const outlines = [...document.querySelectorAll(outlineSelector)];
 		if (outlines.length === 0) {
 			throw new Error("nothing is selected, so no outline is drawn");
 		}
@@ -53,7 +51,7 @@ async function groupOutlineRect(canvas: CanvasDriver): Promise<ClientRect> {
 			width: tallest.width,
 			height: tallest.height,
 		};
-	});
+	}, selectors.selectionOutline);
 }
 
 /**
