@@ -86,11 +86,14 @@ export const createCanvasReducer =
 			}
 
 			case "COMMAND": {
-				const commandResult = handleCommand(
-					state,
-					action.commandId,
-					registries,
-				);
+				const executed = handleCommand(state, action.commandId, registries);
+				// A command may write through a view (applyStyleIntent) and this path
+				// bypasses handleGesture, so flatten it here like the routes below (#213).
+				const flattenedObjects = materializeObjects(executed.objects);
+				const commandResult =
+					flattenedObjects === executed.objects
+						? executed
+						: { ...executed, objects: flattenedObjects };
 				const resizedResult = reconcileObjectContentSizes(
 					commandResult,
 					state,
