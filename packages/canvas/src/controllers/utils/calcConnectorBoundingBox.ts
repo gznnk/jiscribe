@@ -3,6 +3,7 @@ import { calcPolyBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
 import {
+	listConnectorPathPoints,
 	resolveConnectorPoints,
 	resolveEndpointOwner,
 } from "../../connectors/endpoints";
@@ -57,7 +58,7 @@ export const collectConnectorPoints = (
 		return null;
 	}
 
-	return [resolved.source, ...resolved.waypoints, resolved.target];
+	return listConnectorPathPoints(resolved);
 };
 
 /**
@@ -99,16 +100,16 @@ const collectLabelCorners = (
  *
  * A non-empty label is part of the connector's extent: its box (axis aligned,
  * centered on the anchor derived from `label.position` / `label.offset`) is
- * unioned in, so zoom-to-fit and the export viewBox do not crop it and viewport
- * culling does not drop a connector whose label is still on screen.
+ * unioned in, so zoom-to-fit and the export viewBox do not crop it.
  * Returns null if the endpoints cannot be resolved (e.g. a referenced object was removed).
  *
  * The path is resolved without the geometry registries (outline / anchor region /
  * extra connect points), so on such a shape the endpoints land on the bounding box
  * rather than the drawn silhouette. The difference stays within the owner shape's own
  * bounds and is absorbed by the margins the consumers already add (zoom-to-fit, export
- * viewBox, culling) — unlike a path compared against a pointer position, which
- * has no such slack and must pass the registries in.
+ * viewBox) — unlike a path compared against a pointer position, which has no such
+ * slack and must pass the registries in. Viewport culling resolves through the
+ * registries instead (calcVisibleObjectIds), sharing the path with the renderer.
  */
 export const calcConnectorBoundingBox = (
 	connector: ConnectorState,
@@ -119,8 +120,22 @@ export const calcConnectorBoundingBox = (
 		return null;
 	}
 
-	return calcPolyBoundingBox([
+	return calcConnectorPathBoundingBox(connector, connectorPoints);
+};
+
+/**
+ * {@link calcConnectorBoundingBox} over a path the caller already resolved, the
+ * label's box unioned in the same way.
+ *
+ * @param connector - The connector the path belongs to; only its `label` is read
+ * @param connectorPoints - The path, source → waypoints → target, in world coordinates
+ * @returns The box covering the path and the label; null only for an empty path
+ */
+export const calcConnectorPathBoundingBox = (
+	connector: ConnectorState,
+	connectorPoints: readonly Point[],
+): BoundingBox | null =>
+	calcPolyBoundingBox([
 		...connectorPoints,
 		...collectLabelCorners(connector.label, connectorPoints),
 	]);
-};

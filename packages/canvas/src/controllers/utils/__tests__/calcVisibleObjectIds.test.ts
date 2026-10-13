@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { resolveConnectorPointsCached } from "../../../connectors/endpoints";
 import type { Viewport } from "../../../rendering/Viewport";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import {
 	calcVisibleObjectIds,
 	VIEWPORT_CULL_MARGIN,
@@ -49,6 +52,8 @@ const freeConnector = (
 		target: { anchor: { kind: "free", point: targetPoint } },
 	}) as unknown as ObjectState;
 
+const registries = createTestRegistries();
+
 // Visible world rect: x/y 0..1000 x 0..800 (zoom 1), plus VIEWPORT_CULL_MARGIN
 const viewport: Viewport = {
 	minX: 0,
@@ -63,6 +68,7 @@ describe("calcVisibleObjectIds", () => {
 		const inside = rect("inside", 500, 400, 100, 100);
 		const offscreen = rect("offscreen", 5000, 400, 100, 100);
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: { inside, offscreen },
 			rootIds: ["inside", "offscreen"],
 			viewport,
@@ -82,6 +88,7 @@ describe("calcVisibleObjectIds", () => {
 			100,
 		);
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: { withinMargin, beyondMargin },
 			rootIds: ["withinMargin", "beyondMargin"],
 			viewport,
@@ -94,11 +101,16 @@ describe("calcVisibleObjectIds", () => {
 		const obj = rect("r", 700, 200, 40, 40);
 		const zoomedIn = { ...viewport, zoom: 2 };
 		expect(
-			calcVisibleObjectIds({ objects: { r: obj }, rootIds: ["r"], viewport })
-				.visibleIds,
+			calcVisibleObjectIds({
+				registries,
+				objects: { r: obj },
+				rootIds: ["r"],
+				viewport,
+			}).visibleIds,
 		).toEqual(new Set(["r"]));
 		expect(
 			calcVisibleObjectIds({
+				registries,
 				objects: { r: obj },
 				rootIds: ["r"],
 				viewport: zoomedIn,
@@ -111,6 +123,7 @@ describe("calcVisibleObjectIds", () => {
 		const offscreenChild = rect("offscreenChild", 5000, 5000, 50, 50);
 		const g = group("g", ["visibleChild", "offscreenChild"]);
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: { g, visibleChild, offscreenChild },
 			rootIds: ["g"],
 			viewport,
@@ -123,6 +136,7 @@ describe("calcVisibleObjectIds", () => {
 		const inner = group("inner", ["leaf"]);
 		const outer = group("outer", ["inner"]);
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: { outer, inner, leaf },
 			rootIds: ["outer"],
 			viewport,
@@ -143,6 +157,7 @@ describe("calcVisibleObjectIds", () => {
 			{ x: 3000, y: 5000 },
 		);
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: { crossing, offscreenLine },
 			rootIds: ["crossing", "offscreenLine"],
 			viewport,
@@ -153,6 +168,7 @@ describe("calcVisibleObjectIds", () => {
 	it("conservatively includes objects without a computable bbox", () => {
 		const emptyPoly = poly("emptyPoly", []);
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: { emptyPoly },
 			rootIds: ["emptyPoly"],
 			viewport,
@@ -163,6 +179,7 @@ describe("calcVisibleObjectIds", () => {
 	it("always includes the text-edit target even when offscreen", () => {
 		const editing = rect("editing", 5000, 5000, 100, 100);
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: { editing },
 			rootIds: ["editing"],
 			viewport,
@@ -173,6 +190,7 @@ describe("calcVisibleObjectIds", () => {
 
 	it("ignores rootIds entries missing from the objects map", () => {
 		const { visibleIds } = calcVisibleObjectIds({
+			registries,
 			objects: {},
 			rootIds: ["missing"],
 			viewport,
@@ -184,8 +202,14 @@ describe("calcVisibleObjectIds", () => {
 		it("reuses the cache entry while the object identity is unchanged", () => {
 			const r = rect("r", 500, 400, 100, 100);
 			const objects = { r };
-			const first = calcVisibleObjectIds({ objects, rootIds: ["r"], viewport });
+			const first = calcVisibleObjectIds({
+				registries,
+				objects,
+				rootIds: ["r"],
+				viewport,
+			});
 			const second = calcVisibleObjectIds({
+				registries,
 				objects,
 				rootIds: ["r"],
 				viewport,
@@ -196,12 +220,14 @@ describe("calcVisibleObjectIds", () => {
 
 		it("recomputes when the object identity changed", () => {
 			const first = calcVisibleObjectIds({
+				registries,
 				objects: { r: rect("r", 500, 400, 100, 100) },
 				rootIds: ["r"],
 				viewport,
 			});
 			const moved = rect("r", 5000, 400, 100, 100);
 			const second = calcVisibleObjectIds({
+				registries,
 				objects: { r: moved },
 				rootIds: ["r"],
 				viewport,
@@ -221,17 +247,93 @@ describe("calcVisibleObjectIds", () => {
 				target: { anchor: { kind: "free", point: { x: 900, y: 400 } } },
 			} as unknown as ObjectState;
 			const first = calcVisibleObjectIds({
+				registries,
 				objects: { c: connector, r: rect("r", 100, 400, 100, 100) },
 				rootIds: ["r", "c"],
 				viewport,
 			});
 			const second = calcVisibleObjectIds({
+				registries,
 				objects: { c: connector, r: rect("r", 200, 400, 100, 100) },
 				rootIds: ["r", "c"],
 				viewport,
 				prevCache: first.bboxCache,
 			});
 			expect(second.bboxCache.get("c")).not.toBe(first.bboxCache.get("c"));
+		});
+	});
+
+	describe("connectors hanging off shapes", () => {
+		const a = rect("a", 100, 100, 50, 50);
+		const b = rect("b", 400, 100, 50, 50);
+		const connector = {
+			id: "c",
+			type: "connector",
+			points: [],
+			routing: "orthogonal",
+			source: { owner: { id: "a" }, anchor: { kind: "center" } },
+			target: { owner: { id: "b" }, anchor: { kind: "center" } },
+		} as unknown as ConnectorState;
+
+		it("leaves the path it resolved for the connector renderer to reuse", () => {
+			const countingRegistries = createTestRegistries();
+			let outlineCalls = 0;
+			countingRegistries.objectOutline.register("rect", (object) => {
+				outlineCalls++;
+				const { width, height } = object as unknown as {
+					width: number;
+					height: number;
+				};
+				return [
+					{ x: -width / 2, y: -height / 2 },
+					{ x: width / 2, y: -height / 2 },
+					{ x: width / 2, y: height / 2 },
+					{ x: -width / 2, y: height / 2 },
+				];
+			});
+			calcVisibleObjectIds({
+				registries: countingRegistries,
+				objects: { a, b, c: connector },
+				rootIds: ["a", "b", "c"],
+				viewport,
+			});
+			const callsByCulling = outlineCalls;
+
+			resolveConnectorPointsCached(
+				connector,
+				a,
+				b,
+				countingRegistries.objectOutline,
+				countingRegistries.objectAnchorRegion,
+				countingRegistries.objectExtraConnectPoints,
+			);
+
+			expect(callsByCulling).toBeGreaterThan(0);
+			expect(outlineCalls).toBe(callsByCulling);
+		});
+
+		it("culls a connector by the path it resolved", () => {
+			const offscreen = {
+				...connector,
+				id: "far",
+				source: { owner: { id: "x" }, anchor: { kind: "center" } },
+				target: { owner: { id: "y" }, anchor: { kind: "center" } },
+			} as unknown as ConnectorState;
+			const { visibleIds } = calcVisibleObjectIds({
+				registries,
+				objects: {
+					a,
+					b,
+					c: connector,
+					x: rect("x", 5000, 100, 50, 50),
+					y: rect("y", 5400, 100, 50, 50),
+					far: offscreen,
+				},
+				rootIds: ["a", "b", "c", "x", "y", "far"],
+				viewport,
+			});
+
+			expect(visibleIds).toEqual(new Set(["a", "b", "c"]));
 		});
 	});
 });

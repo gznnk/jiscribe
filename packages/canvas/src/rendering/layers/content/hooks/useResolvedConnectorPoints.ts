@@ -1,7 +1,10 @@
 import type { Point, TransformedFrame } from "@jiscribe/geometry";
 import { useMemo } from "react";
 
-import { resolveConnectorPoints } from "../../../../connectors/endpoints";
+import {
+	listConnectorPathPoints,
+	resolveConnectorPointsCached,
+} from "../../../../connectors/endpoints";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
@@ -90,7 +93,9 @@ export const useResolvedConnectorPoints = (
 	const source = getOwnerGeometryDeps(sourceObj, geometryKeyRegistry);
 	const target = getOwnerGeometryDeps(targetObj, geometryKeyRegistry);
 	return useMemo(() => {
-		const resolved = resolveConnectorPoints(
+		// Cached, so a path viewport culling resolved for the same objects this
+		// render is not routed again (calcVisibleObjectIds).
+		const resolved = resolveConnectorPointsCached(
 			connectorState,
 			sourceObj,
 			targetObj,
@@ -104,7 +109,7 @@ export const useResolvedConnectorPoints = (
 		return {
 			source: resolved.source,
 			target: resolved.target,
-			points: [resolved.source, ...resolved.waypoints, resolved.target],
+			points: listConnectorPathPoints(resolved),
 		};
 		/* eslint-disable react-hooks/exhaustive-deps */
 	}, [

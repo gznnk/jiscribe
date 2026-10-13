@@ -687,7 +687,7 @@ const CanvasComponent = ({
 		state.rootIds,
 		state.viewport,
 		textEditObjectId,
-		registries.objectVisualBounds,
+		registries,
 	);
 
 	const canvasHandle = useCanvasHandle({

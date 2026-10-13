@@ -1,13 +1,18 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 
-import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
+import { calcConnectorPathBoundingBox } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
-import { resolveEndpointOwner } from "../../connectors/endpoints";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import {
+	listConnectorPathPoints,
+	resolveConnectorPointsCached,
+	resolveEndpointOwner,
+} from "../../connectors/endpoints";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
+import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**
  * Margin (world px) added around the visible rect. Absorbs extents the bbox
@@ -32,6 +37,15 @@ type VisibilityCacheEntry = {
 /** Object ID → cached bbox entry, carried across renders for diff reuse. */
 export type VisibilityBBoxCache = Map<string, VisibilityCacheEntry>;
 
+/** The registries viewport culling reads. */
+export type CullingRegistries = Pick<
+	ICanvasRegistries,
+	| "objectVisualBounds"
+	| "objectOutline"
+	| "objectAnchorRegion"
+	| "objectExtraConnectPoints"
+>;
+
 type CalcVisibleObjectIdsParams = {
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
@@ -41,11 +55,14 @@ type CalcVisibleObjectIdsParams = {
 	/** Previous render's cache; unchanged objects reuse their bbox from it. */
 	prevCache?: VisibilityBBoxCache;
 	/**
-	 * Per-canvas ObjectVisualBoundsRegistry, so a shape stays mounted while only
-	 * what it draws outside its geometry box is on screen. Fixed for a canvas's
-	 * lifetime, which is what keeps the cache above valid across calls.
+	 * The canvas's registries, fixed for its lifetime, which is what keeps the
+	 * cache above valid across calls. The visual bounds keep a shape mounted while
+	 * only what it draws outside its geometry box is on screen; a connector's path
+	 * is resolved through the geometry registries and the cache the connector
+	 * renderer reads too (resolveConnectorPointsCached), so a moved owner routes
+	 * each connector once per render rather than once here and again to draw it.
 	 */
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null;
+	registries: CullingRegistries;
 };
 
 type CalcVisibleObjectIdsResult = {
@@ -72,7 +89,7 @@ export function calcVisibleObjectIds({
 	viewport,
 	textEditObjectId,
 	prevCache,
-	visualBounds,
+	registries,
 }: CalcVisibleObjectIdsParams): CalcVisibleObjectIdsResult {
 	const { minX, minY, width, height, zoom } = viewport;
 	const visibleLeft = minX - VIEWPORT_CULL_MARGIN;
@@ -82,6 +99,27 @@ export function calcVisibleObjectIds({
 
 	const visibleIds = new Set<string>();
 	const bboxCache: VisibilityBBoxCache = new Map();
+
+	const calcCullingConnectorBBox = (
+		connector: ConnectorState,
+		sourceOwner: ObjectState | null,
+		targetOwner: ObjectState | null,
+	): BoundingBox | null => {
+		const resolved = resolveConnectorPointsCached(
+			connector,
+			sourceOwner,
+			targetOwner,
+			registries.objectOutline,
+			registries.objectAnchorRegion,
+			registries.objectExtraConnectPoints,
+		);
+		return resolved
+			? calcConnectorPathBoundingBox(
+					connector,
+					listConnectorPathPoints(resolved),
+				)
+			: null;
+	};
 
 	const resolveBBox = (id: string, obj: ObjectState): BoundingBox | null => {
 		if (isConnectorState(obj)) {
@@ -97,7 +135,7 @@ export function calcVisibleObjectIds({
 				bboxCache.set(id, prevEntry);
 				return prevEntry.bbox;
 			}
-			const bbox = calcConnectorBoundingBox(obj, objects);
+			const bbox = calcCullingConnectorBBox(obj, sourceOwner, targetOwner);
 			bboxCache.set(id, { obj, sourceOwner, targetOwner, bbox });
 			return bbox;
 		}
@@ -107,7 +145,11 @@ export function calcVisibleObjectIds({
 			bboxCache.set(id, prevEntry);
 			return prevEntry.bbox;
 		}
-		const bbox = calcObjectBoundingBox(obj, objects, visualBounds);
+		const bbox = calcObjectBoundingBox(
+			obj,
+			objects,
+			registries.objectVisualBounds,
+		);
 		bboxCache.set(id, { obj, sourceOwner: null, targetOwner: null, bbox });
 		return bbox;
 	};

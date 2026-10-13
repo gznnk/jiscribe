@@ -4,6 +4,7 @@ import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import {
+	listConnectorPathPoints,
 	resolveConnectorPoints,
 	resolveEndpointOwner,
 } from "../../../../connectors/endpoints";
@@ -85,7 +86,7 @@ function renderConnectorLabelEditor(
 		return null;
 	}
 
-	const points = [resolved.source, ...resolved.waypoints, resolved.target];
+	const points = listConnectorPathPoints(resolved);
 	const anchor = calcConnectorLabelAnchor(
 		points,
 		pendingPlacement?.position ?? connector.label?.position,
