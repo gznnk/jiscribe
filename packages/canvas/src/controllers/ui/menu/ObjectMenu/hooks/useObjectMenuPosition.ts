@@ -81,7 +81,10 @@ export function useObjectMenuPosition(
 	// opening a text editor picks the slot and narrows it the same way, and the
 	// editor's own box moves the menu while it is open.
 	const { objectIds: selectedIds, part } = selection;
-	const selectedIdsString = selectedIds.slice().sort().join(",");
+	const selectedIdsString = useMemo(
+		() => selectedIds.slice().sort().join(","),
+		[selectedIds],
+	);
 	const partKey =
 		part === null
 			? null
@@ -151,9 +154,15 @@ export function useObjectMenuPosition(
 		}
 	}, [menuRef, shouldRender, selectedIdsString, partKey, textEditKey]);
 
+	// Not measured while the menu is hidden: a drag hides it and moves the
+	// selection on every frame, which would re-measure every selected object for a
+	// box nothing draws.
 	const liveBounds = useMemo(
-		() => calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds),
-		[selectedIds, objects, objectVisualBounds],
+		() =>
+			shouldRender
+				? calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds)
+				: null,
+		[shouldRender, selectedIds, objects, objectVisualBounds],
 	);
 
 	// The menu writes properties that resize what it is anchored to: a font size or
@@ -173,7 +182,8 @@ export function useObjectMenuPosition(
 	if (
 		!shouldRender ||
 		!isMenuInUse ||
-		latchedAnchorRef.current.key !== anchorKey
+		latchedAnchorRef.current.key !== anchorKey ||
+		latchedAnchorRef.current.bounds === null
 	) {
 		latchedAnchorRef.current = { key: anchorKey, bounds: liveBounds };
 	}
