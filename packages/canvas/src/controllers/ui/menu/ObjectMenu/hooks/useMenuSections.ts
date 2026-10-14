@@ -100,9 +100,10 @@ const collectSelectionSections = (
  * Computes the menu sections to display from the current selection.
  *
  * While a part is picked whose kind declares what it receives (`styleIntentKinds`), the
- * sections are narrowed to the items raising only that, so the menu never offers
- * an action the part cannot receive: the text items under a text slot, which
- * every text-holding type is given without opting in (filterMenuSectionsForPickedPart).
+ * sections are narrowed to the items raising only that, and every custom item not
+ * naming the picked kind goes, so the menu never offers an action the part cannot
+ * receive: the text items under a text slot, which every text-holding type is
+ * given without opting in (filterMenuSectionsForPickedPart).
  * A pick of a kind declaring nothing (a vertex) leaves them alone, the menu still
  * acting on the object.
  *
@@ -125,9 +126,15 @@ export const getMenuSections = (
 		state,
 		objectPartKindRegistry,
 	);
-	return styleIntentKinds === null
-		? sections
-		: filterMenuSectionsForPickedPart(sections, styleIntentKinds);
+	const pickedPart = state.selection.part;
+	if (styleIntentKinds === null || pickedPart === null) {
+		return sections;
+	}
+	return filterMenuSectionsForPickedPart(
+		sections,
+		pickedPart.kind,
+		styleIntentKinds,
+	);
 };
 
 /**

@@ -9,7 +9,7 @@
  * coerced into an index the grid never offered.
  *
  * @param subAction - The `data-action` segment after `selection:table:<name>:`, or undefined when the handle carries no index
- * @returns The boundary's index, 0-based from the table's leading edge; what it is an index into is the control's own business — the drag strips number the inner rules alone, the `+` badges every insertion position
+ * @returns The boundary's index, 0-based from the table's leading edge; the drag strips number the inner rules alone, the outer edges not counted
  */
 export const parseTableBoundaryIndex = (
 	subAction: string | undefined,

@@ -141,4 +141,45 @@ describe("getMenuSections", () => {
 			getMenuSections(makeState(VERTEX_PICK), registry, partKindRegistry),
 		).toEqual(RECORD_SECTIONS);
 	});
+
+	it("keeps a custom item naming the picked kind, and drops it under a kind it does not name", () => {
+		const gridRegistry = createObjectMenuRegistry();
+		gridRegistry.register("grid", [
+			{ id: "text", items: [{ type: "font" }] },
+			{
+				id: "insert",
+				items: [
+					{
+						type: "custom",
+						id: "insert-rows",
+						component: CustomItemComponent,
+						pickedPartKinds: ["row"],
+					},
+				],
+			},
+		]);
+		const gridPartKindRegistry = createObjectPartKindRegistry();
+		gridPartKindRegistry.register("grid", [
+			coreTextSlot,
+			{
+				kind: "row",
+				has: () => true,
+				styleIntentKinds: TEXT_STYLE_INTENT_KINDS,
+			},
+		]);
+		const sectionIdsUnder = (pick: ObjectPartSelection): string[] =>
+			getMenuSections(
+				makeState(pick, "grid"),
+				gridRegistry,
+				gridPartKindRegistry,
+			).map((section) => section.id);
+
+		expect(
+			sectionIdsUnder({
+				kind: "row",
+				ranges: [{ anchorId: "0", focusId: "0" }],
+			}),
+		).toEqual(["text", "insert"]);
+		expect(sectionIdsUnder(NAME_TEXT_SLOT_PICK)).toEqual(["text"]);
+	});
 });

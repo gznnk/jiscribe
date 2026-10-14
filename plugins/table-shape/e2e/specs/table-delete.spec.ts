@@ -4,8 +4,9 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 import {
 	cellCenter,
 	cellCount,
-	clickInsertBadge,
 	clickTrackGrip,
+	fillCell,
+	pressInsertTrack,
 } from "../support/tableDom";
 
 /**
@@ -23,21 +24,6 @@ async function tableExists(
 	return (await canvas.captureObjects()).some(
 		(object) => object.id === objectId,
 	);
-}
-
-/**
- * Writes `text` into one cell and leaves nothing selected. Typing opens the
- * editor with a double click, so it needs no selection of its own, and
- * committing clicks empty space.
- */
-async function fillCell(
-	canvas: CanvasDriver,
-	objectId: string,
-	cellId: string,
-	text: string,
-): Promise<void> {
-	await canvas.typeTextAt(await cellCenter(canvas, objectId, cellId), text);
-	await canvas.commitText();
 }
 
 /**
@@ -132,8 +118,9 @@ test.describe("table delete", () => {
 	}) => {
 		const id = await canvas.placeShape("Table");
 		// Four rows of two columns.
-		await clickInsertBadge(canvas, "rowInsert", 2);
-		await clickInsertBadge(canvas, "rowInsert", 3);
+		await clickTrackGrip(canvas, "rowGrip", 1);
+		await pressInsertTrack(canvas, "ArrowDown");
+		await pressInsertTrack(canvas, "ArrowDown");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(8);
 		for (const [cellId, text] of [
 			["r0c0", "row one"],

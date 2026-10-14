@@ -32,9 +32,9 @@ type TableTrackGripsProps = {
  * One grip per track, laid against the table's leading edge like a
  * spreadsheet's headings: rows numbered down the left, columns lettered across
  * the top. Each runs the full length of its track, so neighbours abut as the
- * headings of a sheet do and only their borders part them; the insert badges
- * stand on the opposite edge (TableInsertBadges). Shared by both axes because the two differ
- * only in which layout edges run along the bar and which stay fixed.
+ * headings of a sheet do and only their borders part them. Shared by both axes
+ * because the two differ only in which layout edges run along the bar and which
+ * stay fixed.
  *
  * The grips are placed from the layout rather than from the state's box, so they
  * stand beside the drawn grid even on the render before the content resizer has

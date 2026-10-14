@@ -8,7 +8,6 @@ import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { calcSegmentPlacement } from "./calcSegmentPlacement";
-import { INSERT_BADGE_OFFSET, INSERT_BADGE_RADIUS } from "./TableInsertBadge";
 
 /**
  * How thick a grip is drawn, in world units, so it grows and shrinks with the
@@ -45,18 +44,8 @@ export const GRIP_OFFSET = GRIP_THICKNESS / 2;
  */
 const CONNECTION_ANCHOR_RADIUS = darkCanvasTheme.handleDimensions.anchorRadius;
 
-/** Clearance between a control's outer side and a connection-anchor dot's edge, in screen px. */
+/** Clearance between a grip's outer side and a connection-anchor dot's edge, in screen px. */
 const CONNECTION_ANCHOR_CONTROL_CLEARANCE = 10;
-
-/**
- * Distance from the table's edge to the connection-anchor dot on an edge the
- * insert badges stand on (bottom and right), in screen px.
- */
-export const CONNECTION_ANCHOR_OFFSET_PAST_BADGES =
-	INSERT_BADGE_OFFSET +
-	INSERT_BADGE_RADIUS +
-	CONNECTION_ANCHOR_RADIUS +
-	CONNECTION_ANCHOR_CONTROL_CLEARANCE;
 
 /**
  * Distance from the table's edge to the connection-anchor dot on an edge the
@@ -111,8 +100,8 @@ type TableTrackGripProps = {
  * "remove these rows".
  *
  * The cell follows the table's transform; the label is drawn upright whatever
- * the rotation, for the same reason the insert badge is (TableInsertBadge): a
- * heading is read as a heading rather than as part of the drawing.
+ * the rotation: a heading is read as a heading rather than as part of the
+ * drawing, and tilted text would only be harder to read.
  *
  * The drawn cell and the pressable region are separate elements. The width handles
  * sit on the left and right edges at the table's mid-height, and the selection

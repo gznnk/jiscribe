@@ -245,7 +245,15 @@ load.
 
 **`menu`.** Optional, with three meanings: omitted derives the default menu from
 `features`; a declared array replaces it entirely; `[]` means no menu. The
-derivation rules are defined by `createDefaultMenu` and its unit tests.
+derivation rules are defined by `createDefaultMenu` and its unit tests. An item a
+plugin draws itself is `{ type: "custom"; id; component }` (`CustomItem`), handed
+`ObjectMenuItemProps`; it is dropped while a picked part narrows the menu, unless
+it names that kind in `pickedPartKinds` — the same rule as the sidebar's custom
+rows below. A button of its own takes the built-in buttons' look from
+`ObjectMenuButton` inside `ObjectMenuItemPositioner`; one that runs a command is
+named by `resolveCommandLabel`, with the key from `getPlatformShortcuts` /
+`formatShortcut`, and runs it through `commandAction` (the table's Insert
+section).
 
 **`propertyPanel`.** The properties sidebar's sections, with the same three
 meanings: omitted derives them from `features`; a declared array replaces them
@@ -291,11 +299,12 @@ before writing one:
   (`styleIntentKinds`, under `partKinds` below) — a text slot, including the one a
   shape's open text editor keeps picked — the sidebar keeps the built-in rows
   raising only those kinds, and drops custom rows, which cannot say what they
-  edit — the same rule the ObjectMenu applies to its items. A custom row that
-  applies to a pick names the picked kinds it stays under in `pickedPartKinds`
+  edit. A custom row that applies to a pick names the picked kinds it stays
+  under in `pickedPartKinds`
   (the table's Insert row: `row`, `column`, `textSlot`); its buttons run commands
   the way the built-in Arrange section does, with `PropertyCommandGrid` /
-  `PropertyCommandButton`, `resolveCommandLabel` and `commandAction`.
+  `PropertyCommandButton`, `resolveCommandLabel` and `commandAction`. The
+  ObjectMenu narrows its items by the same rule.
 
 **`propertyPanel` section visibility.** A section may carry
 `isShown(selection)`, asked before it is drawn with the slice of the selection
@@ -429,7 +438,8 @@ Two more bear on styling a pick:
 - `styleIntentKinds` — the style kinds a pick of this kind receives, core kinds and the
   type's own alike. Declared, the picked kind is what the ObjectMenu and the
   sidebar answer to: they keep the built-in controls raising only these kinds,
-  drop the rest and every custom item, and hide the system sections and the
+  drop the rest and every custom item not naming the kind in `pickedPartKinds`,
+  and hide the system sections and the
   Meta section. Omitted, a pick of the kind leaves the object the subject of
   every control (`vertex`). The `"textSlot"` kind core gives declares the text
   kinds (`TEXT_STYLE_INTENT_KINDS`)
@@ -463,15 +473,15 @@ instead, built for menus with `commandAction` / `toggleAction` / `setAction` /
 
 Honest limits, so you do not design against something that is not there.
 
-| Area                             | Current state                                                                                                                                                                             |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Built-in UI                      | ObjectMenu / ContextMenu mount unconditionally; a host has no way to hide or replace them (the Toolbar can be hidden with `toolbar.show: false` and recomposed with `toolbar.sections`)   |
-| UI slots                         | Only the toolbar's `{ type: "slot" }` items. No slot for an overlay layer; the properties sidebar takes a component only as a row of a section a type declares, not as a panel of its own |
-| Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path      |
-| Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |
-| Command shortcuts                | A plugin contributes commands (`CanvasPlugin.commands`) and can claim a binding an existing command also holds, but it cannot rebind or unbind that command's own shortcut                |
-| ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                      |
-| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one is dropped while a picked part narrows the sidebar (`styleIntentKinds`)                      |
+| Area                             | Current state                                                                                                                                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Built-in UI                      | ObjectMenu / ContextMenu mount unconditionally; a host has no way to hide or replace them (the Toolbar can be hidden with `toolbar.show: false` and recomposed with `toolbar.sections`)                            |
+| UI slots                         | Only the toolbar's `{ type: "slot" }` items. No slot for an overlay layer; the properties sidebar takes a component only as a row of a section a type declares, not as a panel of its own                          |
+| Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path                               |
+| Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                                                   |
+| Command shortcuts                | A plugin contributes commands (`CanvasPlugin.commands`) and can claim a binding an existing command also holds, but it cannot rebind or unbind that command's own shortcut                                         |
+| ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                                               |
+| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one is dropped while a picked part narrows the sidebar (`styleIntentKinds`) unless it names that kind (`pickedPartKinds`) |
 
 What _is_ fully available: adding shape types with their own doc schema, validation,
 rendering, stencils, menus, properties-sidebar sections, style properties,

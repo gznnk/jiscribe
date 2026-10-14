@@ -1,7 +1,7 @@
 import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-import { cellCenter, insertBadge, trackGrip } from "../support/tableDom";
+import { cellCenter, trackGrip } from "../support/tableDom";
 
 /**
  * A type's own selection controls are hidden while the object is moved or
@@ -17,27 +17,27 @@ const columnBoundaryStrip = (canvas: CanvasDriver, boundaryIndex: number) =>
 	);
 
 test.describe("table controls hidden while dragging", () => {
-	test("hides the grips and badges while the table is moved, and brings them back", async ({
+	test("hides the grips while the table is moved, and brings them back", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
-		const grip = trackGrip(canvas, "rowGrip", 0);
-		const badge = insertBadge(canvas, "columnInsert", 0);
-		await expect(grip).toHaveCount(1);
-		await expect(badge).toHaveCount(1);
+		const rowGrip = trackGrip(canvas, "rowGrip", 0);
+		const columnGrip = trackGrip(canvas, "columnGrip", 0);
+		await expect(rowGrip).toHaveCount(1);
+		await expect(columnGrip).toHaveCount(1);
 
 		const from = await cellCenter(canvas, id, "r0c0");
 		await canvas.dragInspecting(
 			from,
 			{ x: from.x + 150, y: from.y + 100 },
 			async () => {
-				await expect(grip).toHaveCount(0);
-				await expect(badge).toHaveCount(0);
+				await expect(rowGrip).toHaveCount(0);
+				await expect(columnGrip).toHaveCount(0);
 			},
 		);
 
-		await expect(grip).toHaveCount(1);
-		await expect(badge).toHaveCount(1);
+		await expect(rowGrip).toHaveCount(1);
+		await expect(columnGrip).toHaveCount(1);
 	});
 
 	test("hides them while the width handle is dragged", async ({ canvas }) => {

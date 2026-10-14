@@ -65,12 +65,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the run of the cell order between them — while Ctrl- or Cmd-clicking a cell
   adds it to the pick or takes it back out, even from the middle of such a
   block, so cells apart from one another can be picked together. Delete clears the picked cells' text,
-  or removes the picked row or column — never the last one left. A round `+`
-  outside the right and bottom edges stands at every boundary a track can go
-  at, both outer edges included, and clicking one inserts an empty track there
-  and leaves it selected, once per press however fast they come; Alt+Shift+arrow
-  inserts one beside the picked cell or track. The cells keep their contents as
-  the grid renumbers around an insertion, and one undo takes it back.
+  or removes the picked row or column — never the last one left. Alt+Shift+arrow
+  inserts an empty track beside the picked cell or track, and so do the Insert
+  buttons the ObjectMenu and the properties sidebar offer while one is picked —
+  a row's above and below, a column's left and right, a cell's all four. The
+  cells keep their contents as the grid renumbers around an insertion, and one
+  undo takes it back.
+- For plugin authors: a custom ObjectMenu item or properties-sidebar row stays
+  up while a picked part narrows the menu or the sidebar when it names that
+  part's kind in `pickedPartKinds`. `@jiscribe/canvas/unstable` (and so
+  `@jiscribe/canvas-sdk`) now exports what a command button needs to look and
+  read like the built-in ones: `PropertyCommandButton` / `PropertyCommandGrid`,
+  `resolveCommandLabel`, `getPlatformShortcuts` and `formatShortcut`, as well as
+  `createDefaultPropertyPanel` for a type that only adds a section to the
+  derived ones.
 - For plugin authors: a selection control's `handle` is told what is already
   picked on its object. `SelectionControlContext.selectedPart` carries the part
   selection standing there — the same value the `Component` draws from as
@@ -261,8 +269,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **For plugin authors: a type says how far its connection-anchor dots sit off
   its edges.** `connectionAnchorOffsets` answers per anchor id — the four edge
   ids and any `extraConnectPoints` id — in screen px, for a type whose own
-  controls occupy the band the dots would otherwise land in (the table's grips
-  and `+` badges, whose top and left dots now stand past them). Every anchor it
+  controls occupy the band the dots would otherwise land in (the table's grips,
+  whose top and left dots now stand past them). Every anchor it
   leaves out keeps the theme's `connectionAnchorOffset`, and only the dots move:
   where a connector attaches is unchanged. It is one object for the type or a
   function asked per object and zoom, like `transformHandles` — the zoom being
@@ -292,9 +300,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   than as outlines tracing the table's rules. While the part's text is edited
   the box is outlined only.
 - **A shape's own selection controls are hidden while it is moved or resized**,
-  as the connection anchors already were: a table's row and column headings and
-  its `+` badges, a container's header handle, and a polyline's or polygon's
-  vertex and midpoint handles no longer trail the shape through a drag. A drag of
+  as the connection anchors already were: a table's row and column headings, a
+  container's header handle, and a polyline's or polygon's vertex and midpoint
+  handles no longer trail the shape through a drag. A drag of
   one of the controls themselves, such as moving or adding a vertex, keeps them
   drawn.
 - **Editing the text of a one-body shape looks and steps out like editing a

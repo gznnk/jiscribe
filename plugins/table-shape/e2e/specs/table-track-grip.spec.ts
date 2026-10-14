@@ -4,10 +4,10 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 import {
 	cellCenter,
 	cellCount,
-	clickInsertBadge,
 	clickTrackGrip,
 	drawnTextWeight,
 	partOutlineRects,
+	pressInsertTrack,
 	tableOutlineRect,
 	trackGrip,
 	trackGripFace,
@@ -221,11 +221,12 @@ test.describe("table track grips", () => {
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
-		// Read before the insertions, each of which leaves its new row picked.
+		// Read before the insertions, which run from a picked row.
 		const unselectedFill = await gripFill(canvas, "rowGrip", 0);
-		// Four rows, the badges at the bottom edge appending one each.
-		await clickInsertBadge(canvas, "rowInsert", 2);
-		await clickInsertBadge(canvas, "rowInsert", 3);
+		// Four rows, each insertion adding one below the picked last row.
+		await clickTrackGrip(canvas, "rowGrip", 1);
+		await pressInsertTrack(canvas, "ArrowDown");
+		await pressInsertTrack(canvas, "ArrowDown");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(8);
 
 		await clickTrackGrip(canvas, "rowGrip", 0);
@@ -255,7 +256,8 @@ test.describe("table track grips", () => {
 	}) => {
 		const id = await canvas.placeShape("Table");
 		const unselectedFill = await gripFill(canvas, "columnGrip", 0);
-		await clickInsertBadge(canvas, "columnInsert", 2);
+		await clickTrackGrip(canvas, "columnGrip", 1);
+		await pressInsertTrack(canvas, "ArrowRight");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 
 		await clickTrackGrip(canvas, "columnGrip", 0);

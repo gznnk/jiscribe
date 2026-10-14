@@ -12,32 +12,25 @@ import {
 } from "@jiscribe/canvas-sdk";
 import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
 
-import { createTableInsertHandler } from "./controls/createTableInsertHandler";
+import { TABLE_INSERT_PICKED_PART_KINDS } from "./commands/tableInsertCommands";
 import { createTableTrackGripHandler } from "./controls/createTableTrackGripHandler";
 import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
 import { handleTableRowBoundary } from "./controls/handleTableRowBoundary";
 import { TableColumnBoundaryControl } from "./controls/TableColumnBoundaryControl";
 import { TableColumnGripControl } from "./controls/TableColumnGripControl";
-import { TableColumnInsertControl } from "./controls/TableColumnInsertControl";
 import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
 import { TableRowGripControl } from "./controls/TableRowGripControl";
-import { TableRowInsertControl } from "./controls/TableRowInsertControl";
-import {
-	calcConnectionAnchorOffsetPastGrips,
-	CONNECTION_ANCHOR_OFFSET_PAST_BADGES,
-} from "./controls/TableTrackGrip";
+import { calcConnectionAnchorOffsetPastGrips } from "./controls/TableTrackGrip";
 import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
+import { TableInsertMenu } from "./menu/TableInsertMenu";
 import { TABLE_CELL_STYLE_INTENT_KINDS } from "./parts/tableCellStyleIntentKinds";
 import { TABLE_TRACK_PART_DEFINITIONS } from "./parts/tableTrackParts";
 import { calcTableTextSlotRegions } from "./presentation/calcTableTextSlotRegions";
 import { Table } from "./presentation/Table";
-import {
-	TABLE_INSERT_PICKED_PART_KINDS,
-	TableInsertProperty,
-} from "./propertyPanel/TableInsertProperty";
+import { TableInsertProperty } from "./propertyPanel/TableInsertProperty";
 import type { TableDoc } from "./schema/TableDoc";
 import { reconcileTableBoxWithGrid } from "./state/reconcileTableBoxWithGrid";
 import { tableToDoc, tableToState } from "./state/TableMapper";
@@ -64,8 +57,9 @@ import { tableFillEntry } from "./style/tableFillEntries";
 const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
 
 /**
- * Every connection-anchor dot pushed out past the control lining its edge: the
- * grips on the top and left, the insert badges on the bottom and right.
+ * The top and left connection-anchor dots pushed out past the grips lining
+ * those edges. The bottom and right edges carry no control of the table's own,
+ * so their dots keep the theme's distance.
  */
 const calcTableConnectionAnchorOffsets = (
 	_state: TableState,
@@ -75,24 +69,16 @@ const calcTableConnectionAnchorOffsets = (
 	return {
 		topCenter: offsetPastGrips,
 		leftCenter: offsetPastGrips,
-		bottomCenter: CONNECTION_ANCHOR_OFFSET_PAST_BADGES,
-		rightCenter: CONNECTION_ANCHOR_OFFSET_PAST_BADGES,
 	};
 };
 
 /**
- * Six controls: a boundary, a grip and an insert badge per axis. One registration
- * covers every boundary or track of its axis — each handle appends its own index
- * to the control's `data-action`, and the handler reads it back off the event's
+ * Four controls: a boundary and a grip per axis. One registration covers every
+ * boundary or track of its axis — each handle appends its own index to the
+ * control's `data-action`, and the handler reads it back off the event's
  * `subAction` (parseTableBoundaryIndex / parseTableTrackPartId). A registration per
  * boundary would instead have to change as rows and columns come and go, which
  * registration is not able to do — it happens once per type.
- *
- * Dragging a boundary and inserting at one are separate controls rather than one
- * control taking both events. They number different things — the strips run along
- * the inner rules alone, where a `+` stands at every insertion position, the outer
- * two edges included — and a click on the drag strip has to stay a no-op, a
- * missed drag being the commonest way to produce one.
  *
  * Neither boundary handler writes the table's box. Both return the pair of tracks
  * they rewrote, and the box is re-derived from them on the same reducer tick
@@ -100,12 +86,7 @@ const calcTableConnectionAnchorOffsets = (
  * frame exactly where it was.
  *
  * The grips write no object at all, only the part selection, so a click on one is
- * never a document change. A `+` badge is the one control here that changes the
- * document on a click, which the adapter commits on the spot. It takes a
- * doubleClick as well, each press being one insertion: the recognizer reports a
- * second press within the double-click window as a doubleClick instead of a
- * click, so a badge taking clicks alone would drop every other press of a
- * rapid run.
+ * never a document change.
  */
 const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	{
@@ -129,18 +110,6 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 		events: ["click"],
 		Component: TableColumnGripControl,
 		handle: createTableTrackGripHandler(TABLE_COLUMN_PART_KIND),
-	},
-	{
-		name: "rowInsert",
-		events: ["click", "doubleClick"],
-		Component: TableRowInsertControl,
-		handle: createTableInsertHandler(TABLE_ROW_PART_KIND),
-	},
-	{
-		name: "columnInsert",
-		events: ["click", "doubleClick"],
-		Component: TableColumnInsertControl,
-		handle: createTableInsertHandler(TABLE_COLUMN_PART_KIND),
 	},
 ];
 
@@ -198,9 +167,10 @@ const TABLE_STYLE_ENTRIES = {
  * the features would offer. A text edit or a background from the menu lands on
  * the picked cells or the cells of the picked rows or columns (each kind's
  * `textSlotIds`); with nothing picked, a text edit lands on every cell and a
- * background on the table's own ({@link TABLE_STYLE_ENTRIES}). Reshaping the grid is in neither
- * section: it belongs to the keys, the grips, the `+` badges and the sidebar's
- * Insert section.
+ * background on the table's own ({@link TABLE_STYLE_ENTRIES}). An Insert section
+ * follows them, drawn only while a row, column or cell is picked, where the
+ * narrowing keeps its item (`pickedPartKinds`); with the table selected as a
+ * whole it draws nothing and the section collapses with its divider.
  *
  * `propertyPanel` is the sections `createDefaultPropertyPanel` derives from
  * `TableFeatures`, with an Insert section added after them. It is offered
@@ -252,6 +222,17 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 				{ type: "font" },
 				{ type: "textFormat" },
 				{ type: "textAlignment" },
+			],
+		},
+		{
+			id: "table-insert",
+			items: [
+				{
+					type: "custom",
+					id: "table-insert",
+					component: TableInsertMenu,
+					pickedPartKinds: TABLE_INSERT_PICKED_PART_KINDS,
+				},
 			],
 		},
 	],

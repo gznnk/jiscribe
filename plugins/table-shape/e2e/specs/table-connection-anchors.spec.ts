@@ -2,14 +2,13 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { Locator } from "@playwright/test";
 
-import { insertBadge, trackGrip } from "../support/tableDom";
+import { trackGrip } from "../support/tableDom";
 import type { ClientRect } from "../support/tableDom";
 
 /**
- * The connection-anchor dots of a selected table, in a real browser: every edge
- * is lined with a control — grips on the top and left, `+` badges on the bottom
- * and right — and pushes its dot out past them, so a press meant for one never
- * lands on the other.
+ * The connection-anchor dots of a selected table, in a real browser: the top and
+ * left edges are lined with grips and push their dots out past them, so a press
+ * meant for one never lands on the other.
  */
 
 async function rectOf(locator: Locator, name: string): Promise<ClientRect> {
@@ -58,36 +57,6 @@ test.describe("table connection anchors", () => {
 		const controls = [
 			await rectOf(trackGrip(canvas, "rowGrip", 0), "row grip 0"),
 			await rectOf(trackGrip(canvas, "rowGrip", 1), "row grip 1"),
-		];
-		for (const control of controls) {
-			expect(overlaps(anchor, control)).toBe(false);
-		}
-	});
-
-	test("keeps the bottom anchor clear of the column badges", async ({
-		canvas,
-	}) => {
-		await canvas.placeShape("Table");
-		const anchor = await anchorRect(canvas, "bottomCenter");
-
-		const controls = [
-			await rectOf(insertBadge(canvas, "columnInsert", 0), "badge 0"),
-			await rectOf(insertBadge(canvas, "columnInsert", 1), "badge 1"),
-			await rectOf(insertBadge(canvas, "columnInsert", 2), "badge 2"),
-		];
-		for (const control of controls) {
-			expect(overlaps(anchor, control)).toBe(false);
-		}
-	});
-
-	test("keeps the right anchor clear of the row badges", async ({ canvas }) => {
-		await canvas.placeShape("Table");
-		const anchor = await anchorRect(canvas, "rightCenter");
-
-		const controls = [
-			await rectOf(insertBadge(canvas, "rowInsert", 0), "badge 0"),
-			await rectOf(insertBadge(canvas, "rowInsert", 1), "badge 1"),
-			await rectOf(insertBadge(canvas, "rowInsert", 2), "badge 2"),
 		];
 		for (const control of controls) {
 			expect(overlaps(anchor, control)).toBe(false);

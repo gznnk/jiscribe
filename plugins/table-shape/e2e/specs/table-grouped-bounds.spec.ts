@@ -5,8 +5,8 @@ import {
 	cellCenter,
 	cellCount,
 	cellRect,
-	clickInsertBadge,
 	clickTrackGrip,
+	pressInsertTrack,
 	tableOutlineRect,
 	trackGrip,
 } from "../support/tableDom";
@@ -85,8 +85,7 @@ async function groupTableWithRectAbove(canvas: CanvasDriver): Promise<string> {
 }
 
 /**
- * Drills from the group down to the table itself, which is what draws the grips
- * and the `+` badges. Two clicks: the first picks the topmost ancestor, the second
+ * Drills from the group down to the table itself, which is what draws the grips. Two clicks: the first picks the topmost ancestor, the second
  * the member inside it (determineSelection's "immediate parent is selected").
  *
  * They land on different cells on purpose. Two clicks within 5px of each other
@@ -146,12 +145,13 @@ test.describe("a grouped table's parent bounds", () => {
 		await expectGroupOutlineToEndAtTable(canvas, tableId);
 	});
 
-	test("follow a row inserted from a + badge", async ({ canvas }) => {
+	test("follow a row inserted with the keys", async ({ canvas }) => {
 		const tableId = await groupTableWithRectAbove(canvas);
 		await enterTable(canvas, tableId);
 
-		// The badge past the last row, so the table grows downward.
-		await clickInsertBadge(canvas, "rowInsert", 2);
+		// Below the last row, so the table grows downward.
+		await clickTrackGrip(canvas, "rowGrip", 1);
+		await pressInsertTrack(canvas, "ArrowDown");
 		await expect.poll(async () => cellCount(canvas, tableId)).toBe(6);
 
 		await expectGroupOutlineToEndAtTable(canvas, tableId);

@@ -33,6 +33,9 @@ export const getPlatform = (): "mac" | "win" => {
 /**
  * Gets the shortcut array for the current platform.
  * Returns the shortcuts defined for the current platform if present, otherwise the default.
+ *
+ * @param bindings - A command's `shortcuts`; `mac` / `win` replace `default` wholesale on their platform (getPlatform), even when empty
+ * @returns The bindings in declared order, the first being the one menus display
  */
 export const getPlatformShortcuts = (
 	bindings: PlatformKeyBindings,
@@ -104,6 +107,8 @@ const CODE_DISPLAY_MAP: Record<string, string> = {
 
 /**
  * Converts a KeyBinding into a human-readable string.
+ *
+ * @param binding - One binding (getPlatformShortcuts); modifiers come out in the order Ctrl, Shift, Alt, Meta, as symbols joined with nothing on a Mac and as words joined with `+` elsewhere, the key last (`code` mapped for display, else `key`)
  * @example formatShortcut({ code: "KeyA", meta: true }) => "⌘A" (Mac)
  * @example formatShortcut({ code: "KeyA", ctrl: true }) => "Ctrl+A" (Windows)
  */

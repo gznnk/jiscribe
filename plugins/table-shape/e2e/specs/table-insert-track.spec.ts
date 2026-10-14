@@ -6,6 +6,7 @@ import {
 	cellCount,
 	cellRect,
 	drawnTextCenter,
+	pressInsertTrack,
 	tableOutlineRect,
 	trackGrip,
 } from "../support/tableDom";
@@ -17,18 +18,6 @@ import {
  * and are picked by `canExecute` — and that after an insertion the text is still
  * drawn in the cell it was typed into, the ids under it having all moved.
  */
-
-/**
- * Alt+Shift plus an arrow: insert a track in that direction. Keyboard shortcuts
- * run synchronously on keydown, so what follows only has to wait for React to
- * commit — which the poll every caller makes does.
- */
-async function insertTrack(
-	canvas: CanvasDriver,
-	arrow: "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight",
-): Promise<void> {
-	await canvas.page.keyboard.press(`Alt+Shift+${arrow}`);
-}
 
 /** Places a table and picks one of its cells, which is the reference an insertion runs from. */
 async function placeTableWithCellPicked(
@@ -47,7 +36,7 @@ test.describe("table insert track", () => {
 		const id = await placeTableWithCellPicked(canvas, "r0c0");
 		const before = await tableOutlineRect(canvas, id);
 
-		await insertTrack(canvas, "ArrowDown");
+		await pressInsertTrack(canvas, "ArrowDown");
 
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 		// The table grew downwards; its top edge did not move.
@@ -55,7 +44,7 @@ test.describe("table insert track", () => {
 		expect(after.height).toBeGreaterThan(before.height);
 		expect(after.y).toBeCloseTo(before.y, 0);
 
-		await insertTrack(canvas, "ArrowUp");
+		await pressInsertTrack(canvas, "ArrowUp");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(8);
 	});
 
@@ -68,7 +57,7 @@ test.describe("table insert track", () => {
 			box: await tableOutlineRect(canvas, id),
 		};
 
-		await insertTrack(canvas, "ArrowRight");
+		await pressInsertTrack(canvas, "ArrowRight");
 
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 		const after = await tableOutlineRect(canvas, id);
@@ -89,7 +78,7 @@ test.describe("table insert track", () => {
 		await canvas.selectAt(await cellCenter(canvas, id, "r0c1"));
 		await canvas.clickAt(await cellCenter(canvas, id, "r1c0"));
 
-		await insertTrack(canvas, "ArrowUp");
+		await pressInsertTrack(canvas, "ArrowUp");
 
 		// The text was in the second row and is now in the third, every id under it
 		// having moved one along.
@@ -115,17 +104,17 @@ test.describe("table insert track", () => {
 			}),
 		);
 
-		await insertTrack(canvas, "ArrowDown");
+		await pressInsertTrack(canvas, "ArrowDown");
 
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 
 		// A column tells an inserted row nothing about where it goes, so a row
 		// selection leaves the column insertions unavailable...
-		await insertTrack(canvas, "ArrowRight");
+		await pressInsertTrack(canvas, "ArrowRight");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 		// ...and the very same keystroke lands once a cell names a column.
 		await canvas.clickAt(await cellCenter(canvas, id, "r0c0"));
-		await insertTrack(canvas, "ArrowRight");
+		await pressInsertTrack(canvas, "ArrowRight");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(9);
 	});
 
@@ -135,20 +124,20 @@ test.describe("table insert track", () => {
 		const id = await canvas.placeShape("Table");
 
 		// The table itself names no place to insert at.
-		await insertTrack(canvas, "ArrowDown");
+		await pressInsertTrack(canvas, "ArrowDown");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(4);
 
 		// The same keystroke, once a cell is picked, does insert — so the press
 		// above was refused rather than lost.
 		await canvas.clickAt(await cellCenter(canvas, id, "r0c0"));
-		await insertTrack(canvas, "ArrowDown");
+		await pressInsertTrack(canvas, "ArrowDown");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 	});
 
 	test("is undone in one step", async ({ canvas }) => {
 		const id = await placeTableWithCellPicked(canvas, "r0c0");
 
-		await insertTrack(canvas, "ArrowDown");
+		await pressInsertTrack(canvas, "ArrowDown");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 
 		await canvas.undo();

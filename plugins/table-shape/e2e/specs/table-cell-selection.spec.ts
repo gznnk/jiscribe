@@ -4,8 +4,8 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 import {
 	cellCount,
 	cellRect,
-	clickInsertBadge,
 	partOutlineRects,
+	pressInsertTrack,
 	selectedCellIds,
 	tableOutlineRect,
 } from "../support/tableDom";
@@ -84,7 +84,8 @@ test.describe("table cell selection", () => {
 		const id = await canvas.placeShape("Table");
 		// A third column, so the rectangle and the row-major run stop coinciding:
 		// on the 2x2 a table is placed as, they are the same four cells.
-		await clickInsertBadge(canvas, "columnInsert", 2);
+		await clickCell(canvas, id, "r0c1");
+		await pressInsertTrack(canvas, "ArrowRight");
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 
 		await clickCell(canvas, id, "r0c0");

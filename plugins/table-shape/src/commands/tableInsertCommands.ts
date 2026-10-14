@@ -1,17 +1,31 @@
-import { commitEdit } from "@jiscribe/canvas-sdk";
+import { commitEdit, TEXT_SLOT_PART_KIND } from "@jiscribe/canvas-sdk";
 import type { Command, KeyBinding, LocaleMessages } from "@jiscribe/canvas-sdk";
 
 import { readTableInsertTarget } from "./readTableInsertTarget";
 import type { TableInsertSide } from "./readTableInsertTarget";
 import { insertTableTrack } from "../grid/insertTableTrack";
 import { remapTablePartSelectionForInsert } from "../grid/remapTablePartSelectionForInsert";
+import {
+	TABLE_COLUMN_PART_KIND,
+	TABLE_ROW_PART_KIND,
+} from "../grid/tableTrack";
 import type { TableAxis } from "../grid/tableTrack";
+
+/** The ids of the four insert commands, which a surface drawing them keys its own per-command data by. */
+export type TableInsertCommandId =
+	| "table.insertRowAbove"
+	| "table.insertRowBelow"
+	| "table.insertColumnLeft"
+	| "table.insertColumnRight";
+
+/** An insert command, its id narrowed to the four. */
+export type TableInsertCommand = Command & { id: TableInsertCommandId };
 
 /** One command's id, wording and key, per axis and side. */
 type TableInsertCommandSpec = {
 	axis: TableAxis;
 	side: TableInsertSide;
-	id: string;
+	id: TableInsertCommandId;
 	/**
 	 * Wording, per locale. It names the track and the side it appears on rather
 	 * than the act on the selection ("Insert Row Above", not "Insert Above"): a
@@ -83,7 +97,9 @@ const toKeyBinding = (spec: TableInsertCommandSpec): KeyBinding => ({
  * records history off `commitVersion` without advancing it, and re-derives the box
  * afterwards, finding it already grown from the drawn corner (rewriteTableGrid).
  */
-const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
+const createTableInsertCommand = (
+	spec: TableInsertCommandSpec,
+): TableInsertCommand => ({
 	id: spec.id,
 	label: spec.label,
 	category: "edit",
@@ -127,34 +143,54 @@ const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
 });
 
 /** The commands of one axis's specs, in spec order. */
-const createTableInsertCommandsAlong = (axis: TableAxis): Command[] =>
+const createTableInsertCommandsAlong = (
+	axis: TableAxis,
+): TableInsertCommand[] =>
 	TABLE_INSERT_COMMAND_SPECS.filter((spec) => spec.axis === axis).map(
 		createTableInsertCommand,
 	);
 
 /**
  * The insertions along each axis, `"before"` first: what the properties sidebar
- * offers for a picked row, column or cell (TableInsertProperty).
+ * (TableInsertProperty) and the ObjectMenu (TableInsertMenu) offer for a picked
+ * row, column or cell.
  */
 export const TABLE_INSERT_COMMANDS_BY_AXIS: Readonly<
-	Record<TableAxis, readonly Command[]>
+	Record<TableAxis, readonly TableInsertCommand[]>
 > = {
 	row: createTableInsertCommandsAlong("row"),
 	column: createTableInsertCommandsAlong("column"),
 };
 
 /**
+ * The axes offered per picked part kind: a row names no column to insert beside
+ * and a column no row (readTableTrackTarget), where a cell names both. Its keys
+ * are the kinds the Insert items are kept under while a pick narrows the
+ * sidebar and the ObjectMenu.
+ */
+export const TABLE_INSERT_AXES_BY_PICKED_PART_KIND: Readonly<
+	Record<string, readonly TableAxis[]>
+> = {
+	[TABLE_ROW_PART_KIND]: ["row"],
+	[TABLE_COLUMN_PART_KIND]: ["column"],
+	[TEXT_SLOT_PART_KIND]: ["row", "column"],
+};
+
+/** The `pickedPartKinds` the Insert items declare, read off the table above. */
+export const TABLE_INSERT_PICKED_PART_KINDS: readonly string[] = Object.keys(
+	TABLE_INSERT_AXES_BY_PICKED_PART_KIND,
+);
+
+/**
  * The table's command contributions, wired in through `CanvasPlugin.commands`:
  * insert a row above or below, a column left or right, relative to the row,
  * column or cell selection standing on the table.
  *
- * Insertion is deliberately absent from the type's ObjectMenu — the menu carries
- * what styles a table, and reshaping the grid belongs to the keys, the grips, the
- * `+` badges and the properties sidebar's Insert section. Removal has no command
- * at all: Delete over a picked row or column takes it (the part definitions'
- * `delete`).
+ * Besides the keys, they are offered as buttons while a row, column or cell is
+ * picked, in the properties sidebar's Insert section and the ObjectMenu's. Removal has no command at all: Delete over a picked row or column
+ * takes it (the part definitions' `delete`).
  */
-export const TABLE_INSERT_COMMANDS: readonly Command[] = [
+export const TABLE_INSERT_COMMANDS: readonly TableInsertCommand[] = [
 	...TABLE_INSERT_COMMANDS_BY_AXIS.row,
 	...TABLE_INSERT_COMMANDS_BY_AXIS.column,
 ];

@@ -87,6 +87,13 @@ export type CustomItem = {
 	type: "custom";
 	id: string;
 	component: React.ComponentType<ObjectMenuItemProps>;
+	/**
+	 * The picked part kinds (`selection.part.kind`) under which the item survives the
+	 * narrowing a picked part applies (`ObjectPartKindDefinition.styleIntentKinds`).
+	 * Omitted or empty = dropped under every such pick. Says nothing about the
+	 * object selection with no part picked, where the item is drawn either way.
+	 */
+	pickedPartKinds?: readonly string[];
 };
 
 export type ObjectMenuItem = BuiltinItem | CustomItem;

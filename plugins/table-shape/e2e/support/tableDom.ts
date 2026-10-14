@@ -226,42 +226,19 @@ export async function clickTrackGrip(
 }
 
 /**
- * The `+` badge offered at one boundary, by the `data-action` its control gives it.
+ * Alt+Shift plus an arrow: inserts an empty track on that side of the picked
+ * cell or track, the picked one staying picked. Keyboard shortcuts run
+ * synchronously on keydown, so what follows only has to wait for React to
+ * commit — which a poll on the result does.
  *
- * @param canvas - The driver for the page under test
- * @param axis - Which strip of badges to look in: the rows down the right or the columns along the bottom
- * @param at - The insertion position, 0-based; the badges number one more than the tracks, the outer edges included
- * @returns A locator for the badge's circle, which may match nothing when the table is not the sole selection
+ * @param canvas - The driver for the page under test; a cell or a track of the table has to be picked, or the keys insert nothing
+ * @param arrow - The side the new track goes on: up / down insert a row, left / right a column
  */
-export function insertBadge(
+export async function pressInsertTrack(
 	canvas: CanvasDriver,
-	axis: "rowInsert" | "columnInsert",
-	at: number,
-) {
-	return canvas.page.locator(
-		`[data-kind="control"][data-action="selection:table:${axis}:${at}"]`,
-	);
-}
-
-/**
- * Clicks one `+` badge at its middle, which inserts a track at that boundary.
- *
- * @param canvas - The driver for the page under test
- * @param axis - Which strip of badges to click in
- * @param at - The insertion position; throws when the table is not selected and the badges are not drawn
- */
-export async function clickInsertBadge(
-	canvas: CanvasDriver,
-	axis: "rowInsert" | "columnInsert",
-	at: number,
+	arrow: "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight",
 ): Promise<void> {
-	const box = await insertBadge(canvas, axis, at).boundingBox();
-	if (box === null) {
-		throw new Error(`no ${axis} ${at}`);
-	}
-	await canvas.clickAt(
-		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
-	);
+	await canvas.page.keyboard.press(`Alt+Shift+${arrow}`);
 }
 
 /**
@@ -415,5 +392,55 @@ export async function selectedCellIds(
 			);
 		},
 		{ id: objectId, partOutlineSelector: selectors.partOutline },
+	);
+}
+
+/**
+ * Types `text` into one cell and commits it, the way a person double-clicking
+ * the cell would. It needs no selection of its own, and leaves nothing selected:
+ * committing clicks empty space.
+ *
+ * @param canvas - The driver for the page under test
+ * @param objectId - The table's object id, as `captureObjects` reports it
+ * @param cellId - The cell's slot id (`r0c1`); its drawn middle is where the edit opens
+ * @param text - Typed as keystrokes after what the cell already holds (the editor opens with the caret at the end)
+ */
+export async function fillCell(
+	canvas: CanvasDriver,
+	objectId: string,
+	cellId: string,
+	text: string,
+): Promise<void> {
+	await canvas.typeTextAt(await cellCenter(canvas, objectId, cellId), text);
+	await canvas.commitText();
+}
+
+/**
+ * Whether `text` is drawn inside one cell, judged by where its middle falls.
+ *
+ * @param canvas - The driver for the page under test
+ * @param objectId - The table's object id, as `captureObjects` reports it
+ * @param text - Matched as the page's first element showing it, so it should be unique on the page
+ * @param cellId - The cell's slot id (`r0c1`)
+ * @returns false when the text is not drawn at all; throws when the cell is not drawn
+ */
+export async function isTextDrawnInCell(
+	canvas: CanvasDriver,
+	objectId: string,
+	text: string,
+	cellId: string,
+): Promise<boolean> {
+	const textBox = await canvas.page.getByText(text).first().boundingBox();
+	if (textBox === null) {
+		return false;
+	}
+	const cell = await cellRect(canvas, objectId, cellId);
+	const textCenterX = textBox.x + textBox.width / 2;
+	const textCenterY = textBox.y + textBox.height / 2;
+	return (
+		textCenterX > cell.x &&
+		textCenterX < cell.x + cell.width &&
+		textCenterY > cell.y &&
+		textCenterY < cell.y + cell.height
 	);
 }

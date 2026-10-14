@@ -4,8 +4,9 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 import {
 	cellCenter,
 	cellCount,
-	cellRect,
 	clickTrackGrip,
+	fillCell,
+	isTextDrawnInCell,
 } from "../support/tableDom";
 
 /**
@@ -43,38 +44,6 @@ async function clickPanelCommand(
 	commandId: string,
 ): Promise<void> {
 	await canvas.page.click(selectors.propertyPanelCommand(commandId));
-}
-
-async function fillCell(
-	canvas: CanvasDriver,
-	objectId: string,
-	cellId: string,
-	text: string,
-): Promise<void> {
-	await canvas.typeTextAt(await cellCenter(canvas, objectId, cellId), text);
-	await canvas.commitText();
-}
-
-/** Whether `text` is drawn inside the cell `cellId`, judged by where its middle falls. */
-async function isTextDrawnInCell(
-	canvas: CanvasDriver,
-	objectId: string,
-	text: string,
-	cellId: string,
-): Promise<boolean> {
-	const textBox = await canvas.page.getByText(text).first().boundingBox();
-	if (textBox === null) {
-		return false;
-	}
-	const cell = await cellRect(canvas, objectId, cellId);
-	const textCenterX = textBox.x + textBox.width / 2;
-	const textCenterY = textBox.y + textBox.height / 2;
-	return (
-		textCenterX > cell.x &&
-		textCenterX < cell.x + cell.width &&
-		textCenterY > cell.y &&
-		textCenterY < cell.y + cell.height
-	);
 }
 
 test.describe("table insert from the properties sidebar", () => {

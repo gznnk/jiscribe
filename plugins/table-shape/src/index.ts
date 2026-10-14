@@ -51,7 +51,6 @@ export { Table } from "./presentation/Table";
 export {
 	calcTableLocalDragDelta,
 	calcSegmentPlacement,
-	createTableInsertHandler,
 	createTableTrackGripHandler,
 	handleTableColumnBoundary,
 	handleTableRowBoundary,
@@ -61,12 +60,8 @@ export {
 	TableBoundaryStrip,
 	TableColumnBoundaryControl,
 	TableColumnGripControl,
-	TableColumnInsertControl,
-	TableInsertBadge,
-	TableInsertBadges,
 	TableRowBoundaryControl,
 	TableRowGripControl,
-	TableRowInsertControl,
 	TableTrackGrip,
 	TableTrackGrips,
 } from "./controls";

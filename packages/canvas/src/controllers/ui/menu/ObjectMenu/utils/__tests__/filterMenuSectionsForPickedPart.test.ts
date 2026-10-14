@@ -14,6 +14,9 @@ const TEXT_AND_FILL_KINDS: ReadonlySet<string> = new Set([
 	"fill",
 ]);
 
+/** The kind every pick below is of, unless a case says otherwise; no custom item below names it. */
+const PICKED_KIND = "textSlot";
+
 describe("filterMenuSectionsForPickedPart", () => {
 	it("keeps the text items and drops every other builtin", () => {
 		const sections: ObjectMenuSection[] = [
@@ -36,7 +39,9 @@ describe("filterMenuSectionsForPickedPart", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
+		expect(
+			filterMenuSectionsForPickedPart(sections, PICKED_KIND, TEXT_KINDS),
+		).toEqual([
 			{
 				id: "text",
 				items: [
@@ -48,7 +53,7 @@ describe("filterMenuSectionsForPickedPart", () => {
 		]);
 	});
 
-	it("drops custom items even when they sit beside a kept text item", () => {
+	it("drops custom items not naming the picked kind, even beside a kept text item", () => {
 		const sections: ObjectMenuSection[] = [
 			{
 				id: "text",
@@ -59,9 +64,9 @@ describe("filterMenuSectionsForPickedPart", () => {
 			},
 		];
 
-		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
-			{ id: "text", items: [{ type: "font" }] },
-		]);
+		expect(
+			filterMenuSectionsForPickedPart(sections, PICKED_KIND, TEXT_KINDS),
+		).toEqual([{ id: "text", items: [{ type: "font" }] }]);
 	});
 
 	it("removes a section that the filter emptied", () => {
@@ -71,9 +76,9 @@ describe("filterMenuSectionsForPickedPart", () => {
 			{ id: "arrowHead", items: [{ type: "arrowHead" }] },
 		];
 
-		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([
-			{ id: "text", items: [{ type: "textAlignment" }] },
-		]);
+		expect(
+			filterMenuSectionsForPickedPart(sections, PICKED_KIND, TEXT_KINDS),
+		).toEqual([{ id: "text", items: [{ type: "textAlignment" }] }]);
 	});
 
 	it("returns nothing when no section has a text item left", () => {
@@ -82,7 +87,9 @@ describe("filterMenuSectionsForPickedPart", () => {
 			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
-		expect(filterMenuSectionsForPickedPart(sections, TEXT_KINDS)).toEqual([]);
+		expect(
+			filterMenuSectionsForPickedPart(sections, PICKED_KIND, TEXT_KINDS),
+		).toEqual([]);
 	});
 
 	it("keeps an item whose every kind the picked kind receives", () => {
@@ -99,7 +106,11 @@ describe("filterMenuSectionsForPickedPart", () => {
 		];
 
 		expect(
-			filterMenuSectionsForPickedPart(sections, TEXT_AND_FILL_KINDS),
+			filterMenuSectionsForPickedPart(
+				sections,
+				PICKED_KIND,
+				TEXT_AND_FILL_KINDS,
+			),
 		).toEqual([
 			{ id: "style", items: [{ type: "backgroundColor" }] },
 			{ id: "text", items: [{ type: "font" }] },
@@ -117,6 +128,7 @@ describe("filterMenuSectionsForPickedPart", () => {
 		expect(
 			filterMenuSectionsForPickedPart(
 				sections,
+				PICKED_KIND,
 				new Set(["strokeWidth", "startArrow"]),
 			),
 		).toEqual([]);
@@ -130,6 +142,7 @@ describe("filterMenuSectionsForPickedPart", () => {
 		expect(
 			filterMenuSectionsForPickedPart(
 				sections,
+				PICKED_KIND,
 				new Set(["strokeWidth", "strokeDashType"]),
 			),
 		).toEqual(sections);
@@ -146,7 +159,11 @@ describe("filterMenuSectionsForPickedPart", () => {
 		];
 
 		expect(
-			filterMenuSectionsForPickedPart(sections, new Set(["fill", "group"])),
+			filterMenuSectionsForPickedPart(
+				sections,
+				PICKED_KIND,
+				new Set(["fill", "group"]),
+			),
 		).toEqual([]);
 	});
 
@@ -157,7 +174,55 @@ describe("filterMenuSectionsForPickedPart", () => {
 		];
 
 		expect(
-			filterMenuSectionsForPickedPart(sections, new Set(["fill"])),
+			filterMenuSectionsForPickedPart(sections, PICKED_KIND, new Set(["fill"])),
 		).toEqual([{ id: "style", items: [{ type: "backgroundColor" }] }]);
+	});
+
+	it("keeps a custom item naming the picked kind, whatever the pick receives", () => {
+		const sections: ObjectMenuSection[] = [
+			{
+				id: "insert",
+				items: [
+					{
+						type: "custom",
+						id: "insert-tracks",
+						component: CustomItemComponent,
+						pickedPartKinds: ["row", "column"],
+					},
+				],
+			},
+		];
+		const keptIds = (pickedPartKind: string): string[] =>
+			filterMenuSectionsForPickedPart(
+				sections,
+				pickedPartKind,
+				new Set<string>(),
+			).map((section) => section.id);
+
+		expect(keptIds("row")).toEqual(["insert"]);
+		expect(keptIds("column")).toEqual(["insert"]);
+		expect(keptIds("textSlot")).toEqual([]);
+	});
+
+	it("drops a custom item naming no kind at all", () => {
+		expect(
+			filterMenuSectionsForPickedPart(
+				[
+					{
+						id: "insert",
+						items: [
+							{
+								type: "custom",
+								id: "insert-tracks",
+								component: CustomItemComponent,
+								pickedPartKinds: [],
+							},
+						],
+					},
+				],
+				"row",
+				TEXT_KINDS,
+			),
+		).toEqual([]);
 	});
 });

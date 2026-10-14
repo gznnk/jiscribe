@@ -155,6 +155,15 @@ export {
 	ObjectMenuItemPositioner,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuStyled";
 
+// A custom item is dropped while a picked part narrows the menu (its kind's
+// `styleIntentKinds`), unless it names that kind in `pickedPartKinds`. A command
+// button names its command the way the sidebar's do (resolveCommandLabel), with
+// the key it answers to on this platform, as the context menu writes it.
+export {
+	formatShortcut,
+	getPlatformShortcuts,
+} from "./controllers/commands/CommandUtils";
+
 // The swatch shown on a color menu's toggle button (a filled circle, checkered
 // when transparent). Pair it with a dropdown panel of your own swatches when the
 // type picks from a palette other than ObjectMenuColorPickerGrid's.
