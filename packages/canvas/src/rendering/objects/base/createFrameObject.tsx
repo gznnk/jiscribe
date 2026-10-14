@@ -294,18 +294,6 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeOpacity,
 		} = props;
 
-		const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
-			props.type,
-			{
-				stroke,
-				strokeWidth,
-				strokeDashType,
-				strokeOpacity,
-				fill,
-				fillOpacity,
-			},
-		);
-
 		// Read only as a memo key below: `draw` and the slot regions measure text,
 		// and a context change is what gets past this component's memo when a face
 		// lands after the first paint.
@@ -329,21 +317,6 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 			[textSource, textSlotKind, textType, fontsLoadedNonce],
 		);
-
-		const shape: FrameShapeProps = {
-			"data-kind": "object",
-			"data-id": id,
-			transform: transformAttr,
-			strokeColor: resolveAutoColor(shapeStyle.stroke, "ink"),
-			fillColor: resolveAutoColor(shapeStyle.fill, "surface"),
-			strokeWidth: shapeStyle.strokeWidth,
-			strokeAlpha: shapeStyle.strokeOpacity,
-			fillAlpha: shapeStyle.fillOpacity,
-			strokeDasharray: getStrokeDasharray(
-				shapeStyle.strokeDashType,
-				shapeStyle.strokeWidth,
-			),
-		};
 
 		const overlays = useMemo(() => {
 			const {
@@ -399,6 +372,33 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			));
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 		}, [textSource, textSlotKind, textType, textSlotRegions, fontsLoadedNonce]);
+
+		const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
+			props.type,
+			{
+				stroke,
+				strokeWidth,
+				strokeDashType,
+				strokeOpacity,
+				fill,
+				fillOpacity,
+			},
+		);
+
+		const shape: FrameShapeProps = {
+			"data-kind": "object",
+			"data-id": id,
+			transform: transformAttr,
+			strokeColor: resolveAutoColor(shapeStyle.stroke, "ink"),
+			fillColor: resolveAutoColor(shapeStyle.fill, "surface"),
+			strokeWidth: shapeStyle.strokeWidth,
+			strokeAlpha: shapeStyle.strokeOpacity,
+			fillAlpha: shapeStyle.fillOpacity,
+			strokeDasharray: getStrokeDasharray(
+				shapeStyle.strokeDashType,
+				shapeStyle.strokeWidth,
+			),
+		};
 
 		// The overlays sit in a group of their own carrying the shape's transform,
 		// so the transform reaches none of them as a prop: a move or a rotation
