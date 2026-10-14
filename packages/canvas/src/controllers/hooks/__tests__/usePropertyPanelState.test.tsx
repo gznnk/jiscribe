@@ -62,6 +62,7 @@ const baseState = (): CanvasControllerState => {
 		},
 		rootIds: ["selected", "other", "group"],
 		selection: selectionOf(["selected"]),
+		propertyPanel: { ...initial.propertyPanel, isOpen: true },
 	};
 };
 
@@ -183,6 +184,27 @@ describe("usePropertyPanelState", () => {
 			textEditState: { kind: "shape", text: "" },
 		} as unknown as CanvasControllerState;
 		expect(render(editing)).toBe(editing);
+	});
+
+	it("hands out every state while the sidebar is closed, which reads none of them", () => {
+		const closed = {
+			...baseState(),
+			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
+		};
+		const { render } = mount(closed);
+		const panned = { ...closed, viewport: { ...closed.viewport, minX: 99 } };
+		expect(render(panned)).toBe(panned);
+	});
+
+	it("latches the state it is opened on", () => {
+		const opened = baseState();
+		const { render } = mount({
+			...opened,
+			propertyPanel: { ...opened.propertyPanel, isOpen: false },
+		});
+		expect(render(opened)).toBe(opened);
+		const panned = { ...opened, viewport: { ...opened.viewport, minX: 99 } };
+		expect(render(panned)).toBe(opened);
 	});
 
 	it("latches again after a change, so the next pan holds the latest state", () => {
