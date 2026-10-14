@@ -66,14 +66,20 @@ export type TableLayout = {
 	readonly height: number;
 };
 
+/** The cell ids of one row, left to right: what both the measuring and the rects are keyed by. */
+const collectRowCellIds = (rowIndex: number, columnCount: number): string[] =>
+	Array.from({ length: columnCount }, (_unused, columnIndex) =>
+		tableCellTextSlotId(rowIndex, columnIndex),
+	);
+
 /**
  * Height one row is drawn at: its stored height as the lower bound, raised to
  * whatever its tallest cell asks for. A row whose text outgrows the stored value
  * is drawn taller, never clipped.
  */
 const calcRowHeight = (
-	rowIndex: number,
 	row: TableRowDoc,
+	rowCellIds: readonly string[],
 	columns: readonly TableColumnDoc[],
 	cells: Record<string, TableCell> | undefined,
 	strokeWidth: number,
@@ -83,7 +89,7 @@ const calcRowHeight = (
 			Math.max(
 				tallest,
 				readCachedCellTextHeight(
-					cells?.[tableCellTextSlotId(rowIndex, columnIndex)],
+					cells?.[rowCellIds[columnIndex]],
 					column.width - strokeWidth,
 				),
 			),
@@ -116,14 +122,16 @@ const NO_ROW_BOUND: TableRowDoc = {};
 export const calcTableRowTextFloor = (
 	state: TableLayoutSource,
 	rowIndex: number,
-): number =>
-	calcRowHeight(
-		rowIndex,
+): number => {
+	const columns = state.columns ?? [];
+	return calcRowHeight(
 		NO_ROW_BOUND,
-		state.columns ?? [],
+		collectRowCellIds(rowIndex, columns.length),
+		columns,
 		state.text,
 		resolveTableStrokeWidth(state),
 	);
+};
 
 /**
  * The table's width: the column widths summed, which is all of the layout the
@@ -167,8 +175,17 @@ export const calcTableLayout = (state: TableLayoutSource): TableLayout => {
 	const rows = state.rows ?? [];
 	const strokeWidth = resolveTableStrokeWidth(state);
 
+	const cellIdsByRow = rows.map((_, rowIndex) =>
+		collectRowCellIds(rowIndex, columns.length),
+	);
 	const rowHeights = rows.map((row, rowIndex) =>
-		calcRowHeight(rowIndex, row, columns, state.text, strokeWidth),
+		calcRowHeight(
+			row,
+			cellIdsByRow[rowIndex],
+			columns,
+			state.text,
+			strokeWidth,
+		),
 	);
 	const width = calcTableColumnsWidth(columns);
 	const height = rowHeights.reduce((total, rowHeight) => total + rowHeight, 0);
@@ -182,7 +199,7 @@ export const calcTableLayout = (state: TableLayoutSource): TableLayout => {
 	const cellRects: Record<string, Rect> = {};
 	rows.forEach((_, rowIndex) => {
 		columns.forEach((column, columnIndex) => {
-			cellRects[tableCellTextSlotId(rowIndex, columnIndex)] = {
+			cellRects[cellIdsByRow[rowIndex][columnIndex]] = {
 				x: columnEdgeXs[columnIndex],
 				y: rowEdgeYs[rowIndex],
 				width: column.width,
