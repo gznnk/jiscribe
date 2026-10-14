@@ -124,15 +124,12 @@ test.describe("styling a Markdown source body", () => {
 		await expect(
 			canvas.page.locator(selectors.objectMenuToggle("font-size")),
 		).toBeVisible();
-		// The four buttons are laid out flat while text is edited, so their absence
-		// is the absence of the `set:` parts themselves.
+		// The Bold toggle sits on the menu itself, so its absence is the absence of
+		// the `set:` part.
 		await expect(
 			canvas.page.locator(
 				`${selectors.objectMenu} [data-action^="set:fontWeight:"]`,
 			),
-		).toHaveCount(0);
-		await expect(
-			canvas.page.locator(selectors.objectMenuToggle("text-format")),
 		).toHaveCount(0);
 	});
 

@@ -31,7 +31,7 @@ test.describe("<g>-rooted shape text style", () => {
 		await canvas.openObjectMenu("font-size");
 		await canvas.setNumberInput("fontSize", 36);
 		await canvas.setColor("font-color", "#0ea5e9");
-		await canvas.setTextFormat("fontWeight", "bold");
+		await canvas.setBold("bold");
 
 		// The three settings reach the render on separate frames, and fontWeight is set
 		// last, so wait on all three together rather than on fontSize alone.

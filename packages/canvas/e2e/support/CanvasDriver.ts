@@ -1104,25 +1104,14 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Toggle one text format (bold / italic / underline / strikethrough) of the selected shape.
-	 * The buttons are already on the menu itself while text is edited inline, and the submenu
-	 * stays open after a press, so it is only opened when they are absent.
+	 * Press the ObjectMenu's Bold toggle for the selected shape, or for the picked
+	 * part or the stretch being edited.
 	 *
-	 * @param property - Style property the button writes, as it appears in the `set:` data-action
-	 * @param value - Value the button writes; the buttons carry the value the *next* press lands
-	 *   on, so a toggle-off names the cleared value ("normal" / "none")
+	 * @param value - fontWeight the button writes; it carries the value the *next*
+	 *   press lands on, so a toggle-off names "normal"
 	 */
-	async setTextFormat(
-		property: "fontWeight" | "fontStyle" | "textDecoration",
-		value: string,
-	) {
-		const italicButton = this.page.locator(
-			`${selectors.objectMenu} [data-action^="set:fontStyle:"]`,
-		);
-		if ((await italicButton.count()) === 0) {
-			await this.openObjectMenu("text-format");
-		}
-		await this.page.click(selectors.objectMenuSet(property, value));
+	async setBold(value: "bold" | "normal") {
+		await this.page.click(selectors.objectMenuSet("fontWeight", value));
 	}
 
 	/** Set the dash style of the selected line, connector or shape border. */

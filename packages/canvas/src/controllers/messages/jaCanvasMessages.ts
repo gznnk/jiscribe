@@ -100,7 +100,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuAlignTop: "上揃え",
 	menuAlignMiddle: "上下中央揃え",
 	menuAlignBottom: "下揃え",
-	menuTextFormat: "テキスト書式",
 	menuBold: "太字",
 	menuItalic: "イタリック",
 	menuUnderline: "下線",

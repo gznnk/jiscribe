@@ -105,7 +105,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuAlignTop: "Top",
 	menuAlignMiddle: "Middle",
 	menuAlignBottom: "Bottom",
-	menuTextFormat: "Text Format",
 	menuBold: "Bold",
 	menuItalic: "Italic",
 	menuUnderline: "Underline",

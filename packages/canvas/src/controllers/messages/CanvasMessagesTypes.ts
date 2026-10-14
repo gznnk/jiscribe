@@ -169,7 +169,6 @@ export type CanvasMessageStrings = {
 	menuAlignTop: string;
 	menuAlignMiddle: string;
 	menuAlignBottom: string;
-	menuTextFormat: string;
 	menuBold: string;
 	menuItalic: string;
 	menuUnderline: string;

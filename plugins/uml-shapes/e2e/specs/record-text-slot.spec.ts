@@ -10,7 +10,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
  *   away, so only the slot box reads as the operated target
  * - a style change then lands on that slot alone, leaving the others as they were
  * - the object menu drops to the text items, since nothing else applies to a slot,
- *   and its text format buttons come out of their dropdown onto the menu itself
+ *   Bold among them, laid out on the menu itself as it is for the whole object
  * - Escape steps out one level at a time: the slot first, the object next
  * - Tab walks the slots down the box and wraps around, over three slots as well as two
  * - Enter opens the selected slot for editing
@@ -276,7 +276,7 @@ test.describe("record: selecting one text slot", () => {
 			.toBeLessThanOrEqual(2);
 	});
 
-	test("lays the text format buttons out flat while a slot is selected", async ({
+	test("offers Bold alone on the menu itself, with the object or a slot selected", async ({
 		canvas,
 	}) => {
 		await createFilledRecord(canvas);
@@ -286,13 +286,17 @@ test.describe("record: selecting one text slot", () => {
 		);
 		// Matched on the property alone: each button carries the value its *next* press
 		// lands on, and the name slot ships bold and underlined.
-		const bold = canvas.page.locator('[data-action^="set:fontWeight:"]');
-		const italic = canvas.page.locator('[data-action^="set:fontStyle:"]');
+		const bold = canvas.page.locator(
+			`${selectors.objectMenu} [data-action^="set:fontWeight:"]`,
+		);
+		const otherFormats = canvas.page.locator(
+			`${selectors.objectMenu} [data-action^="set:fontStyle:"], ${selectors.objectMenu} [data-action^="set:textDecoration:"]`,
+		);
 
-		// The whole object selected: the four stay behind the dropdown.
 		await canvas.selectAt(ATTRIBUTES_SPOT);
-		await expect(textFormatToggle).toBeVisible();
-		await expect(bold).toHaveCount(0);
+		await expect(bold).toBeVisible();
+		await expect(textFormatToggle).toHaveCount(0);
+		await expect(otherFormats).toHaveCount(0);
 
 		await canvas.clickAt(NAME_SPOT);
 		await expect
@@ -300,13 +304,9 @@ test.describe("record: selecting one text slot", () => {
 				message: "the slot outline replaces the object outline",
 			})
 			.toEqual(["part"]);
-		await expect(textFormatToggle).toHaveCount(0);
 		await expect(bold).toBeVisible();
-		await expect(italic).toBeVisible();
-
-		await canvas.pressEscape();
-		await expect(textFormatToggle).toBeVisible();
-		await expect(bold).toHaveCount(0);
+		await expect(textFormatToggle).toHaveCount(0);
+		await expect(otherFormats).toHaveCount(0);
 	});
 
 	test("steps out of the slot on the first Escape and clears the selection on the second", async ({

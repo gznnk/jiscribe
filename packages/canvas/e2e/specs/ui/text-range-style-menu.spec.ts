@@ -105,14 +105,14 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 	}) => {
 		const id = await editAndSelect(canvas, "Payment failed", 7);
 
-		await canvas.setTextFormat("fontWeight", "bold");
+		await canvas.setBold("bold");
 		await expect
 			.poll(async () => (await canvas.drawnTextRuns(id)).length)
 			.toBe(2);
 
 		// The button now offers the cleared value, which it can only know from the
 		// selection's own styling rather than the slot's.
-		await canvas.setTextFormat("fontWeight", "normal");
+		await canvas.setBold("normal");
 		await expect
 			.poll(async () =>
 				canvas.page.evaluate(

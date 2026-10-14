@@ -106,7 +106,7 @@ const renderItem = (
 				</React.Fragment>
 			);
 		case "textFormat":
-			return <TextFormatMenu key="textFormat" canvasState={canvasState} />;
+			return <TextFormatMenu key="textFormat" />;
 		case "textAlignment":
 			return (
 				<AlignmentMenu
@@ -186,8 +186,8 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	const readStyle = useSelectionStyleReader(canvasState);
 	const { objectPartKind } = useCanvasRegistries();
 	// Reported to the positioning hook, which holds the menu still while it is
-	// under the pointer — the flat format buttons resize an auto-sized text on
-	// every toggle, and the menu must not walk away between two presses.
+	// under the pointer — the Bold toggle resizes an auto-sized text on every
+	// press, and the menu must not walk away between two presses.
 	// The dropdown panels are DOM children of the container, so moving onto one
 	// is not a leave.
 	const [isPointerOverMenu, setIsPointerOverMenu] = useState(false);

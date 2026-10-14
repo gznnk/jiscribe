@@ -295,6 +295,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **The object menu offers Bold alone for text formatting, as one button on the
+  menu itself.** The text-format dropdown, which held Bold, Italic, Underline and
+  Strikethrough, is gone, and so is the row of four the menu used to lay out
+  while a text slot, a cell, a row or a column was picked. Italic, underline and
+  strikethrough stay in the property sidebar's Style row and on Ctrl/Cmd+I, U
+  and Shift+X while text is edited. For plugin authors, the
+  `{ type: "textFormat" }` menu item keeps its name and now renders that one
+  Bold toggle; `CanvasMessages.menuTextFormat` is removed.
 - **A picked part's box is drawn in place of its shape's selection outline.**
   With a text slot, a cell, a row or a column picked — and while one is being
   edited — the shape's own outline, which used to turn dashed around it, is no

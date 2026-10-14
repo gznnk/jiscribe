@@ -7,7 +7,7 @@ import {
 } from "../../../utils/toggleTextDecorationToken";
 import { useSelectionStyle } from "../SelectionStyleReaderContext";
 
-/** One of the four format buttons, as either surface draws it. */
+/** One of the four format buttons, as a surface draws it. */
 type TextFormatToggle = {
 	/** Whether the selected text is drawn with the format, so the button reads lit. */
 	isActive: boolean;
@@ -26,8 +26,8 @@ type TextFormatToggles = {
 /**
  * Bold / italic / underline / strikethrough for the selected text: what each
  * one reads as, and what its press writes. The one place the four are decided,
- * so the ObjectMenu's row of buttons (TextFormatMenu) and the sidebar's Style
- * row (TextFormatItem) cannot disagree about what is lit or what a press does.
+ * so the ObjectMenu's Bold toggle (TextFormatMenu) and the sidebar's Style row
+ * (TextFormatItem) cannot disagree about what is lit or what a press does.
  *
  * Each button writes the value the press should land on rather than a toggle
  * command, so what it does is decided against what the text is actually drawn

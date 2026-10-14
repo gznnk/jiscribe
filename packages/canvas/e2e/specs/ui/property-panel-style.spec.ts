@@ -126,6 +126,71 @@ test.describe("Properties sidebar Text rows", () => {
 			.toBe("400");
 	});
 
+	test("sets font-style to italic with the Italic segment and back to normal on a second press", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.page.click(selectors.propertyPanelSet("fontStyle", "italic"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
+			.toBe("italic");
+
+		await canvas.page.click(selectors.propertyPanelSet("fontStyle", "normal"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
+			.toBe("normal");
+	});
+
+	test("sets text-decoration to underline with the Underline segment and back to none on a second press", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.page.click(
+			selectors.propertyPanelSet("textDecoration", "underline"),
+		);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
+
+		await canvas.page.click(
+			selectors.propertyPanelSet("textDecoration", "none"),
+		);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("none");
+	});
+
+	test("keeps the underline while the strikethrough is toggled on and off", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.page.click(
+			selectors.propertyPanelSet("textDecoration", "underline"),
+		);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
+
+		// With the underline on, the Strikethrough segment writes both lines at once.
+		await canvas.page.click(
+			selectors.propertyPanelSet("textDecoration", "underline line-through"),
+		);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline line-through");
+
+		// Turning the strikethrough back off leaves the underline standing.
+		await canvas.page.click(
+			selectors.propertyPanelSet("textDecoration", "underline"),
+		);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
+	});
+
 	test("moves the text to the side the Horizontal segments state", async ({
 		canvas,
 	}) => {

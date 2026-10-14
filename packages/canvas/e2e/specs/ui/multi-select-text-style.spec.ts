@@ -61,7 +61,7 @@ test.describe("bulk text style application to a multi-selection", () => {
 		const { left, right } = await drawTwoLabeledRects(canvas);
 		await marqueeSelectBoth(canvas);
 
-		await canvas.setTextFormat("fontWeight", "bold");
+		await canvas.setBold("bold");
 
 		await expect
 			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)

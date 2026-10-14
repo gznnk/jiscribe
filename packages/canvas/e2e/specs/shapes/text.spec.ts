@@ -330,7 +330,7 @@ test.describe("text", () => {
 		expect(await drawnLineCount(canvas, id)).toBe(1);
 
 		await canvas.selectAt(centerOf(normal));
-		await canvas.setTextFormat("fontWeight", "bold");
+		await canvas.setBold("bold");
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("700");
@@ -341,8 +341,11 @@ test.describe("text", () => {
 		expect(bold.height).toBeCloseTo(expectedBoxHeight(1, DEFAULT_FONT_SIZE));
 
 		// Italic on top: both are written into one font declaration, so a declaration
-		// the style makes unusable would take the weight down with it.
-		await canvas.setTextFormat("fontStyle", "italic");
+		// the style makes unusable would take the weight down with it. Italic lives in
+		// the sidebar only; closing it gives the canvas its full width back.
+		await canvas.openPropertyPanel();
+		await canvas.page.click(selectors.propertyPanelSet("fontStyle", "italic"));
+		await canvas.closePropertyPanel();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
 			.toBe("italic");
