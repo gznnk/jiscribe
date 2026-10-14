@@ -108,10 +108,13 @@ export const ALL_COMMANDS: Command[] = [
  * @param registries Target bundle to populate.
  * @param commandIds When provided, only commands whose id is included are
  * registered (enables per-canvas command restriction). Defaults to all.
- * @param plugins Command-contributing plugins, appended after `ALL_COMMANDS` in
- * declaration order. They go in before the `commandIds` filter, so a host still
- * narrows the built-in and the contributed set with one list. A contributed id
- * that is already taken throws (`CommandRegistry.register`).
+ * @param plugins Command-contributing plugins, registered after `ALL_COMMANDS` in
+ * declaration order and marked as contributed, so a keystroke they share with a
+ * built-in is offered to them first (`CommandRegistry.findAllByShortcut`): a
+ * contributed command claims the key whenever its `canExecute` is true. They
+ * pass through the same `commandIds` filter, so a host still narrows the
+ * built-in and the contributed set with one list. A contributed id that is
+ * already taken throws (`CommandRegistry.register`).
  */
 export const initializeCommands = (
 	registries: CanvasRegistries,
@@ -122,10 +125,10 @@ export const initializeCommands = (
 	const contributed = (plugins ?? []).flatMap(
 		(plugin) => plugin.commands ?? [],
 	);
-	const all = [...ALL_COMMANDS, ...contributed];
 	const enabled = commandIds ? new Set(commandIds) : undefined;
-	const commands = enabled
-		? all.filter((command) => enabled.has(command.id))
-		: all;
-	registries.command.registerAll(commands);
+	const isEnabled = (command: Command): boolean =>
+		enabled === undefined || enabled.has(command.id);
+	registries.command
+		.registerAll(ALL_COMMANDS.filter(isEnabled))
+		.registerAll(contributed.filter(isEnabled), "contributed");
 };

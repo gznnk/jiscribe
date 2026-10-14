@@ -30,9 +30,14 @@ export type CanvasPlugin = {
 	 * declaration order. An id already registered (built-in or another plugin)
 	 * throws at construction time, so a plugin cannot silently replace a command.
 	 *
-	 * A binding may be shared with an existing command: the keystroke goes to the
-	 * first command whose `canExecute` passes, so the two must not be available at
-	 * the same time (see `CommandRegistry.findAllByShortcut`).
+	 * A binding may be shared with an existing command, and a contributed command
+	 * is offered the keystroke before any built-in one: it claims the key whenever
+	 * its `canExecute` is true, taking it from the built-in (a table's bare arrows
+	 * move the cell selection instead of nudging the table). Keep `canExecute`
+	 * narrow to the context the plugin owns, or the built-in stops answering
+	 * elsewhere too. Among contributed commands the first in declaration order
+	 * whose `canExecute` passes wins, so two of them must not be available at the
+	 * same time (see `CommandRegistry.findAllByShortcut`).
 	 */
 	commands?: readonly Command[];
 };

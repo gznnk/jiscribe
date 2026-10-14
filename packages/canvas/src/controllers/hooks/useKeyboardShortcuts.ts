@@ -69,8 +69,9 @@ export const useKeyboardShortcuts = ({
 			}
 
 			// A binding may be claimed by several commands that are available in
-			// different contexts, so the keystroke is offered to each in
-			// registration order instead of stopping at the first.
+			// different contexts, so the keystroke is offered to each in turn —
+			// plugin-contributed ones ahead of the built-ins
+			// (CommandRegistry.findAllByShortcut) — instead of stopping at the first.
 			const matched = commandRegistry.findAllByShortcut(event);
 
 			// Callback-executed commands (undo/redo when externally owned, paste)

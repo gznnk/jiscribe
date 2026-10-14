@@ -71,6 +71,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   a row's above and below, a column's left and right, a cell's all four. The
   cells keep their contents as the grid renumbers around an insertion, and one
   undo takes it back.
+- **The arrow keys move a table's picked cell.** With a cell picked, an arrow
+  picks the cell next to it in that direction instead of nudging the table, and
+  at the edge of the grid it does nothing. A picked block of cells collapses to
+  the neighbour of the cell the last click or Shift-click ended on. With the
+  table selected as a whole, or a row or column picked, the arrows nudge the
+  table as before.
 - **Ctrl/Cmd+Shift+X strikes the selected text through while editing**, and
   pressing it again takes the line off, as Ctrl/Cmd+B / I / U do for bold,
   italic and underline. An underline on the same characters is kept. Ctrl/Cmd+X
@@ -303,6 +309,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and Shift+X while text is edited. For plugin authors, the
   `{ type: "textFormat" }` menu item keeps its name and now renders that one
   Bold toggle; `CanvasMessages.menuTextFormat` is removed.
+- **For plugin authors: a contributed command is offered a shared keystroke
+  before the built-ins.** When a key binding matches several commands, the ones
+  a plugin contributes through `CanvasPlugin.commands` are asked first, in
+  declaration order, and the built-ins after them in their usual order. A
+  contributed command therefore takes a built-in's key whenever its
+  `canExecute` is true — the table's bare arrows rely on it — so keep that
+  check narrow to the context the plugin owns. `CommandRegistry.register` and
+  `registerAll` take an optional `origin` (`"builtIn"` by default) that marks
+  a command as contributed; `getAll` keeps the registration order.
 - **A picked part's box is drawn in place of its shape's selection outline.**
   With a text slot, a cell, a row or a column picked — and while one is being
   edited — the shape's own outline, which used to turn dashed around it, is no

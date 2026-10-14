@@ -299,6 +299,33 @@ describe("createCanvasRegistries", () => {
 			expect(registries.command.getAll().at(-1)?.id).toBe("cell");
 		});
 
+		it("offers a keystroke to a plugin's command before the built-in sharing it", () => {
+			const registries = createCanvasRegistries({
+				plugins: [
+					{
+						id: "cell-plugin",
+						commands: [
+							{
+								...buildFakeCommand("cell-up"),
+								shortcuts: { default: [{ code: "ArrowUp" }] },
+							},
+						],
+					},
+				],
+			});
+			const matchedIds = registries.command
+				.findAllByShortcut({
+					code: "ArrowUp",
+					key: "ArrowUp",
+					ctrlKey: false,
+					metaKey: false,
+					shiftKey: false,
+					altKey: false,
+				} as KeyboardEvent)
+				.map((command) => command.id);
+			expect(matchedIds).toEqual(["cell-up", "move-up"]);
+		});
+
 		it("narrows the plugin's commands with the same config.commands list", () => {
 			const registries = createCanvasRegistries({
 				commands: ["undo", "cell"],

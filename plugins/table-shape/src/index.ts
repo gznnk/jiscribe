@@ -33,6 +33,7 @@ export type { TableAxis } from "./grid/tableTrack";
 export { TABLE_TRACK_PART_DEFINITIONS } from "./parts/tableTrackParts";
 
 export { TABLE_INSERT_COMMANDS } from "./commands/tableInsertCommands";
+export { TABLE_CELL_SELECTION_COMMANDS } from "./commands/tableCellSelectionCommands";
 export { readTableInsertTarget } from "./commands/readTableInsertTarget";
 export type {
 	TableInsertSide,

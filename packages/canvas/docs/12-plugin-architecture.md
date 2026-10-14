@@ -129,11 +129,15 @@ with no config gives the default configuration: every built-in type and nothing 
   last-wins — an accidental collision between two plugins fails loudly instead of
   silently changing which shape renders or which command a menu entry runs.
   Deliberate replacement is expressed as removal plus addition.
-- **A shared key binding is resolved by `canExecute`, not by order.** Several
-  commands may claim the same keystroke; it goes to the first one that reports
-  itself available, and to the browser when none does. Commands sharing a binding
-  must therefore be available in mutually exclusive contexts — the sweep in
-  `initializeCommands.exclusivity.test.ts` holds them to it.
+- **A shared key binding is resolved by `canExecute`, contributed commands
+  first.** Several commands may claim the same keystroke; it goes to the first one
+  that reports itself available, and to the browser when none does. Commands a
+  plugin contributes are asked before the built-ins, so a contributed command
+  takes a built-in key whenever its `canExecute` is true (the table's bare arrows
+  move the cell selection instead of nudging the table). A plugin must therefore
+  keep `canExecute` narrow to the context it owns. Among the built-ins, commands
+  sharing a binding must be available in mutually exclusive contexts — the sweep
+  in `initializeCommands.exclusivity.test.ts` holds them to it.
 - Adding plugins does not move the validation boundary: the parser remains the one
   place documents are checked, and everything past it assumes valid input
   ([Design Philosophy](./01-design-philosophy.md)).
