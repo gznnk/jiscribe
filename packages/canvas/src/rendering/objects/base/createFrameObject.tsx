@@ -7,7 +7,7 @@ import {
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/text/TextType";
 import type { TransformedFrame } from "@jiscribe/geometry";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef } from "react";
 import type React from "react";
 import type { ReactNode } from "react";
 
@@ -109,6 +109,57 @@ export type FrameTextOverlayProps = {
 export type FrameTextOverlayRenderer = (
 	props: FrameTextOverlayProps,
 ) => ReactNode;
+
+/**
+ * Fields no text region reads: a region is placed in the shape's local space,
+ * before the transform puts it on the canvas (calcTextRegion), and these are
+ * what a move or a rotation writes.
+ */
+const PLACEMENT_FIELDS: ReadonlySet<string> = new Set(["cx", "cy", "rotation"]);
+
+/**
+ * Whether two states hold the same value, by reference, in every field but the
+ * placement. A field one of them leaves out compares as undefined, as every
+ * reader sees it. Walked with `for...in` rather than over `Object.keys`, which
+ * would allocate two arrays per shape on every frame of a drag.
+ */
+const differsInPlacementAlone = (previous: object, next: object): boolean => {
+	const previousRecord = previous as Record<string, unknown>;
+	const nextRecord = next as Record<string, unknown>;
+	for (const field in nextRecord) {
+		if (
+			previousRecord[field] !== nextRecord[field] &&
+			!PLACEMENT_FIELDS.has(field)
+		) {
+			return false;
+		}
+	}
+	for (const field in previousRecord) {
+		if (
+			previousRecord[field] !== nextRecord[field] &&
+			!PLACEMENT_FIELDS.has(field)
+		) {
+			return false;
+		}
+	}
+	return true;
+};
+
+/**
+ * The props to place and draw the text from: the ones last taken, for as long as
+ * nothing but the placement has changed since, so every frame of a move or a
+ * rotation reuses the regions and the overlay elements built from them. Latched
+ * during render, as the overlays are built in the same render.
+ */
+const useTextPlacementSource = <TProps extends object>(
+	props: TProps,
+): TProps => {
+	const latchedRef = useRef(props);
+	if (!differsInPlacementAlone(latchedRef.current, props)) {
+		latchedRef.current = props;
+	}
+	return latchedRef.current;
+};
 
 /**
  * Create the display component for Frame-based shapes (rect / diamond / ellipse, etc. that have
@@ -241,9 +292,6 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeWidth,
 			strokeDashType,
 			strokeOpacity,
-			text,
-			isEditing = false,
-			editingTextSlotId,
 		} = props;
 
 		const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
@@ -272,13 +320,14 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		// property-update side: unset draws no overlay, a root form draws its one
 		// named slot, "slots" enumerates state.text.
 		const textType = props.features?.text;
+		const textSource = useTextPlacementSource(props);
 		const textSlotRegions = useMemo(
 			() =>
 				textType === "slots"
-					? calcTextSlotRegions(props, textSlotKind)
+					? calcTextSlotRegions(textSource, textSlotKind)
 					: undefined,
 			// eslint-disable-next-line react-hooks/exhaustive-deps
-			[props, textSlotKind, textType, fontsLoadedNonce],
+			[textSource, textSlotKind, textType, fontsLoadedNonce],
 		);
 
 		const shape: FrameShapeProps = {
@@ -296,60 +345,71 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			),
 		};
 
-		// Only the slot the editor is over must go blank; a caller that names no
-		// slot is editing the shape as a whole.
-		const isEditingSlot = (slotId: string): boolean =>
-			isEditing &&
-			(editingTextSlotId === undefined || editingTextSlotId === slotId);
+		const overlays = useMemo(() => {
+			const {
+				text: sourceText,
+				type,
+				isEditing = false,
+				editingTextSlotId,
+			} = textSource;
+			// Only the slot the editor is over must go blank; a caller that names no
+			// slot is editing the shape as a whole.
+			const isEditingSlot = (slotId: string): boolean =>
+				isEditing &&
+				(editingTextSlotId === undefined || editingTextSlotId === slotId);
 
-		// A root-form shape addresses its one slot by name rather than enumerating,
-		// so a malformed multi-slot state cannot overlap-draw; a missing body slot
-		// draws nothing, same as the enumeration would.
-		const bodySlot = text?.[BODY_TEXT_SLOT_ID];
-		const bodyRegion =
-			isSingleBodyText(textType) && bodySlot !== undefined
-				? calcTextRegion(props, BODY_TEXT_SLOT_ID, textSlotKind)
-				: undefined;
-
-		const hasOverlays =
-			bodyRegion !== undefined ||
-			(textSlotRegions !== undefined && text !== undefined);
+			// A root-form shape addresses its one slot by name rather than enumerating,
+			// so a malformed multi-slot state cannot overlap-draw; a missing body slot
+			// draws nothing, same as the enumeration would.
+			const bodySlot = sourceText?.[BODY_TEXT_SLOT_ID];
+			if (isSingleBodyText(textType) && bodySlot !== undefined) {
+				const bodyRegion = calcTextRegion(
+					textSource,
+					BODY_TEXT_SLOT_ID,
+					textSlotKind,
+				);
+				return (
+					<TextSlotOverlay
+						objectType={type}
+						textSlotId={BODY_TEXT_SLOT_ID}
+						textSlot={bodySlot}
+						regionX={bodyRegion.x}
+						regionY={bodyRegion.y}
+						regionWidth={bodyRegion.width}
+						regionHeight={bodyRegion.height}
+						isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
+					/>
+				);
+			}
+			if (textSlotRegions === undefined || sourceText === undefined) {
+				return null;
+			}
+			return Object.entries(sourceText).map(([slotId, slot]) => (
+				<TextSlotOverlay
+					key={slotId}
+					objectType={type}
+					textSlotId={slotId}
+					textSlot={slot}
+					regionX={textSlotRegions[slotId].x}
+					regionY={textSlotRegions[slotId].y}
+					regionWidth={textSlotRegions[slotId].width}
+					regionHeight={textSlotRegions[slotId].height}
+					isEditing={isEditingSlot(slotId)}
+				/>
+			));
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [textSource, textSlotKind, textType, textSlotRegions, fontsLoadedNonce]);
 
 		// The overlays sit in a group of their own carrying the shape's transform,
 		// so the transform reaches none of them as a prop: a move or a rotation
-		// changes this one attribute and leaves every overlay's memo intact. Image
-		// export folds the group back into its children (buildExportSvg).
+		// changes this one attribute and reuses every overlay element as it is.
+		// Image export folds the group back into its children (buildExportSvg).
 		return (
 			<>
 				{draw(props, shape)}
-				{hasOverlays && (
+				{overlays !== null && (
 					<g transform={transformAttr} data-canvas-export="flatten">
-						{bodySlot !== undefined && bodyRegion !== undefined && (
-							<TextSlotOverlay
-								objectType={props.type}
-								textSlotId={BODY_TEXT_SLOT_ID}
-								textSlot={bodySlot}
-								regionX={bodyRegion.x}
-								regionY={bodyRegion.y}
-								regionWidth={bodyRegion.width}
-								regionHeight={bodyRegion.height}
-								isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
-							/>
-						)}
-						{textSlotRegions !== undefined &&
-							Object.entries(text ?? {}).map(([slotId, slot]) => (
-								<TextSlotOverlay
-									key={slotId}
-									objectType={props.type}
-									textSlotId={slotId}
-									textSlot={slot}
-									regionX={textSlotRegions[slotId].x}
-									regionY={textSlotRegions[slotId].y}
-									regionWidth={textSlotRegions[slotId].width}
-									regionHeight={textSlotRegions[slotId].height}
-									isEditing={isEditingSlot(slotId)}
-								/>
-							))}
+						{overlays}
 					</g>
 				)}
 			</>
