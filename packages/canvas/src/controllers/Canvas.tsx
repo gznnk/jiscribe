@@ -823,6 +823,14 @@ const CanvasComponent = ({
 									multiSelectGroup={state.multiSelectGroup}
 									isTextEditing={!!state.textEditState}
 								/>
+								<SelectionControlsLayer
+									layer="belowHandles"
+									selection={state.selection}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									isTextEditing={!!state.textEditState}
+									activeDragKind={state.activeDrag?.kind ?? null}
+								/>
 								<ConnectorControlsLayer
 									selection={state.selection}
 									objects={state.objects}
@@ -851,6 +859,7 @@ const CanvasComponent = ({
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<SelectionControlsLayer
+									layer="aboveHandles"
 									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}

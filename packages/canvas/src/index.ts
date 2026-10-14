@@ -217,6 +217,7 @@ export type {
 	SelectionControlDragEvent,
 	SelectionControlEvent,
 	SelectionControlEventType,
+	SelectionControlLayer,
 	SelectionControlProps,
 	SelectionControlResult,
 } from "./controllers/ui/controls/SelectionControlTypes";

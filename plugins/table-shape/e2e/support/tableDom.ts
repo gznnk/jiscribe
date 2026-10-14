@@ -242,6 +242,32 @@ export async function pressInsertTrack(
 }
 
 /**
+ * Whether the element at a width handle's centre is the handle itself, which is
+ * whether a press there resizes the table rather than reaching a strip or grip
+ * drawn at the same spot.
+ *
+ * @param canvas - The driver for the page under test; the table has to be selected
+ * @param handle - Which of the table's two width handles; throws when it is not drawn
+ * @returns True when the handle is the topmost element at its own centre
+ */
+export async function isWidthHandleOnTop(
+	canvas: CanvasDriver,
+	handle: "leftCenter" | "rightCenter",
+): Promise<boolean> {
+	const control = canvas.page.locator(selectors.transformControl(handle));
+	await control.waitFor();
+	return control.evaluate((element) => {
+		const rect = element.getBoundingClientRect();
+		return (
+			document.elementFromPoint(
+				rect.x + rect.width / 2,
+				rect.y + rect.height / 2,
+			) === element
+		);
+	});
+}
+
+/**
  * Where one piece of drawn text sits, in client px: the middle of the innermost
  * element holding exactly that text. Found by the text rather than by a
  * `data-part`, the slot overlays carrying none.

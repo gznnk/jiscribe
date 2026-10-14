@@ -13,6 +13,22 @@ import type { ObjectPartSelection } from "../../selection/CanvasSelection";
 export type SelectionControlEventType =
 	"click" | "doubleClick" | "drag" | "dragEnd";
 
+/**
+ * Where a selection control is drawn relative to the core handles — the
+ * connector endpoints, the transform frame's handles and rotation, the
+ * connection anchors and the vertices. Presses go to whatever is drawn on top,
+ * so this is also which of the two takes a press where they overlap. Both
+ * layers are drawn above the selection outline (SelectionOverlay), and within a
+ * layer the control declared later in `selectionControls` takes the press.
+ *
+ * - `"belowHandles"`: for controls that may lie under a handle without being the
+ *   only way to do something there — a hit strip running the full length of an
+ *   edge, a heading laid outside the object.
+ * - `"aboveHandles"`: for a control that is the only way to drag what it drags
+ *   and may land on a handle's spot.
+ */
+export type SelectionControlLayer = "belowHandles" | "aboveHandles";
+
 /** Props passed to a selection control's handle renderer. */
 export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
 	/** The single selected object the control operates on. */
@@ -130,6 +146,12 @@ export type SelectionControlDefinition<
 	 * dragEnd).
 	 */
 	events?: readonly SelectionControlEventType[];
+	/**
+	 * Whether the handles are drawn under or over the core handles, and so which
+	 * of the two takes a press where they overlap (see SelectionControlLayer).
+	 * Omitted = `"aboveHandles"`.
+	 */
+	layer?: SelectionControlLayer;
 	/** Renders the handles carrying the `action` prop as their data-action. */
 	Component: FC<SelectionControlProps<TState>>;
 	/**

@@ -6,6 +6,7 @@ import {
 	cellCount,
 	clickTrackGrip,
 	drawnTextWeight,
+	isWidthHandleOnTop,
 	partOutlineRects,
 	pressInsertTrack,
 	tableOutlineRect,
@@ -15,16 +16,9 @@ import {
 } from "../support/tableDom";
 
 /**
- * How far a transform handle reaches outside the edge it sits on, in client px
- * (the theme's `anchorRadius`). A grip's pressable region has to stop beyond
- * it, the selection controls being drawn over the transform ones.
- */
-const HANDLE_REACH = 4;
-
-/**
  * The grips that select a whole row or a whole column, in a real browser. Two
  * things only a browser answers: that the bars stand outside the table without
- * covering the width handles that sit on its edges, and that a click on one
+ * hiding the width handle that sits on its left edge, and that a click on one
  * reaches the control at all — the grips take clicks where every other control of
  * this shape takes drags.
  *
@@ -75,7 +69,7 @@ test.describe("table track grips", () => {
 		}
 	});
 
-	test("abuts the table, with only the pressable region kept off the width handle", async ({
+	test("abuts the table, pressable up to the edge, and leaves the width handle on top", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
@@ -98,18 +92,20 @@ test.describe("table track grips", () => {
 			throw new Error("no grips drawn");
 		}
 
-		// The drawn cells run up to the table's edges, as a sheet's headings do.
+		// The drawn cells and the pressable regions both run up to the table's
+		// edges, as a sheet's headings do.
 		expect(Math.abs(rowFace.x + rowFace.width - box.x)).toBeLessThanOrEqual(1);
 		expect(
 			Math.abs(columnFace.y + columnFace.height - box.y),
 		).toBeLessThanOrEqual(1);
-		// The left edge carries a width handle, so the row grip's pressable region
-		// stops short of its reach; the top edge carries none and the column's
-		// reaches the edge.
-		expect(rowGrip.x + rowGrip.width).toBeLessThanOrEqual(box.x - HANDLE_REACH);
+		expect(Math.abs(rowGrip.x + rowGrip.width - box.x)).toBeLessThanOrEqual(1);
 		expect(
 			Math.abs(columnGrip.y + columnGrip.height - box.y),
 		).toBeLessThanOrEqual(1);
+
+		// The width handle on the left edge overlaps the row grips, and is drawn
+		// over them.
+		expect(await isWidthHandleOnTop(canvas, "leftCenter")).toBe(true);
 	});
 
 	test("runs the length of its track, meeting the next grip at the boundary", async ({

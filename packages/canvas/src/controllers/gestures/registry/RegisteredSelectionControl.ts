@@ -11,6 +11,7 @@ import type {
 	SelectionControlDefinition,
 	SelectionControlEvent,
 	SelectionControlEventType,
+	SelectionControlLayer,
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
 import { commitEdit } from "../../utils/commitEdit";
@@ -31,6 +32,15 @@ const SELECTION_CONTROL_NAMESPACE = "selection";
  */
 export const DEFAULT_SELECTION_CONTROL_EVENTS: readonly SelectionControlEventType[] =
 	["drag", "dragEnd"];
+
+/**
+ * The layer a selection control is drawn in when its definition names none
+ * (`SelectionControlDefinition.layer`): over the core handles, as every control
+ * was before the field existed. Kept here for the same layer fence as
+ * DEFAULT_SELECTION_CONTROL_EVENTS.
+ */
+export const DEFAULT_SELECTION_CONTROL_LAYER: SelectionControlLayer =
+	"aboveHandles";
 
 /**
  * Extracts the object type from a selection-control data-action
@@ -243,20 +253,31 @@ class SelectionControlStrategy extends ControlStrategy {
 
 /**
  * A selection control after registration: the definition's Component plus its
- * derived data-action and the routing strategy. Consumed by SelectionControlsLayer
- * (action / Component) and ControlEventHandler (strategy).
+ * derived data-action, its resolved layer and the routing strategy. Consumed by
+ * SelectionControlsLayer (action / Component / layer) and ControlEventHandler
+ * (strategy).
  */
 export type RegisteredSelectionControl = {
 	action: string;
 	Component: FC<SelectionControlProps>;
+	/** The definition's `layer`, or DEFAULT_SELECTION_CONTROL_LAYER when it named none. */
+	layer: SelectionControlLayer;
 	strategy: ControlStrategy;
 };
 
-/** Derives the data-action and routing strategy for one control of the given type. */
+/**
+ * Derives the data-action, layer and routing strategy for one control of the
+ * given type.
+ */
 export const createRegisteredSelectionControl = (
 	objectType: ObjectType,
 	definition: SelectionControlDefinition,
 ): RegisteredSelectionControl => {
 	const strategy = new SelectionControlStrategy(objectType, definition);
-	return { action: strategy.action, Component: definition.Component, strategy };
+	return {
+		action: strategy.action,
+		Component: definition.Component,
+		layer: definition.layer ?? DEFAULT_SELECTION_CONTROL_LAYER,
+		strategy,
+	};
 };

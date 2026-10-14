@@ -22,6 +22,25 @@ describe("SelectionControlRegistry", () => {
 		expect(registry.get("rect")).toBeUndefined();
 	});
 
+	it("keeps each control's resolved layer, in declaration order", () => {
+		const registry = new SelectionControlRegistry();
+		registry.register("container", [
+			{ ...makeControl("strip"), layer: "belowHandles" },
+			makeControl("headerHeight"),
+			{ ...makeControl("grip"), layer: "aboveHandles" },
+		]);
+
+		expect(
+			registry
+				.get("container")
+				?.map(({ action, layer }) => [action, layer] as const),
+		).toEqual([
+			["selection:container:strip", "belowHandles"],
+			["selection:container:headerHeight", "aboveHandles"],
+			["selection:container:grip", "aboveHandles"],
+		]);
+	});
+
 	it("throws on duplicate name within a type", () => {
 		const registry = new SelectionControlRegistry();
 		expect(() =>

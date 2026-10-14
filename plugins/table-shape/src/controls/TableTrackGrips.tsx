@@ -18,8 +18,6 @@ import type { TableState } from "../state/TableState";
 type TableTrackGripsProps = {
 	/** The table the grips stand beside; its transform and layout are what they are placed from. */
 	object: TableState;
-	/** Canvas zoom, passed through to each grip for the screen-px reach of the transform handles. */
-	zoom: number;
 	/** The control's `data-action`; each grip appends its own track index to it. */
 	action: string;
 	/** The part selection standing on this table, or null; a grip draws itself selected only for its own kind. */
@@ -44,7 +42,6 @@ type TableTrackGripsProps = {
  */
 const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 	object,
-	zoom,
 	action,
 	selectedPart,
 	axis,
@@ -101,10 +98,6 @@ const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 						from={toWorld(lead, start)}
 						to={toWorld(lead, end)}
 						edgeMid={toWorld(edge, (start + end) / 2)}
-						// The width handles sit on the left and right edges
-						// (TABLE_TRANSFORM_HANDLES), which only the rows' strip shares.
-						clearsEdgeHandle={axis === "row"}
-						zoom={zoom}
 						objectId={id}
 						action={`${action}:${tableTrackPartId(index)}`}
 						label={formatTableTrackLabel(axis, index)}

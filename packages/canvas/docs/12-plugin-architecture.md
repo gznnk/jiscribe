@@ -393,6 +393,17 @@ modifier click (`event.mods`) can grow or trim the pick rather than replace it. 
 object is being moved or resized through a transform handle (as the connection
 anchors are not); a control's own drag keeps it drawn.
 
+Presses go to whatever is drawn on top, so `layer` decides where the handles
+stand against the core ones — the connector endpoints, the transform frame's
+handles and rotation, the connection anchors and the vertices:
+`"belowHandles"` draws them under those, `"aboveHandles"` (the default) over
+them. Both layers sit above the selection outline, and within a layer the
+control declared later in `selectionControls` takes the press. Put a control
+below when it lies along an edge a handle sits on but can be pressed elsewhere
+too — a hit strip running an edge's full length, a heading laid outside the
+object (the table's boundaries, trailing edges and track grips). Keep it above
+when it is the only way to drag what it drags and may land on a handle's spot.
+
 **`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
 divides its objects into, stating `has` — whether an id still names a part of
 that object — and `delete`. Core treats a part id as an opaque string and hands

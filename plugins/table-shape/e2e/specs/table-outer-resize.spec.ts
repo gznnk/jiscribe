@@ -1,7 +1,11 @@
 import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-import { cellRect, tableOutlineRect } from "../support/tableDom";
+import {
+	cellRect,
+	isWidthHandleOnTop,
+	tableOutlineRect,
+} from "../support/tableDom";
 
 /**
  * Resizing a table by its own frame, in a real browser. A table stores no size,
@@ -34,17 +38,18 @@ const columnBoundaryStrip = (canvas: CanvasDriver, boundaryIndex: number) =>
 	);
 
 /**
- * Drag the table's right edge to a client x, keeping the pointer at the edge's own
- * height. Ctrl is held so the width that lands is the one that was asked for rather
- * than one a snap target moved.
+ * Drag one of the table's width handles to a client x, keeping the pointer at the
+ * edge's own height. Ctrl is held so the width that lands is the one that was asked
+ * for rather than one a snap target moved.
  */
-async function dragRightEdgeTo(
+async function dragWidthHandleTo(
 	canvas: CanvasDriver,
+	handle: "leftCenter" | "rightCenter",
 	box: { x: number; y: number; width: number; height: number },
 	clientX: number,
 ): Promise<void> {
 	await canvas.dragTransformHandle(
-		"rightCenter",
+		handle,
 		canvas.toContent({ x: clientX, y: box.y + box.height / 2 }),
 		{ ctrl: true },
 	);
@@ -66,6 +71,32 @@ test.describe("table outer resize", () => {
 				canvas.page.locator(selectors.transformControl(handle)),
 			).toHaveCount(0);
 		}
+	});
+
+	test("draws the width handles over the strip and grips lining their edges", async ({
+		canvas,
+	}) => {
+		await canvas.placeShape("Table");
+
+		// The right edge carries the trailing-edge strip, the left one the row grips.
+		expect(await isWidthHandleOnTop(canvas, "rightCenter")).toBe(true);
+		expect(await isWidthHandleOnTop(canvas, "leftCenter")).toBe(true);
+	});
+
+	test("widens the table by its left edge, the right edge staying where it was", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const before = await tableOutlineRect(canvas, id);
+
+		await dragWidthHandleTo(canvas, "leftCenter", before, before.x - 80);
+
+		await expect
+			.poll(async () => Math.round((await tableOutlineRect(canvas, id)).width))
+			.toBe(Math.round(before.width + 80));
+		const after = await tableOutlineRect(canvas, id);
+		expect(after.x).toBeCloseTo(before.x - 80, 0);
+		expect(after.x + after.width).toBeCloseTo(before.x + before.width, 0);
 	});
 
 	test("spreads a right-edge drag over the columns in the proportions they hold", async ({
@@ -97,8 +128,9 @@ test.describe("table outer resize", () => {
 			box: await tableOutlineRect(canvas, id),
 		};
 
-		await dragRightEdgeTo(
+		await dragWidthHandleTo(
 			canvas,
+			"rightCenter",
 			before.box,
 			before.box.x + before.box.width + 120,
 		);
@@ -137,7 +169,12 @@ test.describe("table outer resize", () => {
 
 		// Well past the point where both columns are down at their minimum: the
 		// cursor goes on, and the right edge has to stop following it.
-		await dragRightEdgeTo(canvas, before.box, before.box.x + 20);
+		await dragWidthHandleTo(
+			canvas,
+			"rightCenter",
+			before.box,
+			before.box.x + 20,
+		);
 
 		await expect
 			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).width))

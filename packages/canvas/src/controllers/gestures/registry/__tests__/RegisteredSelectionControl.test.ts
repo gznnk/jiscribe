@@ -12,6 +12,7 @@ import type { CanvasEvent } from "../GestureHandlerTypes";
 import {
 	createRegisteredSelectionControl,
 	DEFAULT_SELECTION_CONTROL_EVENTS,
+	DEFAULT_SELECTION_CONTROL_LAYER,
 } from "../RegisteredSelectionControl";
 
 const makeObject = (overrides: Partial<ObjectState> = {}): ObjectState =>
@@ -278,6 +279,23 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 
 	it("defaults to the drag pair when the definition names no events", () => {
 		expect(DEFAULT_SELECTION_CONTROL_EVENTS).toEqual(["drag", "dragEnd"]);
+	});
+
+	it("draws a control over the core handles when its definition names no layer", () => {
+		expect(DEFAULT_SELECTION_CONTROL_LAYER).toBe("aboveHandles");
+		const { layer } = createRegisteredSelectionControl(
+			"container",
+			markingDefinition(),
+		);
+		expect(layer).toBe(DEFAULT_SELECTION_CONTROL_LAYER);
+	});
+
+	it("carries the layer a definition names", () => {
+		const { layer } = createRegisteredSelectionControl("container", {
+			...markingDefinition(),
+			layer: "belowHandles",
+		});
+		expect(layer).toBe("belowHandles");
 	});
 
 	it("routes a click to a definition that asked for it and commits its object", () => {

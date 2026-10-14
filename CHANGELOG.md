@@ -56,7 +56,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   minimum, and a table dragged narrower than its columns can be simply stops.
   There are no handles on the height: a row's stored height is a lower bound its
   text raises, so the height follows the cells and a row is given one by dragging
-  its boundary or the table's trailing edge.
+  its boundary or the table's trailing edge. Both handles take a press over
+  everything else lining their edges — the right one over the trailing-edge
+  strip, the left one over the row headings.
 - **A table's right and bottom edges can be dragged to resize the last column or
   row alone**, the table growing or shrinking from the corner it is drawn from, as
   a boundary does. Mirroring a table moves these edges with it: they are always
@@ -115,6 +117,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   selection standing there — the same value the `Component` draws from as
   `selectedPart` — so a click read with `event.mods` can grow or trim the pick
   rather than only replace it.
+- For plugin authors: a selection control declares whether it is drawn under or
+  over the core handles (the connector endpoints, the transform frame's handles
+  and rotation, the connection anchors, the vertices), and so which of the two a
+  press goes to where they overlap. `SelectionControlDefinition.layer` takes
+  `"belowHandles"` or `"aboveHandles"` (`SelectionControlLayer`); omitted, a
+  control stays above, as every control was. Put below a control that can be
+  pressed elsewhere along its length — a hit strip running an edge, a heading
+  laid outside the object — and keep above one that is the only way to drag
+  what it drags. Either way it is drawn over the selection outline, and within
+  a layer the control declared later takes the press.
 - For plugin authors: `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`)
   now exports `commitEdit`, which a contributed command returns its state through
   to say it edited the document — the COMMAND path never advances `commitVersion`

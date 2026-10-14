@@ -2,7 +2,6 @@ import { darkCanvasTheme } from "@jiscribe/canvas";
 import {
 	canvasThemeCssVars as theme,
 	SELECTION_OUTLINE_WIDTH,
-	useCanvasTheme,
 } from "@jiscribe/canvas-sdk";
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
@@ -72,15 +71,6 @@ type TableTrackGripProps = {
 	 * right.
 	 */
 	edgeMid: Point;
-	/**
-	 * Whether a transform handle sits on the edge this grip abuts. The grip then
-	 * keeps its pressable region off the handle's reach beyond the edge, the
-	 * drawn cell still running up to the edge; a false leaves the whole cell
-	 * pressable.
-	 */
-	clearsEdgeHandle: boolean;
-	/** Canvas zoom, which the transform handle's reach is divided by when the pressable region stops short of it. */
-	zoom: number;
 	/** The table the grip belongs to, as `data-id`. */
 	objectId: string;
 	/** The whole `data-action`, track index included, which is what routes the click to a track. */
@@ -103,28 +93,23 @@ type TableTrackGripProps = {
  * the rotation: a heading is read as a heading rather than as part of the
  * drawing, and tilted text would only be harder to read.
  *
- * The drawn cell and the pressable region are separate elements. The width handles
- * sit on the left and right edges at the table's mid-height, and the selection
- * controls are drawn after the transform ones (SelectionControlsLayer), so a
- * cell abutting that edge would take the press meant for the handle. The cell
- * itself takes no pointer; an unpainted rect on top carries the control data
- * attributes the gesture layer routes on (`data-kind="control"` + the table's id
- * + the action naming the track) and, where a handle shares the edge, stops
- * short of its reach. The label takes no pointer either, so no press resolves to
- * it instead of the control.
+ * The drawn cell and the pressable region are separate elements. The cell itself
+ * takes no pointer; an unpainted rect on top, covering the whole cell, carries
+ * the control data attributes the gesture layer routes on (`data-kind="control"`
+ * + the table's id + the action naming the track). The label takes no pointer
+ * either, so no press resolves to it instead of the control. Where the left
+ * edge's width handle overlaps the cell, the handle takes the press, the grips
+ * being drawn under the core handles (the table's `selectionControls`).
  */
 const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 	from,
 	to,
 	edgeMid,
-	clearsEdgeHandle,
-	zoom,
 	objectId,
 	action,
 	label,
 	selected,
 }) => {
-	const { handleDimensions } = useCanvasTheme();
 	const { transform, length } = calcSegmentPlacement(from, to);
 	const thickness = GRIP_THICKNESS;
 	const fill = selected ? SELECTED_GRIP_FILL : theme.surface;
@@ -137,14 +122,6 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 		-(to.y - from.y) * (edgeMid.x - mid.x) +
 			(to.x - from.x) * (edgeMid.y - mid.y) >
 		0;
-	const handleReach = clearsEdgeHandle
-		? (handleDimensions.anchorRadius + handleDimensions.anchorStrokeWidth) /
-			zoom
-		: 0;
-	const hitThickness = Math.max(thickness - handleReach, 0);
-	const hitY = tableOnPositiveSide
-		? -thickness / 2
-		: -thickness / 2 + handleReach;
 	// The border leaves out the side against the table, where it would be
 	// drawn over the selection outline.
 	const tableSideY = tableOnPositiveSide ? thickness / 2 : -thickness / 2;
@@ -183,9 +160,9 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 			<g transform={transform}>
 				<rect
 					x={-length / 2}
-					y={hitY}
+					y={-thickness / 2}
 					width={length}
-					height={hitThickness}
+					height={thickness}
 					data-kind="control"
 					data-id={objectId}
 					data-action={action}

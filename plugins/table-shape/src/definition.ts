@@ -94,31 +94,41 @@ const calcTableConnectionAnchorOffsets = (
  *
  * The grips write no object at all, only the part selection, so a click on one is
  * never a document change.
+ *
+ * All five are drawn under the core handles: the strips and grips run along the
+ * edges the width handles sit on, and one covered at a handle's spot is still
+ * reachable along the rest of its length, where the handle can be pressed
+ * nowhere else.
  */
 const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	{
 		name: "columnBoundary",
+		layer: "belowHandles",
 		Component: TableColumnBoundaryControl,
 		handle: handleTableColumnBoundary,
 	},
 	{
 		name: "rowBoundary",
+		layer: "belowHandles",
 		Component: TableRowBoundaryControl,
 		handle: handleTableRowBoundary,
 	},
 	{
 		name: "trailingEdge",
+		layer: "belowHandles",
 		Component: TableTrailingEdgeControl,
 		handle: handleTableTrailingEdge,
 	},
 	{
 		name: "rowGrip",
+		layer: "belowHandles",
 		events: ["click"],
 		Component: TableRowGripControl,
 		handle: createTableTrackGripHandler(TABLE_ROW_PART_KIND),
 	},
 	{
 		name: "columnGrip",
+		layer: "belowHandles",
 		events: ["click"],
 		Component: TableColumnGripControl,
 		handle: createTableTrackGripHandler(TABLE_COLUMN_PART_KIND),

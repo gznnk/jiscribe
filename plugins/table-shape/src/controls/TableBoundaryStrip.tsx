@@ -8,11 +8,8 @@ import { calcSegmentPlacement } from "./calcSegmentPlacement";
  * enough to aim at without a steady hand; narrow enough that the cells either
  * side keep the double click that opens them for editing, since the strip is
  * drawn over them.
- *
- * Also the clearance a strip keeps from a transform handle it would otherwise
- * cover (TableRowBoundaryControl).
  */
-export const BOUNDARY_HIT_THICKNESS = 8;
+const BOUNDARY_HIT_THICKNESS = 8;
 
 /**
  * Paint of a strip that is a target and nothing else. `transparent` counts as
