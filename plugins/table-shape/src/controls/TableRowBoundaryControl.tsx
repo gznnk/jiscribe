@@ -36,7 +36,8 @@ const calcHandleClearance = (ruleLength: number, zoom: number): number =>
  * (handleTableRowBoundary reads it back).
  *
  * The inner rules alone get a strip. The table's top and bottom edges are its own
- * silhouette, not a boundary between two rows.
+ * silhouette, not a boundary between two rows; the trailing one is
+ * TableTrailingEdgeControl's.
  *
  * The edges come from the layout rather than from the state's box so the strips
  * sit on the rules even on the render before the content resizer has written the

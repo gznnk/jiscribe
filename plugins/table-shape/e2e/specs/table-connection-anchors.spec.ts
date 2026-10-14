@@ -7,8 +7,10 @@ import type { ClientRect } from "../support/tableDom";
 
 /**
  * The connection-anchor dots of a selected table, in a real browser: the top and
- * left edges are lined with grips and push their dots out past them, so a press
- * meant for one never lands on the other.
+ * left edges are lined with grips and push their dots out past them; the
+ * trailing-edge strips on the right and bottom are thin enough that those dots
+ * clear them at the theme's distance. Either way a press meant for one never
+ * lands on the other.
  */
 
 async function rectOf(locator: Locator, name: string): Promise<ClientRect> {
@@ -23,6 +25,15 @@ function anchorRect(canvas: CanvasDriver, anchorId: string) {
 	return rectOf(
 		canvas.page.locator(selectors.createAnchor(anchorId)),
 		`anchor ${anchorId}`,
+	);
+}
+
+function trailingEdgeRect(canvas: CanvasDriver, axis: "column" | "row") {
+	return rectOf(
+		canvas.page.locator(
+			`[data-kind="control"][data-action="selection:table:trailingEdge:${axis}"]`,
+		),
+		`trailing edge ${axis}`,
 	);
 }
 
@@ -61,5 +72,18 @@ test.describe("table connection anchors", () => {
 		for (const control of controls) {
 			expect(overlaps(anchor, control)).toBe(false);
 		}
+	});
+
+	test("keeps the right and bottom anchors clear of the trailing edges", async ({
+		canvas,
+	}) => {
+		await canvas.placeShape("Table");
+		const right = await anchorRect(canvas, "rightCenter");
+		const bottom = await anchorRect(canvas, "bottomCenter");
+
+		expect(overlaps(right, await trailingEdgeRect(canvas, "column"))).toBe(
+			false,
+		);
+		expect(overlaps(bottom, await trailingEdgeRect(canvas, "row"))).toBe(false);
 	});
 });

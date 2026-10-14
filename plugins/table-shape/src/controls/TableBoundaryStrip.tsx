@@ -32,21 +32,21 @@ type TableBoundaryStripProps = {
 	zoom: number;
 	/** The table the strip belongs to, as `data-id`. */
 	objectId: string;
-	/** The whole `data-action`, boundary index included, which is what routes the drag to a boundary. */
+	/** The whole `data-action`, the boundary index or trailing edge's axis included, which is what routes the drag to its rule. */
 	action: string;
 	/** CSS cursor shown over the strip; the caller resolves it against the table's rotation and flips (getResizeCursorForRotation), so it points the way the drag actually goes. */
 	cursor: string;
 };
 
 /**
- * One draggable boundary: an invisible strip laid along a rule, from one end of
- * it to the other. Drawn in world coordinates from the two endpoints rather than
+ * One draggable rule — an inner boundary or a trailing edge: an invisible strip
+ * laid along it, from one end to the other. Drawn in world coordinates from the two endpoints rather than
  * from the table's box, so its length and angle follow whatever the transform did
  * to the rule — a rotated table's strips lie on its rules, and a flipped one's
  * are simply turned end for end.
  *
  * Carries the control data attributes the gesture layer routes on
- * (`data-kind="control"` + the table's id + the action naming the boundary).
+ * (`data-kind="control"` + the table's id + the action naming the rule).
  */
 const TableBoundaryStripComponent: React.FC<TableBoundaryStripProps> = ({
 	from,

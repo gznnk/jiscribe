@@ -67,7 +67,11 @@ export {
 	TableTrackGrip,
 	TableTrackGrips,
 } from "./controls";
-export type { SegmentPlacement, TableBoundaryDragMode } from "./controls";
+export type {
+	SegmentPlacement,
+	TableBoundaryDragMode,
+	TableEdgeSegment,
+} from "./controls";
 
 export { TableIcon } from "./stencil/TableIcon";
 export { TableStencils } from "./stencil/TableStencils";

@@ -56,7 +56,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   minimum, and a table dragged narrower than its columns can be simply stops.
   There are no handles on the height: a row's stored height is a lower bound its
   text raises, so the height follows the cells and a row is given one by dragging
-  its boundary.
+  its boundary or the table's trailing edge.
+- **A table's right and bottom edges can be dragged to resize the last column or
+  row alone**, the table growing or shrinking from the corner it is drawn from, as
+  a boundary does. Mirroring a table moves these edges with it: they are always
+  the two away from that corner. The column stops at its minimum width and the
+  row at the height its text needs. Shift changes nothing here, an edge having no
+  neighbour to trade with.
 - **A table's rows and columns can be selected, added and removed.** Headings
   along the top and left edges, lettered and numbered as a spreadsheet's are,
   pick a whole column or row — Shift-clicking another heading runs the pick to

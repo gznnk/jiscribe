@@ -10,8 +10,7 @@ import {
 	parseTableBoundaryIndex,
 	readTableBoundaryDragMode,
 } from "./tableBoundaryAction";
-import { calcTableColumnsWidth } from "../layout/calcTableLayout";
-import { resizeTableFromDrawnCorner } from "../state/resizeTableFromDrawnCorner";
+import { resizeTableToColumns } from "../state/resizeTableToColumns";
 import type { TableState } from "../state/TableState";
 
 /**
@@ -62,9 +61,5 @@ export const handleTableColumnBoundary = (
 	if (mode === "pair") {
 		return { object: { ...startTable, columns } };
 	}
-	const resized = resizeTableFromDrawnCorner(startTable, {
-		width: calcTableColumnsWidth(columns),
-		height: startTable.height,
-	});
-	return { object: { ...resized, columns } };
+	return { object: resizeTableToColumns(startTable, columns) };
 };

@@ -17,8 +17,8 @@ import type { TableState } from "../state/TableState";
  * (handleTableColumnBoundary reads it back).
  *
  * The inner rules alone get a strip. The table's left and right edges are its own
- * silhouette, not a boundary between two columns, and resizing there is the
- * transform frame's business.
+ * silhouette, not a boundary between two columns: the transform frame resizes the
+ * whole table there, and the trailing one also carries TableTrailingEdgeControl.
  *
  * The edges come from the layout rather than from the state's box so the strips
  * sit on the rules even on the render before the content resizer has written the

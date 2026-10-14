@@ -16,11 +16,13 @@ import { TABLE_INSERT_PICKED_PART_KINDS } from "./commands/tableInsertCommands";
 import { createTableTrackGripHandler } from "./controls/createTableTrackGripHandler";
 import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
 import { handleTableRowBoundary } from "./controls/handleTableRowBoundary";
+import { handleTableTrailingEdge } from "./controls/handleTableTrailingEdge";
 import { TableColumnBoundaryControl } from "./controls/TableColumnBoundaryControl";
 import { TableColumnGripControl } from "./controls/TableColumnGripControl";
 import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
 import { TableRowGripControl } from "./controls/TableRowGripControl";
 import { calcConnectionAnchorOffsetPastGrips } from "./controls/TableTrackGrip";
+import { TableTrailingEdgeControl } from "./controls/TableTrailingEdgeControl";
 import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
@@ -48,8 +50,9 @@ import { tableFillEntry } from "./style/tableFillEntries";
  * No handle on the height: a row's stored height is a lower bound its text raises,
  * which makes a dragged bottom edge and deleted text indistinguishable to the
  * resizer, the one place a handle's write is visible. The height stays the grid's
- * answer, and a row is given a height by dragging its boundary
- * ({@link TABLE_SELECTION_CONTROLS}).
+ * answer, and a row is given a height by dragging its boundary or, for the last
+ * row, the table's trailing edge ({@link TABLE_SELECTION_CONTROLS}), both of which
+ * write the row's bound rather than the box.
  *
  * Declared once at module scope because the registry memoizes on the declaration
  * itself (ObjectTransformHandlesRegistry).
@@ -58,8 +61,8 @@ const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
 
 /**
  * The top and left connection-anchor dots pushed out past the grips lining
- * those edges. The bottom and right edges carry no control of the table's own,
- * so their dots keep the theme's distance.
+ * those edges. The trailing-edge strips on the bottom and right reach out too
+ * little to meet a dot at the theme's distance, so those dots keep it.
  */
 const calcTableConnectionAnchorOffsets = (
 	_state: TableState,
@@ -73,18 +76,21 @@ const calcTableConnectionAnchorOffsets = (
 };
 
 /**
- * Four controls: a boundary and a grip per axis. One registration covers every
- * boundary or track of its axis — each handle appends its own index to the
- * control's `data-action`, and the handler reads it back off the event's
- * `subAction` (parseTableBoundaryIndex / parseTableTrackPartId). A registration per
- * boundary would instead have to change as rows and columns come and go, which
- * registration is not able to do — it happens once per type.
+ * Five controls: a boundary and a grip per axis, and the trailing edges. One
+ * registration covers every boundary or track of its axis — each handle appends
+ * its own index to the control's `data-action`, and the handler reads it back off
+ * the event's `subAction` (parseTableBoundaryIndex / parseTableTrackPartId). A
+ * registration per boundary would instead have to change as rows and columns
+ * come and go, which registration is not able to do — it happens once per type.
+ * The trailing edges share one registration the same way, by axis
+ * (parseTableTrailingEdgeAxis).
  *
  * A boundary drag resizes the track before it alone and the table with it, or
  * with Shift held trades between the two tracks and leaves the outer frame where
- * it was. Only the column handler ever writes the box, and only when the columns'
- * total changes (handleTableColumnBoundary); otherwise the box is re-derived from
- * the tracks on the same reducer tick (reconcileTableBoxWithGrid).
+ * it was. A trailing-edge drag resizes the last track alone, Shift or not. Only
+ * the column drags ever write the box, and only when the columns' total changes
+ * (resizeTableToColumns); otherwise the box is re-derived from the tracks on the
+ * same reducer tick (reconcileTableBoxWithGrid).
  *
  * The grips write no object at all, only the part selection, so a click on one is
  * never a document change.
@@ -99,6 +105,11 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 		name: "rowBoundary",
 		Component: TableRowBoundaryControl,
 		handle: handleTableRowBoundary,
+	},
+	{
+		name: "trailingEdge",
+		Component: TableTrailingEdgeControl,
+		handle: handleTableTrailingEdge,
 	},
 	{
 		name: "rowGrip",
