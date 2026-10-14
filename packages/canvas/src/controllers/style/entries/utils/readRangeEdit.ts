@@ -20,8 +20,7 @@ export type RangeEdit = {
  * The stretch `ctx` names on this very object, or null when the whole slot is
  * what the edit means — no stretch is being edited, it belongs to another
  * object, or the slot it names is gone. The one answer to "is this a per-range
- * edit" for every entry that has to know (runOrTextSlotEntry,
- * toggleRunOrTextSlotEntry).
+ * edit" for every entry that has to know (runOrTextSlotEntry).
  *
  * @param object - The target, as the walk handed it over; one holding no slots is never ranged
  * @param ctx - The walk's context, for its `textEditRange`

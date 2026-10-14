@@ -134,9 +134,8 @@ const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
 export const FontColorItem = memo(FontColorItemComponent);
 
 /**
- * Bold / italic / underline / strikethrough. Each button writes the value the
- * press should land on rather than a toggle command, so what it does is decided
- * against what the text is actually drawn with.
+ * Bold / italic / underline / strikethrough. Each button runs its format's
+ * command, the one the keyboard shortcut runs too (see useTextFormatToggles).
  */
 const TextFormatItemComponent: React.FC<BuiltinItemProps> = () => {
 	const messages = useCanvasMessages();

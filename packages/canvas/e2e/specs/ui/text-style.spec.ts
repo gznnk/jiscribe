@@ -96,13 +96,13 @@ test.describe("text styling through the ObjectMenu", () => {
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		await canvas.setBold("bold");
+		await canvas.pressBold();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("700");
 
 		// On a second press the button's data-action flips to the normal side, which clears it.
-		await canvas.setBold("normal");
+		await canvas.pressBold();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("400");

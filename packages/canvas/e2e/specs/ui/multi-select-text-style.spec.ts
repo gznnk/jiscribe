@@ -61,8 +61,41 @@ test.describe("bulk text style application to a multi-selection", () => {
 		const { left, right } = await drawTwoLabeledRects(canvas);
 		await marqueeSelectBoth(canvas);
 
-		await canvas.setBold("bold");
+		await canvas.pressBold();
 
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
+			.toBe("700");
+		expect((await canvas.textStyleOf(right))?.fontWeight).toBe("700");
+	});
+
+	test("Ctrl/Cmd+B brings a selection mixing bold and plain all bold, then all plain", async ({
+		canvas,
+	}) => {
+		const { left, right } = await drawTwoLabeledRects(canvas);
+		// One shape bolded on its own first, from the keyboard with no editor open.
+		await canvas.selectAt({ x: 405, y: 240 });
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
+			.toBe("700");
+		expect((await canvas.textStyleOf(right))?.fontWeight).toBe("400");
+
+		await marqueeSelectBoth(canvas);
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(right))?.fontWeight)
+			.toBe("700");
+		expect((await canvas.textStyleOf(left))?.fontWeight).toBe("700");
+
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
+			.toBe("400");
+		expect((await canvas.textStyleOf(right))?.fontWeight).toBe("400");
+
+		// Each press is one undo entry for the whole selection.
+		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
 			.toBe("700");

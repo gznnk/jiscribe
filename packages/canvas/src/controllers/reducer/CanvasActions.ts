@@ -163,21 +163,20 @@ export type EndTextEditAction = {
 /**
  * Style intent action - states one style edit of the selection, with live
  * preview and commit, from every surface that fires no gesture: the ObjectMenu's
- * number input and keyboard-driven slider, the properties sidebar's
- * callback-writing controls, and the text editor's own format keystrokes.
+ * number input and keyboard-driven slider and the properties sidebar's
+ * callback-writing controls. The format toggles are commands instead
+ * (ToggleTextFormatCommands), whatever raises them.
  *
  * The first of the four property routes, and the only one whose payload is
  * already in the shape the layer below takes: the intent reaches
  * `applyStyleIntent` as it stands, the names and strings the DOM carries having
- * been read (toStyleIntent) by whoever held them. A toggle is an ordinary
- * intent on this route — `{ kind: "toggleBold" }` with `commit: true` — so
- * one keystroke lands one entry without a route of its own.
+ * been read (toStyleIntent) by whoever held them.
  */
 export type StyleIntentAction = {
 	type: "STYLE_INTENT";
 	/** What to reflect: one of the core kinds with its value, or a name a shape declared for itself (ExtraStyleIntent). */
 	intent: StyleIntent;
-	/** true: recorded in history (blur/Enter, a keystroke), false: preview only */
+	/** true: recorded in history (blur/Enter), false: preview only */
 	commit: boolean;
 	/**
 	 * true: merge this commit with the preceding one for the same intent kind and

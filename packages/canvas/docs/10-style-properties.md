@@ -26,7 +26,7 @@ type CoreStyleIntent =
 	| { kind: "strokeWidth"; width: number }
 	| { kind: "cornerRadius"; radius: number }
 	| { kind: "fontColor"; color: string }
-	| { kind: "toggleBold" }
+	| { kind: "fontWeight"; weight: string }
 	| { kind: "lockAspectRatio"; locked: boolean }
 	| { kind: "textContent"; text: string }
 	| …;
@@ -37,15 +37,12 @@ fields happen to agree (`fill` ⇔ `fill`) that is the type's answer, not a rule
 where they differ the intent is named after the meaning (`cornerRadius` lands in
 the SVG attribute `rx`).
 
-Three facts ride on the union:
+Two facts ride on the union:
 
 - `CoreStyleIntentKind` — the kind alone, which is the key a table answers under.
 - `StyleIntentValueType<K>` — the type of one kind's value, derived as "the sole field besides
   `kind`". `apply` and `read` of an entry are both bound to it, so the two sides
   cannot disagree on the type.
-- `TOGGLE_FLIPS` — which field each of the keystroke toggles flips
-  (`toggleBold` → `fontWeight`). A toggle's value type is its field's, stated once
-  here for the types and the entries alike.
 
 A kind a type declares for itself is not in the union: it travels as
 `ExtraStyleIntent` (`{ kind: string; value: unknown }`), the engine knowing
@@ -133,33 +130,32 @@ type declares about its text — which fields it may carry at all
 its own syntax, so it is left out of those intents without anyone branching on the
 text type again:
 
-| Fields accepted  | Entries                                                    |
-| ---------------- | ---------------------------------------------------------- |
-| any text at all  | `textContent`                                              |
-| `fontColor`      | `fontColor`                                                |
-| `fontSize`       | `fontSize`                                                 |
-| `fontFamily`     | `fontFamily`                                               |
-| `fontWeight`     | `fontWeight`, `toggleBold`                                 |
-| `fontStyle`      | `fontStyle`, `toggleItalic`                                |
-| `textDecoration` | `textDecoration`, `toggleUnderline`, `toggleStrikethrough` |
-| `textAlign`      | `textAlign`                                                |
-| `verticalAlign`  | `verticalAlign`                                            |
+| Fields accepted  | Entries          |
+| ---------------- | ---------------- |
+| any text at all  | `textContent`    |
+| `fontColor`      | `fontColor`      |
+| `fontSize`       | `fontSize`       |
+| `fontFamily`     | `fontFamily`     |
+| `fontWeight`     | `fontWeight`     |
+| `fontStyle`      | `fontStyle`      |
+| `textDecoration` | `textDecoration` |
+| `textAlign`      | `textAlign`      |
+| `verticalAlign`  | `verticalAlign`  |
 
 ## The helpers that build the pairs
 
 Entries are not written by hand; a helper per storage shape returns the pair
 (`controllers/style/entries/`):
 
-| Helper                                       | Where the value lands                                                                                                                                                                                                                        |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectFieldEntry(field)`                    | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                          |
-| `textSlotFieldEntry(field)`                  | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                      |
-| `runOrTextSlotEntry(field)`                  | The selected stretch of characters while an editor has one (`readRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                               |
-| `toggleRunOrTextSlotEntry(kind, { toggle })` | The field `TOGGLE_FLIPS` names, on a selected stretch and nothing else: a keystroke is not a shape-wide write. It reads what the stretch is drawn with and writes the opposite through `runOrTextSlotEntry`                                  |
-| `declaredFieldEntry(path, valueType)`        | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing |
-| `lockAspectRatioEntry`                       | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                              |
-| `textVerticalBasisEntry`                     | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                       |
-| `textContentEntry`                           | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                           |
+| Helper                                | Where the value lands                                                                                                                                                                                                                        |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`             | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                          |
+| `textSlotFieldEntry(field)`           | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                      |
+| `runOrTextSlotEntry(field)`           | The selected stretch of characters while an editor has one (`readRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                               |
+| `declaredFieldEntry(path, valueType)` | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing |
+| `lockAspectRatioEntry`                | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                              |
+| `textVerticalBasisEntry`              | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                       |
+| `textContentEntry`                    | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                           |
 
 `textSlotEntry` is the part `textSlotFieldEntry` and the whole-slot half of `runOrTextSlotEntry` share:
 which slots are reached, the same-reference contract, and reading each of them
@@ -262,10 +258,25 @@ into an intent:
 - A name no mapper knows becomes `{ kind: property, value }`, and the types' tables
   decide whether anything takes it.
 
-A toggle is an ordinary intent on the React route: `{ kind: "toggleBold" }` with
-`commit: true`, raised from the keystroke itself (`TextToggleIntentKind`), so
-nothing translates a "bold" into the field it flips twice and one keystroke still
-lands one undo entry — the commit tail of `STYLE_INTENT` is what records it.
+### The format toggles
+
+Bold / italic / underline / strikethrough are not intents of their own but four
+commands (`toggleBold` / `toggleItalic` / `toggleUnderline` /
+`toggleStrikethrough`, `commands/text/ToggleTextFormatCommands.ts`), bound to
+Ctrl/Cmd+B / I / U / Shift+X. Every entry point runs them: the canvas shortcut
+with shapes selected, the text editor's keystrokes and the browser's own
+`formatBold`-style edits (the editor dispatches the command itself, its keystrokes
+never reaching the canvas shortcuts), and the ObjectMenu's and the sidebar's
+buttons (`command:toggleBold`).
+
+A command reads the whole selection once (`readSelectionStyle`), treats a mixed
+reading as off, and applies the ordinary `fontWeight` / `fontStyle` /
+`textDecoration` intent carrying the value to land on — so a selection mixing
+bold and plain comes out all bold, the next press all plain, and one press is one
+undo entry. Where the value lands is `runOrTextSlotEntry`'s answer: the selected
+stretch while the editor has one, otherwise the whole slot (with only a caret
+placed, the slot being edited). The reading and the flip are `TextFormat.ts`'s
+(`isTextFormatOn` / `toggleTextFormatIntent`), which the buttons light by too.
 
 ### What is not a style write
 
@@ -324,7 +335,7 @@ Because registration flows through `applyObjectDefinition`, plugin shapes added
 via `CanvasConfig.plugins` (see [Plugin Architecture](./12-plugin-architecture.md))
 get the same capability: `declaredFieldEntry` and `DeclaredStyleTable` are exported from
 `@jiscribe/canvas-sdk`, beside the helpers the engine builds its own entries from
-(`objectFieldEntry` / `textSlotFieldEntry` / `runOrTextSlotEntry` / `toggleRunOrTextSlotEntry` / `resolveTextSlotIds`)
+(`objectFieldEntry` / `textSlotFieldEntry` / `runOrTextSlotEntry` / `resolveTextSlotIds`)
 for a type replacing a derived kind. Connector's table is
 `controllers/style/tables/connectorStyleTable.ts` (`CONNECTOR_STYLE_TABLE`); the container plugin
 declares `CONTAINER_STYLE_ENTRIES` in `src/style/containerStyleEntries.ts` and hands it to

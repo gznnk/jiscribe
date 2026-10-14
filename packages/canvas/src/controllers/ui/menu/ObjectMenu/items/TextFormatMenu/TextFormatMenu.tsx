@@ -10,8 +10,8 @@ import { ObjectMenuButton } from "../../ObjectMenuStyled";
  * the whole object or a picked part is selected. Italic, underline and
  * strikethrough live in the properties sidebar (TextFormatItem) and the text
  * editor's keystrokes, not here.
- * The button writes the value the press should land on rather than a toggle
- * command (see useTextFormatToggles).
+ * The button runs the bold command, the one Ctrl/Cmd+B runs too (see
+ * useTextFormatToggles).
  */
 const TextFormatMenuComponent: React.FC = () => {
 	const messages = useCanvasMessages();
@@ -20,6 +20,7 @@ const TextFormatMenuComponent: React.FC = () => {
 	return (
 		<ObjectMenuButton
 			isActive={bold.isActive}
+			aria-pressed={bold.isActive}
 			data-action={bold.action}
 			title={messages.menuBold}
 		>

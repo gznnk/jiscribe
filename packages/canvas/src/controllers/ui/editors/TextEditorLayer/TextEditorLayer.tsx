@@ -21,7 +21,7 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
-import type { TextToggleIntentKind } from "../../../style/StyleIntent";
+import type { TextFormat } from "../../../style/TextFormat";
 import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
@@ -38,7 +38,7 @@ type EditorHandlers = {
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
 	onSelectionChange: (selection: { start: number; end: number }) => void;
 	/** A bold / italic / underline / strikethrough keystroke over that selection. */
-	onToggleFormat: (kind: TextToggleIntentKind) => void;
+	onToggleFormat: (format: TextFormat) => void;
 };
 
 /**
@@ -202,7 +202,7 @@ type TextEditorLayerProps = {
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
 	onSelectionChange: (selection: { start: number; end: number }) => void;
 	/** A bold / italic / underline / strikethrough keystroke over that selection. */
-	onToggleFormat: (kind: TextToggleIntentKind) => void;
+	onToggleFormat: (format: TextFormat) => void;
 };
 
 /**

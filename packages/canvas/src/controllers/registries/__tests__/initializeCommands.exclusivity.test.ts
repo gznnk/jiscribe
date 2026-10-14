@@ -167,9 +167,12 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
  */
 const US_KEY_BY_CODE: Record<string, readonly [string, string]> = {
 	KeyA: ["a", "A"],
+	KeyB: ["b", "B"],
 	KeyC: ["c", "C"],
 	KeyD: ["d", "D"],
 	KeyG: ["g", "G"],
+	KeyI: ["i", "I"],
+	KeyU: ["u", "U"],
 	KeyV: ["v", "V"],
 	KeyX: ["x", "X"],
 	KeyY: ["y", "Y"],

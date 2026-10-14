@@ -261,9 +261,9 @@ export const createCanvasReducer =
 			case "STYLE_INTENT": {
 				// Style writes take two paths.
 				// (1) This case: dispatched from Canvas.tsx's onStyleIntent callback via React
-				//     onChange events — the ObjectMenu's number input and keyboard-driven slider, the
-				//     properties sidebar's callback-writing controls, and the editor's format
-				//     keystrokes — none of which fires a gesture.
+				//     onChange events — the ObjectMenu's number input and keyboard-driven slider and
+				//     the properties sidebar's callback-writing controls — none of which fires a
+				//     gesture.
 				// (2) applyStyleAction: via the gesture system (set: / slider:), from the
 				//     ObjectMenu's and the sidebar's buttons and sliders (ObjectMenuHandler /
 				//     PropertyPanelHandler). That path does not go through here.
@@ -290,9 +290,8 @@ export const createCanvasReducer =
 						registries.objectContentResizer,
 					);
 				}
-				// The commit tail re-measures too (commitPropertyUpdate), which is what a
-				// committed toggle needs as much as a committed font size: the restyled
-				// body is drawn at a size the box has to follow.
+				// The commit tail re-measures too (commitPropertyUpdate): the restyled body
+				// is drawn at a size the box has to follow.
 				return commitPropertyUpdate(
 					selectionResult,
 					state,

@@ -140,12 +140,10 @@ test.describe("styling through the ObjectMenu", () => {
 		const textFormatToggle = canvas.page.locator(
 			selectors.objectMenuToggle("text-format"),
 		);
-		const bold = canvas.page.locator(
-			selectors.objectMenuSet("fontWeight", "bold"),
-		);
+		const bold = canvas.page.locator(selectors.objectMenuCommand("toggleBold"));
 		// Italic, underline and strikethrough are left to the sidebar and the keystrokes.
 		const otherFormats = canvas.page.locator(
-			`${selectors.objectMenu} [data-action^="set:fontStyle:"], ${selectors.objectMenu} [data-action^="set:textDecoration:"]`,
+			`${selectors.objectMenuCommand("toggleItalic")}, ${selectors.objectMenuCommand("toggleUnderline")}, ${selectors.objectMenuCommand("toggleStrikethrough")}`,
 		);
 
 		await expect(bold).toBeVisible();

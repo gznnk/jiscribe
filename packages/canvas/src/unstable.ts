@@ -218,9 +218,8 @@ export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 // differs from the core guess (a table whose fill lives on its cells) says where
 // the edit lands. `declaredFieldEntry(path, valueType)` is the entry for a
 // field of the type's own, dots being a path into a nested object;
-// `objectFieldEntry` / `textSlotFieldEntry` / `runOrTextSlotEntry` /
-// `toggleRunOrTextSlotEntry` are the ones the engine builds its own entries from,
-// for a type replacing a derived kind. A declared table is a `DeclaredStyleTable`:
+// `objectFieldEntry` / `textSlotFieldEntry` / `runOrTextSlotEntry` are the ones
+// the engine builds its own entries from, for a type replacing a derived kind. A declared table is a `DeclaredStyleTable`:
 // every entry states the fields it writes (`[]` for nothing the doc stores), and
 // one stating none, or a field the type's doc cannot hold (`extraKeys`), is
 // refused at registration. Which slots a text write reaches is not the table's
@@ -233,7 +232,6 @@ export { declaredFieldEntry } from "./controllers/style/entries/declaredFieldEnt
 export { objectFieldEntry } from "./controllers/style/entries/objectFieldEntry";
 export { runOrTextSlotEntry } from "./controllers/style/entries/runOrTextSlotEntry";
 export { textSlotFieldEntry } from "./controllers/style/entries/textSlotFieldEntry";
-export { toggleRunOrTextSlotEntry } from "./controllers/style/entries/toggleRunOrTextSlotEntry";
 export { resolveTextSlotIds } from "./controllers/style/entries/utils/resolveTextSlotIds";
 export { TEXT_STYLE_INTENT_KINDS } from "./controllers/style/StyleIntent";
 export type { StyleValueType } from "./controllers/style/intent/coerceStyleValue";

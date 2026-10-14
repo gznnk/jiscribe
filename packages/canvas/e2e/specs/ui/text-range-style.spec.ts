@@ -4,8 +4,8 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 /**
  * Styling a stretch of a shape's text rather than the whole slot: the editor
  * reports what it has selected, the bold / italic / underline / strikethrough
- * keystrokes apply to that stretch, and the text is drawn as the runs it is now
- * styled in.
+ * keystrokes apply to that stretch (to the whole slot with only a caret placed),
+ * and the text is drawn as the runs it is now styled in.
  *
  * The keystrokes are handled by the editing surface itself (it holds the focus,
  * and they are the browser's own defaults on an editable element), so they are
@@ -223,6 +223,26 @@ test.describe("styling a stretch of a shape's text", () => {
 		expect(await canvas.drawnTextRuns(id)).toEqual([
 			expect.objectContaining({ text: "Payment", textDecoration: "underline" }),
 			expect.objectContaining({ text: " failed", textDecoration: "none" }),
+		]);
+	});
+
+	test("flips the whole text being edited when only the caret is placed", async ({
+		canvas,
+	}) => {
+		const id = await drawAndEdit(canvas, "Payment failed");
+		await canvas.page.keyboard.press("End");
+
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => await canvas.drawnTextRuns(id))
+			.toEqual([
+				expect.objectContaining({ text: "Payment failed", fontWeight: "700" }),
+			]);
+		// The session stays open and typing carries on in the new weight.
+		await canvas.page.keyboard.type("!");
+		await canvas.commitText();
+		expect(await canvas.drawnTextRuns(id)).toEqual([
+			expect.objectContaining({ text: "Payment failed!", fontWeight: "700" }),
 		]);
 	});
 

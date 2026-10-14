@@ -1,5 +1,5 @@
 import type { Command } from "./CommandTypes";
-import { getPlatformShortcuts } from "./CommandUtils";
+import { getPlatformShortcuts, matchesKeyBinding } from "./CommandUtils";
 
 /**
  * Where a registered command came from: the canvas's own set or a plugin's
@@ -108,24 +108,9 @@ export class CommandRegistry {
 				return false;
 			}
 
-			// Get the shortcut array for the current platform
 			const bindings = getPlatformShortcuts(cmd.shortcuts);
 
-			// Check whether any shortcut in the array matches
-			return bindings.some((binding) => {
-				const isCodeBased = binding.code !== undefined;
-				const keyMatch = isCodeBased
-					? binding.code === event.code
-					: binding.key === event.key;
-				return (
-					keyMatch &&
-					!!binding.ctrl === event.ctrlKey &&
-					!!binding.alt === event.altKey &&
-					!!binding.meta === event.metaKey &&
-					// For key-based bindings, shift is subsumed by the character value, so skip it
-					(isCodeBased ? !!binding.shift === event.shiftKey : true)
-				);
-			});
+			return bindings.some((binding) => matchesKeyBinding(binding, event));
 		});
 		return [
 			...matched.filter((cmd) => this.contributedCommandIds.has(cmd.id)),

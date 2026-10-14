@@ -250,8 +250,8 @@ const isActivation = event.type === "click" || event.type === "doubleClick";
 
 理由は前述の排他仕様。反復コマンドボタンには「ダブルクリック固有の意味」が無いため、
 `click` だけを拾うと連打時に 1 回おきにスキップする（2 回目が `doubleClick` として捨てられる）。
-ターゲットを比較しないので、押すたびに `data-action` が変わるトグル（`set:fontWeight:bold` →
-`set:fontWeight:normal`）の 2 回目も `doubleClick` で届く。
+ターゲットを比較しないので、太字ボタン（`command:toggleBold`）のようなトグルの 2 回目も、
+2 回の間に `data-action` が変わったボタンの 2 回目も `doubleClick` で届く。
 認識器の排他仕様はオブジェクト／テキスト系が依存しているので変えず、**消費側ハンドラで両者を
 等価に扱う**ことで「N 連打＝N 実行」を局所的・低リスクに実現する。
 

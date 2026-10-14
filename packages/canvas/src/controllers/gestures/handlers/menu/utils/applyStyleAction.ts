@@ -48,9 +48,9 @@ export const applyStyleAction = (
 	if (action?.kind === "set") {
 		// doubleClick activates like click (the ToolbarHandler pattern): the
 		// recognizer pairs any two rapid same-position clicks without comparing
-		// targets, so the second press of a toggle whose data-action changes with the
-		// value (set:fontWeight:bold → set:fontWeight:normal) arrives as doubleClick
-		// and must still fire. Each pointerup emits exactly one of the two.
+		// targets, so the second of two quick presses arrives as doubleClick even
+		// when the button's data-action changed in between, and must still fire.
+		// Each pointerup emits exactly one of the two.
 		if (event.type !== "click" && event.type !== "doubleClick") {
 			return state;
 		}

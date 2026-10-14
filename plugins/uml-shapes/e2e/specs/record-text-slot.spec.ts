@@ -284,13 +284,9 @@ test.describe("record: selecting one text slot", () => {
 		const textFormatToggle = canvas.page.locator(
 			selectors.objectMenuToggle("text-format"),
 		);
-		// Matched on the property alone: each button carries the value its *next* press
-		// lands on, and the name slot ships bold and underlined.
-		const bold = canvas.page.locator(
-			`${selectors.objectMenu} [data-action^="set:fontWeight:"]`,
-		);
+		const bold = canvas.page.locator(selectors.objectMenuCommand("toggleBold"));
 		const otherFormats = canvas.page.locator(
-			`${selectors.objectMenu} [data-action^="set:fontStyle:"], ${selectors.objectMenu} [data-action^="set:textDecoration:"]`,
+			`${selectors.objectMenuCommand("toggleItalic")}, ${selectors.objectMenuCommand("toggleUnderline")}, ${selectors.objectMenuCommand("toggleStrikethrough")}`,
 		);
 
 		await canvas.selectAt(ATTRIBUTES_SPOT);

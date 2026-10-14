@@ -259,8 +259,8 @@ const isActivation = event.type === "click" || event.type === "doubleClick";
 
 The reason is the exclusivity spec described above. Since a repeat command button has no "doubleClick-specific meaning,"
 picking up only `click` would skip every other tap during rapid tapping (the second event is discarded as a `doubleClick`).
-Because targets are not compared, the second press of a toggle whose `data-action` changes with its value
-(`set:fontWeight:bold` → `set:fontWeight:normal`) arrives as a `doubleClick` too.
+Because targets are not compared, the second press of a toggle such as the Bold button (`command:toggleBold`)
+arrives as a `doubleClick` too, and so does a button whose `data-action` changed between the two presses.
 Because the object- and text-related handlers depend on the recognizer's exclusivity spec, we leave it unchanged and instead
 **treat both events equivalently in the consuming handler**, achieving "N taps = N executions" locally and with low risk.
 

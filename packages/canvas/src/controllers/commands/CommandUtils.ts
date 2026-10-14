@@ -44,6 +44,32 @@ export const getPlatformShortcuts = (
 	return bindings[platform] ?? bindings.default;
 };
 
+/**
+ * Whether a keystroke is the one a binding names.
+ *
+ * @param binding - One binding (getPlatformShortcuts); `code` is compared for a layout-independent binding and `key` for a character one
+ * @param event - The keydown; Ctrl, Alt and Meta must agree exactly, Shift only for the `code` form (a character already implies it)
+ */
+export const matchesKeyBinding = (
+	binding: KeyBinding,
+	event: Pick<
+		KeyboardEvent,
+		"code" | "key" | "ctrlKey" | "shiftKey" | "altKey" | "metaKey"
+	>,
+): boolean => {
+	const isCodeBased = binding.code !== undefined;
+	const keyMatch = isCodeBased
+		? binding.code === event.code
+		: binding.key === event.key;
+	return (
+		keyMatch &&
+		!!binding.ctrl === event.ctrlKey &&
+		!!binding.alt === event.altKey &&
+		!!binding.meta === event.metaKey &&
+		(isCodeBased ? !!binding.shift === event.shiftKey : true)
+	);
+};
+
 /** Mapping from event.code to display string */
 const CODE_DISPLAY_MAP: Record<string, string> = {
 	KeyA: "A",

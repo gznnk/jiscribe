@@ -15,8 +15,6 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
  * derives from a type's features, and what the entries of `coreStyleTable` /
  * `textStyleTable` answer for. Which of them a type actually answers for is what
  * its table says.
- *
- * The toggles carry no value: the entry reads the current one and flips it.
  */
 export type CoreStyleIntent =
 	| { kind: "fill"; color: string }
@@ -39,10 +37,6 @@ export type CoreStyleIntent =
 	| { kind: "textDecoration"; decoration: string }
 	| { kind: "textAlign"; align: TextAlign }
 	| { kind: "verticalAlign"; align: VerticalAlign }
-	| { kind: "toggleBold" }
-	| { kind: "toggleItalic" }
-	| { kind: "toggleUnderline" }
-	| { kind: "toggleStrikethrough" }
 	| { kind: "lockAspectRatio"; locked: boolean }
 	| { kind: "textVerticalBasis"; basis: TextVerticalBasis }
 	| { kind: "textContent"; text: string };
@@ -79,41 +73,6 @@ export type ExtraStyleIntent = {
 export type StyleIntent = CoreStyleIntent | ExtraStyleIntent;
 
 /**
- * Which field each toggle flips: the one fact that makes a toggle one, stated
- * once for the types (StyleIntentValueType, TextToggleIntentKind) and the entries
- * (toggleRunOrTextSlotEntry) alike. A toggle's value type is its field's, so the
- * two cannot drift apart.
- */
-export const TOGGLE_FLIPS = {
-	toggleBold: "fontWeight",
-	toggleItalic: "fontStyle",
-	toggleUnderline: "textDecoration",
-	toggleStrikethrough: "textDecoration",
-} as const satisfies Record<string, CoreStyleIntentKind>;
-
-/**
- * The intents a keystroke in the text editor raises (TextEditor's Ctrl/Cmd+B/I/U,
- * Ctrl/Cmd+Shift+X and the browser's own formatBold / formatItalic /
- * formatUnderline / formatStrikeThrough edits). Spelled in the intent vocabulary
- * all the way from the keystroke, so nothing translates a "bold" into the field
- * it flips twice.
- */
-export type TextToggleIntentKind = Extract<
-	CoreStyleIntentKind,
-	keyof typeof TOGGLE_FLIPS
->;
-
-/**
- * A toggle as an intent: the kind and nothing else. Spelled out because an
- * object literal built from a `TextToggleIntentKind` is assignable to this
- * toggles-only union but not to the whole CoreStyleIntent one.
- */
-export type TextToggleIntent = Extract<
-	CoreStyleIntent,
-	{ kind: TextToggleIntentKind }
->;
-
-/**
  * The intents stored on a text slot, named after the field each of them is: the
  * core vocabulary and a slot's typography (`TextSlotStyle`) agree on these
  * eight names, so the set is their intersection rather than a second list to
@@ -132,7 +91,7 @@ export type TextSlotStyleIntentKind = Extract<
 
 /**
  * Every kind the text half of a type's table can answer for (textStyleTable),
- * whatever its text type: the typography, the keystroke toggles and the content.
+ * whatever its text type: the typography and the content.
  * What a pick of a text slot receives (createTextSlotPartKindDefinition), and the
  * kinds a part reaching text declares among its own (`styleIntentKinds`). A
  * `"source"` type answers for fewer of them, its menu offering none of the rest
@@ -145,12 +104,8 @@ export const TEXT_STYLE_INTENT_KINDS: ReadonlySet<CoreStyleIntentKind> =
 		"fontSize",
 		"fontFamily",
 		"fontWeight",
-		"toggleBold",
 		"fontStyle",
-		"toggleItalic",
 		"textDecoration",
-		"toggleUnderline",
-		"toggleStrikethrough",
 		"textAlign",
 		"verticalAlign",
 	]);
@@ -179,24 +134,17 @@ type CoreStyleIntentPayloadValue<K extends CoreStyleIntentKind> =
  * is a value such a field really has, and the entry reports it rather than
  * standing in a default of its own.
  *
- * A toggle carries no value, but its entry reads and writes the field it flips
- * (TOGGLE_FLIPS), so it works in that field's value — which, every flipped field
- * being a text-slot one, already admits the unset the toggle also has nothing to
- * hand the entry.
- *
  * A name outside the core vocabulary is a kind its declaring type owns
  * (ObjectTypeDefinition.styleEntries), whose stored type the engine does not know:
  * `unknown`. A row holding that declaration reads it typed through the table
  * instead (StyleEntryValueType).
  */
 export type StyleIntentValueType<K extends string> =
-	K extends TextToggleIntentKind
-		? CoreStyleIntentPayloadValue<(typeof TOGGLE_FLIPS)[K]> | undefined
-		: K extends TextSlotStyleIntentKind
-			? CoreStyleIntentPayloadValue<K> | undefined
-			: K extends CoreStyleIntentKind
-				? CoreStyleIntentPayloadValue<K>
-				: unknown;
+	K extends TextSlotStyleIntentKind
+		? CoreStyleIntentPayloadValue<K> | undefined
+		: K extends CoreStyleIntentKind
+			? CoreStyleIntentPayloadValue<K>
+			: unknown;
 
 /**
  * The value an intent carries, erased: the walkers look an entry up by a kind
@@ -204,7 +152,7 @@ export type StyleIntentValueType<K extends string> =
  * statically (applyStyleIntent casts the entry to match).
  *
  * @param intent - The intent to read; the payload field is named differently per kind (`value` for a type's own), and taken as the only one besides `kind`
- * @returns The payload value, or undefined for an intent carrying none (the toggles)
+ * @returns The payload value
  */
 export const styleIntentValue = (intent: StyleIntent): unknown => {
 	const { kind: _kind, ...payload } = intent;

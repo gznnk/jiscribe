@@ -118,8 +118,8 @@ test.describe("Properties sidebar Text rows", () => {
 			"the segment reads back what the text is now drawn with",
 		).toHaveAttribute("aria-pressed", "true");
 
-		// The segment writes the value the press should land on, not a toggle
-		// command, so the second press has to state "normal" from the lit state.
+		// The segment flips from what the text is drawn with, so the second press
+		// takes the weight back off.
 		await bold.click();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
@@ -131,12 +131,12 @@ test.describe("Properties sidebar Text rows", () => {
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		await canvas.page.click(selectors.propertyPanelSet("fontStyle", "italic"));
+		await canvas.page.click(selectors.propertyPanelCommand("toggleItalic"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
 			.toBe("italic");
 
-		await canvas.page.click(selectors.propertyPanelSet("fontStyle", "normal"));
+		await canvas.page.click(selectors.propertyPanelCommand("toggleItalic"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
 			.toBe("normal");
@@ -147,16 +147,12 @@ test.describe("Properties sidebar Text rows", () => {
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		await canvas.page.click(
-			selectors.propertyPanelSet("textDecoration", "underline"),
-		);
+		await canvas.page.click(selectors.propertyPanelCommand("toggleUnderline"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
 			.toBe("underline");
 
-		await canvas.page.click(
-			selectors.propertyPanelSet("textDecoration", "none"),
-		);
+		await canvas.page.click(selectors.propertyPanelCommand("toggleUnderline"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
 			.toBe("none");
@@ -167,16 +163,14 @@ test.describe("Properties sidebar Text rows", () => {
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		await canvas.page.click(
-			selectors.propertyPanelSet("textDecoration", "underline"),
-		);
+		await canvas.page.click(selectors.propertyPanelCommand("toggleUnderline"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
 			.toBe("underline");
 
-		// With the underline on, the Strikethrough segment writes both lines at once.
+		// With the underline on, the Strikethrough segment adds its line beside it.
 		await canvas.page.click(
-			selectors.propertyPanelSet("textDecoration", "underline line-through"),
+			selectors.propertyPanelCommand("toggleStrikethrough"),
 		);
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
@@ -184,7 +178,7 @@ test.describe("Properties sidebar Text rows", () => {
 
 		// Turning the strikethrough back off leaves the underline standing.
 		await canvas.page.click(
-			selectors.propertyPanelSet("textDecoration", "underline"),
+			selectors.propertyPanelCommand("toggleStrikethrough"),
 		);
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)

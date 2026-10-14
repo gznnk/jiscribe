@@ -18,7 +18,8 @@ import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
-import type { TextToggleIntentKind } from "../../../style/StyleIntent";
+import { findTextFormatByShortcut } from "../../../commands/text/ToggleTextFormatCommands";
+import type { TextFormat } from "../../../style/TextFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import {
@@ -33,31 +34,15 @@ import type { CaretTarget } from "../utils/measureCaretInSurface";
 import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
 /**
- * Keys that toggle a format while held with the platform's command modifier,
- * spelled as formatKeyOf spells a keystroke: Shift has to match too, so Ctrl+X
- * stays the cut it is.
- */
-const FORMAT_KEYS: Record<string, TextToggleIntentKind | undefined> = {
-	b: "toggleBold",
-	i: "toggleItalic",
-	u: "toggleUnderline",
-	"shift+x": "toggleStrikethrough",
-};
-
-/** A keystroke as FORMAT_KEYS names it; lowercased since Shift and Caps Lock upper-case `key`. */
-const formatKeyOf = (e: React.KeyboardEvent): string =>
-	`${e.shiftKey ? "shift+" : ""}${e.key.toLowerCase()}`;
-
-/**
  * The browser's own rich-text edits, which reach an editable surface from the
  * context menu and the mobile text toolbar. They would write markup of their own,
  * so each is answered with the editor's own formatting instead.
  */
-const FORMAT_INPUT_TYPES: Record<string, TextToggleIntentKind | undefined> = {
-	formatBold: "toggleBold",
-	formatItalic: "toggleItalic",
-	formatUnderline: "toggleUnderline",
-	formatStrikeThrough: "toggleStrikethrough",
+const FORMAT_INPUT_TYPES: Record<string, TextFormat | undefined> = {
+	formatBold: "bold",
+	formatItalic: "italic",
+	formatUnderline: "underline",
+	formatStrikeThrough: "strikethrough",
 };
 
 /** A stretch of the edited text, in UTF-16 offsets; what the editor reports and restores. */
@@ -103,8 +88,8 @@ type TextEditorProps = {
 	onChange: (text: RichText) => void;
 	/** What the editor has selected, reported on every edit and caret move. */
 	onSelectionChange?: (selection: TextSelection) => void;
-	/** A bold / italic / underline / strikethrough keystroke, as the style intent it raises over the current selection. */
-	onToggleFormat?: (kind: TextToggleIntentKind) => void;
+	/** A bold / italic / underline / strikethrough keystroke, the selection it acts on reported first; the browser's own formatting is already cancelled. */
+	onToggleFormat?: (format: TextFormat) => void;
 	onEscape?: () => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
 	onCaretMove?: (caretWorldBox: BoundingBox) => void;
@@ -566,10 +551,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		// dispatched as the selection moves, and the report it drives is queued once
 		// more onto a frame: a keystroke arriving before either runs would otherwise
 		// style the stretch selected one keystroke ago.
-		const format =
-			(e.metaKey || e.ctrlKey) && !e.altKey
-				? FORMAT_KEYS[formatKeyOf(e)]
-				: undefined;
+		const format = findTextFormatByShortcut(e.nativeEvent);
 		if (format !== undefined && onToggleFormat) {
 			e.preventDefault();
 			e.stopPropagation();

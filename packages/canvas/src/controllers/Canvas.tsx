@@ -24,6 +24,7 @@ import {
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import type { ResolveImageBlob } from "../export";
+import { toggleTextFormatCommandId } from "./commands/text/ToggleTextFormatCommands";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -60,10 +61,7 @@ import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import type {
-	TextToggleIntent,
-	TextToggleIntentKind,
-} from "./style/StyleIntent";
+import type { TextFormat } from "./style/TextFormat";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -674,14 +672,20 @@ const CanvasComponent = ({
 		},
 		[dispatch],
 	);
-	// One keystroke is one commit, so the toggle rides the same action every other
-	// style write does — the editor only ever raises toggles, which carry no value.
+	// The editor's keystrokes never reach useKeyboardShortcuts (it skips an
+	// editable target), so the editor raises the format's command itself — the
+	// same one the canvas shortcut and the format buttons run. A host that left
+	// the command out of `config.commands` gets the keystroke swallowed and nothing
+	// else, as it would on the canvas.
 	const handleTextEditToggleFormat = useCallback(
-		(kind: TextToggleIntentKind) => {
-			const intent: TextToggleIntent = { kind };
-			handleStyleIntent(intent, true);
+		(format: TextFormat) => {
+			const commandId = toggleTextFormatCommandId(format);
+			if (registries.command.get(commandId) === undefined) {
+				return;
+			}
+			dispatch({ type: "COMMAND", commandId });
 		},
-		[handleStyleIntent],
+		[dispatch, registries],
 	);
 
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones

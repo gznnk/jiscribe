@@ -73,37 +73,25 @@ describe("canvasReducer (integration)", () => {
 			expect(committed.history.past).toHaveLength(1);
 		});
 
-		it("a committed toggle lands one entry per keystroke and styles the stretch", () => {
-			// A toggle is the keyboard's own style write: it rides STYLE_INTENT with
-			// commit:true, so the entry is raised by the shared commit tail rather than
-			// by a route of its own.
+		it("a format command lands one entry per press and styles the stretch", () => {
 			const editing = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 				textEditState: {
 					kind: "shape",
 					text: "hello",
-					// A stretch rather than a caret: a toggle writes nothing without one.
 					selection: { start: 0, end: 5 },
 				},
 			});
 			const registries = createTestRegistries();
 
-			const bolded = canvasReducer(editing, {
-				type: "STYLE_INTENT",
-				intent: { kind: "toggleBold" },
-				commit: true,
-			});
+			const bolded = runCommands(editing, "toggleBold");
 			expect(bolded.history.past).toHaveLength(1);
 			expect(readSelectionStyle(bolded, "fontWeight", registries)).toEqual({
 				kind: "single",
 				value: "bold",
 			});
 
-			const unbolded = canvasReducer(bolded, {
-				type: "STYLE_INTENT",
-				intent: { kind: "toggleBold" },
-				commit: true,
-			});
+			const unbolded = runCommands(bolded, "toggleBold");
 			expect(unbolded.history.past).toHaveLength(2);
 			expect(readSelectionStyle(unbolded, "fontWeight", registries)).toEqual({
 				kind: "single",

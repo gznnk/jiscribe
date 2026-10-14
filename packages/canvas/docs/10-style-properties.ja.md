@@ -24,7 +24,7 @@ type CoreStyleIntent =
 	| { kind: "strokeWidth"; width: number }
 	| { kind: "cornerRadius"; radius: number }
 	| { kind: "fontColor"; color: string }
-	| { kind: "toggleBold" }
+	| { kind: "fontWeight"; weight: string }
 	| { kind: "lockAspectRatio"; locked: boolean }
 	| { kind: "textContent"; text: string }
 	| …;
@@ -34,14 +34,11 @@ intent はどの文書のフィールドも名指さない。語彙と doc の�
 ところ（`fill` ⇔ `fill`）は型がそう答えているだけで規則ではなく、一致しないものは
 意味で名付ける（`cornerRadius` は SVG 属性 `rx` へ落ちる）。
 
-union には 3 つの事実が乗る:
+union には 2 つの事実が乗る:
 
 - `CoreStyleIntentKind` — kind だけ。表が答えるキーになる
 - `StyleIntentValueType<K>` — ある kind の値の型。「`kind` 以外の唯一のフィールド」として導出する。
   エントリの `apply` と `read` は両方これに縛られるので、2 つが型で食い違えない
-- `TOGGLE_FLIPS` — 各キーボードトグルがどのフィールドを反転するか
-  （`toggleBold` → `fontWeight`）。トグルの値型はそのフィールドの値型なので、
-  型とエントリの双方のためにここ 1 箇所で宣言する
 
 型が自前で宣言した kind は union に入らない。`ExtraStyleIntent`
 （`{ kind: string; value: unknown }`）として運ばれる。エンジンはその kind の意味も型も
@@ -124,32 +121,31 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 導出する。ソース言語で書かれた本文は自身の構文で強調を表すので、誰も text type で
 分岐し直すことなくそれらの intent から外れる:
 
-| 受け付けるフィールド | 入るエントリ                                               |
-| -------------------- | ---------------------------------------------------------- |
-| テキストを持つ全型   | `textContent`                                              |
-| `fontColor`          | `fontColor`                                                |
-| `fontSize`           | `fontSize`                                                 |
-| `fontFamily`         | `fontFamily`                                               |
-| `fontWeight`         | `fontWeight`, `toggleBold`                                 |
-| `fontStyle`          | `fontStyle`, `toggleItalic`                                |
-| `textDecoration`     | `textDecoration`, `toggleUnderline`, `toggleStrikethrough` |
-| `textAlign`          | `textAlign`                                                |
-| `verticalAlign`      | `verticalAlign`                                            |
+| 受け付けるフィールド | 入るエントリ     |
+| -------------------- | ---------------- |
+| テキストを持つ全型   | `textContent`    |
+| `fontColor`          | `fontColor`      |
+| `fontSize`           | `fontSize`       |
+| `fontFamily`         | `fontFamily`     |
+| `fontWeight`         | `fontWeight`     |
+| `fontStyle`          | `fontStyle`      |
+| `textDecoration`     | `textDecoration` |
+| `textAlign`          | `textAlign`      |
+| `verticalAlign`      | `verticalAlign`  |
 
 ## 対を作るヘルパー
 
 エントリは手で書かない。格納先ごとのヘルパーが対を返す（`controllers/style/entries/`）:
 
-| ヘルパー                                     | 値の落ちる先                                                                                                                                                                                   |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectFieldEntry(field)`                    | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                      |
-| `textSlotFieldEntry(field)`                  | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                              |
-| `runOrTextSlotEntry(field)`                  | 編集中に文字範囲が選ばれていればその範囲（`readRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
-| `toggleRunOrTextSlotEntry(kind, { toggle })` | `TOGGLE_FLIPS` が名指すフィールド。選ばれた範囲にだけ当たる（キー 1 打は図形全体への書きではない）。現在の描画値を読んで反転し、`runOrTextSlotEntry` と同じ経路で書く                          |
-| `declaredFieldEntry(path, valueType)`        | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                           |
-| `lockAspectRatioEntry`                       | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                       |
-| `textVerticalBasisEntry`                     | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                       |
-| `textContentEntry`                           | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                          |
+| ヘルパー                              | 値の落ちる先                                                                                                                                                                                   |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`             | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                      |
+| `textSlotFieldEntry(field)`           | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                              |
+| `runOrTextSlotEntry(field)`           | 編集中に文字範囲が選ばれていればその範囲（`readRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
+| `declaredFieldEntry(path, valueType)` | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                           |
+| `lockAspectRatioEntry`                | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                       |
+| `textVerticalBasisEntry`              | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                       |
+| `textContentEntry`                    | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                          |
 
 `textSlotEntry` は `textSlotFieldEntry` と `runOrTextSlotEntry` のスロット半分が共有する部分 — どのスロットに
 当たるか、同一参照の契約、各スロットを型の既定値で読むこと。
@@ -235,10 +231,24 @@ DOM から名前と文字列を受け取って読み、React 経路（`STYLE_INT
 - どのマッパーも知らない名前は `{ kind: property, value }` になり、受けるかどうかは
   型の表が決める
 
-トグルも React 経路のただの intent で、打鍵が名指す `TextToggleIntentKind` をそのまま
-`{ kind: "toggleBold" }` + `commit: true` として投げる。「太字」をフィールドへ読み替える
-処理が 2 箇所に無く、1 打鍵が 1 エントリになるのも変わらない（記録するのは
-`STYLE_INTENT` のコミット側の後処理）。
+### 書式のトグル
+
+太字・斜体・下線・取り消し線は intent ではなく 4 つのコマンド（`toggleBold` /
+`toggleItalic` / `toggleUnderline` / `toggleStrikethrough`、
+`commands/text/ToggleTextFormatCommands.ts`）で、Ctrl/Cmd+B / I / U / Shift+X に
+割り当ててある。入口はすべてこれを実行する: 図形を選んだときのキャンバスの
+ショートカット、テキストエディタの打鍵とブラウザ自身の `formatBold` 系の編集
+（エディタの打鍵はキャンバスのショートカット処理へ届かないので、エディタが
+コマンドを自分で dispatch する）、ObjectMenu とサイドバーのボタン
+（`command:toggleBold`）。
+
+コマンドは選択全体を 1 度だけ読み（`readSelectionStyle`）、混在は off とみなし、
+着地させる値を載せた通常の `fontWeight` / `fontStyle` / `textDecoration` の intent を
+当てる。太字と細字が混ざった選択は全部太字になり、次の 1 回で全部細字に戻る。1 回が
+履歴 1 件。値の落ちる先は `runOrTextSlotEntry` の答えで、エディタに範囲があればその
+範囲、無ければスロット全体（キャレットだけのときは編集中のスロット）。読み方と反転の
+規則は `TextFormat.ts`（`isTextFormatOn` / `toggleTextFormatIntent`）にあり、ボタンの
+点灯も同じものを使う。
 
 ### スタイルの書き込みではないもの
 
@@ -291,7 +301,7 @@ export const CONTAINER_STYLE_ENTRIES = {
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md) 参照）も同じ能力を得る。
 `declaredFieldEntry` と `DeclaredStyleTable` は `@jiscribe/canvas-sdk` が公開しており、導出された kind を
 差し替える型のために、エンジンが自分の表を組むヘルパー（`objectFieldEntry` / `textSlotFieldEntry` /
-`runOrTextSlotEntry` / `toggleRunOrTextSlotEntry` / `resolveTextSlotIds`）も並んでいる。コネクターの表は
+`runOrTextSlotEntry` / `resolveTextSlotIds`）も並んでいる。コネクターの表は
 `controllers/style/tables/connectorStyleTable.ts`（`CONNECTOR_STYLE_TABLE`）。container プラグインは
 `src/style/containerStyleEntries.ts` で `CONTAINER_STYLE_ENTRIES` を宣言し、`@jiscribe/canvas-sdk` の
 `createFrameObjectDefinition` へ渡す。

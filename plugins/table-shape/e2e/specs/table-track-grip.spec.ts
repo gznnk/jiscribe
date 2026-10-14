@@ -210,7 +210,7 @@ test.describe("table track grips", () => {
 		await canvas.selectAt(await cellCenter(canvas, id, "r1c1"));
 
 		await clickTrackGrip(canvas, "rowGrip", 0);
-		await canvas.setBold("bold");
+		await canvas.pressBold();
 
 		await expect.poll(() => drawnTextWeight(canvas, "top left")).toBe("700");
 		await expect.poll(() => drawnTextWeight(canvas, "top right")).toBe("700");

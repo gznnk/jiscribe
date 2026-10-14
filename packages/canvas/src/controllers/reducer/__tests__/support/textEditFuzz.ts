@@ -15,14 +15,19 @@ import { createTestState } from "./createTestState";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { toggleTextFormatCommandId } from "../../../commands/text/ToggleTextFormatCommands";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
 import { toStyleIntent } from "../../../style/intent/toStyleIntent";
-import type {
-	TextToggleIntent,
-	TextToggleIntentKind,
-} from "../../../style/StyleIntent";
+import { styleIntentValue } from "../../../style/StyleIntent";
+import type { TextFormat } from "../../../style/TextFormat";
+import {
+	TEXT_FORMATS,
+	textFormatStyleIntentKind,
+	toggleTextFormatIntent,
+} from "../../../style/TextFormat";
+import { readSelectionStyle } from "../../../style/walk/readSelectionStyle";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
@@ -32,7 +37,7 @@ import { createCanvasReducer } from "../../canvasReducer";
  *
  * A session is a random script of the operations a user can perform while an
  * editor is open — typing (any replacement of the plain text), format
- * keystrokes, styling from the ObjectMenu, committing and reopening — and a
+ * commands, styling from the ObjectMenu, committing and reopening — and a
  * model tracks alongside what must be true after every step. The invariants are
  * the seams the editor relies on: the draft stays canonical, holds exactly the
  * typed characters, reads back from the grafted object with the same styling it
@@ -72,7 +77,8 @@ type FuzzOp =
 	  }
 	| {
 			kind: "toggle";
-			toggle: TextToggleIntentKind;
+			format: TextFormat;
+			/** Selection reported before the press; start === end takes the slot-wide path. */
 			start: number;
 			end: number;
 	  }
@@ -186,11 +192,23 @@ const assertSameVisibleText = (
 	}
 };
 
+/** The field a step wrote over the whole slot, or undefined for a step that wrote no such thing. */
+const slotWidePropertyOf = (
+	op: FuzzOp | null,
+): keyof InlineTextStyle | undefined => {
+	if (op === null || !("start" in op) || op.start !== op.end) {
+		return undefined;
+	}
+	return op.kind === "menu"
+		? op.property
+		: textFormatStyleIntentKind(op.format);
+};
+
 /** The state the session model tracks between steps. */
 type FuzzModel = {
 	/** What the plain text must read as after the last step. */
 	expectedPlain: string;
-	/** The slot's own styling fields, which only a slot-wide menu write may change. */
+	/** The slot's own styling fields, which only a slot-wide write (a menu value, a format press) may change. */
 	expectedSlotStyle: InlineTextStyle;
 	/** Per property, every value a run override may legitimately hold. */
 	allowedRunValues: Record<string, Set<string | number>>;
@@ -266,12 +284,7 @@ const generateOp = (random: () => number, plain: string): FuzzOp => {
 		const end = start + randomInt(random, plain.length - start + 1);
 		return {
 			kind: "toggle",
-			toggle: pick(random, [
-				"toggleBold",
-				"toggleItalic",
-				"toggleUnderline",
-				"toggleStrikethrough",
-			] as const),
+			format: pick(random, TEXT_FORMATS),
 			start,
 			end,
 		};
@@ -383,7 +396,7 @@ export const runTextEditFuzzSession = (
 		);
 		assertSameVisibleText("grafted slot vs draft", graftedBody, draft, fail);
 
-		// The slot's own styling only moves through a slot-wide menu write.
+		// The slot's own styling only moves through a slot-wide write.
 		const slotStyle = pickDefinedInlineTextStyle(
 			readSlot(state) as unknown as InlineTextStyle,
 		);
@@ -410,17 +423,15 @@ export const runTextEditFuzzSession = (
 		}
 
 		// A slot-wide write leaves no run override of the written property behind.
-		if (lastOp?.kind === "menu" && lastOp.start === lastOp.end) {
-			if (
-				typeof draft !== "string" &&
-				draft.some(
-					(run) => run[lastOp.property as keyof InlineTextStyle] !== undefined,
-				)
-			) {
-				fail(
-					`slot-wide ${lastOp.property} left run overrides behind: ${JSON.stringify(draft)}`,
-				);
-			}
+		const slotWideProperty = slotWidePropertyOf(lastOp);
+		if (
+			slotWideProperty !== undefined &&
+			typeof draft !== "string" &&
+			draft.some((run) => run[slotWideProperty] !== undefined)
+		) {
+			fail(
+				`slot-wide ${slotWideProperty} left run overrides behind: ${JSON.stringify(draft)}`,
+			);
 		}
 	};
 
@@ -459,8 +470,25 @@ export const runTextEditFuzzSession = (
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			const toggle: TextToggleIntent = { kind: op.toggle };
-			dispatch({ type: "STYLE_INTENT", intent: toggle, commit: true });
+			const field = textFormatStyleIntentKind(op.format);
+			// What the press lands on, read from the selection before it as the
+			// command reads it; only the slot-wide path changes the slot's styling.
+			const landed = styleIntentValue(
+				toggleTextFormatIntent(
+					op.format,
+					readSelectionStyle(state, field, registries),
+				),
+			);
+			dispatch({
+				type: "COMMAND",
+				commandId: toggleTextFormatCommandId(op.format),
+			});
+			if (op.start === op.end) {
+				model.expectedSlotStyle = {
+					...model.expectedSlotStyle,
+					[field]: landed,
+				};
+			}
 		} else if (op.kind === "menu") {
 			dispatch({
 				type: "UPDATE_TEXT_EDIT_SELECTION",

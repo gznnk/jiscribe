@@ -1105,13 +1105,11 @@ export class CanvasDriver {
 
 	/**
 	 * Press the ObjectMenu's Bold toggle for the selected shape, or for the picked
-	 * part or the stretch being edited.
-	 *
-	 * @param value - fontWeight the button writes; it carries the value the *next*
-	 *   press lands on, so a toggle-off names "normal"
+	 * part or the stretch being edited. It flips the weight, so a second press
+	 * takes it back off.
 	 */
-	async setBold(value: "bold" | "normal") {
-		await this.page.click(selectors.objectMenuSet("fontWeight", value));
+	async pressBold() {
+		await this.page.click(selectors.objectMenuCommand("toggleBold"));
 	}
 
 	/** Set the dash style of the selected line, connector or shape border. */

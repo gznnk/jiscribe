@@ -125,11 +125,9 @@ test.describe("styling a Markdown source body", () => {
 			canvas.page.locator(selectors.objectMenuToggle("font-size")),
 		).toBeVisible();
 		// The Bold toggle sits on the menu itself, so its absence is the absence of
-		// the `set:` part.
+		// its command.
 		await expect(
-			canvas.page.locator(
-				`${selectors.objectMenu} [data-action^="set:fontWeight:"]`,
-			),
+			canvas.page.locator(selectors.objectMenuCommand("toggleBold")),
 		).toHaveCount(0);
 	});
 
@@ -145,7 +143,7 @@ test.describe("styling a Markdown source body", () => {
 			canvas.page.locator(selectors.propertyPanelField("fontSize")),
 		).toBeVisible();
 		await expect(
-			canvas.page.locator(selectors.propertyPanelSet("fontWeight", "bold")),
+			canvas.page.locator(selectors.propertyPanelCommand("toggleBold")),
 		).toHaveCount(0);
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSet("textAlign", "left")),

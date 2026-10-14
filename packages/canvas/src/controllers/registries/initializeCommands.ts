@@ -32,6 +32,7 @@ import { ToggleLockAspectRatioCommand } from "../commands/shape/ToggleLockAspect
 import { ToggleTextLayoutCommand } from "../commands/shape/ToggleTextLayoutCommand";
 import { ToggleTextVerticalBasisCommand } from "../commands/shape/ToggleTextVerticalBasisCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
+import { toggleTextFormatCommands } from "../commands/text/ToggleTextFormatCommands";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
 import { TogglePropertyPanelCommand } from "../commands/view/TogglePropertyPanelCommand";
@@ -85,6 +86,8 @@ export const ALL_COMMANDS: Command[] = [
 	ToggleTextVerticalBasisCommand,
 	// Text commands
 	StartTextEditCommand,
+	// Text format commands: bold / italic / underline / strikethrough
+	...toggleTextFormatCommands,
 	// View commands
 	ZoomInCommand,
 	ZoomOutCommand,

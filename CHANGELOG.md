@@ -85,11 +85,19 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the neighbour of the cell the last click or Shift-click ended on. With the
   table selected as a whole, or a row or column picked, the arrows nudge the
   table as before.
-- **Ctrl/Cmd+Shift+X strikes the selected text through while editing**, and
-  pressing it again takes the line off, as Ctrl/Cmd+B / I / U do for bold,
-  italic and underline. An underline on the same characters is kept. Ctrl/Cmd+X
-  is still cut, and Ctrl/Cmd+Shift+B / I / U no longer toggle bold, italic or
-  underline.
+- **Bold, italic, underline and strikethrough work the same from the keys and
+  the buttons.** Ctrl/Cmd+B / I / U / Shift+X now act on selected shapes without
+  opening the editor, and while editing with only the caret placed they flip the
+  whole text being edited; with characters selected they style those characters,
+  as before. A selection mixing bold and plain turns all bold, and the next press
+  all plain — several shapes at once included — in one undo step, and the
+  ObjectMenu's and the sidebar's buttons do exactly the same. Ctrl/Cmd+Shift+X
+  strikes text through, keeping an underline on the same characters, and pressing
+  it again takes the line off. Ctrl/Cmd+X is still cut, Ctrl/Cmd+Shift+B / I / U
+  no longer toggle bold, italic or underline, and on a Mac the keys take Cmd
+  alone, as the other shortcuts do. For hosts, they are the commands
+  `toggleBold` / `toggleItalic` / `toggleUnderline` / `toggleStrikethrough`, so
+  `config.commands` can leave them out and the shortcut list shows them.
 - For plugin authors: a custom ObjectMenu item or properties-sidebar row stays
   up while a picked part narrows the menu or the sidebar when it names that
   part's kind in `pickedPartKinds`. `@jiscribe/canvas/unstable` (and so
@@ -314,7 +322,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Strikethrough, is gone, and so is the row of four the menu used to lay out
   while a text slot, a cell, a row or a column was picked. Italic, underline and
   strikethrough stay in the property sidebar's Style row and on Ctrl/Cmd+I, U
-  and Shift+X while text is edited. For plugin authors, the
+  and Shift+X. For plugin authors, the
   `{ type: "textFormat" }` menu item keeps its name and now renders that one
   Bold toggle; `CanvasMessages.menuTextFormat` is removed.
 - **For plugin authors: a contributed command is offered a shared keystroke
@@ -390,8 +398,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   renamed to say what they return.** On `@jiscribe/canvas/unstable` (and so
   `@jiscribe/canvas-sdk`), `fieldEntry` becomes `declaredFieldEntry`,
   `objectField` / `slotField` become `objectFieldEntry` / `textSlotFieldEntry`,
-  `runOrSlot` / `toggleRunOrSlot` become `runOrTextSlotEntry` /
-  `toggleRunOrTextSlotEntry`, `styleIntentOf` becomes `toStyleIntent`, and
+  `runOrSlot` becomes `runOrTextSlotEntry`, `styleIntentOf` becomes
+  `toStyleIntent`, and
   `isTextSlotSelection` becomes `isTextSlotPart`. In `@jiscribe/canvas`, the
   type `ResolvedSelection` (what `CanvasSelectionHandle.select` returns)
   becomes `RequestedSelection`. Arguments and behaviour are unchanged; a type's

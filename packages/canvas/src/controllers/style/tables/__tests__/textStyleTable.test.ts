@@ -13,7 +13,7 @@ const kindsOf = (
 		.sort();
 
 describe("textStyleTable", () => {
-	it("a body takes the whole typography, the keystroke toggles included", () => {
+	it("a body takes the whole typography", () => {
 		expect(kindsOf("body")).toEqual([
 			"fontColor",
 			"fontFamily",
@@ -23,10 +23,6 @@ describe("textStyleTable", () => {
 			"textAlign",
 			"textContent",
 			"textDecoration",
-			"toggleBold",
-			"toggleItalic",
-			"toggleStrikethrough",
-			"toggleUnderline",
 			"verticalAlign",
 		]);
 	});
@@ -36,9 +32,8 @@ describe("textStyleTable", () => {
 	});
 
 	it("a source-language body takes the base fields and the alignments alone", () => {
-		// Its own syntax carries the emphasis, so neither those fields nor the
-		// toggles that flip them are answered for (textStyleKeysOf). The content is
-		// answered for by every type holding text.
+		// Its own syntax carries the emphasis, so those fields are not answered for
+		// (textStyleKeysOf). The content is answered for by every type holding text.
 		expect(kindsOf("source")).toEqual([
 			"fontColor",
 			"fontFamily",

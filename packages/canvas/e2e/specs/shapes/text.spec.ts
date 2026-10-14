@@ -330,7 +330,7 @@ test.describe("text", () => {
 		expect(await drawnLineCount(canvas, id)).toBe(1);
 
 		await canvas.selectAt(centerOf(normal));
-		await canvas.setBold("bold");
+		await canvas.pressBold();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("700");
@@ -344,7 +344,7 @@ test.describe("text", () => {
 		// the style makes unusable would take the weight down with it. Italic lives in
 		// the sidebar only; closing it gives the canvas its full width back.
 		await canvas.openPropertyPanel();
-		await canvas.page.click(selectors.propertyPanelSet("fontStyle", "italic"));
+		await canvas.page.click(selectors.propertyPanelCommand("toggleItalic"));
 		await canvas.closePropertyPanel();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
