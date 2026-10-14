@@ -149,7 +149,9 @@ export type {
 	TextMeasurementSource,
 } from "./text/measure/TextMeasurement";
 export {
+	advanceTextMeasurementGeneration,
 	offerTextMeasurement,
+	readTextMeasurementGeneration,
 	resetTextMeasurementForTests,
 } from "./text/measure/textMeasurementSlot";
 export type { TextWidthMeasurer } from "./text/measure/textWidthMeasurer";

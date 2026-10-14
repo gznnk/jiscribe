@@ -1,9 +1,15 @@
+import { readTextMeasurementGeneration } from "@jiscribe/canvas-sdk/doc";
+
 import { calcTableLayout } from "./calcTableLayout";
 import type { TableLayout, TableLayoutSource } from "./calcTableLayout";
 import type { TableColumnDoc } from "../schema/TableDoc";
 
-/** One cached layout, with the inputs besides the columns it was computed from. */
+/**
+ * One cached layout, with the inputs besides the columns it was computed from and
+ * the measurement generation its cells were measured under.
+ */
 type TableLayoutCacheEntry = {
+	generation: number;
 	rows: TableLayoutSource["rows"];
 	text: TableLayoutSource["text"];
 	strokeWidth: TableLayoutSource["strokeWidth"];
@@ -17,8 +23,8 @@ type TableLayoutCacheEntry = {
  * frame of its drag while leaving all four untouched, and none of them is read
  * by the layout. Weak, so an entry lives exactly as long as the columns it was
  * derived from; one per columns array, so two tables never evict each other
- * unless they share one, which only costs a recomputation. The one input the key
- * does not carry is the measurement (see writeTableLayoutCache).
+ * unless they share one, which only costs a recomputation. An entry from an
+ * earlier measurement generation (web fonts arriving since) misses as well.
  */
 const tableLayoutCache = new WeakMap<
 	readonly TableColumnDoc[],
@@ -34,7 +40,7 @@ const tableLayoutCache = new WeakMap<
  * drag computes nothing; a drag that rewrites the grid computes once per move.
  *
  * @param source - The tracks, the cells and the rule width; matched by the identity of each, so a state spread from another with the grid untouched hits, and a source with no `columns` is computed every time
- * @returns The same layout object for the same four inputs until writeTableLayoutCache replaces it
+ * @returns The same layout object for the same four inputs, until writeTableLayoutCache replaces it or the measurement generation moves on
  */
 export const readCachedTableLayout = (
 	source: TableLayoutSource,
@@ -45,6 +51,7 @@ export const readCachedTableLayout = (
 	const cached = tableLayoutCache.get(source.columns);
 	if (
 		cached !== undefined &&
+		cached.generation === readTextMeasurementGeneration() &&
 		cached.rows === source.rows &&
 		cached.text === source.text &&
 		cached.strokeWidth === source.strokeWidth
@@ -59,13 +66,10 @@ export const readCachedTableLayout = (
 /**
  * A layout computed elsewhere, written over `source`'s cache entry: what the
  * content resizer does with the one it lays the table out with, so the object it
- * hands back is read without a second pass. It also covers the one change the
- * inputs cannot show: a font finishing to load changes what unchanged text
- * measures, so core runs the resizer on the same object (REMEASURE_TEXT) and the
- * entry under its grid has to be replaced.
+ * hands back is read without a second pass.
  *
  * @param source - The object the renderers will ask readCachedTableLayout about; one with no `columns` is never cached, and the write is dropped
- * @param layout - A layout of exactly `source`'s tracks, cells and rule width; nothing checks that it is
+ * @param layout - A layout of exactly `source`'s tracks, cells and rule width, measured under the current measurement generation; nothing checks that it is
  */
 export const writeTableLayoutCache = (
 	source: TableLayoutSource,
@@ -75,6 +79,7 @@ export const writeTableLayoutCache = (
 		return;
 	}
 	tableLayoutCache.set(source.columns, {
+		generation: readTextMeasurementGeneration(),
 		rows: source.rows,
 		text: source.text,
 		strokeWidth: source.strokeWidth,

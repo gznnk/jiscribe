@@ -1,18 +1,8 @@
-import {
-	calcWrappedTextBlockSize,
-	DEFAULT_FONT_FAMILY,
-	SHAPE_STYLE_FALLBACK,
-	TEXT_STYLE_FALLBACK,
-} from "@jiscribe/canvas-sdk/doc";
-import type { TextMeasureFont } from "@jiscribe/canvas-sdk/doc";
-import { isRichText, resolveTextSlotStyle } from "@jiscribe/doc";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/canvas-sdk/doc";
 import type { Rect } from "@jiscribe/geometry";
 
-import {
-	TABLE_CELL_STYLE_DEFAULTS,
-	TABLE_DOC_DEFAULTS,
-	tableCellTextSlotId,
-} from "../schema/TableDoc";
+import { readCachedCellTextHeight } from "./readCachedCellTextHeight";
+import { TABLE_DOC_DEFAULTS, tableCellTextSlotId } from "../schema/TableDoc";
 import type {
 	TableCell,
 	TableColumnDoc,
@@ -77,41 +67,6 @@ export type TableLayout = {
 };
 
 /**
- * The font one cell's text is drawn — and so measured — with: what the cell
- * states, over the type's cell defaults, over what the overlay draws an unset
- * field with. The family is the last to be filled in because
- * TABLE_CELL_STYLE_DEFAULTS names none, and DEFAULT_FONT_FAMILY is what the
- * overlay then draws in.
- */
-const resolveCellFont = (cell: TableCell | undefined): TextMeasureFont => {
-	const style = resolveTextSlotStyle(TABLE_CELL_STYLE_DEFAULTS, cell);
-	return {
-		fontSize: style.fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
-		fontFamily: style.fontFamily ?? DEFAULT_FONT_FAMILY,
-		fontWeight: style.fontWeight ?? TEXT_STYLE_FALLBACK.fontWeight,
-		fontStyle: style.fontStyle,
-	};
-};
-
-/**
- * Height one cell's text asks for: the box the shared measurement gives that text
- * at that width, its padding included. An empty cell still asks for one line,
- * which is what gives a row of empty cells its height.
- *
- * @param cell - The cell, or undefined for a grid position no cell is keyed at
- * @param wrapWidth - Width of the box the text wraps inside, the rules' share already taken off; the text padding is subtracted by the measurement itself
- */
-const calcCellTextHeight = (
-	cell: TableCell | undefined,
-	wrapWidth: number,
-): number =>
-	calcWrappedTextBlockSize(
-		isRichText(cell?.text) ? cell.text : "",
-		resolveCellFont(cell),
-		wrapWidth,
-	).height;
-
-/**
  * Height one row is drawn at: its stored height as the lower bound, raised to
  * whatever its tallest cell asks for. A row whose text outgrows the stored value
  * is drawn taller, never clipped.
@@ -127,7 +82,7 @@ const calcRowHeight = (
 		(tallest, column, columnIndex) =>
 			Math.max(
 				tallest,
-				calcCellTextHeight(
+				readCachedCellTextHeight(
 					cells?.[tableCellTextSlotId(rowIndex, columnIndex)],
 					column.width - strokeWidth,
 				),
@@ -201,6 +156,8 @@ const accumulateEdges = (start: number, sizes: readonly number[]): number[] => {
  * A cell's text is measured against its column minus the rule width, so text
  * never has to run under a rule to fit — which makes the row height an upper
  * bound of what the drawn wrap needs, the drawn cell being the full column wide.
+ * Each cell is measured once per cell object and width (readCachedCellTextHeight),
+ * so a pass measures only the cells it has not seen at that width.
  *
  * @param state - The tracks, the cells and the rule width; absent tracks lay out as an empty grid whose rects are `{}`
  * @returns The edges, one rect per cell and the outer size, all in the shape's local coordinates (origin at its center)

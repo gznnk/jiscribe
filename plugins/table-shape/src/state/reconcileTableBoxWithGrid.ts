@@ -1,11 +1,11 @@
 import { resizeTableFromDrawnCorner } from "./resizeTableFromDrawnCorner";
 import type { TableState } from "./TableState";
-import {
-	calcTableColumnsWidth,
-	calcTableLayout,
-} from "../layout/calcTableLayout";
+import { calcTableColumnsWidth } from "../layout/calcTableLayout";
 import { distributeTableWidthToColumns } from "../layout/distributeTableWidthToColumns";
-import { writeTableLayoutCache } from "../layout/readCachedTableLayout";
+import {
+	readCachedTableLayout,
+	writeTableLayoutCache,
+} from "../layout/readCachedTableLayout";
 
 /**
  * Reconciles a table's box with its own grid, in whichever direction they
@@ -44,10 +44,14 @@ import { writeTableLayoutCache } from "../layout/readCachedTableLayout";
  * by reference, so a fresh array handed back on a still frame would re-measure the
  * table for nothing.
  *
- * The cells are measured once per run, against the columns the table ends up with,
+ * The grid is laid out once per run, against the columns the table ends up with,
  * and that layout is left in the cache under the object handed back — so an outer
  * resize costs one pass per frame, renderers included, not one per side of the
- * decision.
+ * decision. The pass measures only the cells it has not seen at their width
+ * (readCachedCellTextHeight): a row boundary drag measures none, a grid rewrite
+ * only the cells it created. Web fonts arriving move the measurement generation
+ * on, which both caches compare against, so the re-measure core runs then
+ * (REMEASURE_TEXT) is answered afresh.
  *
  * @param state - The table to measure; its `columns` / `rows` / `text` are read, and its box — and, on an outside write of the width, its `columns` — rewritten
  * @returns The state with the two reconciled, or the same object when nothing moved
@@ -63,9 +67,7 @@ export const reconcileTableBoxWithGrid = (state: TableState): TableState => {
 			? null
 			: distributeTableWidthToColumns(state.columns, state.width);
 	const source = columns === null ? state : { ...state, columns };
-	// Computed, not read from the cache: core runs the resizer when the measurement
-	// changed under an unchanged state (fonts loading).
-	const layout = calcTableLayout(source);
+	const layout = readCachedTableLayout(source);
 	const reconciled =
 		source === state &&
 		layout.width === state.width &&

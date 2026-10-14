@@ -1,4 +1,5 @@
 import {
+	advanceTextMeasurementGeneration,
 	createEstimateTextMeasurement,
 	offerTextMeasurement,
 } from "@jiscribe/canvas-sdk/doc";
@@ -16,7 +17,7 @@ import type { TableState } from "../TableState";
 
 // The row heights are resolved from the cells' text, and measuring with nothing
 // offered throws (see calcTableLayout.test.ts). The measurer is counted to see
-// how many layout passes a run costs: one measurer per plain cell per pass.
+// how many cells a run measures: one measurer per plain cell measured.
 let measurerCount = 0;
 const estimate = createEstimateTextMeasurement();
 offerTextMeasurement({
@@ -157,27 +158,19 @@ describe("reconcileTableBoxWithGrid", () => {
 });
 
 describe("reconcileTableBoxWithGrid and the layout cache", () => {
-	it("measures the state afresh and leaves that layout as the one its readers get", () => {
-		const table = makeTable();
-		const stale = readCachedTableLayout(table);
-
-		expect(reconcileTableBoxWithGrid(table)).toBe(table);
-
-		const fresh = readCachedTableLayout(table);
-		expect(fresh).not.toBe(stale);
-		expect(fresh).toEqual(stale);
-	});
-
 	it("lays an outside write out once, under the state it hands back", () => {
-		const table = makeTable({ columns: [{ width: 80 }, { width: 160 }] });
+		const table = reconcileTableBoxWithGrid(
+			makeTable({ columns: [{ width: 80 }, { width: 160 }] }),
+		);
 		const dragged = draggedRightEdgeTo(table, 360);
 		measurerCount = 0;
 
 		const resized = reconcileTableBoxWithGrid(dragged);
 		const laidOut = readCachedTableLayout(resized);
 
-		// Four cells, one pass: the columns being redistributed costs no pass of its
-		// own, and the renderers' read of the returned state hits.
+		// Both columns are redistributed, so all four cells, once: the decision costs
+		// no pass of its own, and the renderers' read of the returned state hits.
+		expect(widthsOf(resized)).toEqual([120, 240]);
 		expect(measurerCount).toBe(4);
 		expect(laidOut.width).toBe(360);
 	});
@@ -195,5 +188,42 @@ describe("reconcileTableBoxWithGrid and the layout cache", () => {
 		readCachedTableLayout(resized);
 
 		expect(measurerCount).toBe(4);
+	});
+
+	it("measures no cell when only a row's stored height moved, as a boundary drag does", () => {
+		const table = reconcileTableBoxWithGrid(makeTable());
+		measurerCount = 0;
+
+		const resized = reconcileTableBoxWithGrid({
+			...table,
+			rows: [{ height: 80 }, {}],
+		});
+
+		expect(resized.height).toBeGreaterThan(table.height);
+		expect(measurerCount).toBe(0);
+	});
+
+	it("measures the same state afresh once the measurement generation moves on, which is how a font arriving reaches it", () => {
+		const table = reconcileTableBoxWithGrid(makeTable());
+		const stale = readCachedTableLayout(table);
+		measurerCount = 0;
+
+		advanceTextMeasurementGeneration();
+		expect(reconcileTableBoxWithGrid(table)).toBe(table);
+
+		const fresh = readCachedTableLayout(table);
+		expect(fresh).not.toBe(stale);
+		expect(fresh).toEqual(stale);
+		expect(measurerCount).toBe(4);
+	});
+
+	it("measures nothing for a state whose grid is laid out already", () => {
+		const table = reconcileTableBoxWithGrid(makeTable());
+		measurerCount = 0;
+
+		const recolored = { ...table, strokeColor: "red" };
+
+		expect(reconcileTableBoxWithGrid(recolored)).toBe(recolored);
+		expect(measurerCount).toBe(0);
 	});
 });

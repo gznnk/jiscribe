@@ -272,6 +272,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `ObjectConnectionAnchorOffsetsCalculator` are exported from `@jiscribe/canvas`.
   `@jiscribe/canvas/unstable` also exports `SELECTION_OUTLINE_WIDTH`, for a
   control drawn against the selection outline at the same line weight.
+- For plugin authors: the text measurement has a generation,
+  `readTextMeasurementGeneration()` in `@jiscribe/doc/unstable`, which the canvas
+  moves on (`advanceTextMeasurementGeneration()`) when web fonts finish after
+  the first paint and the same text starts measuring differently. A shape
+  caching measurements records it and re-measures once it has moved. The table
+  uses it to measure each cell once per width, which leaves a row boundary drag
+  measuring no text at all.
 
 ### Changed
 

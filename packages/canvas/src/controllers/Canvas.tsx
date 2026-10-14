@@ -1,5 +1,6 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import {
 	memo,
 	useCallback,
@@ -395,6 +396,9 @@ const CanvasComponent = ({
 		collectRequests: () =>
 			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
 		onFacesChanged: () => {
+			// First, so the re-measure is not answered from a measurement cached
+			// against the fallback face.
+			advanceTextMeasurementGeneration();
 			dispatch({ type: "REMEASURE_TEXT" });
 		},
 	});
