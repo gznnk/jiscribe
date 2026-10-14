@@ -1,4 +1,5 @@
 import {
+	advanceTextMeasurementGeneration,
 	createEstimateTextMeasurement,
 	offerTextMeasurement,
 } from "@jiscribe/canvas-sdk/doc";
@@ -139,6 +140,18 @@ describe("readCachedTableLayout", () => {
 		expect(measurerCount).toBe(0);
 	});
 
+	it("computes anew once the measurement generation moves on, as web fonts arriving move it", () => {
+		const table = makeTable();
+		const held = readCachedTableLayout(table);
+		measurerCount = 0;
+
+		advanceTextMeasurementGeneration();
+		const remeasured = readCachedTableLayout(table);
+
+		expect(remeasured).not.toBe(held);
+		expect(measurerCount).toBe(12);
+	});
+
 	it("is what the cells' regions read, so placing them twice measures the cells once", () => {
 		const table = makeTable();
 		measurerCount = 0;
@@ -151,7 +164,7 @@ describe("readCachedTableLayout", () => {
 });
 
 describe("writeTableLayoutCache", () => {
-	it("replaces what the same object hands back, as a font finishing to load needs", () => {
+	it("replaces what the same object hands back", () => {
 		const table = makeTable();
 		const stale = readCachedTableLayout(table);
 		const fresh = calcTableLayout(table);

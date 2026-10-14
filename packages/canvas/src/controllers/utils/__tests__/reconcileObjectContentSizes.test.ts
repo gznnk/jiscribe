@@ -118,23 +118,6 @@ describe("reconcileObjectContentSizes", () => {
 		expect(next.objects.t1).toEqual(textObject("t1", "hello"));
 	});
 
-	it("tells the resizer a forced pass is a re-measure, and no other pass", () => {
-		// A resizer keeping measurements of its own has no other way to tell a font
-		// arriving from a state that merely kept its content.
-		const registry = createObjectContentResizerRegistry();
-		const seenRemeasures: (boolean | undefined)[] = [];
-		registry.register("text", (state, context) => {
-			seenRemeasures.push(context.remeasure);
-			return state;
-		});
-		const state = stateOf([textObject("t1", "hello")]);
-
-		reconcileObjectContentSizes(state, stateOf([]), registry);
-		reconcileObjectContentSizes(state, state, registry, true);
-
-		expect(seenRemeasures).toEqual([undefined, true]);
-	});
-
 	it("re-measures a text object whose text changed", () => {
 		const previous = stateOf([textObject("t1", "hello")]);
 		const state = stateOf([withStaleBox(textObject("t1", "hello world"))]);

@@ -1,6 +1,7 @@
 import {
 	calcWrappedTextBlockSize,
 	DEFAULT_FONT_FAMILY,
+	readTextMeasurementGeneration,
 	TEXT_STYLE_FALLBACK,
 } from "@jiscribe/canvas-sdk/doc";
 import type { TextMeasureFont } from "@jiscribe/canvas-sdk/doc";
@@ -9,7 +10,7 @@ import { isRichText, resolveTextSlotStyle } from "@jiscribe/doc";
 import { TABLE_CELL_STYLE_DEFAULTS } from "../schema/TableDoc";
 import type { TableCell } from "../schema/TableDoc";
 
-/** One cell's last measurement, with the width and the generation it was taken at. */
+/** One cell's last measurement, with the width and the measurement generation it was taken at. */
 type CellTextHeightEntry = {
 	generation: number;
 	wrapWidth: number;
@@ -24,12 +25,6 @@ type CellTextHeightEntry = {
  * needs — the cell is re-measured at each new width anyway.
  */
 const cellTextHeightCache = new WeakMap<TableCell, CellTextHeightEntry>();
-
-/**
- * Bumped when the measurement itself changes under unchanged cells (fonts
- * finishing to load), so every entry taken before it misses.
- */
-let measurementGeneration = 0;
 
 /** Stands in for a grid position no cell is keyed at, which measures as an empty cell. */
 const EMPTY_CELL: TableCell = { text: "" };
@@ -62,17 +57,18 @@ const resolveCellFont = (cell: TableCell): TextMeasureFont => {
  *
  * @param cell - The cell, or undefined for a grid position no cell is keyed at
  * @param wrapWidth - Width of the box the text wraps inside, the rules' share already taken off; the text padding is subtracted by the measurement itself
- * @returns The height in local px, the same number calcWrappedTextBlockSize gives until {@link forgetTableCellTextHeights} is called
+ * @returns The height in local px, the same number calcWrappedTextBlockSize gives; an entry taken under an earlier measurement generation (web fonts arriving since) is measured again
  */
 export const readCachedCellTextHeight = (
 	cell: TableCell | undefined,
 	wrapWidth: number,
 ): number => {
 	const key = cell ?? EMPTY_CELL;
+	const generation = readTextMeasurementGeneration();
 	const cached = cellTextHeightCache.get(key);
 	if (
 		cached !== undefined &&
-		cached.generation === measurementGeneration &&
+		cached.generation === generation &&
 		cached.wrapWidth === wrapWidth
 	) {
 		return cached.height;
@@ -82,19 +78,6 @@ export const readCachedCellTextHeight = (
 		resolveCellFont(key),
 		wrapWidth,
 	);
-	cellTextHeightCache.set(key, {
-		generation: measurementGeneration,
-		wrapWidth,
-		height,
-	});
+	cellTextHeightCache.set(key, { generation, wrapWidth, height });
 	return height;
-};
-
-/**
- * Drops every cell measurement taken so far, for the one change the cells cannot
- * show: a font finishing to load changes what unchanged text measures (core says
- * so through the resizer's `remeasure`, see reconcileTableBoxWithGrid).
- */
-export const forgetTableCellTextHeights = (): void => {
-	measurementGeneration++;
 };

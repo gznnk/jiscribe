@@ -1,4 +1,5 @@
 import {
+	advanceTextMeasurementGeneration,
 	calcWrappedTextBlockSize,
 	createEstimateTextMeasurement,
 	DEFAULT_FONT_FAMILY,
@@ -8,10 +9,7 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { TableCell } from "../../schema/TableDoc";
-import {
-	forgetTableCellTextHeights,
-	readCachedCellTextHeight,
-} from "../readCachedCellTextHeight";
+import { readCachedCellTextHeight } from "../readCachedCellTextHeight";
 
 // One measurer per plain cell measured, so the count is the number of cells that
 // actually went to the measurement.
@@ -79,11 +77,11 @@ describe("readCachedCellTextHeight", () => {
 		);
 	});
 
-	it("measures every cell again once the measurements are forgotten", () => {
+	it("measures every cell again once the measurement generation moves on, as web fonts arriving move it", () => {
 		const cell: TableCell = { text: "hello" };
 		readCachedCellTextHeight(cell, 119);
 
-		forgetTableCellTextHeights();
+		advanceTextMeasurementGeneration();
 		readCachedCellTextHeight(cell, 119);
 		readCachedCellTextHeight(cell, 119);
 

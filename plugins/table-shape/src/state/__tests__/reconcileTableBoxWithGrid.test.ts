@@ -1,4 +1,5 @@
 import {
+	advanceTextMeasurementGeneration,
 	createEstimateTextMeasurement,
 	offerTextMeasurement,
 } from "@jiscribe/canvas-sdk/doc";
@@ -202,16 +203,27 @@ describe("reconcileTableBoxWithGrid and the layout cache", () => {
 		expect(measurerCount).toBe(0);
 	});
 
-	it("measures the same state afresh on a remeasure, which is how a font arriving reaches it", () => {
+	it("measures the same state afresh once the measurement generation moves on, which is how a font arriving reaches it", () => {
 		const table = reconcileTableBoxWithGrid(makeTable());
 		const stale = readCachedTableLayout(table);
 		measurerCount = 0;
 
-		expect(reconcileTableBoxWithGrid(table, true)).toBe(table);
+		advanceTextMeasurementGeneration();
+		expect(reconcileTableBoxWithGrid(table)).toBe(table);
 
 		const fresh = readCachedTableLayout(table);
 		expect(fresh).not.toBe(stale);
 		expect(fresh).toEqual(stale);
 		expect(measurerCount).toBe(4);
+	});
+
+	it("measures nothing for a state whose grid is laid out already", () => {
+		const table = reconcileTableBoxWithGrid(makeTable());
+		measurerCount = 0;
+
+		const recolored = { ...table, strokeColor: "red" };
+
+		expect(reconcileTableBoxWithGrid(recolored)).toBe(recolored);
+		expect(measurerCount).toBe(0);
 	});
 });
