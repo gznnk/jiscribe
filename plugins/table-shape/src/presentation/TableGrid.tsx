@@ -1,15 +1,9 @@
-import { textSlotPart } from "@jiscribe/canvas";
 import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
 import { memo } from "react";
 import type React from "react";
 
-import { resolveCellPaint } from "./resolveCellPaint";
-import {
-	TableBody,
-	TableCellBody,
-	TableOutline,
-	TableRule,
-} from "./TableStyled";
+import { TableGridCell } from "./TableGridCell";
+import { TableBody, TableOutline, TableRule } from "./TableStyled";
 import type { TableLayout } from "../layout/calcTableLayout";
 import type { TableState } from "../state/TableState";
 
@@ -35,7 +29,8 @@ type TableGridProps = FillPaintProps &
  *
  * Memoized apart from the transform the caller wraps it in: a move or a rotation
  * keeps the cached layout and the cells, so its drag draws none of the cells
- * again.
+ * again. Each cell is memoized as well (TableGridCell), so a pass that does
+ * redraw the grid — a cell's text or fill edited — redraws only the cells it moved.
  */
 const TableGridComponent: React.FC<TableGridProps> = ({
 	layout,
@@ -64,14 +59,14 @@ const TableGridComponent: React.FC<TableGridProps> = ({
 				fillAlpha={fillAlpha}
 			/>
 			{Object.entries(cellRects).map(([cellId, rect]) => (
-				<TableCellBody
+				<TableGridCell
 					key={cellId}
-					data-part={textSlotPart(cellId)}
+					cellId={cellId}
 					x={rect.x}
 					y={rect.y}
 					width={rect.width}
 					height={rect.height}
-					fillColor={resolveCellPaint(text?.[cellId]?.fill)}
+					fill={text?.[cellId]?.fill}
 				/>
 			))}
 			{/* The inner edges alone: the outer two are the outline's own sides. */}
