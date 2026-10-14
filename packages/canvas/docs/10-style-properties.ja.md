@@ -121,33 +121,34 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 導出する。ソース言語で書かれた本文は自身の構文で強調を表すので、誰も text type で
 分岐し直すことなくそれらの intent から外れる:
 
-| 受け付けるフィールド | 入るエントリ     |
-| -------------------- | ---------------- |
-| テキストを持つ全型   | `textContent`    |
-| `fontColor`          | `fontColor`      |
-| `fontSize`           | `fontSize`       |
-| `fontFamily`         | `fontFamily`     |
-| `fontWeight`         | `fontWeight`     |
-| `fontStyle`          | `fontStyle`      |
-| `textDecoration`     | `textDecoration` |
-| `textAlign`          | `textAlign`      |
-| `verticalAlign`      | `verticalAlign`  |
+| 受け付けるフィールド | 入るエントリ                                   |
+| -------------------- | ---------------------------------------------- |
+| テキストを持つ全型   | `textContent`                                  |
+| `fontColor`          | `fontColor`                                    |
+| `fontSize`           | `fontSize`                                     |
+| `fontFamily`         | `fontFamily`                                   |
+| `fontWeight`         | `fontWeight`                                   |
+| `fontStyle`          | `fontStyle`                                    |
+| `textDecoration`     | `textDecoration`・`underline`・`strikethrough` |
+| `textAlign`          | `textAlign`                                    |
+| `verticalAlign`      | `verticalAlign`                                |
 
 ## 対を作るヘルパー
 
 エントリは手で書かない。格納先ごとのヘルパーが対を返す（`controllers/style/entries/`）:
 
-| ヘルパー                              | 値の落ちる先                                                                                                                                                                                   |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectFieldEntry(field)`             | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                      |
-| `textSlotFieldEntry(field)`           | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                              |
-| `runOrTextSlotEntry(field)`           | 編集中に文字範囲が選ばれていればその範囲（`readRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない） |
-| `declaredFieldEntry(path, valueType)` | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                           |
-| `lockAspectRatioEntry`                | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                       |
-| `textVerticalBasisEntry`              | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                       |
-| `textContentEntry`                    | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                          |
+| ヘルパー                              | 値の落ちる先                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`             | object 自身の 1 フィールド。`read` は `ObjectShapeStyleDefaultsRegistry` 経由（object → 型の既定 → `SHAPE_STYLE_FALLBACK`）なので、受けるのは図形スタイルのフィールドだけ                                                                                                                                                                                |
+| `textSlotFieldEntry(field)`           | 当たる各テキストスロットの 1 フィールド。それより小さい単位には落ちない — ブロック全体を配置する alignment がこれ                                                                                                                                                                                                                                        |
+| `runOrTextSlotEntry(field)`           | 編集中に文字範囲が選ばれていればその範囲（`readRangeEdit`）、無ければスロット全体。全体に書くときは同フィールドを上書きしていた run を剥がす（でないとスロットは変わるのに見た目が変わらない）                                                                                                                                                           |
+| `declaredFieldEntry(path, valueType)` | 型自前のフィールド。ドットはネストへの path。値は宣言した `valueType` に照らしてここで読む（文字列は輸送形として、既にその型の値はそのまま、それ以外は何も当てない）                                                                                                                                                                                     |
+| `lockAspectRatioEntry`                | 選択された object だけの `lockAspectRatio`（`ctx.selected`）。選択グループのメンバーは自分のロックを保つ                                                                                                                                                                                                                                                 |
+| `textVerticalBasisEntry`              | `textVerticalBasis`。`"region"` はフィールドを消すことで表す（自分を書き込むのではない）                                                                                                                                                                                                                                                                 |
+| `textDecorationLineEntry(line)`       | 1 本の装飾線（`underline` / `line-through`）を、編集が届く各箇所で付ける／外す。箇所は、文字範囲が選ばれていればそれが覆う各 run、無ければ各スロット全体と、その中で `textDecoration` を上書きしている run。各箇所はもう一方の線を保つ。run は剥がさない（剥がすと run 固有のもう一方の線まで消える）。結果がスロットと同じになった run は上書きを落とす |
+| `textContentEntry`                    | 既定スロット（先頭キー）の内容を `writeTextSlot` で書く。他のスロット・キー順・スロットの書式・内容の種別はすべて残る                                                                                                                                                                                                                                    |
 
-`textSlotEntry` は `textSlotFieldEntry` と `runOrTextSlotEntry` のスロット半分が共有する部分 — どのスロットに
+`textSlotEntry` は `textSlotFieldEntry` と、`runOrTextSlotEntry`・`textDecorationLineEntry` のスロット半分が共有する部分 — どのスロットに
 当たるか、同一参照の契約、各スロットを型の既定値で読むこと。
 
 どのスロットに当たるかは型ではなく、選ばれた part kind の答え。`resolveTextSlotIds(object, pick, ctx)`
@@ -243,12 +244,20 @@ DOM から名前と文字列を受け取って読み、React 経路（`STYLE_INT
 （`command:toggleBold`）。
 
 コマンドは選択全体を 1 度だけ読み（`readSelectionStyle`）、混在は off とみなし、
-着地させる値を載せた通常の `fontWeight` / `fontStyle` / `textDecoration` の intent を
-当てる。太字と細字が混ざった選択は全部太字になり、次の 1 回で全部細字に戻る。1 回が
-履歴 1 件。値の落ちる先は `runOrTextSlotEntry` の答えで、エディタに範囲があればその
-範囲、無ければスロット全体（キャレットだけのときは編集中のスロット）。読み方と反転の
-規則は `TextFormat.ts`（`isTextFormatOn` / `toggleTextFormatIntent`）にあり、ボタンの
-点灯も同じものを使う。
+書式を付ける／外す intent を当てる。太字と細字が混ざった選択は全部太字になり、次の
+1 回で全部細字に戻る。1 回が履歴 1 件。読み方と反転の規則は `TextFormat.ts`
+（`isTextFormatOn` / `toggleTextFormatIntent`）にあり、ボタンの点灯も同じものを使う。
+
+太字・斜体は通常の `fontWeight` / `fontStyle` の intent で 1 つの値を着地させる。
+落ちる先は `runOrTextSlotEntry` の答えで、エディタに範囲があればその範囲、無ければ
+スロット全体（キャレットだけのときは編集中のスロット）。
+
+下線・取り消し線は `textDecoration` を共有するので、そのフィールドではなくそれぞれ
+専用の intent（`underline` / `strikethrough`、`{ on: boolean }`）で読み書きする。
+読むときは選択が届く各箇所がその線を持つかを見るので、全体に下線があれば、部分ごとの
+取り消し線の有無に関係なく下線ボタンが点く。書くときは各箇所でその線を付ける／外し、
+もう一方の線は各箇所のまま残す（`textDecorationLineEntry`）。全体に下線があり一部に
+取り消し線もあるテキストは、下線だけが外れる。
 
 ### スタイルの書き込みではないもの
 

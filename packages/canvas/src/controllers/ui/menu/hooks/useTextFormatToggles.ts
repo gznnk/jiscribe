@@ -18,7 +18,7 @@ type TextFormatToggle = {
 /** The four formats, named; the surfaces decide the order and the look. */
 type TextFormatToggles = Record<TextFormat, TextFormatToggle>;
 
-/** One format's button: lit by the field it is stored in, pressing its command. */
+/** One format's button: lit by the intent it is read through, pressing its command. */
 const useTextFormatToggle = (format: TextFormat): TextFormatToggle => ({
 	isActive: isTextFormatOn(
 		format,
@@ -35,8 +35,9 @@ const useTextFormatToggle = (format: TextFormat): TextFormatToggle => ({
  *
  * A press runs the format's command (ToggleTextFormatCommands) — the one the
  * keyboard runs too — and the button lights by the same reading the command
- * flips from (isTextFormatOn). Mixing is read per field, so a selection that
- * disagrees only about the weight still lights italic where it agrees on it.
+ * flips from (isTextFormatOn). Mixing is read per format, so a selection that
+ * disagrees only about the weight still lights italic where it agrees on it, and
+ * one disagreeing only about the strikethrough still lights the underline.
  *
  * @returns The four toggles by name
  */

@@ -6,8 +6,8 @@ export type TextDecorationToken = (typeof DECORATION_TOKENS)[number];
 
 /**
  * Whether a `textDecoration` value carries one decoration line. Tokens the menu
- * does not write ("overline", …) read as absent, matching how the toggle drops
- * them when it rewrites the value.
+ * does not write ("overline", …) read as absent, matching how
+ * {@link setTextDecorationToken} drops them when it rewrites the value.
  *
  * @param current - The slot's `textDecoration`; "none", an empty string and
  *   undefined all mean undecorated
@@ -20,24 +20,24 @@ export const hasTextDecorationToken = (
 ): boolean => (current ?? "").split(/\s+/).includes(token);
 
 /**
- * The `textDecoration` value that turns one decoration line on when it is off
- * and off when it is on, leaving the other line as it was. The result is
- * normalized: the lines come in the canonical order (underline first), and a
- * value with no line left is "none" rather than an empty string.
+ * The `textDecoration` value with one decoration line turned on or off and the
+ * other line left as it was. The result is normalized: the lines come in the
+ * canonical order (underline first), and a value with no line left is "none"
+ * rather than an empty string.
  *
- * @param current - The slot's current `textDecoration`; "none", an empty string
- *   and undefined all mean undecorated, and tokens outside {@link DECORATION_TOKENS} are dropped
- * @param token - The line to flip
+ * @param current - The value to start from; "none", an empty string and
+ *   undefined all mean undecorated, and tokens outside {@link DECORATION_TOKENS} are dropped
+ * @param token - The line to set
+ * @param on - True to carry the line, false to drop it; a value already in that state still comes back normalized
  * @returns The value to write, always a non-empty string
  */
-export const toggleTextDecorationToken = (
+export const setTextDecorationToken = (
 	current: string | undefined,
 	token: TextDecorationToken,
+	on: boolean,
 ): string => {
 	const nextTokens = DECORATION_TOKENS.filter((candidate) =>
-		candidate === token
-			? !hasTextDecorationToken(current, candidate)
-			: hasTextDecorationToken(current, candidate),
+		candidate === token ? on : hasTextDecorationToken(current, candidate),
 	);
 	return nextTokens.length === 0 ? "none" : nextTokens.join(" ");
 };

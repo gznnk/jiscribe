@@ -1,11 +1,11 @@
 import type { SelectionValue } from "./SelectionValue";
 import { selectionValueOr } from "./SelectionValue";
-import type { CoreStyleIntent, CoreStyleIntentKind } from "./StyleIntent";
+import type {
+	CoreStyleIntent,
+	CoreStyleIntentKind,
+	StyleIntentValueType,
+} from "./StyleIntent";
 import { isBoldFontWeight } from "../utils/isBoldFontWeight";
-import {
-	hasTextDecorationToken,
-	toggleTextDecorationToken,
-} from "../utils/toggleTextDecorationToken";
 
 /** One of the formats a press or a keystroke turns on and off over the selected text. */
 export type TextFormat = "bold" | "italic" | "underline" | "strikethrough";
@@ -21,22 +21,23 @@ export const TEXT_FORMATS: readonly TextFormat[] = [
 /** The style intents a format is read from and written as. */
 type TextFormatStyleIntentKind = Extract<
 	CoreStyleIntentKind,
-	"fontWeight" | "fontStyle" | "textDecoration"
+	"fontWeight" | "fontStyle" | "underline" | "strikethrough"
 >;
 
-/** How one format sits on the field it is stored in. */
+/** What any format's intent reads as: a weight or a style (unset included), or whether a line is on. */
+type TextFormatValue = StyleIntentValueType<TextFormatStyleIntentKind>;
+
+/** How one format sits on the intent it is read and written through. */
 type TextFormatDefinition<K extends TextFormatStyleIntentKind> = {
-	/** The field the format is read from and written to. */
+	/** The intent the format is read from and written as. */
 	styleIntentKind: K;
-	/** Whether a value of that field draws the format; undefined is the field unset. */
-	isOn: (current: string | undefined) => boolean;
-	/** The write that flips the format, given the value it is flipped from. */
-	toggledIntent: (
-		current: string | undefined,
-	) => Extract<CoreStyleIntent, { kind: K }>;
+	/** Whether a value the selection agrees on draws the format; undefined is no agreed value. */
+	isOn: (current: StyleIntentValueType<K> | undefined) => boolean;
+	/** The write that brings the format on (`on: true`) or off. */
+	intentOf: (on: boolean) => Extract<CoreStyleIntent, { kind: K }>;
 };
 
-/** Each format's definition; the union keeps an entry's kind and its intent the same field. */
+/** Each format's definition; the union keeps an entry's kind and its intent the same. */
 const TEXT_FORMAT_DEFINITIONS: Record<
 	TextFormat,
 	{
@@ -46,36 +47,25 @@ const TEXT_FORMAT_DEFINITIONS: Record<
 	bold: {
 		styleIntentKind: "fontWeight",
 		isOn: isBoldFontWeight,
-		toggledIntent: (current) => ({
-			kind: "fontWeight",
-			weight: isBoldFontWeight(current) ? "normal" : "bold",
-		}),
+		intentOf: (on) => ({ kind: "fontWeight", weight: on ? "bold" : "normal" }),
 	},
 	italic: {
 		styleIntentKind: "fontStyle",
 		isOn: (current) => current === "italic",
-		toggledIntent: (current) => ({
-			kind: "fontStyle",
-			style: current === "italic" ? "normal" : "italic",
-		}),
+		intentOf: (on) => ({ kind: "fontStyle", style: on ? "italic" : "normal" }),
 	},
-	// The decorations share one field, so a flip takes the value and keeps the
-	// other line rather than writing a boolean.
+	// The decorations share one field, so each line is read and written through
+	// an intent of its own that every place resolves against the other line it
+	// carries (textDecorationLineEntry), rather than through `textDecoration`.
 	underline: {
-		styleIntentKind: "textDecoration",
-		isOn: (current) => hasTextDecorationToken(current, "underline"),
-		toggledIntent: (current) => ({
-			kind: "textDecoration",
-			decoration: toggleTextDecorationToken(current, "underline"),
-		}),
+		styleIntentKind: "underline",
+		isOn: (current) => current === true,
+		intentOf: (on) => ({ kind: "underline", on }),
 	},
 	strikethrough: {
-		styleIntentKind: "textDecoration",
-		isOn: (current) => hasTextDecorationToken(current, "line-through"),
-		toggledIntent: (current) => ({
-			kind: "textDecoration",
-			decoration: toggleTextDecorationToken(current, "line-through"),
-		}),
+		styleIntentKind: "strikethrough",
+		isOn: (current) => current === true,
+		intentOf: (on) => ({ kind: "strikethrough", on }),
 	},
 };
 
@@ -83,8 +73,8 @@ const TEXT_FORMAT_DEFINITIONS: Record<
  * The style intent a format is stored as, for reading what the selection says
  * about it (readSelectionStyle / useSelectionStyle).
  *
- * @param format - The format; underline and strikethrough share `textDecoration`
- * @returns `fontWeight`, `fontStyle` or `textDecoration`
+ * @param format - The format asked about
+ * @returns `fontWeight`, `fontStyle`, `underline` or `strikethrough`; the last two read whether each place the selection reaches carries that line
  */
 export const textFormatStyleIntentKind = (
 	format: TextFormat,
@@ -92,17 +82,21 @@ export const textFormatStyleIntentKind = (
 
 /**
  * Whether the selection is drawn with a format, which is what a format button
- * shows lit. A selection disagreeing about the field reads as off, so one press
- * brings all of it on ({@link toggleTextFormatIntent} reads it the same way).
+ * shows lit. A selection disagreeing about it reads as off, so one press brings
+ * all of it on ({@link toggleTextFormatIntent} reads it the same way). A line is
+ * read per place, so text that is all underlined lights the underline whatever
+ * strikethrough each part carries.
  *
  * @param format - The format asked about
- * @param selectionValue - What the selection says about the format's field ({@link textFormatStyleIntentKind}); `none` reads as off
+ * @param selectionValue - What the selection says about the format's intent ({@link textFormatStyleIntentKind}); `none` reads as off
  */
 export const isTextFormatOn = (
 	format: TextFormat,
-	selectionValue: SelectionValue<string | undefined>,
+	selectionValue: SelectionValue<TextFormatValue>,
 ): boolean =>
-	TEXT_FORMAT_DEFINITIONS[format].isOn(
+	// The definition is chosen by `format` at runtime, so its value type cannot
+	// be tied to the selection's statically; each isOn reads only its own kind.
+	(TEXT_FORMAT_DEFINITIONS[format].isOn as (current: unknown) => boolean)(
 		selectionValueOr(selectionValue, undefined),
 	);
 
@@ -112,13 +106,13 @@ export const isTextFormatOn = (
  * uniformly on rather than flipping place by place.
  *
  * @param format - The format to flip
- * @param selectionValue - What the selection says about the format's field ({@link textFormatStyleIntentKind})
- * @returns An ordinary intent of that field carrying the value to land on; a decoration keeps the other line only when the selection agrees on it
+ * @param selectionValue - What the selection says about the format's intent ({@link textFormatStyleIntentKind})
+ * @returns The intent of {@link textFormatStyleIntentKind}: a weight or a style to land on, or a line to put on or take off each place while it keeps its other line
  */
 export const toggleTextFormatIntent = (
 	format: TextFormat,
-	selectionValue: SelectionValue<string | undefined>,
+	selectionValue: SelectionValue<TextFormatValue>,
 ): CoreStyleIntent =>
-	TEXT_FORMAT_DEFINITIONS[format].toggledIntent(
-		selectionValueOr(selectionValue, undefined),
+	TEXT_FORMAT_DEFINITIONS[format].intentOf(
+		!isTextFormatOn(format, selectionValue),
 	);

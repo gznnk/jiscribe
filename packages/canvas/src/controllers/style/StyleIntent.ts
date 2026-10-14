@@ -35,6 +35,14 @@ export type CoreStyleIntent =
 	| { kind: "fontStyle"; style: string }
 	/** The decoration lines, space-separated when both apply ("none" for neither). */
 	| { kind: "textDecoration"; decoration: string }
+	/**
+	 * The underline put on (`on: true`) or taken off every place the edit
+	 * reaches, each place keeping whatever strikethrough it carries — stored in
+	 * `textDecoration` alongside it rather than as a field of its own.
+	 */
+	| { kind: "underline"; on: boolean }
+	/** The strikethrough put on or taken off, each place keeping its own underline (see `underline`). */
+	| { kind: "strikethrough"; on: boolean }
 	| { kind: "textAlign"; align: TextAlign }
 	| { kind: "verticalAlign"; align: VerticalAlign }
 	| { kind: "lockAspectRatio"; locked: boolean }
@@ -106,6 +114,8 @@ export const TEXT_STYLE_INTENT_KINDS: ReadonlySet<CoreStyleIntentKind> =
 		"fontWeight",
 		"fontStyle",
 		"textDecoration",
+		"underline",
+		"strikethrough",
 		"textAlign",
 		"verticalAlign",
 	]);

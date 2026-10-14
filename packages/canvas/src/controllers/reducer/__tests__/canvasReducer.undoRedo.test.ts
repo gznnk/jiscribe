@@ -1,9 +1,10 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { runCommands } from "./support/dispatch";
-import { twoRectsDoc } from "./support/fixtures";
+import { rectDoc, twoRectsDoc } from "./support/fixtures";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 
@@ -155,6 +156,42 @@ describe("canvasReducer (integration)", () => {
 			state = runCommands(state, "undo");
 			expect(state.historyCoalesce.recorded).toBeNull();
 			expect(state.historyCoalesce.pending).toBeNull();
+		});
+
+		it("undoing an underline press over the whole slot restores the runs it rewrote", () => {
+			const originalBody = {
+				text: [
+					{ text: "he", textDecoration: "underline line-through" },
+					{ text: "llo" },
+				],
+				textDecoration: "underline",
+			};
+			// Seeded through the doc so the history baseline holds the runs too
+			const runDoc = {
+				version: 1,
+				root: [{ ...(rectDoc("rect-1", 0, 0) as object), ...originalBody }],
+			} as unknown as CanvasDoc;
+			let state = createTestState(runDoc, {
+				selection: selectionOf(["rect-1"]),
+			});
+			const bodyOf = (current: CanvasControllerState): unknown =>
+				(current.objects["rect-1"] as unknown as { text: { body: unknown } })
+					.text.body;
+
+			expect(bodyOf(state)).toEqual(originalBody);
+
+			state = runCommands(state, "toggleUnderline");
+			// The press reaches into the run, so the undo has more than the slot to put back
+			expect(bodyOf(state)).toEqual({
+				text: [{ text: "he", textDecoration: "line-through" }, { text: "llo" }],
+				textDecoration: "none",
+			});
+			expect(state.history.past).toHaveLength(1);
+
+			state = runCommands(state, "undo");
+			expect(bodyOf(state)).toEqual(originalBody);
+			expect(state.history.past).toHaveLength(0);
+			expect(state.history.future).toHaveLength(1);
 		});
 	});
 });

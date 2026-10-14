@@ -4,6 +4,7 @@ import {
 	isRichText,
 	isSameRichText,
 	isTextRun,
+	mapRichTextRangeStyle,
 	normalizeRichText,
 	readRichTextRangeStyle,
 	remapRichText,
@@ -162,6 +163,54 @@ describe("sliceRichText", () => {
 		expect(sliceRichText(styled, -5, 100)).toEqual(styled);
 		expect(sliceRichText(styled, 4, 4)).toBe("");
 		expect(sliceRichText(styled, 7, 2)).toBe("");
+	});
+});
+
+describe("mapRichTextRangeStyle", () => {
+	it("hands each covered run its own styling and leaves the rest alone", () => {
+		const seen: unknown[] = [];
+		const restyled = mapRichTextRangeStyle(
+			[
+				{ text: "ab", textDecoration: "underline" },
+				{ text: "cd" },
+				{ text: "ef", fontWeight: "bold" },
+			],
+			1,
+			3,
+			(runStyle) => {
+				seen.push(runStyle);
+				return { ...runStyle, fontColor: "#d33" };
+			},
+		);
+		expect(seen).toEqual([{ textDecoration: "underline" }, {}]);
+		expect(restyled).toEqual([
+			{ text: "a", textDecoration: "underline" },
+			{ text: "b", textDecoration: "underline", fontColor: "#d33" },
+			{ text: "c", fontColor: "#d33" },
+			{ text: "d" },
+			{ text: "ef", fontWeight: "bold" },
+		]);
+	});
+
+	it("unsets a field the mapping leaves out, collapsing to a plain string when nothing is left", () => {
+		expect(
+			mapRichTextRangeStyle(
+				[{ text: "hello", textDecoration: "underline" }],
+				0,
+				5,
+				() => ({}),
+			),
+		).toBe("hello");
+	});
+
+	it("restyles nothing for an empty range, and never cuts a surrogate pair", () => {
+		const mark = () => ({ fontWeight: "bold" });
+		expect(mapRichTextRangeStyle("hello", 2, 2, mark)).toBe("hello");
+		expect(mapRichTextRangeStyle("a😀b", 1, 2, mark)).toEqual([
+			{ text: "a" },
+			{ text: "😀", fontWeight: "bold" },
+			{ text: "b" },
+		]);
 	});
 });
 

@@ -20,6 +20,7 @@ import { createTestRegistries } from "../../../registries/createCanvasRegistries
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
 import { toStyleIntent } from "../../../style/intent/toStyleIntent";
+import type { CoreStyleIntent } from "../../../style/StyleIntent";
 import { styleIntentValue } from "../../../style/StyleIntent";
 import type { TextFormat } from "../../../style/TextFormat";
 import {
@@ -29,6 +30,10 @@ import {
 } from "../../../style/TextFormat";
 import { readSelectionStyle } from "../../../style/walk/readSelectionStyle";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
+import {
+	hasTextDecorationToken,
+	setTextDecorationToken,
+} from "../../../utils/textDecorationToken";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
 
@@ -192,16 +197,43 @@ const assertSameVisibleText = (
 	}
 };
 
-/** The field a step wrote over the whole slot, or undefined for a step that wrote no such thing. */
+/**
+ * The field a step wrote over the whole slot and stripped from the runs, or
+ * undefined for a step that wrote no such thing. A decoration line is not one:
+ * its slot-wide write keeps the runs overriding `textDecoration`, each with its
+ * own other line (textDecorationLineEntry).
+ */
 const slotWidePropertyOf = (
 	op: FuzzOp | null,
 ): keyof InlineTextStyle | undefined => {
 	if (op === null || !("start" in op) || op.start !== op.end) {
 		return undefined;
 	}
-	return op.kind === "menu"
-		? op.property
-		: textFormatStyleIntentKind(op.format);
+	if (op.kind === "menu") {
+		return op.property;
+	}
+	const kind = textFormatStyleIntentKind(op.format);
+	return kind === "fontWeight" || kind === "fontStyle" ? kind : undefined;
+};
+
+/** The slot fields a slot-wide format press writes, given the slot's styling before it. */
+const slotStyleLandedBy = (
+	intent: CoreStyleIntent,
+	slotStyle: InlineTextStyle,
+): InlineTextStyle => {
+	if (intent.kind !== "underline" && intent.kind !== "strikethrough") {
+		return { [intent.kind]: styleIntentValue(intent) };
+	}
+	const line = intent.kind === "underline" ? "underline" : "line-through";
+	return hasTextDecorationToken(slotStyle.textDecoration, line) === intent.on
+		? {}
+		: {
+				textDecoration: setTextDecorationToken(
+					slotStyle.textDecoration,
+					line,
+					intent.on,
+				),
+			};
 };
 
 /** The state the session model tracks between steps. */
@@ -470,13 +502,14 @@ export const runTextEditFuzzSession = (
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			const field = textFormatStyleIntentKind(op.format);
 			// What the press lands on, read from the selection before it as the
 			// command reads it; only the slot-wide path changes the slot's styling.
-			const landed = styleIntentValue(
-				toggleTextFormatIntent(
-					op.format,
-					readSelectionStyle(state, field, registries),
+			const landed = toggleTextFormatIntent(
+				op.format,
+				readSelectionStyle(
+					state,
+					textFormatStyleIntentKind(op.format),
+					registries,
 				),
 			);
 			dispatch({
@@ -486,7 +519,7 @@ export const runTextEditFuzzSession = (
 			if (op.start === op.end) {
 				model.expectedSlotStyle = {
 					...model.expectedSlotStyle,
-					[field]: landed,
+					...slotStyleLandedBy(landed, model.expectedSlotStyle),
 				};
 			}
 		} else if (op.kind === "menu") {

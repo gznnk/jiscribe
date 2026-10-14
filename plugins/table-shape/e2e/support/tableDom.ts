@@ -296,6 +296,33 @@ export async function drawnTextWeight(
 }
 
 /**
+ * The lines one piece of drawn text is decorated with, read off the innermost
+ * element holding exactly that text — the same element {@link drawnTextWeight}
+ * reads.
+ *
+ * @param canvas - The driver for the page under test
+ * @param text - The text to find, matched against the trimmed content of an element; throws when nothing is drawn with exactly it
+ * @returns The computed `text-decoration-line` (`"none"` / `"underline"` / `"underline line-through"`); not inherited, so it is the line set on that element itself
+ */
+export async function drawnTextDecoration(
+	canvas: CanvasDriver,
+	text: string,
+): Promise<string> {
+	const decoration = await canvas.page.evaluate((wanted) => {
+		const holder = [...document.querySelectorAll("*")]
+			.reverse()
+			.find((element) => element.textContent?.trim() === wanted);
+		return holder === undefined
+			? null
+			: getComputedStyle(holder).textDecorationLine;
+	}, text);
+	if (decoration === null) {
+		throw new Error(`"${text}" is not drawn`);
+	}
+	return decoration;
+}
+
+/**
  * The boxes the selection overlay draws around selected sub-parts, one per part
  * (SelectionOverlay). The table's own outline is not among them: it is left out
  * while a part is outlined, so compare against tableOutlineRect instead.

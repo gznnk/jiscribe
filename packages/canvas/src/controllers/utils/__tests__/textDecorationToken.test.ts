@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
 	hasTextDecorationToken,
-	toggleTextDecorationToken,
-} from "../toggleTextDecorationToken";
+	setTextDecorationToken,
+} from "../textDecorationToken";
 
 describe("hasTextDecorationToken", () => {
 	it("reads undefined / none / empty as undecorated", () => {
@@ -26,41 +26,47 @@ describe("hasTextDecorationToken", () => {
 	});
 });
 
-describe("toggleTextDecorationToken", () => {
+describe("setTextDecorationToken", () => {
 	it("turns a line on from every undecorated form", () => {
-		expect(toggleTextDecorationToken(undefined, "underline")).toBe("underline");
-		expect(toggleTextDecorationToken("none", "underline")).toBe("underline");
-		expect(toggleTextDecorationToken("", "line-through")).toBe("line-through");
+		expect(setTextDecorationToken(undefined, "underline", true)).toBe(
+			"underline",
+		);
+		expect(setTextDecorationToken("none", "underline", true)).toBe("underline");
+		expect(setTextDecorationToken("", "line-through", true)).toBe(
+			"line-through",
+		);
 	});
 
 	it("returns none once the last line is turned off", () => {
-		expect(toggleTextDecorationToken("underline", "underline")).toBe("none");
-		expect(toggleTextDecorationToken("line-through", "line-through")).toBe(
+		expect(setTextDecorationToken("underline", "underline", false)).toBe(
+			"none",
+		);
+		expect(setTextDecorationToken(undefined, "line-through", false)).toBe(
 			"none",
 		);
 	});
 
 	it("leaves the other line alone", () => {
-		expect(toggleTextDecorationToken("line-through", "underline")).toBe(
+		expect(setTextDecorationToken("line-through", "underline", true)).toBe(
 			"underline line-through",
 		);
 		expect(
-			toggleTextDecorationToken("underline line-through", "line-through"),
+			setTextDecorationToken("underline line-through", "line-through", false),
 		).toBe("underline");
 	});
 
-	it("normalizes the order to underline first", () => {
+	it("keeps a line already in the asked state, normalized", () => {
 		expect(
-			toggleTextDecorationToken("line-through underline", "underline"),
-		).toBe("line-through");
-		expect(toggleTextDecorationToken("line-through", "underline")).toBe(
-			"underline line-through",
+			setTextDecorationToken("line-through underline", "underline", true),
+		).toBe("underline line-through");
+		expect(setTextDecorationToken("line-through", "underline", false)).toBe(
+			"line-through",
 		);
 	});
 
 	it("drops lines the menu does not write", () => {
-		expect(toggleTextDecorationToken("overline underline", "underline")).toBe(
-			"none",
-		);
+		expect(
+			setTextDecorationToken("overline underline", "underline", false),
+		).toBe("none");
 	});
 });

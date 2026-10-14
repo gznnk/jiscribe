@@ -182,6 +182,96 @@ describe("toggleTextFormatCommands", () => {
 		});
 	});
 
+	describe("underline and strikethrough each keep the other line", () => {
+		it("shapes all underlined take it off together, each keeping its own strikethrough", () => {
+			const a = textRectOf("a", {
+				body: { text: "A", textDecoration: "underline" },
+			});
+			const b = textRectOf("b", {
+				body: { text: "B", textDecoration: "underline line-through" },
+			});
+			const next = press(stateOf({ a, b }, ["a", "b"]), "toggleUnderline");
+			expect(bodyOf(next, "a")).toEqual({ text: "A", textDecoration: "none" });
+			expect(bodyOf(next, "b")).toEqual({
+				text: "B",
+				textDecoration: "line-through",
+			});
+			expect(next.commitVersion).toBe(1);
+		});
+
+		it("shapes underlined in part all take it, each keeping its own strikethrough", () => {
+			const a = textRectOf("a", {
+				body: { text: "A", textDecoration: "underline" },
+			});
+			const b = textRectOf("b", {
+				body: { text: "B", textDecoration: "line-through" },
+			});
+			const next = press(stateOf({ a, b }, ["a", "b"]), "toggleUnderline");
+			expect(bodyOf(next, "a")).toEqual({
+				text: "A",
+				textDecoration: "underline",
+			});
+			expect(bodyOf(next, "b")).toEqual({
+				text: "B",
+				textDecoration: "underline line-through",
+			});
+		});
+
+		it("a selected stretch whose runs differ sets the line run by run", () => {
+			const draft = [
+				{ text: "ab", textDecoration: "underline" },
+				{ text: "cd", textDecoration: "underline line-through" },
+			];
+			const a = textRectOf("a", { body: { text: draft } });
+			const next = press(
+				stateOf({ a }, ["a"], { draft, selection: { start: 0, end: 4 } }),
+				"toggleUnderline",
+			);
+			expect(bodyOf(next, "a")).toEqual({
+				text: [
+					{ text: "ab", textDecoration: "none" },
+					{ text: "cd", textDecoration: "line-through" },
+				],
+			});
+			expect(next.commitVersion).toBe(1);
+		});
+
+		it("a caret alone keeps the strikethrough a run of the slot carries", () => {
+			const draft = [
+				{ text: "he", textDecoration: "underline line-through" },
+				{ text: "llo" },
+			];
+			const a = textRectOf("a", {
+				body: { text: draft, textDecoration: "underline" },
+			});
+			const next = press(
+				stateOf({ a }, ["a"], { draft, selection: { start: 1, end: 1 } }),
+				"toggleUnderline",
+			);
+			expect(bodyOf(next, "a")).toEqual({
+				text: [{ text: "he", textDecoration: "line-through" }, { text: "llo" }],
+				textDecoration: "none",
+			});
+		});
+
+		it("a row-partitioned slot keeps the strikethrough of each row's runs", () => {
+			const a = textRectOf("a", {
+				body: {
+					text: [
+						"id",
+						[{ text: "email", textDecoration: "underline line-through" }],
+					],
+					textDecoration: "underline",
+				},
+			});
+			const next = press(stateOf({ a }, ["a"]), "toggleUnderline");
+			expect(bodyOf(next, "a")).toEqual({
+				text: ["id", [{ text: "email", textDecoration: "line-through" }]],
+				textDecoration: "none",
+			});
+		});
+	});
+
 	describe("canExecute", () => {
 		it("is false when nothing selected takes the format", () => {
 			for (const command of toggleTextFormatCommands) {

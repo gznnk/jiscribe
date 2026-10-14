@@ -20,9 +20,11 @@ describe("textStyleTable", () => {
 			"fontSize",
 			"fontStyle",
 			"fontWeight",
+			"strikethrough",
 			"textAlign",
 			"textContent",
 			"textDecoration",
+			"underline",
 			"verticalAlign",
 		]);
 	});

@@ -5,6 +5,7 @@ import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { runOrTextSlotEntry } from "../entries/runOrTextSlotEntry";
 import { textContentEntry } from "../entries/textContentEntry";
+import { textDecorationLineEntry } from "../entries/textDecorationLineEntry";
 import { textSlotFieldEntry } from "../entries/textSlotFieldEntry";
 import type { StyleTable } from "../StyleEntry";
 
@@ -44,6 +45,8 @@ export const textStyleTable = (textType: TextType): StyleTable<ObjectState> => {
 		}),
 		...(accepts("textDecoration") && {
 			textDecoration: runOrTextSlotEntry("textDecoration"),
+			underline: textDecorationLineEntry("underline"),
+			strikethrough: textDecorationLineEntry("line-through"),
 		}),
 		// The alignments place the whole block, so they land on the slot even while
 		// a stretch of it is selected — there is nothing smaller to apply them to.

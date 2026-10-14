@@ -93,7 +93,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   all plain — several shapes at once included — in one undo step, and the
   ObjectMenu's and the sidebar's buttons do exactly the same. Ctrl/Cmd+Shift+X
   strikes text through, keeping an underline on the same characters, and pressing
-  it again takes the line off. Ctrl/Cmd+X is still cut, Ctrl/Cmd+Shift+B / I / U
+  it again takes the line off. Underline and strikethrough work independently of
+  each other: the underline button reads on whenever all of the selected text is
+  underlined, whether or not parts of it are also struck through, and one press
+  takes the underline off everywhere while every part keeps its own
+  strikethrough — and the same the other way round. Ctrl/Cmd+X is still cut, Ctrl/Cmd+Shift+B / I / U
   no longer toggle bold, italic or underline, and on a Mac the keys take Cmd
   alone, as the other shortcuts do. For hosts, they are the commands
   `toggleBold` / `toggleItalic` / `toggleUnderline` / `toggleStrikethrough`, so

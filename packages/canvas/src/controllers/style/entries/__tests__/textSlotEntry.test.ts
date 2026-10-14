@@ -1,3 +1,4 @@
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, expect, it } from "vitest";
 
 import { createObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
@@ -40,6 +41,30 @@ describe("textSlotEntry", () => {
 		expect(entry.read(keyedRect(), null, contextOf())).toEqual([
 			undefined,
 			undefined,
+		]);
+	});
+
+	it("hands the writer and a reader of its own the slot's styling resolved through its type's defaults", () => {
+		const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
+		textStyleDefaults.register("rect", {
+			everyTextSlot: { textAlign: "center" },
+		});
+		const echoEntry = textSlotEntry<ReturnType<typeof textRectOf>, string>(
+			"textAlign",
+			(slot, value, resolvedStyle) => ({
+				...slot,
+				fontColor: `${value}/${resolvedStyle.textAlign}`,
+			}),
+			(slot, resolvedStyle) => [`${slot.text}/${resolvedStyle.textAlign}`],
+		);
+		const ctx = contextOf({ textStyleDefaults });
+		const updated = echoEntry.apply(keyedRect(), null, "x", ctx);
+		expect(
+			(updated as unknown as { text: TextSlots }).text.name.fontColor,
+		).toBe("x/center");
+		expect(echoEntry.read(keyedRect(), null, ctx)).toEqual([
+			"User/center",
+			"id/center",
 		]);
 	});
 });

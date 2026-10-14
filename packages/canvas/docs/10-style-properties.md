@@ -130,34 +130,35 @@ type declares about its text — which fields it may carry at all
 its own syntax, so it is left out of those intents without anyone branching on the
 text type again:
 
-| Fields accepted  | Entries          |
-| ---------------- | ---------------- |
-| any text at all  | `textContent`    |
-| `fontColor`      | `fontColor`      |
-| `fontSize`       | `fontSize`       |
-| `fontFamily`     | `fontFamily`     |
-| `fontWeight`     | `fontWeight`     |
-| `fontStyle`      | `fontStyle`      |
-| `textDecoration` | `textDecoration` |
-| `textAlign`      | `textAlign`      |
-| `verticalAlign`  | `verticalAlign`  |
+| Fields accepted  | Entries                                        |
+| ---------------- | ---------------------------------------------- |
+| any text at all  | `textContent`                                  |
+| `fontColor`      | `fontColor`                                    |
+| `fontSize`       | `fontSize`                                     |
+| `fontFamily`     | `fontFamily`                                   |
+| `fontWeight`     | `fontWeight`                                   |
+| `fontStyle`      | `fontStyle`                                    |
+| `textDecoration` | `textDecoration`, `underline`, `strikethrough` |
+| `textAlign`      | `textAlign`                                    |
+| `verticalAlign`  | `verticalAlign`                                |
 
 ## The helpers that build the pairs
 
 Entries are not written by hand; a helper per storage shape returns the pair
 (`controllers/style/entries/`):
 
-| Helper                                | Where the value lands                                                                                                                                                                                                                        |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `objectFieldEntry(field)`             | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                          |
-| `textSlotFieldEntry(field)`           | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                      |
-| `runOrTextSlotEntry(field)`           | The selected stretch of characters while an editor has one (`readRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                               |
-| `declaredFieldEntry(path, valueType)` | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing |
-| `lockAspectRatioEntry`                | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                              |
-| `textVerticalBasisEntry`              | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                       |
-| `textContentEntry`                    | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                           |
+| Helper                                | Where the value lands                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `objectFieldEntry(field)`             | One field of the object itself. `read` resolves through `ObjectShapeStyleDefaultsRegistry` (object → the type's own defaults → `SHAPE_STYLE_FALLBACK`), so only the shape-style fields are accepted                                                                                                                                                                                   |
+| `textSlotFieldEntry(field)`           | One field of each addressed text slot, and nowhere smaller — what the alignments do, having nothing smaller to apply to                                                                                                                                                                                                                                                               |
+| `runOrTextSlotEntry(field)`           | The selected stretch of characters while an editor has one (`readRangeEdit`), otherwise the whole slot — stripping the runs that overrode the field, or the slot would change and nothing would look different                                                                                                                                                                        |
+| `declaredFieldEntry(path, valueType)` | A field of the type's own, dots being a path into a nested object. The value is read against the declared `valueType` here — a string as the transport form it is, a value already of that type as it stands, anything else applying nothing                                                                                                                                          |
+| `lockAspectRatioEntry`                | `lockAspectRatio` on the selected objects alone (`ctx.selected`): a member of a selected group keeps the lock it was drawn with                                                                                                                                                                                                                                                       |
+| `textVerticalBasisEntry`              | `textVerticalBasis`, `"region"` being spelled by removing the field rather than writing itself into it                                                                                                                                                                                                                                                                                |
+| `textDecorationLineEntry(line)`       | One decoration line (`underline` / `line-through`) set on or off at every place the edit reaches — the covered runs of a selected stretch, or each whole slot together with the runs overriding `textDecoration` in it — each place keeping its other line. The runs are not stripped (that would take their own other line with them); one left drawn as its slot drops its override |
+| `textContentEntry`                    | The default slot's content (the first key), through `writeTextSlot` — the other slots, the key order, the styling and the content kind all survive                                                                                                                                                                                                                                    |
 
-`textSlotEntry` is the part `textSlotFieldEntry` and the whole-slot half of `runOrTextSlotEntry` share:
+`textSlotEntry` is the part `textSlotFieldEntry` and the whole-slot halves of `runOrTextSlotEntry` and `textDecorationLineEntry` share:
 which slots are reached, the same-reference contract, and reading each of them
 through the type's defaults.
 
@@ -270,13 +271,22 @@ never reaching the canvas shortcuts), and the ObjectMenu's and the sidebar's
 buttons (`command:toggleBold`).
 
 A command reads the whole selection once (`readSelectionStyle`), treats a mixed
-reading as off, and applies the ordinary `fontWeight` / `fontStyle` /
-`textDecoration` intent carrying the value to land on — so a selection mixing
-bold and plain comes out all bold, the next press all plain, and one press is one
-undo entry. Where the value lands is `runOrTextSlotEntry`'s answer: the selected
-stretch while the editor has one, otherwise the whole slot (with only a caret
-placed, the slot being edited). The reading and the flip are `TextFormat.ts`'s
+reading as off, and applies the intent that brings the format on or off — so a
+selection mixing bold and plain comes out all bold, the next press all plain, and
+one press is one undo entry. The reading and the flip are `TextFormat.ts`'s
 (`isTextFormatOn` / `toggleTextFormatIntent`), which the buttons light by too.
+
+Bold and italic land one value, the ordinary `fontWeight` / `fontStyle` intent,
+where `runOrTextSlotEntry` puts it: the selected stretch while the editor has one,
+otherwise the whole slot (with only a caret placed, the slot being edited).
+
+Underline and strikethrough share `textDecoration`, so each is read and written
+through an intent of its own (`underline` / `strikethrough`, `{ on: boolean }`)
+rather than through that field. Each place the selection reaches reads whether it
+carries the line, so text that is all underlined lights the underline whatever
+strikethrough its parts carry. The write puts the line on or takes it off each
+place while that place keeps its other line (`textDecorationLineEntry`): text that
+is all underlined, part of it also struck through, loses only the underline.
 
 ### What is not a style write
 

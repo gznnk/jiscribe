@@ -63,9 +63,10 @@ const shortcutsOf = (format: TextFormat): PlatformKeyBindings => {
  * shapes' text, the picked slot, or the stretch an open editor has selected —
  * with an editor open but nothing selected in it, the whole slot it edits.
  *
- * The selection is read as one (readSelectionStyle) and lands on one value, so a
- * selection mixing the format comes out uniformly on and the press after that
- * takes it off everywhere; one commit, one history entry.
+ * The selection is read as one (readSelectionStyle) and the format comes out
+ * uniformly on or off (toggleTextFormatIntent), so a selection mixing it comes
+ * out all on and the press after that takes it off everywhere — a decoration
+ * line leaving each place's other line as it was; one commit, one history entry.
  */
 const createToggleTextFormatCommand = (
 	format: TextFormat,
