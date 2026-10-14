@@ -6,7 +6,7 @@ import {
 	BODY_TEXT_SLOT_ID,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/text/TextType";
-import type { Rect, TransformedFrame } from "@jiscribe/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 import type React from "react";
 import type { ReactNode } from "react";
@@ -75,8 +75,11 @@ export type FrameTextOverlayProps = {
 	width: number;
 	/** Text region height; may be negative for a flipped shape. */
 	height: number;
-	/** The shape's SVG transform matrix; apply it so text follows the shape. */
-	transform: string;
+	/**
+	 * Left unset by createFrameObject, which draws every overlay inside a group
+	 * already carrying the shape's transform; pass it on to TextOverlayFrame as is.
+	 */
+	transform?: string;
 	/**
 	 * The slot's raw text — Markdown source, or whatever the type stores (rows are
 	 * "\n"-joined). The run form when parts of it are styled on their own; a
@@ -149,24 +152,41 @@ export const createFrameObject = <TState extends FrameRenderState>(
 ): React.FC<TState & TextEditable> => {
 	// One overlay of one slot, as a component (keyed by slot id) rather than a
 	// render helper, so the joined body below can live in a per-slot useMemo.
-	const TextSlotOverlay: React.FC<{
-		state: TState;
+	// Memoized on props that carry nothing of the shape's position or transform
+	// (FrameObject draws the overlays inside a group carrying it), so a move or a
+	// rotation re-renders no overlay at all.
+	const TextSlotOverlayComponent: React.FC<{
+		/** The shape's type, which the slot's style defaults are looked up under. */
+		objectType: string;
 		textSlotId: string;
 		textSlot: TextSlot;
-		/** The slot's region in local coordinates, already placed by FrameObject (calcTextRegion / calcTextSlotRegions). */
-		textRegion: Rect;
-		/** The shape's SVG transform matrix, already built by FrameObject. */
-		transform: string;
+		/** Region left edge in local coordinates, already placed by FrameObject (calcTextRegion / calcTextSlotRegions). */
+		regionX: number;
+		/** Region top edge in local coordinates. */
+		regionY: number;
+		/** Region width; may be negative for a flipped shape. */
+		regionWidth: number;
+		/** Region height; may be negative for a flipped shape. */
+		regionHeight: number;
 		/** True while the in-place editor is open on this very slot. */
 		isEditing: boolean;
-	}> = ({ state, textSlotId, textSlot, textRegion, transform, isEditing }) => {
+	}> = ({
+		objectType,
+		textSlotId,
+		textSlot,
+		regionX,
+		regionY,
+		regionWidth,
+		regionHeight,
+		isEditing,
+	}) => {
 		const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 
 		// The type's own defaults for this slot stand in for whatever the slot
 		// leaves unset, the same resolution the editing surface and text
 		// measurement make.
 		const style = textStyleDefaults.resolveTextSlotStyle(
-			state.type,
+			objectType,
 			textSlotId,
 			textSlot,
 		);
@@ -184,11 +204,10 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const overlayProps: FrameTextOverlayProps = {
 			textSlotId,
-			x: textRegion.x,
-			y: textRegion.y,
-			width: textRegion.width,
-			height: textRegion.height,
-			transform,
+			x: regionX,
+			y: regionY,
+			width: regionWidth,
+			height: regionHeight,
 			text,
 			textAlign: style.textAlign,
 			verticalAlign: style.verticalAlign,
@@ -206,6 +225,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			<TextOverlay {...overlayProps} />
 		);
 	};
+	const TextSlotOverlay = memo(TextSlotOverlayComponent);
 
 	const FrameObject: React.FC<TState & TextEditable> = (props) => {
 		const {
@@ -286,32 +306,52 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		// so a malformed multi-slot state cannot overlap-draw; a missing body slot
 		// draws nothing, same as the enumeration would.
 		const bodySlot = text?.[BODY_TEXT_SLOT_ID];
+		const bodyRegion =
+			isSingleBodyText(textType) && bodySlot !== undefined
+				? calcTextRegion(props, BODY_TEXT_SLOT_ID, textSlotKind)
+				: undefined;
 
+		const hasOverlays =
+			bodyRegion !== undefined ||
+			(textSlotRegions !== undefined && text !== undefined);
+
+		// The overlays sit in a group of their own carrying the shape's transform,
+		// so the transform reaches none of them as a prop: a move or a rotation
+		// changes this one attribute and leaves every overlay's memo intact. Image
+		// export folds the group back into its children (buildExportSvg).
 		return (
 			<>
 				{draw(props, shape)}
-				{isSingleBodyText(textType) && bodySlot !== undefined && (
-					<TextSlotOverlay
-						state={props}
-						textSlotId={BODY_TEXT_SLOT_ID}
-						textSlot={bodySlot}
-						textRegion={calcTextRegion(props, BODY_TEXT_SLOT_ID, textSlotKind)}
-						transform={transformAttr}
-						isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
-					/>
+				{hasOverlays && (
+					<g transform={transformAttr} data-canvas-export="flatten">
+						{bodySlot !== undefined && bodyRegion !== undefined && (
+							<TextSlotOverlay
+								objectType={props.type}
+								textSlotId={BODY_TEXT_SLOT_ID}
+								textSlot={bodySlot}
+								regionX={bodyRegion.x}
+								regionY={bodyRegion.y}
+								regionWidth={bodyRegion.width}
+								regionHeight={bodyRegion.height}
+								isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
+							/>
+						)}
+						{textSlotRegions !== undefined &&
+							Object.entries(text ?? {}).map(([slotId, slot]) => (
+								<TextSlotOverlay
+									key={slotId}
+									objectType={props.type}
+									textSlotId={slotId}
+									textSlot={slot}
+									regionX={textSlotRegions[slotId].x}
+									regionY={textSlotRegions[slotId].y}
+									regionWidth={textSlotRegions[slotId].width}
+									regionHeight={textSlotRegions[slotId].height}
+									isEditing={isEditingSlot(slotId)}
+								/>
+							))}
+					</g>
 				)}
-				{textSlotRegions !== undefined &&
-					Object.entries(text ?? {}).map(([slotId, slot]) => (
-						<TextSlotOverlay
-							key={slotId}
-							state={props}
-							textSlotId={slotId}
-							textSlot={slot}
-							textRegion={textSlotRegions[slotId]}
-							transform={transformAttr}
-							isEditing={isEditingSlot(slotId)}
-						/>
-					))}
 			</>
 		);
 	};

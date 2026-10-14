@@ -23,8 +23,12 @@ export type TextOverlayFrameProps = {
 	width: number;
 	/** Text region height; negative values are clamped to 0. */
 	height: number;
-	/** SVG transform matrix of the parent shape (createSvgTransform output). */
-	transform: string;
+	/**
+	 * SVG transform matrix of the parent shape (createSvgTransform output).
+	 * Omitted when an enclosing group already carries it, as createFrameObject's
+	 * overlays do, so a move changes that group's attribute and no overlay's.
+	 */
+	transform?: string;
 	/**
 	 * Horizontal alignment of the content. Pass the value resolved against the
 	 * shape type's own defaults (ObjectTextStyleDefaultsRegistry); omitted, this
@@ -96,13 +100,19 @@ export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 			// region offset (-height/2 + band) and the shape's translate (center).
 			// Both carry half the height, so during a resize each changes by a
 			// fraction while their sum stays put — and the text flickered by 1px
-			// every time the center crossed a pixel. Folded into one transform, the
-			// sum is computed before any rounding, so the text holds still.
+			// every time the center crossed a pixel. As a transform, the offset is
+			// composed with the shape's before any rounding, whether the shape's
+			// rides on the same attribute or on an enclosing group, so the text holds
+			// still.
 			x={0}
 			y={0}
 			width={negativeToZero(width)}
 			height={negativeToZero(height)}
-			transform={`${transform} translate(${x} ${y})`}
+			transform={
+				transform === undefined
+					? `translate(${x} ${y})`
+					: `${transform} translate(${x} ${y})`
+			}
 			pointerEvents="none"
 		>
 			<TextWrapper

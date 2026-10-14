@@ -297,6 +297,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   presses there too: the first leaves the editor, the second drops the outline
   around the text (the menu and the sidebar narrowed to text controls until
   then), the third deselects the shape.
+- **Moving or rotating a shape no longer redraws its text.** A shape's
+  text boxes are drawn inside one group carrying the shape's transform, so a drag
+  rewrites that group's transform and nothing under it. The more text a selection
+  holds, the more it saves: a 300-cell table drags about three times faster, and
+  200 labelled rectangles take about a third less time per frame. Image export folds the group back
+  into the text it holds, so an exported SVG is unchanged.
+- **For plugin authors: `createFrameObject` leaves `transform` unset on the
+  props it hands a `renderTextOverlay`**, and `transform` is optional on
+  `FrameTextOverlayProps`, `TextOverlay` and `TextOverlayFrame`. A renderer that
+  passes it on to `TextOverlayFrame`, as the Markdown card does, needs no change.
+  A shape drawn with `createFrameObject` now follows its element with a `<g>`
+  holding its text boxes rather than with the boxes themselves.
 - **For plugin authors: a selection control can take a click and select a part
   of its object.** `SelectionControlDefinition.handle` now returns
   `{ object?, selection? }` instead of the object itself: `object` replaces the
