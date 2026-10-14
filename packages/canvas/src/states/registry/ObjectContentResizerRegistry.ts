@@ -15,6 +15,13 @@ export type ObjectContentResizeContext = {
 	 * type that declares none.
 	 */
 	textStyleDefaults?: TextSlotStyle;
+	/**
+	 * True when the call re-measures an object whose state did not change, because
+	 * the measurement did (web fonts finishing after the first paint). A resizer
+	 * keeping measurements of its own must drop them rather than answer from them.
+	 * Absent on every other call.
+	 */
+	remeasure?: boolean;
 };
 
 /**

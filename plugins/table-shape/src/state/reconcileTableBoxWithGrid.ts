@@ -5,6 +5,7 @@ import {
 	calcTableLayout,
 } from "../layout/calcTableLayout";
 import { distributeTableWidthToColumns } from "../layout/distributeTableWidthToColumns";
+import { forgetTableCellTextHeights } from "../layout/readCachedCellTextHeight";
 import { writeTableLayoutCache } from "../layout/readCachedTableLayout";
 
 /**
@@ -44,15 +45,24 @@ import { writeTableLayoutCache } from "../layout/readCachedTableLayout";
  * by reference, so a fresh array handed back on a still frame would re-measure the
  * table for nothing.
  *
- * The cells are measured once per run, against the columns the table ends up with,
+ * The grid is laid out once per run, against the columns the table ends up with,
  * and that layout is left in the cache under the object handed back — so an outer
  * resize costs one pass per frame, renderers included, not one per side of the
- * decision.
+ * decision. The pass measures only the cells it has not seen at their width
+ * (readCachedCellTextHeight): a row boundary drag measures none, a grid rewrite
+ * only the cells it created.
  *
  * @param state - The table to measure; its `columns` / `rows` / `text` are read, and its box — and, on an outside write of the width, its `columns` — rewritten
+ * @param remeasure - True when the measurement changed under an unchanged state (core's `remeasure`, fonts finishing to load): every cell measurement held so far is dropped and the grid measured afresh. False by default
  * @returns The state with the two reconciled, or the same object when nothing moved
  */
-export const reconcileTableBoxWithGrid = (state: TableState): TableState => {
+export const reconcileTableBoxWithGrid = (
+	state: TableState,
+	remeasure = false,
+): TableState => {
+	if (remeasure) {
+		forgetTableCellTextHeights();
+	}
 	// Every table state is handed over with the box its own grid answers for
 	// (TableMapper measures it rather than leaving it to this pass), so a width the
 	// columns do not sum to can only have been written from outside. The sum is all
@@ -63,8 +73,9 @@ export const reconcileTableBoxWithGrid = (state: TableState): TableState => {
 			? null
 			: distributeTableWidthToColumns(state.columns, state.width);
 	const source = columns === null ? state : { ...state, columns };
-	// Computed, not read from the cache: core runs the resizer when the measurement
-	// changed under an unchanged state (fonts loading).
+	// Laid out, not read from the layout cache: an entry written before a remeasure
+	// would be handed back as it was (undo restoring an older grid). The cells come
+	// from their own cache, which a remeasure does reach.
 	const layout = calcTableLayout(source);
 	const reconciled =
 		source === state &&

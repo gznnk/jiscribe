@@ -200,7 +200,8 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	...tableDocDefinition,
 	mapper: { toDoc: tableToDoc, toState: tableToState },
 	stateValidator: isValidTableState,
-	contentResizer: (state) => reconcileTableBoxWithGrid(state as TableState),
+	contentResizer: (state, context) =>
+		reconcileTableBoxWithGrid(state as TableState, context.remeasure === true),
 	component: Table,
 	behavior: createFrameBehavior<TableState>(),
 	selectionControls: TABLE_SELECTION_CONTROLS,

@@ -69,6 +69,9 @@ describe("readCachedTableLayout", () => {
 		expect(measurerCount).toBe(0);
 	});
 
+	// The layout is computed anew whichever input is replaced, but a cell is
+	// measured only when its object or its wrap width is new
+	// (readCachedCellTextHeight): only the rule width moves every wrap width here.
 	it.each([
 		[
 			"text",
@@ -76,6 +79,7 @@ describe("readCachedTableLayout", () => {
 				...table,
 				text: { ...table.text },
 			}),
+			0,
 		],
 		[
 			"rows",
@@ -83,10 +87,12 @@ describe("readCachedTableLayout", () => {
 				...table,
 				rows: [...(table.rows ?? [])],
 			}),
+			0,
 		],
 		[
 			"strokeWidth",
 			(table: ReturnType<typeof makeTable>) => ({ ...table, strokeWidth: 2 }),
+			12,
 		],
 		[
 			"columns",
@@ -94,17 +100,21 @@ describe("readCachedTableLayout", () => {
 				...table,
 				columns: [...(table.columns ?? [])],
 			}),
+			0,
 		],
-	])("computes anew once the %s are replaced", (_, replace) => {
-		const table = makeTable();
-		const held = readCachedTableLayout(table);
-		measurerCount = 0;
+	])(
+		"computes anew once the %s are replaced",
+		(_, replace, expectedMeasurerCount) => {
+			const table = makeTable();
+			const held = readCachedTableLayout(table);
+			measurerCount = 0;
 
-		const replaced = readCachedTableLayout(replace(table));
+			const replaced = readCachedTableLayout(replace(table));
 
-		expect(replaced).not.toBe(held);
-		expect(measurerCount).toBe(12);
-	});
+			expect(replaced).not.toBe(held);
+			expect(measurerCount).toBe(expectedMeasurerCount);
+		},
+	);
 
 	it("keeps one entry per grid, so reading another table evicts nothing", () => {
 		const table = makeTable();
@@ -124,9 +134,9 @@ describe("readCachedTableLayout", () => {
 
 		calcTableFrameSize({ ...table });
 
-		expect(measurerCount).toBe(12);
 		expect(readCachedTableLayout(table)).toBe(held);
-		expect(measurerCount).toBe(12);
+		// The cells were measured for `held`, so sizing the same grid measures none.
+		expect(measurerCount).toBe(0);
 	});
 
 	it("is what the cells' regions read, so placing them twice measures the cells once", () => {

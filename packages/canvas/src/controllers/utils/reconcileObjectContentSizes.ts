@@ -6,8 +6,14 @@ import { updateAffectedGroupBounds } from "./updateAffectedGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextState } from "../../states/objects/primitives/text/TextState";
-import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
+import type {
+	ObjectContentResizeContext,
+	ObjectContentResizerRegistry,
+} from "../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
+
+/** What a forced pass tells each resizer, so one caching measurements drops them. */
+const REMEASURE_CONTEXT: ObjectContentResizeContext = { remeasure: true };
 
 /**
  * Whether an object's height alone is derived, its width being stated: a shape
@@ -176,7 +182,10 @@ export const reconcileObjectContentSizes = (
 		) {
 			return;
 		}
-		const resized = resizeToContent(object, {});
+		const resized = resizeToContent(
+			object,
+			forceRemeasure ? REMEASURE_CONTEXT : {},
+		);
 		if (resized === object) {
 			return;
 		}
