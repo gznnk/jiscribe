@@ -945,11 +945,16 @@ export class CanvasDriver {
 						shape?.querySelector("foreignObject") ?? null;
 					if (!foreignObject) {
 						let sibling = shape?.nextElementSibling ?? null;
+						// The overlay is either a sibling of its own or inside the group
+						// createFrameObject draws every overlay of a shape in.
 						while (
 							sibling &&
 							sibling.tagName.toLowerCase() !== "foreignobject"
 						) {
-							sibling = sibling.nextElementSibling;
+							const nested: Element | null = sibling.hasAttribute("data-id")
+								? null
+								: sibling.querySelector("foreignObject");
+							sibling = nested ?? sibling.nextElementSibling;
 						}
 						foreignObject = sibling;
 					}
@@ -1499,10 +1504,11 @@ export class CanvasDriver {
 	 * Computed style of the TextOverlay drawn over a shape, which renders as
 	 * foreignObject > div(wrapper) > div(text).
 	 *
-	 * For rect and ellipse the shape element and the foreignObject are siblings within a
-	 * fragment, while a <g>-rooted shape holds the foreignObject as a child of its `<g data-id>`. To cover
-	 * both, this looks among the data-id element's descendants first and falls back to its
-	 * following siblings. font-size / color / font-weight / font-style / text-decoration /
+	 * A shape drawn by createFrameObject follows its element with a group holding its
+	 * overlays, a bare text or a sticky follows it with the foreignObject itself, and a
+	 * <g>-rooted shape may hold the foreignObject as a child of its `<g data-id>`. To cover
+	 * all three, this looks among the data-id element's descendants first and falls back to
+	 * its following siblings and the overlay group among them. font-size / color / font-weight / font-style / text-decoration /
 	 * text-align live on the text element and vertical alignment (align-items) on the wrapper,
 	 * so both are read.
 	 *
@@ -1530,8 +1536,13 @@ export class CanvasDriver {
 			let foreignObject: Element | null = shape.querySelector("foreignObject");
 			if (!foreignObject) {
 				let sibling = shape.nextElementSibling;
+				// The overlay is either a sibling of its own or inside the group
+				// createFrameObject draws every overlay of a shape in.
 				while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
-					sibling = sibling.nextElementSibling;
+					const nested: Element | null = sibling.hasAttribute("data-id")
+						? null
+						: sibling.querySelector("foreignObject");
+					sibling = nested ?? sibling.nextElementSibling;
 				}
 				foreignObject = sibling;
 			}

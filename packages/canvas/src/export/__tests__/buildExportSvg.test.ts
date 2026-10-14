@@ -65,6 +65,35 @@ describe("buildExportSvg while the font gate hides the scene", () => {
 	});
 });
 
+describe("buildExportSvg over a group marked to flatten", () => {
+	it("folds the group's transform into each child and drops the group", () => {
+		stubMeasureContext();
+		const svg = document.createElementNS(SVG_NS, "svg");
+		svg.setAttribute("viewBox", "0 0 400 300");
+		const group = document.createElementNS(SVG_NS, "g");
+		group.setAttribute("transform", "matrix(1, 0, 0, 1, 120, 80)");
+		group.setAttribute("data-canvas-export", "flatten");
+		const placed = document.createElementNS(SVG_NS, "rect");
+		placed.setAttribute("id", "placed");
+		placed.setAttribute("transform", "translate(-80 -40)");
+		const unplaced = document.createElementNS(SVG_NS, "circle");
+		group.append(placed, unplaced);
+		svg.append(group);
+		document.body.append(svg);
+
+		const exported = buildExportSvg(svg);
+
+		expect(exported.querySelector('[data-canvas-export="flatten"]')).toBeNull();
+		expect(exported.querySelector("#placed")?.getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 120, 80) translate(-80 -40)",
+		);
+		expect(exported.querySelector("circle")?.getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 120, 80)",
+		);
+		expect(exported.querySelector("#placed")?.parentElement).toBe(exported);
+	});
+});
+
 /** A live canvas SVG holding one image object, drawn from a blob URL. */
 const mountCanvasSvgWithImage = (src: string): SVGSVGElement => {
 	const svg = document.createElementNS(SVG_NS, "svg");
