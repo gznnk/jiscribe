@@ -6,20 +6,25 @@ import type {
 
 import { calcTableLocalDragDelta } from "./calcTableLocalDragDelta";
 import { calcTableRowBoundaryDrag } from "./calcTableRowBoundaryDrag";
-import { parseTableBoundaryIndex } from "./tableBoundaryAction";
+import {
+	parseTableBoundaryIndex,
+	readTableBoundaryDragMode,
+} from "./tableBoundaryAction";
 import type { TableState } from "../state/TableState";
 
 /**
- * Handles a drag on the boundary between two rows: the pair trades height as far
- * as their text allows, and the table grows only where a row has reached its text
- * floor (calcTableRowBoundaryDrag states the rule). Which boundary comes from
- * the strip's `data-action`, one control being registered for all of them.
+ * Handles a drag on the boundary between two rows: the row above resizes alone
+ * and the table grows or shrinks with it, or with Shift held the pair trades
+ * height as far as their text allows (calcTableRowBoundaryDrag states both rules).
+ * The mode is read off every frame's modifiers. Which boundary comes from the
+ * strip's `data-action`, one control being registered for all of them.
  *
  * Every frame is rebuilt from the gesture-start snapshot, never from the previous
- * frame, so a cursor brought back to where it started restores the bounds it
- * started with. `height` / `cy` are deliberately not written: the table's box is
- * derived from the grid on the same reducer tick (reconcileTableBoxWithGrid),
- * which is also what lets the box grow when a row can give no more.
+ * frame, so a cursor brought back to where it started — or a Shift pressed or
+ * released — restores what that mode gives from the start. `height` / `cy` are
+ * deliberately not written in either mode: the resizer never reads a height as
+ * an outside write, and re-derives the box from the rows from the corner the
+ * table is drawn from on the same reducer tick (reconcileTableBoxWithGrid).
  *
  * Registered via the table's ObjectTypeDefinition.selectionControls.
  */
@@ -41,6 +46,7 @@ export const handleTableRowBoundary = (
 		startTable,
 		boundaryIndex,
 		calcTableLocalDragDelta(startTable, event).y,
+		readTableBoundaryDragMode(event.mods),
 	);
 	return rows === null ? null : { object: { ...startTable, rows } };
 };

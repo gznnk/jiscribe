@@ -112,8 +112,7 @@ const NO_ROW_BOUND: TableRowDoc = {};
 /**
  * The height one row's own text asks for, with its stored bound left out: the floor
  * {@link calcTableLayout} will not draw the row below, however small the bound is.
- * What a boundary drag can squeeze the row to before the table has to grow instead
- * (calcTableRowBoundaryDrag).
+ * What a boundary drag can squeeze the row to (calcTableRowBoundaryDrag).
  *
  * @param state - The tracks, the cells and the rule width, as the layout reads them
  * @param rowIndex - Which row to measure; one the grid does not have has no cells to ask, and measures as 0

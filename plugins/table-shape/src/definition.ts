@@ -80,10 +80,11 @@ const calcTableConnectionAnchorOffsets = (
  * boundary would instead have to change as rows and columns come and go, which
  * registration is not able to do — it happens once per type.
  *
- * Neither boundary handler writes the table's box. Both return the pair of tracks
- * they rewrote, and the box is re-derived from them on the same reducer tick
- * (reconcileTableBoxWithGrid), which is what makes a column drag leave the outer
- * frame exactly where it was.
+ * A boundary drag resizes the track before it alone and the table with it, or
+ * with Shift held trades between the two tracks and leaves the outer frame where
+ * it was. Only the column handler ever writes the box, and only when the columns'
+ * total changes (handleTableColumnBoundary); otherwise the box is re-derived from
+ * the tracks on the same reducer tick (reconcileTableBoxWithGrid).
  *
  * The grips write no object at all, only the part selection, so a click on one is
  * never a document change.

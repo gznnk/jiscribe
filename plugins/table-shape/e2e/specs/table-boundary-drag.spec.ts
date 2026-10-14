@@ -8,8 +8,8 @@ import { cellRect, tableOutlineRect } from "../support/tableDom";
  * answers is whether the strip is where the rule is drawn and whether the hit
  * lands on it — the arithmetic behind the drag is pinned by the resolvers' unit
  * tests. The one thing asserted here that they cannot see is that the outer box
- * comes out of the same reducer tick as the rewritten tracks, which is what makes
- * a column drag leave the table's own edges alone.
+ * comes out of the same reducer tick as the rewritten tracks: a plain drag grows
+ * the table from its own top-left corner, and a Shift drag leaves its edges alone.
  */
 
 /** The strip for one boundary, by the `data-action` its control gives it. */
@@ -22,20 +22,69 @@ const boundaryStrip = (
 		`[data-kind="control"][data-action="selection:table:${axis}:${boundaryIndex}"]`,
 	);
 
-/** Drag from one client point to another, both converted into the driver's content coordinates. */
+/**
+ * Drag from one client point to another, both converted into the driver's content
+ * coordinates; `shift` holds Shift from before the press to after the release.
+ */
 async function dragClient(
 	canvas: CanvasDriver,
 	from: { x: number; y: number },
 	by: { x: number; y: number },
+	shift = false,
 ): Promise<void> {
-	await canvas.drag(
-		canvas.toContent(from),
-		canvas.toContent({ x: from.x + by.x, y: from.y + by.y }),
-	);
+	if (shift) {
+		await canvas.page.keyboard.down("Shift");
+	}
+	try {
+		await canvas.drag(
+			canvas.toContent(from),
+			canvas.toContent({ x: from.x + by.x, y: from.y + by.y }),
+		);
+	} finally {
+		if (shift) {
+			await canvas.page.keyboard.up("Shift");
+		}
+	}
 }
 
 test.describe("table boundary drag", () => {
-	test("makes two columns trade width without moving the table's own edges", async ({
+	test("widens the column left of the boundary alone and the table with it", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await expect(boundaryStrip(canvas, "columnBoundary", 0)).toBeVisible();
+
+		const before = {
+			leading: await cellRect(canvas, id, "r0c0"),
+			trailing: await cellRect(canvas, id, "r0c1"),
+			box: await tableOutlineRect(canvas, id),
+		};
+
+		await dragClient(
+			canvas,
+			{
+				x: before.leading.x + before.leading.width,
+				y: before.leading.y + before.leading.height / 2,
+			},
+			{ x: 40, y: 0 },
+		);
+
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).width))
+			.toBe(Math.round(before.leading.width + 40));
+		// The content resizer kept the width the handler wrote instead of spreading
+		// it back over the columns, and the table grew from its left edge.
+		const after = {
+			trailing: await cellRect(canvas, id, "r0c1"),
+			box: await tableOutlineRect(canvas, id),
+		};
+		expect(after.trailing.width).toBeCloseTo(before.trailing.width, 0);
+		expect(after.box.width).toBeCloseTo(before.box.width + 40, 0);
+		expect(after.box.x).toBeCloseTo(before.box.x, 0);
+		expect(after.box.y).toBeCloseTo(before.box.y, 0);
+	});
+
+	test("makes two columns trade width with Shift held, without moving the table's own edges", async ({
 		canvas,
 	}) => {
 		// Placed and left selected, which is when the controls are drawn.
@@ -58,6 +107,7 @@ test.describe("table boundary drag", () => {
 				y: before.leading.y + before.leading.height / 2,
 			},
 			{ x: 40, y: 0 },
+			true,
 		);
 
 		await expect
@@ -74,7 +124,59 @@ test.describe("table boundary drag", () => {
 		expect(after.box.x).toBeCloseTo(before.box.x, 0);
 	});
 
-	test("grows the table rather than clipping a row already down at its text, then trades once the row has room", async ({
+	test("heightens the row above the boundary alone and the table with it, and gives it back", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await expect(boundaryStrip(canvas, "rowBoundary", 0)).toBeVisible();
+
+		const before = {
+			leading: await cellRect(canvas, id, "r0c0"),
+			trailing: await cellRect(canvas, id, "r1c0"),
+			box: await tableOutlineRect(canvas, id),
+		};
+		const boundary = {
+			x: before.leading.x + before.leading.width / 2,
+			y: before.leading.y + before.leading.height,
+		};
+		await dragClient(canvas, boundary, { x: 0, y: 30 });
+
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBe(Math.round(before.leading.height + 30));
+		const grown = {
+			trailing: await cellRect(canvas, id, "r1c0"),
+			box: await tableOutlineRect(canvas, id),
+		};
+		expect(grown.trailing.height).toBeCloseTo(before.trailing.height, 0);
+		expect(grown.box.height).toBeCloseTo(before.box.height + 30, 0);
+		expect(grown.box.y).toBeCloseTo(before.box.y, 0);
+		expect(grown.box.x).toBeCloseTo(before.box.x, 0);
+
+		// Back up past where it started: the row stops at its text, and the row
+		// below is left where it was rather than taking up the slack.
+		await dragClient(
+			canvas,
+			{ x: boundary.x, y: boundary.y + 30 },
+			{
+				x: 0,
+				y: -60,
+			},
+		);
+
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBe(Math.round(before.leading.height));
+		const shrunk = {
+			trailing: await cellRect(canvas, id, "r1c0"),
+			box: await tableOutlineRect(canvas, id),
+		};
+		expect(shrunk.trailing.height).toBeCloseTo(before.trailing.height, 0);
+		expect(shrunk.box.height).toBeCloseTo(before.box.height, 0);
+		expect(shrunk.box.y).toBeCloseTo(before.box.y, 0);
+	});
+
+	test("with Shift held, grows the table rather than clipping a row already down at its text, then trades once the row has room", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
@@ -92,7 +194,7 @@ test.describe("table boundary drag", () => {
 			x: before.leading.x + before.leading.width / 2,
 			y: before.leading.y + before.leading.height,
 		};
-		await dragClient(canvas, boundary, { x: 0, y: 20 });
+		await dragClient(canvas, boundary, { x: 0, y: 20 }, true);
 
 		await expect
 			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
@@ -115,6 +217,7 @@ test.describe("table boundary drag", () => {
 				x: 0,
 				y: -20,
 			},
+			true,
 		);
 
 		await expect

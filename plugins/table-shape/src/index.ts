@@ -56,6 +56,7 @@ export {
 	handleTableColumnBoundary,
 	handleTableRowBoundary,
 	parseTableBoundaryIndex,
+	readTableBoundaryDragMode,
 	calcTableColumnBoundaryDrag,
 	calcTableRowBoundaryDrag,
 	TableBoundaryStrip,
@@ -66,7 +67,7 @@ export {
 	TableTrackGrip,
 	TableTrackGrips,
 } from "./controls";
-export type { SegmentPlacement } from "./controls";
+export type { SegmentPlacement, TableBoundaryDragMode } from "./controls";
 
 export { TableIcon } from "./stencil/TableIcon";
 export { TableStencils } from "./stencil/TableStencils";

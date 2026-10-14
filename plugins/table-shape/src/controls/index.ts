@@ -7,7 +7,11 @@ export { handleTableRowBoundary } from "./handleTableRowBoundary";
 export { createTableTrackGripHandler } from "./createTableTrackGripHandler";
 export { calcTableColumnBoundaryDrag } from "./calcTableColumnBoundaryDrag";
 export { calcTableRowBoundaryDrag } from "./calcTableRowBoundaryDrag";
-export { parseTableBoundaryIndex } from "./tableBoundaryAction";
+export {
+	parseTableBoundaryIndex,
+	readTableBoundaryDragMode,
+} from "./tableBoundaryAction";
+export type { TableBoundaryDragMode } from "./tableBoundaryAction";
 export { TableBoundaryStrip } from "./TableBoundaryStrip";
 export { TableColumnBoundaryControl } from "./TableColumnBoundaryControl";
 export { TableColumnGripControl } from "./TableColumnGripControl";

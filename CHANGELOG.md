@@ -41,14 +41,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and their background — and nothing else. Picked cells that disagree
   show as mixed, and the transparent swatch clears a cell so the table's
   background shows through again.
-- **A table's column and row boundaries can be dragged.** Grabbing the rule
-  between two columns gives one of them the width the other loses, so the table's
-  own edges stay where they are however far the boundary is pushed — past a
-  column's minimum it simply stops. Rows trade the same way, with one asymmetry a
-  row's stored height forces: that height is a lower bound the text raises, so
-  dragging a boundary up stops at the text of the row above it, while dragging it
-  down past the text of the row below grows the table rather than clipping that
-  text.
+- **A table's column and row boundaries can be dragged.** As in a spreadsheet,
+  grabbing the rule between two columns resizes the column on its left alone, and
+  the table grows or shrinks with it from its top-left corner (the corner it is
+  drawn from, whatever its rotation or flips); rows do the same with the row
+  above. A column stops at its minimum width, and a row at the height its text
+  needs. With Shift held, the two tracks either side trade instead, so the
+  table's own edges stay where they are — past a column's minimum the boundary
+  simply stops, and for rows dragging down past the text of the row below grows
+  the table rather than clipping that text. Pressing or releasing Shift mid-drag
+  switches between the two from the next pointer move.
 - **A table can be resized by its left and right edges**, the width change spread
   over every column in the proportions it holds. A column never goes under its
   minimum, and a table dragged narrower than its columns can be simply stops.
