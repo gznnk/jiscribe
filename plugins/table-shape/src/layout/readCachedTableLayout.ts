@@ -1,54 +1,83 @@
 import { calcTableLayout } from "./calcTableLayout";
 import type { TableLayout, TableLayoutSource } from "./calcTableLayout";
+import type { TableColumnDoc } from "../schema/TableDoc";
+
+/** One cached layout, with the inputs besides the columns it was computed from. */
+type TableLayoutCacheEntry = {
+	rows: TableLayoutSource["rows"];
+	text: TableLayoutSource["text"];
+	strokeWidth: TableLayoutSource["strokeWidth"];
+	layout: TableLayout;
+};
 
 /**
- * The layout last computed for each source object, kept against the object
- * itself: weak, so an entry lives exactly as long as the state it was derived
- * from, and one per object, so one table's reads never evict another's. A state
- * is replaced whenever its grid changes, which is what makes its identity the
- * key: the one input it does not carry is the measurement (see
- * writeTableLayoutCache).
+ * The layout last computed for each grid, kept against its `columns` array and
+ * matched on the other three inputs by identity. Keyed on the inputs rather than
+ * on the object, because a move or a rotation hands over a new object every
+ * frame of its drag while leaving all four untouched, and none of them is read
+ * by the layout. Weak, so an entry lives exactly as long as the columns it was
+ * derived from; one per columns array, so two tables never evict each other
+ * unless they share one, which only costs a recomputation. The one input the key
+ * does not carry is the measurement (see writeTableLayoutCache).
  */
-const tableLayoutCache = new WeakMap<TableLayoutSource, TableLayout>();
+const tableLayoutCache = new WeakMap<
+	readonly TableColumnDoc[],
+	TableLayoutCacheEntry
+>();
 
 /**
  * The layout of one table, read from the cache and computed into it on a miss, so
- * the same object is laid out once however many readers ask: the frame renderer
+ * the same grid is laid out once however many readers ask: the frame renderer
  * placing every cell (calcTableTextSlotRegions), the in-place editor and the slot
  * outline placing one cell each through the same calculator, the controls laying
- * their strips beside the same table. A drag makes a new object per move and so
- * computes once per move.
+ * their strips beside the same table. A move or a rotation keeps the grid, so its
+ * drag computes nothing; a drag that rewrites the grid computes once per move.
  *
- * @param source - The tracks, the cells and the rule width; matched by identity, so a state spread from another with the grid untouched is still computed anew
- * @returns The same layout object for the same source until writeTableLayoutCache replaces it
+ * @param source - The tracks, the cells and the rule width; matched by the identity of each, so a state spread from another with the grid untouched hits, and a source with no `columns` is computed every time
+ * @returns The same layout object for the same four inputs until writeTableLayoutCache replaces it
  */
 export const readCachedTableLayout = (
 	source: TableLayoutSource,
 ): TableLayout => {
-	const cached = tableLayoutCache.get(source);
-	if (cached !== undefined) {
-		return cached;
+	if (source.columns === undefined) {
+		return calcTableLayout(source);
+	}
+	const cached = tableLayoutCache.get(source.columns);
+	if (
+		cached !== undefined &&
+		cached.rows === source.rows &&
+		cached.text === source.text &&
+		cached.strokeWidth === source.strokeWidth
+	) {
+		return cached.layout;
 	}
 	const layout = calcTableLayout(source);
-	tableLayoutCache.set(source, layout);
+	writeTableLayoutCache(source, layout);
 	return layout;
 };
 
 /**
  * A layout computed elsewhere, written over `source`'s cache entry: what the
  * content resizer does with the one it lays the table out with, so the object it
- * hands back is read without a second pass. Two cases need it that a read-through
- * miss would not cover: the resizer returns a new object with the box written on
- * it, whose layout is the same (the box is no input of it), and a font finishing
- * to load changes what unchanged text measures, so core runs the resizer on the
- * same object (REMEASURE_TEXT) and the entry under it has to be replaced.
+ * hands back is read without a second pass. It also covers the one change the
+ * inputs cannot show: a font finishing to load changes what unchanged text
+ * measures, so core runs the resizer on the same object (REMEASURE_TEXT) and the
+ * entry under its grid has to be replaced.
  *
- * @param source - The object the renderers will ask readCachedTableLayout about
+ * @param source - The object the renderers will ask readCachedTableLayout about; one with no `columns` is never cached, and the write is dropped
  * @param layout - A layout of exactly `source`'s tracks, cells and rule width; nothing checks that it is
  */
 export const writeTableLayoutCache = (
 	source: TableLayoutSource,
 	layout: TableLayout,
 ): void => {
-	tableLayoutCache.set(source, layout);
+	if (source.columns === undefined) {
+		return;
+	}
+	tableLayoutCache.set(source.columns, {
+		rows: source.rows,
+		text: source.text,
+		strokeWidth: source.strokeWidth,
+		layout,
+	});
 };
