@@ -37,7 +37,7 @@ type EditorHandlers = {
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
 	onSelectionChange: (selection: { start: number; end: number }) => void;
-	/** A bold / italic / underline keystroke over that selection. */
+	/** A bold / italic / underline / strikethrough keystroke over that selection. */
 	onToggleFormat: (kind: TextToggleIntentKind) => void;
 };
 
@@ -201,7 +201,7 @@ type TextEditorLayerProps = {
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
 	onSelectionChange: (selection: { start: number; end: number }) => void;
-	/** A bold / italic / underline keystroke over that selection. */
+	/** A bold / italic / underline / strikethrough keystroke over that selection. */
 	onToggleFormat: (kind: TextToggleIntentKind) => void;
 };
 

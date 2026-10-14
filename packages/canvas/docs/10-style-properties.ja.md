@@ -39,7 +39,7 @@ union には 3 つの事実が乗る:
 - `CoreStyleIntentKind` — kind だけ。表が答えるキーになる
 - `StyleIntentValueType<K>` — ある kind の値の型。「`kind` 以外の唯一のフィールド」として導出する。
   エントリの `apply` と `read` は両方これに縛られるので、2 つが型で食い違えない
-- `TOGGLE_FLIPS` — 3 つのキーボードトグルがどのフィールドを反転するか
+- `TOGGLE_FLIPS` — 各キーボードトグルがどのフィールドを反転するか
   （`toggleBold` → `fontWeight`）。トグルの値型はそのフィールドの値型なので、
   型とエントリの双方のためにここ 1 箇所で宣言する
 
@@ -124,17 +124,17 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 導出する。ソース言語で書かれた本文は自身の構文で強調を表すので、誰も text type で
 分岐し直すことなくそれらの intent から外れる:
 
-| 受け付けるフィールド | 入るエントリ                        |
-| -------------------- | ----------------------------------- |
-| テキストを持つ全型   | `textContent`                       |
-| `fontColor`          | `fontColor`                         |
-| `fontSize`           | `fontSize`                          |
-| `fontFamily`         | `fontFamily`                        |
-| `fontWeight`         | `fontWeight`, `toggleBold`          |
-| `fontStyle`          | `fontStyle`, `toggleItalic`         |
-| `textDecoration`     | `textDecoration`, `toggleUnderline` |
-| `textAlign`          | `textAlign`                         |
-| `verticalAlign`      | `verticalAlign`                     |
+| 受け付けるフィールド | 入るエントリ                                               |
+| -------------------- | ---------------------------------------------------------- |
+| テキストを持つ全型   | `textContent`                                              |
+| `fontColor`          | `fontColor`                                                |
+| `fontSize`           | `fontSize`                                                 |
+| `fontFamily`         | `fontFamily`                                               |
+| `fontWeight`         | `fontWeight`, `toggleBold`                                 |
+| `fontStyle`          | `fontStyle`, `toggleItalic`                                |
+| `textDecoration`     | `textDecoration`, `toggleUnderline`, `toggleStrikethrough` |
+| `textAlign`          | `textAlign`                                                |
+| `verticalAlign`      | `verticalAlign`                                            |
 
 ## 対を作るヘルパー
 

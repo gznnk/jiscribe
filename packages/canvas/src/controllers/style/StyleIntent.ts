@@ -16,7 +16,7 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
  * `textStyleTable` answer for. Which of them a type actually answers for is what
  * its table says.
  *
- * The three toggles carry no value: the entry reads the current one and flips it.
+ * The toggles carry no value: the entry reads the current one and flips it.
  */
 export type CoreStyleIntent =
 	| { kind: "fill"; color: string }
@@ -42,6 +42,7 @@ export type CoreStyleIntent =
 	| { kind: "toggleBold" }
 	| { kind: "toggleItalic" }
 	| { kind: "toggleUnderline" }
+	| { kind: "toggleStrikethrough" }
 	| { kind: "lockAspectRatio"; locked: boolean }
 	| { kind: "textVerticalBasis"; basis: TextVerticalBasis }
 	| { kind: "textContent"; text: string };
@@ -87,13 +88,15 @@ export const TOGGLE_FLIPS = {
 	toggleBold: "fontWeight",
 	toggleItalic: "fontStyle",
 	toggleUnderline: "textDecoration",
+	toggleStrikethrough: "textDecoration",
 } as const satisfies Record<string, CoreStyleIntentKind>;
 
 /**
- * The intents a keystroke in the text editor raises (TextEditor's Ctrl/Cmd+B/I/U
- * and the browser's own formatBold / formatItalic / formatUnderline edits). Spelled
- * in the intent vocabulary all the way from the keystroke, so nothing translates
- * a "bold" into the field it flips twice.
+ * The intents a keystroke in the text editor raises (TextEditor's Ctrl/Cmd+B/I/U,
+ * Ctrl/Cmd+Shift+X and the browser's own formatBold / formatItalic /
+ * formatUnderline / formatStrikeThrough edits). Spelled in the intent vocabulary
+ * all the way from the keystroke, so nothing translates a "bold" into the field
+ * it flips twice.
  */
 export type TextToggleIntentKind = Extract<
 	CoreStyleIntentKind,
@@ -103,7 +106,7 @@ export type TextToggleIntentKind = Extract<
 /**
  * A toggle as an intent: the kind and nothing else. Spelled out because an
  * object literal built from a `TextToggleIntentKind` is assignable to this
- * three-member union but not to the whole CoreStyleIntent one.
+ * toggles-only union but not to the whole CoreStyleIntent one.
  */
 export type TextToggleIntent = Extract<
 	CoreStyleIntent,
@@ -147,6 +150,7 @@ export const TEXT_STYLE_INTENT_KINDS: ReadonlySet<CoreStyleIntentKind> =
 		"toggleItalic",
 		"textDecoration",
 		"toggleUnderline",
+		"toggleStrikethrough",
 		"textAlign",
 		"verticalAlign",
 	]);

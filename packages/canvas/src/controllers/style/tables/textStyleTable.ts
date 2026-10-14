@@ -15,7 +15,7 @@ import type { StyleTable } from "../StyleEntry";
  * What a type answers for on its text, derived from the one thing it declares
  * about it: which fields that text may carry at all (`textStyleKeysOf`) — so a
  * source-language body, whose own syntax sets the emphasis, is left out of those
- * intents without anyone branching on the text type again. The three keystroke
+ * intents without anyone branching on the text type again. The keystroke
  * toggles ride on the field each of them flips, and are gated with it.
  *
  * The content itself is answered for by every type holding text, whatever fields
@@ -58,6 +58,9 @@ export const textStyleTable = (textType: TextType): StyleTable<ObjectState> => {
 			// value rather than a boolean.
 			toggleUnderline: toggleRunOrTextSlotEntry("toggleUnderline", {
 				toggle: (current) => toggleTextDecorationToken(current, "underline"),
+			}),
+			toggleStrikethrough: toggleRunOrTextSlotEntry("toggleStrikethrough", {
+				toggle: (current) => toggleTextDecorationToken(current, "line-through"),
 			}),
 		}),
 		// The alignments place the whole block, so they land on the slot even while

@@ -32,12 +32,21 @@ import {
 import type { CaretTarget } from "../utils/measureCaretInSurface";
 import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
-/** Keys that toggle a format while held with the platform's command modifier. */
+/**
+ * Keys that toggle a format while held with the platform's command modifier,
+ * spelled as formatKeyOf spells a keystroke: Shift has to match too, so Ctrl+X
+ * stays the cut it is.
+ */
 const FORMAT_KEYS: Record<string, TextToggleIntentKind | undefined> = {
 	b: "toggleBold",
 	i: "toggleItalic",
 	u: "toggleUnderline",
+	"shift+x": "toggleStrikethrough",
 };
+
+/** A keystroke as FORMAT_KEYS names it; lowercased since Shift and Caps Lock upper-case `key`. */
+const formatKeyOf = (e: React.KeyboardEvent): string =>
+	`${e.shiftKey ? "shift+" : ""}${e.key.toLowerCase()}`;
 
 /**
  * The browser's own rich-text edits, which reach an editable surface from the
@@ -48,6 +57,7 @@ const FORMAT_INPUT_TYPES: Record<string, TextToggleIntentKind | undefined> = {
 	formatBold: "toggleBold",
 	formatItalic: "toggleItalic",
 	formatUnderline: "toggleUnderline",
+	formatStrikeThrough: "toggleStrikethrough",
 };
 
 /** A stretch of the edited text, in UTF-16 offsets; what the editor reports and restores. */
@@ -93,7 +103,7 @@ type TextEditorProps = {
 	onChange: (text: RichText) => void;
 	/** What the editor has selected, reported on every edit and caret move. */
 	onSelectionChange?: (selection: TextSelection) => void;
-	/** A bold / italic / underline keystroke, as the style intent it raises over the current selection. */
+	/** A bold / italic / underline / strikethrough keystroke, as the style intent it raises over the current selection. */
 	onToggleFormat?: (kind: TextToggleIntentKind) => void;
 	onEscape?: () => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
@@ -558,7 +568,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		// style the stretch selected one keystroke ago.
 		const format =
 			(e.metaKey || e.ctrlKey) && !e.altKey
-				? FORMAT_KEYS[e.key.toLowerCase()]
+				? FORMAT_KEYS[formatKeyOf(e)]
 				: undefined;
 		if (format !== undefined && onToggleFormat) {
 			e.preventDefault();

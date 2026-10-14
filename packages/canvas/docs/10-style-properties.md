@@ -43,7 +43,7 @@ Three facts ride on the union:
 - `StyleIntentValueType<K>` — the type of one kind's value, derived as "the sole field besides
   `kind`". `apply` and `read` of an entry are both bound to it, so the two sides
   cannot disagree on the type.
-- `TOGGLE_FLIPS` — which field each of the three keystroke toggles flips
+- `TOGGLE_FLIPS` — which field each of the keystroke toggles flips
   (`toggleBold` → `fontWeight`). A toggle's value type is its field's, stated once
   here for the types and the entries alike.
 
@@ -133,17 +133,17 @@ type declares about its text — which fields it may carry at all
 its own syntax, so it is left out of those intents without anyone branching on the
 text type again:
 
-| Fields accepted  | Entries                             |
-| ---------------- | ----------------------------------- |
-| any text at all  | `textContent`                       |
-| `fontColor`      | `fontColor`                         |
-| `fontSize`       | `fontSize`                          |
-| `fontFamily`     | `fontFamily`                        |
-| `fontWeight`     | `fontWeight`, `toggleBold`          |
-| `fontStyle`      | `fontStyle`, `toggleItalic`         |
-| `textDecoration` | `textDecoration`, `toggleUnderline` |
-| `textAlign`      | `textAlign`                         |
-| `verticalAlign`  | `verticalAlign`                     |
+| Fields accepted  | Entries                                                    |
+| ---------------- | ---------------------------------------------------------- |
+| any text at all  | `textContent`                                              |
+| `fontColor`      | `fontColor`                                                |
+| `fontSize`       | `fontSize`                                                 |
+| `fontFamily`     | `fontFamily`                                               |
+| `fontWeight`     | `fontWeight`, `toggleBold`                                 |
+| `fontStyle`      | `fontStyle`, `toggleItalic`                                |
+| `textDecoration` | `textDecoration`, `toggleUnderline`, `toggleStrikethrough` |
+| `textAlign`      | `textAlign`                                                |
+| `verticalAlign`  | `verticalAlign`                                            |
 
 ## The helpers that build the pairs
 

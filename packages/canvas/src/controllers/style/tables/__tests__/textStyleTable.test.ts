@@ -25,6 +25,7 @@ describe("textStyleTable", () => {
 			"textDecoration",
 			"toggleBold",
 			"toggleItalic",
+			"toggleStrikethrough",
 			"toggleUnderline",
 			"verticalAlign",
 		]);

@@ -3,8 +3,9 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
  * Styling a stretch of a shape's text rather than the whole slot: the editor
- * reports what it has selected, the bold / italic / underline keystrokes apply to
- * that stretch, and the text is drawn as the runs it is now styled in.
+ * reports what it has selected, the bold / italic / underline / strikethrough
+ * keystrokes apply to that stretch, and the text is drawn as the runs it is now
+ * styled in.
  *
  * The keystrokes are handled by the editing surface itself (it holds the focus,
  * and they are the browser's own defaults on an editable element), so they are
@@ -92,7 +93,7 @@ test.describe("styling a stretch of a shape's text", () => {
 		const id = await drawAndEdit(canvas, "Payment failed");
 		await selectFromStart(canvas, 7);
 		// Type size is only reachable from the menu; the keystrokes cover bold,
-		// italic and underline alone.
+		// italic, underline and strikethrough alone.
 		await canvas.openObjectMenu("font-size");
 		await canvas.setNumberInput("fontSize", 40);
 		await expect
@@ -192,6 +193,49 @@ test.describe("styling a stretch of a shape's text", () => {
 		await expect
 			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.fontStyle)
 			.toBe("normal");
+	});
+
+	test("strikes the selection through with Ctrl/Cmd+Shift+X, beside its underline", async ({
+		canvas,
+	}) => {
+		const id = await drawAndEdit(canvas, "Payment failed");
+		await selectFromStart(canvas, 7);
+
+		await canvas.page.keyboard.press("ControlOrMeta+u");
+		await canvas.page.keyboard.press("ControlOrMeta+Shift+X");
+		await expect
+			.poll(async () => await canvas.drawnTextRuns(id))
+			.toEqual([
+				expect.objectContaining({
+					text: "Payment",
+					textDecoration: "underline line-through",
+				}),
+				expect.objectContaining({ text: " failed", textDecoration: "none" }),
+			]);
+
+		// The second press takes the line off and leaves the underline.
+		await canvas.page.keyboard.press("ControlOrMeta+Shift+X");
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.textDecoration)
+			.toBe("underline");
+
+		await canvas.commitText();
+		expect(await canvas.drawnTextRuns(id)).toEqual([
+			expect.objectContaining({ text: "Payment", textDecoration: "underline" }),
+			expect.objectContaining({ text: " failed", textDecoration: "none" }),
+		]);
+	});
+
+	test("leaves Ctrl/Cmd+X to the browser's cut", async ({ canvas }) => {
+		const id = await drawAndEdit(canvas, "Payment failed");
+		await selectFromStart(canvas, 7);
+
+		await canvas.page.keyboard.press("ControlOrMeta+x");
+
+		await expect.poll(() => canvas.textEditorText()).toBe(" failed");
+		expect(await canvas.drawnTextRuns(id)).toEqual([
+			expect.objectContaining({ text: " failed", textDecoration: "none" }),
+		]);
 	});
 
 	// Deleting a run whole leaves Chrome typing in that run's style again, in an

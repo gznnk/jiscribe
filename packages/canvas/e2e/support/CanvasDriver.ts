@@ -921,6 +921,8 @@ export class CanvasDriver {
 	 * @param objectId - data-id of the shape whose overlay is read when no editor is open
 	 * @returns One entry per drawn part in document order, with the typography it is
 	 *   drawn with (browser-normalized: fontWeight as a number, colors as rgb(...));
+	 *   `textDecoration` is the part's own computed `text-decoration-line`, which is
+	 *   not inherited, so a line the whole slot carries reads "none" on its parts;
 	 *   empty when nothing draws the text
 	 */
 	async drawnTextRuns(objectId: string): Promise<
@@ -931,6 +933,7 @@ export class CanvasDriver {
 			fontFamily: string;
 			fontWeight: string;
 			fontStyle: string;
+			textDecoration: string;
 		}[]
 	> {
 		return this.page.evaluate(
@@ -977,6 +980,7 @@ export class CanvasDriver {
 						fontFamily: style.fontFamily,
 						fontWeight: style.fontWeight,
 						fontStyle: style.fontStyle,
+						textDecoration: style.textDecorationLine,
 					};
 				});
 			},

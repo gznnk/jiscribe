@@ -71,6 +71,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   a row's above and below, a column's left and right, a cell's all four. The
   cells keep their contents as the grid renumbers around an insertion, and one
   undo takes it back.
+- **Ctrl/Cmd+Shift+X strikes the selected text through while editing**, and
+  pressing it again takes the line off, as Ctrl/Cmd+B / I / U do for bold,
+  italic and underline. An underline on the same characters is kept. Ctrl/Cmd+X
+  is still cut, and Ctrl/Cmd+Shift+B / I / U no longer toggle bold, italic or
+  underline.
 - For plugin authors: a custom ObjectMenu item or properties-sidebar row stays
   up while a picked part narrows the menu or the sidebar when it names that
   part's kind in `pickedPartKinds`. `@jiscribe/canvas/unstable` (and so

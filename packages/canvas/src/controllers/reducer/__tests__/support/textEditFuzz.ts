@@ -270,6 +270,7 @@ const generateOp = (random: () => number, plain: string): FuzzOp => {
 				"toggleBold",
 				"toggleItalic",
 				"toggleUnderline",
+				"toggleStrikethrough",
 			] as const),
 			start,
 			end,

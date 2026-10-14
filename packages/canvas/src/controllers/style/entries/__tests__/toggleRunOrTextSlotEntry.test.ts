@@ -14,7 +14,7 @@ import {
 } from "../../__tests__/support/styleFixtures";
 import { toggleRunOrTextSlotEntry } from "../toggleRunOrTextSlotEntry";
 
-/** The three entries as textStyleTable builds them, so the toggles under test are the shipped ones. */
+/** The entries as textStyleTable builds them, so the toggles under test are the shipped ones. */
 const bold = toggleRunOrTextSlotEntry("toggleBold", {
 	toggle: (current) => (isBoldFontWeight(current) ? "normal" : "bold"),
 });
@@ -23,6 +23,9 @@ const italic = toggleRunOrTextSlotEntry("toggleItalic", {
 });
 const underline = toggleRunOrTextSlotEntry("toggleUnderline", {
 	toggle: (current) => toggleTextDecorationToken(current, "underline"),
+});
+const strikethrough = toggleRunOrTextSlotEntry("toggleStrikethrough", {
+	toggle: (current) => toggleTextDecorationToken(current, "line-through"),
 });
 
 const readTextSlots = (object: unknown): TextSlots =>
@@ -94,6 +97,33 @@ describe("toggleRunOrTextSlotEntry", () => {
 			{ text: "he", textDecoration: "underline line-through" },
 			{ text: "llo" },
 		]);
+	});
+
+	it("strikes the selected characters through, keeping their underline", () => {
+		const a = textRectOf("a", {
+			body: { text: "hello", textDecoration: "underline" },
+		});
+		expect(
+			bodyOf(strikethrough.apply(a, null, undefined, editing(0, 2))),
+		).toEqual([
+			{ text: "he", textDecoration: "underline line-through" },
+			{ text: "llo" },
+		]);
+	});
+
+	it("a second strikethrough press takes the line off and leaves the underline", () => {
+		const a = textRectOf("a", {
+			body: { text: "hello", textDecoration: "underline" },
+		});
+		const struck = strikethrough.apply(
+			a,
+			null,
+			undefined,
+			editing(0, 2),
+		) as ObjectState;
+		expect(
+			bodyOf(strikethrough.apply(struck, null, undefined, editing(0, 2))),
+		).toEqual([{ text: "he", textDecoration: "underline" }, { text: "llo" }]);
 	});
 
 	it("styles each row's share of a stretch reaching over a row boundary", () => {
