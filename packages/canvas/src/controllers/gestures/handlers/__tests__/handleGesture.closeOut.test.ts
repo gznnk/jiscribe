@@ -294,10 +294,10 @@ describe("handleGesture - close-out", () => {
 		expect(ended.commitVersion).toBe(state.commitVersion + 1);
 	});
 
-	it("never advances the version itself, even when the document changed during the gesture", () => {
-		// Writes on every drag frame but reports no change for the dragEnd, so no
-		// writer commits: whatever the drag frames left is materialized and stays
-		// uncommitted.
+	it("adds no commit of its own to the writer's, even when the document changed during the gesture", () => {
+		// Writes on every drag frame but reports no change for the dragEnd: the
+		// control's adapter settles the drag frames' writes with one commit, and
+		// the close-out adds nothing on top of it.
 		const writeOnDragOnly: SelectionControlDefinition["handle"] = (
 			context,
 			event,
@@ -316,6 +316,6 @@ describe("handleGesture - close-out", () => {
 		const ended = handleGesture(dragged, controlGesture("dragEnd"), registries);
 		expect(ended.activeDrag).toBeNull();
 		expect(isCowView(ended.objects)).toBe(false);
-		expect(ended.commitVersion).toBe(state.commitVersion);
+		expect(ended.commitVersion).toBe(state.commitVersion + 1);
 	});
 });

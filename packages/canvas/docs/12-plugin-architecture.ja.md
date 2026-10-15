@@ -342,8 +342,9 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 `handle` が呼ばれるのは `events` に挙げたイベント種だけで、省略すれば drag / dragEnd
 （`DEFAULT_SELECTION_CONTROL_EVENTS`）。`"click"` / `"doubleClick"` を挙げれば押しただけの
 操作も届き、そのイベントに `start` / `delta` は無い。戻り値は `{ object?, selection? }`
-で、`object` は自オブジェクトの置き換え（drag なら dragEnd で、クリックならその場で
-確定する）、`selection` は自オブジェクトの上の部分選択（`null` で解除、省略なら
+で、`object` は自オブジェクトの置き換え（クリックならその場で確定する。drag はどこかの
+フレームで書いていれば、`events` に dragEnd が無くても dragEnd の `handle` が `object` を
+返さなくても、core が dragEnd で 1 回だけ確定する）、`selection` は自オブジェクトの上の部分選択（`null` で解除、省略なら
 そのまま）。`selection` の `kind` は `partKinds` に宣言したものでなければ落とされる。
 選択だけを返したクリックは編集にならない。いま立っている部分選択は `Component` に
 `selectedPart` として、`handle` にも `context.selectedPart` として渡るので、ハンドルは

@@ -181,6 +181,64 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		expect(next.commitVersion).toBe(3);
 	});
 
+	describe("drag commit at dragEnd", () => {
+		/** Runs `dragFrames` drag frames and then a dragEnd, from commitVersion 3. */
+		const runDrag = (
+			definition: SelectionControlDefinition,
+			dragFrames: number,
+		): CanvasControllerState => {
+			const { strategy } = createRegisteredSelectionControl(
+				"container",
+				definition,
+			);
+			let state = { ...makeState(makeObject()), commitVersion: 3 };
+			for (let frame = 0; frame < dragFrames; frame++) {
+				state = strategy.handle(state, makeEvent("drag"), undefined as never);
+				expect(state.commitVersion).toBe(3);
+			}
+			return strategy.handle(state, makeEvent("dragEnd"), undefined as never);
+		};
+
+		it("commits once for a definition that does not ask for dragEnd", () => {
+			const ended = runDrag({ ...markingDefinition(), events: ["drag"] }, 2);
+			expect(marked(ended)).toBe(true);
+			expect(ended.commitVersion).toBe(4);
+			expect(ended.edgeScrollEnabled).toBe(false);
+		});
+
+		it("commits once when dragEnd returns null after drag frames wrote", () => {
+			const ended = runDrag(
+				{
+					...markingDefinition(),
+					handle: (context, event) =>
+						event.type === "dragEnd"
+							? null
+							: {
+									object: {
+										...context.startObject,
+										marked: true,
+									} as unknown as ObjectState,
+								},
+				},
+				2,
+			);
+			expect(marked(ended)).toBe(true);
+			expect(ended.commitVersion).toBe(4);
+		});
+
+		it("commits exactly once when dragEnd returns an object", () => {
+			const ended = runDrag(markingDefinition(), 2);
+			expect(marked(ended)).toBe(true);
+			expect(ended.commitVersion).toBe(4);
+		});
+
+		it("commits nothing for a drag that wrote nothing", () => {
+			const ended = runDrag({ ...noChangeDefinition(), events: ["drag"] }, 2);
+			expect(ended.commitVersion).toBe(3);
+			expect(ended.edgeScrollEnabled).toBe(false);
+		});
+	});
+
 	it("still disables edge scrolling on dragEnd when a guard fails", () => {
 		const { strategy } = createRegisteredSelectionControl(
 			"container",

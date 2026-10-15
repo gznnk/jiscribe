@@ -383,7 +383,9 @@ internal adapter.
 drag / dragEnd (`DEFAULT_SELECTION_CONTROL_EVENTS`). Listing `"click"` /
 `"doubleClick"` delivers presses that never moved as well; those events carry no
 `start` / `delta`. It returns `{ object?, selection? }`: `object` replaces the
-control's own object (committed at dragEnd for a drag, at once for a click), and
+control's own object (committed at once for a click; a drag is committed by core
+once, at dragEnd, whether or not `events` offers dragEnd or its `handle` returns
+an object there, as long as some drag frame wrote the object), and
 `selection` is the part selection on that object (`null` clears it, omitted
 leaves it). A `selection` whose `kind` the type does not declare in `partKinds`
 is dropped, and a click that returns only a selection is not an edit. The part

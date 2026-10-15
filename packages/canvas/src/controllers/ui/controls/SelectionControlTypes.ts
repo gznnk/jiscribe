@@ -143,7 +143,8 @@ export type SelectionControlDefinition<
 	/**
 	 * Which gesture kinds `handle` is called for; any other kind reaching the
 	 * control is dropped. Omitted = `DEFAULT_SELECTION_CONTROL_EVENTS` (drag and
-	 * dragEnd).
+	 * dragEnd). Leaving dragEnd out does not leave a drag uncommitted (see
+	 * `handle`).
 	 */
 	events?: readonly SelectionControlEventType[];
 	/**
@@ -157,7 +158,10 @@ export type SelectionControlDefinition<
 	/**
 	 * Maps the gesture-start object plus cursor to what the event changed, or null
 	 * for no change. Called only for the kinds `events` names; the adapter owns
-	 * dragStart, the snapshot guards, and the write-back.
+	 * dragStart, the snapshot guards, the write-back and the commit. A click's
+	 * object is committed at once; a drag is committed once, at its end, whether
+	 * or not dragEnd is offered or returns an object, provided some frame wrote
+	 * the object.
 	 */
 	handle: (
 		context: SelectionControlContext<TState>,
