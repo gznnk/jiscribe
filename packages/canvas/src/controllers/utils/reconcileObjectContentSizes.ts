@@ -1,6 +1,11 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
-import { collectCowChangedKeys, copyObjectsRecord } from "./cowObjects";
+import {
+	collectCowChangedKeys,
+	copyObjectsRecord,
+	createCowObjects,
+	isCowObjects,
+} from "./cowObjects";
 import { textSlotsOf } from "./textSlotsOf";
 import { updateAffectedGroupBounds } from "./updateAffectedGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -143,7 +148,7 @@ const holdsSameContentInputs = (
  * @param previousState - The state the transition started from, supplying the slots compared against
  * @param contentResizer - The per-canvas content-resizer registry; every type absent from it is skipped outright, so a canvas whose types all store their box does no work here
  * @param forceRemeasure - Re-measures every object even though its slots are untouched. For the one case the slots cannot express: the same family resolving to different faces than it did before (web fonts finishing after the first paint)
- * @returns The same state reference when no box moved; otherwise a state with the re-measured objects swapped in and the ancestor groups' cached frames recomputed
+ * @returns The same state reference when no box moved; otherwise a state with the re-measured objects swapped in and the ancestor groups' cached frames recomputed. Its `objects` is a copy-on-write view when `state.objects` was one, so a caller handing over a view still flattens the result
  */
 export const reconcileObjectContentSizes = (
 	state: CanvasControllerState,
@@ -181,7 +186,12 @@ export const reconcileObjectContentSizes = (
 			return;
 		}
 		if (!resizedObjects) {
-			resizedObjects = copyObjectsRecord(state.objects);
+			// A view stays a view, as in updateAffectedGroupBounds: flattening it
+			// here would cost O(all objects) per slider or resize frame and leave the
+			// next frame's collectCowChangedKeys no shared base to narrow to.
+			resizedObjects = isCowObjects(state.objects)
+				? createCowObjects(state.objects)
+				: copyObjectsRecord(state.objects);
 		}
 		resizedObjects[object.id] = resized;
 		resizedIds.push(object.id);

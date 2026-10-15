@@ -9,6 +9,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { isCowObjects } from "../../utils/cowObjects";
 import type { TransformProperty } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -304,6 +305,18 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 		it("leaves it alone for a size at or below zero", () => {
 			expectNoOp(singleRectState(), "width", 0);
 			expectNoOp(singleRectState(), "height", -5);
+		});
+	});
+
+	describe("the map it hands back", () => {
+		it("is a plain record for a preview and a commit alike", () => {
+			// The edit writes through a copy-on-write view and this route bypasses
+			// handleGesture, so the reducer flattens it (#213).
+			for (const commit of [false, true]) {
+				const after = update(singleRectState(), "x", 40, { commit });
+				expect(topLeftOf(after, "rect-1").x).toBeCloseTo(40);
+				expect(isCowObjects(after.objects)).toBe(false);
+			}
 		});
 	});
 

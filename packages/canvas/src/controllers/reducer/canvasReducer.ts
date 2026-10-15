@@ -89,11 +89,7 @@ export const createCanvasReducer =
 				const executed = handleCommand(state, action.commandId, registries);
 				// A command may write through a view (applyStyleIntent) and this path
 				// bypasses handleGesture, so flatten it here like the routes below (#213).
-				const flattenedObjects = materializeObjects(executed.objects);
-				const commandResult =
-					flattenedObjects === executed.objects
-						? executed
-						: { ...executed, objects: flattenedObjects };
+				const commandResult = materializeStateObjects(executed);
 				const resizedResult = reconcileObjectContentSizes(
 					commandResult,
 					state,
@@ -271,23 +267,19 @@ export const createCanvasReducer =
 				// intent arrives stated, a surface that holds a name and a string having read it
 				// through the shared toStyleIntent.
 				const updated = applyStyleIntent(state, action.intent, registries);
-				// This path bypasses handleGesture, so flatten the COW view here
-				// (one-shot update, same pattern as MoveCommands; #213).
-				const materialized = {
-					...updated,
-					objects: materializeObjects(updated.objects),
-				};
 				const selectionResult = reconcileSelection(
-					materialized,
+					updated,
 					registries.objectPartKind,
 				);
 				if (!action.commit) {
 					// A live preview draws at the new typography, so its box has to be
 					// measured at the new typography too.
-					return reconcileObjectContentSizes(
-						selectionResult,
-						state,
-						registries.objectContentResizer,
+					return materializeStateObjects(
+						reconcileObjectContentSizes(
+							selectionResult,
+							state,
+							registries.objectContentResizer,
+						),
 					);
 				}
 				// The commit tail re-measures too (commitPropertyUpdate): the restyled body
@@ -327,21 +319,17 @@ export const createCanvasReducer =
 				) {
 					return state;
 				}
-				// Same one-shot flattening as the menu route: this path bypasses
-				// handleGesture, which is what normally does it (#213).
-				const materialized = {
-					...updated,
-					objects: materializeObjects(updated.objects),
-				};
 				const selectionResult = reconcileSelection(
-					materialized,
+					updated,
 					registries.objectPartKind,
 				);
 				if (!action.commit) {
-					return reconcileObjectContentSizes(
-						selectionResult,
-						state,
-						registries.objectContentResizer,
+					return materializeStateObjects(
+						reconcileObjectContentSizes(
+							selectionResult,
+							state,
+							registries.objectContentResizer,
+						),
 					);
 				}
 				return commitPropertyUpdate(
@@ -631,7 +619,8 @@ const buildPropertyCoalesceKey = (
 
 /**
  * Commits a property update that has already been applied: raises commitVersion,
- * arms the coalesce key, re-measures and re-routes, and records the entry.
+ * arms the coalesce key, re-measures, flattens a copy-on-write view the route
+ * wrote through, re-routes, and records the entry.
  *
  * Shared by the three property routes (menu / transform / document), which differ
  * only in what they apply. The reconciles run unconditionally because the caller
@@ -652,16 +641,34 @@ const commitPropertyUpdate = (
 				? updatedState.historyCoalesce
 				: { ...updatedState.historyCoalesce, pending: coalesceKey },
 	};
-	const resizedResult = reconcileObjectContentSizes(
-		committedResult,
-		previousState,
-		registries.objectContentResizer,
+	const resizedResult = materializeStateObjects(
+		reconcileObjectContentSizes(
+			committedResult,
+			previousState,
+			registries.objectContentResizer,
+		),
 	);
 	const reconciledResult = reconcileConnectorVertices(
 		resizedResult,
 		registries,
 	);
 	return recordHistoryIfNeeded(reconciledResult, previousState);
+};
+
+/**
+ * Flattens a state's copy-on-write objects view for the routes that bypass
+ * handleGesture, the one place that otherwise does it (#213). A state already
+ * holding a plain Record comes back as the same reference.
+ *
+ * The property routes call it after the re-measure rather than before it:
+ * reconcileObjectContentSizes narrows its scan to the view's written IDs
+ * (collectCowChangedKeys), which a flattened map no longer offers.
+ */
+const materializeStateObjects = (
+	state: CanvasControllerState,
+): CanvasControllerState => {
+	const objects = materializeObjects(state.objects);
+	return objects === state.objects ? state : { ...state, objects };
 };
 
 /**
