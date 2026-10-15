@@ -94,17 +94,14 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 				objectId={id}
 				objectType={objState.type}
 				objectState={objState}
-			>
-				<ObjectComponent
-					{...objState}
-					isEditing={isEditing}
-					// Only the edited object receives the slot id; for the rest the prop
-					// stays undefined so starting/ending an edit does not break their memo.
-					editingTextSlotId={
-						isEditing ? (editingTextSlotId ?? undefined) : undefined
-					}
-				/>
-			</ObjectRenderBoundary>,
+				component={ObjectComponent}
+				isEditing={isEditing}
+				// Only the edited object receives the slot id; for the rest the prop
+				// stays undefined so starting/ending an edit does not break their memo.
+				editingTextSlotId={
+					isEditing ? (editingTextSlotId ?? undefined) : undefined
+				}
+			/>,
 		);
 	};
 
