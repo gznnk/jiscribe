@@ -10,7 +10,11 @@ import { isTextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/Text
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 
 import { coerceStyleValue } from "./coerceStyleValue";
-import type { CoreStyleIntent, StyleIntent } from "../StyleIntent";
+import type {
+	CoreStyleIntent,
+	CoreStyleIntentKind,
+	StyleIntent,
+} from "../StyleIntent";
 
 /**
  * Every name a style property may carry that is not a shape's own declaration:
@@ -120,6 +124,44 @@ const INTENT_BY_PROPERTY = {
 	},
 } satisfies Record<SystemStyleName, StyleIntentMapper>;
 
+/** A property name the core vocabulary owns: a key of INTENT_BY_PROPERTY. */
+type CoreStyleProperty = keyof typeof INTENT_BY_PROPERTY;
+
+/**
+ * The core intent kinds no property is named after, each paired with the
+ * property that states it. Such a name reaching toStyleIntent would otherwise be
+ * taken for a type's own kind and land on the core entry with the raw string
+ * (`underline` reading `"false"` as on), so it is refused instead.
+ *
+ * Exhaustive by type, so a core kind added under a name of its own fails to
+ * compile until it is listed here.
+ */
+const PROPERTY_FOR_UNNAMED_CORE_KIND = {
+	cornerRadius: "rx",
+	underline: "textDecoration",
+	strikethrough: "textDecoration",
+	textContent: "text",
+} satisfies Record<
+	Exclude<CoreStyleIntentKind, CoreStyleProperty>,
+	CoreStyleProperty
+>;
+
+/**
+ * The property to use instead of a core intent kind no property is named after,
+ * or undefined for any other name.
+ *
+ * @param property - The property name, as the menus' parts spell it
+ */
+const propertyForUnnamedCoreKind = (
+	property: string,
+): CoreStyleProperty | undefined =>
+	(
+		PROPERTY_FOR_UNNAMED_CORE_KIND as Record<
+			string,
+			CoreStyleProperty | undefined
+		>
+	)[property];
+
 /**
  * The mapper for one property name, or undefined for a name the core vocabulary
  * does not own (a kind a type declares in its own style table).
@@ -147,11 +189,13 @@ const intentMapperOf = (property: string): StyleIntentMapper | undefined =>
  * A name the core vocabulary does not own is a kind some type declares in its
  * own table, and is passed on under that very name for the types' tables to
  * answer (ObjectTypeDefinition.styleEntries); a name nobody declares therefore applies
- * to nothing (fail-closed).
+ * to nothing (fail-closed). A core intent kind is not such a name: the ones no
+ * property is named after (`underline`, `cornerRadius`, ...) are refused with a
+ * console warning naming the property to use.
  *
- * @param property - The property name, as the menus' parts spell it; a name with dots in it is a declared write path (`label.fill`)
+ * @param property - The property name, as the menus' parts spell it (`rx`, `textDecoration`, `text`), or a kind a type declares in its own table; a name with dots in it is a declared write path (`label.fill`). A core intent kind no property is named after (`cornerRadius`, `underline`, `strikethrough`, `textContent`) is not accepted
  * @param value - The value as a string, read into the intent's own type (INTENT_BY_PROPERTY) or left as it stands for the declaring type's entry to read
- * @returns The intent to apply, or undefined for a value nothing can be made of (a string no number parses from) — which is the caller's cue to apply nothing
+ * @returns The intent to apply, or undefined for a value nothing can be made of (a string no number parses from) or a core intent kind passed as the property — which is the caller's cue to apply nothing
  * @throws For a `textVerticalBasis` value that is neither basis: only the built-in rows state that property, so such a value is a mistake in the engine and is not quietly turned into applying nothing
  */
 export const toStyleIntent = (
@@ -159,5 +203,15 @@ export const toStyleIntent = (
 	value: string,
 ): StyleIntent | undefined => {
 	const toIntent = intentMapperOf(property);
-	return toIntent === undefined ? { kind: property, value } : toIntent(value);
+	if (toIntent !== undefined) {
+		return toIntent(value);
+	}
+	const propertyToUse = propertyForUnnamedCoreKind(property);
+	if (propertyToUse !== undefined) {
+		console.warn(
+			`[toStyleIntent] "${property}" is a style intent kind, not a property name; use "${propertyToUse}"`,
+		);
+		return undefined;
+	}
+	return { kind: property, value };
 };

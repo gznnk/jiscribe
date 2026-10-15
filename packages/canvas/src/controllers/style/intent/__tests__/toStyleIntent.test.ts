@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 
 import { toStyleIntent } from "../toStyleIntent";
 
@@ -68,6 +68,52 @@ describe("toStyleIntent (the one translation)", () => {
 			expect(() => toStyleIntent("textVerticalBasis", "middle")).toThrow(
 				/textVerticalBasis/,
 			);
+		});
+	});
+
+	describe("a core intent kind no property is named after is refused", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it.each([
+			["underline", "false", "textDecoration"],
+			["strikethrough", "true", "textDecoration"],
+			["cornerRadius", "8", "rx"],
+			["textContent", "Yes", "text"],
+		])(
+			"%s states nothing and warns to use %s's property",
+			(kind, value, propertyToUse) => {
+				const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+				expect(toStyleIntent(kind, value)).toBeUndefined();
+				expect(warn).toHaveBeenCalledOnce();
+				expect(warn.mock.calls[0]?.[0]).toContain(`"${propertyToUse}"`);
+			},
+		);
+
+		it("the property names stating those kinds are unchanged", () => {
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			expect(toStyleIntent("textDecoration", "underline")).toEqual({
+				kind: "textDecoration",
+				decoration: "underline",
+			});
+			expect(toStyleIntent("rx", "4")).toEqual({
+				kind: "cornerRadius",
+				radius: 4,
+			});
+			expect(toStyleIntent("text", "Hi")).toEqual({
+				kind: "textContent",
+				text: "Hi",
+			});
+			expect(toStyleIntent("fill", "#000")).toEqual({
+				kind: "fill",
+				color: "#000",
+			});
+			expect(toStyleIntent("headerHeight", "32")).toEqual({
+				kind: "headerHeight",
+				value: "32",
+			});
+			expect(warn).not.toHaveBeenCalled();
 		});
 	});
 
