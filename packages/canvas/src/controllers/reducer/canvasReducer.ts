@@ -11,6 +11,7 @@ import {
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
+import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import {
@@ -108,7 +109,21 @@ export const createCanvasReducer =
 					reconciledResult,
 					registries.objectPartKind,
 				);
-				return recordHistoryIfNeeded(selectionResult, state);
+				// Pointer gestures pick what is already under the pointer; a command
+				// moving the pick (an arrow key, Tab) may land it off screen.
+				const revealedViewport = calcViewportToRevealActivePart(
+					selectionResult.viewport,
+					state.selection,
+					selectionResult.selection,
+					selectionResult.objects,
+					registries.objectPartKind,
+				);
+				return recordHistoryIfNeeded(
+					revealedViewport === selectionResult.viewport
+						? selectionResult
+						: { ...selectionResult, viewport: revealedViewport },
+					state,
+				);
 			}
 
 			case "REVERT_HISTORY": {

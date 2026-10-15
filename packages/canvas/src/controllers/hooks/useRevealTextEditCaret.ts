@@ -3,10 +3,10 @@ import { type Dispatch, useCallback, useLayoutEffect, useRef } from "react";
 
 import type { Viewport } from "../../rendering/Viewport";
 import type { CanvasAction } from "../reducer/CanvasActions";
-import { calcCameraToRevealBox } from "../utils/calcCameraToRevealBox";
-
-/** Margin kept between the revealed caret and the viewport edge, in screen px. */
-const REVEAL_PADDING = 24;
+import {
+	calcCameraToRevealBox,
+	FOCUS_REVEAL_PADDING,
+} from "../utils/calcCameraToRevealBox";
 
 type RevealTextEditCaretParams = {
 	/** The current viewport; its camera is read at reveal time, not reacted to. */
@@ -45,7 +45,7 @@ export const useRevealTextEditCaret = ({
 			const camera = calcCameraToRevealBox(
 				viewportRef.current,
 				caretWorldBox,
-				REVEAL_PADDING,
+				FOCUS_REVEAL_PADDING,
 			);
 			if (!camera) {
 				return;

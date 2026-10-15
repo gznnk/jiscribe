@@ -343,6 +343,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Moving the pick from the keyboard keeps it in view.** Stepping to another
+  cell or compartment with the arrows, or to another text slot with Tab, pans the
+  view just far enough to show the part it lands on. Only the part moved to is
+  followed, so a pick extended with Shift tracks its moving end; the zoom is
+  never changed, and picking with the pointer moves nothing.
 - **Undo and redo no longer jump to the middle of a large shape still on
   screen.** A change larger than the view used to be centred whatever was
   showing, so undoing a row added to a wide table pulled the view away from the

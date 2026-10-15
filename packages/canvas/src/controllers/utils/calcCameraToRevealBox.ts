@@ -6,6 +6,12 @@ import type { Viewport } from "../../rendering/Viewport";
 import type { Camera } from "../CanvasTypes";
 
 /**
+ * Margin kept around something small the view follows as the user moves it — a
+ * text caret, a picked part — in screen px.
+ */
+export const FOCUS_REVEAL_PADDING = 24;
+
+/**
  * What to show of a box longer than the visible span on an axis: the edge the
  * pan reaches first, or — unless some of the box is already in view — its
  * middle with both ends cut off evenly.
