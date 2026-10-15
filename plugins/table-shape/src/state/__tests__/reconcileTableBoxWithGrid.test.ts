@@ -159,8 +159,17 @@ describe("reconcileTableBoxWithGrid", () => {
 
 describe("reconcileTableBoxWithGrid and the layout cache", () => {
 	it("lays an outside write out once, under the state it hands back", () => {
+		// Text that wraps at every width here, so no cell is spared as one its
+		// column fits unbroken.
+		const wrappingText = "aaaaaa aaaaaa aaaaaa aaaaaa aaaaaa aaaaaa";
 		const table = reconcileTableBoxWithGrid(
-			makeTable({ columns: [{ width: 80 }, { width: 160 }] }),
+			makeTable({
+				columns: [{ width: 80 }, { width: 160 }],
+				text: cellsOf([
+					[wrappingText, wrappingText],
+					[wrappingText, wrappingText],
+				]),
+			}),
 		);
 		const dragged = draggedRightEdgeTo(table, 360);
 		measurerCount = 0;
@@ -173,6 +182,19 @@ describe("reconcileTableBoxWithGrid and the layout cache", () => {
 		expect(widthsOf(resized)).toEqual([120, 240]);
 		expect(measurerCount).toBe(4);
 		expect(laidOut.width).toBe(360);
+	});
+
+	it("measures no cell an outside write leaves fitting its column unbroken, as an outer resize does", () => {
+		const table = reconcileTableBoxWithGrid(
+			makeTable({ columns: [{ width: 80 }, { width: 160 }] }),
+		);
+		const dragged = draggedRightEdgeTo(table, 360);
+		measurerCount = 0;
+
+		const resized = reconcileTableBoxWithGrid(dragged);
+
+		expect(widthsOf(resized)).toEqual([120, 240]);
+		expect(measurerCount).toBe(0);
 	});
 
 	it("lays a grown grid out once, under the state it hands back", () => {
