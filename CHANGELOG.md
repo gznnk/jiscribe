@@ -336,6 +336,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **The object menu hangs under the picked text slot, not under the whole
+  shape.** With a slot, a cell, a row or a column picked, the menu is placed by
+  the boxes outlined around them, and moves when the pick moves to another one.
 - **The object menu offers Bold alone for text formatting, as one button on the
   menu itself.** The text-format dropdown, which held Bold, Italic, Underline and
   Strikethrough, is gone, and so is the row of four the menu used to lay out

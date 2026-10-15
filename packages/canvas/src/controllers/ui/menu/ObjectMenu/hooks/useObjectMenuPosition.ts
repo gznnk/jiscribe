@@ -1,3 +1,5 @@
+import { isTransformedFrame } from "@jiscribe/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 import {
 	type RefObject,
 	useLayoutEffect,
@@ -7,9 +9,15 @@ import {
 } from "react";
 
 import { useLingeringFlag } from "./useLingeringFlag";
+import type { ObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import type { CanvasSelection } from "../../../../selection/CanvasSelection";
+import { calcUnionBoundingBox } from "../../../../utils/buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
+import { calcTransformedRectBounds } from "../../../../utils/calcTransformedRectBounds";
+import { collectOutlinedPartRegions } from "../../../utils/collectOutlinedPartRegions";
 
 /** Distance between the ObjectMenu and the object (px) */
 const DISTANCE_FROM_OBJECT = 40;
@@ -35,7 +43,33 @@ type ObjectMenuPosition = {
 };
 
 /**
- * Computes the coordinates for positioning the menu below the selected object(s).
+ * World bounds of the outlined parts (a picked text slot, say), so the menu sits
+ * by the boxes drawn around them rather than by the whole object; null when no
+ * part is outlined or its owner has no transformed box.
+ */
+const calcOutlinedPartsBoundingBox = (
+	objects: Readonly<Record<string, ObjectState>>,
+	objectPartKind: ObjectPartKindRegistry,
+	selection: CanvasSelection,
+): BoundingBox | null => {
+	const partOwner = objects[selection.objectIds[0]];
+	if (partOwner === undefined || !isTransformedFrame(partOwner)) {
+		return null;
+	}
+	const partBoundsById: Record<string, BoundingBox> = {};
+	for (const { partId, region } of collectOutlinedPartRegions(
+		objects,
+		objectPartKind,
+		selection,
+	)) {
+		partBoundsById[partId] = calcTransformedRectBounds(region, partOwner);
+	}
+	return calcUnionBoundingBox(Object.keys(partBoundsById), partBoundsById);
+};
+
+/**
+ * Computes the coordinates for positioning the menu below the selected object(s),
+ * or below the picked parts when they are outlined (a text slot).
  *
  * Since the menu lives inside ScrollSyncedOverlay, coordinates are returned in the
  * canvas coordinate system. The overlay itself follows scrolling, so no viewport offset is needed.
@@ -68,7 +102,7 @@ export function useObjectMenuPosition(
 
 	// The menu sits below the selection's drawn extent, so a shape whose label
 	// hangs outside its geometry box must not have the menu land on the label.
-	const { objectVisualBounds } = useCanvasRegistries();
+	const { objectVisualBounds, objectPartKind } = useCanvasRegistries();
 
 	const [menuDimensions, setMenuDimensions] = useState({
 		width: 0,
@@ -160,9 +194,17 @@ export function useObjectMenuPosition(
 	const liveBounds = useMemo(
 		() =>
 			shouldRender
-				? calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds)
+				? (calcOutlinedPartsBoundingBox(objects, objectPartKind, selection) ??
+					calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds))
 				: null,
-		[shouldRender, selectedIds, objects, objectVisualBounds],
+		[
+			shouldRender,
+			selection,
+			selectedIds,
+			objects,
+			objectPartKind,
+			objectVisualBounds,
+		],
 	);
 
 	// The menu writes properties that resize what it is anchored to: a font size or
@@ -177,7 +219,9 @@ export function useObjectMenuPosition(
 	// viewport clamping and the menu's own measured size all keep updating, so
 	// panning or zooming with a dropdown open still places the menu correctly.
 	const isMenuInUse = objectMenuOpenId !== null || isPointerOverMenu;
-	const anchorKey = selectedIdsString;
+	// The picked part is part of the key, so moving to another slot (Tab) re-anchors
+	// even while the menu is in use.
+	const anchorKey = `${selectedIdsString}|${partKey ?? ""}`;
 	const latchedAnchorRef = useRef({ key: anchorKey, bounds: liveBounds });
 	if (
 		!shouldRender ||

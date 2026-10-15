@@ -183,4 +183,37 @@ test.describe("table cell selection", () => {
 			await outline.evaluate((element) => getComputedStyle(element).fill),
 		).not.toBe("none");
 	});
+
+	test("hangs the ObjectMenu under the picked cell rather than under the whole table", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		const menuCenterX = async (): Promise<number | undefined> => {
+			const box = await objectMenu.boundingBox();
+			return box === null ? undefined : box.x + box.width / 2;
+		};
+
+		// Diagonal cells, so both the column (center x) and the row (top) differ.
+		const menuTops: number[] = [];
+		const cellBottoms: number[] = [];
+		for (const cellId of ["r0c0", "r1c1"]) {
+			await clickCell(canvas, id, cellId);
+			const cell = await cellRect(canvas, id, cellId);
+			// The menu's left edge is rounded to whole px, so its center can sit half a px off.
+			await expect
+				.poll(async () =>
+					Math.abs(
+						((await menuCenterX()) ?? Infinity) - (cell.x + cell.width / 2),
+					),
+				)
+				.toBeLessThanOrEqual(1);
+			menuTops.push((await objectMenu.boundingBox())?.y ?? NaN);
+			cellBottoms.push(cell.y + cell.height);
+		}
+		// The gap below the cell is the same for both, so the menu follows the row.
+		expect(
+			Math.abs(menuTops[1] - menuTops[0] - (cellBottoms[1] - cellBottoms[0])),
+		).toBeLessThanOrEqual(1);
+	});
 });
