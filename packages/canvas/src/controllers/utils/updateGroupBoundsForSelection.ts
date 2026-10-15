@@ -9,8 +9,8 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * The whole root subtree is recomputed per selected id rather than the chain
  * above it, since a resized group's own frame is derived from the children the
  * resize just scaled. Shared by the transform drag's `dragEnd` and by the
- * property panel's `TRANSFORM_PROPERTY_UPDATE`, which have to leave the same
- * bounds behind.
+ * property panel's size and rotation edits (`TRANSFORM_PROPERTY_UPDATE`), which
+ * have to leave the same bounds behind.
  *
  * The batch call is what keeps a multi-selection to one copy of the objects map
  * (issue #160); ids naming nothing, and ids whose topmost ancestor is not a

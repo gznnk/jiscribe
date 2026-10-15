@@ -1,4 +1,8 @@
-import { copyObjectsRecord } from "./cowObjects";
+import {
+	copyObjectsRecord,
+	createCowObjects,
+	isCowObjects,
+} from "./cowObjects";
 import { updateGroupBounds } from "./updateGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
@@ -10,7 +14,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *
  * @param state - Current canvas controller state with updated object positions
  * @param groupId - ID of the group whose root subtree should be updated
- * @returns Updated canvas controller state with recalculated group bounds
+ * @returns Updated canvas controller state with recalculated group bounds; a copy-on-write view stays one (see updateGroupBoundsFromRoots)
  */
 export function updateGroupBoundsFromRoot(
 	state: CanvasControllerState,
@@ -21,14 +25,14 @@ export function updateGroupBoundsFromRoot(
 
 /**
  * Batch version of updateGroupBoundsFromRoot: resolves each group to its root,
- * dedupes the roots, and updates all their subtrees on a single copy of the
+ * dedupes the roots, and updates all their subtrees on a single writable
  * objects map. Use this over calling the single version in a loop, which would
  * clone the whole objects map once per group (issue #160).
  *
  * @param state - Current canvas controller state with updated object positions
  * @param groupIds - IDs of the groups whose root subtrees should be updated;
  *   read only, so a caller may hand over its own `selection.objectIds`
- * @returns Updated canvas controller state with recalculated group bounds
+ * @returns Updated canvas controller state with recalculated group bounds; its `objects` is a copy-on-write view when `state.objects` was one, and a plain Record otherwise
  */
 export function updateGroupBoundsFromRoots(
 	state: CanvasControllerState,
@@ -45,10 +49,15 @@ export function updateGroupBoundsFromRoots(
 		return state;
 	}
 
-	// Copied through copyObjectsRecord rather than spread: a vertex drag and a
-	// transform both reach here with the map still held as a copy-on-write view,
-	// and spreading one pays a Proxy trap per key for the identical result.
-	const updatedObjects = copyObjectsRecord(state.objects);
+	// A view stays a view (as in updateAffectedGroupBounds): a vertex or transform
+	// dragEnd and a TRANSFORM_PROPERTY_UPDATE preview hand one over, and copying it
+	// would cost O(all objects) per preview step and leave the content re-measure
+	// nothing to narrow its scan to (collectCowChangedKeys). handleGesture and the
+	// reducer flatten it. A plain Record is copied, so the commands and paste,
+	// which hand over one, get one back.
+	const updatedObjects = isCowObjects(state.objects)
+		? createCowObjects(state.objects)
+		: copyObjectsRecord(state.objects);
 	for (const rootGroupId of rootGroupIds) {
 		updateGroupsFromRoot(updatedObjects, rootGroupId);
 	}

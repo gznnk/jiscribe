@@ -470,14 +470,9 @@ export const handleTransformPropertyUpdate = (
 	switch (property) {
 		case "x":
 		case "y":
-			updatedState = applyStatedPosition(
-				state,
-				target,
-				property,
-				value,
-				registries,
-			);
-			break;
+			// Settled already: a translation leaves every frame inside the selection
+			// valid, and applyStatedPosition re-derives the ancestors above it.
+			return applyStatedPosition(state, target, property, value, registries);
 		case "width":
 		case "height":
 			updatedState = applyStatedSize(
