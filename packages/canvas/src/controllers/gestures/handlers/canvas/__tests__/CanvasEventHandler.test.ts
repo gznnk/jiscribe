@@ -540,9 +540,10 @@ describe("CanvasEventHandler", () => {
 	});
 
 	// A context-menu gesture selects what it landed on, so the menu acts on the
-	// pointed-at shape instead of on whatever was selected before. The decision
-	// itself comes from determineClickSelection, the same function the left click
-	// uses.
+	// pointed-at shape instead of on whatever was selected before. A target the
+	// selection already covers (itself or a selected ancestor group) keeps it;
+	// otherwise the decision comes from determineClickSelection, the same function
+	// the left click uses.
 	describe("context menu selection (right click / long press)", () => {
 		const makeTwoRectState = (
 			overrides: Partial<CanvasControllerState> = {},
@@ -631,6 +632,58 @@ describe("CanvasEventHandler", () => {
 
 			const nextState = CanvasEventHandler.handle(
 				state,
+				makeRightClickEvent({ targetId: "child" }),
+				registries,
+			);
+
+			expect(nextState.selection.objectIds).toEqual(["group"]);
+		});
+
+		const makeGroupState = (selectedIds: string[]): CanvasControllerState =>
+			makeTwoRectState({
+				objects: {
+					group: {
+						id: "group",
+						type: "group",
+						childIds: ["child", "sibling"],
+					},
+					child: { ...makeTextRect("child", ""), parentId: "group" },
+					sibling: { ...makeTextRect("sibling", ""), parentId: "group" },
+					b: makeTextRect("b", ""),
+				},
+				rootIds: ["group", "b"],
+				selection: selectionOf(selectedIds),
+			} as unknown as Partial<CanvasControllerState>);
+
+		it("keeps a selected group when one of its children is right-clicked", () => {
+			const state = makeGroupState(["group"]);
+
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeRightClickEvent({ targetId: "child" }),
+				registries,
+			);
+
+			expect(nextState.selection.objectIds).toBe(state.selection.objectIds);
+			expect(nextState.contextMenuPosition).not.toBeNull();
+		});
+
+		it("keeps a multi-selection when a child of a selected group in it is right-clicked", () => {
+			const state = makeGroupState(["group", "b"]);
+
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeRightClickEvent({ targetId: "child" }),
+				registries,
+			);
+
+			expect(nextState.selection.objectIds).toBe(state.selection.objectIds);
+			expect(nextState.contextMenuPosition).not.toBeNull();
+		});
+
+		it("selects the group when its child is right-clicked while another shape is selected", () => {
+			const nextState = CanvasEventHandler.handle(
+				makeGroupState(["b"]),
 				makeRightClickEvent({ targetId: "child" }),
 				registries,
 			);
