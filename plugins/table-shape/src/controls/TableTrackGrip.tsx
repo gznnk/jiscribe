@@ -13,9 +13,10 @@ import { calcSegmentPlacement } from "./calcSegmentPlacement";
  * table it heads at any zoom: the height of a column's heading and
  * the width of a row's. Enough to carry a three-digit row number upright
  * (GRIP_LABEL_FONT_SIZE) and still read as a margin beside the table rather than
- * as another row of it.
+ * as another row of it. Equal to the margin the canvas keeps around a picked
+ * cell it scrolls into view, so at 100% the view stops right at the grips' edge.
  */
-export const GRIP_THICKNESS = 22;
+export const GRIP_THICKNESS = 24;
 
 /**
  * A selected grip's face: the accent faded into the surface. The full accent
