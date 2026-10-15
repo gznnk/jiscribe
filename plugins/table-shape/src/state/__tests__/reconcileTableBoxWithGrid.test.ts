@@ -62,6 +62,7 @@ const makeTable = (overrides: Partial<TableState> = {}): TableState => {
 	return {
 		...grid,
 		...size,
+		minWidth: TABLE_MIN_COLUMN_WIDTH * 2,
 		cx: 380 + size.width / 2,
 		cy: 375 + size.height / 2,
 		...overrides,
@@ -145,6 +146,22 @@ describe("reconcileTableBoxWithGrid", () => {
 		const further = reconcileTableBoxWithGrid(draggedRightEdgeTo(clamped, 5));
 		expect(further.width).toBe(TABLE_MIN_COLUMN_WIDTH * 2);
 		expect(widthsOf(further)).toEqual(widthsOf(clamped));
+	});
+
+	it("keeps the narrowest grid on the state as minWidth, following the column count", () => {
+		const table = makeTable({
+			columns: [{ width: 120 }, { width: 120 }, { width: 120 }],
+			text: cellsOf([
+				["", "", ""],
+				["", "", ""],
+			]),
+		});
+		const reconciled = reconcileTableBoxWithGrid(table);
+
+		// The transform frame stops a dragged edge here itself, holding the opposite
+		// edge; the box derived above would hold the drawn left edge instead.
+		expect(reconciled.minWidth).toBe(TABLE_MIN_COLUMN_WIDTH * 3);
+		expect(reconcileTableBoxWithGrid(reconciled)).toBe(reconciled);
 	});
 
 	it("settles on a box the next frame hands straight back", () => {

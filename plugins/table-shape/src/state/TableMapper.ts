@@ -13,6 +13,7 @@ import {
 
 import type { TableState } from "./TableState";
 import { calcTableFrameSize } from "../layout/calcTableFrameSize";
+import { calcTableMinWidth } from "../layout/calcTableLayout";
 import { mapCellsToTextSlots } from "../schema/mapCellsToTextSlots";
 import { tableCellTextSlotId, TableFeatures } from "../schema/TableDoc";
 import type {
@@ -133,6 +134,7 @@ export const tableToState: ObjectMapperType<TableDoc, TableState>["toState"] = (
 		cy: center.y,
 		width: size.width,
 		height: size.height,
+		minWidth: calcTableMinWidth(columns),
 		columns,
 		rows,
 		text,

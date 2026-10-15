@@ -195,4 +195,41 @@ test.describe("table outer resize", () => {
 		// The grid is still drawn: the cells kept the height their one line asks for.
 		expect(stopped.leading.height).toBeCloseTo(before.leading.height, 0);
 	});
+
+	test("stops a left-edge drag at the narrowest grid with the right edge held", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const before = await tableOutlineRect(canvas, id);
+		const rightEdge = before.x + before.width;
+
+		// Past the minimum but short of the right edge: the floor is met by the
+		// transform frame, which knows the right edge is the one to hold. Left to the
+		// grid, the box would keep its drawn left corner and slide with the cursor.
+		await dragWidthHandleTo(canvas, "leftCenter", before, rightEdge - 20);
+
+		await expect
+			.poll(async () => Math.round((await tableOutlineRect(canvas, id)).width))
+			.toBeLessThan(MIN_COLUMN_WIDTH * 2 + 3);
+		const stopped = await tableOutlineRect(canvas, id);
+		expect(stopped.x + stopped.width).toBeCloseTo(rightEdge, 0);
+	});
+
+	test("flips a left-edge drag carried past the right edge onto its far side", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const before = await tableOutlineRect(canvas, id);
+		const rightEdge = before.x + before.width;
+
+		await dragWidthHandleTo(canvas, "leftCenter", before, rightEdge + 10);
+
+		// Narrower than the floor past the right edge: the table is the narrowest
+		// grid, starting from the edge it was flipped over.
+		await expect
+			.poll(async () => Math.round((await tableOutlineRect(canvas, id)).x))
+			.toBe(Math.round(rightEdge));
+		const flipped = await tableOutlineRect(canvas, id);
+		expect(flipped.width).toBeLessThan(MIN_COLUMN_WIDTH * 2 + 3);
+	});
 });

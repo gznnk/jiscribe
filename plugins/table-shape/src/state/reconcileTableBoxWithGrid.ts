@@ -1,6 +1,9 @@
 import { resizeTableFromDrawnCorner } from "./resizeTableFromDrawnCorner";
 import type { TableState } from "./TableState";
-import { calcTableColumnsWidth } from "../layout/calcTableLayout";
+import {
+	calcTableColumnsWidth,
+	calcTableMinWidth,
+} from "../layout/calcTableLayout";
 import { distributeTableWidthToColumns } from "../layout/distributeTableWidthToColumns";
 import {
 	readCachedTableLayout,
@@ -33,9 +36,12 @@ import {
  * TABLE_TRANSFORM_HANDLES); a height the grid disagrees with is always the grid's
  * answer.
  *
- * A width the grid cannot reach — below `columns.length * TABLE_MIN_COLUMN_WIDTH` —
+ * A width the grid cannot reach — below {@link calcTableMinWidth} —
  * leaves the derived box to win, so the table visibly stops instead of silently
- * narrowing.
+ * narrowing. That floor is also kept on the state as `minWidth`, for the transform
+ * frame to stop at itself: only it knows which edge is being dragged, and the box
+ * derived here keeps the drawn top-left corner — which, dragging the left edge, is
+ * the one under the cursor, so the table would slide along with it instead.
  *
  * Returning `state` itself when neither side moved is part of the contract
  * (ObjectContentResizer): callers run this on every frame of every gesture and skip
@@ -53,7 +59,7 @@ import {
  * on, which both caches compare against, so the re-measure core runs then
  * (REMEASURE_TEXT) is answered afresh.
  *
- * @param state - The table to measure; its `columns` / `rows` / `text` are read, and its box — and, on an outside write of the width, its `columns` — rewritten
+ * @param state - The table to measure; its `columns` / `rows` / `text` are read, and its box and `minWidth` — and, on an outside write of the width, its `columns` — rewritten
  * @returns The state with the two reconciled, or the same object when nothing moved
  */
 export const reconcileTableBoxWithGrid = (state: TableState): TableState => {
@@ -68,12 +74,14 @@ export const reconcileTableBoxWithGrid = (state: TableState): TableState => {
 			: distributeTableWidthToColumns(state.columns, state.width);
 	const source = columns === null ? state : { ...state, columns };
 	const layout = readCachedTableLayout(source);
+	const minWidth = calcTableMinWidth(source.columns);
 	const reconciled =
 		source === state &&
 		layout.width === state.width &&
-		layout.height === state.height
+		layout.height === state.height &&
+		state.minWidth === minWidth
 			? state
-			: resizeTableFromDrawnCorner(source, layout);
+			: { ...resizeTableFromDrawnCorner(source, layout), minWidth };
 	writeTableLayoutCache(reconciled, layout);
 	return reconciled;
 };

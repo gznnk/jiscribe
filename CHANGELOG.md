@@ -53,7 +53,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   switches between the two from the next pointer move.
 - **A table can be resized by its left and right edges**, the width change spread
   over every column in the proportions it holds. A column never goes under its
-  minimum, and a table dragged narrower than its columns can be simply stops.
+  minimum, and a table dragged narrower than its columns can be simply stops,
+  the edge opposite the dragged one held where it was.
   There are no handles on the height: a row's stored height is a lower bound its
   text raises, so the height follows the cells and a row is given one by dragging
   its boundary or the table's trailing edge. Both handles take a press over

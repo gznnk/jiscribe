@@ -1,6 +1,7 @@
 import { PRECISION } from "@jiscribe/canvas-sdk";
 import { roundToDecimal } from "@jiscribe/geometry";
 
+import { calcTableMinWidth } from "./calcTableLayout";
 import { TABLE_MIN_COLUMN_WIDTH } from "../schema/TableDoc";
 import type { TableColumnDoc } from "../schema/TableDoc";
 
@@ -134,7 +135,7 @@ const spreadRoundingResidue = (
  *
  * - **No column goes under {@link TABLE_MIN_COLUMN_WIDTH}.** One whose share would
  *   is held there and what that costs comes off the rest, in their own proportions.
- * - **A width below `columns.length * TABLE_MIN_COLUMN_WIDTH` cannot be met**, every
+ * - **A width below {@link calcTableMinWidth} cannot be met**, every
  *   column already being at the minimum. The grid is built at that floor instead and
  *   the table stops there rather than narrowing past it.
  *
@@ -154,10 +155,7 @@ export const distributeTableWidthToColumns = (
 	if (startColumns.length === 0) {
 		return null;
 	}
-	const width = Math.max(
-		tableWidth,
-		startColumns.length * TABLE_MIN_COLUMN_WIDTH,
-	);
+	const width = Math.max(tableWidth, calcTableMinWidth(startColumns));
 
 	const pinned = calcPinnedColumnFlags(startColumns, width);
 	const { freeWidth, freeTotal, freeCount } = calcFreeBudget(

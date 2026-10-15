@@ -2,7 +2,11 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/canvas-sdk/doc";
 import type { Rect } from "@jiscribe/geometry";
 
 import { readCachedCellTextHeight } from "./readCachedCellTextHeight";
-import { TABLE_DOC_DEFAULTS, tableCellTextSlotId } from "../schema/TableDoc";
+import {
+	TABLE_DOC_DEFAULTS,
+	TABLE_MIN_COLUMN_WIDTH,
+	tableCellTextSlotId,
+} from "../schema/TableDoc";
 import type {
 	TableCell,
 	TableColumnDoc,
@@ -142,6 +146,17 @@ export const calcTableRowTextFloor = (
 export const calcTableColumnsWidth = (
 	columns: readonly TableColumnDoc[],
 ): number => columns.reduce((total, column) => total + column.width, 0);
+
+/**
+ * Narrowest the table can be drawn: every column at {@link TABLE_MIN_COLUMN_WIDTH}.
+ * Also what the table hands the transform frame as its `minWidth`
+ * (reconcileTableBoxWithGrid), so a dragged edge stops there with the opposite
+ * edge held.
+ *
+ * @param columns - The columns, left to right; none gives 0
+ */
+export const calcTableMinWidth = (columns: readonly TableColumnDoc[]): number =>
+	columns.length * TABLE_MIN_COLUMN_WIDTH;
 
 /** The running edges of one track: the first edge, then one per size. */
 const accumulateEdges = (start: number, sizes: readonly number[]): number[] => {
