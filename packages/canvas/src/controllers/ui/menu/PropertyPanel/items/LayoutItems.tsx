@@ -5,7 +5,8 @@ import { isSelectionAutoHeight } from "../../../../commands/shape/ToggleAutoHeig
 import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { getSelectedLockAspectRatio } from "../../../../style/walk/getSelectedLockAspectRatio";
+import { resolveSelectedLockAspectRatio } from "../../../../style/walk/getSelectedLockAspectRatio";
+import { useSelectionStyle } from "../../SelectionStyleReaderContext";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
@@ -128,13 +129,19 @@ const RotationItemComponent: React.FC<BuiltinItemProps> = ({
 
 export const RotationItem = memo(RotationItemComponent);
 
-/** Whether a resize keeps the frame's proportions. */
+/**
+ * Whether a resize keeps the frame's proportions: `getSelectedLockAspectRatio`,
+ * the members' side read through the panel's reader rather than a walk of its own.
+ */
 const LockAspectRatioItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const isLocked = getSelectedLockAspectRatio(canvasState, registries);
+	const membersLockAspectRatio = useSelectionStyle("lockAspectRatio");
+	const isLocked = resolveSelectedLockAspectRatio(
+		canvasState.multiSelectGroup,
+		() => membersLockAspectRatio,
+	);
 
 	return (
 		<PropertyCheckbox

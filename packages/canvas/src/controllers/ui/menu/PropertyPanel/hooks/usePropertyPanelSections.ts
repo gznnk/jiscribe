@@ -1,7 +1,6 @@
-import { useMemo } from "react";
-
 import type { ObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { useMemoAcrossMoveDrag } from "../../../../hooks/useMemoAcrossMoveDrag";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
 import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
@@ -162,7 +161,9 @@ export const getPropertyPanelSections = (
 
 /**
  * Memoized hook wrapper around {@link getPropertyPanelSections}, recomputing
- * only when the selection changes.
+ * only when the selection or its objects change — and not for a move drag,
+ * which changes where the objects are and nothing a section is chosen by
+ * (useMemoAcrossMoveDrag).
  *
  * @param state - The current canvas controller state
  * @returns The sections in display order
@@ -170,12 +171,12 @@ export const getPropertyPanelSections = (
 export const usePropertyPanelSections = (
 	state: CanvasControllerState,
 ): PropertyPanelSection[] => {
-	const { selection, objects } = state;
+	const { selection } = state;
 	const { propertyPanel, objectPartKind } = useCanvasRegistries();
 
-	return useMemo(
+	return useMemoAcrossMoveDrag(
+		state,
 		() => getPropertyPanelSections(state, propertyPanel, objectPartKind),
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[selection, objects, propertyPanel, objectPartKind],
+		[selection, propertyPanel, objectPartKind],
 	);
 };
