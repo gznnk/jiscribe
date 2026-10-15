@@ -261,6 +261,68 @@ describe("calcVisibleObjectIds", () => {
 			});
 			expect(second.bboxCache.get("c")).not.toBe(first.bboxCache.get("c"));
 		});
+
+		it("reuses a connector's entry when an endpoint owner changed only in style", () => {
+			const connector = {
+				id: "c",
+				type: "connector",
+				points: [],
+				routing: "straight",
+				source: { owner: { id: "r" }, anchor: { kind: "center" } },
+				target: { anchor: { kind: "free", point: { x: 900, y: 400 } } },
+			} as unknown as ObjectState;
+			const owner = rect("r", 100, 400, 100, 100);
+			const first = calcVisibleObjectIds({
+				registries,
+				objects: { c: connector, r: owner },
+				rootIds: ["r", "c"],
+				viewport,
+			});
+			const restyled = { ...owner, fill: "#ff0000" } as ObjectState;
+			const second = calcVisibleObjectIds({
+				registries,
+				objects: { c: connector, r: restyled },
+				rootIds: ["r", "c"],
+				viewport,
+				prevCache: first.bboxCache,
+			});
+			// The box and the path it came from are carried over; the entry itself is
+			// renewed so the next frame's identity check sees the restyled owner.
+			expect(second.bboxCache.get("c")?.bbox).toBe(
+				first.bboxCache.get("c")?.bbox,
+			);
+			expect(second.bboxCache.get("c")?.resolved).toBe(
+				first.bboxCache.get("c")?.resolved,
+			);
+			expect(second.bboxCache.get("c")?.sourceOwner).toBe(restyled);
+			expect(second.bboxCache.get("r")).not.toBe(first.bboxCache.get("r"));
+		});
+
+		it("reuses a connector's entry as is while it and its owners are unchanged", () => {
+			const connector = {
+				id: "c",
+				type: "connector",
+				points: [],
+				routing: "straight",
+				source: { owner: { id: "r" }, anchor: { kind: "center" } },
+				target: { anchor: { kind: "free", point: { x: 900, y: 400 } } },
+			} as unknown as ObjectState;
+			const objects = { c: connector, r: rect("r", 100, 400, 100, 100) };
+			const first = calcVisibleObjectIds({
+				registries,
+				objects,
+				rootIds: ["r", "c"],
+				viewport,
+			});
+			const second = calcVisibleObjectIds({
+				registries,
+				objects: { ...objects },
+				rootIds: ["r", "c"],
+				viewport: { ...viewport, minX: viewport.minX + 10 },
+				prevCache: first.bboxCache,
+			});
+			expect(second.bboxCache.get("c")).toBe(first.bboxCache.get("c"));
+		});
 	});
 
 	describe("connectors hanging off shapes", () => {
@@ -306,6 +368,7 @@ describe("calcVisibleObjectIds", () => {
 				countingRegistries.objectOutline,
 				countingRegistries.objectAnchorRegion,
 				countingRegistries.objectExtraConnectPoints,
+				countingRegistries.objectGeometryKey,
 			);
 
 			expect(callsByCulling).toBeGreaterThan(0);
