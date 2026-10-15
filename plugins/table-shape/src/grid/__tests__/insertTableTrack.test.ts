@@ -88,10 +88,68 @@ describe("insertTableTrack", () => {
 	});
 
 	it("keeps the rows' stored bounds with the rows they belong to", () => {
-		const inserted = insertTableTrack(makeTable(), "row", 1);
+		const inserted = insertTableTrack(makeTable(), "row", 1, 0);
 
-		// The new row stores none, so it is drawn at whatever one empty line asks for.
-		expect(inserted.rows).toEqual([{ height: 50 }, {}, { height: 70 }]);
+		expect(inserted.rows).toEqual([
+			{ height: 50 },
+			{ height: 50 },
+			{ height: 70 },
+		]);
+	});
+
+	it("gives a new row the stored height of the source row, or none when it has none", () => {
+		const table = makeTable({ rows: [{}, { height: 70 }] });
+
+		expect(insertTableTrack(table, "row", 0, 1).rows).toEqual([
+			{ height: 70 },
+			{},
+			{ height: 70 },
+		]);
+		expect(insertTableTrack(table, "row", 2, 0).rows).toEqual([
+			{},
+			{ height: 70 },
+			{},
+		]);
+	});
+
+	it("styles each new cell as the source track's cell beside it, without its text", () => {
+		const table = makeTable({
+			text: {
+				...cellsOf([
+					["r0c0", "r0c1", "r0c2"],
+					["r1c0", "r1c1", "r1c2"],
+				]),
+				[tableCellTextSlotId(0, 1)]: {
+					text: "r0c1",
+					fill: "#ffeeaa",
+					fontWeight: "bold",
+					textAlign: "center",
+				},
+			},
+		});
+
+		// Column 1 picked, inserting left: the new column 1 copies the old column 1.
+		const withColumn = insertTableTrack(table, "column", 1, 1);
+		expect(withColumn.text[tableCellTextSlotId(0, 1)]).toEqual({
+			text: "",
+			fill: "#ffeeaa",
+			fontWeight: "bold",
+			textAlign: "center",
+		});
+		expect(withColumn.text[tableCellTextSlotId(1, 1)]).toEqual({ text: "" });
+
+		// Row 0 picked, inserting below: the new row 1 copies row 0.
+		const withRow = insertTableTrack(table, "row", 1, 0);
+		expect(withRow.text[tableCellTextSlotId(1, 1)]).toEqual({
+			text: "",
+			fill: "#ffeeaa",
+			fontWeight: "bold",
+			textAlign: "center",
+		});
+		// No key set to undefined, so an unstyled source still folds to bare text.
+		expect(Object.keys(withRow.text[tableCellTextSlotId(1, 0)])).toEqual([
+			"text",
+		]);
 	});
 
 	it("gives a new column the width of the source column, on either side of it", () => {

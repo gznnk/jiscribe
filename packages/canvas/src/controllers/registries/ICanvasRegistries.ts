@@ -112,6 +112,8 @@ export interface ICanvasRegistries {
 
 /** The slice of a `Command` the pure tree invokes (structural; not the `Command` type). */
 type CommandLike = {
+	/** Read to decide whether the command may run mid-drag (see `handleCommand`). */
+	category?: "edit" | "view" | "arrange" | "selection";
 	canExecute(
 		state: CanvasControllerState,
 		registries: ICanvasRegistries,

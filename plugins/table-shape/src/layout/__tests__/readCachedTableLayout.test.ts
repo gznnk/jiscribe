@@ -128,6 +128,28 @@ describe("readCachedTableLayout", () => {
 		expect(measurerCount).toBe(0);
 	});
 
+	it("keeps one entry per rows of a grid, so a row drag's start table and the one it hands back both hit", () => {
+		const start = makeTable();
+		const dragged = { ...start, rows: [{ height: 60 }, {}, {}] };
+
+		const startLayout = readCachedTableLayout(start);
+		const draggedLayout = readCachedTableLayout(dragged);
+
+		expect(draggedLayout).not.toBe(startLayout);
+		for (let frame = 0; frame < 3; frame++) {
+			expect(readCachedTableLayout(start)).toBe(startLayout);
+			expect(readCachedTableLayout(dragged)).toBe(draggedLayout);
+		}
+	});
+
+	it("caches a grid with no rows like any other", () => {
+		const table = { ...makeTable(), rows: undefined };
+
+		const first = readCachedTableLayout(table);
+
+		expect(readCachedTableLayout({ ...table })).toBe(first);
+	});
+
 	it("is left alone by calcTableFrameSize, which sizes objects nobody renders", () => {
 		const table = makeTable();
 		const held = readCachedTableLayout(table);
@@ -173,6 +195,18 @@ describe("writeTableLayoutCache", () => {
 
 		expect(readCachedTableLayout(table)).toBe(fresh);
 		expect(fresh).not.toBe(stale);
+	});
+
+	it("replaces the entry of its own rows alone, leaving another rows' entry of the same columns", () => {
+		const table = makeTable();
+		const otherRows = { ...table, rows: [{ height: 60 }, {}, {}] };
+		const otherLayout = readCachedTableLayout(otherRows);
+		const fresh = calcTableLayout(table);
+
+		writeTableLayoutCache(table, fresh);
+
+		expect(readCachedTableLayout(table)).toBe(fresh);
+		expect(readCachedTableLayout(otherRows)).toBe(otherLayout);
 	});
 
 	it("lets another object hand back a layout computed for one, measuring nothing", () => {

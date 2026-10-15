@@ -53,7 +53,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   switches between the two from the next pointer move.
 - **A table can be resized by its left and right edges**, the width change spread
   over every column in the proportions it holds. A column never goes under its
-  minimum, and a table dragged narrower than its columns can be simply stops.
+  minimum, and a table dragged narrower than its columns can be simply stops,
+  the edge opposite the dragged one held where it was.
   There are no handles on the height: a row's stored height is a lower bound its
   text raises, so the height follows the cells and a row is given one by dragging
   its boundary or the table's trailing edge. Both handles take a press over
@@ -79,8 +80,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   inserts an empty track beside the picked cell or track, and so do the Insert
   buttons the ObjectMenu and the properties sidebar offer while one is picked —
   a row's above and below, a column's left and right, a cell's all four. The
-  cells keep their contents as the grid renumbers around an insertion, and one
-  undo takes it back.
+  new track copies the picked one's width or height and its cells' fill and
+  typography, never their text, whichever side it lands on. The cells keep
+  their contents as the grid renumbers around an insertion, and one undo takes
+  it back.
 - **The arrow keys move a table's picked cell.** With a cell picked, an arrow
   picks the cell next to it in that direction instead of nudging the table, and
   at the edge of the grid it does nothing. A picked block of cells collapses to
@@ -333,6 +336,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **The object menu hangs under the picked text slot, not under the whole
+  shape.** With a slot, a cell, a row or a column picked, the menu is placed by
+  the boxes outlined around them, and moves when the pick moves to another one.
 - **The object menu offers Bold alone for text formatting, as one button on the
   menu itself.** The text-format dropdown, which held Bold, Italic, Underline and
   Strikethrough, is gone, and so is the row of four the menu used to lay out
@@ -676,6 +682,15 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
   now one copy of the map, whatever the selection holds. The bounds that come out
   are the same; what changes is the time the property sidebar's width and height
   fields take to answer a keystroke while several objects are selected.
+- **A shortcut pressed mid-drag no longer records an edit the canvas then
+  throws away.** Every drag frame is drawn from the state the drag started on,
+  so a command run while the pointer was still down — Ctrl+B, Delete, a paste,
+  an arrow-key nudge, select all, a plugin's own command — was undone on screen
+  by the next frame, yet its history entry and save request stayed. An undo
+  then restored a state nobody had seen kept, and the saved file disagreed with
+  the canvas. Such commands are now refused until the drag ends, from the
+  keyboard, a menu or the canvas handle alike; only the view commands (zoom,
+  fit, the panels, shortcut help) still run, as undo and redo already were.
 
 ## [0.11.0] - 2026-09-29
 
