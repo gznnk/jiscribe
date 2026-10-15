@@ -73,6 +73,7 @@ const addObjectToState = (
 		},
 		rootIds: [...state.rootIds, objectState.id],
 		selection: { objectIds: [objectState.id], part: null },
+		multiSelectGroup: null,
 		commitVersion: state.commitVersion + 1,
 	};
 };
