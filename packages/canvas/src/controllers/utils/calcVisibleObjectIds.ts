@@ -7,10 +7,10 @@ import {
 	resolveConnectorPointsCached,
 	resolveEndpointOwner,
 } from "../../connectors/endpoints";
+import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
-import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
@@ -23,14 +23,15 @@ export const VIEWPORT_CULL_MARGIN = 100;
 
 /**
  * Cached inputs and result of one object's bbox computation. An entry is
- * reusable only while every input identity is unchanged: the object itself,
- * and for connectors also both endpoint owners (a connector's geometry
- * follows its owners, so a moved owner must invalidate the connector's bbox).
+ * reusable only while the object itself is unchanged, and for a connector also
+ * the path it was boxed from: a connector's geometry follows its owners, so the
+ * box stands only while resolveConnectorPointsCached hands back the same path —
+ * which it does through a style-only edit of an owner, and not once one moves.
  */
 type VisibilityCacheEntry = {
 	obj: ObjectState;
-	sourceOwner: ObjectState | null;
-	targetOwner: ObjectState | null;
+	/** The path a connector was boxed from; null for any other object. */
+	resolved: ReturnType<typeof resolveConnectorPointsCached>;
 	bbox: BoundingBox | null;
 };
 
@@ -44,7 +45,10 @@ export type CullingRegistries = Pick<
 	| "objectOutline"
 	| "objectAnchorRegion"
 	| "objectExtraConnectPoints"
->;
+> & {
+	/** Read for the owners' state beyond their frame (resolveConnectorPointsCached). */
+	objectGeometryKey: ObjectGeometryKeyRegistry;
+};
 
 type CalcVisibleObjectIdsParams = {
 	objects: Record<string, ObjectState>;
@@ -100,47 +104,33 @@ export function calcVisibleObjectIds({
 	const visibleIds = new Set<string>();
 	const bboxCache: VisibilityBBoxCache = new Map();
 
-	const calcCullingConnectorBBox = (
-		connector: ConnectorState,
-		sourceOwner: ObjectState | null,
-		targetOwner: ObjectState | null,
-	): BoundingBox | null => {
-		const resolved = resolveConnectorPointsCached(
-			connector,
-			sourceOwner,
-			targetOwner,
-			registries.objectOutline,
-			registries.objectAnchorRegion,
-			registries.objectExtraConnectPoints,
-		);
-		return resolved
-			? calcConnectorPathBoundingBox(
-					connector,
-					listConnectorPathPoints(resolved),
-				)
-			: null;
-	};
-
 	const resolveBBox = (id: string, obj: ObjectState): BoundingBox | null => {
+		const prevEntry = prevCache?.get(id);
 		if (isConnectorState(obj)) {
-			const sourceOwner = resolveEndpointOwner(objects, obj.source);
-			const targetOwner = resolveEndpointOwner(objects, obj.target);
-			const prevEntry = prevCache?.get(id);
+			const resolved = resolveConnectorPointsCached(
+				obj,
+				resolveEndpointOwner(objects, obj.source),
+				resolveEndpointOwner(objects, obj.target),
+				registries.objectOutline,
+				registries.objectAnchorRegion,
+				registries.objectExtraConnectPoints,
+				registries.objectGeometryKey,
+			);
 			if (
 				prevEntry &&
 				prevEntry.obj === obj &&
-				prevEntry.sourceOwner === sourceOwner &&
-				prevEntry.targetOwner === targetOwner
+				prevEntry.resolved === resolved
 			) {
 				bboxCache.set(id, prevEntry);
 				return prevEntry.bbox;
 			}
-			const bbox = calcCullingConnectorBBox(obj, sourceOwner, targetOwner);
-			bboxCache.set(id, { obj, sourceOwner, targetOwner, bbox });
+			const bbox = resolved
+				? calcConnectorPathBoundingBox(obj, listConnectorPathPoints(resolved))
+				: null;
+			bboxCache.set(id, { obj, resolved, bbox });
 			return bbox;
 		}
 
-		const prevEntry = prevCache?.get(id);
 		if (prevEntry && prevEntry.obj === obj) {
 			bboxCache.set(id, prevEntry);
 			return prevEntry.bbox;
@@ -150,7 +140,7 @@ export function calcVisibleObjectIds({
 			objects,
 			registries.objectVisualBounds,
 		);
-		bboxCache.set(id, { obj, sourceOwner: null, targetOwner: null, bbox });
+		bboxCache.set(id, { obj, resolved: null, bbox });
 		return bbox;
 	};
 

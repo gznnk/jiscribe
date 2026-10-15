@@ -11,6 +11,7 @@ type GeometryRegistries = {
 	outline: Parameters<typeof resolveConnectorPointsCached>[3];
 	anchorRegion: Parameters<typeof resolveConnectorPointsCached>[4];
 	extraConnectPoints: Parameters<typeof resolveConnectorPointsCached>[5];
+	geometryKey: Parameters<typeof resolveConnectorPointsCached>[6];
 };
 
 const resolveCachedThrough = (
@@ -26,6 +27,7 @@ const resolveCachedThrough = (
 		registries.outline,
 		registries.anchorRegion,
 		registries.extraConnectPoints,
+		registries.geometryKey,
 	);
 
 const centerOf = (id: string): EndpointRef =>
@@ -54,7 +56,9 @@ const diamond = (id: string, cx: number): ObjectState =>
 	}) as unknown as ObjectState;
 
 /** Registries counting how often the outline is asked for. */
-const countingRegistries = (): GeometryRegistries & {
+const countingRegistries = (
+	geometryKey: GeometryRegistries["geometryKey"] = { get: () => undefined },
+): GeometryRegistries & {
 	outlineCalls: () => number;
 } => {
 	let calls = 0;
@@ -74,6 +78,7 @@ const countingRegistries = (): GeometryRegistries & {
 		},
 		anchorRegion: { get: () => undefined },
 		extraConnectPoints: { get: () => undefined },
+		geometryKey,
 		outlineCalls: () => calls,
 	};
 };
@@ -133,6 +138,45 @@ describe("resolveConnectorPointsCached", () => {
 		expect(after?.source.x).toBeGreaterThan(before?.source.x ?? Infinity);
 	});
 
+	it("hands back the same answer when an owner is replaced by a copy differing only in style", () => {
+		const registries = countingRegistries();
+		const connector = connectorBetween("a", "b");
+		const a = diamond("a", 0);
+		const b = diamond("b", 300);
+
+		const first = resolveCachedThrough(connector, a, b, registries);
+		const callsAfterFirst = registries.outlineCalls();
+		const restyledA = { ...a, fill: "#ff0000" } as ObjectState;
+		const second = resolveCachedThrough(connector, restyledA, b, registries);
+
+		expect(second).toBe(first);
+		expect(registries.outlineCalls()).toBe(callsAfterFirst);
+	});
+
+	it("resolves again when only an owner's geometry key changes", () => {
+		const registries = countingRegistries({
+			get: () => (obj) => (obj as { tail?: number }).tail,
+		});
+		const connector = connectorBetween("a", "b");
+		const a = diamond("a", 0);
+		const b = diamond("b", 300);
+
+		const first = resolveCachedThrough(
+			connector,
+			{ ...a, tail: 1 } as ObjectState,
+			b,
+			registries,
+		);
+		const second = resolveCachedThrough(
+			connector,
+			{ ...a, tail: 2 } as ObjectState,
+			b,
+			registries,
+		);
+
+		expect(second).not.toBe(first);
+	});
+
 	it("never hands one canvas's answer to another", () => {
 		const connector = connectorBetween("a", "b");
 		const a = diamond("a", 0);
@@ -142,6 +186,7 @@ describe("resolveConnectorPointsCached", () => {
 			outline: { get: () => undefined },
 			anchorRegion: { get: () => undefined },
 			extraConnectPoints: { get: () => undefined },
+			geometryKey: { get: () => undefined },
 		};
 
 		resolveCachedThrough(connector, a, b, withOutline);
