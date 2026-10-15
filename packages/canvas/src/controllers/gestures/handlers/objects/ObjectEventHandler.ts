@@ -501,6 +501,9 @@ export const ObjectEventHandler: GestureHandler = {
 					// leaves the slot unselected unless the object already was the whole
 					// selection (selectPartByClick).
 					selection: selectTextSlot(nextState.selection, targetObject, slotId),
+					// The preceding click is a no-op on a member of a multi-selection, so
+					// the group it leaves behind is dropped with the selection it wrapped.
+					multiSelectGroup: null,
 					// The click that precedes the double-click leaves an already-selected
 					// slot untouched, so the submenu open over it is closed here.
 					objectMenuOpenId: null,

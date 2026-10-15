@@ -595,6 +595,29 @@ describe("ObjectEventHandler - text slot selection", () => {
 		});
 	});
 
+	it("drops the multiSelectGroup when a double click on one member of a multi-selection opens its slot", () => {
+		// The click before the double click leaves a multi-selection as it was, so
+		// the group wrapping it is still there when the selection collapses here.
+		const state = {
+			...makeSlotState(["rec-1", "rect-2"], null),
+			multiSelectGroup: { id: "multi-select-group" },
+		} as unknown as CanvasControllerState;
+		const next = ObjectEventHandler.handle(
+			state,
+			{
+				...makeSlotClickEvent("rec-1", textSlotPart("rows")),
+				type: "doubleClick",
+			} as CanvasEvent,
+			registries,
+		);
+		expect(next.selection).toEqual({
+			objectIds: ["rec-1"],
+			part: textSlotPartSelection("rows"),
+		});
+		expect(next.multiSelectGroup).toBeNull();
+		expect(next.textEditState).toEqual({ kind: "shape", text: "id: string" });
+	});
+
 	it("keeps the selection reference when the slot it opens is already picked", () => {
 		const state = makeSlotState(["rec-1"], {
 			kind: TEXT_SLOT_PART_KIND,

@@ -93,6 +93,21 @@ describe("StencilLibraryItemHandler", () => {
 		expect(next.commitVersion).toBe(1);
 	});
 
+	it("a click that places a shape drops the multiSelectGroup of the selection it replaces", () => {
+		const state = {
+			...makeState(),
+			selection: selectionOf(["rect-1", "rect-2"]),
+			multiSelectGroup: { id: "multi-select-group" },
+		} as unknown as CanvasControllerState;
+		const next = StencilLibraryItemHandler.handle(
+			state,
+			makeEvent("click", "item:pin"),
+			registries,
+		);
+		expect(next.selection.objectIds).toEqual([next.rootIds[0]]);
+		expect(next.multiSelectGroup).toBeNull();
+	});
+
 	it("a click that places a shape commits an open text edit onto its own owner first", () => {
 		const edited = {
 			id: "rect-1",
