@@ -20,8 +20,8 @@ export type TableInsertTarget = {
 	at: number;
 	/**
 	 * The referenced track the new one is put next to, 0-based along the axis: the
-	 * lowest referenced index for `"before"`, the highest for `"after"`. A new
-	 * column copies its width.
+	 * lowest referenced index for `"before"`, the highest for `"after"`. The new
+	 * track copies its width or height and its cells' styling (insertTableTrack).
 	 */
 	besideIndex: number;
 };

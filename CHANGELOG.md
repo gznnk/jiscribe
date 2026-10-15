@@ -79,8 +79,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   inserts an empty track beside the picked cell or track, and so do the Insert
   buttons the ObjectMenu and the properties sidebar offer while one is picked —
   a row's above and below, a column's left and right, a cell's all four. The
-  cells keep their contents as the grid renumbers around an insertion, and one
-  undo takes it back.
+  new track copies the picked one's width or height and its cells' fill and
+  typography, never their text, whichever side it lands on. The cells keep
+  their contents as the grid renumbers around an insertion, and one undo takes
+  it back.
 - **The arrow keys move a table's picked cell.** With a cell picked, an arrow
   picks the cell next to it in that direction instead of nudging the table, and
   at the edge of the grid it does nothing. A picked block of cells collapses to
