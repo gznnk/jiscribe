@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import {
+	resolveConnectorPoints,
+	resolveConnectorPointsCached,
+} from "../../../connectors/endpoints";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import { outlinedPlugin } from "../../__tests__/support/outlinedPlugin";
@@ -229,6 +233,52 @@ describe("collectConnectorPoints", () => {
 		expect(points).not.toBeNull();
 		expect(points![0].x).toBeCloseTo(0, 5);
 		expect(points![0].y).toBeCloseTo(25, 5);
+	});
+
+	it("reuses the route the renderer cached while nothing it read was replaced", () => {
+		const connector = outlinedCenteredConnector();
+		const objects = outlinedObjects();
+		const rendered = resolveConnectorPointsCached(
+			connector,
+			objects.ol1,
+			null,
+			registries.objectOutline,
+			registries.objectAnchorRegion,
+			registries.objectExtraConnectPoints,
+		);
+
+		const collect = (owners: Record<string, ObjectState>) =>
+			collectConnectorPoints(
+				connector,
+				owners,
+				registries.objectOutline,
+				registries.objectAnchorRegion,
+				registries.objectExtraConnectPoints,
+			);
+		const first = collect(objects);
+		const second = collect(objects);
+
+		expect(first![0]).toBe(rendered!.source);
+		expect(first![first!.length - 1]).toBe(rendered!.target);
+		// A fresh array each call, so a caller slicing or reordering it cannot
+		// reach the cached answer.
+		expect(second).not.toBe(first);
+		expect(second).toEqual(first);
+
+		const movedOwners = { ol1: { ...objects.ol1, cx: 10 } as ObjectState };
+		const moved = collect(movedOwners);
+		expect(moved![0]).not.toBe(rendered!.source);
+		expect(moved![0]).toEqual(
+			resolveConnectorPoints(
+				connector,
+				movedOwners.ol1,
+				null,
+				registries.objectOutline,
+				registries.objectAnchorRegion,
+				registries.objectExtraConnectPoints,
+			)!.source,
+		);
+		expect(moved![0]).not.toEqual(rendered!.source);
 	});
 
 	it("falls back to the bounding box when they are omitted", () => {
