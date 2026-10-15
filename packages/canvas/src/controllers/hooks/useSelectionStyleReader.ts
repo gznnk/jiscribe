@@ -1,6 +1,5 @@
-import { useMemo } from "react";
-
 import type { CanvasControllerState } from "../CanvasTypes";
+import { useMemoAcrossMoveDrag } from "./useMemoAcrossMoveDrag";
 import { useCanvasRegistries } from "../registries/CanvasRegistriesContext";
 import { createSelectionStyleReader } from "../style/walk/readSelectionStyle";
 import type { SelectionStyleReader } from "../ui/menu/SelectionStyleReaderContext";
@@ -14,22 +13,24 @@ import type { SelectionStyleReader } from "../ui/menu/SelectionStyleReaderContex
  * Bound to the fields the walk reads (SelectionStyleSource) rather than to the
  * whole state, so a pan or a zoom re-renders the rows without walking the
  * selection again; the walk runs once per reader however many rows ask
- * (createSelectionStyleReader).
+ * (createSelectionStyleReader). A move drag keeps the reader too
+ * (useMemoAcrossMoveDrag): it changes no style, only where the objects are.
  *
  * @param canvasState - The state the surface is drawn for; only its SelectionStyleSource fields are read, and a new reader is made when one of them changes
- * @returns The reader, stable while those fields and the registries are
+ * @returns The reader, stable while those fields and the registries are, and through a move drag
  */
 export const useSelectionStyleReader = (
 	canvasState: CanvasControllerState,
 ): SelectionStyleReader => {
 	const registries = useCanvasRegistries();
 	const { objects, selection, textEditState } = canvasState;
-	return useMemo(
+	return useMemoAcrossMoveDrag(
+		canvasState,
 		() =>
 			createSelectionStyleReader(
 				{ objects, selection, textEditState },
 				registries,
 			),
-		[objects, selection, textEditState, registries],
+		[selection, textEditState, registries],
 	);
 };

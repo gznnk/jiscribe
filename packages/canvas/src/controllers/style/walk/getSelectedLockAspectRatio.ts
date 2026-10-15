@@ -3,6 +3,7 @@ import type { StyleIntentRegistries } from "./StyleIntentRegistries";
 import { DEFAULT_LOCK_ASPECT_RATIO } from "../../../states/objects/base/TransformState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { selectionValueOrFirst } from "../SelectionValue";
+import type { SelectionValue } from "../SelectionValue";
 
 /**
  * Whether a resize of the current selection keeps its proportions.
@@ -23,12 +24,25 @@ import { selectionValueOrFirst } from "../SelectionValue";
 export const getSelectedLockAspectRatio = (
 	state: CanvasControllerState,
 	registries: StyleIntentRegistries,
-): boolean => {
-	if (state.multiSelectGroup !== null) {
-		return state.multiSelectGroup.lockAspectRatio ?? DEFAULT_LOCK_ASPECT_RATIO;
-	}
-	return selectionValueOrFirst(
+): boolean =>
+	resolveSelectedLockAspectRatio(state.multiSelectGroup, () =>
 		readSelectionStyle(state, "lockAspectRatio", registries),
-		DEFAULT_LOCK_ASPECT_RATIO,
 	);
+
+/**
+ * {@link getSelectedLockAspectRatio} with the members' side handed in, for a
+ * caller already holding a reader bound to the selection (the sidebar's row).
+ *
+ * @param multiSelectGroup - The state's `multiSelectGroup`; when non-null its own flag is the answer and `readMembersLock` is not called
+ * @param readMembersLock - What the selection reads for the `lockAspectRatio` intent, as `readSelectionStyle` reports it
+ * @returns Whether the selection is locked; {@link DEFAULT_LOCK_ASPECT_RATIO} when neither side carries the flag
+ */
+export const resolveSelectedLockAspectRatio = (
+	multiSelectGroup: CanvasControllerState["multiSelectGroup"],
+	readMembersLock: () => SelectionValue<boolean>,
+): boolean => {
+	if (multiSelectGroup !== null) {
+		return multiSelectGroup.lockAspectRatio ?? DEFAULT_LOCK_ASPECT_RATIO;
+	}
+	return selectionValueOrFirst(readMembersLock(), DEFAULT_LOCK_ASPECT_RATIO);
 };
