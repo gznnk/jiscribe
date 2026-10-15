@@ -5,6 +5,7 @@ import { createTestState } from "./support/createTestState";
 import { runCommands, testReducerRegistries } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { isCowObjects } from "../../utils/cowObjects";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 
 // Start with rect-1 selected (cx=5, cy=5)
@@ -48,6 +49,37 @@ describe("canvasReducer (integration)", () => {
 			expect(state.history.past).toHaveLength(2);
 			expect(state.historyCoalesce.recorded).toBeNull();
 			expect(state.historyCoalesce.pending).toBeNull();
+		});
+
+		it("leaves plain records in the state and its history, the nudge writing through a view", () => {
+			let state = createState();
+			state = runCommands(state, "move-right", "move-right");
+			expect(isCowObjects(state.objects)).toBe(false);
+			for (const snapshot of [...state.history.past, state.history.present]) {
+				if (snapshot.source) {
+					expect(isCowObjects(snapshot.source.objects)).toBe(false);
+				}
+			}
+		});
+
+		it("settles the frame of the group a nudged member sits in", () => {
+			// A deep-frozen state goes in (applyActions), so the group frame has to
+			// be settled on the view rather than written into the map it came from.
+			let state = runCommands(
+				createTestState(twoRectsDoc, {
+					selection: selectionOf(["rect-1", "rect-2"]),
+				}),
+				"group",
+			);
+			const groupId = state.selection.objectIds[0];
+			const groupCxBefore = (
+				state.objects[groupId] as unknown as { cx: number }
+			).cx;
+			state = runCommands(state, "move-right-large");
+			expect(isCowObjects(state.objects)).toBe(false);
+			expect(
+				(state.objects[groupId] as unknown as { cx: number }).cx,
+			).toBeCloseTo(groupCxBefore + 10);
 		});
 
 		it("nudges in different directions are still coalesced as consecutive nudges", () => {
