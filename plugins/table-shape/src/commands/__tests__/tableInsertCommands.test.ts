@@ -172,6 +172,33 @@ describe("TABLE_INSERT_COMMANDS", () => {
 		]);
 	});
 
+	it("gives a new column the width of the picked one, on either side of it", () => {
+		const unevenTable = {
+			...TABLE,
+			width: 600,
+			columns: [{ width: 100 }, { width: 200 }, { width: 300 }],
+			text: cellsOf([
+				["r0c0", "r0c1", "r0c2"],
+				["r1c0", "r1c1", "r1c2"],
+			]),
+		} as TableState;
+		const pickColumn = (index: string) =>
+			canvasWith(
+				{ kind: "column", ranges: [{ anchorId: index, focusId: index }] },
+				{ objects: { [TABLE.id]: unevenTable } },
+			);
+
+		expect(
+			tableAfter("table.insertColumnRight", pickColumn("1")).columns,
+		).toEqual([{ width: 100 }, { width: 200 }, { width: 200 }, { width: 300 }]);
+		expect(
+			tableAfter("table.insertColumnLeft", pickColumn("1")).columns,
+		).toEqual([{ width: 100 }, { width: 200 }, { width: 200 }, { width: 300 }]);
+		expect(
+			tableAfter("table.insertColumnRight", pickColumn("2")).columns,
+		).toEqual([{ width: 100 }, { width: 200 }, { width: 300 }, { width: 300 }]);
+	});
+
 	it("moves the live selection with the grid", () => {
 		const state = canvasWith(cellSelection(["r1c0"]));
 		const next = commandById("table.insertRowAbove").execute?.(

@@ -94,7 +94,33 @@ describe("insertTableTrack", () => {
 		expect(inserted.rows).toEqual([{ height: 50 }, {}, { height: 70 }]);
 	});
 
-	it("gives a new column the width of the one it was put next to", () => {
+	it("gives a new column the width of the source column, on either side of it", () => {
+		const table = makeTable({
+			columns: [{ width: 100 }, { width: 200 }, { width: 300 }],
+		});
+
+		// Picking column 1: inserting right lands at 2, left at 1; both copy 200.
+		expect(insertTableTrack(table, "column", 2, 1).columns).toEqual([
+			{ width: 100 },
+			{ width: 200 },
+			{ width: 200 },
+			{ width: 300 },
+		]);
+		expect(insertTableTrack(table, "column", 1, 1).columns).toEqual([
+			{ width: 100 },
+			{ width: 200 },
+			{ width: 200 },
+			{ width: 300 },
+		]);
+		expect(insertTableTrack(table, "column", 3, 2).columns).toEqual([
+			{ width: 100 },
+			{ width: 200 },
+			{ width: 300 },
+			{ width: 300 },
+		]);
+	});
+
+	it("without a source column, copies the column standing at the index", () => {
 		expect(insertTableTrack(makeTable(), "column", 0).columns).toEqual([
 			{ width: 80 },
 			{ width: 80 },
@@ -102,7 +128,7 @@ describe("insertTableTrack", () => {
 			{ width: 120 },
 		]);
 		// Past the right edge there is no column standing at the index; the last one
-		// is what it was put next to.
+		// is copied.
 		expect(insertTableTrack(makeTable(), "column", 3).columns).toEqual([
 			{ width: 80 },
 			{ width: 100 },

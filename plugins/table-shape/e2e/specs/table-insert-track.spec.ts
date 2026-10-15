@@ -48,7 +48,7 @@ test.describe("table insert track", () => {
 		await expect.poll(async () => cellCount(canvas, id)).toBe(8);
 	});
 
-	test("inserts a column of the width of the one it was put next to", async ({
+	test("inserts a column of the width of the picked one", async ({
 		canvas,
 	}) => {
 		const id = await placeTableWithCellPicked(canvas, "r0c0");

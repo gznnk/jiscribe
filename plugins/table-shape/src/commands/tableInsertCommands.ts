@@ -123,7 +123,12 @@ const createTableInsertCommand = (
 		if (target === null) {
 			return state;
 		}
-		const inserted = insertTableTrack(target.table, spec.axis, target.at);
+		const inserted = insertTableTrack(
+			target.table,
+			spec.axis,
+			target.at,
+			target.besideIndex,
+		);
 		return commitEdit({
 			...state,
 			objects: { ...state.objects, [target.objectId]: inserted },

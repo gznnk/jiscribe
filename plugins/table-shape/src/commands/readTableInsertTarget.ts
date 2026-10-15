@@ -18,6 +18,12 @@ export type TableInsertTarget = {
 	table: TableState;
 	/** Where the new track goes, 0-based along the axis. */
 	at: number;
+	/**
+	 * The referenced track the new one is put next to, 0-based along the axis: the
+	 * lowest referenced index for `"before"`, the highest for `"after"`. A new
+	 * column copies its width.
+	 */
+	besideIndex: number;
 };
 
 /**
@@ -32,7 +38,7 @@ export type TableInsertTarget = {
  * @param axis - The direction the new track would run in
  * @param side - Which end of the referenced span it lands on: `"before"` at the lowest referenced index, `"after"` one past the highest
  * @param objectPartKind - The canvas's part-kind registry (`registries.objectPartKind`), handed straight to readTableTrackTarget
- * @returns The table and the insertion point, or null when the selection is not one table's, names no track along `axis`, or a cell is being edited
+ * @returns The table, the insertion point and the track it is put next to, or null when the selection is not one table's, names no track along `axis`, or a cell is being edited
  */
 export const readTableInsertTarget = (
 	state: CanvasControllerState,
@@ -45,9 +51,12 @@ export const readTableInsertTarget = (
 		return null;
 	}
 	const { objectId, table, indices } = selected;
+	const besideIndex =
+		side === "before" ? Math.min(...indices) : Math.max(...indices);
 	return {
 		objectId,
 		table,
-		at: side === "before" ? Math.min(...indices) : Math.max(...indices) + 1,
+		at: side === "before" ? besideIndex : besideIndex + 1,
+		besideIndex,
 	};
 };
