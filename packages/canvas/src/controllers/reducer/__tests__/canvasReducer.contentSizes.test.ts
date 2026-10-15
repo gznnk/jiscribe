@@ -12,6 +12,7 @@ import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
+import { isCowObjects } from "../../utils/cowObjects";
 import { createCanvasReducer } from "../canvasReducer";
 
 /**
@@ -136,6 +137,50 @@ describe("canvasReducer (integration)", () => {
 			const after = canvasReducer(state, { type: "REMEASURE_TEXT" });
 
 			expect(after.history).toBe(state.history);
+		});
+	});
+
+	describe("STYLE_INTENT", () => {
+		/** Measured box of the fixture's text at another font size. */
+		const measuredBoxAt = (fontSize: number) =>
+			calcTextObjectFrameSize("hello", resolveTextObjectFont({ fontSize }));
+
+		const selectedTextState = (): CanvasControllerState =>
+			createTestState(docWithText("hello"), {
+				selection: selectionOf(["text-1"]),
+			});
+
+		it("measures a preview at the new size and hands it back plain", () => {
+			// The view the style walk wrote through is flattened only after the
+			// re-measure, which must still reach the object the walk wrote.
+			const after = canvasReducer(selectedTextState(), {
+				type: "STYLE_INTENT",
+				intent: { kind: "fontSize", size: 32 },
+				commit: false,
+			});
+
+			expect(boxOf(after, "text-1")).toEqual({
+				...measuredBoxAt(32),
+				left: TEXT_ORIGIN.x,
+				top: TEXT_ORIGIN.y,
+			});
+			expect(isCowObjects(after.objects)).toBe(false);
+		});
+
+		it("records a commit over a plain record", () => {
+			const after = canvasReducer(selectedTextState(), {
+				type: "STYLE_INTENT",
+				intent: { kind: "fontSize", size: 32 },
+				commit: true,
+			});
+
+			expect(boxOf(after, "text-1")).toEqual({
+				...measuredBoxAt(32),
+				left: TEXT_ORIGIN.x,
+				top: TEXT_ORIGIN.y,
+			});
+			expect(isCowObjects(after.objects)).toBe(false);
+			expect(after.history.past).toHaveLength(1);
 		});
 	});
 

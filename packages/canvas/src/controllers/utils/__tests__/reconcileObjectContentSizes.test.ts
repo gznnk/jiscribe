@@ -6,7 +6,11 @@ import { resolveTextObjectFont } from "../../../states/objects/primitives/text/r
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { createCowObjects, materializeObjects } from "../cowObjects";
+import {
+	collectCowChangedKeys,
+	createCowObjects,
+	isCowObjects,
+} from "../cowObjects";
 import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 
 /** The real per-type wiring, so only `text` is re-measured here. */
@@ -398,17 +402,33 @@ describe("reconcileObjectContentSizes", () => {
 			expect(next.objects.t1).toEqual(textObject("t1", "hello"));
 		});
 
-		it("hands back a plain record, so nothing downstream reads through the view", () => {
-			const previous = stateOf([textObject("t1", "hello")]);
+		it("hands back a view still narrowed to what was written, base untouched", () => {
+			// A slider or resize frame: copying the map here would cost O(all
+			// objects) per frame; whoever handed over the view flattens it.
+			const previous = stateOf([textObject("t1", "hello"), rectObject("r1")]);
 			const objects = createCowObjects(previous.objects);
 			objects.t1 = withStaleBox(textObject("t1", "hello world"));
 			const state = { ...previous, objects };
 
 			const next = reconcileObjectContentSizes(state, previous, contentResizer);
 
-			// materializeObjects passes a plain record through by reference, so this
-			// is the test for "the view did not survive the pass".
-			expect(materializeObjects(next.objects)).toBe(next.objects);
+			expect(isCowObjects(next.objects)).toBe(true);
+			expect(collectCowChangedKeys(next.objects, previous.objects)).toEqual(
+				new Set(["t1"]),
+			);
+			expect(next.objects.t1).toEqual(textObject("t1", "hello world"));
+			expect(objects.t1).toEqual(withStaleBox(textObject("t1", "hello world")));
+			expect(previous.objects.t1).toEqual(textObject("t1", "hello"));
+		});
+
+		it("hands back a plain record for a plain record", () => {
+			const previous = stateOf([textObject("t1", "hello")]);
+			const state = stateOf([withStaleBox(textObject("t1", "hello world"))]);
+
+			const next = reconcileObjectContentSizes(state, previous, contentResizer);
+
+			expect(isCowObjects(next.objects)).toBe(false);
+			expect(next.objects).not.toBe(state.objects);
 		});
 	});
 });
