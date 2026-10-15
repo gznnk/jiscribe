@@ -1,6 +1,7 @@
 import { collectCowChangedKeys } from "./cowObjects";
 import { updateAffectedGroupBounds } from "./updateAffectedGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -22,11 +23,12 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *   and that is what this covers (`handleCommand`, the selection-control
  *   write-back). It is the half a plugin reaches, so it settles without the
  *   plugin naming anything — which is the point: there is no call for a plugin
- *   author to forget. A rewritten group is recomputed itself as well as its
- *   ancestors, so a writer that takes a child out of a group (its `childIds`
- *   changed) leaves the frame fitting the children that remain. A group left
- *   with no children keeps its previous frame and stays in the map; removing it
- *   is the writer's call.
+ *   author to forget. A group whose `childIds` the transition replaced is
+ *   recomputed itself as well as its ancestors, so a writer that takes a child
+ *   out of a group leaves the frame fitting the children that remain; a group
+ *   that only moved with its children keeps the frame it was moved to. A group
+ *   left with no children keeps its previous frame and stays in the map;
+ *   removing it is the writer's call.
  *
  * The one automatic pass that came before this
  * ({@link import("./reconcileObjectContentSizes").reconcileObjectContentSizes})
@@ -36,7 +38,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *
  * @param state - The transition's resulting state; its `objects` are what the group frames are recomputed from
  * @param previousState - The state the transition started from, supplying the references compared against; passing `state` itself returns it unchanged
- * @returns The same state reference when neither a group nor anything inside one was rewritten; otherwise a state with those frames recomputed
+ * @returns The same state reference when nothing inside a group was rewritten and no group's membership changed; otherwise a state with those frames recomputed
  */
 export const reconcileGroupBounds = (
 	state: CanvasControllerState,
@@ -48,8 +50,25 @@ export const reconcileGroupBounds = (
 
 	const rewrittenIds: string[] = [];
 	const collectIfRewritten = (id: string, object: ObjectState): void => {
-		if (object !== previousState.objects[id]) {
-			rewrittenIds.push(id);
+		const previousObject = previousState.objects[id];
+		if (object === previousObject) {
+			return;
+		}
+		rewrittenIds.push(id);
+		// updateAffectedGroupBounds settles the groups above an id, so a group whose
+		// membership changed is named through a child it still holds; one left
+		// empty has nothing to recompute from.
+		if (
+			isGroupState(object) &&
+			isGroupState(previousObject) &&
+			object.childIds !== previousObject.childIds
+		) {
+			const remainingChildId = object.childIds.find(
+				(childId) => state.objects[childId] !== undefined,
+			);
+			if (remainingChildId !== undefined) {
+				rewrittenIds.push(remainingChildId);
+			}
 		}
 	};
 
@@ -77,5 +96,5 @@ export const reconcileGroupBounds = (
 
 	return rewrittenIds.length === 0
 		? state
-		: updateAffectedGroupBounds(state, rewrittenIds, true);
+		: updateAffectedGroupBounds(state, rewrittenIds);
 };

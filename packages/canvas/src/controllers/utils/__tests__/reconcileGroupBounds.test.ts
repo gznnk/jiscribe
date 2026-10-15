@@ -203,6 +203,23 @@ describe("reconcileGroupBounds", () => {
 		expect(cyOf(result, "g1")).toBe(100);
 	});
 
+	it("a group rewritten with the same members → keeps the frame the writer gave it", () => {
+		const previous = makeState({
+			g1: group("g1", ["r1"], 100, 20),
+			r1: rect("r1", 100, 20, "g1"),
+		});
+		const nextGroup = {
+			...(group("g1", [], 130, 20) as unknown as Record<string, unknown>),
+			childIds: (previous.objects.g1 as unknown as { childIds: string[] })
+				.childIds,
+		} as unknown as ObjectState;
+		const next = makeState({ g1: nextGroup, r1: previous.objects.r1 });
+
+		const result = reconcileGroupBounds(next, previous);
+
+		expect(cyOf(result, "g1")).toBe(130);
+	});
+
 	it("does not mutate the state it is given", () => {
 		const previous = makeState({
 			g1: group("g1", ["r1"], 100, 20),

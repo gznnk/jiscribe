@@ -35,14 +35,12 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * to.
  *
  * @param state - Current canvas controller state, already holding the changed objects
- * @param changedIds - IDs of the objects whose geometry changed; ids with no parent contribute nothing unless `includeChangedGroups` names them
- * @param includeChangedGroups - When true, a changed id that is itself a group is recomputed too (its `childIds` may be what changed); defaults to false, settling ancestors only
+ * @param changedIds - IDs of the objects whose geometry changed; ids with no parent contribute nothing
  * @returns Updated canvas controller state with recalculated group bounds; its `objects` is a copy-on-write view when `state.objects` was one, and a plain Record otherwise
  */
 export function updateAffectedGroupBounds(
 	state: CanvasControllerState,
 	changedIds: readonly string[],
-	includeChangedGroups = false,
 ): CanvasControllerState {
 	const affectedGroupIds = new Set<string>();
 
@@ -51,9 +49,6 @@ export function updateAffectedGroupBounds(
 		const obj = state.objects[changedId];
 		if (!obj) {
 			continue;
-		}
-		if (includeChangedGroups && obj.type === "group") {
-			affectedGroupIds.add(changedId);
 		}
 
 		// Collect all ancestor groups (parent, grandparent, etc.)
