@@ -682,6 +682,15 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
   now one copy of the map, whatever the selection holds. The bounds that come out
   are the same; what changes is the time the property sidebar's width and height
   fields take to answer a keystroke while several objects are selected.
+- **A shortcut pressed mid-drag no longer records an edit the canvas then
+  throws away.** Every drag frame is drawn from the state the drag started on,
+  so a command run while the pointer was still down — Ctrl+B, Delete, a paste,
+  an arrow-key nudge, select all, a plugin's own command — was undone on screen
+  by the next frame, yet its history entry and save request stayed. An undo
+  then restored a state nobody had seen kept, and the saved file disagreed with
+  the canvas. Such commands are now refused until the drag ends, from the
+  keyboard, a menu or the canvas handle alike; only the view commands (zoom,
+  fit, the panels, shortcut help) still run, as undo and redo already were.
 
 ## [0.11.0] - 2026-09-29
 

@@ -532,6 +532,11 @@ export const createCanvasReducer =
 			}
 
 			case "PASTE": {
+				// Paste is a command executed by callback, so it misses the mid-drag
+				// refusal in handleCommand and takes the same one here.
+				if (state.activeDrag !== null) {
+					return state;
+				}
 				const pasteResult = handlePaste(state, action.data, registries);
 				const resizedResult = reconcileObjectContentSizes(
 					pasteResult,
