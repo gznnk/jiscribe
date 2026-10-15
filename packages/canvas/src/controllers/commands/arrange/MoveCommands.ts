@@ -3,7 +3,6 @@ import type { Point } from "@jiscribe/geometry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
-import { materializeObjects } from "../../utils/cowObjects";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -86,9 +85,12 @@ const createMoveCommand = (
 				objectBehavior: registries.objectBehavior,
 			});
 			// A nudge is a committing operation, so recompute and commit the parent group bounds each time.
-			// The moveSelection result is a COW view; flatten it before it enters history.
+			// The moveSelection result is a COW view, left one so the passes after this
+			// narrow their scan to the moved IDs (collectCowChangedKeys); every route a
+			// command result takes into history flattens it (the COMMAND reducer case,
+			// handleGesture's close-out for a menu click).
 			const moved = updateAffectedGroupBounds(
-				{ ...state, objects: materializeObjects(objects), multiSelectGroup },
+				{ ...state, objects, multiSelectGroup },
 				state.selection.objectIds,
 			);
 			// Coalesce consecutive nudges to the same selection (including key repeat) into

@@ -7,6 +7,7 @@ import { createTestRegistries } from "../../../registries/createCanvasRegistries
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { collectCowChangedKeys, isCowObjects } from "../../../utils/cowObjects";
 import { moveCommands } from "../MoveCommands";
 
 const registries = createTestRegistries();
@@ -151,6 +152,19 @@ describe("moveCommands", () => {
 			const next = commandById("move-right").execute(state, registries);
 			expect(next.multiSelectGroup?.cx).toBe(51);
 			expect(next.multiSelectGroup?.cy).toBe(50);
+		});
+
+		it("hands back a copy-on-write view narrowed to the moved ID, the source untouched", () => {
+			// The reducer flattens it (the COMMAND case); flattening here would leave
+			// the passes in between a full scan each.
+			const objects = { a: makeRect("a", 0, 0), b: makeRect("b", 100, 100) };
+			const state = makeState({ selection: selectionOf(["a"]), objects });
+			const next = commandById("move-right").execute(state, registries);
+			expect(isCowObjects(next.objects)).toBe(true);
+			expect(collectCowChangedKeys(next.objects, objects)).toEqual(
+				new Set(["a"]),
+			);
+			expect((objects.a as unknown as { cx: number }).cx).toBe(0);
 		});
 
 		it("increments commitVersion", () => {
