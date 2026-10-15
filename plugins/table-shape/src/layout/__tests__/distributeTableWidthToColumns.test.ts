@@ -39,6 +39,20 @@ describe("distributeTableWidthToColumns", () => {
 		]);
 	});
 
+	it("keeps every column at the minimum when the shares round up past the width", () => {
+		const resized = distributeTableWidthToColumns(
+			columnsOf([30, 30, 30, 30]),
+			96.0002,
+		);
+
+		// Four shares of 24.00005 round to 24.0001 and overshoot by 0.0002, more than
+		// any one column holds above the minimum.
+		for (const width of widthsOf(resized)) {
+			expect(width).toBeGreaterThanOrEqual(TABLE_MIN_COLUMN_WIDTH);
+		}
+		expect(sumOf(resized)).toBeCloseTo(96.0002, 9);
+	});
+
 	it("holds a column that would fall under the minimum, at the rest's expense", () => {
 		const resized = distributeTableWidthToColumns(columnsOf([200, 40]), 60);
 

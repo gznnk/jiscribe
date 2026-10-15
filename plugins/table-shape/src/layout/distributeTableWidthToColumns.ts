@@ -90,24 +90,38 @@ const calcPinnedColumnFlags = (
 };
 
 /**
- * Which column carries the rounding residue: the widest of the ones not pinned at
- * the minimum, so the nudge can never push a column under it.
+ * Gives the rounding residue to the columns not pinned at the minimum, widest
+ * first. A positive residue all goes to the widest; a negative one takes each
+ * column down at most to {@link TABLE_MIN_COLUMN_WIDTH} and carries the rest on,
+ * since shares rounded up together can overshoot by more than any one column holds
+ * above it. The columns' slack always covers it: the grid is never asked for less
+ * than its minimum.
  *
- * @returns The column's index, or null when every column is pinned, which happens
- *   only at exactly the grid's minimum width — where the residue is 0 anyway,
- *   every share being the minimum itself
+ * @param widths - Rounded widths, one per column; rewritten in place
+ * @param pinned - One flag per column, true where it is held at the minimum and so
+ *   left alone
+ * @param residue - What the rounded widths fall short of the total by; negative
+ *   when they overshoot it
  */
-const findResidueColumnIndex = (
+const spreadRoundingResidue = (
 	widths: number[],
-	pinned: boolean[],
-): number | null =>
-	widths.reduce<number | null>(
-		(widest, width, index) =>
-			pinned[index] || (widest !== null && widths[widest] >= width)
-				? widest
-				: index,
-		null,
-	);
+	pinned: readonly boolean[],
+	residue: number,
+): void => {
+	const freeIndices = widths
+		.map((_, index) => index)
+		.filter((index) => !pinned[index])
+		.sort((left, right) => widths[right] - widths[left]);
+	let remaining = roundToDecimal(residue, PRECISION.SIZE);
+	for (const index of freeIndices) {
+		if (remaining === 0) {
+			return;
+		}
+		const taken = Math.max(remaining, TABLE_MIN_COLUMN_WIDTH - widths[index]);
+		widths[index] = roundToDecimal(widths[index] + taken, PRECISION.SIZE);
+		remaining = roundToDecimal(remaining - taken, PRECISION.SIZE);
+	}
+};
 
 /**
  * The column widths a table of `tableWidth` is made of, each column keeping the
@@ -125,7 +139,7 @@ const findResidueColumnIndex = (
  *   the table stops there rather than narrowing past it.
  *
  * Widths are rounded to `PRECISION.SIZE`, as a document stores them, and the residue
- * the rounding leaves is given to one column so the grid sums to what was asked to
+ * the rounding leaves is handed back, widest column first, so the grid sums to what was asked to
  * within that precision. Left spread, each frame of a drag would read the sum as one
  * more outside write and the table would creep.
  *
@@ -160,17 +174,8 @@ export const distributeTableWidthToColumns = (
 			PRECISION.SIZE,
 		),
 	);
-	const residueColumn = findResidueColumnIndex(widths, pinned);
-	if (residueColumn !== null) {
-		const rounded = widths.reduce(
-			(total, columnWidth) => total + columnWidth,
-			0,
-		);
-		widths[residueColumn] = roundToDecimal(
-			widths[residueColumn] + (width - rounded),
-			PRECISION.SIZE,
-		);
-	}
+	const rounded = widths.reduce((total, columnWidth) => total + columnWidth, 0);
+	spreadRoundingResidue(widths, pinned, width - rounded);
 
 	if (
 		widths.every(
