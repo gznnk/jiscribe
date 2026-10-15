@@ -54,7 +54,11 @@ export type Command = {
 	 * Resolved via `messages.commandLabels[id]` (host override) → this label.
 	 */
 	label: string | LocaleMessages<string>;
-	/** Category of the command */
+	/**
+	 * Category of the command. Only a `"view"` command runs while a drag is under
+	 * way; any other, or one without a category, is refused until the drag ends
+	 * (see handleCommand).
+	 */
 	category?: "edit" | "view" | "arrange" | "selection";
 
 	/**
