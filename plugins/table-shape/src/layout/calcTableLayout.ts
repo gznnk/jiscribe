@@ -2,11 +2,8 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/canvas-sdk/doc";
 import type { Rect } from "@jiscribe/geometry";
 
 import { readCachedCellTextHeight } from "./readCachedCellTextHeight";
-import {
-	TABLE_DOC_DEFAULTS,
-	TABLE_MIN_COLUMN_WIDTH,
-	tableCellTextSlotId,
-} from "../schema/TableDoc";
+import { readTableCellTextSlotIdRow } from "../schema/tableCellTextSlotIdCache";
+import { TABLE_DOC_DEFAULTS, TABLE_MIN_COLUMN_WIDTH } from "../schema/TableDoc";
 import type {
 	TableCell,
 	TableColumnDoc,
@@ -26,7 +23,7 @@ export type TableLayoutSource = {
 	columns?: readonly TableColumnDoc[];
 	/** The rows, top to bottom; each height is a lower bound the cells may push past. */
 	rows?: readonly TableRowDoc[];
-	/** The cells, keyed by {@link tableCellTextSlotId}; a key the grid has no cell for measures as empty. */
+	/** The cells, keyed by {@link import("../schema/TableDoc").tableCellTextSlotId}; a key the grid has no cell for measures as empty. */
 	text?: Record<string, TableCell>;
 	/** Rule width in px; absent resolves the same way the drawing does (the type's defaults, then SHAPE_STYLE_FALLBACK). */
 	strokeWidth?: number;
@@ -59,7 +56,7 @@ export type TableLayout = {
 	 */
 	readonly rowEdgeYs: readonly number[];
 	/**
-	 * One rect per cell of the grid, keyed by {@link tableCellTextSlotId} in row-major
+	 * One rect per cell of the grid, keyed by {@link import("../schema/TableDoc").tableCellTextSlotId} in row-major
 	 * order. Neighbours share an edge exactly, so the rects tile the table with no
 	 * gap and no overlap.
 	 */
@@ -69,12 +66,6 @@ export type TableLayout = {
 	/** Table height: the resolved row heights summed. */
 	readonly height: number;
 };
-
-/** The cell ids of one row, left to right: what both the measuring and the rects are keyed by. */
-const collectRowCellIds = (rowIndex: number, columnCount: number): string[] =>
-	Array.from({ length: columnCount }, (_unused, columnIndex) =>
-		tableCellTextSlotId(rowIndex, columnIndex),
-	);
 
 /**
  * Height one row is drawn at: its stored height as the lower bound, raised to
@@ -129,7 +120,7 @@ export const calcTableRowTextFloor = (
 	const columns = state.columns ?? [];
 	return calcRowHeight(
 		NO_ROW_BOUND,
-		collectRowCellIds(rowIndex, columns.length),
+		readTableCellTextSlotIdRow(rowIndex, columns.length),
 		columns,
 		state.text,
 		resolveTableStrokeWidth(state),
@@ -190,7 +181,7 @@ export const calcTableLayout = (state: TableLayoutSource): TableLayout => {
 	const strokeWidth = resolveTableStrokeWidth(state);
 
 	const cellIdsByRow = rows.map((_, rowIndex) =>
-		collectRowCellIds(rowIndex, columns.length),
+		readTableCellTextSlotIdRow(rowIndex, columns.length),
 	);
 	const rowHeights = rows.map((row, rowIndex) =>
 		calcRowHeight(

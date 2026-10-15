@@ -8,6 +8,7 @@ import type {
 	TextSlotStyle,
 } from "@jiscribe/doc";
 
+import { readTableCellTextSlotId } from "./tableCellTextSlotIdCache";
 import type { Prettify } from "../../../../packages/utility-types/src";
 
 /**
@@ -159,7 +160,7 @@ export const TABLE_CELL_STYLE_DEFAULTS = {
  * @returns The slot id, e.g. `r0c2` for the third cell of the first row
  */
 export const tableCellTextSlotId = (row: number, column: number): string =>
-	`r${row}c${column}`;
+	readTableCellTextSlotId(row, column);
 
 /** The grammar {@link tableCellTextSlotId} writes, and the only spelling read back. */
 const TABLE_CELL_TEXT_SLOT_ID_PATTERN = /^r(\d+)c(\d+)$/;
