@@ -5,12 +5,14 @@ import type { BoundingBox, Point } from "@jiscribe/geometry";
 import {
 	listConnectorPathPoints,
 	resolveConnectorPoints,
+	resolveConnectorPointsCached,
 	resolveEndpointOwner,
 } from "../../connectors/endpoints";
 import { calcConnectorLabelAnchor } from "../../connectors/label/calcConnectorLabelAnchor";
 import { resolveConnectorLabelBox } from "../../rendering/objects/connector/ConnectorLabel/utils/connectorLabelLayout";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
@@ -32,6 +34,11 @@ import type { ConnectorState } from "../../states/objects/connector/ConnectorSta
  * @param extraConnectPointsRegistry - Per-canvas ObjectExtraConnectPointsRegistry, the other
  *   companion of `outlineRegistry`; omitted = an endpoint on a type-declared anchor collapses
  *   onto the owner's center
+ * @param geometryKeyRegistry - Per-canvas ObjectGeometryKeyRegistry; with it and the three
+ *   above the route comes from the cache the renderer and viewport culling fill
+ *   (resolveConnectorPointsCached), omitted = routed afresh
+ * @returns A new array each call, whose point objects are shared with the renderer's cached
+ *   route when all four registries are passed — copy a point before writing to it
  */
 export const collectConnectorPoints = (
 	connector: ConnectorState,
@@ -42,18 +49,37 @@ export const collectConnectorPoints = (
 		ObjectExtraConnectPointsRegistry,
 		"get"
 	> | null,
+	geometryKeyRegistry?: Pick<ObjectGeometryKeyRegistry, "get"> | null,
 ): Point[] | null => {
 	const sourceObj = resolveEndpointOwner(objects, connector.source);
 	const targetObj = resolveEndpointOwner(objects, connector.target);
 
-	const resolved = resolveConnectorPoints(
-		connector,
-		sourceObj,
-		targetObj,
-		outlineRegistry,
-		anchorRegionRegistry,
-		extraConnectPointsRegistry,
-	);
+	// With all four registries this is the route the renderer and viewport
+	// culling resolve (resolveConnectorPointsCached), so an unchanged connector
+	// is not routed again. The answer is shared with them: callers read the
+	// points and never write to them.
+	const resolved =
+		outlineRegistry &&
+		anchorRegionRegistry &&
+		extraConnectPointsRegistry &&
+		geometryKeyRegistry
+			? resolveConnectorPointsCached(
+					connector,
+					sourceObj,
+					targetObj,
+					outlineRegistry,
+					anchorRegionRegistry,
+					extraConnectPointsRegistry,
+					geometryKeyRegistry,
+				)
+			: resolveConnectorPoints(
+					connector,
+					sourceObj,
+					targetObj,
+					outlineRegistry,
+					anchorRegionRegistry,
+					extraConnectPointsRegistry,
+				);
 	if (!resolved) {
 		return null;
 	}
