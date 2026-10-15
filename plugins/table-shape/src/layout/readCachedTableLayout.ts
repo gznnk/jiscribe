@@ -2,33 +2,37 @@ import { readTextMeasurementGeneration } from "@jiscribe/canvas-sdk/doc";
 
 import { calcTableLayout } from "./calcTableLayout";
 import type { TableLayout, TableLayoutSource } from "./calcTableLayout";
-import type { TableColumnDoc } from "../schema/TableDoc";
+import type { TableColumnDoc, TableRowDoc } from "../schema/TableDoc";
 
 /**
- * One cached layout, with the inputs besides the columns it was computed from and
+ * One cached layout, with the inputs besides the tracks it was computed from and
  * the measurement generation its cells were measured under.
  */
 type TableLayoutCacheEntry = {
 	generation: number;
-	rows: TableLayoutSource["rows"];
 	text: TableLayoutSource["text"];
 	strokeWidth: TableLayoutSource["strokeWidth"];
 	layout: TableLayout;
 };
 
+/** Stands in for absent `rows` as a key, a WeakMap taking objects alone. */
+const NO_ROWS: readonly TableRowDoc[] = [];
+
 /**
  * The layout last computed for each grid, kept against its `columns` array and
- * matched on the other three inputs by identity. Keyed on the inputs rather than
- * on the object, because a move or a rotation hands over a new object every
- * frame of its drag while leaving all four untouched, and none of them is read
- * by the layout. Weak, so an entry lives exactly as long as the columns it was
- * derived from; one per columns array, so two tables never evict each other
- * unless they share one, which only costs a recomputation. An entry from an
- * earlier measurement generation (web fonts arriving since) misses as well.
+ * then its `rows` array, and matched on the other two inputs by identity. Keyed
+ * on the inputs rather than on the object, because a move or a rotation hands
+ * over a new object every frame of its drag while leaving all four untouched,
+ * and none of them is read by the layout. Keyed on both tracks because a row
+ * drag lays out the table it started from and the one it hands back in the same
+ * frame, which share their columns. Weak, so an entry lives exactly as long as
+ * the tracks it was derived from; two tables never evict each other unless they
+ * share both, which only costs a recomputation. An entry from an earlier
+ * measurement generation (web fonts arriving since) misses as well.
  */
 const tableLayoutCache = new WeakMap<
 	readonly TableColumnDoc[],
-	TableLayoutCacheEntry
+	WeakMap<readonly TableRowDoc[], TableLayoutCacheEntry>
 >();
 
 /**
@@ -48,11 +52,12 @@ export const readCachedTableLayout = (
 	if (source.columns === undefined) {
 		return calcTableLayout(source);
 	}
-	const cached = tableLayoutCache.get(source.columns);
+	const cached = tableLayoutCache
+		.get(source.columns)
+		?.get(source.rows ?? NO_ROWS);
 	if (
 		cached !== undefined &&
 		cached.generation === readTextMeasurementGeneration() &&
-		cached.rows === source.rows &&
 		cached.text === source.text &&
 		cached.strokeWidth === source.strokeWidth
 	) {
@@ -78,9 +83,13 @@ export const writeTableLayoutCache = (
 	if (source.columns === undefined) {
 		return;
 	}
-	tableLayoutCache.set(source.columns, {
+	let layoutsByRows = tableLayoutCache.get(source.columns);
+	if (layoutsByRows === undefined) {
+		layoutsByRows = new WeakMap();
+		tableLayoutCache.set(source.columns, layoutsByRows);
+	}
+	layoutsByRows.set(source.rows ?? NO_ROWS, {
 		generation: readTextMeasurementGeneration(),
-		rows: source.rows,
 		text: source.text,
 		strokeWidth: source.strokeWidth,
 		layout,
