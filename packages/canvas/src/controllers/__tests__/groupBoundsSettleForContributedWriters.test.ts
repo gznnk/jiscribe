@@ -147,6 +147,61 @@ describe("group bounds settle for contributed writers", () => {
 		expect(groupHeight(next)).toBe(GROWN_HEIGHT);
 	});
 
+	it("a contributed command moving a child out to the root → the group frame shrinks to the rest", () => {
+		const registries = createTestRegistries();
+		const remainingId = "r2";
+		registries.command.register({
+			id: COMMAND_ID,
+			label: "Move child to root",
+			canExecute: () => true,
+			execute: (state) => {
+				const group = state.objects[GROUP_ID] as unknown as {
+					childIds: string[];
+				};
+				return {
+					...state,
+					objects: {
+						...state.objects,
+						[GROUP_ID]: {
+							...state.objects[GROUP_ID],
+							childIds: group.childIds.filter((id) => id !== CHILD_ID),
+						} as ObjectState,
+						[CHILD_ID]: {
+							...state.objects[CHILD_ID],
+							parentId: undefined,
+						} as ObjectState,
+					},
+					rootIds: [...state.rootIds, CHILD_ID],
+					commitVersion: state.commitVersion + 1,
+				};
+			},
+		});
+		const base = stateWithGroupedRect(registries);
+		// A second child below the first, the group frame spanning both.
+		const state: CanvasControllerState = {
+			...base,
+			objects: {
+				...base.objects,
+				[remainingId]: {
+					...base.objects[CHILD_ID],
+					id: remainingId,
+					cy: 200,
+				} as ObjectState,
+				[GROUP_ID]: {
+					...base.objects[GROUP_ID],
+					childIds: [CHILD_ID, remainingId],
+					cy: 150,
+					height: 140,
+				} as ObjectState,
+			},
+		};
+
+		const next = handleCommand(state, COMMAND_ID, registries);
+
+		expect(groupHeight(next)).toBe(START_HEIGHT);
+		expect((next.objects[GROUP_ID] as unknown as { cy: number }).cy).toBe(200);
+	});
+
 	it("a command that changed nothing → the state comes back untouched", () => {
 		const registries = createTestRegistries();
 		registries.command.register({

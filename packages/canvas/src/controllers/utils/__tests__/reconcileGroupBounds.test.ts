@@ -53,6 +53,10 @@ const makeState = (
 const heightOf = (state: CanvasControllerState, id: string): number =>
 	(state.objects[id] as unknown as { height: number }).height;
 
+/** The cached vertical center of the named group. */
+const cyOf = (state: CanvasControllerState, id: string): number =>
+	(state.objects[id] as unknown as { cy: number }).cy;
+
 describe("reconcileGroupBounds", () => {
 	it("the same objects map → returns the same reference", () => {
 		const state = makeState({ r1: rect("r1", 100, 20) });
@@ -122,6 +126,98 @@ describe("reconcileGroupBounds", () => {
 		const next = makeState(objects);
 
 		expect(heightOf(reconcileGroupBounds(next, previous), "g1")).toBe(70);
+	});
+
+	it("a child moved out of its group to the root → the group frame shrinks to the rest", () => {
+		const previous = makeState({
+			g1: group("g1", ["r1", "r2"], 150, 120),
+			r1: rect("r1", 100, 20, "g1"),
+			r2: rect("r2", 200, 20, "g1"),
+		});
+		// Only the membership changed: no remaining child's box moved.
+		const next = makeState({
+			...previous.objects,
+			g1: group("g1", ["r1"], 150, 120),
+			r2: rect("r2", 200, 20),
+		});
+
+		const result = reconcileGroupBounds(next, previous);
+
+		expect(heightOf(result, "g1")).toBe(20);
+		expect(cyOf(result, "g1")).toBe(100);
+	});
+
+	it("a child removed from a nested group → the inner group settles before the outer", () => {
+		const previous = makeState({
+			outer: group("outer", ["inner", "r3"], 150, 120),
+			inner: group("inner", ["r1", "r2"], 150, 120, "outer"),
+			r1: rect("r1", 100, 20, "inner"),
+			r2: rect("r2", 200, 20, "inner"),
+			r3: rect("r3", 100, 20, "outer"),
+		});
+		const next = makeState({
+			...previous.objects,
+			inner: group("inner", ["r1"], 150, 120, "outer"),
+			r2: rect("r2", 200, 20),
+		});
+
+		const result = reconcileGroupBounds(next, previous);
+
+		expect(heightOf(result, "inner")).toBe(20);
+		expect(heightOf(result, "outer")).toBe(20);
+		expect(cyOf(result, "outer")).toBe(100);
+	});
+
+	it("a root object moved into a group → the group frame grows to take it in", () => {
+		const previous = makeState({
+			g1: group("g1", ["r1"], 100, 20),
+			r1: rect("r1", 100, 20, "g1"),
+			r2: rect("r2", 200, 20),
+		});
+		const next = makeState({
+			...previous.objects,
+			g1: group("g1", ["r1", "r2"], 100, 20),
+			r2: rect("r2", 200, 20, "g1"),
+		});
+
+		const result = reconcileGroupBounds(next, previous);
+
+		expect(heightOf(result, "g1")).toBe(120);
+		expect(cyOf(result, "g1")).toBe(150);
+	});
+
+	it("a group emptied by the writer → stays in the map with its previous frame", () => {
+		const previous = makeState({
+			g1: group("g1", ["r1"], 100, 20),
+			r1: rect("r1", 100, 20, "g1"),
+		});
+		const next = makeState({
+			g1: group("g1", [], 100, 20),
+			r1: rect("r1", 100, 20),
+		});
+
+		const result = reconcileGroupBounds(next, previous);
+
+		expect(result.objects.g1).toBeDefined();
+		expect(heightOf(result, "g1")).toBe(20);
+		expect(cyOf(result, "g1")).toBe(100);
+	});
+
+	it("a group rewritten with the same members → keeps the frame the writer gave it", () => {
+		const previous = makeState({
+			g1: group("g1", ["r1"], 100, 20),
+			r1: rect("r1", 100, 20, "g1"),
+		});
+		const nextGroup = {
+			...(group("g1", [], 130, 20) as unknown as Record<string, unknown>),
+			childIds: (previous.objects.g1 as unknown as { childIds: string[] })
+				.childIds,
+		} as unknown as ObjectState;
+		const next = makeState({ g1: nextGroup, r1: previous.objects.r1 });
+
+		const result = reconcileGroupBounds(next, previous);
+
+		expect(cyOf(result, "g1")).toBe(130);
 	});
 
 	it("does not mutate the state it is given", () => {
