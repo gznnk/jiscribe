@@ -83,8 +83,9 @@ const isSoleSelection = (
  * ControlEventHandler can route to it. Owns the data-action format end to end
  * (`action` is what the control's Component must render, and supports() matches it
  * exact or prefixed) and the whole state contract the definition is shielded
- * from: the dragStart UI reset, snapshot guards, the COW write-back with its
- * commit, and installing the part selection.
+ * from: the dragStart UI reset, snapshot guards, the COW write-back, the
+ * commit (a drag's is settled at its end whatever the definition returned
+ * there), and installing the part selection.
  */
 class SelectionControlStrategy extends ControlStrategy {
 	readonly action: string;
@@ -123,10 +124,40 @@ class SelectionControlStrategy extends ControlStrategy {
 		// the definition did not ask for dragEnd.
 		const eventState =
 			event.type === "dragEnd" ? { ...state, edgeScrollEnabled: false } : state;
-		if (!isOfferedEventType(this.definition, event.type)) {
-			return eventState;
+		const appliedState = isOfferedEventType(this.definition, event.type)
+			? this.applyEvent(eventState, event, event.type)
+			: eventState;
+		// A dragEnd the definition answered with an object has committed already;
+		// any other end settles what the drag frames wrote.
+		if (
+			event.type !== "dragEnd" ||
+			appliedState.commitVersion !== eventState.commitVersion
+		) {
+			return appliedState;
 		}
-		return this.applyEvent(eventState, event, event.type);
+		return this.commitDragIfChanged(appliedState, event.targetId);
+	}
+
+	/**
+	 * Commits the drag's writes at its end when the definition did not: the
+	 * object under the control no longer being the gesture-start snapshot's
+	 * (by identity, as COW leaves an unwritten object as it was) means a drag
+	 * frame wrote it. Returns the state unchanged otherwise, or when the object
+	 * or its snapshot is missing.
+	 */
+	private commitDragIfChanged(
+		state: CanvasControllerState,
+		objectId: string | undefined,
+	): CanvasControllerState {
+		if (!objectId) {
+			return state;
+		}
+		const object = state.objects[objectId];
+		const startObject = this.readStartObject(state, objectId, "dragEnd");
+		if (!object || !startObject || object === startObject) {
+			return state;
+		}
+		return commitEdit(state);
 	}
 
 	/**
@@ -191,7 +222,8 @@ class SelectionControlStrategy extends ControlStrategy {
 				{ ...state, objects: updatedObjects },
 				state,
 			);
-			// A drag writer commits once, on its last frame; a click is its own last.
+			// A drag writer commits once, on its last frame (handle() settles it when
+			// dragEnd writes nothing); a click is its own last.
 			if (type !== "drag") {
 				nextState = commitEdit(nextState);
 			}
