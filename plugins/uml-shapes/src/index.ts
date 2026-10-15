@@ -24,6 +24,7 @@ export * from "./state/UmlPackageState";
 export * from "./state/UmlComponentState";
 export { recordToDoc, recordToState } from "./state/RecordMapper";
 export { isValidRecordState } from "./state/validateRecordState";
+export { RECORD_SLOT_SELECTION_COMMANDS } from "./commands/recordSlotSelectionCommands";
 
 export { RecordBox } from "./presentation/RecordBox";
 export { calcRecordTextSlotRegions } from "./presentation/calcRecordTextSlotRegions";

@@ -1,5 +1,6 @@
 import type { CanvasPlugin } from "@jiscribe/canvas";
 
+import { RECORD_SLOT_SELECTION_COMMANDS } from "./commands/recordSlotSelectionCommands";
 import {
 	recordDefinition,
 	umlComponentDefinition,
@@ -11,7 +12,8 @@ import {
  * (packages/canvas/docs/12-plugin-architecture.md). Hosts wire this
  * into `<Canvas initialConfig>` via `plugins`; `objects` also feeds
  * `createCanvasParser` since the definition extends `ObjectDocDefinition`. The
- * headless (Node-side) parse entry is `umlDocPlugin` in `./doc`.
+ * headless (Node-side) parse entry is `umlDocPlugin` in `./doc`. `commands`
+ * carries the record's slot stepping on the bare arrows.
  */
 export const umlPlugin: CanvasPlugin = {
 	id: "uml-shapes",
@@ -20,4 +22,5 @@ export const umlPlugin: CanvasPlugin = {
 		umlPackage: umlPackageDefinition,
 		umlComponent: umlComponentDefinition,
 	},
+	commands: [...RECORD_SLOT_SELECTION_COMMANDS],
 };

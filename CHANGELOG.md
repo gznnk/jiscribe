@@ -90,6 +90,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the neighbour of the cell the last click or Shift-click ended on. With the
   table selected as a whole, or a row or column picked, the arrows nudge the
   table as before.
+- **The up and down arrow keys move a UML record's picked compartment.** With
+  a compartment picked, up and down pick the one above or below it instead of
+  nudging the record, skipping the compartments the record does not have, and
+  at the top or bottom they do nothing; left and right do nothing either. A
+  picked run of compartments collapses to the neighbour of the one the last
+  click or Shift-click ended on. With the record selected as a whole, the
+  arrows nudge it as before.
 - **Bold, italic, underline and strikethrough work the same from the keys and
   the buttons.** Ctrl/Cmd+B / I / U / Shift+X now act on selected shapes without
   opening the editor, and while editing with only the caret placed they flip the
