@@ -55,6 +55,7 @@ import { usePropertyPanelState } from "./hooks/usePropertyPanelState";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
+import { useTextEditDraftState } from "./hooks/useTextEditDraftState";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
@@ -595,6 +596,10 @@ const CanvasComponent = ({
 		[],
 	);
 
+	// Neither memo below reads the caret, so both key on the session held through
+	// caret-only moves.
+	const textEditDraftState = useTextEditDraftState(state.textEditState);
+
 	// The slot being edited carries the uncommitted editor text, so geometry derived from
 	// it follows every keystroke instead of jumping on commit. Rendering, selection
 	// feedback, editor placement and the menu anchor only — hit testing and snapping
@@ -605,11 +610,11 @@ const CanvasComponent = ({
 				{
 					objects: state.objects,
 					selection: state.selection,
-					textEditState: state.textEditState,
+					textEditState: textEditDraftState,
 				},
 				registries.objectContentResizer,
 			),
-		[state.objects, state.selection, state.textEditState, registries],
+		[state.objects, state.selection, textEditDraftState, registries],
 	);
 
 	// What the open editing session is on, for the layers that only need to know
@@ -620,9 +625,9 @@ const CanvasComponent = ({
 			readOpenTextEdit({
 				objects: state.objects,
 				selection: state.selection,
-				textEditState: state.textEditState,
+				textEditState: textEditDraftState,
 			}),
-		[state.objects, state.selection, state.textEditState],
+		[state.objects, state.selection, textEditDraftState],
 	);
 	const textEditObjectId =
 		textEdit === null
