@@ -160,6 +160,7 @@ export const useMeasureHandle = (
 					registries.objectOutline,
 					registries.objectAnchorRegion,
 					registries.objectExtraConnectPoints,
+					registries.objectGeometryKey,
 				);
 				// The points are the renderer's cached route; a host writing to one
 				// must not move the drawn line.

@@ -4,6 +4,7 @@ import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/O
 
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
@@ -86,6 +87,12 @@ export interface ICanvasRegistries {
 	 * type declares itself (the brace's `tip`).
 	 */
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	/**
+	 * Per-type geometry keys, which the connector route cache compares an owner by
+	 * besides its frame (resolveConnectorPointsCached), so a route resolved here
+	 * is the one the renderer already holds.
+	 */
+	objectGeometryKey: ObjectGeometryKeyRegistry;
 	/**
 	 * Per-type visual bounds, read only by the commands that frame a view
 	 * (zoom-to-fit / zoom-to-selection) so decoration drawn outside a shape's

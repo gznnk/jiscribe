@@ -19,6 +19,7 @@ import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import { sortObjectIdsByZOrder } from "./sortObjectIdsByZOrder";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
@@ -32,6 +33,8 @@ export type HitTestRegistries = {
 	objectOutline: Pick<ObjectOutlineRegistry, "get">;
 	objectAnchorRegion: Pick<ObjectAnchorRegionRegistry, "get">;
 	objectExtraConnectPoints: Pick<ObjectExtraConnectPointsRegistry, "get">;
+	/** Omitted = connector paths are routed afresh rather than read from the renderer's cache. */
+	objectGeometryKey?: Pick<ObjectGeometryKeyRegistry, "get">;
 };
 
 /** How close (world px) the point must come to a line-like shape to hit it. */
@@ -126,6 +129,7 @@ export const isPointOnObject = (
 			registries.objectOutline,
 			registries.objectAnchorRegion,
 			registries.objectExtraConnectPoints,
+			registries.objectGeometryKey,
 		);
 		return (
 			path !== null &&

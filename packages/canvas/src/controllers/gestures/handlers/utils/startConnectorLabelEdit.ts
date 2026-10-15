@@ -44,6 +44,7 @@ const calcPendingLabelPlacement = (
 		registries.objectOutline,
 		registries.objectAnchorRegion,
 		registries.objectExtraConnectPoints,
+		registries.objectGeometryKey,
 	);
 	if (!points) {
 		return null;

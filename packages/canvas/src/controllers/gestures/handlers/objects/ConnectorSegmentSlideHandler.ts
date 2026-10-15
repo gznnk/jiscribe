@@ -63,6 +63,7 @@ const resolveSegment = (
 		registries.objectOutline,
 		registries.objectAnchorRegion,
 		registries.objectExtraConnectPoints,
+		registries.objectGeometryKey,
 	);
 	if (!path || segmentIndex > path.length - 2) {
 		return null;

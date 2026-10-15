@@ -115,6 +115,7 @@ const handleDrag = (
 		registries.objectOutline,
 		registries.objectAnchorRegion,
 		registries.objectExtraConnectPoints,
+		registries.objectGeometryKey,
 	);
 	if (!points) {
 		return state;

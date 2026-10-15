@@ -245,6 +245,7 @@ describe("collectConnectorPoints", () => {
 			registries.objectOutline,
 			registries.objectAnchorRegion,
 			registries.objectExtraConnectPoints,
+			registries.objectGeometryKey,
 		);
 
 		const collect = (owners: Record<string, ObjectState>) =>
@@ -254,6 +255,7 @@ describe("collectConnectorPoints", () => {
 				registries.objectOutline,
 				registries.objectAnchorRegion,
 				registries.objectExtraConnectPoints,
+				registries.objectGeometryKey,
 			);
 		const first = collect(objects);
 		const second = collect(objects);
