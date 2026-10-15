@@ -43,7 +43,16 @@ describe("ToggleLockAspectRatioCommand", () => {
 			);
 			expect(next.multiSelectGroup?.lockAspectRatio).toBe(false);
 			expect(next.objects["a"]).toBe(a);
-			expect(next.commitVersion).toBe(1);
+		});
+
+		it("commits nothing, the box being session state no history entry holds", () => {
+			const state = stateOf(["a"], { a: rectOf("a") }, {
+				lockAspectRatio: true,
+			} as unknown as GroupState);
+			const next = ToggleLockAspectRatioCommand.execute(state, registries);
+			// canvasReducer records history and raises a save only on a new commitVersion.
+			expect(next.commitVersion).toBe(state.commitVersion);
+			expect(next.objects).toBe(state.objects);
 		});
 
 		it("a box carrying no flag flips the reading the row shows for one", () => {
@@ -76,6 +85,14 @@ describe("ToggleLockAspectRatioCommand", () => {
 				registries,
 			);
 			expect(lockOf(next, "a")).toBe(true);
+		});
+
+		it("commits nothing when no selected object takes the flag", () => {
+			// Reached past canExecute on purpose: a connector has no entry for the
+			// lock, so the write lands nowhere.
+			const state = stateOf(["c"], { c: connectorOf("c") });
+			const next = ToggleLockAspectRatioCommand.execute(state, registries);
+			expect(next).toBe(state);
 		});
 	});
 

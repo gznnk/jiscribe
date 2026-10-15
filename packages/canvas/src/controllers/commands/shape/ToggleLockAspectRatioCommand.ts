@@ -1,6 +1,7 @@
 import { applyStyleIntent } from "../../style/walk/applyStyleIntent";
 import { getSelectedLockAspectRatio } from "../../style/walk/getSelectedLockAspectRatio";
 import { readSelectionStyle } from "../../style/walk/readSelectionStyle";
+import { commitEditIfChanged } from "../../utils/commitEdit";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -25,19 +26,18 @@ export const ToggleLockAspectRatioCommand: ExecutableCommand = {
 		const { multiSelectGroup } = state;
 		const locked = getSelectedLockAspectRatio(state, registries);
 		if (multiSelectGroup !== null) {
+			// Not committed: history and saves hold the document only, so an entry
+			// here would record nothing an undo could take back.
 			return {
 				...state,
 				multiSelectGroup: { ...multiSelectGroup, lockAspectRatio: !locked },
-				commitVersion: state.commitVersion + 1,
 			};
 		}
-		return {
-			...applyStyleIntent(
-				state,
-				{ kind: "lockAspectRatio", locked: !locked },
-				registries,
-			),
-			commitVersion: state.commitVersion + 1,
-		};
+		const styled = applyStyleIntent(
+			state,
+			{ kind: "lockAspectRatio", locked: !locked },
+			registries,
+		);
+		return commitEditIfChanged(state, styled);
 	},
 };
