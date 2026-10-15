@@ -132,7 +132,7 @@ describe("canvasReducer (integration)", () => {
 			expect(isInView(reverted, "rect-1")).toBe(true);
 		});
 
-		it("keeps the zoom and centres a change larger than the view", () => {
+		it("keeps the zoom and centres an off-screen change larger than the view", () => {
 			// Two rects 4000 apart, both nudged: their union cannot fit at zoom 2.
 			let state = createTestState(
 				docOf(rectDoc("rect-1", 0, 0), rectDoc("rect-2", 4000, 0)),

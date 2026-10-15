@@ -343,6 +343,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Undo and redo no longer jump to the middle of a large shape still on
+  screen.** A change larger than the view used to be centred whatever was
+  showing, so undoing a row added to a wide table pulled the view away from the
+  cell being worked on. The view now stays put on each axis where part of the
+  change is already in view, and centres only on a change wholly off screen.
 - **The object menu hangs under the picked text slot, not under the whole
   shape.** With a slot, a cell, a row or a column picked, the menu is placed by
   the boxes outlined around them, and moves when the pick moves to another one.

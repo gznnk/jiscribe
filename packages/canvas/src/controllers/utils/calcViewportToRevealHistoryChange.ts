@@ -98,7 +98,10 @@ const unionObjectBoxes = (
  * The viewport after an undo, redo or revert, panned just far enough to show
  * what the swap changed: the objects it added or modified where they now are,
  * and the ones it removed where they were. Zoom is never changed; a change too
- * large for the view at that zoom is centred on each axis it overflows.
+ * large for the view at that zoom is left where it is on each axis it overflows
+ * while part of it is on screen, and centred on that axis otherwise. The diff
+ * is per object, so one cell of a large table reads as the whole table changed:
+ * centring it would jump away from the cell being worked on.
  * Changes to `background`, `view` or stacking order alone move nothing.
  *
  * The pan stops at the scroll wall the way a view scroll does
@@ -152,7 +155,7 @@ export const calcViewportToRevealHistoryChange = (
 		viewport,
 		changedBox,
 		HISTORY_REVEAL_PADDING,
-		"center",
+		"centerUnlessVisible",
 	);
 	if (!revealCamera) {
 		return viewport;
