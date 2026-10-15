@@ -14,15 +14,19 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *   (`updateGroupBoundsFromRoot` in DeleteCommand / GroupCommand / the vertex
  *   handlers, `updateAffectedGroupBounds` in MoveCommands / ObjectEventHandler,
  *   `updateGroupBoundsForSelection` at a transform dragEnd). Those calls settle
- *   more than a box diff can see — an object the transition **removed** is gone
- *   from the map this pass reads, so its former parent is the removing writer's
- *   own business and stays so. Deleting one of them as "now redundant" reopens
- *   that case.
+ *   more than a box diff can see (an object the transition **removed** is gone
+ *   from the map this pass reads), and they also clean up the groups a removal
+ *   empties or leaves with one child (`cleanupGroups`). Deleting one of them as
+ *   "now redundant" reopens that case.
  * - A writer core hands the map to and gets an object back has nothing to name,
  *   and that is what this covers (`handleCommand`, the selection-control
  *   write-back). It is the half a plugin reaches, so it settles without the
  *   plugin naming anything — which is the point: there is no call for a plugin
- *   author to forget.
+ *   author to forget. A rewritten group is recomputed itself as well as its
+ *   ancestors, so a writer that takes a child out of a group (its `childIds`
+ *   changed) leaves the frame fitting the children that remain. A group left
+ *   with no children keeps its previous frame and stays in the map; removing it
+ *   is the writer's call.
  *
  * The one automatic pass that came before this
  * ({@link import("./reconcileObjectContentSizes").reconcileObjectContentSizes})
@@ -32,7 +36,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *
  * @param state - The transition's resulting state; its `objects` are what the group frames are recomputed from
  * @param previousState - The state the transition started from, supplying the references compared against; passing `state` itself returns it unchanged
- * @returns The same state reference when nothing inside a group was rewritten; otherwise a state with the ancestor frames recomputed
+ * @returns The same state reference when neither a group nor anything inside one was rewritten; otherwise a state with those frames recomputed
  */
 export const reconcileGroupBounds = (
 	state: CanvasControllerState,
@@ -73,5 +77,5 @@ export const reconcileGroupBounds = (
 
 	return rewrittenIds.length === 0
 		? state
-		: updateAffectedGroupBounds(state, rewrittenIds);
+		: updateAffectedGroupBounds(state, rewrittenIds, true);
 };
