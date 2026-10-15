@@ -19,6 +19,12 @@ import {
 	writeFixtureFile,
 } from "./support/fixtureDirectory";
 import { delay, waitFor } from "./support/timing";
+import {
+	connectWebviewBridge,
+	recordMessagesToWebview,
+	updateMessages,
+	type WebviewBridge,
+} from "./support/webviewBridge";
 
 /**
  * How the canvas editor treats a change it did not make.
@@ -33,11 +39,16 @@ import { delay, waitFor } from "./support/timing";
 /** How long an assertion watches for an event that should never arrive. */
 const QUIET_WINDOW_MS = 500;
 
+/** Budget for a freshly opened Webview to load and post "ready". */
+const WEBVIEW_READY_TIMEOUT_MS = 15_000;
+
 describe("canvas editor and changes made outside it", () => {
 	let fixtureDirectory: string;
+	let bridge: WebviewBridge;
 
 	before(async () => {
 		fixtureDirectory = await createFixtureDirectory();
+		bridge = await connectWebviewBridge();
 	});
 
 	afterEach(async () => {
@@ -85,8 +96,23 @@ describe("canvas editor and changes made outside it", () => {
 			"external-write.jis",
 			canvasDocJson(["r1"]),
 		);
+		// The write below has to land on a settled editor: one written while the
+		// Webview is still loading races the opening exchange and is sometimes
+		// never reloaded.
+		const opening = recordMessagesToWebview(bridge, uri);
 		await openInCustomEditor(uri, CANVAS_EDITOR_VIEW_TYPE);
+		await waitFor(
+			() => updateMessages(opening).length >= 1,
+			`the update the Webview's "ready" asks for on opening ${uri.path}`,
+			WEBVIEW_READY_TIMEOUT_MS,
+		);
+		opening.dispose();
 		const document = await vscode.workspace.openTextDocument(uri);
+		assert.equal(
+			document.isDirty,
+			false,
+			"the document must be clean here, or VSCode keeps it rather than reloading from disk",
+		);
 
 		const diskText = compactCanvasDocJson(["fromDisk"]);
 		await vscode.workspace.fs.writeFile(
