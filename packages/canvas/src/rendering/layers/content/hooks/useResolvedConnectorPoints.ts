@@ -1,15 +1,15 @@
-import type { Point, TransformedFrame } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
 import { useMemo } from "react";
 
 import {
 	listConnectorPathPoints,
+	readOwnerGeometry,
 	resolveConnectorPointsCached,
 } from "../../../../connectors/endpoints";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
 import { useObjectExtraConnectPointsRegistry } from "../../../objects/registry/ObjectExtraConnectPointsRegistryContext";
-import type { ObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistry";
 import { useObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistryContext";
 import { useObjectOutlineRegistry } from "../../../objects/registry/ObjectOutlineRegistryContext";
 
@@ -25,36 +25,6 @@ export type ResolvedConnectorPoints = {
 	source: Point;
 	target: Point;
 	points: Point[];
-};
-
-/**
- * The fields the route resolution actually reads from an endpoint owner, as one
- * value per field for the memo's dependency list. Non-geometry edits (fill /
- * text / ...) clone the owner but keep these values, so keying the memo on them
- * skips the re-route (#214).
- * Connectable types are all frame-based today; if poly shapes ever become
- * connectable, `points` must be added here. Per-type state beyond the frame
- * (a callout's tail) arrives as `geometryKey`, so a type whose silhouette moves
- * on its own stays live by registering one.
- */
-const getOwnerGeometryDeps = (
-	obj: ObjectState | null,
-	geometryKeyRegistry: ObjectGeometryKeyRegistry,
-) => {
-	const frame = obj as (ObjectState & Partial<TransformedFrame>) | null;
-	return {
-		id: obj?.id,
-		type: obj?.type,
-		features: obj?.features,
-		cx: frame?.cx,
-		cy: frame?.cy,
-		width: frame?.width,
-		height: frame?.height,
-		rotation: frame?.rotation,
-		scaleX: frame?.scaleX,
-		scaleY: frame?.scaleY,
-		geometryKey: obj ? geometryKeyRegistry.get(obj.type)?.(obj) : undefined,
-	};
 };
 
 /**
@@ -90,8 +60,8 @@ export const useResolvedConnectorPoints = (
 	// the connector and the owners without changing geometry (#214). The owners'
 	// values are listed field by field — the dependency list must stay an array
 	// literal for the react-hooks rules to check it.
-	const source = getOwnerGeometryDeps(sourceObj, geometryKeyRegistry);
-	const target = getOwnerGeometryDeps(targetObj, geometryKeyRegistry);
+	const source = readOwnerGeometry(sourceObj, geometryKeyRegistry);
+	const target = readOwnerGeometry(targetObj, geometryKeyRegistry);
 	return useMemo(() => {
 		// Cached, so a path viewport culling resolved for the same objects this
 		// render is not routed again (calcVisibleObjectIds).
@@ -102,6 +72,7 @@ export const useResolvedConnectorPoints = (
 			outlineRegistry,
 			anchorRegionRegistry,
 			extraConnectPointsRegistry,
+			geometryKeyRegistry,
 		);
 		if (!resolved) {
 			return null;

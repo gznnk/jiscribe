@@ -61,6 +61,7 @@ const registries = {
 	},
 	anchorRegion: { get: () => undefined },
 	extraConnectPoints: { get: () => undefined },
+	geometryKey: { get: () => undefined },
 };
 
 const cloud = (id: string, cx: number, cy: number): ObjectState =>
@@ -129,6 +130,7 @@ describe(`drag a hub with ${SPOKE_COUNT} connectors: culling + render (one frame
 				registries.outline,
 				registries.anchorRegion,
 				registries.extraConnectPoints,
+				registries.geometryKey,
 			);
 			if (resolved) {
 				calcConnectorPathBoundingBox(
@@ -143,6 +145,7 @@ describe(`drag a hub with ${SPOKE_COUNT} connectors: culling + render (one frame
 				registries.outline,
 				registries.anchorRegion,
 				registries.extraConnectPoints,
+				registries.geometryKey,
 			);
 		}
 	});
