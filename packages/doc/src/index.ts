@@ -142,6 +142,10 @@ export {
 	calcFullBoxTextRegion,
 	calcOutsideBoxTextRegion,
 } from "./plugin/ObjectDocTextRegion";
+// The overflow declaration a doc definition carries, for a type that lays some of
+// its content out by a rule of its own: a plugin author implementing one needs the
+// shape of it.
+export type { ObjectDocOverflowDiagnoser } from "./plugin/ObjectDocOverflow";
 // Whether a type may leave `height` out of the document, which is what that
 // declaration decides: the schema generator relaxes the field for exactly these
 // types, and the doc-ops refuse to switch any other.

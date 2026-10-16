@@ -17,15 +17,15 @@ import {
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 ```
 
-| Export                           | Entry    | What it is                                                                                                        |
-| -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
-| `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                        |
-| `standardToolbarSections`        | `.`      | The whole bar — the shape tools below, then core's history, view and properties sections — for `toolbar.sections` |
-| `standardToolbarToolsSection`    | `.`      | Just the shape tools of that bar: the library toggle, then six pinned presets                                     |
-| `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                  |
-| `standardDocPlugins`             | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                 |
-| `standardObjectDocDefinitions`   | `/doc`   | Every type of the set by name, canvas built-ins included                                                          |
-| `standardAiToolPlugins`          | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's, so far)        |
+| Export                           | Entry    | What it is                                                                                                                  |
+| -------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                  |
+| `standardToolbarSections`        | `.`      | The whole bar — the shape tools below, then core's history, view and properties sections — for `toolbar.sections`           |
+| `standardToolbarToolsSection`    | `.`      | Just the shape tools of that bar: the library toggle, then six pinned presets                                               |
+| `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                            |
+| `standardDocPlugins`             | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                           |
+| `standardObjectDocDefinitions`   | `/doc`   | Every type of the set by name, canvas built-ins included                                                                    |
+| `standardAiToolPlugins`          | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's and the record's, so far) |
 
 ## The entries
 

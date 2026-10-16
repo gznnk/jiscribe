@@ -153,6 +153,13 @@ every slot's region, which the renderer makes once per render. A kind takes
 `region` or `regions`, not both (see
 [Plugin Architecture](./12-plugin-architecture.md)).
 
+Content laid out that way is invisible to `diagnoseDoc`, which measures with the
+shared typesetting. To have it reported when the box is too small, declare
+`diagnoseOverflow` (`ObjectDocOverflowDiagnoser`) on the doc definition: a
+function of the doc returning one English line per overflow — what is short, by
+how many pixels, and how to fix it — which `diagnoseDoc` turns into an error on
+the object. The record does this for its compartments.
+
 A shape that hand-draws instead of going through `createFrameObject` has to redo
 what that helper resolved (the sticky is the example). Colors above all: resolve
 them with `resolveAutoColor(fill, "surface")` and **apply the result through CSS,

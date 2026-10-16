@@ -79,7 +79,10 @@ report either one usefully:
   box into bands each sized from their own text (`record`), or carries no text at
   all and declares no region. Nothing about such a shape's size can make its text
   overflow, so `diagnoseDoc` passes over it and `jiscribe measure` reports the
-  text's own size with no verdict.
+  text's own size with no verdict. A type that stacks its content by a rule of
+  its own checks that content itself where it declares how
+  (`ObjectDocDefinition.diagnoseOverflow`), and `diagnoseDoc` reports each
+  finding as an error — a record too short for its compartments.
 - **`{ kind: "unknown" }`** — the type is not one this build ships, so nothing
   declares anything about it. `jiscribe measure` and the MCP `measure_text` tool
   report it as an error. Within a document the case does not arise: a type the

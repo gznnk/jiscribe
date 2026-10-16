@@ -21,7 +21,7 @@ covers that.
   rest.** Each takes `path` like every document tool, plus the `id` of the one
   object it acts on, refuses an object of another type, and is taken back by
   `undo`; one that only reads does not write the file back.
-- **Seven tools for tables, 76 tools in all.** `table_read` lists a table's
+- **Seven tools for tables.** `table_read` lists a table's
   extent, track sizes and cells; `table_insert_tracks` / `table_delete_tracks`
   add and remove rows or columns; `table_fill_cells` writes a block of text from
   one cell (`grow: true` appends the rows and columns it needs);
@@ -29,6 +29,13 @@ covers that.
   and row heights; and `table_set_cell_style` sets a fill and typography over a
   range. A refused call says why and what the table holds, and leaves the file
   as it was.
+- **`record_set_compartments` for UML records, 77 tools in all.** It adds,
+  replaces, empties or removes a record's stereotype band and its attribute and
+  operation compartments, and then fits the record's height to them, so no
+  `resize_object` has to follow. A call that would change nothing is refused.
+- **`diagnose_canvas` reports a record too short for its rows**, which it used
+  to call valid while the bottom rows were drawn past the box, naming the
+  shortfall and the tools that fix it.
 
 ### Fixed
 

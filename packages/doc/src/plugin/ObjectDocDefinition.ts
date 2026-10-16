@@ -1,4 +1,5 @@
 import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
+import type { ObjectDocOverflowDiagnoser } from "./ObjectDocOverflow";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
@@ -88,6 +89,16 @@ export type ObjectDocDefinition = {
 	 * drawn outside the outline.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Reports content the type places itself that its box is too small for (see
+	 * {@link ObjectDocOverflowDiagnoser}): what the shared typesetting cannot
+	 * measure, because the type stacks or sizes it by a rule of its own — a
+	 * record's compartments. `diagnoseDoc` calls it for any type that declares
+	 * one and reports each message as an error on the object. Omitted means the
+	 * type has nothing beyond {@link textRegion} to check.
+	 */
+	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
 
 	/**
 	 * Set to `false` by a type whose box must not be sized from the text laid out

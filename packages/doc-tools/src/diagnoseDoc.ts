@@ -463,6 +463,26 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 };
 
 /**
+ * What the object's type reports about content it lays out itself and the box
+ * cannot hold (`ObjectDocDefinition.diagnoseOverflow`), each message an error on
+ * the object. Empty for a type that declares no such check.
+ */
+const diagnoseDeclaredOverflow = (object: ObjectDoc): Diagnostic[] => {
+	const diagnoseOverflow = standardObjectDocDefinitions.get(
+		object.type,
+	)?.diagnoseOverflow;
+	if (diagnoseOverflow === undefined) {
+		return [];
+	}
+	offerNodeTextMeasurement();
+	return diagnoseOverflow(object).map((message) => ({
+		severity: "error",
+		objectId: object.id,
+		message,
+	}));
+};
+
+/**
  * The finding about an object of a `geometry: "point"` type that declares no box,
  * empty for every other object. Such a doc holds the corner it is drawn from and
  * nothing else, so the declaration is the only statement of its box
@@ -569,6 +589,11 @@ const diagnoseConnectorLabelLineStarts = (
  * promises the shape's own decoration is not
  * ({@link diagnoseDecorationOverlap}).
  *
+ * Content a type lays out by a rule of its own — a `record`'s compartments — is
+ * checked by the type itself where it declares how
+ * (`ObjectDocDefinition.diagnoseOverflow`), each finding an error on the object
+ * ({@link diagnoseDeclaredOverflow}).
+ *
  * Only text that cannot be read where it is drawn is reported as an error.
  * Spacing, aspect ratio and the other matters of style are deliberately left out:
  * the errors answer "would a reader see the text cut off", which is a fact about
@@ -591,7 +616,7 @@ const diagnoseConnectorLabelLineStarts = (
  * warning per type, after the per-object findings.
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, and per `"source"` type whose text went unmeasured (no `objectId`; its objects are listed in the message); empty when everything fits
+ * @returns One error per overflowing object and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, and per `"source"` type whose text went unmeasured (no `objectId`; its objects are listed in the message); empty when everything fits
  */
 export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	const objects = flattenObjects(doc.root);
@@ -599,6 +624,7 @@ export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	return [
 		...objects.flatMap((object) => [
 			...diagnoseObjectText(object),
+			...diagnoseDeclaredOverflow(object),
 			...diagnoseObjectBounds(object),
 			...diagnoseConnectorLabel(object, objectsById),
 			...diagnoseConnectorLabelLineStarts(object),

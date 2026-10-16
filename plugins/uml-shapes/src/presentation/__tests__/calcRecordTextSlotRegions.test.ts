@@ -3,6 +3,10 @@ import type { TextSlot } from "@jiscribe/doc";
 import { describe, it, expect } from "vitest";
 
 import {
+	calcRecordContentHeight,
+	calcRecordTextSlotHeight,
+} from "../../schema/calcRecordContentHeight";
+import {
 	calcRecordListHeight,
 	RECORD_BAND_HEIGHT,
 	RECORD_TEXT_SLOT_STYLE_DEFAULTS,
@@ -291,5 +295,38 @@ describe("calcRecordTextSlotRegions", () => {
 			text: titleAndAttributes("User\nAccount"),
 		});
 		expect(regions.attributes?.y).toBe(-100 + regions.name.height);
+	});
+});
+
+/** A record with every compartment, its title long enough to wrap in 180px (vitest.setup.ts). */
+const FULL_RECORD_TEXT: Record<string, TextSlot> = {
+	stereotype: { text: "<<interface>>" },
+	name: { text: "aaaaaaaaaa aaaaaaaaaa" },
+	attributes: { text: ["- id: string", "- name: string"] },
+	operations: { text: ["+ save(): void"], fontSize: 20 },
+};
+
+describe("calcRecordTextSlotRegions at calcRecordContentHeight", () => {
+	it("is the height at which the drawing gives every compartment what it asks for", () => {
+		const width = 180;
+		const height = calcRecordContentHeight({ width, text: FULL_RECORD_TEXT });
+		const regions = calcRecordTextSlotRegions({
+			width,
+			height,
+			text: FULL_RECORD_TEXT,
+		});
+
+		for (const slotId of [
+			"stereotype",
+			"name",
+			"attributes",
+			"operations",
+		] as const) {
+			expect(regions[slotId]?.height).toBe(
+				calcRecordTextSlotHeight(width, slotId, FULL_RECORD_TEXT[slotId]),
+			);
+		}
+		const bottom = regions.operations;
+		expect((bottom?.y ?? 0) + (bottom?.height ?? 0)).toBe(height / 2);
 	});
 });

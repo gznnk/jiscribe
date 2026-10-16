@@ -150,6 +150,12 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 1 度だけ呼ぶ。種別が取るのは `region` か `regions` のどちらか一方
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md)参照）。
 
+そうして自分で並べた中身は、共有の文字組みを測る `diagnoseDoc` には見えない。箱に
+収まらないことを報告させたいなら、doc 定義に `diagnoseOverflow`
+（`ObjectDocOverflowDiagnoser`）を宣言する。doc を受け取り、はみ出しごとに英語 1 行
+（何が何 px 足りないかと直し方）を返す関数で、`diagnoseDoc` がそれぞれを図形の id
+付きのエラーにする。record が区画の高さで実例を示している。
+
 `createFrameObject` を通さず手描きするなら、それが解決していたものは自分で解決する
 （sticky が実例）。特に色は `resolveAutoColor(fill, "surface")` で解決し、**結果は
 SVG の `fill` 属性ではなく CSS で当てる**。`"auto"` の解決先は `var(--jiscribe-*)` で、

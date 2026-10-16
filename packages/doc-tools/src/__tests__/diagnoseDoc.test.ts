@@ -338,4 +338,88 @@ describe("diagnoseDoc", () => {
 			expect(diagnoseDoc(textDoc())).toEqual([]);
 		});
 	});
+
+	it("reports what any type's declared overflow check returns, as errors on the object", () => {
+		// No shipped type but the record declares one, so the check is staged on a
+		// type that otherwise has nothing to report.
+		const rect = standardObjectDocDefinitions.get(
+			"rect",
+		) as ObjectDocDefinition;
+		const diagnoseOverflow = vi.fn(() => ["first overflow", "second overflow"]);
+		vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation((type) =>
+			type === "rect" ? { ...rect, diagnoseOverflow } : undefined,
+		);
+
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [{ id: "box", type: "rect", x: 0, y: 0, width: 80, height: 40 }],
+			},
+			"the one-rect doc",
+		);
+		expect(diagnoseDoc(doc)).toEqual([
+			{ severity: "error", objectId: "box", message: "first overflow" },
+			{ severity: "error", objectId: "box", message: "second overflow" },
+		]);
+		expect(diagnoseOverflow).toHaveBeenCalledWith(
+			expect.objectContaining({ id: "box", width: 80, height: 40 }),
+		);
+	});
+
+	describe("a record too short for its compartments", () => {
+		/**
+		 * A record titled "User" over the given attribute rows. A band is one 14px
+		 * line box (21px) plus 7px of padding, and a compartment its rows' line
+		 * boxes — at least one — plus 4px, so three rows need 28 + 67 = 95px.
+		 */
+		const recordDoc = (height: number, attributes: string[]): CanvasDoc =>
+			parseDoc(
+				{
+					version: 1,
+					root: [
+						{
+							id: "user",
+							type: "record",
+							x: 0,
+							y: 0,
+							width: 180,
+							height,
+							text: {
+								name: { text: "User" },
+								attributes: { text: attributes },
+							},
+						},
+					],
+				},
+				"record",
+			);
+		const threeRows = ["- id: string", "- name: string", "- email: string"];
+
+		it("reports nothing for a record exactly as tall as its rows need", () => {
+			expect(diagnoseDoc(recordDoc(95, threeRows))).toEqual([]);
+		});
+
+		it("reports the shortfall and the two ways to fix it", () => {
+			const diagnostics = diagnoseDoc(recordDoc(60, threeRows));
+			expect(diagnostics).toEqual([
+				{
+					severity: "error",
+					objectId: "user",
+					message:
+						"rows overflow record 180x60: its compartments need 95px but the box is 60px tall, 35px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or resize_object it to height 95",
+				},
+			]);
+		});
+
+		it("counts an empty compartment as one row's worth", () => {
+			expect(diagnoseDoc(recordDoc(53, []))).toEqual([]);
+			expect(diagnoseDoc(recordDoc(40, []))).toMatchObject([
+				{ severity: "error", objectId: "user" },
+			]);
+		});
+
+		it("passes over a record taller than its rows need", () => {
+			expect(diagnoseDoc(recordDoc(300, threeRows))).toEqual([]);
+		});
+	});
 });

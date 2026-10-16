@@ -1,6 +1,7 @@
 import type {
 	ObjectDoc,
 	ObjectDocDefinition,
+	ObjectDocOverflowDiagnoser,
 	ObjectDocTextRegionCalculator,
 	ObjectDocValidateFn,
 	ObjectFeatures,
@@ -52,6 +53,13 @@ type FrameObjectDocCommonParams = {
 	 * holds its text leave `height` out of the document (`supportsAutoHeight`).
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Reports content the shape stacks or sizes by a rule of its own that the box
+	 * is too small for (see `ObjectDocDefinition.diagnoseOverflow`). Carried into
+	 * the definition as-is.
+	 */
+	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
 
 	/**
 	 * Pass `false` for a shape whose box must not be sized from its text even
@@ -134,6 +142,7 @@ export const createFrameObjectDoc = ({
 	defaults,
 	extraKeys,
 	textRegion,
+	diagnoseOverflow,
 	autoHeight,
 	description,
 	summary,
@@ -150,6 +159,7 @@ export const createFrameObjectDoc = ({
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
+	diagnoseOverflow,
 	autoHeight,
 	description,
 	summary,

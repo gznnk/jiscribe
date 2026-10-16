@@ -1,19 +1,11 @@
-import type { TextMeasureFont } from "@jiscribe/canvas-sdk";
-import { calcVisualTextHeight } from "@jiscribe/canvas-sdk";
-import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas-sdk/doc";
-import { isRichText, isTextRows } from "@jiscribe/doc";
-import type { RichText, TextSlot } from "@jiscribe/doc";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {
-	RECORD_BAND_PADDING_X,
-	RECORD_BAND_PADDING_Y_TOTAL,
-	RECORD_LIST_PADDING_Y,
-	RECORD_NAME_TEXT_SLOT_ID,
-	RECORD_TEXT_SLOT_IDS,
-	RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID,
-} from "../schema/RecordDoc";
-import type { RecordTextSlotId } from "../schema/RecordDoc";
+	calcRecordTextSlotHeight,
+	listRecordPresentTextSlotIds,
+} from "../schema/calcRecordContentHeight";
+import type { RecordTextSlotsContent } from "../schema/calcRecordContentHeight";
+import { RECORD_NAME_TEXT_SLOT_ID } from "../schema/RecordDoc";
 
 /**
  * What the region split reads off the state: the untransformed box size plus the
@@ -22,10 +14,7 @@ import type { RecordTextSlotId } from "../schema/RecordDoc";
  * than the record's own set, so the registry's calculator type still accepts it
  * (see ObjectTextSlotRegionsCalculator).
  */
-export type RecordTextSlotRegionsState = Dimensions & {
-	/** The shape's text slots, keyed by slot id; absent is read as a title-only box. */
-	text?: Record<string, TextSlot>;
-};
+export type RecordTextSlotRegionsState = Dimensions & RecordTextSlotsContent;
 
 /** The record's compartments, keyed by slot id, top to bottom. */
 export type RecordTextSlotRegions = {
@@ -37,82 +26,6 @@ export type RecordTextSlotRegions = {
 	attributes?: Rect;
 	/** Operation compartment; absent when the box does not have one. */
 	operations?: Rect;
-};
-
-/** The font a slot is drawn with: its own, falling back to that slot id's defaults. */
-const textSlotFont = (
-	slotId: RecordTextSlotId,
-	slot: TextSlot | undefined,
-): TextMeasureFont => {
-	const styleDefaults = RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
-	return {
-		fontSize: slot?.fontSize ?? styleDefaults.fontSize,
-		fontFamily: slot?.fontFamily ?? styleDefaults.fontFamily,
-		fontWeight: slot?.fontWeight ?? styleDefaults.fontWeight,
-		fontStyle: slot?.fontStyle,
-	};
-};
-
-/**
- * Height a text band (the stereotype, the title) needs for its slot: every line
- * the text occupies once wrapped in the box width, plus the padding around it.
- * Follows the slot's own typography, falling back to that slot id's defaults, so
- * raising `fontSize` or writing a title too long for the width grows the band
- * instead of clipping it.
- */
-const calcBandHeight = (
-	width: number,
-	slotId: RecordTextSlotId,
-	slot: TextSlot | undefined,
-): number => {
-	const text = isRichText(slot?.text) ? slot.text : "";
-	return (
-		calcVisualTextHeight(
-			text,
-			textSlotFont(slotId, slot),
-			width - RECORD_BAND_PADDING_X * 2,
-		) + RECORD_BAND_PADDING_Y_TOTAL
-	);
-};
-
-/**
- * Height a compartment needs for its rows: each row's own line box, so a row
- * holding a part drawn larger takes the room it draws in. Rows are measured as
- * authored — a row too long for the width wraps and overflows rather than
- * widening the compartment's share — and an empty compartment still keeps one
- * row's worth.
- */
-const calcListHeight = (
-	slotId: RecordTextSlotId,
-	rows: readonly RichText[],
-	slot: TextSlot | undefined,
-): number => {
-	const font = textSlotFont(slotId, slot);
-	const rowsHeight = rows.reduce(
-		(total, row) => total + calcVisualTextHeight(row, font),
-		0,
-	);
-	return (
-		Math.max(rowsHeight, font.fontSize * TEXT_LINE_HEIGHT) +
-		RECORD_LIST_PADDING_Y * 2
-	);
-};
-
-/**
- * Height a slot asks for. A text band is measured from its wrapped lines; a
- * compartment is measured from its row count and its own `fontSize`, so a row
- * too long for the width wraps and overflows rather than widening the
- * compartment's share.
- */
-const calcTextSlotHeight = (
-	width: number,
-	slotId: RecordTextSlotId,
-	slot: TextSlot | undefined,
-): number => {
-	const content = slot?.text;
-	return isTextRows(content)
-		? calcListHeight(slotId, content, slot)
-		: calcBandHeight(width, slotId, slot);
 };
 
 /**
@@ -136,10 +49,7 @@ export const calcRecordTextSlotRegions = (
 ): RecordTextSlotRegions => {
 	const { width, height } = state;
 	const left = -width / 2;
-	const presentSlotIds = RECORD_TEXT_SLOT_IDS.filter(
-		(slotId) =>
-			slotId === RECORD_NAME_TEXT_SLOT_ID || state.text?.[slotId] !== undefined,
-	);
+	const presentSlotIds = listRecordPresentTextSlotIds(state.text);
 
 	const placed: Record<string, Rect> = {};
 	let top = -height / 2;
@@ -149,7 +59,7 @@ export const calcRecordTextSlotRegions = (
 		const slotHeight = isLast
 			? remaining
 			: Math.min(
-					calcTextSlotHeight(width, slotId, state.text?.[slotId]),
+					calcRecordTextSlotHeight(width, slotId, state.text?.[slotId]),
 					remaining,
 				);
 		placed[slotId] = { x: left, y: top, width, height: slotHeight };

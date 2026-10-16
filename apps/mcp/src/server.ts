@@ -49,7 +49,7 @@ import { createPathLock } from "./pathLock";
  * The tool definitions of the Jiscribe MCP server. Starting it over stdio is
  * `./index`'s job.
  *
- * The tools it exposes, 76 in all, come in four groups.
+ * The tools it exposes, 77 in all, come in four groups.
  *
  * 1. The ones this server has of its own (written out directly below)
  *    - `read_drawing_guide`: hands back one of the two guides `@jiscribe/doc-schema`
@@ -79,7 +79,7 @@ import { createPathLock } from "./pathLock";
  *    to the viewer open_canvas started
  * 4. The ones the standard set's plugins offer for their own shapes
  *    (`standardAiToolPlugins`, through `canvasToolSet`): the table's seven
- *    `table_*` tools so far. Each acts on the one object its `id` names and needs
+ *    `table_*` tools and the record's `record_set_compartments` so far. Each acts on the one object its `id` names and needs
  *    only a document, so they go through `registerDocTools` with group 2 and get
  *    a `path` the same way
  *

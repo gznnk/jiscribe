@@ -376,6 +376,29 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   columns count from 0, and cell `[row,column]` is the text slot
   `r{row}c{column}`. They come from the plugin's new headless `./tools` entry and
   reach hosts through `standardAiToolPlugins`.
+- **A UML record's compartments can be set through an AI tool.**
+  `record_set_compartments` adds, replaces, empties or removes the stereotype
+  band and the attribute and operation compartments, which `set_text` could
+  only fill where they already were. A compartment it replaces keeps its
+  typography, a new one starts from the record's defaults, and a row holding a
+  newline is refused. The record does not grow with its rows, so the tool then
+  sets the height to exactly what the compartments need, keeping the edge the
+  title hangs from in place whatever the rotation or flips. It comes from the
+  UML plugin's new headless `./tools` entry and reaches hosts through
+  `standardAiToolPlugins`. The height is measured with the same rule the drawing
+  splits the box with.
+- **`diagnoseDoc` reports a record too short for its rows.** A record's bottom
+  compartment takes whatever height is left, so rows added without refitting the
+  box were drawn past its edge while the diagnosis called the file clean. It is
+  now an error naming how many pixels the box is short and the two ways to fix
+  it. The record makes the check itself, through the declaration below.
+- For plugin authors: `ObjectDocDefinition.diagnoseOverflow` lets a type report
+  content it lays out by a rule of its own that its box cannot hold — what the
+  shared text measurement cannot see, such as a record's stacked compartments.
+  It takes the object's doc and returns one English line per overflow
+  (`ObjectDocOverflowDiagnoser`, from `@jiscribe/doc`); `diagnoseDoc` calls it
+  for any type that declares one and reports each line as an error on the
+  object. `createFrameObjectDoc` passes it through.
 - For plugin authors: `textSlotStyleSchema` and `canonicalizeFontWeight`, from
   `@jiscribe/canvas-sdk/tools`, are the typography vocabulary `set_style`
   declares and the weight spelling a document keeps (`"700"` is stored as

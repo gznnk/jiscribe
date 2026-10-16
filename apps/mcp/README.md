@@ -59,7 +59,7 @@ and a link to a file of another kind is refused. The one exception is an
 and cannot climb out of it — so a drawing and the pictures it names travel
 together.
 
-Four families of tools, 76 in all:
+Four families of tools, 77 in all:
 
 - Seven of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
   `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse`.
@@ -71,11 +71,12 @@ Four families of tools, 76 in all:
   capture, camera, selection, measurement — run over the viewer's WebSocket.
   The one that measures a slot as drawn is registered as `measure_rendered_text`,
   since `measure_text` above answers from dimensions alone
-- 7 that the shape plugins offer for their own shapes, the table's so far —
+- 8 that the shape plugins offer for their own shapes — the table's
   `table_read` / `table_insert_tracks` / `table_delete_tracks` /
   `table_fill_cells` / `table_clear_cells` / `table_set_track_sizes` /
-  `table_set_cell_style` — each given a `path` and the `id` of the one table it
-  acts on
+  `table_set_cell_style`, and the record's `record_set_compartments`, which
+  adds and removes compartments and fits the height to them — each given a
+  `path` and the `id` of the one object it acts on
 
 The handshake carries `instructions` describing this server alone: that files are
 addressed by absolute path, which tools need a viewer, where validation starts.

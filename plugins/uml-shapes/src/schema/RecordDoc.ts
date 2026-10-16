@@ -114,9 +114,9 @@ export const RECORD_BAND_HEIGHT =
 	RECORD_ROW_HEIGHT + RECORD_BAND_PADDING_Y_TOTAL;
 
 /**
- * Height a list compartment showing `rowCount` rows occupies, padding included.
- * The single place the rows → pixels conversion lives: the region split measures
- * a compartment with it, and the doc defaults size a fresh box with it.
+ * Height a list compartment showing `rowCount` single-line rows occupies, padding
+ * included: what the doc defaults size a fresh box with. Measuring the rows a slot
+ * actually holds is calcRecordContentHeight's.
  *
  * @param rowCount - Rows to fit; 0 still yields one row's worth, so an empty
  *   compartment reads as a compartment rather than a hairline

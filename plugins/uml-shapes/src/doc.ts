@@ -8,6 +8,7 @@ import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 import { calcFullBoxTextRegion } from "@jiscribe/doc";
 
+import { diagnoseRecordOverflow } from "./schema/diagnoseRecordOverflow";
 import {
 	RECORD_DOC_DEFAULTS,
 	RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID,
@@ -42,6 +43,9 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	// only summary is consumed — it fills the generated doc tables.
 	summary: "titled box + row compartments (UML class / ER entity)",
 	validateExtra: validateRecordTextFields,
+	// The bands are stacked by the record's own rule, which the shared overflow
+	// check cannot see, so the record checks its height against them itself.
+	diagnoseOverflow: diagnoseRecordOverflow,
 	// Resolved per read, so a document keeps whichever of these it wrote itself
 	// and nothing more (ObjectTextStyleDefaultsRegistry).
 	textSlotStyleDefaults: {
