@@ -183,7 +183,21 @@ const applyResizedFrame = (
 	return { ...state, objects: updatedObjects };
 };
 
-/** Moves the whole selection so the frame's top-left corner lands on the stated coordinate. */
+/** The group frames above and inside the selection re-derived from its roots, unless nothing changed. */
+const settleGroupsIfChanged = (
+	state: CanvasControllerState,
+	updatedState: CanvasControllerState,
+): CanvasControllerState =>
+	updatedState === state ? state : updateGroupBoundsForSelection(updatedState);
+
+/**
+ * Moves the whole selection so the frame's top-left corner lands on the stated
+ * coordinate.
+ *
+ * @returns The state with every group frame the move affects settled: a
+ *   translation carries the frames inside the selection along with it, so only
+ *   the ancestors above it are re-derived — the set the nudge commands settle
+ */
 const applyStatedPosition = (
 	state: CanvasControllerState,
 	target: TransformTarget,
@@ -212,7 +226,13 @@ const applyStatedPosition = (
 	);
 };
 
-/** Resizes the frame about its top-left corner to the stated width or height. */
+/**
+ * Resizes the frame about its top-left corner to the stated width or height.
+ *
+ * @returns The state with every group frame the resize affects settled, re-derived
+ *   from the roots of the selection: a scaled group's own frame follows the
+ *   children it just scaled, and its ancestors follow it
+ */
 const applyStatedSize = (
 	state: CanvasControllerState,
 	target: TransformTarget,
@@ -341,16 +361,24 @@ const applyStatedSize = (
 		scaleY: resizeResult.scaleY,
 	};
 
-	return applyResizedFrame(
-		settledState,
-		settledTarget,
-		startFrame,
-		updatedFrame,
-		registries,
+	return settleGroupsIfChanged(
+		state,
+		applyResizedFrame(
+			settledState,
+			settledTarget,
+			startFrame,
+			updatedFrame,
+			registries,
+		),
 	);
 };
 
-/** Turns the frame to the stated angle, carrying the children it rotates with it. */
+/**
+ * Turns the frame to the stated angle, carrying the children it rotates with it.
+ *
+ * @returns The state with every group frame the rotation affects settled,
+ *   re-derived from the roots of the selection
+ */
 const applyStatedRotation = (
 	state: CanvasControllerState,
 	target: TransformTarget,
@@ -376,11 +404,11 @@ const applyStatedRotation = (
 				registries.objectBehavior,
 			),
 		);
-		return {
+		return updateGroupBoundsForSelection({
 			...state,
 			objects: updatedObjects,
 			multiSelectGroup: updatedGroup,
-		};
+		});
 	}
 
 	const selectedId = target.selectedId;
@@ -405,7 +433,7 @@ const applyStatedRotation = (
 			),
 		);
 	}
-	return { ...state, objects: updatedObjects };
+	return updateGroupBoundsForSelection({ ...state, objects: updatedObjects });
 };
 
 /**
@@ -466,35 +494,14 @@ export const handleTransformPropertyUpdate = (
 		return state;
 	}
 
-	let updatedState: CanvasControllerState;
 	switch (property) {
 		case "x":
 		case "y":
-			updatedState = applyStatedPosition(
-				state,
-				target,
-				property,
-				value,
-				registries,
-			);
-			break;
+			return applyStatedPosition(state, target, property, value, registries);
 		case "width":
 		case "height":
-			updatedState = applyStatedSize(
-				state,
-				target,
-				property,
-				value,
-				registries,
-			);
-			break;
+			return applyStatedSize(state, target, property, value, registries);
 		case "rotation":
-			updatedState = applyStatedRotation(state, target, value, registries);
-			break;
+			return applyStatedRotation(state, target, value, registries);
 	}
-
-	if (updatedState === state) {
-		return state;
-	}
-	return updateGroupBoundsForSelection(updatedState);
 };

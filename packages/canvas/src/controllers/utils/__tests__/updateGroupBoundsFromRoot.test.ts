@@ -3,6 +3,11 @@ import { describe, it, expect } from "vitest";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import {
+	collectCowChangedKeys,
+	createCowObjects,
+	isCowObjects,
+} from "../cowObjects";
+import {
 	updateGroupBoundsFromRoot,
 	updateGroupBoundsFromRoots,
 } from "../updateGroupBoundsFromRoot";
@@ -153,6 +158,38 @@ describe("updateGroupBoundsFromRoots", () => {
 		const updatedOuter = result.objects["outer"] as unknown as { cx: number };
 		expect(updatedInner.cx).toBeCloseTo(50);
 		expect(updatedOuter.cx).toBeCloseTo(50);
+	});
+
+	it("a copy-on-write view stays a view, written only in the root's subtree", () => {
+		const r1 = rect("r1", 50, 50, "inner");
+		const inner = group("inner", ["r1"], "outer");
+		const outer = group("outer", ["inner"]);
+		const r2 = rect("r2", 300, 300);
+		const baseObjects = { r1, inner, outer, r2 };
+		const view = createCowObjects<ObjectState>(baseObjects);
+		view["r1"] = rect("r1", 70, 50, "inner");
+
+		const result = updateGroupBoundsFromRoots(makeState(view), ["r1"]);
+
+		expect(isCowObjects(result.objects)).toBe(true);
+		expect(
+			[...(collectCowChangedKeys(result.objects, baseObjects) ?? [])].sort(),
+		).toEqual(["inner", "outer", "r1"]);
+		const updatedOuter = result.objects["outer"] as unknown as { cx: number };
+		expect(updatedOuter.cx).toBeCloseTo(70);
+		// The view handed in is left as it was.
+		expect(view["outer"]).toBe(outer);
+	});
+
+	it("a plain Record comes back as a fresh plain Record", () => {
+		const r1 = rect("r1", 50, 50, "g1");
+		const g1 = group("g1", ["r1"]);
+		const state = makeState({ r1, g1 });
+
+		const result = updateGroupBoundsFromRoots(state, ["g1"]);
+
+		expect(isCowObjects(result.objects)).toBe(false);
+		expect(result.objects).not.toBe(state.objects);
 	});
 
 	it("the original state.objects is not mutated (immutable)", () => {
