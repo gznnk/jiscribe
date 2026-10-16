@@ -21,6 +21,7 @@ export { resolveTableCell } from "./grid/resolveTableCell";
 export { remapTablePartSelectionForInsert } from "./grid/remapTablePartSelectionForInsert";
 export { removeTableTracks } from "./grid/removeTableTracks";
 export { rewriteTableGrid } from "./grid/rewriteTableGrid";
+export type { TableGrid } from "./grid/TableGrid";
 export {
 	countTableTracks,
 	parseTableTrackPartId,

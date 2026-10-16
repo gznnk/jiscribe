@@ -154,6 +154,8 @@ package's `package.json` `exports`.
 @jiscribe/doc/unstable        tier 2, headless
 @jiscribe/canvas-sdk          the plugin-facing surface (re-exports unstable + kit)
 @jiscribe/canvas-sdk/doc      headless counterpart
+@jiscribe/canvas-sdk/tools    headless: the contract a plugin offers AI tools through
+                              (re-exports @jiscribe/ai-tools-sdk)
 ```
 
 The two headless entries are a package of their own. `@jiscribe/canvas` has no

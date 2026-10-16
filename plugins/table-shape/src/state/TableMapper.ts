@@ -5,24 +5,18 @@ import {
 	ObjectMapper,
 } from "@jiscribe/canvas-sdk";
 import { collectStyleKeys, roundDocCoordinate } from "@jiscribe/canvas-sdk/doc";
-import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc";
 import {
 	calcFrameCenterFromTopLeft,
 	calcFrameKeyPoint,
 } from "@jiscribe/geometry";
 
 import type { TableState } from "./TableState";
+import { mapTableGridToCells } from "../grid/mapTableGridToCells";
+import { readTableDocGrid } from "../grid/readTableDocGrid";
 import { calcTableFrameSize } from "../layout/calcTableFrameSize";
 import { calcTableMinWidth } from "../layout/calcTableLayout";
-import { mapCellsToTextSlots } from "../schema/mapCellsToTextSlots";
-import { tableCellTextSlotId, TableFeatures } from "../schema/TableDoc";
-import type {
-	TableCell,
-	TableCellDoc,
-	TableColumnDoc,
-	TableDoc,
-	TableRowDoc,
-} from "../schema/TableDoc";
+import { TableFeatures } from "../schema/TableDoc";
+import type { TableDoc } from "../schema/TableDoc";
 
 /**
  * The fields that read the same on a doc and on a state, so the mapper carries
@@ -53,41 +47,6 @@ const pickPassthrough = (
 };
 
 /**
- * Whether a cell carries nothing but its text, and so may be written back as that
- * text alone. Both halves matter: a `fill` is the type's own field on a slot, and
- * the five style fields are the ones a cell shares with every other slot.
- */
-const isTextOnlyCell = (cell: TableCell): boolean =>
-	cell.fill === undefined &&
-	TEXT_SLOT_STYLE_KEYS.every((key) => cell[key] === undefined);
-
-/** The inverse of {@link mapCellsToTextSlots}, folding every unstyled cell to its text. */
-const mapTextSlotsToCells = (state: TableState): TableCellDoc[][] => {
-	const cells: TableCellDoc[][] = [];
-	for (let row = 0; row < state.rows.length; row++) {
-		const rowCells: TableCellDoc[] = [];
-		for (let column = 0; column < state.columns.length; column++) {
-			const cell = state.text[tableCellTextSlotId(row, column)];
-			if (cell === undefined) {
-				rowCells.push("");
-				continue;
-			}
-			rowCells.push(isTextOnlyCell(cell) ? cell.text : { ...cell });
-		}
-		cells.push(rowCells);
-	}
-	return cells;
-};
-
-/** Fresh column entries, so two tables created from the same doc defaults share none. */
-const cloneColumns = (columns: readonly TableColumnDoc[]): TableColumnDoc[] =>
-	columns.map((column) => ({ ...column }));
-
-/** Fresh row entries, for the same reason as {@link cloneColumns}. */
-const cloneRows = (rows: readonly TableRowDoc[]): TableRowDoc[] =>
-	rows.map((row) => ({ ...row }));
-
-/**
  * TableDoc -> TableState: the grid moved into the keyed slot map the text
  * machinery reads, and the box measured from that grid.
  *
@@ -102,13 +61,7 @@ const cloneRows = (rows: readonly TableRowDoc[]): TableRowDoc[] =>
 export const tableToState: ObjectMapperType<TableDoc, TableState>["toState"] = (
 	doc,
 ) => {
-	const columns = cloneColumns(doc.columns);
-	const rows = cloneRows(doc.rows);
-	const text = mapCellsToTextSlots(
-		doc.cells,
-		doc.rows.length,
-		doc.columns.length,
-	);
+	const { columns, rows, text } = readTableDocGrid(doc);
 	const transform = mapTransformDocToState(doc);
 	const size = calcTableFrameSize({
 		columns,
@@ -162,8 +115,8 @@ export const tableToDoc: ObjectMapperType<TableDoc, TableState>["toDoc"] = (
 		// stringifies the doc to decide whether the file is dirty.
 		x: roundDocCoordinate(drawnTopLeft.x),
 		y: roundDocCoordinate(drawnTopLeft.y),
-		columns: cloneColumns(state.columns),
-		rows: cloneRows(state.rows),
-		cells: mapTextSlotsToCells(state),
+		columns: state.columns.map((column) => ({ ...column })),
+		rows: state.rows.map((row) => ({ ...row })),
+		cells: mapTableGridToCells(state),
 	} as TableDoc;
 };

@@ -164,6 +164,65 @@ A type's properties-sidebar sections are declared as `propertyPanel`, and a row 
 
 `./testing` is a separate entry so vitest never reaches a runtime bundle.
 
+## Offering AI tools for your shapes
+
+The generic tools (`set_text`, `set_extra_props`, …) cannot express an edit that
+only makes sense for one type — inserting a table row, say. A plugin offers those
+as tools of its own: each acts on the one object the call names by `id` and either
+rebuilds it (`apply`) or reads it (`read`). Write them against
+`@jiscribe/canvas-sdk/tools`, export them from a headless `./tools` entry
+(`src/tools.ts`). Write the argument schemas as a zod raw shape (the properties,
+not a `z.object`); the host puts it into its declarations as it is, the MCP SDK
+declaring tools from zod alone. zod is a peer of the contract, so the plugin and
+the host share one copy: add `zod` at the catalog version (`catalog:`) to the
+plugin's `peerDependencies` and `devDependencies`.
+
+The contract itself lives in `@jiscribe/ai-tools-sdk`, which
+`@jiscribe/canvas-sdk/tools` re-exports. A plugin does not import the former
+directly (ESLint rejects it), but canvas-sdk takes it as a peer, so a plugin with a
+`./tools` entry adds `@jiscribe/ai-tools-sdk` to its `peerDependencies` and
+`devDependencies`.
+
+```ts
+// src/tools.ts
+import {
+	type AiToolPlugin,
+	defineObjectAiTool,
+} from "@jiscribe/canvas-sdk/tools";
+import { z } from "zod";
+
+export const tableAiToolPlugin: AiToolPlugin = {
+	id: "table-shape",
+	tools: [
+		defineObjectAiTool({
+			name: "table_insert_tracks", // <type>_<verb>, unique across every tool
+			description: "Insert rows or columns into a table.",
+			objectType: "table",
+			inputSchema: { axis: z.enum(["row", "column"]), at: z.number().int() },
+			apply: (table: TableDoc, { axis, at }) => ({
+				doc: insertTracks(table, axis, at), // a new object; never mutate `table`
+				text: `inserted a ${axis} at ${at}`,
+			}),
+		}),
+	],
+};
+```
+
+The host adds `id` to the schema, refuses an object of another type, and checks
+what `apply` returns against the type's `validateDoc` and the names it holds before
+anything is written, so a result the parser would refuse or drop fails the call
+and leaves the document alone. Throw an `Error` to refuse a call; its message is
+what the AI reads. A `read` tool never writes the document back. A tool name that
+repeats a built-in tool or another plugin's tool throws when the host builds its
+tool set.
+
+A tool that styles text slots of its own spreads `textSlotStyleSchema` into its
+`inputSchema` rather than writing the typography out again: it is the vocabulary
+the built-in `set_style` declares, descriptions included. Its `fontWeight` accepts
+`"400"` / `"700"`, so pass the value through `canonicalizeFontWeight` before
+writing it (the document keeps `"normal"` / `"bold"`). Both come from
+`@jiscribe/canvas-sdk/tools`; the table's `table_set_cell_style` is the example.
+
 ## Giving the package an e2e suite
 
 Every plugin owns a Playwright suite driving **a harness that holds that plugin alone**.
@@ -298,8 +357,9 @@ harness alone with `dev:harness` to look at it by eye. `vitest.config.ts` includ
 - Nothing under a plugin's `src/` may import `@jiscribe/canvas/unstable` or
   `@jiscribe/doc/unstable`. Use `@jiscribe/canvas-sdk`, or
   `@jiscribe/canvas-sdk/doc` for the headless side.
-- A plugin's `src/schema/` and `src/doc.ts` are headless. Of the canvas and doc
-  entries they may use `@jiscribe/doc` and `@jiscribe/canvas-sdk/doc` only — not
+- A plugin's `src/schema/`, `src/doc.ts` and `src/tools.ts` (or `src/tools/`) are
+  headless. Of the canvas and doc entries they may use `@jiscribe/doc` and
+  `@jiscribe/canvas-sdk/doc` (`/tools`) only — not
   the UI entries, not `react` / `react-dom` / `@emotion/*`, and not the package's
   own UI-side layers (`presentation/`, `state/`, `menu/` and the rest;
   `eslint.config.js` has the list).
@@ -372,6 +432,10 @@ UI plugin (`somePlugin`):
 Headless doc plugin (`someDocPlugin`):
 
 - [ ] `packages/standard-shapes/src/doc.ts` (`standardDocPlugins`; the VSCode extension's diagnostics, schema generation, the MCP server and `doc-tools` all take the set from there)
+
+AI tools (`someAiToolPlugin`), when the plugin offers any:
+
+- [ ] `packages/standard-shapes/src/tools.ts` (`standardAiToolPlugins`; the MCP server takes the set from there)
 
 Only `packages/standard-shapes` and `apps/canvas-examples` take the plugin as a
 `package.json` dependency; the other hosts (the VSCode extension, MCP, the CLI) depend

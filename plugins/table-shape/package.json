@@ -7,7 +7,8 @@
 	"types": "src/index.ts",
 	"exports": {
 		".": "./src/index.ts",
-		"./doc": "./src/doc.ts"
+		"./doc": "./src/doc.ts",
+		"./tools": "./src/tools.ts"
 	},
 	"scripts": {
 		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
@@ -23,14 +24,18 @@
 	"peerDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/canvas-sdk": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
-		"react": "catalog:"
+		"react": "catalog:",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@jiscribe/ai-tools": "workspace:*",
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/canvas-sdk": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
@@ -39,6 +44,7 @@
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vitest": "catalog:"
+		"vitest": "catalog:",
+		"zod": "catalog:"
 	}
 }

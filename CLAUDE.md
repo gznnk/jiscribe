@@ -25,6 +25,7 @@ packages/
   utility-types/     shared TypeScript utility types
   doc-schema/        generated JSON Schema / AI reference for the shipped shapes
   ai-tools/          the canvas tool set an AI can call: the declaration, and the applying side under ./apply (node) and ./client (browser)
+  ai-tools-sdk/      the contract a plugin offers AI tools for its own shapes through (plugins reach it through canvas-sdk/tools)
   standard-shapes/   the shipped shape set, bundled once for every host (doc + presentation entries)
   doc-tools/         validate / measure / diagnose over the standard set (Node text measurer included)
 plugins/             flowchart, uml, container, general, annotation, sticky, markdown, table, lucide-icon, aws — each with its own e2e suite
@@ -90,13 +91,13 @@ Then, by impact:
 ESLint fails on all of these — see `eslint.config.js` for the exact patterns.
 
 - Packages under `plugins/` may only import `@jiscribe/canvas`, `@jiscribe/doc`,
-  `@jiscribe/canvas-sdk` and its `/doc` entry point. `@jiscribe/canvas/unstable`,
-  `@jiscribe/doc/unstable`, deep `@jiscribe/doc/*` paths and any `src/` path are
-  rejected.
+  `@jiscribe/canvas-sdk` and its `/doc` and `/tools` entry points.
+  `@jiscribe/canvas/unstable`, `@jiscribe/doc/unstable`, `@jiscribe/ai-tools-sdk`,
+  deep `@jiscribe/doc/*` paths and any `src/` path are rejected.
 - The headless document layer (`packages/doc` — the document model, plugin
-  contract, parser, ops, text metrics and file I/O — plus the equivalent layers
-  in `canvas-sdk` and the plugins) must not import `react`, `react-dom`,
-  `@emotion/*`, or `@jiscribe/canvas`. Canvas keeps `./doc` / `./unstable-doc` /
+  contract, parser, ops, text metrics and file I/O — plus `packages/ai-tools-sdk`
+  and the equivalent layers in `canvas-sdk` and the plugins) must not import
+  `react`, `react-dom`, `@emotion/*`, or `@jiscribe/canvas`. Canvas keeps `./doc` / `./unstable-doc` /
   `./png-source` / `./svg-source` as re-export shims over `@jiscribe/doc`.
 - Import through package roots (`@jiscribe/geometry`), never `src/` paths.
 - `as unknown as` is banned under `packages/canvas/src/states` and

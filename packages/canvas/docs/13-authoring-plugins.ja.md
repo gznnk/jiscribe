@@ -159,6 +159,61 @@ SVG の `fill` 属性ではなく CSS で当てる**。`"auto"` の解決先は 
 
 `./testing` を別入口にしてあるのは、vitest がランタイムバンドルに届かないようにするため。
 
+## 図形用の AI ツールを足す
+
+汎用ツール（`set_text`・`set_extra_props` など）では、ある型にしか意味の無い編集
+（表への行の挿入など）を表せない。そうした編集はプラグインが自前のツールとして出す。
+各ツールは呼び出しが `id` で名指す 1 オブジェクトに作用し、作り直す（`apply`）か
+読む（`read`）かのどちらかを持つ。`@jiscribe/canvas-sdk/tools` に対して書き、
+headless の `./tools` 入口（`src/tools.ts`）から export する。引数スキーマは zod の
+raw shape（`z.object` ではなくプロパティの並び）で書く。ホストはそれをそのまま
+ツール宣言に載せる（MCP SDK が zod でしかツールを宣言できない）。zod は契約の peer
+なので、プラグインとホストは同じ zod の実体を共有する。プラグインは `zod` を
+catalog の版（`catalog:`）で `peerDependencies` と `devDependencies` に足す。
+
+契約の正本は `@jiscribe/ai-tools-sdk` で、`@jiscribe/canvas-sdk/tools` はその
+再エクスポートである。プラグインは前者を直接 import しない（ESLint が弾く）が、
+canvas-sdk がそれを peer で取るので、`./tools` を持つプラグインは
+`@jiscribe/ai-tools-sdk` を `peerDependencies` と `devDependencies` に足す。
+
+```ts
+// src/tools.ts
+import {
+	type AiToolPlugin,
+	defineObjectAiTool,
+} from "@jiscribe/canvas-sdk/tools";
+import { z } from "zod";
+
+export const tableAiToolPlugin: AiToolPlugin = {
+	id: "table-shape",
+	tools: [
+		defineObjectAiTool({
+			name: "table_insert_tracks", // <型>_<動詞>。全ツールを通して一意
+			description: "Insert rows or columns into a table.",
+			objectType: "table",
+			inputSchema: { axis: z.enum(["row", "column"]), at: z.number().int() },
+			apply: (table: TableDoc, { axis, at }) => ({
+				doc: insertTracks(table, axis, at), // 新しいオブジェクトを返す。`table` は書き換えない
+				text: `inserted a ${axis} at ${at}`,
+			}),
+		}),
+	],
+};
+```
+
+`id` はホストがスキーマに足し、別の型のオブジェクトは拒否する。`apply` の戻り値は、
+書き込む前にその型の `validateDoc` と型が持つ名前で検査されるので、パーサーが拒否する
+（または落とす）結果は呼び出しの失敗になり、doc は変わらない。呼び出しを断るときは
+`Error` を throw する。そのメッセージが AI に返る。`read` のツールは doc を書き戻さない。
+組み込みツールや他プラグインのツールと名前が重なると、ホストがツール一式を組む時点で
+throw する。
+
+自分の型のテキストスロットをスタイルするツールは、文字装飾の引数を書き起こさず
+`textSlotStyleSchema` を `inputSchema` に展開する。組み込みの `set_style` が宣言する
+語彙そのもので、説明文も同じになる。`fontWeight` は `"400"` / `"700"` も受けるので、
+書き込む前に `canonicalizeFontWeight` を通す（doc は `"normal"` / `"bold"` で持つ）。
+どちらも `@jiscribe/canvas-sdk/tools` から取る。実例はテーブルの `table_set_cell_style`。
+
 ## e2e スイートを持たせる
 
 どのプラグインも、**自分だけを載せたハーネス**を叩く Playwright スイートを持つ。単独
@@ -292,8 +347,9 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 - プラグインの `src/` 配下からは `@jiscribe/canvas/unstable`・
   `@jiscribe/doc/unstable` を import できない。`@jiscribe/canvas-sdk`
   （headless は `@jiscribe/canvas-sdk/doc`）を使う
-- プラグインの `src/schema/` と `src/doc.ts` は headless。canvas / doc 系の入口で
-  使えるのは `@jiscribe/doc` と `@jiscribe/canvas-sdk/doc` だけで、UI 入口・
+- プラグインの `src/schema/`・`src/doc.ts`・`src/tools.ts`（または `src/tools/`）は
+  headless。canvas / doc 系の入口で使えるのは `@jiscribe/doc` と
+  `@jiscribe/canvas-sdk/doc`（`/tools`）だけで、UI 入口・
   `react` / `react-dom` / `@emotion/*`・自パッケージの UI 側の層（`presentation/`・
   `state/`・`menu/` など。一覧は `eslint.config.js` が正本）へは到達できない
 - **import はパッケージルート経由。**`@jiscribe/geometry` であって
@@ -363,6 +419,10 @@ UI プラグイン（`somePlugin`）:
 headless doc プラグイン（`someDocPlugin`）:
 
 - [ ] `packages/standard-shapes/src/doc.ts`（`standardDocPlugins`。VSCode 拡張の診断・スキーマ生成・MCP サーバー・`doc-tools` はここから図形セットを受け取る）
+
+AI ツール（`someAiToolPlugin`。プラグインが出す場合だけ）:
+
+- [ ] `packages/standard-shapes/src/tools.ts`（`standardAiToolPlugins`。MCP サーバーはここからツール一式を受け取る）
 
 `package.json` にプラグインへの依存を足すのは `packages/standard-shapes` と
 `apps/canvas-examples` だけである。ほかのホスト（VSCode 拡張・MCP・CLI）は

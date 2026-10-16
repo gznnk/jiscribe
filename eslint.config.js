@@ -329,11 +329,14 @@ export default tseslint.config(
 		},
 	},
 	{
-		// The headless (doc) entry point that is not the doc package itself: the shipped
-		// set's headless half, whose whole point is that a Node host can take the eight
-		// plugins without a rendering layer coming with them. It may name @jiscribe/doc,
-		// and nothing else that drags the UI in.
-		files: ["packages/standard-shapes/src/doc.ts"],
+		// The headless (doc / tools) entry points that are not the doc package itself: the
+		// shipped set's headless half, whose whole point is that a Node host can take the
+		// eight plugins without a rendering layer coming with them. They may name
+		// @jiscribe/doc and @jiscribe/ai-tools-sdk, and nothing else that drags the UI in.
+		files: [
+			"packages/standard-shapes/src/doc.ts",
+			"packages/standard-shapes/src/tools.ts",
+		],
 		rules: {
 			"no-restricted-imports": [
 				"error",
@@ -358,6 +361,42 @@ export default tseslint.config(
 							group: ["**/rendering/**", "**/controllers/**", "**/states/**"],
 							message:
 								"The headless (doc) layer cannot depend on the rendering / control / state layers.",
+						},
+						docCuratedEntriesOnly,
+					],
+				},
+			],
+		},
+	},
+	{
+		// @jiscribe/ai-tools-sdk is headless in full: the contract runs wherever the
+		// document is applied, a Node MCP server included. It sits under the canvas and
+		// beside the doc model, so it names @jiscribe/doc and nothing that drags the UI in.
+		files: ["packages/ai-tools-sdk/src/**"],
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["@jiscribe/*/src/*"],
+							message:
+								"Import through the package root. Reaching into src/ is not allowed.",
+						},
+						{
+							group: ["react", "react/*", "react-dom", "react-dom/*"],
+							message:
+								"Do not pull in react / react-dom; it would break the headless (doc) layer.",
+						},
+						{
+							group: ["@emotion/*"],
+							message:
+								"Do not pull in @emotion; it would break the headless (doc) layer.",
+						},
+						{
+							group: ["@jiscribe/canvas", "@jiscribe/canvas/*"],
+							message:
+								"The headless (doc) layer cannot depend on the canvas. Take types from @jiscribe/doc.",
 						},
 						docCuratedEntriesOnly,
 					],
@@ -434,11 +473,12 @@ export default tseslint.config(
 		},
 	},
 	{
-		// The canvas-sdk headless (doc) layer: ban the canvas UI entry points
+		// The canvas-sdk headless (doc / tools) layer: ban the canvas UI entry points
 		// (root / unstable), react / @emotion, and reach into this package's own
 		// presentation layer.
 		files: [
 			"packages/canvas-sdk/src/doc.ts",
+			"packages/canvas-sdk/src/tools.ts",
 			"packages/canvas-sdk/src/schema/**",
 		],
 		rules: {
@@ -534,9 +574,10 @@ export default tseslint.config(
 		},
 	},
 	{
-		// Plugins do not look at the canvas unstable entry points directly: the
-		// shape-authoring kit (@jiscribe/canvas-sdk) is their only contact with the
-		// public canvas surface.
+		// Plugins do not look at the canvas unstable entry points or the AI tool
+		// contract directly: the shape-authoring kit (@jiscribe/canvas-sdk) is their
+		// only contact with the public canvas surface, and its ./tools with
+		// @jiscribe/ai-tools-sdk.
 		files: ["plugins/*/src/**"],
 		rules: {
 			"no-restricted-imports": [
@@ -552,6 +593,10 @@ export default tseslint.config(
 							name: "@jiscribe/doc/unstable",
 							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
+						{
+							name: "@jiscribe/ai-tools-sdk",
+							message: "Use @jiscribe/canvas-sdk/tools instead.",
+						},
 					],
 					patterns: [
 						{
@@ -566,10 +611,15 @@ export default tseslint.config(
 		},
 	},
 	{
-		// The plugin headless (schema / doc) layer: ban the canvas / canvas-sdk UI entry
-		// points, react / @emotion, and relative reach into this package's own UI layer;
-		// only @jiscribe/doc and @jiscribe/canvas-sdk/doc are allowed.
-		files: ["plugins/*/src/schema/**", "plugins/*/src/doc.ts"],
+		// The plugin headless (schema / doc / tools) layer: ban the canvas / canvas-sdk UI
+		// entry points, react / @emotion, and relative reach into this package's own UI
+		// layer; only @jiscribe/doc and @jiscribe/canvas-sdk/doc (/tools) are allowed.
+		files: [
+			"plugins/*/src/schema/**",
+			"plugins/*/src/doc.ts",
+			"plugins/*/src/tools.ts",
+			"plugins/*/src/tools/**",
+		],
 		rules: {
 			"no-restricted-imports": [
 				"error",
@@ -588,6 +638,10 @@ export default tseslint.config(
 						{
 							name: "@jiscribe/doc/unstable",
 							message: "Use @jiscribe/canvas-sdk/doc instead.",
+						},
+						{
+							name: "@jiscribe/ai-tools-sdk",
+							message: "Use @jiscribe/canvas-sdk/tools instead.",
 						},
 						{
 							name: "@jiscribe/canvas-sdk",

@@ -17,10 +17,11 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",
-		"zod": "^4.4.3"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@jiscribe/plugin-container-shapes": "workspace:*",

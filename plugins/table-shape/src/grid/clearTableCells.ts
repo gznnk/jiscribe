@@ -1,15 +1,11 @@
-import { calcTableFrameSize } from "../layout/calcTableFrameSize";
-import type { TableCell } from "../schema/TableDoc";
-import { resizeTableFromDrawnCorner } from "../state/resizeTableFromDrawnCorner";
+import { clearTableGridCells } from "./clearTableGridCells";
+import { fitTableBoxToGrid } from "../state/fitTableBoxToGrid";
 import type { TableState } from "../state/TableState";
 
 /**
- * Empties the named cells and leaves the grid standing — what Delete means over a
- * range of cells, as against over a row grip, where the row itself goes.
- *
- * Only the text is taken. A cell's background and its typography are formatting,
- * and a spreadsheet's Delete key does not reach them; clearing a cell is emptying
- * it, not rebuilding it.
+ * Empties the named cells of a table on the canvas ({@link clearTableGridCells}) —
+ * what Delete means over a range of cells, as against over a row grip, where the
+ * row itself goes.
  *
  * The box is re-derived: a cleared cell may have been the tallest of its row, and
  * the table follows its content down as readily as up.
@@ -26,19 +22,6 @@ export const clearTableCells = (
 	state: TableState,
 	cellIds: readonly string[],
 ): TableState | null => {
-	const text: Record<string, TableCell> = { ...state.text };
-	let cleared = false;
-	for (const cellId of cellIds) {
-		const cell = text[cellId];
-		if (cell === undefined || cell.text === "") {
-			continue;
-		}
-		text[cellId] = { ...cell, text: "" };
-		cleared = true;
-	}
-	if (!cleared) {
-		return null;
-	}
-	const emptied: TableState = { ...state, text };
-	return resizeTableFromDrawnCorner(emptied, calcTableFrameSize(emptied));
+	const cleared = clearTableGridCells(state, cellIds);
+	return cleared === null ? null : fitTableBoxToGrid(cleared);
 };

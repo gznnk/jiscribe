@@ -273,6 +273,16 @@ export type AiDocOp =
 	| { kind: "dissolveGroups"; ids: string[] }
 	| { kind: "addToGroup"; groupId: string; ids: string[] }
 	| { kind: "removeFromGroup"; ids: string[] }
+	/**
+	 * A tool a plugin offers for one object of its own type, looked up by name in the
+	 * host's tool set; args are what that tool's inputSchema validated, minus the id
+	 */
+	| {
+			kind: "objectTool";
+			tool: string;
+			id: string;
+			args: Readonly<Record<string, unknown>>;
+	  }
 	| { kind: "undo" };
 
 /** The conditions find_objects narrows by; every one given must hold */

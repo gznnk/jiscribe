@@ -15,6 +15,21 @@ covers that.
 
 ## [Unreleased]
 
+### Added
+
+- **Tools the shape plugins offer for their own shapes are registered beside the
+  rest.** Each takes `path` like every document tool, plus the `id` of the one
+  object it acts on, refuses an object of another type, and is taken back by
+  `undo`; one that only reads does not write the file back.
+- **Seven tools for tables, 76 tools in all.** `table_read` lists a table's
+  extent, track sizes and cells; `table_insert_tracks` / `table_delete_tracks`
+  add and remove rows or columns; `table_fill_cells` writes a block of text from
+  one cell (`grow: true` appends the rows and columns it needs);
+  `table_clear_cells` empties a range; `table_set_track_sizes` sets column widths
+  and row heights; and `table_set_cell_style` sets a fill and typography over a
+  range. A refused call says why and what the table holds, and leaves the file
+  as it was.
+
 ### Fixed
 
 - **A headless Chromium that dies as it starts is reported at once, with what

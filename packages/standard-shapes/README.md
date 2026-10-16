@@ -17,21 +17,23 @@ import {
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 ```
 
-| Export                           | Entry  | What it is                                                                                                        |
-| -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------- |
-| `standardPlugins`                | `.`    | The ten plugins for `CanvasConfig.plugins`                                                                        |
-| `standardToolbarSections`        | `.`    | The whole bar — the shape tools below, then core's history, view and properties sections — for `toolbar.sections` |
-| `standardToolbarToolsSection`    | `.`    | Just the shape tools of that bar: the library toggle, then six pinned presets                                     |
-| `standardStencilLibrarySections` | `.`    | The whole set as sidebar sections, for `stencilLibrary.sections`                                                  |
-| `standardDocPlugins`             | `/doc` | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                 |
-| `standardObjectDocDefinitions`   | `/doc` | Every type of the set by name, canvas built-ins included                                                          |
+| Export                           | Entry    | What it is                                                                                                        |
+| -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                        |
+| `standardToolbarSections`        | `.`      | The whole bar — the shape tools below, then core's history, view and properties sections — for `toolbar.sections` |
+| `standardToolbarToolsSection`    | `.`      | Just the shape tools of that bar: the library toggle, then six pinned presets                                     |
+| `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                  |
+| `standardDocPlugins`             | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                 |
+| `standardObjectDocDefinitions`   | `/doc`   | Every type of the set by name, canvas built-ins included                                                          |
+| `standardAiToolPlugins`          | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's, so far)        |
 
-## The two entries
+## The entries
 
 `./doc` mirrors the split `@jiscribe/canvas` makes: it reaches only each plugin's
 own `./doc`, so importing it drags in no react and no DOM. A Node host — the CLI,
 an MCP server, the extension's diagnostics — takes that one. The root entry is
 the half a canvas is rendered with, and pulls the whole rendering layer.
+`./tools` is headless the same way, reaching each plugin's own `./tools`.
 
 ## Registering both halves
 

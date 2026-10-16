@@ -1,10 +1,7 @@
-import {
-	createCanvasToolDescriptors,
-	type CanvasToolDescriptor,
-} from "@jiscribe/ai-tools";
+import type { CanvasToolDescriptor } from "@jiscribe/ai-tools";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { canvasCapabilities } from "../canvasDefinitions";
+import { canvasToolSet } from "../canvasDefinitions";
 import type { McpTestClient } from "./mcpTestClient";
 import { connectMcpTestClient } from "./mcpTestClient";
 
@@ -43,9 +40,9 @@ describe("createJiscribeMcpServer", () => {
 		]);
 	});
 
-	it("registers every ai-tools declaration, doc-side and screen-side alike", async () => {
+	it("registers every ai-tools declaration, doc-side and screen-side alike, plugin tools included", async () => {
 		const names = await client.listToolNames();
-		const descriptors = createCanvasToolDescriptors(canvasCapabilities);
+		const descriptors = canvasToolSet.descriptors;
 
 		// measure_text alone clashes with one of our own and goes in renamed
 		const expectedNames = descriptors.map((descriptor) =>
@@ -67,7 +64,7 @@ describe("createJiscribeMcpServer", () => {
 		// the single open one. That difference in addressing is not in the
 		// declaration's own description and shows up only as the presence or
 		// absence of an argument, so it is filled in here
-		const descriptors = createCanvasToolDescriptors(canvasCapabilities);
+		const descriptors = canvasToolSet.descriptors;
 		const handleNames = descriptors
 			.filter(needsCanvas)
 			.map((descriptor) =>

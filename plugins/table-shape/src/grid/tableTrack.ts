@@ -1,4 +1,4 @@
-import type { TableState } from "../state/TableState";
+import type { TableGrid } from "./TableGrid";
 
 /**
  * One of the table's two directions, spelled as the part kind that selects a
@@ -49,9 +49,11 @@ export const parseTableTrackPartId = (
 /**
  * How many tracks the table has along one axis.
  *
- * @param state - The table to count; its `rows` / `columns` are the grid's shape
+ * @param grid - The table to count; its `rows` / `columns` are the grid's shape
  * @param axis - Which of the two to count
  * @returns The count, at least 1 for a table that passed validation
  */
-export const countTableTracks = (state: TableState, axis: TableAxis): number =>
-	axis === "row" ? state.rows.length : state.columns.length;
+export const countTableTracks = (
+	grid: Pick<TableGrid, "rows" | "columns">,
+	axis: TableAxis,
+): number => (axis === "row" ? grid.rows.length : grid.columns.length);

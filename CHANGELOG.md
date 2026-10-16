@@ -351,6 +351,40 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   caching measurements records it and re-measures once it has moved. The table
   uses it to measure each cell once per width, which leaves a row boundary drag
   measuring no text at all.
+- **A plugin can offer AI tools for its own shapes.** An object tool
+  (`defineObjectAiTool`, from `@jiscribe/canvas-sdk/tools`) acts on the one object
+  a call names by `id`, and either rebuilds it or reads it. A plugin exports its
+  tools from a `./tools` entry, `@jiscribe/standard-shapes/tools` gathers the
+  shipped set's as `standardAiToolPlugins`, and `createCanvasToolSet` in
+  `@jiscribe/ai-tools` resolves them with the built-in tools into the one set a
+  host both declares from and applies through. A rebuilt object is held to the
+  type's `validateDoc` and to the names the type holds before it is written, and
+  undo takes it back like any other edit. Arguments are written as a zod raw
+  shape, and zod is a peer dependency of the contract, so a plugin takes it at
+  the version the host uses. The contract is a package of its
+  own, `@jiscribe/ai-tools-sdk`, which `@jiscribe/canvas-sdk/tools` re-exports.
+  The table is the first shipped plugin to offer any (below).
+- **A table can be edited through AI tools of its own.** `table_read` lists its
+  extent, track sizes and every cell; `table_insert_tracks` /
+  `table_delete_tracks` add and remove rows or columns, refusing to delete every
+  one of either; `table_fill_cells` writes a block of text from one cell, refusing
+  a block that runs past the table unless `grow` appends what it needs;
+  `table_clear_cells` empties a range and keeps its styling;
+  `table_set_track_sizes` sets column widths and row floors (`"auto"` takes a
+  row's floor away), refusing a column under its minimum; and
+  `table_set_cell_style` lays a fill and typography over a range. Rows and
+  columns count from 0, and cell `[row,column]` is the text slot
+  `r{row}c{column}`. They come from the plugin's new headless `./tools` entry and
+  reach hosts through `standardAiToolPlugins`.
+- For plugin authors: `textSlotStyleSchema` and `canonicalizeFontWeight`, from
+  `@jiscribe/canvas-sdk/tools`, are the typography vocabulary `set_style`
+  declares and the weight spelling a document keeps (`"700"` is stored as
+  `"bold"`), so a tool styling text slots of its own speaks the same arguments.
+  `@jiscribe/ai-tools-sdk` takes zod as a peer dependency for them.
+- **`docOps.replaceObject` swaps one object for a whole new doc of the same id
+  and type**, refusing what the parser would not keep as written — a value the
+  type's `validateDoc` rejects, a malformed `meta`, a name the type does not hold —
+  and leaving the document untouched when it does.
 
 ### Changed
 
@@ -367,6 +401,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **The object menu hangs under the picked text slot, not under the whole
   shape.** With a slot, a cell, a row or a column picked, the menu is placed by
   the boxes outlined around them, and moves when the pick moves to another one.
+- **`@jiscribe/ai-tools` builds its declarations through `createCanvasToolSet`.**
+  `createCanvasToolDescriptors` is no longer exported; call
+  `createCanvasToolSet(capabilities, aiToolPlugins)` and read `descriptors` off
+  it, and pass that same set to `applyCanvasOp` as its new last argument, which
+  resolves plugin tools through it.
 - **The object menu offers Bold alone for text formatting, as one button on the
   menu itself.** The text-format dropdown, which held Bold, Italic, Underline and
   Strikethrough, is gone, and so is the row of four the menu used to lay out

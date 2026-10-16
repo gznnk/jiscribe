@@ -143,6 +143,8 @@ const result = parser.parse(text);
 @jiscribe/doc/unstable        tier 2・headless
 @jiscribe/canvas-sdk          プラグイン向けの面（unstable の再エクスポート + 量産キット）
 @jiscribe/canvas-sdk/doc      その headless 版
+@jiscribe/canvas-sdk/tools    headless: プラグインが AI ツールを出す契約
+                              （@jiscribe/ai-tools-sdk の再エクスポート）
 ```
 
 headless な 2 つのエントリは独立したパッケージである。`@jiscribe/canvas` 側に

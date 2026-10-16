@@ -1,8 +1,9 @@
-import { toCanvasCapabilities } from "@jiscribe/ai-tools";
+import { createCanvasToolSet, toCanvasCapabilities } from "@jiscribe/ai-tools";
 import { createCanvasParser, createDocOps } from "@jiscribe/doc";
 import { offerTextMeasurement } from "@jiscribe/doc/unstable";
 import { nodeTextMeasurement } from "@jiscribe/doc-tools";
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
+import { standardAiToolPlugins } from "@jiscribe/standard-shapes/tools";
 
 /**
  * The parser shared by loading and writing back. The shipped shape set is the
@@ -30,4 +31,15 @@ export const docOps = createDocOps({ plugins: standardDocPlugins });
  * types a declaration lists cannot disagree with the types that can actually be
  * added.
  */
-export const canvasCapabilities = toCanvasCapabilities(standardDocPlugins);
+const canvasCapabilities = toCanvasCapabilities(standardDocPlugins);
+
+/**
+ * The ai-tools tool set: the declarations registered as MCP tools and the plugin
+ * tools applyCanvasOp resolves an `objectTool` op through, both read off this one
+ * value. The plugins' tools come from the same standard set, and only those whose
+ * type the capabilities offer are in it.
+ */
+export const canvasToolSet = createCanvasToolSet(
+	canvasCapabilities,
+	standardAiToolPlugins,
+);

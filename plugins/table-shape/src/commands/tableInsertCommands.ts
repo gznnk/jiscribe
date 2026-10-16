@@ -95,7 +95,7 @@ const toKeyBinding = (spec: TableInsertCommandSpec): KeyBinding => ({
  *
  * The command commits its own edit (commitEdit): the reducer's COMMAND path
  * records history off `commitVersion` without advancing it, and re-derives the box
- * afterwards, finding it already grown from the drawn corner (rewriteTableGrid).
+ * afterwards, finding it already grown from the drawn corner (fitTableBoxToGrid).
  */
 const createTableInsertCommand = (
 	spec: TableInsertCommandSpec,
