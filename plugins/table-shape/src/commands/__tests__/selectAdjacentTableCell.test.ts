@@ -11,6 +11,7 @@ import { tableCellTextSlotIds } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
 import {
 	canSelectAdjacentTableCell,
+	extendTableCellSelection,
 	selectAdjacentTableCell,
 } from "../selectAdjacentTableCell";
 
@@ -126,6 +127,112 @@ describe("selectAdjacentTableCell", () => {
 	});
 });
 
+describe("extendTableCellSelection", () => {
+	/** The cell ranges the extension left picked. */
+	const extendedRangesAfter = (
+		state: CanvasControllerState,
+		direction: Parameters<typeof extendTableCellSelection>[1],
+	) => extendTableCellSelection(state, direction).selection.part?.ranges;
+
+	it("widens a single picked cell into a range anchored on it", () => {
+		const state = canvasWith(cellSelection(["r1c1"]));
+
+		expect(extendedRangesAfter(state, "up")).toEqual([
+			{ anchorId: "r1c1", focusId: "r0c1" },
+		]);
+		expect(extendedRangesAfter(state, "right")).toEqual([
+			{ anchorId: "r1c1", focusId: "r1c2" },
+		]);
+	});
+
+	it("moves the focus away from the anchor and back towards it", () => {
+		const state = canvasWith({
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "r0c0", focusId: "r1c1" }],
+		});
+
+		expect(extendedRangesAfter(state, "down")).toEqual([
+			{ anchorId: "r0c0", focusId: "r2c1" },
+		]);
+		expect(extendedRangesAfter(state, "left")).toEqual([
+			{ anchorId: "r0c0", focusId: "r1c0" },
+		]);
+		// Shrunk back onto the anchor, the range is that one cell again.
+		const shrunk = extendTableCellSelection(
+			extendTableCellSelection(state, "left"),
+			"up",
+		);
+		expect(shrunk.selection.part?.ranges).toEqual([
+			{ anchorId: "r0c0", focusId: "r0c0" },
+		]);
+	});
+
+	it("crosses the anchor, turning the range the other way", () => {
+		const state = canvasWith(cellSelection(["r1c1"]));
+		const crossed = extendTableCellSelection(
+			extendTableCellSelection(state, "right"),
+			"left",
+		);
+
+		expect(extendedRangesAfter(crossed, "left")).toEqual([
+			{ anchorId: "r1c1", focusId: "r1c0" },
+		]);
+	});
+
+	it("keeps the part kind and closes an open ObjectMenu submenu", () => {
+		const next = extendTableCellSelection(
+			canvasWith(cellSelection(["r1c1"])),
+			"up",
+		);
+
+		expect(next.selection.part?.kind).toBe(TEXT_SLOT_PART_KIND);
+		expect(next.selection.objectIds).toEqual([TABLE.id]);
+		expect(next.objectMenuOpenId).toBeNull();
+	});
+
+	it("hands back the input state when the focus is at the grid's edge", () => {
+		for (const [focusId, direction] of [
+			["r0c1", "up"],
+			["r2c1", "down"],
+			["r1c0", "left"],
+			["r1c2", "right"],
+		] as const) {
+			const state = canvasWith({
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "r1c1", focusId }],
+			});
+			expect(canSelectAdjacentTableCell(state)).toBe(true);
+			expect(extendTableCellSelection(state, direction)).toBe(state);
+		}
+	});
+
+	it("extends only the last range of a Ctrl-built pick, keeping the others", () => {
+		const state = canvasWith({
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [
+				{ anchorId: "r0c0", focusId: "r0c1" },
+				{ anchorId: "r2c2", focusId: "r2c2" },
+			],
+		});
+
+		expect(extendedRangesAfter(state, "up")).toEqual([
+			{ anchorId: "r0c0", focusId: "r0c1" },
+			{ anchorId: "r2c2", focusId: "r1c2" },
+		]);
+	});
+
+	it("leaves a table selected as a whole or a cell being edited alone", () => {
+		for (const state of [
+			canvasWith(null),
+			canvasWith(cellSelection(["r0c0"]), {
+				textEditState: { objectId: TABLE.id } as never,
+			}),
+		]) {
+			expect(extendTableCellSelection(state, "down")).toBe(state);
+		}
+	});
+});
+
 describe("canSelectAdjacentTableCell", () => {
 	it("is true for a cell pick on the sole selected table", () => {
 		expect(
@@ -168,15 +275,18 @@ describe("bare arrow routing with the table plugin", () => {
 	/** The same bundle as the narrow view a command's `canExecute` is handed. */
 	const commandRegistries = registries as unknown as ICanvasRegistries;
 
-	/** The command a bare ArrowUp runs in `state`: the first match whose `canExecute` passes. */
-	const arrowUpCommandId = (state: CanvasControllerState): string | undefined =>
+	/** The command an ArrowUp runs in `state`: the first match whose `canExecute` passes. */
+	const arrowUpCommandId = (
+		state: CanvasControllerState,
+		shiftKey = false,
+	): string | undefined =>
 		registries.command
 			.findAllByShortcut({
 				code: "ArrowUp",
 				key: "ArrowUp",
 				ctrlKey: false,
 				metaKey: false,
-				shiftKey: false,
+				shiftKey,
 				altKey: false,
 			} as KeyboardEvent)
 			.find((command) => command.canExecute(state, commandRegistries))?.id;
@@ -191,7 +301,18 @@ describe("bare arrow routing with the table plugin", () => {
 		);
 	});
 
+	it("extends the cell pick with Shift instead of nudging the table further", () => {
+		expect(arrowUpCommandId(canvasWith(cellSelection(["r1c1"])), true)).toBe(
+			"table.extendCellSelectionUp",
+		);
+		// At the edge too, or the key would fall through to the large nudge.
+		expect(arrowUpCommandId(canvasWith(cellSelection(["r0c1"])), true)).toBe(
+			"table.extendCellSelectionUp",
+		);
+	});
+
 	it("leaves the nudge to a table selected as a whole", () => {
 		expect(arrowUpCommandId(canvasWith(null))).toBe("move-up");
+		expect(arrowUpCommandId(canvasWith(null), true)).toBe("move-up-large");
 	});
 });

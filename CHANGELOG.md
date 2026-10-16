@@ -90,6 +90,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the neighbour of the cell the last click or Shift-click ended on. With the
   table selected as a whole, or a row or column picked, the arrows nudge the
   table as before.
+- **Shift+arrow widens or narrows a table's picked block of cells.** With a cell
+  picked, Shift+arrow moves the end of the block the last click, Shift-click or
+  Shift+arrow left it at by one cell, keeping the other corner where it is, as a
+  Shift-click on that cell would; cells added with Ctrl stay picked. At the edge
+  of the grid it does nothing rather than nudging the table.
 - **The up and down arrow keys move a UML record's picked compartment.** With
   a compartment picked, up and down pick the one above or below it instead of
   nudging the record, skipping the compartments the record does not have, and

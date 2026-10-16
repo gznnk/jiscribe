@@ -79,6 +79,36 @@ export const canSelectAdjacentTableCell = (
 	state: CanvasControllerState,
 ): boolean => readTableCellStepOrigin(state) !== null;
 
+/** The cell id one step from the origin's focus in `direction`, clamped to the grid. */
+const readSteppedTableCellId = (
+	origin: TableCellStepOrigin,
+	direction: TableCellStepDirection,
+): string => {
+	const offset = TABLE_CELL_STEP_OFFSET[direction];
+	const clamp = (index: number, count: number): number =>
+		Math.min(Math.max(index, 0), count - 1);
+	return tableCellTextSlotId(
+		clamp(origin.row + offset.row, countTableTracks(origin.table, "row")),
+		clamp(
+			origin.column + offset.column,
+			countTableTracks(origin.table, "column"),
+		),
+	);
+};
+
+/** `state` with the cell pick replaced by `ranges` and any open ObjectMenu submenu closed. */
+const withPickedTableCellRanges = (
+	state: CanvasControllerState,
+	ranges: ObjectPartRange[],
+): CanvasControllerState => ({
+	...state,
+	selection: {
+		...state.selection,
+		part: { kind: TEXT_SLOT_PART_KIND, ranges },
+	},
+	objectMenuOpenId: null,
+});
+
 /**
  * Moves the cell pick one cell in `direction`, leaving exactly that cell picked.
  *
@@ -99,16 +129,7 @@ export const selectAdjacentTableCell = (
 	if (origin === null) {
 		return state;
 	}
-	const offset = TABLE_CELL_STEP_OFFSET[direction];
-	const clamp = (index: number, count: number): number =>
-		Math.min(Math.max(index, 0), count - 1);
-	const nextCellId = tableCellTextSlotId(
-		clamp(origin.row + offset.row, countTableTracks(origin.table, "row")),
-		clamp(
-			origin.column + offset.column,
-			countTableTracks(origin.table, "column"),
-		),
-	);
+	const nextCellId = readSteppedTableCellId(origin, direction);
 
 	const { pickedRanges } = origin;
 	const isUnchanged =
@@ -118,15 +139,42 @@ export const selectAdjacentTableCell = (
 	if (isUnchanged) {
 		return state;
 	}
-	return {
-		...state,
-		selection: {
-			...state.selection,
-			part: {
-				kind: TEXT_SLOT_PART_KIND,
-				ranges: [{ anchorId: nextCellId, focusId: nextCellId }],
-			},
-		},
-		objectMenuOpenId: null,
-	};
+	return withPickedTableCellRanges(state, [
+		{ anchorId: nextCellId, focusId: nextCellId },
+	]);
+};
+
+/**
+ * Widens or narrows the active range of the cell pick by moving its focus one
+ * cell in `direction`, the keyboard counterpart of a Shift-click: the anchor
+ * stays, so the picked rectangle (collectTableCellRange) grows away from it or
+ * shrinks back towards it.
+ *
+ * Only the active range — the last one, whose focus the last gesture moved
+ * (readActivePartFocusId) — changes; the ranges a Ctrl-click added before it
+ * stay picked. At the grid's edge the focus stays where it is.
+ *
+ * @param state - The canvas to extend; its `selection.part` names the range the step starts from, and is live because the reducer reconciles it
+ * @param direction - The way the focus moves, in the table's own grid (rows downwards, columns rightwards), regardless of how the table is rotated
+ * @returns A new state with the active range's focus moved and any open ObjectMenu submenu closed; the input state itself when the focus would not move, or when the step cannot run (canSelectAdjacentTableCell)
+ */
+export const extendTableCellSelection = (
+	state: CanvasControllerState,
+	direction: TableCellStepDirection,
+): CanvasControllerState => {
+	const origin = readTableCellStepOrigin(state);
+	if (origin === null) {
+		return state;
+	}
+	const nextFocusId = readSteppedTableCellId(origin, direction);
+
+	const { pickedRanges } = origin;
+	const activeRange = pickedRanges[pickedRanges.length - 1];
+	if (activeRange.focusId === nextFocusId) {
+		return state;
+	}
+	return withPickedTableCellRanges(state, [
+		...pickedRanges.slice(0, -1),
+		{ anchorId: activeRange.anchorId, focusId: nextFocusId },
+	]);
 };

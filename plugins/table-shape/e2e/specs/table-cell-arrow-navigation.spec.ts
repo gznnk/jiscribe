@@ -45,11 +45,12 @@ async function isCellInsideCanvasArea(
 }
 
 /**
- * Stepping the cell pick with the bare arrows, in a real browser. Where the step
- * lands is pinned by selectAdjacentTableCell.test; what a browser answers is
- * that the keystroke reaches the table's command at all — the built-in nudge
- * claims the same bare arrows, and only the precedence a contributed command
- * gets in the key dispatch keeps the table from moving instead.
+ * Stepping the cell pick with the arrows, and widening it with Shift+arrows, in
+ * a real browser. Where the step lands is pinned by selectAdjacentTableCell.test;
+ * what a browser answers is that the keystroke reaches the table's command at
+ * all — the built-in nudge claims the same arrows, Shift for its larger step,
+ * and only the precedence a contributed command gets in the key dispatch keeps
+ * the table from moving instead.
  */
 
 test.describe("table cell arrow navigation", () => {
@@ -128,6 +129,69 @@ test.describe("table cell arrow navigation", () => {
 		expect((await canvas.getViewBox())?.split(" ").slice(2)).toEqual(
 			viewBoxBefore?.slice(2),
 		);
+	});
+
+	test("widens and narrows the picked block with Shift+arrows, leaving the table where it is", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await canvas.clickAt(await cellCenter(canvas, id, "r0c0"));
+		const before = await tableOutlineRect(canvas, id);
+
+		await canvas.page.keyboard.press("Shift+ArrowRight");
+		await expect
+			.poll(async () => selectedCellIds(canvas, id))
+			.toEqual(["r0c0", "r0c1"]);
+		await canvas.page.keyboard.press("Shift+ArrowDown");
+		await expect
+			.poll(async () => selectedCellIds(canvas, id))
+			.toEqual(["r0c0", "r0c1", "r1c0", "r1c1"]);
+		// Back towards the anchor, the block narrows rather than moves.
+		await canvas.page.keyboard.press("Shift+ArrowLeft");
+		await expect
+			.poll(async () => selectedCellIds(canvas, id))
+			.toEqual(["r0c0", "r1c0"]);
+		await canvas.page.keyboard.press("Shift+ArrowUp");
+		await expect
+			.poll(async () => selectedCellIds(canvas, id))
+			.toEqual(["r0c0"]);
+
+		// At the grid's edge the keys stay with the table rather than falling
+		// through to the larger nudge; the step afterwards proves they were handled.
+		await canvas.page.keyboard.press("Shift+ArrowUp");
+		await canvas.page.keyboard.press("Shift+ArrowLeft");
+		await canvas.page.keyboard.press("Shift+ArrowRight");
+		await expect
+			.poll(async () => selectedCellIds(canvas, id))
+			.toEqual(["r0c0", "r0c1"]);
+
+		expect(await tableOutlineRect(canvas, id)).toEqual(before);
+	});
+
+	test("pans to the cell a Shift+arrow moves the range's end to off screen", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const start = await cellCenter(canvas, id, "r0c0");
+		await canvas.clickAt(start);
+		const area = await canvasArea(canvas);
+		await canvas.wheel(start, { deltaX: area.width * 2 });
+		await expect
+			.poll(() => isCellInsideCanvasArea(canvas, id, "r0c1"), {
+				message: "the scroll takes the table off screen",
+			})
+			.toBe(false);
+
+		await canvas.page.keyboard.press("Shift+ArrowRight");
+
+		await expect
+			.poll(async () => selectedCellIds(canvas, id))
+			.toEqual(["r0c0", "r0c1"]);
+		await expect
+			.poll(() => isCellInsideCanvasArea(canvas, id, "r0c1"), {
+				message: "the extension pans the camera to the range's moving end",
+			})
+			.toBe(true);
 	});
 
 	test("still nudges a table selected as a whole", async ({ canvas }) => {
