@@ -7,9 +7,11 @@ import type {
 import { describe, expect, it } from "vitest";
 
 import { umlPlugin } from "../../plugin";
+import { recordToState } from "../../state/RecordMapper";
 import type { RecordState } from "../../state/RecordState";
 import {
 	canSelectAdjacentRecordSlot,
+	extendRecordSlotSelection,
 	selectAdjacentRecordSlot,
 } from "../selectAdjacentRecordSlot";
 
@@ -162,6 +164,132 @@ describe("selectAdjacentRecordSlot", () => {
 	});
 });
 
+describe("extendRecordSlotSelection", () => {
+	/** The slot ranges the extension left picked. */
+	const extendedRangesAfter = (
+		state: CanvasControllerState,
+		direction: Parameters<typeof extendRecordSlotSelection>[1],
+	) => extendRecordSlotSelection(state, direction).selection.part?.ranges;
+
+	it("widens a single picked slot into a range anchored on it", () => {
+		const state = canvasWith(slotSelection(["name"]));
+
+		expect(extendedRangesAfter(state, "up")).toEqual([
+			{ anchorId: "name", focusId: "stereotype" },
+		]);
+		expect(extendedRangesAfter(state, "down")).toEqual([
+			{ anchorId: "name", focusId: "attributes" },
+		]);
+	});
+
+	it("moves the focus away from the anchor and back towards it", () => {
+		const state = canvasWith({
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "stereotype", focusId: "name" }],
+		});
+
+		expect(extendedRangesAfter(state, "down")).toEqual([
+			{ anchorId: "stereotype", focusId: "attributes" },
+		]);
+		expect(extendedRangesAfter(state, "up")).toEqual([
+			{ anchorId: "stereotype", focusId: "stereotype" },
+		]);
+	});
+
+	it("crosses the anchor, turning the range the other way", () => {
+		const state = canvasWith(slotSelection(["name"]));
+		const crossed = extendRecordSlotSelection(
+			extendRecordSlotSelection(state, "down"),
+			"up",
+		);
+
+		expect(extendedRangesAfter(crossed, "up")).toEqual([
+			{ anchorId: "name", focusId: "stereotype" },
+		]);
+	});
+
+	it("skips the compartments the record does not hold", () => {
+		expect(extendedRangesAfter(sparseCanvasWith(["name"]), "down")).toEqual([
+			{ anchorId: "name", focusId: "operations" },
+		]);
+	});
+
+	it("keeps the part kind and closes an open ObjectMenu submenu", () => {
+		const next = extendRecordSlotSelection(
+			canvasWith(slotSelection(["name"])),
+			"down",
+		);
+
+		expect(next.selection.part?.kind).toBe(TEXT_SLOT_PART_KIND);
+		expect(next.selection.objectIds).toEqual([FULL_RECORD.id]);
+		expect(next.objectMenuOpenId).toBeNull();
+	});
+
+	it("hands back the input state when the focus is at the top or bottom slot", () => {
+		for (const [focusId, direction] of [
+			["stereotype", "up"],
+			["operations", "down"],
+		] as const) {
+			const state = canvasWith({
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "name", focusId }],
+			});
+			expect(canSelectAdjacentRecordSlot(state)).toBe(true);
+			expect(extendRecordSlotSelection(state, direction)).toBe(state);
+		}
+	});
+
+	it("hands back the input state for left and right", () => {
+		const state = canvasWith(slotSelection(["attributes"]));
+
+		expect(extendRecordSlotSelection(state, "left")).toBe(state);
+		expect(extendRecordSlotSelection(state, "right")).toBe(state);
+	});
+
+	it("extends only the last range of a Ctrl-built pick, keeping the others", () => {
+		const state = canvasWith({
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [
+				{ anchorId: "stereotype", focusId: "name" },
+				{ anchorId: "operations", focusId: "operations" },
+			],
+		});
+
+		expect(extendedRangesAfter(state, "up")).toEqual([
+			{ anchorId: "stereotype", focusId: "name" },
+			{ anchorId: "operations", focusId: "attributes" },
+		]);
+	});
+
+	it("leaves a record selected as a whole or a slot being edited alone", () => {
+		for (const state of [
+			canvasWith(null),
+			canvasWith(slotSelection(["name"]), {
+				textEditState: { objectId: FULL_RECORD.id } as never,
+			}),
+		]) {
+			expect(extendRecordSlotSelection(state, "down")).toBe(state);
+		}
+	});
+
+	it("walks the same order the core's linear range runs along", () => {
+		// A Shift-click range is the slice of Object.keys(state.text) between its
+		// ends, so the step order must be that key order.
+		const stackedKeys = Object.keys(
+			recordToState({
+				id: "r",
+				type: "record",
+				text: {
+					operations: { text: ["find()"] },
+					name: { text: "Repository" },
+					stereotype: { text: "interface" },
+				},
+			} as never).text,
+		);
+		expect(stackedKeys).toEqual(["stereotype", "name", "operations"]);
+	});
+});
+
 describe("canSelectAdjacentRecordSlot", () => {
 	it("is true for a slot pick on the sole selected record", () => {
 		expect(
@@ -210,6 +338,7 @@ describe("bare arrow routing with the UML plugin", () => {
 	const arrowCommandId = (
 		state: CanvasControllerState,
 		code: "ArrowUp" | "ArrowLeft",
+		shiftKey = false,
 	): string | undefined =>
 		registries.command
 			.findAllByShortcut({
@@ -217,7 +346,7 @@ describe("bare arrow routing with the UML plugin", () => {
 				key: code,
 				ctrlKey: false,
 				metaKey: false,
-				shiftKey: false,
+				shiftKey,
 				altKey: false,
 			} as KeyboardEvent)
 			.find((command) => command.canExecute(state, commandRegistries))?.id;
@@ -235,7 +364,27 @@ describe("bare arrow routing with the UML plugin", () => {
 		).toBe("record.selectSlotLeft");
 	});
 
+	it("extends the slot pick with Shift instead of nudging the record further", () => {
+		expect(
+			arrowCommandId(canvasWith(slotSelection(["name"])), "ArrowUp", true),
+		).toBe("record.extendSlotSelectionUp");
+		// At the top and sideways too, or the key would fall through to the large nudge.
+		expect(
+			arrowCommandId(
+				canvasWith(slotSelection(["stereotype"])),
+				"ArrowUp",
+				true,
+			),
+		).toBe("record.extendSlotSelectionUp");
+		expect(
+			arrowCommandId(canvasWith(slotSelection(["name"])), "ArrowLeft", true),
+		).toBe("record.extendSlotSelectionLeft");
+	});
+
 	it("leaves the nudge to a record selected as a whole", () => {
 		expect(arrowCommandId(canvasWith(null), "ArrowUp")).toBe("move-up");
+		expect(arrowCommandId(canvasWith(null), "ArrowUp", true)).toBe(
+			"move-up-large",
+		);
 	});
 });

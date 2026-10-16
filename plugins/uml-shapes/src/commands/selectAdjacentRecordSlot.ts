@@ -81,6 +81,30 @@ export const canSelectAdjacentRecordSlot = (
 	state: CanvasControllerState,
 ): boolean => readRecordSlotStepOrigin(state) !== null;
 
+/** The slot `offset` steps from the origin's focus along the stacking order, clamped to the slots the record holds. */
+const readSteppedRecordSlotId = (
+	origin: RecordSlotStepOrigin,
+	offset: number,
+): RecordTextSlotId => {
+	const { presentSlotIds, slotIndex } = origin;
+	return presentSlotIds[
+		Math.min(Math.max(slotIndex + offset, 0), presentSlotIds.length - 1)
+	];
+};
+
+/** `state` with the slot pick replaced by `ranges` and any open ObjectMenu submenu closed. */
+const withPickedRecordSlotRanges = (
+	state: CanvasControllerState,
+	ranges: ObjectPartRange[],
+): CanvasControllerState => ({
+	...state,
+	selection: {
+		...state.selection,
+		part: { kind: TEXT_SLOT_PART_KIND, ranges },
+	},
+	objectMenuOpenId: null,
+});
+
 /**
  * Moves the slot pick to the compartment above or below, leaving exactly that
  * slot picked.
@@ -106,13 +130,9 @@ export const selectAdjacentRecordSlot = (
 	if (origin === null || offset === undefined) {
 		return state;
 	}
-	const { presentSlotIds, slotIndex, pickedRanges } = origin;
-	const nextIndex = Math.min(
-		Math.max(slotIndex + offset, 0),
-		presentSlotIds.length - 1,
-	);
-	const nextSlotId = presentSlotIds[nextIndex];
+	const nextSlotId = readSteppedRecordSlotId(origin, offset);
 
+	const { pickedRanges } = origin;
 	const isUnchanged =
 		pickedRanges.length === 1 &&
 		pickedRanges[0].anchorId === nextSlotId &&
@@ -120,15 +140,45 @@ export const selectAdjacentRecordSlot = (
 	if (isUnchanged) {
 		return state;
 	}
-	return {
-		...state,
-		selection: {
-			...state.selection,
-			part: {
-				kind: TEXT_SLOT_PART_KIND,
-				ranges: [{ anchorId: nextSlotId, focusId: nextSlotId }],
-			},
-		},
-		objectMenuOpenId: null,
-	};
+	return withPickedRecordSlotRanges(state, [
+		{ anchorId: nextSlotId, focusId: nextSlotId },
+	]);
+};
+
+/**
+ * Widens or narrows the active range of the slot pick by moving its focus one
+ * compartment up or down, the keyboard counterpart of a Shift-click: the anchor
+ * stays, so the picked run of compartments (the core's linear range over the
+ * slots in stacking order, the same order this walks) grows away from it or
+ * shrinks back towards it.
+ *
+ * Only the active range — the last one, whose focus the last gesture moved
+ * (readActivePartFocusId) — changes; the ranges a Ctrl-click added before it
+ * stay picked. Compartments the record does not hold are skipped, and at the top
+ * or bottom slot the focus stays where it is. Left and right change nothing.
+ *
+ * @param state - The canvas to extend; its `selection.part` names the range the step starts from, and is live because the reducer reconciles it
+ * @param direction - The way the focus moves, in the record's own stacking (up towards the title), regardless of how the record is rotated; left and right change nothing
+ * @returns A new state with the active range's focus moved and any open ObjectMenu submenu closed; the input state itself for left and right, when the focus would not move, or when the step cannot run (canSelectAdjacentRecordSlot)
+ */
+export const extendRecordSlotSelection = (
+	state: CanvasControllerState,
+	direction: RecordSlotStepDirection,
+): CanvasControllerState => {
+	const origin = readRecordSlotStepOrigin(state);
+	const offset = RECORD_SLOT_STEP_OFFSET[direction];
+	if (origin === null || offset === undefined) {
+		return state;
+	}
+	const nextFocusId = readSteppedRecordSlotId(origin, offset);
+
+	const { pickedRanges } = origin;
+	const activeRange = pickedRanges[pickedRanges.length - 1];
+	if (activeRange.focusId === nextFocusId) {
+		return state;
+	}
+	return withPickedRecordSlotRanges(state, [
+		...pickedRanges.slice(0, -1),
+		{ anchorId: activeRange.anchorId, focusId: nextFocusId },
+	]);
 };

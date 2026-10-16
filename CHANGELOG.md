@@ -102,6 +102,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   picked run of compartments collapses to the neighbour of the one the last
   click or Shift-click ended on. With the record selected as a whole, the
   arrows nudge it as before.
+- **Shift+up and Shift+down widen or narrow a UML record's picked run of
+  compartments.** With a compartment picked, they move the end of the run the
+  last click, Shift-click or Shift+arrow left it at by one compartment, keeping
+  the other end where it is, as a Shift-click on that compartment would;
+  compartments added with Ctrl stay picked. At the top or bottom, and for
+  Shift+left and Shift+right, they do nothing rather than nudging the record.
 - **Bold, italic, underline and strikethrough work the same from the keys and
   the buttons.** Ctrl/Cmd+B / I / U / Shift+X now act on selected shapes without
   opening the editor, and while editing with only the caret placed they flip the

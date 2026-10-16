@@ -2,10 +2,11 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 /**
- * Stepping a record's slot pick with the bare arrows, in a real browser. Where the
+ * Stepping a record's slot pick with the arrows, and widening it with
+ * Shift+arrows, in a real browser. Where the
  * step lands is pinned by selectAdjacentRecordSlot.test; what a browser answers is
  * that the keystroke reaches the record's command at all — the built-in nudge
- * claims the same bare arrows, and only the precedence a contributed command gets
+ * claims the same arrows, Shift for its larger step, and only the precedence a contributed command gets
  * in the key dispatch keeps the record from moving instead.
  *
  * Coordinate note: the interface stencil drawn at 220x100 stacks a 28px
@@ -134,6 +135,34 @@ test.describe("record slot arrow navigation", () => {
 		await expect
 			.poll(() => selectedSlotIds(canvas, id))
 			.toEqual(["stereotype"]);
+
+		expect(await canvas.objectById(id).boundingBox()).toEqual(before);
+	});
+
+	test("widens and narrows the picked run with Shift+arrows, leaving the record where it is", async ({
+		canvas,
+	}) => {
+		const id = await createRecordWithNamePicked(canvas);
+		const before = await canvas.objectById(id).boundingBox();
+
+		await canvas.page.keyboard.press("Shift+ArrowUp");
+		await expect
+			.poll(() => selectedSlotIds(canvas, id))
+			.toEqual(["stereotype", "name"]);
+		await canvas.page.keyboard.press("Shift+ArrowDown");
+		await expect.poll(() => selectedSlotIds(canvas, id)).toEqual(["name"]);
+		await canvas.page.keyboard.press("Shift+ArrowDown");
+		await expect
+			.poll(() => selectedSlotIds(canvas, id))
+			.toEqual(["name", "operations"]);
+
+		// At the bottom, and sideways, the keys stay with the record rather than
+		// falling through to the larger nudge; the step afterwards proves they were handled.
+		await canvas.page.keyboard.press("Shift+ArrowDown");
+		await canvas.page.keyboard.press("Shift+ArrowLeft");
+		await canvas.page.keyboard.press("Shift+ArrowRight");
+		await canvas.page.keyboard.press("Shift+ArrowUp");
+		await expect.poll(() => selectedSlotIds(canvas, id)).toEqual(["name"]);
 
 		expect(await canvas.objectById(id).boundingBox()).toEqual(before);
 	});
