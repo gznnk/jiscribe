@@ -21,9 +21,9 @@ import {
 } from "./IconPickerMenuStyled";
 import { lucideIconMessagesByLocale } from "../messages/lucideIconMessages";
 import { COMMON_ICON_NAMES } from "../schema/icon/commonIconNames";
-import { ICON_ALIASES, ICON_NODES } from "../schema/icon/iconData.generated";
 import { normalizeIconName } from "../schema/icon/normalizeIconName";
 import { resolveIconName } from "../schema/icon/resolveIconName";
+import { searchIconNames } from "../schema/icon/searchIconNames";
 import { DEFAULT_ICON_NAME } from "../schema/IconDoc";
 
 /**
@@ -32,14 +32,6 @@ import { DEFAULT_ICON_NAME } from "../schema/IconDoc";
  * anything selecting on it.
  */
 const SECTION_ID = "lucide-icon";
-
-/**
- * How many results a search shows. The whole set is far too large to lay out at once, and
- * a query narrow enough to be useful lands well inside this; the count at the end of the
- * grid says when it did not, so a wider query is visibly the answer rather than more
- * scrolling.
- */
-const MAX_RESULTS = 96;
 
 /** The icon the selection is currently drawn with, as a current name. */
 const readSelectedIcon = (
@@ -54,33 +46,11 @@ const readSelectedIcon = (
 	return resolved ?? DEFAULT_ICON_NAME;
 };
 
-/**
- * Names matching `query`, best first: the ones starting with it before the ones merely
- * containing it, and shorter before longer so `lock` precedes `lock-keyhole-open`.
- *
- * Superseded names are searched too — someone typing the name they know should still find
- * the icon — but what comes back is always the current name, which is what gets written.
- */
-const searchIcons = (query: string): { names: string[]; total: number } => {
-	const needle = normalizeIconName(query);
-	if (needle === "") {
-		return { names: [...COMMON_ICON_NAMES], total: COMMON_ICON_NAMES.length };
-	}
-
-	const byName = Object.keys(ICON_NODES).filter((name) =>
-		name.includes(needle),
-	);
-	const byFormerName = Object.entries(ICON_ALIASES)
-		.filter(([alias]) => alias.includes(needle))
-		.map(([, current]) => current);
-	const matched = [...new Set([...byName, ...byFormerName])].sort(
-		(left, right) =>
-			Number(right.startsWith(needle)) - Number(left.startsWith(needle)) ||
-			left.length - right.length ||
-			left.localeCompare(right),
-	);
-	return { names: matched.slice(0, MAX_RESULTS), total: matched.length };
-};
+/** Before anything is typed the picker offers the common icons rather than nothing. */
+const searchIcons = (query: string): { names: string[]; total: number } =>
+	normalizeIconName(query) === ""
+		? { names: [...COMMON_ICON_NAMES], total: COMMON_ICON_NAMES.length }
+		: searchIconNames(query);
 
 /**
  * Icon picker (lucideIcon only). Writes the `icon` property, which the shape declares in

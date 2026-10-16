@@ -21,12 +21,15 @@ import {
 	AwsIconPickerPanel,
 	AwsIconSearchInput,
 } from "./AwsIconPickerMenuStyled";
-import { AWS_ICON_CATEGORIES, searchAwsIcons } from "./searchAwsIcons";
 import { awsShapesMessagesByLocale } from "../messages/awsShapesMessages";
 import { DEFAULT_AWS_ICON_NAME } from "../schema/AwsIconDoc";
 import type { AwsIconTier } from "../schema/icon/AwsIconNode";
 import { AWS_ICON_TIERS } from "../schema/icon/AwsIconNode";
 import { resolveAwsIconName } from "../schema/icon/resolveAwsIconName";
+import {
+	AWS_ICON_CATEGORIES,
+	searchAwsIcons,
+} from "../schema/icon/searchAwsIcons";
 
 /**
  * Kept apart from the toolbar category's id (also "aws"). Both put a

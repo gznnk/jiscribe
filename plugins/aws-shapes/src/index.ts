@@ -66,8 +66,14 @@ export type { AwsGroupStroke } from "./presentation/resolveAwsGroupStroke";
 
 export { AwsIconGlyph } from "./menu/AwsIconGlyph";
 export { AwsIconPickerMenu } from "./menu/AwsIconPickerMenu";
-export { AWS_ICON_CATEGORIES, searchAwsIcons } from "./menu/searchAwsIcons";
-export type { AwsIconFilter, AwsIconSearchResult } from "./menu/searchAwsIcons";
+export {
+	AWS_ICON_CATEGORIES,
+	searchAwsIcons,
+} from "./schema/icon/searchAwsIcons";
+export type {
+	AwsIconFilter,
+	AwsIconSearchResult,
+} from "./schema/icon/searchAwsIcons";
 
 export { awsShapesMessagesByLocale } from "./messages/awsShapesMessages";
 

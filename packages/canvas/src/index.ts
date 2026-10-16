@@ -85,6 +85,8 @@ export {
 export {
 	basicStencilCategory,
 	type StencilCategory,
+	type StencilCategorySearch,
+	type StencilCategorySearchResult,
 } from "./controllers/ui/objects/StencilCategory";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {

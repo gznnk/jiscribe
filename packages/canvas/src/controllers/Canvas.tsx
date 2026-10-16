@@ -755,6 +755,12 @@ const CanvasComponent = ({
 		[stencilLibrary?.sections, registries],
 	);
 
+	// A stable reference, so the memoized panel does not re-render on every dispatch.
+	const resolveLibraryPreset = useCallback(
+		(presetId: string) => registries.stencil.get(presetId),
+		[registries],
+	);
+
 	return (
 		<CanvasProviders
 			theme={theme}
@@ -794,6 +800,7 @@ const CanvasComponent = ({
 								state.stencilLibraryPanel.collapsedSectionIds
 							}
 							activePresetId={state.shapeDrawing?.preset.id ?? null}
+							resolvePreset={resolveLibraryPreset}
 						/>
 					)}
 					<Viewport

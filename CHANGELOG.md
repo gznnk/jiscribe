@@ -686,6 +686,18 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **The shape library's search now reaches every icon, not just the ones laid
+  out.** The AWS and Lucide sections list a handful of their icons (100 of 781,
+  20 of 1767) and the search looked only at those, so `lambda` or `bicycle`
+  found nothing and the rest could be reached only by placing some icon and
+  swapping it from the menu. Both plugins now register a stencil for every icon
+  they hold, and a category may declare `search` (`StencilCategorySearch`) to
+  answer the library's search out of its whole set; the sidebar lists what it
+  answers after the label matches, says so when the category cut the list, and,
+  while nothing is typed, points to the search from under the section. For AWS a term
+  also matches the service category, so `compute` lists all of Compute. The
+  toolbar flyout still shows `presetIds` alone, and the menu picker stays for
+  swapping the icon of a shape already placed.
 - **An AI reaching for a table's text is told where it lives.** A type
   declaring keyed text slots but keeping its text in properties of its own
   answered a text write, read or inline style with `has no text slot` — close to

@@ -419,6 +419,15 @@ only presets on the bar. Plugin categories are not part of
 `DEFAULT_TOOLBAR_SECTIONS`, so a host that uses the default bar unchanged and
 declares no library will not show the shape until it adds the category.
 
+A category with more presets than it can list (an icon set with hundreds of
+glyphs) lists a curated few in `presetIds`, registers every preset as a stencil all
+the same, and declares `search` (`StencilCategorySearch`): a function answering a
+sidebar query with registered preset ids in rank order, cut to the category's own
+cap, plus `matchCount` before the cut. The sidebar shows those after the label
+matches of the listed presets, drops ids already shown or not registered, adds a
+line when anything was cut, and while not searching points to the search from under
+the section. The toolbar flyout ignores `search` and shows `presetIds` only.
+
 ## Wiring checklist
 
 **The headless `./doc` side is the one that gets forgotten.** Work through every

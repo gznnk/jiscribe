@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { AWS_ICON_ENTRIES } from "../../schema/icon/iconData.generated";
-import { AWS_TIER1_ICON_NAMES } from "../../schema/icon/tier1Icons";
+import { AWS_ICON_ENTRIES } from "../iconData.generated";
 import { AWS_ICON_CATEGORIES, searchAwsIcons } from "../searchAwsIcons";
+import { AWS_TIER1_ICON_NAMES } from "../tier1Icons";
 
 /** The cap the picker lays out at once; kept here because the module does not export it */
 const MAX_RESULTS = 105;
@@ -231,5 +231,21 @@ describe("AWS_ICON_CATEGORIES", () => {
 			[...AWS_ICON_CATEGORIES].sort((left, right) => left.localeCompare(right)),
 		).toEqual([...AWS_ICON_CATEGORIES]);
 		expect([...AWS_ICON_CATEGORIES].sort()).toEqual(fromEntries.sort());
+	});
+});
+
+describe("searchAwsIcons by category", () => {
+	it("finds every icon of a category through the category's name", () => {
+		const { names } = searchAwsIcons({ query: "compute" });
+
+		expect(names).toEqual(expect.arrayContaining(namesInCategory("Compute")));
+	});
+
+	it("normalizes the category name the way it does the term", () => {
+		const { names } = searchAwsIcons({ query: "Application Integration" });
+
+		expect(names).toEqual(
+			expect.arrayContaining(namesInCategory("Application Integration")),
+		);
 	});
 });

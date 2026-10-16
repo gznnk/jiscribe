@@ -1,8 +1,8 @@
-import type { AwsIconTier } from "../schema/icon/AwsIconNode";
-import { AWS_ICON_ALIASES } from "../schema/icon/iconAliases";
-import { AWS_ICON_ENTRIES } from "../schema/icon/iconData.generated";
-import { normalizeAwsIconName } from "../schema/icon/normalizeAwsIconName";
-import { AWS_TIER1_ICON_NAMES } from "../schema/icon/tier1Icons";
+import type { AwsIconTier } from "./AwsIconNode";
+import { AWS_ICON_ALIASES } from "./iconAliases";
+import { AWS_ICON_ENTRIES } from "./iconData.generated";
+import { normalizeAwsIconName } from "./normalizeAwsIconName";
+import { AWS_TIER1_ICON_NAMES } from "./tier1Icons";
 
 /** What the picker filters by. undefined leaves that axis unfiltered. */
 export type AwsIconFilter = {
@@ -43,8 +43,8 @@ const matchesFacets = (name: string, filter: AwsIconFilter): boolean => {
 
 /**
  * The names the picker lays out. The term is tried against the name, the display
- * label and the aliases, and a prefix match sorts above a substring one, a short
- * name above a long one.
+ * label, the aliases and the AWS category, and a prefix match sorts above a
+ * substring one, a short name above a long one.
  *
  * An empty term with no facet picked shows tier 1, in the palette's order.
  * Laying out all 781 to begin with is not something anyone chooses from, so the
@@ -96,7 +96,11 @@ const sortByPaletteFirst = (names: string[]): string[] =>
 const paletteRank = (name: string): number =>
 	PALETTE_RANK_BY_NAME.get(name) ?? AWS_TIER1_ICON_NAMES.length;
 
-/** The names whose own name, label or alias holds the term. */
+/**
+ * The names whose own name, label, alias or AWS category holds the term. The category
+ * lets a term stand in for a category chip where there are none, as in the stencil
+ * library's search ("compute" lists all of Compute).
+ */
 const findMatches = (needle: string, filter: AwsIconFilter): string[] =>
 	Object.entries(AWS_ICON_ENTRIES)
 		.filter(
@@ -104,6 +108,7 @@ const findMatches = (needle: string, filter: AwsIconFilter): string[] =>
 				matchesFacets(name, filter) &&
 				(name.includes(needle) ||
 					normalizeAwsIconName(entry.label).includes(needle) ||
+					normalizeAwsIconName(entry.category).includes(needle) ||
 					(ALIASES_BY_NAME.get(name) ?? []).some((alias) =>
 						alias.includes(needle),
 					)),
