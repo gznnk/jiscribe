@@ -11,6 +11,7 @@ import {
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
+import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
@@ -22,6 +23,10 @@ import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
 import { reconcileSelection } from "../selection/writers/reconcileSelection";
+import {
+	getTextSlotCycle,
+	selectAdjacentTextSlot,
+} from "../selection/writers/selectAdjacentTextSlot";
 import { selectRequestedIds } from "../selection/writers/selectRequestedIds";
 import { applyStyleIntent } from "../style/walk/applyStyleIntent";
 import {
@@ -509,22 +514,10 @@ export const createCanvasReducer =
 				}
 
 				if (action.commit) {
-					const commitResult = commitTextEditIfNeeded(state);
-					const resizedResult = reconcileObjectContentSizes(
-						commitResult,
+					return recordHistoryIfNeeded(
+						commitOpenTextEdit(state, registries),
 						state,
-						registries.objectContentResizer,
 					);
-					const reconciledResult = reconcileConnectorVerticesIfCommitted(
-						resizedResult,
-						state,
-						registries,
-					);
-					const selectionResult = reconcileSelection(
-						reconciledResult,
-						registries.objectPartKind,
-					);
-					return recordHistoryIfNeeded(selectionResult, state);
 				}
 
 				// On cancel, clear only textEditState
@@ -532,6 +525,42 @@ export const createCanvasReducer =
 					...state,
 					textEditState: null,
 				};
+			}
+
+			case "STEP_TEXT_EDIT": {
+				if (
+					state.textEditState?.kind !== "shape" ||
+					getTextSlotCycle(state, registries.objectPartKind) === null
+				) {
+					return state;
+				}
+				// Committed before the selection moves: the draft is bound to the slot
+				// the selection names (see textEditState).
+				const committedResult = commitOpenTextEdit(state, registries);
+				const steppedResult = selectAdjacentTextSlot(
+					committedResult,
+					action.step,
+					registries.objectPartKind,
+				);
+				const openedResult = StartTextEditCommand.execute(
+					steppedResult,
+					registries,
+				);
+				const revealedViewport = calcViewportToRevealActivePart(
+					openedResult.viewport,
+					state.selection,
+					openedResult.selection,
+					openedResult.objects,
+					registries.objectPartKind,
+				);
+				// The history snapshot holds the document alone, so recording against
+				// the stepped state stores the same entry END_TEXT_EDIT would.
+				return recordHistoryIfNeeded(
+					revealedViewport === openedResult.viewport
+						? openedResult
+						: { ...openedResult, viewport: revealedViewport },
+					state,
+				);
 			}
 
 			case "PASTE": {
@@ -673,6 +702,29 @@ const commitPropertyUpdate = (
 		registries,
 	);
 	return recordHistoryIfNeeded(reconciledResult, previousState);
+};
+
+/**
+ * Commits the open text edit and settles what the commit moved (box sizes,
+ * connector vertices, the selection), leaving the history to the caller: the
+ * commit tail END_TEXT_EDIT and STEP_TEXT_EDIT share.
+ */
+const commitOpenTextEdit = (
+	state: CanvasControllerState,
+	registries: CanvasRegistries,
+): CanvasControllerState => {
+	const commitResult = commitTextEditIfNeeded(state);
+	const resizedResult = reconcileObjectContentSizes(
+		commitResult,
+		state,
+		registries.objectContentResizer,
+	);
+	const reconciledResult = reconcileConnectorVerticesIfCommitted(
+		resizedResult,
+		state,
+		registries,
+	);
+	return reconcileSelection(reconciledResult, registries.objectPartKind);
 };
 
 /**

@@ -13,7 +13,8 @@ export const SelectNextTextSlotCommand: ExecutableCommand = {
 	},
 
 	// Disabled while a text edit is open: the draft is bound to the slot
-	// `selection.part` names and would follow a step to another slot.
+	// `selection.part` names and would follow a step to another slot. The
+	// editor's own Tab commits before it steps (STEP_TEXT_EDIT).
 	canExecute: (state, registries) =>
 		state.textEditState === null &&
 		getTextSlotCycle(state, registries.objectPartKind) !== null,

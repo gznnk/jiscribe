@@ -39,6 +39,8 @@ type EditorHandlers = {
 	onSelectionChange: (selection: { start: number; end: number }) => void;
 	/** A bold / italic / underline / strikethrough keystroke over that selection. */
 	onToggleFormat: (format: TextFormat) => void;
+	/** Tab (1) / Shift+Tab (-1) in a shape's editor; a label editor keeps the keystroke to itself. */
+	onTab: (step: 1 | -1) => void;
 };
 
 /**
@@ -157,8 +159,11 @@ function renderTextEditor(
 	// shape's bottom edge (local coordinates, origin at the shape center). A region
 	// already at or below that edge yields 0 rather than a negative length.
 	const growLimit = Math.max(target.height / 2 - textRegion.y, 0);
+	// Keyed by the slot so a Tab onto the next one mounts a fresh editor, which
+	// takes the focus and places the caret as an editor opened by Enter does.
 	return (
 		<TextEditor
+			key={`${objectId}/${slotId}`}
 			objectId={objectId}
 			richText={richText}
 			cx={target.cx}
@@ -184,6 +189,7 @@ function renderTextEditor(
 			onSelectionChange={handlers.onSelectionChange}
 			onToggleFormat={handlers.onToggleFormat}
 			onEscape={handlers.onEscape}
+			onTab={handlers.onTab}
 			onCaretMove={handlers.onCaretMove}
 		/>
 	);
@@ -203,6 +209,8 @@ type TextEditorLayerProps = {
 	onSelectionChange: (selection: { start: number; end: number }) => void;
 	/** A bold / italic / underline / strikethrough keystroke over that selection. */
 	onToggleFormat: (format: TextFormat) => void;
+	/** Tab (1) / Shift+Tab (-1) in a shape's editor: commit, step to the adjacent slot, edit it. */
+	onTab: (step: 1 | -1) => void;
 };
 
 /**
@@ -218,6 +226,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	onCaretMove,
 	onSelectionChange,
 	onToggleFormat,
+	onTab,
 }) => {
 	const registries = useCanvasRegistries();
 
@@ -235,6 +244,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		onCaretMove,
 		onSelectionChange,
 		onToggleFormat,
+		onTab,
 	};
 
 	if (openEdit.kind === "connectorLabel") {

@@ -91,6 +91,8 @@ type TextEditorProps = {
 	/** A bold / italic / underline / strikethrough keystroke, the selection it acts on reported first; the browser's own formatting is already cancelled. */
 	onToggleFormat?: (format: TextFormat) => void;
 	onEscape?: () => void;
+	/** Tab (1) or Shift+Tab (-1), outside an IME composition; the browser's focus move is already cancelled. Omitted = the keystroke is swallowed. */
+	onTab?: (step: 1 | -1) => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
 	onCaretMove?: (caretWorldBox: BoundingBox) => void;
 };
@@ -120,6 +122,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onSelectionChange,
 	onToggleFormat,
 	onEscape,
+	onTab,
 	onCaretMove,
 }) => {
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same
@@ -535,13 +538,17 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			onEscape();
 			return;
 		}
-		// Tab stays in the editor. The browser's default would move the focus to
-		// the next control while the session stays open, and from there the next
-		// Tab reaches the canvas shortcuts, which walk the selection to the next
-		// slot of a multi-slot shape (a table cell) and drag the open draft along.
+		// The browser's default would move the focus to the next control while the
+		// session stays open, and from there the next Tab reaches the canvas
+		// shortcuts, which refuse to walk the slots under an open edit. Mid
+		// composition the keystroke belongs to the IME, and the draft has not
+		// caught up with the surface yet.
 		if (e.key === "Tab") {
 			e.preventDefault();
 			e.stopPropagation();
+			if (onTab && !isComposing.current && !e.nativeEvent.isComposing) {
+				onTab(e.shiftKey ? -1 : 1);
+			}
 			return;
 		}
 		// The surface has the focus, so these never reach the canvas-wide keyboard

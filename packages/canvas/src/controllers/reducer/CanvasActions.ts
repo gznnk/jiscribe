@@ -161,6 +161,19 @@ export type EndTextEditAction = {
 };
 
 /**
+ * Step text edit action - Tab / Shift+Tab inside the editor of a shape whose
+ * text slots form a cycle (getTextSlotCycle): commits the draft into the slot
+ * being edited, moves the slot selection one step along the cycle
+ * (selectAdjacentTextSlot) and opens the editor on the slot it lands on, as
+ * Enter would. Leaves the state as it is for any other session.
+ */
+export type StepTextEditAction = {
+	type: "STEP_TEXT_EDIT";
+	/** 1 for the next slot, -1 for the previous; wraps at either end. */
+	step: 1 | -1;
+};
+
+/**
  * Style intent action - states one style edit of the selection, with live
  * preview and commit, from every surface that fires no gesture: the ObjectMenu's
  * number input and keyboard-driven slider and the properties sidebar's
@@ -369,6 +382,7 @@ export type CanvasAction =
 	| UpdateTextEditAction
 	| UpdateTextEditSelectionAction
 	| EndTextEditAction
+	| StepTextEditAction
 	| StyleIntentAction
 	| TransformPropertyUpdateAction
 	| DocumentPropertyUpdateAction

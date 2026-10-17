@@ -423,6 +423,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and type**, refusing what the parser would not keep as written — a value the
   type's `validateDoc` rejects, a malformed `meta`, a name the type does not hold —
   and leaving the document untouched when it does.
+- **Tab moves an open text edit on to the next cell, as in a spreadsheet.**
+  While a table cell (or any slot of a multi-slot shape, such as a record's
+  compartments) is being edited, Tab commits what was typed into that cell and
+  opens the editor on the next one with the caret at the end of its text, so
+  typing carries straight on; Shift+Tab does the same backwards. The walk
+  follows the order Tab takes over a picked slot and wraps around the same
+  way, and each cell's commit is an undo step of its own. A shape with a
+  single text body keeps Tab in the editor and does nothing with it.
 
 ### Changed
 
@@ -725,8 +733,9 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
   while editing a table cell (or any slot of a multi-slot shape) took the focus
   off the editor and, on the next Tab, walked the selection on to the next
   slot with the draft still attached, so the editor showed up over another cell
-  holding the first cell's text. The editor now keeps Tab and Shift+Tab to
-  itself, and the slot walk refuses to move while an edit is open.
+  holding the first cell's text. The editor now keeps Tab and Shift+Tab from
+  the browser, committing before it moves on (see Added), and the slot walk
+  refuses to move while an edit is open.
 - **A shape whose renderer throws no longer takes the canvas down.** Each
   object is drawn inside a boundary of its own: the one that threw is drawn as
   nothing and named in a console warning with its type and id, while every other

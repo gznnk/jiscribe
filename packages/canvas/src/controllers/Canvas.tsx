@@ -24,6 +24,8 @@ import {
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import type { ResolveImageBlob } from "../export";
+import { SelectNextTextSlotCommand } from "./commands/selection/SelectNextTextSlotCommand";
+import { SelectPreviousTextSlotCommand } from "./commands/selection/SelectPreviousTextSlotCommand";
 import { toggleTextFormatCommandId } from "./commands/text/ToggleTextFormatCommands";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
@@ -693,6 +695,22 @@ const CanvasComponent = ({
 		[dispatch, registries],
 	);
 
+	// Tab in the editor walks the slots as Tab on the canvas does, so a host that
+	// left that walk out of `config.commands` gets the keystroke swallowed instead.
+	const handleTextEditTab = useCallback(
+		(step: 1 | -1) => {
+			const commandId =
+				step === 1
+					? SelectNextTextSlotCommand.id
+					: SelectPreviousTextSlotCommand.id;
+			if (registries.command.get(commandId) === undefined) {
+				return;
+			}
+			dispatch({ type: "STEP_TEXT_EDIT", step });
+		},
+		[dispatch, registries],
+	);
+
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
 	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
 	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
@@ -907,6 +925,7 @@ const CanvasComponent = ({
 									onCaretMove={revealCaret}
 									onSelectionChange={handleTextEditSelectionChange}
 									onToggleFormat={handleTextEditToggleFormat}
+									onTab={handleTextEditTab}
 								/>
 							</ZoomScaledOverlay>
 							{/* HTML whose position follows zoom but whose size does not */}
