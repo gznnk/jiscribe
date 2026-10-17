@@ -92,8 +92,8 @@ describe(`materialize once per gesture (${OBJECT_COUNT} objects)`, () => {
 	});
 });
 
-// A path that needs a fresh writable Record (updateAffectedGroupBounds and the
-// re-measure pass both do) can be handed a view. Spreading one pays a Proxy trap
+// A path that needs a fresh writable Record (the re-measure pass does) can be
+// handed a view. Spreading one pays a Proxy trap
 // per key for the identical result.
 describe(`copy a view into a writable record (${OBJECT_COUNT} objects)`, () => {
 	const cowView = (() => {

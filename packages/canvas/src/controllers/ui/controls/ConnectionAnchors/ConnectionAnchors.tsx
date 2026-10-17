@@ -9,6 +9,7 @@ import {
 	calcOutwardVector,
 	type AnchorFrame,
 } from "../../../../connectors/calcConnectPoint";
+import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
@@ -48,6 +49,12 @@ type ConnectionAnchorsProps = {
 	 */
 	extraConnectPoints?: readonly ExtraConnectPoint[] | null;
 	/**
+	 * Per-anchor display specs keyed by anchor id (from
+	 * ObjectConnectionAnchorsRegistry): a `hidden` anchor gets no dot, and an
+	 * `offset` replaces the theme's `connectionAnchorOffset` for that dot.
+	 */
+	connectionAnchors?: ResolvedConnectionAnchors | null;
+	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
 	 */
@@ -58,13 +65,13 @@ type ConnectionAnchorsProps = {
  * ConnectionAnchors component for canvas.
  *
  * Displays the four edge connection anchors of a frame, plus whatever extra ones
- * its type declares, at the same points a connector would attach to (see
+ * its type declares, less any its type hides, at the same points a connector would attach to (see
  * calcConnectPoint / calcExtraConnectPoint).
  * These anchors can be dragged to create new connectors.
  *
  * Each anchor has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id=<objectId> + data-part="anchor:<anchorPosition>" for identifying which anchor was interacted with
+ * - data-id=<objectId> + data-action="anchor:<anchorPosition>" for identifying which anchor was interacted with
  */
 const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	objectId,
@@ -72,6 +79,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	outline,
 	anchorRegion,
 	extraConnectPoints,
+	connectionAnchors,
 	zoom = 1,
 }) => {
 	const { rotation, scaleX, scaleY } = frame;
@@ -80,7 +88,13 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	// Adjust sizes based on zoom level to maintain consistent visual size
 	const adjustedAnchorRadius = handleDimensions.anchorRadius / zoom;
 	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
-	const adjustedOffset = handleDimensions.connectionAnchorOffset / zoom;
+	const resolveAdjustedOffset = (anchorId: string): number =>
+		(connectionAnchors?.[anchorId]?.offset ??
+			handleDimensions.connectionAnchorOffset) / zoom;
+	const topOffset = resolveAdjustedOffset("topCenter");
+	const rightOffset = resolveAdjustedOffset("rightCenter");
+	const bottomOffset = resolveAdjustedOffset("bottomCenter");
+	const leftOffset = resolveAdjustedOffset("leftCenter");
 
 	// Anchors sit where a connector would attach (outline + anchor region aware);
 	// the outward-normal offset below is applied on top.
@@ -102,23 +116,23 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	const signY = calcNonZeroSign(scaleY);
 
 	const topCenterAnchor = {
-		x: topEdge.x + signY * Math.sin(radians) * adjustedOffset,
-		y: topEdge.y - signY * Math.cos(radians) * adjustedOffset,
+		x: topEdge.x + signY * Math.sin(radians) * topOffset,
+		y: topEdge.y - signY * Math.cos(radians) * topOffset,
 	};
 
 	const rightCenterAnchor = {
-		x: rightEdge.x + signX * Math.cos(radians) * adjustedOffset,
-		y: rightEdge.y + signX * Math.sin(radians) * adjustedOffset,
+		x: rightEdge.x + signX * Math.cos(radians) * rightOffset,
+		y: rightEdge.y + signX * Math.sin(radians) * rightOffset,
 	};
 
 	const bottomCenterAnchor = {
-		x: bottomEdge.x - signY * Math.sin(radians) * adjustedOffset,
-		y: bottomEdge.y + signY * Math.cos(radians) * adjustedOffset,
+		x: bottomEdge.x - signY * Math.sin(radians) * bottomOffset,
+		y: bottomEdge.y + signY * Math.cos(radians) * bottomOffset,
 	};
 
 	const leftCenterAnchor = {
-		x: leftEdge.x - signX * Math.cos(radians) * adjustedOffset,
-		y: leftEdge.y - signX * Math.sin(radians) * adjustedOffset,
+		x: leftEdge.x - signX * Math.cos(radians) * leftOffset,
+		y: leftEdge.y - signX * Math.sin(radians) * leftOffset,
 	};
 
 	// A declared point is pushed off along its own declared outward direction, so
@@ -126,11 +140,12 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	const extraAnchors = (extraConnectPoints ?? []).map((extraConnectPoint) => {
 		const edge = calcExtraConnectPoint(frame, extraConnectPoint);
 		const outward = calcOutwardVector(frame, extraConnectPoint.direction);
+		const extraOffset = resolveAdjustedOffset(extraConnectPoint.id);
 		return {
 			position: extraConnectPoint.id,
 			point: {
-				x: edge.x + outward.x * adjustedOffset,
-				y: edge.y + outward.y * adjustedOffset,
+				x: edge.x + outward.x * extraOffset,
+				y: edge.y + outward.y * extraOffset,
 			},
 		};
 	});
@@ -145,7 +160,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		{ position: "bottomCenter", point: bottomCenterAnchor },
 		{ position: "leftCenter", point: leftCenterAnchor },
 		...extraAnchors,
-	];
+	].filter(({ position }) => connectionAnchors?.[position]?.hidden !== true);
 
 	return (
 		<g data-layer="connection-anchors">
@@ -158,7 +173,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
 					data-id={objectId}
-					data-part={`anchor:${position}`}
+					data-action={`anchor:${position}`}
 					style={connectionAnchorStyle}
 				/>
 			))}

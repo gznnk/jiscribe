@@ -8,6 +8,9 @@ import { deepFreezeState } from "../../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
+import { reconcileSelection } from "../../../../selection/writers/reconcileSelection";
 import type {
 	CanvasEvent,
 	EventType,
@@ -76,7 +79,7 @@ const dragEvent = (
 		target: null,
 		targetId,
 		targetKind: "connector",
-		targetPart: "label",
+		targetAction: "label",
 		start,
 		last,
 		delta: { x: last.x - start.x, y: last.y - start.y },
@@ -135,7 +138,7 @@ describe("ConnectorLabelDragHandler - supports", () => {
 	it("ignores the bare line, other kinds, and non-left buttons", () => {
 		const onLine = {
 			...dragEvent("dragStart", { x: 0, y: 0 }, { x: 1, y: 1 }),
-			targetPart: undefined,
+			targetAction: undefined,
 		} as CanvasEvent;
 		expect(ConnectorLabelDragHandler.supports(onLine)).toBe(false);
 
@@ -157,8 +160,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 	it("selects the connector exclusively and enables edge scrolling", () => {
 		const state = {
 			...stateWith(labeledConnector({ text: "Yes" })),
-			selectedIds: ["other"],
-			selectedVertex: { objectId: "other", vertexIndex: 0 },
+			selection: selectionOf(["other"], vertexPartSelection(0)),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 			contextMenuPosition: { x: 1, y: 1 },
@@ -170,9 +172,12 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 			registries,
 		);
 
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selection.objectIds).toEqual(["c1"]);
+		// The part selection is the reducer's to drop, which it does for every
+		// gesture result (reconcileSelection).
+		expect(
+			reconcileSelection(next, registries.objectPartKind).selection.part,
+		).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
@@ -186,7 +191,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 			dragEvent("dragStart", { x: 100, y: 0 }, { x: 100, y: 0 }),
 			registries,
 		);
-		expect(next.selectedConnectorId).toBeNull();
+		expect(next.selection.objectIds).toEqual([]);
 		expect(next.edgeScrollEnabled).toBe(false);
 	});
 });
@@ -422,9 +427,10 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		});
 		expect(afterEnd.objects).not.toBe(afterStart.objects);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion + 1);
 	});
 
-	it("keeps the objects reference when the label ends where it started (no history entry)", () => {
+	it("keeps the objects reference and commits nothing when the label ends where it started", () => {
 		const state = stateWith(labeledConnector({ text: "Yes" }));
 		const afterStart = ConnectorLabelDragHandler.handle(
 			state,
@@ -444,6 +450,7 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 
 		expect(afterEnd.objects).toBe(afterDrag.objects);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion);
 	});
 
 	it("commits the final frame when the last drag frame held a different placement (Ctrl released before release)", () => {
@@ -471,6 +478,7 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		expect(labelOf(afterEnd)).toEqual({ text: "Yes" });
 		expect(labelOf(afterEnd)).not.toHaveProperty("offset");
 		expect(afterEnd.objects).not.toBe(afterDrag.objects);
+		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion + 1);
 	});
 
 	it("commits the final frame when a flick's last drag frame stayed off the line", () => {
@@ -498,5 +506,6 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		expect(labelOf(afterEnd)).toEqual({ text: "Yes" });
 		expect(labelOf(afterEnd)).not.toHaveProperty("offset");
 		expect(afterEnd.objects).not.toBe(afterDrag.objects);
+		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion + 1);
 	});
 });

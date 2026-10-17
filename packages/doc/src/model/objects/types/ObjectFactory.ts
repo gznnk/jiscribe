@@ -16,15 +16,16 @@ export type ObjectFactory = {
 	/**
 	 * Create an ObjectDoc from a center-based position.
 	 * Used for click-based center placement and drag-and-drop placement.
-	 * Point-geometry shapes read `position` as the box's drawn top-left instead:
-	 * they know no box to center, so there is nothing to offset by.
+	 * Every geometry reads `position` the same way; what differs is the field it
+	 * lands in — a point-geometry doc stores the drawn top-left corner the center
+	 * puts its measured box at (see GeometryType).
 	 */
 	createDoc(position: Point, overrides?: Record<string, unknown>): ObjectDoc;
 
 	/**
 	 * Return the half-size for ghost display (after overrides are applied).
-	 * Point-geometry shapes report zero: their box is not known until the states
-	 * layer derives it from the content.
+	 * Half of the box the shape is actually drawn at, so a point-geometry shape
+	 * measures its content rather than reporting nothing.
 	 */
 	calcDimensions(overrides?: Record<string, unknown>): ObjectDimensions;
 

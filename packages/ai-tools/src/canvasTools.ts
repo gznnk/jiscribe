@@ -8,6 +8,7 @@
 // of truth: `z.toJSONSchema(z.object(inputSchema))` derives the JSON Schema, and
 // there is no way back.
 
+import { AI_FONT_WEIGHTS, textSlotStyleSchema } from "@jiscribe/ai-tools-sdk";
 import {
 	ArrowTypes,
 	ConnectorRoutings,
@@ -125,7 +126,8 @@ const HEIGHT_MODES = [
 ] as const satisfies readonly AiHeightMode[];
 
 /**
- * The shared style vocabulary; add_object and set_style speak the same one.
+ * The shared style vocabulary; add_object and set_style speak the same one. The
+ * typography is the one plugin tools styling text slots declare too (textSlotStyleSchema).
  * Properties a type has no place for (fill on a connector, an arrowhead on a rect,
  * a font colour on a shape without text) are dropped by docOps, which says so in the
  * tool result.
@@ -181,36 +183,7 @@ const styleSchema = {
 			"Arrowhead at the end of the line, the one that carries the direction (FilledTriangle for a flow). Only for polyline and connector.",
 		),
 	rx: z.number().min(0).optional().describe("Corner radius in px; rect only."),
-	fontColor: z.string().optional().describe("Text color, any CSS color."),
-	fontSize: z.number().min(1).optional().describe("Text size in px."),
-	fontFamily: z
-		.string()
-		.optional()
-		.describe(
-			'Font family for the whole body, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace), \'Caveat, "Klee One", cursive\' (handwriting). A family outside those is drawn by whatever the viewer has, and measured by estimate.',
-		),
-	fontWeight: z
-		.enum(["normal", "400", "500", "600", "700", "bold"])
-		.optional()
-		.describe(
-			'Text weight, from the ladder the canvas ships faces for: "normal" (400), "500", "600", "bold" (700). "400" and "700" are the same two rungs written as a design token would spell them, and are stored as "normal" and "bold".',
-		),
-	fontStyle: z
-		.enum(["normal", "italic"])
-		.optional()
-		.describe('Slant of the whole body; "normal" stands it upright again.'),
-	textDecoration: z
-		.enum(["none", "underline", "line-through", "underline line-through"])
-		.optional()
-		.describe('Line drawn on the whole body; "none" removes it.'),
-	textAlign: z
-		.enum(["left", "center", "right"])
-		.optional()
-		.describe("Horizontal text alignment inside the shape."),
-	verticalAlign: z
-		.enum(["top", "middle", "bottom"])
-		.optional()
-		.describe("Vertical text alignment inside the shape."),
+	...textSlotStyleSchema,
 };
 
 const pointSchema = z
@@ -244,7 +217,7 @@ const inlineTextStyleSchema = {
 			'Font family for the matched characters, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace, e.g. for a code term inside a sentence), \'Caveat, "Klee One", cursive\' (handwriting).',
 		),
 	fontWeight: z
-		.enum(["normal", "400", "500", "600", "700", "bold"])
+		.enum(AI_FONT_WEIGHTS)
 		.optional()
 		.describe(
 			'Weight of the matched characters, from the shipped ladder "normal" (400) / "500" / "600" / "bold" (700); "400" and "700" are those two rungs written as a design token would spell them, and are stored as "normal" and "bold". "normal" takes the emphasis off again.',
@@ -1163,7 +1136,7 @@ export const createCanvasToolDescriptors = (
 			"One object at a time, because these names belong to a single type — read the type's own schema for the names it has.",
 			"Unlike set_style nothing is silently skipped: a name the type does not have, or a value it rejects, comes back as an error with the reason, and the object is left as it was.",
 			'This is also how an existing text is moved between its layouts — `textLayout` with the `width` a "block" wraps in, always together: a `width` on a text that is not being a block is refused, nothing reading it there. A text you are about to create takes both on add_object instead, in one call.',
-			'One name is shared by every shape holding its label inside its box rather than belonging to a single type: `textVerticalBasis` ("region" / "frame") decides whether the label is placed in the area the shape keeps clear of its own decoration or on its whole height — set "frame" on a row of mixed shapes drawn at one height so their labels line up. A shape drawing its label outside its box (actor and the like) refuses it: there is nothing for the placement to move.',
+			'One name is shared by several types rather than belonging to a single one: `textVerticalBasis` ("region" / "frame") decides whether the label is placed in the area the shape\'s outline leaves clear or on its whole height. Only a type whose label area is shorter than the shape (a cylinder\'s caps, a document\'s wavy foot, a header band, the box inside an ellipse or diamond) takes it, and its schema lists it; every other type (rect, stadium, hexagon, sticky, text, …) refuses it, its label already sitting on the whole height. Set "frame" on such a shape in a row drawn at one height so its label lines up with its neighbours\'.',
 		].join(" "),
 		{
 			id: z.string().describe("id of the object to change."),

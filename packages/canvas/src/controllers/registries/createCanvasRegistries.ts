@@ -9,24 +9,23 @@ import {
 import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
 import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
-import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
+import { createObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import { createObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { createObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import { createObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import { createObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
-import { createObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import { createObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
-import { createObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import { createObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
@@ -39,12 +38,13 @@ import { createStencilRegistry } from "../ui/objects/StencilRegistry";
  *
  * Wiring order:
  *   1. instantiate the empty registries,
- *   2. register the object-type-independent sets (gesture handlers, system
- *      style properties) — always all,
+ *   2. register the object-type-independent sets (the gesture handlers) — always all,
  *   3. apply the configured object types (default: every type),
- *   4. register commands, optionally restricted by `config.commands`,
- *   5. apply `config.plugins` in declared order. A plugin object type that
- *      collides with a built-in or an earlier plugin throws (see `CanvasPlugin`).
+ *   4. register the built-in commands followed by the plugins' own, optionally
+ *      restricted by `config.commands`,
+ *   5. apply `config.plugins` in declared order. A plugin object type or command
+ *      id that collides with a built-in or an earlier plugin throws (see
+ *      `CanvasPlugin`).
  *
  * Passing no `config` reproduces the full set, matching the historical singleton
  * behavior (backward compatible).
@@ -57,35 +57,31 @@ export const createCanvasRegistries = (
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectContentResizer: createObjectContentResizerRegistry(),
 		objectAutoHeight: createObjectAutoHeightRegistry(),
-		objectTextVerticalBasis: createObjectTextVerticalBasisRegistry(),
 		objectComponent: createObjectComponentRegistry(),
-		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
 		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
 		objectExtraConnectPoints: createObjectExtraConnectPointsRegistry(),
+		objectConnectionAnchors: createObjectConnectionAnchorsRegistry(),
 		objectGeometryKey: createObjectGeometryKeyRegistry(),
 		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectSvgDefs: createObjectSvgDefsRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		objectTransformHandles: createObjectTransformHandlesRegistry(),
 		selectionControl: createSelectionControlRegistry(),
+		objectPartKind: createObjectPartKindRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),
 		propertyPanel: createPropertyPanelRegistry(),
 		stencil: createStencilRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
-		styleProperty: createStylePropertyRegistry(),
+		objectStyle: createObjectStyleRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
-	initializeStyleProperties(
-		registries.styleProperty,
-		registries.objectTextVerticalBasis,
-	);
 
 	// Tracks which object types are already claimed and by whom, so a plugin
 	// colliding with a built-in or an earlier plugin throws instead of
@@ -102,7 +98,7 @@ export const createCanvasRegistries = (
 		}
 	}
 
-	initializeCommands(registries, config?.commands);
+	initializeCommands(registries, config?.commands, config?.plugins);
 
 	for (const plugin of config?.plugins ?? []) {
 		for (const [type, definition] of Object.entries(plugin.objects ?? {})) {

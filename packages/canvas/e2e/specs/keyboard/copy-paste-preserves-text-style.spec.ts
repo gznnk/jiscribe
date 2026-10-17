@@ -31,7 +31,7 @@ async function drawStyledRect(canvas: CanvasDriver): Promise<string> {
 	await canvas.openObjectMenu("font-size");
 	await canvas.setNumberInput("fontSize", FONT_SIZE);
 	await canvas.setColor("font-color", FONT_COLOR);
-	await canvas.setTextFormat("fontWeight", "bold");
+	await canvas.pressBold();
 
 	// Wait until the settings have reached the rendering.
 	await expect

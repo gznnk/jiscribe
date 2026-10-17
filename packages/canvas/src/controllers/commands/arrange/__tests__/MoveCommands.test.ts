@@ -4,6 +4,10 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { collectCowChangedKeys, isCowObjects } from "../../../utils/cowObjects";
 import { moveCommands } from "../MoveCommands";
 
 const registries = createTestRegistries();
@@ -27,13 +31,13 @@ const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	}) as unknown as ObjectState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
 	textEditState?: CanvasControllerState["textEditState"];
 }): CanvasControllerState =>
 	({
-		selectedIds: params.selectedIds,
+		selection: params.selection,
 		objects: params.objects,
 		multiSelectGroup: params.multiSelectGroup ?? null,
 		textEditState: params.textEditState ?? null,
@@ -60,11 +64,11 @@ describe("moveCommands", () => {
 
 	it("every command sets a coalesce key (pending) containing the selected IDs on execute (a different target means a separate operation)", () => {
 		const stateA = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: { a: makeRect("a", 0, 0) },
 		});
 		const stateAB = makeState({
-			selectedIds: ["a", "b"],
+			selection: selectionOf(["a", "b"]),
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 0, 0) },
 		});
 		for (const command of moveCommands) {
@@ -94,7 +98,7 @@ describe("moveCommands", () => {
 	describe("execute (movement amount)", () => {
 		it("move-right increments cx by 1 (screen coordinates)", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 50, 50) },
 			});
 			const next = commandById("move-right").execute(state, registries);
@@ -105,7 +109,7 @@ describe("moveCommands", () => {
 
 		it("move-up decrements cy by 1 (up is negative in screen coordinates)", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 50, 50) },
 			});
 			const next = commandById("move-up").execute(state, registries);
@@ -115,7 +119,7 @@ describe("moveCommands", () => {
 
 		it("Shift commands move by 10px", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 50, 50) },
 			});
 			const next = commandById("move-down-large").execute(state, registries);
@@ -125,7 +129,7 @@ describe("moveCommands", () => {
 
 		it("moves a multi-selection together by the same delta", () => {
 			const state = makeState({
-				selectedIds: ["a", "b"],
+				selection: selectionOf(["a", "b"]),
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 100, 100) },
 			});
 			const next = commandById("move-left").execute(state, registries);
@@ -141,7 +145,7 @@ describe("moveCommands", () => {
 				cy: 50,
 			} as unknown as GroupState;
 			const state = makeState({
-				selectedIds: ["a", "b"],
+				selection: selectionOf(["a", "b"]),
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 100, 100) },
 				multiSelectGroup,
 			});
@@ -150,9 +154,22 @@ describe("moveCommands", () => {
 			expect(next.multiSelectGroup?.cy).toBe(50);
 		});
 
+		it("hands back a copy-on-write view narrowed to the moved ID, the source untouched", () => {
+			// The reducer flattens it (the COMMAND case); flattening here would leave
+			// the passes in between a full scan each.
+			const objects = { a: makeRect("a", 0, 0), b: makeRect("b", 100, 100) };
+			const state = makeState({ selection: selectionOf(["a"]), objects });
+			const next = commandById("move-right").execute(state, registries);
+			expect(isCowObjects(next.objects)).toBe(true);
+			expect(collectCowChangedKeys(next.objects, objects)).toEqual(
+				new Set(["a"]),
+			);
+			expect((objects.a as unknown as { cx: number }).cx).toBe(0);
+		});
+
 		it("increments commitVersion", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 0, 0) },
 			});
 			const next = commandById("move-up").execute(state, registries);
@@ -163,27 +180,22 @@ describe("moveCommands", () => {
 	describe("canExecute", () => {
 		it("is executable in the normal case when there is a selection", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 0, 0) },
 			});
 			expect(commandById("move-up").canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when there is no selection", () => {
-			const state = makeState({ selectedIds: [], objects: {} });
+			const state = makeState({ selection: selectionOf([]), objects: {} });
 			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});
 
 		it("is not executable while editing text, prioritizing caret movement", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"], textSlotPartSelection("body")),
 				objects: { a: makeRect("a", 0, 0) },
-				textEditState: {
-					kind: "shape",
-					objectId: "a",
-					slotId: "body",
-					text: "",
-				},
+				textEditState: { kind: "shape", text: "" },
 			});
 			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});

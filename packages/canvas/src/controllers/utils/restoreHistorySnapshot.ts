@@ -1,12 +1,12 @@
 import { calcViewportToRevealHistoryChange } from "./calcViewportToRevealHistoryChange";
-import { createMultiSelectGroup } from "./createMultiSelectGroup";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
-import { resolveRequestedSelection } from "./resolveRequestedSelection";
 import { resolveScrollWallPadding } from "./resolveScrollWallPadding";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
+import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
+import { selectRequestedIds } from "../selection/writers/selectRequestedIds";
 
 /**
  * Whether undo, redo and revert should be offered right now — the enabled look
@@ -81,19 +81,15 @@ export const restoreHistorySnapshot = (
 		mapper,
 		registries.objectContentResizer,
 	);
-	const { selectedIds, selectedConnectorId } = resolveRequestedSelection(
-		[
-			...state.selectedIds,
-			...(state.selectedConnectorId ? [state.selectedConnectorId] : []),
-		],
+	const { selectedIds } = selectRequestedIds(
+		state.selection.objectIds,
 		restoredState.objects,
 	);
 
 	return {
 		...restoredState,
 		...resetUiState(),
-		selectedIds,
-		selectedConnectorId,
+		selection: { objectIds: selectedIds, part: null },
 		// Rebuilt rather than carried: the objects it wraps may have moved or gone.
 		multiSelectGroup: createMultiSelectGroup(
 			selectedIds,
@@ -116,7 +112,10 @@ export const restoreHistorySnapshot = (
 		// the measurement cache, and limitViewScroll notices the swapped objects and
 		// `view` and re-measures on the next view scroll.
 		scrollLimit: state.scrollLimit,
-		commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
+		// Not a new commit: this is a restoration, and nothing else on the way
+		// advances the version either (the gesture close-out never does), so a
+		// restore reached by a toolbar click is not recorded as an edit of its own.
+		commitVersion: state.commitVersion,
 		saveRequest: {
 			version: state.saveRequest.version + 1,
 			nonce: crypto.randomUUID(),

@@ -19,7 +19,7 @@ import type { StencilCategory } from "../../objects/StencilCategory";
  *   same {@link StencilCategory} object can also be passed to
  *   `stencilLibrary.sections`.
  * - `command`: a button running a registered command through the command system
- *   (`data-part="command:{id}"` → ToolbarHandler → handleCommand), disabled from
+ *   (`data-action="command:{id}"` → ToolbarHandler → handleCommand), disabled from
  *   the command's own `canExecute`. The icon rides on the item because `Command`
  *   itself carries no icon. A commandId the registry does not know (a command
  *   the host switched off via `CanvasConfig.commands`) is silently dropped.
@@ -44,8 +44,8 @@ export type ToolbarItem =
 			icon: ComponentType<StencilIconProps>;
 			/**
 			 * Overrides the command's own label on this button (tooltip and
-			 * aria-label). Omit to take `messages.commandLabels[commandId]` and fall
-			 * back to the command's English `label`.
+			 * aria-label). Omit to take what `resolveCommandLabel` yields: the host
+			 * override by id, else the command's own label for the locale.
 			 */
 			label?: string | LocaleMessages<string>;
 	  }

@@ -7,6 +7,8 @@ import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import { createFrameMapper } from "../../../states/objects/base/FrameMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { isCowObjects } from "../../utils/cowObjects";
 import { createCanvasReducer } from "../canvasReducer";
 import { createInitialControllerState } from "../createInitialControllerState";
 
@@ -37,6 +39,7 @@ const cappedFeatures = {
 	stroke: true,
 	fill: true,
 	text: "body",
+	textVerticalBasis: true,
 } as const;
 
 const cappedPlugin: CanvasPlugin = {
@@ -85,7 +88,7 @@ const cappedDoc: CanvasDoc = {
 /** The initial state with the shape selected, which is what the command acts on. */
 const createSelectedState = (): CanvasControllerState => {
 	const state = createInitialControllerState(cappedDoc, registries);
-	return { ...state, selectedIds: ["capped-1"] };
+	return { ...state, selection: selectionOf(["capped-1"]) };
 };
 
 /** The two fields the chain moves, read off a state without narrowing it. */
@@ -105,7 +108,9 @@ const runCommand = (
 describe("switching the vertical basis of a shape whose document states no height", () => {
 	it("offers both switches on the one type that takes them", () => {
 		expect(registries.objectAutoHeight.supports("capped")).toBe(true);
-		expect(registries.objectTextVerticalBasis.supports("capped")).toBe(true);
+		expect(
+			registries.objectStyle.get("capped")?.textVerticalBasis,
+		).toBeDefined();
 	});
 
 	it("re-derives the height on the basis the switch just wrote", () => {
@@ -133,5 +138,17 @@ describe("switching the vertical basis of a shape whose document states no heigh
 
 		expect(shapeOf(undone).textVerticalBasis).toBeUndefined();
 		expect(shapeOf(undone).height).toBe(shapeOf(state).height);
+	});
+
+	it("leaves no copy-on-write view behind a command that wrote through one", () => {
+		// The style writers hand back a view; a COMMAND bypasses handleGesture, which
+		// flattens the gesture routes, so the reducer has to (#213).
+		const state = createSelectedState();
+		for (const commandId of [
+			"toggleTextVerticalBasis",
+			"toggleLockAspectRatio",
+		]) {
+			expect(isCowObjects(runCommand(state, commandId).objects)).toBe(false);
+		}
 	});
 });

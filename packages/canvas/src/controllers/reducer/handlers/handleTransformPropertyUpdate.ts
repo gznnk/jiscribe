@@ -18,6 +18,7 @@ import {
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { calcAnchorResize } from "../../gestures/handlers/controls/transform/utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "../../gestures/handlers/controls/transform/utils/calcMultiSelectGroupBounds";
+import { calcTransformDragResize } from "../../gestures/handlers/controls/transform/utils/calcTransformDragResize";
 import { dropAutoHeightOnResize } from "../../gestures/handlers/controls/transform/utils/dropAutoHeightOnResize";
 import {
 	calcHeightWithAspectRatio,
@@ -72,10 +73,7 @@ const RESIZE_INTENT_ANCHOR = {
 const resolveTransformTarget = (
 	state: CanvasControllerState,
 ): TransformTarget | null => {
-	if (state.selectedConnectorId != null) {
-		return null;
-	}
-	if (state.selectedIds.length > 1) {
+	if (state.selection.objectIds.length > 1) {
 		const multiSelectGroup = state.multiSelectGroup;
 		if (
 			!multiSelectGroup ||
@@ -91,10 +89,10 @@ const resolveTransformTarget = (
 			isGroupTarget: true,
 		};
 	}
-	if (state.selectedIds.length !== 1) {
+	if (state.selection.objectIds.length !== 1) {
 		return null;
 	}
-	const selectedId = state.selectedIds[0];
+	const selectedId = state.selection.objectIds[0];
 	const selectedObject = state.objects[selectedId];
 	if (
 		!selectedObject ||
@@ -148,7 +146,7 @@ const applyResizedFrame = (
 		// about the top-left does not leave proportional to the frame it was asked
 		// for (a rotated leaf sticks out further than its own box).
 		const recalculatedBounds = calcMultiSelectGroupBounds(
-			state.selectedIds,
+			state.selection.objectIds,
 			nextState.objects,
 			updatedGroup,
 		);
@@ -186,7 +184,21 @@ const applyResizedFrame = (
 	return { ...state, objects: updatedObjects };
 };
 
-/** Moves the whole selection so the frame's top-left corner lands on the stated coordinate. */
+/** The group frames above and inside the selection re-derived from its roots, unless nothing changed. */
+const settleGroupsIfChanged = (
+	state: CanvasControllerState,
+	updatedState: CanvasControllerState,
+): CanvasControllerState =>
+	updatedState === state ? state : updateGroupBoundsForSelection(updatedState);
+
+/**
+ * Moves the whole selection so the frame's top-left corner lands on the stated
+ * coordinate.
+ *
+ * @returns The state with every group frame the move affects settled: a
+ *   translation carries the frames inside the selection along with it, so only
+ *   the ancestors above it are re-derived — the set the nudge commands settle
+ */
 const applyStatedPosition = (
 	state: CanvasControllerState,
 	target: TransformTarget,
@@ -201,7 +213,7 @@ const applyStatedPosition = (
 	}
 	const offset = value - currentValue;
 	const { objects, multiSelectGroup } = moveSelection({
-		selectedIds: state.selectedIds,
+		selectedIds: state.selection.objectIds,
 		srcObjects: state.objects,
 		srcMultiSelectGroup: state.multiSelectGroup,
 		delta: property === "x" ? { x: offset, y: 0 } : { x: 0, y: offset },
@@ -211,11 +223,17 @@ const applyStatedPosition = (
 	// hangs from are left to re-derive (the nudge commands settle the same set).
 	return updateAffectedGroupBounds(
 		{ ...state, objects, multiSelectGroup },
-		state.selectedIds,
+		state.selection.objectIds,
 	);
 };
 
-/** Resizes the frame about its top-left corner to the stated width or height. */
+/**
+ * Resizes the frame about its top-left corner to the stated width or height.
+ *
+ * @returns The state with every group frame the resize affects settled, re-derived
+ *   from the roots of the selection: a scaled group's own frame follows the
+ *   children it just scaled, and its ancestors follow it
+ */
 const applyStatedSize = (
 	state: CanvasControllerState,
 	target: TransformTarget,
@@ -237,8 +255,11 @@ const applyStatedSize = (
 	// otherwise put the old height straight back.
 	const settledState = dropAutoHeightOnResize(
 		state,
-		STATED_RESIZE_INTENT,
-		RESIZE_INTENT_ANCHOR[property],
+		calcTransformDragResize(
+			state,
+			STATED_RESIZE_INTENT,
+			RESIZE_INTENT_ANCHOR[property],
+		),
 	);
 	const settledTarget = resolveTransformTarget(settledState);
 	if (!settledTarget) {
@@ -344,16 +365,24 @@ const applyStatedSize = (
 		scaleY: resizeResult.scaleY,
 	};
 
-	return applyResizedFrame(
-		settledState,
-		settledTarget,
-		startFrame,
-		updatedFrame,
-		registries,
+	return settleGroupsIfChanged(
+		state,
+		applyResizedFrame(
+			settledState,
+			settledTarget,
+			startFrame,
+			updatedFrame,
+			registries,
+		),
 	);
 };
 
-/** Turns the frame to the stated angle, carrying the children it rotates with it. */
+/**
+ * Turns the frame to the stated angle, carrying the children it rotates with it.
+ *
+ * @returns The state with every group frame the rotation affects settled,
+ *   re-derived from the roots of the selection
+ */
 const applyStatedRotation = (
 	state: CanvasControllerState,
 	target: TransformTarget,
@@ -379,11 +408,11 @@ const applyStatedRotation = (
 				registries.objectBehavior,
 			),
 		);
-		return {
+		return updateGroupBoundsForSelection({
 			...state,
 			objects: updatedObjects,
 			multiSelectGroup: updatedGroup,
-		};
+		});
 	}
 
 	const selectedId = target.selectedId;
@@ -408,7 +437,7 @@ const applyStatedRotation = (
 			),
 		);
 	}
-	return { ...state, objects: updatedObjects };
+	return updateGroupBoundsForSelection({ ...state, objects: updatedObjects });
 };
 
 /**
@@ -469,35 +498,14 @@ export const handleTransformPropertyUpdate = (
 		return state;
 	}
 
-	let updatedState: CanvasControllerState;
 	switch (property) {
 		case "x":
 		case "y":
-			updatedState = applyStatedPosition(
-				state,
-				target,
-				property,
-				value,
-				registries,
-			);
-			break;
+			return applyStatedPosition(state, target, property, value, registries);
 		case "width":
 		case "height":
-			updatedState = applyStatedSize(
-				state,
-				target,
-				property,
-				value,
-				registries,
-			);
-			break;
+			return applyStatedSize(state, target, property, value, registries);
 		case "rotation":
-			updatedState = applyStatedRotation(state, target, value, registries);
-			break;
+			return applyStatedRotation(state, target, value, registries);
 	}
-
-	if (updatedState === state) {
-		return state;
-	}
-	return updateGroupBoundsForSelection(updatedState);
 };

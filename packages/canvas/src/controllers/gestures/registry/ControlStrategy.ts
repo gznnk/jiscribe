@@ -7,7 +7,7 @@ import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
  * Purely a nominal marker: the private brand member makes the class nominal,
  * so only subclasses are assignable — a plain GestureHandler cannot be
  * registered into ControlEventHandler by mistake. Routing is done by each
- * strategy's supports() (data-part matching), not by this class.
+ * strategy's supports() (data-action matching), not by this class.
  */
 export abstract class ControlStrategy implements GestureHandler {
 	/** Nominal brand (`declare` = no runtime emit; `private` = blocks structural fakes). */

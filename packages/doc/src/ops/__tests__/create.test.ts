@@ -79,8 +79,9 @@ describe("addObject", () => {
 		expectValid(doc);
 	});
 
-	// A point-geometry doc stores the top-left and no box, so the position reaches
-	// the doc untouched — no measurement, and nothing to offset a center by.
+	// A point-geometry type is placed by its center like every other shape, so this
+	// call's top-left goes through the box measured from the content and back. What
+	// the doc stores is that same corner, exactly.
 	it("keeps the given top-left for a point-geometry type", () => {
 		const doc = emptyDoc();
 		const id = docOps.addObject(doc, "text", {
@@ -104,6 +105,25 @@ describe("addObject", () => {
 		const text = doc.root[0] as Record<string, unknown>;
 		expect(text.x).toBe(12.5);
 		expect(text.y).toBe(-7.25);
+	});
+
+	it("keeps the given top-left for a rotated point-geometry type", () => {
+		// The corner such a doc stores is the drawn one — turned by the object's own
+		// rotation — so the angle has to reach the factory before it places the box.
+		// Getting that wrong moves the shape by a fraction of its size, which no
+		// unrotated case would show.
+		const doc = emptyDoc();
+		docOps.addObject(doc, "text", {
+			x: 100,
+			y: 100,
+			rotation: 37,
+			text: "Hello World",
+		});
+
+		const text = doc.root[0] as Record<string, unknown>;
+		expect(text.rotation).toBe(37);
+		expect(text.x).toBe(100);
+		expect(text.y).toBe(100);
 	});
 
 	it("keeps box fields out of a point-geometry doc", () => {
@@ -624,15 +644,26 @@ describe("addObject with a type's own extraProps", () => {
 		).toThrow(/cannot be created programmatically/);
 	});
 
-	it("accepts the body placement every single-body type carries, undeclared", () => {
+	it("accepts the body placement a type declaring the basis carries, undeclared", () => {
 		const doc = emptyDoc();
-		const id = docOps.addObject(doc, "rect", {
+		const id = docOps.addObject(doc, "ellipse", {
 			x: 0,
 			y: 0,
 			extraProps: { textVerticalBasis: "frame" },
 		});
 		expect(readObject(doc, id).textVerticalBasis).toBe("frame");
 		expectValid(doc);
+	});
+
+	it("refuses it on a type that does not declare the basis, saying why", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			docOps.addObject(doc, "rect", {
+				x: 0,
+				y: 0,
+				extraProps: { textVerticalBasis: "frame" },
+			}),
+		).toThrow(/does not declare textVerticalBasis/);
 	});
 
 	it("refuses a name the call already takes as a parameter", () => {

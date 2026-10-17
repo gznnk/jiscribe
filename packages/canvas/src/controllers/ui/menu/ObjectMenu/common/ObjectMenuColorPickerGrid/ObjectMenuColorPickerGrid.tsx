@@ -12,18 +12,23 @@ import {
 	ColorSwatch,
 	ColorTextInput,
 } from "./ObjectMenuColorPickerGridStyled";
-import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { setAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { toStyleIntent } from "../../../../../style/intent/toStyleIntent";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuColorPickerGridProps = {
 	/** Currently selected color */
 	currentColor: string;
-	/** Property name (e.g. "fill", "stroke") */
+	/**
+	 * Property name (e.g. "fill", "stroke"). Kept as a name rather than an intent
+	 * because the swatches' `set:` actions are built from it, and because the picker
+	 * holds CSS text rather than a value of the property's own type.
+	 */
 	property: string;
 	/**
-	 * Whether a swatch and the Auto button write through `onPropertyUpdate`
+	 * Whether a swatch and the Auto button write through `onStyleIntent`
 	 * (committing at once) instead of through the `set:` gesture. Set by a picker
 	 * whose target is not the selection — the canvas background — since the
 	 * gesture route ends in the style registry, which only ever writes to
@@ -47,13 +52,13 @@ type ObjectMenuColorPickerGridProps = {
 	 * gznnk/jiscribe-private#288.
 	 */
 	currentColorIsShared?: boolean;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
  * Color picker grid.
  * Displays preset color swatches (4×7 grid) and a CSS color text input.
- * Each swatch carries a `set:` data-part and updates the property through the
+ * Each swatch carries a `set:` data-action and updates the property through the
  * gesture system, resolved to the menu or sidebar that contains it, unless
  * `writesThroughCallback` opts the picker out of gestures entirely.
  * The swatch showing `currentColor` writes nothing where the pick is provably
@@ -69,7 +74,7 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	property,
 	writesThroughCallback = false,
 	currentColorIsShared = false,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const [inputValue, setInputValue] = useState(currentColor);
@@ -79,6 +84,18 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	inputValueRef.current = inputValue;
 	// Whether the user has made a valid edit that has not yet been committed.
 	const pendingCommit = useRef(false);
+
+	// The picker holds a property name and CSS text, so the name is read into the
+	// intent it states here, where the string is born.
+	const writeColor = useCallback(
+		(color: string, commitColor: boolean) => {
+			const intent = toStyleIntent(property, color);
+			if (intent !== undefined) {
+				onStyleIntent(intent, commitColor);
+			}
+		},
+		[property, onStyleIntent],
+	);
 
 	// Only treat it as an external change (preset, etc.) and reset the input when currentColor differs from the user's input.
 	// A commit:false preview also updates currentColor, but in that case it matches inputValue and is skipped.
@@ -99,18 +116,18 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 			setIsValid(valid);
 			if (valid) {
 				pendingCommit.current = true;
-				onPropertyUpdate(property, val, false);
+				writeColor(val, false);
 			}
 		},
-		[property, onPropertyUpdate],
+		[writeColor],
 	);
 
 	const commit = useCallback(() => {
 		if (isValid && pendingCommit.current) {
-			onPropertyUpdate(property, inputValue, true);
+			writeColor(inputValue, true);
 			pendingCommit.current = false;
 		}
-	}, [isValid, inputValue, property, onPropertyUpdate]);
+	}, [isValid, inputValue, writeColor]);
 
 	const handleBlur = useCallback(() => {
 		commit();
@@ -135,26 +152,24 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	// The two routes a swatch (and the Auto button) can take. The gesture one
 	// keeps the `set:` grammar the floating menu is read by; the callback one
 	// opts out of gestures so no handler applies the write to the selection as
-	// well, and still carries data-part, which is what names the swatch.
+	// well, and still carries data-action, which is what names the swatch.
 	//
 	// The swatch already picked writes nothing on either route, where the picker
 	// is told the color stands for every target (currentColorIsShared): both
 	// routes commit unconditionally, and a commit of the color in place is
 	// recorded as a history entry that changes nothing, dropping the redo stack
 	// with it. The gesture route is stopped by opting the swatch out rather than
-	// by dropping its data-part, which e2e and the parts grammar still read.
+	// by dropping its data-action, which e2e and the actions grammar still read.
 	const buildPickProps = (value: string) => {
 		const picked = currentColorIsShared && isCurrentColor(value);
 		return writesThroughCallback
 			? {
 					"data-gesture": "none",
-					"data-part": setPart(property, value),
-					onClick: picked
-						? undefined
-						: () => onPropertyUpdate(property, value, true),
+					"data-action": setAction(property, value),
+					onClick: picked ? undefined : () => writeColor(value, true),
 				}
 			: {
-					"data-part": setPart(property, value),
+					"data-action": setAction(property, value),
 					"data-gesture": picked ? "none" : undefined,
 				};
 	};

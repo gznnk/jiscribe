@@ -65,6 +65,11 @@ export { NoteIcon } from "./stencil/NoteIcon";
 export { annotationStencilCategory } from "./stencil/AnnotationStencilCategory";
 
 export {
+	GROUP_MARKER_DIRECTION_STYLE_ENTRIES,
+	GROUP_MARKER_TIP_STYLE_ENTRIES,
+} from "./style/groupMarkerStyleEntries";
+
+export {
 	braceDefinition,
 	bracketDefinition,
 	bracketWithStemDefinition,

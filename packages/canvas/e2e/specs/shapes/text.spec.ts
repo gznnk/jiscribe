@@ -277,9 +277,7 @@ test.describe("text", () => {
 
 		// The outline is decoration with pointerEvents: none and no data-kind, so it
 		// is counted rather than asserted visible, and matched against the box.
-		const outlines = canvas.page.locator(
-			'[data-layer="selection-overlay"] rect',
-		);
+		const outlines = canvas.page.locator(selectors.selectionOutline);
 		await expect(outlines).toHaveCount(1);
 		const box = await textBoxOf(canvas, id);
 		expect(Number(await outlines.getAttribute("width"))).toBeCloseTo(box.width);
@@ -332,7 +330,7 @@ test.describe("text", () => {
 		expect(await drawnLineCount(canvas, id)).toBe(1);
 
 		await canvas.selectAt(centerOf(normal));
-		await canvas.setTextFormat("fontWeight", "bold");
+		await canvas.pressBold();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("700");
@@ -343,8 +341,11 @@ test.describe("text", () => {
 		expect(bold.height).toBeCloseTo(expectedBoxHeight(1, DEFAULT_FONT_SIZE));
 
 		// Italic on top: both are written into one font declaration, so a declaration
-		// the style makes unusable would take the weight down with it.
-		await canvas.setTextFormat("fontStyle", "italic");
+		// the style makes unusable would take the weight down with it. Italic lives in
+		// the sidebar only; closing it gives the canvas its full width back.
+		await canvas.openPropertyPanel();
+		await canvas.page.click(selectors.propertyPanelCommand("toggleItalic"));
+		await canvas.closePropertyPanel();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
 			.toBe("italic");

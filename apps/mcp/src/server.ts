@@ -3,7 +3,6 @@ import { createRequire } from "node:module";
 import { basename, dirname } from "node:path";
 
 import {
-	createCanvasToolDescriptors,
 	isAiDocOp,
 	type AiCanvasOpOutcome,
 	type AiDocOp,
@@ -26,7 +25,7 @@ import {
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import { canvasCapabilities, docOps } from "./canvasDefinitions";
+import { canvasToolSet, docOps } from "./canvasDefinitions";
 import { createCanvasFileLock } from "./canvasFileLock";
 import {
 	CanvasFileError,
@@ -50,7 +49,7 @@ import { createPathLock } from "./pathLock";
  * The tool definitions of the Jiscribe MCP server. Starting it over stdio is
  * `./index`'s job.
  *
- * The tools it exposes come in three groups.
+ * The tools it exposes, 77 in all, come in four groups.
  *
  * 1. The ones this server has of its own (written out directly below)
  *    - `read_drawing_guide`: hands back one of the two guides `@jiscribe/doc-schema`
@@ -78,8 +77,13 @@ import { createPathLock } from "./pathLock";
  * 3. The ones from ai-tools that need a mounted canvas (`registerHandleTools`).
  *    Capture, camera, selection, measurement. Running them becomes a round trip
  *    to the viewer open_canvas started
+ * 4. The ones the standard set's plugins offer for their own shapes
+ *    (`standardAiToolPlugins`, through `canvasToolSet`): the table's seven
+ *    `table_*` tools and the record's `record_set_compartments` so far. Each acts on the one object its `id` names and needs
+ *    only a document, so they go through `registerDocTools` with group 2 and get
+ *    a `path` the same way
  *
- * A name collision between 1 and 2 or 3 makes the later registration win and one
+ * A name collision between 1 and 2, 3 or 4 makes the later registration win and one
  * of them silently disappear, so registration goes through `registerName`, which
  * throws at startup.
  *
@@ -305,6 +309,7 @@ export function createJiscribeMcpServer(): McpServer {
 				},
 				history,
 				docOps,
+				canvasToolSet,
 			);
 			if (nextDoc !== null) {
 				rememberHistory(filePath, history);
@@ -645,11 +650,20 @@ export function createJiscribeMcpServer(): McpServer {
 			}),
 	);
 
-	// The declarations are read twice, once for each group, so they are built once
-	// and handed to both
-	const toolDescriptors = createCanvasToolDescriptors(canvasCapabilities);
-	registerDocTools(server, registerName, toolDescriptors, applyDocOpToFile);
-	registerHandleTools(server, registerName, toolDescriptors, () => host);
+	// The declarations are read twice, once for each group; applying resolves the
+	// plugin tools through the same set
+	registerDocTools(
+		server,
+		registerName,
+		canvasToolSet.descriptors,
+		applyDocOpToFile,
+	);
+	registerHandleTools(
+		server,
+		registerName,
+		canvasToolSet.descriptors,
+		() => host,
+	);
 
 	return server;
 }
@@ -658,9 +672,9 @@ export function createJiscribeMcpServer(): McpServer {
  * Register the tools ai-tools declares that a document alone can answer.
  *
  * The declaring side is written assuming "the document currently open", so a
- * `path` that picks the target is added to read them as operations on a file. No
- * declared tool has a `path`, so this addition never collides with an existing
- * argument.
+ * `path` that picks the target is added to read them as operations on a file. A
+ * declaration that has a `path` of its own (a plugin tool can) is refused at
+ * startup rather than having its argument silently replaced.
  *
  * @param server Where the tools are registered
  * @param registerName The registration entry that rejects duplicate names
@@ -677,6 +691,11 @@ function registerDocTools(
 	for (const descriptor of descriptors) {
 		if (descriptor.drives.some((ref) => ref.startsWith("handle."))) {
 			continue;
+		}
+		if (Object.hasOwn(descriptor.inputSchema, "path")) {
+			throw new Error(
+				`tool ${descriptor.name} declares "path", which this server adds to name the file`,
+			);
 		}
 		server.registerTool(
 			registerName(descriptor.name),

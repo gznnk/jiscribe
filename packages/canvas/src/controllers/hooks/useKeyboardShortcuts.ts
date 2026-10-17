@@ -68,29 +68,36 @@ export const useKeyboardShortcuts = ({
 				return;
 			}
 
-			const command = commandRegistry.findByShortcut(event);
-			if (!command) {
-				return;
-			}
+			// A binding may be claimed by several commands that are available in
+			// different contexts, so the keystroke is offered to each in turn —
+			// plugin-contributed ones ahead of the built-ins
+			// (CommandRegistry.findAllByShortcut) — instead of stopping at the first.
+			const matched = commandRegistry.findAllByShortcut(event);
 
-			// Callback-executed commands (undo/redo when externally owned, paste)
-			// are delegated without checking canExecute (see callbacks JSDoc).
-			const callback = callbacksRef.current?.[command.id];
-			if (callback) {
-				event.preventDefault();
-				event.stopPropagation();
-				callback();
-				return;
+			// The first command that takes the key wins: a callback-executed one
+			// (undo/redo when externally owned, paste) takes it without checking
+			// canExecute (see callbacks JSDoc), any other only when it can execute.
+			// Checked in that one order so a contributed command sharing paste's key
+			// still claims it while its canExecute is true.
+			const callbacks = callbacksRef.current;
+			for (const command of matched) {
+				const callback = callbacks?.[command.id];
+				if (callback) {
+					event.preventDefault();
+					event.stopPropagation();
+					callback();
+					return;
+				}
+				if (command.canExecute(canvasStateRef.current, registries)) {
+					event.preventDefault();
+					event.stopPropagation();
+					dispatch({ type: "COMMAND", commandId: command.id });
+					return;
+				}
 			}
-			// A binding the command cannot execute right now is left to the browser,
-			// so Tab keeps moving focus (and arrows keep scrolling) while the
-			// matching command is unavailable.
-			if (!command.canExecute(canvasStateRef.current, registries)) {
-				return;
-			}
-			event.preventDefault();
-			event.stopPropagation();
-			dispatch({ type: "COMMAND", commandId: command.id });
+			// A binding no matching command can execute right now is left to the
+			// browser, so Tab keeps moving focus (and arrows keep scrolling) while
+			// every command claiming it is unavailable.
 		};
 
 		// Scoped to the container: keydown reaches here only while focus is inside

@@ -8,14 +8,16 @@ import type { RichText, SemanticDiagnostic } from "@jiscribe/doc";
 import { richTextToPlain, TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc";
 
 import {
-	isRecordListSlotId,
-	isRecordSlotId,
-	RECORD_SLOT_IDS,
+	isRecordListTextSlotId,
+	isRecordTextSlotId,
+	RECORD_TEXT_SLOT_IDS,
 } from "./RecordDoc";
-import type { RecordSlotId } from "./RecordDoc";
+import type { RecordTextSlotId } from "./RecordDoc";
 
-/** The slot ids spelled out for a diagnostic: `"stereotype" / "name" / …`, in RECORD_SLOT_IDS order. */
-const RECORD_SLOT_ID_LIST = RECORD_SLOT_IDS.map((id) => `"${id}"`).join(" / ");
+/** The slot ids spelled out for a diagnostic: `"stereotype" / "name" / …`, in RECORD_TEXT_SLOT_IDS order. */
+const RECORD_TEXT_SLOT_ID_LIST = RECORD_TEXT_SLOT_IDS.map(
+	(id) => `"${id}"`,
+).join(" / ");
 
 /** Validates a text band's content: one body of text, newlines and all. */
 const validateBandText = (
@@ -73,9 +75,9 @@ const validateRows = (content: unknown, path: string): SemanticDiagnostic[] => {
  * content check — the difference between the two compartments, as between the two
  * text bands, is what they mean and not what they hold.
  */
-const validateSlot = (
+const validateTextSlot = (
 	value: unknown,
-	slotId: RecordSlotId,
+	slotId: RecordTextSlotId,
 	path: string,
 ): SemanticDiagnostic[] => {
 	if (!isObject(value)) {
@@ -88,7 +90,7 @@ const validateSlot = (
 			},
 		];
 	}
-	const validateContent = isRecordListSlotId(slotId)
+	const validateContent = isRecordListTextSlotId(slotId)
 		? validateRows
 		: validateBandText;
 	return [
@@ -115,21 +117,24 @@ const validateRecordText: ObjectDocValidateFn = (o, path) => {
 		return [
 			{
 				path: textPath,
-				message: `must be an object holding the ${RECORD_SLOT_ID_LIST} slots (a record does not take a plain string)`,
+				message: `must be an object holding the ${RECORD_TEXT_SLOT_ID_LIST} slots (a record does not take a plain string)`,
 				severity: "error",
 			},
 		];
 	}
 
-	const unknownKeys = Object.keys(text).filter((key) => !isRecordSlotId(key));
+	const unknownKeys = Object.keys(text).filter(
+		(key) => !isRecordTextSlotId(key),
+	);
 	return [
 		...unknownKeys.map((key) => ({
 			path: `${textPath}.${key}`,
-			message: `is not a slot of a record: use ${RECORD_SLOT_ID_LIST}`,
+			message: `is not a slot of a record: use ${RECORD_TEXT_SLOT_ID_LIST}`,
 			severity: "error" as const,
 		})),
-		...RECORD_SLOT_IDS.filter((slotId) => slotId in text).flatMap((slotId) =>
-			validateSlot(text[slotId], slotId, `${textPath}.${slotId}`),
+		...RECORD_TEXT_SLOT_IDS.filter((slotId) => slotId in text).flatMap(
+			(slotId) =>
+				validateTextSlot(text[slotId], slotId, `${textPath}.${slotId}`),
 		),
 	];
 };
@@ -146,7 +151,7 @@ const validateRecordText: ObjectDocValidateFn = (o, path) => {
 const validateNoRootTextStyle: ObjectDocValidateFn = (o, path) =>
 	TEXT_SLOT_STYLE_KEYS.filter((key) => key in o).map((key) => ({
 		path: `${path}.${key}`,
-		message: `is not a field of a record: set it on one of ${RECORD_SLOT_ID_LIST} under "text" instead`,
+		message: `is not a field of a record: set it on one of ${RECORD_TEXT_SLOT_ID_LIST} under "text" instead`,
 		severity: "error" as const,
 	}));
 

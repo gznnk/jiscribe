@@ -10,6 +10,9 @@ import { resolveTextObjectFont } from "../../../states/objects/primitives/text/r
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
+import { isCowObjects } from "../../utils/cowObjects";
 import { createCanvasReducer } from "../canvasReducer";
 
 /**
@@ -137,6 +140,50 @@ describe("canvasReducer (integration)", () => {
 		});
 	});
 
+	describe("STYLE_INTENT", () => {
+		/** Measured box of the fixture's text at another font size. */
+		const measuredBoxAt = (fontSize: number) =>
+			calcTextObjectFrameSize("hello", resolveTextObjectFont({ fontSize }));
+
+		const selectedTextState = (): CanvasControllerState =>
+			createTestState(docWithText("hello"), {
+				selection: selectionOf(["text-1"]),
+			});
+
+		it("measures a preview at the new size and hands it back plain", () => {
+			// The view the style walk wrote through is flattened only after the
+			// re-measure, which must still reach the object the walk wrote.
+			const after = canvasReducer(selectedTextState(), {
+				type: "STYLE_INTENT",
+				intent: { kind: "fontSize", size: 32 },
+				commit: false,
+			});
+
+			expect(boxOf(after, "text-1")).toEqual({
+				...measuredBoxAt(32),
+				left: TEXT_ORIGIN.x,
+				top: TEXT_ORIGIN.y,
+			});
+			expect(isCowObjects(after.objects)).toBe(false);
+		});
+
+		it("records a commit over a plain record", () => {
+			const after = canvasReducer(selectedTextState(), {
+				type: "STYLE_INTENT",
+				intent: { kind: "fontSize", size: 32 },
+				commit: true,
+			});
+
+			expect(boxOf(after, "text-1")).toEqual({
+				...measuredBoxAt(32),
+				left: TEXT_ORIGIN.x,
+				top: TEXT_ORIGIN.y,
+			});
+			expect(isCowObjects(after.objects)).toBe(false);
+			expect(after.history.past).toHaveLength(1);
+		});
+	});
+
 	describe("PASTE", () => {
 		/** Clipboard holding one text object, its box already stale. */
 		const clipboardWithStaleTextBox = (
@@ -159,7 +206,7 @@ describe("canvasReducer (integration)", () => {
 				data: clipboardWithStaleTextBox(state),
 			});
 
-			const pastedId = after.selectedIds[0];
+			const pastedId = after.selection.objectIds[0];
 			expect(pastedId).not.toBe("text-1");
 			expect(boxOf(after, pastedId)).toEqual({
 				...measuredBoxOf("hello"),
@@ -189,12 +236,9 @@ describe("canvasReducer (integration)", () => {
 		): CanvasControllerState => {
 			const state = {
 				...createTestState(docWithText("hello")),
-				textEditState: {
-					kind: "shape" as const,
-					objectId: "text-1",
-					slotId: "body",
-					text: "hello world",
-				},
+				// The session's owner is the selection (see textEditState).
+				selection: selectionOf(["text-1"], textSlotPartSelection("body")),
+				textEditState: { kind: "shape" as const, text: "hello world" },
 			};
 			return reducer(state, { type: "END_TEXT_EDIT", commit: true });
 		};

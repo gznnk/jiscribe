@@ -11,7 +11,7 @@ import { collectObjectPoints } from "../../../../../utils/collectObjectPoints";
  * When existingGroup is given, computes an Oriented Bounding Box that accounts for its rotation/scale.
  */
 export function calcMultiSelectGroupBounds(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	allObjects: Record<string, ObjectState>,
 	existingGroup?: GroupState | null,
 ): { cx: number; cy: number; width: number; height: number } | null {

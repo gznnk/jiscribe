@@ -4,12 +4,13 @@ import {
 	ObjectMenuButton,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
-	getSelectedShapeStyle,
+	SHAPE_STYLE_FALLBACK,
+	selectionValueOr,
 	useCanvasMessages,
-	useObjectShapeStyleDefaultsRegistry,
+	useSelectionStyle,
 	useSubmenuPosition,
-	setPart,
-	togglePart,
+	setAction,
+	toggleAction,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
@@ -30,20 +31,15 @@ const SECTION_ID = "sticky-color";
  * plugin-owned one: every preset name is a key it already carries.
  */
 const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
-	objects,
-	selectedIds,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const shapeStyleDefaults = useObjectShapeStyleDefaultsRegistry();
-	const currentColor = getSelectedShapeStyle(
-		selectedIds,
-		objects,
-		shapeStyleDefaults,
-		"fill",
-	).fill;
+	const currentColor = selectionValueOr(
+		useSelectionStyle("fill"),
+		SHAPE_STYLE_FALLBACK.fill,
+	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -53,7 +49,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon
@@ -76,7 +72,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									selected={
 										preset.value.toLowerCase() === currentColor.toLowerCase()
 									}
-									data-part={setPart("fill", preset.value)}
+									data-action={setAction("fill", preset.value)}
 									title={messages.colorNames[preset.name] ?? preset.name}
 								/>
 							))}

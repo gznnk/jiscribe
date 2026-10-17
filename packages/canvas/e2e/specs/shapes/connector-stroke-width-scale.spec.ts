@@ -144,7 +144,7 @@ test.describe("connector stroke width driving the arrow and the inset", () => {
 		// Open the line-style menu and change strokeWidth to 6.
 		await canvas.clickAt({ x: 610, y: 250 });
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-style"]'),
+			canvas.page.locator('[data-action="toggle:line-style"]'),
 		).toBeVisible();
 		await canvas.openObjectMenu("line-style");
 		await canvas.setNumberInput("strokeWidth", 6);

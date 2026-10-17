@@ -11,6 +11,9 @@ import {
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
+import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
+import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
+import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import {
@@ -19,13 +22,20 @@ import {
 } from "./handlers/handleTransformPropertyUpdate";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
+import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
+import { reconcileSelection } from "../selection/writers/reconcileSelection";
+import {
+	getTextSlotCycle,
+	selectAdjacentTextSlot,
+} from "../selection/writers/selectAdjacentTextSlot";
+import { selectRequestedIds } from "../selection/writers/selectRequestedIds";
+import { applyStyleIntent } from "../style/walk/applyStyleIntent";
 import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
 } from "../utils/applyDocumentProperty";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
-import { createMultiSelectGroup } from "../utils/createMultiSelectGroup";
 import {
 	reconcileConnectorVertices,
 	reconcileConnectorVerticesIfCommitted,
@@ -33,12 +43,10 @@ import {
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
 import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
-import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
 import {
 	canNavigateHistory,
 	restoreHistorySnapshot,
 } from "../utils/restoreHistorySnapshot";
-import { toggleTextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
  * Builds the root reducer for the canvas controller, closing over the canvas's
@@ -61,40 +69,36 @@ export const createCanvasReducer =
 					registries,
 					action.gestureHandling,
 				);
-				// Boxes first, connector vertices second: a vertex is settled against
-				// the shape outlines, which a re-measured box moves. The box pass has
-				// no commit gate — a slider drag must not clip its own text — while the
-				// vertex pass keeps one, since settling vertices is a commit-time step.
-				const resizedResult = reconcileObjectContentSizes(
-					gestureResult,
+				return recordHistoryIfNeeded(
+					settleTransition(gestureResult, state, registries),
 					state,
-					registries.objectContentResizer,
 				);
-				const reconciledResult = reconcileConnectorVerticesIfCommitted(
-					resizedResult,
-					state,
-					registries,
-				);
-				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "COMMAND": {
-				const commandResult = handleCommand(
-					state,
-					action.commandId,
-					registries,
-				);
-				const resizedResult = reconcileObjectContentSizes(
-					commandResult,
-					state,
-					registries.objectContentResizer,
-				);
-				const reconciledResult = reconcileConnectorVerticesIfCommitted(
-					resizedResult,
+				const executed = handleCommand(state, action.commandId, registries);
+				// A command may write through a view (applyStyleIntent) and this path
+				// bypasses handleGesture, so flatten it here like the routes below (#213).
+				const selectionResult = settleTransition(
+					materializeStateObjects(executed),
 					state,
 					registries,
 				);
-				return recordHistoryIfNeeded(reconciledResult, state);
+				// Pointer gestures pick what is already under the pointer; a command
+				// moving the pick (an arrow key, Tab) may land it off screen.
+				const revealedViewport = calcViewportToRevealActivePart(
+					selectionResult.viewport,
+					state.selection,
+					selectionResult.selection,
+					selectionResult.objects,
+					registries.objectPartKind,
+				);
+				return recordHistoryIfNeeded(
+					revealedViewport === selectionResult.viewport
+						? selectionResult
+						: { ...selectionResult, viewport: revealedViewport },
+					state,
+				);
 			}
 
 			case "REVERT_HISTORY": {
@@ -126,23 +130,25 @@ export const createCanvasReducer =
 					state,
 					registries.objectContentResizer,
 				);
-				return reconcileConnectorVerticesIfCommitted(
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
 					resizedResult,
 					state,
 					registries,
 				);
+				return reconcileSelection(reconciledResult, registries.objectPartKind);
 			}
 
 			case "REMEASURE_TEXT": {
 				// Web fonts arrive after the first paint, so every box derived before
 				// then was measured against a fallback face. Not a commit: the doc
 				// stores no size, so nothing about it changed.
-				return reconcileObjectContentSizes(
+				const resizedResult = reconcileObjectContentSizes(
 					state,
 					state,
 					registries.objectContentResizer,
 					true,
 				);
+				return reconcileSelection(resizedResult, registries.objectPartKind);
 			}
 
 			case "CONTAINER_RESIZE": {
@@ -186,67 +192,100 @@ export const createCanvasReducer =
 			}
 
 			case "SET_SELECTION": {
-				const { selectedIds, selectedConnectorId } = resolveRequestedSelection(
-					action.ids,
-					state.objects,
-				);
-				return {
-					...state,
-					selectedIds,
-					selectedConnectorId,
+				// Resolved against the state as it stands: a commit rewrites one
+				// object's text, never which ids the canvas holds, so what the request
+				// resolves to is the same before and after one.
+				const { selectedIds } = selectRequestedIds(action.ids, state.objects);
+				// A request naming the selection already held moves nothing, so an open
+				// session stays open — `selection.part` and all, since a session over a
+				// type with slots dies the moment the slot is no longer named
+				// (reconcileSelection). Otherwise a host restating the selection it just
+				// read would end typing it never asked about.
+				if (
+					state.textEditState &&
+					selectedIds.length === state.selection.objectIds.length &&
+					selectedIds.every(
+						(id, index) => id === state.selection.objectIds[index],
+					)
+				) {
+					return state;
+				}
+				// An open editing session belongs to the selection it sits on (see
+				// textEditState), so moving the selection ends the session rather than
+				// leaving it pointing at whatever was just selected. Committed, not
+				// discarded: the host asked for another selection, not for the typing
+				// to be thrown away.
+				const committedResult = commitTextEditIfNeeded(state);
+				const selectedResult: CanvasControllerState = {
+					...committedResult,
+					// The part hanging off the previous selection means nothing for the
+					// new one, nor does the open submenu (same clears as SelectAllCommand).
+					selection: { objectIds: selectedIds, part: null },
 					multiSelectGroup: createMultiSelectGroup(
 						selectedIds,
-						state.objects,
-						state.multiSelectGroup,
+						committedResult.objects,
+						committedResult.multiSelectGroup,
 					),
-					// The channels are mutually exclusive, and the UI hanging off the
-					// previous selection means nothing for the new one (same clears as
-					// SelectAllCommand).
-					selectedVertex: null,
-					selectedTextSlot: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
 				};
+				if (!state.textEditState) {
+					return selectedResult;
+				}
+				// The same tail the commit gets when Escape or a press ends it
+				// (END_TEXT_EDIT), so a committed body is measured, settled and undoable
+				// here too.
+				const resizedResult = reconcileObjectContentSizes(
+					selectedResult,
+					state,
+					registries.objectContentResizer,
+				);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					resizedResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
-			case "STYLE_PROPERTY_UPDATE": {
-				// Style property updates take two paths.
-				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React
-				//     onChange events — the ObjectMenu's number input and keyboard-driven slider, and
-				//     the properties sidebar's callback-writing controls — none of which fires a gesture.
-				// (2) applyStylePropertyPart: via the gesture system (set: / slider:), from the
+			case "STYLE_INTENT": {
+				// Style writes take two paths.
+				// (1) This case: dispatched from Canvas.tsx's onStyleIntent callback via React
+				//     onChange events — the ObjectMenu's number input and keyboard-driven slider and
+				//     the properties sidebar's callback-writing controls — none of which fires a
+				//     gesture.
+				// (2) applyStyleAction: via the gesture system (set: / slider:), from the
 				//     ObjectMenu's and the sidebar's buttons and sliders (ObjectMenuHandler /
 				//     PropertyPanelHandler). That path does not go through here.
-				const updated = registries.styleProperty.apply(
-					state,
-					action.property,
-					action.value,
+				// Both end at the same apply; what differs is only the commit tail below. The
+				// intent arrives stated, a surface that holds a name and a string having read it
+				// through the shared toStyleIntent.
+				const updated = applyStyleIntent(state, action.intent, registries);
+				const selectionResult = reconcileSelection(
+					updated,
+					registries.objectPartKind,
 				);
-				// Clear the vertex selection after a property change (so the Delete key acts as object deletion).
-				// This path bypasses handleGesture, so flatten the COW view here
-				// (one-shot update, same pattern as MoveCommands; #213).
-				const updatedWithVertexCleared = {
-					...updated,
-					objects: materializeObjects(updated.objects),
-					selectedVertex: null,
-				};
 				if (!action.commit) {
 					// A live preview draws at the new typography, so its box has to be
 					// measured at the new typography too.
-					return reconcileObjectContentSizes(
-						updatedWithVertexCleared,
-						state,
-						registries.objectContentResizer,
+					return materializeStateObjects(
+						reconcileObjectContentSizes(
+							selectionResult,
+							state,
+							registries.objectContentResizer,
+						),
 					);
 				}
+				// The commit tail re-measures too (commitPropertyUpdate): the restyled body
+				// is drawn at a size the box has to follow.
 				return commitPropertyUpdate(
-					updatedWithVertexCleared,
+					selectionResult,
 					state,
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
 								state,
-								STYLE_PROPERTY_COALESCE_PREFIX,
-								action.property,
+								STYLE_INTENT_COALESCE_PREFIX,
+								action.intent.kind,
 							)
 						: null,
 					registries,
@@ -254,8 +293,8 @@ export const createCanvasReducer =
 			}
 
 			case "TRANSFORM_PROPERTY_UPDATE": {
-				// The sibling route to STYLE_PROPERTY_UPDATE for the geometry the style
-				// registry does not own; dispatched from the properties sidebar's
+				// The sibling route to STYLE_INTENT for the geometry no StyleIntent
+				// names; dispatched from the properties sidebar's
 				// number inputs, which fire no gesture (see TransformPropertyUpdateAction).
 				const updated = handleTransformPropertyUpdate(
 					state,
@@ -274,22 +313,21 @@ export const createCanvasReducer =
 				) {
 					return state;
 				}
-				// Same one-shot flattening and vertex clearing as the menu route: this
-				// path bypasses handleGesture, which is what normally does both (#213).
-				const updatedWithVertexCleared = {
-					...updated,
-					objects: materializeObjects(updated.objects),
-					selectedVertex: null,
-				};
+				const selectionResult = reconcileSelection(
+					updated,
+					registries.objectPartKind,
+				);
 				if (!action.commit) {
-					return reconcileObjectContentSizes(
-						updatedWithVertexCleared,
-						state,
-						registries.objectContentResizer,
+					return materializeStateObjects(
+						reconcileObjectContentSizes(
+							selectionResult,
+							state,
+							registries.objectContentResizer,
+						),
 					);
 				}
 				return commitPropertyUpdate(
-					updatedWithVertexCleared,
+					selectionResult,
 					state,
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
@@ -305,8 +343,8 @@ export const createCanvasReducer =
 			case "DOCUMENT_PROPERTY_UPDATE": {
 				// The third property route: what the sidebar states about the document
 				// itself rather than about a selection. No object is touched, so the
-				// COW flattening and vertex clearing the other two routes do would
-				// have nothing to act on here.
+				// COW flattening the other two routes do would have nothing to act on
+				// here.
 				//
 				// null drops the setting, which hands it back to the host (the
 				// headless setBackground / setView ops' rule).
@@ -341,8 +379,8 @@ export const createCanvasReducer =
 			case "META_PROPERTY_UPDATE": {
 				// The fourth property route: the note the selected object carries in
 				// the document. Nothing is drawn from it, so the re-measure the style
-				// route needs and the vertex clearing the geometry ones do both have
-				// nothing to act on — the object's shape is the one it already had.
+				// route needs has nothing to act on — the object's shape is the one it
+				// already had.
 				const updated = handleMetaPropertyUpdate(
 					state,
 					action.property,
@@ -358,11 +396,15 @@ export const createCanvasReducer =
 				) {
 					return state;
 				}
+				const selectionResult = reconcileSelection(
+					updated,
+					registries.objectPartKind,
+				);
 				if (!action.commit) {
-					return updated;
+					return selectionResult;
 				}
 				return commitPropertyUpdate(
-					updated,
+					selectionResult,
 					state,
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
@@ -383,17 +425,23 @@ export const createCanvasReducer =
 				// The same document edited elsewhere, so the entries recorded for it stay
 				// usable: the current present moves onto past and the edit becomes
 				// undoable like any local commit.
-				return adoptDocumentState(state, action.payload, [
-					...state.history.past,
-					state.history.present,
-				]);
+				return reconcileSelection(
+					adoptDocumentState(state, action.payload, [
+						...state.history.past,
+						state.history.present,
+					]),
+					registries.objectPartKind,
+				);
 			}
 
 			case "LOAD_DOCUMENT": {
 				// Another document, so its predecessor's entries go with it: undoing into
 				// them would restore the old contents under the new document's name
 				// (see LoadDocumentAction).
-				return adoptDocumentState(state, action.payload, []);
+				return reconcileSelection(
+					adoptDocumentState(state, action.payload, []),
+					registries.objectPartKind,
+				);
 			}
 
 			case "UPDATE_TEXT_EDIT": {
@@ -434,46 +482,16 @@ export const createCanvasReducer =
 				};
 			}
 
-			case "TOGGLE_TEXT_FORMAT": {
-				const styled = toggleTextEditFormat(
-					state,
-					action.format,
-					registries.objectTextStyleDefaults,
-				);
-				if (styled === state) {
-					return state;
-				}
-				// The styling is written into the object right away (the session stays
-				// open), so the box it is measured into has to follow, and the change is
-				// its own undo entry rather than riding on the commit that ends the edit.
-				// One keystroke is one commit, which is why the commit is raised here and
-				// not in styleTextEditSelection, whose menu callers preview.
-				const resizedResult = reconcileObjectContentSizes(
-					{ ...styled, commitVersion: state.commitVersion + 1 },
-					state,
-					registries.objectContentResizer,
-				);
-				return recordHistoryIfNeeded(resizedResult, state);
-			}
-
 			case "END_TEXT_EDIT": {
 				if (!state.textEditState) {
 					return state;
 				}
 
 				if (action.commit) {
-					const commitResult = commitTextEditIfNeeded(state);
-					const resizedResult = reconcileObjectContentSizes(
-						commitResult,
+					return recordHistoryIfNeeded(
+						commitOpenTextEdit(state, registries),
 						state,
-						registries.objectContentResizer,
 					);
-					const reconciledResult = reconcileConnectorVerticesIfCommitted(
-						resizedResult,
-						state,
-						registries,
-					);
-					return recordHistoryIfNeeded(reconciledResult, state);
 				}
 
 				// On cancel, clear only textEditState
@@ -483,19 +501,75 @@ export const createCanvasReducer =
 				};
 			}
 
-			case "PASTE": {
-				const pasteResult = handlePaste(state, action.data, registries);
+			case "STEP_TEXT_EDIT": {
+				if (
+					state.textEditState?.kind !== "shape" ||
+					getTextSlotCycle(state, registries.objectPartKind) === null
+				) {
+					return state;
+				}
+				// Committed before the selection moves: the draft is bound to the slot
+				// the selection names (see textEditState).
+				const committedResult = commitOpenTextEdit(state, registries);
+				// Only the editor's Tab grows the object: Shift+Tab and the canvas Tab
+				// wrap at the last slot.
+				const extendedResult =
+					action.step === 1
+						? extendPastLastTextSlot(committedResult, registries.objectPartKind)
+						: null;
+				const steppedResult =
+					extendedResult ??
+					selectAdjacentTextSlot(
+						committedResult,
+						action.step,
+						registries.objectPartKind,
+					);
+				// A growth is settled like any structural edit before the editor
+				// measures the slot it opens on.
 				const resizedResult = reconcileObjectContentSizes(
-					pasteResult,
-					state,
+					steppedResult,
+					committedResult,
 					registries.objectContentResizer,
 				);
 				const reconciledResult = reconcileConnectorVerticesIfCommitted(
 					resizedResult,
-					state,
+					committedResult,
 					registries,
 				);
-				return recordHistoryIfNeeded(reconciledResult, state);
+				const openedResult = StartTextEditCommand.execute(
+					reconciledResult,
+					registries,
+				);
+				const revealedViewport = calcViewportToRevealActivePart(
+					openedResult.viewport,
+					state.selection,
+					openedResult.selection,
+					openedResult.objects,
+					registries.objectPartKind,
+				);
+				// The history snapshot holds the document alone, so recording against
+				// the stepped state stores the same entry END_TEXT_EDIT would — one
+				// entry for the commit and the growth together, recorded once against
+				// the state before both.
+				return recordHistoryIfNeeded(
+					revealedViewport === openedResult.viewport
+						? openedResult
+						: { ...openedResult, viewport: revealedViewport },
+					state,
+				);
+			}
+
+			case "PASTE": {
+				// Paste is a command executed by callback, so it misses the mid-drag
+				// refusal in handleCommand and takes the same one here.
+				if (state.activeDrag !== null) {
+					return state;
+				}
+				const pasteResult = handlePaste(state, action.data, registries);
+				return recordHistoryIfNeeded(
+					settleTransition(pasteResult, state, registries),
+					state,
+				);
 			}
 
 			case "CLOSE_CONTEXT_MENU": {
@@ -551,8 +625,8 @@ const adoptDocumentState = (
 	},
 });
 
-/** Prefix of the coalesce key for consecutive style-property commits (ObjectMenu or sidebar) */
-const STYLE_PROPERTY_COALESCE_PREFIX = "style-property";
+/** Prefix of the coalesce key for consecutive style-intent commits (ObjectMenu or sidebar) */
+const STYLE_INTENT_COALESCE_PREFIX = "style-intent";
 
 /** Prefix of the coalesce key for consecutive properties-sidebar transform commits */
 const TRANSFORM_PROPERTY_COALESCE_PREFIX = "transform-property";
@@ -566,7 +640,7 @@ const META_PROPERTY_COALESCE_PREFIX = "meta-property";
 /**
  * Builds the coalesce key for a property commit. The target identity is part of the
  * key, so a changed selection (or a different property) automatically becomes a
- * separate undo entry; the prefix keeps the two routes apart, since the same name
+ * separate undo entry; the prefix keeps the four routes apart, since the same name
  * can mean a different edit on each.
  */
 const buildPropertyCoalesceKey = (
@@ -574,16 +648,13 @@ const buildPropertyCoalesceKey = (
 	prefix: string,
 	property: string,
 ): string => {
-	const target =
-		state.selectedIds.length > 0
-			? state.selectedIds.join(",")
-			: (state.selectedConnectorId ?? "");
-	return `${prefix}:${property}:${target}`;
+	return `${prefix}:${property}:${state.selection.objectIds.join(",")}`;
 };
 
 /**
  * Commits a property update that has already been applied: raises commitVersion,
- * arms the coalesce key, re-measures and re-routes, and records the entry.
+ * arms the coalesce key, re-measures, flattens a copy-on-write view the route
+ * wrote through, re-routes, and records the entry.
  *
  * Shared by the three property routes (menu / transform / document), which differ
  * only in what they apply. The reconciles run unconditionally because the caller
@@ -604,16 +675,74 @@ const commitPropertyUpdate = (
 				? updatedState.historyCoalesce
 				: { ...updatedState.historyCoalesce, pending: coalesceKey },
 	};
-	const resizedResult = reconcileObjectContentSizes(
-		committedResult,
-		previousState,
-		registries.objectContentResizer,
+	const resizedResult = materializeStateObjects(
+		reconcileObjectContentSizes(
+			committedResult,
+			previousState,
+			registries.objectContentResizer,
+		),
 	);
 	const reconciledResult = reconcileConnectorVertices(
 		resizedResult,
 		registries,
 	);
 	return recordHistoryIfNeeded(reconciledResult, previousState);
+};
+
+/**
+ * Settles what a transition moved, leaving the history to the caller: the
+ * passes GESTURE, COMMAND, PASTE and the text-edit commit share.
+ *
+ * Boxes first, connector vertices second: a vertex is settled against the shape
+ * outlines, which a re-measured box moves. The box pass has no commit gate — a
+ * slider drag must not clip its own text — while the vertex pass keeps one,
+ * since settling vertices is a commit-time step. Then the selection last, once
+ * the objects and the selection it refers to have settled.
+ */
+const settleTransition = (
+	result: CanvasControllerState,
+	previousState: CanvasControllerState,
+	registries: CanvasRegistries,
+): CanvasControllerState => {
+	const resizedResult = reconcileObjectContentSizes(
+		result,
+		previousState,
+		registries.objectContentResizer,
+	);
+	const reconciledResult = reconcileConnectorVerticesIfCommitted(
+		resizedResult,
+		previousState,
+		registries,
+	);
+	return reconcileSelection(reconciledResult, registries.objectPartKind);
+};
+
+/**
+ * Commits the open text edit and settles what the commit moved, leaving the
+ * history to the caller: the commit tail END_TEXT_EDIT and STEP_TEXT_EDIT
+ * share. CommitTextEditCommand reaches the same through the COMMAND case, whose
+ * settling is this one (settleTransition).
+ */
+const commitOpenTextEdit = (
+	state: CanvasControllerState,
+	registries: CanvasRegistries,
+): CanvasControllerState =>
+	settleTransition(commitTextEditIfNeeded(state), state, registries);
+
+/**
+ * Flattens a state's copy-on-write objects view for the routes that bypass
+ * handleGesture, the one place that otherwise does it (#213). A state already
+ * holding a plain Record comes back as the same reference.
+ *
+ * The property routes call it after the re-measure rather than before it:
+ * reconcileObjectContentSizes narrows its scan to the view's written IDs
+ * (collectCowChangedKeys), which a flattened map no longer offers.
+ */
+const materializeStateObjects = (
+	state: CanvasControllerState,
+): CanvasControllerState => {
+	const objects = materializeObjects(state.objects);
+	return objects === state.objects ? state : { ...state, objects };
 };
 
 /**

@@ -1,5 +1,5 @@
 // Initializers that populate a given bundle. A canvas gets its bundle from
-// createCanvasRegistries, which calls these along with initializeStyleProperties.
+// createCanvasRegistries, which calls these.
 export { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
 export { initializeCommands } from "./initializeCommands";
 

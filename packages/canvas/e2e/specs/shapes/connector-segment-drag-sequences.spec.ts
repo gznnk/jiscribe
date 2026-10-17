@@ -66,7 +66,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	}
 	await canvas.clickAt(best.mid);
 	await expect(
-		canvas.page.locator('[data-part="toggle:connector-routing"]'),
+		canvas.page.locator('[data-action="toggle:connector-routing"]'),
 	).toBeVisible();
 }
 
@@ -171,11 +171,11 @@ test.describe("sequences of segment-drag operations", () => {
 		//    The dropdown stays open after a command, so the second one is pressed without the toggle.
 		await selectConnector(canvas, connectorId);
 		await canvas.openObjectMenu("connector-routing");
-		await canvas.page.click('[data-part="command:setRoutingStraight"]');
+		await canvas.page.click('[data-action="command:setRoutingStraight"]');
 		await expect
 			.poll(async () => readPoints(canvas, connectorId))
 			.toEqual(afterMove);
-		await canvas.page.click('[data-part="command:setRoutingOrthogonal"]');
+		await canvas.page.click('[data-action="command:setRoutingOrthogonal"]');
 		await expect
 			.poll(async () => readPoints(canvas, connectorId))
 			.toEqual(afterMove);

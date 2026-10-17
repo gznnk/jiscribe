@@ -151,6 +151,8 @@ export type Pressed = {
 	targetKind?: string;
 	/** Nearest [data-part] within the pressed element (see getGestureTarget); undefined when it marks none. */
 	targetPart?: string;
+	/** Nearest [data-action] within the pressed element (see getGestureTarget); undefined when it marks none. */
+	targetAction?: string;
 	/** Modifier snapshot at pointerdown. Fired gestures use the current event's mods; this copy is what the synthesized long press replays. */
 	mods: Mods;
 	/**
@@ -387,7 +389,9 @@ export class GestureRecognizer {
 			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
-				target === null ? undefined : { id: target.id, part: target.part },
+				target === null
+					? undefined
+					: { id: target.id, part: target.part, action: target.action },
 				this.containerRef.current,
 			);
 
@@ -519,6 +523,7 @@ export class GestureRecognizer {
 			const targetId = target?.id;
 			const targetKind = target?.kind;
 			const targetPart = target?.part;
+			const targetAction = target?.action;
 			const isNativePointer = isNativePointerTarget(e.target);
 
 			// Sliders and the like keep the browser's native drag behavior, so they are
@@ -539,6 +544,7 @@ export class GestureRecognizer {
 				targetId,
 				targetKind,
 				targetPart,
+				targetAction,
 				mods,
 				dragging: false,
 				button: e.button,
@@ -1161,6 +1167,7 @@ export class GestureRecognizer {
 			targetId: pressed.targetId,
 			targetKind: pressed.targetKind,
 			targetPart: pressed.targetPart,
+			targetAction: pressed.targetAction,
 			start: pressed.start,
 			last: current.last,
 			delta: current.delta,
@@ -1173,7 +1180,11 @@ export class GestureRecognizer {
 				current.clientLast.y,
 				pressed.targetId === undefined
 					? undefined
-					: { id: pressed.targetId, part: pressed.targetPart },
+					: {
+							id: pressed.targetId,
+							part: pressed.targetPart,
+							action: pressed.targetAction,
+						},
 				this.containerRef.current,
 			),
 			time: current.time,

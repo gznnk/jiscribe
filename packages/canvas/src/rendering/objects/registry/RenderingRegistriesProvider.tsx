@@ -6,27 +6,30 @@ import type { ObjectAnchorRegionRegistry } from "./ObjectAnchorRegionRegistry";
 import { ObjectAnchorRegionRegistryContext } from "./ObjectAnchorRegionRegistryContext";
 import type { ObjectComponentRegistry } from "./ObjectComponentRegistry";
 import { ObjectComponentRegistryContext } from "./ObjectComponentRegistryContext";
+import type { ObjectConnectionAnchorsRegistry } from "./ObjectConnectionAnchorsRegistry";
+import { ObjectConnectionAnchorsRegistryContext } from "./ObjectConnectionAnchorsRegistryContext";
 import type { ObjectExtraConnectPointsRegistry } from "./ObjectExtraConnectPointsRegistry";
 import { ObjectExtraConnectPointsRegistryContext } from "./ObjectExtraConnectPointsRegistryContext";
 import type { ObjectGeometryKeyRegistry } from "./ObjectGeometryKeyRegistry";
 import { ObjectGeometryKeyRegistryContext } from "./ObjectGeometryKeyRegistryContext";
 import type { ObjectOutlineRegistry } from "./ObjectOutlineRegistry";
 import { ObjectOutlineRegistryContext } from "./ObjectOutlineRegistryContext";
+import type { ObjectPartKindRegistry } from "./ObjectPartKindRegistry";
+import { ObjectPartKindRegistryContext } from "./ObjectPartKindRegistryContext";
 import { ObjectShapeStyleDefaultsRegistryContext } from "./ObjectShapeStyleDefaultsRegistryContext";
 import type { ObjectSvgDefsRegistry } from "./ObjectSvgDefsRegistry";
 import { ObjectSvgDefsRegistryContext } from "./ObjectSvgDefsRegistryContext";
-import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
-import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryContext";
 import { ObjectTextStyleDefaultsRegistryContext } from "./ObjectTextStyleDefaultsRegistryContext";
 
 type RenderingRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;
-	objectTextRegion: ObjectTextRegionRegistry;
+	objectPartKind: ObjectPartKindRegistry;
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	objectConnectionAnchors: ObjectConnectionAnchorsRegistry;
 	objectGeometryKey: ObjectGeometryKeyRegistry;
 	objectSvgDefs: ObjectSvgDefsRegistry;
 	children: ReactNode;
@@ -40,19 +43,20 @@ type RenderingRegistriesProviderProps = {
  */
 export function RenderingRegistriesProvider({
 	objectComponent,
-	objectTextRegion,
+	objectPartKind,
 	objectTextStyleDefaults,
 	objectShapeStyleDefaults,
 	objectOutline,
 	objectAnchorRegion,
 	objectExtraConnectPoints,
+	objectConnectionAnchors,
 	objectGeometryKey,
 	objectSvgDefs,
 	children,
 }: RenderingRegistriesProviderProps) {
 	return (
 		<ObjectComponentRegistryContext value={objectComponent}>
-			<ObjectTextRegionRegistryContext value={objectTextRegion}>
+			<ObjectPartKindRegistryContext value={objectPartKind}>
 				<ObjectTextStyleDefaultsRegistryContext value={objectTextStyleDefaults}>
 					<ObjectShapeStyleDefaultsRegistryContext
 						value={objectShapeStyleDefaults}
@@ -62,17 +66,21 @@ export function RenderingRegistriesProvider({
 								<ObjectExtraConnectPointsRegistryContext
 									value={objectExtraConnectPoints}
 								>
-									<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
-										<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
-											{children}
-										</ObjectSvgDefsRegistryContext>
-									</ObjectGeometryKeyRegistryContext>
+									<ObjectConnectionAnchorsRegistryContext
+										value={objectConnectionAnchors}
+									>
+										<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
+											<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
+												{children}
+											</ObjectSvgDefsRegistryContext>
+										</ObjectGeometryKeyRegistryContext>
+									</ObjectConnectionAnchorsRegistryContext>
 								</ObjectExtraConnectPointsRegistryContext>
 							</ObjectAnchorRegionRegistryContext>
 						</ObjectOutlineRegistryContext>
 					</ObjectShapeStyleDefaultsRegistryContext>
 				</ObjectTextStyleDefaultsRegistryContext>
-			</ObjectTextRegionRegistryContext>
+			</ObjectPartKindRegistryContext>
 		</ObjectComponentRegistryContext>
 	);
 }

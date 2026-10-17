@@ -3,8 +3,8 @@ import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";
-import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { blankTextSlots } from "../../../../states/objects/types/TextSlots";
+import { textSlotsOf } from "../../../utils/textSlotsOf";
 
 /** Uniform thin outline for the drag-drawing ghost, independent of the shape's real strokeWidth. */
 const PREVIEW_STROKE_WIDTH = 1.5;
@@ -20,7 +20,7 @@ export const ghostifyPreviewState = (state: ObjectState): ObjectState => {
 		(state as StrokeStyleState).stroke ?? AUTO_COLOR,
 		"ink",
 	);
-	const text = (state as TextStyleState).text;
+	const text = textSlotsOf(state);
 	return {
 		...state,
 		stroke,

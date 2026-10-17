@@ -13,7 +13,7 @@ const RESET_ZOOM = 1;
  */
 export const ResetZoomCommand: ExecutableCommand = {
 	id: "resetZoom",
-	label: "Reset Zoom",
+	label: { en: "Reset Zoom", ja: "ズームをリセット" },
 	category: "view",
 
 	// Allowed to trigger even when already at 100% (just a center-preserving no-op).

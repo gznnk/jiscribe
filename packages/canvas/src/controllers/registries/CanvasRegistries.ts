@@ -6,17 +6,17 @@ import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/O
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
+import type { ObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
-import type { ObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
-import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type {
 	Camera,
 	CanvasInitialSidebars,
@@ -25,7 +25,7 @@ import type {
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import type { ObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
@@ -55,13 +55,7 @@ export type CanvasRegistries = {
 	 * switch exactly where the parser accepts the result.
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
-	/**
-	 * Which types the switch between the two vertical text bases actually moves
-	 * the body of, so the canvas offers it only where it does something.
-	 */
-	objectTextVerticalBasis: ObjectTextVerticalBasisRegistry;
 	objectComponent: ObjectComponentRegistry;
-	objectTextRegion: ObjectTextRegionRegistry;
 	/**
 	 * Per-type, per-slot text-style defaults, read by every side that draws,
 	 * edits, measures or reports a text style so a field the author left unset
@@ -79,19 +73,29 @@ export type CanvasRegistries = {
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	objectConnectionAnchors: ObjectConnectionAnchorsRegistry;
 	objectGeometryKey: ObjectGeometryKeyRegistry;
 	objectVisualBounds: ObjectVisualBoundsRegistry;
 	objectSvgDefs: ObjectSvgDefsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	objectTransformHandles: ObjectTransformHandlesRegistry;
 	selectionControl: SelectionControlRegistry;
+	/**
+	 * Per-type sub-part definitions, keyed by `(type, kind)`: what a part
+	 * selection inside an object means to the type that owns it.
+	 */
+	objectPartKind: ObjectPartKindRegistry;
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
 	propertyPanel: PropertyPanelRegistry;
 	stencil: StencilRegistry;
 	objectFactory: ObjectFactoryRegistry;
-	styleProperty: StylePropertyRegistry;
+	/**
+	 * Per-type style tables: which style intents a type takes and where each
+	 * lands in its data, so writing a style and reporting it read one answer.
+	 */
+	objectStyle: ObjectStyleRegistry;
 };
 
 /**

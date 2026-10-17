@@ -47,7 +47,11 @@ Key points:
 - **Touch long press**: A touch press held for `LONG_PRESS_DURATION_MS` (500ms) within the touch drag slop
   fires `longPress` and consumes the gesture (the lift fires no click). It routes to CanvasEventHandler
   wherever it lands — per-target handlers reject it via `isPerTargetInteraction`, like middle/right
-  buttons — and opens the context menu, mirroring the right-button click.
+  buttons — and opens the context menu, mirroring the right-button click. Both
+  select the shape (or connector) they landed on before opening the menu, through
+  the same `determineClickSelection` the left click uses, so the menu acts on what was
+  pointed at; a target already in the selection keeps the whole selection, and the
+  background changes nothing (`selectContextMenuTarget`).
 - **Inertial scrolling**: A middle-/right-button pan released while still moving leaves a fling behind. The
   recognizer records raw pointer samples in `enqueue` (`feed` sees at most one move per frame, too coarse
   to measure a flick), estimates the release velocity over `FLING_VELOCITY_WINDOW_MS` (`calcFlingVelocity`),
@@ -76,7 +80,7 @@ It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `sc
 `inertialScrollEnd` is consumed there as a state transition and routed nowhere)
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
 determine whether it should process the event. The registry holds exactly one handler per
-`targetKind` (`controllers/registries/initializeGestureHandlerRegistry.ts`); where a kind needs finer splitting (by `targetId`, `data-part`, or event type), that
+`targetKind` (`controllers/registries/initializeGestureHandlerRegistry.ts`); where a kind needs finer splitting (by `targetId`, `data-action` / `data-part`, or event type), that
 handler is a router delegating to sub-handlers inside its own folder.
 
 | Handler group | Target                                                                                                              | Main files                                                                                                                                                                                       |
@@ -89,14 +93,23 @@ handler is a router delegating to sub-handlers inside its own folder.
 On `dragStart`, `handleGesture` opens the state's `activeDrag` (typed `ActiveDrag` in
 `controllers/CanvasTypes.ts`) and sets it back to `null` on `dragEnd`. `activeDrag.startSnapshot` holds the
 objects / keyPoints / snapCandidates, etc. at the start of the operation, and the drag's calculations are
-measured from it. If the doc has actually changed
-on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
+measured from it.
+
+`dragEnd`, `click` and `doubleClick` are the gesture close-out (`EVENT_CLOSE_OUT_TYPES`): each flattens the
+copy-on-write objects view and drops the drag bookkeeping. The close-out never advances `commitVersion`;
+the handler that edited the document does, at the event that completes the edit (`commitEdit` — see
+[State Update Flow](./06-state-update-flow.md)). A drag writer advances it on its `dragEnd`, a click that
+edits — a style swatch, a stencil placed by a click — on that click. A click is part of the close-out
+because it is a whole gesture of its own: the copy-on-write view a swatch writes through is flattened
+before history and persistence see it.
 
 `activeDrag.kind` (`DragKind`) says what the drag is doing. `handleGesture` opens every drag as
 `"other"`, so `activeDrag !== null` always means "a drag is under way". A handler whose drag needs to be
 told apart overwrites the kind in its own `dragStart` — e.g. `ObjectEventHandler` sets `"move"` and
-`TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame and the
-connection anchors while a selection is moved, and the anchors while it is transformed. The ObjectMenu
+`TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame while a
+selection is moved, and the connection anchors, the vertex handles and a type's own selection controls
+while it is moved or transformed (`controllers/ui/utils/isObjectBeingMovedOrTransformed.ts`); a drag of
+one of those controls stays `"other"` and keeps them. The ObjectMenu
 hides for any kind of drag, except while one of its dropdowns is open (`objectMenuOpenId !== null`), so
 its sliders stay usable mid-drag (`controllers/ui/menu/ObjectMenu/hooks/useObjectMenuPosition.ts`).
 
@@ -110,7 +123,7 @@ set — as do a fling and the pan that interrupts it — so the menu's own condi
 `useLingeringFlag`: it hides at once and only comes back once the view has been still for
 `REAPPEAR_DELAY_MS`, which is what keeps those handovers from flashing it.
 
-## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
+## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part` / `data-action`
 
 DOM elements on the canvas interoperate with the gesture system through `data-*` attributes.
 This convention allows **elements that should retain native browser behavior**—such as the editing surface used during
@@ -138,36 +151,41 @@ Where they are read:
 All of these decision utilities are built on `findGestureElement(target, token)` and
 are located in `controllers/gestures/recognizer/targeting/`.
 
-### `data-kind` / `data-id` / `data-part`
+### `data-kind` / `data-id` / `data-part` / `data-action`
 
 Attributes that **identify the target** of a gesture. `getGestureTarget` finds the nearest element via `closest("[data-kind]")`,
-resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`. `part` is read from the
-nearest `[data-part]` **at or inside** that element, so a shape that draws several hit regions can mark each one while still
-exposing a single `[data-kind]` element (one object = one `data-kind="object"` element, which e2e's `captureObjects` counts on).
+resolves `{ kind, id, part, action }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart` /
+`targetAction`. `part` and `action` are each read from the nearest `[data-part]` / `[data-action]` **at or inside** that
+element, so a shape that draws several hit regions can mark each one while still exposing a single `[data-kind]` element
+(one object = one `data-kind="object"` element, which e2e's `captureObjects` counts on).
 
-Each attribute carries exactly one axis, forming the two-level routing tree `kind` (coarse) → `part` prefix (fine) (issue #81):
+Each attribute carries exactly one axis. Routing is the two-level tree `kind` (coarse) → `action` prefix or `part` kind
+(fine) (issue #81):
 
-| Attribute   | Meaning                                     | Grammar                                                                           |
-| ----------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
-| `data-kind` | **Domain** — 1:1 with a registered handler  | a fixed name a handler claims in `supports()` (e.g. `object` / `canvas` / `menu`) |
-| `data-id`   | **Identity** — which target                 | an entity UUID or a singleton widget name. **Never parsed — no colons**           |
-| `data-part` | **Sub-element** — which piece of the target | `<subtype>[:<args...>]`; absent = the target's body itself                        |
+| Attribute     | Meaning                                                  | Grammar                                                                           |
+| ------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `data-kind`   | **Domain** — 1:1 with a registered handler               | a fixed name a handler claims in `supports()` (e.g. `object` / `canvas` / `menu`) |
+| `data-id`     | **Identity** — which target                              | an entity UUID or a singleton widget name. **Never parsed — no colons**           |
+| `data-part`   | **Model part** — which part of the object the press hits | `<kind>:<partId>` (`textSlot:{slotId}` / `vertex:{index}`); absent = no part      |
+| `data-action` | **Action** — what pressing this element starts           | `<subtype>[:<args...>]`; absent = the target's body itself                        |
 
 Rules:
 
-- Routing is `kind` → handler, then `part` prefix → strategy. `id` is used only for lookup, never parsed.
+- Routing is `kind` → handler, then `action` prefix (or `part` kind) → strategy. `id` is used only for lookup, never parsed.
 - An entity's subtype (rect / connector / …) is never encoded in the DOM; resolve it via `objects[id].type`.
-- `part` (args included) is always the **identifier of a sub-element**, parallel to `id` being the identifier
-  of the entity. A verb-looking part (`set:fill:red`) names the button by what it does; `part` is not a
-  command channel.
+- `data-part` carries **only** the address of a model part: the strings `parsePartAddress` understands, which a
+  click turns into `selection.part`. Everything else an element says about itself — a menu command, a resize
+  handle, a connector's label box — is a `data-action`. An element carries at most one of the two.
+- `action` (args included) names the element by what pressing it starts (`set:fill:red`, `resize:topLeft`,
+  `label`); it is not a command channel beyond that press.
 - `data-kind` is present only on elements that have a gesture handler. "Interactive but not a gesture
   target" is expressed with `data-gesture="none"`, not with a handler-less kind.
-- The `menu` kind's part grammar (the prefixes such as `command:` and what each means) has one home,
-  `controllers/gestures/handlers/menu/utils/menuParts.ts`: writers build the strings with its builder
-  functions (`commandPart` and the like, also exported through `@jiscribe/canvas/unstable` for plugins)
-  and the menu handlers take them apart with `parseMenuPart`, so no prefix is spelled twice.
+- The `menu` kind's action grammar (the prefixes such as `command:` and what each means) has one home,
+  `controllers/gestures/handlers/menu/utils/menuActions.ts`: writers build the strings with its builder
+  functions (`commandAction` and the like, also exported through `@jiscribe/canvas/unstable` for plugins)
+  and the menu handlers take them apart with `parseMenuAction`, so no prefix is spelled twice.
 
-Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
+Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-action="label"`.
 With a committed label, only a double click on the label box (not the bare line) starts label editing,
 and dragging the box moves the label along the path (`label.position` / `label.offset`),
 with `offset` snapping to 0 within `SNAP_THRESHOLD_PX` of the line (bypassed by holding Ctrl).
@@ -175,14 +193,22 @@ With no label yet, a double click on the bare line creates one at the clicked po
 the path and snapped the same way), carried in `textEditState` until the edit is committed.
 A multi-slot shape uses the nested form instead: for example, the `<g data-kind="object">` of the UML
 `record` shape (`plugins/uml-shapes/src/presentation/RecordBox.tsx`) wraps one rect per compartment the box
-has, each carrying its slot id as its `data-part` (`data-part="name"`, `data-part="attributes"`, and so
-on), which is how a double click resolves the text slot it landed in (`resolveTextSlotId` checks the value
-against the keys of `state.text` and falls back to the first slot otherwise).
+has, each carrying that slot's part address as its `data-part` (`data-part="textSlot:name"`,
+`data-part="textSlot:attributes"`, and so on, built with `textSlotPart`). That address is how a click picks
+the slot it landed in (`selectPartByClick`) and a double click resolves the one to edit (`resolveTextSlotId`
+checks the id against the keys of `state.text` and falls back to the first slot otherwise).
+
+The part grammar of an object's own sub-parts — `<kind>:<partId>`, where `kind` is a namespace
+`ObjectPartKindRegistry` answers for and `partId` is opaque to core — has one home,
+`controllers/gestures/handlers/utils/partAddress.ts`, the way the `menu` kind's actions have their own: writers
+build the address with its per-kind builder (`textSlotPart`, also exported through `@jiscribe/canvas` for
+plugins; `vertexPart`) and the click path takes it apart with `parsePartAddress` (`selectPartByClick`), so no
+handler spells a kind.
 
 #### Migration (issue #81) — completed
 
 The grammar above is fully in effect: menu kinds are consolidated into `menu`, control ids are entity
-UUIDs (with `part` carrying the sub-element), and handler-less marker kinds were removed — elements
+UUIDs (with `action` or `part` carrying the sub-element), and handler-less marker kinds were removed — elements
 that only need a test hook use `data-testid` instead of `data-kind` / `data-id`.
 
 ### Why we tokenized it
@@ -196,7 +222,7 @@ space-separated token list plus `closest` search.
 ### When adding a new interactive element
 
 1. An element that is fully served by standard browser interaction → `data-gesture="none"`
-2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-part`, inside the widget that carries `data-kind` / `data-id`
+2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-action`, inside the widget that carries `data-kind` / `data-id`
 3. Scrollable and you want to prioritize internal scrolling → `data-gesture="native-wheel"`
 
 ## Sharing gestures with the host page (`gestureHandling`)
@@ -233,8 +259,8 @@ const isActivation = event.type === "click" || event.type === "doubleClick";
 
 The reason is the exclusivity spec described above. Since a repeat command button has no "doubleClick-specific meaning,"
 picking up only `click` would skip every other tap during rapid tapping (the second event is discarded as a `doubleClick`).
-Because targets are not compared, the second press of a toggle whose `data-part` changes with its value
-(`set:fontWeight:bold` → `set:fontWeight:normal`) arrives as a `doubleClick` too.
+Because targets are not compared, the second press of a toggle such as the Bold button (`command:toggleBold`)
+arrives as a `doubleClick` too, and so does a button whose `data-action` changed between the two presses.
 Because the object- and text-related handlers depend on the recognizer's exclusivity spec, we leave it unchanged and instead
 **treat both events equivalently in the consuming handler**, achieving "N taps = N executions" locally and with low risk.
 

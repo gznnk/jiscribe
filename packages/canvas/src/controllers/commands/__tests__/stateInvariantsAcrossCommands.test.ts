@@ -12,7 +12,9 @@ import type { ConnectorState } from "../../../states/objects/connector/Connector
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
+import { reconcileSelection } from "../../selection/writers/reconcileSelection";
 
 const registries = createTestRegistries();
 
@@ -24,44 +26,40 @@ const registries = createTestRegistries();
 const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 	const violations: string[] = [];
 
-	// Selection channels are mutually exclusive, and connectors never enter selectedIds.
-	if (state.selectedIds.length > 0 && state.selectedConnectorId !== null) {
-		violations.push(
-			"selectedIds and selectedConnectorId are both set (channels must be mutually exclusive)",
-		);
-	}
-	for (const id of state.selectedIds) {
-		if (isConnectorState(state.objects[id])) {
-			violations.push(`connector ${id} leaked into selectedIds`);
+	// A connector is selected on its own: one of them, never beside a shape.
+	for (const id of state.selection.objectIds) {
+		if (
+			isConnectorState(state.objects[id]) &&
+			state.selection.objectIds.length > 1
+		) {
+			violations.push(`connector ${id} is selected alongside other objects`);
 		}
 		if (!state.objects[id]) {
-			violations.push(`selectedIds references nonexistent object ${id}`);
+			violations.push(`selection.objectIds names nonexistent object ${id}`);
 		}
-	}
-	if (
-		state.selectedConnectorId !== null &&
-		!state.objects[state.selectedConnectorId]
-	) {
-		violations.push(
-			`selectedConnectorId references nonexistent object ${state.selectedConnectorId}`,
-		);
 	}
 
-	// A slot selection, once it survives the resolver, must name a live slot of the
-	// sole selected object. The raw selectedTextSlot is deliberately allowed to go
-	// stale (resolveSelectedTextSlot's contract), so only the resolved value is pinned.
-	const resolvedTextSlot = resolveSelectedTextSlot(state);
-	if (resolvedTextSlot !== null) {
-		const { objectId, slotId } = resolvedTextSlot;
-		if (state.selectedIds.length !== 1 || state.selectedIds[0] !== objectId) {
+	// A slot selection the reducer's reconciliation keeps must name a live slot of
+	// the sole selected object. A command alone may leave a stale one behind — the
+	// reducer clears it after the command runs (reconcileSelection) — so
+	// the invariant is pinned on the reconciled state, not the raw one. What this
+	// catches is a command turning a stale selection into a live one.
+	const { objectIds, part } = reconcileSelection(
+		state,
+		registries.objectPartKind,
+	).selection;
+	if (part !== null) {
+		const slotId = part.ranges[0].anchorId;
+		if (objectIds.length !== 1) {
 			violations.push(
-				`selectedTextSlot resolves to ${objectId} which is not the sole selection`,
+				`selection.part survives a selection of ${objectIds.length} objects`,
 			);
 		}
+		const objectId = objectIds[0];
 		const owner = state.objects[objectId];
 		if (!isTextStyleState(owner) || owner.text?.[slotId] === undefined) {
 			violations.push(
-				`selectedTextSlot resolves to slot ${slotId} which ${objectId} does not have`,
+				`selection.part resolves to slot ${slotId} which ${objectId} does not have`,
 			);
 		}
 	}
@@ -158,31 +156,33 @@ describe("every command preserves structural invariants", () => {
 			label: "one shape selected",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedIds: ["rect-1"],
+					selection: selectionOf(["rect-1"]),
 				}),
 		},
 		{
 			label: "all shapes selected",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedIds: ["rect-1", "rect-2"],
+					selection: selectionOf(["rect-1", "rect-2"]),
 				}),
 		},
 		{
 			// No built-in type spells its text out as slots, so this exercises the
-			// stale side: no command may turn a raw selectedTextSlot into a live one.
+			// stale side: no command may turn a raw part selection into a live one.
 			label: "one shape selected with a stale text slot",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedIds: ["rect-1"],
-					selectedTextSlot: { objectId: "rect-1", slotId: "no-such-slot" },
+					selection: selectionOf(["rect-1"], {
+						kind: TEXT_SLOT_PART_KIND,
+						ranges: [{ anchorId: "no-such-slot", focusId: "no-such-slot" }],
+					}),
 				}),
 		},
 		{
 			label: "a connector selected",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
-					selectedConnectorId: "conn-1",
+					selection: selectionOf(["conn-1"]),
 				}),
 		},
 		{
@@ -190,12 +190,15 @@ describe("every command preserves structural invariants", () => {
 			build: () => {
 				const inner = runCommand(
 					createCommandState(threeRectsWithConnectorDoc, {
-						selectedIds: ["rect-1", "rect-2"],
+						selection: selectionOf(["rect-1", "rect-2"]),
 					}),
 					"group",
 				);
 				return runCommand(
-					{ ...inner, selectedIds: [inner.selectedIds[0], "rect-3"] },
+					{
+						...inner,
+						selection: selectionOf([inner.selection.objectIds[0], "rect-3"]),
+					},
 					"group",
 				);
 			},

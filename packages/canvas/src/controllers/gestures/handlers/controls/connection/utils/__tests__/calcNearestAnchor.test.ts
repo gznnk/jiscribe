@@ -305,4 +305,46 @@ describe("calcNearestAnchor", () => {
 			expect(result).toEqual({ kind: "connectPoint", id: "leftCenter" });
 		});
 	});
+
+	describe("hidden anchors", () => {
+		// Local (-20, -5) on this frame is world (80, 95): just above leftCenter.
+		const tip: ExtraConnectPoint = {
+			id: "tip",
+			point: { x: -20, y: -5 },
+			direction: { x: -1, y: 0 },
+		};
+
+		it("does not snap onto a hidden edge midpoint, landing on the edge position instead", () => {
+			expect(
+				calcNearestAnchor(roomyFrame, 200, 145, undefined, {
+					connectionAnchors: { topCenter: { hidden: true } },
+				}),
+			).toEqual({ kind: "edge", side: "top", t: 0.5 });
+		});
+
+		it("keeps snapping onto the edge midpoints left offered", () => {
+			expect(
+				calcNearestAnchor(frame, 126, 100, undefined, {
+					connectionAnchors: { topCenter: { hidden: true } },
+				}),
+			).toEqual({ kind: "connectPoint", id: "rightCenter" });
+		});
+
+		it("is not affected by an entry that only moves the dot", () => {
+			expect(
+				calcNearestAnchor(roomyFrame, 200, 145, undefined, {
+					connectionAnchors: { topCenter: { offset: 40 } },
+				}),
+			).toEqual({ kind: "connectPoint", id: "topCenter" });
+		});
+
+		it("does not snap onto a hidden extra point", () => {
+			expect(
+				calcNearestAnchor(frame, 74, 95, undefined, {
+					extraConnectPoints: [tip],
+					connectionAnchors: { tip: { hidden: true } },
+				}),
+			).toEqual({ kind: "connectPoint", id: "leftCenter" });
+		});
+	});
 });

@@ -1,3 +1,4 @@
+import { isString } from "@jiscribe/basic-validators";
 import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
 import type {
 	ViewDoc,
@@ -9,10 +10,10 @@ import {
 } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useCallback } from "react";
 
-import { documentPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { documentAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
-import type { StylePropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
@@ -39,13 +40,18 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 
-	// The picker speaks the style-property shape, so the sentinel it writes for
-	// Auto is translated here into the null the document route takes.
-	const handleColorUpdate = useCallback<StylePropertyUpdater>(
-		(_property, value, commit, coalesceHistory) => {
+	// The picker speaks the style shape, translated here: `background` is no name
+	// of the core vocabulary, so what arrives is an extra-shaped intent whose
+	// value the engine does not type. The picker's is the CSS text, and the
+	// sentinel it writes for Auto becomes the null the document route takes.
+	const handleColorUpdate = useCallback<StyleIntentUpdater>(
+		(intent, commit, coalesceHistory) => {
+			if (!("value" in intent) || !isString(intent.value)) {
+				return;
+			}
 			onDocumentUpdate(
 				"background",
-				isAutoColor(value) ? null : value,
+				isAutoColor(intent.value) ? null : intent.value,
 				commit,
 				coalesceHistory,
 			);
@@ -63,7 +69,7 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 				// The document's own background is the whole target.
 				currentColorIsShared
 				title={messages.propertyPanelRowBackground}
-				onPropertyUpdate={handleColorUpdate}
+				onStyleIntent={handleColorUpdate}
 			/>
 		</PropertyRow>
 	);
@@ -162,21 +168,21 @@ const ViewOpenItemComponent: React.FC<ViewModeItemProps> = ({ view }) => {
 				options={[
 					{
 						id: "none",
-						part: documentPart("view.open", null),
+						action: documentAction("view.open", null),
 						title: messages.propertyPanelViewOpenNoneTitle,
 						content: messages.propertyPanelViewOpenNone,
 						isActive: open === undefined,
 					},
 					{
 						id: "fit-width",
-						part: documentPart("view.open", "fit-width"),
+						action: documentAction("view.open", "fit-width"),
 						title: messages.propertyPanelViewOpenFitWidthTitle,
 						content: messages.propertyPanelViewOpenFitWidth,
 						isActive: open === "fit-width",
 					},
 					{
 						id: "fit-all",
-						part: documentPart("view.open", "fit-all"),
+						action: documentAction("view.open", "fit-all"),
 						title: messages.propertyPanelViewOpenFitAllTitle,
 						content: messages.propertyPanelViewOpenFitAll,
 						isActive: open === "fit-all",
@@ -201,7 +207,7 @@ const ViewScrollItemComponent: React.FC<ViewModeItemProps> = ({ view }) => {
 	return (
 		<PropertyCheckbox
 			isOn={isContent}
-			part={documentPart("view.scroll", isContent ? null : "content")}
+			action={documentAction("view.scroll", isContent ? null : "content")}
 			label={messages.propertyPanelViewScrollContent}
 		/>
 	);

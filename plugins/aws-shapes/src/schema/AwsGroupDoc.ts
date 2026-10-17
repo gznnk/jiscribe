@@ -1,10 +1,6 @@
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
 import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
-import type {
-	CreateObjectType,
-	ExtraStylePropertyDescriptor,
-	ObjectFeatures,
-} from "@jiscribe/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * The kinds of frame. The list AWS's own PowerPoint toolkit
@@ -78,11 +74,6 @@ export const AwsGroupFeatures = {
 	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
-
-/** The style properties of this shape that no ObjectFeatures flag covers. */
-export const AwsGroupExtraStyleProperties = {
-	kind: { valueType: "string" },
-} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const AwsGroupDocBrand: unique symbol;

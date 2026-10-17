@@ -4,6 +4,7 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import type { Stencil } from "../../../ui/objects/Stencil";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
@@ -19,13 +20,14 @@ import {
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 /**
- * Extracts the preset ID from a targetPart.
+ * Extracts the preset ID from a targetAction.
  * Format: "item:<presetId>"
  *
  * Splitting is enough because a preset id holds no colon of its own — StencilRegistry
  * refuses one that does, rather than letting it reach here and resolve to nothing.
  */
-const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
+const parsePresetId = (targetAction: string): string =>
+	targetAction.split(":")[1];
 
 /**
  * Returns the half-size of the ghost shape for a preset.
@@ -45,9 +47,9 @@ const calcObjectDimensions = (
 /**
  * Adds a shape to the state according to the preset and returns a new CanvasControllerState.
  *
- * Adding an object always modifies the doc, so commitVersion is incremented.
- * This ensures history recording and saving happen even via click (center placement).
- * Via dragEnd, handleGesture overwrites with the same value, so there is no double increment.
+ * Adding an object always modifies the doc, so it is committed here, whether the
+ * placement came from a click or a dragEnd (handleGesture's close-out never
+ * advances the version itself).
  */
 const addObjectToState = (
 	state: CanvasControllerState,
@@ -70,7 +72,8 @@ const addObjectToState = (
 			[objectState.id]: objectState,
 		},
 		rootIds: [...state.rootIds, objectState.id],
-		selectedIds: [objectState.id],
+		selection: { objectIds: [objectState.id], part: null },
+		multiSelectGroup: null,
 		commitVersion: state.commitVersion + 1,
 	};
 };
@@ -96,11 +99,11 @@ export const StencilLibraryItemHandler: GestureHandler = {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		if (!event.targetPart) {
+		if (!event.targetAction) {
 			return nextState;
 		}
 
-		const presetId = parsePresetId(event.targetPart);
+		const presetId = parsePresetId(event.targetAction);
 		const preset = registries.stencil.get(presetId);
 		if (!preset) {
 			return nextState;
@@ -116,8 +119,12 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
+					// Placing selects the new shape, and the open session is owned by the
+					// selection (see textEditState), so the draft has to be written back
+					// first or it rides over onto the shape just placed.
+					const committed = commitTextEditIfNeeded(state);
 					const placed = addObjectToState(
-						state,
+						committed,
 						preset,
 						{
 							x: centerX,
@@ -149,8 +156,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 				return {
 					...committed,
 					shapeDrawing: { preset, preview: null },
-					selectedIds: [],
-					selectedConnectorId: null,
+					selection: EMPTY_SELECTION,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
@@ -164,8 +170,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 				return {
 					...committed,
 					shapeDrawing: null,
-					selectedIds: [],
-					selectedConnectorId: null,
+					selection: EMPTY_SELECTION,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,

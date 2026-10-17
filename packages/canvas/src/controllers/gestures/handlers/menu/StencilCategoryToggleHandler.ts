@@ -1,4 +1,4 @@
-import { parseMenuPart } from "./utils/menuParts";
+import { parseMenuAction } from "./utils/menuActions";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -9,7 +9,7 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * GestureHandler for the StencilLibrary category toggle buttons in the toolbar.
  * Handles events with targetKind "menu" and targetId "stencil-category".
  *
- * targetPart format: `toggle:{categoryId}` → open that category's flyout, or
+ * targetAction format: `toggle:{categoryId}` → open that category's flyout, or
  * close it if it is already the open one (click acts as a toggle).
  *
  * This handler only owns the toggle itself. Dismissal on outside interactions
@@ -41,9 +41,9 @@ export const StencilCategoryToggleHandler: GestureHandler = {
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		const part = parseMenuPart(event.targetPart);
-		if (isActivation && part?.kind === "toggle") {
-			const categoryId = part.id;
+		const action = parseMenuAction(event.targetAction);
+		if (isActivation && action?.kind === "toggle") {
+			const categoryId = action.id;
 			return {
 				...nextState,
 				stencilLibraryOpenCategory:

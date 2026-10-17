@@ -5,6 +5,9 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import {
 	SetRoutingOrthogonalCommand,
 	SetRoutingStraightCommand,
@@ -56,14 +59,11 @@ const makeRect = (id: string): ObjectState =>
 	({ id, type: "rect" }) as ObjectState;
 
 const makeState = (params: {
-	selectedConnectorId: string | null;
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
-	selectedVertex?: CanvasControllerState["selectedVertex"];
 }): CanvasControllerState =>
 	({
-		selectedIds: [],
 		commitVersion: 0,
-		selectedVertex: null,
 		...params,
 	}) as unknown as CanvasControllerState;
 
@@ -72,9 +72,8 @@ describe("SetConnectorRoutingCommand", () => {
 		it("keeps the route's vertices when switching to orthogonal (only ResetConnectorRoute drops them)", () => {
 			const waypoints: Point[] = [{ x: 10, y: 20 }];
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"], vertexPartSelection(0)),
 				objects: { c1: makeConnector("c1", "straight", waypoints) },
-				selectedVertex: { objectId: "c1", vertexIndex: 0 },
 			});
 
 			const next = SetRoutingOrthogonalCommand.execute(state, registries);
@@ -82,8 +81,8 @@ describe("SetConnectorRoutingCommand", () => {
 
 			expect(conn.routing).toBe("orthogonal");
 			expect(conn.points).toBe(waypoints);
-			// the per-vertex handles disappear under orthogonal, so the selected vertex is cleared
-			expect(next.selectedVertex).toBeNull();
+			// the per-vertex handles disappear under orthogonal, so the picked vertex is dropped
+			expect(next.selection.part).toBeNull();
 			expect(next.commitVersion).toBe(1);
 		});
 	});
@@ -97,7 +96,7 @@ describe("SetConnectorRoutingCommand", () => {
 				{ x: 50, y: 100 },
 			];
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: {
 					c1: makeConnector("c1", "orthogonal", staleVertices, undefined, {
 						source: { x: 0, y: 0 },
@@ -120,7 +119,7 @@ describe("SetConnectorRoutingCommand", () => {
 		it("a connector with no vertices keeps none (straight draws the direct line)", () => {
 			const emptyPoints: Point[] = [];
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1: makeConnector("c1", "orthogonal", emptyPoints) },
 			});
 
@@ -136,7 +135,7 @@ describe("SetConnectorRoutingCommand", () => {
 	describe("when the effective routing does not change", () => {
 		it("applying orthogonal to the default (routing omitted) is a no-op (writes no redundant value)", () => {
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1: makeConnector("c1", undefined, []) },
 			});
 
@@ -150,7 +149,7 @@ describe("SetConnectorRoutingCommand", () => {
 
 		it("re-applying straight to straight is a no-op", () => {
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1: makeConnector("c1", "straight", [{ x: 1, y: 2 }]) },
 			});
 			expect(SetRoutingStraightCommand.execute(state, registries)).toBe(state);
@@ -160,7 +159,7 @@ describe("SetConnectorRoutingCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when a connector is selected", () => {
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: { c1: makeConnector("c1", undefined, []) },
 			});
 			expect(SetRoutingStraightCommand.canExecute(state, registries)).toBe(
@@ -173,7 +172,7 @@ describe("SetConnectorRoutingCommand", () => {
 
 		it("is not executable when no connector is selected", () => {
 			const state = makeState({
-				selectedConnectorId: null,
+				selection: selectionOf([]),
 				objects: { r1: makeRect("r1") },
 			});
 			expect(SetRoutingStraightCommand.canExecute(state, registries)).toBe(
@@ -186,7 +185,7 @@ describe("SetConnectorRoutingCommand", () => {
 
 		it("self-loops cannot be straight but can be orthogonal (orthogonal only)", () => {
 			const state = makeState({
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 				objects: {
 					c1: makeConnector("c1", undefined, [], {
 						sourceId: "r1",

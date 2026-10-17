@@ -7,7 +7,8 @@
 
 `plugins/` 配下のパッケージがそれぞれ実例である。完成形として最小なのが `sticky-shape`、
 型固有の選択コントロールを持つのが `container-shapes`、複数テキストスロットを
-持つのが `uml-shapes`。
+持つのが `uml-shapes`。自前の部分種別・クリックを受ける選択コントロール・寄与コマンド・
+保存せず内容から測る箱を持つのが `table-shape`。
 
 ## パッケージ構成
 
@@ -137,10 +138,23 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`） | 「箱いっぱいに描くので文字を下へ吊る」機構一式                  |
 | `createParseCheckSuite`（`/testing`）                                                                                    | 図形パッケージが毎回書く parse-check テスト                     |
 
-下ラベルの部材は 3 つで 1 組である。領域を型の `textRegion` に、bounds を
-`visualBounds` に登録する。後者が無いと zoom-to-fit とエクスポートの viewBox が
+下ラベルの部材は 3 つで 1 組である。領域を `createFrameObjectDefinition` の
+`textRegion`（ラベルを置くテキストスロットの部分種別になる）に、bounds を
+`visualBounds` に渡す。後者が無いと zoom-to-fit とエクスポートの viewBox が
 ラベルを切り落とす。ヒットエリアは図形自身の `data-kind="object"` グループの中に
 置き、ラベルを掴めるようにする。
+
+スロット同士を並べてレイアウトする型（表のセル、record の区画）は、`"textSlot"` の
+部分種別を自分で宣言し、`createTextSlotPartKindDefinition({ regions })` を
+`partKinds` に置く。全スロットの領域を 1 回で答える関数で、描画は描画 1 回につき
+1 度だけ呼ぶ。種別が取るのは `region` か `regions` のどちらか一方
+（[プラグインアーキテクチャ](./12-plugin-architecture.ja.md)参照）。
+
+そうして自分で並べた中身は、共有の文字組みを測る `diagnoseDoc` には見えない。箱に
+収まらないことを報告させたいなら、doc 定義に `diagnoseOverflow`
+（`ObjectDocOverflowDiagnoser`）を宣言する。doc を受け取り、はみ出しごとに英語 1 行
+（何が何 px 足りないかと直し方）を返す関数で、`diagnoseDoc` がそれぞれを図形の id
+付きのエラーにする。record が区画の高さで実例を示している。
 
 `createFrameObject` を通さず手描きするなら、それが解決していたものは自分で解決する
 （sticky が実例）。特に色は `resolveAutoColor(fill, "surface")` で解決し、**結果は
@@ -150,6 +164,61 @@ SVG の `fill` 属性ではなく CSS で当てる**。`"auto"` の解決先は 
 型のプロパティサイドバーのセクションは `propertyPanel` で宣言し、独自の行は `{ type: "custom"; id; component }` として、キットが再エクスポートするサイドバーの部品（`PropertyRow` ほか）で組む。その選択に対して言うことが何も無いセクションは `isShown` を持たせると、行と一緒に見出しも消える。どちらも doc 12 を参照。
 
 `./testing` を別入口にしてあるのは、vitest がランタイムバンドルに届かないようにするため。
+
+## 図形用の AI ツールを足す
+
+汎用ツール（`set_text`・`set_extra_props` など）では、ある型にしか意味の無い編集
+（表への行の挿入など）を表せない。そうした編集はプラグインが自前のツールとして出す。
+各ツールは呼び出しが `id` で名指す 1 オブジェクトに作用し、作り直す（`apply`）か
+読む（`read`）かのどちらかを持つ。`@jiscribe/canvas-sdk/tools` に対して書き、
+headless の `./tools` 入口（`src/tools.ts`）から export する。引数スキーマは zod の
+raw shape（`z.object` ではなくプロパティの並び）で書く。ホストはそれをそのまま
+ツール宣言に載せる（MCP SDK が zod でしかツールを宣言できない）。zod は契約の peer
+なので、プラグインとホストは同じ zod の実体を共有する。プラグインは `zod` を
+catalog の版（`catalog:`）で `peerDependencies` と `devDependencies` に足す。
+
+契約の正本は `@jiscribe/ai-tools-sdk` で、`@jiscribe/canvas-sdk/tools` はその
+再エクスポートである。プラグインは前者を直接 import しない（ESLint が弾く）が、
+canvas-sdk がそれを peer で取るので、`./tools` を持つプラグインは
+`@jiscribe/ai-tools-sdk` を `peerDependencies` と `devDependencies` に足す。
+
+```ts
+// src/tools.ts
+import {
+	type AiToolPlugin,
+	defineObjectAiTool,
+} from "@jiscribe/canvas-sdk/tools";
+import { z } from "zod";
+
+export const tableAiToolPlugin: AiToolPlugin = {
+	id: "table-shape",
+	tools: [
+		defineObjectAiTool({
+			name: "table_insert_tracks", // <型>_<動詞>。全ツールを通して一意
+			description: "Insert rows or columns into a table.",
+			objectType: "table",
+			inputSchema: { axis: z.enum(["row", "column"]), at: z.number().int() },
+			apply: (table: TableDoc, { axis, at }) => ({
+				doc: insertTracks(table, axis, at), // 新しいオブジェクトを返す。`table` は書き換えない
+				text: `inserted a ${axis} at ${at}`,
+			}),
+		}),
+	],
+};
+```
+
+`id` はホストがスキーマに足し、別の型のオブジェクトは拒否する。`apply` の戻り値は、
+書き込む前にその型の `validateDoc` と型が持つ名前で検査されるので、パーサーが拒否する
+（または落とす）結果は呼び出しの失敗になり、doc は変わらない。呼び出しを断るときは
+`Error` を throw する。そのメッセージが AI に返る。`read` のツールは doc を書き戻さない。
+組み込みツールや他プラグインのツールと名前が重なると、ホストがツール一式を組む時点で
+throw する。
+
+自分の型のテキストスロットをスタイルするツールは、文字装飾の引数を書き起こさず
+`textSlotStyleSchema` を `inputSchema` に展開する。組み込みの `set_style` が宣言する
+語彙そのもので、説明文も同じになる。`fontWeight` は `"400"` / `"700"` も受けるので、
+書き込む前に `canonicalizeFontWeight` を通す（doc は `"normal"` / `"bold"` で持つ）。
+どちらも `@jiscribe/canvas-sdk/tools` から取る。実例はテーブルの `table_set_cell_style`。
 
 ## e2e スイートを持たせる
 
@@ -284,8 +353,9 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 - プラグインの `src/` 配下からは `@jiscribe/canvas/unstable`・
   `@jiscribe/doc/unstable` を import できない。`@jiscribe/canvas-sdk`
   （headless は `@jiscribe/canvas-sdk/doc`）を使う
-- プラグインの `src/schema/` と `src/doc.ts` は headless。canvas / doc 系の入口で
-  使えるのは `@jiscribe/doc` と `@jiscribe/canvas-sdk/doc` だけで、UI 入口・
+- プラグインの `src/schema/`・`src/doc.ts`・`src/tools.ts`（または `src/tools/`）は
+  headless。canvas / doc 系の入口で使えるのは `@jiscribe/doc` と
+  `@jiscribe/canvas-sdk/doc`（`/tools`）だけで、UI 入口・
   `react` / `react-dom` / `@emotion/*`・自パッケージの UI 側の層（`presentation/`・
   `state/`・`menu/` など。一覧は `eslint.config.js` が正本）へは到達できない
 - **import はパッケージルート経由。**`@jiscribe/geometry` であって
@@ -335,6 +405,15 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 カテゴリは `DEFAULT_TOOLBAR_SECTIONS` に含まれないので、既定のバーをそのまま使い
 library も宣言しないホストでは、カテゴリを足すまでその図形は出てこない。
 
+並べきれない数のプリセットを持つカテゴリ（数百のグリフを抱えるアイコンセット）は、
+`presetIds` には選んだ数個だけを並べ、プリセットは全てステンシルとして登録したうえで
+`search`（`StencilCategorySearch`）を宣言する。サイドバーの検索語を受け、登録済み
+プリセットの id を順位順で、カテゴリ自身の上限で切って返し、切る前の件数を
+`matchCount` で添える関数である。サイドバーはそれを並べたプリセットのラベル一致の
+後ろに並べ、表示済みの id と未登録の id を落とし、切られた分があれば 1 行添える。
+検索していない間は、セクションの下に「ほかの図形を探す」と検索への導線を出す。
+ツールバーのフライアウトは `search` を見ず、`presetIds` だけを出す。
+
 ## 配線チェックリスト
 
 **忘れられるのは headless の `./doc` 側である。**どのリストも機械的に潰すこと。
@@ -355,6 +434,10 @@ UI プラグイン（`somePlugin`）:
 headless doc プラグイン（`someDocPlugin`）:
 
 - [ ] `packages/standard-shapes/src/doc.ts`（`standardDocPlugins`。VSCode 拡張の診断・スキーマ生成・MCP サーバー・`doc-tools` はここから図形セットを受け取る）
+
+AI ツール（`someAiToolPlugin`。プラグインが出す場合だけ）:
+
+- [ ] `packages/standard-shapes/src/tools.ts`（`standardAiToolPlugins`。MCP サーバーはここからツール一式を受け取る）
 
 `package.json` にプラグインへの依存を足すのは `packages/standard-shapes` と
 `apps/canvas-examples` だけである。ほかのホスト（VSCode 拡張・MCP・CLI）は

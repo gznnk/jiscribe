@@ -1,8 +1,10 @@
+import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { describe, it, expect } from "vitest";
 
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
+import type { Command } from "../../commands/CommandTypes";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 // Minimal stand-in for a plugin object type (mirrors how plugin-container-shapes
@@ -25,6 +27,14 @@ const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
 		},
 		menu: [],
 	});
+
+/** Minimal stand-in for a plugin command: an id, and an execute that changes nothing. */
+const buildFakeCommand = (id: string): Command => ({
+	id,
+	label: id,
+	canExecute: () => true,
+	execute: (state) => state,
+});
 
 describe("createCanvasRegistries", () => {
 	describe("default (no config)", () => {
@@ -150,6 +160,9 @@ describe("createCanvasRegistries", () => {
 							fill: true,
 							text: "body",
 						},
+						// The box holds the text, which is what lets a document leave
+						// `height` out (supportsAutoHeight).
+						textRegion: calcFullBoxTextRegion,
 						validateDoc: () => [],
 						mapper: {
 							toDoc: (state) => ({ id: state.id, type: "boxy" }),
@@ -186,7 +199,7 @@ describe("createCanvasRegistries", () => {
 				},
 			]);
 			// The box holds its text and nothing denies it, so the type may leave
-			// `height` out and gets the switch (supportsAutoHeightType) — in the
+			// `height` out and gets the switch (supportsAutoHeight) — in the
 			// sidebar, which is the only place it is offered.
 			expect(
 				registries.propertyPanel
@@ -208,6 +221,7 @@ describe("createCanvasRegistries", () => {
 							stroke: true,
 							fill: true,
 							text: "body",
+							textVerticalBasis: true,
 						},
 						// A cap band the text stays below, as a cylinder has.
 						textRegion: ({ width, height }) => ({
@@ -275,6 +289,78 @@ describe("createCanvasRegistries", () => {
 			expect(() => createCanvasRegistries({ plugins: [rectPlugin] })).toThrow(
 				/rect-plugin.*"rect"/,
 			);
+		});
+
+		it("registers a plugin's commands after the built-in set", () => {
+			const registries = createCanvasRegistries({
+				plugins: [{ id: "cell-plugin", commands: [buildFakeCommand("cell")] }],
+			});
+			expect(registries.command.get("cell")).toBeDefined();
+			expect(registries.command.getAll().at(-1)?.id).toBe("cell");
+		});
+
+		it("offers a keystroke to a plugin's command before the built-in sharing it", () => {
+			const registries = createCanvasRegistries({
+				plugins: [
+					{
+						id: "cell-plugin",
+						commands: [
+							{
+								...buildFakeCommand("cell-up"),
+								shortcuts: { default: [{ code: "ArrowUp" }] },
+							},
+						],
+					},
+				],
+			});
+			const matchedIds = registries.command
+				.findAllByShortcut({
+					code: "ArrowUp",
+					key: "ArrowUp",
+					ctrlKey: false,
+					metaKey: false,
+					shiftKey: false,
+					altKey: false,
+				} as KeyboardEvent)
+				.map((command) => command.id);
+			expect(matchedIds).toEqual(["cell-up", "move-up"]);
+		});
+
+		it("narrows the plugin's commands with the same config.commands list", () => {
+			const registries = createCanvasRegistries({
+				commands: ["undo", "cell"],
+				plugins: [
+					{
+						id: "cell-plugin",
+						commands: [buildFakeCommand("cell"), buildFakeCommand("row")],
+					},
+				],
+			});
+			expect(registries.command.getAll().map((command) => command.id)).toEqual([
+				"undo",
+				"cell",
+			]);
+		});
+
+		it("throws when a plugin's command id collides with a built-in", () => {
+			expect(() =>
+				createCanvasRegistries({
+					plugins: [
+						{ id: "undo-plugin", commands: [buildFakeCommand("undo")] },
+					],
+				}),
+			).toThrow(/"undo".*already registered/);
+		});
+
+		it("throws when two plugins declare the same command id", () => {
+			expect(() =>
+				createCanvasRegistries({
+					plugins: [
+						{ id: "plugin-a", commands: [buildFakeCommand("cell")] },
+						{ id: "plugin-b", commands: [buildFakeCommand("cell")] },
+					],
+				}),
+			).toThrow(/"cell".*already registered/);
 		});
 
 		it("throws when two plugins declare the same object type", () => {

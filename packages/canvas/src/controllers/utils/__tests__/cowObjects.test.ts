@@ -4,6 +4,7 @@ import {
 	collectCowChangedKeys,
 	copyObjectsRecord,
 	createCowObjects,
+	isCowObjects,
 	materializeObjects,
 } from "../cowObjects";
 
@@ -111,6 +112,20 @@ describe("createCowObjects", () => {
 		view.b = { id: "b", value: 20 };
 
 		expect(JSON.parse(JSON.stringify(view))).toEqual({ ...view });
+	});
+});
+
+describe("isCowObjects", () => {
+	it("tells a view from a plain record", () => {
+		expect(isCowObjects(buildBase())).toBe(false);
+		expect(isCowObjects({})).toBe(false);
+		expect(isCowObjects(createCowObjects(buildBase()))).toBe(true);
+	});
+
+	it("still recognizes a view rebased on a view", () => {
+		expect(isCowObjects(createCowObjects(createCowObjects(buildBase())))).toBe(
+			true,
+		);
 	});
 });
 

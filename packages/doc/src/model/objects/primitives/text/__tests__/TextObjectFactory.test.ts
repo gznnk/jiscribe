@@ -2,21 +2,33 @@ import { describe, expect, it } from "vitest";
 
 import { TextObjectFactory } from "../TextObjectFactory";
 
+/** The box the factory measures for these overrides, as a whole size. */
+const boxOf = (
+	overrides?: Record<string, unknown>,
+): { width: number; height: number } => {
+	const { halfWidth, halfHeight } = TextObjectFactory.calcDimensions(overrides);
+	return { width: halfWidth * 2, height: halfHeight * 2 };
+};
+
 describe("TextObjectFactory", () => {
 	describe("createDoc", () => {
-		it("stores the position as the box's top-left, without measuring", () => {
+		it("centers the measured box on the position, storing its drawn top-left", () => {
+			const overrides = { text: "Text" };
+			const box = boxOf(overrides);
 			const doc = TextObjectFactory.createDoc(
 				{ x: 100, y: 100 },
-				{ text: "Text" },
+				overrides,
 			) as Record<string, unknown>;
 
 			expect(doc.type).toBe("text");
 			expect(doc.id).toEqual(expect.any(String));
-			expect(doc.x).toBe(100);
-			expect(doc.y).toBe(100);
+			// Close rather than equal: the stored corner is rounded to the doc's own
+			// coordinate precision (roundDocNumbers).
+			expect(doc.x).toBeCloseTo(100 - box.width / 2, 3);
+			expect(doc.y).toBeCloseTo(100 - box.height / 2, 3);
 		});
 
-		it("places a long text where a short one goes: the text no longer moves the corner", () => {
+		it("keeps the center a long text and a short one are placed on", () => {
 			const short = TextObjectFactory.createDoc(
 				{ x: 0, y: 0 },
 				{ text: "T" },
@@ -26,7 +38,26 @@ describe("TextObjectFactory", () => {
 				{ text: "Long enough to matter" },
 			) as unknown as { x: number };
 
-			expect(long.x).toBe(short.x);
+			// The corner is where the text starts, so a wider text starts further left.
+			expect(long.x).toBeLessThan(short.x);
+			expect(short.x + boxOf({ text: "T" }).width / 2).toBeCloseTo(0, 3);
+			expect(
+				long.x + boxOf({ text: "Long enough to matter" }).width / 2,
+			).toBeCloseTo(0, 3);
+		});
+
+		it("stores the corner the object's own rotation draws it at", () => {
+			const overrides = { text: "Text", rotation: 90 };
+			const box = boxOf(overrides);
+			const doc = TextObjectFactory.createDoc(
+				{ x: 0, y: 0 },
+				overrides,
+			) as unknown as { x: number; y: number };
+
+			// A quarter turn about the center puts the local top-left corner where the
+			// local bottom-left one was.
+			expect(doc.x).toBeCloseTo(box.height / 2, 10);
+			expect(doc.y).toBeCloseTo(-box.width / 2, 10);
 		});
 
 		it("stores no width / height on the doc", () => {
@@ -59,6 +90,9 @@ describe("TextObjectFactory", () => {
 			expect(doc.width).toBe(200);
 			// The height stays measured from the wrapped text in either layout.
 			expect(doc).not.toHaveProperty("height");
+			// That width is also the box the placement centers, so the corner is half of
+			// it to the left rather than half of the longest line.
+			expect(doc.x).toBe(-100);
 		});
 
 		it("assigns a different id on each creation", () => {
@@ -69,11 +103,35 @@ describe("TextObjectFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("reports no extent: the doc holds no box for this layer to size", () => {
-			expect(TextObjectFactory.calcDimensions({ text: "Text" })).toEqual({
-				halfWidth: 0,
-				halfHeight: 0,
+		it("reports half the box the text is measured at", () => {
+			// Under the estimate measurement a line is fontSize x 0.6 per character, so
+			// only the relations are asserted: a longer text is wider, and a bigger type
+			// size is taller.
+			const short = TextObjectFactory.calcDimensions({ text: "Text" });
+			expect(short.halfWidth).toBeGreaterThan(0);
+			expect(short.halfHeight).toBeGreaterThan(0);
+
+			expect(
+				TextObjectFactory.calcDimensions({ text: "Text Text" }).halfWidth,
+			).toBeGreaterThan(short.halfWidth);
+			expect(
+				TextObjectFactory.calcDimensions({ text: "Text", fontSize: 32 })
+					.halfHeight,
+			).toBeGreaterThan(short.halfHeight);
+		});
+
+		it("measures a block text against the width it wraps in", () => {
+			const wrapped = TextObjectFactory.calcDimensions({
+				textLayout: "block",
+				width: 60,
+				text: "body copy long enough to wrap",
 			});
+			const label = TextObjectFactory.calcDimensions({
+				text: "body copy long enough to wrap",
+			});
+
+			expect(wrapped.halfWidth).toBe(30);
+			expect(wrapped.halfHeight).toBeGreaterThan(label.halfHeight);
 		});
 	});
 

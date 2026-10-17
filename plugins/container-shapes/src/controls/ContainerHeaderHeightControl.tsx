@@ -16,12 +16,12 @@ import type { ContainerState } from "../state/ContainerState";
  * Handle for dragging the container's header divider to change headerHeight.
  * Rendered as a horizontal pill at the divider midpoint.
  *
- * data-kind="control" + data-id=<objectId> + data-part={part}
- * (part comes from the selectionControls registration via SelectionControlsLayer).
+ * data-kind="control" + data-id=<objectId> + data-action={action}
+ * (action comes from the selectionControls registration via SelectionControlsLayer).
  */
 const ContainerHeaderHeightControlComponent: React.FC<
 	SelectionControlProps<ContainerState>
-> = ({ object, zoom, part }) => {
+> = ({ object, zoom, action }) => {
 	const { id, cx, cy, height, rotation, scaleX, scaleY } = object;
 
 	const headerHeight = calcContainerHeaderHeight(object);
@@ -44,7 +44,7 @@ const ContainerHeaderHeightControlComponent: React.FC<
 			rotation={rotation}
 			zoom={zoom}
 			objectId={id}
-			part={part}
+			action={action}
 			cursor={getResizeCursorForRotation(90, rotation, scaleX, scaleY)}
 		/>
 	);

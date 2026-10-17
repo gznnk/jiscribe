@@ -5,6 +5,8 @@ import { memo, useMemo } from "react";
 import { calcEdgeAnchorPoint } from "../../../../connectors/calcConnectPoint";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { useObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistryContext";
+import type { ObjectConnectionAnchorsRegistry } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
+import { useObjectConnectionAnchorsRegistry } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistryContext";
 import type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsRegistry,
@@ -17,11 +19,12 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import type { ConnectorDraft, DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { isConnectableObject } from "../../../utils/isConnectableObject";
+import { isObjectBeingMovedOrTransformed } from "../../utils/isObjectBeingMovedOrTransformed";
 import { ConnectionAnchors } from "../ConnectionAnchors";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
 
 type ConnectionAnchorsLayerProps = {
-	selectedIds: string[];
+	selectedIds: readonly string[];
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	/**
@@ -48,6 +51,15 @@ const EMPTY_ANCHOR_GEOMETRY: ResolvedAnchorGeometry = {
 	anchorRegion: null,
 	extraConnectPoints: null,
 };
+
+const resolveConnectionAnchors = (
+	obj: ObjectState | null,
+	zoom: number,
+	connectionAnchorsRegistry: ObjectConnectionAnchorsRegistry,
+) =>
+	obj && isTransformedFrame(obj)
+		? (connectionAnchorsRegistry.resolve(obj, zoom) ?? null)
+		: null;
 
 const resolveAnchorGeometry = (
 	obj: ObjectState | null,
@@ -89,6 +101,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	const outlineRegistry = useObjectOutlineRegistry();
 	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
 	const extraConnectPointsRegistry = useObjectExtraConnectPointsRegistry();
+	const connectionAnchorsRegistry = useObjectConnectionAnchorsRegistry();
 
 	// --- Source anchors (shown on a single-selected, connectable frame object) ---
 	const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
@@ -152,6 +165,20 @@ const ConnectionAnchorsLayerComponent: React.FC<
 		],
 	);
 
+	// Apart from the geometry because they alone also follow the zoom: a type
+	// whose controls are sized in world units answers per zoom, and folding them
+	// in would re-ask every calculator above on each step of a wheel zoom.
+	const selectedConnectionAnchors = useMemo(
+		() =>
+			resolveConnectionAnchors(selectedObject, zoom, connectionAnchorsRegistry),
+		[selectedObject, zoom, connectionAnchorsRegistry],
+	);
+	const targetConnectionAnchors = useMemo(
+		() =>
+			resolveConnectionAnchors(targetObject, zoom, connectionAnchorsRegistry),
+		[targetObject, zoom, connectionAnchorsRegistry],
+	);
+
 	// Do not render anchors while text editing
 	if (isTextEditing) {
 		return null;
@@ -160,10 +187,8 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	// Hidden while the selection is moved or transformed: the dots would just ride along
 	// the geometry being changed. A connection drag ("other") keeps them, since the anchor
 	// being dragged from is one of them.
-	const isShapeBeingMovedOrTransformed =
-		activeDragKind === "move" || activeDragKind === "transform";
 	const showSourceAnchors =
-		!isShapeBeingMovedOrTransformed &&
+		!isObjectBeingMovedOrTransformed(activeDragKind) &&
 		selectedObject != null &&
 		isConnectableObject(selectedObject, registries.objectMapper) &&
 		isTransformedFrame(selectedObject);
@@ -202,6 +227,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 					outline={selectedGeometry.outline}
 					anchorRegion={selectedGeometry.anchorRegion}
 					extraConnectPoints={selectedGeometry.extraConnectPoints}
+					connectionAnchors={selectedConnectionAnchors}
 					zoom={zoom}
 				/>
 			)}
@@ -211,6 +237,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 					outline={targetGeometry.outline}
 					anchorRegion={targetGeometry.anchorRegion}
 					extraConnectPoints={targetGeometry.extraConnectPoints}
+					connectionAnchors={targetConnectionAnchors}
 					activeAnchorId={activeAnchorId}
 					freeConnectPoint={freeConnectPoint}
 					zoom={zoom}

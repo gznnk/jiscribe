@@ -3,6 +3,31 @@ import type { FC } from "react";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { Mods } from "../../gestures/recognizer/GestureRecognizerTypes";
+import type { ObjectPartSelection } from "../../selection/CanvasSelection";
+
+/**
+ * The gesture kinds a selection control may ask for. `dragStart` is absent on
+ * purpose: the adapter spends it on its own UI reset, so a definition could only
+ * observe it, never decide anything with it.
+ */
+export type SelectionControlEventType =
+	"click" | "doubleClick" | "drag" | "dragEnd";
+
+/**
+ * Where a selection control is drawn relative to the core handles — the
+ * connector endpoints, the transform frame's handles and rotation, the
+ * connection anchors and the vertices. Presses go to whatever is drawn on top,
+ * so this is also which of the two takes a press where they overlap. Both
+ * layers are drawn above the selection outline (SelectionOverlay), and within a
+ * layer the control declared later in `selectionControls` takes the press.
+ *
+ * - `"belowHandles"`: for controls that may lie under a handle without being the
+ *   only way to do something there — a hit strip running the full length of an
+ *   edge, a heading laid outside the object.
+ * - `"aboveHandles"`: for a control that is the only way to drag what it drags
+ *   and may land on a handle's spot.
+ */
+export type SelectionControlLayer = "belowHandles" | "aboveHandles";
 
 /** Props passed to a selection control's handle renderer. */
 export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
@@ -11,33 +36,92 @@ export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
 	/** Zoom level for keeping handle sizes visually constant. */
 	zoom: number;
 	/**
-	 * The data-part value to render on the handles (`selection:<objectType>:<name>`),
-	 * alongside data-kind="control" and data-id={object.id}.
+	 * The data-action value to render on the handles (`selection:<objectType>:<name>`),
+	 * alongside data-kind="control" and data-id={object.id}. A handle that stands
+	 * for one of several grips appends `:<sub>` to it, read back as
+	 * `SelectionControlEvent.subAction`.
 	 */
-	part: string;
+	action: string;
+	/**
+	 * The part selection standing on this object, or null when none is. Already
+	 * checked against the type's `partKinds` (reconcileSelection). Every control
+	 * of the type sees the same value, `kind` included, so a control draws itself
+	 * selected only for the kind it owns.
+	 */
+	selectedPart: ObjectPartSelection | null;
 };
 
-/** The control's own object, as of the current frame and the gesture-start snapshot. */
+/**
+ * The control's own object, as of the current frame and the gesture-start
+ * snapshot, and the part selection standing on it.
+ */
 export type SelectionControlContext<TState extends ObjectState = ObjectState> =
 	{
 		/** The control's object in the current frame. */
 		object: TState;
-		/** The control's object captured at gesture start. */
+		/**
+		 * The control's object captured at gesture start. Equal to `object` for a
+		 * click, nothing having moved.
+		 */
 		startObject: TState;
+		/**
+		 * The part selection standing on this object in the current frame, or null
+		 * when none is or the object is no longer the sole selection — the value the
+		 * `Component` drew from as `SelectionControlProps.selectedPart`, so a
+		 * modifier click can grow or trim what is already picked. Its `kind` may be
+		 * any the type declares, not only the one this control writes.
+		 */
+		selectedPart: ObjectPartSelection | null;
 	};
 
-/** A drag/dragEnd event handed to a selection control, in SVG coordinates. */
-export type SelectionControlEvent = {
+/** What every selection-control event carries, whichever kind it is. */
+type SelectionControlEventBase = {
+	/** Current pointer position, in SVG coordinates. */
+	last: Point;
+	mods: Mods;
+	/** data-action sub-segment after `selection:<type>:<name>:`, or undefined. */
+	subAction?: string;
+};
+
+/** A drag in progress or just released, in SVG coordinates. */
+export type SelectionControlDragEvent = SelectionControlEventBase & {
 	type: "drag" | "dragEnd";
 	/** Pointer position at gesture start. */
 	start: Point;
-	/** Current pointer position. */
-	last: Point;
 	/** Movement from `start` to `last`. */
 	delta: Point;
-	mods: Mods;
-	/** data-part sub-segment after `selection:<type>:<name>:`, or undefined. */
-	subPart?: string;
+};
+
+/**
+ * A press that stayed put. It carries no `start` / `delta`: `last` is where the
+ * pointer was the whole time.
+ */
+export type SelectionControlClickEvent = SelectionControlEventBase & {
+	type: "click" | "doubleClick";
+};
+
+/** An event handed to a selection control, in SVG coordinates. */
+export type SelectionControlEvent =
+	SelectionControlDragEvent | SelectionControlClickEvent;
+
+/**
+ * What one selection-control event may change: the control's own object and the
+ * part selection standing on it, and nothing else.
+ *
+ * Deliberately not a state transformer (`state => state`): the reducer writes the
+ * objects map copy-on-write, one key per frame (controllers/utils/cowObjects.ts),
+ * and a plugin handed the whole state could break that contract from outside
+ * core.
+ */
+export type SelectionControlResult<TState extends ObjectState = ObjectState> = {
+	/** Full replacement of the control's own object. Omitted = unchanged. */
+	object?: TState;
+	/**
+	 * The part selection to install on the control's object. `null` clears it;
+	 * omitted leaves it alone. A kind the type does not declare in `partKinds`,
+	 * or an id its `has` refuses, is dropped (reconcileSelection).
+	 */
+	selection?: ObjectPartSelection | null;
 };
 
 /**
@@ -45,26 +129,42 @@ export type SelectionControlEvent = {
  * handler that interprets its events. Registered per object type via
  * `ObjectTypeDefinition.selectionControls`, rendered by `SelectionControlsLayer`
  * (single selection only), and routed by `ControlEventHandler` via the derived
- * data-part.
+ * data-action.
  */
 export type SelectionControlDefinition<
 	TState extends ObjectState = ObjectState,
 > = {
 	/**
 	 * Unique within the object type. Becomes the trailing segment of the control's
-	 * data-part (`selection:<objectType>:<name>`), so changing it shifts the DOM
-	 * contract (e2e selectors and any code matching on the part).
+	 * data-action (`selection:<objectType>:<name>`), so changing it shifts the DOM
+	 * contract (e2e selectors and any code matching on the action).
 	 */
 	name: string;
-	/** Renders the handles carrying the `part` prop as their data-part. */
+	/**
+	 * Which gesture kinds `handle` is called for; any other kind reaching the
+	 * control is dropped. Omitted = `DEFAULT_SELECTION_CONTROL_EVENTS` (drag and
+	 * dragEnd). Leaving dragEnd out does not leave a drag uncommitted (see
+	 * `handle`).
+	 */
+	events?: readonly SelectionControlEventType[];
+	/**
+	 * Whether the handles are drawn under or over the core handles, and so which
+	 * of the two takes a press where they overlap (see SelectionControlLayer).
+	 * Omitted = `"aboveHandles"`.
+	 */
+	layer?: SelectionControlLayer;
+	/** Renders the handles carrying the `action` prop as their data-action. */
 	Component: FC<SelectionControlProps<TState>>;
 	/**
-	 * Maps the gesture-start object plus cursor to the updated object (full
-	 * replacement), or null for no change. Called for drag/dragEnd only; the
-	 * adapter owns dragStart, snapshot guards, and the write-back.
+	 * Maps the gesture-start object plus cursor to what the event changed, or null
+	 * for no change. Called only for the kinds `events` names; the adapter owns
+	 * dragStart, the snapshot guards, the write-back and the commit. A click's
+	 * object is committed at once; a drag is committed once, at its end, whether
+	 * or not dragEnd is offered or returns an object, provided some frame wrote
+	 * the object.
 	 */
 	handle: (
 		context: SelectionControlContext<TState>,
 		event: SelectionControlEvent,
-	) => TState | null;
+	) => SelectionControlResult<TState> | null;
 };

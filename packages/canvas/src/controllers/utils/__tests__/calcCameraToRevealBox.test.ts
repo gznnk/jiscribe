@@ -80,26 +80,62 @@ describe("calcCameraToRevealBox", () => {
 		});
 	});
 
-	it("centres a box longer than the visible rect when asked to", () => {
-		// 600 wide against 400 shown: centred on x (0 - 200); 100 tall fits, so y
-		// takes the smallest pan.
+	it("centres a box longer than the visible rect when none of it is in view", () => {
+		// 600 wide against 400 shown and wholly left of it: centred on x (-1000 -
+		// 200); 100 tall fits, so y takes the smallest pan.
 		expect(
-			calcCameraToRevealBox(viewport, box(-300, 350, 300, 450), 0, "center"),
-		).toEqual({ minX: -200, minY: 150, zoom: 1 });
+			calcCameraToRevealBox(
+				viewport,
+				box(-1300, 350, -700, 450),
+				0,
+				"centerUnlessVisible",
+			),
+		).toEqual({ minX: -1200, minY: 150, zoom: 1 });
 	});
 
-	it("centres an oversized box even while the view lies inside it", () => {
+	it("leaves an axis alone while part of an oversized box is in view", () => {
+		// x: 600 wide, its right half on screen; y still takes the smallest pan.
 		expect(
-			calcCameraToRevealBox(viewport, box(-500, -100, 1300, 400), 0, "center"),
-		).toEqual({ minX: 200, minY: 0, zoom: 1 });
+			calcCameraToRevealBox(
+				viewport,
+				box(-300, 350, 300, 450),
+				0,
+				"centerUnlessVisible",
+			),
+		).toEqual({ minX: 0, minY: 150, zoom: 1 });
+		expect(
+			calcCameraToRevealBox(
+				viewport,
+				box(-500, -100, 1300, 400),
+				0,
+				"centerUnlessVisible",
+			),
+		).toBeNull();
+	});
+
+	it("does not count the padding as part of the box when judging it in view", () => {
+		// Ends 10 short of the view: only the 24 of padding would reach into it.
+		expect(
+			calcCameraToRevealBox(
+				viewport,
+				box(-610, 50, -10, 120),
+				24,
+				"centerUnlessVisible",
+			),
+		).toEqual({ minX: -510, minY: 0, zoom: 1 });
 	});
 
 	it("counts the padding when judging whether a box is oversized", () => {
 		// 380 wide fits the 400 shown, but not with 24 on each side: centred on
-		// 290 rather than panned the 104 that brings the padded right edge in.
+		// 690 rather than panned the 504 that brings the padded right edge in.
 		expect(
-			calcCameraToRevealBox(viewport, box(100, 50, 480, 120), 24, "center"),
-		).toEqual({ minX: 90, minY: 0, zoom: 1 });
+			calcCameraToRevealBox(
+				viewport,
+				box(500, 50, 880, 120),
+				24,
+				"centerUnlessVisible",
+			),
+		).toEqual({ minX: 490, minY: 0, zoom: 1 });
 	});
 
 	it("never changes the zoom", () => {

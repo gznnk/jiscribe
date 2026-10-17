@@ -15,6 +15,41 @@ covers that.
 
 ## [Unreleased]
 
+### Added
+
+- **Tools the shape plugins offer for their own shapes are registered beside the
+  rest.** Each takes `path` like every document tool, plus the `id` of the one
+  object it acts on, refuses an object of another type, and is taken back by
+  `undo`; one that only reads does not write the file back.
+- **Seven tools for tables.** `table_read` lists a table's
+  extent, track sizes and cells; `table_insert_tracks` / `table_delete_tracks`
+  add and remove rows or columns; `table_fill_cells` writes a block of text from
+  one cell (`grow: true` appends the rows and columns it needs);
+  `table_clear_cells` empties a range; `table_set_track_sizes` sets column widths
+  and row heights; and `table_set_cell_style` sets a fill and typography over a
+  range. A refused call says why and what the table holds, and leaves the file
+  as it was.
+- **`record_set_compartments` for UML records, 77 tools in all.** It adds,
+  replaces, empties or removes a record's stereotype band and its attribute and
+  operation compartments, and then fits the record's height to them, so no
+  `resize_object` has to follow. A call that would change nothing is refused.
+- **`diagnose_canvas` reports a record too short for its rows**, which it used
+  to call valid while the bottom rows were drawn past the box, naming the
+  shortfall and the tools that fix it.
+
+### Fixed
+
+- **A headless Chromium that dies as it starts is reported at once, with what
+  it said.** `open_canvas` with `headless: true` read a browser's death on a
+  signal (how a Chromium that cannot set up its sandbox goes down) as nothing
+  at all, so it waited the full twenty seconds for a page that was never
+  coming, tried no other Chromium, and then said only that the page never
+  connected back — with the browser's own stderr thrown away. Now a browser
+  gone within the launch window drops to the next candidate whether it left
+  with a code or on a signal, and the `error:` names the signal and carries the
+  first lines the browser wrote, minus its stack trace (`No usable sandbox!`
+  arrives as such). (#49)
+
 ## [0.11.0] - 2026-09-29
 
 ### Security

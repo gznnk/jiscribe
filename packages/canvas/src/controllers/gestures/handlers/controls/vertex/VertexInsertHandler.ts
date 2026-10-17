@@ -5,6 +5,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -20,8 +21,8 @@ import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 /**
  * Handles vertex-insert control operations (adding a vertex to a segment).
  *
- * Target format: data-id=<objectId>, data-part="vertex-insert:<segmentIndex>"
- * Example: data-part="vertex-insert:0" (the segment between points[0] and points[1])
+ * Target format: data-id=<objectId>, data-action="vertex-insert:<segmentIndex>"
+ * Example: data-action="vertex-insert:0" (the segment between points[0] and points[1])
  *
  * Behavior:
  * - dragStart: add a new vertex to the specified segment
@@ -34,28 +35,28 @@ export class VertexInsertHandler extends ControlStrategy {
 			return false;
 		}
 
-		const targetPart = event.targetPart;
-		if (!targetPart) {
+		const targetAction = event.targetAction;
+		if (!targetAction) {
 			return false;
 		}
 
 		// Check whether it is a vertex-insert
-		return targetPart.startsWith("vertex-insert:");
+		return targetAction.startsWith("vertex-insert:");
 	}
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// targetId = objectId, targetPart = "vertex-insert:<segmentIndex>"
+		// targetId = objectId, targetAction = "vertex-insert:<segmentIndex>"
 		const objectId = event.targetId;
-		const targetPart = event.targetPart;
-		if (!objectId || !targetPart) {
+		const targetAction = event.targetAction;
+		if (!objectId || !targetAction) {
 			return state;
 		}
 
 		const segmentIndex = parseInt(
-			targetPart.slice("vertex-insert:".length),
+			targetAction.slice("vertex-insert:".length),
 			10,
 		);
 
@@ -115,7 +116,9 @@ export class VertexInsertHandler extends ControlStrategy {
 		const nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
-			selectedVertex: null,
+			// An insertion renumbers the vertices after it, so a picked one is dropped
+			// rather than left addressing whoever took the number over.
+			selection: { ...state.selection, part: null },
 			edgeScrollEnabled: true,
 		};
 
@@ -232,19 +235,17 @@ export class VertexInsertHandler extends ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state.
-		// handleDrag never mutates its argument, so the state can be passed as is.
-		let nextState = this.handleDrag(state, event, objectId, segmentIndex);
-
-		// If it belongs to a group, update the group's bounds
-		const updatedObject = nextState.objects[objectId];
-		if (updatedObject?.parentId) {
-			nextState = updateGroupBoundsFromRoot(nextState, updatedObject.parentId);
-		}
-
-		return {
-			...nextState,
-			edgeScrollEnabled: false,
-		};
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
+			event,
+			objectId,
+			segmentIndex,
+		);
+		const committedState = commitEditIfChanged(closingState, draggedState);
+		const parentId = committedState.objects[objectId]?.parentId;
+		return parentId
+			? updateGroupBoundsFromRoot(committedState, parentId)
+			: committedState;
 	}
 }

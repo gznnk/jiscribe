@@ -1,4 +1,4 @@
-import { isTextVerticalBasis } from "@jiscribe/doc";
+import { isSingleBodyText, isTextVerticalBasis } from "@jiscribe/doc";
 import {
 	applyTextVerticalBasis,
 	BODY_TEXT_SLOT_ID,
@@ -59,8 +59,8 @@ export type ContentBoxResolution =
 
 /**
  * Where a shape's text is actually laid out: the box its `textVerticalBasis`
- * names — the region its type declares (`ObjectDocDefinition.textRegion`, the
- * same calculator the canvas draws and edits in), or the shape's whole height
+ * names — the region its type declares for the body (`ObjectDocDefinition.textRegion`
+ * asked for `body`), or the shape's whole height
  * with that region's width ({@link applyTextVerticalBasis}) — minus the padding
  * every text box has ({@link calcTextContentBox}). A `region`'s rectangle is the
  * width to wrap at and the height to fit into — the pair
@@ -71,7 +71,7 @@ export type ContentBoxResolution =
  * region is the whole box resolves to `{ x: -width / 2 + 6, y: -height / 2 + 2, … }`.
  *
  * @param shape - The object to measure: its `type`, its `width` / `height`, its `textVerticalBasis` if it sets one, and any field its type's region reads (see {@link ContentBoxShape})
- * @returns `{ kind: "region", rect, declaredRegion }` for a type whose box holds its text, `{ kind: "outside" }` for one whose box does not (a label drawn outside the outline, bands sized from their own text, no text at all, or a shipped type that declares no region), and `{ kind: "unknown" }` for a type name outside the shipped set
+ * @returns `{ kind: "region", rect, declaredRegion }` for a type whose box holds its one body, `{ kind: "outside" }` for one whose box does not (a label drawn outside the outline, a `"slots"` type whose text is not one body, no text at all, or a shipped type that declares no region), and `{ kind: "unknown" }` for a type name outside the shipped set
  */
 export const resolveContentBox = <TShape extends ContentBoxShape>(
 	shape: TShape,
@@ -79,6 +79,11 @@ export const resolveContentBox = <TShape extends ContentBoxShape>(
 	const definition = standardObjectDocDefinitions.get(shape.type);
 	if (definition === undefined) {
 		return { kind: "unknown" };
+	}
+	// The box asked about is the one body's: a type whose text is keyed slots has
+	// no single body to place, whatever its region declares for a slot.
+	if (!isSingleBodyText(definition.features.text)) {
+		return { kind: "outside" };
 	}
 	const region = definition.textRegion?.(shape, BODY_TEXT_SLOT_ID) ?? null;
 	if (region === null) {

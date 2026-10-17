@@ -2,22 +2,40 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import type { CanvasDoc, ObjectDocDefinition } from "@jiscribe/doc";
+import { isMissingBounds } from "@jiscribe/doc";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
 import { validateDoc } from "../validateDoc";
 
-const readFixture = (name: string): CanvasDoc => {
-	const path = fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
-	const result = validateDoc(readFileSync(path, "utf8"));
+/**
+ * Parse a document written out here, failing the test when it does not parse: the
+ * checks read a parsed doc, and a hand-built one would skip the very validation
+ * that decides what reaches them.
+ *
+ * @param source - The document, as its file text or as the object it parses to
+ * @param label - Named in the failure so a broken document is identified
+ */
+const parseDoc = (source: string | object, label: string): CanvasDoc => {
+	const text = typeof source === "string" ? source : JSON.stringify(source);
+	const result = validateDoc(text);
 	if (result.doc === undefined) {
 		throw new Error(
-			`${name} does not parse: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
+			`${label} does not parse: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
 		);
 	}
 	return result.doc;
 };
+
+const readFixture = (name: string): CanvasDoc =>
+	parseDoc(
+		readFileSync(
+			fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)),
+			"utf8",
+		),
+		name,
+	);
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -277,5 +295,131 @@ describe("diagnoseDoc", () => {
 		const diagnostics = diagnoseDoc(readFixture("overflowing.jis.json"));
 		expect(diagnostics.every((one) => one.severity === "warning")).toBe(true);
 		expect(diagnostics[0].message).toMatch(/rect declares no text region/);
+	});
+
+	describe("a point-geometry type that declares no box", () => {
+		/** A document holding one text, the shipped type whose doc stores no size. */
+		const textDoc = (): CanvasDoc =>
+			parseDoc(
+				{
+					version: 1,
+					root: [{ id: "label", type: "text", x: 0, y: 0, text: "hi" }],
+				},
+				"the one-text doc",
+			);
+
+		it("is warned about rather than passed over", () => {
+			// Unreachable with the shipped set (see the case below), so the gap is
+			// staged here — which is what the warning is a guard against.
+			const text = standardObjectDocDefinitions.get(
+				"text",
+			) as ObjectDocDefinition;
+			vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation(
+				(type) =>
+					type === "text" ? { ...text, bounds: undefined } : undefined,
+			);
+
+			const diagnostics = diagnoseDoc(textDoc());
+
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0]).toMatchObject({
+				severity: "warning",
+				objectId: "label",
+			});
+			expect(diagnostics[0].message).toMatch(/text stores no size/);
+		});
+
+		it("is not in the shipped set: every point type declares its own box", () => {
+			const undeclared = [...standardObjectDocDefinitions]
+				.filter(([, definition]) => isMissingBounds(definition))
+				.map(([type]) => type);
+
+			expect(undeclared).toEqual([]);
+			expect(diagnoseDoc(textDoc())).toEqual([]);
+		});
+	});
+
+	it("reports what any type's declared overflow check returns, as errors on the object", () => {
+		// No shipped type but the record declares one, so the check is staged on a
+		// type that otherwise has nothing to report.
+		const rect = standardObjectDocDefinitions.get(
+			"rect",
+		) as ObjectDocDefinition;
+		const diagnoseOverflow = vi.fn(() => ["first overflow", "second overflow"]);
+		vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation((type) =>
+			type === "rect" ? { ...rect, diagnoseOverflow } : undefined,
+		);
+
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [{ id: "box", type: "rect", x: 0, y: 0, width: 80, height: 40 }],
+			},
+			"the one-rect doc",
+		);
+		expect(diagnoseDoc(doc)).toEqual([
+			{ severity: "error", objectId: "box", message: "first overflow" },
+			{ severity: "error", objectId: "box", message: "second overflow" },
+		]);
+		expect(diagnoseOverflow).toHaveBeenCalledWith(
+			expect.objectContaining({ id: "box", width: 80, height: 40 }),
+		);
+	});
+
+	describe("a record too short for its compartments", () => {
+		/**
+		 * A record titled "User" over the given attribute rows. A band is one 14px
+		 * line box (21px) plus 7px of padding, and a compartment its rows' line
+		 * boxes — at least one — plus 4px, so three rows need 28 + 67 = 95px.
+		 */
+		const recordDoc = (height: number, attributes: string[]): CanvasDoc =>
+			parseDoc(
+				{
+					version: 1,
+					root: [
+						{
+							id: "user",
+							type: "record",
+							x: 0,
+							y: 0,
+							width: 180,
+							height,
+							text: {
+								name: { text: "User" },
+								attributes: { text: attributes },
+							},
+						},
+					],
+				},
+				"record",
+			);
+		const threeRows = ["- id: string", "- name: string", "- email: string"];
+
+		it("reports nothing for a record exactly as tall as its rows need", () => {
+			expect(diagnoseDoc(recordDoc(95, threeRows))).toEqual([]);
+		});
+
+		it("reports the shortfall and the two ways to fix it", () => {
+			const diagnostics = diagnoseDoc(recordDoc(60, threeRows));
+			expect(diagnostics).toEqual([
+				{
+					severity: "error",
+					objectId: "user",
+					message:
+						"rows overflow record 180x60: its compartments need 95px but the box is 60px tall, 35px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or resize_object it to height 95",
+				},
+			]);
+		});
+
+		it("counts an empty compartment as one row's worth", () => {
+			expect(diagnoseDoc(recordDoc(53, []))).toEqual([]);
+			expect(diagnoseDoc(recordDoc(40, []))).toMatchObject([
+				{ severity: "error", objectId: "user" },
+			]);
+		});
+
+		it("passes over a record taller than its rows need", () => {
+			expect(diagnoseDoc(recordDoc(300, threeRows))).toEqual([]);
+		});
 	});
 });

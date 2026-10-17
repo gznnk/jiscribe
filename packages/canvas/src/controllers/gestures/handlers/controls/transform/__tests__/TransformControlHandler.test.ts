@@ -5,6 +5,7 @@ import type { GroupState } from "../../../../../../states/objects/primitives/gro
 import { MIN_GROUP_DIMENSION } from "../../../../../../states/utils/groupDimensions";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { TransformControlHandler } from "../TransformControlHandler";
 
@@ -68,7 +69,7 @@ const makeGroupResizeState = (): CanvasControllerState => {
 		registries,
 		objects,
 		rootIds: ["g"],
-		selectedIds: ["g"],
+		selection: selectionOf(["g"]),
 		viewport,
 		multiSelectGroup: null,
 		snapFeedback: { x: [], y: [] },
@@ -78,7 +79,7 @@ const makeGroupResizeState = (): CanvasControllerState => {
 				keyPoints: {},
 				bboxes: {},
 				snapCandidates: { x: [], y: [] },
-				selectedIds: ["g"],
+				selection: selectionOf(["g"]),
 				selectedIdsWithDescendants: new Set(["g", "a"]),
 				multiSelectGroup: null,
 				viewport,
@@ -98,14 +99,14 @@ const makeDragState = (): CanvasControllerState => {
 		registries,
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
-		selectedIds: ["rect-1"],
+		selection: selectionOf(["rect-1"]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "rect-1": rect },
 				keyPoints: {},
 				snapCandidates: null,
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				selectedIdsWithDescendants: new Set(["rect-1"]),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -121,7 +122,7 @@ const makeDragEvent = (x: number, y: number): CanvasEvent =>
 		type: "drag",
 		targetKind: "control",
 		targetId: "transform",
-		targetPart: "resize:bottomRight",
+		targetAction: "resize:bottomRight",
 		button: 0,
 		mods: { ctrl: true, shift: false, alt: false, meta: false },
 		last: { x, y },
@@ -132,9 +133,19 @@ const makeDragEndEvent = (last: { x: number; y: number }): CanvasEvent =>
 		type: "dragEnd",
 		targetKind: "control",
 		targetId: "transform",
-		targetPart: "resize:bottomRight",
+		targetAction: "resize:bottomRight",
 		button: 0,
 		last,
+		mods: { shift: false, alt: false, ctrl: false, meta: false },
+	}) as unknown as CanvasEvent;
+
+const makeDragStartEvent = (targetAction: string): CanvasEvent =>
+	({
+		type: "dragStart",
+		targetKind: "control",
+		targetId: "transform",
+		targetAction,
+		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
 
@@ -200,6 +211,34 @@ describe("TransformControlHandler", () => {
 		});
 	});
 
+	describe("handleDragStart", () => {
+		it("names the axes a bottom-edge resize writes on the drag", () => {
+			const handler = new TransformControlHandler();
+
+			const next = handler.handle(
+				makeDragState(),
+				makeDragStartEvent("resize:bottomCenter"),
+				registries,
+			);
+
+			expect(next.activeDrag?.kind).toBe("transform");
+			expect(next.activeDrag?.resize?.axes).toEqual({ height: "start" });
+		});
+
+		it("names no axes on the rotation knob", () => {
+			const handler = new TransformControlHandler();
+
+			const next = handler.handle(
+				makeDragState(),
+				makeDragStartEvent("rotation"),
+				registries,
+			);
+
+			expect(next.activeDrag?.kind).toBe("transform");
+			expect(next.activeDrag).not.toHaveProperty("resize");
+		});
+	});
+
 	describe("handleDragEnd", () => {
 		it("computes the final state from a deep-frozen input without mutating it", () => {
 			const handler = new TransformControlHandler();
@@ -227,6 +266,33 @@ describe("TransformControlHandler", () => {
 				width: 100,
 				height: 100,
 			});
+		});
+
+		it("commits a resize once", () => {
+			const handler = new TransformControlHandler();
+			const state = { ...makeDragState(), commitVersion: 3 };
+
+			const next = handler.handle(
+				state,
+				makeDragEndEvent({ x: 150, y: 130 }),
+				registries,
+			);
+
+			expect(next.commitVersion).toBe(4);
+		});
+
+		it("commits nothing when there is no drag to apply", () => {
+			const handler = new TransformControlHandler();
+			const state = { ...makeDragState(), activeDrag: null, commitVersion: 3 };
+
+			const next = handler.handle(
+				state,
+				makeDragEndEvent({ x: 150, y: 130 }),
+				registries,
+			);
+
+			expect(next.objects).toBe(state.objects);
+			expect(next.commitVersion).toBe(3);
 		});
 	});
 });

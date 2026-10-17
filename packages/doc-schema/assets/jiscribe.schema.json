@@ -237,6 +237,9 @@
 					"$ref": "#/$defs/StickyDoc"
 				},
 				{
+					"$ref": "#/$defs/TableDoc"
+				},
+				{
 					"$ref": "#/$defs/SvgDoc"
 				},
 				{
@@ -411,6 +414,9 @@
 					"$ref": "#/$defs/StickyDoc"
 				},
 				{
+					"$ref": "#/$defs/TableDoc"
+				},
+				{
 					"$ref": "#/$defs/SvgDoc"
 				},
 				{
@@ -505,9 +511,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -620,9 +623,6 @@
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -718,9 +718,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -732,6 +729,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -810,9 +810,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -832,7 +829,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -896,7 +893,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -912,7 +909,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -928,7 +925,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -960,7 +957,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -976,7 +973,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -1071,9 +1068,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1085,6 +1079,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1172,9 +1169,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1186,6 +1180,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1242,7 +1239,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -1258,7 +1255,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -1401,9 +1398,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1415,6 +1409,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1587,9 +1584,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1601,6 +1595,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -1696,9 +1693,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1800,9 +1794,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1903,9 +1894,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2000,9 +1988,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2022,7 +2007,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2086,7 +2071,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2102,7 +2087,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2134,7 +2119,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2198,7 +2183,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeWithTextBasisDoc"
 				}
 			],
 			"properties": {
@@ -2634,9 +2619,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2648,6 +2630,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -2739,9 +2724,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2830,9 +2812,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -2967,9 +2946,6 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3221,9 +3197,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3235,6 +3208,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},
@@ -3326,8 +3302,189 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"TableDoc": {
+			"description": "Table: a grid of cells. `x` / `y` are the top-left of the grid; its width is the column widths summed and its height the resolved row heights summed, so neither is stored and a table grows to the right and down. A row's \"height\" is a lower bound: the row is drawn as tall as its tallest cell's text needs, never clipping it. \"cells\" is dense — exactly one row per entry of \"rows\", one cell per entry of \"columns\" — and a cell carrying nothing but text may be written as that text alone (\"中川\" for { \"text\": \"中川\" }). The table has a shape-wide \"fill\" (its background, theme-following by default), and each cell may carry its own \"fill\" painted over it. Typography stays per cell, so there are no shape-wide textAlign/fontSize/... fields here.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "columns", "rows", "cells"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"table\".",
+					"type": "string",
+					"const": "table"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the grid, as it is drawn (rotation and flips applied).",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the grid, as it is drawn (rotation and flips applied).",
+					"type": "number"
+				},
+				"columns": {
+					"description": "The columns, left to right. A column stores the one measurement nothing derives: its width. Default: two 120px columns",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["width"],
+						"properties": {
+							"width": {
+								"description": "Column width in px, at least 24 — below that a cell has no room left to wrap text in.",
+								"type": "number",
+								"minimum": 24
+							}
+						}
+					}
+				},
+				"rows": {
+					"description": "The rows, top to bottom. Write {} for a row that is exactly as tall as what it holds. Default: two rows with no stored height",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"properties": {
+							"height": {
+								"description": "Lowest the row may be drawn, in px. Omitted lets the row be exactly as tall as its tallest cell's text needs; a row whose text outgrows this value is drawn taller, never clipped.",
+								"type": "number",
+								"minimum": 0
+							}
+						}
+					}
+				},
+				"cells": {
+					"description": "The cells, \"[row][column]\": exactly one array per entry of \"rows\", exactly one cell per entry of \"columns\". A cell is either the whole object or, when nothing about it is styled, its text alone.",
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "array",
+						"minItems": 1,
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/TextRun"
+									},
+									"minItems": 1
+								},
+								{
+									"type": "object",
+									"additionalProperties": false,
+									"required": ["text"],
+									"properties": {
+										"text": {
+											"description": "The cell text. Write a plain string unless part of it has to be drawn differently; the array of runs is only for that, and the runs are concatenated in order to form the text. Default: \"\"",
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/TextRun"
+													},
+													"minItems": 1
+												}
+											],
+											"default": ""
+										},
+										"fill": {
+											"description": "Cell background: any CSS color, or \"auto\" to follow the theme. Painted over the table's own \"fill\"; omitted, the cell paints nothing of its own and the table's \"fill\" shows through.",
+											"type": "string"
+										},
+										"textAlign": {
+											"description": "Horizontal text alignment. Default: \"center\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/TextAlign"
+												}
+											],
+											"default": "center"
+										},
+										"verticalAlign": {
+											"description": "Vertical text alignment. Default: \"middle\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/VerticalAlign"
+												}
+											],
+											"default": "middle"
+										},
+										"fontColor": {
+											"$ref": "#/$defs/TextStyle/properties/fontColor"
+										},
+										"fontSize": {
+											"description": "Font size in pixels. Default: 14 (a row grows to the height its tallest cell needs at this size)",
+											"type": "number",
+											"minimum": 1,
+											"default": 14
+										},
+										"fontFamily": {
+											"$ref": "#/$defs/TextStyle/properties/fontFamily"
+										},
+										"fontWeight": {
+											"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"normal\" (a header row is bold only where you say so)",
+											"type": "string",
+											"default": "normal"
+										},
+										"fontStyle": {
+											"$ref": "#/$defs/TextStyle/properties/fontStyle"
+										},
+										"textDecoration": {
+											"$ref": "#/$defs/TextStyle/properties/textDecoration"
+										}
+									}
+								}
+							]
+						}
+					}
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
+				"fill": {
+					"description": "Table background: any CSS color, or \"auto\" to follow the theme surface. A cell's own \"fill\" paints over it. Default: \"auto\" (unlike most shapes, which default to transparent)",
+					"type": "string",
+					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3626,7 +3783,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / awsIcon / awsGroup / container / sticky / image (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / awsIcon / awsGroup / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,
@@ -4006,9 +4163,6 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
-				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -4102,8 +4256,98 @@
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
-				"textVerticalBasis": {
-					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"AutoHeightBoxShapeWithTextBasisDoc": {
+			"description": "Shared structure of the plain box shapes that size themselves from their text when no height is given and measure their text against the region their own outline leaves clear: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"type": "string"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes.",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
+				"fill": {
+					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -4116,6 +4360,9 @@
 				},
 				"lockAspectRatio": {
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
 				}
 			}
 		},

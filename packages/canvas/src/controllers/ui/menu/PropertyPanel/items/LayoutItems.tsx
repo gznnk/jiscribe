@@ -2,18 +2,16 @@ import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { isSelectionAutoHeight } from "../../../../commands/shape/ToggleAutoHeightCommand";
-import {
-	commandPart,
-	setPart,
-} from "../../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { resolveSelectedLockAspectRatio } from "../../../../style/walk/getSelectedLockAspectRatio";
+import { useSelectionStyle } from "../../SelectionStyleReaderContext";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
 import { PropertyPanelFieldGrid } from "../PropertyPanelStyled";
 import { getSelectedFrameValues } from "../utils/getSelectedFrameValues";
-import { getSelectedLockAspectRatio } from "../utils/getSelectedLockAspectRatio";
 
 /** A box may not be driven to zero, the floor the transform drag applies too. */
 const MIN_DIMENSION = 1;
@@ -131,17 +129,24 @@ const RotationItemComponent: React.FC<BuiltinItemProps> = ({
 
 export const RotationItem = memo(RotationItemComponent);
 
-/** Whether a resize keeps the frame's proportions. */
+/**
+ * Whether a resize keeps the frame's proportions: `getSelectedLockAspectRatio`,
+ * the members' side read through the panel's reader rather than a walk of its own.
+ */
 const LockAspectRatioItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const isLocked = getSelectedLockAspectRatio(canvasState);
+	const membersLockAspectRatio = useSelectionStyle("lockAspectRatio");
+	const isLocked = resolveSelectedLockAspectRatio(
+		canvasState.multiSelectGroup,
+		() => membersLockAspectRatio,
+	);
 
 	return (
 		<PropertyCheckbox
 			isOn={isLocked}
-			part={setPart("lockAspectRatio", isLocked ? "false" : "true")}
+			action={commandAction("toggleLockAspectRatio")}
 			label={messages.menuLockAspectRatio}
 			title={
 				isLocked ? messages.menuUnlockAspectRatio : messages.menuLockAspectRatio
@@ -168,7 +173,7 @@ const AutoHeightItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyCheckbox
 			isOn={isAuto}
-			part={commandPart("toggleAutoHeight")}
+			action={commandAction("toggleAutoHeight")}
 			label={messages.menuAutoHeight}
 			title={isAuto ? messages.menuFixedHeight : messages.menuAutoHeight}
 		/>

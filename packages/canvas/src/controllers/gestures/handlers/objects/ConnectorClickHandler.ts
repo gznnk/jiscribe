@@ -1,5 +1,6 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { selectConnectorAlone } from "../../../selection/writers/selectConnectorAlone";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -10,15 +11,15 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
 /**
  * Handles click events on connectors.
- * Connectors are selected independently from objects (selectedConnectorId vs selectedIds).
- * Only single selection is supported; selecting a connector clears selectedIds, and vice versa.
+ * A connector is selected on its own: selecting one replaces whatever was
+ * selected, and selecting a shape replaces it in turn.
  *
  * Label editing (label.text) starts on a double click, with the edit target
  * depending on whether a label exists:
  * - No committed label: a double click anywhere on the line starts editing
  *   (there is no label box to aim at yet), and the label being created takes the
  *   clicked point as its placement (carried in textEditState until committed).
- * - Committed label: only a double click on the label box (targetPart "label")
+ * - Committed label: only a double click on the label box (targetAction "label")
  *   starts editing; a double click on the bare line just selects.
  *
  * While editing, the static label box is not rendered and the editor overlay
@@ -59,7 +60,7 @@ export const ConnectorClickHandler: GestureHandler = {
 				nextState,
 				connectorId,
 				event,
-				event.targetPart === "label",
+				event.targetAction === "label",
 				registries,
 			);
 		}
@@ -70,23 +71,8 @@ export const ConnectorClickHandler: GestureHandler = {
 		}
 
 		// A click selects the connector (clearing shape selection to enforce exclusivity)
-		// No change if the same connector is already selected
-		if (
-			event.type === "click" &&
-			connectorId &&
-			nextState.selectedConnectorId !== connectorId
-		) {
-			nextState = {
-				...nextState,
-				selectedConnectorId: connectorId,
-				selectedIds: [],
-				// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-				selectedVertex: null,
-				multiSelectGroup: null,
-				// Close the submenu / category flyout on selection change
-				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
-			};
+		if (event.type === "click" && connectorId) {
+			nextState = selectConnectorAlone(nextState, connectorId);
 		}
 
 		return nextState;

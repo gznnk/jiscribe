@@ -41,7 +41,7 @@ export function handleRotationDrag(
 	// Determine the target frame (multiSelectGroup for multi-selection, the selected object for single selection)
 	let startFrame: TransformedFrame | null = null;
 	let selectedId: string | null = null;
-	const isMultiSelect = state.selectedIds.length > 1;
+	const isMultiSelect = state.selection.objectIds.length > 1;
 
 	if (isMultiSelect) {
 		// For multi-selection, use multiSelectGroup
@@ -49,9 +49,9 @@ export function handleRotationDrag(
 		if (multiSelectGroup && isTransformedFrame(multiSelectGroup)) {
 			startFrame = multiSelectGroup;
 		}
-	} else if (state.selectedIds.length === 1) {
+	} else if (state.selection.objectIds.length === 1) {
 		// For single selection
-		selectedId = state.selectedIds[0];
+		selectedId = state.selection.objectIds[0];
 		const startObject = dragStartSnapshot.objects[selectedId];
 		if (startObject && isTransformedFrame(startObject)) {
 			startFrame = startObject;

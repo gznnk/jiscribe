@@ -18,7 +18,29 @@ engine's registries are the same ones the built-in types go through.
 
 The type is `CanvasPlugin` (`packages/canvas/src/plugin/CanvasPlugin.ts`), and its
 substance is `objects`: keyed by `ObjectType`, with the type's definition as the
-value.
+value. `commands` is the second contribution: an array of `Command`, registered
+after the built-in set in plugin declaration order and narrowed by the same
+`config.commands` list.
+
+## Strings: a declaration carries its own wording
+
+A `Command`'s `label` is either a plain string or a `LocaleMessages<string>`, a
+dictionary keyed by locale tag with `en` required. A contributed command names
+itself in every language it ships, on the declaration and nowhere else;
+`Stencil.label` and a stencil category's label are declared the same way. The
+canvas resolves it for its `locale` — exact → language subtag (`"ja-JP"` →
+`"ja"`) → `"en"`, per declaration, so a command shipping no `ja` falls back to
+its own English rather than dragging the canvas back with it.
+
+The host still has the last word: `messages.commandLabels[id]` outranks any
+command's own label, core's and a plugin's alike (`resolveCommandLabel`).
+
+What a plugin draws itself — its menu titles, its field labels — never reaches
+the canvas at all. The plugin owns a `LocaleMessages` of its own and resolves it
+with `useCanvasLocale` + `resolveLocaleMessages`, so there is no shared
+namespace to collide in and no core key within reach.
+`plugins/container-shapes/src/messages/containerMessages.ts` is the worked
+example.
 
 A host wires it in through `initialConfig`:
 
@@ -56,12 +78,26 @@ as `CanvasPlugin`, with `ObjectDocDefinition` as the value of `objects`.
 headless half of a type: what the parse layer needs to know the type exists, validate
 its doc and create it from a doc (`features`, `validateDoc` and so on), plus the
 metadata the schema and AI-docs generator reads. That type is the authority on which
-fields exist. `ObjectTypeDefinition` adds the UI-layer contracts to it and takes over
-exactly one field, `textRegion`, with the renderer's calculator type — a doc
-declaration may answer "the box does not hold the text" with `null`, which a renderer
-has no use for. Everything else carries over, which is why a full `CanvasPlugin` is
-**structurally assignable** to `CanvasDocPlugin` — one `plugins` array feeds both
-`<Canvas>` and the parser.
+fields exist. `ObjectTypeDefinition` adds the UI-layer contracts to it and carries
+every doc field over untouched — `textRegion` included — which is why a full
+`CanvasPlugin` is **structurally assignable** to `CanvasDocPlugin`: one `plugins`
+array feeds both `<Canvas>` and the parser.
+
+The doc's `textRegion` is the headless answer (the overflow checks, the
+auto-height verdict) and may say "the box does not hold the text" with `null`, so
+it is not what the canvas draws with. A type places its text on the canvas through
+the `"textSlot"` part kind's `region` (`(state, slotId) => Rect`, one slot at a
+time) or `regions` (`(state) => Record<slotId, Rect>`, every slot in one call),
+built with `createTextSlotPartKindDefinition({ region })` /
+`createTextSlotPartKindDefinition({ regions })` and declared in `partKinds`;
+`createFrameObjectDefinition({ textRegion })` builds the former for you. The frame
+renderer asks the kind's `regions` once per render for every slot rather than once
+per slot, so a type whose one slot cannot be placed without laying out the rest
+(the table's cells, the record's compartments) lays itself out once. Both answer
+in local coordinates (origin at the shape center, top-left based), and `regions`
+must hold every key of `state.text`. Registration wraps whichever kind is
+registered so the whole box stands in where it declares neither and the object's
+`textVerticalBasis` goes on top; a kind declaring both is refused when built.
 
 The split exists so a consumer that only validates documents never loads React.
 The VSCode extension's diagnostics provider and the MCP server both parse
@@ -89,9 +125,19 @@ with no config gives the default configuration: every built-in type and nothing 
   enable/disable is a non-goal: a document can contain objects of a type that was
   just unregistered, and there is no coherent answer for what should happen to them.
 - **Merge order** is `presetDefinitions` → `plugins` in declaration order.
-- **A duplicate type throws at construction.** Not last-wins — an accidental
-  collision between two plugins fails loudly instead of silently changing which
-  shape renders. Deliberate replacement is expressed as removal plus addition.
+- **A duplicate type, or a duplicate command id, throws at construction.** Not
+  last-wins — an accidental collision between two plugins fails loudly instead of
+  silently changing which shape renders or which command a menu entry runs.
+  Deliberate replacement is expressed as removal plus addition.
+- **A shared key binding is resolved by `canExecute`, contributed commands
+  first.** Several commands may claim the same keystroke; it goes to the first one
+  that reports itself available, and to the browser when none does. Commands a
+  plugin contributes are asked before the built-ins, so a contributed command
+  takes a built-in key whenever its `canExecute` is true (the table's bare arrows
+  move the cell selection instead of nudging the table). A plugin must therefore
+  keep `canExecute` narrow to the context it owns. Among the built-ins, commands
+  sharing a binding must be available in mutually exclusive contexts — the sweep
+  in `initializeCommands.exclusivity.test.ts` holds them to it.
 - Adding plugins does not move the validation boundary: the parser remains the one
   place documents are checked, and everything past it assumes valid input
   ([Design Philosophy](./01-design-philosophy.md)).
@@ -108,6 +154,8 @@ package's `package.json` `exports`.
 @jiscribe/doc/unstable        tier 2, headless
 @jiscribe/canvas-sdk          the plugin-facing surface (re-exports unstable + kit)
 @jiscribe/canvas-sdk/doc      headless counterpart
+@jiscribe/canvas-sdk/tools    headless: the contract a plugin offers AI tools through
+                              (re-exports @jiscribe/ai-tools-sdk)
 ```
 
 The two headless entries are a package of their own. `@jiscribe/canvas` has no
@@ -203,7 +251,15 @@ load.
 
 **`menu`.** Optional, with three meanings: omitted derives the default menu from
 `features`; a declared array replaces it entirely; `[]` means no menu. The
-derivation rules are defined by `createDefaultMenu` and its unit tests.
+derivation rules are defined by `createDefaultMenu` and its unit tests. An item a
+plugin draws itself is `{ type: "custom"; id; component }` (`CustomItem`), handed
+`ObjectMenuItemProps`; it is dropped while a picked part narrows the menu, unless
+it names that kind in `pickedPartKinds` — the same rule as the sidebar's custom
+rows below. A button of its own takes the built-in buttons' look from
+`ObjectMenuButton` inside `ObjectMenuItemPositioner`; one that runs a command is
+named by `resolveCommandLabel`, with the key from `getPlatformShortcuts` /
+`formatShortcut`, and runs it through `commandAction` (the table's Insert
+section).
 
 **`propertyPanel`.** The properties sidebar's sections, with the same three
 meanings: omitted derives them from `features`; a declared array replaces them
@@ -218,7 +274,7 @@ built-in row kinds and, where none of them fits, rows of the type's own.
 `{ type: "custom"; id; component }` (`PropertyPanelCustomItem`) among the built-in
 ones, the same shape the ObjectMenu's custom item has. What the component receives
 is `PropertyPanelItemProps` and nothing else: the slice of the selection, plus
-`onPropertyUpdate` for a style property and `onTransformUpdate` for a number of the
+`onStyleIntent` for a style and `onTransformUpdate` for a number of the
 frame (both types live in
 `packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts`) —
 never the controller state the built-in rows read. What it may import is the
@@ -227,15 +283,34 @@ through `@jiscribe/canvas-sdk`): `PropertyRow` for the label column every row
 shares, input controls such as `PropertyNumberField` / `PropertyColorField` for the
 control beside it, and `PropertyCheckbox`, which is a row of its own (the box with
 its label to the right, from the section's left edge). The exports of
-`packages/canvas/src/unstable.ts` are the authority on what the kit holds. Two rules to know before writing one:
+`packages/canvas/src/unstable.ts` are the authority on what the kit holds. The
+value the row _states_ comes from the kit's one read API,
+`useSelectionStyle(name)`: it answers what the whole selection says about that
+property — over exactly the objects a write of the same name would reach — which
+is what lets a plugin row be mixed the way a built-in one is (see
+[Style System](./10-style-properties.md)). A row of a property its own type
+declared passes that type's table ahead of the kind
+(`useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")`), which types the answer from
+the declaration. Writing is the mirror of it: `onStyleIntent(intent, commit)`
+takes the edit stated rather than a name and a string, and a type's own kind is
+stated as `{ kind, value }` — the declared name, and the value either typed as
+the declaration holds it or left as the transport string. Two rules to know
+before writing one:
 
 - The `id` is what the multi-type merge matches the row by, so two types offering
   the same row must spell it the same way; a selection mixing types that spell it
   differently drops it, exactly as a built-in kind only one of them offers is
   dropped.
-- Custom rows are dropped while a text slot is selected, since a plugin row has
-  no way to say it is slot-aware — the same rule the ObjectMenu applies to its
-  custom items.
+- While a part is picked whose kind declares the style kinds it receives
+  (`styleIntentKinds`, under `partKinds` below) — a text slot, including the one a
+  shape's open text editor keeps picked — the sidebar keeps the built-in rows
+  raising only those kinds, and drops custom rows, which cannot say what they
+  edit. A custom row that applies to a pick names the picked kinds it stays
+  under in `pickedPartKinds`
+  (the table's Insert row: `row`, `column`, `textSlot`); its buttons run commands
+  the way the built-in Arrange section does, with `PropertyCommandGrid` /
+  `PropertyCommandButton`, `resolveCommandLabel` and `commandAction`. The
+  ObjectMenu narrows its items by the same rule.
 
 **`propertyPanel` section visibility.** A section may carry
 `isShown(selection)`, asked before it is drawn with the slice of the selection
@@ -244,38 +319,205 @@ the rows leave on their own, but the accordion heading would stay behind over an
 empty body. Core's own use is the connector's Label and Label border sections, offered
 only once the label has text. Omitted means always offered.
 
-`plugins/container-shapes` is the worked example: its `header-fill` row states
-`headerFill` through `onPropertyUpdate` from a `PropertyColorField`, sitting under
-the body color in the Fill section, and its `header-height` row states the
-`headerHeight` extra style property from a `PropertyNumberField` under the size in
-the Layout section; both take their wording from the plugin's own dictionary.
+`plugins/container-shapes` is the worked example: it declares both of its own
+styles as a table of its own (`src/style/containerStyleEntries.ts`), handed to
+`createFrameObjectDefinition` as `styleEntries`:
 
-**i18n.** A plugin owns its dictionary and resolves it through `useCanvasLocale` /
-`resolveLocaleMessages`. Plugin vocabulary is never added to the core message keys.
+```ts
+export const CONTAINER_STYLE_ENTRIES = {
+	headerFill: declaredFieldEntry("headerFill", "string"),
+	headerHeight: declaredFieldEntry("headerHeight", "number"),
+} satisfies DeclaredStyleTable<ContainerState>;
+```
+
+Every entry of a declared table states the fields it writes (`fields`, `[]`
+when it writes nothing the document stores), and one stating none is refused at
+registration; `declaredFieldEntry` states it for you.
+
+Its `header-fill` row states `headerFill` through `onStyleIntent` from a
+`PropertyColorField`, sitting under the body color in the Fill section, and its
+`header-height` row states `headerHeight` from a `PropertyNumberField` under the
+size in the Layout section; both state their current value through
+`useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)`, which types it from that declaration, and
+take their wording from the plugin's own dictionary.
+
+A declared kind replaces the one `features` derive, which is how a type changes
+where a core kind lands. `plugins/table-shape` declares `fill` again to route it
+by the pick: its own background with nothing picked, the `fill` of the cells the
+pick reaches otherwise (`resolveTextSlotIds`, the same answer the text entries ask —
+see `textSlotIds` under `partKinds` below):
+
+```ts
+const TABLE_STYLE_ENTRIES = {
+	fill: tableFillEntry,
+} satisfies DeclaredStyleTable<TableState>;
+```
+
+Which slots a text style reaches is not a table's to declare: the core text
+entries already follow the picked kind's `textSlotIds`, so the table declares no text
+kind of its own.
+
+**Commands.** A contributed command's `execute` is the whole of its transition,
+and that includes saying it edited the document: return the state through
+`commitEdit(state)` (from `@jiscribe/canvas/unstable`, so through
+`@jiscribe/canvas-sdk`). The reducer records a history entry and raises a save
+off the `commitVersion` it advances. The COMMAND path settles the ancestor group
+frames, the content-sized boxes and the part selection after `execute`, but never
+commits — a command that changes the document without `commitEdit` leaves
+nothing to undo and nothing saved. A command that only moves the selection
+returns its state as it is.
+
+**i18n.** A contributed command declares its own `label` per locale. Everything
+the plugin draws itself comes from a dictionary the plugin owns, resolved
+through `useCanvasLocale` / `resolveLocaleMessages`. Plugin vocabulary is never
+added to the core message keys.
 
 **`selectionControls`.** A plain declaration (`SelectionControlDefinition`: a
 `Component` that draws the handles, paired with a `handle` that interprets the
 gesture) — no base class. `handle` receives the object's own information (current frame plus the
-gesture-start snapshot) and the cursor, and nothing else; part derivation, snapshot
-guarding, copy-on-write write-back and edge-scroll release are handled by an
+gesture-start snapshot) and the cursor, and nothing else; deriving the
+`data-action` the handles carry (`selection:<objectType>:<name>`, handed to the
+`Component` as its `action` prop, with a `:<sub>` suffix read back as
+`SelectionControlEvent.subAction`), snapshot guarding, copy-on-write write-back and edge-scroll release are handled by an
 internal adapter.
+
+`handle` is called only for the event kinds listed in `events`, which defaults to
+drag / dragEnd (`DEFAULT_SELECTION_CONTROL_EVENTS`). Listing `"click"` /
+`"doubleClick"` delivers presses that never moved as well; those events carry no
+`start` / `delta`. It returns `{ object?, selection? }`: `object` replaces the
+control's own object (committed at once for a click; a drag is committed by core
+once, at dragEnd, whether or not `events` offers dragEnd or its `handle` returns
+an object there, as long as some drag frame wrote the object), and
+`selection` is the part selection on that object (`null` clears it, omitted
+leaves it). A `selection` whose `kind` the type does not declare in `partKinds`
+is dropped, and a click that returns only a selection is not an edit. The part
+selection standing on the object reaches the `Component` as `selectedPart`, so a
+handle can draw itself selected, and `handle` as `context.selectedPart`, so a
+modifier click (`event.mods`) can grow or trim the pick rather than replace it. The `Component` is not rendered while the
+object is being moved or resized through a transform handle (as the connection
+anchors are not); a control's own drag keeps it drawn.
+
+Presses go to whatever is drawn on top, so `layer` decides where the handles
+stand against the core ones — the connector endpoints, the transform frame's
+handles and rotation, the connection anchors and the vertices:
+`"belowHandles"` draws them under those, `"aboveHandles"` (the default) over
+them. Both layers sit above the selection outline, and within a layer the
+control declared later in `selectionControls` takes the press. Put a control
+below when it lies along an edge a handle sits on but can be pressed elsewhere
+too — a hit strip running an edge's full length, a heading laid outside the
+object (the table's boundaries, trailing edges and track grips). Keep it above
+when it is the only way to drag what it drags and may land on a handle's spot.
+
+**`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
+divides its objects into, stating `has` — whether an id still names a part of
+that object — and `delete`. Core treats a part id as an opaque string and hands
+it back to the type, so only the type knows what `"3"` or `"cell:2,1"` means;
+omitted means the object is indivisible and Delete falls through to it as a
+whole. The built-in `vertex` kind is the worked example: polyline, polygon and
+connector each declare it with the vertex floor below which deletion is refused.
+Every type with a `features.text` is given the `"textSlot"` kind without
+declaring anything, its part ids being the keys of its own `text` (`body` alone
+for a one-body type, which is the slot its open text editor keeps picked); declaring
+`"textSlot"` yourself replaces that one rather than colliding with it; spread
+`createTextSlotPartKindDefinition()` to keep what core derives and add
+only what it cannot (the table adds a `range`, a `delete` and the fill to its
+`styleIntentKinds`), and pass it `region` / `regions` to place the slots.
+Either way core wraps the registered kind's `region` / `regions` with the
+whole-box fallback and the vertical basis, so a slot is outlined where it is
+drawn and edited.
+
+Five optional members bear on selection:
+
+- `region` — the part's box in the object's local coordinates. A kind that
+  declares it has a box drawn around every selected part, in place of the
+  owner's own outline. A part answering null is not outlined. While any box
+  is drawn the transform handles are hidden, since they would compete with it.
+  `vertex` declares none (a vertex has handles of its own), so it neither draws
+  a box nor hides the handles
+- `regions` — every part's box in one call, keyed by part id, in the same
+  coordinates as `region`, for a kind whose one part cannot be placed without
+  laying out the rest (the table's cells); a kind declaring both answers the
+  same boxes from each
+- `list` — every part id the object currently holds, in the order Tab walks them;
+  it is also the order the linear default resolves a Shift-click range in (the
+  run between the anchor and the focus)
+- `range` — the parts a range from an anchor to a focus covers, for a type whose
+  parts are not laid out in one line (a table's cells, where the run is the
+  rectangle the two corners span); omitted means the run over `list`. Every
+  returned id must pass `has`, in the type's own order, and the list may not be
+  empty — a range covers at least its focus
+- `multiPick` — true lets a Ctrl / Meta-click on a part of the picked kind add
+  it to the pick as a range of its own or take it out, a range it sat inside
+  being broken into the parts it still covers (through `range` or `list`);
+  omitted means a Ctrl / Meta-click toggles the owner as a whole. The
+  `"textSlot"` kind declares it, `vertex` does not
+
+One more bears on the open text editor:
+
+- `extend` — asked of the `"textSlot"` kind alone, when Tab in the editor
+  leaves the last slot: it returns the object grown by parts after the last one
+  `list` names, every part it held kept under its id, and the step lands on the
+  first new one instead of wrapping to the first slot. The grown object is
+  settled by the type's content resizer like any structural edit and joins the
+  slot's commit in one undo step. Null or omitted wraps, and Shift+Tab and Tab
+  outside the editor always do. The table declares it to append a row styled as
+  its last one
+
+Two more bear on styling a pick:
+
+- `styleIntentKinds` — the style kinds a pick of this kind receives, core kinds and the
+  type's own alike. Declared, the picked kind is what the ObjectMenu and the
+  sidebar answer to: they keep the built-in controls raising only these kinds,
+  drop the rest and every custom item not naming the kind in `pickedPartKinds`,
+  and hide the system sections and the
+  Meta section. Omitted, a pick of the kind leaves the object the subject of
+  every control (`vertex`). The `"textSlot"` kind core gives declares the text
+  kinds (`TEXT_STYLE_INTENT_KINDS`)
+- `textSlotIds` — the text slots a pick of this kind reaches, handed the ids it
+  covers with its ranges already expanded. The text entries write and read those
+  slots (`resolveTextSlotIds`); omitted, a pick reaches every slot. The `"textSlot"`
+  kind answers with the picked slots themselves
+
+The table's `row` and `column` declare both: a track pick receives the text kinds
+and `fill`, as a cell pick does, and reaches the cells the tracks run through —
+so a color or a bold chosen with a row picked lands on that row's cells, and the
+menu offers the text and background controls, without the table declaring any
+text style kind of its own. `fillOpacity` is not among them, being the table
+background's alone, so its row is hidden under any pick.
+
+A kind's name is an identifier (a letter, then letters, digits, `_` or `-`), so
+the first `:` separates it from the id in the `<kind>:<partId>` address a part's
+element carries in its `data-part`
+(`controllers/gestures/handlers/utils/partAddress.ts`). Marking the element is
+all a part takes to be pickable: core parses the address, checks it against the
+kind's `has` and writes the selection (`selectPartByClick`). For text slots the
+builder is `textSlotPart`, exported from `@jiscribe/canvas`.
+
+`data-part` carries nothing but such addresses. An element whose press starts
+something — a menu row, a selection-control handle — carries a `data-action`
+instead, built for menus with `commandAction` / `toggleAction` / `setAction` /
+`sliderAction` from `@jiscribe/canvas/unstable` (the grammar is in
+`04-gesture-system.md`).
 
 ## What is not extensible yet
 
 Honest limits, so you do not design against something that is not there.
 
-| Area                             | Current state                                                                                                                                                                             |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Built-in UI                      | ObjectMenu / ContextMenu mount unconditionally; a host has no way to hide or replace them (the Toolbar can be hidden with `toolbar.show: false` and recomposed with `toolbar.sections`)   |
-| UI slots                         | Only the toolbar's `{ type: "slot" }` items. No slot for an overlay layer; the properties sidebar takes a component only as a row of a section a type declares, not as a panel of its own |
-| Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path      |
-| Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |
-| Commands                         | `config.commands` can narrow the built-in set, but a plugin cannot contribute a command or rebind a shortcut                                                                              |
-| ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                      |
-| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one cannot say it is text-slot-aware                                                             |
+| Area                             | Current state                                                                                                                                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Built-in UI                      | ObjectMenu / ContextMenu mount unconditionally; a host has no way to hide or replace them (the Toolbar can be hidden with `toolbar.show: false` and recomposed with `toolbar.sections`)                            |
+| UI slots                         | Only the toolbar's `{ type: "slot" }` items. No slot for an overlay layer; the properties sidebar takes a component only as a row of a section a type declares, not as a panel of its own                          |
+| Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path                               |
+| Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                                                   |
+| Command shortcuts                | A plugin contributes commands (`CanvasPlugin.commands`) and can claim a binding an existing command also holds, but it cannot rebind or unbind that command's own shortcut                                         |
+| ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                                               |
+| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one is dropped while a picked part narrows the sidebar (`styleIntentKinds`) unless it names that kind (`pickedPartKinds`) |
 
 What _is_ fully available: adding shape types with their own doc schema, validation,
 rendering, stencils, menus, properties-sidebar sections, style properties,
 outline/snap behaviour, type-specific
-selection controls, shared SVG defs, and their own i18n — all from an external
-package.
+selection controls, shared SVG defs, commands of their own, and their own i18n —
+all from an external package. A command is written against `Command` from
+`@jiscribe/canvas-sdk`, which carries the controller state and the registry
+bundle it is handed; those live on the unstable surface because a command reads
+and returns the canvas's working state rather than a settled contract.

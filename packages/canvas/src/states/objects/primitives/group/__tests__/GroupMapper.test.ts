@@ -2,11 +2,8 @@ import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/Grou
 import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import {
-	groupToDoc,
-	groupToState,
-} from "../../../../../states/objects/primitives/group/GroupMapper";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { groupToDoc, groupToState } from "../GroupMapper";
+import type { GroupState } from "../GroupState";
 
 describe("GroupMapper", () => {
 	// Note: GroupMapper no longer handles recursive children mapping.

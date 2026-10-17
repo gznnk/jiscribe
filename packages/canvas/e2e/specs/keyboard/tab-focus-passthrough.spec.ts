@@ -7,7 +7,9 @@ import { test, expect } from "../../fixtures";
  * cannot execute must stay with the browser: otherwise the canvas root swallows
  * Tab unconditionally and keyboard focus can never leave it.
  * The counterpart (Tab consumed while a record's slots are cyclable) is covered
- * by shapes/record-text-slot.spec.ts.
+ * by the uml-shapes plugin's record-text-slot.spec.ts, and Tab inside an open
+ * editor, which commits and edits the next cell, by the table-shape plugin's
+ * table-cell-edit-tab.spec.ts.
  */
 test.describe("keyboard: tab focus passthrough", () => {
 	/** True when pressing Tab moves focus off the currently focused element. */

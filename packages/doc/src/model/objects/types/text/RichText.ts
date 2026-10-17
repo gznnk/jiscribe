@@ -293,6 +293,42 @@ const alignToCharacterBoundary = (
 };
 
 /**
+ * Restyles the characters between two offsets run by run, leaving the rest of
+ * the text as it is: each covered run's styling is replaced by what `mapStyle`
+ * makes of it. The operation behind a write that depends on what each run
+ * already carries — turning one decoration line on while every run keeps the
+ * other — where {@link styleRichTextRange} writes one value over all of them.
+ *
+ * @param rich - The body to restyle
+ * @param start - First restyled offset, in UTF-16 code units; clamped to the text, and moved off the middle of a surrogate pair
+ * @param end - First offset past the restyled part; an `end` at or before `start` restyles nothing
+ * @param mapStyle - Called once per covered run (a run the range cuts is handed its covered part alone) with that run's own inline styling, not the slot's; what it returns replaces the run's styling whole, so a field it leaves out is unset on that run
+ * @returns The restyled body, in canonical form
+ */
+export const mapRichTextRangeStyle = (
+	rich: RichText,
+	start: number,
+	end: number,
+	mapStyle: (runStyle: InlineTextStyle) => InlineTextStyle,
+): RichText => {
+	const plain = richTextToPlain(rich);
+	const from = alignToCharacterBoundary(plain, start, -1);
+	const to = alignToCharacterBoundary(plain, end, 1);
+	if (from >= to) {
+		return normalizeRichText(rich);
+	}
+	const runs = toRuns(rich);
+	return normalizeRichText([
+		...sliceRuns(runs, 0, from),
+		...sliceRuns(runs, from, to).map((run) => ({
+			text: run.text,
+			...pickDefinedInlineTextStyle(mapStyle(pickDefinedInlineTextStyle(run))),
+		})),
+		...sliceRuns(runs, to, plain.length),
+	]);
+};
+
+/**
  * Styles the characters between two offsets, leaving the rest of the text as it
  * is: the operation behind "select a word and make it bold".
  *
@@ -312,19 +348,11 @@ export const styleRichTextRange = (
 	end: number,
 	style: InlineTextStyle,
 ): RichText => {
-	const plain = richTextToPlain(rich);
-	const from = alignToCharacterBoundary(plain, start, -1);
-	const to = alignToCharacterBoundary(plain, end, 1);
-	if (from >= to) {
-		return normalizeRichText(rich);
-	}
-	const runs = toRuns(rich);
 	const applied = pickDefinedInlineTextStyle(style);
-	return normalizeRichText([
-		...sliceRuns(runs, 0, from),
-		...sliceRuns(runs, from, to).map((run) => ({ ...run, ...applied })),
-		...sliceRuns(runs, to, plain.length),
-	]);
+	return mapRichTextRangeStyle(rich, start, end, (runStyle) => ({
+		...runStyle,
+		...applied,
+	}));
 };
 
 /**

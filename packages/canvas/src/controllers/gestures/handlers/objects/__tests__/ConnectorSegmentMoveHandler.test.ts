@@ -12,6 +12,8 @@ import type {
 } from "../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type {
 	CanvasEvent,
 	EventType,
@@ -110,7 +112,7 @@ const dragEvent = (
 	type: EventType,
 	start: Point,
 	last: Point,
-	targetPart = "segment-move:1",
+	targetAction = "segment-move:1",
 	targetId = "c1",
 ): CanvasEvent =>
 	({
@@ -118,7 +120,7 @@ const dragEvent = (
 		target: null,
 		targetId,
 		targetKind: "connector",
-		targetPart,
+		targetAction,
 		start,
 		last,
 		delta: { x: last.x - start.x, y: last.y - start.y },
@@ -209,7 +211,7 @@ describe("ConnectorSegmentMoveHandler - supports", () => {
 
 		const onBareLine = {
 			...dragEvent("dragStart", { x: 0, y: 0 }, { x: 1, y: 1 }),
-			targetPart: undefined,
+			targetAction: undefined,
 		} as CanvasEvent;
 		expect(ConnectorSegmentMoveHandler.supports(onBareLine)).toBe(false);
 
@@ -231,8 +233,7 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 	it("selects the connector exclusively and enables edge scrolling", () => {
 		const state = {
 			...stateWith(connectorWithVertices()),
-			selectedIds: ["other"],
-			selectedVertex: { objectId: "other", vertexIndex: 0 },
+			selection: selectionOf(["other"], vertexPartSelection(0)),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 			contextMenuPosition: { x: 1, y: 1 },
@@ -244,9 +245,8 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 			registries,
 		);
 
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selection.objectIds).toEqual(["c1"]);
+		expect(next.selection.part).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
@@ -441,9 +441,9 @@ describe("ConnectorSegmentMoveHandler - segments it refuses", () => {
 		).toBe(state);
 	});
 
-	it("leaves the state alone for a part carrying no usable index", () => {
+	it("leaves the state alone for an action carrying no usable index", () => {
 		const state = stateWith(connectorWithVertices());
-		for (const part of [
+		for (const action of [
 			"segment-move:",
 			"segment-move:abc",
 			"segment-move:-1",
@@ -451,7 +451,7 @@ describe("ConnectorSegmentMoveHandler - segments it refuses", () => {
 			expect(
 				ConnectorSegmentMoveHandler.handle(
 					state,
-					dragEvent("drag", { x: 150, y: 0 }, { x: 160, y: 0 }, part),
+					dragEvent("drag", { x: 150, y: 0 }, { x: 160, y: 0 }, action),
 					registries,
 				),
 			).toBe(state);
@@ -519,6 +519,7 @@ describe("ConnectorSegmentMoveHandler - dragEnd", () => {
 		]);
 		expect(afterEnd.objects).not.toBe(afterStart.objects);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion + 1);
 	});
 
 	it("disables edge scrolling even on a segment it refuses to move", () => {
@@ -544,5 +545,6 @@ describe("ConnectorSegmentMoveHandler - dragEnd", () => {
 			{ x: 200, y: 0 },
 		]);
 		expect(afterEnd.edgeScrollEnabled).toBe(false);
+		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion);
 	});
 });

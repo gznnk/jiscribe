@@ -22,6 +22,9 @@ export const STROKE_WIDTH_MIN = 0;
  */
 export const DEFAULT_STROKE_OPACITY = 1;
 
+/** The dash a stroke is drawn with when none is declared: a plain line. */
+export const DEFAULT_STROKE_DASH: StrokeDashType = "solid";
+
 /**
  * Properties related to stroke (outline) styling.
  */

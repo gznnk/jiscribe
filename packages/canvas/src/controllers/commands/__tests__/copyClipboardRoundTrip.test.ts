@@ -8,6 +8,7 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { isClipboardData as isClipboardDataRaw } from "../selection/ClipboardData";
 
 const registries = createTestRegistries();
@@ -29,7 +30,7 @@ const isClipboardData = (value: unknown): boolean =>
 describe("copy output always passes the paste-side clipboard validator", () => {
 	it("shapes + a fully-enclosed connector serialize to valid, self-contained clipboard data", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-1", "rect-2"],
+			selection: selectionOf(["rect-1", "rect-2"]),
 		});
 		const clipboard = runCommand(state, "copy").internalClipboard;
 
@@ -39,7 +40,7 @@ describe("copy output always passes the paste-side clipboard validator", () => {
 
 	it("copying a single endpoint shape excludes the connector, keeping the payload self-contained", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-1"],
+			selection: selectionOf(["rect-1"]),
 		});
 		const clipboard = runCommand(state, "copy").internalClipboard;
 
@@ -52,11 +53,11 @@ describe("copy output always passes the paste-side clipboard validator", () => {
 	it("copying a group includes its descendants and the connector they enclose, and passes validation", () => {
 		const grouped = runCommand(
 			createCommandState(twoRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const groupId = grouped.selectedIds[0];
+		const groupId = grouped.selection.objectIds[0];
 		const clipboard = runCommand(grouped, "copy").internalClipboard;
 
 		// The payload carries the group's children (childIds must resolve within
@@ -78,7 +79,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 
 	it("a pasted connector points at the pasted shapes, never at the originals", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-1", "rect-2"],
+			selection: selectionOf(["rect-1", "rect-2"]),
 		});
 		const copied = runCommand(state, "copy");
 		const after = handlePaste(copied, copied.internalClipboard!, registries);
@@ -105,11 +106,11 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 	it("a pasted group is a deep clone: fresh child IDs whose parentId is the fresh group ID", () => {
 		const grouped = runCommand(
 			createCommandState(twoRectsWithConnectorDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			}),
 			"group",
 		);
-		const originalGroupId = grouped.selectedIds[0];
+		const originalGroupId = grouped.selection.objectIds[0];
 		const originalGroup = grouped.objects[originalGroupId] as GroupState;
 
 		const copied = runCommand(grouped, "copy");
@@ -145,9 +146,9 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 		);
 	});
 
-	it("paste selects only the pasted shapes (connectors stay in their own channel)", () => {
+	it("paste selects only the pasted shapes, never the connectors it brought", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
-			selectedIds: ["rect-1", "rect-2"],
+			selection: selectionOf(["rect-1", "rect-2"]),
 		});
 		const copied = runCommand(state, "copy");
 		const after = handlePaste(copied, copied.internalClipboard!, registries);
@@ -156,7 +157,8 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 		const newRectIds = newIds.filter(
 			(id) => after.objects[id]?.type === "rect",
 		);
-		expect([...after.selectedIds].sort()).toEqual([...newRectIds].sort());
-		expect(after.selectedConnectorId).toBeNull();
+		expect([...after.selection.objectIds].sort()).toEqual(
+			[...newRectIds].sort(),
+		);
 	});
 });

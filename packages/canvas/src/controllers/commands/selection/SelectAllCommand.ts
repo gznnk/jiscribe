@@ -1,10 +1,10 @@
 import { isConnectorState } from "../../../states/objects/connector/ConnectorState";
-import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
+import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
 import type { ExecutableCommand } from "../CommandTypes";
 
 export const SelectAllCommand: ExecutableCommand = {
 	id: "selectAll",
-	label: "Select All",
+	label: { en: "Select All", ja: "すべて選択" },
 	category: "selection",
 	shortcuts: {
 		mac: [{ code: "KeyA", meta: true }],
@@ -17,25 +17,21 @@ export const SelectAllCommand: ExecutableCommand = {
 	},
 
 	execute: (state) => {
-		// Connectors are mixed into rootIds but belong to the separate selectedConnectorId
-		// channel; they must never enter selectedIds (otherwise Group would grab them).
-		// Paste already applies this same filter (handlePaste), so Select All matches it.
+		// Connectors are mixed into rootIds but are only ever selected on their own,
+		// so Select All leaves them out (otherwise Group would grab them). Paste
+		// applies the same filter (handlePaste).
 		const selectableIds = state.rootIds.filter(
 			(id) => !isConnectorState(state.objects[id]),
 		);
 
 		return {
 			...state,
-			selectedIds: selectableIds,
+			selection: { objectIds: selectableIds, part: null },
 			multiSelectGroup: createMultiSelectGroup(
 				selectableIds,
 				state.objects,
 				state.multiSelectGroup,
 			),
-			// selectedIds is mutually exclusive with selectedConnectorId / selectedVertex.
-			// Without clearing them, the branching in SwapArrows and the style-property handlers breaks.
-			selectedConnectorId: null,
-			selectedVertex: null,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
 		};

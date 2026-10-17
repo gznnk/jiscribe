@@ -7,7 +7,7 @@ import { selectors } from "../../support/selectors";
  *
  * - The toolbar toggle opens and closes it, and carries the open state on
  *   aria-expanded.
- * - Its shape items are the same `data-part="item:<presetId>"` contract as the
+ * - Its shape items are the same `data-action="item:<presetId>"` contract as the
  *   toolbar's, routed to the same handler: a click enters drawing mode and a drag
  *   onto the canvas creates the shape.
  * - Unlike the category flyout the panel is persistent chrome: a click on the
@@ -16,14 +16,18 @@ import { selectors } from "../../support/selectors";
  * - Opening and closing it never moves the drawing: the viewport's left edge moves,
  *   and the camera is compensated for it (CONTAINER_RESIZE / leftEdgeShift).
  * - Sections collapse from their header, and the search box replaces them with one
- *   flat grid of what matches.
+ *   flat grid of what matches — including presets a category holds beyond the
+ *   ones it lists, reached through its `search`.
  *
  * The subject is the sidebar mechanism, not any one shape set, so the shapes come
  * from core's `basic` section and the harness's test-only category
  * (e2e/plugins/specShapesPlugin).
  */
 
-/** The test-only plugin's section, holding the single `tile` preset. */
+/**
+ * The test-only plugin's section, listing the single `tile` preset and holding
+ * `brick` beyond it (reachable only through its `search`).
+ */
 const SPEC_SECTION = "spec";
 
 /** Core's primitives as a section, declared by the harness's `library`. */
@@ -303,6 +307,56 @@ test.describe("Shape library sidebar", () => {
 		await expect(basicSection).toBeVisible();
 		await expect(rectItem).toBeVisible();
 		await expect(tileItem).toBeVisible();
+	});
+
+	test("reaches a preset the section does not list through the search", async ({
+		canvas,
+	}) => {
+		await canvas.openStencilLibrary();
+
+		const brickItem = canvas.page.locator(
+			selectors.stencilLibraryPanelItem("brick"),
+		);
+		// Unlisted, so the browsing view does not show it
+		await expect(
+			canvas.page.locator(selectors.stencilLibraryPanelItem("tile")),
+		).toBeVisible();
+		await expect(brickItem).toHaveCount(0);
+
+		await canvas.page.locator(selectors.stencilLibrarySearch).fill("brick");
+		await expect(brickItem).toBeVisible();
+
+		// It is a stencil like any other: the click goes to the same handler
+		await brickItem.click();
+		await expect
+			.poll(() => canvas.isDrawingMode(), {
+				message: "clicking a preset found through search enters drawing mode",
+			})
+			.toBe(true);
+	});
+
+	test("points from a section to the search for what it does not list", async ({
+		canvas,
+	}) => {
+		await canvas.openStencilLibrary();
+
+		const panel = canvas.page.locator(selectors.stencilLibraryPanel);
+		const search = canvas.page.locator(selectors.stencilLibrarySearch);
+		// Only the spec section declares `search`; basic does not
+		const moreButton = panel.getByRole("button", {
+			name: "Find more shapes",
+		});
+		await expect(moreButton).toHaveCount(1);
+		await expect(search).not.toBeFocused();
+
+		await moreButton.click();
+		await expect(search).toBeFocused();
+
+		// Collapsing the section takes the pointer with it
+		await canvas.page
+			.locator(selectors.stencilLibrarySection(SPEC_SECTION))
+			.click();
+		await expect(moreButton).toHaveCount(0);
 	});
 
 	test("closes from the panel's close button", async ({ canvas }) => {

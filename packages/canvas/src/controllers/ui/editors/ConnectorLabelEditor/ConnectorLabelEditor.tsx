@@ -12,6 +12,7 @@ import {
 	resolveLabelFill,
 } from "../../../../rendering/objects/connector/ConnectorLabel";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
+import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditCommand";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
 import type { CaretTarget } from "../utils/measureCaretInSurface";
@@ -55,6 +56,8 @@ type ConnectorLabelEditorProps = {
 	strokeDashType?: string;
 	onChange: (text: string) => void;
 	onEscape?: () => void;
+	/** Cmd+Enter on a Mac, Ctrl+Enter elsewhere (CommitTextEditCommand), outside an IME composition; the browser's own handling is already cancelled. Omitted = the keystroke is swallowed. */
+	onCommit?: () => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
 	onCaretMove?: (caretWorldBox: BoundingBox) => void;
 };
@@ -72,6 +75,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	strokeDashType = "solid",
 	onChange,
 	onEscape,
+	onCommit,
 	onCaretMove,
 }) => {
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
@@ -127,6 +131,20 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 			e.preventDefault();
 			e.stopPropagation();
 			onEscape();
+			return;
+		}
+		// Mid composition the keystroke belongs to the IME.
+		if (isCommitTextEditShortcut(e.nativeEvent) && !e.nativeEvent.isComposing) {
+			e.preventDefault();
+			e.stopPropagation();
+			onCommit?.();
+			return;
+		}
+		// Tab stays in the editor rather than moving the focus off an open session
+		// (as in TextEditor).
+		if (e.key === "Tab") {
+			e.preventDefault();
+			e.stopPropagation();
 		}
 	};
 

@@ -8,6 +8,7 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./doc": "./src/doc.ts",
+		"./tools": "./src/tools.ts",
 		"./testing": "./src/testing.ts",
 		"./testing/e2e": "./src/testing-e2e.ts",
 		"./testing/playwright-config": "./src/testing-playwright-config.ts",
@@ -25,19 +26,23 @@
 	"peerDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
-		"react": "catalog:"
+		"react": "catalog:",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"react": "catalog:",
 		"typescript": "catalog:",
-		"vitest": "catalog:"
+		"vitest": "catalog:",
+		"zod": "catalog:"
 	}
 }

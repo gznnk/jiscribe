@@ -3,8 +3,8 @@ import {
 	isViewScrollMode,
 } from "@jiscribe/doc/model/canvas/ViewDoc";
 
-import { applyStylePropertyPart } from "./utils/applyStylePropertyPart";
-import { parseMenuPart } from "./utils/menuParts";
+import { applyStyleAction } from "./utils/applyStyleAction";
+import { parseMenuAction } from "./utils/menuActions";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type { DocumentPropertyUpdate } from "../../../reducer/CanvasActions";
 import {
@@ -19,7 +19,7 @@ import type {
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
- * Reads a `doc:` part's text into a document update, or null when the setting is
+ * Reads a `doc:` action's text into a document update, or null when the setting is
  * unknown or the text is not a value it takes (a view mode outside its set, a
  * padding side that is not a number, null for a padding side).
  */
@@ -50,9 +50,9 @@ const toDocumentPropertyUpdate = (
  * Handles events with targetKind "menu" and targetId "property-panel": the
  * panel's container carries the pair, and everything inside it — its own chrome
  * and the controls of every section, the dropdowns portalled into it included —
- * carries only a data-part.
+ * carries only a data-action.
  *
- * targetPart format (built and parsed by utils/menuParts.ts):
+ * targetAction format (built and parsed by utils/menuActions.ts):
  * - `command:{commandId}` → execute the command (the close button is
  *   `command:togglePropertyPanel`, the same route as the toolbar's toggle; the
  *   Arrange buttons run the stacking-order commands).
@@ -60,7 +60,7 @@ const toDocumentPropertyUpdate = (
  *   collapsed (click acts as a toggle), the way the shape library's own section
  *   headers do.
  * - `set:{property}:{value}` / `slider:{property}` → write a style property of
- *   the selection (applyStylePropertyPart, shared with ObjectMenuHandler).
+ *   the selection (applyStyleAction, shared with ObjectMenuHandler).
  * - `doc:{property}:{value}` → state one of the document's own settings (the
  *   Canvas section's buttons), through the same state change the
  *   DOCUMENT_PROPERTY_UPDATE reducer case makes. A value the document already
@@ -91,29 +91,24 @@ export const PropertyPanelHandler: GestureHandler = {
 			};
 		}
 
-		const part = parseMenuPart(event.targetPart);
+		const action = parseMenuAction(event.targetAction);
 
-		const styledState = applyStylePropertyPart(
-			nextState,
-			event,
-			part,
-			registries,
-		);
+		const styledState = applyStyleAction(nextState, event, action, registries);
 		if (styledState !== null) {
 			return styledState;
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		if (!isActivation || part === null) {
+		if (!isActivation || action === null) {
 			return nextState;
 		}
 
-		if (part.kind === "command") {
-			return handleCommand(nextState, part.commandId, registries);
+		if (action.kind === "command") {
+			return handleCommand(nextState, action.commandId, registries);
 		}
 
-		if (part.kind === "toggle") {
-			const sectionId = part.id;
+		if (action.kind === "toggle") {
+			const sectionId = action.id;
 			const collapsedIds = nextState.propertyPanel.collapsedSectionIds;
 			return {
 				...nextState,
@@ -126,11 +121,11 @@ export const PropertyPanelHandler: GestureHandler = {
 			};
 		}
 
-		if (part.kind === "doc") {
-			const update = toDocumentPropertyUpdate(part.property, part.value);
+		if (action.kind === "doc") {
+			const update = toDocumentPropertyUpdate(action.property, action.value);
 			if (update === null || !canApplyDocumentProperty(update)) {
 				console.warn(
-					`[PropertyPanelHandler] Unknown document setting or value: ${event.targetPart}`,
+					`[PropertyPanelHandler] Unknown document setting or value: ${event.targetAction}`,
 				);
 				return nextState;
 			}
@@ -139,7 +134,7 @@ export const PropertyPanelHandler: GestureHandler = {
 				return nextState;
 			}
 			// History recording is delegated to handleGesture's caller, as for the
-			// set: parts.
+			// set: actions.
 			return {
 				...updatedState,
 				commitVersion: nextState.commitVersion + 1,

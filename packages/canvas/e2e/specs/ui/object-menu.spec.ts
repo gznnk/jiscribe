@@ -92,7 +92,7 @@ test.describe("styling through the ObjectMenu", () => {
 		// Click the blank part of the panel (background, not a button): the top-left
 		// corner falls inside the padding of ColorPickerContainer.
 		const panel = canvas.page.locator(
-			`${selectors.objectMenu} [data-part="panel"]`,
+			`${selectors.objectMenu} [data-action="panel"]`,
 		);
 		await panel.click({ position: { x: 6, y: 6 } });
 
@@ -124,11 +124,15 @@ test.describe("styling through the ObjectMenu", () => {
 		await expect(fontSize).toBeVisible();
 		await expect(backgroundColor).toHaveCount(0);
 
+		// Leaving the editor keeps the body picked, so the menu stays narrowed until
+		// the pick is dropped by a second Escape.
 		await canvas.cancelText();
+		await expect(backgroundColor).toHaveCount(0);
+		await canvas.pressEscape();
 		await expect(backgroundColor).toBeVisible();
 	});
 
-	test("lays the text format buttons out flat while text is being edited", async ({
+	test("offers Bold alone, on the menu itself, whether the shape is selected or its text edited", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
@@ -136,33 +140,20 @@ test.describe("styling through the ObjectMenu", () => {
 		const textFormatToggle = canvas.page.locator(
 			selectors.objectMenuToggle("text-format"),
 		);
-		const bold = canvas.page.locator(
-			selectors.objectMenuSet("fontWeight", "bold"),
-		);
-		const italic = canvas.page.locator(
-			selectors.objectMenuSet("fontStyle", "italic"),
-		);
-		const underline = canvas.page.locator(
-			selectors.objectMenuSet("textDecoration", "underline"),
-		);
-		const strikethrough = canvas.page.locator(
-			selectors.objectMenuSet("textDecoration", "line-through"),
+		const bold = canvas.page.locator(selectors.objectMenuCommand("toggleBold"));
+		// Italic, underline and strikethrough are left to the sidebar and the keystrokes.
+		const otherFormats = canvas.page.locator(
+			`${selectors.objectMenuCommand("toggleItalic")}, ${selectors.objectMenuCommand("toggleUnderline")}, ${selectors.objectMenuCommand("toggleStrikethrough")}`,
 		);
 
-		// Selected but not editing: the four sit behind the dropdown.
-		await expect(textFormatToggle).toBeVisible();
-		await expect(bold).toHaveCount(0);
+		await expect(bold).toBeVisible();
+		await expect(textFormatToggle).toHaveCount(0);
+		await expect(otherFormats).toHaveCount(0);
 
 		await canvas.typeTextAt({ x: 500, y: 260 }, "Editing");
-		await expect(textFormatToggle).toHaveCount(0);
 		await expect(bold).toBeVisible();
-		await expect(italic).toBeVisible();
-		await expect(underline).toBeVisible();
-		await expect(strikethrough).toBeVisible();
-
-		await canvas.cancelText();
-		await expect(textFormatToggle).toBeVisible();
-		await expect(bold).toHaveCount(0);
+		await expect(textFormatToggle).toHaveCount(0);
+		await expect(otherFormats).toHaveCount(0);
 	});
 
 	test("keeps the color setting after text editing", async ({ canvas }) => {

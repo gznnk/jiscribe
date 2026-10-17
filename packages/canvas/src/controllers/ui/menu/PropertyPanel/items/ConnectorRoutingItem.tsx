@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { getSelectedRouting } from "../../../../utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "../../../../utils/isSelectedConnectorSelfLoop";
@@ -21,16 +21,16 @@ import type { PropertyPanelItemProps } from "../PropertyPanelTypes";
  */
 const ConnectorRoutingItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 }) => {
 	const messages = useCanvasMessages();
 
-	if (isSelectedConnectorSelfLoop(selectedConnectorId, objects)) {
+	if (isSelectedConnectorSelfLoop({ objects, selection })) {
 		return null;
 	}
 
 	// An omitted routing draws orthogonal, so that is the segment to light.
-	const routing = getSelectedRouting(selectedConnectorId, objects);
+	const routing = getSelectedRouting({ objects, selection });
 
 	return (
 		<PropertyRow label={messages.propertyPanelRowRouting}>
@@ -38,7 +38,7 @@ const ConnectorRoutingItemComponent: React.FC<PropertyPanelItemProps> = ({
 				options={[
 					{
 						id: "orthogonal",
-						part: commandPart("setRoutingOrthogonal"),
+						action: commandAction("setRoutingOrthogonal"),
 						title: messages.menuRoutingOrthogonal,
 						content: (
 							<OrthogonalConnectorIcon title={messages.menuRoutingOrthogonal} />
@@ -47,7 +47,7 @@ const ConnectorRoutingItemComponent: React.FC<PropertyPanelItemProps> = ({
 					},
 					{
 						id: "straight",
-						part: commandPart("setRoutingStraight"),
+						action: commandAction("setRoutingStraight"),
 						title: messages.menuRoutingStraight,
 						content: (
 							<StraightConnectorIcon title={messages.menuRoutingStraight} />

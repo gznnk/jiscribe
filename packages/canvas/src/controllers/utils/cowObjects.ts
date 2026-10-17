@@ -26,6 +26,16 @@ const hasOwn = (record: object, key: string): boolean =>
 	Object.prototype.hasOwnProperty.call(record, key);
 
 /**
+ * Whether objects is a copy-on-write view rather than a plain Record.
+ *
+ * @param objects - Any object map
+ * @returns true for a view from {@link createCowObjects}, however many times it was rebased; false for a plain Record, including an empty one
+ */
+export function isCowObjects<V>(objects: Record<string, V>): boolean {
+	return getCowMeta(objects) !== null;
+}
+
+/**
  * Returns a writable copy-on-write view of srcObjects (O(1), no key copy).
  * A view over an existing view is rebased onto the same backing map
  * (overlay cloned, O(changed)), so chains never build up.

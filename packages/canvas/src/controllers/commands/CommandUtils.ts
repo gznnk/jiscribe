@@ -1,4 +1,6 @@
-import type { KeyBinding, PlatformKeyBindings } from "./CommandTypes";
+import type { Command, KeyBinding, PlatformKeyBindings } from "./CommandTypes";
+import type { CanvasMessages } from "../messages/CanvasMessagesTypes";
+import { resolveLocalizedLabel } from "../messages/resolveLocaleMessages";
 
 // Type definitions for the User-Agent Client Hints API (experimental API)
 interface NavigatorUAData {
@@ -31,12 +33,41 @@ export const getPlatform = (): "mac" | "win" => {
 /**
  * Gets the shortcut array for the current platform.
  * Returns the shortcuts defined for the current platform if present, otherwise the default.
+ *
+ * @param bindings - A command's `shortcuts`; `mac` / `win` replace `default` wholesale on their platform (getPlatform), even when empty
+ * @returns The bindings in declared order, the first being the one menus display
  */
 export const getPlatformShortcuts = (
 	bindings: PlatformKeyBindings,
 ): KeyBinding[] => {
 	const platform = getPlatform();
 	return bindings[platform] ?? bindings.default;
+};
+
+/**
+ * Whether a keystroke is the one a binding names.
+ *
+ * @param binding - One binding (getPlatformShortcuts); `code` is compared for a layout-independent binding and `key` for a character one
+ * @param event - The keydown; Ctrl, Alt and Meta must agree exactly, Shift only for the `code` form (a character already implies it)
+ */
+export const matchesKeyBinding = (
+	binding: KeyBinding,
+	event: Pick<
+		KeyboardEvent,
+		"code" | "key" | "ctrlKey" | "shiftKey" | "altKey" | "metaKey"
+	>,
+): boolean => {
+	const isCodeBased = binding.code !== undefined;
+	const keyMatch = isCodeBased
+		? binding.code === event.code
+		: binding.key === event.key;
+	return (
+		keyMatch &&
+		!!binding.ctrl === event.ctrlKey &&
+		!!binding.alt === event.altKey &&
+		!!binding.meta === event.metaKey &&
+		(isCodeBased ? !!binding.shift === event.shiftKey : true)
+	);
 };
 
 /** Mapping from event.code to display string */
@@ -102,6 +133,8 @@ const CODE_DISPLAY_MAP: Record<string, string> = {
 
 /**
  * Converts a KeyBinding into a human-readable string.
+ *
+ * @param binding - One binding (getPlatformShortcuts); modifiers come out in the order Ctrl, Shift, Alt, Meta, as symbols joined with nothing on a Mac and as words joined with `+` elsewhere, the key last (`code` mapped for display, else `key`)
  * @example formatShortcut({ code: "KeyA", meta: true }) => "⌘A" (Mac)
  * @example formatShortcut({ code: "KeyA", ctrl: true }) => "Ctrl+A" (Windows)
  */
@@ -162,3 +195,19 @@ export const formatShortcutTokens = (binding: KeyBinding): string[] => {
 
 	return tokens;
 };
+
+/**
+ * Display label of a command: the host override (`messages.commandLabels[id]`)
+ * first, then the label the command itself carries, resolved for `locale`.
+ *
+ * @param command - The command to name; `id` keys the host override, `label` is the fallback (a plain string is used as is)
+ * @param messages - The active message set (useCanvasMessages), host overrides already applied
+ * @param locale - BCP 47 tag a dictionary `label` is resolved against (exact tag, then language subtag, then `en`)
+ */
+export const resolveCommandLabel = (
+	command: Pick<Command, "id" | "label">,
+	messages: CanvasMessages,
+	locale: string,
+): string =>
+	messages.commandLabels[command.id] ??
+	resolveLocalizedLabel(command.label, locale);

@@ -5,6 +5,9 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { DeleteCommand } from "../DeleteCommand";
 
 const registries = createTestRegistries();
@@ -26,8 +29,9 @@ const makeRect = (id: string, parentId?: string): ObjectState =>
 const makePolyline = (
 	id: string,
 	points: { x: number; y: number }[],
+	parentId?: string,
 ): PolylineState =>
-	({ id, type: "polyline", points }) as unknown as PolylineState;
+	({ id, type: "polyline", points, parentId }) as unknown as PolylineState;
 
 const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({
@@ -44,15 +48,12 @@ const makeGroup = (id: string, childIds: string[]): GroupState =>
 	}) as unknown as GroupState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
-	selectedVertex?: CanvasControllerState["selectedVertex"];
-	selectedConnectorId?: string | null;
+	lastDuplicate?: CanvasControllerState["lastDuplicate"];
 }): CanvasControllerState =>
 	({
-		selectedVertex: null,
-		selectedConnectorId: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,
 		commitVersion: 0,
@@ -63,20 +64,20 @@ describe("DeleteCommand", () => {
 	describe("object deletion", () => {
 		it("removes selected objects from objects and rootIds and clears the selection", () => {
 			const state = makeState({
-				selectedIds: ["b"],
+				selection: selectionOf(["b"]),
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
 			const next = DeleteCommand.execute(state, registries);
 			expect(next.objects["b"]).toBeUndefined();
 			expect(next.rootIds).toEqual(["a"]);
-			expect(next.selectedIds).toEqual([]);
+			expect(next.selection.objectIds).toEqual([]);
 			expect(next.commitVersion).toBe(1);
 		});
 
 		it("recursively deletes descendants when a group is selected", () => {
 			const state = makeState({
-				selectedIds: ["g"],
+				selection: selectionOf(["g"]),
 				objects: {
 					g: makeGroup("g", ["c1", "c2"]),
 					c1: makeRect("c1", "g"),
@@ -94,7 +95,7 @@ describe("DeleteCommand", () => {
 		it("deleting one child in a group removes it from the parent's childIds", () => {
 			// 2 children remain, so the group is not dissolved
 			const state = makeState({
-				selectedIds: ["c1"],
+				selection: selectionOf(["c1"]),
 				objects: {
 					g: makeGroup("g", ["c1", "c2", "c3"]),
 					c1: makeRect("c1", "g"),
@@ -117,10 +118,9 @@ describe("DeleteCommand", () => {
 				{ x: 20, y: 0 },
 			]);
 			const state = makeState({
-				selectedIds: ["p"],
+				selection: selectionOf(["p"], vertexPartSelection(1)),
 				objects: { p: poly },
 				rootIds: ["p"],
-				selectedVertex: { objectId: "p", vertexIndex: 1 },
 			});
 			const next = DeleteCommand.execute(state, registries);
 			const updated = next.objects["p"] as PolylineState;
@@ -128,7 +128,7 @@ describe("DeleteCommand", () => {
 				{ x: 0, y: 0 },
 				{ x: 20, y: 0 },
 			]);
-			expect(next.selectedVertex).toBeNull();
+			expect(next.selection.part).toBeNull();
 			// the object itself remains (vertex deletion takes priority)
 			expect(next.objects["p"]).toBeDefined();
 		});
@@ -139,32 +139,99 @@ describe("DeleteCommand", () => {
 				{ x: 10, y: 0 },
 			]);
 			const state = makeState({
-				selectedIds: ["p"],
+				selection: selectionOf(["p"], vertexPartSelection(1)),
 				objects: { p: poly },
 				rootIds: ["p"],
-				selectedVertex: { objectId: "p", vertexIndex: 1 },
 			});
 			expect(DeleteCommand.execute(state, registries)).toBe(state);
 		});
 
-		it("clears only selectedVertex when the vertex-selection target is not a polyline", () => {
+		it("ignores a vertex selection on a type with no vertex kind and goes on to the object", () => {
+			// A rect has no vertices, so the field names nothing: it is no selection,
+			// and the key belongs to the selected objects.
 			const state = makeState({
-				selectedIds: ["r"],
+				selection: selectionOf(["r"], vertexPartSelection(0)),
 				objects: { r: makeRect("r") },
 				rootIds: ["r"],
-				selectedVertex: { objectId: "r", vertexIndex: 0 },
 			});
 			const next = DeleteCommand.execute(state, registries);
-			expect(next.selectedVertex).toBeNull();
-			// does not fall through to object deletion
-			expect(next.objects["r"]).toBeDefined();
+			expect(next.selection.part).toBeNull();
+			expect(next.objects["r"]).toBeUndefined();
+			expect(next.selection.objectIds).toEqual([]);
+		});
+
+		it("lets a stale vertex index fall through to the object the key then takes", () => {
+			const polyline = makePolyline("p", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+			]);
+			const state = makeState({
+				selection: selectionOf(["p"], vertexPartSelection(7)),
+				objects: { p: polyline },
+				rootIds: ["p"],
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.selection.part).toBeNull();
+			expect(next.objects["p"]).toBeUndefined();
+		});
+
+		it("commits the edit, forgets the last duplicate, and leaves other objects as they were", () => {
+			const other = makeRect("r");
+			const state = makeState({
+				selection: selectionOf(["p"], vertexPartSelection(1)),
+				objects: {
+					p: makePolyline("p", [
+						{ x: 0, y: 0 },
+						{ x: 10, y: 0 },
+						{ x: 20, y: 0 },
+					]),
+					r: other,
+				},
+				rootIds: ["p", "r"],
+				lastDuplicate: {
+					newIds: ["p"],
+					cx: 0,
+					cy: 0,
+					offset: { x: 10, y: 10 },
+				},
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.commitVersion).toBe(1);
+			// A deletion is not something a duplicate can be offset from any more.
+			expect(next.lastDuplicate).toBeNull();
+			expect(next.objects["r"]).toBe(other);
+		});
+
+		it("propagates the deletion to the bounds of the group the polyline sits in", () => {
+			const state = makeState({
+				selection: selectionOf(["p"], vertexPartSelection(2)),
+				objects: {
+					g: makeGroup("g", ["p"]),
+					p: makePolyline(
+						"p",
+						[
+							{ x: 0, y: 0 },
+							{ x: 10, y: 10 },
+							{ x: 20, y: 20 },
+						],
+						"g",
+					),
+				},
+				rootIds: ["g"],
+			});
+			const next = DeleteCommand.execute(state, registries);
+			const group = next.objects["g"] as GroupState;
+			expect(group.cx).toBe(5);
+			expect(group.cy).toBe(5);
+			expect(group.width).toBe(10);
+			expect(group.height).toBe(10);
 		});
 	});
 
 	describe("canExecute", () => {
 		it("is executable when there is an object selection", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a") },
 				rootIds: ["a"],
 			});
@@ -172,21 +239,97 @@ describe("DeleteCommand", () => {
 		});
 
 		it("is executable when there is a vertex selection", () => {
+			const poly = makePolyline("p", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+				{ x: 20, y: 0 },
+			]);
 			const state = makeState({
-				selectedIds: [],
-				objects: {},
-				rootIds: [],
-				selectedVertex: { objectId: "p", vertexIndex: 0 },
+				selection: selectionOf(["p"], vertexPartSelection(0)),
+				objects: { p: poly },
+				rootIds: ["p"],
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
 
+		it("lets the key mean object deletion while the selected vertex's kind registers none", () => {
+			// Omitting `delete` is the kind saying Delete is not about its parts, so
+			// the object the vertex sits in is what goes.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selection: selectionOf(["n"], vertexPartSelection(0)),
+				objects: { n: pin },
+				rootIds: ["n"],
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
+			const next = DeleteCommand.execute(state, pinRegistries);
+			expect(next.objects["n"]).toBeUndefined();
+			expect(next.selection.part).toBeNull();
+		});
+
+		it("holds the key over a picked part whose kind declares a deletion that refuses", () => {
+			// `delete: () => null` is how a kind keeps Delete from reaching the object
+			// while one of its parts is picked: executable, yet nothing is removed.
+			const pinRegistries = createTestRegistries();
+			pinRegistries.objectPartKind.register("pin", [
+				{ kind: "vertex", has: () => true, delete: () => null },
+			]);
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selection: selectionOf(["n"], vertexPartSelection(0)),
+				objects: { n: pin },
+				rootIds: ["n"],
+			});
+
+			expect(DeleteCommand.canExecute(state, pinRegistries)).toBe(true);
+			expect(DeleteCommand.execute(state, pinRegistries)).toBe(state);
+		});
+
+		it("removes every part a range covers, not only its focus", () => {
+			type TrackState = ObjectState & { items: string[] };
+			const trackRegistries = createTestRegistries();
+			let deletedPartIds: readonly string[] = [];
+			trackRegistries.objectPartKind.register<TrackState>("pin", [
+				{
+					kind: "track",
+					has: (object, partId) => Number(partId) < object.items.length,
+					list: (object) => object.items.map((_, index) => String(index)),
+					delete: (object, partIds) => {
+						deletedPartIds = partIds;
+						return { ...object, items: [] };
+					},
+				},
+			]);
+			const pin = {
+				id: "n",
+				type: "pin",
+				items: ["a", "b", "c", "d"],
+			} as unknown as TrackState;
+			const state = makeState({
+				selection: selectionOf(["n"], {
+					kind: "track",
+					ranges: [{ anchorId: "2", focusId: "0" }],
+				}),
+				objects: { n: pin },
+				rootIds: ["n"],
+			});
+
+			const next = DeleteCommand.execute(state, trackRegistries);
+
+			expect(deletedPartIds).toEqual(["0", "1", "2"]);
+			expect(next.selection.part).toBeNull();
+		});
+
 		it("is executable when there is a connector selection", () => {
 			const state = makeState({
-				selectedIds: [],
 				objects: {},
 				rootIds: [],
-				selectedConnectorId: "c1",
+				selection: selectionOf(["c1"]),
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
@@ -194,7 +337,7 @@ describe("DeleteCommand", () => {
 		it("is not executable when nothing is selected", () => {
 			expect(
 				DeleteCommand.canExecute(
-					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					makeState({ selection: selectionOf([]), objects: {}, rootIds: [] }),
 					registries,
 				),
 			).toBe(false);

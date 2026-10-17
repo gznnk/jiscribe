@@ -10,8 +10,8 @@ export const BELOW_LABEL_GAP = 4;
 /**
  * What the label layout reads off the state: the untransformed box size plus the
  * text slots, whose content sizes the label. Typed as the open slot map every
- * text-bearing state carries rather than one shape's own single slot, so the
- * registry's calculator type still accepts it (see ObjectTextRegionCalculator).
+ * text-bearing state carries rather than one shape's own single slot, so every
+ * shape's state still satisfies it (see ObjectTextRegionCalculator).
  */
 type BelowLabelState = Dimensions & {
 	/** The shape's text slots, keyed by slot id; an absent slot reads as empty. */
@@ -26,8 +26,9 @@ type BelowLabelState = Dimensions & {
  * connector's label is independent of its path. The label has no maximum width:
  * it runs sideways past the shape until the author breaks it themselves.
  *
- * Register as such a shape's `textRegion`, so the drawn label (TextOverlay) and
- * the in-place editor resolve the same rectangle; while editing, the grafted
+ * Pass as such a shape's `createFrameObjectDefinition({ textRegion })`, which
+ * makes it the text slot's place, so the drawn label (TextOverlay) and the
+ * in-place editor resolve the same rectangle; while editing, the grafted
  * draft text (graftTextEditDraft) reaches here, so the box follows every
  * keystroke. Pair it with `calcBelowLabelVisualBounds`, or zoom-to-fit and the
  * export viewBox crop the label away.

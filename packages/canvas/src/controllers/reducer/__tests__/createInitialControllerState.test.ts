@@ -29,7 +29,7 @@ describe("createInitialControllerState", () => {
 		const state = createInitialControllerState(docWithRect, registries);
 
 		expect(state.objects["rect-1"]).toMatchObject({ cx: 5, cy: 5 });
-		expect(state.selectedIds).toEqual([]);
+		expect(state.selection.objectIds).toEqual([]);
 		expect(state.activeDrag).toBeNull();
 		expect(state.multiSelectGroup).toBeNull();
 		expect(state.textEditState).toBeNull();

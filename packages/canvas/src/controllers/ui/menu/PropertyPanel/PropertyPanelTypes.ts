@@ -7,7 +7,8 @@ import type {
 	MetaProperty,
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
-import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 /**
  * The controls the properties sidebar knows how to draw. Each names one row (or
@@ -56,7 +57,8 @@ export type PropertyPanelBuiltinItem = { type: PropertyPanelBuiltinItemKey };
  *
  * The id is what the multi-type merge matches the row by, so two types offering
  * the same row have to spell it the same way. A row that is not slot-aware needs
- * no opt-out: the text-slot narrowing drops every custom row.
+ * no opt-out: the narrowing under a picked part drops every custom row that does
+ * not name the picked kind in `pickedPartKinds`.
  */
 export type PropertyPanelCustomItem = {
 	type: "custom";
@@ -64,6 +66,13 @@ export type PropertyPanelCustomItem = {
 	id: string;
 	/** Drawn with {@link PropertyPanelItemProps}; return null to leave the row out for this selection. */
 	component: React.ComponentType<PropertyPanelItemProps>;
+	/**
+	 * The picked part kinds (`selection.part.kind`) under which the row survives the
+	 * narrowing a picked part applies (`ObjectPartKindDefinition.styleIntentKinds`).
+	 * Omitted or empty = dropped under every such pick. Says nothing about the
+	 * object selection with no part picked, where the row is drawn either way.
+	 */
+	pickedPartKinds?: readonly string[];
 };
 
 /**
@@ -101,13 +110,14 @@ export type PropertyPanelSection = {
  */
 export type PropertyPanelSelection = Pick<
 	PropertyPanelItemProps,
-	"objects" | "selectedIds" | "selectedConnectorId"
+	"objects" | "selection"
 >;
 
 /**
  * States one number of the selection's transform frame, dispatching
- * TRANSFORM_PROPERTY_UPDATE. The sibling of {@link StylePropertyUpdater}
- * for the geometry the style-property registry does not own.
+ * TRANSFORM_PROPERTY_UPDATE. The sibling of {@link StyleIntentUpdater}
+ * for the geometry no StyleIntent names, and so no ObjectStyleRegistry table
+ * answers for.
  *
  * @param property - Which of the frame's five numbers is being stated
  * @param value - World units, `rotation` in degrees; the frame is the single selected object's or the multiSelectGroup's, and `x` / `y` name its top-left corner
@@ -181,10 +191,10 @@ export type PropertyPanelMetaUpdater = (
  */
 export type PropertyPanelItemProps = {
 	objects: Record<string, ObjectState>;
-	selectedIds: string[];
-	selectedConnectorId: string | null;
+	/** What the canvas is pointed at: the objects picked, and the part picked below a single one of them (CanvasSelection). */
+	selection: CanvasSelection;
 	/** The frame a multi-selection is transformed through; null while one object or nothing is selected. */
 	multiSelectGroup: GroupState | null;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 	onTransformUpdate: PropertyPanelTransformUpdater;
 };

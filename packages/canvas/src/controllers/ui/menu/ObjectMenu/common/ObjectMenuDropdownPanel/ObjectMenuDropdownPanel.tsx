@@ -18,8 +18,8 @@ type ObjectMenuDropdownPanelProps = ComponentPropsWithoutRef<
  * Must be rendered inside a menu target — the ObjectMenu, or the properties
  * sidebar it is portalled into — which a press on the panel's padding, the gaps
  * between buttons, or the border area resolves to; the panel itself carries only
- * `data-part="panel"`, which neither handler acts on, so the press leaves the
- * menu and the selection alone. The buttons inside carry their own data-part and
+ * `data-action="panel"`, which neither handler acts on, so the press leaves the
+ * menu and the selection alone. The buttons inside carry their own data-action and
  * are read first.
  */
 export const ObjectMenuDropdownPanel = forwardRef<
@@ -28,7 +28,7 @@ export const ObjectMenuDropdownPanel = forwardRef<
 >(({ placement = "down", offsetX = 0, style, ...props }, ref) => (
 	<ObjectMenuDropdownPanelRoot
 		ref={ref}
-		data-part="panel"
+		data-action="panel"
 		style={{
 			...(placement === "up" ? { bottom: 40 } : { top: 40 }),
 			transform: `translateX(calc(-50% + ${offsetX}px))`,

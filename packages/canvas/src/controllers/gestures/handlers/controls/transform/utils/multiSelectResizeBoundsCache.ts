@@ -26,7 +26,7 @@ import { collectObjectPoints } from "../../../../../utils/collectObjectPoints";
  * group before isTransformedFrame).
  */
 export function createMultiSelectResizeBoundsCache(
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	startGroup: GroupState,
 ): MultiSelectResizeBoundsCache {

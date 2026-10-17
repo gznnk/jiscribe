@@ -1,8 +1,9 @@
 import { memo } from "react";
 
+import { resolveCommandLabel } from "../../../../commands/CommandUtils";
 import { ResetConnectorRouteCommand } from "../../../../commands/connector/ResetConnectorRouteCommand";
-import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
-import { getCommandLabel } from "../../../../messages/CanvasMessages";
+import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
+import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { hasSelectedConnectorShapedRoute } from "../../../../utils/hasSelectedConnectorShapedRoute";
 import { PropertyCommandButton } from "../common/PropertyControlsStyled";
@@ -21,20 +22,23 @@ import type { PropertyPanelItemProps } from "../PropertyPanelTypes";
  */
 const ConnectorResetRouteItemComponent: React.FC<PropertyPanelItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getCommandLabel(messages, ResetConnectorRouteCommand);
+	const locale = useCanvasLocale();
+	const label = resolveCommandLabel(
+		ResetConnectorRouteCommand,
+		messages,
+		locale,
+	);
 
 	return (
 		<PropertyRow>
 			<PropertyCommandButton
 				type="button"
-				disabled={
-					!hasSelectedConnectorShapedRoute(selectedConnectorId, objects)
-				}
+				disabled={!hasSelectedConnectorShapedRoute({ objects, selection })}
 				title={label}
-				data-part={commandPart(ResetConnectorRouteCommand.id)}
+				data-action={commandAction(ResetConnectorRouteCommand.id)}
 			>
 				{label}
 			</PropertyCommandButton>

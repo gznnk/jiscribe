@@ -15,10 +15,15 @@ import {
 	requestedStyleKeys,
 	type StyleParams,
 } from "./utils/styleFields";
-import { applyRotation, requireRotationDegrees } from "./utils/transformFields";
+import {
+	acceptsRotation,
+	applyRotation,
+	requireRotationDegrees,
+} from "./utils/transformFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { TextLayout } from "../model/objects/types/text/TextLayout";
+import { calcPointDocCenter } from "../model/objects/utils/pointDocDrawnTopLeft";
 import { isSemanticError } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../plugin/supportsAutoHeight";
@@ -269,17 +274,33 @@ const buildObject = (
 
 	let created: ObjectDoc;
 	if (definition.features.geometry === "point") {
-		// The position goes in as the drawn top-left it already is: this geometry
-		// reports no dimensions to offset a center by, and stores no box to offset.
-		// A width reaches the factory as one more content field, the geometry having
-		// no box parameter to pass it as; the type keeps it only in the layout that
-		// wraps in it, and drops it otherwise.
+		const pointOverrides = {
+			...textOverride,
+			// A width reaches the factory as one more content field, the geometry having
+			// no box parameter to pass it as; the type keeps it only in the layout that
+			// wraps in it, and drops it otherwise.
+			...(params.width !== undefined ? { width: params.width } : {}),
+			// The angle goes in ahead of `applyRotation`, which writes it again below:
+			// the corner this geometry stores is a rotated one, so the conversion here
+			// and the one inside the factory have to read the same rotation.
+			...(rotation !== undefined && acceptsRotation(definition)
+				? { rotation }
+				: {}),
+		};
+		const { halfWidth, halfHeight } = factory.calcDimensions(pointOverrides);
+		// Two branches because the doc's corner means two different things. A point doc
+		// stores the corner as it is drawn — the local (-w/2, -h/2) corner already
+		// turned by the object's own rotation — so going from the top-left this call
+		// names to the center `createDoc` takes needs the measured box and that angle. A
+		// rect doc stores its untransformed corner, which no angle enters, hence the
+		// plain half-width below.
 		created = factory.createDoc(
-			{ x: params.x, y: params.y },
-			{
-				...textOverride,
-				...(params.width !== undefined ? { width: params.width } : {}),
-			},
+			calcPointDocCenter(
+				{ x: params.x, y: params.y },
+				{ width: halfWidth * 2, height: halfHeight * 2 },
+				pointOverrides,
+			),
+			pointOverrides,
 		);
 	} else {
 		const sizeOverride = {
@@ -374,9 +395,9 @@ const buildObject = (
  * Position is the top-left of the bounding box, sized by the effective width/height.
  * A factory with `createDocFromBounds` uses it — the one uniform entry that maps bounds
  * correctly for both rect-like and ellipse-like shapes — otherwise this falls back to the
- * center-based `createDoc`. Point-geometry types skip the sizing entirely: their
- * `createDoc` already takes the drawn top-left. The factory's UUID is replaced by a
- * `${type}-N` sequence.
+ * center-based `createDoc`. A point-geometry type is placed by the box measured from its
+ * content, the position still being the top-left of it. The factory's UUID is replaced by
+ * a `${type}-N` sequence.
  *
  * @param doc - Mutated in place: the created object is pushed onto `doc.root`
  * @param type - Object type name, which must be a key of `definitions` and carry a factory

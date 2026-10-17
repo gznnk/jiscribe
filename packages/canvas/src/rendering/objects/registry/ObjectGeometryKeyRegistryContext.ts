@@ -9,7 +9,7 @@ import {
  * Rendering-layer context that distributes the per-canvas
  * `ObjectGeometryKeyRegistry` to the connector endpoint memo (handed down
  * separately from the controllers-layer bundle for the same reason as
- * ObjectTextRegionRegistryContext).
+ * ObjectComponentRegistryContext).
  *
  * The default is a fresh empty registry, so rendering without a Provider keys
  * the memo on the frame fields alone. `Canvas` always provides the canvas's

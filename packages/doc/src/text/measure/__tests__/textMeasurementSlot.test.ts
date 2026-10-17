@@ -7,7 +7,9 @@ import type {
 } from "../TextMeasurement";
 import {
 	adoptTextMeasurement,
+	advanceTextMeasurementGeneration,
 	offerTextMeasurement,
+	readTextMeasurementGeneration,
 	resetTextMeasurementForTests,
 } from "../textMeasurementSlot";
 
@@ -118,5 +120,38 @@ describe("the text measurement slot with nothing offered", () => {
 		expect(() => adoptTextMeasurement()).toThrow(
 			/No text measurement has been offered/,
 		);
+	});
+});
+
+describe("the text measurement generation", () => {
+	it("stands while nothing declares the answers changed, offers and measuring included", () => {
+		resetTextMeasurementForTests();
+		const generation = readTextMeasurementGeneration();
+
+		offerTextMeasurement(measurementOf("renderer"));
+		adoptTextMeasurement();
+
+		expect(readTextMeasurementGeneration()).toBe(generation);
+	});
+
+	it("moves on when the answers are declared changed, the adopted instance staying", () => {
+		resetTextMeasurementForTests();
+		const renderer = measurementOf("renderer");
+		offerTextMeasurement(renderer);
+		adoptTextMeasurement();
+		const generation = readTextMeasurementGeneration();
+
+		advanceTextMeasurementGeneration();
+
+		expect(readTextMeasurementGeneration()).toBeGreaterThan(generation);
+		expect(adoptTextMeasurement()).toBe(renderer);
+	});
+
+	it("moves on with a reset, so nothing cached under one implementation is read under the next", () => {
+		const generation = readTextMeasurementGeneration();
+
+		resetTextMeasurementForTests();
+
+		expect(readTextMeasurementGeneration()).toBeGreaterThan(generation);
 	});
 });

@@ -1,14 +1,19 @@
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-import type { Dimensions } from "@jiscribe/geometry";
-import { describe, it, expect } from "vitest";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
+import { describe, it, expect, vi } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
-import { calcFullTextRegion, calcTextRegion } from "../calcTextRegion";
+import type { ObjectPartKindDefinition } from "../../registry/ObjectPartKindRegistry";
+import {
+	calcFullTextRegion,
+	calcTextRegion,
+	calcTextSlotRegions,
+} from "../calcTextRegion";
 
 type TextRegionState = ObjectState &
 	Dimensions &
-	Pick<TextStyleState, "textVerticalBasis">;
+	Pick<TextStyleState, "textVerticalBasis" | "text">;
 
 const makeState = (
 	width: number,
@@ -23,83 +28,120 @@ const makeState = (
 		...(textVerticalBasis === undefined ? {} : { textVerticalBasis }),
 	}) as unknown as TextRegionState;
 
-/** A cylinder's region: clear of its top cap and its bottom bulge, so vertically off-centre. */
-const cylinderRegion = ({ width, height }: Dimensions) => ({
-	x: -width / 2,
-	y: -height / 2 + height * 0.24,
-	width,
-	height: height - height * 0.36,
+/** A two-slot shape (a title over rows), as a `features.text: "slots"` type holds it. */
+const makeSlotsState = (
+	width: number,
+	height: number,
+	textVerticalBasis?: TextStyleState["textVerticalBasis"],
+): TextRegionState => ({
+	...makeState(width, height, textVerticalBasis),
+	type: "record",
+	text: { header: { text: "User" }, rows: { text: ["id"] } },
+});
+
+const HEADER_REGION: Rect = { x: 0, y: 0, width: 100, height: 20 };
+const ROWS_REGION: Rect = { x: 0, y: 20, width: 100, height: 40 };
+
+/**
+ * A registered kind stands in here as the bare pair of answers: the readers take
+ * what the kind says (placeTextSlotRegions has already placed it), so whatever
+ * `region` / `regions` return is what comes out.
+ */
+const textSlotKindAnswering = (
+	answers: Pick<ObjectPartKindDefinition, "region" | "regions">,
+): ObjectPartKindDefinition => ({
+	kind: "textSlot",
+	has: () => true,
+	...answers,
 });
 
 describe("calcTextRegion", () => {
-	it("returns the whole bbox in center-origin local coordinates when no calculator is registered", () => {
-		const result = calcTextRegion(
-			makeState(100, 60),
-			BODY_TEXT_SLOT_ID,
-			undefined,
+	it("answers the kind's region for the slot", () => {
+		const region = vi.fn((_object: ObjectState, partId: string) =>
+			partId === "rows" ? ROWS_REGION : HEADER_REGION,
 		);
-		expect(result).toEqual({ x: -50, y: -30, width: 100, height: 60 });
-	});
-
-	it("returns the calculator result when one is given", () => {
-		const result = calcTextRegion(
-			makeState(100, 60),
-			BODY_TEXT_SLOT_ID,
-			({ width }) => ({
-				x: 0,
-				y: 0,
-				width: width / 2,
-				height: 10,
-			}),
-		);
-		expect(result).toEqual({ x: 0, y: 0, width: 50, height: 10 });
-	});
-
-	it("passes slotId through to the calculator so it can return a region per compartment", () => {
-		const calculator = (state: Dimensions, slotId: string) =>
-			slotId === "header"
-				? { x: 0, y: 0, width: state.width, height: 20 }
-				: { x: 0, y: 20, width: state.width, height: state.height - 20 };
-
-		expect(calcTextRegion(makeState(100, 60), "header", calculator)).toEqual({
-			x: 0,
-			y: 0,
-			width: 100,
-			height: 20,
-		});
-		expect(calcTextRegion(makeState(100, 60), "rows", calculator)).toEqual({
-			x: 0,
-			y: 20,
-			width: 100,
-			height: 40,
-		});
-	});
-
-	it("places the body on the declared region when the state names no basis", () => {
-		expect(
-			calcTextRegion(makeState(100, 100), BODY_TEXT_SLOT_ID, cylinderRegion),
-		).toEqual({ x: -50, y: -26, width: 100, height: 64 });
-	});
-
-	it("places the body on the whole height for the frame basis, keeping the region's width", () => {
 		expect(
 			calcTextRegion(
-				makeState(100, 100, "frame"),
-				BODY_TEXT_SLOT_ID,
-				cylinderRegion,
+				makeSlotsState(100, 60),
+				"rows",
+				textSlotKindAnswering({ region }),
 			),
-		).toEqual({ x: -50, y: -50, width: 100, height: 100 });
+		).toEqual(ROWS_REGION);
+		expect(region).toHaveBeenCalledWith(makeSlotsState(100, 60), "rows");
 	});
 
-	it("leaves a type whose region is the whole box untouched by the frame basis", () => {
+	it("returns the whole bbox in center-origin local coordinates when no kind is registered", () => {
+		expect(
+			calcTextRegion(makeState(100, 60), BODY_TEXT_SLOT_ID, undefined),
+		).toEqual({ x: -50, y: -30, width: 100, height: 60 });
+	});
+
+	it("falls back to the whole bbox where the kind answers null", () => {
+		expect(
+			calcTextRegion(
+				makeSlotsState(100, 60),
+				"operations",
+				textSlotKindAnswering({ region: () => null }),
+			),
+		).toEqual({ x: -50, y: -30, width: 100, height: 60 });
+	});
+
+	it("puts the fallback on the vertical basis, the box itself being its whole height", () => {
 		expect(
 			calcTextRegion(makeState(100, 60, "frame"), BODY_TEXT_SLOT_ID, undefined),
 		).toEqual(calcTextRegion(makeState(100, 60), BODY_TEXT_SLOT_ID, undefined));
 	});
 });
 
+describe("calcTextSlotRegions", () => {
+	it("asks the kind's regions exactly once for every slot", () => {
+		const regions = vi.fn(() => ({
+			header: HEADER_REGION,
+			rows: ROWS_REGION,
+		}));
+		const region = vi.fn(() => HEADER_REGION);
+
+		expect(
+			calcTextSlotRegions(
+				makeSlotsState(100, 60),
+				textSlotKindAnswering({ region, regions }),
+			),
+		).toEqual({ header: HEADER_REGION, rows: ROWS_REGION });
+		expect(regions).toHaveBeenCalledTimes(1);
+		expect(region).not.toHaveBeenCalled();
+	});
+
+	it("asks the kind's region once per slot when it declares no regions", () => {
+		const region = vi.fn((_object: ObjectState, partId: string) =>
+			partId === "rows" ? ROWS_REGION : HEADER_REGION,
+		);
+
+		const textSlotRegions = calcTextSlotRegions(
+			makeSlotsState(100, 60),
+			textSlotKindAnswering({ region }),
+		);
+
+		expect(region).toHaveBeenCalledTimes(2);
+		expect(textSlotRegions).toEqual({
+			header: HEADER_REGION,
+			rows: ROWS_REGION,
+		});
+	});
+
+	it("gives every slot the full box when no kind is registered", () => {
+		expect(calcTextSlotRegions(makeSlotsState(100, 60), undefined)).toEqual({
+			header: { x: -50, y: -30, width: 100, height: 60 },
+			rows: { x: -50, y: -30, width: 100, height: 60 },
+		});
+	});
+
+	it("answers nothing for a state holding no text", () => {
+		expect(calcTextSlotRegions(makeState(100, 60), undefined)).toEqual({});
+	});
+});
+
 describe("calcFullTextRegion", () => {
-	it("is the box itself, which is what a type registering no calculator gets", () => {
+	it("is the box itself, which is what a type placing no slot gets", () => {
 		expect(calcFullTextRegion(makeState(100, 60))).toEqual(
 			calcTextRegion(makeState(100, 60), BODY_TEXT_SLOT_ID, undefined),
 		);

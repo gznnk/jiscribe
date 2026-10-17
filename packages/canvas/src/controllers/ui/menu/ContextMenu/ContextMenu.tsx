@@ -12,16 +12,17 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import {
 	formatShortcut,
 	getPlatformShortcuts,
+	resolveCommandLabel,
 } from "../../../commands/CommandUtils";
-import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../hooks/useCommandState";
-import { getCommandLabel } from "../../../messages/CanvasMessages";
+import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 /**
  * Both kinds resolve label / shortcut / enabled from the command registry;
  * they differ only in execution wiring: "command" dispatches via the gesture
- * system (data-part), "callback" invokes callbacks[commandId] directly
+ * system (data-action), "callback" invokes callbacks[commandId] directly
  * (definition-only commands such as paste).
  */
 type CommandMenuItem =
@@ -48,6 +49,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
 	const resolveCommand = useCommandState(canvasState);
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
@@ -101,12 +103,14 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 						: {
 								"data-kind": "menu",
 								"data-id": "context-menu",
-								"data-part": commandPart(command.id),
+								"data-action": commandAction(command.id),
 							};
 
 				return (
 					<MenuItem key={command.id} disabled={!enabled} {...executionProps}>
-						<MenuItemLabel>{getCommandLabel(messages, command)}</MenuItemLabel>
+						<MenuItemLabel>
+							{resolveCommandLabel(command, messages, locale)}
+						</MenuItemLabel>
 						{firstShortcut && (
 							<MenuItemShortcut>
 								{formatShortcut(firstShortcut)}

@@ -7,11 +7,11 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * group.spec guards moving and ungrouping a single-level group, but a group that is
  * itself grouped had no coverage. The points for nesting are: (1) GroupCommand can
  * create a new group that holds an existing group as a child, (2) clicking a leaf child
- * selects the topmost (root) group (the ancestors[0] path in determineSelection),
- * (3) moving the root moves the grandchildren too, (4) ungroup (Ctrl+Shift+G) peels off
- * only the root level and keeps the inner group. Unit tests
- * (autoSelectParentGroups / determineSelection) exist, but there was no regression
- * guard through the UI.
+ * selects the topmost (root) group (the ancestors[0] path in
+ * determineClickSelection), (3) moving the root moves the grandchildren too,
+ * (4) ungroup (Ctrl+Shift+G) peels off only the root level and keeps the inner
+ * group. Unit tests (autoSelectParentGroups / determineClickSelection) exist,
+ * but there was no regression guard through the UI.
  */
 
 /**

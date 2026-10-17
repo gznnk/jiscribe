@@ -1,9 +1,9 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
-import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 import type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefinition";
 import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
+import type { DeclaredStyleTable } from "../controllers/style/StyleEntry";
 import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
@@ -11,10 +11,11 @@ import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/Object
 import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectConnectionAnchorsDeclaration } from "../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
-import type { ObjectTextRegionCalculator } from "../rendering/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectPartKindDefinition } from "../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectVisualBoundsCalculator } from "../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
@@ -29,12 +30,14 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  * extends {@link ObjectDocDefinition}, a UI definition is structurally a doc
  * definition, and `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
  *
- * `textRegion` is the one field taken over rather than inherited: a doc
+ * The inherited `textRegion` is the doc's, for the headless checks and the
+ * auto-height verdict; it is not where the canvas draws the text. That is the
+ * `"textSlot"` part kind's `region` / `regions` (createTextSlotPartKindDefinition
+ * in `partKinds`, or `createFrameObjectDefinition({ textRegion })`), since a doc
  * declaration may answer "the box does not hold the text at all" (`null`), which
- * a renderer has no use for. Most shipped shapes register the very same function
+ * a renderer has no use for. Most shipped shapes declare the very same function
  * on both sides; the ones that cannot are those whose region is sized from the
- * text itself (a below-label caption, a record's bands), and their doc side is
- * exactly the one declaring `calcOutsideBoxTextRegion`.
+ * text itself (a below-label caption, a record's bands).
  *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
  * type. A plugin declares a standalone definition with an explicit
@@ -46,7 +49,7 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 export type ObjectTypeDefinition<
 	TDoc extends ObjectDoc = ObjectDoc,
 	TState extends ObjectState = ObjectState,
-> = Omit<ObjectDocDefinition, "textRegion"> & {
+> = ObjectDocDefinition & {
 	// --- Model (state) ---
 
 	/** Doc ↔ State conversion. */
@@ -60,7 +63,9 @@ export type ObjectTypeDefinition<
 	 * (`geometry: "point"`). Runs wherever content and box can drift apart: load,
 	 * undo/redo, external sync, every committed and uncommitted edit. Omitted =
 	 * no derivation, so the doc's own width/height stand as-is — which is what
-	 * every stored-box geometry wants (see ObjectContentResizerRegistry).
+	 * every stored-box geometry wants (see ObjectContentResizerRegistry). While a
+	 * transform handle is resizing the object, `context.resizedAxes` names the
+	 * axes the drag writes and the edge each holds.
 	 */
 	contentResizer?: ObjectContentResizer<TState>;
 
@@ -80,18 +85,9 @@ export type ObjectTypeDefinition<
 	svgDefs?: FC;
 
 	/**
-	 * Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry).
-	 * Register the very function the type's doc definition declares as its own
-	 * `textRegion`, unless the region is sized from the text itself (the
-	 * below-label shapes, a record's bands), which a doc cannot answer.
-	 */
-	textRegion?: ObjectTextRegionCalculator;
-
-	/**
 	 * Whether the in-place editor scrolls inside a slot's region or grows past it,
-	 * to the shape's bottom edge at most. Declared next to `textRegion` because
-	 * only a region derived from the text itself may grow. Omitted = `"scroll"`
-	 * for every slot (see ObjectTextEditOverflowRegistry).
+	 * to the shape's bottom edge at most. Only a slot whose region is derived
+	 * from the text itself may grow. Omitted = `"scroll"` for every slot (see ObjectTextEditOverflowRegistry).
 	 */
 	textEditOverflow?: ObjectTextEditOverflowResolver;
 
@@ -110,6 +106,23 @@ export type ObjectTypeDefinition<
 	 * midpoints only (see ObjectExtraConnectPointsRegistry).
 	 */
 	extraConnectPoints?: ObjectExtraConnectPointsCalculator;
+
+	/**
+	 * How each fixed connection anchor is shown, keyed by the edge anchor ids
+	 * (`topCenter` / `rightCenter` / `bottomCenter` / `leftCenter`) and the ids
+	 * `extraConnectPoints` declares — local-space ids, so an entry stays on its
+	 * edge through rotation and flips. `offset` moves the source dot off its
+	 * edge, for a type whose own controls occupy the band the dot would land in
+	 * (screen px, divided by zoom like the theme's
+	 * `handleDimensions.connectionAnchorOffset`, which an omitted offset keeps).
+	 * `hidden` stops offering the anchor: no source dot, no landing dot during a
+	 * connection drag, no snap on drop. Neither changes where a connector a doc
+	 * already attaches lands, so `connectPoint` / `edge` / `center` endpoints
+	 * keep parsing and drawing as before. One object for the whole type, or a
+	 * function asked per object and zoom. Omitted = every anchor offered at the
+	 * theme's distance (see ObjectConnectionAnchorsRegistry).
+	 */
+	connectionAnchors?: ObjectConnectionAnchorsDeclaration<TState>;
 
 	/**
 	 * Key over whatever `outline` / `anchorRegion` / `extraConnectPoints` read beyond the frame fields
@@ -140,6 +153,18 @@ export type ObjectTypeDefinition<
 	selectionControls?: SelectionControlDefinition<TState>[];
 
 	/**
+	 * The sub-parts of an object of this type that core may select and act on —
+	 * one entry per part-id namespace (see ObjectPartKindRegistry). Omitted = the
+	 * object is indivisible, and every part-aware seam is inert for it.
+	 *
+	 * A type with `features.text` gets the `"textSlot"` kind without declaring it,
+	 * its slots taking the whole box. Declaring it here
+	 * (createTextSlotPartKindDefinition) replaces that one, and its `region` /
+	 * `regions` are where the slots are drawn, edited and outlined.
+	 */
+	partKinds?: ObjectPartKindDefinition<TState>[];
+
+	/**
 	 * Which handles the transform frame offers on a single selection. Omitted =
 	 * every handle (eight resize handles + rotation knob), so leaving it out
 	 * keeps the historical behavior. A function is asked per object, for a type
@@ -152,8 +177,24 @@ export type ObjectTypeDefinition<
 
 	// --- Style ---
 
-	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
-	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
+	/**
+	 * What this type answers for when a style is written or reported: an
+	 * `{ apply, read }` pair per intent kind ({@link DeclaredStyleTable}). Composed onto
+	 * the entries derived from `features` (`coreStyleTable`) at registration,
+	 * these last — so a kind declared here **replaces** the derived one, which is
+	 * how a type whose storage differs from the core guess (a table whose fill
+	 * lives on its cells) says where the edit really lands.
+	 *
+	 * A kind the core vocabulary does not hold is a style of this type alone: it
+	 * reaches the objects of the selection that declare it and no others, the
+	 * declaration being the gate (fail-closed). `declaredFieldEntry(path,
+	 * valueType)` is the entry for a field of the type's own, dots in the path
+	 * being a write into a nested object. Every entry states the fields it writes
+	 * (`fields`), `[]` when it writes nothing the document stores; an entry
+	 * stating none, or a field the type's doc cannot hold (`extraKeys`), is
+	 * refused at registration.
+	 */
+	styleEntries?: DeclaredStyleTable<TState>;
 
 	// --- Editor UI (StencilLibrary / ObjectMenu) ---
 

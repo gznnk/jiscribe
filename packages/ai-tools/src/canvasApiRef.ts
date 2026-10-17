@@ -20,11 +20,13 @@ type CanvasHandleMemberPath = {
 
 /**
  * One canvas API a tool drives: a headless doc-ops member, a member of the
- * imperative canvas handle, or `"agent"` for the tools that have no canvas member
+ * imperative canvas handle, `"agent"` for the tools that have no canvas member
  * behind them at all (reading the document back, and the AI's own undo history,
- * both of which the host owns).
+ * both of which the host owns), or `"plugin"` for a tool whose work is a plugin's
+ * own code (an `ObjectAiToolDefinition`).
  */
 export type CanvasApiRef =
 	| `docOps.${keyof DocOps & string}`
 	| `handle.${CanvasHandleMemberPath}`
-	| "agent";
+	| "agent"
+	| "plugin";

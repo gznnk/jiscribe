@@ -10,7 +10,8 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * turning a handle off costs nothing elsewhere (unlike `features.transform`,
  * which drops rotation/scale from the state and makes `isTransformedFrame`
  * false). A type whose size is derived from its own content turns `resize` off
- * so the handles cannot contradict the derivation.
+ * so the handles cannot contradict the derivation — or keeps the handles and has
+ * its resizer read the dragged axes from `ObjectContentResizeContext.resizedAxes`.
  */
 export type ObjectTransformHandles = {
 	/**

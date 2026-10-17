@@ -15,8 +15,25 @@ import { createTestState } from "./createTestState";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { toggleTextFormatCommandId } from "../../../commands/text/ToggleTextFormatCommands";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
+import { toStyleIntent } from "../../../style/intent/toStyleIntent";
+import type { CoreStyleIntent } from "../../../style/StyleIntent";
+import { styleIntentValue } from "../../../style/StyleIntent";
+import type { TextFormat } from "../../../style/TextFormat";
+import {
+	TEXT_FORMATS,
+	textFormatStyleIntentKind,
+	toggleTextFormatIntent,
+} from "../../../style/TextFormat";
+import { readSelectionStyle } from "../../../style/walk/readSelectionStyle";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
+import {
+	hasTextDecorationToken,
+	setTextDecorationToken,
+} from "../../../utils/textDecorationToken";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
 
@@ -25,7 +42,7 @@ import { createCanvasReducer } from "../../canvasReducer";
  *
  * A session is a random script of the operations a user can perform while an
  * editor is open — typing (any replacement of the plain text), format
- * keystrokes, styling from the ObjectMenu, committing and reopening — and a
+ * commands, styling from the ObjectMenu, committing and reopening — and a
  * model tracks alongside what must be true after every step. The invariants are
  * the seams the editor relies on: the draft stays canonical, holds exactly the
  * typed characters, reads back from the grafted object with the same styling it
@@ -65,7 +82,8 @@ type FuzzOp =
 	  }
 	| {
 			kind: "toggle";
-			format: "bold" | "italic" | "underline";
+			format: TextFormat;
+			/** Selection reported before the press; start === end takes the slot-wide path. */
 			start: number;
 			end: number;
 	  }
@@ -179,11 +197,50 @@ const assertSameVisibleText = (
 	}
 };
 
+/**
+ * The field a step wrote over the whole slot and stripped from the runs, or
+ * undefined for a step that wrote no such thing. A decoration line is not one:
+ * its slot-wide write keeps the runs overriding `textDecoration`, each with its
+ * own other line (textDecorationLineEntry).
+ */
+const slotWidePropertyOf = (
+	op: FuzzOp | null,
+): keyof InlineTextStyle | undefined => {
+	if (op === null || !("start" in op) || op.start !== op.end) {
+		return undefined;
+	}
+	if (op.kind === "menu") {
+		return op.property;
+	}
+	const kind = textFormatStyleIntentKind(op.format);
+	return kind === "fontWeight" || kind === "fontStyle" ? kind : undefined;
+};
+
+/** The slot fields a slot-wide format press writes, given the slot's styling before it. */
+const slotStyleLandedBy = (
+	intent: CoreStyleIntent,
+	slotStyle: InlineTextStyle,
+): InlineTextStyle => {
+	if (intent.kind !== "underline" && intent.kind !== "strikethrough") {
+		return { [intent.kind]: styleIntentValue(intent) };
+	}
+	const line = intent.kind === "underline" ? "underline" : "line-through";
+	return hasTextDecorationToken(slotStyle.textDecoration, line) === intent.on
+		? {}
+		: {
+				textDecoration: setTextDecorationToken(
+					slotStyle.textDecoration,
+					line,
+					intent.on,
+				),
+			};
+};
+
 /** The state the session model tracks between steps. */
 type FuzzModel = {
 	/** What the plain text must read as after the last step. */
 	expectedPlain: string;
-	/** The slot's own styling fields, which only a slot-wide menu write may change. */
+	/** The slot's own styling fields, which only a slot-wide write (a menu value, a format press) may change. */
 	expectedSlotStyle: InlineTextStyle;
 	/** Per property, every value a run override may legitimately hold. */
 	allowedRunValues: Record<string, Set<string | number>>;
@@ -216,19 +273,17 @@ const openSession = (scenario: FuzzScenario): CanvasControllerState => {
 			},
 		],
 	} as unknown as CanvasDoc;
-	const base = createTestState(doc, { selectedIds: [OBJECT_ID] });
+	const base = createTestState(doc, { selection: selectionOf([OBJECT_ID]) });
 	const seeded = {
 		...base.objects[OBJECT_ID],
 		text: { [SLOT_ID]: { text: scenario.slotContent } },
 	} as CanvasControllerState["objects"][string];
 	const objects = { ...base.objects, [OBJECT_ID]: seeded };
 	return createTestState(doc, {
-		selectedIds: [OBJECT_ID],
+		selection: selectionOf([OBJECT_ID], textSlotPartSelection(SLOT_ID)),
 		objects,
 		textEditState: {
 			kind: "shape",
-			objectId: OBJECT_ID,
-			slotId: SLOT_ID,
 			text: readRichTextSlot(
 				(seeded as unknown as { text: TextSlots }).text,
 				SLOT_ID,
@@ -261,7 +316,7 @@ const generateOp = (random: () => number, plain: string): FuzzOp => {
 		const end = start + randomInt(random, plain.length - start + 1);
 		return {
 			kind: "toggle",
-			format: pick(random, ["bold", "italic", "underline"] as const),
+			format: pick(random, TEXT_FORMATS),
 			start,
 			end,
 		};
@@ -366,18 +421,14 @@ export const runTextEditFuzzSession = (
 		}
 
 		// What the grafted object draws is what the editor draws.
-		const grafted = graftTextEditDraft(
-			state.objects,
-			state.textEditState,
-			registries.objectContentResizer,
-		);
+		const grafted = graftTextEditDraft(state, registries.objectContentResizer);
 		const graftedBody = readRichTextSlot(
 			(grafted[OBJECT_ID] as unknown as { text: TextSlots }).text,
 			SLOT_ID,
 		);
 		assertSameVisibleText("grafted slot vs draft", graftedBody, draft, fail);
 
-		// The slot's own styling only moves through a slot-wide menu write.
+		// The slot's own styling only moves through a slot-wide write.
 		const slotStyle = pickDefinedInlineTextStyle(
 			readSlot(state) as unknown as InlineTextStyle,
 		);
@@ -404,17 +455,15 @@ export const runTextEditFuzzSession = (
 		}
 
 		// A slot-wide write leaves no run override of the written property behind.
-		if (lastOp?.kind === "menu" && lastOp.start === lastOp.end) {
-			if (
-				typeof draft !== "string" &&
-				draft.some(
-					(run) => run[lastOp.property as keyof InlineTextStyle] !== undefined,
-				)
-			) {
-				fail(
-					`slot-wide ${lastOp.property} left run overrides behind: ${JSON.stringify(draft)}`,
-				);
-			}
+		const slotWideProperty = slotWidePropertyOf(lastOp);
+		if (
+			slotWideProperty !== undefined &&
+			typeof draft !== "string" &&
+			draft.some((run) => run[slotWideProperty] !== undefined)
+		) {
+			fail(
+				`slot-wide ${slotWideProperty} left run overrides behind: ${JSON.stringify(draft)}`,
+			);
 		}
 	};
 
@@ -453,18 +502,38 @@ export const runTextEditFuzzSession = (
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			dispatch({ type: "TOGGLE_TEXT_FORMAT", format: op.format });
+			// What the press lands on, read from the selection before it as the
+			// command reads it; only the slot-wide path changes the slot's styling.
+			const landed = toggleTextFormatIntent(
+				op.format,
+				readSelectionStyle(
+					state,
+					textFormatStyleIntentKind(op.format),
+					registries,
+				),
+			);
+			dispatch({
+				type: "COMMAND",
+				commandId: toggleTextFormatCommandId(op.format),
+			});
+			if (op.start === op.end) {
+				model.expectedSlotStyle = {
+					...model.expectedSlotStyle,
+					...slotStyleLandedBy(landed, model.expectedSlotStyle),
+				};
+			}
 		} else if (op.kind === "menu") {
 			dispatch({
 				type: "UPDATE_TEXT_EDIT_SELECTION",
 				selection: { start: op.start, end: op.end },
 			});
-			dispatch({
-				type: "STYLE_PROPERTY_UPDATE",
-				property: op.property,
-				value: op.value,
-				commit: op.commit,
-			});
+			const intent = toStyleIntent(op.property, op.value);
+			if (intent === undefined) {
+				throw new Error(
+					`the menu op states a value nothing reads: ${op.property}=${op.value}`,
+				);
+			}
+			dispatch({ type: "STYLE_INTENT", intent, commit: op.commit });
 			const coerced = op.property === "fontSize" ? Number(op.value) : op.value;
 			model.allowedRunValues[op.property].add(coerced);
 			if (op.start === op.end) {

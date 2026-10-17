@@ -52,10 +52,12 @@ const runCandidates = (
 	advancedTo: number[];
 	spawned: ChildProcess[];
 	exhaustedReasons: string[];
+	exhaustedStderrs: string[];
 } => {
 	const advancedTo: number[] = [];
 	const spawned: ChildProcess[] = [];
 	const exhaustedReasons: string[] = [];
+	const exhaustedStderrs: string[] = [];
 	spawnFirstAvailable(commands, {
 		onAdvance: (nextIndex) => {
 			advancedTo.push(nextIndex);
@@ -64,13 +66,14 @@ const runCandidates = (
 			spawned.push(child);
 			runningChildren.push(child);
 		},
-		onExhausted: (reason) => {
+		onExhausted: (reason, stderr) => {
 			exhaustedReasons.push(reason);
+			exhaustedStderrs.push(stderr);
 		},
 		isChildTheBrowser,
 		launchFailureWindowMs,
 	});
-	return { advancedTo, spawned, exhaustedReasons };
+	return { advancedTo, spawned, exhaustedReasons, exhaustedStderrs };
 };
 
 const waitFor = async (isDone: () => boolean): Promise<void> => {
@@ -141,6 +144,75 @@ describe("spawnFirstAvailable", () => {
 
 		await waitFor(() => run.advancedTo.length === 1);
 		expect(run.advancedTo).toEqual([1]);
+	});
+
+	// Windows has no signals to die on
+	it.skipIf(process.platform === "win32")(
+		"drops to the next browser when one kills itself as it starts, and names the signal",
+		async () => {
+			// A Chromium whose sandbox cannot be set up goes down on a signal, not an
+			// exit code. Read as nothing, that left the next candidate untried and the
+			// caller waiting the full connect timeout for a page that was never coming.
+			// (Chromium's is SIGTRAP; a signal that dumps core takes seconds to kill a
+			// node on some machines, so the stand-in dies on one that does not)
+			const run = runCandidates(
+				[
+					nodeCommand('process.kill(process.pid, "SIGTERM")'),
+					nodeCommand('process.kill(process.pid, "SIGTERM")'),
+				],
+				true,
+			);
+
+			await waitFor(() => run.exhaustedReasons.length === 1);
+			expect(run.advancedTo).toEqual([1]);
+			expect(run.exhaustedReasons[0]).toContain("SIGTERM");
+		},
+	);
+
+	it("hands over what a browser wrote to stderr before it died", async () => {
+		// The exit code or signal says that it died; what it wrote says why
+		const run = runCandidates(
+			[
+				nodeCommand(
+					'console.error("No usable sandbox!"); console.error("second line"); process.exit(1)',
+				),
+			],
+			true,
+		);
+
+		await waitFor(() => run.exhaustedReasons.length === 1);
+		expect(run.exhaustedReasons[0]).toContain("exited with 1");
+		expect(run.exhaustedStderrs[0]).toContain("No usable sandbox!");
+		expect(run.exhaustedStderrs[0]).toContain("second line");
+	});
+
+	it("keeps the head of a browser's stderr and drops the rest", async () => {
+		// Chromium explains itself first and traces afterwards, and a browser
+		// writing without end must not be let fill the parent's memory
+		const run = runCandidates(
+			[
+				nodeCommand(
+					'process.stderr.write("head\\n" + "x".repeat(40_000)); process.exit(1)',
+				),
+			],
+			true,
+		);
+
+		await waitFor(() => run.exhaustedReasons.length === 1);
+		expect(run.exhaustedStderrs[0].startsWith("head\n")).toBe(true);
+		expect(run.exhaustedStderrs[0].length).toBeLessThan(40_000);
+	});
+
+	it("does not read a launcher's stderr", async () => {
+		// A launcher is left to outlive this process, and an open pipe to it would
+		// hold this process up until the launcher let go
+		const run = runCandidates(
+			[nodeCommand('console.error("noise"); process.exit(4)')],
+			false,
+		);
+
+		await waitFor(() => run.exhaustedReasons.length === 1);
+		expect(run.exhaustedStderrs).toEqual([""]);
 	});
 
 	it("does not read a process it killed itself as a launch that failed", async () => {

@@ -1,10 +1,10 @@
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo, useRef } from "react";
 
-import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import {
 	ObjectMenuFontFamilyList,
@@ -25,7 +25,7 @@ const SECTION_ID = "label-font-family";
  */
 const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
@@ -37,22 +37,23 @@ const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	// An unset family draws in the default one, so that is the entry to mark active.
+	const { value: fontFamily, hasLabelText } = useConnectorLabelStyle(
+		"label.fontFamily",
+		CONNECTOR_LABEL_DEFAULTS.fontFamily,
+		{ objects, selection },
+	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily = label.fontFamily ?? CONNECTOR_LABEL_DEFAULTS.fontFamily;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuLabelFontFamily}
 			>
 				<FontFamilyIcon title={messages.menuLabelFontFamily} />

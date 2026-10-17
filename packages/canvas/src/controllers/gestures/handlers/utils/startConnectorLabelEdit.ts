@@ -44,6 +44,7 @@ const calcPendingLabelPlacement = (
 		registries.objectOutline,
 		registries.objectAnchorRegion,
 		registries.objectExtraConnectPoints,
+		registries.objectGeometryKey,
 	);
 	if (!points) {
 		return null;
@@ -69,10 +70,10 @@ const calcPendingLabelPlacement = (
  * otherwise the double click just selects.
  *
  * Reached from two targets: the connector itself (ConnectorClickHandler, label
- * hit = targetPart "label") and the waypoint-insert handle sitting on the path
+ * hit = targetAction "label") and the waypoint-insert handle sitting on the path
  * (ConnectorVertexInsertHandler, label hit resolved from the hover stack — the
  * handle covers the box at the default midpoint placement, so the recognizer
- * pairs the clicks but the part cannot tell what is underneath).
+ * pairs the clicks but the pressed action cannot tell what is underneath).
  *
  * @param state Canvas state with any pending text edit already committed
  *   (both callers run under commitTextEditIfNeeded)
@@ -99,10 +100,7 @@ export const startConnectorLabelEdit = (
 	const labelText = connectorState.label?.text ?? "";
 	const selectedState = {
 		...state,
-		selectedConnectorId: connectorId,
-		selectedIds: [],
-		// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-		selectedVertex: null,
+		selection: { objectIds: [connectorId], part: null },
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,
@@ -124,9 +122,9 @@ export const startConnectorLabelEdit = (
 			: null;
 	return {
 		...selectedState,
+		// The owner is the selection written just above (see textEditState).
 		textEditState: {
 			kind: "connectorLabel",
-			objectId: connectorId,
 			text: labelText,
 			...(placement ? { placement } : {}),
 		},

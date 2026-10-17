@@ -1,9 +1,10 @@
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
-import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
+import { resolveCommandLabel } from "../../../../commands/CommandUtils";
+import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../../hooks/useCommandState";
-import { getCommandLabel } from "../../../../messages/CanvasMessages";
+import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import {
 	PropertyCommandButton,
@@ -27,6 +28,7 @@ const StackOrderItemComponent: React.FC<
 	Pick<BuiltinItemProps, "canvasState">
 > = ({ canvasState }) => {
 	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
 	const resolveCommand = useCommandState(canvasState);
 
 	return (
@@ -36,14 +38,14 @@ const StackOrderItemComponent: React.FC<
 				if (!resolved) {
 					return null;
 				}
-				const label = getCommandLabel(messages, resolved.command);
+				const label = resolveCommandLabel(resolved.command, messages, locale);
 				return (
 					<PropertyCommandButton
 						key={commandId}
 						type="button"
 						disabled={!resolved.enabled}
 						title={label}
-						data-part={commandPart(commandId)}
+						data-action={commandAction(commandId)}
 					>
 						{label}
 					</PropertyCommandButton>

@@ -37,14 +37,14 @@ export type AnchorResizeResult = {
  * keypoint (-1 = toward left/top, 0 = axis fixed, 1 = toward right/bottom).
  * The opposite keypoint stays fixed during the resize.
  */
-type ResizeAnchorGeometry = {
+export type ResizeAnchorGeometry = {
 	dx: -1 | 0 | 1;
 	dy: -1 | 0 | 1;
 	anchorKeyPointId: KeyPointId;
 	oppositeKeyPointId: KeyPointId;
 };
 
-const RESIZE_ANCHOR_GEOMETRIES: Partial<
+export const RESIZE_ANCHOR_GEOMETRIES: Partial<
 	Record<TransformAnchorType, ResizeAnchorGeometry>
 > = {
 	topLeft: {

@@ -131,11 +131,10 @@ export {
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "./model/objects/types/text/TextType";
-export type {
-	ExtraStylePropertyDescriptor,
-	StyleValueType,
-} from "./model/objects/types/ExtraStyleProperty";
 export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
+// The box declaration a doc definition carries, for the types whose geometry does
+// not settle their box: a plugin author annotating one needs the shape of it.
+export type { ObjectDocBoundsCalculator } from "./plugin/ObjectDocBounds";
 // The text-region declaration a doc definition carries, and the two answers most
 // types give: the whole box, and "the box does not hold the text at all".
 export type { ObjectDocTextRegionCalculator } from "./plugin/ObjectDocTextRegion";
@@ -143,26 +142,28 @@ export {
 	calcFullBoxTextRegion,
 	calcOutsideBoxTextRegion,
 } from "./plugin/ObjectDocTextRegion";
+// The overflow declaration a doc definition carries, for a type that lays some of
+// its content out by a rule of its own: a plugin author implementing one needs the
+// shape of it.
+export type { ObjectDocOverflowDiagnoser } from "./plugin/ObjectDocOverflow";
 // Whether a type may leave `height` out of the document, which is what that
 // declaration decides: the schema generator relaxes the field for exactly these
 // types, and the doc-ops refuse to switch any other.
 export { supportsAutoHeight } from "./plugin/supportsAutoHeight";
 export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
-// Whether the same declaration gives up part of the box's height, which is what
-// decides whether switching `textVerticalBasis` moves the type's body at all.
-export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";
-export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
+// The rule a point-geometry type is held to: it has to declare as `bounds` the
+// box its doc does not store. Read by the plugin testing kit and by the headless
+// diagnostics.
+export { isMissingBounds } from "./plugin/isMissingBounds";
+export type { BoundsDeclaration } from "./plugin/isMissingBounds";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
 // The stroke / fill defaults a type declares through its creation defaults, and
 // what one shape's style resolves to once type and last resort are folded in.
 export { extractShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
-export type {
-	ObjectShapeStyleDefaults,
-	ResolvedShapeStyle,
-	ShapeStyleGroup,
-} from "./registries/ObjectShapeStyleDefaultsRegistry";
+export type { ObjectShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
+export type { ResolvedShapeStyle } from "./model/objects/utils/shapeStyleFallback";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";

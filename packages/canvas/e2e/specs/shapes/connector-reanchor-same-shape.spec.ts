@@ -130,13 +130,13 @@ test.describe("re-anchoring to another edge of the same shape", () => {
 		// Select the connector (a vertical line with both ends owned) to show the target handle.
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator(`[data-id="${id}"][data-part="endpoint:target"]`),
+			canvas.page.locator(`[data-id="${id}"][data-action="endpoint:target"]`),
 		).toBeVisible();
 
 		// Drag the target handle near the right edge center of B -> re-anchors to rightCenter.
 		await dragControlTo(
 			canvas,
-			`[data-id="${id}"][data-part="endpoint:target"]`,
+			`[data-id="${id}"][data-action="endpoint:target"]`,
 			{
 				x: 590,
 				y: 500,

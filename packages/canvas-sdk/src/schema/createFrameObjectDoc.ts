@@ -1,6 +1,7 @@
 import type {
 	ObjectDoc,
 	ObjectDocDefinition,
+	ObjectDocOverflowDiagnoser,
 	ObjectDocTextRegionCalculator,
 	ObjectDocValidateFn,
 	ObjectFeatures,
@@ -54,6 +55,13 @@ type FrameObjectDocCommonParams = {
 	textRegion?: ObjectDocTextRegionCalculator;
 
 	/**
+	 * Reports content the shape stacks or sizes by a rule of its own that the box
+	 * is too small for (see `ObjectDocDefinition.diagnoseOverflow`). Carried into
+	 * the definition as-is.
+	 */
+	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
+
+	/**
 	 * Pass `false` for a shape whose box must not be sized from its text even
 	 * though its `textRegion` says it could — one whose height is settled by
 	 * something else (the children it frames), or whose body is not drawn by the
@@ -76,9 +84,10 @@ type FrameObjectDocCommonParams = {
 	validateExtra?: ObjectDocValidateFn;
 
 	/**
-	 * Draw-time text-style defaults keyed by slot id, for a `text: "slots"` shape
-	 * (see `ObjectDocDefinition.textSlotStyleDefaults`). A `"body"` shape omits it:
-	 * its single slot's defaults are read off {@link defaults}.
+	 * Draw-time text-style defaults of a `text: "slots"` shape — `byTextSlot` for the
+	 * slots it names, `everyTextSlot` for a shape whose slot set is not fixed (see
+	 * `ObjectDocDefinition.textSlotStyleDefaults`). A `"body"` shape omits it: its
+	 * single slot's defaults are read off {@link defaults}.
 	 */
 	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
 };
@@ -133,6 +142,7 @@ export const createFrameObjectDoc = ({
 	defaults,
 	extraKeys,
 	textRegion,
+	diagnoseOverflow,
 	autoHeight,
 	description,
 	summary,
@@ -149,6 +159,7 @@ export const createFrameObjectDoc = ({
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
+	diagnoseOverflow,
 	autoHeight,
 	description,
 	summary,

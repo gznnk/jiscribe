@@ -56,7 +56,7 @@ export const ObjectMenuSectionRow = styled.div`
 		display: none;
 	}
 
-	&:not(:first-child)::before {
+	&:not(:first-of-type)::before {
 		content: "";
 		width: 1px;
 		height: 16px;

@@ -6,6 +6,10 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import { defaultCanvasRegistries } from "../../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../../selection/__tests__/support/selectionOf";
+import { readSelectionStyle } from "../../../../../../style/walk/readSelectionStyle";
+import { SelectionStyleReaderContext } from "../../../../SelectionStyleReaderContext";
 import { ArrowHeadMenu } from "../ArrowHeadMenu";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -24,8 +28,7 @@ const line = (id: string, startArrow: string, endArrow: string): ObjectState =>
 
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
-		selectedIds: shapes.map((shape) => shape.id),
-		selectedConnectorId: null,
+		selection: selectionOf(shapes.map((shape) => shape.id)),
 		objectMenuOpenId: null,
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),
 	}) as unknown as CanvasControllerState;
@@ -33,7 +36,8 @@ const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 let container: HTMLDivElement | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
 
-const render = (element: React.ReactElement): void => {
+/** Renders the menu for `canvasState`, under the reader the ObjectMenu provides. */
+const render = (canvasState: CanvasControllerState): void => {
 	if (!container) {
 		container = document.createElement("div");
 		document.body.appendChild(container);
@@ -41,14 +45,23 @@ const render = (element: React.ReactElement): void => {
 	}
 	const mounted = root;
 	act(() => {
-		mounted?.render(element);
+		mounted?.render(
+			<SelectionStyleReaderContext.Provider
+				value={(kind) =>
+					readSelectionStyle(canvasState, kind, defaultCanvasRegistries)
+				}
+			>
+				<ArrowHeadMenu canvasState={canvasState} />
+			</SelectionStyleReaderContext.Provider>,
+		);
 	});
 };
 
 /** The two end triggers, in the order they are laid out: start, then end. */
 const triggerIcons = (): SVGSVGElement[] =>
 	Array.from(
-		container?.querySelectorAll('[data-part^="toggle:arrow-head-"] svg') ?? [],
+		container?.querySelectorAll('[data-action^="toggle:arrow-head-"] svg') ??
+			[],
 	);
 
 /** How one trigger draws itself: the marks it holds and whether it drew a line. */
@@ -69,12 +82,10 @@ afterEach(() => {
 describe("ArrowHeadMenu", () => {
 	it("draws the mark each end agrees on", () => {
 		render(
-			<ArrowHeadMenu
-				canvasState={stateOf(
-					line("a", "None", "FilledTriangle"),
-					line("b", "None", "FilledTriangle"),
-				)}
-			/>,
+			stateOf(
+				line("a", "None", "FilledTriangle"),
+				line("b", "None", "FilledTriangle"),
+			),
 		);
 
 		expect(triggerIcons().map(describeIcon)).toEqual([
@@ -85,12 +96,7 @@ describe("ArrowHeadMenu", () => {
 
 	it("draws three dots and no line for the end the selection disagrees about", () => {
 		render(
-			<ArrowHeadMenu
-				canvasState={stateOf(
-					line("a", "None", "FilledTriangle"),
-					line("b", "None", "Circle"),
-				)}
-			/>,
+			stateOf(line("a", "None", "FilledTriangle"), line("b", "None", "Circle")),
 		);
 
 		// The start agrees, so it keeps its preview; only the end falls back to the dots.

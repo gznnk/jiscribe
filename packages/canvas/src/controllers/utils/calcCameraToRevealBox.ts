@@ -6,24 +6,41 @@ import type { Viewport } from "../../rendering/Viewport";
 import type { Camera } from "../CanvasTypes";
 
 /**
- * What to show of a box longer than the visible span on an axis: the edge the
- * pan reaches first, or its middle with both ends cut off evenly.
+ * Margin kept around something small the view follows as the user moves it — a
+ * text caret, a picked part — in screen px.
  */
-export type OversizedBoxPlacement = "leadingEdge" | "center";
+export const FOCUS_REVEAL_PADDING = 24;
+
+/**
+ * What to show of a box longer than the visible span on an axis: the edge the
+ * pan reaches first, or — unless some of the box is already in view — its
+ * middle with both ends cut off evenly.
+ */
+export type OversizedBoxPlacement = "leadingEdge" | "centerUnlessVisible";
 
 /**
  * Start of the visible span on one axis after the smallest pan that reveals
- * `[boxMin, boxMax]`. Every value is in world units on that axis.
+ * `[boxMin, boxMax]` with `padding` on both ends. Every value is in world units
+ * on that axis.
  */
 const calcRevealedAxisMin = (
 	visibleMin: number,
 	visibleSize: number,
-	boxMin: number,
-	boxMax: number,
+	unpaddedBoxMin: number,
+	unpaddedBoxMax: number,
+	padding: number,
 	oversizedPlacement: OversizedBoxPlacement,
 ): number => {
-	if (oversizedPlacement === "center" && boxMax - boxMin > visibleSize) {
-		return (boxMin + boxMax - visibleSize) / 2;
+	const boxMin = unpaddedBoxMin - padding;
+	const boxMax = unpaddedBoxMax + padding;
+	if (
+		oversizedPlacement === "centerUnlessVisible" &&
+		boxMax - boxMin > visibleSize
+	) {
+		// Judged on the box itself: the padding is a margin, not content.
+		const isPartlyVisible =
+			unpaddedBoxMax > visibleMin && unpaddedBoxMin < visibleMin + visibleSize;
+		return isPartlyVisible ? visibleMin : (boxMin + boxMax - visibleSize) / 2;
 	}
 	if (boxMin < visibleMin) {
 		return boxMin;
@@ -54,8 +71,9 @@ const calcRevealedAxisMin = (
  * @param oversizedPlacement - Per axis, for a padded box longer than the
  *   visible span: `"leadingEdge"` (the default) takes the smallest pan, which
  *   lands on the edge it reaches first and leaves the view alone while the
- *   view already lies inside the box; `"center"` centres the view on the box
- *   whatever it showed before
+ *   view already lies inside the box; `"centerUnlessVisible"` leaves the view
+ *   alone while any of the box (padding aside) is on screen, and otherwise
+ *   centres the view on it
  * @returns The camera to move to, or null when the padded box is already inside
  *   the visible rect and nothing has to move
  */
@@ -75,15 +93,17 @@ export const calcCameraToRevealBox = (
 	const revealedMinX = calcRevealedAxisMin(
 		minX,
 		width / zoom,
-		worldBox.left - worldPadding,
-		worldBox.right + worldPadding,
+		worldBox.left,
+		worldBox.right,
+		worldPadding,
 		oversizedPlacement,
 	);
 	const revealedMinY = calcRevealedAxisMin(
 		minY,
 		height / zoom,
-		worldBox.top - worldPadding,
-		worldBox.bottom + worldPadding,
+		worldBox.top,
+		worldBox.bottom,
+		worldPadding,
 		oversizedPlacement,
 	);
 

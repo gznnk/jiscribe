@@ -1,18 +1,17 @@
 ﻿import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
-import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
-import { readSelectionShapeStyle } from "../../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,
 	selectionValueOr,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
+import { useSelectionStyle } from "../../../SelectionStyleReaderContext";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -20,13 +19,13 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "bg-color";
 
 type BackgroundColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -35,18 +34,12 @@ type BackgroundColorMenuProps = {
  */
 const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { fill } = readSelectionShapeStyle(
-		canvasState.selectedIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"fill",
-	);
+	const fill = useSelectionStyle("fill");
 	const isMixed = isMixedSelectionValue(fill);
 	const currentColor = selectionValueOr(fill, SHAPE_STYLE_FALLBACK.fill);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -58,7 +51,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon
@@ -81,7 +74,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 						// descendants of a selected group included.
 						currentColorIsShared={!isMixed}
 						property="fill"
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</ObjectMenuDropdownPanel>
 			)}

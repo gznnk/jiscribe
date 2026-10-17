@@ -2,6 +2,8 @@ import type { StencilCategory } from "@jiscribe/canvas";
 
 import { createLucideStencilIcon } from "./createLucideStencilIcon";
 import { ICON_STENCIL_IDS } from "./IconStencils";
+import { toIconStencilId } from "./toIconStencilId";
+import { searchIconNames } from "../schema/icon/searchIconNames";
 
 /**
  * Stencil category for the icon shape. Not in core's default bar, so a host
@@ -17,4 +19,8 @@ export const lucideIconStencilCategory: StencilCategory = {
 	label: { en: "Icon", ja: "アイコン" },
 	icon: createLucideStencilIcon("face-slightly-smiling"),
 	presetIds: [...ICON_STENCIL_IDS],
+	search: (query) => {
+		const { names, total } = searchIconNames(query);
+		return { presetIds: names.map(toIconStencilId), matchCount: total };
+	},
 };

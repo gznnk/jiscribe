@@ -33,13 +33,13 @@ type VertexInsertControlsProps = {
 	 */
 	zoom?: number;
 	/**
-	 * data-part subtype, routing the gesture to the matching handler.
+	 * data-action subtype, routing the gesture to the matching handler.
 	 * Polyline/polygon use `"vertex-insert"` (default, → VertexInsertHandler);
 	 * connectors pass `"waypoint-insert"` (→ ConnectorVertexInsertHandler),
 	 * because the inserted point maps to a different array index (see those handlers).
 	 * @default "vertex-insert"
 	 */
-	insertPartSubtype?: string;
+	insertActionSubtype?: string;
 };
 
 /**
@@ -48,18 +48,18 @@ type VertexInsertControlsProps = {
  * This is a pure render-only component that draws a simple blue dot at each segment
  * midpoint (matching the connector ConnectionAnchors / Miro style), signalling that a
  * new vertex can be added there. All interaction logic should be handled by the
- * insert handler matching `insertPartSubtype`.
+ * insert handler matching `insertActionSubtype`.
  *
  * Each insertion control has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id=<objectId> + data-part="<insertPartSubtype>:<segmentIndex>" for identifying which segment was interacted with
+ * - data-id=<objectId> + data-action="<insertActionSubtype>:<segmentIndex>" for identifying which segment was interacted with
  */
 const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 	objectId,
 	points,
 	closed = false,
 	zoom = 1,
-	insertPartSubtype = "vertex-insert",
+	insertActionSubtype = "vertex-insert",
 }) => {
 	const { handleDimensions } = useCanvasTheme();
 
@@ -101,7 +101,7 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
 					data-id={objectId}
-					data-part={`${insertPartSubtype}:${segmentIndex}`}
+					data-action={`${insertActionSubtype}:${segmentIndex}`}
 					style={insertHandleStyle}
 				/>
 			))}

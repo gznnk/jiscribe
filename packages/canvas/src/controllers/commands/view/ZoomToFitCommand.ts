@@ -5,7 +5,7 @@ const PADDING_PX = 48;
 
 export const ZoomToFitCommand: ExecutableCommand = {
 	id: "zoomToFit",
-	label: "Zoom to Fit",
+	label: { en: "Zoom to Fit", ja: "全体を表示" },
 	category: "view",
 	shortcuts: {
 		mac: [{ code: "Digit0", meta: true }],
@@ -13,7 +13,7 @@ export const ZoomToFitCommand: ExecutableCommand = {
 		default: [{ code: "Digit0", ctrl: true }],
 	},
 
-	canExecute: (state) => Object.keys(state.objects).length > 0,
+	canExecute: (state) => state.rootIds.length > 0,
 
 	execute: (state, registries) => {
 		const fitted = calcFitViewport(

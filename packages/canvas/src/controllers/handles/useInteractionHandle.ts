@@ -7,6 +7,7 @@ import type {
 	DragKind,
 } from "../CanvasTypes";
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
+import { readOpenTextEdit } from "../utils/readOpenTextEdit";
 
 /** What the user is doing to the canvas at this instant. */
 export type CanvasInteractionStatus = {
@@ -77,11 +78,25 @@ export type CanvasInteractionHandle = {
 };
 
 /**
+ * The object whose text the in-place editor is open on, or null when none is.
+ */
+const resolveEditedObjectId = (
+	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
+): string | null => {
+	const openEdit = readOpenTextEdit(state);
+	if (openEdit === null) {
+		return null;
+	}
+	return openEdit.kind === "shape" ? openEdit.object.id : openEdit.connector.id;
+};
+
+/**
  * Reads the interaction status off a controller state
  * (see {@link CanvasInteractionStatus}).
  *
- * @param state - The controller state to read; only its transient interaction
- *   fields are touched, never the document
+ * @param state - The controller state to read; the transient interaction fields,
+ *   plus the selection and the objects an open text edit is resolved against
+ *   (readOpenTextEdit), which are read and never written
  * @returns The status, derived fresh on every call
  */
 export const resolveInteractionStatus = (
@@ -90,13 +105,15 @@ export const resolveInteractionStatus = (
 		| "activeDrag"
 		| "inertialScrolling"
 		| "textEditState"
+		| "selection"
+		| "objects"
 		| "shapeDrawing"
 		| "activeModal"
 	>,
 ): CanvasInteractionStatus => ({
 	drag: state.activeDrag?.kind ?? null,
 	isInertialScrolling: state.inertialScrolling,
-	editingTextId: state.textEditState?.objectId ?? null,
+	editingTextId: resolveEditedObjectId(state),
 	drawingShapeType: state.shapeDrawing?.preset.objectType ?? null,
 	modal: state.activeModal,
 	// The transient states of the individual drags (a pending connector, a

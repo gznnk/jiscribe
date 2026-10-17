@@ -17,7 +17,7 @@ import {
 	resolveToolbarSections,
 	type ResolvedToolbarItem,
 } from "./utils/resolveToolbarSections";
-import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { SidebarIcon } from "../../icons/SidebarIcon";
@@ -145,7 +145,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label={messages.toolbarStencilLibrary}
 						title={messages.toolbarStencilLibrary}
 						aria-expanded={isLibraryOpen}
-						data-part={commandPart("toggleStencilLibrary")}
+						data-action={commandAction("toggleStencilLibrary")}
 						isOpen={isLibraryOpen}
 					>
 						<SidebarIcon edge="left" />
@@ -158,7 +158,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label={messages.toolbarPropertyPanel}
 						title={messages.toolbarPropertyPanel}
 						aria-expanded={isPropertyPanelOpen}
-						data-part={commandPart("togglePropertyPanel")}
+						data-action={commandAction("togglePropertyPanel")}
 						isOpen={isPropertyPanelOpen}
 					>
 						<SidebarIcon edge="right" />
@@ -178,9 +178,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	// handlers/commands that clear it, so the Toolbar is stateless here and
 	// multiple <Canvas> instances stay independent.
 
-	// The one [data-kind] element of the bar: its own buttons carry only data-part
+	// The one [data-kind] element of the bar: its own buttons carry only data-action
 	// and resolve their kind/id here through closest(), and a press on the empty
-	// area arrives with no part (dismissing the open menus). Nested targets with a
+	// area arrives with no action (dismissing the open menus). Nested targets with a
 	// different id (stencil-category / stencil-library) keep their own [data-kind]
 	// and still win.
 	return (

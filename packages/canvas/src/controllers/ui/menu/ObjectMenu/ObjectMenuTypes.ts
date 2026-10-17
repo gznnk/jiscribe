@@ -1,4 +1,6 @@
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import type { StyleIntent } from "../../../style/StyleIntent";
 
 export type BuiltinItemKey =
 	| "arrowHead"
@@ -14,21 +16,24 @@ export type BuiltinItemKey =
 	| "openReference";
 
 /**
- * Applies a style property change to the current selection, from an ObjectMenu
- * item or a properties-sidebar row (both surfaces are handed the same callback).
+ * Reflects one style edit in the current selection, from an ObjectMenu item or a
+ * properties-sidebar row (both surfaces are handed the same callback). The write
+ * mirror of `useSelectionStyle`, which reads the same selection.
  *
- * @param property - Style property key resolved by the style-property registry (e.g. `strokeWidth`)
- * @param value - New value as a string; the property's own parser converts it
+ * @param intent - What the edit means, paired with its value: one of the core
+ *   kinds, typed (`{ kind: "fontSize", size: 24 }`), or a name the shape
+ *   declared for itself, whose value stays the transport string
+ *   (`{ kind: "headerHeight", value: "32" }`). A row holding a property name and
+ *   a string from the DOM reads it with `toStyleIntent` first
  * @param commit - true records the change in history (blur / Enter / key release),
  *   false only previews it live
  * @param coalesceHistory - true merges this commit into the immediately preceding
- *   commit for the same property and selection, so a burst (e.g. arrow-key repeat
- *   on a slider) becomes a single undo entry. Defaults to false, i.e. every commit
- *   gets its own entry
+ *   commit for the same intent kind and selection, so a burst (e.g. arrow-key
+ *   repeat on a slider) becomes a single undo entry. Defaults to false, i.e. every
+ *   commit gets its own entry
  */
-export type StylePropertyUpdater = (
-	property: string,
-	value: string,
+export type StyleIntentUpdater = (
+	intent: StyleIntent,
 	commit: boolean,
 	coalesceHistory?: boolean,
 ) => void;
@@ -58,11 +63,11 @@ export type OpenReferenceHandler = (payload: OpenReferencePayload) => void;
  */
 export type ObjectMenuItemProps = {
 	objects: Record<string, ObjectState>;
-	selectedIds: string[];
-	selectedConnectorId: string | null;
+	/** What the canvas is pointed at: the objects picked, and the part picked below a single one of them (CanvasSelection). */
+	selection: CanvasSelection;
 	/** ID of the currently open menu section (`toggle:{sectionId}`). */
 	openSectionId: string | null;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 export type BuiltinItem =
@@ -82,6 +87,13 @@ export type CustomItem = {
 	type: "custom";
 	id: string;
 	component: React.ComponentType<ObjectMenuItemProps>;
+	/**
+	 * The picked part kinds (`selection.part.kind`) under which the item survives the
+	 * narrowing a picked part applies (`ObjectPartKindDefinition.styleIntentKinds`).
+	 * Omitted or empty = dropped under every such pick. Says nothing about the
+	 * object selection with no part picked, where the item is drawn either way.
+	 */
+	pickedPartKinds?: readonly string[];
 };
 
 export type ObjectMenuItem = BuiltinItem | CustomItem;

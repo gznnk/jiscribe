@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { PropertyPanelHandler } from "../PropertyPanelHandler";
 
@@ -15,7 +17,7 @@ const makeState = (
 	({
 		propertyPanel: { isOpen: true, collapsedSectionIds: [] },
 		stencilLibraryOpenCategory: "flowchart",
-		selectedIds: ["a"],
+		selection: selectionOf(["a"]),
 		contextMenuPosition: { x: 1, y: 1 },
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -23,7 +25,7 @@ const makeState = (
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick" | "drag" | "dragEnd",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	targetKind = "menu",
 	inputValue?: string,
 ): CanvasEvent =>
@@ -31,7 +33,7 @@ const makeEvent = (
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		inputValue,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -82,7 +84,7 @@ describe("PropertyPanelHandler", () => {
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		// The panel is persistent chrome, so a press on it leaves it open
 		expect(next.propertyPanel.isOpen).toBe(true);
-		expect(next.selectedIds).toEqual(["a"]);
+		expect(next.selection.objectIds).toEqual(["a"]);
 	});
 
 	it("a click on the panel's own background changes nothing", () => {
@@ -95,7 +97,7 @@ describe("PropertyPanelHandler", () => {
 		expect(next).toBe(state);
 	});
 
-	it("ignores a part that is not a command", () => {
+	it("ignores an action that is not a command", () => {
 		const state = makeState();
 		const next = PropertyPanelHandler.handle(
 			state,
@@ -144,7 +146,7 @@ describe("PropertyPanelHandler", () => {
 		it("ignores and warns about a value the setting does not take, and an unknown setting", () => {
 			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 			const state = makeState({ commitVersion: 3 });
-			for (const part of [
+			for (const action of [
 				"doc:view.open:fit-height",
 				"doc:view.scroll:none",
 				"doc:view.padding.top:-4",
@@ -154,7 +156,7 @@ describe("PropertyPanelHandler", () => {
 				expect(
 					PropertyPanelHandler.handle(
 						state,
-						makeEvent("click", "property-panel", part),
+						makeEvent("click", "property-panel", action),
 						registries,
 					),
 				).toBe(state);
@@ -192,10 +194,7 @@ describe("PropertyPanelHandler", () => {
 					} as unknown as ObjectState,
 				},
 				rootIds: ["rect-1"],
-				selectedIds: ["rect-1"],
-				selectedConnectorId: null,
-				selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
-				selectedTextSlot: null,
+				selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 				multiSelectGroup: null,
 				textEditState: null,
 				commitVersion: 5,
@@ -206,7 +205,7 @@ describe("PropertyPanelHandler", () => {
 				strokeWidth: number;
 			};
 
-		it("a click on a set: part writes the selection's style and bumps commitVersion", () => {
+		it("a click on a set: action writes the selection's style and bumps commitVersion", () => {
 			const next = PropertyPanelHandler.handle(
 				makeStyledState(),
 				makeEvent("click", "property-panel", "set:fill:#dc2626"),
@@ -214,7 +213,8 @@ describe("PropertyPanelHandler", () => {
 			);
 			expect(rectOf(next).fill).toBe("#dc2626");
 			expect(next.commitVersion).toBe(6);
-			expect(next.selectedVertex).toBeNull();
+			// Styling renumbers nothing, so what is picked below the object stays picked.
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a slider previews on drag and commits on dragEnd", () => {

@@ -2,14 +2,25 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
+import type { ObjectPartSelection } from "../../../selection/CanvasSelection";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "../../../selection/partKinds/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { StartTextEditCommand } from "../StartTextEditCommand";
 
 const registries = createTestRegistries();
+// "record" below stands in for a plugin type, so the built-in bundle does not
+// carry it: register the textSlot kind applyObjectDefinition would give it.
+registries.objectPartKind.register("record", [
+	createTextSlotPartKindDefinition(),
+]);
 
 const rect = {
 	id: "rect-1",
@@ -49,38 +60,53 @@ const doc = {
 const stateWithSelection = (selectedId: string) =>
 	deepFreezeState({
 		...createInitialControllerState(doc, registries),
-		selectedIds: [selectedId],
+		selection: selectionOf([selectedId]),
 	});
 
 const stateWithConnectorSelected = (connectorId: string) =>
 	deepFreezeState({
 		...createInitialControllerState(doc, registries),
-		selectedIds: [],
-		selectedConnectorId: connectorId,
+		selection: selectionOf([connectorId]),
 	});
 
 describe("StartTextEditCommand", () => {
-	it("a rect that supports text can start editing", () => {
+	it("a rect that supports text can start editing on its one body", () => {
 		const state = stateWithSelection("rect-1");
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
-		expect(
-			StartTextEditCommand.execute(state, registries).textEditState,
-		).toMatchObject({ objectId: "rect-1", slotId: "body" });
+		const after = StartTextEditCommand.execute(state, registries);
+		expect(after.textEditState).toMatchObject({ kind: "shape" });
+		// The one body is the slot being edited, picked like any other.
+		expect(after.selection).toEqual({
+			objectIds: ["rect-1"],
+			part: textSlotPartSelection("body"),
+		});
+	});
+
+	it("keeps the selection reference when the rect's body is already picked", () => {
+		const state = deepFreezeState({
+			...createInitialControllerState(doc, registries),
+			selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
+		});
+		const after = StartTextEditCommand.execute(state, registries);
+		expect(after.textEditState).toMatchObject({ kind: "shape" });
+		expect(after.selection).toBe(state.selection);
 	});
 
 	it("creating a connector label from Enter takes the default placement, not what a deleted label left", () => {
 		const state = stateWithConnectorSelected("connector-1");
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
 
-		const textEditState = StartTextEditCommand.execute(
-			state,
-			registries,
-		).textEditState;
+		const after = StartTextEditCommand.execute(state, registries);
+		const { textEditState } = after;
 		expect(textEditState).toMatchObject({
 			kind: "connectorLabel",
-			objectId: "connector-1",
 			text: "",
 			placement: DEFAULT_LABEL_PLACEMENT,
+		});
+		// The connector itself owns the session, with nothing picked below it.
+		expect(after.selection).toEqual({
+			objectIds: ["connector-1"],
+			part: null,
 		});
 
 		// The placement rides through the commit, so the revived label sits at the
@@ -114,9 +140,7 @@ describe("StartTextEditCommand", () => {
 
 	describe("a shape with slots", () => {
 		/** A record standing in: no built-in type declares `features.text = "slots"`. */
-		const stateWithSlotSelection = (
-			selectedTextSlot: CanvasControllerState["selectedTextSlot"],
-		) =>
+		const stateWithSlotSelection = (part: ObjectPartSelection | null) =>
 			deepFreezeState({
 				...createInitialControllerState(doc, registries),
 				objects: {
@@ -127,49 +151,47 @@ describe("StartTextEditCommand", () => {
 						text: { name: { text: "User" }, rows: { text: ["id: string"] } },
 					},
 				} as never,
-				selectedIds: ["rec-1"],
-				selectedTextSlot,
+				selection: selectionOf(["rec-1"], part),
 			});
 
 		it("edits the selected slot", () => {
 			const state = stateWithSlotSelection({
-				objectId: "rec-1",
-				slotId: "rows",
+				kind: TEXT_SLOT_PART_KIND,
+				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			});
-			expect(
-				StartTextEditCommand.execute(state, registries).textEditState,
-			).toMatchObject({
-				objectId: "rec-1",
-				slotId: "rows",
+			const after = StartTextEditCommand.execute(state, registries);
+			expect(after.textEditState).toMatchObject({
+				kind: "shape",
 				text: "id: string",
 			});
+			// Already that slot, so the selection is handed over unchanged.
+			expect(after.selection).toBe(state.selection);
 		});
 
-		it("edits the first slot when no slot is selected", () => {
+		it("edits the first slot when no slot is selected, and selects it", () => {
 			const state = stateWithSlotSelection(null);
-			expect(
-				StartTextEditCommand.execute(state, registries).textEditState,
-			).toMatchObject({ objectId: "rec-1", slotId: "name" });
+			const after = StartTextEditCommand.execute(state, registries);
+			expect(after.textEditState).toMatchObject({
+				kind: "shape",
+				text: "User",
+			});
+			expect(after.selection).toEqual({
+				objectIds: ["rec-1"],
+				part: textSlotPartSelection("name"),
+			});
 		});
 
 		it("closes an open ObjectMenu submenu, which the edit session re-lays out", () => {
 			const state = deepFreezeState({
-				...stateWithSlotSelection({ objectId: "rec-1", slotId: "rows" }),
+				...stateWithSlotSelection({
+					kind: TEXT_SLOT_PART_KIND,
+					ranges: [{ anchorId: "rows", focusId: "rows" }],
+				}),
 				objectMenuOpenId: "alignment",
 			});
 			expect(
 				StartTextEditCommand.execute(state, registries).objectMenuOpenId,
 			).toBeNull();
-		});
-
-		it("edits the first slot when the slot selection is stale", () => {
-			const state = stateWithSlotSelection({
-				objectId: "rec-1",
-				slotId: "operations",
-			});
-			expect(
-				StartTextEditCommand.execute(state, registries).textEditState,
-			).toMatchObject({ objectId: "rec-1", slotId: "name" });
 		});
 	});
 

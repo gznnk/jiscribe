@@ -1,25 +1,27 @@
+import type { ObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
-import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 
 /**
  * Whether the sidebar shows its Meta section — the note the selected object
  * carries in the document.
  *
  * The note belongs to one object, so the section stands only while the selection
- * names one (resolveMetaTargetId). A selected text slot and an open shape editor
- * take it away with everything else: what is offered then is narrowed to the
- * text of the stretch being edited (getPropertyPanelSections), and the object's
- * own note is not that.
+ * names one (resolveMetaTargetId). A picked part that narrows the panel — a
+ * text slot, an open shape editor's included — takes it away with everything
+ * else: what is offered then is what the part receives
+ * (getPropertyPanelSections), and the object's own note is not that.
  *
- * @param state - The selection channels, the selected text slot and the open text edit are read
- * @returns True while a single object, or a connector, is selected and no text is being addressed
+ * @param state - The selection channels and the picked part are read
+ * @param objectPartKind - Per-canvas registry of part kinds, asked whether the picked kind narrows the panel (readPickedPartStyleIntentKinds)
+ * @returns True while a single object, or a connector, is selected and no picked part narrows the panel
  */
-export const isMetaSectionShown = (state: CanvasControllerState): boolean => {
-	if (
-		resolveSelectedTextSlot(state) !== null ||
-		state.textEditState?.kind === "shape"
-	) {
+export const isMetaSectionShown = (
+	state: CanvasControllerState,
+	objectPartKind: ObjectPartKindRegistry,
+): boolean => {
+	if (readPickedPartStyleIntentKinds(state, objectPartKind) !== null) {
 		return false;
 	}
 	return resolveMetaTargetId(state) !== null;

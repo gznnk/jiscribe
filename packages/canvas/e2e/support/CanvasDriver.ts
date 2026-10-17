@@ -352,6 +352,24 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * What each selection outline boxes, in drawing order: a picked part, or an
+	 * object (selectors.selectionOutline). Read off the attributes rather than by
+	 * visibility, an outline being a fill-less rect.
+	 */
+	async selectionOutlineKinds(): Promise<("part" | "object")[]> {
+		return this.page.evaluate(
+			({ outlineSelector, partOutlineSelector }) =>
+				[...document.querySelectorAll(outlineSelector)].map((outline) =>
+					outline.matches(partOutlineSelector) ? "part" : "object",
+				),
+			{
+				outlineSelector: selectors.selectionOutline,
+				partOutlineSelector: selectors.partOutline,
+			},
+		);
+	}
+
+	/**
 	 * data-id list of the currently shown controls (selection handles, connection anchors).
 	 * Controls are mounted only while visible, so this is exactly the visible set.
 	 */
@@ -361,15 +379,22 @@ export class CanvasDriver {
 				[...document.querySelectorAll(controlSelector)]
 					.map((el) => {
 						const id = el.getAttribute("data-id");
-						const part = el.getAttribute("data-part");
-						return id === null ? null : part === null ? id : `${id}/${part}`;
+						// Vertex handles address a model part; every other control
+						// carries an action.
+						const marker =
+							el.getAttribute("data-action") ?? el.getAttribute("data-part");
+						return id === null
+							? null
+							: marker === null
+								? id
+								: `${id}/${marker}`;
 					})
 					.filter((descriptor): descriptor is string => descriptor !== null),
 			selectors.control,
 		);
 	}
 
-	/** Whether a specific control is shown; the descriptor is "<data-id>/<data-part>". */
+	/** Whether a specific control is shown; the descriptor is "<data-id>/<data-action or data-part>". */
 	async isControlVisible(controlDescriptor: string): Promise<boolean> {
 		return (await this.visibleControlIds()).includes(controlDescriptor);
 	}
@@ -896,6 +921,8 @@ export class CanvasDriver {
 	 * @param objectId - data-id of the shape whose overlay is read when no editor is open
 	 * @returns One entry per drawn part in document order, with the typography it is
 	 *   drawn with (browser-normalized: fontWeight as a number, colors as rgb(...));
+	 *   `textDecoration` is the part's own computed `text-decoration-line`, which is
+	 *   not inherited, so a line the whole slot carries reads "none" on its parts;
 	 *   empty when nothing draws the text
 	 */
 	async drawnTextRuns(objectId: string): Promise<
@@ -906,6 +933,7 @@ export class CanvasDriver {
 			fontFamily: string;
 			fontWeight: string;
 			fontStyle: string;
+			textDecoration: string;
 		}[]
 	> {
 		return this.page.evaluate(
@@ -920,11 +948,16 @@ export class CanvasDriver {
 						shape?.querySelector("foreignObject") ?? null;
 					if (!foreignObject) {
 						let sibling = shape?.nextElementSibling ?? null;
+						// The overlay is either a sibling of its own or inside the group
+						// createFrameObject draws every overlay of a shape in.
 						while (
 							sibling &&
 							sibling.tagName.toLowerCase() !== "foreignobject"
 						) {
-							sibling = sibling.nextElementSibling;
+							const nested: Element | null = sibling.hasAttribute("data-id")
+								? null
+								: sibling.querySelector("foreignObject");
+							sibling = nested ?? sibling.nextElementSibling;
 						}
 						foreignObject = sibling;
 					}
@@ -947,6 +980,7 @@ export class CanvasDriver {
 						fontFamily: style.fontFamily,
 						fontWeight: style.fontWeight,
 						fontStyle: style.fontStyle,
+						textDecoration: style.textDecorationLine,
 					};
 				});
 			},
@@ -977,8 +1011,8 @@ export class CanvasDriver {
 	 * Set a color by clicking a preset swatch in the color picker.
 	 *
 	 * @param sectionId - Color section to open, ignored when `open` is false
-	 * @param property - Style property the swatch writes, as it appears in the `set:` data-part
-	 * @param value - Swatch value to click, matched exactly against the `set:` data-part
+	 * @param property - Style property the swatch writes, as it appears in the `set:` data-action
+	 * @param value - Swatch value to click, matched exactly against the `set:` data-action
 	 * @param open - Open the section first; pass false when it is already open
 	 */
 	async pickColorSwatch(
@@ -998,7 +1032,7 @@ export class CanvasDriver {
 	 * A real pointer drag is used because the slider has to fire drag/dragEnd through the
 	 * native-pointer gesture path.
 	 *
-	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-action
 	 * @param dx - Screen-pixel distance from the slider's center; positive moves right, raising
 	 *   the value
 	 */
@@ -1019,7 +1053,7 @@ export class CanvasDriver {
 	 * Click an ObjectMenu slider track without dragging, the way a user jumps the thumb to a
 	 * position. The section must already be open.
 	 *
-	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-action
 	 * @param ratio - Horizontal position on the track, 0 (left end / lowest value) to 1 (right end)
 	 */
 	async clickSliderAt(property: string, ratio: number) {
@@ -1040,7 +1074,7 @@ export class CanvasDriver {
 	 * Each press is its own keydown/keyup pair, so presses within the history coalesce window
 	 * collapse into a single undo entry, just like a held key.
 	 *
-	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-action
 	 * @param key - Key name to press, e.g. "ArrowRight" / "Home" / "PageUp"
 	 * @param repeat - Number of presses, defaults to 1
 	 */
@@ -1070,25 +1104,12 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Toggle one text format (bold / italic / underline / strikethrough) of the selected shape.
-	 * The buttons are already on the menu itself while text is edited inline, and the submenu
-	 * stays open after a press, so it is only opened when they are absent.
-	 *
-	 * @param property - Style property the button writes, as it appears in the `set:` data-part
-	 * @param value - Value the button writes; the buttons carry the value the *next* press lands
-	 *   on, so a toggle-off names the cleared value ("normal" / "none")
+	 * Press the ObjectMenu's Bold toggle for the selected shape, or for the picked
+	 * part or the stretch being edited. It flips the weight, so a second press
+	 * takes it back off.
 	 */
-	async setTextFormat(
-		property: "fontWeight" | "fontStyle" | "textDecoration",
-		value: string,
-	) {
-		const italicButton = this.page.locator(
-			`${selectors.objectMenu} [data-part^="set:fontStyle:"]`,
-		);
-		if ((await italicButton.count()) === 0) {
-			await this.openObjectMenu("text-format");
-		}
-		await this.page.click(selectors.objectMenuSet(property, value));
+	async pressBold() {
+		await this.page.click(selectors.objectMenuCommand("toggleBold"));
 	}
 
 	/** Set the dash style of the selected line, connector or shape border. */
@@ -1474,10 +1495,11 @@ export class CanvasDriver {
 	 * Computed style of the TextOverlay drawn over a shape, which renders as
 	 * foreignObject > div(wrapper) > div(text).
 	 *
-	 * For rect and ellipse the shape element and the foreignObject are siblings within a
-	 * fragment, while a <g>-rooted shape holds the foreignObject as a child of its `<g data-id>`. To cover
-	 * both, this looks among the data-id element's descendants first and falls back to its
-	 * following siblings. font-size / color / font-weight / font-style / text-decoration /
+	 * A shape drawn by createFrameObject follows its element with a group holding its
+	 * overlays, a bare text or a sticky follows it with the foreignObject itself, and a
+	 * <g>-rooted shape may hold the foreignObject as a child of its `<g data-id>`. To cover
+	 * all three, this looks among the data-id element's descendants first and falls back to
+	 * its following siblings and the overlay group among them. font-size / color / font-weight / font-style / text-decoration /
 	 * text-align live on the text element and vertical alignment (align-items) on the wrapper,
 	 * so both are read.
 	 *
@@ -1505,8 +1527,13 @@ export class CanvasDriver {
 			let foreignObject: Element | null = shape.querySelector("foreignObject");
 			if (!foreignObject) {
 				let sibling = shape.nextElementSibling;
+				// The overlay is either a sibling of its own or inside the group
+				// createFrameObject draws every overlay of a shape in.
 				while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
-					sibling = sibling.nextElementSibling;
+					const nested: Element | null = sibling.hasAttribute("data-id")
+						? null
+						: sibling.querySelector("foreignObject");
+					sibling = nested ?? sibling.nextElementSibling;
 				}
 				foreignObject = sibling;
 			}

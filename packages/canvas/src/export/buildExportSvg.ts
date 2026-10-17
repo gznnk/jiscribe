@@ -223,6 +223,28 @@ export const buildExportSvg = (
 		}
 	}
 
+	// Fold every group marked "flatten" into its children (the text overlays'
+	// wrapper, createFrameObject): its transform is prepended to each child's,
+	// which writes exactly what the children would carry with the group's
+	// transform on themselves, and the export stays as compact as before.
+	for (const group of Array.from(
+		cloned.querySelectorAll('[data-canvas-export="flatten"]'),
+	)) {
+		const groupTransform = group.getAttribute("transform");
+		for (const child of Array.from(group.children)) {
+			if (groupTransform !== null) {
+				const childTransform = child.getAttribute("transform");
+				child.setAttribute(
+					"transform",
+					childTransform === null
+						? groupTransform
+						: `${groupTransform} ${childTransform}`,
+				);
+			}
+		}
+		group.replaceWith(...Array.from(group.childNodes));
+	}
+
 	// Remove everything opted out of image export (control overlays, grid, ...)
 	for (const node of Array.from(
 		cloned.querySelectorAll('[data-canvas-export="exclude"]'),

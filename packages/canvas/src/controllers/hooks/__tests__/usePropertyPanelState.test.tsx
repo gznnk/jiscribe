@@ -9,6 +9,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { usePropertyPanelState } from "../usePropertyPanelState";
 
 /**
@@ -60,7 +61,8 @@ const baseState = (): CanvasControllerState => {
 			child: rectAt("child", 50, "group"),
 		},
 		rootIds: ["selected", "other", "group"],
-		selectedIds: ["selected"],
+		selection: selectionOf(["selected"]),
+		propertyPanel: { ...initial.propertyPanel, isOpen: true },
 	};
 };
 
@@ -131,12 +133,12 @@ describe("usePropertyPanelState", () => {
 	it("moves to the new state when the selection changes", () => {
 		const initial = baseState();
 		const { render } = mount(initial);
-		const reselected = { ...initial, selectedIds: ["other"] };
+		const reselected = { ...initial, selection: selectionOf(["other"]) };
 		expect(render(reselected)).toBe(reselected);
 	});
 
 	it("moves to the new state when a descendant of a selected group changes", () => {
-		const initial = { ...baseState(), selectedIds: ["group"] };
+		const initial = { ...baseState(), selection: selectionOf(["group"]) };
 		const { first, render } = mount(initial);
 		const childMoved = {
 			...initial,
@@ -146,11 +148,10 @@ describe("usePropertyPanelState", () => {
 		expect(render(childMoved)).not.toBe(first);
 	});
 
-	it("follows the selected connector rather than selectedIds", () => {
+	it("follows the selected connector rather than the object selection", () => {
 		const initial = {
 			...baseState(),
-			selectedIds: [],
-			selectedConnectorId: "other",
+			selection: selectionOf(["other"]),
 		};
 		const { first, render } = mount(initial);
 		const connectorChanged = {
@@ -180,15 +181,36 @@ describe("usePropertyPanelState", () => {
 		expect(render(reframed)).toBe(reframed);
 		const editing = {
 			...reframed,
-			textEditState: { kind: "shape", objectId: "selected", slotId: "main" },
+			textEditState: { kind: "shape", text: "" },
 		} as unknown as CanvasControllerState;
 		expect(render(editing)).toBe(editing);
+	});
+
+	it("hands out every state while the sidebar is closed, which reads none of them", () => {
+		const closed = {
+			...baseState(),
+			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
+		};
+		const { render } = mount(closed);
+		const panned = { ...closed, viewport: { ...closed.viewport, minX: 99 } };
+		expect(render(panned)).toBe(panned);
+	});
+
+	it("latches the state it is opened on", () => {
+		const opened = baseState();
+		const { render } = mount({
+			...opened,
+			propertyPanel: { ...opened.propertyPanel, isOpen: false },
+		});
+		expect(render(opened)).toBe(opened);
+		const panned = { ...opened, viewport: { ...opened.viewport, minX: 99 } };
+		expect(render(panned)).toBe(opened);
 	});
 
 	it("latches again after a change, so the next pan holds the latest state", () => {
 		const initial = baseState();
 		const { render } = mount(initial);
-		const reselected = { ...initial, selectedIds: ["other"] };
+		const reselected = { ...initial, selection: selectionOf(["other"]) };
 		render(reselected);
 		const panned = {
 			...reselected,

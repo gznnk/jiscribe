@@ -38,11 +38,8 @@ export {
 	MAX_SUMMARY_CHARS,
 	MAX_SVG_CHARS,
 } from "./canvasOps";
-export {
-	type CanvasToolArgs,
-	type CanvasToolDescriptor,
-	createCanvasToolDescriptors,
-} from "./canvasTools";
+export { type CanvasToolArgs, type CanvasToolDescriptor } from "./canvasTools";
+export { type CanvasToolSet, createCanvasToolSet } from "./canvasToolSet";
 export {
 	type AiCanvasCapabilities,
 	toCanvasCapabilities,

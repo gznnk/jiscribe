@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import { EscapeSelectionCommand } from "../EscapeSelectionCommand";
 
 const registries = createTestRegistries();
@@ -11,10 +14,7 @@ const baseState = (
 ): CanvasControllerState =>
 	({
 		objects: {},
-		selectedIds: [],
-		selectedConnectorId: null,
-		selectedVertex: null,
-		selectedTextSlot: null,
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		areaSelection: null,
 		shapeDrawing: null,
@@ -36,16 +36,16 @@ const slotSelectedState = (): CanvasControllerState =>
 				text: { name: { text: "User" }, rows: { text: [] } },
 			},
 		} as never,
-		selectedIds: ["rec-1"],
-		selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+		selection: selectionOf(["rec-1"], {
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "rows", focusId: "rows" }],
+		}),
 	});
 
 describe("EscapeSelectionCommand", () => {
-	it("clears all selection and editing state when no text slot is selected", () => {
+	it("clears all selection and editing state when nothing is part-selected", () => {
 		const state = baseState({
-			selectedIds: ["a", "b"],
-			selectedConnectorId: "c1",
-			selectedVertex: { objectId: "p1", vertexIndex: 0 },
+			selection: selectionOf(["a", "b"]),
 			multiSelectGroup: { id: "ms" } as never,
 			areaSelection: { x: 0, y: 0 } as never,
 			shapeDrawing: { type: "rect" } as never,
@@ -53,14 +53,25 @@ describe("EscapeSelectionCommand", () => {
 			edgeScrollEnabled: true,
 		});
 		const next = EscapeSelectionCommand.execute(state, registries);
-		expect(next.selectedIds).toEqual([]);
-		expect(next.selectedConnectorId).toBeNull();
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selection.objectIds).toEqual([]);
+		expect(next.selection.part).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.areaSelection).toBeNull();
 		expect(next.shapeDrawing).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.edgeScrollEnabled).toBe(false);
+	});
+
+	it("drops only a picked vertex on the first press, keeping the object selected", () => {
+		const state = baseState({
+			objects: {
+				p1: { id: "p1", type: "polyline", points: [] },
+			} as never,
+			selection: selectionOf(["p1"], vertexPartSelection(0)),
+		});
+		const next = EscapeSelectionCommand.execute(state, registries);
+		expect(next.selection.part).toBeNull();
+		expect(next.selection.objectIds).toEqual(["p1"]);
 	});
 
 	describe("staged deselection of a text slot", () => {
@@ -69,8 +80,8 @@ describe("EscapeSelectionCommand", () => {
 				slotSelectedState(),
 				registries,
 			);
-			expect(next.selectedTextSlot).toBeNull();
-			expect(next.selectedIds).toEqual(["rec-1"]);
+			expect(next.selection.part).toBeNull();
+			expect(next.selection.objectIds).toEqual(["rec-1"]);
 		});
 
 		it("clears the object selection on the next press", () => {
@@ -79,24 +90,13 @@ describe("EscapeSelectionCommand", () => {
 				registries,
 			);
 			const next = EscapeSelectionCommand.execute(afterFirst, registries);
-			expect(next.selectedIds).toEqual([]);
+			expect(next.selection.objectIds).toEqual([]);
 		});
 
 		it("closes an open ObjectMenu submenu on the step out of the slot", () => {
 			const state = { ...slotSelectedState(), objectMenuOpenId: "alignment" };
 			const next = EscapeSelectionCommand.execute(state, registries);
 			expect(next.objectMenuOpenId).toBeNull();
-		});
-
-		it("clears everything at once when the slot selection is stale", () => {
-			// The object it names is no longer the selection, so there is no level to step out of.
-			const state = baseState({
-				selectedIds: ["other"],
-				selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
-			});
-			const next = EscapeSelectionCommand.execute(state, registries);
-			expect(next.selectedIds).toEqual([]);
-			expect(next.selectedTextSlot).toBeNull();
 		});
 	});
 
@@ -112,7 +112,7 @@ describe("EscapeSelectionCommand", () => {
 		it("is executable when there is an object selection", () => {
 			expect(
 				EscapeSelectionCommand.canExecute(
-					baseState({ selectedIds: ["a"] }),
+					baseState({ selection: selectionOf(["a"]) }),
 					registries,
 				),
 			).toBe(true);
@@ -132,7 +132,7 @@ describe("EscapeSelectionCommand", () => {
 
 		it("is not executable during an object drag (other than area selection)", () => {
 			const state = baseState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
 				areaSelection: null,
 			});

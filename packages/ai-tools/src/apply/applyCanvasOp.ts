@@ -7,6 +7,7 @@ import {
 	DocOperationError,
 	type CanvasDoc,
 	type DocOps,
+	type ObjectDoc,
 	type ObjectSummary,
 } from "@jiscribe/doc";
 
@@ -20,6 +21,7 @@ import type {
 } from "../canvasOps";
 import { canonicalizeFontWeights } from "./canonicalFontWeight";
 import type { CanvasOpHistory } from "./canvasOpHistory";
+import type { CanvasToolSet } from "../canvasToolSet";
 import { describeRectEdges, formatNumber, quoteIds } from "../resultText";
 import type { AiDocBridge } from "./docBridge";
 
@@ -75,7 +77,7 @@ const unknownTypeNote = (summaries: readonly ObjectSummary[]): string => {
 };
 
 /** How the getText result sentence names the text it read; with no slot given it is the body */
-const slotLabel = (id: string, slot: string | undefined): string =>
+const textSlotLabel = (id: string, slot: string | undefined): string =>
 	slot === undefined ? `"${id}"` : `slot "${slot}" of "${id}"`;
 
 /** How a result sentence names a connector end: the id for an end attached to a shape, the coordinates for a free one */
@@ -156,8 +158,8 @@ const applyDocRead = (
 		case "getText": {
 			const text = docOps.getText(doc, op.id, op.slot);
 			return text === ""
-				? `${slotLabel(op.id, op.slot)} holds no text: its text is empty, not missing`
-				: `the text of ${slotLabel(op.id, op.slot)} is "${text}"`;
+				? `${textSlotLabel(op.id, op.slot)} holds no text: its text is empty, not missing`
+				: `the text of ${textSlotLabel(op.id, op.slot)} is "${text}"`;
 		}
 		case "getZOrder": {
 			const { index, total } = docOps.getZOrder(doc, op.id);
@@ -411,8 +413,8 @@ const applyDocChange = (
 			const written = op.entries
 				.map(({ id, text, slot }) =>
 					text === ""
-						? `${slotLabel(id, slot)} cleared`
-						: `${slotLabel(id, slot)} to "${text}"`,
+						? `${textSlotLabel(id, slot)} cleared`
+						: `${textSlotLabel(id, slot)} to "${text}"`,
 				)
 				.join(", ");
 			return `set the text of ${op.entries.length} object(s): ${written}`;
@@ -420,14 +422,14 @@ const applyDocChange = (
 		case "setTextStyle": {
 			const { kind: _kind, id, ...params } = op;
 			docOps.setInlineTextStyle(draftDoc, id, params);
-			return `styled ${matchLabel(params.match, params.occurrence)} in ${slotLabel(id, params.slot)}`;
+			return `styled ${matchLabel(params.match, params.occurrence)} in ${textSlotLabel(id, params.slot)}`;
 		}
 		case "setTextStyles": {
 			docOps.setInlineTextStyles(draftDoc, op.entries);
 			const styled = op.entries
 				.map(
 					({ id, match, occurrence, slot }) =>
-						`${matchLabel(match, occurrence)} in ${slotLabel(id, slot)}`,
+						`${matchLabel(match, occurrence)} in ${textSlotLabel(id, slot)}`,
 				)
 				.join(", ");
 			return `styled ${op.entries.length} stretch(es) of text: ${styled}`;
@@ -480,8 +482,8 @@ const applyDocChange = (
 			return `took ${quoteIds(releasedIds)} out of their group${emptiedGroupsNote(droppedGroupIds)}`;
 		}
 		default:
-			// describeCanvas, undo and the reads do not change the document, so
-			// applyCanvasOp deals with them before reaching here
+			// describeCanvas, undo, the plugin tools and the reads are not docOps
+			// changes, so applyCanvasOp deals with them before reaching here
 			throw new DocOperationError(`unsupported operation: ${op.kind}`);
 	}
 };
@@ -495,6 +497,60 @@ const toFailureOutcome = (error: unknown): AiCanvasOpOutcome => {
 		ok: false,
 		text: `internal error: ${error instanceof Error ? error.message : String(error)}`,
 	};
+};
+
+/**
+ * Runs a plugin's object tool on the one object the op names. A read hands its text
+ * straight back; a write goes through docOps.replaceObject on a clone, so a result the
+ * type would refuse (or the parser drop) fails the call and leaves the document as it was.
+ * What the tool throws is passed to the AI as it is, its message being written for it.
+ */
+const applyObjectTool = (
+	op: Extract<AiDocOp, { kind: "objectTool" }>,
+	docBridge: AiDocBridge,
+	history: CanvasOpHistory,
+	docOps: DocOps,
+	toolSet: CanvasToolSet,
+): AiCanvasOpOutcome => {
+	const tool = toolSet.objectTools.get(op.tool);
+	if (tool === undefined) {
+		return {
+			ok: false,
+			text: `internal error: no plugin tool named "${op.tool}" in the tool set applying it`,
+		};
+	}
+	const currentDoc = docBridge.getDoc();
+	let target: Readonly<ObjectDoc>;
+	try {
+		target = docOps.getObject(currentDoc, op.id);
+	} catch (error) {
+		return toFailureOutcome(error);
+	}
+	if (target.type !== tool.objectType) {
+		return {
+			ok: false,
+			text: `${op.tool} acts on ${tool.objectType} objects only, but "${op.id}" is of type ${target.type}`,
+		};
+	}
+
+	// Handed a copy, so a tool that writes into what it was given cannot reach the document
+	const objectDoc = structuredClone(target) as ObjectDoc;
+	try {
+		if (tool.read !== undefined) {
+			return { ok: true, text: tool.read(objectDoc, op.args) };
+		}
+		const change = tool.apply(objectDoc, op.args);
+		const draftDoc = structuredClone(currentDoc);
+		docOps.replaceObject(draftDoc, op.id, change.doc);
+		history.push(currentDoc, draftDoc);
+		docBridge.replaceDoc(draftDoc);
+		return { ok: true, text: change.text };
+	} catch (error) {
+		return {
+			ok: false,
+			text: error instanceof Error ? error.message : String(error),
+		};
+	}
 };
 
 /**
@@ -525,6 +581,9 @@ const describePadding = (padding: AiViewPadding): string =>
  *   operation that changes the document
  * @param docOps - The doc-ops applying goes through; pass one built with the
  *   same plugin set as the capabilities the tools were given
+ * @param toolSet - The same set the tools were declared from
+ *   (`createCanvasToolSet`); an `objectTool` op is
+ *   resolved through it, and one naming a tool it does not hold fails as an internal error
  * @returns The outcome of applying; when ok=false, text is the error message
  *   written for the AI
  */
@@ -533,6 +592,7 @@ export const applyCanvasOp = (
 	docBridge: AiDocBridge,
 	history: CanvasOpHistory,
 	docOps: DocOps,
+	toolSet: CanvasToolSet,
 ): AiCanvasOpOutcome => {
 	if (op.kind === "describeCanvas") {
 		return { ok: true, text: describeCanvas(docBridge.getDoc()) };
@@ -553,6 +613,10 @@ export const applyCanvasOp = (
 		}
 		docBridge.replaceDoc(structuredClone(restoredDoc));
 		return { ok: true, text: "undid your last change" };
+	}
+
+	if (op.kind === "objectTool") {
+		return applyObjectTool(op, docBridge, history, docOps, toolSet);
 	}
 
 	// A read never replaces the document, so it needs neither a clone nor an undo entry

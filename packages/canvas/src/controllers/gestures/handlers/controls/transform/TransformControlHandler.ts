@@ -10,6 +10,7 @@ import type { TransformAnchorType } from "./TransformAnchorType";
 import { applyResizeSnap } from "./utils/applyResizeSnap";
 import { calcAnchorResize } from "./utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
+import { calcTransformDragResize } from "./utils/calcTransformDragResize";
 import { dropAutoHeightOnResize } from "./utils/dropAutoHeightOnResize";
 import { handleRotationDrag } from "./utils/handleRotationDrag";
 import {
@@ -27,6 +28,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsForSelection } from "../../../../utils/updateGroupBoundsForSelection";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -36,8 +38,8 @@ import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 /**
  * Handles transform-control operations (resize and rotation).
  *
- * Target format: data-id="transform", data-part="resize:<anchorType>" / "rotation"
- * Example: data-part="resize:bottomRight"
+ * Target format: data-id="transform", data-action="resize:<anchorType>" / "rotation"
+ * Example: data-action="resize:bottomRight"
  */
 export class TransformControlHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
@@ -45,13 +47,13 @@ export class TransformControlHandler extends ControlStrategy {
 			return false;
 		}
 
-		const targetPart = event.targetPart;
-		if (!targetPart) {
+		const targetAction = event.targetAction;
+		if (!targetAction) {
 			return false;
 		}
 
 		// Resize handles and the rotation handle of the transform frame
-		return targetPart.startsWith("resize:") || targetPart === "rotation";
+		return targetAction.startsWith("resize:") || targetAction === "rotation";
 	}
 
 	handle(
@@ -59,16 +61,16 @@ export class TransformControlHandler extends ControlStrategy {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		const targetPart = event.targetPart;
-		if (!targetPart) {
+		const targetAction = event.targetAction;
+		if (!targetAction) {
 			return state;
 		}
 
 		// Parse the anchor type from "resize:<anchorType>" / "rotation"
 		const anchorType = (
-			targetPart === "rotation"
+			targetAction === "rotation"
 				? "rotation"
-				: targetPart.slice("resize:".length)
+				: targetAction.slice("resize:".length)
 		) as TransformAnchorType;
 
 		// Route to the appropriate handler based on the gesture type
@@ -96,7 +98,8 @@ export class TransformControlHandler extends ControlStrategy {
 		// A drag that can move the bottom edge relative to the top one settles the
 		// height of whatever was following its text, before the snapshot below is
 		// read from for the rest of the gesture.
-		state = dropAutoHeightOnResize(state, event, anchorType);
+		const resize = calcTransformDragResize(state, event, anchorType);
+		state = dropAutoHeightOnResize(state, resize);
 
 		// For a multi-select resize, cache what the per-frame bounds derivation
 		// needs so it never re-collects every leaf vertex (#215)
@@ -104,12 +107,12 @@ export class TransformControlHandler extends ControlStrategy {
 		if (
 			anchorType !== "rotation" &&
 			startSnapshot?.multiSelectGroup &&
-			state.selectedIds.length > 1
+			state.selection.objectIds.length > 1
 		) {
 			startSnapshot = {
 				...startSnapshot,
 				multiSelectResizeBoundsCache: createMultiSelectResizeBoundsCache(
-					state.selectedIds,
+					state.selection.objectIds,
 					startSnapshot.objects,
 					startSnapshot.multiSelectGroup,
 				),
@@ -118,7 +121,13 @@ export class TransformControlHandler extends ControlStrategy {
 
 		return {
 			...state,
-			activeDrag: startSnapshot ? { startSnapshot, kind: "transform" } : null,
+			activeDrag: startSnapshot
+				? {
+						startSnapshot,
+						kind: "transform",
+						...(resize && { resize }),
+					}
+				: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
@@ -149,7 +158,7 @@ export class TransformControlHandler extends ControlStrategy {
 		let startFrame: (TransformedFrame & TransformState) | null = null;
 		let selectedId: string | null = null;
 		let isGroupTarget = false;
-		const isMultiSelect = state.selectedIds.length > 1;
+		const isMultiSelect = state.selection.objectIds.length > 1;
 
 		if (isMultiSelect) {
 			// For multi-selection, use multiSelectGroup
@@ -162,9 +171,9 @@ export class TransformControlHandler extends ControlStrategy {
 				startFrame = multiSelectGroup as TransformedFrame & TransformState;
 				isGroupTarget = true;
 			}
-		} else if (state.selectedIds.length === 1) {
+		} else if (state.selection.objectIds.length === 1) {
 			// For single selection
-			selectedId = state.selectedIds[0];
+			selectedId = state.selection.objectIds[0];
 			const startObject = dragStartSnapshot.objects[selectedId];
 			if (
 				startObject &&
@@ -178,6 +187,22 @@ export class TransformControlHandler extends ControlStrategy {
 
 		if (!startFrame) {
 			return state;
+		}
+
+		// The floors are the live object's, not the snapshot's: a content-sized
+		// type re-derives them every frame (a table's rows unwrap as its columns
+		// widen), and a floor that dropped mid-drag has to let the frame through.
+		// One that rose this frame is the type's to hold, from the edge the drag
+		// keeps (ObjectContentResizeContext.resizedAxes).
+		if (selectedId !== null) {
+			const liveObject = state.objects[selectedId];
+			if (liveObject && isTransformState(liveObject)) {
+				startFrame = {
+					...startFrame,
+					minWidth: liveObject.minWidth,
+					minHeight: liveObject.minHeight,
+				};
+			}
 		}
 
 		// GroupState invariant: a group's width/height are divisors when scaling
@@ -324,7 +349,7 @@ export class TransformControlHandler extends ControlStrategy {
 						updatedGroup,
 					)
 				: calcMultiSelectGroupBounds(
-						state.selectedIds,
+						state.selection.objectIds,
 						nextState.objects,
 						nextState.multiSelectGroup,
 					);
@@ -391,16 +416,14 @@ export class TransformControlHandler extends ControlStrategy {
 		anchorType: TransformAnchorType,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state.
-		// handleDrag never mutates its argument, so the state can be passed as is.
-		const draggedState = this.handleDrag(state, event, anchorType, registries);
-
-		// On dragEnd, update the bounds of the selected objects and their parent groups
-		const nextState = updateGroupBoundsForSelection(draggedState);
-
-		return {
-			...nextState,
-			edgeScrollEnabled: false, // Disable edge scrolling on drag end
-		};
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
+			event,
+			anchorType,
+			registries,
+		);
+		const committedState = commitEditIfChanged(closingState, draggedState);
+		return updateGroupBoundsForSelection(committedState);
 	}
 }

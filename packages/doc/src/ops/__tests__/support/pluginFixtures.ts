@@ -1,3 +1,5 @@
+import type { Rect } from "@jiscribe/geometry";
+
 import { createFrameObjectFactory } from "../../../model/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
 import { calcFullBoxTextRegion } from "../../../plugin/ObjectDocTextRegion";
@@ -39,6 +41,21 @@ export const cardDefinition: ObjectDocDefinition = {
 };
 
 /**
+ * A `text: "slots"` type keeping its text in a `cells` grid of its own rather than
+ * under `text`, the way the table plugin's does (which a doc test cannot import).
+ */
+export const cellGridDefinition: ObjectDocDefinition = {
+	features: {
+		type: "cell-grid",
+		geometry: "rect",
+		text: "slots",
+		connectable: true,
+	},
+	extraKeys: ["cells"],
+	validateDoc: () => [],
+};
+
+/**
  * A body-text shape whose declared region gives up a quarter of the height at
  * the top and nothing at the bottom, the way a cylinder's cap does. Off-centre
  * on purpose: it is the one shape of region on which the two vertical bases
@@ -49,6 +66,7 @@ export const cappedDefinition: ObjectDocDefinition = {
 		type: "capped",
 		geometry: "rect",
 		text: "body",
+		textVerticalBasis: true,
 		transform: true,
 		connectable: true,
 	},
@@ -71,8 +89,8 @@ export const cappedDefinition: ObjectDocDefinition = {
 
 /**
  * A body-text shape whose label hangs below its outline, the way a pictogram's
- * does: its declared region lies outside the box, so a body placement
- * (`textVerticalBasis`) has nothing to move on it.
+ * does: its declared region lies outside the box, so it declares no
+ * `textVerticalBasis` and a body placement has nothing to move on it.
  */
 export const belowLabelDefinition: ObjectDocDefinition = {
 	features: {
@@ -165,4 +183,44 @@ export const sourceBodyDefinition: ObjectDocDefinition = {
 		height: 100,
 		text: "",
 	}),
+};
+
+/**
+ * A `geometry: "point"` shape declaring no `bounds`, which is the gap the
+ * declaration exists to close: such a doc states no size of its own, so nothing
+ * else answers how big it is. No shipped type is in this state, so the case is
+ * staged here.
+ */
+export const unsizedPointDefinition: ObjectDocDefinition = {
+	features: {
+		type: "pin",
+		geometry: "point",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+};
+
+/** The box {@link declaredBoundsDefinition} answers with, whatever its doc states. */
+export const DECLARED_BADGE_BOUNDS: Rect = {
+	x: -7,
+	y: -8,
+	width: 33,
+	height: 44,
+};
+
+/**
+ * A `geometry: "rect"` shape declaring a box that shares no edge with the one its
+ * `x` / `y` / `width` / `height` imply: nothing but the declaration winning can
+ * produce it, which is what pins the order of the two branches.
+ */
+export const declaredBoundsDefinition: ObjectDocDefinition = {
+	features: {
+		type: "badge",
+		geometry: "rect",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+	bounds: () => DECLARED_BADGE_BOUNDS,
 };

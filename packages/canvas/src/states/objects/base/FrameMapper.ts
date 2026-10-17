@@ -28,8 +28,16 @@ import type { TransformState } from "./TransformState";
 import { pick } from "../utils/stylePassthrough";
 
 /**
- * Generates a Doc↔State mapper from `features` for Frame-family objects
- * (shapes with geometry: "rect" | "ellipse" + transform).
+ * Generates a Doc↔State mapper from `features` for Frame-family objects: the ones
+ * whose State is a box with a transform that their Doc spells out as well, as a
+ * rect or as an ellipse (geometry: "rect" | "ellipse").
+ *
+ * A `geometry: "point"` type is deliberately not one of them, and passing one
+ * fails to compile. Its doc holds no box for a mapper to convert, so going
+ * through here would mean handing out a placeholder frame and re-deriving it
+ * immediately; such a type measures its content in its own `toState` instead
+ * (`TextMapper`), which is also what keeps a state that never reaches the
+ * derivation pass from reading as a shape with no extent.
  *
  * The differences between Doc and State are the geometry, the transform, and the text
  * group (whose styling sits flat on a root-form Doc but inside each slot in the State).
@@ -55,8 +63,8 @@ import { pick } from "../utils/stylePassthrough";
  * The round-trip test over every registered type covers this from the runtime side instead.
  *
  * @param features - Feature descriptor of the type being mapped. Its `type` must match
- *   `TDoc["type"]`, and its `geometry` must be a Frame family one (see `createPolyMapper`
- *   for poly shapes).
+ *   `TDoc["type"]`, and its `geometry` must be a Frame family one — "rect" or "ellipse"
+ *   (see `createPolyMapper` for poly shapes, and `TextMapper` for a point one).
  * @param extraKeys - Shape-specific field names to pass through (non-style groups).
  */
 export const createFrameMapper = <
@@ -74,12 +82,23 @@ export const createFrameMapper = <
 
 	return {
 		toState: (doc) => {
-			// A rect doc stating no height is one whose height follows its text
-			// (supportsAutoHeight). The frame is built at height 0 so the box's top
-			// edge lands exactly where the doc's `y` put it, and the derivation pass
-			// grows it from there (resizeAutoHeightStateToContent).
+			// A rect doc stating no height is one whose height follows its text.
+			//
+			// `supportsAutoHeight` is the actual verdict, and it reads two things a
+			// mapper cannot see: the type's `textRegion` (a label drawn outside the
+			// outline has no height to derive) and its `autoHeight: false` denial.
+			// Only `features` is in hand here, so `geometry === "rect"` stands in for
+			// the whole test. It holds because the parser has already applied the real
+			// verdict: `height` is required for every type it refuses
+			// (validateGeometryFields), so an absent height cannot reach this line
+			// unless the type genuinely derives one.
+			//
+			// The frame is built at height 0 so the box's top edge lands exactly where
+			// the doc's `y` put it, and the derivation pass grows it from there
+			// (resizeAutoHeightStateToContent).
 			const rect = doc as unknown as Rect;
-			const autoHeight = !isEllipse && rect.height === undefined;
+			const autoHeight =
+				features.geometry === "rect" && rect.height === undefined;
 			const frame: Frame = isEllipse
 				? convertEllipseToFrame(doc as unknown as Ellipse)
 				: convertRectToFrame(autoHeight ? { ...rect, height: 0 } : rect);
@@ -98,8 +117,9 @@ export const createFrameMapper = <
 
 		toDoc: (state) => {
 			// Rounded here, not at the State's cx / cy / width / height: the Doc's
-			// geometry is derived from those, and the halving re-introduces a float
-			// tail even when both operands are already round (roundDocNumbers).
+			// geometry is derived from those, and both the halving and the transform
+			// re-introduce a float tail even when the operands are already round
+			// (roundDocNumbers).
 			const frame = state as unknown as Frame;
 			const geometry: Rect | Ellipse = isEllipse
 				? roundDocEllipse(convertFrameToEllipse(frame))
@@ -107,7 +127,7 @@ export const createFrameMapper = <
 			// The derived height is the text's answer, not the document's, so it goes
 			// back out the way it came in: absent. `y` is unaffected — it was read off
 			// the same frame the height was.
-			if (!isEllipse && state.autoHeight === true) {
+			if (features.geometry === "rect" && state.autoHeight === true) {
 				delete (geometry as Partial<Rect>).height;
 			}
 			const transform: Partial<TransformDoc> = features.transform

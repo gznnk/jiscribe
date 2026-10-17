@@ -1,6 +1,8 @@
 import type { Stencil } from "@jiscribe/canvas";
 
 import { createLucideStencilIcon } from "./createLucideStencilIcon";
+import { toIconStencilId } from "./toIconStencilId";
+import { ICON_NODES } from "../schema/icon/iconData.generated";
 
 /**
  * The icons the palette offers outright, in the order they are reached for: who, what runs,
@@ -8,8 +10,8 @@ import { createLucideStencilIcon } from "./createLucideStencilIcon";
  * its own state.
  *
  * A short list on purpose — the whole set is 1767 icons, and the flyout is for the handful
- * a diagram reaches for without thinking. Everything else is a search away in the picker,
- * which is where an unusual icon belongs.
+ * a diagram reaches for without thinking. Everything else is a search away, in the picker
+ * or in the stencil library.
  */
 const FLYOUT_ICON_NAMES = [
 	"user",
@@ -35,25 +37,13 @@ const FLYOUT_ICON_NAMES = [
 ] as const;
 
 /**
- * Preset id of the palette entry for one icon: the type name with the icon's own name
- * appended (`lucideIconFileText`). Prefixed because preset ids share one space across
- * every plugin a host applies, and bare names like `lock` are already taken by the
- * pictogram shapes; written as one word because the id travels inside a `data-part`
- * whose own separator is the colon.
+ * One preset per icon in the set, so a library search can place any of them; only
+ * {@link ICON_STENCIL_IDS} are laid out up front. Labelled with the icon's own name rather
+ * than a translation: the name is what the document stores, what the picker searches and
+ * what an AI writes, so it is the word worth learning from the tooltip.
  */
-const stencilId = (name: string): string =>
-	`lucideIcon${name
-		.split("-")
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join("")}`;
-
-/**
- * The palette entries. Labelled with the icon's own name rather than a translation: the
- * name is what the document stores, what the picker searches and what an AI writes, so it
- * is the word worth learning from the tooltip.
- */
-export const IconStencils: Stencil[] = FLYOUT_ICON_NAMES.map((name) => ({
-	id: stencilId(name),
+export const IconStencils: Stencil[] = Object.keys(ICON_NODES).map((name) => ({
+	id: toIconStencilId(name),
 	objectType: "lucideIcon",
 	label: name,
 	icon: createLucideStencilIcon(name),
@@ -62,4 +52,4 @@ export const IconStencils: Stencil[] = FLYOUT_ICON_NAMES.map((name) => ({
 
 /** Preset ids of the flyout, in palette order; a host laying out its own toolbar reads these. */
 export const ICON_STENCIL_IDS: readonly string[] =
-	FLYOUT_ICON_NAMES.map(stencilId);
+	FLYOUT_ICON_NAMES.map(toIconStencilId);

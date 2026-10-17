@@ -2,8 +2,6 @@ import { quoteNames } from "./errorText";
 import type { ObjectRecord } from "./objectAccess";
 import { TEXT_BODY_KEYS } from "../../model/objects/base/TextStyleDoc";
 import { GROUP_EXTRA_KEYS } from "../../model/objects/primitives/group/GroupDoc";
-import { isSingleBodyText } from "../../model/objects/types/text/TextType";
-import { holdsBodyInsideBox } from "../../plugin/hasInsetTextRegion";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
 
@@ -26,12 +24,9 @@ const STRUCTURAL_EXTRA_KEYS: readonly string[] = GROUP_EXTRA_KEYS;
 /**
  * Every name a props write may set on one type: what the type declares for
  * itself, minus what it declares as structure ({@link STRUCTURAL_EXTRA_KEYS}),
- * plus what carrying a single body *inside its box* implies (TEXT_BODY_KEYS).
- * The last group is shared rather than declared by each type, so it is added
- * here instead of being copied into as many `extraKeys` lists — but only where
- * the body has a box to be placed against ({@link holdsBodyInsideBox}): on a
- * type drawing its label outside its outline, the keys would be accepted,
- * written, and never read.
+ * plus the body placement a type declaring `features.textVerticalBasis` holds
+ * (TEXT_BODY_KEYS). The last group is shared rather than declared by each type,
+ * so it is added here instead of being copied into as many `extraKeys` lists.
  */
 const collectWritableKeys = (
 	definition: ObjectDocDefinition,
@@ -39,10 +34,7 @@ const collectWritableKeys = (
 	...(definition.extraKeys ?? []).filter(
 		(key) => !STRUCTURAL_EXTRA_KEYS.includes(key),
 	),
-	...(isSingleBodyText(definition.features.text) &&
-	holdsBodyInsideBox(definition)
-		? TEXT_BODY_KEYS
-		: []),
+	...(definition.features.textVerticalBasis === true ? TEXT_BODY_KEYS : []),
 ];
 
 /**
@@ -55,16 +47,16 @@ const collectWritableKeys = (
  * nothing downstream reads it, the mapper drops it on the way to the state, and the
  * value would sit in the document looking as though it had taken effect — which is the
  * whole point of asking the definition rather than writing what it is handed. And a
- * body-placement key on a type whose label is not inside its box is refused with that
- * reason named, the property existing on other types being what would make the generic
- * message misleading.
+ * body-placement key on a type that does not declare `features.textVerticalBasis` is
+ * refused with that reason named, the property existing on other types being what
+ * would make the generic message misleading.
  *
  * @param target - The object being built or edited, mutated in place
  * @param extraProps - Property names and values as given; a value of `undefined` is dropped,
  *   so an optional argument that was never filled in reads as absent
- * @param definition - The type's doc definition, whose `extraKeys` and text feature say
- *   which names it has (see {@link collectWritableKeys}); a type with neither accepts no
- *   extra props at all
+ * @param definition - The type's doc definition, whose `extraKeys` and
+ *   `features.textVerticalBasis` say which names it has (see
+ *   {@link collectWritableKeys}); a type with neither accepts no extra props at all
  * @param reserved - Names the call takes as parameters of its own, which differ per op
  *   (a creation call owns the geometry, an edit call does not)
  * @param subjectName - What to call the offender in the error: the object type when
@@ -93,17 +85,15 @@ export const applyExtraProps = (
 	const allowed = collectWritableKeys(definition);
 	const unknown = names.filter((key) => !allowed.includes(key));
 	if (unknown.length > 0) {
-		// A body-placement key on a type whose label is not inside its box gets
-		// its own reason: "not one of this type's properties" would send the
-		// caller hunting for a different spelling of a knob the type cannot have.
-		const inertBodyKeys = unknown.filter(
-			(key) =>
-				(TEXT_BODY_KEYS as readonly string[]).includes(key) &&
-				isSingleBodyText(definition.features.text),
+		// A body-placement key on a type that does not declare the feature gets its
+		// own reason: "not one of this type's properties" would send the caller
+		// hunting for a different spelling of a knob the type cannot have.
+		const inertBodyKeys = unknown.filter((key) =>
+			(TEXT_BODY_KEYS as readonly string[]).includes(key),
 		);
 		if (inertBodyKeys.length > 0) {
 			throw new DocOperationError(
-				`extraProps on "${subjectName}" must not carry ${quoteNames(inertBodyKeys)}: this type draws its label outside its box, so there is nothing for a body placement to move`,
+				`extraProps on "${subjectName}" must not carry ${quoteNames(inertBodyKeys)}: this type does not declare textVerticalBasis, so there is nothing for a body placement to move`,
 			);
 		}
 		throw new DocOperationError(

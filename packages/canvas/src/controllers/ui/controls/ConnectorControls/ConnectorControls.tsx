@@ -9,6 +9,7 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { readSelectedVertexIndex } from "../../../selection/readers/readSelectedVertexIndex";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 // Handle colors may hold var(--jiscribe-*), so they are applied via style
@@ -23,18 +24,23 @@ type ConnectorControlsProps = {
 	connectorState: ConnectorState;
 	objects: CanvasState["objects"];
 	zoom?: number;
-	selectedVertex?: CanvasControllerState["selectedVertex"];
+	/**
+	 * What the canvas is pointed at, `state.selection` as it stands: a picked
+	 * waypoint of this very connector rings its handle, anything else leaves the
+	 * handles plain
+	 */
+	selection: CanvasControllerState["selection"];
 };
 
 /**
  * Renders the editing controls for a selected connector:
  * - Endpoint handles (source / target): drag to reconnect to a shape
- *   (data-id=<id> + data-part="endpoint:source|target" → ConnectionAnchorEventHandler)
+ *   (data-id=<id> + data-action="endpoint:source|target" → ConnectionAnchorEventHandler)
  * - Waypoint move handles: move existing waypoints
  *   (data-id=<id> + data-part="vertex:<i>" → reuses VertexControlHandler)
  * - Waypoint insert handles (lines drawn straight only): the midpoint of each segment of the resolved path
  *   [source, ...waypoints, target]. Drag to add a new waypoint
- *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
+ *   (data-id=<id> + data-action="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
  *
  * The two shapes are edited differently because a point means a different thing in each. Under
  * straight a point is a bend the user places and then moves freely, so it gets a handle; under
@@ -52,7 +58,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	connectorState,
 	objects,
 	zoom = 1,
-	selectedVertex = null,
+	selection,
 }) => {
 	const resolved = useResolvedConnectorPoints(
 		connectorState,
@@ -84,10 +90,10 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	// index the drawn path, so offering them there would hand out handles nothing answers to.
 	const isOrthogonal = isConnectorDrawnOrthogonal(connectorState);
 	const waypoints = connectorState.points;
-	const selectedVertexIndex =
-		selectedVertex?.objectId === connectorState.id
-			? selectedVertex.vertexIndex
-			: null;
+	const selectedVertexIndex = readSelectedVertexIndex(
+		selection,
+		connectorState.id,
+	);
 
 	return (
 		<g data-layer="connector-controls">
@@ -96,7 +102,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				<VertexInsertControls
 					objectId={connectorState.id}
 					points={resolved.points}
-					insertPartSubtype="waypoint-insert"
+					insertActionSubtype="waypoint-insert"
 					zoom={zoom}
 				/>
 			)}
@@ -120,7 +126,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
 					data-id={connectorState.id}
-					data-part="endpoint:source"
+					data-action="endpoint:source"
 					style={endpointHandleStyle}
 				/>
 			)}
@@ -134,7 +140,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
 					data-id={connectorState.id}
-					data-part="endpoint:target"
+					data-action="endpoint:target"
 					style={endpointHandleStyle}
 				/>
 			)}

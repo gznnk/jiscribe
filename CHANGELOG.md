@@ -13,6 +13,839 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Security
+
+- **A long `markdown` card no longer stalls the page.** `@jiscribe/markdown`
+  renders with markdown-it's `linkify` on, and markdown-it 15.0.0 spent
+  quadratic time there, so a few hundred KB of text could block the event loop
+  for tens of seconds. It is now on 15.0.2.
+
+### Added
+
+- **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
+  it takes the same rich text, the same typography and the same in-place editing
+  every other shape's text does, and may carry a `fill` besides, painted over the
+  table's own `fill` (its background, the theme's surface by default). A table
+  stores no size: its width is the column widths summed, its height the resolved
+  row heights summed, and a row's `height` is a lower bound the text raises
+  rather than a box the text is clipped to. Cells are written as a dense grid —
+  one row per entry of `rows`, one cell per entry of `columns` — and a cell
+  carrying nothing but text may be written as that text alone. A text style set
+  from the menu lands on the picked cells, on every cell of a picked row or
+  column, or on every cell when nothing inside the table is picked.
+- **A table's cells can be given a background from the Fill control.** The one
+  Fill control in the menu and the sidebar follows the selection: with cells, a
+  row or a column picked it paints those cells, and with the table alone
+  selected it paints the table's own background. With cells, a row or a column
+  picked, the menu and the sidebar offer what reaches those cells — their text
+  and their background — and nothing else. Picked cells that disagree
+  show as mixed, and the transparent swatch clears a cell so the table's
+  background shows through again.
+- **A table's column and row boundaries can be dragged.** As in a spreadsheet,
+  grabbing the rule between two columns resizes the column on its left alone, and
+  the table grows or shrinks with it from its top-left corner (the corner it is
+  drawn from, whatever its rotation or flips); rows do the same with the row
+  above. A column stops at its minimum width, and a row at the height its text
+  needs. With Shift held, the two tracks either side trade instead, so the
+  table's own edges stay where they are — past a column's minimum the boundary
+  simply stops, and for rows dragging down past the text of the row below grows
+  the table rather than clipping that text. Pressing or releasing Shift mid-drag
+  switches between the two from the next pointer move.
+- **A table can be resized by its transform frame**, all eight handles. A width
+  change is spread over every column in the proportions it holds, a height change
+  over every row in the proportions it is drawn at. A column never goes under its
+  minimum and a row never under its text, so a table dragged narrower or shorter
+  than its grid allows simply stops, the edge opposite the dragged one held where
+  it was. A row's stored height stays a lower bound its text raises: a row the
+  drag squeezes down to its text keeps no bound of its own, so a table dragged to
+  its minimum height follows its cells again and shrinks when their text is
+  deleted. A group or multi-select resize spreads the table's share the same
+  way, a table it squeezes past its grid stopping against the edge the group
+  keeps. The handles take a press over everything else lining their edges —
+  the trailing-edge strips, the row and column headings.
+- **A content-sized shape can offer resize handles.** The canvas tells a type's
+  `contentResizer` which axes a transform-handle drag is writing and which edge
+  each holds (`context.resizedAxes`, a `ResizeHeldEdge` per written axis), on
+  every frame of the drag and on the one that ends it, and nothing else — a
+  load, an undo, a text edit — carries it. A type can therefore read a dragged
+  width or height as an input without mistaking its own content's changes for
+  one, where before it had to turn the handles off, and a box its content keeps
+  larger than the drag asked for grows from the held edge instead of sliding
+  with the cursor. The axes are stated in each object's own frame, also for one
+  a group or multi-select resize scales: a child turned 90° has its height
+  written by the group's side handles, and one flipped against the group holds
+  the opposite edge.
+- **A table's right and bottom edges can be dragged to resize the last column or
+  row alone**, the table growing or shrinking from the corner it is drawn from, as
+  a boundary does. Mirroring a table moves these edges with it: they are always
+  the two away from that corner. The column stops at its minimum width and the
+  row at the height its text needs. Shift changes nothing here, an edge having no
+  neighbour to trade with.
+- **A table's rows and columns can be selected, added and removed.** Headings
+  along the top and left edges, lettered and numbered as a spreadsheet's are,
+  pick a whole column or row — Shift-clicking another heading runs the pick to
+  it, and Ctrl- or Cmd-clicking one adds it to the pick or takes it back out, so
+  Delete can remove several at once; clicking a cell
+  picks it, and Shift widens the pick to the block of cells between the two —
+  the rectangle they stand at opposite corners of, as a spreadsheet does it, not
+  the run of the cell order between them — while Ctrl- or Cmd-clicking a cell
+  adds it to the pick or takes it back out, even from the middle of such a
+  block, so cells apart from one another can be picked together. Delete clears the picked cells' text,
+  or removes the picked row or column — never the last one left. Alt+Shift+arrow
+  inserts an empty track beside the picked cell or track, and so do the Insert
+  buttons the ObjectMenu and the properties sidebar offer while one is picked —
+  a row's above and below, a column's left and right, a cell's all four. The
+  new track copies the picked one's width or height and its cells' fill and
+  typography, never their text, whichever side it lands on. The cells keep
+  their contents as the grid renumbers around an insertion, and one undo takes
+  it back.
+- **The arrow keys move a table's picked cell.** With a cell picked, an arrow
+  picks the cell next to it in that direction instead of nudging the table, and
+  at the edge of the grid it does nothing. A picked block of cells collapses to
+  the neighbour of the cell the last click or Shift-click ended on. With the
+  table selected as a whole, or a row or column picked, the arrows nudge the
+  table as before.
+- **Shift+arrow widens or narrows a table's picked block of cells.** With a cell
+  picked, Shift+arrow moves the end of the block the last click, Shift-click or
+  Shift+arrow left it at by one cell, keeping the other corner where it is, as a
+  Shift-click on that cell would; cells added with Ctrl stay picked. At the edge
+  of the grid it does nothing rather than nudging the table.
+- **The up and down arrow keys move a UML record's picked compartment.** With
+  a compartment picked, up and down pick the one above or below it instead of
+  nudging the record, skipping the compartments the record does not have, and
+  at the top or bottom they do nothing; left and right do nothing either. A
+  picked run of compartments collapses to the neighbour of the one the last
+  click or Shift-click ended on. With the record selected as a whole, the
+  arrows nudge it as before.
+- **Shift+up and Shift+down widen or narrow a UML record's picked run of
+  compartments.** With a compartment picked, they move the end of the run the
+  last click, Shift-click or Shift+arrow left it at by one compartment, keeping
+  the other end where it is, as a Shift-click on that compartment would;
+  compartments added with Ctrl stay picked. At the top or bottom, and for
+  Shift+left and Shift+right, they do nothing rather than nudging the record.
+- **Bold, italic, underline and strikethrough work the same from the keys and
+  the buttons.** Ctrl/Cmd+B / I / U / Shift+X now act on selected shapes without
+  opening the editor, and while editing with only the caret placed they flip the
+  whole text being edited; with characters selected they style those characters,
+  as before. A selection mixing bold and plain turns all bold, and the next press
+  all plain — several shapes at once included — in one undo step, and the
+  ObjectMenu's and the sidebar's buttons do exactly the same. Ctrl/Cmd+Shift+X
+  strikes text through, keeping an underline on the same characters, and pressing
+  it again takes the line off. Underline and strikethrough work independently of
+  each other: the underline button reads on whenever all of the selected text is
+  underlined, whether or not parts of it are also struck through, and one press
+  takes the underline off everywhere while every part keeps its own
+  strikethrough — and the same the other way round. Ctrl/Cmd+X is still cut, Ctrl/Cmd+Shift+B / I / U
+  no longer toggle bold, italic or underline, and on a Mac the keys take Cmd
+  alone, as the other shortcuts do. For hosts, they are the commands
+  `toggleBold` / `toggleItalic` / `toggleUnderline` / `toggleStrikethrough`, so
+  `config.commands` can leave them out and the shortcut list shows them.
+- For plugin authors: a custom ObjectMenu item or properties-sidebar row stays
+  up while a picked part narrows the menu or the sidebar when it names that
+  part's kind in `pickedPartKinds`. `@jiscribe/canvas/unstable` (and so
+  `@jiscribe/canvas-sdk`) now exports what a command button needs to look and
+  read like the built-in ones: `PropertyCommandButton` / `PropertyCommandGrid`,
+  `resolveCommandLabel`, `getPlatformShortcuts` and `formatShortcut`, as well as
+  `createDefaultPropertyPanel` for a type that only adds a section to the
+  derived ones.
+- For plugin authors: a selection control's `handle` is told what is already
+  picked on its object. `SelectionControlContext.selectedPart` carries the part
+  selection standing there — the same value the `Component` draws from as
+  `selectedPart` — so a click read with `event.mods` can grow or trim the pick
+  rather than only replace it.
+- For plugin authors: a selection control declares whether it is drawn under or
+  over the core handles (the connector endpoints, the transform frame's handles
+  and rotation, the connection anchors, the vertices), and so which of the two a
+  press goes to where they overlap. `SelectionControlDefinition.layer` takes
+  `"belowHandles"` or `"aboveHandles"` (`SelectionControlLayer`); omitted, a
+  control stays above, as every control was. Put below a control that can be
+  pressed elsewhere along its length — a hit strip running an edge, a heading
+  laid outside the object — and keep above one that is the only way to drag
+  what it drags. Either way it is drawn over the selection outline, and within
+  a layer the control declared later takes the press.
+- For plugin authors: `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`)
+  now exports `commitEdit`, which a contributed command returns its state through
+  to say it edited the document — the COMMAND path never advances `commitVersion`
+  itself; `createTextSlotPartKindDefinition()` and `TEXT_SLOT_PART_KIND`, so a type
+  declaring its own `"textSlot"` kind can spread the derived one and add a `range`
+  or a `delete`, and pass it `{ region }` or `{ regions }` to place the slots;
+  and `resolveTextSlotIds(object, pick, ctx)` with
+  `TEXT_STYLE_INTENT_KINDS`, the slots a pick reaches as its kind declares them
+  and the text kinds a part reaching text receives, for a type's own entry that
+  writes where a pick reaches (a table's cell fill) and for its part kinds'
+  `styleIntentKinds`.
+- **A Shift-click selects a run of compartments.** With one compartment of a
+  slot-based shape picked (a UML record's name, attributes or operations), a
+  Shift-click on another picks every compartment from the first to the one
+  clicked, each with a box of its own, and a style change such as a font color
+  lands on all of them. A plain click, or Tab, goes back to a single compartment;
+  Tab steps on from the end of the run it is moving towards. A Ctrl- or
+  Cmd-click on a compartment adds it to the pick or takes it back out, where it
+  used to deselect the shape; with no compartment picked it still does.
+- **For plugin authors: a part kind says whether its parts can be picked apart
+  from one another.** `ObjectPartKindDefinition.multiPick: true` lets a Ctrl- or
+  Cmd-click on a part of the picked kind add it to the pick as a range of its
+  own, or take it out — a range it sat inside is broken into the parts it still
+  covers, as the kind's `range` or `list` reads it. Omitted, as for `vertex`,
+  the click toggles the object as before. The `"textSlot"` kind core registers
+  (and `createTextSlotPartKindDefinition()`) declares it, and so do the table's
+  row and column kinds.
+- **For plugin authors: a part kind says how its parts are outlined, walked and
+  spanned.** `ObjectPartKindDefinition` takes four optional members. `region`
+  gives a part's box in the object's local coordinates: a kind that declares it
+  has every selected part outlined, the owner's own outline turning dashed and
+  its transform handles hidden, while a kind without one (the built-in `vertex`)
+  looks as before. `regions` gives every part's box in one call, for a kind
+  whose one part cannot be placed without laying out the rest. `list` gives every part id in the order Tab walks them, which
+  is also the order a Shift-click range is resolved over by default. `range` is
+  for a type whose parts are not laid out in one line, such as a table's cells:
+  it answers which parts a range from an anchor to a focus covers, every id
+  passing `has`, in the type's own order, and never empty. Two more say what a
+  pick of the kind is styled through: `textSlotIds` names the text slots the picked
+  parts reach, which the core text entries write and read (a table row reaches
+  its cells; omitted, every slot), and `styleIntentKinds` names the style kinds a pick
+  receives, which the ObjectMenu and the sidebar narrow to while one is picked,
+  dropping custom items and the system and Meta sections with the rest (omitted,
+  as for `vertex`, the object stays the subject of every control). The
+  `"textSlot"` kind core registers declares its own slots and the text kinds. A reader turns the
+  stored ranges into ids through `collectObjectPartIds`, and finds the part the
+  active range ends on through `readActivePartFocusId`, both on
+  `@jiscribe/canvas/unstable`. The style walk resolves a slot pick the same way,
+  so `StyleContext` now carries the canvas's `objectPartKind` registry.
+- **For plugin authors: picking a vertex is a part selection too.** The separate
+  single-vertex field is gone: a vertex handle now writes `selection.part` under
+  the `vertex` kind, so the one channel carries every pick made one level
+  below the object and the reducer's reconciliation covers vertices as it already
+  covered slots — including a connector's waypoints, picked while the connector
+  itself is the selection. Because two kinds now share the channel, every reader
+  that narrows itself to text asks for the slot kind by name rather than for a
+  pick of any sort. What the user sees changes where the vertex pick now follows
+  the rules a slot pick already had: a style write or a sidebar edit of the size,
+  position or rotation no longer drops the picked vertex (nothing renumbers it),
+  so a Delete right after goes to that vertex rather than to the whole shape, and
+  Escape drops the vertex first and the shape on the next press.
+- **For plugin authors: picking a text slot is one case of a general part
+  selection.** What was a slot-only field is now `selection.part`, a channel
+  over the part kinds a type declares: the `kind` the ids belong to, and a list
+  of ranges, each a fixed `anchorId` and a moving `focusId` — the model a DOM
+  `Selection` keeps, so a later gesture can grow the active range or add another
+  without the stored form changing again. A type that spells its text out as
+  slots takes part with no declaration of its own: the `"textSlot"` kind is
+  registered for it, its part ids being the keys of its own `text`. So is every
+  other type holding text, a single body included, whose one part id is `body`.
+  The reducer reconciles the channel after every action that rewrites the
+  selection or the objects, through the kind's own `has`, so a selection the
+  state no longer backs is already gone by the time anything reads it — the
+  readers take `state.selection.part` as it stands, and each kind answers for
+  its own ids. A plain click and Tab write a single slot, and a Shift-click
+  grows the active range from its anchor.
+- **For plugin authors: a type declares the sub-parts of its own objects.**
+  `ObjectTypeDefinition.partKinds` takes one entry per part-id namespace (`kind`),
+  each stating `has` — whether an id still names a part of that object — and
+  `delete`. Core never learns what an id means: it carries the string around and
+  hands it back to the type, so a kind it has no definition for simply has no
+  parts. The first consumer is vertex deletion, which polyline, polygon and
+  connector now go through: what the user sees is unchanged, including stopping
+  at each type's vertex floor (two for an open line, three for a closed
+  outline), which each type now states where it declares its part kinds instead
+  of the delete command inferring it from the type id.
+- For plugin authors: a type whose geometry does not settle its box declares it as
+  `ObjectDocDefinition.bounds`, and the doc-side ops measure it by that declaration
+  instead of by the rule the `text` shape happens to follow. Today that means every
+  `geometry: "point"` type, whose document stores the corner it is drawn from and
+  no size; hand the same measurement to the type's factory and where a new shape is
+  placed cannot drift from where a saved one is measured, aligned and distributed. A
+  point type declaring no box now fails its own parse-check suite
+  (`@jiscribe/canvas-sdk/testing`) and is reported by `diagnoseDoc`, rather than
+  quietly having no box at all.
+- **For plugin authors: the parts a hand-written mapper is assembled from are on
+  the unstable surface.** A `geometry: "point"` type is refused by
+  `createFrameMapper` — its doc holds no box to convert — so it writes its own
+  mapper and measures the box there, which until now meant rebuilding by hand
+  what the shared mapper already knew. `ObjectMapper` and
+  `mapTransformDocToState` / `mapTransformStateToDoc` (through
+  `@jiscribe/canvas-sdk`) are the conversions such a mapper shares with every
+  other type, and `collectStyleKeys` / `roundDocCoordinate` (through
+  `@jiscribe/canvas-sdk/doc`) the two rules it must not restate: which fields
+  belong to which style group, which the parser builds the names it accepts
+  from, and the rounding a coordinate written back to a doc goes through.
+  `calcPointDocCenter` and `numberOverride` come with them, being what such a
+  type's `ObjectDocDefinition.bounds` turns the stored corner into a box with.
+- **A command carries its own wording, in every locale it ships.**
+  `Command.label` takes `string | LocaleMessages<string>`, exactly as
+  `Stencil.label` already did, and a host override by id still outranks it. The
+  built-in commands' Japanese moves out of the `ja` dictionary onto the commands
+  themselves, leaving `CanvasMessages.commandLabels` as the host-override slot
+  `stencilLabels` has been for a while — so a label and its translations are one
+  declaration instead of two places that had to be kept in step. Resolution is
+  per declaration (exact → language subtag → `en`), so a command shipping no
+  `ja` falls back to its own English rather than dragging the canvas back with
+  it. This is what makes a contributed command nameable in the host's language:
+  a plugin declares the same field, and what it draws itself it localizes as the
+  other shipped plugins do (`useCanvasLocale` + `resolveLocaleMessages` over its
+  own dictionary).
+- **For plugin authors: a plugin may contribute commands.**
+  `CanvasPlugin.commands` is registered after `ALL_COMMANDS` in declaration
+  order, and the host's own `config.commands` narrowing is applied over the
+  result, so one list still narrows the whole set. The types a command is
+  written against (`Command`, and the `CanvasControllerState` /
+  `ICanvasRegistries` it reads) are exported from the unstable surface, which
+  `canvas-sdk` re-exports whole: a command is a state transition over the
+  canvas's working state rather than a settled contract, so it is not on the
+  stable surface. Two commands may now share a keyboard shortcut as long as
+  their `canExecute` disagree — the lookup answers with every match in
+  registration order and the caller takes the first that can run, instead of
+  taking the first match alone and passing the key to the browser when that one
+  refused. No pair of built-in commands shares a binding today, so nothing
+  shipped changes; a swept test holds that (`initializeCommands.exclusivity`).
+  `CommandRegistry.register` now throws on a duplicate id rather than silently
+  letting the later one win.
+- For plugin authors: a shape may now declare `geometry: "point"` — the doc
+  stores the position alone, and the box is measured from the content. Such a
+  type writes its own mapper, measuring the box as it maps (`TextMapper` is the
+  worked example), and declares a `contentResizer` for re-deriving it after an
+  edit; `createFrameMapper` takes a rect or an ellipse only, and refuses a point
+  type at compile time. `@jiscribe/geometry` gained
+  `calcFrameCenterFromTopLeft`, the inverse of
+  `calcFrameKeyPoint(frame, "topLeft")`, for the corner such a box is grown from
+  and rebuilt around, and `@jiscribe/doc` exports `calcWrappedTextBlockSize` so a
+  shape measuring its own text box does not restate the padding rule. A slot may
+  carry fields of its type's own: every shared write copies a slot whole, which
+  is now stated on `TextSlots` and held by a test.
+- **For plugin authors, a breaking change:**
+  `ObjectDocDefinition.textSlotStyleDefaults` is now
+  `{ byTextSlot?, everyTextSlot? }` rather than one map keyed by slot id. A type
+  whose slot set is not fixed — a table's cells are one per row × column, so
+  there is no list of ids — declares `everyTextSlot`, which every slot without an
+  entry of its own falls back to; a type that names its slots declares
+  `byTextSlot` as before, wrapped in that field. The two are separate because
+  one map keyed by slot id had to reserve an id for "every slot", which then
+  could not be the name of a real slot in any document of the type.
+- **For plugin authors, a breaking change: a type places its text through its
+  `"textSlot"` part kind.** `ObjectTypeDefinition` no longer takes a `textRegion`
+  of its own (v0.11.0 had one): the `textRegion` it carries is the doc
+  definition's, inherited untouched, which is what the headless checks and the
+  auto-height verdict read. Where the canvas draws, edits and outlines a slot is
+  the `"textSlot"` part kind's `region` (one slot at a time) or `regions` (every
+  slot in one call, keyed by slot id), built with
+  `createTextSlotPartKindDefinition({ region })` /
+  `createTextSlotPartKindDefinition({ regions })` and declared in `partKinds`; a
+  kind given both is refused. `createFrameObjectDefinition({ textRegion })` keeps
+  working, and builds that kind for you (declaring a `"textSlot"` kind in
+  `partKinds` next to it is refused). A hand-written definition that declared
+  `textRegion` declares the part kind instead. Registration wraps whichever
+  `"textSlot"` kind is registered so a slot it does not place takes the whole box
+  and the object's `textVerticalBasis` goes on top, and the frame renderer asks
+  the kind's `regions` once per render rather than once per slot — so a type
+  whose one slot cannot be placed without laying out the rest (the table's
+  cells, the record's compartments, now `calcTableTextSlotRegions` /
+  `calcRecordTextSlotRegions`) lays itself out once.
+  `ObjectPartKindDefinition.regions` is new for that. `ObjectTextRegionRegistry`
+  and `CanvasRegistries.objectTextRegion` are gone; `calcTextRegion` and the new
+  `calcTextSlotRegions` on `@jiscribe/canvas/unstable` take the registered
+  `"textSlot"` part kind instead of the calculators. `@jiscribe/plugin-uml-shapes`
+  no longer exports `calcRecordTextRegion`.
+- **For plugin authors: a type says how its fixed connection anchors are shown.**
+  `connectionAnchors` answers per anchor id — the four edge ids and any
+  `extraConnectPoints` id — with an `offset` and a `hidden` flag. `offset` is how
+  far the dot sits off its edge, in screen px, for a type whose own controls
+  occupy the band the dots would otherwise land in (the table's grips, whose top
+  and left dots now stand past them); an anchor without one keeps the theme's
+  `connectionAnchorOffset`, and only the dot moves: where a connector attaches
+  is unchanged. `hidden` stops offering the anchor: the selected shape shows no
+  dot to drag a connector from, a connection drag shows no landing dot there,
+  and a drop next to it does not snap to it but lands on the edge position under
+  the cursor. A doc that already attaches a connector there keeps attaching,
+  parsing and drawing as before, and `edge` / `center` endpoints are untouched.
+  It is one object for the type or a function asked per object and zoom, like
+  `transformHandles` — the zoom being for controls sized in world units, which
+  reach further on screen the further the canvas is zoomed in;
+  `ConnectionAnchors`, `ConnectionAnchorSpec`,
+  `ObjectConnectionAnchorsDeclaration` and `ObjectConnectionAnchorsCalculator`
+  are exported from `@jiscribe/canvas`.
+- **For plugin authors, a breaking change: `connectionAnchorOffsets` is now
+  `connectionAnchors`.** Each entry is an object rather than a number —
+  `{ topCenter: 24 }` becomes `{ topCenter: { offset: 24 } }` — and the
+  exported types are renamed (`ConnectionAnchorOffsets` → `ConnectionAnchors`,
+  `ObjectConnectionAnchorOffsetsDeclaration` →
+  `ObjectConnectionAnchorsDeclaration`, `ObjectConnectionAnchorOffsetsCalculator`
+  → `ObjectConnectionAnchorsCalculator`), as is the registry
+  (`CanvasRegistries.objectConnectionAnchorOffsets` →
+  `objectConnectionAnchors`). The old names are not kept as aliases.
+  `@jiscribe/canvas/unstable` also exports `SELECTION_OUTLINE_WIDTH`, for a
+  control drawn against the selection outline at the same line weight.
+- For plugin authors: the text measurement has a generation,
+  `readTextMeasurementGeneration()` in `@jiscribe/doc/unstable`, which the canvas
+  moves on (`advanceTextMeasurementGeneration()`) when web fonts finish after
+  the first paint and the same text starts measuring differently. A shape
+  caching measurements records it and re-measures once it has moved. The table
+  uses it to measure each cell once per width, which leaves a row boundary drag
+  measuring no text at all.
+- **A plugin can offer AI tools for its own shapes.** An object tool
+  (`defineObjectAiTool`, from `@jiscribe/canvas-sdk/tools`) acts on the one object
+  a call names by `id`, and either rebuilds it or reads it. A plugin exports its
+  tools from a `./tools` entry, `@jiscribe/standard-shapes/tools` gathers the
+  shipped set's as `standardAiToolPlugins`, and `createCanvasToolSet` in
+  `@jiscribe/ai-tools` resolves them with the built-in tools into the one set a
+  host both declares from and applies through. A rebuilt object is held to the
+  type's `validateDoc` and to the names the type holds before it is written, and
+  undo takes it back like any other edit. Arguments are written as a zod raw
+  shape, and zod is a peer dependency of the contract, so a plugin takes it at
+  the version the host uses. The contract is a package of its
+  own, `@jiscribe/ai-tools-sdk`, which `@jiscribe/canvas-sdk/tools` re-exports.
+  The table is the first shipped plugin to offer any (below).
+- **A table can be edited through AI tools of its own.** `table_read` lists its
+  extent, track sizes and every cell; `table_insert_tracks` /
+  `table_delete_tracks` add and remove rows or columns, refusing to delete every
+  one of either; `table_fill_cells` writes a block of text from one cell, refusing
+  a block that runs past the table unless `grow` appends what it needs;
+  `table_clear_cells` empties a range and keeps its styling;
+  `table_set_track_sizes` sets column widths and row floors (`"auto"` takes a
+  row's floor away), refusing a column under its minimum; and
+  `table_set_cell_style` lays a fill and typography over a range. Rows and
+  columns count from 0, and cell `[row,column]` is the text slot
+  `r{row}c{column}`. They come from the plugin's new headless `./tools` entry and
+  reach hosts through `standardAiToolPlugins`.
+- **A UML record's compartments can be set through an AI tool.**
+  `record_set_compartments` adds, replaces, empties or removes the stereotype
+  band and the attribute and operation compartments, which `set_text` could
+  only fill where they already were. A compartment it replaces keeps its
+  typography, a new one starts from the record's defaults, and a row holding a
+  newline is refused. The record does not grow with its rows, so the tool then
+  sets the height to exactly what the compartments need, keeping the edge the
+  title hangs from in place whatever the rotation or flips. It comes from the
+  UML plugin's new headless `./tools` entry and reaches hosts through
+  `standardAiToolPlugins`. The height is measured with the same rule the drawing
+  splits the box with.
+- **`diagnoseDoc` reports a record too short for its rows.** A record's bottom
+  compartment takes whatever height is left, so rows added without refitting the
+  box were drawn past its edge while the diagnosis called the file clean. It is
+  now an error naming how many pixels the box is short and the two ways to fix
+  it. The record makes the check itself, through the declaration below.
+- For plugin authors: `ObjectDocDefinition.diagnoseOverflow` lets a type report
+  content it lays out by a rule of its own that its box cannot hold — what the
+  shared text measurement cannot see, such as a record's stacked compartments.
+  It takes the object's doc and returns one English line per overflow
+  (`ObjectDocOverflowDiagnoser`, from `@jiscribe/doc`); `diagnoseDoc` calls it
+  for any type that declares one and reports each line as an error on the
+  object. `createFrameObjectDoc` passes it through.
+- For plugin authors: `textSlotStyleSchema` and `canonicalizeFontWeight`, from
+  `@jiscribe/canvas-sdk/tools`, are the typography vocabulary `set_style`
+  declares and the weight spelling a document keeps (`"700"` is stored as
+  `"bold"`), so a tool styling text slots of its own speaks the same arguments.
+  `@jiscribe/ai-tools-sdk` takes zod as a peer dependency for them.
+- **`docOps.replaceObject` swaps one object for a whole new doc of the same id
+  and type**, refusing what the parser would not keep as written — a value the
+  type's `validateDoc` rejects, a malformed `meta`, a name the type does not hold —
+  and leaving the document untouched when it does.
+- **Tab moves an open text edit on to the next cell, as in a spreadsheet.**
+  While a table cell (or any slot of a multi-slot shape, such as a record's
+  compartments) is being edited, Tab commits what was typed into that cell and
+  opens the editor on the next one with the caret at the end of its text, so
+  typing carries straight on; Shift+Tab does the same backwards. The walk
+  follows the order Tab takes over a picked slot and wraps around the same
+  way, and each cell's commit is an undo step of its own. Tab from a table's
+  last cell appends a row instead, styled as the last one is, and carries on
+  in its first cell; one undo takes back the row together with what was typed
+  into the cell left. A shape with a single text body keeps Tab in the editor
+  and does nothing with it. Plugin authors get the same through the new
+  `extend` member of `ObjectPartKindDefinition`: declared on a `"textSlot"`
+  kind, it returns the object grown by slots after its last one, and the
+  editor's Tab steps onto the first of them rather than wrapping (null
+  declines).
+- **Ctrl+Enter (Cmd+Enter on a Mac) commits an open text edit and closes the
+  editor**, as a click outside it does: the text lands in one undo step, and a
+  picked cell or slot stays picked, so Enter opens it again. It works in a
+  shape's editor and a connector label's alike; plain Enter is still a newline
+  and Escape still cancels. It is the `commitTextEdit` command, so a host
+  leaving it out of `config.commands` turns the keystroke off.
+
+### Changed
+
+- **Moving the pick from the keyboard keeps it in view.** Stepping to another
+  cell or compartment with the arrows, or to another text slot with Tab, pans the
+  view just far enough to show the part it lands on. Only the part moved to is
+  followed, so a pick extended with Shift tracks its moving end; the zoom is
+  never changed, and picking with the pointer moves nothing.
+- **Undo and redo no longer jump to the middle of a large shape still on
+  screen.** A change larger than the view used to be centred whatever was
+  showing, so undoing a row added to a wide table pulled the view away from the
+  cell being worked on. The view now stays put on each axis where part of the
+  change is already in view, and centres only on a change wholly off screen.
+- **The object menu hangs under the picked text slot, not under the whole
+  shape.** With a slot, a cell, a row or a column picked, the menu is placed by
+  the boxes outlined around them, and moves when the pick moves to another one.
+- **`@jiscribe/ai-tools` builds its declarations through `createCanvasToolSet`.**
+  `createCanvasToolDescriptors` is no longer exported; call
+  `createCanvasToolSet(capabilities, aiToolPlugins)` and read `descriptors` off
+  it, and pass that same set to `applyCanvasOp` as its new last argument, which
+  resolves plugin tools through it.
+- **The object menu offers Bold alone for text formatting, as one button on the
+  menu itself.** The text-format dropdown, which held Bold, Italic, Underline and
+  Strikethrough, is gone, and so is the row of four the menu used to lay out
+  while a text slot, a cell, a row or a column was picked. Italic, underline and
+  strikethrough stay in the property sidebar's Style row and on Ctrl/Cmd+I, U
+  and Shift+X. For plugin authors, the
+  `{ type: "textFormat" }` menu item keeps its name and now renders that one
+  Bold toggle; `CanvasMessages.menuTextFormat` is removed.
+- **For plugin authors: a contributed command is offered a shared keystroke
+  before the built-ins.** When a key binding matches several commands, the ones
+  a plugin contributes through `CanvasPlugin.commands` are asked first, in
+  declaration order, and the built-ins after them in their usual order. A
+  contributed command therefore takes a built-in's key whenever its
+  `canExecute` is true — the table's bare arrows rely on it — so keep that
+  check narrow to the context the plugin owns. `CommandRegistry.register` and
+  `registerAll` take an optional `origin` (`"builtIn"` by default) that marks
+  a command as contributed; `getAll` keeps the registration order.
+- **A picked part's box is drawn in place of its shape's selection outline.**
+  With a text slot, a cell, a row or a column picked — and while one is being
+  edited — the shape's own outline, which used to turn dashed around it, is no
+  longer drawn, so a body that fills the shape is not boxed twice. The transform handles stay
+  hidden as before; a part with no box keeps the shape's outline.
+- **A picked part's box is tinted inside as well as outlined**, with the
+  selection accent faded to a wash, so a run of cells reads as one pick rather
+  than as outlines tracing the table's rules. While the part's text is edited
+  the box is outlined only.
+- **A shape's own selection controls are hidden while it is moved or resized**,
+  as the connection anchors already were: a table's row and column headings, a
+  container's header handle, and a polyline's or polygon's vertex and midpoint
+  handles no longer trail the shape through a drag. A drag of
+  one of the controls themselves, such as moving or adding a vertex, keeps them
+  drawn.
+- **Editing the text of a one-body shape looks and steps out like editing a
+  compartment.** While a rectangle's, a sticky note's or any other single-text
+  shape's text is edited, its text area is outlined and the shape's own outline
+  turns dashed, as a UML record's compartment already was. Escape now takes three
+  presses there too: the first leaves the editor, the second drops the outline
+  around the text (the menu and the sidebar narrowed to text controls until
+  then), the third deselects the shape.
+- **Moving or rotating a shape no longer redraws its text.** A shape's
+  text boxes are drawn inside one group carrying the shape's transform, so a drag
+  rewrites that group's transform and nothing under it. The more text a selection
+  holds, the more it saves: a 300-cell table drags about three times faster, and
+  200 labelled rectangles take about a third less time per frame. Image export folds the group back
+  into the text it holds, so an exported SVG is unchanged.
+- **For plugin authors: `createFrameObject` leaves `transform` unset on the
+  props it hands a `renderTextOverlay`**, and `transform` is optional on
+  `FrameTextOverlayProps`, `TextOverlay` and `TextOverlayFrame`. A renderer that
+  passes it on to `TextOverlayFrame`, as the Markdown card does, needs no change.
+  A shape drawn with `createFrameObject` now follows its element with a `<g>`
+  holding its text boxes rather than with the boxes themselves.
+- **For plugin authors: a selection control can take a click and select a part
+  of its object.** `SelectionControlDefinition.handle` now returns
+  `{ object?, selection? }` instead of the object itself: `object` replaces the
+  control's own object as before, and `selection` sets (or, with `null`,
+  clears) the part selection on it, under a kind the type declares in
+  `partKinds`. An existing control returns `{ object: next }` where it returned
+  `next`. A definition lists the gestures it wants in `events` (`"click"`,
+  `"doubleClick"`, `"drag"`, `"dragEnd"`); left out, it gets the drag pair as
+  before (`DEFAULT_SELECTION_CONTROL_EVENTS`). A click event carries no `start`
+  or `delta`. The control's `Component` receives the part selection standing on
+  its object as `selectedPart`, so a handle can draw itself selected.
+
+- **For plugin authors: what a press starts is a `data-action`, and
+  `data-part` only addresses a model part.** The one `data-part` attribute used
+  to carry both a part's address and everything else an element said about
+  itself; the two now travel apart. `data-part` (`event.targetPart`) holds only
+  the `textSlot:{slotId}` / `vertex:{index}` addresses a click turns into
+  `selection.part`, so `textSlotPart` is unchanged. Menu rows, stencil items and
+  control handles write `data-action` (`event.targetAction`) instead, with the
+  same strings as before. On `@jiscribe/canvas/unstable` the builders are renamed
+  `commandAction` / `toggleAction` / `setAction` / `sliderAction` (from
+  `commandPart` / `togglePart` / `setPart` / `sliderPart`); in `@jiscribe/canvas`,
+  `SelectionControlProps.part` becomes `action` and `SelectionControlEvent.subPart`
+  becomes `subAction`. A plugin's menu row or selection control renders
+  `data-action={...}` where it rendered `data-part={...}`.
+
+- **For plugin authors: the style entry factories and the text-slot guard are
+  renamed to say what they return.** On `@jiscribe/canvas/unstable` (and so
+  `@jiscribe/canvas-sdk`), `fieldEntry` becomes `declaredFieldEntry`,
+  `objectField` / `slotField` become `objectFieldEntry` / `textSlotFieldEntry`,
+  `runOrSlot` becomes `runOrTextSlotEntry`, `styleIntentOf` becomes
+  `toStyleIntent`, and
+  `isTextSlotSelection` becomes `isTextSlotPart`. In `@jiscribe/canvas`, the
+  type `ResolvedSelection` (what `CanvasSelectionHandle.select` returns)
+  becomes `RequestedSelection`. Arguments and behaviour are unchanged; a type's
+  style table reads `declaredFieldEntry("headerFill", "string")` where it read
+  `fieldEntry(...)`.
+
+- **For plugin authors: a type declares `features.textVerticalBasis`.** The flag
+  says the type holds that field — its one body may be measured against the
+  shape's whole height rather than against the region the type declares — and is
+  what every side now reads: the style table offers the switch, the properties
+  sidebar shows the row, and the parser accepts the name in a document. A type
+  that does not declare it is told so by name when an AI writes the field
+  (`setExtraProps`, or `extraProps` on a creation), and a document holding it is
+  warned about and has it dropped on save, where before any single-body type took
+  it. Declare it only where the region gives up part of the box's height — a
+  cylinder's caps, a document's wavy foot, a container's header band — and the
+  parse-check suite (`@jiscribe/canvas-sdk/testing`) holds the declaration against
+  the region it is measured at, failing the author's own build on either half
+  without the other. Declaring it on a type with no single body to place
+  (`features.text` naming slots, or absent) is refused at registration. What the
+  user sees: an AWS frame no longer offers the switch. Its label is a title band
+  the doc layer has always held to be outside the box — which is why an AI write
+  of the field was already refused on it — and the frame basis only moved the
+  band down into the middle of the frame.
+- **For plugin authors: one read API for the selection's style.** A row of the
+  floating menu or the properties sidebar states its value through
+  `useSelectionStyle(name)` (`@jiscribe/canvas/unstable`): what the whole
+  selection says about one style property — `single` / `mixed` / `none` — over
+  exactly the objects a write of the same name would reach, folded with the
+  `selectionValue*` helpers exported beside it. A core name comes back
+  typed, and so does a name a shape declares for itself when the row reads it
+  through the declaring table (`useSelectionStyle(table, name)`); read by its name
+  alone it comes back `unknown` for the row to narrow.
+  `selectionValueOr` and `selectionValueOrFirst` take the row's default for an
+  agreed `undefined` too, so a property carried but unset reads as that default.
+  The first-match readers
+  `getFirstSelectedWithProp` / `getFirstSelectedWithStyleGroup` /
+  `getFirstSelectedPropValue` / `getSelectedShapeStyle` and the `ShapeStyleGroup`
+  they were searched by are gone. What the user sees: a plugin row (a sticky's
+  paper color, a container's header color and band height) now stands for the
+  whole selection rather than its first shape, showing its default where the
+  selection disagrees.
+- **For plugin authors: and one write API, its mirror.** A row writes through
+  `onStyleIntent(intent, commit)` (`StyleIntentUpdater`), which takes the edit
+  stated rather than a property name and a string: a core name goes as
+  its typed intent (`{ kind: "fontSize", size: 24 }`), a shape's own name as
+  `{ kind, value }` (`{ kind: "headerHeight", value: "32" }`). `StylePropertyUpdater`
+  and the `onPropertyUpdate` prop are gone; a widget that holds a name and a
+  string from the DOM reads it with `styleIntentOf(property, value)`, exported
+  beside `useSelectionStyle`.
+- **For plugin authors: a type declares its style table.**
+  `ObjectTypeDefinition.extraStyleProperties` is now `styleEntries`, a `StyleTable`
+  composed over the entries the type's `features` derive — so a kind declared
+  there **replaces** the derived one, which is what a type whose storage differs
+  from the core guess (a table whose fill lives on its cells) needs; shadowing a
+  core name no longer throws. `fieldEntry(path, valueType)` is the entry for a
+  field of the type's own, dots being a path into a nested object, and it carries
+  the field it writes: an entry writing one the type's doc cannot hold
+  (`extraKeys` plus what its features imply) is refused at registration rather
+  than writing state the next save drops. A declared entry always states its
+  `fields`, `[]` when it writes nothing the document stores, and one stating
+  none is refused at registration too; `DeclaredStyleTable` /
+  `DeclaredStyleEntry` name that shape. `fieldEntry` / `StyleTable` /
+  `StyleEntry` and the core entry helpers are exported from
+  `@jiscribe/canvas/unstable`; `ExtraStylePropertyDescriptor` and `StyleValueType`
+  are gone from `@jiscribe/doc`. A row reads its own kind typed from that
+  declaration — `useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")` — instead of
+  narrowing an `unknown` with a guard of its own.
+- **For plugin authors: the menu and the sidebar narrow to what the picked part
+  receives.** Picking a text slot, or editing a shape's text, used to narrow both
+  to their text controls alone, whatever the type. They now keep the built-in
+  controls whose every style kind the picked part kind declares in its
+  `styleIntentKinds` — the text kinds for core's `"textSlot"`, so a type adding
+  nothing narrows exactly as before, and the text kinds and `fill` for a table's
+  cells, rows and columns, which is what keeps its background color there.
+  Custom items and rows are still dropped.
+- **For plugin authors: a text edit is opened on the selection, not alongside
+  it.** `textEditState` no longer names its own object or slot: it carries the
+  draft and nothing else, and what is being edited is `selection` — the lone
+  selected object, with the slot as its `textSlot` part whatever the type's
+  text shape (a type holding one body has its `body` picked). Inside the canvas
+  the two halves are paired again in one place,
+  `resolveTextEdit`, which throws rather than returning null when they do not pair
+  up (a session with no owner is a bug, not an empty editor). Three things the
+  user sees follow from the owner being in one place. A double click on a
+  multi-slot shape that was not yet selected now picks the slot it opens, the way
+  Enter and a second click already did, so the text menus read that slot rather
+  than the shape's first one, and Escape leaves the editor, then the slot, then
+  the shape — three steps however the editor was opened, where this path had two.
+  The host's `select()` commits what is being typed before moving the selection,
+  instead of leaving the session pointing at the newly selected object, while a
+  `select()` naming the selection already held leaves the editor open. And a
+  double click that opens an editor on a child of a group, or on one shape of a
+  multi-selection, narrows the selection to that shape alone and leaves it there
+  once the edit ends: the owner is the selection, so there is no group or
+  multi-selection left to return to. A slot that disappears under an open editor
+  now closes it, the draft being discarded for want of anywhere to write it —
+  `reconcileSelection` (renamed from `reconcileObjectPartSelection`) is the one
+  net over both halves, and it closes a shape session the moment
+  `selection.part` stops naming a slot, so an editor can no longer outlive the
+  object or slot it was opened on.
+- **For plugin authors: a sub-part's element carries its address as
+  `data-part="<kind>:<id>"`.** A text slot's element used to carry the bare slot
+  id; it now carries `textSlot:<slotId>`, built with `textSlotPart(slotId)`
+  (exported from `@jiscribe/canvas`), and a vertex handle `vertex:<index>`. One
+  path reads the address back for every kind (`applyPartClick`: parse, ask the
+  kind's `has`, write the pick), so no handler spells a kind of its own. A plugin
+  that writes `data-part={slotId}` on its own slot elements has to switch to
+  `textSlotPart`: with the bare id a click no longer picks the slot and a double
+  click opens the first slot instead. The shipped shapes are switched, and
+  `BelowLabelHitArea` writes no `data-part` at all: a click on a hanging label
+  selects the shape rather than picking its body, and a double click still opens
+  that body. A kind is an identifier (`/^[A-Za-z][\w-]*$/`), which
+  `ObjectPartKindRegistry.register` now enforces, so the first `:` of an address
+  is always the separator.
+- **For plugin authors: the selection is one nested value, `selection: { objectIds,
+part }`.** `CanvasControllerState` used to hold the object selection and the
+  pick made one level below it as two fields that only made sense together, so a
+  writer could move one and forget the other and only the reducer's safety net
+  caught it. Nested, every writer states both in the same breath — and
+  `reconcileSelection` is back to being the net it was meant to be, dropping a
+  part whose object is gone; an operation that renumbers a kind's ids (a vertex
+  inserted, a route reset) still clears the pick itself.
+  `objectIds` is read-only, and `part` is non-null only while exactly one object
+  is selected, which is why `ObjectPartSelection` no longer names its own object:
+  its owner is `selection.objectIds[0]`. `ObjectMenuItemProps` and
+  `PropertyPanelItemProps` hand a row the whole `selection` in place of
+  `selectedIds`, so a slot-aware row reads the pick from the same value it reads
+  the ids from. Hosts are unaffected: `getSelection`, `select` and
+  `onSelectionChange` still speak in plain id lists.
+- **For plugin authors: a connector is selected through the one id list like
+  everything else.** The separate single-connector field is gone, so
+  `selection.objectIds` carries every selection the canvas holds; the rule it
+  carried stays as the writers' own — a connector is selected on its own, one of
+  them, never beside a shape — and a reader that needs it asks
+  `getSelectedConnectorId` for that shape. `ObjectMenuItemProps` and
+  `PropertyPanelItemProps` no longer pass `selectedConnectorId`: a row reads the
+  connector off the `selection` and `objects` it already receives. For hosts
+  nothing changes — `getSelection`, `select` and `onSelectionChange` have
+  levelled the two into one list all along — except that `select`'s report drops
+  the same field.
+- **A right click selects the shape it lands on, and then opens the context
+  menu.** The menu used to act on whatever was selected at the time, so a right
+  click on another shape ran the command on the one still selected elsewhere —
+  the shape under the cursor was not even what the menu described. Right-clicking
+  a shape already in the selection keeps the whole selection, so a multi-selection
+  can still be acted on from one of its members, and a right click on the
+  background, a control handle or a menu changes nothing. The touch long press
+  mirrors it, and the decision is the left click's own `determineSelection`, which
+  is what makes a group member resolve to the group exactly as it does on a left
+  click.
+- **A shape placed from the toolbar or the shape library lands centered on the
+  cursor, whatever its geometry.** `text` used to land with its top-left there
+  instead: a shape whose size is measured rather than stored reported no size to
+  offset a center by, so it was placed by the corner and, dragged out of the
+  library, snapped to nothing. Both follow from the size now being measured at
+  placement time. What a document holds is unchanged — a `text`'s `x` / `y` is
+  still the top-left of the drawn box — and so is `add_object`, whose `x` / `y`
+  still name that corner. **For plugin authors**, `createPointObjectFactory`
+  takes the measurement as its second argument, `calcDimensions` answers with the
+  real half-size, `createDoc` reads its `position` as the center for every
+  geometry, and `calcPointDocDrawnTopLeft` / `calcPointDocCenter` read that
+  conversion off a document's own transform fields.
+- **For plugin authors: names that hold a text slot say `textSlot`.**
+  `ObjectTextStyleDefaultsRegistry.resolveSlotStyle` becomes
+  `resolveTextSlotStyle`, and `TextSlotMeasurement.slotId` (what
+  `CanvasHandle.measure.textSlot` returns) becomes `textSlotId`. On
+  `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`),
+  `FrameTextOverlayProps.slotId` becomes `textSlotId` and
+  `TextEditable.editingSlotId` becomes `editingTextSlotId`. Arguments and
+  behaviour are unchanged.
+
+### Fixed
+
+- **The shape library's search now reaches every icon, not just the ones laid
+  out.** The AWS and Lucide sections list a handful of their icons (100 of 781,
+  20 of 1767) and the search looked only at those, so `lambda` or `bicycle`
+  found nothing and the rest could be reached only by placing some icon and
+  swapping it from the menu. Both plugins now register a stencil for every icon
+  they hold, and a category may declare `search` (`StencilCategorySearch`) to
+  answer the library's search out of its whole set; the sidebar lists what it
+  answers after the label matches, says so when the category cut the list, and,
+  while nothing is typed, points to the search from under the section. For AWS a term
+  also matches the service category, so `compute` lists all of Compute. The
+  toolbar flyout still shows `presetIds` alone, and the menu picker stays for
+  swapping the icon of a shape already placed.
+- **An AI reaching for a table's text is told where it lives.** A type
+  declaring keyed text slots but keeping its text in properties of its own
+  answered a text write, read or inline style with `has no text slot` — close to
+  untrue for a table full of cells, and no hint of what to do instead. It now
+  says the type keeps its text in properties of its own, that the type's
+  description names them, and that they are read and written as the type's own
+  properties. The table, whose text is its `cells`, is the type this reaches
+  today.
+- **Tab no longer moves an open text edit to the next cell.** Pressing Tab
+  while editing a table cell (or any slot of a multi-slot shape) took the focus
+  off the editor and, on the next Tab, walked the selection on to the next
+  slot with the draft still attached, so the editor showed up over another cell
+  holding the first cell's text. The editor now keeps Tab and Shift+Tab from
+  the browser, committing before it moves on (see Added), and the slot walk
+  refuses to move while an edit is open.
+- **A shape whose renderer throws no longer takes the canvas down.** Each
+  object is drawn inside a boundary of its own: the one that threw is drawn as
+  nothing and named in a console warning with its type and id, while every other
+  object stays drawn, editable and saved. The failure is held against the state
+  that threw, so an undo or an outside correction draws the object again. For
+  plugin authors this is also what makes a thrown invariant the right answer to
+  data a shape cannot draw — the table's and the record's text region
+  calculators now throw for a slot they do not have, naming it, instead of
+  answering with some other rectangle.
+- **A group's frame no longer goes stale when a shape inside it is edited by a
+  plugin's command or a selection control.** Whether a group kept its box
+  depended on _how_ an edit was made rather than on what it did — the same
+  change to a grouped shape settled the group when a built-in edit made it and
+  did not when a contributed command or a control's handles did — so the group's
+  outline, its handles and the width and height it reports could be left at the
+  size it used to be until the document was reloaded. What it cost in the
+  meantime was typing a size into the stale group, which scaled its children by
+  the wrong ratio.
+- **A style row states what the selection carries, and a style write lands
+  where the row said.** Reading and writing a style now take the same walk over
+  the selection, each property through its own entry on the shape's type, so the
+  two cannot disagree about who is addressed. Before, a row read the first shape
+  it found and the write reached every one: a record selected as a whole showed
+  its first slot's font color while the write recolored every slot; the stroke
+  rows were gated by one feature flag for all six fields; and a corner radius
+  or an arrowhead left unset showed a constant of the menu's rather than the
+  type's default. Now a disagreeing selection shows as mixed, and an unset value
+  shows as the type draws it.
+- **Delete on a connector's last waypoints does something again.** A connector's
+  `points` holds only the waypoints between its endpoints, yet its vertex floor
+  was the polyline's two, so with one or two waypoints left the key was claimed
+  and refused: nothing moved, and the connector did not go either. The floor is
+  now none, so a picked waypoint is always removed — down to the straight route
+  the connector started as.
+- **A shape whose size is measured no longer stays put when the group around it
+  is resized.** Scaling a group scales the gaps inside it, and every shape that
+  stores a box moved with them — but a `text`, whose box is its own content,
+  carried no extent for the scale to write and so was left at the coordinate it
+  started from. A label centred under an icon ended up beside it, by half of
+  however much the icon grew. Its box is still the text's own; what follows the
+  layout now is where that box sits, its centre landing where any other
+  geometry's would. A `text` named in a resize of its own is still refused —
+  that is a caller stating a size, which this geometry has no field for, while a
+  group scale states the layout instead.
+
+- **`resize_object` no longer reports success on a shape whose size it cannot
+  set.** A `geometry: "point"` shape — a `text` — is measured from its own
+  content every time it is read, so there is no extent for a resize to write;
+  the op planned the change, found no case for the geometry and wrote nothing,
+  answering as though it had. It now refuses the id and says what to change
+  instead: the fields the content is laid out in, a block text's own width among
+  them. `resize_objects` rejects the whole batch the way it already does for a
+  connector, naming the offender as `ids[i] (id)` and leaving every other id
+  untouched, so a selection holding a text resizes nothing until that id is left
+  out. Reporting the box, aligning and distributing by it, and moving the shape
+  are unchanged — only setting the box is refused.
+- **The reported box of a rotated shape whose size is measured no longer misses
+  it.** `get_object_bounds`, and with it alignment, distribution and overlap
+  checks, read a `text`'s stored coordinate as the box's plain top-left corner —
+  but for a shape storing no size that coordinate is the corner as it is _drawn_,
+  turned with the shape. A rotated or flipped text therefore reported a box
+  beside the one it occupies, a quarter turn putting it a whole box away. An
+  upright one is unchanged, as is the rule that these ops work on the
+  untransformed box.
+- **Resizing or moving a multi-selection inside a group no longer costs one pass
+  over the whole drawing per selected object.** Settling the groups a transform
+  invalidated copied the object map once for every selected id instead of once
+  for the selection, and copied it through a spread that pays a proxy trap per
+  object when the map is still the working copy a drag leaves behind. Both are
+  now one copy of the map, whatever the selection holds. The bounds that come out
+  are the same; what changes is the time the property sidebar's width and height
+  fields take to answer a keystroke while several objects are selected.
+- **A shortcut pressed mid-drag no longer records an edit the canvas then
+  throws away.** Every drag frame is drawn from the state the drag started on,
+  so a command run while the pointer was still down — Ctrl+B, Delete, a paste,
+  an arrow-key nudge, select all, a plugin's own command — was undone on screen
+  by the next frame, yet its history entry and save request stayed. An undo
+  then restored a state nobody had seen kept, and the saved file disagreed with
+  the canvas. Such commands are now refused until the drag ends, from the
+  keyboard, a menu or the canvas handle alike; only the view commands (zoom,
+  fit, the panels, shortcut help) still run, as undo and redo already were.
+
 ## [0.11.0] - 2026-09-29
 
 ### Security

@@ -2,9 +2,9 @@ import { useCallback, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { useVisibleObjectIds } from "./useVisibleObjectIds";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { CullingRegistries } from "../utils/calcVisibleObjectIds";
 
 type UseViewportCullingResult = {
 	/**
@@ -30,14 +30,14 @@ export const useViewportCulling = (
 	rootIds: string[],
 	viewport: Viewport,
 	textEditObjectId: string | null,
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	registries: CullingRegistries,
 ): UseViewportCullingResult => {
 	const visibleObjectIds = useVisibleObjectIds(
 		objects,
 		rootIds,
 		viewport,
 		textEditObjectId,
-		visualBounds,
+		registries,
 	);
 
 	const [isCullingSuspended, setIsCullingSuspended] = useState(false);

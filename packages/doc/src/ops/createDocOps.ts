@@ -61,6 +61,7 @@ import {
 	type ObjectFilter,
 	type ObjectSummary,
 } from "./query";
+import { replaceObject } from "./replace";
 import {
 	setPoints,
 	type SetPointsEntry,
@@ -87,6 +88,7 @@ import type { ViewDoc } from "../model/canvas/ViewDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
 import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
+import { createDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
 
 /**
  * The whole set of programmatic edits to a CanvasDoc: building it up (`addObject` /
@@ -224,6 +226,16 @@ export type DocOps = {
 		id: string,
 		extraProps: Readonly<Record<string, unknown>>,
 	): string[];
+	/**
+	 * Swap one object for a whole new doc of the same id and type — what a caller that
+	 * reworks a type's own structure (a plugin's AI tool rebuilding a table) writes back
+	 * with. The replacement is held to what the parser keeps: the type's `validateDoc`,
+	 * `meta`, and the names the type holds, an unknown one being refused rather than left
+	 * for the next save to drop.
+	 * Throws `DocOperationError` for a missing id, a changed id or type, a group, or a
+	 * replacement those checks reject, having written nothing.
+	 */
+	replaceObject(doc: CanvasDoc, id: string, replacement: ObjectDoc): void;
 	/**
 	 * Turn several objects to the same angle, in clockwise degrees about each one's own centre,
 	 * skipping and reporting the types that have no rotation.
@@ -429,6 +441,7 @@ export type DocOps = {
  */
 export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 	const definitions = resolveDocDefinitions(config);
+	const validatorRegistry = createDocValidatorRegistry(config);
 	return {
 		addObject: (doc, type, params) => addObject(doc, type, params, definitions),
 		addObjects: (doc, entries) => addObjects(doc, entries, definitions),
@@ -450,6 +463,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		setView,
 		setExtraProps: (doc, id, extraProps) =>
 			setExtraProps(doc, id, extraProps, definitions),
+		replaceObject: (doc, id, replacement) =>
+			replaceObject(doc, id, replacement, validatorRegistry),
 		setInlineTextStyle: (doc, id, params) =>
 			setInlineTextStyle(doc, id, params, definitions),
 		setInlineTextStyles: (doc, entries) =>

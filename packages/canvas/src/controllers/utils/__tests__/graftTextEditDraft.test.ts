@@ -5,8 +5,8 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { resolveTextObjectFont } from "../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
-import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { graftTextEditDraft } from "../graftTextEditDraft";
 
 /** The real per-type wiring, so only `text` is re-measured here. */
@@ -15,38 +15,53 @@ const contentResizer = createTestRegistries().objectContentResizer;
 const textObj = (id: string, text: TextSlots): ObjectState =>
 	({ id, type: "rect", text }) as unknown as ObjectState;
 
-const slotsOf = (objects: Record<string, ObjectState>, id: string): TextSlots =>
-	(objects[id] as unknown as { text: TextSlots }).text;
+const readTextSlots = (
+	objects: Record<string, ObjectState>,
+	id: string,
+): TextSlots => (objects[id] as unknown as { text: TextSlots }).text;
 
+type GraftInput = Parameters<typeof graftTextEditDraft>[0];
+
+/** The objects with nothing being edited. */
+const noEdit = (objects: Record<string, ObjectState>): GraftInput => ({
+	objects,
+	selection: { objectIds: [], part: null },
+	textEditState: null,
+});
+
+/** The objects with one slot edit open: the draft, and the selection that owns it. */
 const shapeEdit = (
+	objects: Record<string, ObjectState>,
 	objectId: string,
 	slotId: string,
 	text: string,
-): CanvasControllerState["textEditState"] => ({
-	kind: "shape",
-	objectId,
-	slotId,
-	text,
+): GraftInput => ({
+	objects,
+	selection: { objectIds: [objectId], part: textSlotPartSelection(slotId) },
+	textEditState: { kind: "shape", text },
+});
+
+/** The objects with a connector label edit open. */
+const labelEdit = (
+	objects: Record<string, ObjectState>,
+	connectorId: string,
+	text: string,
+): GraftInput => ({
+	objects,
+	selection: { objectIds: [connectorId], part: null },
+	textEditState: { kind: "connectorLabel", text },
 });
 
 describe("graftTextEditDraft", () => {
 	it("returns the same reference when nothing is being edited", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
-		expect(graftTextEditDraft(objects, null, contentResizer)).toBe(objects);
+		expect(graftTextEditDraft(noEdit(objects), contentResizer)).toBe(objects);
 	});
 
 	it("returns the same reference while a connector label is being edited", () => {
 		const objects = { c1: { id: "c1", type: "connector" } as ObjectState };
 		expect(
-			graftTextEditDraft(
-				objects,
-				{
-					kind: "connectorLabel",
-					objectId: "c1",
-					text: "calls",
-				},
-				contentResizer,
-			),
+			graftTextEditDraft(labelEdit(objects, "c1", "calls"), contentResizer),
 		).toBe(objects);
 	});
 
@@ -54,25 +69,23 @@ describe("graftTextEditDraft", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
 		expect(
 			graftTextEditDraft(
-				objects,
-				shapeEdit("r1", "name", "User"),
+				shapeEdit(objects, "r1", "name", "User"),
 				contentResizer,
 			),
 		).toBe(objects);
 	});
 
-	it("returns the same reference for a missing object or an unknown slot", () => {
+	it("throws for a missing object or an unknown slot", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
-		expect(
+		expect(() =>
 			graftTextEditDraft(
-				objects,
-				shapeEdit("gone", "name", "X"),
+				shapeEdit(objects, "gone", "name", "X"),
 				contentResizer,
 			),
-		).toBe(objects);
-		expect(
-			graftTextEditDraft(objects, shapeEdit("r1", "rows", "X"), contentResizer),
-		).toBe(objects);
+		).toThrow(/gone/);
+		expect(() =>
+			graftTextEditDraft(shapeEdit(objects, "r1", "rows", "X"), contentResizer),
+		).toThrow(/rows/);
 	});
 
 	it("replaces only the edited slot's text on the edited object", () => {
@@ -85,20 +98,21 @@ describe("graftTextEditDraft", () => {
 		};
 
 		const grafted = graftTextEditDraft(
-			objects,
-			shapeEdit("r1", "name", "User\nAccount"),
+			shapeEdit(objects, "r1", "name", "User\nAccount"),
 			contentResizer,
 		);
 
 		expect(grafted).not.toBe(objects);
-		expect(slotsOf(grafted, "r1").name).toEqual({
+		expect(readTextSlots(grafted, "r1").name).toEqual({
 			text: "User\nAccount",
 			fontSize: 20,
 		});
 		// Objects other than the edited one, and the edited object's other slots,
 		// keep their identity so their memoized components bail out.
 		expect(grafted.r2).toBe(objects.r2);
-		expect(slotsOf(grafted, "r1").rows).toBe(slotsOf(objects, "r1").rows);
+		expect(readTextSlots(grafted, "r1").rows).toBe(
+			readTextSlots(objects, "r1").rows,
+		);
 		expect(objects.r1).not.toBe(grafted.r1);
 	});
 
@@ -108,13 +122,14 @@ describe("graftTextEditDraft", () => {
 		};
 
 		const grafted = graftTextEditDraft(
-			objects,
-			shapeEdit("r1", "rows", "id\nname"),
+			shapeEdit(objects, "r1", "rows", "id\nname"),
 			contentResizer,
 		);
 
-		expect(slotsOf(grafted, "r1").rows.text).toEqual(["id", "name"]);
-		expect(slotsOf(grafted, "r1").name).toBe(slotsOf(objects, "r1").name);
+		expect(readTextSlots(grafted, "r1").rows.text).toEqual(["id", "name"]);
+		expect(readTextSlots(grafted, "r1").name).toBe(
+			readTextSlots(objects, "r1").name,
+		);
 	});
 
 	it("re-measures the box of an object whose size is derived from its text", () => {
@@ -138,8 +153,7 @@ describe("graftTextEditDraft", () => {
 		};
 
 		const grafted = graftTextEditDraft(
-			objects,
-			shapeEdit("t1", "body", "a much longer draft"),
+			shapeEdit(objects, "t1", "body", "a much longer draft"),
 			contentResizer,
 		) as unknown as Record<string, { cx: number; width: number }>;
 
@@ -160,25 +174,23 @@ describe("graftTextEditDraft", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
 
 		const grafted = graftTextEditDraft(
-			objects,
-			shapeEdit("r1", "name", "Account"),
+			shapeEdit(objects, "r1", "name", "Account"),
 			registry,
 		);
 
 		expect(seenTypes).toEqual([]);
-		expect(slotsOf(grafted, "r1").name.text).toBe("Account");
+		expect(readTextSlots(grafted, "r1").name.text).toBe("Account");
 	});
 
-	it("leaves an object whose text is not the keyed normal form untouched", () => {
+	it("throws for an object whose text is not the keyed normal form", () => {
 		const objects = {
 			r1: { id: "r1", type: "rect", text: 123 } as unknown as ObjectState,
 		};
-		expect(
+		expect(() =>
 			graftTextEditDraft(
-				objects,
-				shapeEdit("r1", "name", "User"),
+				shapeEdit(objects, "r1", "name", "User"),
 				contentResizer,
 			),
-		).toBe(objects);
+		).toThrow(/no text slots/);
 	});
 });

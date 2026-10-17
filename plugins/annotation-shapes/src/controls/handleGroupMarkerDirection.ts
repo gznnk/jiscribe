@@ -1,6 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
+	SelectionControlResult,
 } from "@jiscribe/canvas";
 
 import { resolveGroupMarkerTipDrag } from "./resolveGroupMarkerTipDrag";
@@ -19,7 +20,9 @@ export const handleGroupMarkerDirection = <
 >(
 	context: SelectionControlContext<TState>,
 	event: SelectionControlEvent,
-): TState => ({
-	...context.startObject,
-	direction: resolveGroupMarkerTipDrag(context, event).direction,
+): SelectionControlResult<TState> => ({
+	object: {
+		...context.startObject,
+		direction: resolveGroupMarkerTipDrag(context, event).direction,
+	},
 });

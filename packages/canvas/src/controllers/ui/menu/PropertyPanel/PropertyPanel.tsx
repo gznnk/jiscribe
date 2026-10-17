@@ -60,22 +60,25 @@ import { isMetaSectionShown } from "./utils/isMetaSectionShown";
 import { resolvePropertyPanelSectionLabel } from "./utils/resolvePropertyPanelSectionLabel";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import {
-	commandPart,
-	togglePart,
-} from "../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	toggleAction,
+} from "../../../gestures/handlers/menu/utils/menuActions";
+import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
-import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
 
 type PropertyPanelProps = {
 	/** The state the rows read: the draft-grafted objects, so a keystroke mid-edit shows here too. */
 	canvasState: CanvasControllerState;
 	/** Applies a style change; the same callback the ObjectMenu's own inputs are given. */
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 	/** States one number of the selection's transform frame. */
 	onTransformUpdate: PropertyPanelTransformUpdater;
 	/** States one of the document's own settings, for the Canvas section. */
@@ -165,7 +168,7 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
 		<PropertyPanelSectionHeader
 			type="button"
 			aria-expanded={isExpanded}
-			data-part={togglePart(sectionId)}
+			data-action={toggleAction(sectionId)}
 		>
 			<PropertyPanelSectionChevron isExpanded={isExpanded}>
 				<ChevronRightIcon width={CHEVRON_SIZE} height={CHEVRON_SIZE} />
@@ -189,30 +192,32 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
  * handled by PropertyPanelHandler: everything inside it — its chrome, the
  * controls of every section, and the dropdowns portalled into it — carries only
- * a data-part. The close button routes through the command system like the
+ * a data-action. The close button routes through the command system like the
  * toolbar's own toggle; a selection's controls write through the same `set:` /
  * `slider:` / `command:` grammar the floating menu uses and land one history
- * entry; the Canvas section's buttons write the document through `doc:` parts.
+ * entry; the Canvas section's buttons write the document through `doc:` actions.
  * The fields that take typing opt out of gestures entirely.
  *
  * Open and collapse state are reducer state, so this component is render-only.
  */
 const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 	onTransformUpdate,
 	onDocumentUpdate,
 	onMetaUpdate,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
+	const readStyle = useSelectionStyleReader(canvasState);
 	const sections = usePropertyPanelSections(canvasState);
+	const { objectPartKind } = useCanvasRegistries();
 	const { collapsedSectionIds } = canvasState.propertyPanel;
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
 	const showsArrangeSection =
 		!showsCanvasSection && isArrangeableSelection(canvasState);
 	const showsMetaSection =
-		!showsCanvasSection && isMetaSectionShown(canvasState);
+		!showsCanvasSection && isMetaSectionShown(canvasState, objectPartKind);
 	// State rather than a ref, so the fields re-render once the host element exists.
 	const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
 
@@ -230,117 +235,118 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 					type="button"
 					aria-label={messages.propertyPanelClose}
 					title={messages.propertyPanelClose}
-					data-part={commandPart("togglePropertyPanel")}
+					data-action={commandAction("togglePropertyPanel")}
 				>
 					<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
 				</PropertyPanelCloseButton>
 			</PropertyPanelHeader>
 
 			<PropertyPanelBody>
-				<PropertyPanelOverlayHostContext.Provider value={overlayHost}>
-					{showsCanvasSection && (
-						<PropertyPanelAccordion
-							sectionId={CANVAS_SECTION_ID}
-							label={resolvePropertyPanelSectionLabel(
-								CANVAS_SECTION_ID,
-								CANVAS_SECTION_LABEL,
-								messages,
-								locale,
-							)}
-							isExpanded={!collapsedSectionIds.includes(CANVAS_SECTION_ID)}
-						>
-							<BackgroundItem
-								background={canvasState.background}
-								onDocumentUpdate={onDocumentUpdate}
-							/>
-							<ViewPaddingItem
-								view={canvasState.view}
-								onDocumentUpdate={onDocumentUpdate}
-							/>
-							<ViewOpenItem view={canvasState.view} />
-							<ViewScrollItem view={canvasState.view} />
-						</PropertyPanelAccordion>
-					)}
-					{!showsCanvasSection &&
-						sections.map((section) => {
-							const isExpanded = !collapsedSectionIds.includes(section.id);
-							return (
-								<PropertyPanelAccordion
-									key={section.id}
-									sectionId={section.id}
-									label={resolvePropertyPanelSectionLabel(
-										section.id,
-										section.label,
-										messages,
-										locale,
-									)}
-									isExpanded={isExpanded}
-								>
-									{section.items.map((item) => {
-										// A plugin row is handed the narrowed props, not the
-										// controller state the built-in rows read.
-										if (item.type === "custom") {
+				<SelectionStyleReaderContext.Provider value={readStyle}>
+					<PropertyPanelOverlayHostContext.Provider value={overlayHost}>
+						{showsCanvasSection && (
+							<PropertyPanelAccordion
+								sectionId={CANVAS_SECTION_ID}
+								label={resolvePropertyPanelSectionLabel(
+									CANVAS_SECTION_ID,
+									CANVAS_SECTION_LABEL,
+									messages,
+									locale,
+								)}
+								isExpanded={!collapsedSectionIds.includes(CANVAS_SECTION_ID)}
+							>
+								<BackgroundItem
+									background={canvasState.background}
+									onDocumentUpdate={onDocumentUpdate}
+								/>
+								<ViewPaddingItem
+									view={canvasState.view}
+									onDocumentUpdate={onDocumentUpdate}
+								/>
+								<ViewOpenItem view={canvasState.view} />
+								<ViewScrollItem view={canvasState.view} />
+							</PropertyPanelAccordion>
+						)}
+						{!showsCanvasSection &&
+							sections.map((section) => {
+								const isExpanded = !collapsedSectionIds.includes(section.id);
+								return (
+									<PropertyPanelAccordion
+										key={section.id}
+										sectionId={section.id}
+										label={resolvePropertyPanelSectionLabel(
+											section.id,
+											section.label,
+											messages,
+											locale,
+										)}
+										isExpanded={isExpanded}
+									>
+										{section.items.map((item) => {
+											// A plugin row is handed the narrowed props, not the
+											// controller state the built-in rows read.
+											if (item.type === "custom") {
+												return (
+													<item.component
+														key={item.id}
+														objects={canvasState.objects}
+														selection={canvasState.selection}
+														multiSelectGroup={canvasState.multiSelectGroup}
+														onStyleIntent={onStyleIntent}
+														onTransformUpdate={onTransformUpdate}
+													/>
+												);
+											}
+											const ItemComponent = ITEM_COMPONENTS[item.type];
 											return (
-												<item.component
-													key={item.id}
-													objects={canvasState.objects}
-													selectedIds={canvasState.selectedIds}
-													selectedConnectorId={canvasState.selectedConnectorId}
-													multiSelectGroup={canvasState.multiSelectGroup}
-													onPropertyUpdate={onPropertyUpdate}
+												<ItemComponent
+													key={item.type}
+													canvasState={canvasState}
+													onStyleIntent={onStyleIntent}
 													onTransformUpdate={onTransformUpdate}
 												/>
 											);
-										}
-										const ItemComponent = ITEM_COMPONENTS[item.type];
-										return (
-											<ItemComponent
-												key={item.type}
-												canvasState={canvasState}
-												onPropertyUpdate={onPropertyUpdate}
-												onTransformUpdate={onTransformUpdate}
-											/>
-										);
-									})}
-								</PropertyPanelAccordion>
-							);
-						})}
-					{showsArrangeSection && (
-						<PropertyPanelAccordion
-							sectionId={ARRANGE_SECTION_ID}
-							label={resolvePropertyPanelSectionLabel(
-								ARRANGE_SECTION_ID,
-								ARRANGE_SECTION_LABEL,
-								messages,
-								locale,
-							)}
-							isExpanded={!collapsedSectionIds.includes(ARRANGE_SECTION_ID)}
-						>
-							<StackOrderItem canvasState={canvasState} />
-						</PropertyPanelAccordion>
-					)}
-					{showsMetaSection && (
-						<PropertyPanelAccordion
-							sectionId={META_SECTION_ID}
-							label={resolvePropertyPanelSectionLabel(
-								META_SECTION_ID,
-								META_SECTION_LABEL,
-								messages,
-								locale,
-							)}
-							isExpanded={!collapsedSectionIds.includes(META_SECTION_ID)}
-						>
-							<MetaNameItem
-								canvasState={canvasState}
-								onMetaUpdate={onMetaUpdate}
-							/>
-							<MetaDescriptionItem
-								canvasState={canvasState}
-								onMetaUpdate={onMetaUpdate}
-							/>
-						</PropertyPanelAccordion>
-					)}
-				</PropertyPanelOverlayHostContext.Provider>
+										})}
+									</PropertyPanelAccordion>
+								);
+							})}
+						{showsArrangeSection && (
+							<PropertyPanelAccordion
+								sectionId={ARRANGE_SECTION_ID}
+								label={resolvePropertyPanelSectionLabel(
+									ARRANGE_SECTION_ID,
+									ARRANGE_SECTION_LABEL,
+									messages,
+									locale,
+								)}
+								isExpanded={!collapsedSectionIds.includes(ARRANGE_SECTION_ID)}
+							>
+								<StackOrderItem canvasState={canvasState} />
+							</PropertyPanelAccordion>
+						)}
+						{showsMetaSection && (
+							<PropertyPanelAccordion
+								sectionId={META_SECTION_ID}
+								label={resolvePropertyPanelSectionLabel(
+									META_SECTION_ID,
+									META_SECTION_LABEL,
+									messages,
+									locale,
+								)}
+								isExpanded={!collapsedSectionIds.includes(META_SECTION_ID)}
+							>
+								<MetaNameItem
+									canvasState={canvasState}
+									onMetaUpdate={onMetaUpdate}
+								/>
+								<MetaDescriptionItem
+									canvasState={canvasState}
+									onMetaUpdate={onMetaUpdate}
+								/>
+							</PropertyPanelAccordion>
+						)}
+					</PropertyPanelOverlayHostContext.Provider>
+				</SelectionStyleReaderContext.Provider>
 			</PropertyPanelBody>
 		</PropertyPanelContainer>
 	);

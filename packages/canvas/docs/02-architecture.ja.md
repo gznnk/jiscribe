@@ -32,6 +32,8 @@ packages/canvas/src/
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc など
 │   ├── registries/         # レジストリのバンドルの生成と配線（createCanvasRegistries など）
+│   ├── selection/          # 何が選ばれているか。CanvasSelection モデル + partKinds/ / readers/ / writers/
+│   ├── style/              # スタイルの intent とその行き先。intent のモデル + intent/ / walk/ / tables/ / entries/
 │   ├── ui/                 # 変形コントロール・メニュー・アイコンなど UI 制御（StencilRegistry / ObjectMenuRegistry などを含む）
 │   └── utils/
 ├── rendering/              # 純粋な描画コンポーネント + Viewport 型
@@ -51,6 +53,19 @@ Doc モデルはこのパッケージには**無い**。canvas が依存する `
 ソース埋め込み）からなる。いずれも `@jiscribe/doc` から取る →
 [`packages/doc/README.md`](../../doc/README.md)。
 
+`controllers/selection/` は直下に選択のモデル（`CanvasSelection.ts`）を置き、残りを層で
+分ける。`partKinds/` は型がパーツについて宣言するもの（テキストスロットと頂点の
+kind。それを登録する `ObjectPartKindRegistry` は、描画層がテキストスロットの置き場所を
+そこから引くため、描画層のレジストリと並べて置く）、`readers/` は選択を変えずにそこから値を導くもの、
+`writers/` は状態から次の状態への遷移（状態が裏付けなくなったパーツを落とす
+`reconcileSelection` を含む）。
+
+`controllers/style/` も同じく直下にモデル（`StyleIntent.ts`・`StyleEntry.ts`・
+`SelectionValue.ts`）を置き、残りを役割で分ける。`intent/` はプロパティ名と文字列から
+intent を作るもの、`walk/` は書きと読みが共有する選択の歩き 1 本、`tables/` は型別の
+スタイル表、`entries/` は intent が型のデータのどこに着地するか（各エントリは
+`{ apply, read }` の対）→ [スタイルシステム](./10-style-properties.ja.md)。
+
 形状ごとに、`states/objects/.../<shape>/` と `controllers/behaviors/...`、
 `rendering/objects/...` が対応する。コアの型の一覧は `@jiscribe/doc` の
 `model/objects/types/ObjectType.ts`（`ObjectTypes`）が正本で、それ以外の図形はプラグインが足す
@@ -69,7 +84,7 @@ Doc モデルはこのパッケージには**無い**。canvas が依存する `
 
 State を Props として受け取り SVG を描画するコンポーネント。ドキュメントやキャンバスの状態は持たず、
 書き換えもしない（描画に閉じた局所状態は持ってよい）。イベントハンドラも受け取らない。操作の対象は
-`data-*` 属性（`data-kind` / `data-id` / `data-part` など）で宣言し、それを受けて振り分けるのはルートの
+`data-*` 属性（`data-kind` / `data-id` / `data-part` / `data-action` など）で宣言し、それを受けて振り分けるのはルートの
 ジェスチャシステム → [描画・テーマ](./08-rendering-and-theme.ja.md)。
 上位の制御層から組み立てられる側で、自分より上を知らない。
 
@@ -98,16 +113,17 @@ State を Props として受け取り SVG を描画するコンポーネント�
 | `ObjectFactoryRegistry` / `ObjectDocValidatorRegistry` など                                          | `@jiscribe/doc` の `plugin/`           | 型別 ObjectFactory（Doc / bounds 生成）、Doc バリデータ                                                 |
 | `ObjectMapperRegistry` / `ObjectStateValidatorRegistry` など                                         | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ                                                      |
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                  | `controllers/gestures/registry/`       | ジェスチャーハンドラ・型別の `ObjectBehavior`                                                           |
-| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` など                | `rendering/objects/registry/`          | 描画コンポーネント・編集テキスト領域・ヒットテスト / スナップ輪郭                                       |
+| `ObjectComponentRegistry` / `ObjectOutlineRegistry` など                                             | `rendering/objects/registry/`          | 描画コンポーネント・ヒットテスト / スナップ輪郭                                                         |
+| `ObjectPartKindRegistry`                                                                             | `rendering/objects/registry/`          | 型別の部分種別（頂点・セル・テキストスロットとその置き場所）                                            |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry` など | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別プロパティサイドバーのセクション・型別 SelectionControl |
-| `StylePropertyRegistry`                                                                              | `controllers/styleProperties/`         | スタイルプロパティ（[スタイルプロパティシステム](./10-style-properties.ja.md)）                         |
+| `ObjectStyleRegistry`                                                                                | `controllers/style/tables/`            | 型別のスタイル表（[スタイルシステム](./10-style-properties.ja.md)）                                     |
 | `CommandRegistry`                                                                                    | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）                                               |
 
 型別のレジストリは形状タイプ（`"rect"`, `"ellipse"` など）をキーにするため、形状横断的な処理を `if (type === ...)` の分岐なしで型安全に書ける。
 
 `StencilRegistry` が答えるのは「どのプリセットが存在するか」だけで、並びはホストが宣言する。`toolbar.sections` は図形ツールだけでなく**バー全体**を表示順に並べたもので、ピン留めプリセット・カテゴリフライアウト・コマンドボタン・ズーム表示・サイドバーのトグル・区切り線・ホストが仕上げた UI（`{ type: "slot", id, node }`）を、左端寄せか右端寄せかを持つセクションに束ねる。自前のものを渡すホストは既定から残したい分を自分で並べ直すことになるので、既定はセクションごとに個別に export してある（`DEFAULT_TOOLBAR_TOOLS_SECTION` などの `DEFAULT_TOOLBAR_*_SECTION`。それらを表示順に揃えたものが `DEFAULT_TOOLBAR_SECTIONS`。正本は `controllers/ui/menu/Toolbar/toolbarSections.ts`）。並びには 3 つの規則があり、ホストも守ることを想定している。サイドバーのトグルはそのパネルが開く側の端に置く。左寄せは文書を変える操作（図形の配置・undo / redo）、右寄せは変えない操作（ズーム・ヘルプ・ホスト自身の表示系 UI）。バーにピン留めするのは基本のプリセットだけで、あくまでショートカットである。そのキャンバスに無いプリセット・カテゴリ・コマンドを名指しした項目は黙って落ち、それで宙に浮いた区切り線も一緒に落ちる。`stencilLibrary.sections` は**図形ライブラリのサイドバー**のセクションを決める。サイドバーはバーの左端のトグルでビューポートの左に開くパネルで、登録済みの全ステンシルをセクション分け・検索付きで並べる。どちらも同じ `StencilCategory` を取り、`presetIds` をレジストリに解決して、解決できない id と空になったセクションを落とす。パネルの開閉と折りたたみ状態は reducer state（`stencilLibraryPanel` (`isOpen` / `collapsedSectionIds`)）で、ツールバーからは `toggleStencilLibrary` コマンド、パネル自身のセクションヘッダと閉じるボタンからは `StencilLibraryPanelHandler` が動かす。常設パネルなのでどちらも `resetUiState` の対象外で、doc を差し替えてもユーザーが開いたままにした姿を保つ。パネルは開いている間だけマウントされ、ビューポートから自分の幅ぶんの場所を取る（オーバーレイでもスライドでもない）。その場所を取るぶんビューポートの左端が動き、放っておくと絵が画面上を一緒に流れてしまうので、`useContainerResize` が移動量を `CONTAINER_RESIZE` の `leftEdgeShift` として渡し、reducer がそのときのズームで `minX` から差し引く。絵は画面に留まったままで、パネルは左の帯を覆ったり戻したりするだけになる。この補正はカメラそのものに乗るので、`onViewportChange`（および `ref.viewport`）が返すカメラはパネルを開いている間その補正を含む。そのカメラを保存したホストが、次回マウント時にパネルを閉じた状態で復元すると、絵はパネル幅 ÷ ズームぶん横にずれて見える。サイドバー自身も同じ流儀で復元できる。`initialConfig.sidebars` が左右の開閉と各パネルの折りたたみをマウント時に流し込み、`onSidebarsChange` がユーザーの操作をそのまま返す。カメラと一緒に保存して一緒に戻せば、パネルはカメラが前提にしている姿で開き直る。
 
-**プロパティサイドバー**は、これと同じ仕組みを反対側の端に置いたもの。ホストが宣言するのはツールバーのトグルの置き場所だけで（既定では `DEFAULT_TOOLBAR_PROPERTIES_SECTION` の `propertyPanelToggle` 項目。`toolbar.sections` を差し替えるホストは、残したければ自分で並べる）、パネルは閉じた状態から始まる。開閉とセクションの折りたたみ状態は reducer state（`propertyPanel` (`isOpen` / `collapsedSectionIds`)）で、ツールバーのトグルからも、ObjectMenu 末尾の 3 点リーダーからも（`ObjectMenuHandler` 経由）、パネル自身の閉じるボタンからも（`PropertyPanelHandler` 経由）`togglePropertyPanel` コマンドが動かす。図形ライブラリと同じく `resetUiState` の対象外で、開いている間だけマウントされ、ビューポートから自分の幅ぶんの場所を取る。開いている間はフローティングの ObjectMenu を描かない。サイドバーが ObjectMenu の内容を全て持つので、出しても重複するうえ選択のそばの絵を隠すだけになる。パネル内の部品は `data-part` しか持たないので、パネル内の押下はすべて `PropertyPanelHandler` に届き、`set:` / `slider:` 部品は `ObjectMenuHandler` と同じ `applyStylePropertyPart` で書き込む。ただし右端にあるためビューポートの動く端は**右**だけで、補正すべきものが無い。`useContainerResize` は `leftEdgeShift` を 0 のまま新しいサイズだけを渡し、カメラには触らない。それでも描画前の再計測は要るので、フックの `layoutKey` は両パネルの開閉フラグをまとめて持つ。中身が型ごとに決まるのは ObjectMenu と同じで、`PropertyPanelRegistry` が型別のセクションを持ち（`propertyPanel` の宣言か、`createDefaultPropertyPanel` による `features` からの導出）、選択に出るのは選択中の全型が共通して持つものだけになる（`useMenuSections` と共有の `mergeSectionsByKey`。行単位まで突き合わせる）。コネクターだけは、コア型のなかで唯一セクションを導出せず手で宣言する。「線」セクションの末尾に経路の行（直角 / 直線。ObjectMenu の RoutingMenu のサイドバー版）と、経路をエンジンに返すボタン（`resetConnectorRoute`。手で置いた頂点が無い間は隠さず disabled）が付き、ラベル用のセクションが 2 つ加わる。「ラベル」が文字と面、「ラベルの枠線」が枠線で、図形の「テキスト」と「枠線」が別れているのと同じ分け方（1 つにまとめると「幅」「色」の行がどちらのものか読めない）。どちらも `isShown` を持ち、ラベルに文字があるときだけ出る（全ての行が何も描かない状態で見出しだけが残るのを防ぐため）。何も選択していない間は、型別のセクションの代わりに文書自身の設定（`background` と表示の宣言 `view`）を編集する「キャンバス」セクションを出す。色と余白の欄は `DOCUMENT_PROPERTY_UPDATE` で reducer に届き、表示モードのボタンは `doc:` 部品を `PropertyPanelHandler` へ押し込み、同じ `applyDocumentProperty` を通る。選択があるときは、型に属さないセクションを型別セクションの後ろにパネル自身が足す。コネクターやプラグインの型も宣言なしでこれを得る。「重ね順」は重なり順のコマンドをテキストボタンで並べたもので、`isArrangeableSelection`（4 つのコマンド自身の実行可否と同じ判定）が真のとき出る。「メタ情報」は選択が 1 個のオブジェクト（またはコネクター）を指すとき（`isMetaSectionShown`）だけ出て、そのオブジェクトの `meta.name` / `meta.description` を編集する。書き込みは `META_PROPERTY_UPDATE` で、STYLE / TRANSFORM / DOCUMENT と並ぶプロパティ経路の 1 つ。描画に関わらない値なので再計測は要らず、グループを選んでいればグループ自身の meta を書き、子には及ばない。
+**プロパティサイドバー**は、これと同じ仕組みを反対側の端に置いたもの。ホストが宣言するのはツールバーのトグルの置き場所だけで（既定では `DEFAULT_TOOLBAR_PROPERTIES_SECTION` の `propertyPanelToggle` 項目。`toolbar.sections` を差し替えるホストは、残したければ自分で並べる）、パネルは閉じた状態から始まる。開閉とセクションの折りたたみ状態は reducer state（`propertyPanel` (`isOpen` / `collapsedSectionIds`)）で、ツールバーのトグルからも、ObjectMenu 末尾の 3 点リーダーからも（`ObjectMenuHandler` 経由）、パネル自身の閉じるボタンからも（`PropertyPanelHandler` 経由）`togglePropertyPanel` コマンドが動かす。図形ライブラリと同じく `resetUiState` の対象外で、開いている間だけマウントされ、ビューポートから自分の幅ぶんの場所を取る。開いている間はフローティングの ObjectMenu を描かない。サイドバーが ObjectMenu の内容を全て持つので、出しても重複するうえ選択のそばの絵を隠すだけになる。パネル内の部品は `data-action` しか持たないので、パネル内の押下はすべて `PropertyPanelHandler` に届き、`set:` / `slider:` のアクションは `ObjectMenuHandler` と同じ `applyStyleAction` で書き込む。ただし右端にあるためビューポートの動く端は**右**だけで、補正すべきものが無い。`useContainerResize` は `leftEdgeShift` を 0 のまま新しいサイズだけを渡し、カメラには触らない。それでも描画前の再計測は要るので、フックの `layoutKey` は両パネルの開閉フラグをまとめて持つ。中身が型ごとに決まるのは ObjectMenu と同じで、`PropertyPanelRegistry` が型別のセクションを持ち（`propertyPanel` の宣言か、`createDefaultPropertyPanel` による `features` からの導出）、選択に出るのは選択中の全型が共通して持つものだけになる（`useMenuSections` と共有の `mergeSectionsByKey`。行単位まで突き合わせる）。コネクターだけは、コア型のなかで唯一セクションを導出せず手で宣言する。「線」セクションの末尾に経路の行（直角 / 直線。ObjectMenu の RoutingMenu のサイドバー版）と、経路をエンジンに返すボタン（`resetConnectorRoute`。手で置いた頂点が無い間は隠さず disabled）が付き、ラベル用のセクションが 2 つ加わる。「ラベル」が文字と面、「ラベルの枠線」が枠線で、図形の「テキスト」と「枠線」が別れているのと同じ分け方（1 つにまとめると「幅」「色」の行がどちらのものか読めない）。どちらも `isShown` を持ち、ラベルに文字があるときだけ出る（全ての行が何も描かない状態で見出しだけが残るのを防ぐため）。何も選択していない間は、型別のセクションの代わりに文書自身の設定（`background` と表示の宣言 `view`）を編集する「キャンバス」セクションを出す。色と余白の欄は `DOCUMENT_PROPERTY_UPDATE` で reducer に届き、表示モードのボタンは `doc:` アクションを `PropertyPanelHandler` へ押し込み、同じ `applyDocumentProperty` を通る。選択があるときは、型に属さないセクションを型別セクションの後ろにパネル自身が足す。コネクターやプラグインの型も宣言なしでこれを得る。「重ね順」は重なり順のコマンドをテキストボタンで並べたもので、`isArrangeableSelection`（4 つのコマンド自身の実行可否と同じ判定）が真のとき出る。「メタ情報」は選択が 1 個のオブジェクト（またはコネクター）を指すとき（`isMetaSectionShown`）だけ出て、そのオブジェクトの `meta.name` / `meta.description` を編集する。書き込みは `META_PROPERTY_UPDATE` で、STYLE / TRANSFORM / DOCUMENT と並ぶプロパティ経路の 1 つ。描画に関わらない値なので再計測は要らず、グループを選んでいればグループ自身の meta を書き、子には及ばない。
 
 ### canvas 単位のレジストリ（`CanvasConfig`）
 
@@ -189,7 +205,7 @@ graph TD
 
 `@jiscribe/doc` の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `theme/`（`theme` トークン）への直接参照はほぼ全域から存在するため、図では省略している。
 
-**`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、`@jiscribe/doc` の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、rendering の component/textRegion/outline 契約など）ため、`plugin` はこのパッケージの3レイヤーと doc パッケージのすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。`ui` のプロパティパネル導出（`derivePropertyPanel`）も `plugin` の判定関数を値で使う。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
+**`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、`@jiscribe/doc` の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、`selection` の部分種別（テキストスロットの置き場所を含む）、rendering の component/outline 契約など）ため、`plugin` はこのパッケージの3レイヤーと doc パッケージのすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。`ui` のプロパティパネル導出（`derivePropertyPanel`）も `plugin` の判定関数を値で使う。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
 
 これは意図的に、具象的な import 循環には**なっていない**: `plugin` から canvas の他レイヤーへの import はすべて型のみで、その先のモジュールが `plugin` を import し返すことはない。`plugin` を値で使うのは `registries/applyObjectDefinition` や `ui` の `derivePropertyPanel` など別のファイルで、`plugin` が型を取りに行くモジュールからは import されない。そのため madge `dep:check` はフォルダ同士が相互参照していても green のまま。`applyObjectDefinition`（実行時の配線）を `plugin` ではなく `registries` に置いていることがこれを保っている。
 

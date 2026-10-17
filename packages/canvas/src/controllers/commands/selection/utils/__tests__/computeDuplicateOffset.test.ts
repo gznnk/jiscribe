@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../../selection/CanvasSelection";
 import {
 	DUPLICATE_OFFSET,
 	computeDuplicateOffset,
@@ -26,7 +28,7 @@ const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 
 const makeState = (
 	params: Partial<CanvasControllerState> & {
-		selectedIds: string[];
+		selection: CanvasSelection;
 		objects: Record<string, ObjectState>;
 	},
 ): CanvasControllerState =>
@@ -42,14 +44,14 @@ const makeState = (
 
 describe("computeDuplicateOffset", () => {
 	it("no lastDuplicate → default offset", () => {
-		const state = makeState({ selectedIds: ["r1"], objects: {} });
+		const state = makeState({ selection: selectionOf(["r1"]), objects: {} });
 		expect(computeDuplicateOffset(state)).toEqual(DUPLICATE_OFFSET);
 	});
 
 	it("selection count differs from the previous duplication result → default offset", () => {
 		const r1 = makeRect("r1", 0, 0);
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1 },
 			lastDuplicate: {
 				newIds: ["r1", "r2"],
@@ -64,7 +66,7 @@ describe("computeDuplicateOffset", () => {
 	it("selected IDs do not match the previous duplication result → default offset", () => {
 		const r1 = makeRect("r1", 0, 0);
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1 },
 			lastDuplicate: {
 				newIds: ["other"],
@@ -79,7 +81,7 @@ describe("computeDuplicateOffset", () => {
 	it("selection matches + moved 1px or more → adopts the movement as the new offset", () => {
 		const r1 = makeRect("r1", 30, 50);
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1 },
 			lastDuplicate: {
 				newIds: ["r1"],
@@ -94,7 +96,7 @@ describe("computeDuplicateOffset", () => {
 	it("selection matches + barely moved (less than 1px) → keeps the previous offset", () => {
 		const r1 = makeRect("r1", 10.5, 10.5);
 		const state = makeState({
-			selectedIds: ["r1"],
+			selection: selectionOf(["r1"]),
 			objects: { r1 },
 			lastDuplicate: {
 				newIds: ["r1"],
@@ -108,7 +110,7 @@ describe("computeDuplicateOffset", () => {
 
 	it("selection matches but the center cannot be obtained → keeps the previous offset", () => {
 		const state = makeState({
-			selectedIds: ["gone"],
+			selection: selectionOf(["gone"]),
 			objects: {},
 			lastDuplicate: {
 				newIds: ["gone"],

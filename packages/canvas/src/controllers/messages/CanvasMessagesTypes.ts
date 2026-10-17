@@ -22,6 +22,10 @@ export type CanvasMessageStrings = {
 	stencilLibrarySearchPlaceholder: string;
 	/** Shown in place of the sections when a search matches no stencil */
 	stencilLibraryNoMatch: string;
+	/** Line under the search results when a category cut its matches short. */
+	stencilLibraryMoreMatches: string;
+	/** Button under a section that declares `search`; it focuses the search box. */
+	stencilLibraryMoreViaSearch: string;
 
 	// Properties sidebar
 	/** Heading of the sidebar */
@@ -169,7 +173,6 @@ export type CanvasMessageStrings = {
 	menuAlignTop: string;
 	menuAlignMiddle: string;
 	menuAlignBottom: string;
-	menuTextFormat: string;
 	menuBold: string;
 	menuItalic: string;
 	menuUnderline: string;

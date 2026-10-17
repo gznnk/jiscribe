@@ -105,23 +105,23 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 	}) => {
 		const id = await editAndSelect(canvas, "Payment failed", 7);
 
-		await canvas.setTextFormat("fontWeight", "bold");
+		await canvas.pressBold();
 		await expect
 			.poll(async () => (await canvas.drawnTextRuns(id)).length)
 			.toBe(2);
+		// The button reads lit off the selection's own styling rather than the
+		// slot's, which is what lets the second press take the weight back off.
+		await expect(
+			canvas.page.locator(selectors.objectMenuCommand("toggleBold")),
+		).toHaveAttribute("aria-pressed", "true");
 
-		// The button now offers the cleared value, which it can only know from the
-		// selection's own styling rather than the slot's.
-		await canvas.setTextFormat("fontWeight", "normal");
+		await canvas.pressBold();
 		await expect
-			.poll(async () =>
-				canvas.page.evaluate(
-					(selector) =>
-						document.querySelector(selector)?.getAttribute("data-part"),
-					`${selectors.objectMenu} [data-part^="set:fontWeight:"]`,
-				),
-			)
-			.toBe("set:fontWeight:bold");
+			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.fontWeight)
+			.toBe("400");
+		await expect(
+			canvas.page.locator(selectors.objectMenuCommand("toggleBold")),
+		).toHaveAttribute("aria-pressed", "false");
 	});
 
 	test("takes the focus back with the same stretch selected once the size is committed", async ({

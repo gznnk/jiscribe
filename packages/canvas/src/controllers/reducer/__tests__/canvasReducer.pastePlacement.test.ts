@@ -7,6 +7,7 @@ import { rectDoc } from "./support/fixtures";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { handlePaste } from "../handlers/handlePaste";
 
 /** One 10x10 rect at the origin, so its center sits at (5, 5). */
@@ -38,7 +39,10 @@ const copyRect = (
 	viewport: CanvasControllerState["viewport"],
 ): { copied: CanvasControllerState; clipboard: ClipboardData } => {
 	const copied = applyActions(
-		createTestState(oneRectDoc, { selectedIds: ["rect-1"], viewport }),
+		createTestState(oneRectDoc, {
+			selection: selectionOf(["rect-1"]),
+			viewport,
+		}),
 		[command("copy")],
 	);
 	expect(copied.internalClipboard).not.toBeNull();
@@ -54,8 +58,8 @@ const paste = (
 const pastedCenter = (
 	state: CanvasControllerState,
 ): { cx: number; cy: number } => {
-	expect(state.selectedIds).toHaveLength(1);
-	const pasted = state.objects[state.selectedIds[0]] as unknown as {
+	expect(state.selection.objectIds).toHaveLength(1);
+	const pasted = state.objects[state.selection.objectIds[0]] as unknown as {
 		cx: number;
 		cy: number;
 	};
@@ -105,7 +109,7 @@ describe("stacks repeated pastes", () => {
 
 		const once = paste(copied, clipboard);
 		expect(once.lastDuplicate).not.toBeNull();
-		expect(once.lastDuplicate?.newIds).toEqual(once.selectedIds);
+		expect(once.lastDuplicate?.newIds).toEqual(once.selection.objectIds);
 
 		const twice = paste(once, clipboard);
 		expect(pastedCenter(twice)).toEqual({ cx: 45, cy: 45 });
@@ -130,7 +134,7 @@ describe("stacks repeated pastes", () => {
 
 /**
  * A clipboard holding only connectors has no shape to center, so it keeps the plain
- * offset and leaves no chain behind (nothing lands in selectedIds).
+ * offset and leaves no chain behind (nothing lands in the selection).
  */
 describe("falls back for a connector-only clipboard", () => {
 	const freeConnectorClipboard = (): ClipboardData =>
@@ -165,7 +169,7 @@ describe("falls back for a connector-only clipboard", () => {
 			points: { x: number; y: number }[];
 		};
 		expect(pasted.points).toEqual([{ x: 70, y: 70 }]);
-		expect(after.selectedIds).toEqual([]);
+		expect(after.selection.objectIds).toEqual([]);
 		expect(after.lastDuplicate).toBeNull();
 	});
 });

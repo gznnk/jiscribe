@@ -9,7 +9,8 @@ export type AwsTier1Icon = {
 /**
  * The icons the palette carries (tier 1): what an AWS diagram reaches for
  * without thinking, in service → resource → general order. All 781 would be too
- * many to choose from, so the rest are reached through the picker's search.
+ * many to lay out, so the rest are reached by search, in the picker or the
+ * stencil library.
  *
  * The labels are the names used on the ground rather than the official ones
  * (`S3`, not `Amazon Simple Storage Service`), because that is what a diagram

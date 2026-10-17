@@ -18,7 +18,9 @@ import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
-import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
+import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditCommand";
+import { findTextFormatByShortcut } from "../../../commands/text/ToggleTextFormatCommands";
+import type { TextFormat } from "../../../style/TextFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import {
@@ -32,22 +34,16 @@ import {
 import type { CaretTarget } from "../utils/measureCaretInSurface";
 import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
-/** Keys that toggle a format while held with the platform's command modifier. */
-const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
-	b: "bold",
-	i: "italic",
-	u: "underline",
-};
-
 /**
  * The browser's own rich-text edits, which reach an editable surface from the
  * context menu and the mobile text toolbar. They would write markup of their own,
  * so each is answered with the editor's own formatting instead.
  */
-const FORMAT_INPUT_TYPES: Record<string, TextEditFormat | undefined> = {
+const FORMAT_INPUT_TYPES: Record<string, TextFormat | undefined> = {
 	formatBold: "bold",
 	formatItalic: "italic",
 	formatUnderline: "underline",
+	formatStrikeThrough: "strikethrough",
 };
 
 /** A stretch of the edited text, in UTF-16 offsets; what the editor reports and restores. */
@@ -93,9 +89,13 @@ type TextEditorProps = {
 	onChange: (text: RichText) => void;
 	/** What the editor has selected, reported on every edit and caret move. */
 	onSelectionChange?: (selection: TextSelection) => void;
-	/** A bold / italic / underline keystroke, to apply over the current selection. */
-	onToggleFormat?: (format: TextEditFormat) => void;
+	/** A bold / italic / underline / strikethrough keystroke, the selection it acts on reported first; the browser's own formatting is already cancelled. */
+	onToggleFormat?: (format: TextFormat) => void;
 	onEscape?: () => void;
+	/** Cmd+Enter on a Mac, Ctrl+Enter elsewhere (CommitTextEditCommand), outside an IME composition; the browser's own handling is already cancelled. Omitted = the keystroke is swallowed. */
+	onCommit?: () => void;
+	/** Tab (1) or Shift+Tab (-1), outside an IME composition; the browser's focus move is already cancelled. Omitted = the keystroke is swallowed. */
+	onTab?: (step: 1 | -1) => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
 	onCaretMove?: (caretWorldBox: BoundingBox) => void;
 };
@@ -125,6 +125,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onSelectionChange,
 	onToggleFormat,
 	onEscape,
+	onCommit,
+	onTab,
 	onCaretMove,
 }) => {
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same
@@ -540,6 +542,31 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			onEscape();
 			return;
 		}
+		// Mid composition the keystroke belongs to the IME, and the draft has not
+		// caught up with the surface yet (as for Tab below).
+		if (
+			isCommitTextEditShortcut(e.nativeEvent) &&
+			!isComposing.current &&
+			!e.nativeEvent.isComposing
+		) {
+			e.preventDefault();
+			e.stopPropagation();
+			onCommit?.();
+			return;
+		}
+		// The browser's default would move the focus to the next control while the
+		// session stays open, and from there the next Tab reaches the canvas
+		// shortcuts, which refuse to walk the slots under an open edit. Mid
+		// composition the keystroke belongs to the IME, and the draft has not
+		// caught up with the surface yet.
+		if (e.key === "Tab") {
+			e.preventDefault();
+			e.stopPropagation();
+			if (onTab && !isComposing.current && !e.nativeEvent.isComposing) {
+				onTab(e.shiftKey ? -1 : 1);
+			}
+			return;
+		}
 		// The surface has the focus, so these never reach the canvas-wide keyboard
 		// handling; they are also the browser's own defaults on an editable element,
 		// which writes markup of its own and has to be prevented. The selection is
@@ -547,10 +574,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		// dispatched as the selection moves, and the report it drives is queued once
 		// more onto a frame: a keystroke arriving before either runs would otherwise
 		// style the stretch selected one keystroke ago.
-		const format =
-			(e.metaKey || e.ctrlKey) && !e.altKey
-				? FORMAT_KEYS[e.key.toLowerCase()]
-				: undefined;
+		const format = findTextFormatByShortcut(e.nativeEvent);
 		if (format !== undefined && onToggleFormat) {
 			e.preventDefault();
 			e.stopPropagation();

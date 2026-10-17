@@ -65,7 +65,7 @@ const collectRunKeyPaths = (
  * list of rows. Read by shape alone (as isTextRows reads it): an entry that is an
  * array is a row held as runs, one that is an object is a run of a body.
  */
-const collectSlotContentKeyPaths = (
+const collectTextSlotContentKeyPaths = (
 	content: unknown,
 	contentPath: KeyPath,
 ): KeyPath[] => {
@@ -82,11 +82,14 @@ const collectSlotContentKeyPaths = (
 /** What walking a keyed text found: the unknown names, and the slot ids the key order would not survive. */
 type TextSlotsFindings = {
 	keyPaths: KeyPath[];
-	integerLikeSlotIds: string[];
+	integerLikeTextSlotIds: string[];
 };
 
 const collectTextSlotsFindings = (text: unknown): TextSlotsFindings => {
-	const findings: TextSlotsFindings = { keyPaths: [], integerLikeSlotIds: [] };
+	const findings: TextSlotsFindings = {
+		keyPaths: [],
+		integerLikeTextSlotIds: [],
+	};
 	if (!isObject(text)) {
 		return findings;
 	}
@@ -94,13 +97,13 @@ const collectTextSlotsFindings = (text: unknown): TextSlotsFindings => {
 		// The slot cannot be kept under that id at all, so what it holds is not
 		// reported on top of it.
 		if (isIntegerLikeTextSlotId(slotId)) {
-			findings.integerLikeSlotIds.push(slotId);
+			findings.integerLikeTextSlotIds.push(slotId);
 			continue;
 		}
 		findings.keyPaths.push(
 			...collectUnknownKeyPaths(slot, TEXT_SLOT_KEYS, ["text", slotId]),
 			...(isObject(slot)
-				? collectSlotContentKeyPaths(slot.text, ["text", slotId, "text"])
+				? collectTextSlotContentKeyPaths(slot.text, ["text", slotId, "text"])
 				: []),
 		);
 	}
@@ -220,7 +223,7 @@ export const validateDocKeys = (
 	const slots =
 		features.text === "slots"
 			? collectTextSlotsFindings(o.text)
-			: { keyPaths: [], integerLikeSlotIds: [] };
+			: { keyPaths: [], integerLikeTextSlotIds: [] };
 	const keyPaths: KeyPath[] = [
 		...Object.keys(o)
 			.filter((key) => !declaration.knownKeys.has(key))
@@ -232,7 +235,7 @@ export const validateDocKeys = (
 	];
 
 	const diagnostics: SemanticDiagnostic[] = [
-		...slots.integerLikeSlotIds.map((slotId) => ({
+		...slots.integerLikeTextSlotIds.map((slotId) => ({
 			path: `${path}.text.${slotId}`,
 			message:
 				"is a slot id the JS engine would re-order: name the slot something other than a plain number, the key order deciding the default slot and the drawing order.",

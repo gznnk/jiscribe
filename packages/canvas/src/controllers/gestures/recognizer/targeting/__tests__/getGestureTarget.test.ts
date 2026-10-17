@@ -2,11 +2,16 @@ import { describe, it, expect } from "vitest";
 
 import { getGestureTarget } from "../getGestureTarget";
 
-const makeEl = (kind?: string, id?: string, part?: string): Element => {
+const makeEl = (
+	kind?: string,
+	id?: string,
+	{ part, action }: { part?: string; action?: string } = {},
+): Element => {
 	const attrs: Record<string, string | undefined> = {
 		"data-kind": kind,
 		"data-id": id,
 		"data-part": part,
+		"data-action": action,
 	};
 	const el = {
 		closest: (selector: string) => {
@@ -14,6 +19,9 @@ const makeEl = (kind?: string, id?: string, part?: string): Element => {
 				return el;
 			}
 			if (selector === "[data-part]" && part !== undefined) {
+				return el;
+			}
+			if (selector === "[data-action]" && action !== undefined) {
 				return el;
 			}
 			return null;
@@ -24,31 +32,32 @@ const makeEl = (kind?: string, id?: string, part?: string): Element => {
 };
 
 /**
- * Two elements: the pressed one carries [data-part], an ancestor carries
- * [data-kind]/[data-id]. `partOutsideKind` puts the part element above the kind
- * element instead, which must not be read.
+ * Two elements: the pressed one carries `attribute`, an ancestor carries
+ * [data-kind]/[data-id]. `outsideKind` puts the carrier above the kind element
+ * instead, which must not be read.
  */
-const makeNestedPartEl = (
+const makeNestedEl = (
 	kind: string,
 	id: string,
-	part: string,
-	{ partOutsideKind = false }: { partOutsideKind?: boolean } = {},
-): { partEl: Element; kindEl: Element } => {
+	attribute: "data-part" | "data-action",
+	value: string,
+	{ outsideKind = false }: { outsideKind?: boolean } = {},
+): { carrierEl: Element; kindEl: Element } => {
 	const kindEl = {
 		getAttribute: (attr: string) =>
 			({ "data-kind": kind, "data-id": id })[attr] ?? null,
-		contains: (other: Element) => !partOutsideKind && other === partEl,
+		contains: (other: Element) => !outsideKind && other === carrierEl,
 	} as unknown as Element;
-	const partEl = {
+	const carrierEl = {
 		closest: (selector: string) =>
 			selector === "[data-kind]"
 				? kindEl
-				: selector === "[data-part]"
-					? partEl
+				: selector === `[${attribute}]`
+					? carrierEl
 					: null,
-		getAttribute: (attr: string) => (attr === "data-part" ? part : null),
+		getAttribute: (attr: string) => (attr === attribute ? value : null),
 	} as unknown as Element;
-	return { partEl, kindEl };
+	return { carrierEl, kindEl };
 };
 
 const makeElNoMatch = (): Element =>
@@ -77,30 +86,79 @@ describe("getGestureTarget", () => {
 		expect(getGestureTarget(el)).toEqual({ kind: "control", id: "ctrl-2" });
 	});
 
-	it("returns part when the element also carries data-part", () => {
-		const el = makeEl("connector", "c-1", "label");
+	it("returns action when the element also carries data-action", () => {
+		const el = makeEl("connector", "c-1", { action: "label" });
 		expect(getGestureTarget(el)).toEqual({
 			kind: "connector",
 			id: "c-1",
-			part: "label",
+			action: "label",
+		});
+	});
+
+	it("returns part when the element also carries data-part", () => {
+		const el = makeEl("object", "obj-1", { part: "textSlot:body" });
+		expect(getGestureTarget(el)).toEqual({
+			kind: "object",
+			id: "obj-1",
+			part: "textSlot:body",
 		});
 	});
 
 	it("reads data-part from a descendant of the [data-kind] element", () => {
 		// A compartmented shape (record) keeps data-kind on a single element and puts
 		// data-part on the per-compartment hit element.
-		const { partEl } = makeNestedPartEl("object", "obj-1", "rows");
-		expect(getGestureTarget(partEl)).toEqual({
+		const { carrierEl } = makeNestedEl(
+			"object",
+			"obj-1",
+			"data-part",
+			"textSlot:rows",
+		);
+		expect(getGestureTarget(carrierEl)).toEqual({
 			kind: "object",
 			id: "obj-1",
-			part: "rows",
+			part: "textSlot:rows",
+		});
+	});
+
+	it("reads data-action from a descendant of the [data-kind] element", () => {
+		const { carrierEl } = makeNestedEl(
+			"menu",
+			"toolbar",
+			"data-action",
+			"command:zoomIn",
+		);
+		expect(getGestureTarget(carrierEl)).toEqual({
+			kind: "menu",
+			id: "toolbar",
+			action: "command:zoomIn",
 		});
 	});
 
 	it("ignores a data-part that sits outside the [data-kind] element", () => {
-		const { partEl } = makeNestedPartEl("object", "obj-1", "rows", {
-			partOutsideKind: true,
+		const { carrierEl } = makeNestedEl(
+			"object",
+			"obj-1",
+			"data-part",
+			"textSlot:rows",
+			{ outsideKind: true },
+		);
+		expect(getGestureTarget(carrierEl)).toEqual({
+			kind: "object",
+			id: "obj-1",
 		});
-		expect(getGestureTarget(partEl)).toEqual({ kind: "object", id: "obj-1" });
+	});
+
+	it("ignores a data-action that sits outside the [data-kind] element", () => {
+		const { carrierEl } = makeNestedEl(
+			"menu",
+			"toolbar",
+			"data-action",
+			"command:zoomIn",
+			{ outsideKind: true },
+		);
+		expect(getGestureTarget(carrierEl)).toEqual({
+			kind: "menu",
+			id: "toolbar",
+		});
 	});
 });

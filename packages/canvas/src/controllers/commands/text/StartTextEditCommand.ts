@@ -5,8 +5,11 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
+import { isTextSlotPart } from "../../selection/partKinds/textSlotPartKind";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
+import { readActivePartFocusId } from "../../selection/readers/readActivePartFocusId";
+import { selectTextSlot } from "../../selection/writers/selectTextSlot";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
-import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -15,8 +18,8 @@ import type { ExecutableCommand } from "../CommandTypes";
  * structural guard supplements this by checking value validity. isTextStyleState
  * alone is a loose guard that only checks the text attributes are internally
  * consistent, so it would also pass shapes with no text at all (svg / polyline /
- * polygon, etc.); this aligns on the same features.text criterion used by the
- * property-update side (TextSlotStyleProperty).
+ * polygon, etc.); this aligns on the same features.text criterion the style
+ * tables gate the text intents with (textStyleTable).
  */
 const canEditText = (
 	object: ObjectState | undefined,
@@ -27,7 +30,7 @@ const canEditText = (
 
 export const StartTextEditCommand: ExecutableCommand = {
 	id: "start-text-edit",
-	label: "Start Text Editing",
+	label: { en: "Start Text Editing", ja: "テキスト編集を開始" },
 	category: "edit",
 	shortcuts: {
 		default: [{ code: "Enter" }],
@@ -39,26 +42,24 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return false;
 		}
 
-		// A single connector selection (selectedConnectorId) allows label editing.
-		if (state.selectedConnectorId && state.selectedIds.length === 0) {
-			return state.objects[state.selectedConnectorId]?.type === "connector";
+		// A selected connector edits its label instead.
+		if (getSelectedConnectorId(state) !== null) {
+			return true;
 		}
 
 		// Single selection only
-		if (state.selectedIds.length !== 1) {
+		if (state.selection.objectIds.length !== 1) {
 			return false;
 		}
 
-		return canEditText(state.objects[state.selectedIds[0]]);
+		return canEditText(state.objects[state.selection.objectIds[0]]);
 	},
 
 	execute(state) {
 		// When a connector is selected, start editing its label (label.text).
-		if (state.selectedConnectorId && state.selectedIds.length === 0) {
-			const connector = state.objects[state.selectedConnectorId];
-			if (connector?.type !== "connector") {
-				return state;
-			}
+		const connectorId = getSelectedConnectorId(state);
+		if (connectorId !== null) {
+			const connector = state.objects[connectorId];
 			const labelText =
 				(connector as { label?: { text?: string } }).label?.text ?? "";
 			return {
@@ -66,9 +67,16 @@ export const StartTextEditCommand: ExecutableCommand = {
 				// An open submenu does not survive the edit session (the menu is hidden or
 				// re-laid out), so it would otherwise pop back on exit.
 				objectMenuOpenId: null,
+				// The selection is already that one connector
+				// (getSelectedConnectorId), so only a part picked below it has to go:
+				// the label is no part, and the session's owner must be the object
+				// itself (see textEditState).
+				selection:
+					state.selection.part === null
+						? state.selection
+						: { ...state.selection, part: null },
 				textEditState: {
 					kind: "connectorLabel",
-					objectId: state.selectedConnectorId,
 					text: labelText,
 					// Enter carries no pointer position, so a label being created takes
 					// the default placement. Without it the commit would spread the
@@ -79,7 +87,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 			};
 		}
 
-		const objectId = state.selectedIds[0];
+		const objectId = state.selection.objectIds[0];
 		const targetObject = state.objects[objectId];
 
 		if (!canEditText(targetObject)) {
@@ -87,11 +95,13 @@ export const StartTextEditCommand: ExecutableCommand = {
 		}
 
 		// Enter carries no pointer position, so the slot already selected one level
-		// below the object decides; resolveSelectedTextSlot validates it against
-		// this very single selection, so a stale one falls back to the first slot.
-		const slotId =
-			resolveSelectedTextSlot(state)?.slotId ??
-			getFirstTextSlotId(targetObject.text);
+		// below the object decides, falling back to the first slot when none is
+		// (nothing picked, or a part of another kind). The editor opens on one slot,
+		// so a range opens it on the slot the last gesture moved to.
+		const { part } = state.selection;
+		const slotId = isTextSlotPart(part)
+			? readActivePartFocusId(part)
+			: getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;
 		}
@@ -99,10 +109,12 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return {
 			...state,
 			objectMenuOpenId: null,
+			// The slot being edited is the selection (see textEditState), so the one
+			// the fallback picked is written there too; a slot already selected keeps
+			// the reference.
+			selection: selectTextSlot(state.selection, targetObject, slotId),
 			textEditState: {
 				kind: "shape",
-				objectId,
-				slotId,
 				text: readRichTextSlot(targetObject.text, slotId),
 			},
 		};

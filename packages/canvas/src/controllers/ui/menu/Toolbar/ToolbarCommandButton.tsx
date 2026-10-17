@@ -2,9 +2,9 @@ import type { ComponentType } from "react";
 
 import { useToolbarCommandState } from "./ToolbarCommandStateContext";
 import { ToolbarIconButton } from "./ToolbarStyled";
-import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
+import { resolveCommandLabel } from "../../../commands/CommandUtils";
+import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import {
 	resolveLocalizedLabel,
@@ -26,7 +26,7 @@ type ToolbarCommandButtonProps = {
  *
  * The only part of the bar that reads {@link useToolbarCommandState}, together
  * with {@link ToolbarZoomGroup}: the press itself goes through the gesture
- * system (`data-part` → ToolbarHandler → handleCommand), and only the disabled
+ * system (`data-action` → ToolbarHandler → handleCommand), and only the disabled
  * look needs the current state.
  *
  * Draws nothing when the id is not registered, matching the silent drop
@@ -51,7 +51,7 @@ export const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
 
 	const resolvedLabel =
 		label === undefined
-			? getCommandLabel(messages, resolved.command)
+			? resolveCommandLabel(resolved.command, messages, locale)
 			: resolveLocalizedLabel(label, locale);
 
 	return (
@@ -61,7 +61,7 @@ export const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
 			title={resolvedLabel}
 			disabled={!resolved.enabled}
 			data-testid={`toolbar-command:${commandId}`}
-			data-part={commandPart(commandId)}
+			data-action={commandAction(commandId)}
 		>
 			<Icon />
 		</ToolbarIconButton>
