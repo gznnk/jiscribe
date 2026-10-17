@@ -3,7 +3,7 @@ import type { Rect } from "@jiscribe/geometry";
 
 import { TABLE_CELL_STYLE_INTENT_KINDS } from "./tableCellStyleIntentKinds";
 import { collectTableTrackCellIds } from "../grid/collectTableTrackCellIds";
-import { removeTableTracks } from "../grid/removeTableTracks";
+import { removeTableGridTracks } from "../grid/removeTableGridTracks";
 import {
 	countTableTracks,
 	parseTableTrackPartId,
@@ -44,7 +44,7 @@ const calcTrackRegion = (
  *
  * Kept apart from the cells, which ride core's `"textSlot"` kind, because the two
  * answer Delete differently: a row selected as a row is removed, where the very
- * same cells selected as cells only lose their text (clearTableCells). One kind
+ * same cells selected as cells only lose their text (clearTableGridCells). One kind
  * could not mean both.
  *
  * `list` is declared so a range of tracks is expressible at all — core builds one
@@ -82,7 +82,7 @@ const createTableTrackPartDefinition = (
 	},
 
 	delete: (object, partIds) =>
-		removeTableTracks(
+		removeTableGridTracks(
 			object,
 			axis,
 			partIds

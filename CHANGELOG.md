@@ -51,15 +51,30 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   simply stops, and for rows dragging down past the text of the row below grows
   the table rather than clipping that text. Pressing or releasing Shift mid-drag
   switches between the two from the next pointer move.
-- **A table can be resized by its left and right edges**, the width change spread
-  over every column in the proportions it holds. A column never goes under its
-  minimum, and a table dragged narrower than its columns can be simply stops,
-  the edge opposite the dragged one held where it was.
-  There are no handles on the height: a row's stored height is a lower bound its
-  text raises, so the height follows the cells and a row is given one by dragging
-  its boundary or the table's trailing edge. Both handles take a press over
-  everything else lining their edges — the right one over the trailing-edge
-  strip, the left one over the row headings.
+- **A table can be resized by its transform frame**, all eight handles. A width
+  change is spread over every column in the proportions it holds, a height change
+  over every row in the proportions it is drawn at. A column never goes under its
+  minimum and a row never under its text, so a table dragged narrower or shorter
+  than its grid allows simply stops, the edge opposite the dragged one held where
+  it was. A row's stored height stays a lower bound its text raises: a row the
+  drag squeezes down to its text keeps no bound of its own, so a table dragged to
+  its minimum height follows its cells again and shrinks when their text is
+  deleted. A group or multi-select resize spreads the table's share the same
+  way, a table it squeezes past its grid stopping against the edge the group
+  keeps. The handles take a press over everything else lining their edges —
+  the trailing-edge strips, the row and column headings.
+- **A content-sized shape can offer resize handles.** The canvas tells a type's
+  `contentResizer` which axes a transform-handle drag is writing and which edge
+  each holds (`context.resizedAxes`, a `ResizeHeldEdge` per written axis), on
+  every frame of the drag and on the one that ends it, and nothing else — a
+  load, an undo, a text edit — carries it. A type can therefore read a dragged
+  width or height as an input without mistaking its own content's changes for
+  one, where before it had to turn the handles off, and a box its content keeps
+  larger than the drag asked for grows from the held edge instead of sliding
+  with the cursor. The axes are stated in each object's own frame, also for one
+  a group or multi-select resize scales: a child turned 90° has its height
+  written by the group's side handles, and one flipped against the group holds
+  the opposite edge.
 - **A table's right and bottom edges can be dragged to resize the last column or
   row alone**, the table growing or shrinking from the corner it is drawn from, as
   a boundary does. Mirroring a table moves these edges with it: they are always

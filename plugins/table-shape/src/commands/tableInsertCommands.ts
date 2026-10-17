@@ -3,7 +3,7 @@ import type { Command, KeyBinding, LocaleMessages } from "@jiscribe/canvas-sdk";
 
 import { readTableInsertTarget } from "./readTableInsertTarget";
 import type { TableInsertSide } from "./readTableInsertTarget";
-import { insertTableTrack } from "../grid/insertTableTrack";
+import { insertTableGridTrack } from "../grid/insertTableGridTrack";
 import { remapTablePartSelectionForInsert } from "../grid/remapTablePartSelectionForInsert";
 import {
 	TABLE_COLUMN_PART_KIND,
@@ -95,7 +95,7 @@ const toKeyBinding = (spec: TableInsertCommandSpec): KeyBinding => ({
  *
  * The command commits its own edit (commitEdit): the reducer's COMMAND path
  * records history off `commitVersion` without advancing it, and re-derives the box
- * afterwards, finding it already grown from the drawn corner (fitTableBoxToGrid).
+ * afterwards, growing it from the drawn corner (reconcileTableBoxWithGrid).
  */
 const createTableInsertCommand = (
 	spec: TableInsertCommandSpec,
@@ -123,7 +123,7 @@ const createTableInsertCommand = (
 		if (target === null) {
 			return state;
 		}
-		const inserted = insertTableTrack(
+		const inserted = insertTableGridTrack(
 			target.table,
 			spec.axis,
 			target.at,

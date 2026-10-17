@@ -21,7 +21,7 @@ export type TableInsertTarget = {
 	/**
 	 * The referenced track the new one is put next to, 0-based along the axis: the
 	 * lowest referenced index for `"before"`, the highest for `"after"`. The new
-	 * track copies its width or height and its cells' styling (insertTableTrack).
+	 * track copies its width or height and its cells' styling (insertTableGridTrack).
 	 */
 	besideIndex: number;
 };

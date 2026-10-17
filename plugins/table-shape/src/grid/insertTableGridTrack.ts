@@ -31,7 +31,7 @@ const createEmptyCellStyledAs = (sourceCell: TableCell): TableCell => {
  * positional, so every cell at or past `at` moves to the next id along the axis;
  * the caller moves any live selection the same way
  * (remapTablePartSelectionForInsert). The box, where the grid has one, is left
- * alone (insertTableTrack re-derives a state's).
+ * alone (a state's is re-derived by reconcileTableBoxWithGrid).
  *
  * The new track copies everything about `sourceIndex` but its text: a column its
  * width, a row its stored height, and each new cell the `fill` and typography of

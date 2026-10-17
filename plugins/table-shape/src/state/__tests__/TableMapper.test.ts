@@ -5,6 +5,11 @@ import {
 import { describe, it, expect } from "vitest";
 
 import { calcTableFrameSize } from "../../layout/calcTableFrameSize";
+import {
+	calcTableLayout,
+	calcTableMinHeight,
+	calcTableMinWidth,
+} from "../../layout/calcTableLayout";
 import type { TableDoc } from "../../schema/TableDoc";
 import { TABLE_DOC_DEFAULTS } from "../../schema/TableDoc";
 import { tableToDoc, tableToState } from "../TableMapper";
@@ -118,6 +123,14 @@ describe("tableToState", () => {
 		expect(state.autoHeight).toBeUndefined();
 	});
 
+	it("hands the transform frame the grid's floors as minWidth and minHeight", () => {
+		const state = tableToState(makeDoc());
+		expect(state.minWidth).toBe(calcTableMinWidth(state.columns));
+		expect(state.minHeight).toBe(calcTableMinHeight(calcTableLayout(state)));
+		// Every cell holds a line, so the floor is more than nothing.
+		expect(state.minHeight).toBeGreaterThan(0);
+	});
+
 	it("copies the axes, so two tables from the same defaults share none", () => {
 		const doc = makeDoc();
 		const state = tableToState(doc);
@@ -161,6 +174,8 @@ describe("tableToDoc", () => {
 		expect("width" in doc).toBe(false);
 		expect("height" in doc).toBe(false);
 		expect("text" in doc).toBe(false);
+		expect("minWidth" in doc).toBe(false);
+		expect("minHeight" in doc).toBe(false);
 	});
 
 	it("puts the drawn top-left corner back, rotation included", () => {

@@ -85,6 +85,44 @@ async function groupTableWithRectAbove(canvas: CanvasDriver): Promise<string> {
 }
 
 /**
+ * Places a table, draws a rectangle clear above it, and selects the two together
+ * without grouping them, so the transform frame drawn is the multi-select one.
+ *
+ * @returns The table's object id, both shapes left selected
+ */
+async function selectTableWithRectAbove(canvas: CanvasDriver): Promise<string> {
+	const tableId = await canvas.placeShape("Table");
+	const table = await tableOutlineRect(canvas, tableId);
+	await canvas.deselect();
+
+	const from = canvas.toContent({ x: table.x + 10, y: table.y - 180 });
+	const to = canvas.toContent({ x: table.x + 90, y: table.y - 100 });
+	await canvas.drawShape("Rectangle", from, to);
+	await canvas.deselect();
+
+	await canvas.selectAt(await cellCenter(canvas, tableId, "r0c0"));
+	await canvas.ctrlClickAt(
+		canvas.toContent({ x: table.x + 50, y: table.y - 140 }),
+	);
+
+	return tableId;
+}
+
+/** The client-pixel center of a transform handle of the frame drawn now. */
+async function transformHandleCenter(
+	canvas: CanvasDriver,
+	handle: "bottomCenter",
+): Promise<{ x: number; y: number }> {
+	const box = await canvas.page
+		.locator(selectors.transformControl(handle))
+		.boundingBox();
+	if (!box) {
+		throw new Error(`cannot read the position of transform handle ${handle}`);
+	}
+	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+/**
  * Drills from the group down to the table itself, which is what draws the grips. Two clicks: the first picks the topmost ancestor, the second
  * the member inside it (determineSelection's "immediate parent is selected").
  *
@@ -178,5 +216,107 @@ test.describe("a grouped table's parent bounds", () => {
 			.toBeGreaterThan(before.height);
 
 		await expectGroupOutlineToEndAtTable(canvas, tableId);
+	});
+});
+
+test.describe("a grouped table scaled by its group's frame", () => {
+	test("spreads a group's bottom-edge drag over the table's rows", async ({
+		canvas,
+	}) => {
+		const tableId = await groupTableWithRectAbove(canvas);
+		const group = await groupOutlineRect(canvas);
+		const before = {
+			leading: await cellRect(canvas, tableId, "r0c0"),
+			trailing: await cellRect(canvas, tableId, "r1c0"),
+			box: await tableOutlineRect(canvas, tableId),
+		};
+
+		await canvas.dragTransformHandle(
+			"bottomCenter",
+			canvas.toContent({
+				x: group.x + group.width / 2,
+				y: group.y + group.height + 120,
+			}),
+			{ ctrl: true },
+		);
+
+		await expect
+			.poll(async () => (await tableOutlineRect(canvas, tableId)).height)
+			.toBeGreaterThan(before.box.height + 20);
+		const after = {
+			leading: await cellRect(canvas, tableId, "r0c0"),
+			trailing: await cellRect(canvas, tableId, "r1c0"),
+			box: await tableOutlineRect(canvas, tableId),
+		};
+		// The table's bottom is the group's, which the drag carried down.
+		expect(after.box.y + after.box.height).toBeCloseTo(
+			group.y + group.height + 120,
+			0,
+		);
+		expect(after.leading.height / after.trailing.height).toBeCloseTo(
+			before.leading.height / before.trailing.height,
+			1,
+		);
+	});
+
+	test("holds the table's bottom when a group's top-edge drag shrinks it past the rows' text", async ({
+		canvas,
+	}) => {
+		const tableId = await groupTableWithRectAbove(canvas);
+		const group = await groupOutlineRect(canvas);
+		const before = await tableOutlineRect(canvas, tableId);
+
+		// A fresh table's rows are drawn at their floor already, so any shrink the
+		// group hands it stops there, and it has to stop against the edge the group
+		// keeps rather than hang below it.
+		await canvas.dragTransformHandle(
+			"topCenter",
+			canvas.toContent({ x: group.x + group.width / 2, y: group.y + 60 }),
+			{ ctrl: true },
+		);
+
+		const after = await tableOutlineRect(canvas, tableId);
+		expect(after.height).toBeCloseTo(before.height, 0);
+		expect(after.y + after.height).toBeCloseTo(before.y + before.height, 0);
+	});
+});
+
+test.describe("a table scaled by a multi-select frame", () => {
+	test("spreads a multi-select's bottom-edge drag over the table's rows", async ({
+		canvas,
+	}) => {
+		const tableId = await selectTableWithRectAbove(canvas);
+		const before = {
+			leading: await cellRect(canvas, tableId, "r0c0"),
+			trailing: await cellRect(canvas, tableId, "r1c0"),
+			box: await tableOutlineRect(canvas, tableId),
+		};
+		// The frame spans both shapes, and its bottom edge is the table's alone.
+		const handle = await transformHandleCenter(canvas, "bottomCenter");
+		expect(handle.y).toBeCloseTo(before.box.y + before.box.height, 0);
+
+		await canvas.dragTransformHandle(
+			"bottomCenter",
+			canvas.toContent({ x: handle.x, y: handle.y + 120 }),
+			{ ctrl: true },
+		);
+
+		await expect
+			.poll(async () => (await tableOutlineRect(canvas, tableId)).height)
+			.toBeGreaterThan(before.box.height + 20);
+		const after = {
+			leading: await cellRect(canvas, tableId, "r0c0"),
+			trailing: await cellRect(canvas, tableId, "r1c0"),
+			box: await tableOutlineRect(canvas, tableId),
+		};
+		// The table's bottom is the frame's, which the drag carried down.
+		expect(after.box.y + after.box.height).toBeCloseTo(
+			before.box.y + before.box.height + 120,
+			0,
+		);
+		expect(after.leading.height / after.trailing.height).toBeCloseTo(
+			before.leading.height / before.trailing.height,
+			1,
+		);
 	});
 });

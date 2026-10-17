@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TableCell } from "../../schema/TableDoc";
 import type { TableState } from "../../state/TableState";
-import { clearTableCells } from "../clearTableCells";
+import { clearTableGridCells } from "../clearTableGridCells";
 
 // The box is re-derived from the cells' text (see calcTableLayout.test.ts).
 offerTextMeasurement(createEstimateTextMeasurement());
@@ -35,9 +35,9 @@ const makeTable = (overrides: Record<string, TableCell> = {}): TableState =>
 		},
 	}) as unknown as TableState;
 
-describe("clearTableCells", () => {
+describe("clearTableGridCells", () => {
 	it("empties the named cells and leaves the rest as they were", () => {
-		const cleared = clearTableCells(makeTable(), [
+		const cleared = clearTableGridCells(makeTable(), [
 			"r0c1",
 			"r1c0",
 		]) as TableState;
@@ -48,7 +48,7 @@ describe("clearTableCells", () => {
 	});
 
 	it("keeps the grid, cells and all", () => {
-		const cleared = clearTableCells(makeTable(), ["r0c0"]) as TableState;
+		const cleared = clearTableGridCells(makeTable(), ["r0c0"]) as TableState;
 
 		expect(cleared.rows).toHaveLength(2);
 		expect(cleared.columns).toHaveLength(2);
@@ -56,7 +56,7 @@ describe("clearTableCells", () => {
 	});
 
 	it("spares the formatting, a cleared cell being emptied rather than rebuilt", () => {
-		const cleared = clearTableCells(makeTable(), ["r0c0"]) as TableState;
+		const cleared = clearTableGridCells(makeTable(), ["r0c0"]) as TableState;
 
 		expect(cleared.text.r0c0).toEqual({
 			text: "",
@@ -66,14 +66,14 @@ describe("clearTableCells", () => {
 	});
 
 	it("refuses when every cell it names is empty already", () => {
-		expect(clearTableCells(makeTable(), ["r1c1"])).toBeNull();
-		expect(clearTableCells(makeTable(), [])).toBeNull();
-		expect(clearTableCells(makeTable(), ["r9c9"])).toBeNull();
+		expect(clearTableGridCells(makeTable(), ["r1c1"])).toBeNull();
+		expect(clearTableGridCells(makeTable(), [])).toBeNull();
+		expect(clearTableGridCells(makeTable(), ["r9c9"])).toBeNull();
 	});
 
 	it("leaves the table it was given untouched", () => {
 		const table = makeTable();
-		clearTableCells(table, ["r0c0"]);
+		clearTableGridCells(table, ["r0c0"]);
 
 		expect(table.text.r0c0.text).toBe("kept");
 	});

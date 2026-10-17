@@ -5,7 +5,8 @@ import type { TableCell } from "../schema/TableDoc";
  * Empties the named cells and leaves the grid standing. Only the text is taken: a
  * cell's background and its typography are formatting, and a spreadsheet's Delete
  * key does not reach them; clearing a cell is emptying it, not rebuilding it. The
- * box, where the grid has one, is left alone (clearTableCells re-derives a state's).
+ * box, where the grid has one, is left alone (a state's is re-derived by
+ * reconcileTableBoxWithGrid).
  *
  * @param grid - The table to clear in; left untouched
  * @param cellIds - The cells to empty, as `grid.text` keys them; ids the grid has no cell at are ignored

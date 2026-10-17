@@ -141,7 +141,7 @@ test.describe("table cell selection", () => {
 		expect(outlines[0].y).toBeCloseTo(table.y + table.height / 2, 0);
 	});
 
-	test("puts the width handles away while cells are the operated target", async ({
+	test("puts the resize handles away while cells are the operated target", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");

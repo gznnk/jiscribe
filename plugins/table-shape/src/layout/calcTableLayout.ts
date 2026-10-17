@@ -3,7 +3,11 @@ import type { Rect } from "@jiscribe/geometry";
 
 import { readCachedCellTextHeight } from "./readCachedCellTextHeight";
 import { readTableCellTextSlotIdRow } from "../schema/tableCellTextSlotIdCache";
-import { TABLE_DOC_DEFAULTS, TABLE_MIN_COLUMN_WIDTH } from "../schema/TableDoc";
+import {
+	TABLE_DOC_DEFAULTS,
+	TABLE_MIN_COLUMN_WIDTH,
+	TABLE_MIN_ROW_HEIGHT,
+} from "../schema/TableDoc";
 import type {
 	TableCell,
 	TableColumnDoc,
@@ -61,6 +65,12 @@ export type TableLayout = {
 	 * gap and no overlap.
 	 */
 	readonly cellRects: Readonly<Record<string, Readonly<Rect>>>;
+	/**
+	 * Lowest each row can be drawn at whatever its stored bound: what its tallest
+	 * cell's text asks for, never under {@link TABLE_MIN_ROW_HEIGHT}. One per row,
+	 * top to bottom; the row is drawn at the greater of this and its bound.
+	 */
+	readonly rowFloors: readonly number[];
 	/** Table width: the column widths summed. */
 	readonly width: number;
 	/** Table height: the resolved row heights summed. */
@@ -68,12 +78,11 @@ export type TableLayout = {
 };
 
 /**
- * Height one row is drawn at: its stored height as the lower bound, raised to
- * whatever its tallest cell asks for. A row whose text outgrows the stored value
- * is drawn taller, never clipped.
+ * Lowest one row can be drawn at: what its tallest cell's text asks for, never
+ * under {@link TABLE_MIN_ROW_HEIGHT}. The row's stored bound raises it, never
+ * lowers it, so text is never clipped.
  */
-const calcRowHeight = (
-	row: TableRowDoc,
+const calcRowFloor = (
 	rowCellIds: readonly string[],
 	columns: readonly TableColumnDoc[],
 	cells: Record<string, TableCell> | undefined,
@@ -88,7 +97,7 @@ const calcRowHeight = (
 					column.width - strokeWidth,
 				),
 			),
-		row.height ?? 0,
+		TABLE_MIN_ROW_HEIGHT,
 	);
 
 /**
@@ -101,36 +110,10 @@ const resolveTableStrokeWidth = (state: TableLayoutSource): number =>
 	TABLE_DOC_DEFAULTS.strokeWidth ??
 	SHAPE_STYLE_FALLBACK.strokeWidth;
 
-/** Stands in for a row's bound where only its text's own demand is wanted. */
-const NO_ROW_BOUND: TableRowDoc = {};
-
-/**
- * The height one row's own text asks for, with its stored bound left out: the floor
- * {@link calcTableLayout} will not draw the row below, however small the bound is.
- * What a boundary drag can squeeze the row to (calcTableRowBoundaryDrag).
- *
- * @param state - The tracks, the cells and the rule width, as the layout reads them
- * @param rowIndex - Which row to measure; one the grid does not have has no cells to ask, and measures as 0
- * @returns The floor in local px. An empty cell still asks for a line, so only a grid with no columns at all floors at 0
- */
-export const calcTableRowTextFloor = (
-	state: TableLayoutSource,
-	rowIndex: number,
-): number => {
-	const columns = state.columns ?? [];
-	return calcRowHeight(
-		NO_ROW_BOUND,
-		readTableCellTextSlotIdRow(rowIndex, columns.length),
-		columns,
-		state.text,
-		resolveTableStrokeWidth(state),
-	);
-};
-
 /**
  * The table's width: the column widths summed, which is all of the layout the
- * width is — no cell is measured for it, which is what lets the content resizer
- * tell an outside write of the width before it lays the table out.
+ * width is — no cell is measured for it, so the content resizer can tell whether a
+ * dragged width differs from the columns before it lays the table out.
  *
  * @param columns - The columns, left to right; none sums to 0
  */
@@ -148,6 +131,17 @@ export const calcTableColumnsWidth = (
  */
 export const calcTableMinWidth = (columns: readonly TableColumnDoc[]): number =>
 	columns.length * TABLE_MIN_COLUMN_WIDTH;
+
+/**
+ * Lowest the table can be drawn at its current column widths: every row at its
+ * floor. The height twin of {@link calcTableMinWidth}, handed to the transform
+ * frame as `minHeight` (reconcileTableBoxWithGrid) so a dragged top edge stops
+ * there with the bottom edge held.
+ *
+ * @param layout - The table's layout; its `rowFloors` are summed, so no rows gives 0
+ */
+export const calcTableMinHeight = (layout: TableLayout): number =>
+	layout.rowFloors.reduce((total, floor) => total + floor, 0);
 
 /** The running edges of one track: the first edge, then one per size. */
 const accumulateEdges = (start: number, sizes: readonly number[]): number[] => {
@@ -183,14 +177,11 @@ export const calcTableLayout = (state: TableLayoutSource): TableLayout => {
 	const cellIdsByRow = rows.map((_, rowIndex) =>
 		readTableCellTextSlotIdRow(rowIndex, columns.length),
 	);
+	const rowFloors = rows.map((_, rowIndex) =>
+		calcRowFloor(cellIdsByRow[rowIndex], columns, state.text, strokeWidth),
+	);
 	const rowHeights = rows.map((row, rowIndex) =>
-		calcRowHeight(
-			row,
-			cellIdsByRow[rowIndex],
-			columns,
-			state.text,
-			strokeWidth,
-		),
+		Math.max(row.height ?? 0, rowFloors[rowIndex]),
 	);
 	const width = calcTableColumnsWidth(columns);
 	const height = rowHeights.reduce((total, rowHeight) => total + rowHeight, 0);
@@ -213,5 +204,5 @@ export const calcTableLayout = (state: TableLayoutSource): TableLayout => {
 		});
 	});
 
-	return { columnEdgeXs, rowEdgeYs, cellRects, width, height };
+	return { columnEdgeXs, rowEdgeYs, cellRects, rowFloors, width, height };
 };

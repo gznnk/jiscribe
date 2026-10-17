@@ -20,7 +20,7 @@ export type TableEdgeSegment = {
  * Where the table's two trailing edges lie in world coordinates, keyed by the axis
  * whose last track each one closes: `column` the edge after the last column,
  * `row` the edge after the last row. Trailing means away from the corner the table
- * is drawn from (resizeTableFromDrawnCorner), which is the local top-left — so the
+ * is drawn from (resizeTableHoldingEdges), which is the local top-left — so the
  * edges are the local right and bottom, and a table mirrored on an axis shows that
  * edge on the opposite side of the screen.
  *

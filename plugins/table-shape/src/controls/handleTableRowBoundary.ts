@@ -22,9 +22,9 @@ import type { TableState } from "../state/TableState";
  * Every frame is rebuilt from the gesture-start snapshot, never from the previous
  * frame, so a cursor brought back to where it started — or a Shift pressed or
  * released — restores what that mode gives from the start. `height` / `cy` are
- * deliberately not written in either mode: the resizer never reads a height as
- * an outside write, and re-derives the box from the rows from the corner the
- * table is drawn from on the same reducer tick (reconcileTableBoxWithGrid).
+ * not written in either mode: the resizer re-derives the box from the rows, from
+ * the corner the table is drawn from, on the same reducer tick
+ * (reconcileTableBoxWithGrid).
  *
  * Registered via the table's ObjectTypeDefinition.selectionControls.
  */

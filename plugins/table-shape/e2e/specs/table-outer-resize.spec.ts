@@ -2,40 +2,88 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 import {
+	cellCenter,
 	cellRect,
-	isWidthHandleOnTop,
+	fillCell,
+	isResizeHandleOnTop,
 	tableOutlineRect,
 } from "../support/tableDom";
 
 /**
  * Resizing a table by its own frame, in a real browser. A table stores no size,
- * so the handle writes a width that only the content resizer ever sees; what a
- * browser answers here is whether the two halves — the handle's write and the
- * grid re-derived from it — land on the same frame, so the dragged edge follows
- * the cursor instead of snapping back.
+ * so the handle writes a width or a height that only the content resizer ever
+ * sees; what a browser answers here is whether the two halves — the handle's
+ * write and the grid re-derived from it — land on the same frame, so the dragged
+ * edge follows the cursor instead of snapping back.
  *
  * The arithmetic of the distribution is pinned by
- * distributeTableWidthToColumns.test.
+ * distributeTableTrackSizes.test and its two callers' tests.
  */
 
 /** Narrowest a column may be drawn, in local px (TABLE_MIN_COLUMN_WIDTH). */
 const MIN_COLUMN_WIDTH = 24;
 
-/** Handles a table must not offer: its height is its content's answer. */
-const HEIGHT_HANDLES = [
+/** Every handle the transform frame draws around a resizable shape. */
+const RESIZE_HANDLES = [
 	"topLeft",
 	"topCenter",
 	"topRight",
+	"leftCenter",
+	"rightCenter",
 	"bottomLeft",
 	"bottomCenter",
 	"bottomRight",
 ] as const;
+
+/** Wraps over several lines in a fresh table's column, so its row is held by it. */
+const WRAPPING_TEXT = "a cell holding enough words to wrap";
+
+/** The strip for one row boundary, by the `data-action` its control gives it. */
+const rowBoundaryStrip = (canvas: CanvasDriver, boundaryIndex: number) =>
+	canvas.page.locator(
+		`[data-kind="control"][data-action="selection:table:rowBoundary:${boundaryIndex}"]`,
+	);
+
+/** The strip along the table's trailing edge on one axis. */
+const trailingEdgeStrip = (canvas: CanvasDriver, axis: "column" | "row") =>
+	canvas.page.locator(
+		`[data-kind="control"][data-action="selection:table:trailingEdge:${axis}"]`,
+	);
 
 /** The strip for one column boundary, by the `data-action` its control gives it. */
 const columnBoundaryStrip = (canvas: CanvasDriver, boundaryIndex: number) =>
 	canvas.page.locator(
 		`[data-kind="control"][data-action="selection:table:columnBoundary:${boundaryIndex}"]`,
 	);
+
+/**
+ * Drag one of the table's height handles to a client y, keeping the pointer at the
+ * edge's own middle. Ctrl is held for the reason dragWidthHandleTo gives.
+ */
+async function dragHeightHandleTo(
+	canvas: CanvasDriver,
+	handle: "topCenter" | "bottomCenter",
+	box: { x: number; y: number; width: number; height: number },
+	clientY: number,
+): Promise<void> {
+	await canvas.dragTransformHandle(
+		handle,
+		canvas.toContent({ x: box.x + box.width / 2, y: clientY }),
+		{ ctrl: true },
+	);
+}
+
+/** Drag from one client point by a client offset, both converted into content coordinates. */
+async function dragClient(
+	canvas: CanvasDriver,
+	from: { x: number; y: number },
+	by: { x: number; y: number },
+): Promise<void> {
+	await canvas.drag(
+		canvas.toContent(from),
+		canvas.toContent({ x: from.x + by.x, y: from.y + by.y }),
+	);
+}
 
 /**
  * Drag one of the table's width handles to a client x, keeping the pointer at the
@@ -56,31 +104,31 @@ async function dragWidthHandleTo(
 }
 
 test.describe("table outer resize", () => {
-	test("offers the two handles that change the width and no others", async ({
-		canvas,
-	}) => {
+	test("offers all eight resize handles", async ({ canvas }) => {
 		await canvas.placeShape("Table");
 
-		for (const handle of ["leftCenter", "rightCenter"] as const) {
+		for (const handle of RESIZE_HANDLES) {
 			await expect(
 				canvas.page.locator(selectors.transformControl(handle)),
 			).toBeVisible();
 		}
-		for (const handle of HEIGHT_HANDLES) {
-			await expect(
-				canvas.page.locator(selectors.transformControl(handle)),
-			).toHaveCount(0);
-		}
 	});
 
-	test("draws the width handles over the strip and grips lining their edges", async ({
+	test("draws the edge handles over the strips and grips lining their edges", async ({
 		canvas,
 	}) => {
 		await canvas.placeShape("Table");
 
-		// The right edge carries the trailing-edge strip, the left one the row grips.
-		expect(await isWidthHandleOnTop(canvas, "rightCenter")).toBe(true);
-		expect(await isWidthHandleOnTop(canvas, "leftCenter")).toBe(true);
+		// The right and bottom edges carry the trailing-edge strips, the left and
+		// top ones the grips.
+		for (const handle of [
+			"rightCenter",
+			"leftCenter",
+			"bottomCenter",
+			"topCenter",
+		] as const) {
+			expect(await isResizeHandleOnTop(canvas, handle)).toBe(true);
+		}
 	});
 
 	test("widens the table by its left edge, the right edge staying where it was", async ({
@@ -231,5 +279,216 @@ test.describe("table outer resize", () => {
 			.toBe(Math.round(rightEdge));
 		const flipped = await tableOutlineRect(canvas, id);
 		expect(flipped.width).toBeLessThan(MIN_COLUMN_WIDTH * 2 + 3);
+	});
+
+	test("spreads a bottom-edge drag over the rows in the proportions they are drawn at", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+
+		// A fresh table's rows are equal; the boundary drag is what makes them uneven.
+		// Grabbed at the middle of the first column, clear of the left handle.
+		await expect(rowBoundaryStrip(canvas, 0)).toBeVisible();
+		const even = await cellRect(canvas, id, "r0c0");
+		await dragClient(
+			canvas,
+			{ x: even.x + even.width / 2, y: even.y + even.height },
+			{ x: 0, y: 40 },
+		);
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBe(Math.round(even.height + 40));
+
+		const before = {
+			leading: await cellRect(canvas, id, "r0c0"),
+			trailing: await cellRect(canvas, id, "r1c0"),
+			box: await tableOutlineRect(canvas, id),
+		};
+
+		await dragHeightHandleTo(
+			canvas,
+			"bottomCenter",
+			before.box,
+			before.box.y + before.box.height + 120,
+		);
+
+		await expect
+			.poll(async () => Math.round((await tableOutlineRect(canvas, id)).height))
+			.toBe(Math.round(before.box.height + 120));
+
+		const after = {
+			leading: await cellRect(canvas, id, "r0c0"),
+			trailing: await cellRect(canvas, id, "r1c0"),
+			box: await tableOutlineRect(canvas, id),
+		};
+		// The edge that was not dragged stays where it was drawn, and the width with it.
+		expect(after.box.y).toBeCloseTo(before.box.y, 0);
+		expect(after.box.width).toBeCloseTo(before.box.width, 0);
+		// Each row grew by its own share.
+		expect(after.leading.height / after.trailing.height).toBeCloseTo(
+			before.leading.height / before.trailing.height,
+			1,
+		);
+		expect(after.leading.height + after.trailing.height).toBeCloseTo(
+			before.leading.height + before.trailing.height + 120,
+			0,
+		);
+	});
+
+	test("heightens the table by its top edge, the bottom edge staying where it was", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const before = await tableOutlineRect(canvas, id);
+
+		await dragHeightHandleTo(canvas, "topCenter", before, before.y - 80);
+
+		await expect
+			.poll(async () => Math.round((await tableOutlineRect(canvas, id)).height))
+			.toBe(Math.round(before.height + 80));
+		const after = await tableOutlineRect(canvas, id);
+		expect(after.y).toBeCloseTo(before.y - 80, 0);
+		expect(after.y + after.height).toBeCloseTo(before.y + before.height, 0);
+	});
+
+	test("stops a top-edge drag at the rows' text with the bottom edge held", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const before = await tableOutlineRect(canvas, id);
+		const bottomEdge = before.y + before.height;
+
+		// A fresh table's rows are drawn at their one empty line, which is already
+		// their floor: dragged down toward the bottom edge, the top must not move.
+		await dragHeightHandleTo(canvas, "topCenter", before, bottomEdge - 10);
+
+		const stopped = await tableOutlineRect(canvas, id);
+		expect(stopped.height).toBeCloseTo(before.height, 0);
+		expect(stopped.y + stopped.height).toBeCloseTo(bottomEdge, 0);
+	});
+
+	test("holds the opposite corner while a corner drag narrows the columns and raises the rows' text", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await fillCell(canvas, id, "r0c0", WRAPPING_TEXT);
+		const oneLine = await cellRect(canvas, id, "r1c0");
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBeGreaterThan(Math.round(oneLine.height));
+		await canvas.selectAt(await cellCenter(canvas, id, "r1c0"));
+		const before = await tableOutlineRect(canvas, id);
+		const textHeld = await cellRect(canvas, id, "r0c0");
+
+		// Inward on both axes: the columns narrow, so the wrapped cell takes more
+		// lines and the floor rises above the one the drag started under.
+		await canvas.dragTransformHandle(
+			"topLeft",
+			canvas.toContent({ x: before.x + 140, y: before.y + 80 }),
+			{ ctrl: true },
+		);
+
+		const after = await tableOutlineRect(canvas, id);
+		expect(after.width).toBeLessThan(before.width - 100);
+		expect((await cellRect(canvas, id, "r0c0")).height).toBeGreaterThan(
+			textHeld.height,
+		);
+		expect(after.x + after.width).toBeCloseTo(before.x + before.width, 0);
+		expect(after.y + after.height).toBeCloseTo(before.y + before.height, 0);
+	});
+
+	test("stops a bottom-edge drag at the rows' text, and shrinks once that text is gone", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await fillCell(canvas, id, "r0c0", WRAPPING_TEXT);
+		const oneLine = await cellRect(canvas, id, "r1c0");
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBeGreaterThan(Math.round(oneLine.height));
+		const textHeld = await cellRect(canvas, id, "r0c0");
+
+		// The last row given room of its own, so the shrink below has something to
+		// take before it reaches the text. Selected by a cell so the strip is drawn.
+		await canvas.selectAt(await cellCenter(canvas, id, "r0c1"));
+		await expect(trailingEdgeStrip(canvas, "row")).toBeVisible();
+		await dragClient(
+			canvas,
+			{ x: oneLine.x + oneLine.width / 2, y: oneLine.y + oneLine.height },
+			{ x: 0, y: 60 },
+		);
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r1c0")).height))
+			.toBe(Math.round(oneLine.height + 60));
+
+		const before = await tableOutlineRect(canvas, id);
+		await dragHeightHandleTo(canvas, "bottomCenter", before, before.y + 10);
+
+		// Each row is down at what its text needs, and the table is no lower.
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r1c0")).height))
+			.toBe(Math.round(oneLine.height));
+		const stopped = {
+			leading: await cellRect(canvas, id, "r0c0"),
+			box: await tableOutlineRect(canvas, id),
+		};
+		expect(stopped.leading.height).toBeCloseTo(textHeld.height, 0);
+		expect(stopped.box.y).toBeCloseTo(before.y, 0);
+
+		// A row landing at its floor stores no bound, so emptying the cell lets the
+		// row fall to its one empty line.
+		await canvas.selectAt(await cellCenter(canvas, id, "r1c1"));
+		await canvas.clickAt(await cellCenter(canvas, id, "r0c0"));
+		await canvas.deleteSelection();
+
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBe(Math.round(oneLine.height));
+		const cleared = await tableOutlineRect(canvas, id);
+		expect(cleared.height).toBeLessThan(stopped.box.height);
+		expect(cleared.y).toBeCloseTo(before.y, 0);
+	});
+
+	test("follows its text again once a bottom-edge drag has been taken back to the minimum", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await fillCell(canvas, id, "r0c0", WRAPPING_TEXT);
+		const oneLine = await cellRect(canvas, id, "r1c0");
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBeGreaterThan(Math.round(oneLine.height));
+		await canvas.selectAt(await cellCenter(canvas, id, "r0c1"));
+
+		// Down first, which gives every row a bound above its text, then back up
+		// past where it started.
+		const start = await tableOutlineRect(canvas, id);
+		await dragHeightHandleTo(
+			canvas,
+			"bottomCenter",
+			start,
+			start.y + start.height + 100,
+		);
+		await expect
+			.poll(async () => Math.round((await tableOutlineRect(canvas, id)).height))
+			.toBe(Math.round(start.height + 100));
+		const grown = await tableOutlineRect(canvas, id);
+		await dragHeightHandleTo(canvas, "bottomCenter", grown, grown.y + 10);
+		await expect
+			.poll(async () => Math.round((await tableOutlineRect(canvas, id)).height))
+			.toBe(Math.round(start.height));
+
+		// Back at the minimum, no row stores a bound, so the cleared cell's row
+		// falls to one line.
+		await canvas.selectAt(await cellCenter(canvas, id, "r1c1"));
+		await canvas.clickAt(await cellCenter(canvas, id, "r0c0"));
+		await canvas.deleteSelection();
+
+		await expect
+			.poll(async () => Math.round((await cellRect(canvas, id, "r0c0")).height))
+			.toBe(Math.round(oneLine.height));
+		const cleared = await tableOutlineRect(canvas, id);
+		expect(cleared.height).toBeCloseTo(oneLine.height * 2, 0);
+		expect(cleared.y).toBeCloseTo(start.y, 0);
 	});
 });

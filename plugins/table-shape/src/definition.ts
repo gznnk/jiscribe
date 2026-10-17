@@ -2,7 +2,6 @@ import type {
 	ConnectionAnchorOffsets,
 	ObjectPartKindDefinition,
 	ObjectTypeDefinition,
-	ObjectTransformHandles,
 	SelectionControlDefinition,
 } from "@jiscribe/canvas";
 import {
@@ -24,7 +23,7 @@ import { TableRowGripControl } from "./controls/TableRowGripControl";
 import { calcConnectionAnchorOffsetPastGrips } from "./controls/TableTrackGrip";
 import { TableTrailingEdgeControl } from "./controls/TableTrailingEdgeControl";
 import { tableDocDefinition } from "./doc";
-import { clearTableCells } from "./grid/clearTableCells";
+import { clearTableGridCells } from "./grid/clearTableGridCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
 import { TableInsertMenu } from "./menu/TableInsertMenu";
@@ -40,24 +39,6 @@ import type { TableState } from "./state/TableState";
 import { isValidTableState } from "./state/validateTableState";
 import { TableStencils } from "./stencil/TableStencils";
 import { tableFillEntry } from "./style/tableFillEntries";
-
-/**
- * The left and right handles alone. Dragging one distributes the width change
- * across every column in the proportions it holds, which the content resizer does
- * on reading a width the columns do not sum to (reconcileTableBoxWithGrid) — so
- * the handle does not fight the re-derivation, it feeds it.
- *
- * No handle on the height: a row's stored height is a lower bound its text raises,
- * which makes a dragged bottom edge and deleted text indistinguishable to the
- * resizer, the one place a handle's write is visible. The height stays the grid's
- * answer, and a row is given a height by dragging its boundary or, for the last
- * row, the table's trailing edge ({@link TABLE_SELECTION_CONTROLS}), both of which
- * write the row's bound rather than the box.
- *
- * Declared once at module scope because the registry memoizes on the declaration
- * itself (ObjectTransformHandlesRegistry).
- */
-const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
 
 /**
  * The top and left connection-anchor dots pushed out past the grips lining
@@ -87,16 +68,16 @@ const calcTableConnectionAnchorOffsets = (
  *
  * A boundary drag resizes the track before it alone and the table with it, or
  * with Shift held trades between the two tracks and leaves the outer frame where
- * it was. A trailing-edge drag resizes the last track alone, Shift or not. Only
- * the column drags ever write the box, and only when the columns' total changes
- * (resizeTableToColumns); otherwise the box is re-derived from the tracks on the
- * same reducer tick (reconcileTableBoxWithGrid).
+ * it was. A trailing-edge drag resizes the last track alone, Shift or not. None
+ * of them writes the box: it is re-derived from the tracks on the same reducer
+ * tick (reconcileTableBoxWithGrid), and these being selection controls rather than
+ * transform handles, the resizer reads no axis of it as an input.
  *
  * The grips write no object at all, only the part selection, so a click on one is
  * never a document change.
  *
  * All five are drawn under the core handles: the strips and grips run along the
- * edges the width handles sit on, and one covered at a handle's spot is still
+ * edges the resize handles sit on, and one covered at a handle's spot is still
  * reachable along the rest of its length, where the handle can be pressed
  * nowhere else.
  */
@@ -163,7 +144,7 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 			regions: calcTableTextSlotRegions,
 		}),
 		range: collectTableCellRange,
-		delete: clearTableCells,
+		delete: clearTableGridCells,
 		styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
 	},
 ];
@@ -204,12 +185,12 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	...tableDocDefinition,
 	mapper: { toDoc: tableToDoc, toState: tableToState },
 	stateValidator: isValidTableState,
-	contentResizer: (state) => reconcileTableBoxWithGrid(state as TableState),
+	contentResizer: (state, context) =>
+		reconcileTableBoxWithGrid(state as TableState, context),
 	component: Table,
 	behavior: createFrameBehavior<TableState>(),
 	selectionControls: TABLE_SELECTION_CONTROLS,
 	partKinds: TABLE_PARTS,
-	transformHandles: TABLE_TRANSFORM_HANDLES,
 	connectionAnchorOffsets: calcTableConnectionAnchorOffsets,
 	stencils: TableStencils,
 	styleEntries: TABLE_STYLE_ENTRIES,

@@ -139,6 +139,16 @@ const makeDragEndEvent = (last: { x: number; y: number }): CanvasEvent =>
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
 
+const makeDragStartEvent = (targetAction: string): CanvasEvent =>
+	({
+		type: "dragStart",
+		targetKind: "control",
+		targetId: "transform",
+		targetAction,
+		button: 0,
+		mods: { shift: false, alt: false, ctrl: false, meta: false },
+	}) as unknown as CanvasEvent;
+
 const rectOf = (state: CanvasControllerState) =>
 	state.objects["rect-1"] as unknown as {
 		cx: number;
@@ -198,6 +208,34 @@ describe("TransformControlHandler", () => {
 			const group = next.objects["g"] as GroupState;
 			expect(group.width).toBeCloseTo(200);
 			expect(group.height).toBeCloseTo(150);
+		});
+	});
+
+	describe("handleDragStart", () => {
+		it("names the axes a bottom-edge resize writes on the drag", () => {
+			const handler = new TransformControlHandler();
+
+			const next = handler.handle(
+				makeDragState(),
+				makeDragStartEvent("resize:bottomCenter"),
+				registries,
+			);
+
+			expect(next.activeDrag?.kind).toBe("transform");
+			expect(next.activeDrag?.resize?.axes).toEqual({ height: "start" });
+		});
+
+		it("names no axes on the rotation knob", () => {
+			const handler = new TransformControlHandler();
+
+			const next = handler.handle(
+				makeDragState(),
+				makeDragStartEvent("rotation"),
+				registries,
+			);
+
+			expect(next.activeDrag?.kind).toBe("transform");
+			expect(next.activeDrag).not.toHaveProperty("resize");
 		});
 	});
 

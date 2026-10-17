@@ -1,7 +1,12 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
-import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
+import type {
+	BoundingBox,
+	FrameKeyPoints,
+	Point,
+	Transform,
+} from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorLabelPlacement";
 import type { Viewport } from "../rendering/Viewport";
@@ -12,6 +17,7 @@ import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
+import type { ResizedAxes } from "../states/registry/ObjectContentResizerRegistry";
 
 // ---------------------------------------------------------------------------
 // Save request types (stored in CanvasControllerState)
@@ -297,6 +303,23 @@ export type ActiveDrag = {
 	 * distinguished overwrites the kind in its own dragStart.
 	 */
 	kind: DragKind;
+	/**
+	 * What a transform-handle resize writes, set by the transform handler's
+	 * dragStart. Absent on the rotation knob and on every other kind, so its
+	 * presence alone says a handle is resizing.
+	 */
+	resize?: TransformDragResize;
+};
+
+/**
+ * A transform-handle resize, stated in the frame whose handle is dragged; each
+ * object the drag scales reads it in its own frame (calcObjectResizedAxes).
+ */
+export type TransformDragResize = {
+	/** The axes the handle writes and the edges it holds, in `frame`'s terms */
+	readonly axes: ResizedAxes;
+	/** Rotation (degrees) and flips of the dragged frame at dragStart: the selected object's own, or the multi-select group's */
+	readonly frame: Transform;
 };
 
 /**

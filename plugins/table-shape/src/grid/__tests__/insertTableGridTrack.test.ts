@@ -9,8 +9,9 @@ import {
 	tableCellTextSlotIds,
 } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
+import { reconcileTableBoxWithGrid } from "../../state/reconcileTableBoxWithGrid";
 import type { TableState } from "../../state/TableState";
-import { insertTableTrack } from "../insertTableTrack";
+import { insertTableGridTrack } from "../insertTableGridTrack";
 
 // The box is re-derived from the cells' text, and measuring with nothing offered
 // throws (see calcTableLayout.test.ts).
@@ -62,9 +63,9 @@ const makeTable = (overrides: Partial<TableState> = {}): TableState =>
 		...overrides,
 	}) as unknown as TableState;
 
-describe("insertTableTrack", () => {
+describe("insertTableGridTrack", () => {
 	it("renumbers every cell below an inserted row and leaves the ones above alone", () => {
-		const inserted = insertTableTrack(makeTable(), "row", 1);
+		const inserted = insertTableGridTrack(makeTable(), "row", 1);
 
 		expect(inserted.rows).toHaveLength(3);
 		expect(readGrid(inserted)).toEqual([
@@ -77,7 +78,7 @@ describe("insertTableTrack", () => {
 	});
 
 	it("renumbers every cell right of an inserted column", () => {
-		const inserted = insertTableTrack(makeTable(), "column", 1);
+		const inserted = insertTableGridTrack(makeTable(), "column", 1);
 
 		expect(inserted.columns).toHaveLength(4);
 		expect(readGrid(inserted)).toEqual([
@@ -88,7 +89,7 @@ describe("insertTableTrack", () => {
 	});
 
 	it("keeps the rows' stored bounds with the rows they belong to", () => {
-		const inserted = insertTableTrack(makeTable(), "row", 1, 0);
+		const inserted = insertTableGridTrack(makeTable(), "row", 1, 0);
 
 		expect(inserted.rows).toEqual([
 			{ height: 50 },
@@ -100,12 +101,12 @@ describe("insertTableTrack", () => {
 	it("gives a new row the stored height of the source row, or none when it has none", () => {
 		const table = makeTable({ rows: [{}, { height: 70 }] });
 
-		expect(insertTableTrack(table, "row", 0, 1).rows).toEqual([
+		expect(insertTableGridTrack(table, "row", 0, 1).rows).toEqual([
 			{ height: 70 },
 			{},
 			{ height: 70 },
 		]);
-		expect(insertTableTrack(table, "row", 2, 0).rows).toEqual([
+		expect(insertTableGridTrack(table, "row", 2, 0).rows).toEqual([
 			{},
 			{ height: 70 },
 			{},
@@ -129,7 +130,7 @@ describe("insertTableTrack", () => {
 		});
 
 		// Column 1 picked, inserting left: the new column 1 copies the old column 1.
-		const withColumn = insertTableTrack(table, "column", 1, 1);
+		const withColumn = insertTableGridTrack(table, "column", 1, 1);
 		expect(withColumn.text[tableCellTextSlotId(0, 1)]).toEqual({
 			text: "",
 			fill: "#ffeeaa",
@@ -139,7 +140,7 @@ describe("insertTableTrack", () => {
 		expect(withColumn.text[tableCellTextSlotId(1, 1)]).toEqual({ text: "" });
 
 		// Row 0 picked, inserting below: the new row 1 copies row 0.
-		const withRow = insertTableTrack(table, "row", 1, 0);
+		const withRow = insertTableGridTrack(table, "row", 1, 0);
 		expect(withRow.text[tableCellTextSlotId(1, 1)]).toEqual({
 			text: "",
 			fill: "#ffeeaa",
@@ -158,19 +159,19 @@ describe("insertTableTrack", () => {
 		});
 
 		// Picking column 1: inserting right lands at 2, left at 1; both copy 200.
-		expect(insertTableTrack(table, "column", 2, 1).columns).toEqual([
+		expect(insertTableGridTrack(table, "column", 2, 1).columns).toEqual([
 			{ width: 100 },
 			{ width: 200 },
 			{ width: 200 },
 			{ width: 300 },
 		]);
-		expect(insertTableTrack(table, "column", 1, 1).columns).toEqual([
+		expect(insertTableGridTrack(table, "column", 1, 1).columns).toEqual([
 			{ width: 100 },
 			{ width: 200 },
 			{ width: 200 },
 			{ width: 300 },
 		]);
-		expect(insertTableTrack(table, "column", 3, 2).columns).toEqual([
+		expect(insertTableGridTrack(table, "column", 3, 2).columns).toEqual([
 			{ width: 100 },
 			{ width: 200 },
 			{ width: 300 },
@@ -179,7 +180,7 @@ describe("insertTableTrack", () => {
 	});
 
 	it("without a source column, copies the column standing at the index", () => {
-		expect(insertTableTrack(makeTable(), "column", 0).columns).toEqual([
+		expect(insertTableGridTrack(makeTable(), "column", 0).columns).toEqual([
 			{ width: 80 },
 			{ width: 80 },
 			{ width: 100 },
@@ -187,7 +188,7 @@ describe("insertTableTrack", () => {
 		]);
 		// Past the right edge there is no column standing at the index; the last one
 		// is copied.
-		expect(insertTableTrack(makeTable(), "column", 3).columns).toEqual([
+		expect(insertTableGridTrack(makeTable(), "column", 3).columns).toEqual([
 			{ width: 80 },
 			{ width: 100 },
 			{ width: 120 },
@@ -195,10 +196,12 @@ describe("insertTableTrack", () => {
 		]);
 	});
 
-	it("widens the table by the new column and leaves its drawn corner where it was", () => {
+	it("leaves the box to the resizer, which widens the table by the new column from its drawn corner", () => {
 		const table = makeTable();
-		const inserted = insertTableTrack(table, "column", 1);
+		const unreconciled = insertTableGridTrack(table, "column", 1);
+		expect(unreconciled.width).toBe(table.width);
 
+		const inserted = reconcileTableBoxWithGrid(unreconciled, {});
 		expect(inserted.width).toBe(table.width + 100);
 		expect(inserted.cx - inserted.width / 2).toBeCloseTo(
 			table.cx - table.width / 2,
@@ -211,8 +214,8 @@ describe("insertTableTrack", () => {
 	});
 
 	it("clamps an index outside the grid rather than leaving a hole", () => {
-		expect(insertTableTrack(makeTable(), "row", -5).rows).toHaveLength(3);
-		expect(readGrid(insertTableTrack(makeTable(), "row", 99))).toEqual([
+		expect(insertTableGridTrack(makeTable(), "row", -5).rows).toHaveLength(3);
+		expect(readGrid(insertTableGridTrack(makeTable(), "row", 99))).toEqual([
 			["r0c0", "r0c1", "r0c2"],
 			["r1c0", "r1c1", "r1c2"],
 			["", "", ""],
@@ -221,8 +224,8 @@ describe("insertTableTrack", () => {
 
 	it("leaves the table it was given untouched", () => {
 		const table = makeTable();
-		insertTableTrack(table, "row", 0);
-		insertTableTrack(table, "column", 0);
+		insertTableGridTrack(table, "row", 0);
+		insertTableGridTrack(table, "column", 0);
 
 		expect(table.rows).toHaveLength(2);
 		expect(table.columns).toHaveLength(3);

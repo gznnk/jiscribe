@@ -91,7 +91,7 @@ const drawnCornerOf = (table: TableState | null): Point => {
 /** The handler's result as the reducer leaves it, the box re-derived from the grid. */
 const reconciledOf = (table: TableState | null): TableState => {
 	expect(table).not.toBeNull();
-	return reconcileTableBoxWithGrid(table as TableState);
+	return reconcileTableBoxWithGrid(table as TableState, {});
 };
 
 /** The object a handler put in its result, or null when it reported no change. */
@@ -106,7 +106,7 @@ const heightsOf = (table: TableState | null): (number | undefined)[] =>
 	(table?.rows ?? []).map((row) => row.height);
 
 describe("handleTableColumnBoundary", () => {
-	it("resizes the column left of the boundary alone and widens the table from its drawn corner", () => {
+	it("resizes the column left of the boundary alone and leaves the box to the resizer", () => {
 		const startTable = makeTable();
 		const resized = objectOf(
 			handleTableColumnBoundary(
@@ -116,13 +116,13 @@ describe("handleTableColumnBoundary", () => {
 		);
 
 		expect(widthsOf(resized)).toEqual([100, 140, 100]);
-		expect(resized?.width).toBe(340);
-		expect(drawnCornerOf(resized)).toEqual(drawnCornerOf(startTable));
+		expect(resized?.width).toBe(startTable.width);
+		expect(resized?.cx).toBe(startTable.cx);
 		expect(resized?.text).toBe(startTable.text);
 		expect(resized?.rows).toBe(startTable.rows);
 	});
 
-	it("keeps the written width through the content resizer instead of having it spread back", () => {
+	it("widens the table from its drawn corner once the resizer derives the box from the columns", () => {
 		const startTable = makeTable();
 		const reconciled = reconciledOf(
 			objectOf(
@@ -161,7 +161,7 @@ describe("handleTableColumnBoundary", () => {
 			),
 		);
 		expect(widthsOf(resized)).toEqual([TABLE_MIN_COLUMN_WIDTH, 100, 100]);
-		expect(resized?.width).toBe(TABLE_MIN_COLUMN_WIDTH + 200);
+		expect(reconciledOf(resized).width).toBe(TABLE_MIN_COLUMN_WIDTH + 200);
 	});
 
 	it("trades between the pair with Shift held and leaves the table's width alone", () => {

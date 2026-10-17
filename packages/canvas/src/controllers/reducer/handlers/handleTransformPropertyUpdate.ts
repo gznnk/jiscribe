@@ -18,6 +18,7 @@ import {
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { calcAnchorResize } from "../../gestures/handlers/controls/transform/utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "../../gestures/handlers/controls/transform/utils/calcMultiSelectGroupBounds";
+import { calcTransformDragResize } from "../../gestures/handlers/controls/transform/utils/calcTransformDragResize";
 import { dropAutoHeightOnResize } from "../../gestures/handlers/controls/transform/utils/dropAutoHeightOnResize";
 import {
 	calcHeightWithAspectRatio,
@@ -254,8 +255,11 @@ const applyStatedSize = (
 	// otherwise put the old height straight back.
 	const settledState = dropAutoHeightOnResize(
 		state,
-		STATED_RESIZE_INTENT,
-		RESIZE_INTENT_ANCHOR[property],
+		calcTransformDragResize(
+			state,
+			STATED_RESIZE_INTENT,
+			RESIZE_INTENT_ANCHOR[property],
+		),
 	);
 	const settledTarget = resolveTransformTarget(settledState);
 	if (!settledTarget) {

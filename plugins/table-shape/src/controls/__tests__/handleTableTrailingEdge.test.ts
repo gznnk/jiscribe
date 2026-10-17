@@ -11,7 +11,7 @@ import { calcFrameKeyPoint } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { calcTableRowTextFloor } from "../../layout/calcTableLayout";
+import { readCachedTableLayout } from "../../layout/readCachedTableLayout";
 import { TABLE_MIN_COLUMN_WIDTH } from "../../schema/TableDoc";
 import { reconcileTableBoxWithGrid } from "../../state/reconcileTableBoxWithGrid";
 import type { TableState } from "../../state/TableState";
@@ -85,7 +85,7 @@ const drawnCornerOf = (table: TableState | null): Point => {
 /** The handler's result as the reducer leaves it, the box re-derived from the grid. */
 const reconciledOf = (table: TableState | null): TableState => {
 	expect(table).not.toBeNull();
-	return reconcileTableBoxWithGrid(table as TableState);
+	return reconcileTableBoxWithGrid(table as TableState, {});
 };
 
 const objectOf = (
@@ -99,7 +99,7 @@ const heightsOf = (table: TableState | null): (number | undefined)[] =>
 	(table?.rows ?? []).map((row) => row.height);
 
 describe("handleTableTrailingEdge on the column edge", () => {
-	it("resizes the last column alone and keeps the written width through the content resizer", () => {
+	it("resizes the last column alone, and the resizer widens the table from its drawn corner", () => {
 		const startTable = makeTable();
 		const reconciled = reconciledOf(
 			objectOf(
@@ -124,7 +124,7 @@ describe("handleTableTrailingEdge on the column edge", () => {
 			),
 		);
 		expect(widthsOf(resized)).toEqual([100, 100, TABLE_MIN_COLUMN_WIDTH]);
-		expect(resized?.width).toBe(TABLE_MIN_COLUMN_WIDTH + 200);
+		expect(reconciledOf(resized).width).toBe(TABLE_MIN_COLUMN_WIDTH + 200);
 	});
 
 	it("keeps the drawn corner of a rotated, mirrored table", () => {
@@ -188,7 +188,7 @@ describe("handleTableTrailingEdge on the row edge", () => {
 		const startTable = makeTable({
 			text: { ...makeTable().text, r1c2: { text: WRAPPING_TEXT } },
 		});
-		const floor = calcTableRowTextFloor(startTable, 1);
+		const floor = readCachedTableLayout(startTable).rowFloors[1];
 		// The wrapping text has to be what holds the row, or this proves nothing.
 		expect(floor).toBeGreaterThan(50);
 		const startHeight = reconciledOf(startTable).height;

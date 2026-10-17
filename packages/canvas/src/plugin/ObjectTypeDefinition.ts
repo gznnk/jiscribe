@@ -63,7 +63,9 @@ export type ObjectTypeDefinition<
 	 * (`geometry: "point"`). Runs wherever content and box can drift apart: load,
 	 * undo/redo, external sync, every committed and uncommitted edit. Omitted =
 	 * no derivation, so the doc's own width/height stand as-is — which is what
-	 * every stored-box geometry wants (see ObjectContentResizerRegistry).
+	 * every stored-box geometry wants (see ObjectContentResizerRegistry). While a
+	 * transform handle is resizing the object, `context.resizedAxes` names the
+	 * axes the drag writes and the edge each holds.
 	 */
 	contentResizer?: ObjectContentResizer<TState>;
 

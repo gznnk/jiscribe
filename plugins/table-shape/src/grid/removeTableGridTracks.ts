@@ -21,7 +21,7 @@ const collectKeptIndices = (
 /**
  * Removes whole tracks and renumbers the grid behind them, the mirror of
  * {@link import("./insertTableGridTrack").insertTableGridTrack}. The box, where the
- * grid has one, is left alone (removeTableTracks re-derives a state's).
+ * grid has one, is left alone (a state's is re-derived by reconcileTableBoxWithGrid).
  *
  * **A removal that would empty an axis is refused.** A table of no rows draws
  * nothing and has no cell left to click back into, so the last row — and the last

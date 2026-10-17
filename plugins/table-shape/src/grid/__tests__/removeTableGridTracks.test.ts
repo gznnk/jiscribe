@@ -9,8 +9,9 @@ import {
 	tableCellTextSlotIds,
 } from "../../schema/TableDoc";
 import type { TableCell } from "../../schema/TableDoc";
+import { reconcileTableBoxWithGrid } from "../../state/reconcileTableBoxWithGrid";
 import type { TableState } from "../../state/TableState";
-import { removeTableTracks } from "../removeTableTracks";
+import { removeTableGridTracks } from "../removeTableGridTracks";
 
 // The box is re-derived from the cells' text (see calcTableLayout.test.ts).
 offerTextMeasurement(createEstimateTextMeasurement());
@@ -58,9 +59,9 @@ const makeTable = (overrides: Partial<TableState> = {}): TableState =>
 		...overrides,
 	}) as unknown as TableState;
 
-describe("removeTableTracks", () => {
+describe("removeTableGridTracks", () => {
 	it("removes a row and pulls the ones below it up", () => {
-		const removed = removeTableTracks(makeTable(), "row", [1]);
+		const removed = removeTableGridTracks(makeTable(), "row", [1]);
 
 		expect(removed).not.toBeNull();
 		expect(readGrid(removed as TableState)).toEqual([
@@ -77,7 +78,7 @@ describe("removeTableTracks", () => {
 	});
 
 	it("removes a column and pulls the ones right of it left", () => {
-		const removed = removeTableTracks(makeTable(), "column", [0]);
+		const removed = removeTableGridTracks(makeTable(), "column", [0]);
 
 		expect(readGrid(removed as TableState)).toEqual([
 			["r0c1", "r0c2"],
@@ -91,32 +92,38 @@ describe("removeTableTracks", () => {
 	});
 
 	it("takes several tracks at once, in whatever order they are named", () => {
-		const removed = removeTableTracks(makeTable(), "row", [2, 0]);
+		const removed = removeTableGridTracks(makeTable(), "row", [2, 0]);
 
 		expect(readGrid(removed as TableState)).toEqual([["r1c0", "r1c1", "r1c2"]]);
 	});
 
 	it("refuses a removal that would leave no row or no column", () => {
-		expect(removeTableTracks(makeTable(), "row", [0, 1, 2])).toBeNull();
-		expect(removeTableTracks(makeTable(), "column", [0, 1, 2])).toBeNull();
+		expect(removeTableGridTracks(makeTable(), "row", [0, 1, 2])).toBeNull();
+		expect(removeTableGridTracks(makeTable(), "column", [0, 1, 2])).toBeNull();
 
 		const oneRow = makeTable({
 			rows: [{ height: 40 }],
 			text: cellsOf([["r0c0", "r0c1", "r0c2"]]),
 		});
-		expect(removeTableTracks(oneRow, "row", [0])).toBeNull();
+		expect(removeTableGridTracks(oneRow, "row", [0])).toBeNull();
 	});
 
 	it("refuses when nothing it names is in the grid", () => {
-		expect(removeTableTracks(makeTable(), "row", [])).toBeNull();
-		expect(removeTableTracks(makeTable(), "row", [7])).toBeNull();
-		expect(removeTableTracks(makeTable(), "row", [-1])).toBeNull();
+		expect(removeTableGridTracks(makeTable(), "row", [])).toBeNull();
+		expect(removeTableGridTracks(makeTable(), "row", [7])).toBeNull();
+		expect(removeTableGridTracks(makeTable(), "row", [-1])).toBeNull();
 	});
 
-	it("narrows the table by the removed column and leaves its drawn corner where it was", () => {
+	it("leaves the box to the resizer, which narrows the table by the removed column from its drawn corner", () => {
 		const table = makeTable();
-		const removed = removeTableTracks(table, "column", [1]) as TableState;
+		const unreconciled = removeTableGridTracks(
+			table,
+			"column",
+			[1],
+		) as TableState;
+		expect(unreconciled.width).toBe(table.width);
 
+		const removed = reconcileTableBoxWithGrid(unreconciled, {});
 		expect(removed.width).toBe(table.width - 100);
 		expect(removed.cx - removed.width / 2).toBeCloseTo(
 			table.cx - table.width / 2,
@@ -126,7 +133,7 @@ describe("removeTableTracks", () => {
 
 	it("leaves the table it was given untouched", () => {
 		const table = makeTable();
-		removeTableTracks(table, "row", [0]);
+		removeTableGridTracks(table, "row", [0]);
 
 		expect(table.rows).toHaveLength(3);
 		expect(Object.keys(table.text)).toEqual(tableCellTextSlotIds(3, 3));

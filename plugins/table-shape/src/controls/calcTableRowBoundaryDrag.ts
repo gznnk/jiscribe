@@ -1,6 +1,5 @@
 import { calcTableRowResize, clampTableRowHeight } from "./calcTableRowResize";
 import type { TableBoundaryDragMode } from "./tableBoundaryAction";
-import { calcTableRowTextFloor } from "../layout/calcTableLayout";
 import type { TableLayoutSource } from "../layout/calcTableLayout";
 import { readCachedTableLayout } from "../layout/readCachedTableLayout";
 import type { TableRowDoc } from "../schema/TableDoc";
@@ -49,12 +48,12 @@ export const calcTableRowBoundaryDrag = (
 		return resized;
 	}
 
-	const { rowEdgeYs } = readCachedTableLayout(startTable);
+	const { rowEdgeYs, rowFloors } = readCachedTableLayout(startTable);
 	// Where the boundary actually lands: never above the text of the row it would
 	// have to cut into. Below is unbounded, the table growing downward instead.
 	const landedY = Math.max(
 		rowEdgeYs[boundaryIndex + 1] + localDeltaY,
-		rowEdgeYs[boundaryIndex] + calcTableRowTextFloor(startTable, boundaryIndex),
+		rowEdgeYs[boundaryIndex] + rowFloors[boundaryIndex],
 	);
 	resized[boundaryIndex + 1] = {
 		...trailing,

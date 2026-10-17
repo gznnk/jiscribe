@@ -15,7 +15,7 @@ import type {
  * set of `text` is exactly the axes, in row-major order (see TableGrid) — is kept
  * here by construction rather than by every caller splicing `text` correctly.
  * Nothing about a box is touched; a state has its box re-derived by
- * rewriteTableGrid.
+ * reconcileTableBoxWithGrid.
  *
  * @param grid - The grid to rewrite; every other field it carries (a state's box, a doc's style) is carried over untouched
  * @param rows - The rows after the operation, top to bottom; a fresh array, the result keeping the one it is given

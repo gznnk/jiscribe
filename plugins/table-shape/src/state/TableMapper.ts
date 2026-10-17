@@ -13,8 +13,11 @@ import {
 import type { TableState } from "./TableState";
 import { mapTableGridToCells } from "../grid/mapTableGridToCells";
 import { readTableDocGrid } from "../grid/readTableDocGrid";
-import { calcTableFrameSize } from "../layout/calcTableFrameSize";
-import { calcTableMinWidth } from "../layout/calcTableLayout";
+import {
+	calcTableLayout,
+	calcTableMinHeight,
+	calcTableMinWidth,
+} from "../layout/calcTableLayout";
 import { TableFeatures } from "../schema/TableDoc";
 import type { TableDoc } from "../schema/TableDoc";
 
@@ -32,7 +35,7 @@ const TABLE_PASSTHROUGH_KEYS = collectStyleKeys(TableFeatures);
 /**
  * The passthrough fields `src` owns. An allow-list rather than a copy, for the
  * reason the shared mapper picks by one: nothing a runtime state carries on its
- * own (id / parentId / minWidth) can then leak into the document.
+ * own (id / parentId / minWidth / minHeight) can then leak into the document.
  */
 const pickPassthrough = (
 	src: Readonly<Record<string, unknown>>,
@@ -63,7 +66,9 @@ export const tableToState: ObjectMapperType<TableDoc, TableState>["toState"] = (
 ) => {
 	const { columns, rows, text } = readTableDocGrid(doc);
 	const transform = mapTransformDocToState(doc);
-	const size = calcTableFrameSize({
+	// Computed outright, not through the layout cache: an entry under a state
+	// nobody renders yet would never be read (as calcTableFrameSize does).
+	const layout = calcTableLayout({
 		columns,
 		rows,
 		text,
@@ -74,7 +79,7 @@ export const tableToState: ObjectMapperType<TableDoc, TableState>["toState"] = (
 	// round the coordinate twice on a doc round trip.
 	const center = calcFrameCenterFromTopLeft(
 		{ x: doc.x, y: doc.y },
-		size,
+		layout,
 		transform,
 	);
 
@@ -85,9 +90,10 @@ export const tableToState: ObjectMapperType<TableDoc, TableState>["toState"] = (
 		type: "table",
 		cx: center.x,
 		cy: center.y,
-		width: size.width,
-		height: size.height,
+		width: layout.width,
+		height: layout.height,
 		minWidth: calcTableMinWidth(columns),
+		minHeight: calcTableMinHeight(layout),
 		columns,
 		rows,
 		text,

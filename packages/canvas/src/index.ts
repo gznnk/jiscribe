@@ -178,6 +178,8 @@ export type { ObjectStateValidator } from "./states/registry/ObjectStateValidato
 export type {
 	ObjectContentResizer,
 	ObjectContentResizeContext,
+	ResizedAxes,
+	ResizeHeldEdge,
 } from "./states/registry/ObjectContentResizerRegistry";
 export type {
 	ObjectBehaviorEntry,

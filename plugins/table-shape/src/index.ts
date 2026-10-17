@@ -12,15 +12,15 @@ export * from "./state/TableState";
 export { tableToDoc, tableToState } from "./state/TableMapper";
 export { isValidTableState } from "./state/validateTableState";
 export { reconcileTableBoxWithGrid } from "./state/reconcileTableBoxWithGrid";
-export { resizeTableFromDrawnCorner } from "./state/resizeTableFromDrawnCorner";
+export { resizeTableHoldingEdges } from "./state/resizeTableHoldingEdges";
 
-export { clearTableCells } from "./grid/clearTableCells";
+export { clearTableGridCells } from "./grid/clearTableGridCells";
 export { collectTableTrackCellIds } from "./grid/collectTableTrackCellIds";
-export { insertTableTrack } from "./grid/insertTableTrack";
+export { insertTableGridTrack } from "./grid/insertTableGridTrack";
 export { resolveTableCell } from "./grid/resolveTableCell";
 export { remapTablePartSelectionForInsert } from "./grid/remapTablePartSelectionForInsert";
-export { removeTableTracks } from "./grid/removeTableTracks";
-export { rewriteTableGrid } from "./grid/rewriteTableGrid";
+export { removeTableGridTracks } from "./grid/removeTableGridTracks";
+export { rebuildTableGrid } from "./grid/rebuildTableGrid";
 export type { TableGrid } from "./grid/TableGrid";
 export {
 	countTableTracks,

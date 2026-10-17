@@ -6,7 +6,7 @@ import {
 	cellCount,
 	clickTrackGrip,
 	drawnTextWeight,
-	isWidthHandleOnTop,
+	isResizeHandleOnTop,
 	partOutlineRects,
 	pressInsertTrack,
 	tableOutlineRect,
@@ -18,9 +18,9 @@ import {
 /**
  * The grips that select a whole row or a whole column, in a real browser. Two
  * things only a browser answers: that the bars stand outside the table without
- * hiding the width handle that sits on its left edge, and that a click on one
- * reaches the control at all — the grips take clicks where every other control of
- * this shape takes drags.
+ * hiding the resize handles at the middle of its left and top edges, and that a
+ * click on one reaches the control at all — the grips take clicks where every
+ * other control of this shape takes drags.
  *
  * What the selection then *means* is the point of it: a track is selected as its
  * own kind, not as the cells it covers, which is what lets Delete remove a row
@@ -69,7 +69,7 @@ test.describe("table track grips", () => {
 		}
 	});
 
-	test("abuts the table, pressable up to the edge, and leaves the width handle on top", async ({
+	test("abuts the table, pressable up to the edge, and leaves the resize handles on top", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Table");
@@ -103,9 +103,10 @@ test.describe("table track grips", () => {
 			Math.abs(columnGrip.y + columnGrip.height - box.y),
 		).toBeLessThanOrEqual(1);
 
-		// The width handle on the left edge overlaps the row grips, and is drawn
-		// over them.
-		expect(await isWidthHandleOnTop(canvas, "leftCenter")).toBe(true);
+		// The resize handles on the left and top edges overlap the grips, and are
+		// drawn over them.
+		expect(await isResizeHandleOnTop(canvas, "leftCenter")).toBe(true);
+		expect(await isResizeHandleOnTop(canvas, "topCenter")).toBe(true);
 	});
 
 	test("runs the length of its track, meeting the next grip at the boundary", async ({
@@ -166,7 +167,7 @@ test.describe("table track grips", () => {
 		expect(outlines[0].x).toBeCloseTo(table.x + table.width / 2, 0);
 	});
 
-	test("puts the width handles away while a track is the operated target", async ({
+	test("puts the resize handles away while a track is the operated target", async ({
 		canvas,
 	}) => {
 		await canvas.placeShape("Table");

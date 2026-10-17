@@ -98,9 +98,10 @@ type TableTrackGripProps = {
  * takes no pointer; an unpainted rect on top, covering the whole cell, carries
  * the control data attributes the gesture layer routes on (`data-kind="control"`
  * + the table's id + the action naming the track). The label takes no pointer
- * either, so no press resolves to it instead of the control. Where the left
- * edge's width handle overlaps the cell, the handle takes the press, the grips
- * being drawn under the core handles (the table's `selectionControls`).
+ * either, so no press resolves to it instead of the control. Where the resize
+ * handle at the middle of the left or top edge overlaps the cell, the handle
+ * takes the press, the grips being drawn under the core handles (the table's
+ * `selectionControls`).
  */
 const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 	from,

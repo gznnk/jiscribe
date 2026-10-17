@@ -10,7 +10,6 @@ import {
 	parseTableBoundaryIndex,
 	readTableBoundaryDragMode,
 } from "./tableBoundaryAction";
-import { resizeTableToColumns } from "../state/resizeTableToColumns";
 import type { TableState } from "../state/TableState";
 
 /**
@@ -25,12 +24,9 @@ import type { TableState } from "../state/TableState";
  * frame, so a cursor brought back to where it started — or a Shift pressed or
  * released — restores what that mode gives from the start.
  *
- * When the columns' total changes, the box is written here: the content resizer
- * reads a `width` the columns do not sum to as an outer-frame resize and would
- * spread it back over every column (reconcileTableBoxWithGrid). So the new sum
- * goes onto `width`, with the center moved to keep the corner the table is drawn
- * from (resizeTableFromDrawnCorner). In `"pair"` the sum is unchanged and the box
- * is left to the resizer.
+ * `width` / `cx` are not written in either mode: the resizer re-derives the box
+ * from the columns, from the corner the table is drawn from, on the same reducer
+ * tick (reconcileTableBoxWithGrid).
  *
  * Registered via the table's ObjectTypeDefinition.selectionControls.
  */
@@ -48,18 +44,11 @@ export const handleTableColumnBoundary = (
 		return null;
 	}
 	const startTable = context.startObject;
-	const mode = readTableBoundaryDragMode(event.mods);
 	const columns = calcTableColumnBoundaryDrag(
 		startTable.columns,
 		boundaryIndex,
 		calcTableLocalDragDelta(startTable, event).x,
-		mode,
+		readTableBoundaryDragMode(event.mods),
 	);
-	if (columns === null) {
-		return null;
-	}
-	if (mode === "pair") {
-		return { object: { ...startTable, columns } };
-	}
-	return { object: resizeTableToColumns(startTable, columns) };
+	return columns === null ? null : { object: { ...startTable, columns } };
 };

@@ -4,7 +4,11 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { resolveTextObjectFont } from "../../../states/objects/primitives/text/resolveTextObjectFont";
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
-import type { CanvasControllerState } from "../../CanvasTypes";
+import type {
+	ObjectContentResizeContext,
+	ResizedAxes,
+} from "../../../states/registry/ObjectContentResizerRegistry";
+import type { ActiveDrag, CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import {
 	collectCowChangedKeys,
@@ -14,7 +18,8 @@ import {
 import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 
 /** The real per-type wiring, so only `text` is re-measured here. */
-const contentResizer = createTestRegistries().objectContentResizer;
+const testRegistries = createTestRegistries();
+const contentResizer = testRegistries.objectContentResizer;
 
 const textObject = (id: string, text: string): ObjectState => {
 	const { width, height } = calcTextObjectFrameSize(
@@ -429,6 +434,147 @@ describe("reconcileObjectContentSizes", () => {
 
 			expect(isCowObjects(next.objects)).toBe(false);
 			expect(next.objects).not.toBe(state.objects);
+		});
+	});
+
+	describe("the axes a transform-handle drag writes", () => {
+		const bottomEdge: ResizedAxes = { height: "start" };
+		const dragOf = (kind: ActiveDrag["kind"], axes?: ResizedAxes): ActiveDrag =>
+			({
+				startSnapshot: {},
+				kind,
+				...(axes && {
+					resize: { axes, frame: { rotation: 0, scaleX: 1, scaleY: 1 } },
+				}),
+			}) as unknown as ActiveDrag;
+
+		/** Reconciles a text whose content changed, returning the context the resizer saw. */
+		const contextSeen = (
+			activeDrag: ActiveDrag | null,
+			previousActiveDrag: ActiveDrag | null,
+		): ObjectContentResizeContext | undefined => {
+			const registry = createObjectContentResizerRegistry();
+			let seen: ObjectContentResizeContext | undefined;
+			registry.register("text", (state, context) => {
+				seen = context;
+				return state;
+			});
+			reconcileObjectContentSizes(
+				stateOf([textObject("t1", "hello world")], { activeDrag }),
+				stateOf([textObject("t1", "hello")], {
+					activeDrag: previousActiveDrag,
+				}),
+				registry,
+			);
+			return seen;
+		};
+
+		it("hands them to the resizer on a frame of the drag", () => {
+			const drag = dragOf("transform", bottomEdge);
+
+			expect(contextSeen(drag, drag)?.resizedAxes).toBe(bottomEdge);
+		});
+
+		it("still hands them over on the dragEnd that dropped the drag", () => {
+			expect(
+				contextSeen(null, dragOf("transform", bottomEdge))?.resizedAxes,
+			).toBe(bottomEdge);
+		});
+
+		it("hands the resizer only the objects the frame rewrote, an unchanged reference skipped", () => {
+			// A full scan over plain records, so the skip comes from the reference
+			// comparison and not from a copy-on-write view's narrowing.
+			const registry = createObjectContentResizerRegistry();
+			const seenIds: string[] = [];
+			registry.register("text", (state) => {
+				seenIds.push(state.id);
+				return state;
+			});
+			const untouched = textObject("t1", "hello");
+			const drag = dragOf("transform", bottomEdge);
+
+			reconcileObjectContentSizes(
+				stateOf([untouched, textObject("t2", "hello world")], {
+					activeDrag: drag,
+				}),
+				stateOf([untouched, textObject("t2", "hello")], {
+					activeDrag: drag,
+				}),
+				registry,
+			);
+
+			expect(seenIds).toEqual(["t2"]);
+		});
+
+		it("hands none over off a drag or on a drag of another kind", () => {
+			expect(contextSeen(null, null)).toEqual({});
+			expect(
+				contextSeen(dragOf("move"), dragOf("move"))?.resizedAxes,
+			).toBeUndefined();
+			expect(
+				contextSeen(dragOf("transform"), dragOf("transform"))?.resizedAxes,
+			).toBeUndefined();
+		});
+	});
+
+	describe("a change to the height alone", () => {
+		const boxOf = (type: string, height: number): ObjectState =>
+			({
+				id: "b1",
+				type,
+				cx: 50,
+				cy: 50,
+				width: 100,
+				height,
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			}) as unknown as ObjectState;
+
+		const heightDrag = {
+			startSnapshot: {},
+			kind: "transform",
+			resize: {
+				axes: { height: "start" },
+				frame: { rotation: 0, scaleX: 1, scaleY: 1 },
+			},
+		} as unknown as ActiveDrag;
+
+		/** Whether the resizer ran when only the height moved, under the given drag. */
+		const remeasures = (activeDrag: ActiveDrag | null): boolean => {
+			const registry = createObjectContentResizerRegistry();
+			let calls = 0;
+			registry.register("box", (state) => {
+				calls++;
+				return state;
+			});
+			reconcileObjectContentSizes(
+				stateOf([boxOf("box", 140)], { activeDrag }),
+				stateOf([boxOf("box", 100)], { activeDrag }),
+				registry,
+			);
+			return calls > 0;
+		};
+
+		it("re-measures while a drag writes the height, the written axis being an input", () => {
+			expect(remeasures(heightDrag)).toBe(true);
+		});
+
+		it("leaves it alone off a drag, the height then being the resizer's own answer", () => {
+			expect(remeasures(null)).toBe(false);
+		});
+
+		it("reads the drag in the object's own frame: a frame turned 90° against it writes its width", () => {
+			const turnedFrameDrag = {
+				startSnapshot: {},
+				kind: "transform",
+				resize: {
+					axes: { height: "start" },
+					frame: { rotation: 90, scaleX: 1, scaleY: 1 },
+				},
+			} as unknown as ActiveDrag;
+
+			expect(remeasures(turnedFrameDrag)).toBe(false);
 		});
 	});
 });

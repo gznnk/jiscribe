@@ -13,7 +13,7 @@ import {
 
 /**
  * Inserting a row or a column, in a real browser. The renumbering itself is
- * pinned by insertTableTrack.test; what a browser answers is that the commands a
+ * pinned by insertTableGridTrack.test; what a browser answers is that the commands a
  * plugin contributes are reachable at all — they register after the built-in set
  * and are picked by `canExecute` — and that after an insertion the text is still
  * drawn in the cell it was typed into, the ids under it having all moved.

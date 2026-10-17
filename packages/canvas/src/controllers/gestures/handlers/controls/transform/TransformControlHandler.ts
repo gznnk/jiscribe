@@ -10,6 +10,7 @@ import type { TransformAnchorType } from "./TransformAnchorType";
 import { applyResizeSnap } from "./utils/applyResizeSnap";
 import { calcAnchorResize } from "./utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
+import { calcTransformDragResize } from "./utils/calcTransformDragResize";
 import { dropAutoHeightOnResize } from "./utils/dropAutoHeightOnResize";
 import { handleRotationDrag } from "./utils/handleRotationDrag";
 import {
@@ -97,7 +98,8 @@ export class TransformControlHandler extends ControlStrategy {
 		// A drag that can move the bottom edge relative to the top one settles the
 		// height of whatever was following its text, before the snapshot below is
 		// read from for the rest of the gesture.
-		state = dropAutoHeightOnResize(state, event, anchorType);
+		const resize = calcTransformDragResize(state, event, anchorType);
+		state = dropAutoHeightOnResize(state, resize);
 
 		// For a multi-select resize, cache what the per-frame bounds derivation
 		// needs so it never re-collects every leaf vertex (#215)
@@ -119,7 +121,13 @@ export class TransformControlHandler extends ControlStrategy {
 
 		return {
 			...state,
-			activeDrag: startSnapshot ? { startSnapshot, kind: "transform" } : null,
+			activeDrag: startSnapshot
+				? {
+						startSnapshot,
+						kind: "transform",
+						...(resize && { resize }),
+					}
+				: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
@@ -179,6 +187,22 @@ export class TransformControlHandler extends ControlStrategy {
 
 		if (!startFrame) {
 			return state;
+		}
+
+		// The floors are the live object's, not the snapshot's: a content-sized
+		// type re-derives them every frame (a table's rows unwrap as its columns
+		// widen), and a floor that dropped mid-drag has to let the frame through.
+		// One that rose this frame is the type's to hold, from the edge the drag
+		// keeps (ObjectContentResizeContext.resizedAxes).
+		if (selectedId !== null) {
+			const liveObject = state.objects[selectedId];
+			if (liveObject && isTransformState(liveObject)) {
+				startFrame = {
+					...startFrame,
+					minWidth: liveObject.minWidth,
+					minHeight: liveObject.minHeight,
+				};
+			}
 		}
 
 		// GroupState invariant: a group's width/height are divisors when scaling

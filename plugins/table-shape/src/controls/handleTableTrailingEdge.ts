@@ -8,7 +8,6 @@ import { calcTableColumnResize } from "./calcTableColumnResize";
 import { calcTableLocalDragDelta } from "./calcTableLocalDragDelta";
 import { calcTableRowResize } from "./calcTableRowResize";
 import { parseTableTrailingEdgeAxis } from "./tableBoundaryAction";
-import { resizeTableToColumns } from "../state/resizeTableToColumns";
 import type { TableState } from "../state/TableState";
 
 /**
@@ -20,9 +19,8 @@ import type { TableState } from "../state/TableState";
  * `data-action`.
  *
  * Every frame is rebuilt from the gesture-start snapshot, never from the previous
- * frame. The column edge writes the box itself (resizeTableToColumns); the row
- * edge leaves `height` / `cy` to the resizer, as the row boundary does
- * (handleTableRowBoundary).
+ * frame. Neither edge writes the box; the resizer re-derives it from the tracks,
+ * as it does for the boundaries (handleTableRowBoundary).
  *
  * Registered via the table's ObjectTypeDefinition.selectionControls.
  */
@@ -47,9 +45,7 @@ export const handleTableTrailingEdge = (
 			startTable.columns.length - 1,
 			localDelta.x,
 		);
-		return columns === null
-			? null
-			: { object: resizeTableToColumns(startTable, columns) };
+		return columns === null ? null : { object: { ...startTable, columns } };
 	}
 	const rows = calcTableRowResize(
 		startTable,
