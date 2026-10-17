@@ -18,6 +18,7 @@ import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
+import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditCommand";
 import { findTextFormatByShortcut } from "../../../commands/text/ToggleTextFormatCommands";
 import type { TextFormat } from "../../../style/TextFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
@@ -91,6 +92,8 @@ type TextEditorProps = {
 	/** A bold / italic / underline / strikethrough keystroke, the selection it acts on reported first; the browser's own formatting is already cancelled. */
 	onToggleFormat?: (format: TextFormat) => void;
 	onEscape?: () => void;
+	/** Cmd+Enter on a Mac, Ctrl+Enter elsewhere (CommitTextEditCommand), outside an IME composition; the browser's own handling is already cancelled. Omitted = the keystroke is swallowed. */
+	onCommit?: () => void;
 	/** Tab (1) or Shift+Tab (-1), outside an IME composition; the browser's focus move is already cancelled. Omitted = the keystroke is swallowed. */
 	onTab?: (step: 1 | -1) => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
@@ -122,6 +125,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onSelectionChange,
 	onToggleFormat,
 	onEscape,
+	onCommit,
 	onTab,
 	onCaretMove,
 }) => {
@@ -536,6 +540,18 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			e.preventDefault();
 			e.stopPropagation();
 			onEscape();
+			return;
+		}
+		// Mid composition the keystroke belongs to the IME, and the draft has not
+		// caught up with the surface yet (as for Tab below).
+		if (
+			isCommitTextEditShortcut(e.nativeEvent) &&
+			!isComposing.current &&
+			!e.nativeEvent.isComposing
+		) {
+			e.preventDefault();
+			e.stopPropagation();
+			onCommit?.();
 			return;
 		}
 		// The browser's default would move the focus to the next control while the

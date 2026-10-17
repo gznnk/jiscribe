@@ -453,6 +453,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   kind, it returns the object grown by slots after its last one, and the
   editor's Tab steps onto the first of them rather than wrapping (null
   declines).
+- **Ctrl+Enter (Cmd+Enter on a Mac) commits an open text edit and closes the
+  editor**, as a click outside it does: the text lands in one undo step, and a
+  picked cell or slot stays picked, so Enter opens it again. It works in a
+  shape's editor and a connector label's alike; plain Enter is still a newline
+  and Escape still cancels. It is the `commitTextEdit` command, so a host
+  leaving it out of `config.commands` turns the keystroke off.
 
 ### Changed
 

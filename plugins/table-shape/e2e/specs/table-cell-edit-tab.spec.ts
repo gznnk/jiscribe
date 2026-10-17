@@ -1,4 +1,4 @@
-import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
+import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 import {
@@ -140,5 +140,36 @@ test.describe("table cell editing: Tab", () => {
 
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
 		expect(await isDrawnInsideCell(canvas, id, "last", "r1c1")).toBe(true);
+	});
+});
+
+/**
+ * Ctrl+Enter (Cmd+Enter on a Mac) while a cell is being edited commits it and
+ * closes the editor as a press outside would, leaving the cell picked so Enter
+ * opens it again.
+ */
+test.describe("table cell editing: Ctrl/Cmd+Enter", () => {
+	test("commits the cell, closes the editor and keeps the cell picked", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		const firstCell = await cellRect(canvas, id, "r0c0");
+		await canvas.page.mouse.dblclick(
+			firstCell.x + firstCell.width / 2,
+			firstCell.y + firstCell.height / 2,
+		);
+		await canvas.waitForTextEditor();
+		await canvas.page.keyboard.type("abc");
+
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+		expect(await isDrawnInsideCell(canvas, id, "abc", "r0c0")).toBe(true);
+		expect(await selectedCellIds(canvas, id)).toEqual(["r0c0"]);
+
+		await canvas.page.keyboard.press("Enter");
+
+		await canvas.waitForTextEditor();
+		expect(await canvas.textEditorText()).toBe("abc");
 	});
 });
