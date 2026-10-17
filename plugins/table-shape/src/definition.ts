@@ -1,5 +1,5 @@
 import type {
-	ConnectionAnchorOffsets,
+	ConnectionAnchors,
 	ObjectPartKindDefinition,
 	ObjectTypeDefinition,
 	SelectionControlDefinition,
@@ -45,14 +45,14 @@ import { tableFillEntry } from "./style/tableFillEntries";
  * those edges. The trailing-edge strips on the bottom and right reach out too
  * little to meet a dot at the theme's distance, so those dots keep it.
  */
-const calcTableConnectionAnchorOffsets = (
+const calcTableConnectionAnchors = (
 	_state: TableState,
 	zoom: number,
-): ConnectionAnchorOffsets => {
+): ConnectionAnchors => {
 	const offsetPastGrips = calcConnectionAnchorOffsetPastGrips(zoom);
 	return {
-		topCenter: offsetPastGrips,
-		leftCenter: offsetPastGrips,
+		topCenter: { offset: offsetPastGrips },
+		leftCenter: { offset: offsetPastGrips },
 	};
 };
 
@@ -191,7 +191,7 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	behavior: createFrameBehavior<TableState>(),
 	selectionControls: TABLE_SELECTION_CONTROLS,
 	partKinds: TABLE_PARTS,
-	connectionAnchorOffsets: calcTableConnectionAnchorOffsets,
+	connectionAnchors: calcTableConnectionAnchors,
 	stencils: TableStencils,
 	styleEntries: TABLE_STYLE_ENTRIES,
 	propertyPanel: [

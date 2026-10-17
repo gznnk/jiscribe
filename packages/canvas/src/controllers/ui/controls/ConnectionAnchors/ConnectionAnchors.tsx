@@ -9,7 +9,7 @@ import {
 	calcOutwardVector,
 	type AnchorFrame,
 } from "../../../../connectors/calcConnectPoint";
-import type { ConnectionAnchorOffsets } from "../../../../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
+import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
@@ -49,11 +49,11 @@ type ConnectionAnchorsProps = {
 	 */
 	extraConnectPoints?: readonly ExtraConnectPoint[] | null;
 	/**
-	 * Per-anchor dot distances in screen px, keyed by anchor id (from
-	 * ObjectConnectionAnchorOffsetsRegistry). Anchors it leaves out sit at the
-	 * theme's `connectionAnchorOffset`.
+	 * Per-anchor display specs keyed by anchor id (from
+	 * ObjectConnectionAnchorsRegistry): a `hidden` anchor gets no dot, and an
+	 * `offset` replaces the theme's `connectionAnchorOffset` for that dot.
 	 */
-	connectionAnchorOffsets?: ConnectionAnchorOffsets | null;
+	connectionAnchors?: ResolvedConnectionAnchors | null;
 	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
@@ -65,7 +65,7 @@ type ConnectionAnchorsProps = {
  * ConnectionAnchors component for canvas.
  *
  * Displays the four edge connection anchors of a frame, plus whatever extra ones
- * its type declares, at the same points a connector would attach to (see
+ * its type declares, less any its type hides, at the same points a connector would attach to (see
  * calcConnectPoint / calcExtraConnectPoint).
  * These anchors can be dragged to create new connectors.
  *
@@ -79,7 +79,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	outline,
 	anchorRegion,
 	extraConnectPoints,
-	connectionAnchorOffsets,
+	connectionAnchors,
 	zoom = 1,
 }) => {
 	const { rotation, scaleX, scaleY } = frame;
@@ -89,7 +89,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	const adjustedAnchorRadius = handleDimensions.anchorRadius / zoom;
 	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
 	const resolveAdjustedOffset = (anchorId: string): number =>
-		(connectionAnchorOffsets?.[anchorId] ??
+		(connectionAnchors?.[anchorId]?.offset ??
 			handleDimensions.connectionAnchorOffset) / zoom;
 	const topOffset = resolveAdjustedOffset("topCenter");
 	const rightOffset = resolveAdjustedOffset("rightCenter");
@@ -160,7 +160,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		{ position: "bottomCenter", point: bottomCenterAnchor },
 		{ position: "leftCenter", point: leftCenterAnchor },
 		...extraAnchors,
-	];
+	].filter(({ position }) => connectionAnchors?.[position]?.hidden !== true);
 
 	return (
 		<g data-layer="connection-anchors">

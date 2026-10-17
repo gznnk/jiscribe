@@ -7,6 +7,7 @@ import {
 	calcExtraConnectPoint,
 	type AnchorFrame,
 } from "../../../../connectors/calcConnectPoint";
+import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
@@ -34,6 +35,13 @@ type ConnectionTargetAnchorsProps = {
 	 */
 	extraConnectPoints?: readonly ExtraConnectPoint[] | null;
 	/**
+	 * Per-anchor display specs keyed by anchor id (from
+	 * ObjectConnectionAnchorsRegistry): a `hidden` edge or extra anchor gets no
+	 * dot. The center is always drawn; `offset` does not apply here, since these
+	 * dots sit where the connector lands.
+	 */
+	connectionAnchors?: ResolvedConnectionAnchors | null;
+	/**
 	 * The anchor that is currently nearest to the cursor — an AnchorHandleId or the
 	 * id of a declared extra point. null means no specific anchor is highlighted.
 	 */
@@ -56,8 +64,8 @@ type ConnectionTargetAnchorsProps = {
  *
  * When a connection drag is in progress and the cursor hovers over a valid
  * target object, this component renders the connectable points on that object:
- * center + the four edge anchors, plus whatever extra ones its type declares
- * (see calcConnectPoint / calcExtraConnectPoint).
+ * center + the four edge anchors, plus whatever extra ones its type declares,
+ * less any its type hides (see calcConnectPoint / calcExtraConnectPoint).
  *
  * The point nearest to the cursor (already computed by
  * ConnectionAnchorEventHandler) is visually highlighted; when the cursor is on a
@@ -71,6 +79,7 @@ const ConnectionTargetAnchorsComponent: React.FC<
 	outline,
 	anchorRegion,
 	extraConnectPoints,
+	connectionAnchors,
 	activeAnchorId,
 	freeConnectPoint,
 	zoom = 1,
@@ -92,14 +101,16 @@ const ConnectionTargetAnchorsComponent: React.FC<
 
 	const anchors: Array<{ id: string; x: number; y: number }> = [
 		{ id: "center", x: cx, y: cy },
-		{ id: "topCenter", x: top.x, y: top.y },
-		{ id: "rightCenter", x: right.x, y: right.y },
-		{ id: "bottomCenter", x: bottom.x, y: bottom.y },
-		{ id: "leftCenter", x: left.x, y: left.y },
-		...(extraConnectPoints ?? []).map((extraConnectPoint) => {
-			const point = calcExtraConnectPoint(frame, extraConnectPoint);
-			return { id: extraConnectPoint.id, x: point.x, y: point.y };
-		}),
+		...[
+			{ id: "topCenter", x: top.x, y: top.y },
+			{ id: "rightCenter", x: right.x, y: right.y },
+			{ id: "bottomCenter", x: bottom.x, y: bottom.y },
+			{ id: "leftCenter", x: left.x, y: left.y },
+			...(extraConnectPoints ?? []).map((extraConnectPoint) => {
+				const point = calcExtraConnectPoint(frame, extraConnectPoint);
+				return { id: extraConnectPoint.id, x: point.x, y: point.y };
+			}),
+		].filter(({ id }) => connectionAnchors?.[id]?.hidden !== true),
 	];
 
 	return (

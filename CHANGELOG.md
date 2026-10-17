@@ -345,18 +345,33 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `calcTextSlotRegions` on `@jiscribe/canvas/unstable` take the registered
   `"textSlot"` part kind instead of the calculators. `@jiscribe/plugin-uml-shapes`
   no longer exports `calcRecordTextRegion`.
-- **For plugin authors: a type says how far its connection-anchor dots sit off
-  its edges.** `connectionAnchorOffsets` answers per anchor id — the four edge
-  ids and any `extraConnectPoints` id — in screen px, for a type whose own
-  controls occupy the band the dots would otherwise land in (the table's grips,
-  whose top and left dots now stand past them). Every anchor it
-  leaves out keeps the theme's `connectionAnchorOffset`, and only the dots move:
-  where a connector attaches is unchanged. It is one object for the type or a
-  function asked per object and zoom, like `transformHandles` — the zoom being
-  for controls sized in world units, which reach further on screen the further
-  the canvas is zoomed in; `ConnectionAnchorOffsets`,
-  `ObjectConnectionAnchorOffsetsDeclaration` and
-  `ObjectConnectionAnchorOffsetsCalculator` are exported from `@jiscribe/canvas`.
+- **For plugin authors: a type says how its fixed connection anchors are shown.**
+  `connectionAnchors` answers per anchor id — the four edge ids and any
+  `extraConnectPoints` id — with an `offset` and a `hidden` flag. `offset` is how
+  far the dot sits off its edge, in screen px, for a type whose own controls
+  occupy the band the dots would otherwise land in (the table's grips, whose top
+  and left dots now stand past them); an anchor without one keeps the theme's
+  `connectionAnchorOffset`, and only the dot moves: where a connector attaches
+  is unchanged. `hidden` stops offering the anchor: the selected shape shows no
+  dot to drag a connector from, a connection drag shows no landing dot there,
+  and a drop next to it does not snap to it but lands on the edge position under
+  the cursor. A doc that already attaches a connector there keeps attaching,
+  parsing and drawing as before, and `edge` / `center` endpoints are untouched.
+  It is one object for the type or a function asked per object and zoom, like
+  `transformHandles` — the zoom being for controls sized in world units, which
+  reach further on screen the further the canvas is zoomed in;
+  `ConnectionAnchors`, `ConnectionAnchorSpec`,
+  `ObjectConnectionAnchorsDeclaration` and `ObjectConnectionAnchorsCalculator`
+  are exported from `@jiscribe/canvas`.
+- **For plugin authors, a breaking change: `connectionAnchorOffsets` is now
+  `connectionAnchors`.** Each entry is an object rather than a number —
+  `{ topCenter: 24 }` becomes `{ topCenter: { offset: 24 } }` — and the
+  exported types are renamed (`ConnectionAnchorOffsets` → `ConnectionAnchors`,
+  `ObjectConnectionAnchorOffsetsDeclaration` →
+  `ObjectConnectionAnchorsDeclaration`, `ObjectConnectionAnchorOffsetsCalculator`
+  → `ObjectConnectionAnchorsCalculator`), as is the registry
+  (`CanvasRegistries.objectConnectionAnchorOffsets` →
+  `objectConnectionAnchors`). The old names are not kept as aliases.
   `@jiscribe/canvas/unstable` also exports `SELECTION_OUTLINE_WIDTH`, for a
   control drawn against the selection outline at the same line weight.
 - For plugin authors: the text measurement has a generation,

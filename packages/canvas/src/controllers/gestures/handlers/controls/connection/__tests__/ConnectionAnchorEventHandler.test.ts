@@ -571,4 +571,48 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			expect(updated.routing).toBe("orthogonal");
 		});
 	});
+
+	describe("a type's hidden connection anchors", () => {
+		// Just inside the target's top edge, 3px from its topCenter (80, -20).
+		const nearTopCenter = { x: 80, y: -17 };
+
+		const dropNearTopCenter = (
+			dropRegistries: ReturnType<typeof createTestRegistries>,
+		): ConnectorState => {
+			const state = withTarget(
+				stateWithConnectors([edgeSourceConnector("c1", { x: 10, y: 10 })]),
+			);
+			const afterStart = handler.handle(
+				state,
+				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+				dropRegistries,
+			);
+			const afterEnd = handler.handle(
+				afterStart,
+				dragEvent("dragEnd", "c1", "endpoint:target", nearTopCenter),
+				dropRegistries,
+			);
+			return afterEnd.objects["c1"] as ConnectorState;
+		};
+
+		it("snaps onto the edge midpoint the type offers", () => {
+			expect(dropNearTopCenter(registries).target.anchor).toEqual({
+				kind: "connectPoint",
+				id: "topCenter",
+			});
+		});
+
+		it("lands on the edge position instead of an edge midpoint the type hides", () => {
+			const hidingRegistries = createTestRegistries();
+			hidingRegistries.objectConnectionAnchors.register("rect", {
+				topCenter: { hidden: true },
+			});
+
+			expect(dropNearTopCenter(hidingRegistries).target.anchor).toEqual({
+				kind: "edge",
+				side: "top",
+				t: 0.5,
+			});
+		});
+	});
 });

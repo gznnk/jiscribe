@@ -39,8 +39,9 @@ export const GRIP_OFFSET = GRIP_THICKNESS / 2;
 
 /**
  * Radius of the canvas's connection-anchor dots, in screen px, read off the
- * built-in theme because an offset calculator is pure and is not handed the
- * host's; a host theme with a larger radius narrows the clearance below.
+ * built-in theme because a connection-anchors calculator is pure and is not
+ * handed the host's; a host theme with a larger radius narrows the clearance
+ * below.
  */
 const CONNECTION_ANCHOR_RADIUS = darkCanvasTheme.handleDimensions.anchorRadius;
 

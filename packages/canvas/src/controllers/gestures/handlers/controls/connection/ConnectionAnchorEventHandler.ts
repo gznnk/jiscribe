@@ -99,7 +99,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 	/**
 	 * The geometry the drop position is snapped against: the shape's outline,
-	 * anchor region and declared points, plus the zoom the px-denominated snap
+	 * anchor region, declared points and hidden anchors, plus the zoom the px-denominated snap
 	 * distances are measured in. Empty geometry for a non-frame shape, which has
 	 * no anchors to snap to in the first place.
 	 */
@@ -116,6 +116,8 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			anchorRegion: registries.objectAnchorRegion.get(obj.type)?.(obj) ?? null,
 			extraConnectPoints:
 				registries.objectExtraConnectPoints.get(obj.type)?.(obj) ?? null,
+			connectionAnchors:
+				registries.objectConnectionAnchors.resolve(obj, zoom) ?? null,
 			zoom,
 		};
 	}

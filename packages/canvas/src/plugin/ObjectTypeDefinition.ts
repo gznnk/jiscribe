@@ -11,7 +11,7 @@ import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/Object
 import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectConnectionAnchorOffsetsDeclaration } from "../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
+import type { ObjectConnectionAnchorsDeclaration } from "../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
@@ -108,19 +108,21 @@ export type ObjectTypeDefinition<
 	extraConnectPoints?: ObjectExtraConnectPointsCalculator;
 
 	/**
-	 * How far each connection-anchor dot shown on the selected shape sits off
-	 * its edge (or off an extra point's declared position), for a type whose own
-	 * controls occupy the band the dots would land in. Values are screen px,
-	 * divided by zoom like the theme's `handleDimensions.connectionAnchorOffset`,
-	 * which every anchor left out keeps. Keys are the edge anchor ids
+	 * How each fixed connection anchor is shown, keyed by the edge anchor ids
 	 * (`topCenter` / `rightCenter` / `bottomCenter` / `leftCenter`) and the ids
 	 * `extraConnectPoints` declares — local-space ids, so an entry stays on its
-	 * edge through rotation and flips. Moves only the dots: where a connector
-	 * attaches is unchanged. One object for the whole type, or a function asked
-	 * per object and zoom. Omitted = the theme's distance everywhere (see
-	 * ObjectConnectionAnchorOffsetsRegistry).
+	 * edge through rotation and flips. `offset` moves the source dot off its
+	 * edge, for a type whose own controls occupy the band the dot would land in
+	 * (screen px, divided by zoom like the theme's
+	 * `handleDimensions.connectionAnchorOffset`, which an omitted offset keeps).
+	 * `hidden` stops offering the anchor: no source dot, no landing dot during a
+	 * connection drag, no snap on drop. Neither changes where a connector a doc
+	 * already attaches lands, so `connectPoint` / `edge` / `center` endpoints
+	 * keep parsing and drawing as before. One object for the whole type, or a
+	 * function asked per object and zoom. Omitted = every anchor offered at the
+	 * theme's distance (see ObjectConnectionAnchorsRegistry).
 	 */
-	connectionAnchorOffsets?: ObjectConnectionAnchorOffsetsDeclaration<TState>;
+	connectionAnchors?: ObjectConnectionAnchorsDeclaration<TState>;
 
 	/**
 	 * Key over whatever `outline` / `anchorRegion` / `extraConnectPoints` read beyond the frame fields

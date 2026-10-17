@@ -11,7 +11,7 @@ import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
 import { createObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
-import { createObjectConnectionAnchorOffsetsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorOffsetsRegistry";
+import { createObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import { createObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { createObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import { createObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
@@ -64,8 +64,7 @@ export const createCanvasRegistries = (
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
 		objectExtraConnectPoints: createObjectExtraConnectPointsRegistry(),
-		objectConnectionAnchorOffsets:
-			createObjectConnectionAnchorOffsetsRegistry(),
+		objectConnectionAnchors: createObjectConnectionAnchorsRegistry(),
 		objectGeometryKey: createObjectGeometryKeyRegistry(),
 		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectSvgDefs: createObjectSvgDefsRegistry(),

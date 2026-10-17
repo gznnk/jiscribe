@@ -22,6 +22,7 @@ import {
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
 } from "../../../../../../connectors/calcConnectPoint";
+import type { ConnectionAnchors } from "../../../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
@@ -32,7 +33,7 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
  * (`handleDimensions.anchorRadius` = 4) so the whole dot is grabbable, and well
  * inside the distance the source handles sit off the shape
  * (`connectionAnchorOffset` = 20; a type may declare a larger distance but
- * never a smaller one, see ObjectConnectionAnchorOffsetsRegistry) so the named
+ * never a smaller one, see ObjectConnectionAnchorsRegistry) so the named
  * anchors do not swallow the free positions next to them.
  */
 export const NAMED_ANCHOR_SNAP_PX = 12;
@@ -88,6 +89,12 @@ export type AnchorSnapContext = {
 	anchorRegion?: Rect | null;
 	/** The anchors the shape's type declares (from ObjectExtraConnectPointsRegistry). */
 	extraConnectPoints?: readonly ExtraConnectPoint[] | null;
+	/**
+	 * The shape's per-anchor display specs (from ObjectConnectionAnchorsRegistry);
+	 * a `hidden` edge or extra anchor is not snapped to, so the cursor near it
+	 * falls through to the edge position or the center.
+	 */
+	connectionAnchors?: ConnectionAnchors | null;
 	/** Viewport zoom; omitted or non-positive reads as 1. */
 	zoom?: number;
 };
@@ -149,7 +156,10 @@ const calcNearestNamedAnchor = (
 	}
 
 	for (const connectPointId of ConnectPointIds) {
-		if (connectPointId === exclude?.connectPointId) {
+		if (
+			connectPointId === exclude?.connectPointId ||
+			context.connectionAnchors?.[connectPointId]?.hidden === true
+		) {
 			continue;
 		}
 		const point = calcConnectPoint(
@@ -166,7 +176,10 @@ const calcNearestNamedAnchor = (
 	}
 
 	for (const extraConnectPoint of context.extraConnectPoints ?? []) {
-		if (extraConnectPoint.id === exclude?.connectPointId) {
+		if (
+			extraConnectPoint.id === exclude?.connectPointId ||
+			context.connectionAnchors?.[extraConnectPoint.id]?.hidden === true
+		) {
 			continue;
 		}
 		const point = calcExtraConnectPoint(frame, extraConnectPoint);
@@ -245,7 +258,7 @@ const isCursorInsideFrame = (
  * Three rules, applied in order:
  * 1. **A named anchor**, when the cursor is within NAMED_ANCHOR_SNAP_PX of one —
  *    the center, one of the four edge midpoints, or a point the shape's type
- *    declares. Every candidate is resolved through calcConnectPoint /
+ *    declares, less any its type hides. Every candidate is resolved through calcConnectPoint /
  *    calcExtraConnectPoint, so a shape whose outline or anchor region moves its
  *    dots is judged where those dots actually are.
  * 2. **The center**, when the cursor is deeper than CENTER_ANCHOR_DEPTH_PX
@@ -263,7 +276,7 @@ const isCursorInsideFrame = (
  * @param cursorY - Cursor position in world coordinates
  * @param exclude - Anchors to keep the result off, used on a self-loop so the two
  *   ends cannot coincide; omitted = every anchor is offered
- * @param context - The shape's outline / anchor region / declared points, plus the
+ * @param context - The shape's outline / anchor region / declared points / hidden anchors, plus the
  *   zoom the px thresholds above are divided by; omitted = bounding-box geometry
  *   at zoom 1
  * @returns The winning anchor spec, ready to store on an endpoint

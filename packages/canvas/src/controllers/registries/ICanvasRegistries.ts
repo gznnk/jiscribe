@@ -3,6 +3,7 @@ import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
@@ -87,6 +88,11 @@ export interface ICanvasRegistries {
 	 * type declares itself (the brace's `tip`).
 	 */
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	/**
+	 * Per-type connection-anchor declarations, read by the connection drag so a
+	 * drop does not snap onto an anchor its type hides.
+	 */
+	objectConnectionAnchors: ObjectConnectionAnchorsRegistry;
 	/**
 	 * Per-type geometry keys, which the connector route cache compares an owner by
 	 * besides its frame (resolveConnectorPointsCached), so a route resolved here
