@@ -13,6 +13,7 @@ import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
+import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import {
@@ -537,13 +538,33 @@ export const createCanvasReducer =
 				// Committed before the selection moves: the draft is bound to the slot
 				// the selection names (see textEditState).
 				const committedResult = commitOpenTextEdit(state, registries);
-				const steppedResult = selectAdjacentTextSlot(
+				// Only the editor's Tab grows the object: Shift+Tab and the canvas Tab
+				// wrap at the last slot.
+				const extendedResult =
+					action.step === 1
+						? extendPastLastTextSlot(committedResult, registries.objectPartKind)
+						: null;
+				const steppedResult =
+					extendedResult ??
+					selectAdjacentTextSlot(
+						committedResult,
+						action.step,
+						registries.objectPartKind,
+					);
+				// A growth is settled like any structural edit before the editor
+				// measures the slot it opens on.
+				const resizedResult = reconcileObjectContentSizes(
+					steppedResult,
 					committedResult,
-					action.step,
-					registries.objectPartKind,
+					registries.objectContentResizer,
+				);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					resizedResult,
+					committedResult,
+					registries,
 				);
 				const openedResult = StartTextEditCommand.execute(
-					steppedResult,
+					reconciledResult,
 					registries,
 				);
 				const revealedViewport = calcViewportToRevealActivePart(
@@ -554,7 +575,9 @@ export const createCanvasReducer =
 					registries.objectPartKind,
 				);
 				// The history snapshot holds the document alone, so recording against
-				// the stepped state stores the same entry END_TEXT_EDIT would.
+				// the stepped state stores the same entry END_TEXT_EDIT would — one
+				// entry for the commit and the growth together, recorded once against
+				// the state before both.
 				return recordHistoryIfNeeded(
 					revealedViewport === openedResult.viewport
 						? openedResult

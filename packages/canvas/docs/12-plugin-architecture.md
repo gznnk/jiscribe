@@ -452,6 +452,17 @@ Five optional members bear on selection:
   omitted means a Ctrl / Meta-click toggles the owner as a whole. The
   `"textSlot"` kind declares it, `vertex` does not
 
+One more bears on the open text editor:
+
+- `extend` — asked of the `"textSlot"` kind alone, when Tab in the editor
+  leaves the last slot: it returns the object grown by parts after the last one
+  `list` names, every part it held kept under its id, and the step lands on the
+  first new one instead of wrapping to the first slot. The grown object is
+  settled by the type's content resizer like any structural edit and joins the
+  slot's commit in one undo step. Null or omitted wraps, and Shift+Tab and Tab
+  outside the editor always do. The table declares it to append a row styled as
+  its last one
+
 Two more bear on styling a pick:
 
 - `styleIntentKinds` — the style kinds a pick of this kind receives, core kinds and the

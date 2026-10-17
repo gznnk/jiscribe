@@ -444,8 +444,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   opens the editor on the next one with the caret at the end of its text, so
   typing carries straight on; Shift+Tab does the same backwards. The walk
   follows the order Tab takes over a picked slot and wraps around the same
-  way, and each cell's commit is an undo step of its own. A shape with a
-  single text body keeps Tab in the editor and does nothing with it.
+  way, and each cell's commit is an undo step of its own. Tab from a table's
+  last cell appends a row instead, styled as the last one is, and carries on
+  in its first cell; one undo takes back the row together with what was typed
+  into the cell left. A shape with a single text body keeps Tab in the editor
+  and does nothing with it. Plugin authors get the same through the new
+  `extend` member of `ObjectPartKindDefinition`: declared on a `"textSlot"`
+  kind, it returns the object grown by slots after its last one, and the
+  editor's Tab steps onto the first of them rather than wrapping (null
+  declines).
 
 ### Changed
 

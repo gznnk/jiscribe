@@ -1,8 +1,9 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createTestState } from "./support/createTestState";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
+import type { ObjectPartKindDefinition } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
@@ -125,5 +126,164 @@ describe("canvasReducer STEP_TEXT_EDIT", () => {
 		});
 
 		expect(canvasReducer(state, tab)).toBe(state);
+	});
+});
+
+/** rect-1 grown by two empty slots after its last, as a table appends a row of two cells. */
+const appendTwoSlots = (object: ObjectState): ObjectState => {
+	const { text } = object as unknown as { text: TextSlots };
+	return {
+		...object,
+		text: { ...text, d: { text: "" }, e: { text: "" } },
+	} as unknown as ObjectState;
+};
+
+/**
+ * A reducer whose "rect" slot kind declares `extend`, and whose content resizer
+ * makes the height follow the slot count — so a test can see the growth settled
+ * the way a structural edit is.
+ */
+const createExtendingReducer = (
+	extend: NonNullable<ObjectPartKindDefinition["extend"]>,
+) => {
+	const extendingRegistries = createTestRegistries();
+	extendingRegistries.objectPartKind.register("rect", [
+		{ ...createTextSlotPartKindDefinition(), extend },
+	]);
+	extendingRegistries.objectContentResizer.register("rect", (object) => {
+		const { text, height } = object as unknown as {
+			text: TextSlots;
+			height: number;
+		};
+		const slotHeight = 10 * Object.keys(text).length;
+		return slotHeight === height
+			? object
+			: ({ ...object, height: slotHeight } as ObjectState);
+	});
+	return createCanvasReducer(extendingRegistries);
+};
+
+const heightOf = (state: CanvasControllerState): number =>
+	(state.objects["rect-1"] as unknown as { height: number }).height;
+
+const slotIdsOf = (state: CanvasControllerState): string[] =>
+	Object.keys((state.objects["rect-1"] as unknown as { text: TextSlots }).text);
+
+const undo: CanvasAction = { type: "COMMAND", commandId: "undo" };
+const redo: CanvasAction = { type: "COMMAND", commandId: "redo" };
+const cancelEdit: CanvasAction = { type: "END_TEXT_EDIT", commit: false };
+
+describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
+	it("grows the object by the kind's extend and opens the first new slot", () => {
+		const extend = vi.fn(appendTwoSlots);
+		const extendingReducer = createExtendingReducer(extend);
+
+		const after = [reportEdit("x"), tab].reduce(
+			extendingReducer,
+			editingState("c"),
+		);
+
+		expect(extend).toHaveBeenCalledTimes(1);
+		expect(slotIdsOf(after)).toEqual(["a", "b", "c", "d", "e"]);
+		expect(slotOf(after, "c")).toBe("x");
+		expect(after.selection).toEqual(
+			selectionOf(["rect-1"], textSlotPartSelection("d")),
+		);
+		expect(after.textEditState).toEqual({ kind: "shape", text: "" });
+		// Settled by the content resizer, as a structural edit is.
+		expect(heightOf(after)).toBe(50);
+	});
+
+	it("grows the object even when the last slot is left unchanged", () => {
+		const extendingReducer = createExtendingReducer(appendTwoSlots);
+
+		const after = extendingReducer(editingState("c"), tab);
+
+		expect(slotIdsOf(after)).toEqual(["a", "b", "c", "d", "e"]);
+		expect(after.history.past).toHaveLength(1);
+	});
+
+	it("takes the commit and the growth back in one undo step, and redoes both", () => {
+		const extendingReducer = createExtendingReducer(appendTwoSlots);
+		const start = editingState("c");
+		const stepped = [reportEdit("x"), tab].reduce(extendingReducer, start);
+
+		// One entry, recorded against the state before the commit, whose present
+		// holds both the committed slot and the grown ones. Asserted on the
+		// snapshots: a rect's document has one body, so restoring one would fold
+		// the slots this test gives it.
+		expect(stepped.history.past).toEqual([start.history.present]);
+		const steppedObject = stepped.history.present.source?.objects["rect-1"];
+		expect(steppedObject).toBe(stepped.objects["rect-1"]);
+		expect(slotOf(stepped, "c")).toBe("x");
+		expect(slotIdsOf(stepped)).toEqual(["a", "b", "c", "d", "e"]);
+
+		const undone = [cancelEdit, undo].reduce(extendingReducer, stepped);
+		expect(undone.history.past).toEqual([]);
+		expect(undone.history.present).toBe(start.history.present);
+		expect(undone.history.future).toEqual([stepped.history.present]);
+
+		const redone = extendingReducer(undone, redo);
+		expect(redone.history.past).toEqual([start.history.present]);
+		expect(redone.history.present).toBe(stepped.history.present);
+	});
+
+	it("wraps to the first slot when extend declines", () => {
+		const extendingReducer = createExtendingReducer(() => null);
+
+		const after = [reportEdit("x"), tab].reduce(
+			extendingReducer,
+			editingState("c"),
+		);
+
+		expect(slotIdsOf(after)).toEqual(["a", "b", "c"]);
+		expect(slotOf(after, "c")).toBe("x");
+		expect(after.selection).toEqual(
+			selectionOf(["rect-1"], textSlotPartSelection("a")),
+		);
+	});
+
+	it("does not ask extend on a step that leaves no last slot", () => {
+		const extend = vi.fn(appendTwoSlots);
+		const extendingReducer = createExtendingReducer(extend);
+
+		const steppedForward = extendingReducer(editingState("b"), tab);
+		const steppedBackFromFirst = extendingReducer(editingState("a"), shiftTab);
+
+		expect(extend).not.toHaveBeenCalled();
+		expect(steppedForward.selection).toEqual(
+			selectionOf(["rect-1"], textSlotPartSelection("c")),
+		);
+		expect(steppedBackFromFirst.selection).toEqual(
+			selectionOf(["rect-1"], textSlotPartSelection("c")),
+		);
+	});
+
+	it("leaves Tab on the canvas, with no edit open, wrapping", () => {
+		const extend = vi.fn(appendTwoSlots);
+		const extendingReducer = createExtendingReducer(extend);
+		const state = createTestState(twoRectsDoc, {
+			objects: slottedObjects,
+			selection: selectionOf(["rect-1"], textSlotPartSelection("c")),
+		});
+
+		const after = extendingReducer(state, {
+			type: "COMMAND",
+			commandId: "selectNextTextSlot",
+		});
+
+		expect(extend).not.toHaveBeenCalled();
+		expect(after.objects).toBe(state.objects);
+		expect(after.selection).toEqual(
+			selectionOf(["rect-1"], textSlotPartSelection("a")),
+		);
+	});
+
+	it("throws when extend lists no slot after the old last one", () => {
+		const extendingReducer = createExtendingReducer((object) => object);
+
+		expect(() => extendingReducer(editingState("c"), tab)).toThrow(
+			/without listing a slot after "c"/,
+		);
 	});
 });
