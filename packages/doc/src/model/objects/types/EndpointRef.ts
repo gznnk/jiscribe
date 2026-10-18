@@ -21,7 +21,8 @@ export type ConnectPointAnchorSpec = {
 	 * A {@link ConnectPointId}, or an id the owner's object type declares itself
 	 * (see ObjectExtraConnectPointsRegistry) — `string` because the set is open to
 	 * plugins. Never `"center"`: the center is its own {@link CenterAnchorSpec}.
-	 * An id no type declares resolves to the owner's center rather than failing.
+	 * An id the owner does not offer resolves to the owner's center rather than
+	 * failing; the doc ops refuse to write one (see listConnectPointIds).
 	 */
 	id: string;
 };

@@ -1,5 +1,6 @@
 import type { RichText, TextSlot } from "@jiscribe/doc";
 
+import type { ErEntityColumnSource } from "./ErEntityColumnSource";
 import {
 	countErEntityColumns,
 	erEntityColumnTextSlotId,
@@ -10,9 +11,6 @@ import {
 } from "../schema/ErEntityDoc";
 import type { ErEntityState } from "../state/ErEntityState";
 import { reconcileErEntityBox } from "../state/reconcileErEntityBox";
-
-/** Where one column of a rewrite comes from: the 0-based index of the column whose slots it takes, or null for a fresh column whose slots are all empty. */
-export type ErEntityColumnSource = number | null;
 
 /**
  * Rebuilds an entity's slots in a new column order and re-derives everything the

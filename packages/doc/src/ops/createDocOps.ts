@@ -13,6 +13,8 @@ import {
 	type ConnectParams,
 	getConnectedObjects,
 	getConnectors,
+	remapConnectPoints,
+	type RemappedConnectorEnd,
 	updateConnector,
 	type UpdateConnectorEntry,
 	updateConnectors,
@@ -86,6 +88,7 @@ import type { StyleParams } from "./utils/styleFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ViewDoc } from "../model/canvas/ViewDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
+import type { OwnedEndpointRef } from "../model/objects/types/EndpointRef";
 import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
 import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
 import { createDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
@@ -326,6 +329,18 @@ export type DocOps = {
 		entries: readonly UpdateConnectorEntry[],
 	): void;
 	/**
+	 * Re-point the connector ends on one object's connect points after the object moved
+	 * them, every end looked up once against the id it had, and return the ends moved.
+	 * Throws `DocOperationError` for a missing owner, or a value that is not a center, edge
+	 * or connectPoint anchor naming an id the owner offers as `doc` now holds it, having
+	 * changed nothing.
+	 */
+	remapConnectPoints(
+		doc: CanvasDoc,
+		ownerId: string,
+		remap: Readonly<Record<string, OwnedEndpointRef["anchor"]>>,
+	): RemappedConnectorEnd[];
+	/**
 	 * Read the ids of the connectors with an end on this object, in drawing order; pass one to
 	 * `getObject` for the connector itself. Throws `DocOperationError` when the id is not in
 	 * the doc.
@@ -483,6 +498,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 			updateConnector(doc, id, params, definitions),
 		updateConnectors: (doc, entries) =>
 			updateConnectors(doc, entries, definitions),
+		remapConnectPoints: (doc, ownerId, remap) =>
+			remapConnectPoints(doc, ownerId, remap, definitions),
 		getConnectors: (doc, id) => getConnectors(doc, id),
 		getConnectedObjects: (doc, id) => getConnectedObjects(doc, id),
 		alignObjects: (doc, ids, edge) => alignObjects(doc, ids, edge, definitions),

@@ -34,6 +34,8 @@ const capabilities: AiCanvasCapabilities = {
 const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {
 	replaceObject:
 		"writes back what a plugin's object tool built (createCanvasToolSet drives it); handing the AI a whole object to write would bypass every op's own checks",
+	remapConnectPoints:
+		"follows a plugin's object tool that moved its own connect points (its connectPointRemap); only the type that numbers the points knows where each one went, so the AI moves ends itself through update_connector",
 };
 
 const toCamelCase = (toolName: string): string =>

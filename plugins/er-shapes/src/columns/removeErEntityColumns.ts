@@ -1,8 +1,8 @@
+import type { ErEntityColumnSource } from "./ErEntityColumnSource";
 import {
 	listErEntityColumnIndices,
 	rewriteErEntityColumns,
 } from "./rewriteErEntityColumns";
-import type { ErEntityColumnSource } from "./rewriteErEntityColumns";
 import type { ErEntityState } from "../state/ErEntityState";
 
 /**

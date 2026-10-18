@@ -128,6 +128,25 @@ export const parseErEntityColumnConnectPointId = (
 };
 
 /**
+ * Every column connect point id of an entity, in the order calcErEntityConnectPoints
+ * places them: each column's left then right, in declared column order.
+ *
+ * @param columnCount - Number of columns; 0 yields none
+ * @returns Freshly built ids the caller may keep
+ */
+export const erEntityColumnConnectPointIds = (
+	columnCount: number,
+): string[] => {
+	const ids: string[] = [];
+	for (let columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+		for (const side of ER_ENTITY_COLUMN_CONNECT_POINT_SIDES) {
+			ids.push(erEntityColumnConnectPointId(columnIndex, side));
+		}
+	}
+	return ids;
+};
+
+/**
  * Every slot id of an entity, in the order they are keyed into state: the title
  * first, then each column's key, name and type in declared order. That order is
  * what Tab walks (TextSlots) and what makes the title the slot Enter opens.

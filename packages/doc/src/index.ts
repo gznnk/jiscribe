@@ -166,6 +166,10 @@ export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
 // diagnostics.
 export { isMissingBounds } from "./plugin/isMissingBounds";
 export type { BoundsDeclaration } from "./plugin/isMissingBounds";
+// Which connect point ids a connector end may name on an object: what the doc-ops
+// hold a write to, and what the headless diagnostics hold a stored end to.
+export { listConnectPointIds } from "./plugin/listConnectPointIds";
+export type { ConnectPointDeclaration } from "./plugin/listConnectPointIds";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
@@ -188,6 +192,7 @@ export { builtinObjectDocDefinitions } from "./plugin/builtinObjectDocDefinition
 export {
 	createDocOps,
 	DocOperationError,
+	TextKeptInOwnFieldsError,
 	type AddObjectEntry,
 	type AddObjectParams,
 	type AlignEdge,
@@ -205,6 +210,7 @@ export {
 	type ObjectTypeSummary,
 	type Point,
 	type Rect,
+	type RemappedConnectorEnd,
 	type RemoveObjectsFromGroupResult,
 	type ResizeObjectParams,
 	type SetHeightModeParams,

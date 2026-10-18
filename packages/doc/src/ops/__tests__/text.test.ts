@@ -17,7 +17,7 @@ import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import { createFrameObjectFactory } from "../../model/objects/utils/createFrameObjectFactory";
 import { createDocOps } from "../createDocOps";
-import { DocOperationError } from "../errors";
+import { DocOperationError, TextKeptInOwnFieldsError } from "../errors";
 
 describe("setText", () => {
 	it("rewrites a single-body shape's text", () => {
@@ -525,7 +525,7 @@ describe("a slotted type keeping its text outside `text`", () => {
 	});
 	/** The refusal's text after "to be <action>", which is the same for every op. */
 	const ownPropertiesTail =
-		": this type keeps its text in properties of its own, which its description names and which are read and written as the type's own properties";
+		": this type keeps its texts in fields of its own, which the text ops do not reach";
 
 	it("tells setText the text lives in the type's own properties", () => {
 		expect(() => gridOps.setText(gridDoc(), "grid-1", "x")).toThrow(
@@ -548,6 +548,33 @@ describe("a slotted type keeping its text outside `text`", () => {
 		).toThrow(
 			`grid-1 ("cell-grid") holds no text under \`text\` to be styled${ownPropertiesTail}`,
 		);
+	});
+
+	it("names the refused object and its type on the error itself", () => {
+		let refusal: unknown;
+		try {
+			gridOps.getText(gridDoc(), "grid-1");
+		} catch (error) {
+			refusal = error;
+		}
+
+		expect(refusal).toBeInstanceOf(TextKeptInOwnFieldsError);
+		expect(refusal).toMatchObject({
+			objectId: "grid-1",
+			objectType: "cell-grid",
+		});
+	});
+
+	it("keeps the refusal as the cause of a batch op's failure", () => {
+		let failure: unknown;
+		try {
+			gridOps.setTexts(gridDoc(), [{ id: "grid-1", text: "x" }]);
+		} catch (error) {
+			failure = error;
+		}
+
+		expect(failure).toBeInstanceOf(DocOperationError);
+		expect((failure as Error).cause).toBeInstanceOf(TextKeptInOwnFieldsError);
 	});
 
 	it("still says a `text` map with no entry has no text slot", () => {

@@ -9,6 +9,7 @@ import {
 	buildFreeEndpoint,
 	type ConnectorEnd,
 	requireConnectable,
+	requireOfferedConnectPoint,
 	requireOwnedEnd,
 	requireSingleEndpointTarget,
 } from "./utils/connectorEndpoints";
@@ -17,6 +18,7 @@ import {
 	type ObjectRecord,
 	rejectIds,
 	requireObject,
+	visitObjects,
 } from "./utils/objectAccess";
 import { type DocDefinitions, isConnectorObject } from "./utils/objectGeometry";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
@@ -26,7 +28,11 @@ import {
 	type ConnectorRouting,
 	defaultRoutingForAnchors,
 } from "../model/objects/types/ConnectorRouting";
-import type { EndpointRef } from "../model/objects/types/EndpointRef";
+import type {
+	EdgeAnchorSide,
+	EndpointRef,
+	OwnedEndpointRef,
+} from "../model/objects/types/EndpointRef";
 
 export type ConnectParams = {
 	/**
@@ -92,7 +98,12 @@ const buildRequestedEndpoint = (
 			`the ${end} end got neither ${end}Id nor ${end}Point; give ${end}Id to attach it to an object, or ${end}Point to leave it standing at a coordinate`,
 		);
 	}
-	return buildEndpoint(requireConnectable(doc, ownerId, definitions), anchorId);
+	return buildEndpoint(
+		doc,
+		requireConnectable(doc, ownerId, definitions),
+		anchorId,
+		definitions,
+	);
 };
 
 /**
@@ -160,9 +171,10 @@ const buildConnector = (
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
  * @returns The id assigned to the new connector, `connector-N` unique across the root tree
  * @throws {@link DocOperationError} with a user-facing message when an end names both an object
- *   and a point or neither, when an object is missing from the root tree, is not connectable or
- *   carries an unusable edge anchor (see {@link AnchorHandleId}), when a point is not finite, or
- *   when both ends would be free
+ *   and a point or neither, when an object is missing from the root tree, is not connectable,
+ *   carries an unusable edge anchor (see {@link AnchorHandleId}) or is asked for a connect point
+ *   it does not offer (the message lists the ones it does), when a point is not finite, or when
+ *   both ends would be free
  */
 export const connect = (
 	doc: CanvasDoc,
@@ -280,12 +292,15 @@ const nextEndpoint = (
 		current?.anchor !== undefined && current.anchor.kind !== "free"
 			? current.anchor
 			: undefined;
+	// A kept connect point is checked too: the end may be moving to an owner that does not
+	// offer it.
+	const anchor =
+		anchorId !== undefined
+			? buildAnchor(anchorId)
+			: (keptAnchor ?? { kind: "center" });
 	return {
 		owner: { id: nextOwnerId },
-		anchor:
-			anchorId !== undefined
-				? buildAnchor(anchorId)
-				: (keptAnchor ?? { kind: "center" }),
+		anchor: requireOfferedConnectPoint(doc, nextOwnerId, anchor, definitions),
 	};
 };
 
@@ -457,7 +472,9 @@ const findRepeatedIds = (ids: readonly string[]): string[] => {
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
  * @throws {@link DocOperationError} when the id is missing or is not a connector, when an end
  *   names both an object and a point, when a new endpoint is missing, not connectable or
- *   carries an unusable edge anchor (see {@link AnchorHandleId}), when detaching would leave
+ *   carries an unusable edge anchor (see {@link AnchorHandleId}), when an end would name a
+ *   connect point its owner does not offer — a kept one included, when the end moves to
+ *   another owner — when detaching would leave
  *   both ends free, or when a label placement is given for a connector that has no label
  */
 export const updateConnector = (
@@ -516,6 +533,145 @@ export const updateConnectors = (
 	for (const write of writes) {
 		applyConnectorUpdate(write);
 	}
+};
+
+/** One connector end {@link remapConnectPoints} moved. */
+export type RemappedConnectorEnd = {
+	/** Id of the connector the end belongs to. */
+	connectorId: string;
+	/** Which of its two ends moved; a self-connector can contribute both. */
+	end: ConnectorEnd;
+	/** The anchor the end names now, as stored. */
+	anchor: OwnedEndpointRef["anchor"];
+};
+
+/** One remap value checked and copied, so the doc never holds the caller's object. */
+const buildRemapAnchor = (
+	doc: CanvasDoc,
+	ownerId: string,
+	fromId: string,
+	value: unknown,
+	definitions: DocDefinitions,
+): OwnedEndpointRef["anchor"] => {
+	const anchor = (
+		typeof value === "object" && value !== null ? value : {}
+	) as Record<string, unknown>;
+	try {
+		if (anchor.kind === "center") {
+			return buildAnchor("center");
+		}
+		if (anchor.kind === "connectPoint") {
+			if (typeof anchor.id !== "string" || anchor.id === "") {
+				throw new DocOperationError(
+					`a connectPoint anchor needs a non-empty id, got ${JSON.stringify(anchor.id)}`,
+				);
+			}
+			if (anchor.id === "center") {
+				throw new DocOperationError(
+					'"center" is not a connectPoint id; give { kind: "center" } instead',
+				);
+			}
+			return requireOfferedConnectPoint(
+				doc,
+				ownerId,
+				{ kind: "connectPoint", id: anchor.id },
+				definitions,
+			);
+		}
+		if (anchor.kind === "edge") {
+			return buildAnchor({
+				side: anchor.side as EdgeAnchorSide,
+				t: anchor.t as number,
+			});
+		}
+		throw new DocOperationError(
+			`anchor kind must be connectPoint / edge / center, got ${JSON.stringify(anchor.kind)}`,
+		);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new DocOperationError(`connect point remap "${fromId}": ${message}`);
+	}
+};
+
+/** Whether the remap would leave the end naming the very connect point it names now. */
+const isUnchangedConnectPoint = (
+	fromId: string,
+	anchor: OwnedEndpointRef["anchor"],
+): boolean => anchor.kind === "connectPoint" && anchor.id === fromId;
+
+/**
+ * Re-point the connector ends attached to one object's connect points, after the object
+ * renumbered or moved them (an ER entity inserting a column). Mutates `doc` in place.
+ *
+ * Every end is looked up once against the id it names before the call, so a swap
+ * (`a → b`, `b → a`) exchanges the two ends rather than mapping one of them twice. A
+ * connector that never stored a `routing` re-derives it from its new anchors, as
+ * {@link updateConnector} does when re-anchoring.
+ *
+ * @param doc - Mutated in place; connectors are looked for through the whole tree,
+ *   group children included
+ * @param ownerId - Id of the object whose connect points moved; must exist in the root
+ *   tree. Only ends owned by it are touched
+ * @param remap - Keyed by the `connectPoint` id an end names before the change, valued by
+ *   the anchor it should name after it: a `connectPoint` with an id the owner offers as
+ *   `doc` now holds it (see listConnectPointIds), an `edge` with a known side and a finite
+ *   `t` in 0..1, or a `center`. Ends
+ *   on edge or center anchors and ids absent here are left alone; an entry mapping an id
+ *   to itself is a no-op. An empty map is a no-op
+ * @param definitions - Type table the owner's declared connect points are read from
+ * @returns The ends that moved, in document order (depth-first, source before target),
+ *   each with the anchor it now names; an end mapped to its own id is not listed
+ * @throws {@link DocOperationError} when `ownerId` is not in the doc or a remap value is
+ *   not one of the anchors above, having written nothing
+ */
+export const remapConnectPoints = (
+	doc: CanvasDoc,
+	ownerId: string,
+	remap: Readonly<Record<string, OwnedEndpointRef["anchor"]>>,
+	definitions: DocDefinitions,
+): RemappedConnectorEnd[] => {
+	requireObject(doc, ownerId);
+	const anchorsByFromId = new Map(
+		Object.entries(remap).map(([fromId, value]) => [
+			fromId,
+			buildRemapAnchor(doc, ownerId, fromId, value, definitions),
+		]),
+	);
+
+	const movedEnds: RemappedConnectorEnd[] = [];
+	visitObjects(doc.root, (object) => {
+		if (!isConnectorObject(object)) {
+			return;
+		}
+		let moved = false;
+		for (const end of ["source", "target"] as const) {
+			const endpoint = object[end] as EndpointRef;
+			if (
+				endpoint.owner?.id !== ownerId ||
+				endpoint.anchor.kind !== "connectPoint"
+			) {
+				continue;
+			}
+			const fromId = endpoint.anchor.id;
+			const anchor = anchorsByFromId.get(fromId);
+			if (anchor === undefined || isUnchangedConnectPoint(fromId, anchor)) {
+				continue;
+			}
+			object[end] = { owner: { id: ownerId }, anchor: { ...anchor } };
+			movedEnds.push({ connectorId: object.id, end, anchor: { ...anchor } });
+			moved = true;
+		}
+		if (moved && object.routing === undefined) {
+			const derived = defaultRoutingForAnchors(
+				(object.source as EndpointRef).anchor,
+				(object.target as EndpointRef).anchor,
+			);
+			if (derived !== undefined) {
+				object.routing = derived;
+			}
+		}
+	});
+	return movedEnds;
 };
 
 /** The objects a connector's two ends are attached to; a free end contributes nothing. */

@@ -120,11 +120,18 @@ Use `erEntity` for every entity of an ER diagram, never `record`. The title is
   instead.
 - Write every text as a plain string. An entity has no typography at its
   root: to style a text (one column's name in red, say), write it as
-  `{ "text": "email", "fontColor": "#c00" }`. `set_style` does not reach an
-  entity's texts yet, so style them in the document.
+  `{ "text": "email", "fontColor": "#c00" }`. `set_style` and `set_text` do
+  not reach an entity's texts: on an existing entity, style them with
+  `er_entity_set_text_style` and rewrite them with `er_entity_set_texts`.
+- Change the columns of an existing entity with `er_entity_insert_columns` /
+  `er_entity_delete_columns` / `er_entity_move_columns`: connectors on a
+  column follow it to its new index. Rewriting `columns` wholesale through
+  `set_extra_props` does **not** move them, so a relationship ends up on
+  whatever column now holds its old index.
 - A relationship is a `connector` from the FK column's `col:<i>:right` (or
   `col:<i>:left`) to the referenced PK column's `col:<j>:left`, `<i>` counting
-  `columns` from 0. `startArrow` is the FK side's cardinality (usually
+  `columns` from 0. Draw it with `connect`, passing those ids as
+  `sourceAnchor` / `targetAnchor`. `startArrow` is the FK side's cardinality (usually
   `"CrowFootZeroMany"`), `endArrow` the PK side's (`"CrowFootOne"`). An
   identifying relationship is solid, a non-identifying one `"dashed"`.
 - Resolve a many-to-many relationship through a junction entity holding both

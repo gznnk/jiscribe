@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.11.0+c197917e -->
+<!-- jiscribe guide 0.11.0+650f24c8 -->
 
 # Jiscribe AI Authoring Guide
 
@@ -127,11 +127,18 @@ Use `erEntity` for every entity of an ER diagram, never `record`. The title is
   instead.
 - Write every text as a plain string. An entity has no typography at its
   root: to style a text (one column's name in red, say), write it as
-  `{ "text": "email", "fontColor": "#c00" }`. `set_style` does not reach an
-  entity's texts yet, so style them in the document.
+  `{ "text": "email", "fontColor": "#c00" }`. `set_style` and `set_text` do
+  not reach an entity's texts: on an existing entity, style them with
+  `er_entity_set_text_style` and rewrite them with `er_entity_set_texts`.
+- Change the columns of an existing entity with `er_entity_insert_columns` /
+  `er_entity_delete_columns` / `er_entity_move_columns`: connectors on a
+  column follow it to its new index. Rewriting `columns` wholesale through
+  `set_extra_props` does **not** move them, so a relationship ends up on
+  whatever column now holds its old index.
 - A relationship is a `connector` from the FK column's `col:<i>:right` (or
   `col:<i>:left`) to the referenced PK column's `col:<j>:left`, `<i>` counting
-  `columns` from 0. `startArrow` is the FK side's cardinality (usually
+  `columns` from 0. Draw it with `connect`, passing those ids as
+  `sourceAnchor` / `targetAnchor`. `startArrow` is the FK side's cardinality (usually
   `"CrowFootZeroMany"`), `endArrow` the PK side's (`"CrowFootOne"`). An
   identifying relationship is solid, a non-identifying one `"dashed"`.
 - Resolve a many-to-many relationship through a junction entity holding both
@@ -507,7 +514,7 @@ connector attached to it follows the text as it grows.
 ```
 
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"edge"` (+ `side`, `t`) / `"free"` (+ `point`)
-- `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id). On `brace` / `bracket` / `bracketWithStem` also `"tip"`, the marker's cusp / spine middle / stem end — use it whenever a connector points at a group marker
+- `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id). On `brace` / `bracket` / `bracketWithStem` also `"tip"`, the marker's cusp / spine middle / stem end — use it whenever a connector points at a group marker. On an `erEntity` also `"col:<index>:left"` / `"col:<index>:right"`, the two edges at one column's row (the index counts `columns` from 0) — attach a relationship line to its columns, not to the entity's edge midpoints
 - `edge`: a free position along one local edge, `{ "kind": "edge", "side": "top", "t": 0.25 }`. Only when a named anchor cannot express where the line has to land (several parallel lines into one edge); `t` runs left→right on top/bottom, top→bottom on left/right, and `0.5` is the edge midpoint — write that as a `connectPoint` instead
 - `owner` may reference **any box shape, and `text`** — that is, every type except `polyline` / `polygon` / `group` / `svg` / `connector`. You **cannot** attach an endpoint to those five. To point an arrow at/from one of them, use a `free` endpoint placed near it instead. On a `lucideIcon` the endpoint meets the box, which the drawing is centred in, so a non-square box lands the line off the pictogram.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)

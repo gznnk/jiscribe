@@ -4,6 +4,7 @@
 //
 // e.g. `import { standardAiToolPlugins } from "@jiscribe/standard-shapes/tools";`
 import type { AiToolPlugin } from "@jiscribe/ai-tools-sdk";
+import { erAiToolPlugin } from "@jiscribe/plugin-er-shapes/tools";
 import { tableAiToolPlugin } from "@jiscribe/plugin-table-shape/tools";
 import { umlAiToolPlugin } from "@jiscribe/plugin-uml-shapes/tools";
 
@@ -15,4 +16,5 @@ import { umlAiToolPlugin } from "@jiscribe/plugin-uml-shapes/tools";
 export const standardAiToolPlugins: readonly AiToolPlugin[] = [
 	tableAiToolPlugin,
 	umlAiToolPlugin,
+	erAiToolPlugin,
 ];

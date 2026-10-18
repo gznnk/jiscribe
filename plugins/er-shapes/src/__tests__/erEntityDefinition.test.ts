@@ -66,6 +66,46 @@ describe("erEntityDefinition.connectionAnchors", () => {
 	});
 });
 
+describe("erEntityDefinition.extraConnectPointIds", () => {
+	const makeDoc = (columns: ErEntityDoc["columns"]): ErEntityDoc =>
+		({
+			id: "e-1",
+			type: "erEntity",
+			x: 0,
+			y: 0,
+			name: "users",
+			columns,
+		}) as ErEntityDoc;
+
+	it.each([
+		["no columns", []],
+		["one column", [{ key: "PK", name: "id" }]],
+		[
+			"three columns",
+			[
+				{ key: "PK", name: "id" },
+				{ name: "email" },
+				{ key: "FK", name: "org_id" },
+			],
+		],
+	] satisfies [string, ErEntityDoc["columns"]][])(
+		"lists the ids the presentation places, in its order, on an entity of %s",
+		(_label, columns) => {
+			const doc = makeDoc(columns);
+			const placedIds = erEntityDefinition
+				.extraConnectPoints?.(erEntityDefinition.mapper.toState(doc))
+				.map((point) => point.id);
+			expect(placedIds).toHaveLength(columns.length * 2);
+			expect(erEntityDefinition.extraConnectPointIds?.(doc)).toEqual(placedIds);
+		},
+	);
+
+	it("offers none on a doc whose columns is not an array", () => {
+		const doc = { ...makeDoc([]), columns: "id" } as unknown as ErEntityDoc;
+		expect(erEntityDefinition.extraConnectPointIds?.(doc)).toEqual([]);
+	});
+});
+
 describe("the registered erEntity text slot kind", () => {
 	const partKind = createCanvasRegistries({
 		plugins: [erPlugin],

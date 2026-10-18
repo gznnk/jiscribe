@@ -238,3 +238,34 @@ export const declaredBoundsDefinition: ObjectDocDefinition = {
 	validateDoc: () => [],
 	bounds: () => DECLARED_BADGE_BOUNDS,
 };
+
+/**
+ * A connectable shape declaring a `col:<i>:left` / `col:<i>:right` pair per entry
+ * of its `columns` count, the way an ER entity declares one per column (which a
+ * doc test cannot import). Created with four columns.
+ */
+export const columnCardDefinition: ObjectDocDefinition = {
+	features: {
+		type: "column-card",
+		geometry: "rect",
+		connectable: true,
+	},
+	extraKeys: ["columns"],
+	validateDoc: () => [],
+	extraConnectPointIds: (doc) => {
+		const { columns } = doc as { columns?: unknown };
+		if (typeof columns !== "number") {
+			throw new Error(`column-card ${doc.id} carries no columns count`);
+		}
+		return Array.from({ length: columns }, (_, index) => [
+			`col:${index}:left`,
+			`col:${index}:right`,
+		]).flat();
+	},
+	factory: createFrameObjectFactory({
+		type: "column-card",
+		width: 100,
+		height: 100,
+		columns: 4,
+	}),
+};

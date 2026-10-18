@@ -40,7 +40,7 @@ write and a person can move by hand.
 
 ## Built for agents, not bolted onto them
 
-- **It edits one move at a time; it does not regenerate.** 77 tools over
+- **It edits one move at a time; it does not regenerate.** 83 tools over
   stdio, the same moves you make in the editor: add and connect, align and
   distribute, group, restyle, reorder, select. An edit lands on the document
   you have, so what you placed by hand stays where you put it, and `undo` takes

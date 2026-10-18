@@ -4,10 +4,12 @@ import {
 	offerTextMeasurement,
 } from "@jiscribe/doc/unstable";
 import { erDocPlugin } from "@jiscribe/plugin-er-shapes/doc";
+import { erAiToolPlugin } from "@jiscribe/plugin-er-shapes/tools";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { AiDocOp } from "../../canvasOps";
-import { createCanvasToolSet } from "../../canvasToolSet";
+import { createCanvasToolSet, type CanvasToolSet } from "../../canvasToolSet";
+import { toCanvasCapabilities } from "../../capabilities";
 import { applyCanvasOp } from "../applyCanvasOp";
 import { createCanvasOpHistory } from "../canvasOpHistory";
 import type { AiDocBridge } from "../docBridge";
@@ -23,8 +25,16 @@ beforeAll(() => {
 	offerTextMeasurement(createEstimateTextMeasurement());
 });
 
+/** The built-ins plus the entity's own tools, the way the shipped hosts offer them */
+const erToolSet = createCanvasToolSet(toCanvasCapabilities([erDocPlugin]), [
+	erAiToolPlugin,
+]);
+
+/** The entity's own tools as the pointers name them, in tool-set order */
+const erToolNames = erAiToolPlugin.tools.map((tool) => tool.name);
+
 /** A docBridge holding one document, applying ops the way a host does. */
-const createFakeDocBridge = () => {
+const createFakeDocBridge = (toolSet: CanvasToolSet = builtinToolSet) => {
 	let doc: CanvasDoc = { version: 1, root: [] };
 	const bridge: AiDocBridge = {
 		getDoc: () => doc,
@@ -35,8 +45,7 @@ const createFakeDocBridge = () => {
 	const history = createCanvasOpHistory();
 	return {
 		currentDoc: () => doc,
-		apply: (op: AiDocOp) =>
-			applyCanvasOp(op, bridge, history, docOps, builtinToolSet),
+		apply: (op: AiDocOp) => applyCanvasOp(op, bridge, history, docOps, toolSet),
 	};
 };
 
@@ -243,5 +252,191 @@ describe("erEntity through the AI ops", () => {
 		expect(result.ok).toBe(false);
 		expect(result.text).toContain('"fontSize"');
 		expect(fake.currentDoc().root).toHaveLength(0);
+	});
+});
+
+describe("an erEntity's own tools, as the generic ops point at them", () => {
+	/** A fake holding one entity "erEntity-1" and one rect "rect-1". */
+	const createEntityDoc = (toolSet: CanvasToolSet) => {
+		const fake = createFakeDocBridge(toolSet);
+		fake.apply({
+			kind: "addObject",
+			type: "erEntity",
+			x: 0,
+			y: 0,
+			extraProps: { name: "users", columns: entityColumns },
+		});
+		fake.apply({ kind: "addObject", type: "rect", x: 400, y: 0 });
+		return fake;
+	};
+
+	/** The pointer the entity's refusals end in */
+	const erPointer = `erEntity has tools of its own for what the generic ops do not reach: ${erToolNames.join(", ")}`;
+
+	it("lists them under tools on the entity's list_types entry, and on no type without any", () => {
+		const result = createFakeDocBridge(erToolSet).apply({ kind: "listTypes" });
+
+		const typeSummaries = JSON.parse(
+			result.text.slice(result.text.indexOf("\n") + 1),
+		) as { type: string; tools?: string[] }[];
+		expect(
+			typeSummaries.find((summary) => summary.type === "erEntity")?.tools,
+		).toEqual(erToolNames);
+		expect(
+			typeSummaries.filter((summary) => summary.tools !== undefined),
+		).toHaveLength(1);
+	});
+
+	it.each([
+		{ label: "get_text", op: { kind: "getText", id: "erEntity-1" } },
+		{
+			label: "set_text",
+			op: { kind: "setText", id: "erEntity-1", text: "accounts" },
+		},
+		{
+			label: "set_texts",
+			op: { kind: "setTexts", entries: [{ id: "erEntity-1", text: "x" }] },
+		},
+		{
+			label: "set_text_style",
+			op: {
+				kind: "setTextStyle",
+				id: "erEntity-1",
+				match: "users",
+				fontWeight: "bold",
+			},
+		},
+		{
+			label: "set_text_styles",
+			op: {
+				kind: "setTextStyles",
+				entries: [{ id: "erEntity-1", match: "users", fontWeight: "bold" }],
+			},
+		},
+	] satisfies { label: string; op: AiDocOp }[])(
+		"ends a $label refusal with a pointer to them",
+		({ op }) => {
+			const result = createEntityDoc(erToolSet).apply(op);
+
+			expect(result.ok).toBe(false);
+			expect(result.text).toContain(
+				"this type keeps its texts in fields of its own, which the text ops do not reach",
+			);
+			expect(result.text.endsWith(`; ${erPointer}`)).toBe(true);
+		},
+	);
+
+	it("adds nothing to the refusal when the set offers the type no tools", () => {
+		const result = createEntityDoc(builtinToolSet).apply({
+			kind: "getText",
+			id: "erEntity-1",
+		});
+
+		expect(result).toEqual({
+			ok: false,
+			text: 'erEntity-1 ("erEntity") holds no text under `text` to be read: this type keeps its texts in fields of its own, which the text ops do not reach',
+		});
+	});
+
+	it("points set_style's ignored note at them once, and at nothing for a type without any", () => {
+		const fake = createEntityDoc(erToolSet);
+		fake.apply({
+			kind: "addObject",
+			type: "erEntity",
+			x: 0,
+			y: 300,
+			extraProps: { name: "orders", columns: entityColumns },
+		});
+
+		const result = fake.apply({
+			kind: "setStyle",
+			ids: ["erEntity-1", "rect-1", "erEntity-2"],
+			style: { fontWeight: "bold" },
+		});
+
+		expect(result).toEqual({
+			ok: true,
+			text: `styled "rect-1" (not supported by their type: "erEntity-1" fontWeight; "erEntity-2" fontWeight; ${erPointer})`,
+		});
+	});
+
+	it("leaves set_style's ignored note as it was when the set offers the type no tools", () => {
+		const result = createEntityDoc(builtinToolSet).apply({
+			kind: "setStyle",
+			ids: ["erEntity-1"],
+			style: { fontWeight: "bold" },
+		});
+
+		expect(result.text).toBe(
+			'nothing to style: none of "erEntity-1" takes these properties (not supported by their type: "erEntity-1" fontWeight)',
+		);
+	});
+});
+
+describe("connecting to an erEntity's column points", () => {
+	/** Two two-column entities, `erEntity-1` and `erEntity-2`. */
+	const twoEntities = () => {
+		const fake = createFakeDocBridge();
+		for (const [name, x] of [
+			["users", 0],
+			["orders", 400],
+		] as const) {
+			fake.apply({
+				kind: "addObject",
+				type: "erEntity",
+				x,
+				y: 0,
+				extraProps: { name, columns: entityColumns },
+			});
+		}
+		return fake;
+	};
+	const readEnds = (doc: CanvasDoc) =>
+		doc.root
+			.filter((object) => object.type === "connector")
+			.map((object) => {
+				const { source, target } = object as unknown as Record<
+					string,
+					{ anchor: unknown }
+				>;
+				return [source.anchor, target.anchor];
+			});
+
+	it("attaches the ends to the columns the anchor strings name", () => {
+		const fake = twoEntities();
+
+		const result = fake.apply({
+			kind: "connect",
+			sourceId: "erEntity-2",
+			targetId: "erEntity-1",
+			sourceAnchor: "col:1:left",
+			targetAnchor: "col:0:right",
+		});
+
+		expect(result.ok).toBe(true);
+		expect(readEnds(fake.currentDoc())).toEqual([
+			[
+				{ kind: "connectPoint", id: "col:1:left" },
+				{ kind: "connectPoint", id: "col:0:right" },
+			],
+		]);
+	});
+
+	it("refuses a column the entity does not have, writing nothing", () => {
+		const fake = twoEntities();
+		const before = structuredClone(fake.currentDoc());
+
+		const result = fake.apply({
+			kind: "connect",
+			sourceId: "erEntity-2",
+			targetId: "erEntity-1",
+			sourceAnchor: "col:2:left",
+		});
+
+		expect(result.ok).toBe(false);
+		expect(result.text).toContain(
+			'"col:2:left" is not a connect point of "erEntity-2" (erEntity); it offers topCenter, rightCenter, bottomCenter, leftCenter and the 4 its type declares: col:0:left, col:0:right, col:1:left, col:1:right',
+		);
+		expect(fake.currentDoc()).toEqual(before);
 	});
 });

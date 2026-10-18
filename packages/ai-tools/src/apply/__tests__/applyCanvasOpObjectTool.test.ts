@@ -1,5 +1,10 @@
 import { defineObjectAiTool, type AiToolPlugin } from "@jiscribe/ai-tools-sdk";
-import { createDocOps, type CanvasDoc, type ObjectDoc } from "@jiscribe/doc";
+import {
+	builtinObjectDocDefinitions,
+	createDocOps,
+	type CanvasDoc,
+	type ObjectDoc,
+} from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -10,7 +15,19 @@ import { applyCanvasOp } from "../applyCanvasOp";
 import { createCanvasOpHistory } from "../canvasOpHistory";
 import type { AiDocBridge } from "../docBridge";
 
-const docOps = createDocOps();
+/**
+ * The built-ins, with the rect declaring the connect points the remap tools below move
+ * ends between, the way a plugin type declares its own.
+ */
+const docOps = createDocOps({
+	presetDefinitions: {
+		...builtinObjectDocDefinitions,
+		rect: {
+			...builtinObjectDocDefinitions.rect,
+			extraConnectPointIds: () => ["col:1:right", "col:2:right", "col:3:right"],
+		},
+	},
+});
 
 /** A rect as the tools below read it; the built-in rect stands in for a plugin's own type */
 type RectLike = ObjectDoc & { width: number };
@@ -58,6 +75,48 @@ const rectToolPlugin: AiToolPlugin = {
 				objectDoc.width = 999;
 				throw new Error("the rect has no room for that");
 			},
+		}),
+		defineObjectAiTool({
+			name: "rect_shift_points",
+			description:
+				"Swap two connect points and move a third onto the right edge.",
+			objectType: "rect",
+			inputSchema: {},
+			apply: (objectDoc) => ({
+				doc: { ...objectDoc },
+				text: "shifted",
+				connectPointRemap: {
+					"col:1:right": { kind: "connectPoint", id: "col:2:right" },
+					"col:2:right": { kind: "connectPoint", id: "col:1:right" },
+					"col:3:right": { kind: "edge", side: "right", t: 0.62 },
+				},
+			}),
+		}),
+		defineObjectAiTool({
+			name: "rect_remap_nothing_attached",
+			description: "Remap a connect point no connector names.",
+			objectType: "rect",
+			inputSchema: {},
+			apply: (objectDoc) => ({
+				doc: { ...objectDoc },
+				text: "remapped",
+				connectPointRemap: {
+					"col:9:right": { kind: "center" },
+				},
+			}),
+		}),
+		defineObjectAiTool({
+			name: "rect_remap_invalid",
+			description: "Remap onto an anchor an owned end cannot hold.",
+			objectType: "rect",
+			inputSchema: {},
+			apply: (objectDoc: RectLike) => ({
+				doc: { ...objectDoc, width: 300 },
+				text: "remapped",
+				connectPointRemap: {
+					"col:1:right": { kind: "free", point: { x: 0, y: 0 } } as never,
+				},
+			}),
 		}),
 		defineObjectAiTool({
 			name: "rect_read_width",
@@ -231,5 +290,77 @@ describe("applyCanvasOp with a plugin's object tool", () => {
 
 		expect(outcome.ok).toBe(false);
 		expect(outcome.text).toMatch(/^internal error: /);
+	});
+
+	describe("with a connectPointRemap", () => {
+		/** {@link setUp} plus three connectors leaving the rect from the ids it declares here */
+		const setUpWired = () => {
+			const harness = setUp();
+			const doc = harness.currentDoc();
+			for (const sourcePoint of ["col:1:right", "col:2:right", "col:3:right"]) {
+				docOps.connect(doc, {
+					sourceId: harness.rectId,
+					targetId: harness.ellipseId,
+					sourceAnchor: sourcePoint,
+					targetAnchor: "leftCenter",
+				});
+			}
+			return harness;
+		};
+		const sourceAnchors = (doc: CanvasDoc): unknown[] =>
+			doc.root
+				.filter((object) => object.type === "connector")
+				.map((object) => (object as Record<string, unknown>).source)
+				.map((source) => (source as { anchor: unknown }).anchor);
+
+		it("moves the connector ends and reports each one after the tool's sentence", () => {
+			const { rectId, callTool, currentDoc, history } = setUpWired();
+
+			const outcome = callTool("rect_shift_points", { id: rectId });
+
+			expect(outcome).toEqual({
+				ok: true,
+				text: 'shifted; moved 3 connector ends: "connector-1" source → col:2:right, "connector-2" source → col:1:right, "connector-3" source → right edge (t=0.62)',
+			});
+			expect(sourceAnchors(currentDoc())).toEqual([
+				{ kind: "connectPoint", id: "col:2:right" },
+				{ kind: "connectPoint", id: "col:1:right" },
+				{ kind: "edge", side: "right", t: 0.62 },
+			]);
+			expect(history.depth()).toBe(1);
+		});
+
+		it("takes the object and its connectors back in one undo step", () => {
+			const { rectId, callTool, currentDoc, undo } = setUpWired();
+			const before = structuredClone(currentDoc());
+
+			callTool("rect_shift_points", { id: rectId });
+
+			expect(undo().ok).toBe(true);
+			expect(currentDoc()).toEqual(before);
+		});
+
+		it("appends nothing when no end moved", () => {
+			const { rectId, callTool } = setUpWired();
+
+			expect(callTool("rect_remap_nothing_attached", { id: rectId })).toEqual({
+				ok: true,
+				text: "remapped",
+			});
+		});
+
+		it("fails on an anchor an owned end cannot hold, writing neither the object nor its connectors", () => {
+			const { rectId, callTool, currentDoc, replacedDocs, history } =
+				setUpWired();
+			const before = structuredClone(currentDoc());
+
+			const outcome = callTool("rect_remap_invalid", { id: rectId });
+
+			expect(outcome.ok).toBe(false);
+			expect(outcome.text).toContain('connect point remap "col:1:right"');
+			expect(currentDoc()).toEqual(before);
+			expect(replacedDocs).toEqual([]);
+			expect(history.depth()).toBe(0);
+		});
 	});
 });

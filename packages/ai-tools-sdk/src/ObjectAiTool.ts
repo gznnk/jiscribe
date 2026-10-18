@@ -6,7 +6,7 @@
 // Arguments are zod raw shapes: the host hands them to the MCP SDK as they are, and
 // zod is a peer dependency so a plugin's schemas are the same zod the host reads.
 
-import type { ObjectDoc } from "@jiscribe/doc";
+import type { ObjectDoc, OwnedEndpointRef } from "@jiscribe/doc";
 import type { z } from "zod";
 
 /**
@@ -27,6 +27,15 @@ export type ObjectAiToolChange<Doc extends ObjectDoc = ObjectDoc> = {
 	doc: Doc;
 	/** The sentence the AI reads back: what changed, in terms it can act on next */
 	text: string;
+	/**
+	 * Connect points of the object that now sit elsewhere, keyed by the id an endpoint
+	 * names before the change, valued by the anchor it should name after it. The host
+	 * rewrites every connector end owned by this object whose `connectPoint` id is a key,
+	 * all ends looked up once against the ids they had before (so a swap does not map
+	 * twice), and appends the ends it moved to `text`. Ends on other anchor kinds and ids
+	 * absent here are left as they are. Omit when no connect point moved
+	 */
+	connectPointRemap?: Readonly<Record<string, OwnedEndpointRef["anchor"]>>;
 };
 
 type ObjectAiToolBase<Shape extends z.ZodRawShape> = {

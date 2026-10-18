@@ -62,6 +62,16 @@ export type ObjectDocDefinition = {
 	bounds?: ObjectDocBoundsCalculator;
 
 	/**
+	 * The connect point ids a doc of this type offers beyond the built-in four
+	 * (`topCenter` …): what a connector end may name as `{ kind: "connectPoint", id }`
+	 * besides those. Answered per doc, since the set may follow its content (an ER
+	 * entity's `col:<i>:left|right`, one pair per column). Must list exactly the ids
+	 * the presentation's `extraConnectPoints` places, in the same order. Omitted = the
+	 * type offers none, so the doc ops refuse any other id on it.
+	 */
+	extraConnectPointIds?: (doc: ObjectDoc) => readonly string[];
+
+	/**
 	 * Where the type lays one text slot out, given a doc of it: the rectangle the
 	 * canvas places that slot in, answerable with no rendering layer present. A
 	 * declaration for any text form — the one `body` of a `"body"` / `"source"`

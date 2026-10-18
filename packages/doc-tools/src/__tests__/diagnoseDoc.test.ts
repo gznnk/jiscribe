@@ -471,3 +471,83 @@ describe("diagnoseDoc on an erEntity", () => {
 		expect(result.doc).toBeUndefined();
 	});
 });
+
+describe("diagnoseDoc on connector ends naming connect points", () => {
+	const entity = {
+		id: "users",
+		type: "erEntity",
+		x: 0,
+		y: 0,
+		name: "users",
+		columns: [
+			{ key: "PK", name: "id", type: "bigint" },
+			{ name: "email", type: "text" },
+		],
+	};
+	const box = { id: "box", type: "rect", x: 400, y: 0, width: 120, height: 80 };
+	/** A connector from `sourceId`'s `sourcePointId` to the box's left edge. */
+	const connectorFrom = (
+		id: string,
+		sourceId: string,
+		sourcePointId: string,
+	) => ({
+		id,
+		type: "connector",
+		source: {
+			owner: { id: sourceId },
+			anchor: { kind: "connectPoint", id: sourcePointId },
+		},
+		target: {
+			owner: { id: "box" },
+			anchor: { kind: "connectPoint", id: "leftCenter" },
+		},
+		points: [],
+	});
+
+	it("passes over ends on edge midpoints and on the points the owner's type declares", () => {
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					entity,
+					box,
+					connectorFrom("toColumn", "users", "col:1:right"),
+					connectorFrom("toEdge", "users", "bottomCenter"),
+				],
+			},
+			"declared points",
+		);
+
+		expect(diagnoseDoc(doc)).toEqual([]);
+	});
+
+	it("warns about an end on a point the owner no longer offers, which is drawn at its center", () => {
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					entity,
+					box,
+					connectorFrom("toGoneColumn", "users", "col:2:right"),
+					connectorFrom("toRectColumn", "box", "col:0:left"),
+				],
+			},
+			"undeclared points",
+		);
+
+		expect(diagnoseDoc(doc)).toEqual([
+			{
+				severity: "warning",
+				objectId: "toGoneColumn",
+				message:
+					'the source end names connect point "col:2:right", which users (erEntity) does not offer, so it is drawn at the center of users: the part of users it belonged to is gone (on an erEntity, a column deleted since); re-anchor it with update_connector',
+			},
+			{
+				severity: "warning",
+				objectId: "toRectColumn",
+				message:
+					'the source end names connect point "col:0:left", which box (rect) does not offer, so it is drawn at the center of box: rect offers only topCenter, rightCenter, bottomCenter, leftCenter; re-anchor it with update_connector',
+			},
+		]);
+	});
+});

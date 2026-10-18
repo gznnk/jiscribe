@@ -35,8 +35,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Tab, and styled on its own like a table cell: the entity has no typography
   at its root, and a text written as `{ "text": …, "fontSize": …, … }` carries
   its own. A row is as tall as its largest text needs. `add_object` refuses
-  typography for an entity, and `set_style` does not reach its texts yet (it
-  reports them as ignored).
+  typography for an entity, and `set_style` does not reach its texts (it
+  reports them as ignored): the entity's own AI tools style them (below).
   Each column offers two connect points, `col:<index>:left` and
   `col:<index>:right`, at its row on either edge, so a relationship line can run
   from a foreign-key column to the primary key it references. A connector
@@ -491,6 +491,21 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   UML plugin's new headless `./tools` entry and reaches hosts through
   `standardAiToolPlugins`. The height is measured with the same rule the drawing
   splits the box with.
+- **An ER entity can be edited through AI tools of its own.** `er_entity_read`
+  lists its title, slot widths and every column as `key | name | type`;
+  `er_entity_insert_columns` / `er_entity_delete_columns` /
+  `er_entity_move_columns` add, remove and reorder columns, and the connectors
+  on a column follow it as they do when a person edits the columns — one on a
+  deleted column stays on its side of the box where the row stood;
+  `er_entity_set_texts` rewrites the title and the columns' texts, each keeping
+  its typography; and `er_entity_set_text_style` lays typography over the title
+  and the key, name and type texts of a run of columns, which `set_style`
+  cannot reach. Columns count from 0, the same index their connect points
+  `col:<index>:left|right` carry. A call that would change nothing, or a text
+  holding a newline, is refused. They come from the ER plugin's new headless
+  `./tools` entry and reach hosts through `standardAiToolPlugins`. The connect
+  points that move are handed to the host as the tool change's
+  `connectPointRemap`, the one rule the canvas commands also go through.
 - **`diagnoseDoc` reports a record too short for its rows.** A record's bottom
   compartment takes whatever height is left, so rows added without refitting the
   box were drawn past its edge while the diagnosis called the file clean. It is
@@ -503,6 +518,21 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   (`ObjectDocOverflowDiagnoser`, from `@jiscribe/doc`); `diagnoseDoc` calls it
   for any type that declares one and reports each line as an error on the
   object. `createFrameObjectDoc` passes it through.
+- **The AI can attach a connector end to a connect point a type declares**, such
+  as an `erEntity`'s `col:<index>:left`. The anchors of `connect` /
+  `connect_many` / `update_connector` / `update_connectors` take any id rather
+  than the five built-in ones, and the doc ops check it against the object as it
+  stands: an id the object does not offer is refused with the ones it does,
+  where it used to be stored and drawn at the object's center. An end kept
+  while it moves to another object is checked as well, and so is every connect
+  point a plugin tool's `connectPointRemap` moves an end to. `diagnoseDoc`
+  warns about an end a document already holds on a point its object does not
+  offer (an entity's column deleted since), which is drawn at the center.
+- For plugin authors: `ObjectDocDefinition.extraConnectPointIds` states the
+  connect point ids a doc of the type offers beyond the built-in four, per doc,
+  so the set may follow the content. `listConnectPointIds`, from
+  `@jiscribe/doc`, is the list an end is held to: the built-ins, then the
+  declared ids.
 - For plugin authors: `textSlotStyleSchema` and `canonicalizeFontWeight`, from
   `@jiscribe/canvas-sdk/tools`, are the typography vocabulary `set_style`
   declares and the weight spelling a document keeps (`"700"` is stored as
@@ -833,10 +863,14 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
   declaring keyed text slots but keeping its text in properties of its own
   answered a text write, read or inline style with `has no text slot` — close to
   untrue for a table full of cells, and no hint of what to do instead. It now
-  says the type keeps its text in properties of its own, that the type's
-  description names them, and that they are read and written as the type's own
-  properties. The table, whose text is its `cells`, is the type this reaches
-  today.
+  says the type keeps its texts in fields of its own, which the text ops do not
+  reach, and `applyCanvasOp` follows it with the tools the type's plugin offers
+  for them (`table_*` for a table, `er_entity_*` for an ER entity); a type with
+  none in the tool set gets no pointer. The refusal is a
+  `TextKeptInOwnFieldsError` (exported from `@jiscribe/doc`, carrying
+  `objectId` / `objectType`), which a batch op's failure keeps as its `cause`.
+  `list_types` lists a type's own tools under `tools`, and `set_style`, when it
+  ignores properties on such a type, names them once per type.
 - **Tab no longer moves an open text edit to the next cell.** Pressing Tab
   while editing a table cell (or any slot of a multi-slot shape) took the focus
   off the editor and, on the next Tab, walked the selection on to the next

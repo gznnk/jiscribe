@@ -180,6 +180,30 @@ describe("createCanvasToolDescriptors", () => {
 		expect(withoutTypes).not.toContain("Connectable types");
 	});
 
+	it("takes any non-empty anchor id on every connector tool, leaving the check to docOps", () => {
+		const descriptors = createCanvasToolDescriptors(capabilities);
+		const parse = (name: string, args: unknown) =>
+			z.safeParse(z.object(findDescriptor(descriptors, name).inputSchema), args)
+				.success;
+		const anchors = { sourceAnchor: "col:1:left", targetAnchor: "col:0:right" };
+
+		expect(parse("connect", { sourceId: "a", targetId: "b", ...anchors })).toBe(
+			true,
+		);
+		expect(
+			parse("connect_many", {
+				entries: [{ sourceId: "a", targetId: "b", ...anchors }],
+			}),
+		).toBe(true);
+		expect(parse("update_connector", { id: "c", ...anchors })).toBe(true);
+		expect(
+			parse("update_connectors", { entries: [{ id: "c", ...anchors }] }),
+		).toBe(true);
+		expect(
+			parse("connect", { sourceId: "a", targetId: "b", sourceAnchor: "" }),
+		).toBe(false);
+	});
+
 	it("takes poly vertices and a rotation on add_object", () => {
 		const descriptors = createCanvasToolDescriptors(capabilities);
 

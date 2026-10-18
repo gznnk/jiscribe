@@ -4,6 +4,7 @@ export { createDocOps, type DocOps } from "./createDocOps";
 export { type AlignEdge, type DistributeAxis } from "./arrange";
 export {
 	type ConnectParams,
+	type RemappedConnectorEnd,
 	type UpdateConnectorEntry,
 	type UpdateConnectorParams,
 } from "./connectors";
@@ -33,7 +34,7 @@ export {
 	type EdgeAnchorHandle,
 } from "./utils/connectorEndpoints";
 export { type StyleParams } from "./utils/styleFields";
-export { DocOperationError } from "./errors";
+export { DocOperationError, TextKeptInOwnFieldsError } from "./errors";
 export type { CanvasDoc } from "../model/canvas/CanvasDoc";
 // Re-exported so a consumer can name what getObject hands back without reaching into the
 // schemas layer.

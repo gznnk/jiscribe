@@ -1522,7 +1522,7 @@
 		}
 	},
 	"ConnectPointId": {
-		"description": "Named connection point on a shape. Every connectable shape has the four edge midpoints; a shape type may name further points of its own, and the group markers (brace / bracket / bracketWithStem) add \"tip\" for the cusp, spine middle, or stem end the label points from, and an erEntity adds \"col:<index>:left\" / \"col:<index>:right\" on the two edges at each column's row. An id the target shape's type does not name falls back to that shape's center, so \"tip\" on any other type is a silent miss rather than an error. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
+		"description": "Named connection point on a shape. Every connectable shape has the four edge midpoints; a shape type may name further points of its own, and the group markers (brace / bracket / bracketWithStem) add \"tip\" for the cusp, spine middle, or stem end the label points from, and an erEntity adds \"col:<index>:left\" / \"col:<index>:right\" on the two edges at each column's row. An id the target shape's type does not name is drawn at that shape's center: the editing tools refuse it, and diagnose_canvas reports one already in a file. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
 		"anyOf": [
 			{
 				"type": "string",

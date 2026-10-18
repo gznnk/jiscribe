@@ -148,7 +148,7 @@ const describeHeightChange = (
 export const recordSetCompartmentsTool = defineObjectAiTool({
 	name: "record_set_compartments",
 	description: [
-		"Set which compartments a record (a UML class / interface / ER entity box) has and what they hold: the stereotype line above the name, the attribute rows and the operation rows.",
+		"Set which compartments a record (a UML class / interface box) has and what they hold: the stereotype line above the name, the attribute rows and the operation rows.",
 		"The generic set_text writes only a compartment the record already has and cannot remove one, so this is how a class gains its operations, an interface its stereotype, or a DTO loses its attributes.",
 		"A compartment that already exists keeps its typography; a new one starts with the record's defaults. Rename the record with set_text on its name slot.",
 		"The record does not grow with its rows, so afterwards its height is set to exactly what the compartments need, taller or shorter, its top edge staying where it is — no resize_object is needed. Called with no compartment at all, it only refits the height.",
@@ -163,7 +163,7 @@ export const recordSetCompartmentsTool = defineObjectAiTool({
 				'Stereotype line above the name, written as drawn ("<<interface>>"). "" keeps an empty band, null removes the band, omit to leave it as it is.',
 			),
 		attributes: createRowsSchema(
-			'Attribute rows (fields, properties, ER columns, e.g. "- id: string")',
+			'Attribute rows (fields, properties, e.g. "- id: string")',
 		),
 		operations: createRowsSchema(
 			'Operation rows (methods, e.g. "+ save(): void")',

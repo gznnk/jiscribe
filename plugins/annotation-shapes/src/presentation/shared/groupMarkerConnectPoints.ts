@@ -9,18 +9,11 @@ import {
 	resolveGroupMarkerDirection,
 	resolveGroupMarkerTipPosition,
 } from "./groupMarkerGeometry";
+import { GROUP_MARKER_TIP_CONNECT_POINT_ID } from "../../schema/shared/groupMarkerConnectPointIds";
 import type {
 	GroupMarkerDirection,
 	GroupMarkerTipFields,
 } from "../../schema/shared/GroupMarkerFields";
-
-/**
- * Id of the connection point on a marker's tip. Stored in a saved doc as
- * `{ "kind": "connectPoint", "id": "tip" }`, so it is part of the file format:
- * point a connector at it to attach to the cusp of a `{` rather than to an edge
- * midpoint of the thin band around it.
- */
-export const GROUP_MARKER_TIP_CONNECT_POINT_ID = "tip";
 
 /** The way each marker faces, as a local outward unit vector. */
 const TIP_OUTWARD_DIRECTIONS: Record<GroupMarkerDirection, Point> = {

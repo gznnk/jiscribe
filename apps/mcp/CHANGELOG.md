@@ -29,15 +29,34 @@ covers that.
   and row heights; and `table_set_cell_style` sets a fill and typography over a
   range. A refused call says why and what the table holds, and leaves the file
   as it was.
-- **`record_set_compartments` for UML records, 77 tools in all.** It adds,
+- **`record_set_compartments` for UML records.** It adds,
   replaces, empties or removes a record's stereotype band and its attribute and
   operation compartments, and then fits the record's height to them, so no
   `resize_object` has to follow. A call that would change nothing is refused.
+- **Six tools for ER entities, 83 tools in all.** `er_entity_read` lists an
+  entity's title, slot widths and columns; `er_entity_insert_columns` /
+  `er_entity_delete_columns` / `er_entity_move_columns` change its columns,
+  moving the relationship lines attached to a column along with it and listing
+  the ends that moved; `er_entity_set_texts` rewrites its texts and
+  `er_entity_set_text_style` styles them, which `set_style` does not reach. A
+  call that would change nothing is refused.
+- **`connect` and the other connector tools attach an end to a connect point
+  a type declares**, such as an ER entity's `col:<index>:left` /
+  `col:<index>:right`: the anchors take any id instead of the five built-in
+  ones, and an id the object does not offer is refused with the ones it does.
+  `diagnose_canvas` warns about an end on a point its object no longer offers,
+  which is drawn at the object's center.
 - **`diagnose_canvas` reports a record too short for its rows**, which it used
   to call valid while the bottom rows were drawn past the box, naming the
   shortfall and the tools that fix it.
 
 ### Fixed
+
+- **A text tool or `set_style` refused on a table or an ER entity names the
+  tools that do reach it.** The text tools said the entity's description named
+  them, which `list_types` never showed; they now end with the type's own tools
+  (`table_*` / `er_entity_*`), `set_style` names them beside what it ignored,
+  and `list_types` lists them under `tools` on the type's entry.
 
 - **A headless Chromium that dies as it starts is reported at once, with what
   it said.** `open_canvas` with `headless: true` read a browser's death on a

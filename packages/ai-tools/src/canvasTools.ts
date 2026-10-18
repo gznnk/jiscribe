@@ -17,7 +17,6 @@ import {
 	OPACITY_MIN,
 	TextLayouts,
 } from "@jiscribe/doc";
-import type { AnchorHandleId } from "@jiscribe/doc";
 import { z } from "zod";
 
 import type { CanvasApiRef } from "./canvasApiRef";
@@ -93,11 +92,18 @@ const defineCanvasTool = <Shape extends z.ZodRawShape>(
 	drives: options.drives,
 });
 
-/** The named anchors of AnchorHandleId; its edge anchors (`{ side, t }`) are not offered to the AI */
-const ANCHOR_HANDLE_IDS = [
-	"center",
-	...ConnectPointIds,
-] as const satisfies readonly AnchorHandleId[];
+/**
+ * What an anchor argument may name, said once for all four connector anchors. The
+ * edge anchors of AnchorHandleId (`{ side, t }`) are not offered to the AI.
+ */
+const ANCHOR_ID_NOTE = [
+	`"center" or an edge midpoint (${ConnectPointIds.join(" / ")}) works on every connectable object.`,
+	'A type may declare connect points of its own, which are checked against the object as it stands — e.g. an erEntity\'s column points "col:<index>:left" / "col:<index>:right" (er_entity_read lists the columns).',
+].join(" ");
+
+/** One anchor argument: an open set of ids, since a type may declare its own. */
+const anchorIdSchema = (purpose: string) =>
+	z.string().min(1).optional().describe(`${purpose} ${ANCHOR_ID_NOTE}`);
 
 const ALIGN_EDGES = [
 	"left",
@@ -285,14 +291,8 @@ const connectorDrawSchema = {
 		.describe(
 			"World coordinate to stand the target end at instead of attaching it. Cannot be combined with targetId or targetAnchor, and the source end must then be attached.",
 		),
-	sourceAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Anchor on the source (default center)."),
-	targetAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Anchor on the target (default center)."),
+	sourceAnchor: anchorIdSchema("Anchor on the source (default center)."),
+	targetAnchor: anchorIdSchema("Anchor on the target (default center)."),
 	startArrow: z
 		.enum(ArrowTypes)
 		.optional()
@@ -346,14 +346,8 @@ const connectorChangeSchema = {
 		.describe(
 			"Detach the target end and stand it at this world coordinate. Cannot be combined with targetId or targetAnchor, and is refused when it would leave both ends unattached.",
 		),
-	sourceAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Move the source end to this anchor."),
-	targetAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Move the target end to this anchor."),
+	sourceAnchor: anchorIdSchema("Move the source end to this anchor."),
+	targetAnchor: anchorIdSchema("Move the target end to this anchor."),
 	startArrow: z
 		.enum(ArrowTypes)
 		.optional()
@@ -631,6 +625,7 @@ export const createCanvasToolDescriptors = (
 		[
 			"List every object type this canvas knows and what each one can be asked to do: whether add_object can create it, whether connect may put an endpoint on it, what text it carries (one body, named slots, or none) and how its shape is stored.",
 			'The geometry answers which ops apply: only a poly type takes set_points, and a type stored as a point takes its size from its content rather than from add_object or resize_object, which refuse a width or height for it. What lays that content out is its own properties (extraProps); the one exception is a text in textLayout "block", which takes the width it wraps in.',
+			"A type a plugin offers tools of its own for lists their names under tools: those tools are how to read and edit what the generic ops do not reach on it, such as texts kept in fields of its own.",
 			"Read it when a call was refused for the type rather than the arguments, and before writing a named slot with set_text.",
 			"It describes the canvas rather than the drawing, so it answers the same on an empty one.",
 		].join(" "),

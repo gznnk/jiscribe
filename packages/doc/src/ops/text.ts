@@ -1,4 +1,4 @@
-import { DocOperationError } from "./errors";
+import { DocOperationError, TextKeptInOwnFieldsError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
 import { type ObjectRecord, requireObject } from "./utils/objectAccess";
 import { type DocDefinitions, isConnectorObject } from "./utils/objectGeometry";
@@ -58,9 +58,11 @@ const textKeptInOwnPropertiesError = (
 	object: ObjectRecord,
 	id: string,
 	action: "set" | "read" | "styled",
-): DocOperationError =>
-	new DocOperationError(
-		`${id} ("${object.type}") holds no text under \`text\` to be ${action}: this type keeps its text in properties of its own, which its description names and which are read and written as the type's own properties`,
+): TextKeptInOwnFieldsError =>
+	new TextKeptInOwnFieldsError(
+		`${id} ("${object.type}") holds no text under \`text\` to be ${action}: this type keeps its texts in fields of its own, which the text ops do not reach`,
+		id,
+		object.type,
 	);
 
 /**
