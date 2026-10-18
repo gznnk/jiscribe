@@ -1,4 +1,4 @@
-// The standard shape set as a host mounts it: the ten plugins a `<Canvas>` is
+// The standard shape set as a host mounts it: the eleven plugins a `<Canvas>` is
 // configured with, plus the two declarations that make their stencils reachable —
 // the toolbar sections and the shape library sidebar. The headless half lives
 // behind ./doc and pulls in no react.
@@ -29,6 +29,7 @@ import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
+import { erPlugin, erStencilCategory } from "@jiscribe/plugin-er-shapes";
 import {
 	flowchartPlugin,
 	flowchartStencilCategory,
@@ -47,7 +48,7 @@ import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 /**
- * The ten plugins of the standard shape set, in the same order as
+ * The eleven plugins of the standard shape set, in the same order as
  * `standardDocPlugins`. Pass to `CanvasConfig.plugins`; a shape whose plugin is
  * missing is simply not drawn, so this array and the one the parser is given
  * have to describe the same set.
@@ -59,6 +60,7 @@ export const standardPlugins: readonly CanvasPlugin[] = [
 	stickyPlugin,
 	tablePlugin,
 	umlPlugin,
+	erPlugin,
 	generalPlugin,
 	annotationPlugin,
 	lucideIconPlugin,
@@ -69,7 +71,7 @@ export const standardPlugins: readonly CanvasPlugin[] = [
  * The shape tools of the standard set: the shape library toggle at the far left,
  * then the six presets a diagram is mostly built out of, pinned straight on the
  * bar and ordered area → line → text. Everything else the set ships — the
- * `markdown` and `table` presets and the eight plugin categories — is reached through the
+ * `markdown` and `table` presets and the nine plugin categories — is reached through the
  * shape library sidebar instead, so pass `standardStencilLibrarySections`
  * alongside this or those shapes become undrawable by hand.
  *
@@ -141,6 +143,7 @@ export const standardStencilLibrarySections: StencilCategory[] = [
 	},
 	flowchartStencilCategory,
 	umlStencilCategory,
+	erStencilCategory,
 	containerStencilCategory,
 	generalStencilCategory,
 	annotationStencilCategory,

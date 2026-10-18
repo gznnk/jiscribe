@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.11.0+72f45af1 -->
+<!-- jiscribe guide 0.11.0+c197917e -->
 
 # Drawing on a Jiscribe canvas
 
@@ -63,12 +63,13 @@ order to form the text.
 - `markdown` is the exception: its text is Markdown source, so it is always a
   plain string and its emphasis is written in the syntax (`**bold**`).
 
-## Three shapes that carry structured content
+## Shapes that carry structured content
 
 ### `record` — a titled box with compartments
 
-Use `record` for a **titled box with compartments of rows**: a UML class, an ER
-entity, an ontology concept with its properties. Its text is not one body but a
+Use `record` for a **titled box with compartments of rows**: a UML class, a DTO,
+an ontology concept with its properties. An ER entity is `erEntity`, not a
+`record`. Its text is not one body but a
 set of named slots: the title goes in the `name` slot, and a compartment holds
 **one entry per row** (never a newline inside an entry).
 
@@ -77,8 +78,8 @@ set of named slots: the title goes in the `name` slot, and a compartment holds
 that order. Leave a slot out entirely and the box does not have it. `stereotype`
 is an optional thin band above the title — write it for an interface, an abstract
 class, or an enum (`<<interface>>`); no divider separates it from `name`, so the
-two read as one header. A UML class adds the `operations` slot; a DTO, an ER
-entity, or a value object leaves it out and stays two-compartment.
+two read as one header. A UML class adds the `operations` slot; a DTO or a value
+object leaves it out and stays two-compartment.
 
 An empty row list is not the same as an absent slot: an empty `operations`
 compartment is still drawn, which is how you say "this class has no operations"
@@ -109,6 +110,38 @@ The **header bands** are the parts that grow with their text: a larger
 `fontSize`, a newline, or a string too long for the width makes the band taller
 (one 1.5×fontSize line per displayed line plus 7px) and pushes the compartments
 down, so add that much to the height too.
+
+### `erEntity` — a database table in an ER diagram
+
+Use `erEntity` for every entity of an ER diagram, never `record`. The title is
+`name`; each table column is one entry of `columns`, written as
+`{ "key": "PK", "name": "id", "type": "bigint" }` — only `name` is required.
+
+- `key` is `"PK"`, `"FK"` or `"PK, FK"`. The rows are drawn in the order of
+  `columns`, so declare the `PK` columns first. The key is drawn as written and
+  changes nothing else about the row. Write nullability in `type`, in SQL
+  words (`"varchar(80) null"`).
+- **Never write `width` or `height`**: the width is the key gutter, the name
+  column and the type column summed, and the height follows the columns. Each
+  column is drawn at least as wide as its longest text, and returns to its
+  stated width when the text gets shorter; the stated widths are kept as
+  written.
+- Leave out `keyWidth` / `nameWidth` / `typeWidth` unless a column needs more
+  room than its texts: the key gutter follows the widest key, and the name and
+  type columns start at 96 and 104 px. `add_object` / `resize_object` take no
+  `width` or `height` for an entity: set these three through `extraProps`
+  instead.
+- Write every text as a plain string. An entity has no typography at its
+  root: to style a text (one column's name in red, say), write it as
+  `{ "text": "email", "fontColor": "#c00" }`. `set_style` does not reach an
+  entity's texts yet, so style them in the document.
+- A relationship is a `connector` from the FK column's `col:<i>:right` (or
+  `col:<i>:left`) to the referenced PK column's `col:<j>:left`, `<i>` counting
+  `columns` from 0. `startArrow` is the FK side's cardinality (usually
+  `"CrowFootZeroMany"`), `endArrow` the PK side's (`"CrowFootOne"`). An
+  identifying relationship is solid, a non-identifying one `"dashed"`.
+- Resolve a many-to-many relationship through a junction entity holding both
+  foreign keys.
 
 ### `markdown` — a rendered document card
 
@@ -234,9 +267,10 @@ rather than a `rect` with a label on it.
 | `extract`               | extract / merge marker                                             |
 | `cross`                 | junction / emphasis marker                                         |
 | `offPageConnector`      | off-page connector (jump to another page)                          |
-| `record`                | titled box + row compartments (UML class / ER entity)              |
+| `record`                | titled box + row compartments (UML class / DTO)                    |
 | `umlPackage`            | namespace, module, layer                                           |
 | `umlComponent`          | component, replaceable part                                        |
+| `erEntity`              | entity with typed columns (ER diagram)                             |
 | `awsIcon`               | AWS service / resource icon (a labelled, connectable node)         |
 | `awsGroup`              | AWS boundary frame (VPC, subnet, region, account)                  |
 | `polyline`              | open line                                                          |

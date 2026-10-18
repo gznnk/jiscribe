@@ -22,6 +22,80 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **An `erEntity` shape for ER diagrams (IE notation), in a new "ER" stencil
+  category.** An entity is a title band over its columns, drawn in declared
+  order. Its columns are structured data: each entry of `columns` is a `key`, a
+  `name` and a `type`, drawn as a key gutter at the left, the name, and the type
+  left-aligned in its own column. `key` is free text, drawn as written and not
+  interpreted by the shape. The entity stores no box: its width is the key gutter, the name
+  column and the type column summed (`keyWidth` / `nameWidth` / `typeWidth`,
+  in px, as a table stores its column widths) and its height follows the column
+  count and the font size, so it offers only the left and right resize handles. Every key, name and type is a
+  text slot of its own, edited in place by double-clicking it and reached with
+  Tab, and styled on its own like a table cell: the entity has no typography
+  at its root, and a text written as `{ "text": …, "fontSize": …, … }` carries
+  its own. A row is as tall as its largest text needs. `add_object` refuses
+  typography for an entity, and `set_style` does not reach its texts yet (it
+  reports them as ignored).
+  Each column offers two connect points, `col:<index>:left` and
+  `col:<index>:right`, at its row on either edge, so a relationship line can run
+  from a foreign-key column to the primary key it references. A connector
+  attached to a column follows it when columns are inserted or deleted; one on a
+  deleted column stays on the same side of the entity, where the row was, and
+  undo restores both in one step. While the entity has columns its left and
+  right edge midpoints are not offered as anchors, the rows' points standing in
+  for them; a connector a document already attaches there still draws.
+  Columns are edited in place: a pill at the box's left picks a column, `Delete`
+  removes it, `Enter` edits its name, and `Alt+Shift+↑` / `Alt+Shift+↓`, the
+  object menu or the sidebar ("Add Above" / "Add Below" / "Add at Bottom") insert
+  an empty column and open its name for editing. `↑` / `↓` move the pick to the
+  column above or below, and several columns are picked at once, as a table's
+  rows are: Shift-clicking a pill or `Shift+↑` / `Shift+↓` runs the pick over
+  the rows between, Ctrl / Cmd-clicking adds a column or takes it out, and
+  `Delete` removes them together. Slots are picked as a table's cells are: the
+  arrows move a picked slot, and Shift-clicking or `Shift+arrow` widens the pick
+  to the rectangle between, the title counting as a full-width row above the
+  columns. `Delete` over picked slots empties their text
+  and keeps the entity, as it does over a table's cells. A text style edit applies to the picked slot,
+  to the picked columns' three slots, or to every text when the entity itself
+  is selected.
+- **An `erEntity`'s key, name and type columns are resized by dragging the
+  boundaries between them**, the way a table's columns are; a selected entity
+  marks them with a dashed guide. A plain drag widens the slot left of the
+  boundary and the box with it, drawn from its top-left corner; with Shift held
+  the two slots either side trade width and the box keeps its own. Dragging
+  the right edge below the title band widens or narrows the type alone and the
+  box with it. A drag writes the px of the slots it moved; while `keyWidth` is
+  omitted the key gutter follows the widest key. The left and right handles
+  split a width change between the name and the type in proportion to their
+  widths, the key gutter kept, as a table's handles split one over its columns.
+  Only these, and `extraProps`, write `keyWidth` / `nameWidth` / `typeWidth`:
+  `add_object` / `resize_object` refuse a width or height for an entity, as
+  they do for a table. No slot is drawn narrower than
+  its texts: typing a column name or a type longer than its slot widens that
+  column and the box with it, already while editing, the other columns keeping
+  their widths. The saved widths stay as written, so the box narrows back when
+  the text gets shorter or a narrower font finishes loading; the handles and
+  drags stop where a column would no longer fit its texts.
+- For plugin authors: `@jiscribe/canvas` exports `ConnectorState` and
+  `isConnectorState`, and `@jiscribe/doc` the endpoint types (`EndpointRef`,
+  `OwnedEndpointRef`, `AnchorSpec`) with `isOwnedEndpointRef`, so an edit that
+  renumbers a type's own connect points can move the connector ends attached to
+  them in the same transition.
+- For plugin authors: `textSlotStyleDefaults.byTextSlot` may be a function of
+  the slot id instead of a map, for a `"slots"` type whose slot ids are not a
+  fixed set but still say each slot's role (an `erEntity`'s `col:<i>:key`). Its
+  answer is narrowed to the style fields as it is read, and undefined falls back
+  to `everyTextSlot`, as a slot missing from the map does. `@jiscribe/doc`
+  exports `readTextSlotStyleDefaults`, the resolution the registry's `get` makes,
+  for a type resolving its own slots headlessly.
+- **The drawing guide covers `erEntity`.** Columns go in `columns` rather than in
+  a `record`; keys are written `"PK"` / `"FK"` / `"PK, FK"` and nullability in
+  `type`; a relationship runs from the FK column's connect point to the PK
+  column's, with the FK side's cardinality as `startArrow` and the PK side's as
+  `endArrow`, dashed when non-identifying; no `height` is written; and
+  many-to-many is resolved through a junction entity. `record` is no longer
+  offered for ER entities.
 - **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
   it takes the same rich text, the same typography and the same in-place editing
   every other shape's text does, and may carry a `fill` besides, painted over the
@@ -449,6 +523,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **`resize_object` / `resize_objects` set the width a block `text` wraps in.**
+  Only that width is rewritten and the corner is kept; a `height` for it is
+  still refused with the reason, the height following the content.
+- **`add_object` refuses typography a new object has no field for** rather than
+  silently dropping it, so a `table` created with a `fontSize` is refused: style
+  its cells with `table_set_cell_style` once it exists.
 - **Moving the pick from the keyboard keeps it in view.** Stepping to another
   cell or compartment with the arrows, or to another text slot with Tab, pans the
   view just far enough to show the part it lands on. Only the part moved to is

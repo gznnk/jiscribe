@@ -630,7 +630,7 @@ export const createCanvasToolDescriptors = (
 		"list_types",
 		[
 			"List every object type this canvas knows and what each one can be asked to do: whether add_object can create it, whether connect may put an endpoint on it, what text it carries (one body, named slots, or none) and how its shape is stored.",
-			"The geometry answers which ops apply: only a poly type takes set_points, and a type stored as a point takes its size from its content rather than resize_object.",
+			'The geometry answers which ops apply: only a poly type takes set_points, and a type stored as a point takes its size from its content rather than from add_object or resize_object, which refuse a width or height for it. What lays that content out is its own properties (extraProps); the one exception is a text in textLayout "block", which takes the width it wraps in.',
 			"Read it when a call was refused for the type rather than the arguments, and before writing a named slot with set_text.",
 			"It describes the canvas rather than the drawing, so it answers the same on an empty one.",
 		].join(" "),
@@ -658,14 +658,14 @@ export const createCanvasToolDescriptors = (
 			.min(0)
 			.optional()
 			.describe(
-				'Width of the bounding box in px (default: the shape\'s own default); on an ellipse that is the whole width, twice the rx a document stores. For a text this is refused, its box being its content — unless textLayout is "block", where this is the width the text wraps in.',
+				'Width of the bounding box in px (default: the shape\'s own default); on an ellipse that is the whole width, twice the rx a document stores. For a type stored as a point (list_types shows its geometry) this is refused, its box being its content: set the properties that lay the content out through extraProps instead. The one exception is a text with textLayout "block", where this is the width the text wraps in.',
 			),
 		height: z
 			.number()
 			.min(0)
 			.optional()
 			.describe(
-				"Height of the bounding box in px (default: the shape's own default, which is written into the document all the same — autoHeight is what leaves a height out); on an ellipse that is the whole height, twice the ry. Refused for a text, whose height is always measured.",
+				"Height of the bounding box in px (default: the shape's own default, which is written into the document all the same — autoHeight is what leaves a height out); on an ellipse that is the whole height, twice the ry. Refused for a type stored as a point (a text, say), whose height is always measured.",
 			),
 		autoHeight: z
 			.boolean()
@@ -691,7 +691,7 @@ export const createCanvasToolDescriptors = (
 			.string()
 			.optional()
 			.describe(
-				"Label text inside the object. Only for shapes with a single text body: record keeps its title and rows in keyed text slots and rejects a plain string, so use set_text there, and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.",
+				'Label text inside the object. Only for shapes with a single text body: a type keeping named texts (list_types shows text "slots") rejects a plain string — record keeps its title and rows in keyed text slots, so use set_text there, and a type keeping its texts in properties of its own rather than slots takes them through extraProps, as its entry in the drawing guide names them; and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.',
 			),
 		points: z
 			.array(pointSchema)
@@ -876,7 +876,7 @@ export const createCanvasToolDescriptors = (
 
 	const resizeObjectTool = defineCanvasTool(
 		"resize_object",
-		"Resize one object, keeping its top-left corner. Give at least one of width / height. A group scales its children with it.",
+		'Resize one object, keeping its top-left corner. Give at least one of width / height. A group scales its children with it. A type stored as a point is refused, its box being measured from its content (set_extra_props changes what lays it out); a text in textLayout "block" is the one exception, taking a width alone (the width it wraps in) and never a height.',
 		{
 			id: z.string().describe("id of the object to resize."),
 			width: z.number().min(1).optional().describe("New width in px."),

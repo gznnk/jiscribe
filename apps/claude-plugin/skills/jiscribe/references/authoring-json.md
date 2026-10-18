@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.11.0+72f45af1 -->
+<!-- jiscribe guide 0.11.0+c197917e -->
 
 # The Jiscribe file format
 
@@ -111,6 +111,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `record`                | `x`,`y`,`width`,`height`                                       |
 | `umlPackage`            | `x`,`y`,`width`,`height`                                       |
 | `umlComponent`          | `x`,`y`,`width`,`height`                                       |
+| `erEntity`              | `x`,`y` (no `width`/`height`: the size comes from the content) |
 | `awsIcon`               | `x`,`y`,`width`,`height`                                       |
 | `awsGroup`              | `x`,`y`,`width`,`height`                                       |
 | `polyline`              | `points` (open line)                                           |

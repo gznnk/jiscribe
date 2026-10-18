@@ -25,6 +25,7 @@
 	},
 	"devDependencies": {
 		"@jiscribe/plugin-container-shapes": "workspace:*",
+		"@jiscribe/plugin-er-shapes": "workspace:*",
 		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
 		"@jiscribe/plugin-markdown-shape": "workspace:*",
 		"@jiscribe/plugin-uml-shapes": "workspace:*",

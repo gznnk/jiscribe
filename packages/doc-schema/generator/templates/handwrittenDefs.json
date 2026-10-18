@@ -111,7 +111,7 @@
 		}
 	},
 	"RecordDoc": {
-		"description": "Record: a titled box with compartments of rows underneath (a UML class, an ER entity, an ontology concept with its properties). Uses the same rect-based geometry (x/y/width/height) as RectDoc. Unlike every other shape, its \"text\" is a keyed object of slots — an optional \"stereotype\" band, \"name\" for the title band, then \"attributes\" and \"operations\" for the compartments — and the plain-string form is rejected. Which slots you write is what gives the box its compartments: omit \"operations\" for a two-compartment box, omit both for a plain titled box. Typography belongs to each slot, so there are no shape-wide textAlign/fontSize/... fields here. The box is not auto-fitted to its rows.",
+		"description": "Record: a titled box with compartments of rows underneath (a UML class, a DTO, an ontology concept with its properties; an ER entity is erEntity). Uses the same rect-based geometry (x/y/width/height) as RectDoc. Unlike every other shape, its \"text\" is a keyed object of slots — an optional \"stereotype\" band, \"name\" for the title band, then \"attributes\" and \"operations\" for the compartments — and the plain-string form is rejected. Which slots you write is what gives the box its compartments: omit \"operations\" for a two-compartment box, omit both for a plain titled box. Typography belongs to each slot, so there are no shape-wide textAlign/fontSize/... fields here. The box is not auto-fitted to its rows.",
 		"type": "object",
 		"required": ["id", "type", "x", "y", "width", "height"],
 		"additionalProperties": false,
@@ -167,7 +167,7 @@
 				"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 			},
 			"text": {
-				"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (an ER entity, a DTO), add \"operations\" for a UML class, omit both for a plain titled box; \"stereotype\" is a band rather than a compartment and is what marks an interface, an abstract class, or an enum. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
+				"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (a DTO, a value object), add \"operations\" for a UML class, omit both for a plain titled box; \"stereotype\" is a band rather than a compartment and is what marks an interface, an abstract class, or an enum. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
 				"type": "object",
 				"additionalProperties": false,
 				"properties": {
@@ -611,6 +611,403 @@
 			},
 			"fill": {
 				"description": "Table background: any CSS color, or \"auto\" to follow the theme surface. A cell's own \"fill\" paints over it. Default: \"auto\" (unlike most shapes, which default to transparent)",
+				"type": "string",
+				"default": "auto"
+			},
+			"fillOpacity": {
+				"$ref": "#/$defs/FillStyle/properties/fillOpacity"
+			},
+			"rotation": {
+				"$ref": "#/$defs/TransformStyle/properties/rotation"
+			},
+			"flipX": {
+				"$ref": "#/$defs/TransformStyle/properties/flipX"
+			},
+			"flipY": {
+				"$ref": "#/$defs/TransformStyle/properties/flipY"
+			},
+			"lockAspectRatio": {
+				"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+			}
+		}
+	},
+	"ErEntityDoc": {
+		"description": "ER diagram entity (IE / crow's foot notation): a title band holding \"name\", then one row per entry of \"columns\", top to bottom in the array's order. `x` / `y` are the top-left of the box. There is no \"width\": it is the row's three slot widths summed — the key gutter (sized to the widest key, or \"keyWidth\"), \"nameWidth\" and \"typeWidth\" — and each slot widens on its own to its longest text. There is no \"height\" either: it is derived from the column count and the font size (a row is 1.5 × the largest fontSize among its texts plus 4px tall, 25 at the default fontSize), so the box grows downwards as columns are added. Each entry of \"columns\" is one table column. Columns are drawn where they are declared, so declare the primary key first. Connect a relationship line to one column with the connect point \"col:<index>:left\" / \"col:<index>:right\" (the index counts \"columns\" from 0, in declared order). Typography belongs to each text, so there are no shape-wide fontSize/fontColor/... fields here: to style a text (the title, or one column's \"key\" / \"name\" / \"type\"), write it as { \"text\": …, \"fontSize\": …, \"fontWeight\": …, … } instead of a plain string.",
+		"type": "object",
+		"required": ["id", "type", "x", "y", "name", "columns"],
+		"additionalProperties": false,
+		"properties": {
+			"id": {
+				"description": "Unique identifier.",
+				"type": "string"
+			},
+			"type": {
+				"description": "Must be \"erEntity\".",
+				"type": "string",
+				"const": "erEntity"
+			},
+			"meta": {
+				"$ref": "#/$defs/MetaDoc"
+			},
+			"x": {
+				"description": "Left-edge X coordinate of the box, as it is drawn (rotation and flips applied).",
+				"type": "number"
+			},
+			"y": {
+				"description": "Top-edge Y coordinate of the box, as it is drawn (rotation and flips applied).",
+				"type": "number"
+			},
+			"keyWidth": {
+				"description": "Width of the key gutter in px, at least 24; widened (with the box) to the widest key when narrower. Omit it: the gutter is then sized to the widest key and follows the keys as they change. Written when a person drags the boundary between the key and the name.",
+				"type": "number",
+				"minimum": 24
+			},
+			"nameWidth": {
+				"description": "Width of the name column in px, at least 24; widened (with the box) to the longest column name when narrower, and never narrowed on its own. Omit it unless a column needs more room than its texts. A width the box is resized to with its width handle is split between the name and the type by their widths, the key gutter kept. Default: 96",
+				"type": "number",
+				"minimum": 24,
+				"default": 96
+			},
+			"typeWidth": {
+				"description": "Width of the type column in px, at least 60; widened (with the box) to the longest type when narrower, and never narrowed on its own. Omit it unless a column needs more room than its texts. Default: 104",
+				"type": "number",
+				"minimum": 60,
+				"default": 104
+			},
+			"name": {
+				"description": "Entity (table) name, drawn bold and centered in the title band. Either the text alone (a plain string, or runs when part of it is drawn differently), or { \"text\": …, \"fontWeight\": …, \"fontColor\": … } when this one text has to look different from the rest of the entity; write the plain string otherwise.",
+				"anyOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "array",
+						"items": {
+							"$ref": "#/$defs/TextRun"
+						},
+						"minItems": 1
+					},
+					{
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["text"],
+						"properties": {
+							"text": {
+								"description": "The entity name.",
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "array",
+										"items": {
+											"$ref": "#/$defs/TextRun"
+										},
+										"minItems": 1
+									}
+								],
+								"default": ""
+							},
+							"textAlign": {
+								"description": "Horizontal text alignment. Default: \"center\"",
+								"allOf": [
+									{
+										"$ref": "#/$defs/TextAlign"
+									}
+								],
+								"default": "center"
+							},
+							"verticalAlign": {
+								"description": "Vertical text alignment. Default: \"middle\"",
+								"allOf": [
+									{
+										"$ref": "#/$defs/VerticalAlign"
+									}
+								],
+								"default": "middle"
+							},
+							"fontColor": {
+								"$ref": "#/$defs/TextStyle/properties/fontColor"
+							},
+							"fontSize": {
+								"description": "Font size in pixels, for this text alone. Default: 14; a row grows to the height its largest text needs.",
+								"type": "number",
+								"minimum": 1
+							},
+							"fontFamily": {
+								"$ref": "#/$defs/TextStyle/properties/fontFamily"
+							},
+							"fontWeight": {
+								"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\"",
+								"type": "string"
+							},
+							"fontStyle": {
+								"$ref": "#/$defs/TextStyle/properties/fontStyle"
+							},
+							"textDecoration": {
+								"$ref": "#/$defs/TextStyle/properties/textDecoration"
+							}
+						}
+					}
+				],
+				"default": ""
+			},
+			"columns": {
+				"description": "The columns, drawn top to bottom in this order whatever their keys. Write [] for an entity with no columns yet; one empty row is still drawn. Default: []",
+				"type": "array",
+				"items": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["name"],
+					"properties": {
+						"key": {
+							"description": "Key marks drawn in the gutter at the left of the row: free text, drawn as written and not interpreted by the shape. Write \"PK\" for a primary key, \"FK\" for a column that references another entity (its relationship line is expected to start at this column), \"PK, FK\" for a key that is both, or any other mark (\"UK\", \"AK1\"). Omit for a column with no key. Either the text alone (a plain string, or runs when part of it is drawn differently), or { \"text\": …, \"fontWeight\": …, \"fontColor\": … } when this one text has to look different from the rest of the entity; write the plain string otherwise.",
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/TextRun"
+									},
+									"minItems": 1
+								},
+								{
+									"type": "object",
+									"additionalProperties": false,
+									"required": ["text"],
+									"properties": {
+										"text": {
+											"description": "The text drawn in this slot.",
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/TextRun"
+													},
+													"minItems": 1
+												}
+											],
+											"default": ""
+										},
+										"textAlign": {
+											"description": "Horizontal text alignment. Default: \"left\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/TextAlign"
+												}
+											],
+											"default": "left"
+										},
+										"verticalAlign": {
+											"description": "Vertical text alignment. Default: \"middle\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/VerticalAlign"
+												}
+											],
+											"default": "middle"
+										},
+										"fontColor": {
+											"$ref": "#/$defs/TextStyle/properties/fontColor"
+										},
+										"fontSize": {
+											"description": "Font size in pixels, for this text alone. Default: 14; a row grows to the height its largest text needs.",
+											"type": "number",
+											"minimum": 1
+										},
+										"fontFamily": {
+											"$ref": "#/$defs/TextStyle/properties/fontFamily"
+										},
+										"fontWeight": {
+											"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\"",
+											"type": "string"
+										},
+										"fontStyle": {
+											"$ref": "#/$defs/TextStyle/properties/fontStyle"
+										},
+										"textDecoration": {
+											"$ref": "#/$defs/TextStyle/properties/textDecoration"
+										}
+									}
+								}
+							]
+						},
+						"name": {
+							"description": "Column name, drawn left-aligned right of the key gutter. Either the text alone (a plain string, or runs when part of it is drawn differently), or { \"text\": …, \"fontWeight\": …, \"fontColor\": … } when this one text has to look different from the rest of the entity; write the plain string otherwise.",
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/TextRun"
+									},
+									"minItems": 1
+								},
+								{
+									"type": "object",
+									"additionalProperties": false,
+									"required": ["text"],
+									"properties": {
+										"text": {
+											"description": "The text drawn in this slot.",
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/TextRun"
+													},
+													"minItems": 1
+												}
+											],
+											"default": ""
+										},
+										"textAlign": {
+											"description": "Horizontal text alignment. Default: \"left\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/TextAlign"
+												}
+											],
+											"default": "left"
+										},
+										"verticalAlign": {
+											"description": "Vertical text alignment. Default: \"top\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/VerticalAlign"
+												}
+											],
+											"default": "top"
+										},
+										"fontColor": {
+											"$ref": "#/$defs/TextStyle/properties/fontColor"
+										},
+										"fontSize": {
+											"description": "Font size in pixels, for this text alone. Default: 14; a row grows to the height its largest text needs.",
+											"type": "number",
+											"minimum": 1
+										},
+										"fontFamily": {
+											"$ref": "#/$defs/TextStyle/properties/fontFamily"
+										},
+										"fontWeight": {
+											"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"normal\"",
+											"type": "string"
+										},
+										"fontStyle": {
+											"$ref": "#/$defs/TextStyle/properties/fontStyle"
+										},
+										"textDecoration": {
+											"$ref": "#/$defs/TextStyle/properties/textDecoration"
+										}
+									}
+								}
+							]
+						},
+						"type": {
+							"description": "Column type, drawn left-aligned in its own column at the right. Write nullability and other notes here in SQL words (\"varchar(80) null\"). Omit for no type. Either the text alone (a plain string, or runs when part of it is drawn differently), or { \"text\": …, \"fontWeight\": …, \"fontColor\": … } when this one text has to look different from the rest of the entity; write the plain string otherwise.",
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "array",
+									"items": {
+										"$ref": "#/$defs/TextRun"
+									},
+									"minItems": 1
+								},
+								{
+									"type": "object",
+									"additionalProperties": false,
+									"required": ["text"],
+									"properties": {
+										"text": {
+											"description": "The text drawn in this slot.",
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/TextRun"
+													},
+													"minItems": 1
+												}
+											],
+											"default": ""
+										},
+										"textAlign": {
+											"description": "Horizontal text alignment. Default: \"left\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/TextAlign"
+												}
+											],
+											"default": "left"
+										},
+										"verticalAlign": {
+											"description": "Vertical text alignment. Default: \"top\"",
+											"allOf": [
+												{
+													"$ref": "#/$defs/VerticalAlign"
+												}
+											],
+											"default": "top"
+										},
+										"fontColor": {
+											"$ref": "#/$defs/TextStyle/properties/fontColor"
+										},
+										"fontSize": {
+											"description": "Font size in pixels, for this text alone. Default: 14; a row grows to the height its largest text needs.",
+											"type": "number",
+											"minimum": 1
+										},
+										"fontFamily": {
+											"$ref": "#/$defs/TextStyle/properties/fontFamily"
+										},
+										"fontWeight": {
+											"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"normal\"",
+											"type": "string"
+										},
+										"fontStyle": {
+											"$ref": "#/$defs/TextStyle/properties/fontStyle"
+										},
+										"textDecoration": {
+											"$ref": "#/$defs/TextStyle/properties/textDecoration"
+										}
+									}
+								}
+							]
+						}
+					}
+				}
+			},
+			"stroke": {
+				"$ref": "#/$defs/StrokeStyle/properties/stroke"
+			},
+			"strokeWidth": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+			},
+			"strokeDashType": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+			},
+			"strokeOpacity": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+			},
+			"fill": {
+				"description": "Entity background: any CSS color, or \"auto\" to follow the theme surface. The title band takes the same fill. Default: \"auto\" (unlike most shapes, which default to transparent)",
 				"type": "string",
 				"default": "auto"
 			},
@@ -1125,9 +1522,23 @@
 		}
 	},
 	"ConnectPointId": {
-		"description": "Named connection point on a shape. Every connectable shape has the four edge midpoints; a shape type may name further points of its own, and the group markers (brace / bracket / bracketWithStem) add \"tip\" for the cusp, spine middle, or stem end the label points from. An id the target shape's type does not name falls back to that shape's center, so \"tip\" on any other type is a silent miss rather than an error. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
-		"type": "string",
-		"enum": ["topCenter", "rightCenter", "bottomCenter", "leftCenter", "tip"]
+		"description": "Named connection point on a shape. Every connectable shape has the four edge midpoints; a shape type may name further points of its own, and the group markers (brace / bracket / bracketWithStem) add \"tip\" for the cusp, spine middle, or stem end the label points from, and an erEntity adds \"col:<index>:left\" / \"col:<index>:right\" on the two edges at each column's row. An id the target shape's type does not name falls back to that shape's center, so \"tip\" on any other type is a silent miss rather than an error. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
+		"anyOf": [
+			{
+				"type": "string",
+				"enum": [
+					"topCenter",
+					"rightCenter",
+					"bottomCenter",
+					"leftCenter",
+					"tip"
+				]
+			},
+			{
+				"type": "string",
+				"pattern": "^col:(0|[1-9][0-9]*):(left|right)$"
+			}
+		]
 	},
 	"Point": {
 		"description": "A 2D coordinate.",

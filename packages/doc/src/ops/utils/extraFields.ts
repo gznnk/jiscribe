@@ -12,6 +12,22 @@ export const declaresExtraKey = (
 ): boolean => (definition.extraKeys ?? []).includes(key);
 
 /**
+ * Whether an object is a text in the block layout, the one `geometry: "point"`
+ * object that keeps a width (the one it wraps in), which creation and a resize
+ * may then write. Its height is measured from its content all the same.
+ *
+ * @param definition - The object's type; a type not declaring both `width` and `textLayout` among its fields answers false whatever `textLayout` holds
+ * @param textLayout - The layout the object is in, or is being created with; anything but `"block"` (omitted included) answers false
+ */
+export const isBlockLayoutText = (
+	definition: ObjectDocDefinition,
+	textLayout: unknown,
+): boolean =>
+	textLayout === "block" &&
+	declaresExtraKey(definition, "width") &&
+	declaresExtraKey(definition, "textLayout");
+
+/**
  * Names a type declares that are structure rather than properties: a group's
  * `children` is built by grouping and checked as a tree (checkStructure), so
  * handing one to `extraProps` would put an unchecked object list into the

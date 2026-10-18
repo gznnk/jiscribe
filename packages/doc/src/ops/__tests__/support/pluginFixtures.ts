@@ -56,6 +56,20 @@ export const cellGridDefinition: ObjectDocDefinition = {
 };
 
 /**
+ * {@link cardDefinition} with a factory, so a test can create one: a slot card
+ * holding a `title` and a `body` slot under `text`, the way a record does.
+ */
+export const creatableCardDefinition: ObjectDocDefinition = {
+	...cardDefinition,
+	factory: createFrameObjectFactory({
+		type: "slot-card",
+		width: 160,
+		height: 100,
+		text: { title: { text: "Title" }, body: { text: "Body" } },
+	}),
+};
+
+/**
  * A body-text shape whose declared region gives up a quarter of the height at
  * the top and nothing at the bottom, the way a cylinder's cap does. Off-centre
  * on purpose: it is the one shape of region on which the two vertical bases

@@ -63,3 +63,20 @@ describe("the table's doc-side box", () => {
 		expect(bounds?.y).toBeCloseTo(60, 3);
 	});
 });
+
+describe("the table created with typography", () => {
+	const docOps = createDocOps({ plugins: [tableDocPlugin] });
+
+	// A table keeps its texts in its own cells rather than under `text`, so the
+	// typography would land nowhere: refused rather than reported as created.
+	it("is refused, the document left empty", () => {
+		const doc: CanvasDoc = { version: 1, root: [] };
+
+		expect(() =>
+			docOps.addObject(doc, "table", { x: 0, y: 0, fontSize: 18 }),
+		).toThrow(
+			'object type "table" cannot be created with "fontSize": a new one has no text slot to hold it',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+});

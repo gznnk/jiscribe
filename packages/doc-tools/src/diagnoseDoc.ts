@@ -8,6 +8,7 @@ import type {
 import {
 	isMissingBounds,
 	isTextVerticalBasis,
+	readTextSlotStyleDefaults,
 	richTextToPlain,
 	supportsAutoHeight,
 } from "@jiscribe/doc";
@@ -92,11 +93,14 @@ type TextBodyDoc = ObjectDoc & {
 const resolveBodyStyleDefaults = (
 	definition: ObjectDocDefinition,
 ): TextSlotStyle | undefined =>
-	extractTextSlotStyleDefaults(
-		definition.features,
-		definition.defaults,
-		definition.textSlotStyleDefaults,
-	)?.byTextSlot?.[BODY_TEXT_SLOT_ID];
+	readTextSlotStyleDefaults(
+		extractTextSlotStyleDefaults(
+			definition.features,
+			definition.defaults,
+			definition.textSlotStyleDefaults,
+		),
+		BODY_TEXT_SLOT_ID,
+	);
 
 /**
  * The font the object's body is drawn with: what the document sets, over what

@@ -13,6 +13,7 @@ import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
+import { erPlugin, erStencilCategory } from "@jiscribe/plugin-er-shapes";
 import {
 	flowchartPlugin,
 	flowchartStencilCategory,
@@ -41,7 +42,7 @@ import "katex/dist/katex.min.css";
 // category left on it as a flyout so that mechanism stays covered, and the shape library
 // sidebar holding the whole set as sections. The shipped hosts leave no flyout on the bar
 // (standardToolbarToolsSection pins the six presets and nothing else). The markdown / sticky
-// presets and the eight categories are all plugin-supplied and absent from core's default
+// presets and the nine categories are all plugin-supplied and absent from core's default
 // bar.
 mountPluginHarness({
 	plugins: [
@@ -51,6 +52,7 @@ mountPluginHarness({
 		stickyPlugin,
 		tablePlugin,
 		umlPlugin,
+		erPlugin,
 		generalPlugin,
 		annotationPlugin,
 		lucideIconPlugin,
@@ -77,6 +79,7 @@ mountPluginHarness({
 		},
 		flowchartStencilCategory,
 		umlStencilCategory,
+		erStencilCategory,
 		containerStencilCategory,
 		generalStencilCategory,
 		annotationStencilCategory,

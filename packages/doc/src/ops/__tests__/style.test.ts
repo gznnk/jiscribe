@@ -9,7 +9,10 @@ import {
 	readObject,
 	twoConnectedRects,
 } from "./support/docFixtures";
-import { sourceBodyDefinition } from "./support/pluginFixtures";
+import {
+	creatableCardDefinition,
+	sourceBodyDefinition,
+} from "./support/pluginFixtures";
 
 describe("setStyle", () => {
 	it("colours a shape and reports nothing ignored", () => {
@@ -237,5 +240,37 @@ describe("setStyle on a source-text type", () => {
 		expect(card).not.toHaveProperty("fontWeight");
 		expect(card).not.toHaveProperty("fontStyle");
 		expect(card).not.toHaveProperty("textDecoration");
+	});
+});
+
+describe("setStyle on a slots type", () => {
+	const slotsOps = createDocOps({
+		plugins: [
+			{
+				id: "slots-plugin",
+				objects: {
+					"slot-card": creatableCardDefinition,
+				},
+			},
+		],
+	});
+
+	it("writes every slot under text, and nothing at the root", () => {
+		const doc = emptyDoc();
+		slotsOps.addObject(doc, "slot-card", { x: 0, y: 0 });
+
+		const result = slotsOps.setStyle(doc, ["slot-card-1"], {
+			fontSize: 22,
+			fontWeight: "bold",
+		});
+
+		expect(result).toEqual({ styledIds: ["slot-card-1"], ignored: [] });
+		const card = readObject(doc, "slot-card-1");
+		expect(card.text).toEqual({
+			title: { text: "Title", fontSize: 22, fontWeight: "bold" },
+			body: { text: "Body", fontSize: 22, fontWeight: "bold" },
+		});
+		expect(card).not.toHaveProperty("fontSize");
+		expect(card).not.toHaveProperty("fontWeight");
 	});
 });

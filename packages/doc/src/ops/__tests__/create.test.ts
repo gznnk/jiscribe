@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createFrameObjectFactory } from "../../model/objects/utils/createFrameObjectFactory";
 import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 import {
@@ -12,7 +13,11 @@ import {
 	twoRects,
 	unknownObjectFields,
 } from "./support/docFixtures";
-import { badgeDefinition } from "./support/pluginFixtures";
+import {
+	badgeDefinition,
+	cellGridDefinition,
+	creatableCardDefinition,
+} from "./support/pluginFixtures";
 
 describe("addObject", () => {
 	it("assigns friendly sequential ids and keeps top-left coordinates", () => {
@@ -364,6 +369,67 @@ describe("addObject with styling", () => {
 			docOps.addObject(doc, "polygon", { x: 0, y: 0, fontSize: 20 }),
 		).toThrow(
 			'object type "polygon" cannot be styled with "fontSize": the styling it takes is "fill", "fillOpacity", "stroke", "strokeWidth", "strokeDashType", "strokeOpacity"',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+});
+
+describe("addObject with styling on a slots type", () => {
+	const slotsOps = createDocOps({
+		plugins: [
+			{
+				id: "slots-plugin",
+				objects: {
+					"slot-card": creatableCardDefinition,
+					"cell-grid": {
+						...cellGridDefinition,
+						factory: createFrameObjectFactory({
+							type: "cell-grid",
+							width: 120,
+							height: 60,
+							cells: [["a"]],
+						}),
+					},
+				},
+			},
+		],
+	});
+
+	it("writes the typography into every slot of a type keeping it per slot", () => {
+		const doc = emptyDoc();
+		slotsOps.addObject(doc, "slot-card", { x: 0, y: 0, fontSize: 18 });
+
+		const card = readObject(doc, "slot-card-1");
+		expect(card.text).toEqual({
+			title: { text: "Title", fontSize: 18 },
+			body: { text: "Body", fontSize: 18 },
+		});
+		expect(card).not.toHaveProperty("fontSize");
+	});
+
+	it("refuses typography on a type keeping its slots in a field of its own", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			slotsOps.addObject(doc, "cell-grid", { x: 0, y: 0, fontSize: 18 }),
+		).toThrow(
+			'object type "cell-grid" cannot be created with "fontSize": a new one has no text slot to hold it',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("names every refused typography property at once", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			slotsOps.addObject(doc, "cell-grid", {
+				x: 0,
+				y: 0,
+				fontSize: 18,
+				fontWeight: "bold",
+			}),
+		).toThrow(
+			'object type "cell-grid" cannot be created with "fontSize", "fontWeight": a new one has no text slot to hold them',
 		);
 		expect(doc.root).toHaveLength(0);
 	});
@@ -810,5 +876,29 @@ describe("addObjects", () => {
 		]);
 
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
+	});
+});
+
+describe("addObject sizing a point-geometry type", () => {
+	it("tells a block text it takes a width but no height, and any other text that it takes neither", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "text", {
+				x: 0,
+				y: 0,
+				width: 200,
+				height: 80,
+				textLayout: "block",
+			}),
+		).toThrow(
+			'object type "text" sizes itself from its content and takes no height, only a width',
+		);
+		expect(() =>
+			docOps.addObject(doc, "text", { x: 0, y: 0, height: 80 }),
+		).toThrow(
+			'object type "text" sizes itself from its content and takes no width/height',
+		);
+		expect(doc.root).toHaveLength(0);
 	});
 });

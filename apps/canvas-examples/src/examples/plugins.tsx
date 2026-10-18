@@ -25,6 +25,7 @@ import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
+import { erPlugin, erStencilCategory } from "@jiscribe/plugin-er-shapes";
 import {
 	flowchartPlugin,
 	flowchartStencilCategory,
@@ -52,8 +53,9 @@ import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 //   sticky     sticky
 //   markdown   markdown
 //   lucide     lucideIcon
-// Only rect / ellipse / polyline / polygon / text / connector are core. The aws plugin is
-// registered alongside them; its shapes are reached through the shape library below.
+// Only rect / ellipse / polyline / polygon / text / connector are core. The aws and er
+// plugins are registered alongside them; their shapes are reached through the shape
+// library below.
 const plugins = [
 	flowchartPlugin,
 	containerPlugin,
@@ -61,6 +63,7 @@ const plugins = [
 	stickyPlugin,
 	tablePlugin,
 	umlPlugin,
+	erPlugin,
 	generalPlugin,
 	annotationPlugin,
 	lucideIconPlugin,
@@ -122,6 +125,7 @@ const stencilLibrarySections: StencilCategory[] = [
 	},
 	flowchartStencilCategory,
 	umlStencilCategory,
+	erStencilCategory,
 	containerStencilCategory,
 	generalStencilCategory,
 	annotationStencilCategory,

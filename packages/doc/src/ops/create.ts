@@ -3,10 +3,15 @@ import { calcPolyBoundingBox, type Point } from "@jiscribe/geometry";
 import { DocOperationError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
 import { quoteNames } from "./utils/errorText";
-import { applyExtraProps, declaresExtraKey } from "./utils/extraFields";
+import {
+	applyExtraProps,
+	declaresExtraKey,
+	isBlockLayoutText,
+} from "./utils/extraFields";
 import { generateUniqueId } from "./utils/ids";
 import type { ObjectRecord } from "./utils/objectAccess";
 import type { DocDefinitions } from "./utils/objectGeometry";
+import { requireValidObjectDoc } from "./utils/objectValidation";
 import { requirePolyPoints } from "./utils/polyFields";
 import {
 	ALL_STYLE_KEYS,
@@ -24,7 +29,6 @@ import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { TextLayout } from "../model/objects/types/text/TextLayout";
 import { calcPointDocCenter } from "../model/objects/utils/pointDocDrawnTopLeft";
-import { isSemanticError } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../plugin/supportsAutoHeight";
 
@@ -41,14 +45,14 @@ export type AddObjectParams = StyleParams & {
 	y: number;
 	/**
 	 * Bounding-box width in px; omitted falls back to the type's default dimensions.
-	 * A point-geometry type (`text`) has no box to size and rejects it, the one exception
-	 * being the width a `textLayout: "block"` creation wraps in, which such a type stores.
+	 * A point-geometry type has no box to size and rejects it, the one exception being
+	 * the width a `textLayout: "block"` text wraps in ({@link isBlockLayoutText}).
 	 */
 	width?: number;
 	/**
 	 * Bounding-box height in px; omitted falls back to the type's default dimensions, which
 	 * is written into the document just the same — `autoHeight` is what leaves a height out.
-	 * Rejected for point-geometry types (`text`), whose box comes from the content.
+	 * Rejected for point-geometry types, whose height comes from the content.
 	 */
 	height?: number;
 	/**
@@ -124,10 +128,9 @@ export type AddObjectEntry = { type: string } & AddObjectParams;
 /**
  * Check the size parameters against what the type can actually store, writing nothing.
  *
- * A point-geometry doc has no width/height field, so honoring one is impossible; silently
- * dropping it would hand the caller an object of a size it never asked for. The block
- * layout is the one configuration such a type does keep a width for — the width its text
- * wraps in ({@link AddObjectParams.textLayout}) — and it stores no height even then.
+ * A point-geometry doc has no height field, and keeps a width only as the one a block
+ * text wraps in ({@link isBlockLayoutText}), so honoring any other size is impossible;
+ * silently dropping it would hand the caller an object of a size it never asked for.
  */
 const requireStorableSize = (
 	type: string,
@@ -137,16 +140,18 @@ const requireStorableSize = (
 	if (definition.features.geometry !== "point") {
 		return;
 	}
-	const blockWidth =
-		params.textLayout === "block" && declaresExtraKey(definition, "width");
+	const isBlockText = isBlockLayoutText(definition, params.textLayout);
 	if (
-		params.height !== undefined ||
-		(params.width !== undefined && !blockWidth)
+		params.height === undefined &&
+		(params.width === undefined || isBlockText)
 	) {
-		throw new DocOperationError(
-			`object type "${type}" sizes itself from its content and takes no width/height`,
-		);
+		return;
 	}
+	throw new DocOperationError(
+		`object type "${type}" sizes itself from its content and takes ${
+			isBlockText ? "no height, only a width" : "no width/height"
+		}`,
+	);
 };
 
 /**
@@ -219,6 +224,28 @@ const requireApplicableStyle = (
 			applicable.length === 0
 				? "this type takes no styling at all"
 				: `the styling it takes is ${quoteNames(applicable)}`
+		}`,
+	);
+};
+
+/**
+ * Refuse styling the created object turned out to have no field for, writing nothing
+ * further. Its features admitted the property ({@link requireApplicableStyle}), but a
+ * `text: "slots"` type keeps its typography per slot, and a new object of it may have no
+ * slot to hold the property in.
+ *
+ * @param ignoredStyleKeys - What `applyStyle` reported back as unwritten
+ */
+const requireAppliedStyle = (
+	type: string,
+	ignoredStyleKeys: readonly string[],
+): void => {
+	if (ignoredStyleKeys.length === 0) {
+		return;
+	}
+	throw new DocOperationError(
+		`object type "${type}" cannot be created with ${quoteNames(ignoredStyleKeys)}: a new one has no text slot to hold ${
+			ignoredStyleKeys.length === 1 ? "it" : "them"
 		}`,
 	);
 };
@@ -359,7 +386,10 @@ const buildObject = (
 		(created as ObjectRecord).points = points;
 	}
 	// After the factory, so an explicit colour wins over the type's own defaults.
-	applyStyle(created as ObjectRecord, params, definition);
+	requireAppliedStyle(
+		type,
+		applyStyle(created as ObjectRecord, params, definition),
+	);
 	if (rotation !== undefined) {
 		applyRotation(created as ObjectRecord, rotation, definition);
 	}
@@ -376,16 +406,12 @@ const buildObject = (
 	// Last, so it sees the finished object. The parameters above are each checked as
 	// they are applied, but `extraProps` is an open door: only the type knows which names it
 	// has and what they may hold, and this is where it gets to say so.
-	const diagnostics = definition
-		.validateDoc(created as ObjectRecord, type)
-		.filter(isSemanticError);
-	if (diagnostics.length > 0) {
-		throw new DocOperationError(
-			`cannot create "${type}": ${diagnostics
-				.map((diagnostic) => `${diagnostic.path} ${diagnostic.message}`)
-				.join("; ")}`,
-		);
-	}
+	requireValidObjectDoc(
+		created as ObjectRecord,
+		definition,
+		type,
+		`cannot create "${type}"`,
+	);
 	return created;
 };
 
@@ -409,14 +435,15 @@ const buildObject = (
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
- *   (group / connector / svg and the like), when width/height are given for a
- *   point-geometry type that cannot store them, for `text` on a type holding no text,
+ *   (group / connector / svg and the like), when a height, or a width other than a block
+ *   text's, is given for a point-geometry type, for `text` on a type holding no text,
  *   when the factory rejects the given size,
  *   when `points` are given to a type not built from vertices or are too few, for a
  *   rotation that is not finite, for a `textLayout` on a type that declares none, for
  *   `autoHeight` on a type whose height cannot follow its text or alongside a `height`,
  *   for a styling property the type's features do not admit (a `rx` on an ellipse, a
- *   `fontSize` on a type holding no text) or one whose value is malformed, when
+ *   `fontSize` on a type holding no text, a typography property a new `"slots"` object has
+ *   no slot for) or one whose value is malformed, when
  *   `extraProps` carries a name this call already takes as a parameter or one the type
  *   does not declare, or when the finished object fails the type's own `validateDoc`
  */

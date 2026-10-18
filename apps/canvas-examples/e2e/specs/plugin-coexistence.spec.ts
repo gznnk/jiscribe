@@ -50,6 +50,7 @@ const LIBRARY_SECTIONS = [
 	{ id: "basic", ownPresetId: "markdown" },
 	{ id: "flowchart", ownPresetId: "diamond" },
 	{ id: "uml", ownPresetId: "class" },
+	{ id: "er", ownPresetId: "erEntity" },
 	{ id: "container", ownPresetId: "frame" },
 	{ id: "general", ownPresetId: "actor" },
 	{ id: "annotation", ownPresetId: "callout" },
