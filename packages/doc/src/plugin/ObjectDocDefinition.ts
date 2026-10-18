@@ -104,9 +104,10 @@ export type ObjectDocDefinition = {
 	 * Reports content the type places itself that its box is too small for (see
 	 * {@link ObjectDocOverflowDiagnoser}): what the shared typesetting cannot
 	 * measure, because the type stacks or sizes it by a rule of its own — a
-	 * record's compartments. `diagnoseDoc` calls it for any type that declares
-	 * one and reports each message as an error on the object. Omitted means the
-	 * type has nothing beyond {@link textRegion} to check.
+	 * record's compartments, an ER entity's one-line columns. `diagnoseDoc`
+	 * calls it for any type that declares one and reports each message as an
+	 * error on the object. Omitted means the type has nothing beyond
+	 * {@link textRegion} to check.
 	 */
 	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
 

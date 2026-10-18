@@ -96,6 +96,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `Shift+Enter` does nothing, and a line break in pasted text becomes a space;
   the title band still takes line breaks. A shape declares this per slot with
   `textEditLineBreaks`, beside `textEditOverflow`.
+- **`diagnose_canvas` / `diagnoseDoc` report a line break in an `erEntity`'s
+  key, name or type as an error.** A file or a tool can still write one, and the
+  slot is one line tall, so part of the text is clipped; the message names the
+  column and points to `er_entity_set_texts`.
 - For plugin authors: `@jiscribe/canvas` exports `ConnectorState` and
   `isConnectorState`, and `@jiscribe/doc` the endpoint types (`EndpointRef`,
   `OwnedEndpointRef`, `AnchorSpec`) with `isOwnedEndpointRef`, so an edit that

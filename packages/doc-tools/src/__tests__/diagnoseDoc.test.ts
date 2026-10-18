@@ -455,6 +455,34 @@ describe("diagnoseDoc on an erEntity", () => {
 		expect(diagnoseDoc(doc)).toEqual([]);
 	});
 
+	it("reports a column text holding a line break, which its one-line row clips", () => {
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					{
+						id: "users",
+						type: "erEntity",
+						x: 0,
+						y: 0,
+						name: "users",
+						columns: [{ key: "PK", name: "first\nname", type: "text" }],
+					},
+				],
+			},
+			"entity with a line break",
+		);
+
+		expect(diagnoseDoc(doc)).toEqual([
+			{
+				severity: "error",
+				objectId: "users",
+				message:
+					"line break in column 0 name: a column's key, name and type are one line tall, so the text after the line break is clipped and not drawn; rewrite it on one line with er_entity_set_texts",
+			},
+		]);
+	});
+
 	it("leaves typography written at the root to the validation, as an error on the field", () => {
 		const result = validateDoc(
 			JSON.stringify({

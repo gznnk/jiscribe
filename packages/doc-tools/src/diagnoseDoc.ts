@@ -656,10 +656,10 @@ const diagnoseConnectorConnectPoints = (
  * promises the shape's own decoration is not
  * ({@link diagnoseDecorationOverlap}).
  *
- * Content a type lays out by a rule of its own — a `record`'s compartments — is
- * checked by the type itself where it declares how
- * (`ObjectDocDefinition.diagnoseOverflow`), each finding an error on the object
- * ({@link diagnoseDeclaredOverflow}).
+ * Content a type lays out by a rule of its own — a `record`'s compartments, an
+ * `erEntity`'s one-line column slots — is checked by the type itself where it
+ * declares how (`ObjectDocDefinition.diagnoseOverflow`), each finding an error
+ * on the object ({@link diagnoseDeclaredOverflow}).
  *
  * A connector end naming a connect point its owner does not offer — a column an
  * ER entity no longer has — is drawn at the owner's center, and is a warning

@@ -1,7 +1,8 @@
 /**
  * How a type reports content of its own that its box cannot hold: the part it
  * lays out itself, which the shared typesetting a checker measures single bodies
- * with cannot see — a record's compartments, stacked by the record's own rule.
+ * with cannot see — a record's compartments, stacked by the record's own rule,
+ * or a line break in a slot one line tall, such as an ER entity's column.
  * Answerable with no rendering layer present, so a headless check
  * (`@jiscribe/doc-tools` `diagnoseDoc`) reports it against a saved document.
  *
@@ -11,8 +12,9 @@
  *
  * The caller attaches the object's id and the severity (an error), so a message
  * names neither. Write each one as a single English line stating what overflows,
- * by how many pixels, and how to fix it — the tool or the size that makes it
- * fit — since it reaches an AI that has not seen the rendering.
+ * by how many pixels where it is a matter of size, and how to fix it — the tool
+ * or the size that makes it fit — since it reaches an AI that has not seen the
+ * rendering.
  *
  * Text measurement is offered by the caller before it asks.
  *
