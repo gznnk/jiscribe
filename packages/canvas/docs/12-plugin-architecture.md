@@ -455,13 +455,16 @@ Five optional members bear on selection:
 One more bears on the open text editor:
 
 - `extend` — asked of the `"textSlot"` kind alone, when Tab in the editor
-  leaves the last slot: it returns the object grown by parts after the last one
-  `list` names, every part it held kept under its id, and the step lands on the
-  first new one instead of wrapping to the first slot. The grown object is
+  leaves the last slot: it returns `{ object, landingPartId? }`, `object` being
+  the object grown by parts after the last one `list` names, every part it held
+  kept under its id. The step lands on `landingPartId` instead of wrapping to
+  the first slot, or on the first new part when it is omitted; a
+  `landingPartId` that is not one of the new parts throws. The grown object is
   settled by the type's content resizer like any structural edit and joins the
   slot's commit in one undo step. Null or omitted wraps, and Shift+Tab and Tab
   outside the editor always do. The table declares it to append a row styled as
-  its last one
+  its last one; the ER entity appends a column and lands on its name, past the
+  key
 
 Two more bear on styling a pick:
 

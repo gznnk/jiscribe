@@ -48,7 +48,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Columns are edited in place: a numbered heading at the box's left picks a column, `Delete`
   removes it, `Enter` edits its name, and `Alt+Shift+↑` / `Alt+Shift+↓`, the
   object menu or the sidebar ("Add Above" / "Add Below" / "Add at Bottom") insert
-  an empty column and open its name for editing. `↑` / `↓` move the pick to the
+  an empty column and open its name for editing. Tab from the last slot while
+  editing appends one too, even after an empty last column, and carries on in
+  its name; one undo takes back the column with what was typed into the slot
+  left. `↑` / `↓` move the pick to the
   column above or below, and several columns are picked at once, as a table's
   rows are: Shift-clicking a heading or `Shift+↑` / `Shift+↓` runs the pick over
   the rows between, Ctrl / Cmd-clicking adds a column or takes it out, and
@@ -565,9 +568,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   into the cell left. A shape with a single text body keeps Tab in the editor
   and does nothing with it. Plugin authors get the same through the new
   `extend` member of `ObjectPartKindDefinition`: declared on a `"textSlot"`
-  kind, it returns the object grown by slots after its last one, and the
-  editor's Tab steps onto the first of them rather than wrapping (null
-  declines).
+  kind, it returns `{ object, landingPartId? }`, the object grown by slots
+  after its last one, and the editor's Tab steps onto `landingPartId` rather
+  than wrapping, or onto the first new slot when it is omitted (null declines;
+  a `landingPartId` that is not a new slot throws).
 - **Ctrl+Enter (Cmd+Enter on a Mac) commits an open text edit and closes the
   editor**, as a click outside it does: the text lands in one undo step, and a
   picked cell or slot stays picked, so Enter opens it again. It works in a

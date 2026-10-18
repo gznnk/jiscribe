@@ -822,6 +822,53 @@ test.describe("erEntity columns", () => {
 		expect((await drawnTexts(canvas, id)).join("|")).toContain("updated_at");
 	});
 
+	test("appends a column on Tab from the last slot and carries on editing its name, the Tab undone in one step", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		const heightBefore = await boxHeight(canvas, id);
+		const lastSlot = await slotRect(canvas, id, "col:2:type");
+		await canvas.page.mouse.dblclick(
+			lastSlot.x + lastSlot.width / 2,
+			lastSlot.y + lastSlot.height / 2,
+		);
+		await canvas.waitForTextEditor();
+		await canvas.page
+			.locator("textarea, [contenteditable=true]")
+			.first()
+			.fill("datetime");
+
+		await canvas.page.keyboard.press("Tab");
+
+		await expect.poll(() => columnCount(canvas, id)).toBe(4);
+		await expect(canvas.textEditorSurface()).toBeFocused();
+		// The name, past the new row's key.
+		expect(await pickedSlotIds(canvas, id)).toEqual(["col:3:name"]);
+		expect(await canvas.textEditorText()).toBe("");
+		await canvas.page.keyboard.type("updated_at");
+		expect(await canvas.textEditorText()).toBe("updated_at");
+		await canvas.commitText();
+		const texts = (await drawnTexts(canvas, id)).join("|");
+		expect(texts).toContain("datetime");
+		expect(texts).toContain("updated_at");
+
+		// The name typed is an entry of its own; the one before it is the Tab's,
+		// which holds the row and the last slot's commit together.
+		await canvas.undo();
+		await expect
+			.poll(async () => (await drawnTexts(canvas, id)).join("|"))
+			.not.toContain("updated_at");
+		expect(await columnCount(canvas, id)).toBe(4);
+
+		await canvas.undo();
+
+		await expect.poll(() => columnCount(canvas, id)).toBe(3);
+		const restored = (await drawnTexts(canvas, id)).join("|");
+		expect(restored).toContain("timestamp");
+		expect(restored).not.toContain("datetime");
+		expect(await boxHeight(canvas, id)).toBeCloseTo(heightBefore, 0);
+	});
+
 	test("outlines a picked slot and a picked column exactly on the row, the rows tiling with no gap", async ({
 		canvas,
 	}) => {

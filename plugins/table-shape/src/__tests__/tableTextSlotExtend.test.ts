@@ -43,11 +43,11 @@ const textSlotKind = registries.objectPartKind.get(
 );
 
 const extendTable = (table: TableState): TableState => {
-	const extended = textSlotKind?.extend?.(table as unknown as ObjectState);
-	if (extended === undefined || extended === null) {
+	const extension = textSlotKind?.extend?.(table as unknown as ObjectState);
+	if (extension === undefined || extension === null) {
 		throw new Error("the table's textSlot kind did not extend");
 	}
-	return extended as TableState;
+	return extension.object as TableState;
 };
 
 describe("table textSlot extend", () => {
@@ -63,6 +63,13 @@ describe("table textSlot extend", () => {
 			"r2c1",
 		]);
 		expect(extended.text.r1c1).toEqual({ text: "d", fontWeight: "bold" });
+	});
+
+	it("lands on the new row's first cell, naming no slot of its own", () => {
+		const extension = textSlotKind?.extend?.(TABLE as unknown as ObjectState);
+
+		expect(extension).not.toBeNull();
+		expect(extension?.landingPartId).toBeUndefined();
 	});
 
 	it("styles the new row as Insert Row Below would: the last row's height and its cells' styling, no text", () => {

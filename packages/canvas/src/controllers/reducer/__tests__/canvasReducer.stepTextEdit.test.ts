@@ -130,13 +130,18 @@ describe("canvasReducer STEP_TEXT_EDIT", () => {
 });
 
 /** rect-1 grown by two empty slots after its last, as a table appends a row of two cells. */
-const appendTwoSlots = (object: ObjectState): ObjectState => {
+const appendTwoSlotsTo = (object: ObjectState): ObjectState => {
 	const { text } = object as unknown as { text: TextSlots };
 	return {
 		...object,
 		text: { ...text, d: { text: "" }, e: { text: "" } },
 	} as unknown as ObjectState;
 };
+
+/** The `extend` answer for {@link appendTwoSlotsTo}, landing on the first new slot. */
+const appendTwoSlots = (object: ObjectState) => ({
+	object: appendTwoSlotsTo(object),
+});
 
 /**
  * A reducer whose "rect" slot kind declares `extend`, and whose content resizer
@@ -280,10 +285,43 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 	});
 
 	it("throws when extend lists no slot after the old last one", () => {
-		const extendingReducer = createExtendingReducer((object) => object);
+		const extendingReducer = createExtendingReducer((object) => ({ object }));
 
 		expect(() => extendingReducer(editingState("c"), tab)).toThrow(
 			/without listing a slot after "c"/,
 		);
 	});
+
+	it("opens the added slot extend names to land on", () => {
+		const extendingReducer = createExtendingReducer((object) => ({
+			object: appendTwoSlotsTo(object),
+			landingPartId: "e",
+		}));
+
+		const after = [reportEdit("x"), tab].reduce(
+			extendingReducer,
+			editingState("c"),
+		);
+
+		expect(slotIdsOf(after)).toEqual(["a", "b", "c", "d", "e"]);
+		expect(slotOf(after, "c")).toBe("x");
+		expect(after.selection).toEqual(
+			selectionOf(["rect-1"], textSlotPartSelection("e")),
+		);
+		expect(after.textEditState).toEqual({ kind: "shape", text: "" });
+	});
+
+	it.each(["b", "c", "z"])(
+		"throws when extend names %s, not a slot it added, to land on",
+		(landingPartId) => {
+			const extendingReducer = createExtendingReducer((object) => ({
+				object: appendTwoSlotsTo(object),
+				landingPartId,
+			}));
+
+			expect(() => extendingReducer(editingState("c"), tab)).toThrow(
+				`the "textSlot" part kind of "rect" extended the object to land on "${landingPartId}", which is not a slot it added`,
+			);
+		},
+	);
 });

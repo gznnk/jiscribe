@@ -13,6 +13,7 @@ import {
 	createTextSlotPartKindDefinition,
 } from "@jiscribe/canvas-sdk";
 
+import { appendErEntityColumnOnTab } from "./columns/appendErEntityColumnOnTab";
 import { ErEntityColumnGripControl } from "./controls/ErEntityColumnGripControl";
 import { calcConnectionAnchorOffsetPastGrips } from "./controls/ErEntityGrip";
 import { ErEntityLaneGripControl } from "./controls/ErEntityLaneGripControl";
@@ -190,7 +191,8 @@ const ER_ENTITY_PROPERTY_PANEL: PropertyPanelSection[] = [
  * picked slots only empties them (clearErEntityTextSlots). A whole lane — key,
  * name or type down every row — is a part too (ER_ENTITY_LANE_PART_DEFINITION),
  * picked by its grip above the title band; Delete empties it, the lanes being
- * fixed.
+ * fixed. Tab in the editor off the last slot appends a column
+ * (appendErEntityColumnOnTab).
  * The column connect points (calcErEntityConnectPoints) are re-resolved by
  * `geometryKey` when a row is added, removed or changes its pitch.
  *
@@ -228,6 +230,7 @@ export const erEntityDefinition: ObjectTypeDefinition<
 			region: calcErEntityTextSlotRegion,
 			range: collectErEntityTextSlotRange,
 			delete: clearErEntityTextSlots,
+			extend: appendErEntityColumnOnTab,
 		},
 	],
 	transformHandles: ER_ENTITY_TRANSFORM_HANDLES,

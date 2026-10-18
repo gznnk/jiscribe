@@ -51,19 +51,24 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		/**
 		 * Grows the object by parts after the last one `list` names — a table
 		 * appending a row — so that Tab in the open text editor, leaving the last
-		 * slot, steps onto the first new one instead of wrapping to the first
+		 * slot, steps onto a new one instead of wrapping to the first
 		 * (STEP_TEXT_EDIT). Asked of the `"textSlot"` kind alone, and only there:
 		 * Shift+Tab and Tab outside the editor always wrap.
 		 *
-		 * The object returned must keep every part it held under the same id, and
-		 * its `list` must name at least one part after the old last one; the step
-		 * lands on the first of those, and anything else throws. It goes through
-		 * the type's content resizer and re-routes the connectors attached to it
-		 * like any structural edit, and joins the commit of the edited slot in one
-		 * undo step. Null declines, and the step wraps as if this were omitted.
-		 * Omitted = the kind never grows past its last part.
+		 * The `object` returned must keep every part it held under the same id, and
+		 * its `list` must name at least one part after the old last one — the
+		 * parts it added. The step lands on `landingPartId`, which must be one of
+		 * those (for a row whose first cell is not the one to type in), or on the
+		 * first of them when it is omitted; anything else throws. The
+		 * object goes through the type's content resizer and re-routes the
+		 * connectors attached to it like any structural edit, and joins the commit
+		 * of the edited slot in one undo step. Null declines, and the step wraps as
+		 * if this were omitted. Omitted = the kind never grows past its last part.
 		 */
-		extend?: (object: TState) => TState | null;
+		extend?: (object: TState) => {
+			object: TState;
+			landingPartId?: string;
+		} | null;
 
 		/**
 		 * The parts a range from `anchorPartId` to `focusPartId` covers, for a kind

@@ -153,8 +153,13 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 		range: collectTableCellRange,
 		delete: clearTableGridCells,
 		styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
-		extend: (table) =>
-			insertTableGridTrack(table, "row", countTableTracks(table, "row")),
+		extend: (table) => ({
+			object: insertTableGridTrack(
+				table,
+				"row",
+				countTableTracks(table, "row"),
+			),
+		}),
 	},
 ];
 
