@@ -5,10 +5,13 @@ import {
 	cellCenter,
 	cellCount,
 	clickTrackGrip,
+	cornerGrip,
 	drawnTextWeight,
+	fillCell,
 	isResizeHandleOnTop,
 	partOutlineRects,
 	pressInsertTrack,
+	selectedCellIds,
 	tableOutlineRect,
 	trackGrip,
 	trackGripFace,
@@ -36,6 +39,35 @@ async function gripFill(
 	return trackGripFace(canvas, axis, trackIndex).evaluate(
 		(face) => getComputedStyle(face).fill,
 	);
+}
+
+/** Clicks the corner grip at its middle, with `modifier` held when given. */
+async function clickCornerGrip(
+	canvas: CanvasDriver,
+	modifier?: "shift" | "ctrl",
+): Promise<void> {
+	const box = await cornerGrip(canvas).boundingBox();
+	if (box === null) {
+		throw new Error("no corner grip");
+	}
+	const point = canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
+	if (modifier === "shift") {
+		await canvas.shiftClickAt(point);
+	} else if (modifier === "ctrl") {
+		await canvas.ctrlClickAt(point);
+	} else {
+		await canvas.clickAt(point);
+	}
+}
+
+/** The corner grip's resolved fill, read off the drawn rect behind the pressable one. */
+async function cornerGripFill(canvas: CanvasDriver): Promise<string> {
+	return cornerGrip(canvas)
+		.locator("xpath=preceding-sibling::*[local-name()='rect'][1]")
+		.evaluate((face) => getComputedStyle(face).fill);
 }
 
 test.describe("table track grips", () => {
@@ -274,5 +306,93 @@ test.describe("table track grips", () => {
 			.toBe(1);
 		expect(await gripFill(canvas, "columnGrip", 0)).toBe(unselectedFill);
 		expect(await gripFill(canvas, "columnGrip", 2)).not.toBe(unselectedFill);
+	});
+
+	test.describe("corner grip", () => {
+		test("sits where the row and column headings meet, as thick as they are", async ({
+			canvas,
+		}) => {
+			await canvas.placeShape("Table");
+
+			const corner = await cornerGrip(canvas).boundingBox();
+			const rowGrip = await trackGrip(canvas, "rowGrip", 0).boundingBox();
+			const columnGrip = await trackGrip(canvas, "columnGrip", 0).boundingBox();
+			if (corner === null || rowGrip === null || columnGrip === null) {
+				throw new Error("no grips drawn");
+			}
+
+			expect(Math.abs(corner.x - rowGrip.x)).toBeLessThanOrEqual(1);
+			expect(Math.abs(corner.width - rowGrip.width)).toBeLessThanOrEqual(1);
+			expect(
+				Math.abs(corner.x + corner.width - columnGrip.x),
+			).toBeLessThanOrEqual(1);
+			expect(Math.abs(corner.y - columnGrip.y)).toBeLessThanOrEqual(1);
+			expect(Math.abs(corner.height - columnGrip.height)).toBeLessThanOrEqual(
+				1,
+			);
+			expect(
+				Math.abs(corner.y + corner.height - rowGrip.y),
+			).toBeLessThanOrEqual(1);
+		});
+
+		test("picks every cell as cells, and is never drawn selected", async ({
+			canvas,
+		}) => {
+			const id = await canvas.placeShape("Table");
+			const unselectedCornerFill = await cornerGripFill(canvas);
+			const unselectedGripFill = await gripFill(canvas, "rowGrip", 0);
+
+			await clickCornerGrip(canvas);
+
+			await expect
+				.poll(async () => (await selectedCellIds(canvas, id)).sort())
+				.toEqual(["r0c0", "r0c1", "r1c0", "r1c1"]);
+			expect(await cornerGripFill(canvas)).toBe(unselectedCornerFill);
+			// A pick of cells, not of tracks: no heading lights up.
+			expect(await gripFill(canvas, "rowGrip", 0)).toBe(unselectedGripFill);
+			expect(await gripFill(canvas, "columnGrip", 0)).toBe(unselectedGripFill);
+
+			// A second click, modified or not, leaves the pick as it is.
+			await clickCornerGrip(canvas);
+			await clickCornerGrip(canvas, "shift");
+			expect((await selectedCellIds(canvas, id)).sort()).toEqual([
+				"r0c0",
+				"r0c1",
+				"r1c0",
+				"r1c1",
+			]);
+		});
+
+		test("treats a Ctrl-click as a plain one, replacing a row pick", async ({
+			canvas,
+		}) => {
+			const id = await canvas.placeShape("Table");
+			await clickTrackGrip(canvas, "rowGrip", 0);
+
+			await clickCornerGrip(canvas, "ctrl");
+
+			await expect
+				.poll(async () => (await selectedCellIds(canvas, id)).sort())
+				.toEqual(["r0c0", "r0c1", "r1c0", "r1c1"]);
+		});
+
+		test("lets Delete clear every cell's text and keep the grid", async ({
+			canvas,
+		}) => {
+			const id = await canvas.placeShape("Table");
+			await fillCell(canvas, id, "r0c0", "first cell");
+			await fillCell(canvas, id, "r1c1", "last cell");
+			await canvas.selectAt(await cellCenter(canvas, id, "r0c1"));
+
+			await clickCornerGrip(canvas);
+			await canvas.deleteSelection();
+
+			await expect(canvas.page.getByText("first cell")).toHaveCount(0);
+			await expect(canvas.page.getByText("last cell")).toHaveCount(0);
+			expect(await cellCount(canvas, id)).toBe(4);
+			expect(
+				(await canvas.captureObjects()).some((object) => object.id === id),
+			).toBe(true);
+		});
 	});
 });

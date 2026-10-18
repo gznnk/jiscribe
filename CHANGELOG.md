@@ -196,6 +196,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   typography, never their text, whichever side it lands on. The cells keep
   their contents as the grid renumbers around an insertion, and one undo takes
   it back.
+- **The corner where a table's row and column headings meet selects every
+  cell**, as a spreadsheet's select-all corner does. The cells are picked as
+  cells, not as rows, so Delete clears their text and keeps the grid. Shift and
+  Ctrl or Cmd change nothing about the click, and clicking it again with every
+  cell already picked leaves the pick as it is.
 - **The arrow keys move a table's picked cell.** With a cell picked, an arrow
   picks the cell next to it in that direction instead of nudging the table, and
   at the edge of the grid it does nothing. A picked block of cells collapses to

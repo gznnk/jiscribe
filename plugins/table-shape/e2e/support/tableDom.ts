@@ -156,6 +156,18 @@ export function trackGrip(
 }
 
 /**
+ * The corner grip where the row and column headings meet, which picks every cell.
+ *
+ * @param canvas - The driver for the page under test
+ * @returns A locator for the grip's pressable rect, which matches nothing when the table is not the sole selection
+ */
+export function cornerGrip(canvas: CanvasDriver) {
+	return canvas.page.locator(
+		`[data-kind="control"][data-action="selection:table:cornerGrip"]`,
+	);
+}
+
+/**
  * The drawn cell of one track's grip: the painted rect behind the pressable one
  * `trackGrip` finds, which carries the fill and abuts the table.
  *

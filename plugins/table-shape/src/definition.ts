@@ -14,10 +14,12 @@ import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
 import { TABLE_INSERT_PICKED_PART_KINDS } from "./commands/tableInsertCommands";
 import { createTableTrackGripHandler } from "./controls/createTableTrackGripHandler";
 import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
+import { handleTableCornerGrip } from "./controls/handleTableCornerGrip";
 import { handleTableRowBoundary } from "./controls/handleTableRowBoundary";
 import { handleTableTrailingEdge } from "./controls/handleTableTrailingEdge";
 import { TableColumnBoundaryControl } from "./controls/TableColumnBoundaryControl";
 import { TableColumnGripControl } from "./controls/TableColumnGripControl";
+import { TableCornerGripControl } from "./controls/TableCornerGripControl";
 import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
 import { TableRowGripControl } from "./controls/TableRowGripControl";
 import { calcConnectionAnchorOffsetPastGrips } from "./controls/TableTrackGrip";
@@ -62,7 +64,8 @@ const calcTableConnectionAnchors = (
 };
 
 /**
- * Five controls: a boundary and a grip per axis, and the trailing edges. One
+ * Six controls: a boundary and a grip per axis, the trailing edges, and the
+ * corner grip where the two strips of grips meet. One
  * registration covers every boundary or track of its axis — each handle appends
  * its own index to the control's `data-action`, and the handler reads it back off
  * the event's `subAction` (parseTableBoundaryIndex / parseTableTrackPartId). A
@@ -79,9 +82,10 @@ const calcTableConnectionAnchors = (
  * transform handles, the resizer reads no axis of it as an input.
  *
  * The grips write no object at all, only the part selection, so a click on one is
- * never a document change.
+ * never a document change. The corner grip picks every cell, as cells rather
+ * than as rows, so Delete over that pick clears text and removes nothing.
  *
- * All five are drawn under the core handles: the strips and grips run along the
+ * All six are drawn under the core handles: the strips and grips run along the
  * edges the resize handles sit on, and one covered at a handle's spot is still
  * reachable along the rest of its length, where the handle can be pressed
  * nowhere else.
@@ -118,6 +122,13 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 		events: ["click"],
 		Component: TableColumnGripControl,
 		handle: createTableTrackGripHandler(TABLE_COLUMN_PART_KIND),
+	},
+	{
+		name: "cornerGrip",
+		layer: "belowHandles",
+		events: ["click"],
+		Component: TableCornerGripControl,
+		handle: handleTableCornerGrip,
 	},
 ];
 

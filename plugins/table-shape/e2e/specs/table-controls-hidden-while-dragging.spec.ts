@@ -1,7 +1,7 @@
 import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-import { cellCenter, trackGrip } from "../support/tableDom";
+import { cellCenter, cornerGrip, trackGrip } from "../support/tableDom";
 
 /**
  * A type's own selection controls are hidden while the object is moved or
@@ -23,8 +23,10 @@ test.describe("table controls hidden while dragging", () => {
 		const id = await canvas.placeShape("Table");
 		const rowGrip = trackGrip(canvas, "rowGrip", 0);
 		const columnGrip = trackGrip(canvas, "columnGrip", 0);
+		const corner = cornerGrip(canvas);
 		await expect(rowGrip).toHaveCount(1);
 		await expect(columnGrip).toHaveCount(1);
+		await expect(corner).toHaveCount(1);
 
 		const from = await cellCenter(canvas, id, "r0c0");
 		await canvas.dragInspecting(
@@ -33,11 +35,13 @@ test.describe("table controls hidden while dragging", () => {
 			async () => {
 				await expect(rowGrip).toHaveCount(0);
 				await expect(columnGrip).toHaveCount(0);
+				await expect(corner).toHaveCount(0);
 			},
 		);
 
 		await expect(rowGrip).toHaveCount(1);
 		await expect(columnGrip).toHaveCount(1);
+		await expect(corner).toHaveCount(1);
 	});
 
 	test("hides them while the width handle is dragged", async ({ canvas }) => {
