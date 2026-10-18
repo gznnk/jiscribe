@@ -28,7 +28,8 @@ what each action means is documented on its type in that file. The main actions 
 
 Other actions only swap a piece of state inside the reducer, such as setting the camera or the selection, or
 updating the draft during a text edit. `UPDATE_TEXT_EDIT`, for instance, only replaces the draft; the commit into
-the doc happens when `END_TEXT_EDIT` commits.
+the doc happens when `END_TEXT_EDIT` commits, or when the editor's Ctrl/Cmd+Enter runs the `commitTextEdit`
+command, which ends in the same state and the same undo entry.
 
 Each handler (`handleGesture` / `handleCommand` / `handlePaste`, …) is implemented as a
 **pure function** that returns the new state from the state and its input (plus the canvas's registry bundle),

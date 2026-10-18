@@ -33,6 +33,8 @@ type EditorHandlers = {
 	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
 	onChange: (text: RichText) => void;
 	onEscape: () => void;
+	/** Cmd+Enter / Ctrl+Enter in either editor: commit and close, as a press outside does. */
+	onCommit: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
@@ -112,6 +114,7 @@ function renderConnectorLabelEditor(
 			strokeDashType={connector.label?.strokeDashType}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
+			onCommit={handlers.onCommit}
 			onCaretMove={handlers.onCaretMove}
 		/>
 	);
@@ -189,6 +192,7 @@ function renderTextEditor(
 			onSelectionChange={handlers.onSelectionChange}
 			onToggleFormat={handlers.onToggleFormat}
 			onEscape={handlers.onEscape}
+			onCommit={handlers.onCommit}
 			onTab={handlers.onTab}
 			onCaretMove={handlers.onCaretMove}
 		/>
@@ -203,6 +207,8 @@ type TextEditorLayerProps = {
 	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
 	onTextChange: (text: RichText) => void;
 	onEscape: () => void;
+	/** Cmd+Enter / Ctrl+Enter in either editor: commit and close, as a press outside does. */
+	onCommit: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
@@ -223,6 +229,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	objects,
 	onTextChange,
 	onEscape,
+	onCommit,
 	onCaretMove,
 	onSelectionChange,
 	onToggleFormat,
@@ -241,6 +248,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	const handlers: EditorHandlers = {
 		onChange: onTextChange,
 		onEscape,
+		onCommit,
 		onCaretMove,
 		onSelectionChange,
 		onToggleFormat,

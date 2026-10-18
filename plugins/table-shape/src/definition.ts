@@ -25,7 +25,12 @@ import { TableTrailingEdgeControl } from "./controls/TableTrailingEdgeControl";
 import { tableDocDefinition } from "./doc";
 import { clearTableGridCells } from "./grid/clearTableGridCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
-import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
+import { insertTableGridTrack } from "./grid/insertTableGridTrack";
+import {
+	countTableTracks,
+	TABLE_COLUMN_PART_KIND,
+	TABLE_ROW_PART_KIND,
+} from "./grid/tableTrack";
 import { TableInsertMenu } from "./menu/TableInsertMenu";
 import { TABLE_CELL_STYLE_INTENT_KINDS } from "./parts/tableCellStyleIntentKinds";
 import { TABLE_TRACK_PART_DEFINITIONS } from "./parts/tableTrackParts";
@@ -125,10 +130,12 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
  * that steps into a shape writes it, Tab walks it, the text style menu reads it.
  * A `"cell"` kind would be a second name for the same thing, selected by nobody.
  *
- * What is declared here is the four things core cannot derive — where the cells
+ * What is declared here is the five things core cannot derive — where the cells
  * are (every cell rect in one layout pass, calcTableTextSlotRegions), what Delete
- * means over a cell range, what the range between two cells is, and that a cell
- * pick receives the fill on top of the text (TABLE_CELL_STYLE_INTENT_KINDS) — so
+ * means over a cell range, what the range between two cells is, that a cell
+ * pick receives the fill on top of the text (TABLE_CELL_STYLE_INTENT_KINDS), and
+ * that Tab in the editor of the last cell appends a row looking like the last
+ * one, as Insert Row Below would, rather than wrapping to the first cell — so
  * `createTextSlotPartKindDefinition` is spread for the rest and only those added (a
  * declared `"textSlot"` replaces the derived one). Emptying is not removing,
  * which is why rows and cells are separate kinds at all: Delete over a row grip
@@ -146,6 +153,8 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 		range: collectTableCellRange,
 		delete: clearTableGridCells,
 		styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
+		extend: (table) =>
+			insertTableGridTrack(table, "row", countTableTracks(table, "row")),
 	},
 ];
 

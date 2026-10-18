@@ -8,7 +8,8 @@ import { selectors } from "../../support/selectors";
  * - A connector without a label starts label editing on a double click on the line
  * - Typing and committing draws a horizontal label on the route
  *   (foreignObject[data-kind=connector]) at the double-clicked point (not at the
- *   route midpoint). Cancelling with Escape leaves nothing behind
+ *   route midpoint). Ctrl+Enter (Cmd+Enter on a Mac) commits as an outside click
+ *   does; cancelling with Escape leaves nothing behind
  * - Once a label exists, only a double click on the label box starts re-editing
  *   (a double click on the line only selects; tapping the line while editing
  *   commits as an outside-the-label tap)
@@ -537,6 +538,17 @@ test.describe("connector label", () => {
 		await canvas.textEditorSurface().fill("Changed");
 		await canvas.cancelText();
 		await expect(labelBoxOf(canvas, connectorId)).toContainText("Yes");
+	});
+
+	test("commits label editing with Ctrl/Cmd+Enter", async ({ canvas }) => {
+		const connectorId = await setupConnector(canvas);
+		const onLine = await pointOnConnector(canvas, connectorId);
+
+		await canvas.typeTextAt(onLine, "Go");
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("Go");
 	});
 
 	test("changes the label font color from the styling UI (label.fontColor)", async ({

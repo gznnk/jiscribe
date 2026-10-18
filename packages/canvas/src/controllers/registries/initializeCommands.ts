@@ -31,6 +31,7 @@ import { ToggleAutoHeightCommand } from "../commands/shape/ToggleAutoHeightComma
 import { ToggleLockAspectRatioCommand } from "../commands/shape/ToggleLockAspectRatioCommand";
 import { ToggleTextLayoutCommand } from "../commands/shape/ToggleTextLayoutCommand";
 import { ToggleTextVerticalBasisCommand } from "../commands/shape/ToggleTextVerticalBasisCommand";
+import { CommitTextEditCommand } from "../commands/text/CommitTextEditCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { toggleTextFormatCommands } from "../commands/text/ToggleTextFormatCommands";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
@@ -86,6 +87,7 @@ export const ALL_COMMANDS: Command[] = [
 	ToggleTextVerticalBasisCommand,
 	// Text commands
 	StartTextEditCommand,
+	CommitTextEditCommand,
 	// Text format commands: bold / italic / underline / strikethrough
 	...toggleTextFormatCommands,
 	// View commands

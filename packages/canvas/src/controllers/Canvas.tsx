@@ -26,6 +26,7 @@ import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import type { ResolveImageBlob } from "../export";
 import { SelectNextTextSlotCommand } from "./commands/selection/SelectNextTextSlotCommand";
 import { SelectPreviousTextSlotCommand } from "./commands/selection/SelectPreviousTextSlotCommand";
+import { CommitTextEditCommand } from "./commands/text/CommitTextEditCommand";
 import { toggleTextFormatCommandId } from "./commands/text/ToggleTextFormatCommands";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
@@ -695,6 +696,15 @@ const CanvasComponent = ({
 		[dispatch, registries],
 	);
 
+	// Cmd/Ctrl+Enter in the editor commits through its command, so a host that
+	// left it out of `config.commands` gets the keystroke swallowed instead.
+	const handleTextEditCommit = useCallback(() => {
+		if (registries.command.get(CommitTextEditCommand.id) === undefined) {
+			return;
+		}
+		dispatch({ type: "COMMAND", commandId: CommitTextEditCommand.id });
+	}, [dispatch, registries]);
+
 	// Tab in the editor walks the slots as Tab on the canvas does, so a host that
 	// left that walk out of `config.commands` gets the keystroke swallowed instead.
 	const handleTextEditTab = useCallback(
@@ -922,6 +932,7 @@ const CanvasComponent = ({
 									objects={draftObjects}
 									onTextChange={handleTextEditChange}
 									onEscape={handleTextEditEscape}
+									onCommit={handleTextEditCommit}
 									onCaretMove={revealCaret}
 									onSelectionChange={handleTextEditSelectionChange}
 									onToggleFormat={handleTextEditToggleFormat}
