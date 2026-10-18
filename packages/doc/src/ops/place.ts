@@ -2,6 +2,7 @@ import type { Rect } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
+import { isBlockLayoutText } from "./utils/extraFields";
 import { requireFiniteNumber } from "./utils/numberArgs";
 import {
 	type ObjectRecord,
@@ -146,27 +147,43 @@ export type ResizeObjectParams = {
 };
 
 /**
- * Resize one object around its top-left corner, mutating `doc` in place.
- *
- * Geometry alone is scaled: stroke width and font size are styling and are left as they
- * are. A group scales its children, so their gaps scale with the box.
- *
- * @param doc - Mutated in place
- * @param id - Id of the object to resize; must exist in the root tree
- * @param params - Target size; an omitted axis keeps its current extent. Both must be
- *   greater than 0
- * @param definitions - Type table `features.geometry` is read from
- * @throws {@link DocOperationError} when the id is missing, names a connector or another
- *   object with no size of its own to set — a `geometry: "point"` shape measured from its
- *   content — has a zero extent on an axis being resized, or when a requested extent is
- *   not greater than 0
+ * An object cleared for resizing: one scaled from its box to the target extents, or a
+ * block text (isBlockLayoutText), which has only the width it wraps in rewritten.
  */
-/** An object cleared for resizing, with the box and target extents the scaling uses. */
-type ResizePlan = {
-	object: ObjectRecord;
-	bounds: Rect;
-	width: number;
-	height: number;
+type ResizePlan =
+	| {
+			kind: "scale";
+			object: ObjectRecord;
+			bounds: Rect;
+			width: number;
+			height: number;
+	  }
+	| { kind: "blockWidth"; object: ObjectRecord; width: number | undefined };
+
+/**
+ * Settle the new wrap width of a block text (isBlockLayoutText), writing nothing. Its
+ * height is measured from its content, so a height asked for is refused rather than
+ * dropped.
+ */
+const planBlockTextResize = (
+	object: ObjectRecord,
+	params: ResizeObjectParams,
+): ResizePlan => {
+	if (params.height !== undefined) {
+		throw new DocOperationError(
+			`${object.id} ("${object.type}") has no height of its own to set: its height is measured from its content, so resize it by width alone`,
+		);
+	}
+	if (params.width === undefined) {
+		return { kind: "blockWidth", object, width: undefined };
+	}
+	const width = requireFiniteNumber(params.width, "width");
+	if (width <= 0) {
+		throw new DocOperationError(
+			`${object.id} cannot be resized to width ${width}: it must be greater than 0`,
+		);
+	}
+	return { kind: "blockWidth", object, width };
 };
 
 /** Settle one object's target size and reject what cannot be scaled, writing nothing. */
@@ -175,6 +192,13 @@ const planResize = (
 	params: ResizeObjectParams,
 	definitions: DocDefinitions,
 ): ResizePlan => {
+	const definition = definitions.get(object.type);
+	if (
+		definition?.features.geometry === "point" &&
+		isBlockLayoutText(definition, object.textLayout)
+	) {
+		return planBlockTextResize(object, params);
+	}
 	requireResizableObject(object, definitions);
 	const bounds = requireObjectBounds(object, definitions);
 	const width = params.width ?? bounds.width;
@@ -196,14 +220,21 @@ const planResize = (
 			`${object.id} has a zero-width or zero-height bounding box, so it cannot be scaled to a size`,
 		);
 	}
-	return { object, bounds, width, height };
+	return { kind: "scale", object, bounds, width, height };
 };
 
-/** Carry out a plan {@link planResize} has already cleared. */
-const applyResize = (
-	{ object, bounds, width, height }: ResizePlan,
-	definitions: DocDefinitions,
-): void => {
+/**
+ * Carry out a plan {@link planResize} has already cleared. A block text's plan keeps the
+ * stored corner, which for a point-geometry doc is the drawn top-left.
+ */
+const applyResize = (plan: ResizePlan, definitions: DocDefinitions): void => {
+	if (plan.kind === "blockWidth") {
+		if (plan.width !== undefined) {
+			plan.object.width = plan.width;
+		}
+		return;
+	}
+	const { object, bounds, width, height } = plan;
 	scaleObject(
 		object,
 		{ x: bounds.x, y: bounds.y },
@@ -213,6 +244,24 @@ const applyResize = (
 	);
 };
 
+/**
+ * Resize one object around its top-left corner, mutating `doc` in place.
+ *
+ * Geometry alone is scaled: stroke width and font size are styling and are left as they
+ * are. A group scales its children, so their gaps scale with the box. A block text
+ * (isBlockLayoutText) has the width it wraps in rewritten and nothing else, its height
+ * following its content.
+ *
+ * @param doc - Mutated in place
+ * @param id - Id of the object to resize; must exist in the root tree
+ * @param params - Target size; an omitted axis keeps its current extent. Both must be
+ *   greater than 0
+ * @param definitions - Type table `features.geometry` is read from
+ * @throws {@link DocOperationError} when the id is missing, names a connector or another
+ *   object with no size of its own to set — a `geometry: "point"` shape measured from its
+ *   content — has a zero extent on an axis being resized, or when a requested extent is
+ *   not greater than 0; for a block text, when a height is given
+ */
 export const resizeObject = (
 	doc: CanvasDoc,
 	id: string,
@@ -239,8 +288,9 @@ export const resizeObject = (
  * @throws {@link DocOperationError} before touching the doc: for a missing id, naming every
  *   missing one at once; for a size failure — a connector or other object with no size of
  *   its own to set, a zero extent on an axis being resized, or a requested extent not
- *   greater than 0 — identified as `ids[i] (id)`. One such id rejects the whole batch, so
- *   a selection holding a `geometry: "point"` shape resizes nothing until that id is left out
+ *   greater than 0, a height for a block text — identified as `ids[i] (id)`. One such id
+ *   rejects the whole batch, so a selection holding a `geometry: "point"` shape resizes
+ *   nothing until that id is left out (or, for a block text, until the height is)
  */
 export const resizeObjects = (
 	doc: CanvasDoc,

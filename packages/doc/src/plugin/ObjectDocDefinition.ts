@@ -143,7 +143,8 @@ export type ObjectDocDefinition = {
 	 * Draw-time text-style defaults of a `features.text: "slots"` type: what each
 	 * slot's typography falls back to where the document sets none
 	 * (ObjectTextStyleDefaultsRegistry). Declared as `byTextSlot` for the slots the
-	 * type names, or as `everyTextSlot` by a type whose slot set is not fixed (see
+	 * type names (a map, or a function of the slot id), or as `everyTextSlot` by a
+	 * type whose slot set is not fixed (see
 	 * {@link ObjectTextSlotStyleDefaults}). Declared here because a keyed type's
 	 * styling has no flat doc field for {@link defaults} to carry it in; a
 	 * `"body"` type needs none, its single slot's defaults being read off

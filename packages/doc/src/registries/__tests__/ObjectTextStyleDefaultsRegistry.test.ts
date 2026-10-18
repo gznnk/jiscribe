@@ -8,6 +8,7 @@ import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import {
 	createObjectTextStyleDefaultsRegistry,
 	extractTextSlotStyleDefaults,
+	readTextSlotStyleDefaults,
 } from "../ObjectTextStyleDefaultsRegistry";
 
 const slotsFeatures = { ...TextFeatures, text: "slots" } as const;
@@ -49,9 +50,9 @@ describe("extractTextSlotStyleDefaults", () => {
 			TEXT_DOC_DEFAULTS,
 		);
 		expect(TEXT_DOC_DEFAULTS.fontFamily).not.toBeUndefined();
-		expect(defaults?.byTextSlot?.[BODY_TEXT_SLOT_ID]).not.toHaveProperty(
-			"fontFamily",
-		);
+		expect(
+			readTextSlotStyleDefaults(defaults, BODY_TEXT_SLOT_ID),
+		).not.toHaveProperty("fontFamily");
 	});
 
 	it("takes a slots type's defaults from its own per-slot declaration", () => {
@@ -289,5 +290,111 @@ describe("extractTextSlotStyleDefaults for a source type", () => {
 		});
 		// The body form reads the same defaults and does take the weight.
 		expect(TEXT_DOC_DEFAULTS.fontWeight).toBe("normal");
+	});
+});
+
+describe("ObjectTextStyleDefaultsRegistry with a byTextSlot function", () => {
+	const TITLE_STYLE = {
+		textAlign: "center",
+		fontWeight: "bold",
+		fontFamily: "serif",
+	} as const;
+	const FAMILY_ONLY_STYLE = { fontFamily: "serif" } as const;
+	const COLUMN_STYLE = { fontSize: 14, fontWeight: "normal" } as const;
+	const readSlotStyle = (slotId: string) => {
+		if (slotId === "title") {
+			return TITLE_STYLE;
+		}
+		return slotId === "family-only" ? FAMILY_ONLY_STYLE : undefined;
+	};
+	const registry = createObjectTextStyleDefaultsRegistry();
+	registry.registerDefinition("entity", {
+		features: slotsFeatures,
+		textSlotStyleDefaults: {
+			everyTextSlot: COLUMN_STYLE,
+			byTextSlot: readSlotStyle,
+		},
+	});
+
+	it("answers with the style the function gives for its slot, picked to the style fields", () => {
+		expect(registry.get("entity", "title")).toEqual({
+			textAlign: "center",
+			fontWeight: "bold",
+		});
+	});
+
+	it("answers with the same object on every read of one style the function gives", () => {
+		expect(registry.get("entity", "title")).toBe(
+			registry.get("entity", "title"),
+		);
+	});
+
+	it("falls back to everyTextSlot, unmerged, where the function answers undefined", () => {
+		expect(registry.get("entity", "col:0:name")).toEqual(COLUMN_STYLE);
+	});
+
+	it("falls back to everyTextSlot where the function's style sets no style field once picked", () => {
+		expect(registry.get("entity", "family-only")).toEqual(COLUMN_STYLE);
+	});
+
+	it("lets the slot's own fields win over the function's style", () => {
+		expect(
+			registry.resolveTextSlotStyle("entity", "title", {
+				text: "t",
+				fontWeight: "300",
+			}),
+		).toEqual({ textAlign: "center", fontWeight: "300" });
+	});
+
+	it("is carried by the extraction as declared, even declared alone", () => {
+		expect(
+			extractTextSlotStyleDefaults(slotsFeatures, undefined, {
+				byTextSlot: readSlotStyle,
+			}),
+		).toEqual({ byTextSlot: readSlotStyle });
+	});
+
+	it("is read as declared, unnarrowed, by readTextSlotStyleDefaults off the unregistered declaration", () => {
+		const declaration = {
+			everyTextSlot: COLUMN_STYLE,
+			byTextSlot: readSlotStyle,
+		};
+
+		expect(readTextSlotStyleDefaults(declaration, "title")).toBe(TITLE_STYLE);
+		expect(readTextSlotStyleDefaults(declaration, "name")).toBe(COLUMN_STYLE);
+	});
+
+	it("keeps its picked styles per registry, so two registries never share one", () => {
+		const otherRegistry = createObjectTextStyleDefaultsRegistry();
+		otherRegistry.registerDefinition("entity", {
+			features: slotsFeatures,
+			textSlotStyleDefaults: {
+				everyTextSlot: COLUMN_STYLE,
+				byTextSlot: readSlotStyle,
+			},
+		});
+
+		expect(otherRegistry.get("entity", "title")).toEqual(
+			registry.get("entity", "title"),
+		);
+		expect(otherRegistry.get("entity", "title")).not.toBe(
+			registry.get("entity", "title"),
+		);
+	});
+});
+
+describe("readTextSlotStyleDefaults with a byTextSlot map", () => {
+	it("prefers the slot's own entry and otherwise falls back to everyTextSlot", () => {
+		const defaults = {
+			byTextSlot: { name: { textAlign: "center" } },
+			everyTextSlot: { fontSize: 12 },
+		} as const;
+		expect(readTextSlotStyleDefaults(defaults, "name")).toBe(
+			defaults.byTextSlot.name,
+		);
+		expect(readTextSlotStyleDefaults(defaults, "other")).toBe(
+			defaults.everyTextSlot,
+		);
+		expect(readTextSlotStyleDefaults(undefined, "name")).toBeUndefined();
 	});
 });

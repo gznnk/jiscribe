@@ -10,7 +10,10 @@ import { calcPointDocDrawnTopLeft } from "../../model/objects/utils/pointDocDraw
 import { roundDocCoordinate } from "../../model/objects/utils/roundDocNumbers";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
-import { extractTextSlotStyleDefaults } from "../../registries/ObjectTextStyleDefaultsRegistry";
+import {
+	extractTextSlotStyleDefaults,
+	readTextSlotStyleDefaults,
+} from "../../registries/ObjectTextStyleDefaultsRegistry";
 import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import type { TextMeasurement } from "../../text/measure/TextMeasurement";
@@ -50,8 +53,10 @@ const resolveBodyFont = (
 ): TextMeasureFont =>
 	resolveDocBodyFont(
 		object,
-		extractTextSlotStyleDefaults(definition.features, definition.defaults)
-			?.byTextSlot?.[BODY_TEXT_SLOT_ID],
+		readTextSlotStyleDefaults(
+			extractTextSlotStyleDefaults(definition.features, definition.defaults),
+			BODY_TEXT_SLOT_ID,
+		),
 	);
 
 /**
@@ -283,8 +288,9 @@ export const requireObjectBounds = (
 /**
  * Refuses an object whose size is not the document's to set: a `geometry: "point"`
  * shape, whose box is measured from its own content every time it is read, so there
- * is no extent for a resize to write. Every other geometry keeps its box in fields a
- * resize rewrites.
+ * is no extent for a resize to write. A block text (isBlockLayoutText) never reaches
+ * here: the resize rewrites the width it wraps in instead. Every other geometry keeps
+ * its box in fields a resize rewrites.
  *
  * Separate from {@link requireObjectBounds} because such a shape does have a box:
  * it reports one, aligns and distributes by it, and is moved by it. Only stating a
@@ -305,7 +311,7 @@ export const requireResizableObject = (
 		return;
 	}
 	throw new DocOperationError(
-		`${object.id} ("${object.type}") has no size of its own to set: its box is measured from its content, so change the fields that content is laid out in — a block text's own width, say — rather than the box`,
+		`${object.id} ("${object.type}") has no size of its own to set: its box is measured from its content, so change the fields that content is laid out in — a text's textLayout, say — rather than the box`,
 	);
 };
 

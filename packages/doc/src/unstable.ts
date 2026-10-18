@@ -29,9 +29,12 @@ export { numberOverride } from "./model/objects/utils/numberOverride";
 // being refused by the shared one (createFrameMapper) and having to measure its
 // box itself: the field names of the style groups its features enable, which is
 // the single answer to which names pass between doc and state untouched, and the
-// rounding a coordinate written back to a doc goes through.
+// rounding a coordinate or a size written back to a doc goes through.
 export { collectStyleKeys } from "./model/objects/utils/collectStyleKeys";
-export { roundDocCoordinate } from "./model/objects/utils/roundDocNumbers";
+export {
+	roundDocCoordinate,
+	roundDocSize,
+} from "./model/objects/utils/roundDocNumbers";
 
 // The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
 // cannot use createFrameObjectFactory (center origin, vertex lists).

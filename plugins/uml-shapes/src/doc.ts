@@ -41,7 +41,7 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	defaults: RECORD_DOC_DEFAULTS,
 	// The schema $def is a handwritten template (text is a slotted object), so
 	// only summary is consumed — it fills the generated doc tables.
-	summary: "titled box + row compartments (UML class / ER entity)",
+	summary: "titled box + row compartments (UML class / DTO)",
 	validateExtra: validateRecordTextFields,
 	// The bands are stacked by the record's own rule, which the shared overflow
 	// check cannot see, so the record checks its height against them itself.

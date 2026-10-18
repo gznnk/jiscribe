@@ -423,3 +423,51 @@ describe("diagnoseDoc", () => {
 		});
 	});
 });
+
+describe("diagnoseDoc on an erEntity", () => {
+	/**
+	 * An entity whose stated name and type widths are far narrower than its texts:
+	 * the shape widens a slot to its text on its own, so nothing is drawn past an
+	 * edge however short the stated widths are.
+	 */
+	const crampedEntity = {
+		id: "users",
+		type: "erEntity",
+		x: 0,
+		y: 0,
+		nameWidth: 24,
+		typeWidth: 60,
+		name: { text: "a_rather_long_entity_name", fontSize: 28 },
+		columns: [
+			{ key: "PK", name: "id", type: "bigint" },
+			{
+				key: "FK",
+				name: "a_rather_long_column_name_for_the_slot",
+				type: "varchar(255) not null default 'unknown'",
+			},
+			{ name: { text: "email", fontSize: 24 }, type: "text" },
+		],
+	};
+
+	it("reports no overflow for texts wider than the stated slot widths", () => {
+		const doc = parseDoc({ version: 1, root: [crampedEntity] }, "entity");
+
+		expect(diagnoseDoc(doc)).toEqual([]);
+	});
+
+	it("leaves typography written at the root to the validation, as an error on the field", () => {
+		const result = validateDoc(
+			JSON.stringify({
+				version: 1,
+				root: [{ ...crampedEntity, fontSize: 18 }],
+			}),
+		);
+
+		expect(
+			result.diagnostics
+				.filter((diagnostic) => diagnostic.severity === "error")
+				.map((diagnostic) => diagnostic.path),
+		).toEqual(["root[0].fontSize"]);
+		expect(result.doc).toBeUndefined();
+	});
+});

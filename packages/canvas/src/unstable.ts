@@ -319,6 +319,10 @@ export { theme as canvasThemeCssVars } from "./theme/themeTokens";
 // outline and meant to read as the same weight of line.
 export { SELECTION_OUTLINE_WIDTH } from "./controllers/ui/feedback/utils/selectionOutline";
 
+// How much thicker a handle's stroke is drawn while its part is selected, so a
+// plugin's own pick handle thickens by the same factor as the canvas's pills.
+export { SELECTED_HANDLE_STROKE_SCALE } from "./controllers/ui/utils/selectedHandleStrokeScale";
+
 // The scrollbar the canvas's own scrollable panels wear (the text editor, the shortcut
 // help). A plugin panel that scrolls has no other way to match them, and a default
 // browser scrollbar next to a custom one is exactly the kind of seam a plugin should not

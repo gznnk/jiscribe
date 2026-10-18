@@ -41,14 +41,98 @@ const textStyleDefaultKeys = (
  * declares `byTextSlot` for the slots of its own fixed set, a slot left out
  * contributing no defaults; one whose slot set is not fixed — a table's cells are
  * one per row × column, so there is no list of ids — declares `everyTextSlot`
- * instead, which every slot without its own entry falls back to.
+ * instead, which every slot without its own entry falls back to. One whose slot
+ * ids are not fixed but still say the slot's role (`col:<i>:key`) declares
+ * `byTextSlot` as a function of the id.
  */
 export type ObjectTextSlotStyleDefaults = Readonly<{
-	/** Defaults of the slots the type names, keyed by slot id. */
-	byTextSlot?: Readonly<Record<string, TextSlotStyle>>;
+	/**
+	 * Defaults of the slots the type names: a map keyed by slot id, or a function
+	 * giving the style for one id (undefined for a slot it has none for). A
+	 * function sees the id alone, never the object, and has to be pure: the same
+	 * style for the same id and no side effect, at best one shared constant per
+	 * role, since a reader may compare styles by reference. A map is narrowed to
+	 * the style fields at registration, a function's style by the registry as it is
+	 * read.
+	 */
+	byTextSlot?:
+		| Readonly<Record<string, TextSlotStyle>>
+		| ((slotId: string) => TextSlotStyle | undefined);
 	/** Defaults every slot without an entry of its own falls back to. */
 	everyTextSlot?: TextSlotStyle;
 }>;
+
+/**
+ * The fields of `style` a slot default may set (`styleKeys`, from
+ * {@link textStyleDefaultKeys}); undefined when it sets none of them.
+ */
+const pickTextStyleDefaults = (
+	style: TextSlotStyle,
+	styleKeys: (keyof TextSlotStyle)[],
+): TextSlotStyle | undefined => {
+	const picked = pickDefined(style, styleKeys);
+	return Object.keys(picked).length > 0 ? picked : undefined;
+};
+
+/**
+ * One slot's defaults read off a declaration, the style a function `byTextSlot`
+ * gives for the slot put through `readSlotStyle` first: the slot's own entry (or
+ * the function's style) or else `everyTextSlot`, the two never merged. The one
+ * statement of that order, read as declared by {@link readTextSlotStyleDefaults}
+ * and picked by the registry.
+ */
+const readDeclaredSlotStyle = (
+	defaults: ObjectTextSlotStyleDefaults | undefined,
+	slotId: string,
+	readSlotStyle: (slotStyle: TextSlotStyle) => TextSlotStyle | undefined,
+): TextSlotStyle | undefined => {
+	const byTextSlot = defaults?.byTextSlot;
+	if (typeof byTextSlot === "function") {
+		const slotStyle = byTextSlot(slotId);
+		return (
+			(slotStyle === undefined ? undefined : readSlotStyle(slotStyle)) ??
+			defaults?.everyTextSlot
+		);
+	}
+	return byTextSlot?.[slotId] ?? defaults?.everyTextSlot;
+};
+
+/** The style a function `byTextSlot` gives, taken as declared. */
+const readSlotStyleAsDeclared = (slotStyle: TextSlotStyle): TextSlotStyle =>
+	slotStyle;
+
+/**
+ * One slot's defaults read off a declaration, in the order every reader lays
+ * them: the slot's own `byTextSlot` entry, or else `everyTextSlot`. A type that
+ * resolves its own slots headlessly (a layout measuring a document) reads its
+ * declaration through this, in the order the registry's `get` reads a registered
+ * one, so the two cannot drift apart. Pure as long as the declaration's function
+ * `byTextSlot` is.
+ *
+ * @param defaults - The type's declaration, or undefined for a type that declares none
+ * @param slotId - Which slot; its own entry in `byTextSlot` (or the style a function gives for it) wins over `everyTextSlot`, the two never merged
+ * @returns The declared object itself, a function's style included, as declared and not narrowed (the registry picks the style fields of the ones it is asked for); undefined when nothing is declared for the slot
+ */
+export const readTextSlotStyleDefaults = (
+	defaults: ObjectTextSlotStyleDefaults | undefined,
+	slotId: string,
+): TextSlotStyle | undefined =>
+	readDeclaredSlotStyle(defaults, slotId, readSlotStyleAsDeclared);
+
+/** A `byTextSlot` map narrowed to `styleKeys`, a slot setting none dropped; undefined when none is left. */
+const narrowTextSlotStyleMap = (
+	byTextSlot: Readonly<Record<string, TextSlotStyle>>,
+	styleKeys: (keyof TextSlotStyle)[],
+): Record<string, TextSlotStyle> | undefined => {
+	const narrowed: Record<string, TextSlotStyle> = {};
+	for (const [slotId, slotDefaults] of Object.entries(byTextSlot)) {
+		const style = pickTextStyleDefaults(slotDefaults, styleKeys);
+		if (style !== undefined) {
+			narrowed[slotId] = style;
+		}
+	}
+	return Object.keys(narrowed).length > 0 ? narrowed : undefined;
+};
 
 /**
  * The per-slot draw-time defaults of one type, from whichever of its two
@@ -68,7 +152,7 @@ export type ObjectTextSlotStyleDefaults = Readonly<{
  * @param features - The type's feature flags; one with no text at all yields undefined
  * @param defaults - The type's creation defaults (its `*_DOC_DEFAULTS`); read for a root-form type only, undefined for a type that declares none
  * @param slotStyleDefaults - The type's per-slot declaration; read for a `"slots"` type only, undefined for a type that declares none
- * @returns The defaults in the same two-field shape, each field narrowed to the style fields and dropped when it sets none; undefined when nothing is left — the value `register` is meant to be handed
+ * @returns The defaults in the same two-field shape, each map narrowed to the style fields and dropped when it sets none, a function `byTextSlot` carried as declared; undefined when nothing is left — the value `register` is meant to be handed
  */
 export const extractTextSlotStyleDefaults = (
 	features: ObjectFeatures,
@@ -94,29 +178,20 @@ export const extractTextSlotStyleDefaults = (
 		return undefined;
 	}
 	const styleKeys = textStyleDefaultKeys(features.text);
-	const byTextSlot: Record<string, TextSlotStyle> = {};
-	for (const [slotId, slotDefaults] of Object.entries(
-		slotStyleDefaults.byTextSlot ?? {},
-	)) {
-		const style = pickDefined(slotDefaults, styleKeys);
-		if (Object.keys(style).length > 0) {
-			byTextSlot[slotId] = style;
-		}
-	}
-	const everyTextSlotStyle =
+	const declaredByTextSlot = slotStyleDefaults.byTextSlot;
+	const byTextSlot: ObjectTextSlotStyleDefaults["byTextSlot"] =
+		typeof declaredByTextSlot === "function"
+			? declaredByTextSlot
+			: narrowTextSlotStyleMap(declaredByTextSlot ?? {}, styleKeys);
+	const everyTextSlot =
 		slotStyleDefaults.everyTextSlot === undefined
 			? undefined
-			: pickDefined(slotStyleDefaults.everyTextSlot, styleKeys);
-	const everyTextSlot =
-		everyTextSlotStyle !== undefined &&
-		Object.keys(everyTextSlotStyle).length > 0
-			? everyTextSlotStyle
-			: undefined;
-	if (Object.keys(byTextSlot).length === 0 && everyTextSlot === undefined) {
+			: pickTextStyleDefaults(slotStyleDefaults.everyTextSlot, styleKeys);
+	if (byTextSlot === undefined && everyTextSlot === undefined) {
 		return undefined;
 	}
 	return {
-		...(Object.keys(byTextSlot).length > 0 && { byTextSlot }),
+		...(byTextSlot !== undefined && { byTextSlot }),
 		...(everyTextSlot !== undefined && { everyTextSlot }),
 	};
 };
@@ -140,6 +215,36 @@ export class ObjectTextStyleDefaultsRegistry {
 		ObjectType,
 		ObjectTextSlotStyleDefaults
 	>();
+
+	/**
+	 * What {@link pickTextStyleDefaults} took out of each style a function
+	 * `byTextSlot` gave, keyed by that style, so a style that is one shared
+	 * constant reads back as one object however often it is asked for, as a map
+	 * entry picked at registration does.
+	 */
+	private readonly pickedTextStyleDefaultsCache = new WeakMap<
+		TextSlotStyle,
+		TextSlotStyle | undefined
+	>();
+
+	/**
+	 * The style fields of a style a function `byTextSlot` gave, picked as a map
+	 * entry is at registration: from the cache when this style was picked before,
+	 * otherwise picked now and cached. Undefined when it sets no style field.
+	 */
+	private readonly readPickedTextStyleDefaults = (
+		slotStyle: TextSlotStyle,
+	): TextSlotStyle | undefined => {
+		if (this.pickedTextStyleDefaultsCache.has(slotStyle)) {
+			return this.pickedTextStyleDefaultsCache.get(slotStyle);
+		}
+		const picked = pickTextStyleDefaults(
+			slotStyle,
+			textStyleDefaultKeys("slots"),
+		);
+		this.pickedTextStyleDefaultsCache.set(slotStyle, picked);
+		return picked;
+	};
 
 	register(type: ObjectType, defaults: ObjectTextSlotStyleDefaults): void {
 		this.defaultsByType.set(type, defaults);
@@ -173,14 +278,20 @@ export class ObjectTextStyleDefaultsRegistry {
 
 	/**
 	 * The defaults of one slot, or undefined when the type declares none for it
-	 * through either field of {@link ObjectTextSlotStyleDefaults}.
+	 * through either field of {@link ObjectTextSlotStyleDefaults}, read in the
+	 * order {@link readTextSlotStyleDefaults} reads one, the style a function
+	 * gives picked to the style fields.
 	 *
 	 * @param type - The object type the slot belongs to
 	 * @param slotId - Which slot; a root-form type's single slot is BODY_TEXT_SLOT_ID. Its own entry in `byTextSlot` wins over `everyTextSlot`
+	 * @returns The registered entry itself, or for a function `byTextSlot` the picked style — the same object on every read of one style it gives
 	 */
 	get(type: ObjectType, slotId: string): TextSlotStyle | undefined {
-		const defaults = this.defaultsByType.get(type);
-		return defaults?.byTextSlot?.[slotId] ?? defaults?.everyTextSlot;
+		return readDeclaredSlotStyle(
+			this.defaultsByType.get(type),
+			slotId,
+			this.readPickedTextStyleDefaults,
+		);
 	}
 
 	/**

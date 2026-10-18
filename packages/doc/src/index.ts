@@ -67,8 +67,18 @@ export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
 export type { ArrowType } from "./model/objects/types/ArrowType";
 export { ArrowTypes } from "./model/objects/types/ArrowType";
-export type { ConnectPointId } from "./model/objects/types/EndpointRef";
-export { ConnectPointIds } from "./model/objects/types/EndpointRef";
+// Where a connector end attaches: the owner it names and the anchor on it. A
+// plugin that renumbers its own connect points rewrites these ends.
+export type {
+	AnchorSpec,
+	ConnectPointId,
+	EndpointRef,
+	OwnedEndpointRef,
+} from "./model/objects/types/EndpointRef";
+export {
+	ConnectPointIds,
+	isOwnedEndpointRef,
+} from "./model/objects/types/EndpointRef";
 export type { ConnectorRouting } from "./model/objects/types/ConnectorRouting";
 export { ConnectorRoutings } from "./model/objects/types/ConnectorRouting";
 export type { TextLayout } from "./model/objects/types/text/TextLayout";
@@ -159,6 +169,7 @@ export type { BoundsDeclaration } from "./plugin/isMissingBounds";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
+export { readTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
 // The stroke / fill defaults a type declares through its creation defaults, and
 // what one shape's style resolves to once type and last resort are folded in.
 export { extractShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";

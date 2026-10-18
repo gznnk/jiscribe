@@ -161,6 +161,10 @@ export type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 export type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 export type { ObjectState } from "./states/objects/base/ObjectState";
 export type { MetaState } from "./states/objects/base/MetaState";
+// A connector as the canvas holds it, for a plugin whose edit moves the ends
+// attached to its own shape (a renumbered connect point) in the same transition.
+export type { ConnectorState } from "./states/objects/connector/ConnectorState";
+export { isConnectorState } from "./states/objects/connector/ConnectorState";
 export type { CreateObjectType } from "@jiscribe/doc/model/objects/types/CreateObjectType";
 export type { CreateObjectState } from "./states/objects/types/CreateObjectState";
 export type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
