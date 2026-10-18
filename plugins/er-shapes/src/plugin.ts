@@ -14,8 +14,8 @@ import { erEntityDefinition } from "./definition";
  * headless (Node-side) parse entry is `erDocPlugin` in `./doc`.
  *
  * `commands` carries the column insertions (Alt+Shift+Up / Down beside a picked
- * column or slot, and "Add at Bottom" for the entity as a whole), Delete and
- * Enter over a column pick, Enter over a lane pick, the arrows that move or widen a column pick
+ * column or slot, and "Add at Bottom" for the entity as a whole), Enter over a
+ * column pick, Enter over a lane pick, the arrows that move or widen a column pick
  * (Up / Down, Shift for the range), and the arrows that move or widen a slot
  * pick (all four, Shift for the range), each with its own wording per locale.
  */

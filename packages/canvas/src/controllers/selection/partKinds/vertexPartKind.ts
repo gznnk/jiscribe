@@ -38,8 +38,10 @@ export const createVertexPartKindDefinition = <
 			return null;
 		}
 		return {
-			...object,
-			points: object.points.filter((_, index) => !removedIndices.has(index)),
+			object: {
+				...object,
+				points: object.points.filter((_, index) => !removedIndices.has(index)),
+			},
 		};
 	},
 });

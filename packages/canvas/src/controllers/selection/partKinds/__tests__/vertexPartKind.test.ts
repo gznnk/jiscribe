@@ -29,7 +29,7 @@ describe("createVertexPartKindDefinition", () => {
 	});
 
 	it("removes the named vertices and keeps the rest in order", () => {
-		expect(vertex.delete?.(polyline, ["1"])?.points).toEqual([
+		expect(vertex.delete?.(polyline, ["1"])?.object.points).toEqual([
 			{ x: 0, y: 0 },
 			{ x: 20, y: 0 },
 		]);

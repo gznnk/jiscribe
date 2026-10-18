@@ -29,7 +29,7 @@ export const listErEntityColumnSourcesForInsert = (
  * Inserts one column of three empty slots. The slot ids of every column at or
  * past `at` move one along, and so do their connect point ids; the connectors
  * attached to them are moved along with them by the canvas-side rewrite
- * (rewriteErEntityColumnsOnCanvas), which the commands go through.
+ * (rewriteErEntityColumnsWithConnectors), which the commands go through.
  *
  * @param state - The entity to insert into; left untouched
  * @param at - Where the new column goes, 0-based in declared order; clamped to `0`…the column count, so the count appends

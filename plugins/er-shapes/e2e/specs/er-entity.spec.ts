@@ -575,7 +575,7 @@ test.describe("erEntity", () => {
 });
 
 test.describe("erEntity columns", () => {
-	test("picks a column by its grip, Delete removes it and shrinks the box, Enter edits the next", async ({
+	test("picks a column by its grip, Delete removes it, shrinks the box and drops the pick", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
@@ -593,10 +593,16 @@ test.describe("erEntity columns", () => {
 		);
 		// One row less: the row pitch at 100%.
 		expect(heightBefore - (await boxHeight(canvas, id))).toBeCloseTo(25, 0);
-		// The column that moved into the removed one's place is picked next.
-		await expect.poll(() => columnGripFill(canvas, 1)).not.toBe(unpickedFill);
+		// The removal drops the pick, as a table's does (DeleteCommand).
+		await expect.poll(() => partOutlineRects(canvas)).toHaveLength(0);
+		expect(await columnGripFill(canvas, 1)).toBe(unpickedFill);
 
-		// Enter over the picked column opens its name.
+		// Enter over the column that moved into the removed one's place opens its
+		// name. Picked from the one above, as a second click on the same grip would
+		// read as a double click.
+		await clickColumnGrip(canvas, 0);
+		await canvas.page.keyboard.press("ArrowDown");
+		await expect.poll(() => columnGripFill(canvas, 1)).not.toBe(unpickedFill);
 		await canvas.page.keyboard.press("Enter");
 		await canvas.waitForTextEditor();
 		expect(await canvas.textEditorText()).toBe("created_at");
@@ -675,10 +681,10 @@ test.describe("erEntity columns", () => {
 		const texts = (await drawnTexts(canvas, id)).join("|");
 		expect(texts).toContain("varchar(100)");
 		expect(texts).not.toContain("created_at");
-		// The column that moved into the first removed one's place is picked next.
+		// The removal drops the pick.
 		await expect
 			.poll(() => pickedColumns(canvas, id, unpickedFill))
-			.toEqual([0]);
+			.toEqual([]);
 	});
 
 	test("takes the last picked column out with Ctrl, leaving the entity selected", async ({
@@ -775,6 +781,32 @@ test.describe("erEntity columns", () => {
 		await canvas.deleteSelection();
 		await expect.poll(() => columnCount(canvas, id)).toBe(3);
 		const afterDelete = await rowRightEdge(canvas, id, 1);
+		await expect
+			.poll(async () => (await connectorStart(canvas, connectorId)).y)
+			.toBeCloseTo(afterDelete.y, 0);
+		expect((await connectorStart(canvas, connectorId)).x).toBeCloseTo(
+			afterDelete.x,
+			0,
+		);
+	});
+
+	test("keeps a connector on its column when one before it is deleted from the context menu", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		const rowRight = await rowRightEdge(canvas, id, 1);
+		const connectorId = await canvas.createConnector(
+			"col:1:right",
+			canvas.toContent({ x: rowRight.x + 160, y: rowRight.y + 40 }),
+		);
+
+		await canvas.clickAt(await slotCenter(canvas, id, "name"));
+		await clickColumnGrip(canvas, 0);
+		await canvas.openContextMenu(await slotCenter(canvas, id, "col:0:name"));
+		await canvas.clickContextMenuCommand("delete");
+
+		await expect.poll(() => columnCount(canvas, id)).toBe(2);
+		const afterDelete = await rowRightEdge(canvas, id, 0);
 		await expect
 			.poll(async () => (await connectorStart(canvas, connectorId)).y)
 			.toBeCloseTo(afterDelete.y, 0);

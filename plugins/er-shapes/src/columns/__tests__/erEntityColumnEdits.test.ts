@@ -5,7 +5,6 @@ import { erEntityTextSlotIds } from "../../schema/erEntityColumnIds";
 import type { ErEntityDoc } from "../../schema/ErEntityDoc";
 import { erEntityToDoc, erEntityToState } from "../../state/ErEntityMapper";
 import { insertErEntityColumn } from "../insertErEntityColumn";
-import { pickErEntityColumnAfterRemoval } from "../pickErEntityColumnAfterRemoval";
 import { removeErEntityColumns } from "../removeErEntityColumns";
 
 const makeState = () =>
@@ -114,33 +113,5 @@ describe("removeErEntityColumns", () => {
 	it("refuses a removal naming no column", () => {
 		expect(removeErEntityColumns(makeState(), [3, -1])).toBeNull();
 		expect(removeErEntityColumns(makeState(), [])).toBeNull();
-	});
-});
-
-describe("pickErEntityColumnAfterRemoval", () => {
-	const pickOf = (partId: string) => ({
-		kind: "erEntityColumn",
-		ranges: [{ anchorId: partId, focusId: partId }],
-	});
-
-	it("picks the column that moved into the removed one's place", () => {
-		expect(pickErEntityColumnAfterRemoval([1], 2)).toEqual(pickOf("col:1"));
-	});
-
-	it("picks the one before when the last column went", () => {
-		expect(pickErEntityColumnAfterRemoval([2], 2)).toEqual(pickOf("col:1"));
-	});
-
-	it("picks the first column left behind the first removed one when several went", () => {
-		// Five columns less 3, 1 and 2: old col:4 is renumbered to col:1.
-		expect(pickErEntityColumnAfterRemoval([3, 1, 2], 2)).toEqual(
-			pickOf("col:1"),
-		);
-		// Five columns less 3 and 4: nothing was left behind, so the last remaining.
-		expect(pickErEntityColumnAfterRemoval([4, 3], 3)).toEqual(pickOf("col:2"));
-	});
-
-	it("picks nothing when no column is left", () => {
-		expect(pickErEntityColumnAfterRemoval([0], 0)).toBeNull();
 	});
 });

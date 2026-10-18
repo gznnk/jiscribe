@@ -367,7 +367,12 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 `ObjectPartKindDefinition` を 1 つ宣言し、`has`（その id がまだそのオブジェクトの部分を
 指すか）と `delete` を述べる。core は部分 id を不透明な文字列として運び、型へ渡し
 返すだけなので、`"3"` や `"cell:2,1"` の意味を知っているのは型だけである。省略すれば
-そのオブジェクトは不可分で、Delete は全体の削除へ落ちる。組み込みの `vertex` が
+そのオブジェクトは不可分で、Delete は全体の削除へ落ちる。`delete` は
+`{ object, connectPointRemap? }` を返す（断るなら null）。接続点を振り直したり消したり
+する削除（ER エンティティの列）は、各接続点の行き先を元の id をキーにして答え、core が
+そのオブジェクトに付いたコネクターの端を同じ undo 1 手で付け替える。AI ツールの
+`connectPointRemap` と同じ写像で、キャンバス側では `remapConnectorEnds` が
+適用する。組み込みの `vertex` が
 実例で、polyline / polygon / connector がそれぞれ、削除を断る頂点数の下限とともに
 宣言している。`features.text` を持つ型には `"textSlot"` の種別が宣言なしで
 付き、部分 id は自分の `text` のキーになる（1 ボディの型なら `body` だけで、テキスト

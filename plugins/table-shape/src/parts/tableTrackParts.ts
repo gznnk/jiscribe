@@ -81,14 +81,16 @@ const createTableTrackPartDefinition = (
 			: calcTrackRegion(object, axis, index);
 	},
 
-	delete: (object, partIds) =>
-		removeTableGridTracks(
+	delete: (object, partIds) => {
+		const removedTable = removeTableGridTracks(
 			object,
 			axis,
 			partIds
 				.map(parseTableTrackPartId)
 				.filter((index): index is number => index !== null),
-		),
+		);
+		return removedTable === null ? null : { object: removedTable };
+	},
 
 	styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
 

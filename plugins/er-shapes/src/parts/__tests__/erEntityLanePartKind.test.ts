@@ -149,7 +149,9 @@ describe("ER_ENTITY_LANE_PART_DEFINITION", () => {
 	});
 
 	it("empties the picked lane on delete, keeping its slots and every other text", () => {
-		const cleared = ER_ENTITY_LANE_PART_DEFINITION.delete?.(ENTITY, ["type"]);
+		const cleared = ER_ENTITY_LANE_PART_DEFINITION.delete?.(ENTITY, [
+			"type",
+		])?.object;
 		expect(cleared?.text["col:0:type"].text).toBe("");
 		expect(cleared?.text["col:2:type"].text).toBe("");
 		expect(cleared?.text["col:0:name"].text).toBe("id");
@@ -158,8 +160,10 @@ describe("ER_ENTITY_LANE_PART_DEFINITION", () => {
 	});
 
 	it("refuses to delete a lane whose slots are empty already", () => {
-		const cleared = ER_ENTITY_LANE_PART_DEFINITION.delete?.(ENTITY, ["key"]);
-		expect(cleared).not.toBeNull();
+		const cleared = ER_ENTITY_LANE_PART_DEFINITION.delete?.(ENTITY, [
+			"key",
+		])?.object;
+		expect(cleared).toBeDefined();
 		expect(
 			ER_ENTITY_LANE_PART_DEFINITION.delete?.(cleared!, ["key"]),
 		).toBeNull();

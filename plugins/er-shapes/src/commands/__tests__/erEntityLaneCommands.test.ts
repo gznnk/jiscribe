@@ -10,7 +10,6 @@ import { erPlugin } from "../../plugin";
 import type { ErEntityDoc } from "../../schema/ErEntityDoc";
 import { erEntityToState } from "../../state/ErEntityMapper";
 import type { ErEntityState } from "../../state/ErEntityState";
-import { ER_ENTITY_COLUMN_COMMANDS } from "../erEntityColumnCommands";
 import { ER_ENTITY_LANE_COMMANDS } from "../erEntityLaneCommands";
 
 const makeState = (columns: ErEntityDoc["columns"]): ErEntityState =>
@@ -58,10 +57,7 @@ const registries = createCanvasRegistries({
 }) as unknown as ICanvasRegistries;
 
 const commandById = (id: string) => {
-	const command = [
-		...ER_ENTITY_LANE_COMMANDS,
-		...ER_ENTITY_COLUMN_COMMANDS,
-	].find((entry) => entry.id === id);
+	const command = ER_ENTITY_LANE_COMMANDS.find((entry) => entry.id === id);
 	if (command === undefined) {
 		throw new Error(`no command ${id}`);
 	}
@@ -104,11 +100,15 @@ describe("erEntity lane commands", () => {
 	});
 
 	it("leaves Delete over a lane pick to the built-in one, which empties the lane", () => {
-		expect(
-			commandById("erEntity.deleteColumn").canExecute(
-				canvasWith(pickOf("erEntityLane", "name")),
-				registries,
-			),
-		).toBe(false);
+		const execute = registries.command.get("delete")?.execute;
+		const result = execute!(
+			canvasWith(pickOf("erEntityLane", "name")),
+			registries,
+		);
+		const entity = result.objects[ENTITY.id] as ErEntityState;
+		expect(entity.text["col:0:name"].text).toBe("");
+		expect(entity.text["col:1:name"].text).toBe("");
+		expect(entity.text["col:0:type"].text).toBe("bigint");
+		expect("col:1:key" in entity.text).toBe(true);
 	});
 });

@@ -87,11 +87,13 @@ export const ER_ENTITY_LANE_PART_DEFINITION: ObjectPartKindDefinition<ErEntitySt
 			return lane === null ? null : calcErEntityLaneRegion(object, lane);
 		},
 
-		delete: (object, partIds) =>
-			clearErEntityTextSlots(
+		delete: (object, partIds) => {
+			const clearedEntity = clearErEntityTextSlots(
 				object,
 				collectErEntityLaneTextSlotIds(object, partIds),
-			),
+			);
+			return clearedEntity === null ? null : { object: clearedEntity };
+		},
 
 		styleIntentKinds: TEXT_STYLE_INTENT_KINDS,
 

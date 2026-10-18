@@ -92,7 +92,7 @@ describe("TABLE_TRACK_PART_DEFINITIONS", () => {
 	});
 
 	it("deletes the named tracks", () => {
-		const deleted = rowPart.delete?.(makeTable(), ["0"]) as TableState;
+		const deleted = rowPart.delete?.(makeTable(), ["0"])?.object as TableState;
 
 		expect(deleted.rows).toHaveLength(1);
 		expect(Object.keys(deleted.text)).toEqual(["r0c0", "r0c1", "r0c2"]);

@@ -75,7 +75,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   call clean while the bottom rows were drawn past the box.
 - **For plugin authors: a type declares the sub-parts of its objects.**
   `ObjectTypeDefinition.partKinds` takes one `ObjectPartKindDefinition` per
-  part-id namespace, stating `has` and `delete`, and optionally `multiPick`,
+  part-id namespace, stating `has` and `delete` (the changed object, plus an
+  optional `connectPointRemap` that core applies to the connectors attached to
+  it), and optionally `multiPick`,
   `region` / `regions` (a part's box, outlined when picked), `list` (Tab order),
   `range` (what a Shift-click range covers), `textSlotIds` and
   `styleIntentKinds` (what a pick is styled through), and `extend` (what Tab
@@ -83,8 +85,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and a list of anchor/focus ranges. Core registers `"textSlot"` for every
   type holding text and `vertex` for polylines, polygons and connectors.
   `createTextSlotPartKindDefinition`, `TEXT_SLOT_PART_KIND`,
-  `resolveTextSlotIds`, `TEXT_STYLE_INTENT_KINDS`, `collectObjectPartIds` and
-  `readActivePartFocusId` are on `@jiscribe/canvas/unstable`.
+  `resolveTextSlotIds`, `TEXT_STYLE_INTENT_KINDS`, `collectObjectPartIds`,
+  `readActivePartFocusId` and `remapConnectorEnds` (the same remap,
+  for a plugin command) are on `@jiscribe/canvas/unstable`.
 - **For plugin authors: a plugin may contribute commands** through
   `CanvasPlugin.commands`, narrowed by the host's `config.commands` like the
   built-ins. A command's `label` takes `LocaleMessages` as a stencil's does.

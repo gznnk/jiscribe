@@ -13,7 +13,7 @@ import { reconcileErEntityBox } from "./reconcileErEntityBox";
  * the cleared text was, and an automatic key gutter follows its keys, as it does
  * when one is edited empty.
  *
- * Registered as the `delete` of the entity's `"textSlot"` part.
+ * What the `delete` of the entity's `"textSlot"` part empties the slots through.
  *
  * @param state - The entity to clear in; left untouched
  * @param slotIds - The slots to empty, as `state.text` keys them; ids the entity has no slot at are ignored

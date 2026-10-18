@@ -56,11 +56,21 @@ describe("ER_ENTITY_COLUMN_PART_DEFINITION", () => {
 
 	it("removes the picked column on delete, the last one included", () => {
 		const removed = ER_ENTITY_COLUMN_PART_DEFINITION.delete?.(state, ["col:0"]);
-		expect(removed?.text["col:0:name"].text).toBe("id");
-		const emptied = ER_ENTITY_COLUMN_PART_DEFINITION.delete?.(removed!, [
+		expect(removed?.object.text["col:0:name"].text).toBe("id");
+		const emptied = ER_ENTITY_COLUMN_PART_DEFINITION.delete?.(removed!.object, [
 			"col:0",
 		]);
-		expect(Object.keys(emptied!.text)).toEqual(["name"]);
+		expect(Object.keys(emptied!.object.text)).toEqual(["name"]);
+	});
+
+	it("says on delete where the connect points of the removed and the following columns go", () => {
+		const removed = ER_ENTITY_COLUMN_PART_DEFINITION.delete?.(state, ["col:0"]);
+		expect(removed?.connectPointRemap).toEqual({
+			"col:0:left": { kind: "edge", side: "left", t: expect.any(Number) },
+			"col:0:right": { kind: "edge", side: "right", t: expect.any(Number) },
+			"col:1:left": { kind: "connectPoint", id: "col:0:left" },
+			"col:1:right": { kind: "connectPoint", id: "col:0:right" },
+		});
 	});
 
 	it("sends a text style to the picked column's three slots", () => {

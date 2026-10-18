@@ -13,9 +13,7 @@ import {
 	readErEntityCommandTarget,
 } from "./readErEntityCommandTarget";
 import { listErEntityColumnSourcesForInsert } from "../columns/insertErEntityColumn";
-import { pickErEntityColumnAfterRemoval } from "../columns/pickErEntityColumnAfterRemoval";
-import { listErEntityColumnSourcesForRemoval } from "../columns/removeErEntityColumns";
-import { rewriteErEntityColumnsOnCanvas } from "../columns/rewriteErEntityColumnsOnCanvas";
+import { rewriteErEntityColumnsWithConnectors } from "../columns/rewriteErEntityColumnsWithConnectors";
 import { ER_ENTITY_COLUMN_PART_KIND } from "../parts/erEntityColumnPartKind";
 import {
 	parseErEntityColumnPartId,
@@ -114,7 +112,7 @@ const toKeyBinding = (arrowCode: string): KeyBinding => ({
 /**
  * Builds one insertion. The command commits its own edit (commitEdit) — the
  * entity and the connectors on the columns that moved along, in one step
- * (rewriteErEntityColumnsOnCanvas) — then opens the editor on the new column's name: typing it is why a column is added, so the
+ * (rewriteErEntityColumnsWithConnectors) — then opens the editor on the new column's name: typing it is why a column is added, so the
  * pick goes straight to it rather than being remapped past the insertion.
  */
 const createErEntityInsertCommand = (
@@ -136,7 +134,7 @@ const createErEntityInsertCommand = (
 		if (target === null || at === null) {
 			return state;
 		}
-		const objects = rewriteErEntityColumnsOnCanvas(
+		const objects = rewriteErEntityColumnsWithConnectors(
 			state.objects,
 			target.objectId,
 			listErEntityColumnSourcesForInsert(target.entity, at),
@@ -176,79 +174,6 @@ const readPickedColumnIndex = (state: CanvasControllerState): number | null => {
 };
 
 /**
- * The picked columns a column-pick command removes, 0-based in declared order:
- * every column the ranges of a column pick cover. Empty for any other pick,
- * whose Delete is not about columns.
- */
-const readPickedColumnIndices = (
-	state: CanvasControllerState,
-	registries: ICanvasRegistries,
-): number[] => {
-	const target = readErEntityCommandTarget(state);
-	if (
-		target === null ||
-		state.selection.part?.kind !== ER_ENTITY_COLUMN_PART_KIND
-	) {
-		return [];
-	}
-	return collectPickedErEntityColumnIndices(
-		state,
-		target.entity,
-		registries.objectPartKind,
-	);
-};
-
-/**
- * Delete or Backspace over picked columns: removes every one of them, the
- * connectors on the columns behind following them and those on a removed one
- * kept on its side of the box (rewriteErEntityColumnsOnCanvas), and picks
- * the column that moved into the first one's place, else the last remaining,
- * else the entity as a whole (pickErEntityColumnAfterRemoval). Claimed ahead of
- * the built-in Delete, which would remove the columns through the part kind's
- * `delete` too but drop the pick and leave the connectors on the ids they name.
- */
-const deleteErEntityColumnCommand: ExecutableCommand = {
-	id: "erEntity.deleteColumn",
-	label: { en: "Delete Column", ja: "カラムを削除" },
-	category: "edit",
-	shortcuts: { default: [{ code: "Delete" }, { code: "Backspace" }] },
-
-	canExecute: (state, registries) =>
-		readPickedColumnIndices(state, registries).length > 0,
-
-	execute: (state, registries) => {
-		const target = readErEntityCommandTarget(state);
-		const columnIndices = readPickedColumnIndices(state, registries);
-		if (target === null || columnIndices.length === 0) {
-			return state;
-		}
-		const columnSources = listErEntityColumnSourcesForRemoval(
-			target.entity,
-			columnIndices,
-		);
-		if (columnSources === null) {
-			return state;
-		}
-		return commitEdit({
-			...state,
-			objects: rewriteErEntityColumnsOnCanvas(
-				state.objects,
-				target.objectId,
-				columnSources,
-			),
-			selection: {
-				...state.selection,
-				part: pickErEntityColumnAfterRemoval(
-					columnIndices,
-					columnSources.length,
-				),
-			},
-			lastDuplicate: null,
-		});
-	},
-};
-
-/**
  * Enter over a column pick: opens the editor on the active column's name, the
  * text a column is mostly edited for. Claimed ahead of the built-in Enter, which would
  * open the first slot, the title, for a pick that is not a slot.
@@ -277,10 +202,10 @@ const editErEntityColumnNameCommand: ExecutableCommand = {
 
 /**
  * The entity's command contributions, wired in through `CanvasPlugin.commands`:
- * the three insertions, and Delete and Enter over a column pick.
+ * the three insertions, and Enter over a column pick. Delete over one is the
+ * built-in command's, through the column kind's `delete`.
  */
 export const ER_ENTITY_COLUMN_COMMANDS: readonly ExecutableCommand[] = [
 	...ER_ENTITY_INSERT_COMMANDS,
-	deleteErEntityColumnCommand,
 	editErEntityColumnNameCommand,
 ];

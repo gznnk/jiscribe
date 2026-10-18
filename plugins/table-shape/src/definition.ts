@@ -162,7 +162,10 @@ const TABLE_PARTS: ObjectPartKindDefinition<TableState>[] = [
 			regions: calcTableTextSlotRegions,
 		}),
 		range: collectTableCellRange,
-		delete: clearTableGridCells,
+		delete: (table, cellIds) => {
+			const clearedTable = clearTableGridCells(table, cellIds);
+			return clearedTable === null ? null : { object: clearedTable };
+		},
 		styleIntentKinds: TABLE_CELL_STYLE_INTENT_KINDS,
 		extend: (table) => ({
 			object: insertTableGridTrack(

@@ -239,7 +239,10 @@ export const erEntityDefinition: ObjectTypeDefinition<
 			// asked for alone is placed without placing every other.
 			region: calcErEntityTextSlotRegion,
 			range: collectErEntityTextSlotRange,
-			delete: clearErEntityTextSlots,
+			delete: (object, slotIds) => {
+				const clearedEntity = clearErEntityTextSlots(object, slotIds);
+				return clearedEntity === null ? null : { object: clearedEntity };
+			},
 			extend: appendErEntityColumnOnTab,
 		},
 	],

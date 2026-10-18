@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
@@ -301,7 +302,7 @@ describe("DeleteCommand", () => {
 					list: (object) => object.items.map((_, index) => String(index)),
 					delete: (object, partIds) => {
 						deletedPartIds = partIds;
-						return { ...object, items: [] };
+						return { object: { ...object, items: [] } };
 					},
 				},
 			]);
@@ -323,6 +324,80 @@ describe("DeleteCommand", () => {
 
 			expect(deletedPartIds).toEqual(["0", "1", "2"]);
 			expect(next.selection.part).toBeNull();
+		});
+
+		it("moves the ends on the connect points the deletion's `connectPointRemap` names, in the same commit", () => {
+			const rowRegistries = createTestRegistries();
+			rowRegistries.objectPartKind.register("pin", [
+				{
+					kind: "row",
+					has: () => true,
+					delete: (object) => ({
+						object,
+						connectPointRemap: {
+							"row:1": { kind: "connectPoint", id: "row:0" },
+							"row:0": { kind: "edge", side: "left", t: 0.25 },
+						},
+					}),
+				},
+			]);
+			const connectorTo = (
+				id: string,
+				ownerId: string,
+				anchor: ConnectorState["target"]["anchor"],
+			): ConnectorState =>
+				({
+					id,
+					type: "connector",
+					points: [],
+					source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+					target: { owner: { id: ownerId }, anchor },
+				}) as unknown as ConnectorState;
+			const onRow0 = connectorTo("c0", "n", {
+				kind: "connectPoint",
+				id: "row:0",
+			});
+			const onRow1 = connectorTo("c1", "n", {
+				kind: "connectPoint",
+				id: "row:1",
+			});
+			const onCenter = connectorTo("c2", "n", { kind: "center" });
+			const onOtherOwner = connectorTo("c3", "m", {
+				kind: "connectPoint",
+				id: "row:1",
+			});
+			const pin = { id: "n", type: "pin" } as unknown as ObjectState;
+			const state = makeState({
+				selection: selectionOf(["n"], {
+					kind: "row",
+					ranges: [{ anchorId: "0", focusId: "0" }],
+				}),
+				objects: {
+					n: pin,
+					c0: onRow0,
+					c1: onRow1,
+					c2: onCenter,
+					c3: onOtherOwner,
+				},
+				rootIds: ["n", "c0", "c1", "c2", "c3"],
+			});
+
+			const next = DeleteCommand.execute(state, rowRegistries);
+
+			// Both ends looked up against the ids they had before: row:1 lands on row:0
+			// without then being carried on to the edge.
+			expect((next.objects["c0"] as ConnectorState).target.anchor).toEqual({
+				kind: "edge",
+				side: "left",
+				t: 0.25,
+			});
+			expect((next.objects["c1"] as ConnectorState).target.anchor).toEqual({
+				kind: "connectPoint",
+				id: "row:0",
+			});
+			expect(next.objects["c2"]).toBe(onCenter);
+			expect(next.objects["c3"]).toBe(onOtherOwner);
+			expect(next.commitVersion).toBe(1);
 		});
 
 		it("is executable when there is a connector selection", () => {

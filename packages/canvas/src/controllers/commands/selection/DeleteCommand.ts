@@ -1,13 +1,16 @@
-﻿import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../selection/CanvasSelection";
 import { collectObjectPartIds } from "../../selection/readers/collectObjectPartIds";
-import type { DeletableParts } from "../../selection/readers/readDeletableParts";
+import type {
+	DeletableParts,
+	DeletablePartKindDefinition,
+} from "../../selection/readers/readDeletableParts";
 import { readDeletableParts } from "../../selection/readers/readDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
+import { remapConnectorEnds } from "../../utils/remapConnectorEnds";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { ExecutableCommand } from "../CommandTypes";
 
@@ -86,16 +89,16 @@ export const DeleteCommand: ExecutableCommand = {
 		if (target !== null) {
 			const deletable = readDeletableParts(state, target, registries);
 			if (deletable !== null) {
-				const deletedObject = deletable.part.delete(
+				const deletion = deletable.part.delete(
 					deletable.object,
 					target.partIds,
 				);
-				if (deletedObject === null) {
+				if (deletion === null) {
 					// The type refused this one deletion (a polyline at its vertex floor):
 					// the key stays claimed, yet nothing changes.
 					return state;
 				}
-				return commitPartDeletion(state, deletedObject);
+				return commitPartDeletion(state, deletion);
 			}
 		}
 		// Either nothing is picked below the object or the kind registers no
@@ -105,20 +108,26 @@ export const DeleteCommand: ExecutableCommand = {
 };
 
 /**
- * Commits the object the part definition gave back as one command edit (plain
- * spread of the objects map, no copy-on-write view), the counterpart of
- * `deleteSelectedObjects` for the part branch.
+ * Commits what the part definition gave back as one command edit (plain spread
+ * of the objects map, no copy-on-write view): the object, and the connector ends
+ * its `connectPointRemap` moves. The counterpart of `deleteSelectedObjects` for
+ * the part branch.
  */
 const commitPartDeletion = (
 	state: CanvasControllerState,
-	deletedObject: ObjectState,
+	deletion: NonNullable<ReturnType<DeletablePartKindDefinition["delete"]>>,
 ): CanvasControllerState => {
+	const { object: deletedObject, connectPointRemap } = deletion;
+	const objects = {
+		...state.objects,
+		[deletedObject.id]: deletedObject,
+	};
 	const nextState: CanvasControllerState = {
 		...state,
-		objects: {
-			...state.objects,
-			[deletedObject.id]: deletedObject,
-		},
+		objects:
+			connectPointRemap === undefined
+				? objects
+				: remapConnectorEnds(objects, deletedObject.id, connectPointRemap),
 		// Removing a part renumbers the ids of a positional kind (the vertices), so
 		// the pick is dropped rather than left addressing whoever took the number
 		// over (see ObjectPartSelection).

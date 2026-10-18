@@ -32,8 +32,10 @@ const itemPart = (floor: number): ObjectPartKindDefinition<ListState> => ({
 			return null;
 		}
 		return {
-			...object,
-			items: object.items.filter((_, index) => !removed.has(index)),
+			object: {
+				...object,
+				items: object.items.filter((_, index) => !removed.has(index)),
+			},
 		};
 	},
 });

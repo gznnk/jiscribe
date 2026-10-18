@@ -1,3 +1,4 @@
+import type { OwnedEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { Rect } from "@jiscribe/geometry";
 
@@ -98,16 +99,31 @@ export type ObjectPartKindDefinition<TState extends ObjectState = ObjectState> =
 		multiPick?: boolean;
 
 		/**
-		 * Removes the named parts and returns the changed object, or null to refuse
+		 * Removes the named parts and returns the changed `object`, or null to refuse
 		 * this one deletion while keeping the state as it stands (a polyline already
 		 * at its vertex floor). Every id is guaranteed to have passed `has`.
+		 *
+		 * `connectPointRemap` is for a deletion that renumbers or removes connect
+		 * points (an ER entity's per-column points): keyed by the connect point id an
+		 * end names before the deletion, valued by the anchor it names after it, the
+		 * same map as an AI tool's `connectPointRemap`. Core rewrites every connector
+		 * end owned by the object whose `connectPoint` id is a key
+		 * (remapConnectorEnds), in the same undo step; ends on other anchor
+		 * kinds and ids absent from it are left alone. Omitted = no connect point
+		 * moved.
 		 *
 		 * Omitted entirely means Delete is not about this kind of part: with one of
 		 * them picked, the key keeps meaning what it means for the object as a whole.
 		 * A kind that wants the key held over a picked part, and nothing removed,
 		 * declares a deletion that always refuses (`() => null`).
 		 */
-		delete?: (object: TState, partIds: readonly string[]) => TState | null;
+		delete?: (
+			object: TState,
+			partIds: readonly string[],
+		) => {
+			object: TState;
+			connectPointRemap?: Readonly<Record<string, OwnedEndpointRef["anchor"]>>;
+		} | null;
 
 		/**
 		 * The style intent kinds a pick of this kind receives, core kinds

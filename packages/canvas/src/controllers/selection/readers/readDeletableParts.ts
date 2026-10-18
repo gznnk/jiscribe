@@ -22,7 +22,7 @@ export type DeletableParts = {
 type PartRegistries = Pick<ICanvasRegistries, "objectPartKind">;
 
 /** A definition whose `delete` the caller can reach without guarding it again. */
-type DeletablePartKindDefinition = ObjectPartKindDefinition & {
+export type DeletablePartKindDefinition = ObjectPartKindDefinition & {
 	delete: NonNullable<ObjectPartKindDefinition["delete"]>;
 };
 

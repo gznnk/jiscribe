@@ -413,7 +413,12 @@ divides its objects into, stating `has` — whether an id still names a part of
 that object — and `delete`. Core treats a part id as an opaque string and hands
 it back to the type, so only the type knows what `"3"` or `"cell:2,1"` means;
 omitted means the object is indivisible and Delete falls through to it as a
-whole. The built-in `vertex` kind is the worked example: polyline, polygon and
+whole. `delete` answers `{ object, connectPointRemap? }`, or null to refuse:
+a deletion that renumbers or removes connect points (an ER entity's columns)
+says where each one goes, keyed by its old id, and core moves the connector
+ends owned by the object in the same undo step — the map an AI tool's
+`connectPointRemap` carries, applied on the canvas by
+`remapConnectorEnds`. The built-in `vertex` kind is the worked example: polyline, polygon and
 connector each declare it with the vertex floor below which deletion is refused.
 Every type with a `features.text` is given the `"textSlot"` kind without
 declaring anything, its part ids being the keys of its own `text` (`body` alone

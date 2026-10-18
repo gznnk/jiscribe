@@ -1,7 +1,8 @@
 import type { ObjectPartKindDefinition } from "@jiscribe/canvas";
 import { TEXT_STYLE_INTENT_KINDS } from "@jiscribe/canvas-sdk";
 
-import { removeErEntityColumns } from "../columns/removeErEntityColumns";
+import { listErEntityColumnSourcesForRemoval } from "../columns/removeErEntityColumns";
+import { rewriteErEntityColumnsWithRemap } from "../columns/rewriteErEntityColumnsWithConnectors";
 import { readCachedErEntityLayout } from "../layout/readCachedErEntityLayout";
 import {
 	countErEntityColumns,
@@ -27,10 +28,11 @@ export const ER_ENTITY_COLUMN_PART_KIND = "erEntityColumn";
  * Several columns at once: the grip's Shift and Ctrl / Meta clicks
  * (handleErEntityColumnGrip) and Shift+Up / Down (extendErEntityColumnSelection)
  * write ranges, which run over `list` — the declared order, the rows' order top
- * to bottom, so a range covers the rows between its ends. `delete` is what
- * Delete removes the picked columns through when no command of this package
- * claims the key first (erEntity.deleteColumn moves the pick on to the next
- * column as well).
+ * to bottom, so a range covers the rows between its ends. `delete` — the
+ * built-in Delete's, from the key and the context menu alike — removes the
+ * picked columns and answers where their connect points go, so the connectors
+ * on the columns behind follow them and those on a removed one stay on its side
+ * of the box (rewriteErEntityColumnsWithRemap).
  *
  * A column pick receives what a slot pick does (TEXT_STYLE_INTENT_KINDS), so
  * the menus offer the text controls alone, which land on the picked columns'
@@ -64,13 +66,17 @@ export const ER_ENTITY_COLUMN_PART_DEFINITION: ObjectPartKindDefinition<ErEntity
 			return readCachedErEntityLayout(object).rows[columnIndex]?.band ?? null;
 		},
 
-		delete: (object, partIds) =>
-			removeErEntityColumns(
+		delete: (object, partIds) => {
+			const columnSources = listErEntityColumnSourcesForRemoval(
 				object,
 				partIds
 					.map(parseErEntityColumnPartId)
 					.filter((columnIndex): columnIndex is number => columnIndex !== null),
-			),
+			);
+			return columnSources === null
+				? null
+				: rewriteErEntityColumnsWithRemap(object, columnSources);
+		},
 
 		styleIntentKinds: TEXT_STYLE_INTENT_KINDS,
 

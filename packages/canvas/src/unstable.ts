@@ -345,6 +345,10 @@ export type { CanvasControllerState } from "./controllers/CanvasTypes";
 // A command that edits the document says so itself: the reducer records history
 // and raises a save off `commitVersion`, and the COMMAND path does not advance it.
 export { commitEdit } from "./controllers/utils/commitEdit";
+// A command that renumbers an object's connect points carries the connectors on
+// them along by the same rule a part kind's `delete` answers with
+// (`connectPointRemap`), which core applies through this.
+export { remapConnectorEnds } from "./controllers/utils/remapConnectorEnds";
 export type {
 	CanvasSelection,
 	ObjectPartRange,

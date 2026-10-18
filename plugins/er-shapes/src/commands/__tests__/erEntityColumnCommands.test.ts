@@ -71,6 +71,21 @@ const canRun = (id: string, state: CanvasControllerState): boolean =>
 const run = (id: string, state: CanvasControllerState) =>
 	commandById(id).execute(state, registries);
 
+/** The built-in Delete, which reaches the column kind's `delete` (DeleteCommand). */
+const runDelete = (state: CanvasControllerState): CanvasControllerState => {
+	const execute = registries.command.get("delete")?.execute;
+	if (execute === undefined) {
+		throw new Error("no built-in delete");
+	}
+	return execute(state, registries);
+};
+
+/** A pick of the run of columns from `anchorId` to `focusId`. */
+const columnRangeOf = (anchorId: string, focusId: string): PartSelection => ({
+	kind: "erEntityColumn",
+	ranges: [{ anchorId, focusId }],
+});
+
 const entityOf = (state: CanvasControllerState): ErEntityState =>
 	state.objects[ENTITY.id] as ErEntityState;
 
@@ -161,16 +176,7 @@ describe("erEntity insert commands", () => {
 			columnNamesOf(run("erEntity.appendColumn", canvasWith(null))),
 		).toEqual(["id", "email", "name", ""]);
 
-		const emptied = run(
-			"erEntity.deleteColumn",
-			run(
-				"erEntity.deleteColumn",
-				run(
-					"erEntity.deleteColumn",
-					canvasWith(pickOf("erEntityColumn", "col:0")),
-				),
-			),
-		);
+		const emptied = runDelete(canvasWith(columnRangeOf("col:0", "col:2")));
 		expect(columnNamesOf(emptied)).toEqual([]);
 		const appended = run("erEntity.appendColumn", emptied);
 		expect(columnNamesOf(appended)).toEqual([""]);
@@ -181,78 +187,23 @@ describe("erEntity insert commands", () => {
 });
 
 describe("erEntity column pick commands", () => {
-	it("claims Delete and Enter only over a picked column", () => {
-		for (const id of ["erEntity.deleteColumn", "erEntity.editColumnName"]) {
-			expect(canRun(id, canvasWith(pickOf("erEntityColumn", "col:0")))).toBe(
-				true,
-			);
-			expect(
-				canRun(id, canvasWith(pickOf(TEXT_SLOT_PART_KIND, "col:0:name"))),
-			).toBe(false);
-			expect(canRun(id, canvasWith(null))).toBe(false);
-		}
+	it("claims Enter only over a picked column", () => {
+		const id = "erEntity.editColumnName";
+		expect(canRun(id, canvasWith(pickOf("erEntityColumn", "col:0")))).toBe(
+			true,
+		);
+		expect(
+			canRun(id, canvasWith(pickOf(TEXT_SLOT_PART_KIND, "col:0:name"))),
+		).toBe(false);
+		expect(canRun(id, canvasWith(null))).toBe(false);
 	});
 
-	it("deletes the picked column and picks the one that moved into its place", () => {
-		const result = run(
-			"erEntity.deleteColumn",
-			canvasWith(pickOf("erEntityColumn", "col:1")),
-		);
-		expect(columnNamesOf(result)).toEqual(["id", "name"]);
-		expect(result.commitVersion).toBe(8);
-		expect(result.selection.part).toEqual(pickOf("erEntityColumn", "col:1"));
-	});
-
-	it("picks the previous column after deleting the last, and the entity after deleting the only one", () => {
-		const lastDeleted = run(
-			"erEntity.deleteColumn",
-			canvasWith(pickOf("erEntityColumn", "col:2")),
-		);
-		expect(lastDeleted.selection.part).toEqual(
-			pickOf("erEntityColumn", "col:1"),
-		);
-
-		const single = canvasWith(pickOf("erEntityColumn", "col:0"), {
-			objects: {
-				[ENTITY.id]: run(
-					"erEntity.deleteColumn",
-					run(
-						"erEntity.deleteColumn",
-						canvasWith(pickOf("erEntityColumn", "col:0")),
-					),
-				).objects[ENTITY.id],
-			},
-		});
-		const emptied = run("erEntity.deleteColumn", single);
-		expect(columnNamesOf(emptied)).toEqual([]);
-		expect(emptied.selection).toEqual({ objectIds: [ENTITY.id], part: null });
-	});
-
-	it("deletes every column a pick of several covers and picks the one after the first", () => {
-		const result = run(
-			"erEntity.deleteColumn",
-			canvasWith({
-				kind: "erEntityColumn",
-				ranges: [
-					{ anchorId: "col:1", focusId: "col:1" },
-					{ anchorId: "col:0", focusId: "col:0" },
-				],
-			}),
-		);
-		expect(columnNamesOf(result)).toEqual(["name"]);
-		expect(result.selection.part).toEqual(pickOf("erEntityColumn", "col:0"));
-	});
-
-	it("deletes a range of columns and picks the one that followed it", () => {
-		const result = run(
-			"erEntity.deleteColumn",
-			canvasWith({
-				kind: "erEntityColumn",
-				ranges: [{ anchorId: "col:0", focusId: "col:1" }],
-			}),
-		);
-		expect(columnNamesOf(result)).toEqual(["name"]);
-		expect(result.selection.part).toEqual(pickOf("erEntityColumn", "col:0"));
+	it("leaves Delete and Backspace to the built-in command", () => {
+		const boundCodes = ER_ENTITY_COLUMN_COMMANDS.flatMap(
+			(command) => command.shortcuts?.default ?? [],
+		).map((binding) => binding.code);
+		expect(boundCodes).not.toContain("Delete");
+		expect(boundCodes).not.toContain("Backspace");
 	});
 
 	it("opens the active column's name on Enter under a pick of several", () => {
@@ -276,6 +227,49 @@ describe("erEntity column pick commands", () => {
 		);
 		expect(result.textEditState).toEqual({ kind: "shape", text: "email" });
 		expect(result.commitVersion).toBe(7);
+	});
+});
+
+describe("the built-in Delete over a column pick", () => {
+	it("deletes the picked column in one commit and drops the pick", () => {
+		const result = runDelete(canvasWith(pickOf("erEntityColumn", "col:1")));
+		expect(columnNamesOf(result)).toEqual(["id", "name"]);
+		expect(result.commitVersion).toBe(8);
+		expect(result.selection).toEqual({ objectIds: [ENTITY.id], part: null });
+	});
+
+	it("deletes every column a pick of several covers", () => {
+		const result = runDelete(
+			canvasWith({
+				kind: "erEntityColumn",
+				ranges: [
+					{ anchorId: "col:2", focusId: "col:2" },
+					{ anchorId: "col:0", focusId: "col:0" },
+				],
+			}),
+		);
+		expect(columnNamesOf(result)).toEqual(["email"]);
+		expect(result.commitVersion).toBe(8);
+		expect(result.selection.part).toBeNull();
+	});
+
+	it("deletes a range of columns, every one of them included", () => {
+		expect(
+			columnNamesOf(runDelete(canvasWith(columnRangeOf("col:0", "col:1")))),
+		).toEqual(["name"]);
+
+		const emptied = runDelete(canvasWith(columnRangeOf("col:0", "col:2")));
+		expect(columnNamesOf(emptied)).toEqual([]);
+		expect(emptied.objects[ENTITY.id]).toBeDefined();
+		expect(emptied.selection).toEqual({ objectIds: [ENTITY.id], part: null });
+	});
+
+	it("empties a picked slot rather than removing its column", () => {
+		const result = runDelete(
+			canvasWith(pickOf(TEXT_SLOT_PART_KIND, "col:1:type")),
+		);
+		expect(columnNamesOf(result)).toEqual(["id", "email", "name"]);
+		expect(entityOf(result).text["col:1:type"].text).toBe("");
 	});
 });
 
@@ -347,19 +341,20 @@ describe("erEntity column commands and the connectors on the columns", () => {
 		}
 	});
 
-	it("moves the connectors on the columns behind a removal up with them", () => {
-		const result = run(
-			"erEntity.deleteColumn",
-			canvasWithConnectors(pickOf("erEntityColumn", "col:0")),
-		);
+	it("moves the connectors on the columns behind a removal up with them, in the one commit", () => {
+		const start = canvasWithConnectors(pickOf("erEntityColumn", "col:0"));
+		const result = runDelete(start);
+		expect(result.commitVersion).toBe(start.commitVersion + 1);
 		expect(endOf(result, "c-right-1", "source")).toEqual(
 			endOn(ENTITY.id, "col:0:right"),
 		);
+		for (const connectorId of ["c-top", "c-other"]) {
+			expect(result.objects[connectorId]).toBe(start.objects[connectorId]);
+		}
 	});
 
 	it("keeps a connector on a removed column attached to the same side, where the row stood", () => {
-		const removedFirst = run(
-			"erEntity.deleteColumn",
+		const removedFirst = runDelete(
 			canvasWithConnectors(pickOf("erEntityColumn", "col:0")),
 		);
 		// Row 0's center was 28 + 12.5 below the top; the box is now 28 + 25 * 2 tall.
@@ -368,8 +363,7 @@ describe("erEntity column commands and the connectors on the columns", () => {
 			anchor: { kind: "edge", side: "left", t: 0.5192 },
 		});
 
-		const removedSecond = run(
-			"erEntity.deleteColumn",
+		const removedSecond = runDelete(
 			canvasWithConnectors(pickOf("erEntityColumn", "col:1")),
 		);
 		// Row 1's center was 28 + 25 + 12.5 below the top.
@@ -381,8 +375,7 @@ describe("erEntity column commands and the connectors on the columns", () => {
 	});
 
 	it("holds the end at the bottom edge when the row stood below the box left behind", () => {
-		const result = run(
-			"erEntity.deleteColumn",
+		const result = runDelete(
 			canvasWithConnectors({
 				kind: "erEntityColumn",
 				ranges: [{ anchorId: "col:0", focusId: "col:2" }],

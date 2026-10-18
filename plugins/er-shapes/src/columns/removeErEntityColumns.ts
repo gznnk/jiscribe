@@ -32,10 +32,10 @@ export const listErEntityColumnSourcesForRemoval = (
 /**
  * Removes whole columns and renumbers the ones behind them. Removing every
  * column is allowed: an entity of none draws one empty row, and a column is
- * added back from the menu's "Add at Bottom". The connectors attached to the
- * columns are rewritten by the canvas-side rewrite (rewriteErEntityColumnsOnCanvas),
- * which the commands go through; this entity-only form is what the part kind's
- * `delete` can reach, and leaves them on the ids they name.
+ * added back from the menu's "Add at Bottom". This entity-only form leaves the
+ * connectors attached to the columns on the ids they name; the commands and the
+ * part kind's `delete` go through rewriteErEntityColumnsWithRemap, which says
+ * where they go.
  *
  * @param state - The entity to remove from; left untouched
  * @param columnIndices - 0-based in declared order, in any order and with repeats allowed; indices the entity does not have are ignored

@@ -40,7 +40,7 @@ const calcRemovedRowRatio = (
  * its new index; a removed column's to an edge anchor on the same side of the box
  * at the height the row stood (the attachment kept rather than the connector
  * dropped, as core keeps a connector whose owner is deleted). The one rule the
- * canvas commands (rewriteErEntityColumnsOnCanvas) and the AI tools'
+ * canvas commands (rewriteErEntityColumnsWithConnectors) and the AI tools'
  * `connectPointRemap` share.
  *
  * @param startLayout - The entity before the rewrite, laid out (calcErEntityLayout, or readCachedErEntityLayout on the canvas side); its row count is the column count
