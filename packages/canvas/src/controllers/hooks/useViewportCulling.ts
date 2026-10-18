@@ -4,7 +4,7 @@ import { flushSync } from "react-dom";
 import { useVisibleObjectIds } from "./useVisibleObjectIds";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { CullingRegistries } from "../utils/calcVisibleObjectIds";
+import type { VisualExtentRegistries } from "../utils/VisualExtentRegistries";
 
 type UseViewportCullingResult = {
 	/**
@@ -30,7 +30,7 @@ export const useViewportCulling = (
 	rootIds: string[],
 	viewport: Viewport,
 	textEditObjectId: string | null,
-	registries: CullingRegistries,
+	registries: VisualExtentRegistries,
 ): UseViewportCullingResult => {
 	const visibleObjectIds = useVisibleObjectIds(
 		objects,

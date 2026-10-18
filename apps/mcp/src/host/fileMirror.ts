@@ -1,7 +1,8 @@
 // The one file on display, and the two directions it moves in.
 //
 // The source of truth is the .jis in the workspace. An AI tool or another editor
-// rewriting it is picked up by the watch and mirrored into the windows; a person's
+// rewriting it is picked up by the watch and mirrored into the windows (or at once
+// through syncOpenFile, for a screen tool that cannot wait for the poll); a person's
 // save comes back the other way through writeOpenFile, under the same per-file lock
 // the tools take and naming the revision it replaces, so neither side lands on top
 // of the other without noticing.
@@ -99,6 +100,22 @@ const waitMs = async (delayMs: number): Promise<void> => {
 /** When a read starting now stops looking again at a file that will not hold still */
 const calcSettleDeadline = (): number => Date.now() + SETTLE_TIMEOUT_MS;
 
+/** One read of the file on display */
+type OpenFileRead =
+	{ kind: "read"; text: string } | { kind: "unreadable"; reason: string };
+
+/** What the windows hold once syncOpenFile has passed the file on display on */
+export type OpenFileSyncOutcome =
+	/** The text under this revision is the last the windows were sent */
+	| { kind: "synced"; revision: string }
+	/** The file cannot be read, and the windows have been told why */
+	| { kind: "unreadable"; relPath: string; reason: string }
+	/**
+	 * No file is on display, or it was switched while being read; there is no
+	 * text to hold the windows to
+	 */
+	| { kind: "none" };
+
 export type FileMirrorOptions = {
 	/** What the paths on display are relative to (absolute path) */
 	workspaceRoot: string;
@@ -148,6 +165,15 @@ export type FileMirror = {
 		body: Buffer,
 		ifMatch: string,
 	) => Promise<WriteOpenFileOutcome>;
+	/**
+	 * Reads the file on display now, rather than at the watch's next poll, and
+	 * sends the windows what changed since they were last told — through the
+	 * watch's own path, so the two never send the same text twice.
+	 *
+	 * @returns The revision the windows now hold, for a request to name so the
+	 *   window can tell it has drawn that text before answering
+	 */
+	syncOpenFile: () => Promise<OpenFileSyncOutcome>;
 	/**
 	 * The frame that opens what is on display, for a window that has just connected.
 	 *
@@ -276,18 +302,55 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 	};
 
 	/**
-	 * Reads the file on display. Returns null when it cannot be read, and tells the
-	 * viewer why (the AI side hears it separately through the tool's return value,
-	 * so nothing is thrown here).
+	 * Reads the file on display. When it cannot be read, the viewer is told why and
+	 * the reason is returned rather than thrown: the AI side hears of it through
+	 * the tool that asked, if any.
 	 */
-	const readOpenFileText = async (relPath: string): Promise<string | null> => {
+	const readOpenFileText = async (relPath: string): Promise<OpenFileRead> => {
 		try {
-			return await readFile(path.resolve(workspaceRoot, relPath), "utf8");
+			return {
+				kind: "read",
+				text: await readFile(path.resolve(workspaceRoot, relPath), "utf8"),
+			};
 		} catch (error) {
 			const reason = error instanceof Error ? error.message : String(error);
 			broadcast({ type: "docError", relPath, message: reason });
-			return null;
+			return { kind: "unreadable", reason };
 		}
+	};
+
+	/**
+	 * Reads the file on display again and passes what changed on to the windows:
+	 * what the watch does on every poll, and what syncOpenFile does on demand.
+	 * Outside the lock like the rest of the watch: the lock would hold the tools
+	 * and a person's write up behind a read, and the numbering keeps a look that
+	 * is overtaken meanwhile from being taken.
+	 *
+	 * @param relPath The file on display when the read was asked for
+	 * @returns What the read found, which a newer read may have overtaken
+	 */
+	const refreshOpenFile = async (relPath: string): Promise<OpenFileRead> => {
+		// Held back until the file parses or the time runs out, so that a writer
+		// caught half way through does not flash the broken-file error for a poll
+		const { readNumber, result: read } = await readUntilSettled(
+			async () => await readOpenFileText(relPath),
+			(result) =>
+				openPath === relPath &&
+				result.kind === "read" &&
+				isPossiblyHalfWritten(result.text),
+			calcSettleDeadline(),
+		);
+		if (read.kind === "read") {
+			passOnReadText(relPath, readNumber, read.text);
+			return read;
+		}
+		// The windows have just been told the file cannot be read, so the same text
+		// coming back is news to them and has to be sent. Left alone if a newer read
+		// or a person's write has spoken for the file meanwhile
+		if (openPath === relPath && takeRead(readNumber)) {
+			clearKnownText();
+		}
+		return read;
 	};
 
 	const stopWatching = (): void => {
@@ -302,35 +365,11 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 		const absolutePath = path.resolve(workspaceRoot, relPath);
 		watchedFile = absolutePath;
 		watchFile(absolutePath, { interval: WATCH_INTERVAL_MS }, () => {
-			void (async () => {
-				// A firing right after a switch can still point at the old target
-				if (openPath !== relPath) {
-					return;
-				}
-				// Held back until the file parses or the time runs out, so that a writer
-				// caught half way through does not flash the broken-file error for a
-				// poll. Outside the lock like the rest of the watch: the lock would hold
-				// the tools and a person's write up behind a read, and the numbering
-				// keeps a look that is overtaken meanwhile from being taken
-				const { readNumber, result: text } = await readUntilSettled(
-					async () => await readOpenFileText(relPath),
-					(result) =>
-						openPath === relPath &&
-						result !== null &&
-						isPossiblyHalfWritten(result),
-					calcSettleDeadline(),
-				);
-				if (text !== null) {
-					passOnReadText(relPath, readNumber, text);
-					return;
-				}
-				// The windows have just been told the file cannot be read, so the same
-				// text coming back is news to them and has to be sent. Left alone if a
-				// newer read or a person's write has spoken for the file meanwhile
-				if (openPath === relPath && takeRead(readNumber)) {
-					clearKnownText();
-				}
-			})();
+			// A firing right after a switch can still point at the old target
+			if (openPath !== relPath) {
+				return;
+			}
+			void refreshOpenFile(relPath);
 		});
 	};
 
@@ -366,7 +405,7 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 						return;
 					}
 				}
-				const text = await readOpenFileText(relPath);
+				const read = await readOpenFileText(relPath);
 				if (!isNewestCall()) {
 					return;
 				}
@@ -377,15 +416,15 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 				// A read still in the air is of the file displayed until now, and is not
 				// to be taken for this one
 				takeRead(beginRead());
-				if (text === null) {
+				if (read.kind === "unreadable") {
 					clearKnownText();
 					return;
 				}
 				broadcast({
 					type: "openCanvas",
 					relPath,
-					docText: text,
-					revision: recordKnownText(text),
+					docText: read.text,
+					revision: recordKnownText(read.text),
 				});
 			};
 			const queued = openFileChain.then(run, run);
@@ -496,6 +535,22 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 					return { kind: "written", revision };
 				},
 			);
+		},
+		syncOpenFile: async () => {
+			const relPath = openPath;
+			if (relPath === null) {
+				return { kind: "none" };
+			}
+			const read = await refreshOpenFile(relPath);
+			// What the windows were last sent is the answer rather than what this read
+			// found: a newer read, or a person's write, may have been taken over it
+			if (openPath === relPath && lastKnownRevision !== null) {
+				return { kind: "synced", revision: lastKnownRevision };
+			}
+			if (read.kind === "unreadable") {
+				return { kind: "unreadable", relPath, reason: read.reason };
+			}
+			return { kind: "none" };
 		},
 		calcOpenCanvasMessage: () => {
 			if (

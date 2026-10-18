@@ -13,7 +13,7 @@
 //
 // Its other job is answering the queries only the drawn result can answer (capture,
 // camera, selection, measurement). Reading the file does not tell the AI those, so
-// it comes here to ask.
+// it comes here to ask, and is answered once the file it wrote has been drawn.
 //
 // The same page is used for the window a person looks at and for the headless one
 // the AI looks through (?headless=1). The headless one has nobody to close it, so
@@ -96,6 +96,17 @@ const DRAG_RELEASE_WAIT_MS = 1_500;
 
 /** How often that wait looks, the canvas having nothing to call when a drag ends */
 const DRAG_RELEASE_POLL_MS = 50;
+
+/**
+ * How long a query waits for the file the host named to be drawn before it
+ * answers with an error. What holds it up is a person's gesture, which the file
+ * waits behind; the host gives up on the query at 15 seconds, which leaves room
+ * for the op itself
+ */
+const DRAWN_REVISION_WAIT_MS = 5_000;
+
+/** How often that wait looks, the gesture having nothing to call when it ends */
+const DRAWN_REVISION_POLL_MS = 50;
 
 /** What Ctrl+S is answered with, in place of the browser's save dialog */
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
@@ -191,6 +202,8 @@ export function App() {
 		applyDocError,
 		handleCommit,
 		flushPendingSave,
+		readRevisionStatus,
+		readDocHandOverCount,
 	} = useDocSync({
 		reportError: setErrorMessage,
 		reportLostEdits,
@@ -198,6 +211,8 @@ export function App() {
 		readWorkInHand,
 	});
 	const waitForCanvasCommit = useCanvasCommitWait();
+	// The hand-over count a query last waited out a render for; null before the first
+	const renderedHandOverCountRef = useRef<number | null>(null);
 	const openPath = openDoc?.relPath ?? null;
 
 	// One resolver per open file: a src is relative to that file's directory
@@ -222,12 +237,58 @@ export function App() {
 	);
 
 	/**
+	 * Waits until the file under a revision is on the canvas, rendered, so that a
+	 * query is answered against it rather than the drawing before it. The render is
+	 * waited out only when a doc was handed to the canvas since the last query that
+	 * waited, so queries in a row on an unchanged drawing answer at once.
+	 *
+	 * @param revision The revision the host named on the query
+	 * @returns null once it is drawn, or why it is not, as it goes to the AI
+	 */
+	const waitForDrawnRevision = useCallback(
+		async (revision: string): Promise<string | null> => {
+			const deadline = performance.now() + DRAWN_REVISION_WAIT_MS;
+			for (;;) {
+				const status = readRevisionStatus(revision);
+				if (status.kind === "drawn") {
+					// Read before the wait: a doc handed over during it moves the count
+					// past this, so the next query waits for that one in turn
+					const handOverCount = readDocHandOverCount();
+					if (renderedHandOverCountRef.current !== handOverCount) {
+						await waitForCanvasCommit();
+						renderedHandOverCountRef.current = handOverCount;
+					}
+					return null;
+				}
+				if (status.kind === "unparsable") {
+					return `the file on display does not parse, so the canvas viewer is still drawing the version before it: ${status.parseErrorMessage}`;
+				}
+				if (performance.now() >= deadline) {
+					return status.kind === "held"
+						? "the canvas viewer has not drawn the file's latest version yet: a person is in the middle of an edit there, and the file is drawn once they let go; try again in a moment"
+						: "the canvas viewer did not receive the file's latest version in time";
+				}
+				await new Promise((resolve) => {
+					window.setTimeout(resolve, DRAWN_REVISION_POLL_MS);
+				});
+			}
+		},
+		[readDocHandOverCount, readRevisionStatus, waitForCanvasCommit],
+	);
+
+	/**
 	 * Answers the queries about the drawn result. Capture alone carries an image
 	 * rather than text, so it has a path of its own
 	 */
 	const runHandleOp = useCallback(
-		async (op: AiHandleOp) => {
+		async (op: AiHandleOp, expectedRevision: string | undefined) => {
 			try {
+				if (expectedRevision !== undefined) {
+					const notDrawnReason = await waitForDrawnRevision(expectedRevision);
+					if (notDrawnReason !== null) {
+						return { ok: false, text: notDrawnReason };
+					}
+				}
 				return op.kind === "captureCanvas"
 					? await captureCanvasImage(capturePng)
 					: await applyHandleOp(op, handleControl);
@@ -240,7 +301,7 @@ export function App() {
 				};
 			}
 		},
-		[capturePng, handleControl],
+		[capturePng, handleControl, waitForDrawnRevision],
 	);
 
 	/**

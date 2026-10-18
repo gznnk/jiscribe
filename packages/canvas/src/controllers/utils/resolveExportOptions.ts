@@ -6,8 +6,8 @@ import type { BoundingBox, Rect } from "@jiscribe/geometry";
 import { calcContentBounds } from "./calcContentBounds";
 import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
 import { calcVisibleWorldRect } from "./calcVisibleWorldRect";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { BuildExportSvgOptions, RasterizeSvgOptions } from "../../export";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../rendering/Viewport";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";
@@ -101,12 +101,15 @@ type ResolvedExportRegion = {
 /** Resolves a {@link CanvasExportRegion} against the state it is measured in. */
 const resolveExportRegion = (
 	state: Pick<CanvasState, "objects"> & { viewport: Viewport },
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get"> | null | undefined,
+	visualExtentRegistries: VisualExtentRegistries,
 	region: CanvasExportRegion,
 	margin: ResolvedViewPadding,
 ): ResolvedExportRegion => {
 	if (region === "content") {
-		return { bounds: calcContentBounds(state.objects, visualBounds), margin };
+		return {
+			bounds: calcContentBounds(state.objects, visualExtentRegistries),
+			margin,
+		};
 	}
 	if (region === "viewport") {
 		return {
@@ -116,7 +119,11 @@ const resolveExportRegion = (
 	}
 	if ("ids" in region) {
 		return {
-			bounds: calcObjectsBoundingBox(region.ids, state.objects, visualBounds),
+			bounds: calcObjectsBoundingBox(
+				region.ids,
+				state.objects,
+				visualExtentRegistries,
+			),
 			margin,
 		};
 	}
@@ -146,15 +153,15 @@ const resolveExportRegion = (
  *   would drop what it left out (the background, the objects held as opaque)
  * @param objectMapper - Per-canvas ObjectMapperRegistry, used to serialize the
  *   embedded `.jis` source
- * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; without it the
- *   viewBox is fitted to the geometry boxes and the default 16px margin is all
- *   that keeps a shape's outside decoration from being cropped
+ * @param visualExtentRegistries - Per-canvas registries measuring what is drawn
+ *   (see calcObjectBoundingBox), so the viewBox takes in a shape's outside
+ *   decoration and any connector route that leaves its owners
  * @param options - Region / margin / source embedding / background overrides
  */
 export const resolveExportOptions = (
 	state: CanvasState & { viewport: Viewport },
 	objectMapper: ObjectMapperRegistry,
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
+	visualExtentRegistries: VisualExtentRegistries,
 	{
 		region = "content",
 		margin,
@@ -170,7 +177,7 @@ export const resolveExportOptions = (
 				: uniformMargin(EXPORT_FIT_PADDING);
 	const resolved = resolveExportRegion(
 		state,
-		visualBounds,
+		visualExtentRegistries,
 		region,
 		requestedMargin,
 	);

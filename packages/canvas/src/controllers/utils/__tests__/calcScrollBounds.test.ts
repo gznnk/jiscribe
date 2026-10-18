@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { calcScrollBounds } from "../calcScrollBounds";
+
+const registries = createTestRegistries();
 
 /** Axis-aligned rect: its box is left=cx-w/2, top=cy-h/2, … */
 const rect = (id: string, cx: number, cy: number): ObjectState =>
@@ -32,15 +35,15 @@ const uniform = (value: number) => ({
 
 describe("calcScrollBounds", () => {
 	it("is unrestricted without a wall", () => {
-		expect(calcScrollBounds(null, objects)).toBeNull();
+		expect(calcScrollBounds(null, objects, registries)).toBeNull();
 	});
 
 	it("is unrestricted when there is no content to bound it to", () => {
-		expect(calcScrollBounds(uniform(100), {})).toBeNull();
+		expect(calcScrollBounds(uniform(100), {}, registries)).toBeNull();
 	});
 
 	it("grows the content extent by a uniform padding", () => {
-		expect(calcScrollBounds(uniform(100), objects)).toEqual({
+		expect(calcScrollBounds(uniform(100), objects, registries)).toEqual({
 			left: -150,
 			top: -150,
 			right: 350,
@@ -49,7 +52,7 @@ describe("calcScrollBounds", () => {
 	});
 
 	it("puts the wall on the content edge at padding 0", () => {
-		expect(calcScrollBounds(uniform(0), objects)).toEqual({
+		expect(calcScrollBounds(uniform(0), objects, registries)).toEqual({
 			left: -50,
 			top: -50,
 			right: 250,
@@ -59,7 +62,11 @@ describe("calcScrollBounds", () => {
 
 	it("grows each side by its own padding", () => {
 		expect(
-			calcScrollBounds({ top: 32, right: 64, bottom: 24, left: 16 }, objects),
+			calcScrollBounds(
+				{ top: 32, right: 64, bottom: 24, left: 16 },
+				objects,
+				registries,
+			),
 		).toEqual({
 			left: -66,
 			top: -82,

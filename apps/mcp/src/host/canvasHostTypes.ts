@@ -76,12 +76,16 @@ export type CanvasHost = {
 	flushViewers: (timeoutMs: number) => Promise<void>;
 	/**
 	 * Asks the viewer for an operation only the drawn result can answer (capture,
-	 * camera, selection, measurement).
+	 * camera, selection, measurement). The file on display is read first and sent
+	 * on if it changed, and the window answers only once it has drawn that text,
+	 * so a write that has landed is what the answer sees. A write still being made
+	 * is the caller's to wait out.
 	 *
 	 * @param op The operation to run
 	 * @returns A result that can be handed to the AI as it is. Even when no viewer
-	 *   is connected, or none answers, it returns ok=false rather than throwing (all
-	 *   the AI needs is a readable reason)
+	 *   is connected, none answers, or the file on display cannot be read, it
+	 *   returns ok=false rather than throwing (all the AI needs is a readable
+	 *   reason)
 	 */
 	runHandleOp: (op: AiHandleOp) => Promise<HandleOpOutcome>;
 	/**

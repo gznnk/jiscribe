@@ -2,7 +2,7 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import { buildSelectedIdsWithDescendants } from "./buildSelectedIdsWithDescendants";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
@@ -17,13 +17,14 @@ import { isGroupState } from "../../states/objects/primitives/group/GroupState";
  *
  * @param selectedIds - Ids to measure; ids absent from `objects` are skipped
  * @param objects - Flat object map, used to resolve group children and geometry
- * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; omitting it
- *   measures the geometry boxes and crops what a shape draws outside them
+ * @param visualExtentRegistries - Per-canvas registries measuring what is drawn
+ *   (see calcObjectBoundingBox): what a shape draws outside its geometry box and a
+ *   connector route leaving its owners are part of the extent
  */
 export const calcSelectionBounds = (
 	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
+	visualExtentRegistries: VisualExtentRegistries,
 ): BoundingBox | null => {
 	const targetIds = buildSelectedIdsWithDescendants(selectedIds, objects);
 
@@ -41,7 +42,7 @@ export const calcSelectionBounds = (
 			continue;
 		}
 
-		const bbox = calcObjectBoundingBox(obj, objects, visualBounds);
+		const bbox = calcObjectBoundingBox(obj, objects, visualExtentRegistries);
 		if (!bbox) {
 			continue;
 		}

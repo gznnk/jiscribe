@@ -847,6 +847,15 @@ part }`.** `CanvasControllerState` used to hold the object selection and the
 
 ### Fixed
 
+- **Fitting the view or exporting an image no longer crops a line that runs
+  outside the shapes it joins.** The whole-content extent behind zoom-to-fit,
+  the image export's viewBox, the scroll wall and the initial `view.open`
+  framing measured a connector's route without the shapes' own connect points,
+  so an end on a type-declared anchor — an ER entity's `col:<index>:right`, a
+  group marker's `tip` — was taken at the shape's center and an orthogonal route
+  looping round outside both shapes was left out. They now measure the route
+  the canvas draws, as viewport culling already did; so do zoom-to-selection,
+  where the object menu sits, and the measure handle's `visualBounds`.
 - **The shape library's search now reaches every icon, not just the ones laid
   out.** The AWS and Lucide sections list a handful of their icons (100 of 781,
   20 of 1767) and the search looked only at those, so `lambda` or `bicycle`

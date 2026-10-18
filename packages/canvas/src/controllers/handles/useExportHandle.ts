@@ -114,7 +114,7 @@ export const useExportHandle = (
 			...resolveExportOptions(
 				canvasStateRef.current,
 				registries.objectMapper,
-				registries.objectVisualBounds,
+				registries,
 				options,
 			),
 			resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),

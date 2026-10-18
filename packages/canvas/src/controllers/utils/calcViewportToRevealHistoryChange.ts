@@ -9,7 +9,7 @@ import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import { calcScrollBounds } from "./calcScrollBounds";
 import { clampScrolledCamera } from "./clampScrolledCamera";
 import { isSameCamera } from "./isSameCamera";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
@@ -73,12 +73,14 @@ const unionObjectBoxes = (
 	union: BoundingBox | null,
 	ids: readonly string[],
 	objects: Record<string, ObjectState>,
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	visualExtentRegistries: VisualExtentRegistries,
 ): BoundingBox | null => {
 	let merged = union;
 	for (const id of ids) {
 		const obj = objects[id];
-		const box = obj ? calcObjectBoundingBox(obj, objects, visualBounds) : null;
+		const box = obj
+			? calcObjectBoundingBox(obj, objects, visualExtentRegistries)
+			: null;
 		if (!box) {
 			continue;
 		}
@@ -118,8 +120,9 @@ const unionObjectBoxes = (
  *   as `leftDoc` short-cuts to no change
  * @param restoredObjects - The objects after the swap, where added and modified
  *   objects are measured
- * @param visualBounds - Widens each box by what its shape draws outside its
- *   geometry (see calcObjectBoundingBox), the wall's content extent included
+ * @param visualExtentRegistries - Measures each box as drawn: what a shape draws
+ *   outside its geometry, a connector's route as rendered (see
+ *   calcObjectBoundingBox), the wall's content extent included
  * @param scrollWallPadding - The restored document's wall margin as
  *   resolveScrollWallPadding answers it, or null when panning is unrestricted.
  *   The wall is measured from `restoredObjects`, not taken from the state's
@@ -133,7 +136,7 @@ export const calcViewportToRevealHistoryChange = (
 	leftObjects: Record<string, ObjectState>,
 	restoredDoc: CanvasDoc,
 	restoredObjects: Record<string, ObjectState>,
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	visualExtentRegistries: VisualExtentRegistries,
 	scrollWallPadding: ResolvedViewPadding | null,
 ): Viewport => {
 	if (leftDoc === restoredDoc) {
@@ -142,10 +145,15 @@ export const calcViewportToRevealHistoryChange = (
 
 	const { restoredIds, removedIds } = diffDocObjects(leftDoc, restoredDoc);
 	const changedBox = unionObjectBoxes(
-		unionObjectBoxes(null, restoredIds, restoredObjects, visualBounds),
+		unionObjectBoxes(
+			null,
+			restoredIds,
+			restoredObjects,
+			visualExtentRegistries,
+		),
 		removedIds,
 		leftObjects,
-		visualBounds,
+		visualExtentRegistries,
 	);
 	if (!changedBox) {
 		return viewport;
@@ -166,7 +174,11 @@ export const calcViewportToRevealHistoryChange = (
 			: clampScrolledCamera(
 					{ ...viewport, ...revealCamera },
 					viewport,
-					calcScrollBounds(scrollWallPadding, restoredObjects, visualBounds),
+					calcScrollBounds(
+						scrollWallPadding,
+						restoredObjects,
+						visualExtentRegistries,
+					),
 				);
 	if (isSameCamera(viewport, camera)) {
 		return viewport;

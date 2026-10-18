@@ -488,7 +488,7 @@ const CanvasComponent = ({
 		containerRef: canvasRef,
 		viewportSize: state.viewport,
 		objects: state.objects,
-		visualBounds: registries.objectVisualBounds,
+		visualExtentRegistries: registries,
 		dispatch,
 	});
 

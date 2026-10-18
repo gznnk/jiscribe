@@ -23,7 +23,7 @@ export const ZoomToFitCommand: ExecutableCommand = {
 				height: state.viewport.height,
 				padding: PADDING_PX,
 			},
-			registries.objectVisualBounds,
+			registries,
 		);
 		// For degenerate targets (no extent to fit to), keep the current viewport
 		// (consistent with the "no targets" no-op guard).

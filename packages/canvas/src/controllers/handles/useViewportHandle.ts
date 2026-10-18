@@ -198,7 +198,7 @@ export const useViewportHandle = (
 							height: viewport.height,
 							padding: options?.padding,
 						},
-						registries.objectVisualBounds,
+						registries,
 					),
 				);
 			},
@@ -214,7 +214,7 @@ export const useViewportHandle = (
 							height: viewport.height,
 							padding: options?.padding,
 						},
-						registries.objectVisualBounds,
+						registries,
 					),
 				);
 			},

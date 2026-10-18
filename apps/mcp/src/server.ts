@@ -25,8 +25,9 @@ import {
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+import { createCallBarrier } from "./callBarrier";
 import { canvasToolSet, docOps } from "./canvasDefinitions";
-import { createCanvasFileLock } from "./canvasFileLock";
+import { createCanvasFileLock, type CanvasFileLock } from "./canvasFileLock";
 import {
 	CanvasFileError,
 	ensureCanvasFile,
@@ -76,7 +77,8 @@ import { createPathLock } from "./pathLock";
  *    file operations
  * 3. The ones from ai-tools that need a mounted canvas (`registerHandleTools`).
  *    Capture, camera, selection, measurement. Running them becomes a round trip
- *    to the viewer open_canvas started
+ *    to the viewer open_canvas started, made once the file calls that arrived
+ *    ahead of it have landed and the viewer has drawn what they wrote
  * 4. The ones the standard set's plugins offer for their own shapes
  *    (`standardAiToolPlugins`, through `canvasToolSet`): the table's seven
  *    `table_*` tools, the record's `record_set_compartments` and the ER entity's
@@ -218,9 +220,16 @@ export function createJiscribeMcpServer(): McpServer {
 	// between load → modify → write back makes the later write-back discard the
 	// earlier change along with it
 	const withPathLock = createPathLock();
+	// What a screen tool waits out before it asks the viewer: every call that can
+	// write a file, or switch or fold up the host, which had arrived ahead of it.
+	// The file calls that only read are tracked along with the rest, since the
+	// gate they share cannot tell the two apart
+	const callBarrier = createCallBarrier();
+	const withCanvasFileLockUntracked = createCanvasFileLock(withPathLock);
 	// Every tool naming a canvas file goes through this, so the calls on one file
 	// run in the order they arrived even though resolving the path is asynchronous
-	const withCanvasFileLock = createCanvasFileLock(withPathLock);
+	const withCanvasFileLock: CanvasFileLock = (path, task) =>
+		callBarrier.track(() => withCanvasFileLockUntracked(path, task));
 
 	/**
 	 * Start the host, arranging for it to be folded up once every window is closed.
@@ -263,7 +272,7 @@ export function createJiscribeMcpServer(): McpServer {
 	 * running with nothing pointing at it.
 	 */
 	const withHostLock = <T>(task: () => Promise<T>): Promise<T> =>
-		withPathLock(HOST_LOCK_KEY, task);
+		callBarrier.track(() => withPathLock(HOST_LOCK_KEY, task));
 
 	// undo can only go back while things are "as the AI left them", so the history
 	// is held per edited file
@@ -664,6 +673,7 @@ export function createJiscribeMcpServer(): McpServer {
 		registerName,
 		canvasToolSet.descriptors,
 		() => host,
+		callBarrier.waitForTrackedCalls,
 	);
 
 	return server;
@@ -759,13 +769,19 @@ const HANDLE_TOOL_DESCRIPTION_NOTES: Readonly<Record<string, string>> = {
  * @param registerName The registration entry that rejects duplicate names
  * @param descriptors Every declaration ai-tools offers; the ones a document
  *   alone can answer are skipped here and picked up by registerDocTools
- * @param getHost The current host. null when called before open_canvas
+ * @param getHost The current host. null when called before open_canvas. Read
+ *   only once the calls ahead have settled, so an open_canvas sent just before
+ *   is the host asked
+ * @param waitForEarlierCalls Waits out the calls that arrived before the one
+ *   being answered. Called before the handler's first await, which is what
+ *   makes "before" the order the MCP SDK hands the calls over in
  */
 function registerHandleTools(
 	server: McpServer,
 	registerName: (name: string) => string,
 	descriptors: readonly CanvasToolDescriptor[],
 	getHost: () => CanvasHost | null,
+	waitForEarlierCalls: () => Promise<void>,
 ): void {
 	for (const descriptor of descriptors) {
 		if (!descriptor.drives.some((ref) => ref.startsWith("handle."))) {
@@ -782,6 +798,9 @@ function registerHandleTools(
 				inputSchema: z.object(descriptor.inputSchema).strict(),
 			},
 			async (args: CanvasToolArgs) => {
+				// The viewer draws the file as it was last sent, so a write sent ahead
+				// of this call has to have landed before the viewer is asked
+				await waitForEarlierCalls();
 				const host = getHost();
 				if (host === null) {
 					return textResult(

@@ -52,6 +52,18 @@ covers that.
 
 ### Fixed
 
+- **A screen tool sees the writes sent before it.** `capture_canvas`, `fit_view`,
+  `find_overlaps`, the `measure_*` tools and the rest of the sixteen that ask the
+  viewer were answered against whatever the page was drawing, and the page heard
+  of a tool's write only when the host's file watch next polled, 300 ms later at
+  most. A capture sent right after `set_style` — or in the same batch, which a
+  client is free to do — could come back without the style. Now a screen tool
+  waits for the file calls that arrived before it to finish, the host sends the
+  file on display to the viewer then and there, and the viewer answers only
+  once it has drawn that version. When it cannot within five seconds (a person
+  holding a drag keeps the file waiting until they let go) or the file does not
+  parse, the tool returns an `error:` saying so rather than a stale answer.
+
 - **A text tool or `set_style` refused on a table or an ER entity names the
   tools that do reach it.** The text tools said the entity's description named
   them, which `list_types` never showed; they now end with the type's own tools

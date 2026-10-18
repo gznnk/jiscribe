@@ -8,6 +8,7 @@ import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
@@ -52,31 +53,40 @@ const unionVisualBounds = (
  *
  * @param obj - The object whose bounding box is computed
  * @param objects - The object map, used to resolve connector endpoints and group children
- * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry, widening a frame
- *   shape's box by what it draws outside its geometry (an actor's label, say).
- *   Pass it only from the visual-extent consumers (zoom-to-fit, export viewBox,
- *   culling, menu placement); omitting it yields the geometry box, which is
- *   what selection, snapping and group bounds must keep using
+ * @param visualExtentRegistries - Per-canvas registries measuring what is drawn:
+ *   a frame shape's box widened by what it draws outside its geometry (an actor's
+ *   label, say), a connector's path resolved as the renderer routes it. Pass them
+ *   only from the visual-extent consumers (zoom-to-fit, export viewBox, culling,
+ *   menu placement); omitting them yields the geometry box, which is what
+ *   selection, snapping and group bounds must keep using
  * @returns The bounding box, or null when the object has no valid extent
  *   (unresolvable connector, group without valid children, empty poly, unknown kind)
  */
 export function calcObjectBoundingBox(
 	obj: ObjectState,
 	objects: Record<string, ObjectState>,
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
+	visualExtentRegistries?: VisualExtentRegistries | null,
 ): BoundingBox | null {
 	if (isConnectorState(obj)) {
-		return calcConnectorBoundingBox(obj, objects);
+		return calcConnectorBoundingBox(obj, objects, visualExtentRegistries);
 	}
 
 	if (isGroupState(obj)) {
-		return calcObjectsBoundingBox(obj.childIds, objects, visualBounds);
+		return calcObjectsBoundingBox(
+			obj.childIds,
+			objects,
+			visualExtentRegistries,
+		);
 	}
 
 	if (isTransformedFrame(obj)) {
 		const geometryBox = calcBoundingBox(obj);
-		return visualBounds
-			? unionVisualBounds(obj, geometryBox, visualBounds)
+		return visualExtentRegistries
+			? unionVisualBounds(
+					obj,
+					geometryBox,
+					visualExtentRegistries.objectVisualBounds,
+				)
 			: geometryBox;
 	}
 
@@ -94,14 +104,14 @@ export function calcObjectBoundingBox(
  *
  * @param ids - IDs of the objects to include
  * @param objects - The object map
- * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; see
- *   {@link calcObjectBoundingBox} for when to pass it
+ * @param visualExtentRegistries - Per-canvas registries measuring what is drawn;
+ *   see {@link calcObjectBoundingBox} for when to pass them
  * @returns The union bounding box, or null when no object has a valid extent
  */
 export function calcObjectsBoundingBox(
 	ids: Iterable<string>,
 	objects: Record<string, ObjectState>,
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
+	visualExtentRegistries?: VisualExtentRegistries | null,
 ): BoundingBox | null {
 	let left = Infinity;
 	let top = Infinity;
@@ -115,7 +125,7 @@ export function calcObjectsBoundingBox(
 			continue;
 		}
 
-		const bbox = calcObjectBoundingBox(obj, objects, visualBounds);
+		const bbox = calcObjectBoundingBox(obj, objects, visualExtentRegistries);
 		if (!bbox) {
 			continue;
 		}

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { createVisualExtentRegistries } from "../../__tests__/support/visualExtentRegistries";
 import {
 	calcObjectBoundingBox,
 	calcObjectsBoundingBox,
@@ -40,7 +40,7 @@ const poly = (
  * Stands in for a type that draws outside its geometry box (an actor's label):
  * a 20x10 strip hung 4px below the box, centered horizontally.
  */
-const labelBelowBox: Pick<ObjectVisualBoundsRegistry, "get"> = {
+const labelBelowBox = createVisualExtentRegistries({
 	get: (type) =>
 		type !== "rect"
 			? undefined
@@ -50,7 +50,7 @@ const labelBelowBox: Pick<ObjectVisualBoundsRegistry, "get"> = {
 					width: Math.max(state.width, 20),
 					height: state.height + 4 + 10,
 				}),
-};
+});
 
 const freeConnector = (
 	overrides: Partial<Record<string, unknown>> = {},
@@ -254,9 +254,9 @@ describe("calcObjectBoundingBox", () => {
 		});
 
 		it("cannot shrink the box below its geometry", () => {
-			const shrinking: Pick<ObjectVisualBoundsRegistry, "get"> = {
+			const shrinking = createVisualExtentRegistries({
 				get: () => () => ({ x: 0, y: 0, width: 1, height: 1 }),
-			};
+			});
 			const obj = rect("r", 100, 100, 100, 50);
 			expect(calcObjectBoundingBox(obj, { r: obj }, shrinking)).toEqual({
 				left: 50,

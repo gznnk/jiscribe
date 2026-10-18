@@ -102,7 +102,8 @@ export function useObjectMenuPosition(
 
 	// The menu sits below the selection's drawn extent, so a shape whose label
 	// hangs outside its geometry box must not have the menu land on the label.
-	const { objectVisualBounds, objectPartKind } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
+	const { objectPartKind } = registries;
 
 	const [menuDimensions, setMenuDimensions] = useState({
 		width: 0,
@@ -195,16 +196,9 @@ export function useObjectMenuPosition(
 		() =>
 			shouldRender
 				? (calcOutlinedPartsBoundingBox(objects, objectPartKind, selection) ??
-					calcObjectsBoundingBox(selectedIds, objects, objectVisualBounds))
+					calcObjectsBoundingBox(selectedIds, objects, registries))
 				: null,
-		[
-			shouldRender,
-			selection,
-			selectedIds,
-			objects,
-			objectPartKind,
-			objectVisualBounds,
-		],
+		[shouldRender, selection, selectedIds, objects, objectPartKind, registries],
 	);
 
 	// The menu writes properties that resize what it is anchored to: a font size or

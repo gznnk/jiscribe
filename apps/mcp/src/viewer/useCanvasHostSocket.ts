@@ -65,8 +65,15 @@ export type CanvasHostSocketOptions = {
 	 * is done once this settles, whether or not the write went through
 	 */
 	onFlushEdits: () => Promise<unknown>;
-	/** A query about the drawn result, whose outcome goes back under its request id */
-	onHandleOp: (op: AiHandleOp) => Promise<AiCanvasOpOutcome>;
+	/**
+	 * A query about the drawn result, whose outcome goes back under its request id.
+	 * The revision, when the host named one, is the file's text the canvas is to
+	 * have drawn before the op runs
+	 */
+	onHandleOp: (
+		op: AiHandleOp,
+		expectedRevision: string | undefined,
+	) => Promise<AiCanvasOpOutcome>;
 };
 
 /**
@@ -203,8 +210,8 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 						break;
 					}
 					case "handleOpRequest": {
-						const { requestId, op } = frame;
-						void handlers.onHandleOp(op).then((outcome) => {
+						const { requestId, op, expectedRevision } = frame;
+						void handlers.onHandleOp(op, expectedRevision).then((outcome) => {
 							send(openedSocket, {
 								type: "handleOpResult",
 								requestId,

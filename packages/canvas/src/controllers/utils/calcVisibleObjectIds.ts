@@ -2,17 +2,16 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcConnectorPathBoundingBox } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import {
 	listConnectorPathPoints,
 	resolveConnectorPointsCached,
 	resolveEndpointOwner,
 } from "../../connectors/endpoints";
-import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
-import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**
  * Margin (world px) added around the visible rect. Absorbs extents the bbox
@@ -42,18 +41,6 @@ type VisibilityCacheEntry = {
 /** Object ID → cached bbox entry, carried across renders for diff reuse. */
 export type VisibilityBBoxCache = Map<string, VisibilityCacheEntry>;
 
-/** The registries viewport culling reads. */
-export type CullingRegistries = Pick<
-	ICanvasRegistries,
-	| "objectVisualBounds"
-	| "objectOutline"
-	| "objectAnchorRegion"
-	| "objectExtraConnectPoints"
-> & {
-	/** Read for the owners' state beyond their frame (resolveConnectorPointsCached). */
-	objectGeometryKey: ObjectGeometryKeyRegistry;
-};
-
 type CalcVisibleObjectIdsParams = {
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
@@ -70,7 +57,7 @@ type CalcVisibleObjectIdsParams = {
 	 * renderer reads too (resolveConnectorPointsCached), so a moved owner routes
 	 * each connector once per render rather than once here and again to draw it.
 	 */
-	registries: CullingRegistries;
+	registries: VisualExtentRegistries;
 };
 
 type CalcVisibleObjectIdsResult = {
@@ -153,11 +140,7 @@ export function calcVisibleObjectIds({
 			bboxCache.set(id, prevEntry);
 			return prevEntry.bbox;
 		}
-		const bbox = calcObjectBoundingBox(
-			obj,
-			objects,
-			registries.objectVisualBounds,
-		);
+		const bbox = calcObjectBoundingBox(obj, objects, registries);
 		bboxCache.set(id, {
 			obj,
 			resolved: null,

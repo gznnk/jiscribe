@@ -126,7 +126,7 @@ export const useMeasureHandle = (
 				const bounds = calcObjectsBoundingBox(
 					ids,
 					canvasStateRef.current.objects,
-					registries.objectVisualBounds,
+					registries,
 				);
 				return bounds ? convertBoundingBoxToRect(bounds) : null;
 			},

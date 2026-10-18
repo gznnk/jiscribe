@@ -55,7 +55,7 @@ const reveal = (
 			registries.objectMapper,
 			registries.objectContentResizer,
 		).objects,
-		registries.objectVisualBounds,
+		registries,
 		scrollWallPadding,
 	);
 

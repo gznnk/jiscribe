@@ -24,7 +24,7 @@ export const ZoomToSelectionCommand: ExecutableCommand = {
 				height: state.viewport.height,
 				padding: PADDING_PX,
 			},
-			registries.objectVisualBounds,
+			registries,
 		);
 		// For degenerate targets with no extent to fit (both axes size 0, e.g. a
 		// single-point Poly or a degenerate Frame), keep the current viewport

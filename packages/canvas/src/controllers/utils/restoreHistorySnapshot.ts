@@ -102,7 +102,7 @@ export const restoreHistorySnapshot = (
 			state.objects,
 			restoredDoc,
 			restoredState.objects,
-			registries.objectVisualBounds,
+			registries,
 			resolveScrollWallPadding(
 				state.scrollLimit.hostConfig,
 				restoredState.view,

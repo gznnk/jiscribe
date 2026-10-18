@@ -2,6 +2,7 @@ import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/Conne
 import { calcPolyBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import {
 	listConnectorPathPoints,
 	resolveConnectorPoints,
@@ -119,29 +120,39 @@ const collectLabelCorners = (
 /**
  * Computes the bounding box of an entire connector, path and label together.
  *
- * Dynamically resolves the endpoints (including outline adjustment) via
- * resolveConnectorPoints and returns a range that also covers the intermediate
- * waypoints. In orthogonal routing the bend points are included in the waypoints,
- * so they are covered by the range as well.
+ * Dynamically resolves the endpoints and returns a range that also covers the
+ * intermediate waypoints. In orthogonal routing the bend points are included in
+ * the waypoints, so they are covered by the range as well.
  *
  * A non-empty label is part of the connector's extent: its box (axis aligned,
  * centered on the anchor derived from `label.position` / `label.offset`) is
  * unioned in, so zoom-to-fit and the export viewBox do not crop it.
- * Returns null if the endpoints cannot be resolved (e.g. a referenced object was removed).
  *
- * The path is resolved without the geometry registries (outline / anchor region /
- * extra connect points), so on such a shape the endpoints land on the bounding box
- * rather than the drawn silhouette. The difference stays within the owner shape's own
- * bounds and is absorbed by the margins the consumers already add (zoom-to-fit, export
- * viewBox) — unlike a path compared against a pointer position, which has no such
- * slack and must pass the registries in. Viewport culling resolves through the
- * registries instead (calcVisibleObjectIds), sharing the path with the renderer.
+ * @param connector - The connector to measure
+ * @param objects - The object map, used to resolve the endpoint owners
+ * @param visualExtentRegistries - Per-canvas registries the path is resolved
+ *   through, as the renderer draws it; only the four geometry ones are read. Omitted =
+ *   the path is resolved without them, which is not the drawn route: an end on a
+ *   type-declared anchor collapses onto the owner's center, so a route that loops
+ *   outside the owners falls outside the box. Every consumer framing the drawing
+ *   must pass them
+ * @returns null if the endpoints cannot be resolved (e.g. a referenced object was removed)
  */
 export const calcConnectorBoundingBox = (
 	connector: ConnectorState,
 	objects: Record<string, ObjectState>,
+	visualExtentRegistries?: VisualExtentRegistries | null,
 ): BoundingBox | null => {
-	const connectorPoints = collectConnectorPoints(connector, objects);
+	const connectorPoints = visualExtentRegistries
+		? collectConnectorPoints(
+				connector,
+				objects,
+				visualExtentRegistries.objectOutline,
+				visualExtentRegistries.objectAnchorRegion,
+				visualExtentRegistries.objectExtraConnectPoints,
+				visualExtentRegistries.objectGeometryKey,
+			)
+		: collectConnectorPoints(connector, objects);
 	if (!connectorPoints) {
 		return null;
 	}

@@ -51,7 +51,18 @@ export type CanvasHostServerMessage =
 	// The file cannot be read, or is broken. The viewer only shows the message
 	| { type: "docError"; relPath: string; message: string }
 	// A query about the drawn result, to be answered with the requestId attached
-	| { type: "handleOpRequest"; requestId: string; op: AiHandleOp }
+	| {
+			type: "handleOpRequest";
+			requestId: string;
+			op: AiHandleOp;
+			/**
+			 * The revision of the last doc frame the host sent, which the window is to
+			 * have drawn before it runs the op. Left out when the host has no file text
+			 * to name (none on display). A window too old to know the field answers
+			 * at once, against whatever it is drawing
+			 */
+			expectedRevision?: string;
+	  }
 	// A request to write out the edits still sitting on the save debounce, answered
 	// with "flushed" once they are on disk. The host sends it before it moves to
 	// another file, since the file API takes a write only for the file on display
@@ -143,7 +154,9 @@ export function isCanvasHostServerMessage(
 			return (
 				typeof value.requestId === "string" &&
 				typeof value.op === "object" &&
-				value.op !== null
+				value.op !== null &&
+				(value.expectedRevision === undefined ||
+					typeof value.expectedRevision === "string")
 			);
 		case "flushEdits":
 			return typeof value.requestId === "string";
