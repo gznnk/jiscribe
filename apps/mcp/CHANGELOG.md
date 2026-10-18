@@ -17,29 +17,14 @@ covers that.
 
 ### Added
 
-- **Tools the shape plugins offer for their own shapes are registered beside the
-  rest.** Each takes `path` like every document tool, plus the `id` of the one
-  object it acts on, refuses an object of another type, and is taken back by
-  `undo`; one that only reads does not write the file back.
-- **Seven tools for tables.** `table_read` lists a table's
-  extent, track sizes and cells; `table_insert_tracks` / `table_delete_tracks`
-  add and remove rows or columns; `table_fill_cells` writes a block of text from
-  one cell (`grow: true` appends the rows and columns it needs);
-  `table_clear_cells` empties a range; `table_set_track_sizes` sets column widths
-  and row heights; and `table_set_cell_style` sets a fill and typography over a
-  range. A refused call says why and what the table holds, and leaves the file
-  as it was.
-- **`record_set_compartments` for UML records.** It adds,
-  replaces, empties or removes a record's stereotype band and its attribute and
-  operation compartments, and then fits the record's height to them, so no
-  `resize_object` has to follow. A call that would change nothing is refused.
-- **Six tools for ER entities, 83 tools in all.** `er_entity_read` lists an
-  entity's title, slot widths and columns; `er_entity_insert_columns` /
-  `er_entity_delete_columns` / `er_entity_move_columns` change its columns,
-  moving the relationship lines attached to a column along with it and listing
-  the ends that moved; `er_entity_set_texts` rewrites its texts and
-  `er_entity_set_text_style` styles them, which `set_style` does not reach. A
-  call that would change nothing is refused.
+- **Tools for tables, ER entities and UML records, 83 tools in all.** Seven
+  `table_*` tools read a table and edit its tracks, cells and their styles; six
+  `er_entity_*` tools read an entity and edit its columns, texts and their
+  styles, moving the relationship lines attached to a column along with it; and
+  `record_set_compartments` sets a record's compartments and fits its height to
+  them. Each takes `path` and the `id` of the object it acts on, and is taken
+  back by `undo`. The text tools and `set_style` point to them when they cannot
+  reach a type's texts, and `list_types` lists them under `tools`.
 - **`connect` and the other connector tools attach an end to a connect point
   a type declares**, such as an ER entity's `col:<index>:left` /
   `col:<index>:right`: the anchors take any id instead of the five built-in
@@ -47,8 +32,7 @@ covers that.
   `diagnose_canvas` warns about an end on a point its object no longer offers,
   which is drawn at the object's center.
 - **`diagnose_canvas` reports a record too short for its rows**, which it used
-  to call valid while the bottom rows were drawn past the box, naming the
-  shortfall and the tools that fix it.
+  to call valid while the bottom rows were drawn past the box.
 
 ### Fixed
 
@@ -63,12 +47,6 @@ covers that.
   once it has drawn that version. When it cannot within five seconds (a person
   holding a drag keeps the file waiting until they let go) or the file does not
   parse, the tool returns an `error:` saying so rather than a stale answer.
-
-- **A text tool or `set_style` refused on a table or an ER entity names the
-  tools that do reach it.** The text tools said the entity's description named
-  them, which `list_types` never showed; they now end with the type's own tools
-  (`table_*` / `er_entity_*`), `set_style` names them beside what it ignored,
-  and `list_types` lists them under `tools` on the type's entry.
 
 - **A headless Chromium that dies as it starts is reported at once, with what
   it said.** `open_canvas` with `headless: true` read a browser's death on a
