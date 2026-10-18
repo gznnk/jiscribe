@@ -1,6 +1,7 @@
 import type {
 	ConnectionAnchorSpec,
 	ConnectionAnchors,
+	ObjectTextEditLineBreaksResolver,
 	ObjectTextEditOverflowResolver,
 	ObjectTransformHandles,
 	ObjectTypeDefinition,
@@ -58,6 +59,14 @@ import { ErEntityStencils } from "./stencil/ErEntityStencils";
 const resolveErEntityTextEditOverflow: ObjectTextEditOverflowResolver = (
 	slotId,
 ) => (slotId === ER_ENTITY_NAME_TEXT_SLOT_ID ? "grow" : "scroll");
+
+/**
+ * A column slot is one row tall (calcErEntityRowHeight), with no room for a
+ * second line; the title band is sized from its text (calcErEntityLayout).
+ */
+const resolveErEntityTextEditLineBreaks: ObjectTextEditLineBreaksResolver = (
+	slotId,
+) => (slotId === ER_ENTITY_NAME_TEXT_SLOT_ID ? "allow" : "reject");
 
 /**
  * The left and right handles alone: the height is derived from the columns, and
@@ -213,6 +222,7 @@ export const erEntityDefinition: ObjectTypeDefinition<
 	contentResizer: (state) => reconcileErEntityBox(state as ErEntityState),
 	component: ErEntityBox,
 	textEditOverflow: resolveErEntityTextEditOverflow,
+	textEditLineBreaks: resolveErEntityTextEditLineBreaks,
 	extraConnectPoints: (state) =>
 		calcErEntityConnectPoints(state as ErEntityState),
 	geometryKey: (state) => erEntityGeometryKey(state as ErEntityState),

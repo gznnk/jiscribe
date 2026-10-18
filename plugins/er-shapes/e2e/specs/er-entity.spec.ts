@@ -460,6 +460,80 @@ test.describe("erEntity", () => {
 		await expect(canvas.objectById(id).locator("line")).toHaveCount(1);
 	});
 
+	test("commits a column slot on Enter with no line break, the title still taking one", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		await canvas.deselect();
+
+		const columnName = await slotRect(canvas, id, "col:0:name");
+		await canvas.page.mouse.dblclick(
+			columnName.x + columnName.width / 2,
+			columnName.y + columnName.height / 2,
+		);
+		await canvas.waitForTextEditor();
+		await canvas.textEditorSurface().fill("");
+		await canvas.page.keyboard.type("order_id");
+		await canvas.page.keyboard.press("Enter");
+
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+		const saved = (await savedObject(canvas, id)) as {
+			columns: { name?: string }[];
+		};
+		expect(saved.columns[0]?.name).toBe("order_id");
+
+		const title = await slotRect(canvas, id, "name");
+		await canvas.page.mouse.dblclick(
+			title.x + title.width / 2,
+			title.y + title.height / 2,
+		);
+		await canvas.waitForTextEditor();
+		await canvas.textEditorSurface().fill("");
+		await canvas.page.keyboard.type("order");
+		await canvas.page.keyboard.press("Enter");
+		await canvas.page.keyboard.type("lines");
+		expect(await canvas.textEditorText()).toBe("order\nlines");
+		await canvas.cancelText();
+	});
+
+	test("pastes a multi-line text into a column slot as one line", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		await canvas.deselect();
+
+		const columnType = await slotRect(canvas, id, "col:0:type");
+		await canvas.page.mouse.dblclick(
+			columnType.x + columnType.width / 2,
+			columnType.y + columnType.height / 2,
+		);
+		await canvas.waitForTextEditor();
+		await canvas.textEditorSurface().fill("");
+		await canvas.textEditorSurface().evaluate((surface, pasted) => {
+			const clipboardData = new DataTransfer();
+			clipboardData.setData("text/plain", pasted);
+			surface.dispatchEvent(
+				new ClipboardEvent("paste", {
+					clipboardData,
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+		}, "varchar\r\n(100)\nnot null");
+
+		await expect
+			.poll(() => canvas.textEditorText())
+			.toBe("varchar (100) not null");
+		await canvas.commitText();
+		const saved = (await savedObject(canvas, id)) as {
+			columns: { type?: string }[];
+		};
+		expect(saved.columns[0]?.type).toBe("varchar (100) not null");
+		expect((await drawnTexts(canvas, id)).join("|")).toContain(
+			"varchar (100) not null",
+		);
+	});
+
 	test("offers each column's left and right points but not the edge midpoints", async ({
 		canvas,
 	}) => {

@@ -128,6 +128,27 @@ describe("createCanvasRegistries", () => {
 			expect(registries.objectTextEditOverflow.get("rect")).toBeUndefined();
 		});
 
+		it("registers a plugin's text-edit line-break resolver, and only for that type", () => {
+			const resolveSlotLineBreaks = (slotId: string) =>
+				slotId === "name" ? ("allow" as const) : ("reject" as const);
+			const rowsPlugin: CanvasPlugin = {
+				id: "rows-plugin",
+				objects: {
+					rows: defineObject({
+						...buildFakeDefinition("rows"),
+						textEditLineBreaks: resolveSlotLineBreaks,
+					}),
+				},
+			};
+			const registries = createCanvasRegistries({ plugins: [rowsPlugin] });
+			expect(registries.objectTextEditLineBreaks.get("rows")).toBe(
+				resolveSlotLineBreaks,
+			);
+			// A type that declares nothing stays on the default (allow), which the
+			// editor applies via resolveTextEditLineBreaks.
+			expect(registries.objectTextEditLineBreaks.get("rect")).toBeUndefined();
+		});
+
 		it("registers a plugin's svgDefs, and only for the type declaring it", () => {
 			const HaloDefs = () => null;
 			const haloPlugin: CanvasPlugin = {

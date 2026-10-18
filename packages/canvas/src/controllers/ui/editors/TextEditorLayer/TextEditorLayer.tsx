@@ -24,6 +24,8 @@ import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKi
 import type { TextFormat } from "../../../style/TextFormat";
 import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
+import { resolveTextEditLineBreaks } from "../ObjectTextEditLineBreaksRegistry";
+import type { ObjectTextEditLineBreaksResolver } from "../ObjectTextEditLineBreaksTypes";
 import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
 import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
 import { TextEditor } from "../TextEditor";
@@ -140,6 +142,7 @@ function renderConnectorLabelEditor(
  *   the slot leaves unset is drawn with the same value the overlay uses
  * @param textSlotKind - The `"textSlot"` part kind registered for the type, which places the slot. Omitted = full bbox
  * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
+ * @param textEditLineBreaksResolver - Per-type resolver from ObjectTextEditLineBreaksRegistry. Omitted = the slot takes line breaks
  * @returns The text editor
  */
 function renderTextEditor(
@@ -151,6 +154,7 @@ function renderTextEditor(
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
 	textSlotKind?: ObjectPartKindDefinition,
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
+	textEditLineBreaksResolver?: ObjectTextEditLineBreaksResolver,
 ): React.ReactElement {
 	const textRegion = calcTextRegion(target, slotId, textSlotKind);
 	const style = textStyleDefaults.resolveTextSlotStyle(
@@ -179,6 +183,7 @@ function renderTextEditor(
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
 			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
+			lineBreaks={resolveTextEditLineBreaks(slotId, textEditLineBreaksResolver)}
 			growLimit={growLimit}
 			textAlign={style.textAlign}
 			verticalAlign={style.verticalAlign}
@@ -280,6 +285,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		registries.objectTextStyleDefaults,
 		registries.objectPartKind.get(openEdit.object.type, TEXT_SLOT_PART_KIND),
 		registries.objectTextEditOverflow.get(openEdit.object.type),
+		registries.objectTextEditLineBreaks.get(openEdit.object.type),
 	);
 };
 

@@ -6,6 +6,7 @@ import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/Objec
 import type { DeclaredStyleTable } from "../controllers/style/StyleEntry";
 import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
+import type { ObjectTextEditLineBreaksResolver } from "../controllers/ui/editors/ObjectTextEditLineBreaksTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
@@ -90,6 +91,14 @@ export type ObjectTypeDefinition<
 	 * from the text itself may grow. Omitted = `"scroll"` for every slot (see ObjectTextEditOverflowRegistry).
 	 */
 	textEditOverflow?: ObjectTextEditOverflowResolver;
+
+	/**
+	 * Whether the in-place editor may hold a line break in a slot. Only a slot
+	 * drawn one line tall from a fixed row height should reject them (what the
+	 * editor does instead is on TextEditLineBreaks). Omitted = `"allow"` for every
+	 * slot (see ObjectTextEditLineBreaksRegistry).
+	 */
+	textEditLineBreaks?: ObjectTextEditLineBreaksResolver;
 
 	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see ObjectOutlineRegistry). */
 	outline?: ObjectOutlineCalculator;

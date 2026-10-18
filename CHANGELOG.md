@@ -91,6 +91,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   them (the lanes themselves are fixed), and `Enter` edits the active lane's
   slot in the first row. The top edge's connection anchor sits past the
   headings, as a table's does.
+- **An `erEntity`'s key, name and type slots hold a single line.** `Enter` in
+  one of them commits the edit, as `Ctrl+Enter` or a click outside does,
+  `Shift+Enter` does nothing, and a line break in pasted text becomes a space;
+  the title band still takes line breaks. A shape declares this per slot with
+  `textEditLineBreaks`, beside `textEditOverflow`.
 - For plugin authors: `@jiscribe/canvas` exports `ConnectorState` and
   `isConnectorState`, and `@jiscribe/doc` the endpoint types (`EndpointRef`,
   `OwnedEndpointRef`, `AnchorSpec`) with `isOwnedEndpointRef`, so an edit that

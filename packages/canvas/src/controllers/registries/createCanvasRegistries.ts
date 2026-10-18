@@ -28,6 +28,7 @@ import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavio
 import { createObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
+import { createObjectTextEditLineBreaksRegistry } from "../ui/editors/ObjectTextEditLineBreaksRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import { createPropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
@@ -61,6 +62,7 @@ export const createCanvasRegistries = (
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
 		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
+		objectTextEditLineBreaks: createObjectTextEditLineBreaksRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
 		objectExtraConnectPoints: createObjectExtraConnectPointsRegistry(),

@@ -28,6 +28,7 @@ import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavior
 import type { ObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
+import type { ObjectTextEditLineBreaksRegistry } from "../ui/editors/ObjectTextEditLineBreaksRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { PropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
@@ -70,6 +71,7 @@ export type CanvasRegistries = {
 	 */
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
+	objectTextEditLineBreaks: ObjectTextEditLineBreaksRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;

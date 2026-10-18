@@ -273,6 +273,10 @@ export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
+export type {
+	ObjectTextEditLineBreaksResolver,
+	TextEditLineBreaks,
+} from "./controllers/ui/editors/ObjectTextEditLineBreaksTypes";
 export type { ObjectOutlineCalculator } from "./rendering/objects/registry/ObjectOutlineRegistry";
 export type { ObjectAnchorRegionCalculator } from "./rendering/objects/registry/ObjectAnchorRegionRegistry";
 export type {

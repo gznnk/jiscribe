@@ -570,6 +570,12 @@ export const applyObjectDefinition = (
 			definition.textEditOverflow,
 		);
 	}
+	if (definition.textEditLineBreaks) {
+		registries.objectTextEditLineBreaks.register(
+			type,
+			definition.textEditLineBreaks,
+		);
+	}
 	if (definition.outline) {
 		registries.objectOutline.register(type, definition.outline);
 	}

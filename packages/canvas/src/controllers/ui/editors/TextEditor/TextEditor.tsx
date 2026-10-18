@@ -22,6 +22,7 @@ import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditC
 import { findTextFormatByShortcut } from "../../../commands/text/ToggleTextFormatCommands";
 import type { TextFormat } from "../../../style/TextFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
+import type { TextEditLineBreaks } from "../ObjectTextEditLineBreaksTypes";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import {
 	focusEditableAtEnd,
@@ -76,6 +77,8 @@ type TextEditorProps = {
 	overflow: TextEditOverflow;
 	/** How far a "grow" editor may extend, in local px from the region's top edge (the shape's bottom edge); never negative, ignored when `overflow` is "scroll" */
 	growLimit: number;
+	/** Whether Enter / Shift+Enter / a paste may put a line break in the text (see TextEditLineBreaks for what "reject" does instead) */
+	lineBreaks: TextEditLineBreaks;
 	/** Horizontal alignment; resolved against the shape type's defaults by the caller, else TEXT_STYLE_FALLBACK. */
 	textAlign?: TextAlign;
 	verticalAlign?: VerticalAlign;
@@ -92,7 +95,7 @@ type TextEditorProps = {
 	/** A bold / italic / underline / strikethrough keystroke, the selection it acts on reported first; the browser's own formatting is already cancelled. */
 	onToggleFormat?: (format: TextFormat) => void;
 	onEscape?: () => void;
-	/** Cmd+Enter on a Mac, Ctrl+Enter elsewhere (CommitTextEditCommand), outside an IME composition; the browser's own handling is already cancelled. Omitted = the keystroke is swallowed. */
+	/** Cmd+Enter on a Mac, Ctrl+Enter elsewhere (CommitTextEditCommand), and plain Enter when `lineBreaks` is "reject"; outside an IME composition, the browser's own handling already cancelled. Omitted = the keystroke is swallowed. */
 	onCommit?: () => void;
 	/** Tab (1) or Shift+Tab (-1), outside an IME composition; the browser's focus move is already cancelled. Omitted = the keystroke is swallowed. */
 	onTab?: (step: 1 | -1) => void;
@@ -113,6 +116,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	rotation,
 	overflow,
 	growLimit,
+	lineBreaks,
 	textAlign = TEXT_STYLE_FALLBACK.textAlign,
 	verticalAlign = TEXT_STYLE_FALLBACK.verticalAlign,
 	fontColor = TEXT_STYLE_FALLBACK.fontColor,
@@ -397,6 +401,19 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				onToggleFormat(format);
 				return;
 			}
+			if (
+				lineBreaks === "reject" &&
+				(event.inputType === "insertParagraph" ||
+					event.inputType === "insertLineBreak")
+			) {
+				event.preventDefault();
+				// The slot is one row tall, so Enter has nothing to add to it; it is
+				// also what opened the slot from a pick, so it closes it the same way.
+				if (event.inputType === "insertParagraph" && !isComposing.current) {
+					onCommit?.();
+				}
+				return;
+			}
 			if (event.inputType === "insertParagraph") {
 				// Enter has to put a "\n" in the text rather than split the surface into
 				// blocks. Under `white-space: pre-wrap` insertLineBreak inserts the
@@ -420,7 +437,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				event.preventDefault();
 			}
 		},
-		[onToggleFormat, reportSelectionNow],
+		[onToggleFormat, reportSelectionNow, lineBreaks, onCommit],
 	);
 
 	const handlePaste = useCallback(
@@ -428,7 +445,11 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			// Plain text only: what a body is styled in are its runs, not pasted
 			// markup. execCommand keeps the insertion on the browser's undo stack.
 			event.preventDefault();
-			const text = event.clipboardData?.getData("text/plain") ?? "";
+			const pastedText = event.clipboardData?.getData("text/plain") ?? "";
+			const text =
+				lineBreaks === "reject"
+					? pastedText.replace(/\r\n|\n|\r/g, " ")
+					: pastedText;
 			if (text === "") {
 				return;
 			}
@@ -445,7 +466,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				ownerDocument.execCommand("insertText", false, text);
 			}, 0);
 		},
-		[surfaceRef],
+		[surfaceRef, lineBreaks],
 	);
 
 	const handleCompositionStart = useCallback(() => {

@@ -7,6 +7,8 @@ import { GRIP_THICKNESS } from "../controls/ErEntityGrip";
 import { erEntityDefinition } from "../definition";
 import { erPlugin } from "../plugin";
 import { calcErEntityTextSlotRegions } from "../presentation/calcErEntityTextSlotRegions";
+import { erEntityColumnTextSlotId } from "../schema/erEntityColumnIds";
+import { ER_ENTITY_NAME_TEXT_SLOT_ID } from "../schema/ErEntityDoc";
 import type { ErEntityDoc } from "../schema/ErEntityDoc";
 import { erEntityToState } from "../state/ErEntityMapper";
 
@@ -63,6 +65,17 @@ describe("erEntityDefinition.connectionAnchors", () => {
 		const anchors = anchorsOf([]);
 		expect(anchors).toEqual({});
 		expect(anchorsOf([])).toBe(anchors);
+	});
+});
+
+describe("erEntityDefinition.textEditLineBreaks", () => {
+	it("keeps line breaks in the title and rejects them in every column slot", () => {
+		const resolve = erEntityDefinition.textEditLineBreaks;
+		expect(resolve).toBeDefined();
+		expect(resolve?.(ER_ENTITY_NAME_TEXT_SLOT_ID)).toBe("allow");
+		expect(resolve?.(erEntityColumnTextSlotId(0, "key"))).toBe("reject");
+		expect(resolve?.(erEntityColumnTextSlotId(0, "name"))).toBe("reject");
+		expect(resolve?.(erEntityColumnTextSlotId(0, "type"))).toBe("reject");
 	});
 });
 
