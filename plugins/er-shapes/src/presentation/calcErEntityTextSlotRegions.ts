@@ -1,5 +1,6 @@
 import type { Rect } from "@jiscribe/geometry";
 
+import { calcErEntityColumnSlotBand } from "../layout/calcErEntityColumnSlotBand";
 import type { ErEntityLayout } from "../layout/calcErEntityLayout";
 import { readCachedErEntityLayout } from "../layout/readCachedErEntityLayout";
 import type { ErEntityLayoutInput } from "../layout/readErEntityLayoutSource";
@@ -19,22 +20,6 @@ export type ErEntityColumnSlotBands = {
 	columnIndex: number;
 } & Record<ErEntityColumnField, Rect>;
 
-/** One field's cell of a row band: the key gutter at the left, the name, and the type at the right, each as wide as the layout draws it. */
-const calcColumnSlotBand = (
-	layout: ErEntityLayout,
-	band: Rect,
-	field: ErEntityColumnField,
-): Rect => {
-	if (field === "key") {
-		return { ...band, width: layout.keyWidth };
-	}
-	const nameLeft = band.x + layout.keyWidth;
-	if (field === "name") {
-		return { ...band, x: nameLeft, width: layout.nameWidth };
-	}
-	return { ...band, x: nameLeft + layout.nameWidth, width: layout.typeWidth };
-};
-
 /**
  * Splits every row band into the column's three cells. The cells are a row pitch
  * tall, so the rows tile the box under the title band; they are the slots' hit
@@ -48,9 +33,9 @@ export const calcErEntityColumnSlotBands = (
 ): ErEntityColumnSlotBands[] =>
 	layout.rows.map(({ columnIndex, band }) => ({
 		columnIndex,
-		key: calcColumnSlotBand(layout, band, "key"),
-		name: calcColumnSlotBand(layout, band, "name"),
-		type: calcColumnSlotBand(layout, band, "type"),
+		key: calcErEntityColumnSlotBand(layout, band, "key"),
+		name: calcErEntityColumnSlotBand(layout, band, "name"),
+		type: calcErEntityColumnSlotBand(layout, band, "type"),
 	}));
 
 /**
@@ -106,5 +91,5 @@ export const calcErEntityTextSlotRegion = (
 	if (columnSlot === null || row === undefined) {
 		throw new Error(`erEntity places no text slot "${slotId}"`);
 	}
-	return calcColumnSlotBand(layout, row.band, columnSlot.field);
+	return calcErEntityColumnSlotBand(layout, row.band, columnSlot.field);
 };

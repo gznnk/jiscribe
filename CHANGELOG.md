@@ -45,12 +45,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   undo restores both in one step. While the entity has columns its left and
   right edge midpoints are not offered as anchors, the rows' points standing in
   for them; a connector a document already attaches there still draws.
-  Columns are edited in place: a pill at the box's left picks a column, `Delete`
+  Columns are edited in place: a numbered heading at the box's left picks a column, `Delete`
   removes it, `Enter` edits its name, and `Alt+Shift+↑` / `Alt+Shift+↓`, the
   object menu or the sidebar ("Add Above" / "Add Below" / "Add at Bottom") insert
   an empty column and open its name for editing. `↑` / `↓` move the pick to the
   column above or below, and several columns are picked at once, as a table's
-  rows are: Shift-clicking a pill or `Shift+↑` / `Shift+↓` runs the pick over
+  rows are: Shift-clicking a heading or `Shift+↑` / `Shift+↓` runs the pick over
   the rows between, Ctrl / Cmd-clicking adds a column or takes it out, and
   `Delete` removes them together. Slots are picked as a table's cells are: the
   arrows move a picked slot, and Shift-clicking or `Shift+arrow` widens the pick
@@ -58,7 +58,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   columns. `Delete` over picked slots empties their text
   and keeps the entity, as it does over a table's cells. A text style edit applies to the picked slot,
   to the picked columns' three slots, or to every text when the entity itself
-  is selected.
+  is selected. A picked slot or column offers only the text controls; the
+  entity's fill and border are offered with the entity itself.
 - **An `erEntity`'s key, name and type columns are resized by dragging the
   boundaries between them**, the way a table's columns are; a selected entity
   marks them with a dashed guide. A plain drag widens the slot left of the
@@ -77,6 +78,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   their widths. The saved widths stay as written, so the box narrows back when
   the text gets shorter or a narrower font finishes loading; the handles and
   drags stop where a column would no longer fit its texts.
+- **An `erEntity`'s key, name and type lanes can be picked whole.** A selected
+  entity heads them across its top edge, above the title band, as "Key" /
+  "Name" / "Type" ("キー" / "名前" / "型" in Japanese), and numbers its rows
+  down the left edge, both drawn as a table's row and column headings are.
+  Clicking a lane's heading picks that lane in every row; Shift-clicking runs the
+  pick over the lanes between and Ctrl / Cmd-clicking adds a lane or takes it
+  out. A text style edit applies to the picked lanes' slots, `Delete` empties
+  them (the lanes themselves are fixed), and `Enter` edits the active lane's
+  slot in the first row. The top edge's connection anchor sits past the
+  headings, as a table's does.
 - For plugin authors: `@jiscribe/canvas` exports `ConnectorState` and
   `isConnectorState`, and `@jiscribe/doc` the endpoint types (`EndpointRef`,
   `OwnedEndpointRef`, `AnchorSpec`) with `isOwnedEndpointRef`, so an edit that

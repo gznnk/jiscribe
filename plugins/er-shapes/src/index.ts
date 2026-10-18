@@ -55,6 +55,15 @@ export {
 	ER_ENTITY_COLUMN_PART_DEFINITION,
 	ER_ENTITY_COLUMN_PART_KIND,
 } from "./parts/erEntityColumnPartKind";
+export {
+	ER_ENTITY_LANE_PART_DEFINITION,
+	ER_ENTITY_LANE_PART_KIND,
+} from "./parts/erEntityLanePartKind";
+export {
+	ER_ENTITY_LANES,
+	parseErEntityLanePartId,
+} from "./parts/erEntityLaneIds";
+export type { ErEntityLane } from "./parts/erEntityLaneIds";
 export { insertErEntityColumn } from "./columns/insertErEntityColumn";
 export { removeErEntityColumns } from "./columns/removeErEntityColumns";
 

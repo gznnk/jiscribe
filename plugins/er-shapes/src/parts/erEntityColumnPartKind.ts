@@ -1,4 +1,5 @@
 import type { ObjectPartKindDefinition } from "@jiscribe/canvas";
+import { TEXT_STYLE_INTENT_KINDS } from "@jiscribe/canvas-sdk";
 
 import { removeErEntityColumns } from "../columns/removeErEntityColumns";
 import { readCachedErEntityLayout } from "../layout/readCachedErEntityLayout";
@@ -31,9 +32,10 @@ export const ER_ENTITY_COLUMN_PART_KIND = "erEntityColumn";
  * claims the key first (erEntity.deleteColumn moves the pick on to the next
  * column as well).
  *
- * No `styleIntentKinds`, so a column pick leaves the entity the subject of every
- * menu control; the text ones land on the picked columns' three slots, as a
- * table row pick's land on its cells.
+ * A column pick receives what a slot pick does (TEXT_STYLE_INTENT_KINDS), so
+ * the menus offer the text controls alone, which land on the picked columns'
+ * three slots (`textSlotIds`); the entity's fill and border are not the
+ * column's.
  */
 export const ER_ENTITY_COLUMN_PART_DEFINITION: ObjectPartKindDefinition<ErEntityState> =
 	{
@@ -69,6 +71,8 @@ export const ER_ENTITY_COLUMN_PART_DEFINITION: ObjectPartKindDefinition<ErEntity
 					.map(parseErEntityColumnPartId)
 					.filter((columnIndex): columnIndex is number => columnIndex !== null),
 			),
+
+		styleIntentKinds: TEXT_STYLE_INTENT_KINDS,
 
 		textSlotIds: (_object, partIds) =>
 			partIds.flatMap((partId) => {

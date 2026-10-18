@@ -13,11 +13,13 @@ import {
 	createTextSlotPartKindDefinition,
 } from "@jiscribe/canvas-sdk";
 
-import { calcConnectionAnchorOffsetPastGrips } from "./controls/ErEntityColumnGrip";
 import { ErEntityColumnGripControl } from "./controls/ErEntityColumnGripControl";
+import { calcConnectionAnchorOffsetPastGrips } from "./controls/ErEntityGrip";
+import { ErEntityLaneGripControl } from "./controls/ErEntityLaneGripControl";
 import { ErEntitySlotBoundaryControl } from "./controls/ErEntitySlotBoundaryControl";
 import { ErEntityTrailingEdgeControl } from "./controls/ErEntityTrailingEdgeControl";
 import { handleErEntityColumnGrip } from "./controls/handleErEntityColumnGrip";
+import { handleErEntityLaneGrip } from "./controls/handleErEntityLaneGrip";
 import { handleErEntitySlotBoundary } from "./controls/handleErEntitySlotBoundary";
 import { handleErEntityTrailingEdge } from "./controls/handleErEntityTrailingEdge";
 import { erEntityDocDefinition } from "./doc";
@@ -25,6 +27,7 @@ import { ErEntityColumnMenu } from "./menu/ErEntityColumnMenu";
 import { ER_ENTITY_INSERT_PICKED_PART_KINDS } from "./menu/readOfferedErEntityInsertCommands";
 import { collectErEntityTextSlotRange } from "./parts/collectErEntityTextSlotRange";
 import { ER_ENTITY_COLUMN_PART_DEFINITION } from "./parts/erEntityColumnPartKind";
+import { ER_ENTITY_LANE_PART_DEFINITION } from "./parts/erEntityLanePartKind";
 import { calcErEntityConnectPoints } from "./presentation/calcErEntityConnectPoints";
 import {
 	calcErEntityTextSlotRegion,
@@ -66,8 +69,8 @@ const ER_ENTITY_TRANSFORM_HANDLES: ObjectTransformHandles = {
 };
 
 /**
- * The slot boundaries, the trailing edge and the column grips, all drawn under
- * the core handles.
+ * The slot boundaries, the trailing edge, the column grips and the lane grips,
+ * all drawn under the core handles.
  *
  * The slot boundaries are two strips (key / name and name / type) under the
  * title band, each shown by a dashed guide; a drag resizes the slot left of the boundary and the box with it,
@@ -78,9 +81,11 @@ const ER_ENTITY_TRANSFORM_HANDLES: ObjectTransformHandles = {
  * guide; a drag resizes the type column alone and the box with it
  * (handleErEntityTrailingEdge), the right width handle keeping its middle.
  *
- * The column grips, a pill per row down the left edge, write the pick and nothing else, so a
- * click on one is never a document change; the left width handle keeps the press
- * where the two overlap.
+ * The grips are headings abutting the entity, as a table's track grips are: the
+ * column grips number the rows down the left edge, the lane grips name the key,
+ * name and type lanes across the top edge above the title band. Both write the
+ * pick and nothing else, so a click on one is never a document change; the left
+ * width handle keeps the press where it overlaps a column grip.
  */
 const ER_ENTITY_SELECTION_CONTROLS: SelectionControlDefinition<ErEntityState>[] =
 	[
@@ -103,6 +108,13 @@ const ER_ENTITY_SELECTION_CONTROLS: SelectionControlDefinition<ErEntityState>[] 
 			Component: ErEntityColumnGripControl,
 			handle: handleErEntityColumnGrip,
 		},
+		{
+			name: "laneGrip",
+			layer: "belowHandles",
+			events: ["click"],
+			Component: ErEntityLaneGripControl,
+			handle: handleErEntityLaneGrip,
+		},
 	];
 
 /** An anchor the entity does not offer (see calcErEntityConnectionAnchors). */
@@ -117,8 +129,10 @@ const ER_ENTITY_NO_COLUMN_ANCHORS: ConnectionAnchors = {};
  * (calcErEntityConnectPoints), and the midpoint would sit on one of them, a
  * second dot meaning "this row" or "the entity" depending on which one the drop
  * lands nearer. A connector a doc attaches there still draws. Each column's left
- * point is pushed out past its row's grip, which it would otherwise sit on. An
- * entity of no columns offers its midpoints as any box does.
+ * point is pushed out past its row's grip, which it would otherwise sit on, and
+ * the top midpoint past the lane grips, as a table's top and left midpoints are.
+ * An entity of no columns draws no grips and offers its midpoints as any box
+ * does.
  */
 const calcErEntityConnectionAnchors = (
 	state: ErEntityState,
@@ -132,6 +146,7 @@ const calcErEntityConnectionAnchors = (
 	const anchors: Record<string, ConnectionAnchorSpec> = {
 		leftCenter: ER_ENTITY_HIDDEN_ANCHOR,
 		rightCenter: ER_ENTITY_HIDDEN_ANCHOR,
+		topCenter: pastGrips,
 	};
 	for (let columnIndex = 0; columnIndex < columnCount; columnIndex++) {
 		anchors[erEntityColumnConnectPointId(columnIndex, "left")] = pastGrips;
@@ -172,12 +187,16 @@ const ER_ENTITY_PROPERTY_PANEL: PropertyPanelSection[] = [
  * (ER_ENTITY_TEXT_SLOT_SELECTION_COMMANDS). A whole column is a part of its own kind
  * (ER_ENTITY_COLUMN_PART_DEFINITION), picked by its grip — several with Shift
  * or Ctrl / Meta, or Shift+Up / Down — and removed by Delete, where Delete over
- * picked slots only empties them (clearErEntityTextSlots).
+ * picked slots only empties them (clearErEntityTextSlots). A whole lane — key,
+ * name or type down every row — is a part too (ER_ENTITY_LANE_PART_DEFINITION),
+ * picked by its grip above the title band; Delete empties it, the lanes being
+ * fixed.
  * The column connect points (calcErEntityConnectPoints) are re-resolved by
  * `geometryKey` when a row is added, removed or changes its pitch.
  *
  * A text style lands where the pick says: on the picked slots, on the picked
- * columns' three slots each, or on every slot when the entity itself is selected.
+ * columns' three slots each, on the picked lanes' slot in every row, or on every
+ * slot when the entity itself is selected.
  * What a slot leaves unset resolves through its role
  * (readErEntityTextSlotStyleDefaults). The column section offers the insertions
  * (readOfferedErEntityInsertCommands); there is no delete button.
@@ -199,6 +218,7 @@ export const erEntityDefinition: ObjectTypeDefinition<
 	selectionControls: ER_ENTITY_SELECTION_CONTROLS,
 	partKinds: [
 		ER_ENTITY_COLUMN_PART_DEFINITION,
+		ER_ENTITY_LANE_PART_DEFINITION,
 		{
 			...createTextSlotPartKindDefinition<ErEntityState>({
 				regions: calcErEntityTextSlotRegions,

@@ -1,3 +1,4 @@
+import { TEXT_STYLE_INTENT_KINDS } from "@jiscribe/canvas-sdk";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -66,5 +67,11 @@ describe("ER_ENTITY_COLUMN_PART_DEFINITION", () => {
 		expect(
 			ER_ENTITY_COLUMN_PART_DEFINITION.textSlotIds?.(state, ["col:1"]),
 		).toEqual(["col:1:key", "col:1:name", "col:1:type"]);
+	});
+
+	it("receives what a slot pick does, leaving the entity's fill and border out", () => {
+		expect(
+			[...(ER_ENTITY_COLUMN_PART_DEFINITION.styleIntentKinds ?? [])].sort(),
+		).toEqual([...TEXT_STYLE_INTENT_KINDS].sort());
 	});
 });

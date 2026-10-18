@@ -126,35 +126,65 @@ async function replaceSlotText(
 	await canvas.commitText();
 }
 
-/** The pressable rect of one column's grip, named by the column's part id. */
-function columnGrip(canvas: CanvasDriver, columnIndex: number) {
+/**
+ * The pressable rect of one grip: a column's, down the left edge, named by its
+ * part id, or a lane's, across the top edge, named by the lane.
+ */
+function grip(
+	canvas: CanvasDriver,
+	control: "columnGrip" | "laneGrip",
+	partId: string,
+) {
 	return canvas.page.locator(
-		`[data-kind="control"][data-action="selection:erEntity:columnGrip:col:${columnIndex}"]`,
+		`[data-kind="control"][data-action="selection:erEntity:${control}:${partId}"]`,
 	);
 }
 
-/** The fill of one column's pill, which swaps to the accent while its column is picked. */
+/** The pressable rect of one column's grip, named by the column's part id. */
+function columnGrip(canvas: CanvasDriver, columnIndex: number) {
+	return grip(canvas, "columnGrip", `col:${columnIndex}`);
+}
+
+/** The drawn cell of a grip: the painted rect behind the pressable one, which carries the fill. */
+function gripFace(locator: ReturnType<typeof grip>) {
+	// SVG elements sit in their own namespace, which a bare XPath name never matches.
+	return locator.locator(
+		"xpath=../preceding-sibling::*[local-name()='g'][1]/*[local-name()='rect']",
+	);
+}
+
+/** The heading drawn on a grip: the row's number or the lane's name. */
+function gripLabel(locator: ReturnType<typeof grip>) {
+	return locator.locator(
+		"xpath=../preceding-sibling::*[local-name()='text'][1]",
+	);
+}
+
+/** The fill of a grip's cell, which is tinted while what it stands for is picked. */
+async function gripFill(locator: ReturnType<typeof grip>): Promise<string> {
+	return gripFace(locator).evaluate((face) => getComputedStyle(face).fill);
+}
+
+/** The fill of one column's grip, which is tinted while its column is picked. */
 async function columnGripFill(
 	canvas: CanvasDriver,
 	columnIndex: number,
 ): Promise<string> {
-	return columnGrip(canvas, columnIndex)
-		.locator("xpath=preceding-sibling::*[local-name()='rect'][1]")
-		.evaluate((element) => getComputedStyle(element).fill);
+	return gripFill(columnGrip(canvas, columnIndex));
 }
 
 /**
- * Clicks one column's grip at its middle, which picks the whole column; with a
- * modifier held, the click extends ("shift") or toggles ("ctrl") a column pick.
+ * Clicks a grip at its middle, which picks the whole column or lane; with a
+ * modifier held, the click extends ("shift") or toggles ("ctrl") a pick of its kind.
  */
-async function clickColumnGrip(
+async function clickGrip(
 	canvas: CanvasDriver,
-	columnIndex: number,
+	locator: ReturnType<typeof grip>,
 	modifier?: "shift" | "ctrl",
 ): Promise<void> {
-	const box = await columnGrip(canvas, columnIndex).boundingBox();
+	const box = await locator.boundingBox();
 	if (box === null) {
-		throw new Error(`no grip for column ${columnIndex}`);
+		throw new Error("the grip is not drawn");
 	}
 	const point = canvas.toContent({
 		x: box.x + box.width / 2,
@@ -167,6 +197,18 @@ async function clickColumnGrip(
 	} else {
 		await canvas.clickAt(point);
 	}
+}
+
+/**
+ * Clicks one column's grip at its middle, which picks the whole column; with a
+ * modifier held, the click extends ("shift") or toggles ("ctrl") a column pick.
+ */
+async function clickColumnGrip(
+	canvas: CanvasDriver,
+	columnIndex: number,
+	modifier?: "shift" | "ctrl",
+): Promise<void> {
+	await clickGrip(canvas, columnGrip(canvas, columnIndex), modifier);
 }
 
 /** Which of the entity's columns draw their grip picked, by index. */
@@ -701,23 +743,39 @@ test.describe("erEntity columns", () => {
 		);
 	});
 
-	test("thickens a picked column's grip outline by the factor the core's picked handles use", async ({
+	test("heads the rows with their numbers and the lanes with their names, outside the left and top edges", async ({
 		canvas,
 	}) => {
-		await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
-		const gripStrokeWidth = (columnIndex: number) =>
-			columnGrip(canvas, columnIndex)
-				.locator("xpath=preceding-sibling::*[local-name()='rect'][1]")
-				.evaluate((element) => Number(element.getAttribute("stroke-width")));
-		const unpickedStroke = await gripStrokeWidth(1);
+		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
 
-		await clickColumnGrip(canvas, 1);
+		for (const columnIndex of [0, 1, 2]) {
+			await expect(gripLabel(columnGrip(canvas, columnIndex))).toHaveText(
+				String(columnIndex + 1),
+			);
+		}
+		await expect(columnGrip(canvas, 3)).toHaveCount(0);
+		for (const [lane, label] of [
+			["key", "Key"],
+			["name", "Name"],
+			["type", "Type"],
+		] as const) {
+			await expect(gripLabel(grip(canvas, "laneGrip", lane))).toHaveText(label);
+		}
 
-		// SELECTED_HANDLE_STROKE_SCALE, the factor the core thickens a picked handle by.
-		await expect
-			.poll(async () => (await gripStrokeWidth(1)) / unpickedStroke)
-			.toBeCloseTo(1.5, 5);
-		expect(await gripStrokeWidth(0)).toBeCloseTo(unpickedStroke, 5);
+		// Abutting the entity, as a table's grips abut the table: the row's grip
+		// against its key slot, the key lane's over the title band, as wide as the
+		// key slot.
+		const rowFace = await gripFace(columnGrip(canvas, 0)).boundingBox();
+		const laneFace = await gripFace(
+			grip(canvas, "laneGrip", "key"),
+		).boundingBox();
+		const firstKey = await slotRect(canvas, id, "col:0:key");
+		const title = await slotRect(canvas, id, "name");
+		expect(rowFace!.x + rowFace!.width).toBeCloseTo(firstKey.x, 0);
+		expect(rowFace!.y).toBeCloseTo(firstKey.y, 0);
+		expect(laneFace!.y + laneFace!.height).toBeCloseTo(title.y, 0);
+		expect(laneFace!.x).toBeCloseTo(firstKey.x, 0);
+		expect(laneFace!.width).toBeCloseTo(firstKey.width, 0);
 	});
 
 	test("inserts below a picked slot from the menu", async ({ canvas }) => {
@@ -1093,5 +1151,53 @@ test.describe("erEntity column insert from the properties sidebar", () => {
 			columns: { name: unknown }[];
 		};
 		expect(saved.columns[1].name).toBe("org_id");
+	});
+});
+
+test.describe("erEntity lanes", () => {
+	test("picks a lane by its grip, Ctrl adds another, a style lands on their slots and Delete empties them", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		const typeGrip = grip(canvas, "laneGrip", "type");
+		const keyGrip = grip(canvas, "laneGrip", "key");
+		const unpickedFill = await gripFill(typeGrip);
+
+		await clickGrip(canvas, typeGrip);
+		await expect.poll(() => gripFill(typeGrip)).not.toBe(unpickedFill);
+		expect(await gripFill(keyGrip)).toBe(unpickedFill);
+		// One outline over the lane, from the first row down to the last.
+		const outlines = await partOutlineRects(canvas);
+		expect(outlines).toHaveLength(1);
+		const firstType = await slotRect(canvas, id, "col:0:type");
+		const lastType = await slotRect(canvas, id, "col:2:type");
+		expect(outlines[0].x).toBeCloseTo(firstType.x, 0);
+		expect(outlines[0].y).toBeCloseTo(firstType.y, 0);
+		expect(outlines[0].y + outlines[0].height).toBeCloseTo(
+			lastType.y + lastType.height,
+			0,
+		);
+
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await slotFont(canvas, id, "col:2:type")).fontWeight)
+			.toBe("700");
+		expect((await slotFont(canvas, id, "col:2:name")).fontWeight).not.toBe(
+			"700",
+		);
+
+		await clickGrip(canvas, keyGrip, "ctrl");
+		await expect.poll(() => gripFill(keyGrip)).not.toBe(unpickedFill);
+		expect(await gripFill(typeGrip)).not.toBe(unpickedFill);
+
+		await canvas.deleteSelection();
+		await expect
+			.poll(async () => (await drawnTexts(canvas, id)).join("|"))
+			.not.toContain("varchar(100)");
+		const texts = (await drawnTexts(canvas, id)).join("|");
+		expect(texts).not.toContain("PK");
+		expect(texts).toContain("created_at");
+		await expect(canvas.objectById(id)).toHaveCount(1);
+		expect(await columnCount(canvas, id)).toBe(3);
 	});
 });

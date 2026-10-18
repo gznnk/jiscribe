@@ -1,8 +1,8 @@
 import type { SelectionControlProps } from "@jiscribe/canvas";
-import { collectObjectPartIds, createSvgTransform } from "@jiscribe/canvas-sdk";
+import { collectObjectPartIds } from "@jiscribe/canvas-sdk";
 import { memo } from "react";
 
-import { ErEntityColumnGrip } from "./ErEntityColumnGrip";
+import { ErEntityGripStrip } from "./ErEntityGripStrip";
 import { readCachedErEntityLayout } from "../layout/readCachedErEntityLayout";
 import {
 	ER_ENTITY_COLUMN_PART_KIND,
@@ -12,8 +12,9 @@ import { erEntityColumnPartId } from "../schema/erEntityColumnIds";
 import type { ErEntityState } from "../state/ErEntityState";
 
 /**
- * The column grips: one per row, down the outside of the entity's left edge.
- * Each grip's action carries its column's part id.
+ * The column grips: one numbered heading per row (from `1`), down the outside of
+ * the entity's left edge, as a table heads its rows. Each grip's action carries
+ * its column's part id.
  *
  * The grips are placed from the layout rather than from the state's box, so they
  * stand beside the drawn rows even on the render before the content resizer has
@@ -21,7 +22,7 @@ import type { ErEntityState } from "../state/ErEntityState";
  */
 const ErEntityColumnGripControlComponent: React.FC<
 	SelectionControlProps<ErEntityState>
-> = ({ object, zoom, action, selectedPart }) => {
+> = ({ object, action, selectedPart }) => {
 	const layout = readCachedErEntityLayout(object);
 	// The selection stores the ends of its ranges; the kind's own definition is
 	// what expands them, as it does for every other reader of the pick.
@@ -36,29 +37,22 @@ const ErEntityColumnGripControlComponent: React.FC<
 	);
 
 	return (
-		<g
-			transform={createSvgTransform(
-				object.scaleX,
-				object.scaleY,
-				object.rotation,
-				object.cx,
-				object.cy,
-			)}
-		>
-			{layout.rows.map(({ columnIndex, band }) => {
+		<ErEntityGripStrip
+			object={object}
+			action={action}
+			side="left"
+			edge={-layout.width / 2}
+			items={layout.rows.map(({ columnIndex, band }) => {
 				const partId = erEntityColumnPartId(columnIndex);
-				return (
-					<ErEntityColumnGrip
-						key={partId}
-						band={band}
-						zoom={zoom}
-						objectId={object.id}
-						action={`${action}:${partId}`}
-						selected={selectedPartIds.has(partId)}
-					/>
-				);
+				return {
+					partId,
+					start: band.y,
+					end: band.y + band.height,
+					label: String(columnIndex + 1),
+					selected: selectedPartIds.has(partId),
+				};
 			})}
-		</g>
+		/>
 	);
 };
 
