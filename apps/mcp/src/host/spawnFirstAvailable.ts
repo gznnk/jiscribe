@@ -44,7 +44,7 @@ export type SpawnFirstAvailableOptions = {
 	 * that hands the URL on and leaves. When it is, it is kept attached (someone
 	 * has to be left able to kill it), its stderr is read so that a launch that
 	 * failed can be explained, and the chain latches once it has been up long
-	 * enough to count as started
+	 * enough to count as started, letting go of the stderr there
 	 */
 	isChildTheBrowser: boolean;
 	/**
@@ -55,23 +55,43 @@ export type SpawnFirstAvailableOptions = {
 	launchFailureWindowMs?: number;
 };
 
+/** The head of a child's stderr read so far, and the way to stop reading it */
+type StderrCapture = {
+	/** What has been read so far, cut at the capture limit */
+	read: () => string;
+	/**
+	 * Stops reading and closes this process's end of the pipe, so that a browser
+	 * that stuck is not drained for the rest of its life and its stderr does not
+	 * hold this process's event loop. Its later writes fail with EPIPE, which
+	 * Chromium ignores SIGPIPE for and drops — the same as once this process exits
+	 */
+	release: () => void;
+};
+
 /**
  * Reads a child's stderr as it comes, keeping the head of it. Reading it is not
- * optional once the pipe is open: a child that fills an unread pipe blocks on
- * its next write.
+ * optional while the pipe is open: a child that fills an unread pipe blocks on
+ * its next write, so it is either read or released, never left.
  *
  * @param child A child spawned with its stderr piped
- * @returns What has been read so far, cut at the capture limit
  */
-const captureStderrHead = (child: ChildProcess): (() => string) => {
+const captureStderrHead = (child: ChildProcess): StderrCapture => {
 	let text = "";
-	child.stderr?.setEncoding("utf8");
-	child.stderr?.on("data", (chunk: string) => {
+	const stderr = child.stderr;
+	const onData = (chunk: string): void => {
 		if (text.length < STDERR_CAPTURE_BYTES) {
 			text = (text + chunk).slice(0, STDERR_CAPTURE_BYTES);
 		}
-	});
-	return () => text;
+	};
+	stderr?.setEncoding("utf8");
+	stderr?.on("data", onData);
+	return {
+		read: () => text,
+		release: () => {
+			stderr?.off("data", onData);
+			stderr?.destroy();
+		},
+	};
 };
 
 /**
@@ -127,9 +147,21 @@ export const spawnFirstAvailable = (
 				],
 			});
 			options.onSpawn(child);
-			const readStderr = options.isChildTheBrowser
+			const stderrCapture = options.isChildTheBrowser
 				? captureStderrHead(child)
 				: null;
+			/**
+			 * Latches this candidate as the one that stuck. The stderr is kept only
+			 * to explain a launch that failed, so it is let go here; a candidate
+			 * already settled by a failure is left to finish reading it
+			 */
+			const settleAsStarted = (): void => {
+				if (isSettled) {
+					return;
+				}
+				isSettled = true;
+				stderrCapture?.release();
+			};
 			/**
 			 * Falls back once the browser's stderr has been read to the end, or has
 			 * had its grace: the reason is worth little without what it wrote
@@ -138,7 +170,7 @@ export const spawnFirstAvailable = (
 				if (isSettled) {
 					return;
 				}
-				if (readStderr === null) {
+				if (stderrCapture === null) {
 					fallBack(reason);
 					return;
 				}
@@ -149,7 +181,7 @@ export const spawnFirstAvailable = (
 						return;
 					}
 					isReported = true;
-					advanceOrExhaust(reason, readStderr());
+					advanceOrExhaust(reason, stderrCapture.read());
 				};
 				// close follows exit once every stdio stream has ended
 				child.once("close", report);
@@ -166,21 +198,22 @@ export const spawnFirstAvailable = (
 				// instead. So the browser is up, and once it has stayed up it is the one
 				// that stuck. The timer is unref'd, so the three seconds never hold a
 				// process open that is otherwise finished
-				setTimeout(() => {
-					isSettled = true;
-				}, options.launchFailureWindowMs ?? LAUNCH_FAILURE_WINDOW_MS).unref();
+				setTimeout(
+					settleAsStarted,
+					options.launchFailureWindowMs ?? LAUNCH_FAILURE_WINDOW_MS,
+				).unref();
 			});
 			child.on("exit", (code, signal) => {
 				// A child that never launched reports error, not exit, so an exit
 				// without a code is a death on a signal
 				if (code === 0) {
-					isSettled = true;
+					settleAsStarted();
 					return;
 				}
 				// A child this process killed is on its way out, not a launch that
 				// failed. Windows has no signals, so a kill surfaces as an exit code
 				if (child.killed) {
-					isSettled = true;
+					settleAsStarted();
 					return;
 				}
 				fallBackWithStderr(

@@ -203,6 +203,31 @@ describe("spawnFirstAvailable", () => {
 		expect(run.exhaustedStderrs[0].length).toBeLessThan(40_000);
 	});
 
+	it("lets go of a browser's stderr once it has stayed up", async () => {
+		// Read for the browser's whole life, the pipe drained its logs for nothing,
+		// and held this process's event loop for as long as the browser ran
+		const madeDir = mkdtempSync(join(tmpdir(), "jiscribe-mcp-spawn-"));
+		workDir = madeDir;
+		const readyPath = join(madeDir, "ready");
+		const run = runCandidates(
+			[
+				nodeCommand(
+					`setInterval(() => {}, 1000);` +
+						`require("node:fs").writeFileSync(${JSON.stringify(readyPath)}, "");`,
+				),
+			],
+			true,
+		);
+		await waitFor(() => existsSync(readyPath));
+		const stderr = run.spawned[0].stderr;
+
+		await waitFor(() => stderr?.destroyed === true);
+
+		expect(stderr?.listenerCount("data")).toBe(0);
+		expect(run.spawned[0].exitCode).toBeNull();
+		expect(run.exhaustedReasons).toEqual([]);
+	});
+
 	it("does not read a launcher's stderr", async () => {
 		// A launcher is left to outlive this process, and an open pipe to it would
 		// hold this process up until the launcher let go
