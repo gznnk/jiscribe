@@ -13,6 +13,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Security
+
+- **DOMPurify is now 3.4.16.** The advisories fixed there concern `IN_PLACE`
+  sanitizing and `afterSanitize` hooks, neither of which `@jiscribe/canvas` or
+  `@jiscribe/markdown` uses, so no drawing was exposed; the bump keeps the
+  shipped version off the advisory list.
+
 ## [0.12.0] - 2026-10-19
 
 ### Security
