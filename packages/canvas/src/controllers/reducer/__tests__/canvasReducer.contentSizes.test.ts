@@ -2,7 +2,7 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { roundToDecimal } from "@jiscribe/geometry";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createTestState } from "./support/createTestState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
@@ -181,6 +181,42 @@ describe("canvasReducer (integration)", () => {
 			});
 			expect(isCowObjects(after.objects)).toBe(false);
 			expect(after.history.past).toHaveLength(1);
+		});
+	});
+
+	describe("COMMAND", () => {
+		/** Doc holding several text objects, so a full scan and a narrowed one differ. */
+		const docWithTexts = (count: number): CanvasDoc =>
+			({
+				version: 1,
+				root: Array.from({ length: count }, (_, index) => ({
+					id: `text-${index + 1}`,
+					type: "text",
+					x: TEXT_ORIGIN.x,
+					y: TEXT_ORIGIN.y + index * 40,
+					text: "hello",
+					fontSize: 16,
+				})),
+			}) as unknown as CanvasDoc;
+
+		it("re-measures only the objects a nudge wrote, and hands the result back plain", () => {
+			// The nudge writes through a copy-on-write view; flattening it before
+			// the box pass would leave nothing to narrow the scan to.
+			const registries = createTestRegistries();
+			const reducer = createCanvasReducer(registries);
+			const state = createTestState(docWithTexts(5), {
+				selection: selectionOf(["text-2"]),
+			});
+			const resizerLookup = vi.spyOn(registries.objectContentResizer, "get");
+
+			const after = reducer(state, {
+				type: "COMMAND",
+				commandId: "move-right",
+			});
+
+			expect(resizerLookup).toHaveBeenCalledTimes(1);
+			expect(after.objects["text-2"]).not.toBe(state.objects["text-2"]);
+			expect(isCowObjects(after.objects)).toBe(false);
 		});
 	});
 
