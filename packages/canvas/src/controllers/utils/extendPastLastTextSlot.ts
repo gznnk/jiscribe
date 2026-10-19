@@ -5,7 +5,7 @@ import {
 	isTextSlotPart,
 	TEXT_SLOT_PART_KIND,
 } from "../selection/partKinds/textSlotPartKind";
-import { getTextSlotCycle } from "../selection/writers/selectAdjacentTextSlot";
+import { readSelectedTextSlotOrder } from "../selection/readers/readSelectedTextSlotOrder";
 import { selectTextSlot } from "../selection/writers/selectTextSlot";
 
 /**
@@ -15,12 +15,14 @@ import { selectTextSlot } from "../selection/writers/selectTextSlot";
  * or else the first slot it added.
  *
  * @param state - The current canvas controller state; asked only when its
- *   selection picks the last slot of a slot cycle (getTextSlotCycle) alone
+ *   selection picks the last slot of the selection's slot order
+ *   (readSelectedTextSlotOrder) alone, which for an object of one slot is that
+ *   slot
  * @param objectPartKind - Per-canvas registry of part kinds, which answers the
  *   slot order before and after the growth
  * @returns The grown state, or null when the selection is not on the last
  *   slot, or the kind declares no `extend` or it declines
- * @throws As getTextSlotCycle does, when the grown object's `list` no longer
+ * @throws As readSelectedTextSlotOrder does; and when the grown object's `list` no longer
  *   names the old last slot or names nothing after it, and when `extend` names
  *   a landing slot that is not listed after it or that the object held before
  */
@@ -28,11 +30,11 @@ export const extendPastLastTextSlot = (
 	state: CanvasControllerState,
 	objectPartKind: ObjectPartKindRegistry,
 ): CanvasControllerState | null => {
-	const cycle = getTextSlotCycle(state, objectPartKind);
-	if (cycle === null) {
+	const slotOrder = readSelectedTextSlotOrder(state, objectPartKind);
+	if (slotOrder === null) {
 		return null;
 	}
-	const { target, textSlotPart, textSlotIds } = cycle;
+	const { target, textSlotPart, textSlotIds } = slotOrder;
 	const lastSlotId = textSlotIds[textSlotIds.length - 1];
 	const { part } = state.selection;
 	const isOnLastSlot =

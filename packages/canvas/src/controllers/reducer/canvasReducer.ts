@@ -502,10 +502,7 @@ export const createCanvasReducer =
 			}
 
 			case "STEP_TEXT_EDIT": {
-				if (
-					state.textEditState?.kind !== "shape" ||
-					getTextSlotCycle(state, registries.objectPartKind) === null
-				) {
+				if (state.textEditState?.kind !== "shape") {
 					return state;
 				}
 				// Committed before the selection moves: the draft is bound to the slot
@@ -517,6 +514,14 @@ export const createCanvasReducer =
 					action.step === 1
 						? extendPastLastTextSlot(committedResult, registries.objectPartKind)
 						: null;
+				// With nowhere to step to (a sole slot that does not grow), the edit
+				// stays open as it was, uncommitted.
+				if (
+					extendedResult === null &&
+					getTextSlotCycle(committedResult, registries.objectPartKind) === null
+				) {
+					return state;
+				}
 				const steppedResult =
 					extendedResult ??
 					selectAdjacentTextSlot(
