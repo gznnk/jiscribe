@@ -20,6 +20,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `@jiscribe/markdown` uses, so no drawing was exposed; the bump keeps the
   shipped version off the advisory list.
 
+### Fixed
+
+- **Dragging a table out of the shape library shows its ghost on an empty
+  canvas.** In Chromium the ghost stayed in the DOM but was never drawn while
+  nothing on the canvas gave it a snap guide.
+
 ## [0.12.0] - 2026-10-19
 
 ### Security

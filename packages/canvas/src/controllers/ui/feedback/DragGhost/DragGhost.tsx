@@ -16,6 +16,12 @@ const GHOST_ID = "drag-ghost";
 /**
  * Creates the ghost element.
  * Uses React.createElement to avoid creating a component variable during render.
+ *
+ * Keyed by position so every move mounts a fresh element. The ghost is first
+ * drawn under the library panel, outside the SVG's clip, where Chromium culls it;
+ * a shape whose transform sits on a `<g>` (the table) is then only re-transformed
+ * on a move, never repainted, and stays invisible unless something else on the
+ * canvas (a snap guide) happens to repaint it.
  */
 const createGhostElement = (
 	preset: Stencil,
@@ -36,7 +42,10 @@ const createGhostElement = (
 	const ghostState = registries.objectMapper.toState(doc);
 	ghostState.id = GHOST_ID;
 
-	return React.createElement(component, ghostState);
+	return React.createElement(component, {
+		...ghostState,
+		key: `${position.x},${position.y}`,
+	});
 };
 
 /**
