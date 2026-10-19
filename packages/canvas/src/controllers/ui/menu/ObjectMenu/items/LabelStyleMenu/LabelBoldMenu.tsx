@@ -1,10 +1,10 @@
 import { memo } from "react";
 
-import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { setAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
@@ -17,24 +17,26 @@ import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
  */
 const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 }) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const { value: fontWeight, hasLabelText } = useConnectorLabelStyle(
+		"label.fontWeight",
+		undefined,
+		{ objects, selection },
+	);
+	const isBold = isBoldFontWeight(fontWeight);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const isBold = isBoldFontWeight(label.fontWeight);
 
 	return (
 		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
-				data-part={setPart("label.fontWeight", isBold ? "normal" : "bold")}
+				data-action={setAction("label.fontWeight", isBold ? "normal" : "bold")}
 				title={messages.menuLabelBold}
 			>
 				<BoldIcon />

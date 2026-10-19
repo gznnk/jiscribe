@@ -17,7 +17,7 @@ import type { GroupState } from "../../states/objects/primitives/group/GroupStat
  * @returns A new array of the object IDs sorted by z-order, back to front
  */
 export function sortObjectIdsByZOrder(
-	ids: string[],
+	ids: readonly string[],
 	objects: Record<string, ObjectState>,
 	rootIds: string[],
 ): string[] {

@@ -7,6 +7,9 @@ import type { ConnectorState } from "../../../../../states/objects/connector/Con
 import { outlinedPlugin } from "../../../../__tests__/support/outlinedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
+import { reconcileSelection } from "../../../../selection/writers/reconcileSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 import { ConnectorClickHandler } from "../ConnectorClickHandler";
@@ -31,9 +34,7 @@ const makeState = (labelText: string): CanvasControllerState =>
 			c2: makeConnector("c2", "other"),
 		},
 		rootIds: ["c1", "c2"],
-		selectedIds: [],
-		selectedConnectorId: null,
-		selectedVertex: null,
+		selection: selectionOf([]),
 		multiSelectGroup: null,
 		textEditState: null,
 		commitVersion: 5,
@@ -49,18 +50,14 @@ const makeEditState = (
 ): CanvasControllerState =>
 	({
 		...makeState(labelText),
-		selectedConnectorId: editingId,
-		textEditState: {
-			kind: "connectorLabel",
-			objectId: editingId,
-			text: pendingText,
-		},
+		selection: selectionOf([editingId]),
+		textEditState: { kind: "connectorLabel", text: pendingText },
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick",
 	targetId: string,
-	targetPart?: string,
+	targetAction?: string,
 	last: Point = { x: 0, y: 0 },
 	pointerType?: string,
 ): CanvasEvent =>
@@ -68,7 +65,7 @@ const makeEvent = (
 		type,
 		targetKind: "connector",
 		targetId,
-		targetPart,
+		targetAction,
 		start: last,
 		last,
 		button: 0,
@@ -93,7 +90,7 @@ describe("ConnectorClickHandler - double click edit target", () => {
 			registries,
 		);
 		expect(next.textEditState).toBeNull();
-		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selection.objectIds).toEqual(["c1"]);
 	});
 
 	it("with a committed label, a double click on the label box opens the editor prefilled", () => {
@@ -104,10 +101,9 @@ describe("ConnectorClickHandler - double click edit target", () => {
 		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "Yes",
 		});
-		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selection.objectIds).toEqual(["c1"]);
 	});
 
 	it("without a label, a double click anywhere on the line opens the editor empty", () => {
@@ -118,10 +114,9 @@ describe("ConnectorClickHandler - double click edit target", () => {
 		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "",
 		});
-		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selection.objectIds).toEqual(["c1"]);
 	});
 });
 
@@ -150,11 +145,11 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 	const dblclickAt = (
 		state: CanvasControllerState,
 		last: Point,
-		targetPart?: string,
+		targetAction?: string,
 	) =>
 		ConnectorClickHandler.handle(
 			state,
-			makeEvent("doubleClick", "c1", targetPart, last),
+			makeEvent("doubleClick", "c1", targetAction, last),
 			registries,
 		);
 
@@ -162,7 +157,6 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 		const next = dblclickAt(stateWith(), { x: 150, y: 0 });
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "",
 			placement: { position: 0.75, offset: 0 },
 		});
@@ -252,7 +246,6 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
-			objectId: "c1",
 			text: "Yes",
 		});
 		expect(pendingPlacement(next)).toBeUndefined();
@@ -287,7 +280,7 @@ describe("ConnectorClickHandler - clicks while editing commit", () => {
 		expect(labelText(afterDouble, "c1")).toBe("new");
 		expect(afterDouble.textEditState).toBeNull();
 		expect(afterDouble.commitVersion).toBe(6);
-		expect(afterDouble.selectedConnectorId).toBe("c1");
+		expect(afterDouble.selection.objectIds).toEqual(["c1"]);
 	});
 
 	it("a pressed on a different connector commits the pending edit", () => {
@@ -307,7 +300,7 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 	const staleUiState = (): CanvasControllerState =>
 		({
 			...makeState("Yes"),
-			selectedVertex: { objectId: "c2", vertexIndex: 0 },
+			selection: selectionOf(["c2"], vertexPartSelection(0)),
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 		}) as unknown as CanvasControllerState;
@@ -318,8 +311,12 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			makeEvent("click", "c1"),
 			registries,
 		);
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selection.objectIds).toEqual(["c1"]);
+		// The part selection is the reducer's to drop, which it does for every
+		// gesture result (reconcileSelection).
+		expect(
+			reconcileSelection(next, registries.objectPartKind).selection.part,
+		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
@@ -330,8 +327,10 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
-		expect(next.selectedConnectorId).toBe("c1");
-		expect(next.selectedVertex).toBeNull();
+		expect(next.selection.objectIds).toEqual(["c1"]);
+		expect(
+			reconcileSelection(next, registries.objectPartKind).selection.part,
+		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});

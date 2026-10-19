@@ -6,6 +6,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -47,8 +48,8 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		if (event.targetKind !== "control") {
 			return false;
 		}
-		const targetPart = event.targetPart;
-		return !!targetPart && targetPart.startsWith("waypoint-insert:");
+		const targetAction = event.targetAction;
+		return !!targetAction && targetAction.startsWith("waypoint-insert:");
 	}
 
 	handle(
@@ -56,10 +57,10 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// targetId = connectorId, targetPart = "waypoint-insert:<segmentIndex>"
+		// targetId = connectorId, targetAction = "waypoint-insert:<segmentIndex>"
 		const connectorId = event.targetId;
-		const targetPart = event.targetPart;
-		if (!connectorId || !targetPart) {
+		const targetAction = event.targetAction;
+		if (!connectorId || !targetAction) {
 			return state;
 		}
 
@@ -73,7 +74,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 					(hovered) =>
 						hovered.kind === "connector" &&
 						hovered.id === connectorId &&
-						hovered.part === "label",
+						hovered.action === "label",
 				);
 			return startConnectorLabelEdit(
 				state,
@@ -85,7 +86,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		}
 
 		const segmentIndex = parseInt(
-			targetPart.slice("waypoint-insert:".length),
+			targetAction.slice("waypoint-insert:".length),
 			10,
 		);
 		if (isNaN(segmentIndex) || segmentIndex < 0) {
@@ -138,7 +139,9 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		const nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
-			selectedVertex: null,
+			// An insertion renumbers the waypoints after it, so a picked one is dropped
+			// rather than left addressing whoever took the number over.
+			selection: { ...state.selection, part: null },
 			edgeScrollEnabled: true,
 		};
 
@@ -236,16 +239,13 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		connectorId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const nextState = this.handleDrag(
-			{ ...state },
+		const closingState = { ...state, edgeScrollEnabled: false };
+		const draggedState = this.handleDrag(
+			closingState,
 			event,
 			connectorId,
 			segmentIndex,
 		);
-
-		return {
-			...nextState,
-			edgeScrollEnabled: false,
-		};
+		return commitEditIfChanged(closingState, draggedState);
 	}
 }

@@ -3,11 +3,11 @@ import type { ViewDoc, ViewOpenMode } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { Dimensions } from "@jiscribe/geometry";
 import { type Dispatch, type RefObject, useLayoutEffect, useRef } from "react";
 
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { calcContentBounds } from "../utils/calcContentBounds";
 import { calcInitialCameraFromView } from "../utils/calcInitialCameraFromView";
+import type { VisualExtentRegistries } from "../utils/VisualExtentRegistries";
 import { ZOOM } from "../utils/zoom";
 
 type InitialViewOpenOptions = {
@@ -29,8 +29,11 @@ type InitialViewOpenOptions = {
 	viewportSize: Dimensions;
 	/** The mapped objects whose extent is fitted. */
 	objects: Record<string, ObjectState>;
-	/** Per-canvas registry, so shapes drawing outside their geometry box are framed too. */
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">;
+	/**
+	 * Per-canvas registries measuring what is drawn, so shapes drawing outside their
+	 * geometry box and connector routes leaving their owners are framed too.
+	 */
+	visualExtentRegistries: VisualExtentRegistries;
 	/** The Canvas reducer's dispatch. */
 	dispatch: Dispatch<CanvasAction>;
 };
@@ -85,7 +88,7 @@ export const useInitialViewOpen = ({
 	containerRef,
 	viewportSize,
 	objects,
-	visualBounds,
+	visualExtentRegistries,
 	dispatch,
 }: InitialViewOpenOptions): void => {
 	// Every framing declaration already answered, keyed by content
@@ -117,7 +120,7 @@ export const useInitialViewOpen = ({
 		// document's intent into a standing override.
 		answeredFramingsRef.current.add(framingKey);
 
-		const bounds = calcContentBounds(objects, visualBounds);
+		const bounds = calcContentBounds(objects, visualExtentRegistries);
 		if (!bounds) {
 			return;
 		}
@@ -136,5 +139,12 @@ export const useInitialViewOpen = ({
 			viewport: { width, height, ...camera },
 		});
 		// viewportSize is a re-run trigger, not an input; see its option doc.
-	}, [view, containerRef, viewportSize, objects, visualBounds, dispatch]);
+	}, [
+		view,
+		containerRef,
+		viewportSize,
+		objects,
+		visualExtentRegistries,
+		dispatch,
+	]);
 };

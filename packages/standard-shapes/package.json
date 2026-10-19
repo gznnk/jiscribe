@@ -2,38 +2,45 @@
 	"name": "@jiscribe/standard-shapes",
 	"version": "0.0.0",
 	"private": true,
-	"description": "The shipped shape set as one package: the nine standard shape plugins, bundled once for every host to register",
+	"description": "The shipped shape set as one package: the eleven standard shape plugins, bundled once for every host to register",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {
 		".": "./src/index.ts",
-		"./doc": "./src/doc.ts"
+		"./doc": "./src/doc.ts",
+		"./tools": "./src/tools.ts"
 	},
 	"scripts": {
 		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
-		"exports": "./doc is the headless half (parsing, doc-ops, schema generation) and pulls in no react; the root entry is the half a canvas is rendered with. A Node host importing the root entry would drag react into a process that has no DOM, which is what the split prevents."
+		"exports": "./doc is the headless half (parsing, doc-ops, schema generation) and pulls in no react; the root entry is the half a canvas is rendered with. A Node host importing the root entry would drag react into a process that has no DOM, which is what the split prevents. ./tools is headless too: the plugins' AI tools, applied wherever the document is."
 	},
 	"dependencies": {
 		"@jiscribe/plugin-annotation-shapes": "workspace:*",
 		"@jiscribe/plugin-aws-shapes": "workspace:*",
 		"@jiscribe/plugin-container-shapes": "workspace:*",
+		"@jiscribe/plugin-er-shapes": "workspace:*",
 		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
 		"@jiscribe/plugin-general-shapes": "workspace:*",
 		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
 		"@jiscribe/plugin-markdown-shape": "workspace:*",
 		"@jiscribe/plugin-sticky-shape": "workspace:*",
+		"@jiscribe/plugin-table-shape": "workspace:*",
 		"@jiscribe/plugin-uml-shapes": "workspace:*"
 	},
 	"peerDependencies": {
-		"@jiscribe/canvas": "workspace:*",
-		"@jiscribe/doc": "workspace:*"
-	},
-	"devDependencies": {
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
-		"typescript": "catalog:"
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@jiscribe/ai-tools-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
+		"typescript": "catalog:",
+		"zod": "catalog:"
 	}
 }

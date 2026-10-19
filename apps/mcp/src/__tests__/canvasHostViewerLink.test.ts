@@ -1204,6 +1204,107 @@ describe("runHandleOp", () => {
 		).toHaveLength(1);
 	});
 
+	it("names no revision while no file is on display", async () => {
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host, (requestId, answering) => {
+			answering.send({
+				type: "handleOpResult",
+				requestId,
+				ok: true,
+				text: "answered",
+			});
+		});
+
+		await host.runHandleOp({ kind: "getView" });
+
+		const request = viewer.receivedFrames.find(
+			(frame) => frame.type === "handleOpRequest",
+		);
+		expect(request).not.toHaveProperty("expectedRevision");
+	});
+
+	it("names the revision the window was opened with when the file has not changed", async () => {
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		await host.openFile(OPEN_REL_PATH);
+		const viewer = await connectFakeViewer(host, (requestId, answering) => {
+			answering.send({
+				type: "handleOpResult",
+				requestId,
+				ok: true,
+				text: "answered",
+			});
+		});
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+
+		await host.runHandleOp({ kind: "getView" });
+
+		expect(viewer.receivedFrames.map((frame) => frame.type)).toEqual([
+			"openCanvas",
+			"handleOpRequest",
+		]);
+		expect(viewer.receivedFrames[1]).toMatchObject({
+			expectedRevision: readLatestRevision(viewer),
+		});
+	});
+
+	it("sends a change the watch has not picked up yet ahead of the request, and names its revision", async () => {
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		await host.openFile(OPEN_REL_PATH);
+		const viewer = await connectFakeViewer(host, (requestId, answering) => {
+			answering.send({
+				type: "handleOpResult",
+				requestId,
+				ok: true,
+				text: "answered",
+			});
+		});
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+
+		await writeOpenFile(savedDocText);
+		await host.runHandleOp({ kind: "captureCanvas" });
+
+		const requestIndex = viewer.receivedFrames.findIndex(
+			(frame) => frame.type === "handleOpRequest",
+		);
+		const sentAhead = viewer.receivedFrames[requestIndex - 1];
+		expect(sentAhead).toMatchObject({
+			type: "docChanged",
+			docText: savedDocText,
+		});
+		expect(viewer.receivedFrames[requestIndex]).toMatchObject({
+			expectedRevision: isDocFrame(sentAhead) ? sentAhead.revision : null,
+		});
+		// The watch reading the same change afterwards has nothing to add
+		await new Promise((resolve) => setTimeout(resolve, WATCH_SETTLE_MS));
+		expect(calcChangedTexts(viewer)).toEqual([savedDocText]);
+	});
+
+	it("fails without asking anyone when the file on display cannot be read", async () => {
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		await host.openFile(OPEN_REL_PATH);
+		const viewer = await connectFakeViewer(host);
+		await rm(join(workspaceRoot, OPEN_REL_PATH));
+
+		const outcome = await host.runHandleOp({ kind: "captureCanvas" });
+
+		expect(outcome.ok).toBe(false);
+		expect(outcome.text).toContain(`${OPEN_REL_PATH}, cannot be read`);
+		expect(
+			viewer.receivedFrames.filter((frame) => frame.type === "handleOpRequest"),
+		).toHaveLength(0);
+		// The window is told the same, as the watch would have told it
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "docError"),
+		);
+	});
+
 	it("fails without asking anyone when no viewer is connected", async () => {
 		const host = await startTestHost();
 

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { calcFitViewport } from "../calcFitViewport";
 import { ZOOM } from "../zoom";
+
+const registries = createTestRegistries();
 
 /** Axis-aligned (unrotated) Frame-family state. bbox is trivial: left=cx-w/2, etc. */
 const rectObj = (
@@ -40,18 +43,24 @@ const toRecord = (objects: ObjectState[]): Record<string, ObjectState> =>
 
 describe("calcFitViewport", () => {
 	it("returns null when there are no objects", () => {
-		expect(calcFitViewport({}, { width: 800, height: 600 })).toBeNull();
+		expect(
+			calcFitViewport({}, { width: 800, height: 600 }, registries),
+		).toBeNull();
 	});
 
 	it("fits a single rectangle to the viewport center and computes zoom and origin", () => {
 		// bbox: left=0, right=200, top=50, bottom=150 -> center (100,100), 200x100
 		const objects = toRecord([rectObj("r1", 100, 100, 200, 100)]);
 
-		const viewport = calcFitViewport(objects, {
-			width: 800,
-			height: 600,
-			padding: 50,
-		});
+		const viewport = calcFitViewport(
+			objects,
+			{
+				width: 800,
+				height: 600,
+				padding: 50,
+			},
+			registries,
+		);
 
 		// horizontal: (800-100)/200=3.5, vertical: (600-100)/100=5 -> the tighter 3.5
 		expect(viewport).not.toBeNull();
@@ -69,11 +78,15 @@ describe("calcFitViewport", () => {
 			rectObj("r2", 350, 250, 100, 100), // left300 top200 right400 bottom300
 		]);
 
-		const viewport = calcFitViewport(objects, {
-			width: 800,
-			height: 600,
-			padding: 0,
-		});
+		const viewport = calcFitViewport(
+			objects,
+			{
+				width: 800,
+				height: 600,
+				padding: 0,
+			},
+			registries,
+		);
 
 		// union: 400x300, center (200,150)
 		// horizontal 800/400=2, vertical 600/300=2 -> 2
@@ -98,7 +111,11 @@ describe("calcFitViewport", () => {
 		} as unknown as ObjectState;
 
 		expect(
-			calcFitViewport(toRecord([group]), { width: 800, height: 600 }),
+			calcFitViewport(
+				toRecord([group]),
+				{ width: 800, height: 600 },
+				registries,
+			),
 		).toBeNull();
 	});
 
@@ -117,16 +134,24 @@ describe("calcFitViewport", () => {
 		} as unknown as ObjectState;
 		const rect = rectObj("r1", 100, 100, 200, 100);
 
-		const withGroup = calcFitViewport(toRecord([group, rect]), {
-			width: 800,
-			height: 600,
-			padding: 50,
-		});
-		const rectOnly = calcFitViewport(toRecord([rect]), {
-			width: 800,
-			height: 600,
-			padding: 50,
-		});
+		const withGroup = calcFitViewport(
+			toRecord([group, rect]),
+			{
+				width: 800,
+				height: 600,
+				padding: 50,
+			},
+			registries,
+		);
+		const rectOnly = calcFitViewport(
+			toRecord([rect]),
+			{
+				width: 800,
+				height: 600,
+				padding: 50,
+			},
+			registries,
+		);
 
 		// not dragged by the group's huge bound; same result as the rect alone
 		expect(withGroup).toEqual(rectOnly);
@@ -140,11 +165,15 @@ describe("calcFitViewport", () => {
 			]),
 		]);
 
-		const viewport = calcFitViewport(objects, {
-			width: 800,
-			height: 600,
-			padding: 50,
-		});
+		const viewport = calcFitViewport(
+			objects,
+			{
+				width: 800,
+				height: 600,
+				padding: 50,
+			},
+			registries,
+		);
 
 		// bbox 200x100, center (100,50) -> same zoom as the rectangle case
 		expect(viewport).not.toBeNull();
@@ -163,11 +192,15 @@ describe("calcFitViewport", () => {
 			target: { anchor: { kind: "free", point: { x: 200, y: 100 } } },
 		} as unknown as ObjectState;
 
-		const viewport = calcFitViewport(toRecord([connector]), {
-			width: 800,
-			height: 600,
-			padding: 50,
-		});
+		const viewport = calcFitViewport(
+			toRecord([connector]),
+			{
+				width: 800,
+				height: 600,
+				padding: 50,
+			},
+			registries,
+		);
 
 		expect(viewport).not.toBeNull();
 		expect(viewport!.zoom).toBeCloseTo(3.5, 4);
@@ -176,11 +209,15 @@ describe("calcFitViewport", () => {
 	it("clamps to ZOOM.MAX when content is small and the zoom exceeds the upper limit", () => {
 		const objects = toRecord([rectObj("r1", 0, 0, 10, 10)]);
 
-		const viewport = calcFitViewport(objects, {
-			width: 800,
-			height: 600,
-			padding: 0,
-		});
+		const viewport = calcFitViewport(
+			objects,
+			{
+				width: 800,
+				height: 600,
+				padding: 0,
+			},
+			registries,
+		);
 
 		// horizontal 80, vertical 60 -> both exceed ZOOM.MAX(10)
 		expect(viewport).not.toBeNull();
@@ -190,11 +227,15 @@ describe("calcFitViewport", () => {
 	it("clamps to ZOOM.MIN when content is huge and the zoom falls below the lower limit", () => {
 		const objects = toRecord([rectObj("r1", 0, 0, 100_000, 100_000)]);
 
-		const viewport = calcFitViewport(objects, {
-			width: 800,
-			height: 600,
-			padding: 0,
-		});
+		const viewport = calcFitViewport(
+			objects,
+			{
+				width: 800,
+				height: 600,
+				padding: 0,
+			},
+			registries,
+		);
 
 		expect(viewport).not.toBeNull();
 		expect(viewport!.zoom).toBe(ZOOM.MIN);
@@ -203,7 +244,9 @@ describe("calcFitViewport", () => {
 	it("degenerate content with zero size on both axes (single-point Poly) returns null", () => {
 		const objects = toRecord([polylineObj("p1", [{ x: 42, y: 42 }])]);
 
-		expect(calcFitViewport(objects, { width: 800, height: 600 })).toBeNull();
+		expect(
+			calcFitViewport(objects, { width: 800, height: 600 }, registries),
+		).toBeNull();
 	});
 
 	it("fits by the zoom of the spanning axis even when only one axis has extent", () => {
@@ -215,11 +258,15 @@ describe("calcFitViewport", () => {
 			]),
 		]);
 
-		const viewport = calcFitViewport(objects, {
-			width: 800,
-			height: 600,
-			padding: 0,
-		});
+		const viewport = calcFitViewport(
+			objects,
+			{
+				width: 800,
+				height: 600,
+				padding: 0,
+			},
+			registries,
+		);
 
 		// height=0 is excluded from the candidates, so horizontal 800/200=4 is used
 		expect(viewport).not.toBeNull();

@@ -173,7 +173,7 @@ test.describe("viewport framing", () => {
 
 		await canvas.zoomToSelection();
 
-		// canExecute is false with 0 selectedIds, so the viewBox is unchanged.
+		// canExecute is false with nothing selected, so the viewBox is unchanged.
 		await expect.poll(() => canvas.getViewBox()).toBe(before);
 	});
 });

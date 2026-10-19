@@ -1,7 +1,7 @@
 // External package of UML-family shapes. The first shape is record (a box with
 // compartments), which doubles as proof that the "several text slots in one shape"
 // mechanism holds up on the public API alone (the canonical slot set is the keys of
-// state.text, and the textRegion calculator returns each region from a slotId).
+// state.text, and the "textSlot" part kind places every one of them at once).
 // ObjectDocDefinition is derived from features/defaults by createFrameObjectDoc
 // (`@jiscribe/canvas-sdk/doc`), so there is no RecordObjectFactory / validateRecordDoc.
 // ObjectTypeDefinition is written out by hand rather than via createFrameObjectDefinition,
@@ -24,14 +24,14 @@ export * from "./state/UmlPackageState";
 export * from "./state/UmlComponentState";
 export { recordToDoc, recordToState } from "./state/RecordMapper";
 export { isValidRecordState } from "./state/validateRecordState";
+export { RECORD_SLOT_SELECTION_COMMANDS } from "./commands/recordSlotSelectionCommands";
 
 export { RecordBox } from "./presentation/RecordBox";
-export { calcRecordSlotRegions } from "./presentation/calcRecordSlotRegions";
+export { calcRecordTextSlotRegions } from "./presentation/calcRecordTextSlotRegions";
 export type {
-	RecordSlotRegions,
-	RecordSlotRegionsState,
-} from "./presentation/calcRecordSlotRegions";
-export { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
+	RecordTextSlotRegions,
+	RecordTextSlotRegionsState,
+} from "./presentation/calcRecordTextSlotRegions";
 
 export { UmlPackageBox } from "./presentation/UmlPackageBox";
 export { calcUmlPackagePoints } from "./presentation/calcUmlPackagePoints";

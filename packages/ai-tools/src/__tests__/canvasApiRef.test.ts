@@ -28,11 +28,15 @@ const capabilities: AiCanvasCapabilities = {
  * and written down: the exhaustiveness test below fails until the new member is
  * either driven by a tool or entered here.
  *
- * Empty is the state to keep it in — every other doc-op is reachable by the model
- * today. The list is also the place a future member is argued out of the tool set;
+ * The list is also the place a future member is argued out of the tool set;
  * deleting it would let one be added and never exposed, unnoticed.
  */
-const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {};
+const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {
+	replaceObject:
+		"writes back what a plugin's object tool built (createCanvasToolSet drives it); handing the AI a whole object to write would bypass every op's own checks",
+	remapConnectPoints:
+		"follows a plugin's object tool that moved its own connect points (its connectPointRemap); only the type that numbers the points knows where each one went, so the AI moves ends itself through update_connector",
+};
 
 const toCamelCase = (toolName: string): string =>
 	toolName.replace(/_(.)/g, (_match, letter: string) => letter.toUpperCase());

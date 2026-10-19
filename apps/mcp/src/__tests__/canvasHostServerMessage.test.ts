@@ -38,6 +38,15 @@ describe("isCanvasHostServerMessage", () => {
 				op: { kind: "captureCanvas" },
 			},
 		],
+		[
+			"handleOpRequest naming the revision to draw first",
+			{
+				type: "handleOpRequest",
+				requestId: "1",
+				op: { kind: "captureCanvas" },
+				expectedRevision: "abc",
+			},
+		],
 		["flushEdits", { type: "flushEdits", requestId: "1" }],
 		["closeViewer", { type: "closeViewer" }],
 	])("accepts a complete %s frame", (_label, frame) => {
@@ -70,6 +79,15 @@ describe("isCanvasHostServerMessage", () => {
 		[
 			"a handleOpRequest whose op is null",
 			{ type: "handleOpRequest", requestId: "1", op: null },
+		],
+		[
+			"a handleOpRequest whose revision is not a string",
+			{
+				type: "handleOpRequest",
+				requestId: "1",
+				op: { kind: "captureCanvas" },
+				expectedRevision: 1,
+			},
 		],
 		["a flushEdits without a request id", { type: "flushEdits" }],
 		["an unknown type", { type: "somethingElse" }],

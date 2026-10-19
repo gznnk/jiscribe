@@ -66,7 +66,7 @@ const segmentBand = (
 	index: number,
 ) =>
 	canvas.page.locator(
-		`[data-kind="connector"][data-id="${connectorId}"][data-part="segment-move:${index}"]`,
+		`[data-kind="connector"][data-id="${connectorId}"][data-action="segment-move:${index}"]`,
 	);
 
 /** Computed cursor of an element, for checking what the pointer promises. */
@@ -89,7 +89,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	}
 	await canvas.clickAt(best.mid);
 	await expect(
-		canvas.page.locator('[data-part="toggle:connector-routing"]'),
+		canvas.page.locator('[data-action="toggle:connector-routing"]'),
 	).toBeVisible();
 }
 
@@ -106,7 +106,7 @@ async function switchToStraightRouting(
 	connectorId: string,
 ) {
 	await canvas.openObjectMenu("connector-routing");
-	await canvas.page.click('[data-part="command:setRoutingStraight"]');
+	await canvas.page.click('[data-action="command:setRoutingStraight"]');
 	await expect
 		.poll(async () => (await readPoints(canvas, connectorId)).length, {
 			message: "straight routing draws a single direct line",
@@ -152,7 +152,7 @@ async function insertVertex(
 	const points = await readPoints(canvas, connectorId);
 	const before = points.length;
 	const handle = canvas.page.locator(
-		`[data-kind="control"][data-id="${connectorId}"][data-part="waypoint-insert:${segmentIndex}"]`,
+		`[data-kind="control"][data-id="${connectorId}"][data-action="waypoint-insert:${segmentIndex}"]`,
 	);
 	await expect(handle).toBeVisible();
 	await canvas.drag(

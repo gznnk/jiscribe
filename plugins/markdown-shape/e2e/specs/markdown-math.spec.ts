@@ -23,8 +23,13 @@ async function renderedCount(
 				shape?.querySelector("foreignObject") ?? null;
 			if (!foreignObject) {
 				let sibling = shape?.nextElementSibling ?? null;
+				// The overlay is either a sibling of its own or inside the group
+				// createFrameObject draws every overlay of a shape in.
 				while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
-					sibling = sibling.nextElementSibling;
+					const nested: Element | null = sibling.hasAttribute("data-id")
+						? null
+						: sibling.querySelector("foreignObject");
+					sibling = nested ?? sibling.nextElementSibling;
 				}
 				foreignObject = sibling;
 			}

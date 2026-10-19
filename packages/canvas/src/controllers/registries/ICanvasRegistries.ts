@@ -3,15 +3,18 @@ import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
-import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import type { ObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
@@ -46,11 +49,6 @@ export interface ICanvasRegistries {
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
 	/**
-	 * Which types the switch between the two vertical text bases moves the body
-	 * of, needed by the command that switches the selection between them.
-	 */
-	objectTextVerticalBasis: ObjectTextVerticalBasisRegistry;
-	/**
 	 * Per-type, per-slot text-style defaults, needed by the pure tree wherever it
 	 * reads a
 	 * text style back: the format toggles resolve the styling a keystroke flips
@@ -65,6 +63,12 @@ export interface ICanvasRegistries {
 	 */
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
+	/**
+	 * Per-type sub-part definitions, needed by the commands that act on a part
+	 * selection rather than the whole object: Delete asks this registry whether
+	 * the selected parts can be removed before claiming the key.
+	 */
+	objectPartKind: ObjectPartKindRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	stencil: StencilRegistry;
 	/**
@@ -85,6 +89,17 @@ export interface ICanvasRegistries {
 	 */
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
 	/**
+	 * Per-type connection-anchor declarations, read by the connection drag so a
+	 * drop does not snap onto an anchor its type hides.
+	 */
+	objectConnectionAnchors: ObjectConnectionAnchorsRegistry;
+	/**
+	 * Per-type geometry keys, which the connector route cache compares an owner by
+	 * besides its frame (resolveConnectorPointsCached), so a route resolved here
+	 * is the one the renderer already holds.
+	 */
+	objectGeometryKey: ObjectGeometryKeyRegistry;
+	/**
 	 * Per-type visual bounds, read only by the commands that frame a view
 	 * (zoom-to-fit / zoom-to-selection) so decoration drawn outside a shape's
 	 * geometry box — an actor's label, say — is not cropped.
@@ -99,21 +114,19 @@ export interface ICanvasRegistries {
 		get(commandId: string): CommandLike | undefined;
 	};
 	/**
-	 * Styleable-property update dispatch, used by the menus' gesture route
-	 * (applyStylePropertyPart) and the reducer's STYLE_PROPERTY_UPDATE. Inline shape for the same acyclicity
-	 * reason as `command` (the concrete class is `StylePropertyRegistry`).
+	 * Per-type style tables, read by the walkers that write a style
+	 * (applyStyleIntent) and report it (readSelectionStyle): what a style intent
+	 * means to the type it is addressed to. The whole bundle is handed to the
+	 * walkers' callers, each of which takes the slice it needs
+	 * (StyleIntentRegistries) structurally.
 	 */
-	styleProperty: {
-		apply(
-			state: CanvasControllerState,
-			property: string,
-			value: string,
-		): CanvasControllerState;
-	};
+	objectStyle: ObjectStyleRegistry;
 }
 
 /** The slice of a `Command` the pure tree invokes (structural; not the `Command` type). */
 type CommandLike = {
+	/** Read to decide whether the command may run mid-drag (see `handleCommand`). */
+	category?: "edit" | "view" | "arrange" | "selection";
 	canExecute(
 		state: CanvasControllerState,
 		registries: ICanvasRegistries,

@@ -13,6 +13,265 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-19
+
+### Security
+
+- **A long `markdown` card no longer stalls the page.** `@jiscribe/markdown`
+  renders with markdown-it's `linkify` on, and markdown-it 15.0.0 spent
+  quadratic time there, so a few hundred KB of text could block the event loop
+  for tens of seconds. It is now on 15.0.2.
+
+### Added
+
+- **A `table` shape: a grid of cells.** Each cell is a text slot of its own,
+  with the same rich text, typography and in-place editing as any other shape's
+  text, and may carry a `fill` over the table's background. The table stores no
+  box: its width is the column widths summed and its height the row heights,
+  each row growing to fit its text. Rows and columns are picked, inserted and
+  deleted from lettered and numbered headings, as in a spreadsheet; cells are
+  picked by clicking, Shift-clicking a block, Ctrl/Cmd-clicking, or with the
+  arrows and Shift+arrows, and the corner where the headings meet selects every
+  cell. Column and row boundaries, the right and bottom edges and the
+  transform frame resize it.
+- **An `erEntity` shape for ER diagrams (IE notation), in a new "ER" stencil
+  category.** An entity is a title band over its columns, each a `key`, a
+  `name` and a `type` drawn in lanes of their own. Its width is the three lanes
+  summed and its height follows the columns, as a table's does. Columns are
+  picked, inserted and deleted, and the lanes picked and resized, as a table's
+  rows and columns are, and each column offers the connect points `col:<index>:left` /
+  `col:<index>:right`, so a relationship line runs from a foreign key to the
+  primary key it references and follows its column when columns are inserted
+  or deleted. The key, name and type slots hold one line; `diagnoseDoc` reports
+  a line break in one as an error. The drawing guide covers it.
+- **AI tools for tables, ER entities and UML records.** `table_*` (seven
+  tools) read a table and edit its tracks, cells and their styles;
+  `er_entity_*` (six) read an entity and edit its columns, texts and their
+  styles, carrying the attached connectors along; `record_set_compartments` sets
+  a record's stereotype band and compartments and fits its height to them. The
+  text tools and `set_style` point to these when they cannot reach a type's
+  texts, and `list_types` lists them under `tools`.
+- **A UML record's compartments are picked as a table's cells are**:
+  Shift-click picks a run, Ctrl/Cmd-click adds or removes one, ↑ / ↓ move the
+  pick and Shift+↑ / Shift+↓ widen it. A style change lands on every picked
+  compartment.
+- **Tab moves an open text edit on to the next cell or compartment**, committing
+  the one left, and Shift+Tab goes back; from a table's last cell it appends a
+  row, and from an entity's last slot a column. **Ctrl+Enter (Cmd+Enter)
+  commits an open text edit and closes the editor** (the `commitTextEdit`
+  command).
+- **Bold, italic, underline and strikethrough work the same from the keys and
+  the buttons.** Ctrl/Cmd+B / I / U / Shift+X act on selected shapes without
+  opening the editor, and on the whole text being edited when nothing is
+  highlighted. A mixed selection turns all on first, in one undo step.
+  Underline and strikethrough toggle independently of each other.
+  Ctrl/Cmd+Shift+B / I / U no longer toggle anything, and on a Mac the keys
+  take Cmd alone. For hosts they are the commands `toggleBold` /
+  `toggleItalic` / `toggleUnderline` / `toggleStrikethrough`.
+- **A connector end can attach to a connect point a type declares**, such as an
+  `erEntity`'s `col:<index>:left`, through `connect` / `connect_many` /
+  `update_connector` / `update_connectors`. An id the object does not offer is
+  refused with the ones it does, where it used to be drawn at the center, and
+  `diagnoseDoc` warns about an end a document already holds on such an id.
+- **`diagnoseDoc` reports a record too short for its rows**, which it used to
+  call clean while the bottom rows were drawn past the box.
+- **For plugin authors: a type declares the sub-parts of its objects.**
+  `ObjectTypeDefinition.partKinds` takes one `ObjectPartKindDefinition` per
+  part-id namespace, stating `has` and `delete` (the changed object, plus an
+  optional `connectPointRemap` that core applies to the connectors attached to
+  it), and optionally `multiPick`,
+  `region` / `regions` (a part's box, outlined when picked), `list` (Tab order),
+  `range` (what a Shift-click range covers), `textSlotIds` and
+  `styleIntentKinds` (what a pick is styled through), and `extend` (what Tab
+  past the last slot appends). A pick is stored in `selection.part` as a kind
+  and a list of anchor/focus ranges. Core registers `"textSlot"` for every
+  type holding text and `vertex` for polylines, polygons and connectors.
+  `createTextSlotPartKindDefinition`, `TEXT_SLOT_PART_KIND`,
+  `resolveTextSlotIds`, `TEXT_STYLE_INTENT_KINDS`, `collectObjectPartIds`,
+  `readActivePartFocusId` and `remapConnectorEnds` (the same remap,
+  for a plugin command) are on `@jiscribe/canvas/unstable`.
+- **For plugin authors: a plugin may contribute commands** through
+  `CanvasPlugin.commands`, narrowed by the host's `config.commands` like the
+  built-ins. A command's `label` takes `LocaleMessages` as a stencil's does.
+  Commands may share a shortcut when their `canExecute` disagree, contributed
+  ones being asked first. A command reports a document edit by returning its
+  state through `commitEdit`, and `CommandRegistry.register` throws on a
+  duplicate id. `Command` and the state types it is written against are on the
+  unstable surface.
+- **For plugin authors: selection controls take clicks and layers.** A
+  definition lists the gestures it wants in `events` (`"click"`,
+  `"doubleClick"`, `"drag"`, `"dragEnd"`), its `handle` may set the part
+  selection (see Changed), its context carries the `selectedPart` standing on
+  its object, and `layer` (`"belowHandles"` / `"aboveHandles"`) says whether it
+  sits under or over the core handles.
+- **For plugin authors: menus and sidebars.** A custom ObjectMenu item or
+  sidebar row naming a part kind in `pickedPartKinds` stays up while that part
+  is picked. `PropertyCommandButton` / `PropertyCommandGrid`,
+  `resolveCommandLabel`, `getPlatformShortcuts`, `formatShortcut` and
+  `createDefaultPropertyPanel` are on `@jiscribe/canvas/unstable`.
+- **For plugin authors: connection anchors and connect points.**
+  `connectionAnchors` gives each fixed anchor an `offset` (how far its dot sits
+  off the edge) and a `hidden` flag (not offered for new connections; existing
+  ones still draw). `ObjectDocDefinition.extraConnectPointIds` states the
+  connect point ids a doc offers beyond the built-in four, and
+  `listConnectPointIds` (`@jiscribe/doc`) is the list an end is held to.
+  `ConnectorState` / `isConnectorState` and the endpoint types
+  (`EndpointRef`, `OwnedEndpointRef`, `AnchorSpec`, `isOwnedEndpointRef`) are
+  exported, so an edit renumbering a type's connect points can move the
+  attached ends with it.
+- **For plugin authors: content-sized shapes.** A shape may declare
+  `geometry: "point"` (the doc stores the position, the box is measured from
+  the content) and states that box as `ObjectDocDefinition.bounds`; a point
+  type without one fails its parse-check suite. The mapper parts it is written
+  from are exported (`ObjectMapper`, `mapTransformDocToState` /
+  `mapTransformStateToDoc`, `collectStyleKeys`, `roundDocCoordinate`,
+  `calcPointDocCenter`, `numberOverride`), with `calcFrameCenterFromTopLeft` in
+  `@jiscribe/geometry` and `calcWrappedTextBlockSize` in `@jiscribe/doc`.
+  A `contentResizer` is told which axes a handle drag writes and which edge it
+  holds (`context.resizedAxes`), so such a shape can offer resize handles.
+- **For plugin authors: text slots.** `textSlotStyleDefaults.byTextSlot` may be
+  a function of the slot id, and `everyTextSlot` covers a slot set that is not
+  fixed (`readTextSlotStyleDefaults` in `@jiscribe/doc` resolves them).
+  `textEditLineBreaks` keeps a slot to one line. `readTextMeasurementGeneration()`
+  (`@jiscribe/doc/unstable`) moves when web fonts change how text measures, for
+  a shape caching measurements.
+- **For plugin authors: a plugin can offer AI tools for its own shapes.**
+  `defineObjectAiTool` (`@jiscribe/canvas-sdk/tools`, from the new
+  `@jiscribe/ai-tools-sdk`) declares a tool acting on the one object a call
+  names by `id`, held to the type's `validateDoc` before it is written and
+  taken back by undo. A plugin exports its tools from a `./tools` entry,
+  `@jiscribe/standard-shapes/tools` gathers the shipped ones as
+  `standardAiToolPlugins`, and a tool moving connect points declares them in
+  `connectPointRemap`. `textSlotStyleSchema` and `canonicalizeFontWeight` are
+  the typography vocabulary `set_style` speaks. zod is a peer dependency.
+- For plugin authors: `ObjectDocDefinition.diagnoseOverflow` lets a type report
+  content its box cannot hold, which `diagnoseDoc` reports as errors;
+  `docOps.replaceObject` swaps an object for a new doc of the same id and type,
+  refusing what the parser would not keep.
+
+### Changed
+
+- **`add_object` refuses typography a new object has no field for** rather than
+  silently dropping it.
+- **Moving the pick from the keyboard keeps it in view.** The view pans just
+  far enough to show the cell, compartment or slot the arrows or Tab land on;
+  the zoom is never changed.
+- **Undo and redo no longer jump to the middle of a large shape still on
+  screen.** The view stays put on each axis where part of the change is in
+  view, and centres only on a change wholly off screen.
+- **A picked part is shown by its own box.** With a text slot, a cell, a row or
+  a column picked, the box is tinted and outlined in place of the shape's
+  selection outline, and the object menu hangs under it. Editing a one-body
+  shape's text outlines its text area the same way, and Escape steps out in
+  three presses: the editor, the text, the shape.
+- **The object menu offers Bold alone for text formatting.** The text-format
+  dropdown is gone; italic, underline and strikethrough stay in the sidebar and
+  on their keys. `CanvasMessages.menuTextFormat` is removed.
+- **A shape's own selection controls are hidden while it is moved or resized**,
+  as the connection anchors already were.
+- **Moving or rotating a shape no longer redraws its text**: a 300-cell table
+  drags about three times faster. An exported SVG is unchanged.
+- **A right click selects the shape it lands on before opening the context
+  menu**, keeping the selection when the shape is already in it.
+- **A shape placed from the toolbar or the shape library lands centered on the
+  cursor, whatever its geometry**, a `text` included. What a document holds is
+  unchanged.
+- **A double click on a multi-slot shape picks the slot it opens**, and one on
+  a group child or a member of a multi-selection narrows the selection to that
+  shape. The host's `select()` commits what is being typed before moving the
+  selection.
+- **An AWS frame no longer offers the text vertical-basis switch**, which only
+  moved its title band into the middle of the frame.
+- **`@jiscribe/ai-tools` builds its declarations through
+  `createCanvasToolSet`.** `createCanvasToolDescriptors` is no longer exported;
+  read `descriptors` off `createCanvasToolSet(capabilities, aiToolPlugins)` and
+  pass the same set to `applyCanvasOp` as its new last argument.
+- **For plugin authors, breaking changes to the canvas API:**
+  - The selection is one nested value, `selection: { objectIds, part }`. The
+    separate text-slot, vertex and connector fields are gone: a slot or vertex
+    pick is `selection.part`, and a connector is an id in `objectIds`
+    (`getSelectedConnectorId` reads it). `ObjectMenuItemProps` and
+    `PropertyPanelItemProps` pass `selection` instead of `selectedIds` /
+    `selectedConnectorId`. Hosts are unaffected.
+  - `textEditState` carries only the draft; what is edited is the selection's
+    `textSlot` part. `reconcileSelection` closes an editor whose slot is gone.
+  - `ObjectTypeDefinition.textRegion` is replaced by the `"textSlot"` part
+    kind's `region` / `regions` (`createFrameObjectDefinition({ textRegion })`
+    still works). `ObjectTextRegionRegistry`,
+    `CanvasRegistries.objectTextRegion` and the UML plugin's
+    `calcRecordTextRegion` are gone; `calcTextRegion` / `calcTextSlotRegions`
+    take the part kind.
+  - `ObjectDocDefinition.textSlotStyleDefaults` is
+    `{ byTextSlot?, everyTextSlot? }` rather than one map keyed by slot id.
+  - `extraStyleProperties` is now `styleEntries`, a `StyleTable` composed over
+    the derived entries: a kind declared there replaces the derived one, and an
+    entry writing a field the doc cannot hold is refused at registration.
+    `declaredFieldEntry` and the core entry helpers are on
+    `@jiscribe/canvas/unstable`; `ExtraStylePropertyDescriptor` and
+    `StyleValueType` are gone from `@jiscribe/doc`.
+  - A row reads the selection's style through `useSelectionStyle(name)`
+    (`single` / `mixed` / `none` over the whole selection) and writes it
+    through `onStyleIntent(intent, commit)`; `toStyleIntent` turns a name and a
+    string into an intent. `getFirstSelectedWithProp` /
+    `getFirstSelectedWithStyleGroup` / `getFirstSelectedPropValue` /
+    `getSelectedShapeStyle`, `ShapeStyleGroup`, `StylePropertyUpdater` and
+    `onPropertyUpdate` are gone. A plugin row now stands for the whole
+    selection rather than its first shape.
+  - A picked part narrows the menu and the sidebar to the controls its kind's
+    `styleIntentKinds` receive, rather than to the text controls alone.
+  - A type holding `textVerticalBasis` declares it in
+    `features.textVerticalBasis`; one that does not is told so on an AI write
+    and has the field dropped on save.
+  - `data-part` carries only a part address, `<kind>:<id>` (`textSlotPart(slotId)`
+    for a slot), and what a press starts goes in `data-action`
+    (`event.targetAction`). `commandPart` / `togglePart` / `setPart` /
+    `sliderPart` are renamed `commandAction` / `toggleAction` / `setAction` /
+    `sliderAction`, `SelectionControlProps.part` is `action` and
+    `SelectionControlEvent.subPart` is `subAction`.
+  - `SelectionControlDefinition.handle` returns `{ object?, selection? }`
+    instead of the object itself.
+  - `createFrameObject` leaves `transform` unset on the props it hands a
+    `renderTextOverlay`, and `transform` is optional on
+    `FrameTextOverlayProps`, `TextOverlay` and `TextOverlayFrame`.
+  - `createPointObjectFactory` takes the measurement as its second argument,
+    and `createDoc` reads its `position` as the center for every geometry.
+  - Renamed: `ResolvedSelection` → `RequestedSelection`,
+    `resolveSlotStyle` → `resolveTextSlotStyle`,
+    `TextSlotMeasurement.slotId` / `FrameTextOverlayProps.slotId` →
+    `textSlotId`, `TextEditable.editingSlotId` → `editingTextSlotId`.
+
+### Fixed
+
+- **Fitting the view or exporting an image no longer crops a line that runs
+  outside the shapes it joins**, when an end sits on a type-declared connect
+  point such as a group marker's `tip`.
+- **The shape library's search now reaches every icon, not just the ones laid
+  out**, so `lambda` or `bicycle` is found; for AWS a term also matches the
+  service category. A category may declare `search`
+  (`StencilCategorySearch`) to answer from its whole set.
+- **A shape whose renderer throws no longer takes the canvas down.** It is drawn
+  as nothing and named in a console warning, and every other object stays
+  drawn, editable and saved.
+- **A group's frame no longer goes stale when a shape inside it is edited by a
+  selection control or a plugin's command**, which left typing a size into the
+  group scaling its children by the wrong ratio.
+- **A style row states what the selection carries, and a style write lands
+  where the row said.** A disagreeing selection shows as mixed, and an unset
+  value shows as the type draws it.
+- **A `text` follows the layout when the group around it is resized**, rather
+  than staying at the coordinate it started from.
+- **`resize_object` no longer reports success on a `text` it cannot size.** A
+  block text's wrap width is set and its corner kept; a height, or any size for
+  a point text, is refused with what to change instead. `resize_objects`
+  rejects a batch holding such an id.
+- **The reported box of a rotated or flipped `text` no longer misses it**, in
+  `get_object_bounds` and in alignment, distribution and overlap checks.
+- **Resizing or moving a multi-selection inside a group** no longer copies the
+  whole drawing once per selected object.
+- **A shortcut pressed mid-drag no longer records an edit the canvas then
+  throws away.** Document-editing commands are refused until the drag ends;
+  the view commands still run.
+
 ## [0.11.0] - 2026-09-29
 
 ### Security
@@ -290,7 +549,8 @@ The first release in this repository.
 Earlier versions were released before this repository was public and are not
 recorded here.
 
-[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/gznnk/jiscribe/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/gznnk/jiscribe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gznnk/jiscribe/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/gznnk/jiscribe/compare/v0.8.0...v0.9.0

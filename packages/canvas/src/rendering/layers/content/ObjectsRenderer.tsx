@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "./ConnectorRenderer";
+import { ObjectRenderBoundary } from "./ObjectRenderBoundary";
 import { resolveEndpointOwner } from "../../../connectors/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
@@ -13,7 +14,7 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	 * Slot of `textEditObjectId` the editor is over. Passed on so a multi-slot
 	 * shape hides only that slot's text while the editor covers it.
 	 */
-	textEditSlotId?: string | null;
+	editingTextSlotId?: string | null;
 	/**
 	 * Viewport culling (issue #212): when set, only these IDs are rendered.
 	 * Omit to render the full tree — required for paths that need every object
@@ -28,13 +29,14 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
  * is the stacking order as-is.
  * - group → expand children recursively (a group's children never include a connector)
  * - connector → drawn by the dedicated ConnectorRenderer since it needs endpoint resolution
- * - otherwise → the component from the registry
+ * - otherwise → the component from the registry, each inside its own
+ *   ObjectRenderBoundary so one object's throw leaves the rest drawn
  */
 const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
 	rootIds,
 	textEditObjectId,
-	textEditSlotId,
+	editingTextSlotId,
 	visibleObjectIds,
 }) => {
 	const objectComponentRegistry = useObjectComponentRegistry();
@@ -87,13 +89,18 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 		// When text editing, add the isEditing prop
 		const isEditing = id === textEditObjectId;
 		result.push(
-			<ObjectComponent
+			<ObjectRenderBoundary
 				key={id}
-				{...objState}
+				objectId={id}
+				objectType={objState.type}
+				objectState={objState}
+				component={ObjectComponent}
 				isEditing={isEditing}
 				// Only the edited object receives the slot id; for the rest the prop
 				// stays undefined so starting/ending an edit does not break their memo.
-				editingSlotId={isEditing ? (textEditSlotId ?? undefined) : undefined}
+				editingTextSlotId={
+					isEditing ? (editingTextSlotId ?? undefined) : undefined
+				}
 			/>,
 		);
 	};

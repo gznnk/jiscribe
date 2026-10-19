@@ -26,7 +26,7 @@ test.describe("connector hit testing (z-order aware)", () => {
 		await canvas.createConnector("bottomCenter", { x: 500, y: 450 });
 		await canvas.deselect();
 
-		const lineColor = canvas.page.locator('[data-part="toggle:line-color"]');
+		const lineColor = canvas.page.locator('[data-action="toggle:line-color"]');
 
 		// A new connector is frontmost, so clicking the overlap selects it
 		await canvas.selectAt({ x: 500, y: 350 });

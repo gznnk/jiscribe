@@ -11,6 +11,7 @@ vitest.config.ts
 **/node_modules/**
 **/*.map
 tsconfig.json
+tsconfig.tsbuildinfo
 .gitignore
 **/*.jis.json
 *.vsix

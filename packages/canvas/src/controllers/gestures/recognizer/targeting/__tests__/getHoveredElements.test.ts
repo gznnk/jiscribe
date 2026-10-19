@@ -2,18 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createGetHovered, getHoveredElements } from "../getHoveredElements";
 
-const makeEl = (kind?: string, id?: string, part?: string): Element => {
+const makeEl = (kind?: string, id?: string, action?: string): Element => {
 	const attrs: Record<string, string | undefined> = {
 		"data-kind": kind,
 		"data-id": id,
-		"data-part": part,
+		"data-action": action,
 	};
 	const el: Partial<Element> = {
 		closest: (selector: string) => {
 			if (selector === "[data-kind]" && kind !== undefined) {
 				return el as Element;
 			}
-			if (selector === "[data-part]" && part !== undefined) {
+			if (selector === "[data-action]" && action !== undefined) {
 				return el as Element;
 			}
 			return null;
@@ -72,32 +72,42 @@ describe("getHoveredElements", () => {
 		expect(getHoveredElements(0, 0)).toHaveLength(1);
 	});
 
-	it("excludes the drag origin element (matching id and part)", () => {
+	it("excludes the drag origin element (matching id, part and action)", () => {
 		const el = makeEl("rect", "obj-1");
 		mockElementsFromPoint.mockReturnValue([el]);
 
 		expect(getHoveredElements(0, 0, { id: "obj-1" })).toEqual([]);
 	});
 
-	it("does not exclude an element sharing the origin's id but with a different part (self-loop: dragging from an anchor must still hover the shape itself)", () => {
+	it("does not exclude an element sharing the origin's id but with a different action (self-loop: dragging from an anchor must still hover the shape itself)", () => {
 		const shape = makeEl("object", "obj-1");
 		mockElementsFromPoint.mockReturnValue([shape]);
 
 		expect(
-			getHoveredElements(0, 0, { id: "obj-1", part: "anchor:rightCenter" }),
+			getHoveredElements(0, 0, { id: "obj-1", action: "anchor:rightCenter" }),
 		).toEqual([{ kind: "object", id: "obj-1" }]);
 	});
 
 	it("still hovers the entity body when an excluded control shares its id (excluded origin must not consume the dedup slot)", () => {
 		// Topmost: the drag-origin anchor control (data-id = owner shapeId, excluded).
-		// Below it: the shape body itself, sharing the same id but with no part.
+		// Below it: the shape body itself, sharing the same id but with no action.
 		const anchor = makeEl("control", "obj-1", "anchor:rightCenter");
 		const shapeBody = makeEl("object", "obj-1");
 		mockElementsFromPoint.mockReturnValue([anchor, shapeBody]);
 
 		expect(
-			getHoveredElements(0, 0, { id: "obj-1", part: "anchor:rightCenter" }),
+			getHoveredElements(0, 0, { id: "obj-1", action: "anchor:rightCenter" }),
 		).toEqual([{ kind: "object", id: "obj-1" }]);
+	});
+
+	it("does not exclude a connector's label box when the drag origin is its waypoint-insert handle (both carry no part)", () => {
+		const insertHandle = makeEl("control", "c-1", "waypoint-insert:0");
+		const labelBox = makeEl("connector", "c-1", "label");
+		mockElementsFromPoint.mockReturnValue([insertHandle, labelBox]);
+
+		expect(
+			getHoveredElements(0, 0, { id: "c-1", action: "waypoint-insert:0" }),
+		).toEqual([{ kind: "connector", id: "c-1", action: "label" }]);
 	});
 
 	it("excludes elements outside the canvas when rootElement is passed", () => {

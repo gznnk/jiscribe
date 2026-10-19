@@ -8,10 +8,15 @@ import { rectDoc, twoRectsDoc } from "./support/fixtures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { collectCowChangedKeys, isCowObjects } from "../../utils/cowObjects";
+import { updateGroupBounds } from "../../utils/updateGroupBounds";
 import type { TransformProperty } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
+import { handleTransformPropertyUpdate } from "../handlers/handleTransformPropertyUpdate";
 
-const canvasReducer = createCanvasReducer(createTestRegistries());
+const registries = createTestRegistries();
+const canvasReducer = createCanvasReducer(registries);
 
 /** The frame fields the assertions read, which ObjectState leaves to the shape types. */
 type FrameFields = {
@@ -49,7 +54,9 @@ const update = (
 const singleRectState = (
 	objectOverrides: Partial<Record<string, unknown>> = {},
 ): CanvasControllerState => {
-	const state = createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+	const state = createTestState(twoRectsDoc, {
+		selection: selectionOf(["rect-1"]),
+	});
 	if (Object.keys(objectOverrides).length === 0) {
 		return state;
 	}
@@ -75,7 +82,9 @@ const multiSelectState = (): CanvasControllerState =>
 /** The two rects wrapped in one group, that group selected. */
 const groupedState = (): CanvasControllerState => {
 	const grouped = canvasReducer(
-		createTestState(twoRectsDoc, { selectedIds: ["rect-1", "rect-2"] }),
+		createTestState(twoRectsDoc, {
+			selection: selectionOf(["rect-1", "rect-2"]),
+		}),
 		{ type: "COMMAND", commandId: "group" },
 	);
 	return grouped;
@@ -212,7 +221,7 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 	describe("a group's frame", () => {
 		it("scales the children when the group is widened", () => {
 			const grouped = groupedState();
-			const groupId = grouped.selectedIds[0];
+			const groupId = grouped.selection.objectIds[0];
 			expect(frameOf(grouped, groupId).width).toBe(110);
 
 			const next = update(grouped, "width", 220);
@@ -234,6 +243,122 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 
 			expect(frameOf(next, "rect-1").cx).toBe(15);
 			expect(frameOf(next, "rect-2").cx).toBe(115);
+		});
+	});
+
+	describe("a shape inside nested groups", () => {
+		/** rect-1 selected inside `inner`, which sits in `outer` beside rect-3. */
+		const nestedState = (): CanvasControllerState =>
+			createTestState(nestedGroupsDoc, { selection: selectionOf(["rect-1"]) });
+
+		/** The frame each group would get re-derived from scratch off its children. */
+		const expectGroupsSettled = (state: CanvasControllerState) => {
+			for (const groupId of ["inner", "outer"]) {
+				const derivedFrame = updateGroupBounds(
+					state.objects,
+					groupId,
+				) as unknown as FrameFields;
+				const storedFrame = frameOf(state, groupId);
+				expect(storedFrame.cx).toBeCloseTo(derivedFrame.cx);
+				expect(storedFrame.cy).toBeCloseTo(derivedFrame.cy);
+				expect(storedFrame.width).toBeCloseTo(derivedFrame.width);
+				expect(storedFrame.height).toBeCloseTo(derivedFrame.height);
+			}
+		};
+
+		it("refits both groups around a shape moved out past their left edge", () => {
+			for (const commit of [false, true]) {
+				const next = update(nestedState(), "x", -20, { commit });
+
+				// inner now spans -20..50, outer -20..110.
+				expect(frameOf(next, "inner").width).toBeCloseTo(70);
+				expect(frameOf(next, "inner").cx).toBeCloseTo(15);
+				expect(frameOf(next, "outer").width).toBeCloseTo(130);
+				expect(frameOf(next, "outer").cx).toBeCloseTo(45);
+				expectGroupsSettled(next);
+			}
+		});
+
+		it("refits both groups around a shape widened past their right edge", () => {
+			for (const commit of [false, true]) {
+				const next = update(nestedState(), "width", 120, { commit });
+
+				expect(frameOf(next, "inner").width).toBeCloseTo(120);
+				expect(frameOf(next, "outer").width).toBeCloseTo(120);
+				expect(frameOf(next, "outer").height).toBeCloseTo(110);
+				expectGroupsSettled(next);
+			}
+		});
+
+		it("refits both groups around the corners a rotation swings out", () => {
+			for (const commit of [false, true]) {
+				const next = update(nestedState(), "rotation", 45, { commit });
+
+				// A 10 x 10 square turned 45 degrees reaches 5 * sqrt(2) from its center.
+				const reachedLeft = 5 - 5 * Math.SQRT2;
+				expect(frameOf(next, "inner").width).toBeCloseTo(50 - reachedLeft);
+				expect(frameOf(next, "outer").width).toBeCloseTo(110 - reachedLeft);
+				expectGroupsSettled(next);
+			}
+		});
+
+		it("keeps the groups settled across a run of previews and the commit", () => {
+			let state = nestedState();
+			for (let step = 1; step <= 5; step++) {
+				state = update(state, "x", -10 * step, { commit: false });
+				expectGroupsSettled(state);
+			}
+			for (let step = 1; step <= 5; step++) {
+				state = update(state, "width", 10 + 20 * step, { commit: false });
+				expectGroupsSettled(state);
+			}
+			state = update(state, "width", 110);
+
+			expect(frameOf(state, "inner").width).toBeCloseTo(110);
+			expectGroupsSettled(state);
+		});
+
+		it("hands back a view written only where the edit and the groups above it landed", () => {
+			// The view is what lets the reducer's re-measure scan the written ids
+			// alone; flattening it per preview step would cost a full scan each.
+			for (const [property, value] of [
+				["x", -20],
+				["width", 120],
+				["rotation", 45],
+			] as const) {
+				const state = nestedState();
+				const next = handleTransformPropertyUpdate(
+					state,
+					property,
+					value,
+					registries,
+				);
+
+				expect(isCowObjects(next.objects)).toBe(true);
+				const changedIds = collectCowChangedKeys(next.objects, state.objects);
+				expect(changedIds).not.toBeNull();
+				expect([...(changedIds ?? [])].sort()).toEqual(
+					["inner", "outer", "rect-1"].sort(),
+				);
+			}
+		});
+
+		it("leaves plain records in the state and in every history snapshot", () => {
+			let state = nestedState();
+			state = update(state, "x", -20, { commit: false });
+			expect(isCowObjects(state.objects)).toBe(false);
+			state = update(state, "x", -20);
+			state = update(state, "width", 40, { commit: false });
+			expect(isCowObjects(state.objects)).toBe(false);
+			state = update(state, "width", 40);
+
+			expect(isCowObjects(state.objects)).toBe(false);
+			expect(state.history.past).toHaveLength(2);
+			for (const snapshot of [...state.history.past, state.history.present]) {
+				if (snapshot.source) {
+					expect(isCowObjects(snapshot.source.objects)).toBe(false);
+				}
+			}
 		});
 	});
 
@@ -274,7 +399,7 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 
 		it("leaves it alone for a connector-only selection", () => {
 			const connectorSelected = createTestState(connectorDoc, {
-				selectedConnectorId: "conn-1",
+				selection: selectionOf(["conn-1"]),
 			});
 
 			expectNoOp(connectorSelected, "width", 40);
@@ -299,6 +424,18 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 		it("leaves it alone for a size at or below zero", () => {
 			expectNoOp(singleRectState(), "width", 0);
 			expectNoOp(singleRectState(), "height", -5);
+		});
+	});
+
+	describe("the map it hands back", () => {
+		it("is a plain record for a preview and a commit alike", () => {
+			// The edit writes through a copy-on-write view and this route bypasses
+			// handleGesture, so the reducer flattens it (#213).
+			for (const commit of [false, true]) {
+				const after = update(singleRectState(), "x", 40, { commit });
+				expect(topLeftOf(after, "rect-1").x).toBeCloseTo(40);
+				expect(isCowObjects(after.objects)).toBe(false);
+			}
 		});
 	});
 
@@ -366,9 +503,8 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 			expect(state.history.past).toHaveLength(1);
 
 			state = canvasReducer(state, {
-				type: "STYLE_PROPERTY_UPDATE",
-				property: "width",
-				value: "60",
+				type: "STYLE_INTENT",
+				intent: { kind: "width", value: "60" },
 				commit: true,
 				coalesceHistory: true,
 			});
@@ -397,6 +533,28 @@ const connectorDoc: CanvasDoc = {
 			points: [],
 			source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
 			target: { anchor: { kind: "free", point: { x: 50, y: 50 } } },
+		},
+	],
+} as unknown as CanvasDoc;
+
+/**
+ * rect-1 (0..10) and rect-2 (40..50) in `inner`, which sits in `outer` beside
+ * rect-3 (100..110 on both axes).
+ */
+const nestedGroupsDoc: CanvasDoc = {
+	version: 1,
+	root: [
+		{
+			id: "outer",
+			type: "group",
+			children: [
+				{
+					id: "inner",
+					type: "group",
+					children: [rectDoc("rect-1", 0, 0), rectDoc("rect-2", 40, 0)],
+				},
+				rectDoc("rect-3", 100, 100),
+			],
 		},
 	],
 } as unknown as CanvasDoc;

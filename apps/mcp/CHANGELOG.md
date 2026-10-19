@@ -13,7 +13,51 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
-## [Unreleased]
+## [0.12.0] - 2026-10-19
+
+### Added
+
+- **Tools for tables, ER entities and UML records, 83 tools in all.** Seven
+  `table_*` tools read a table and edit its tracks, cells and their styles; six
+  `er_entity_*` tools read an entity and edit its columns, texts and their
+  styles, moving the relationship lines attached to a column along with it; and
+  `record_set_compartments` sets a record's compartments and fits its height to
+  them. Each takes `path` and the `id` of the object it acts on, and is taken
+  back by `undo`. The text tools and `set_style` point to them when they cannot
+  reach a type's texts, and `list_types` lists them under `tools`.
+- **`connect` and the other connector tools attach an end to a connect point
+  a type declares**, such as an ER entity's `col:<index>:left` /
+  `col:<index>:right`: the anchors take any id instead of the five built-in
+  ones, and an id the object does not offer is refused with the ones it does.
+  `diagnose_canvas` warns about an end on a point its object no longer offers,
+  which is drawn at the object's center.
+- **`diagnose_canvas` reports a record too short for its rows**, which it used
+  to call valid while the bottom rows were drawn past the box.
+
+### Fixed
+
+- **A screen tool sees the writes sent before it.** `capture_canvas`, `fit_view`,
+  `find_overlaps`, the `measure_*` tools and the rest of the sixteen that ask the
+  viewer were answered against whatever the page was drawing, and the page heard
+  of a tool's write only when the host's file watch next polled, 300 ms later at
+  most. A capture sent right after `set_style` — or in the same batch, which a
+  client is free to do — could come back without the style. Now a screen tool
+  waits for the file calls that arrived before it to finish, the host sends the
+  file on display to the viewer then and there, and the viewer answers only
+  once it has drawn that version. When it cannot within five seconds (a person
+  holding a drag keeps the file waiting until they let go) or the file does not
+  parse, the tool returns an `error:` saying so rather than a stale answer.
+
+- **A headless Chromium that dies as it starts is reported at once, with what
+  it said.** `open_canvas` with `headless: true` read a browser's death on a
+  signal (how a Chromium that cannot set up its sandbox goes down) as nothing
+  at all, so it waited the full twenty seconds for a page that was never
+  coming, tried no other Chromium, and then said only that the page never
+  connected back — with the browser's own stderr thrown away. Now a browser
+  gone within the launch window drops to the next candidate whether it left
+  with a code or on a signal, and the `error:` names the signal and carries the
+  first lines the browser wrote, minus its stack trace (`No usable sandbox!`
+  arrives as such). (#49)
 
 ## [0.11.0] - 2026-09-29
 

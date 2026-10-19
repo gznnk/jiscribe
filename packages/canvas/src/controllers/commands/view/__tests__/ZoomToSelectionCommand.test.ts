@@ -5,6 +5,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { ZoomToSelectionCommand } from "../ZoomToSelectionCommand";
 
 const registries = createTestRegistries();
@@ -29,12 +31,12 @@ const makePolyline = (
 	({ id, type: "polyline", points }) as unknown as PolylineState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	viewport?: Partial<Viewport>;
 }): CanvasControllerState =>
 	({
-		selectedIds: params.selectedIds,
+		selection: params.selection,
 		objects: params.objects,
 		viewport: {
 			minX: 0,
@@ -54,7 +56,7 @@ const centerOf = (viewport: Viewport) => ({
 describe("ZoomToSelectionCommand", () => {
 	it("centers on the bounds of selected objects (ignoring unselected ones)", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: {
 				a: makeRect("a", 500, 500),
 				// A far-away unselected object does not affect the center calculation
@@ -69,7 +71,7 @@ describe("ZoomToSelectionCommand", () => {
 
 	it("picks a zoom level that fits the selected content (including 48px padding)", () => {
 		const state = makeState({
-			selectedIds: ["a"],
+			selection: selectionOf(["a"]),
 			objects: { a: makeRect("a", 500, 500) },
 		});
 		const next = ZoomToSelectionCommand.execute(state, registries);
@@ -80,7 +82,7 @@ describe("ZoomToSelectionCommand", () => {
 	it("fits to the valid axis even when one axis has size 0 (a horizontal line)", () => {
 		// Horizontal polyline: width 200, height 0. Does not fall back (zoom=1) just because height is 0
 		const state = makeState({
-			selectedIds: ["line"],
+			selection: selectionOf(["line"]),
 			objects: {
 				line: makePolyline("line", [
 					{ x: 400, y: 500 },
@@ -108,7 +110,7 @@ describe("ZoomToSelectionCommand", () => {
 			target: { anchor: { kind: "free", point: { x: 600, y: 500 } } },
 		} as unknown as ObjectState;
 		const state = makeState({
-			selectedIds: ["c1"],
+			selection: selectionOf(["c1"]),
 			objects: { c1: connector },
 			viewport: { minX: 123, minY: 456, zoom: 2 },
 		});
@@ -125,7 +127,7 @@ describe("ZoomToSelectionCommand", () => {
 		// A poly collapsed to a single point has contentWidth=contentHeight=0. With no zoom
 		// candidate, it keeps the current viewport instead of snapping to 100% and recentering.
 		const state = makeState({
-			selectedIds: ["dot"],
+			selection: selectionOf(["dot"]),
 			objects: {
 				dot: makePolyline("dot", [
 					{ x: 500, y: 500 },
@@ -142,7 +144,7 @@ describe("ZoomToSelectionCommand", () => {
 			expect(
 				ZoomToSelectionCommand.canExecute(
 					makeState({
-						selectedIds: ["a"],
+						selection: selectionOf(["a"]),
 						objects: { a: makeRect("a", 0, 0) },
 					}),
 					registries,
@@ -153,7 +155,7 @@ describe("ZoomToSelectionCommand", () => {
 		it("is not executable when there is no selection", () => {
 			expect(
 				ZoomToSelectionCommand.canExecute(
-					makeState({ selectedIds: [], objects: {} }),
+					makeState({ selection: selectionOf([]), objects: {} }),
 					registries,
 				),
 			).toBe(false);

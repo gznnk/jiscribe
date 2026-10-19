@@ -1,16 +1,16 @@
-import { ConnectorExtraStyleProperties } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { supportsAutoHeight } from "@jiscribe/doc";
+import { calcEllipseTextRegion } from "@jiscribe/doc/model/objects/primitives/ellipse/calcEllipseTextRegion";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
-import { hasInsetTextRegionType } from "../../plugin/hasInsetTextRegionType";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
 import type {
 	AnyObjectTypeDefinition,
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
-import { supportsAutoHeightType } from "../../plugin/supportsAutoHeightType";
 import { Connector } from "../../rendering/objects/connector/Connector";
 import { Ellipse } from "../../rendering/objects/primitives/Ellipse";
 import { Image } from "../../rendering/objects/primitives/Image";
@@ -23,6 +23,7 @@ import {
 	connectorToDoc,
 	connectorToState,
 } from "../../states/objects/connector/ConnectorMapper";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isValidConnectorState } from "../../states/objects/connector/validateConnectorState";
 import {
 	ellipseToDoc,
@@ -45,11 +46,13 @@ import {
 	polygonToDoc,
 	polygonToState,
 } from "../../states/objects/primitives/polygon/PolygonMapper";
+import type { PolygonState } from "../../states/objects/primitives/polygon/PolygonState";
 import { isValidPolygonState } from "../../states/objects/primitives/polygon/validatePolygonState";
 import {
 	polylineToDoc,
 	polylineToState,
 } from "../../states/objects/primitives/polyline/PolylineMapper";
+import type { PolylineState } from "../../states/objects/primitives/polyline/PolylineState";
 import { isValidPolylineState } from "../../states/objects/primitives/polyline/validatePolylineState";
 import {
 	rectToDoc,
@@ -97,6 +100,14 @@ import {
 	rotateByGroup as textRotateByGroup,
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
+import {
+	createTextSlotPartKindDefinition,
+	placeTextSlotRegions,
+	TEXT_SLOT_PART_KIND,
+} from "../selection/partKinds/textSlotPartKind";
+import { createVertexPartKindDefinition } from "../selection/partKinds/vertexPartKind";
+import { CONNECTOR_STYLE_TABLE } from "../style/tables/connectorStyleTable";
+import { coreStyleTable } from "../style/tables/coreStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
@@ -155,11 +166,11 @@ const TEXT_BLOCK_TRANSFORM_HANDLES: ObjectTransformHandles = {
  * Data-only description of every built-in object type. `createCanvasRegistries`
  * applies a chosen subset of these to a fresh bundle, ahead of the plugins'.
  *
- * Each entry spreads its headless definition, so a built-in's `textRegion` comes
- * from `builtinObjectDocDefinitions` — the ellipse's inscribed rect, the box
- * itself for the other two. The plugins' UI definitions declare theirs again
- * instead, their doc-side declaration being allowed to say "not in the box at
- * all", which a renderer cannot use (see createFrameObjectDefinition).
+ * Each entry spreads its headless definition, so a built-in's doc `textRegion`
+ * comes from `builtinObjectDocDefinitions`. Where the canvas draws the text is
+ * the `"textSlot"` part kind's: the ellipse declares its inscribed rect there
+ * (the same calculator as its doc one), and rect and text take the whole box,
+ * which is what an undeclared kind gives.
  */
 export const BUILTIN_OBJECT_DEFINITIONS: Record<
 	ObjectType,
@@ -180,6 +191,11 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		stateValidator: isValidEllipseState,
 		component: Ellipse,
 		behavior: createFrameBehavior<EllipseState>(),
+		partKinds: [
+			createTextSlotPartKindDefinition<EllipseState>({
+				region: calcEllipseTextRegion,
+			}),
+		],
 		stencils: EllipseStencils,
 	}),
 
@@ -234,6 +250,9 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			transformByGroup: polygonTransformByGroup,
 			rotateByGroup: polygonRotateByGroup,
 		},
+		// A closed outline needs three corners; the third-to-last vertex is where
+		// deletion stops.
+		partKinds: [createVertexPartKindDefinition<PolygonState>(3)],
 		stencils: PolygonStencils,
 	}),
 
@@ -247,6 +266,8 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			transformByGroup: polylineTransformByGroup,
 			rotateByGroup: polylineRotateByGroup,
 		},
+		// An open line needs the two ends it runs between.
+		partKinds: [createVertexPartKindDefinition<PolylineState>(2)],
 		stencils: PolylineStencils,
 	}),
 
@@ -260,7 +281,11 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			transformByGroup: connectorTransformByGroup,
 			rotateByGroup: connectorRotateByGroup,
 		},
-		extraStyleProperties: ConnectorExtraStyleProperties,
+		// `points` holds the waypoints between the two endpoints, not the whole
+		// route: the endpoints are not among them, so there is no floor — a
+		// connector with no waypoint left is the straight route it started as.
+		partKinds: [createVertexPartKindDefinition<ConnectorState>(0)],
+		styleEntries: CONNECTOR_STYLE_TABLE,
 		menu: [
 			{
 				id: "arrowHead",
@@ -426,8 +451,57 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 };
 
 /**
+ * Refuses a declared style entry (`ObjectTypeDefinition.styleEntries`) that writes a
+ * field the type's doc cannot hold: the mapper passes exactly the fields
+ * `features` and `extraKeys` name between doc and state (FrameMapper), so such
+ * an entry would write state the next save drops.
+ *
+ * A declared entry must state what it writes (DeclaredStyleEntry), so one
+ * stating nothing is refused rather than let through unchecked.
+ *
+ * @param type - The type being registered; named in the error
+ * @param definition - Its whole definition: the fields its `features` imply (collectStyleKeys, plus the text group) and its `extraKeys` are what an entry may write
+ * @throws When an entry states no `fields`, naming the type and the kind; or when it writes a field that is neither, naming the type, the kind and the field
+ */
+const checkDeclaredStyleFields = (
+	type: ObjectType,
+	definition: AnyObjectTypeDefinition,
+): void => {
+	if (definition.styleEntries === undefined) {
+		return;
+	}
+	const docFields = new Set<string>([
+		...collectStyleKeys(definition.features),
+		// The text group's own field, which collectStyleKeys leaves out because Doc
+		// and State disagree on where its styling sits (mapTextDocToState).
+		...(definition.features.text === undefined ? [] : ["text"]),
+		...(definition.extraKeys ?? []),
+	]);
+	for (const [kind, entry] of Object.entries(definition.styleEntries)) {
+		if (entry === undefined) {
+			continue;
+		}
+		// Typed as required, but a definition from JavaScript or cast past the
+		// type can still leave it out.
+		const fields = entry.fields as readonly string[] | undefined;
+		if (fields === undefined) {
+			throw new Error(
+				`ObjectTypeDefinition "${type}": the style entry "${kind}" does not state the fields it writes (fields); state [] when it writes nothing the document stores`,
+			);
+		}
+		for (const field of fields) {
+			if (!docFields.has(field)) {
+				throw new Error(
+					`ObjectTypeDefinition "${type}": the style entry "${kind}" writes "${field}", which the type's doc does not hold (declare it in extraKeys)`,
+				);
+			}
+		}
+	}
+};
+
+/**
  * Registers a single object type described by `definition` across all registries
- * in the given bundle (mapper, component, text region, behavior, state validator,
+ * in the given bundle (mapper, component, part kinds, behavior, state validator,
  * menu, property panel), and optionally its factory / stencils.
  */
 export const applyObjectDefinition = (
@@ -443,12 +517,17 @@ export const applyObjectDefinition = (
 	registries.objectComponent.register(type, definition.component);
 	registries.objectTextStyleDefaults.registerDefinition(type, definition);
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
-	const supportsAutoHeight = supportsAutoHeightType(definition);
-	if (supportsAutoHeight) {
+	checkDeclaredStyleFields(type, definition);
+	// The type's own table comes last on purpose: a kind it declares replaces the
+	// one derived from its features, which is how a type whose storage differs
+	// from the core guess says where the edit lands.
+	registries.objectStyle.register(type, {
+		...coreStyleTable(definition.features),
+		...definition.styleEntries,
+	});
+	const mayLeaveHeightOut = supportsAutoHeight(definition);
+	if (mayLeaveHeightOut) {
 		registries.objectAutoHeight.register(type);
-	}
-	if (hasInsetTextRegionType(definition)) {
-		registries.objectTextVerticalBasis.register(type);
 	}
 	// A type whose doc may leave `height` out gets the shared derivation, which is
 	// inert for every object of it that states one — the two are mutually
@@ -456,7 +535,7 @@ export const applyObjectDefinition = (
 	// (`geometry: "point"`) and an auto-height one storing a rect.
 	const resizeToContent =
 		definition.contentResizer ??
-		(supportsAutoHeight
+		(mayLeaveHeightOut
 			? (state, context) =>
 					resizeAutoHeightStateToContent(
 						state,
@@ -485,13 +564,16 @@ export const applyObjectDefinition = (
 	if (definition.svgDefs) {
 		registries.objectSvgDefs.register(type, definition.svgDefs);
 	}
-	if (definition.textRegion) {
-		registries.objectTextRegion.register(type, definition.textRegion);
-	}
 	if (definition.textEditOverflow) {
 		registries.objectTextEditOverflow.register(
 			type,
 			definition.textEditOverflow,
+		);
+	}
+	if (definition.textEditLineBreaks) {
+		registries.objectTextEditLineBreaks.register(
+			type,
+			definition.textEditLineBreaks,
 		);
 	}
 	if (definition.outline) {
@@ -504,6 +586,12 @@ export const applyObjectDefinition = (
 		registries.objectExtraConnectPoints.register(
 			type,
 			definition.extraConnectPoints,
+		);
+	}
+	if (definition.connectionAnchors) {
+		registries.objectConnectionAnchors.register(
+			type,
+			definition.connectionAnchors,
 		);
 	}
 	if (definition.geometryKey) {
@@ -528,13 +616,26 @@ export const applyObjectDefinition = (
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
-	if (definition.extraStyleProperties) {
-		registries.styleProperty.registerExtras(
-			type,
-			definition.extraStyleProperties,
-		);
+	// A type holding text takes part in slot selection without declaring
+	// anything, one body or several: the ids are the keys of its `text`, so there
+	// is nothing per type to say. Declaring `"textSlot"` itself replaces that
+	// default rather than colliding with it (the rule `menu` and `propertyPanel`
+	// already follow). Whichever is registered is placed here, so every reader of
+	// a slot's box gets the fallback and the vertical basis from one spot.
+	const declaredPartKinds = (definition.partKinds ?? []).map((part) =>
+		part.kind === TEXT_SLOT_PART_KIND ? placeTextSlotRegions(type, part) : part,
+	);
+	const partKinds =
+		definition.features.text !== undefined &&
+		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
+			? [
+					...declaredPartKinds,
+					placeTextSlotRegions(type, createTextSlotPartKindDefinition()),
+				]
+			: declaredPartKinds;
+	if (partKinds.length > 0) {
+		registries.objectPartKind.register(type, partKinds);
 	}
-
 	if (definition.factory) {
 		registries.objectFactory.register(type, definition.factory);
 	} else if (definition.stencils) {

@@ -1,9 +1,10 @@
 ﻿import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { resolveCommandLabel } from "../../../../../commands/CommandUtils";
+import { commandAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../../../hooks/useCommandState";
-import { getCommandLabel } from "../../../../../messages/CanvasMessages";
+import { useCanvasLocale } from "../../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { GroupIcon } from "../../../../icons/GroupIcon";
 import {
@@ -17,11 +18,12 @@ type GroupMenuProps = {
 
 const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
 	const resolveCommand = useCommandState(canvasState);
 	// Determine if the single selected item is a group (→ show ungroup)
 	const singleSelected =
-		canvasState.selectedIds.length === 1
-			? canvasState.objects[canvasState.selectedIds[0]]
+		canvasState.selection.objectIds.length === 1
+			? canvasState.objects[canvasState.selection.objectIds[0]]
 			: undefined;
 	const isGroup = singleSelected?.type === "group";
 
@@ -38,9 +40,9 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 			<ObjectMenuButton
 				isActive={isGroup}
 				disabled={!enabled}
-				data-part={commandPart(commandId)}
+				data-action={commandAction(commandId)}
 			>
-				<GroupIcon title={getCommandLabel(messages, command)} />
+				<GroupIcon title={resolveCommandLabel(command, messages, locale)} />
 			</ObjectMenuButton>
 		</ObjectMenuItemPositioner>
 	);

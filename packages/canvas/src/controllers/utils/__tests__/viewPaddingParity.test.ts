@@ -5,8 +5,8 @@ import { convertRectToBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import { createVisualExtentRegistries } from "../../__tests__/support/visualExtentRegistries";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { calcContentBounds } from "../calcContentBounds";
 import { calcInitialCameraFromView } from "../calcInitialCameraFromView";
@@ -17,6 +17,7 @@ import {
 	resolveExportOptions,
 } from "../resolveExportOptions";
 import { resolveScrollWallPadding } from "../resolveScrollWallPadding";
+import type { VisualExtentRegistries } from "../VisualExtentRegistries";
 import { ZOOM } from "../zoom";
 
 /**
@@ -38,22 +39,22 @@ import { ZOOM } from "../zoom";
 const registries = createTestRegistries();
 
 /** No shape draws outside its geometry box; the padded box is the geometry one. */
-const geometryOnlyVisualBounds: Pick<ObjectVisualBoundsRegistry, "get"> = {
+const geometryOnlyVisualBounds = createVisualExtentRegistries({
 	get: () => undefined,
-};
+});
 
 /**
  * Stands in for a type drawing a 10px-tall strip below its box — the case the
- * three consumers only agree on because they all pass the same registry down.
+ * three consumers only agree on because they all pass the same registries down.
  */
-const stripBelowBoxVisualBounds: Pick<ObjectVisualBoundsRegistry, "get"> = {
+const stripBelowBoxVisualBounds = createVisualExtentRegistries({
 	get: () => (state) => ({
 		x: -state.width / 2,
 		y: -state.height / 2,
 		width: state.width,
 		height: state.height + 10,
 	}),
-};
+});
 
 /** Content spanning 0,0..400,240, so every side of the padding lands on a different edge. */
 const twoRectsDocWith = (view: ViewDoc): CanvasDoc =>
@@ -77,11 +78,11 @@ const view: ViewDoc = {
 
 /** The content extent grown by the declared padding — what all three must come to. */
 const calcPaddedBox = (
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	visualExtentRegistries: VisualExtentRegistries,
 	objects: Parameters<typeof calcContentBounds>[0],
 	declaredPadding: ViewDoc["padding"],
 ): BoundingBox => {
-	const bounds = calcContentBounds(objects, visualBounds);
+	const bounds = calcContentBounds(objects, visualExtentRegistries);
 	if (bounds === null) {
 		throw new Error("the fixture has no content to measure");
 	}
@@ -95,7 +96,7 @@ const calcPaddedBox = (
 };
 
 /**
- * The three rectangles, measured over one document with one registry.
+ * The three rectangles, measured over one document with one set of registries.
  *
  * The viewport handed to the framing is the padded box itself, so the camera's
  * visible world rect *is* the box it framed: `"fit-all"` centers on an axis with
@@ -103,7 +104,7 @@ const calcPaddedBox = (
  * viewport's aspect ratio rather than the padding.
  */
 const measureThreeWays = (
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	visualExtentRegistries: VisualExtentRegistries,
 	measuredView: ViewDoc = view,
 ) => {
 	const state = canvasToState(
@@ -112,7 +113,7 @@ const measureThreeWays = (
 		registries.objectContentResizer,
 	);
 	const paddedBox = calcPaddedBox(
-		visualBounds,
+		visualExtentRegistries,
 		state.objects,
 		measuredView.padding,
 	);
@@ -121,7 +122,7 @@ const measureThreeWays = (
 		height: paddedBox.bottom - paddedBox.top,
 	};
 
-	const bounds = calcContentBounds(state.objects, visualBounds);
+	const bounds = calcContentBounds(state.objects, visualExtentRegistries);
 	if (bounds === null) {
 		throw new Error("the fixture has no content to measure");
 	}
@@ -139,7 +140,7 @@ const measureThreeWays = (
 	const exportViewBox = resolveExportOptions(
 		{ ...state, viewport: { ...viewportSize, ...camera } },
 		registries.objectMapper,
-		visualBounds,
+		visualExtentRegistries,
 		{ includeSource: false },
 	).viewBox;
 	if (exportViewBox === undefined) {
@@ -156,7 +157,7 @@ const measureThreeWays = (
 		wall: calcScrollBounds(
 			resolveScrollWallPadding(null, state.view),
 			state.objects,
-			visualBounds,
+			visualExtentRegistries,
 		),
 		/** The world rect the exported image covers. */
 		exported: convertRectToBoundingBox(exportViewBox),

@@ -1,9 +1,9 @@
 import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
 import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
+import { calcFrameKeyPoint } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { resolveTextObjectFont } from "../resolveTextObjectFont";
-import { calcTextDrawnTopLeft } from "../textDrawnTopLeft";
 import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
 
@@ -48,7 +48,7 @@ describe("textToState", () => {
 
 	it("puts the drawn top-left on (x, y) under rotation and flip", () => {
 		const state = textToState(doc({ rotation: 30, flipX: true }));
-		const drawnTopLeft = calcTextDrawnTopLeft(state);
+		const drawnTopLeft = calcFrameKeyPoint(state, "topLeft");
 
 		expect(drawnTopLeft.x).toBeCloseTo(10, 9);
 		expect(drawnTopLeft.y).toBeCloseTo(20, 9);

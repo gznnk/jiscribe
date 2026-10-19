@@ -1,10 +1,10 @@
 import { useMemo, useRef } from "react";
 
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { calcVisibleObjectIds } from "../utils/calcVisibleObjectIds";
 import type { VisibilityBBoxCache } from "../utils/calcVisibleObjectIds";
+import type { VisualExtentRegistries } from "../utils/VisualExtentRegistries";
 
 /**
  * Derives the set of object IDs to render under the current viewport
@@ -20,7 +20,7 @@ export const useVisibleObjectIds = (
 	rootIds: string[],
 	viewport: Viewport,
 	textEditObjectId: string | null,
-	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	registries: VisualExtentRegistries,
 ): ReadonlySet<string> => {
 	const bboxCacheRef = useRef<VisibilityBBoxCache>(new Map());
 	const prevVisibleIdsRef = useRef<ReadonlySet<string> | null>(null);
@@ -32,7 +32,7 @@ export const useVisibleObjectIds = (
 			viewport,
 			textEditObjectId,
 			prevCache: bboxCacheRef.current,
-			visualBounds,
+			registries,
 		});
 		bboxCacheRef.current = bboxCache;
 
@@ -51,5 +51,5 @@ export const useVisibleObjectIds = (
 		}
 		prevVisibleIdsRef.current = visibleIds;
 		return visibleIds;
-	}, [objects, rootIds, viewport, textEditObjectId, visualBounds]);
+	}, [objects, rootIds, viewport, textEditObjectId, registries]);
 };

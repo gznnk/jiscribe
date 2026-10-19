@@ -1,3 +1,5 @@
+import { isTransformedFrame } from "@jiscribe/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 import {
 	type RefObject,
 	useLayoutEffect,
@@ -7,9 +9,15 @@ import {
 } from "react";
 
 import { useLingeringFlag } from "./useLingeringFlag";
+import type { ObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import type { CanvasSelection } from "../../../../selection/CanvasSelection";
+import { calcUnionBoundingBox } from "../../../../utils/buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
+import { calcTransformedRectBounds } from "../../../../utils/calcTransformedRectBounds";
+import { collectOutlinedPartRegions } from "../../../utils/collectOutlinedPartRegions";
 
 /** Distance between the ObjectMenu and the object (px) */
 const DISTANCE_FROM_OBJECT = 40;
@@ -35,7 +43,33 @@ type ObjectMenuPosition = {
 };
 
 /**
- * Computes the coordinates for positioning the menu below the selected object(s).
+ * World bounds of the outlined parts (a picked text slot, say), so the menu sits
+ * by the boxes drawn around them rather than by the whole object; null when no
+ * part is outlined or its owner has no transformed box.
+ */
+const calcOutlinedPartsBoundingBox = (
+	objects: Readonly<Record<string, ObjectState>>,
+	objectPartKind: ObjectPartKindRegistry,
+	selection: CanvasSelection,
+): BoundingBox | null => {
+	const partOwner = objects[selection.objectIds[0]];
+	if (partOwner === undefined || !isTransformedFrame(partOwner)) {
+		return null;
+	}
+	const partBoundsById: Record<string, BoundingBox> = {};
+	for (const { partId, region } of collectOutlinedPartRegions(
+		objects,
+		objectPartKind,
+		selection,
+	)) {
+		partBoundsById[partId] = calcTransformedRectBounds(region, partOwner);
+	}
+	return calcUnionBoundingBox(Object.keys(partBoundsById), partBoundsById);
+};
+
+/**
+ * Computes the coordinates for positioning the menu below the selected object(s),
+ * or below the picked parts when they are outlined (a text slot).
  *
  * Since the menu lives inside ScrollSyncedOverlay, coordinates are returned in the
  * canvas coordinate system. The overlay itself follows scrolling, so no viewport offset is needed.
@@ -54,9 +88,7 @@ export function useObjectMenuPosition(
 	isPointerOverMenu: boolean,
 ): ObjectMenuPosition {
 	const {
-		selectedIds,
-		selectedConnectorId,
-		selectedTextSlot,
+		selection,
 		objects,
 		viewport,
 		contextMenuPosition,
@@ -70,7 +102,8 @@ export function useObjectMenuPosition(
 
 	// The menu sits below the selection's drawn extent, so a shape whose label
 	// hangs outside its geometry box must not have the menu land on the label.
-	const { objectVisualBounds } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
+	const { objectPartKind } = registries;
 
 	const [menuDimensions, setMenuDimensions] = useState({
 		width: 0,
@@ -78,18 +111,24 @@ export function useObjectMenuPosition(
 	});
 
 	// Measure menu dimensions from DOM when it renders or selection changes.
-	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
+	// Slot selection changes the item set (see filterMenuSectionsForPickedPart), so the
 	// width must be re-measured then too or the centering uses the stale width;
-	// opening and closing a text editor narrows it the same way.
-	const selectedIdsString = selectedIds.slice().sort().join(",");
-	const selectedTextSlotKey =
-		selectedTextSlot === null
+	// opening a text editor picks the slot and narrows it the same way, and the
+	// editor's own box moves the menu while it is open.
+	const { objectIds: selectedIds, part } = selection;
+	const selectedIdsString = useMemo(
+		() => selectedIds.slice().sort().join(","),
+		[selectedIds],
+	);
+	const partKey =
+		part === null
 			? null
-			: `${selectedTextSlot.objectId}:${selectedTextSlot.slotId}`;
-	const textEditKey =
-		textEditState === null
-			? null
-			: `${textEditState.kind}:${textEditState.objectId}`;
+			: `${part.kind}:${part.ranges
+					.map((range) => `${range.anchorId}-${range.focusId}`)
+					.join(",")}`;
+	// The kind alone: what the session is open over is `selectedIdsString` and
+	// `partKey`, which are deps of the same measurement.
+	const textEditKey = textEditState?.kind ?? null;
 
 	// Every way the view moves under the selection, as one state: dragging (except
 	// while an ObjectMenu dropdown is open, so its sliders stay usable) and the
@@ -100,15 +139,14 @@ export function useObjectMenuPosition(
 	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
 
 	const shouldRender = useMemo(() => {
-		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
-		if (!hasSelection) {
+		if (selectedIds.length === 0) {
 			return false;
 		}
 		if (contextMenuPosition !== null) {
 			return false;
 		}
 		// A shape's text editor keeps the menu: its text items are how a stretch of
-		// the text being edited is styled (TextSlotStyleProperty), and the menu is
+		// the text being edited is styled (runOrTextSlotEntry), and the menu is
 		// the only place the color and the size of one live. The menu itself never
 		// commits the edit — ObjectMenuHandler runs no commit, and the press does
 		// not even move the focus off the editing surface (TextEditorFocusScope) —
@@ -137,7 +175,6 @@ export function useObjectMenuPosition(
 		return true;
 	}, [
 		selectedIds,
-		selectedConnectorId,
 		contextMenuPosition,
 		isViewUnsettled,
 		areaSelection,
@@ -150,25 +187,18 @@ export function useObjectMenuPosition(
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-	}, [
-		menuRef,
-		shouldRender,
-		selectedIdsString,
-		selectedConnectorId,
-		selectedTextSlotKey,
-		textEditKey,
-	]);
+	}, [menuRef, shouldRender, selectedIdsString, partKey, textEditKey]);
 
+	// Not measured while the menu is hidden: a drag hides it and moves the
+	// selection on every frame, which would re-measure every selected object for a
+	// box nothing draws.
 	const liveBounds = useMemo(
 		() =>
-			calcObjectsBoundingBox(
-				selectedConnectorId !== null
-					? [selectedConnectorId, ...selectedIds]
-					: selectedIds,
-				objects,
-				objectVisualBounds,
-			),
-		[selectedIds, selectedConnectorId, objects, objectVisualBounds],
+			shouldRender
+				? (calcOutlinedPartsBoundingBox(objects, objectPartKind, selection) ??
+					calcObjectsBoundingBox(selectedIds, objects, registries))
+				: null,
+		[shouldRender, selection, selectedIds, objects, objectPartKind, registries],
 	);
 
 	// The menu writes properties that resize what it is anchored to: a font size or
@@ -183,12 +213,15 @@ export function useObjectMenuPosition(
 	// viewport clamping and the menu's own measured size all keep updating, so
 	// panning or zooming with a dropdown open still places the menu correctly.
 	const isMenuInUse = objectMenuOpenId !== null || isPointerOverMenu;
-	const anchorKey = `${selectedIdsString}/${selectedConnectorId ?? ""}`;
+	// The picked part is part of the key, so moving to another slot (Tab) re-anchors
+	// even while the menu is in use.
+	const anchorKey = `${selectedIdsString}|${partKey ?? ""}`;
 	const latchedAnchorRef = useRef({ key: anchorKey, bounds: liveBounds });
 	if (
 		!shouldRender ||
 		!isMenuInUse ||
-		latchedAnchorRef.current.key !== anchorKey
+		latchedAnchorRef.current.key !== anchorKey ||
+		latchedAnchorRef.current.bounds === null
 	) {
 		latchedAnchorRef.current = { key: anchorKey, bounds: liveBounds };
 	}

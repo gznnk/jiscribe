@@ -3,7 +3,12 @@ import type {
 	CanvasParseResult,
 	SemanticDiagnostic,
 } from "@jiscribe/doc";
-import { createCanvasParser } from "@jiscribe/doc";
+import {
+	createCanvasParser,
+	isMissingBounds,
+	isSingleBodyText,
+} from "@jiscribe/doc";
+import { insetsBodyVertically } from "@jiscribe/doc/testing";
 import { describe, expect, it } from "vitest";
 
 /** A doc as it is written in a test, before `JSON.stringify` hands it to the parser. */
@@ -146,6 +151,40 @@ export function createParseCheckSuite(params: ParseCheckSuiteParams): void {
 				);
 				expect(warningPaths).toContain(`root[${entry.index}].type`);
 			}
+		});
+
+		it("declares a box for every point-geometry type it registers", () => {
+			// A point-geometry doc stores no size, so a type that declares none has no
+			// box at all and its objects are silently left out of every op working off
+			// one. Checked here because the author's own suite is where it can still
+			// be a build failure rather than a diagnostic on someone's document.
+			const undeclared = Object.entries(plugin.objects ?? {})
+				.filter(
+					([, definition]) =>
+						definition !== undefined && isMissingBounds(definition),
+				)
+				.map(([type]) => type);
+
+			expect(undeclared).toEqual([]);
+		});
+
+		it("declares textVerticalBasis exactly where its region insets the body", () => {
+			// The declaration is what the style table, the sidebar and the AI write
+			// path all read, while the region is what the basis is applied to when
+			// the shape is drawn. A region reshaped for the outline's sake would
+			// otherwise leave the switch offered where it moves nothing, or withheld
+			// where it would have moved the body.
+			const disagreeing = Object.entries(plugin.objects ?? {})
+				.filter(
+					([, definition]) =>
+						definition !== undefined &&
+						isSingleBodyText(definition.features.text) &&
+						(definition.features.textVerticalBasis === true) !==
+							insetsBodyVertically(definition),
+				)
+				.map(([type]) => type);
+
+			expect(disagreeing).toEqual([]);
 		});
 
 		if (checkEveryRegisteredType) {

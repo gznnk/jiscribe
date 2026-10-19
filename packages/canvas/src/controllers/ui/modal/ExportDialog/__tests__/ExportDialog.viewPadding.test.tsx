@@ -126,7 +126,7 @@ describe("the export dialog against a document that declared its own padding", (
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			onSubmit.mock.calls[0][0],
 		);
 		expect(options.viewBox).toEqual({

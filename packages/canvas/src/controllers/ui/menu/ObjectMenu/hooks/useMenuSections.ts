@@ -1,13 +1,15 @@
 import { useMemo } from "react";
 
+import type { ObjectPartKindRegistry } from "../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { getSelectedConnectorId } from "../../../../selection/readers/getSelectedConnectorId";
+import { readPickedPartStyleIntentKinds } from "../../../../selection/readers/readPickedPartStyleIntentKinds";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
-import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
-import { filterTextSlotMenuSections } from "../utils/filterTextSlotMenuSections";
+import { filterMenuSectionsForPickedPart } from "../utils/filterMenuSectionsForPickedPart";
 
 const itemKey = (item: ObjectMenuItem): string =>
 	item.type === "custom" ? item.id : item.type;
@@ -42,23 +44,20 @@ const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] =>
 /**
  * Collects the menu sections of the current selection, before any slot narrowing.
  *
- * When a connector is selected (selectedConnectorId != null), returns the sections for
- * its type. When group objects are selected, expands the descendant concrete object
- * types; if multiple types are mixed, only the common sections are shown (AND-merge).
+ * A selected connector returns the sections for its type. When group objects are
+ * selected, expands the descendant concrete object types; if multiple types are
+ * mixed, only the common sections are shown (AND-merge).
  */
 const collectSelectionSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, objects } = state;
+	const { objectIds: selectedIds } = state.selection;
+	const { objects } = state;
 
-	// When a connector is selected, return the connector's sections instead of selectedIds
-	if (selectedConnectorId !== null) {
-		const connector = objects[selectedConnectorId];
-		if (!connector) {
-			return [];
-		}
-		return objectMenuRegistry.getSections(connector.type);
+	const connectorId = getSelectedConnectorId(state);
+	if (connectorId !== null) {
+		return objectMenuRegistry.getSections(objects[connectorId].type);
 	}
 
 	if (selectedIds.length === 0) {
@@ -100,26 +99,42 @@ const collectSelectionSections = (
 /**
  * Computes the menu sections to display from the current selection.
  *
- * While a text slot is selected the sections are narrowed to the text items, so the
- * menu never offers an action that the slot cannot receive. Doing it here keeps every
- * `features.text === "slots"` type covered without each definition opting in.
+ * While a part is picked whose kind declares what it receives (`styleIntentKinds`), the
+ * sections are narrowed to the items raising only that, and every custom item not
+ * naming the picked kind goes, so the menu never offers an action the part cannot
+ * receive: the text items under a text slot, which every text-holding type is
+ * given without opting in (filterMenuSectionsForPickedPart).
+ * A pick of a kind declaring nothing (a vertex) leaves them alone, the menu still
+ * acting on the object.
  *
- * An open text editor narrows them the same way, for the same reason read the other
- * way round: what the menu offers there has to be something a stretch of the text
+ * An open text editor narrows them the same way, through the slot it keeps picked
+ * (see `textEditState`), for the same reason read the other way round: what the menu offers there has to be something a stretch of the text
  * being edited can take, and reshaping or restacking the shape mid-edit is not it.
+ *
+ * @param state - The current canvas controller state
+ * @param objectMenuRegistry - Per-canvas ObjectMenuRegistry, asked once per concrete type in the selection
+ * @param objectPartKindRegistry - Per-canvas ObjectPartKindRegistry, asked for what the picked kind receives (readPickedPartStyleIntentKinds)
+ * @returns The sections in display order
  */
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
+	objectPartKindRegistry: ObjectPartKindRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
-	if (
-		resolveSelectedTextSlot(state) === null &&
-		state.textEditState?.kind !== "shape"
-	) {
+	const styleIntentKinds = readPickedPartStyleIntentKinds(
+		state,
+		objectPartKindRegistry,
+	);
+	const pickedPart = state.selection.part;
+	if (styleIntentKinds === null || pickedPart === null) {
 		return sections;
 	}
-	return filterTextSlotMenuSections(sections);
+	return filterMenuSectionsForPickedPart(
+		sections,
+		pickedPart.kind,
+		styleIntentKinds,
+	);
 };
 
 /**
@@ -131,23 +146,12 @@ export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, selectedTextSlot, objects } = state;
-	// The editing session itself is not read, only whether one is open on a shape:
-	// the item set is narrowed while it is (getMenuSections).
-	const isEditingShapeText = state.textEditState?.kind === "shape";
-	const { objectMenu } = useCanvasRegistries();
+	const { selection, objects } = state;
+	const { objectMenu, objectPartKind } = useCanvasRegistries();
 
 	return useMemo(
-		() => (enabled ? getMenuSections(state, objectMenu) : []),
+		() => (enabled ? getMenuSections(state, objectMenu, objectPartKind) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[
-			enabled,
-			selectedIds,
-			selectedConnectorId,
-			selectedTextSlot,
-			isEditingShapeText,
-			objects,
-			objectMenu,
-		],
+		[enabled, selection, objects, objectMenu, objectPartKind],
 	);
 };

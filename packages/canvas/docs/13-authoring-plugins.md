@@ -8,7 +8,9 @@ belongs, and the wiring you must not forget.
 
 Every package under `plugins/` is a worked example. `sticky-shape` is the
 smallest complete one; `container-shapes` shows a type-specific selection control;
-`uml-shapes` shows multiple text slots.
+`uml-shapes` shows multiple text slots; `table-shape` shows part kinds of its own,
+selection controls that take clicks, contributed commands, and a box measured
+from the content rather than stored.
 
 ## Package layout
 
@@ -138,10 +140,25 @@ the full list):
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS` (`/doc`) | the "drawing fills the box, so the caption hangs underneath" trio          |
 | `createParseCheckSuite` (`/testing`)                                                                                    | the parse-check test every shape package writes                            |
 
-The below-label parts go together: register the region as the type's `textRegion`
-and the bounds as its `visualBounds` — without the latter, zoom-to-fit and the
+The below-label parts go together: pass the region as `createFrameObjectDefinition`'s
+`textRegion` (which builds the text slot part kind placing the label) and the bounds
+as its `visualBounds` — without the latter, zoom-to-fit and the
 export viewBox crop the label away — and place the hit area inside the shape's own
 `data-kind="object"` group so the label can be grabbed.
+
+A type whose slots are laid out against each other (a table's cells, a record's
+compartments) declares the `"textSlot"` part kind itself, with
+`createTextSlotPartKindDefinition({ regions })` in `partKinds`: one call answering
+every slot's region, which the renderer makes once per render. A kind takes
+`region` or `regions`, not both (see
+[Plugin Architecture](./12-plugin-architecture.md)).
+
+Content laid out that way is invisible to `diagnoseDoc`, which measures with the
+shared typesetting. To have it reported when the box is too small, declare
+`diagnoseOverflow` (`ObjectDocOverflowDiagnoser`) on the doc definition: a
+function of the doc returning one English line per overflow — what is short, by
+how many pixels, and how to fix it — which `diagnoseDoc` turns into an error on
+the object. The record does this for its compartments.
 
 A shape that hand-draws instead of going through `createFrameObject` has to redo
 what that helper resolved (the sticky is the example). Colors above all: resolve
@@ -153,6 +170,65 @@ painted black (#38 / #206).
 A type's properties-sidebar sections are declared as `propertyPanel`, and a row of its own is a `{ type: "custom"; id; component }` item built from the sidebar widgets the kit re-exports (`PropertyRow` and friends). A section that has nothing to say for a given selection carries `isShown`, which takes its heading away with its rows — see doc 12 for both.
 
 `./testing` is a separate entry so vitest never reaches a runtime bundle.
+
+## Offering AI tools for your shapes
+
+The generic tools (`set_text`, `set_extra_props`, …) cannot express an edit that
+only makes sense for one type — inserting a table row, say. A plugin offers those
+as tools of its own: each acts on the one object the call names by `id` and either
+rebuilds it (`apply`) or reads it (`read`). Write them against
+`@jiscribe/canvas-sdk/tools`, export them from a headless `./tools` entry
+(`src/tools.ts`). Write the argument schemas as a zod raw shape (the properties,
+not a `z.object`); the host puts it into its declarations as it is, the MCP SDK
+declaring tools from zod alone. zod is a peer of the contract, so the plugin and
+the host share one copy: add `zod` at the catalog version (`catalog:`) to the
+plugin's `peerDependencies` and `devDependencies`.
+
+The contract itself lives in `@jiscribe/ai-tools-sdk`, which
+`@jiscribe/canvas-sdk/tools` re-exports. A plugin does not import the former
+directly (ESLint rejects it), but canvas-sdk takes it as a peer, so a plugin with a
+`./tools` entry adds `@jiscribe/ai-tools-sdk` to its `peerDependencies` and
+`devDependencies`.
+
+```ts
+// src/tools.ts
+import {
+	type AiToolPlugin,
+	defineObjectAiTool,
+} from "@jiscribe/canvas-sdk/tools";
+import { z } from "zod";
+
+export const tableAiToolPlugin: AiToolPlugin = {
+	id: "table-shape",
+	tools: [
+		defineObjectAiTool({
+			name: "table_insert_tracks", // <type>_<verb>, unique across every tool
+			description: "Insert rows or columns into a table.",
+			objectType: "table",
+			inputSchema: { axis: z.enum(["row", "column"]), at: z.number().int() },
+			apply: (table: TableDoc, { axis, at }) => ({
+				doc: insertTracks(table, axis, at), // a new object; never mutate `table`
+				text: `inserted a ${axis} at ${at}`,
+			}),
+		}),
+	],
+};
+```
+
+The host adds `id` to the schema, refuses an object of another type, and checks
+what `apply` returns against the type's `validateDoc` and the names it holds before
+anything is written, so a result the parser would refuse or drop fails the call
+and leaves the document alone. Throw an `Error` to refuse a call; its message is
+what the AI reads. A `read` tool never writes the document back. A tool name that
+repeats a built-in tool or another plugin's tool throws when the host builds its
+tool set.
+
+A tool that styles text slots of its own spreads `textSlotStyleSchema` into its
+`inputSchema` rather than writing the typography out again: it is the vocabulary
+the built-in `set_style` declares, descriptions included. Its `fontWeight` accepts
+`"400"` / `"700"`, so pass the value through `canonicalizeFontWeight` before
+writing it (the document keeps `"normal"` / `"bold"`). Both come from
+`@jiscribe/canvas-sdk/tools`; the table's `table_set_cell_style` is the example.
 
 ## Giving the package an e2e suite
 
@@ -288,8 +364,9 @@ harness alone with `dev:harness` to look at it by eye. `vitest.config.ts` includ
 - Nothing under a plugin's `src/` may import `@jiscribe/canvas/unstable` or
   `@jiscribe/doc/unstable`. Use `@jiscribe/canvas-sdk`, or
   `@jiscribe/canvas-sdk/doc` for the headless side.
-- A plugin's `src/schema/` and `src/doc.ts` are headless. Of the canvas and doc
-  entries they may use `@jiscribe/doc` and `@jiscribe/canvas-sdk/doc` only — not
+- A plugin's `src/schema/`, `src/doc.ts` and `src/tools.ts` (or `src/tools/`) are
+  headless. Of the canvas and doc entries they may use `@jiscribe/doc` and
+  `@jiscribe/canvas-sdk/doc` (`/tools`) only — not
   the UI entries, not `react` / `react-dom` / `@emotion/*`, and not the package's
   own UI-side layers (`presentation/`, `state/`, `menu/` and the rest;
   `eslint.config.js` has the list).
@@ -342,6 +419,15 @@ only presets on the bar. Plugin categories are not part of
 `DEFAULT_TOOLBAR_SECTIONS`, so a host that uses the default bar unchanged and
 declares no library will not show the shape until it adds the category.
 
+A category with more presets than it can list (an icon set with hundreds of
+glyphs) lists a curated few in `presetIds`, registers every preset as a stencil all
+the same, and declares `search` (`StencilCategorySearch`): a function answering a
+sidebar query with registered preset ids in rank order, cut to the category's own
+cap, plus `matchCount` before the cut. The sidebar shows those after the label
+matches of the listed presets, drops ids already shown or not registered, adds a
+line when anything was cut, and while not searching points to the search from under
+the section. The toolbar flyout ignores `search` and shows `presetIds` only.
+
 ## Wiring checklist
 
 **The headless `./doc` side is the one that gets forgotten.** Work through every
@@ -362,6 +448,10 @@ UI plugin (`somePlugin`):
 Headless doc plugin (`someDocPlugin`):
 
 - [ ] `packages/standard-shapes/src/doc.ts` (`standardDocPlugins`; the VSCode extension's diagnostics, schema generation, the MCP server and `doc-tools` all take the set from there)
+
+AI tools (`someAiToolPlugin`), when the plugin offers any:
+
+- [ ] `packages/standard-shapes/src/tools.ts` (`standardAiToolPlugins`; the MCP server takes the set from there)
 
 Only `packages/standard-shapes` and `apps/canvas-examples` take the plugin as a
 `package.json` dependency; the other hosts (the VSCode extension, MCP, the CLI) depend

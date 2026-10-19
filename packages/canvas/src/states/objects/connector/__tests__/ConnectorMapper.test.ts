@@ -1,11 +1,8 @@
 import type { ConnectorDoc } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { describe, expect, it } from "vitest";
 
-import {
-	connectorToDoc,
-	connectorToState,
-} from "../../../../states/objects/connector/ConnectorMapper";
-import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
+import { connectorToDoc, connectorToState } from "../ConnectorMapper";
+import type { ConnectorState } from "../ConnectorState";
 
 describe("ConnectorMapper", () => {
 	describe("connectorToState", () => {

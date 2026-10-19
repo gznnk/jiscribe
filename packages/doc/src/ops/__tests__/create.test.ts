@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createFrameObjectFactory } from "../../model/objects/utils/createFrameObjectFactory";
 import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 import {
@@ -12,7 +13,11 @@ import {
 	twoRects,
 	unknownObjectFields,
 } from "./support/docFixtures";
-import { badgeDefinition } from "./support/pluginFixtures";
+import {
+	badgeDefinition,
+	cellGridDefinition,
+	creatableCardDefinition,
+} from "./support/pluginFixtures";
 
 describe("addObject", () => {
 	it("assigns friendly sequential ids and keeps top-left coordinates", () => {
@@ -79,8 +84,9 @@ describe("addObject", () => {
 		expectValid(doc);
 	});
 
-	// A point-geometry doc stores the top-left and no box, so the position reaches
-	// the doc untouched — no measurement, and nothing to offset a center by.
+	// A point-geometry type is placed by its center like every other shape, so this
+	// call's top-left goes through the box measured from the content and back. What
+	// the doc stores is that same corner, exactly.
 	it("keeps the given top-left for a point-geometry type", () => {
 		const doc = emptyDoc();
 		const id = docOps.addObject(doc, "text", {
@@ -104,6 +110,25 @@ describe("addObject", () => {
 		const text = doc.root[0] as Record<string, unknown>;
 		expect(text.x).toBe(12.5);
 		expect(text.y).toBe(-7.25);
+	});
+
+	it("keeps the given top-left for a rotated point-geometry type", () => {
+		// The corner such a doc stores is the drawn one — turned by the object's own
+		// rotation — so the angle has to reach the factory before it places the box.
+		// Getting that wrong moves the shape by a fraction of its size, which no
+		// unrotated case would show.
+		const doc = emptyDoc();
+		docOps.addObject(doc, "text", {
+			x: 100,
+			y: 100,
+			rotation: 37,
+			text: "Hello World",
+		});
+
+		const text = doc.root[0] as Record<string, unknown>;
+		expect(text.rotation).toBe(37);
+		expect(text.x).toBe(100);
+		expect(text.y).toBe(100);
 	});
 
 	it("keeps box fields out of a point-geometry doc", () => {
@@ -344,6 +369,67 @@ describe("addObject with styling", () => {
 			docOps.addObject(doc, "polygon", { x: 0, y: 0, fontSize: 20 }),
 		).toThrow(
 			'object type "polygon" cannot be styled with "fontSize": the styling it takes is "fill", "fillOpacity", "stroke", "strokeWidth", "strokeDashType", "strokeOpacity"',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+});
+
+describe("addObject with styling on a slots type", () => {
+	const slotsOps = createDocOps({
+		plugins: [
+			{
+				id: "slots-plugin",
+				objects: {
+					"slot-card": creatableCardDefinition,
+					"cell-grid": {
+						...cellGridDefinition,
+						factory: createFrameObjectFactory({
+							type: "cell-grid",
+							width: 120,
+							height: 60,
+							cells: [["a"]],
+						}),
+					},
+				},
+			},
+		],
+	});
+
+	it("writes the typography into every slot of a type keeping it per slot", () => {
+		const doc = emptyDoc();
+		slotsOps.addObject(doc, "slot-card", { x: 0, y: 0, fontSize: 18 });
+
+		const card = readObject(doc, "slot-card-1");
+		expect(card.text).toEqual({
+			title: { text: "Title", fontSize: 18 },
+			body: { text: "Body", fontSize: 18 },
+		});
+		expect(card).not.toHaveProperty("fontSize");
+	});
+
+	it("refuses typography on a type keeping its slots in a field of its own", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			slotsOps.addObject(doc, "cell-grid", { x: 0, y: 0, fontSize: 18 }),
+		).toThrow(
+			'object type "cell-grid" cannot be created with "fontSize": a new one has no text slot to hold it',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("names every refused typography property at once", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			slotsOps.addObject(doc, "cell-grid", {
+				x: 0,
+				y: 0,
+				fontSize: 18,
+				fontWeight: "bold",
+			}),
+		).toThrow(
+			'object type "cell-grid" cannot be created with "fontSize", "fontWeight": a new one has no text slot to hold them',
 		);
 		expect(doc.root).toHaveLength(0);
 	});
@@ -624,15 +710,26 @@ describe("addObject with a type's own extraProps", () => {
 		).toThrow(/cannot be created programmatically/);
 	});
 
-	it("accepts the body placement every single-body type carries, undeclared", () => {
+	it("accepts the body placement a type declaring the basis carries, undeclared", () => {
 		const doc = emptyDoc();
-		const id = docOps.addObject(doc, "rect", {
+		const id = docOps.addObject(doc, "ellipse", {
 			x: 0,
 			y: 0,
 			extraProps: { textVerticalBasis: "frame" },
 		});
 		expect(readObject(doc, id).textVerticalBasis).toBe("frame");
 		expectValid(doc);
+	});
+
+	it("refuses it on a type that does not declare the basis, saying why", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			docOps.addObject(doc, "rect", {
+				x: 0,
+				y: 0,
+				extraProps: { textVerticalBasis: "frame" },
+			}),
+		).toThrow(/does not declare textVerticalBasis/);
 	});
 
 	it("refuses a name the call already takes as a parameter", () => {
@@ -779,5 +876,29 @@ describe("addObjects", () => {
 		]);
 
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
+	});
+});
+
+describe("addObject sizing a point-geometry type", () => {
+	it("tells a block text it takes a width but no height, and any other text that it takes neither", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "text", {
+				x: 0,
+				y: 0,
+				width: 200,
+				height: 80,
+				textLayout: "block",
+			}),
+		).toThrow(
+			'object type "text" sizes itself from its content and takes no height, only a width',
+		);
+		expect(() =>
+			docOps.addObject(doc, "text", { x: 0, y: 0, height: 80 }),
+		).toThrow(
+			'object type "text" sizes itself from its content and takes no width/height',
+		);
+		expect(doc.root).toHaveLength(0);
 	});
 });

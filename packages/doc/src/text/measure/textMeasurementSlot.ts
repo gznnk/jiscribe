@@ -22,6 +22,12 @@ let adoptedMeasurement: TextMeasurement | null = null;
  */
 let sealed = false;
 
+/**
+ * Advanced each time the adopted implementation starts answering differently for
+ * the same text and font (advanceTextMeasurementGeneration).
+ */
+let measurementGeneration = 0;
+
 const NOTHING_OFFERED_MESSAGE =
 	"No text measurement has been offered. A browser host gets one by importing " +
 	"@jiscribe/canvas — in a DOM-less test environment (jsdom) that import " +
@@ -84,7 +90,7 @@ export const offerTextMeasurement = (measurement: TextMeasurement): void => {
  * Internal to this package — a host reaches the slot through
  * {@link offerTextMeasurement} alone.
  *
- * @returns The implementation the offers settled on; the same instance on every call afterwards, which is what a cache of measured results can key on
+ * @returns The implementation the offers settled on; the same instance on every call afterwards. Its answers can still change (web fonts arriving), so a cache of measured results keys on {@link readTextMeasurementGeneration} rather than on the instance
  * @throws When nothing has been offered, naming the implementations a host can offer
  */
 export const adoptTextMeasurement = (): TextMeasurement => {
@@ -96,14 +102,38 @@ export const adoptTextMeasurement = (): TextMeasurement => {
 };
 
 /**
+ * The generation of the answers the adopted implementation gives: a measurement
+ * taken under one generation is still the answer while it stands, and stale once
+ * it has moved on. What a cache of measured results records and compares, so it
+ * needs no notice of its own when the answers change.
+ *
+ * @returns A counter starting at 0 that only grows; it never moves in a process whose measurement cannot change (a Node host, the estimate)
+ */
+export const readTextMeasurementGeneration = (): number =>
+	measurementGeneration;
+
+/**
+ * Declares every measurement taken so far stale, because the adopted
+ * implementation now answers differently for the same text and font. The browser
+ * host calls it when web fonts finish loading after the first paint: the renderer
+ * measures with whatever face the browser holds, so the same instance gave the
+ * fallback face's widths until then.
+ *
+ * Call it before anything re-measures, so the re-measure is not answered from a
+ * cache.
+ */
+export const advanceTextMeasurementGeneration = (): void => {
+	measurementGeneration++;
+};
+
+/**
  * Empties the slot and lifts the seal, for a test that measures under an
  * implementation of its own. Nothing else may call it: the whole point of the
- * seal is that a running process cannot do this.
- *
- * Caches keyed on the adopted instance need no notice of it — whatever is
- * adopted next is a different instance, so their entries miss.
+ * seal is that a running process cannot do this. Advances the generation as
+ * well, so nothing cached under the previous implementation is read under the next.
  */
 export const resetTextMeasurementForTests = (): void => {
 	adoptedMeasurement = null;
 	sealed = false;
+	measurementGeneration++;
 };

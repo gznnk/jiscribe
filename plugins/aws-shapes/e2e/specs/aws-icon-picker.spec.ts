@@ -16,7 +16,7 @@ test.describe("the AWS icon picker", () => {
 		await canvas.placeShapeFromFlyout(CATEGORY, S3_PRESET);
 		await canvas.page.click(selectors.objectMenuToggle(SECTION));
 
-		const cells = canvas.page.locator(`${GRID} [data-part^="set:icon:"]`);
+		const cells = canvas.page.locator(`${GRID} [data-action^="set:icon:"]`);
 		// count() does not auto-wait, so the panel is waited for first. Counting
 		// straight away reads 0 and the comparison below is against an empty grid.
 		await expect(canvas.page.locator(GRID)).toBeVisible();
@@ -25,7 +25,7 @@ test.describe("the AWS icon picker", () => {
 
 		await canvas.page.fill(SEARCH, "lambda");
 		await expect(
-			canvas.page.locator(`${GRID} [data-part="set:icon:${LAMBDA}"]`),
+			canvas.page.locator(`${GRID} [data-action="set:icon:${LAMBDA}"]`),
 		).toBeVisible();
 		expect(await cells.count()).toBeLessThan(tier1Count);
 	});
@@ -40,7 +40,7 @@ test.describe("the AWS icon picker", () => {
 		await canvas.page.click(selectors.objectMenuToggle(SECTION));
 		await canvas.page.fill(SEARCH, "lambda");
 		const cell = canvas.page.locator(
-			`${GRID} [data-part="set:icon:${LAMBDA}"]`,
+			`${GRID} [data-action="set:icon:${LAMBDA}"]`,
 		);
 		await expect(cell).toBeVisible();
 		// The cell's glyph draws the same asset the shape does, so seeing it on the
@@ -77,7 +77,7 @@ test.describe("the AWS icon picker's filter chips", () => {
 		await canvas.page.click(selectors.objectMenuToggle(SECTION));
 		await expect(canvas.page.locator(GRID)).toBeVisible();
 		await expect(
-			canvas.page.locator(`${GRID} [data-part="set:icon:${S3}"]`),
+			canvas.page.locator(`${GRID} [data-action="set:icon:${S3}"]`),
 		).toBeVisible();
 
 		// A chip writes nothing to the canvas and only moves state inside the
@@ -85,10 +85,10 @@ test.describe("the AWS icon picker's filter chips", () => {
 		await canvas.page.click(`${CATEGORIES} button:has-text("Compute")`);
 
 		await expect(
-			canvas.page.locator(`${GRID} [data-part="set:icon:${LAMBDA}"]`),
+			canvas.page.locator(`${GRID} [data-action="set:icon:${LAMBDA}"]`),
 		).toBeVisible();
 		await expect(
-			canvas.page.locator(`${GRID} [data-part="set:icon:${S3}"]`),
+			canvas.page.locator(`${GRID} [data-action="set:icon:${S3}"]`),
 		).toHaveCount(0);
 	});
 });

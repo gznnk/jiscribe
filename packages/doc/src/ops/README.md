@@ -24,7 +24,7 @@ and ESLint both enforce it (see `eslint.config.js`). It reads and writes the pla
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `createDocOps.ts` | The `DocOps` type and its factory. Every op is bound to the resolved definitions here, and this is where a new op is wired    |
 | `index.ts`        | What the directory exports, re-exported in turn by `src/index.ts`                                                             |
-| `errors.ts`       | `DocOperationError` — the only exception these ops throw                                                                      |
+| `errors.ts`       | `DocOperationError` — the only exception these ops throw — and its subclasses                                                 |
 | `ops/`            | The ops. Named for the group they belong to, not for one op, so adding an op does not make a file name a lie                  |
 | `ops/query.ts`    | The reads that answer about the doc as a whole rather than about one group of ops                                             |
 | `ops/types.ts`    | `listTypes`, the one op that answers from the definitions instead of from a doc                                               |
@@ -142,6 +142,11 @@ for one being created (`entries[0] (rect)`), since there is no id yet. It is dro
 the element has neither. Failures that name every offending id at once — a missing id in
 `requireObjects`, a repeated id in `rejectIds` — are reported unwrapped, because listing
 them together tells the caller more than pointing at the first index would.
+
+The wrapped error keeps the element's own failure as its `cause`. A refusal a host may want
+to add to from what it knows itself is a subclass carrying the facts it needs:
+`TextKeptInOwnFieldsError` names the object and type a text op could not reach, so a host
+offering that type's own tools can point at them.
 
 ## Adding an op
 

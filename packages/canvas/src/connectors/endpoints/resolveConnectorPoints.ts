@@ -236,3 +236,15 @@ export const resolveConnectorPoints = (
 
 	return { source: sourcePoint, target: targetPoint, waypoints };
 };
+
+/**
+ * The drawn path of a resolved connector as one point list.
+ *
+ * @param resolved - What {@link resolveConnectorPoints} returned, past its null check
+ * @returns `source`, then the waypoints, then `target`, in world coordinates; a new array each call
+ */
+export const listConnectorPathPoints = (resolved: {
+	source: Point;
+	target: Point;
+	waypoints: readonly Point[];
+}): Point[] => [resolved.source, ...resolved.waypoints, resolved.target];

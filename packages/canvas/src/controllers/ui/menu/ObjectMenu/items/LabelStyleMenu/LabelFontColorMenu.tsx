@@ -2,10 +2,10 @@ import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useRef } from "react";
 
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
-import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
+import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -22,9 +22,9 @@ const SECTION_ID = "label-font-color";
  */
 const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 	openSectionId,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -34,21 +34,22 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+	const { value: fontColor, hasLabelText } = useConnectorLabelStyle(
+		"label.fontColor",
+		AUTO_COLOR,
+		{ objects, selection },
+	);
 
-	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
-	if (!label?.text) {
+	if (!hasLabelText) {
 		return null;
 	}
-
-	const fontColor = label.fontColor ?? AUTO_COLOR;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuLabelFontColor}
 			>
 				<FontColorIcon underlineColor={resolveAutoColor(fontColor, "ink")} />
@@ -62,7 +63,7 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 					<ObjectMenuColorPickerGrid
 						currentColor={fontColor}
 						property="label.fontColor"
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</ObjectMenuDropdownPanel>
 			)}

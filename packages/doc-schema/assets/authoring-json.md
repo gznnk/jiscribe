@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.11.0+1e02488e -->
+<!-- jiscribe guide 0.12.0+650f24c8 -->
 
 # The Jiscribe file format
 
@@ -111,6 +111,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `record`                | `x`,`y`,`width`,`height`                                       |
 | `umlPackage`            | `x`,`y`,`width`,`height`                                       |
 | `umlComponent`          | `x`,`y`,`width`,`height`                                       |
+| `erEntity`              | `x`,`y` (no `width`/`height`: the size comes from the content) |
 | `awsIcon`               | `x`,`y`,`width`,`height`                                       |
 | `awsGroup`              | `x`,`y`,`width`,`height`                                       |
 | `polyline`              | `points` (open line)                                           |
@@ -118,6 +119,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `group`                 | `children`                                                     |
 | `container`             | `x`,`y`,`width`,`height`                                       |
 | `sticky`                | `x`,`y`,`width`,`height`                                       |
+| `table`                 | `x`,`y` + `columns`,`rows`,`cells` (no `width`/`height`)       |
 | `svg`                   | `x`,`y`,`width`,`height` + `svgText`                           |
 | `image`                 | `x`,`y`,`width`,`height` + `src`                               |
 | `connector` (in `root`) | `source`,`target`,`points:[]`                                  |
@@ -149,7 +151,7 @@ connector attached to it follows the text as it grows.
 ```
 
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"edge"` (+ `side`, `t`) / `"free"` (+ `point`)
-- `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id). On `brace` / `bracket` / `bracketWithStem` also `"tip"`, the marker's cusp / spine middle / stem end — use it whenever a connector points at a group marker
+- `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id). On `brace` / `bracket` / `bracketWithStem` also `"tip"`, the marker's cusp / spine middle / stem end — use it whenever a connector points at a group marker. On an `erEntity` also `"col:<index>:left"` / `"col:<index>:right"`, the two edges at one column's row (the index counts `columns` from 0) — attach a relationship line to its columns, not to the entity's edge midpoints
 - `edge`: a free position along one local edge, `{ "kind": "edge", "side": "top", "t": 0.25 }`. Only when a named anchor cannot express where the line has to land (several parallel lines into one edge); `t` runs left→right on top/bottom, top→bottom on left/right, and `0.5` is the edge midpoint — write that as a `connectPoint` instead
 - `owner` may reference **any box shape, and `text`** — that is, every type except `polyline` / `polygon` / `group` / `svg` / `connector`. You **cannot** attach an endpoint to those five. To point an arrow at/from one of them, use a `free` endpoint placed near it instead. On a `lucideIcon` the endpoint meets the box, which the drawing is centred in, so a non-square box lands the line off the pictogram.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)

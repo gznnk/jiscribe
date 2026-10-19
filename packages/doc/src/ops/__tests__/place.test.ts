@@ -508,4 +508,130 @@ describe("place: a point-geometry shape", () => {
 		// The text sits to the right of the rect, so the union has to reach past it
 		expect(combined?.width).toBeGreaterThan(300);
 	});
+
+	// It reports a box and is placed by one, but nothing can write that box back:
+	// scaleObject has no case for the geometry, so the op used to report success
+	// and change nothing at all.
+	it("refuses a resize instead of silently keeping its size", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", { x: 100, y: 200, text: "hello" });
+
+		expect(() => docOps.resizeObject(doc, id, { width: 300 })).toThrow(
+			DocOperationError,
+		);
+		expect(() => docOps.resizeObject(doc, id, { width: 300 })).toThrow(
+			/no size of its own to set/,
+		);
+	});
+
+	it("has only its wrap width rewritten when it is a block text, and refuses a height", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", {
+			x: 10,
+			y: 20,
+			text: "body copy",
+			textLayout: "block",
+			width: 200,
+		});
+
+		docOps.resizeObject(doc, id, { width: 320 });
+
+		expect(readObject(doc, id)).toMatchObject({ x: 10, y: 20, width: 320 });
+		expect(readObject(doc, id)).not.toHaveProperty("height");
+		expect(() =>
+			docOps.resizeObject(doc, id, { width: 240, height: 80 }),
+		).toThrow(/has no height of its own to set/);
+		expect(readObject(doc, id).width).toBe(320);
+		expectValid(doc);
+	});
+
+	// A group scale states a layout rather than any one shape's size, so it does
+	// reach such a shape — and has to move it, or the shape sits at the old centre
+	// while everything around it spreads out.
+	it("keeps its size but follows the layout when its group is scaled", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 100 });
+		const textId = docOps.addObject(doc, "text", {
+			x: 200,
+			y: 0,
+			text: "hi",
+		});
+		const before = docOps.getObjectBounds(doc, textId);
+		const groupId = docOps.groupObjects(doc, ["rect-1", textId]);
+		const groupBefore = docOps.getObjectBounds(doc, groupId);
+
+		docOps.resizeObject(doc, groupId, { width: groupBefore!.width * 2 });
+
+		const after = docOps.getObjectBounds(doc, textId);
+		// The box is the text's own either way: only where it sits changed.
+		expect(after?.width).toBeCloseTo(before!.width, 6);
+		expect(after?.height).toBeCloseTo(before!.height, 6);
+		// Its centre lands where every other geometry's would — scaled about the
+		// group's left edge, which is the rect's own x of 0.
+		expect(after!.x + after!.width / 2).toBeCloseTo(
+			(before!.x + before!.width / 2) * 2,
+			6,
+		);
+		expectValid(doc);
+	});
+
+	it("rejects a batch it is named in, leaving every other id untouched", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });
+		const textId = docOps.addObject(doc, "text", { x: 300, y: 0, text: "hi" });
+
+		expect(() =>
+			docOps.resizeObjects(doc, ["rect-1", textId], { width: 200 }),
+		).toThrow(/ids\[1\]/);
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ width: 100 });
+	});
+});
+
+describe("place: a block text's wrap width", () => {
+	/** A block text wrapping in 200px at (10, 20). */
+	const blockTextDoc = (): { doc: CanvasDoc; id: string } => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", {
+			x: 10,
+			y: 20,
+			text: "body copy",
+			textLayout: "block",
+			width: 200,
+		});
+		return { doc, id };
+	};
+
+	it.each([0, -5])("refuses a wrap width of %d, writing nothing", (width) => {
+		const { doc, id } = blockTextDoc();
+
+		expect(() => docOps.resizeObject(doc, id, { width })).toThrow(
+			`${id} cannot be resized to width ${width}: it must be greater than 0`,
+		);
+		expect(readObject(doc, id).width).toBe(200);
+	});
+
+	it("leaves a block text as it was for a resize naming no width", () => {
+		const { doc, id } = blockTextDoc();
+		const before = structuredClone(readObject(doc, id));
+
+		docOps.resizeObject(doc, id, {});
+
+		expect(readObject(doc, id)).toEqual(before);
+	});
+
+	it("gives a block text the width of a batch, and refuses the batch for a height", () => {
+		const { doc, id } = blockTextDoc();
+		docOps.addObject(doc, "rect", { x: 300, y: 0, width: 100, height: 50 });
+
+		docOps.resizeObjects(doc, ["rect-1", id], { width: 260 });
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ width: 260, height: 50 });
+		expect(readObject(doc, id)).toMatchObject({ x: 10, y: 20, width: 260 });
+		expect(() =>
+			docOps.resizeObjects(doc, ["rect-1", id], { height: 80 }),
+		).toThrow(/ids\[1\].*has no height of its own to set/);
+		expect(readObject(doc, "rect-1")).toMatchObject({ height: 50 });
+		expectValid(doc);
+	});
 });

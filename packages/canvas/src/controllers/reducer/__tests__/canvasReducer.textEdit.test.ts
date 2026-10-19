@@ -3,10 +3,13 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
+import { applyActions, command } from "./support/dispatch";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { createCanvasReducer } from "../canvasReducer";
 
 const canvasReducer = createCanvasReducer(createTestRegistries());
@@ -31,10 +34,9 @@ const styledRectDoc: CanvasDoc = {
 const editingState = (): CanvasControllerState => {
 	const base = createTestState(styledRectDoc);
 	return createTestState(styledRectDoc, {
+		selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 		textEditState: {
 			kind: "shape",
-			objectId: "rect-1",
-			slotId: "body",
 			text: readRichTextSlot(
 				(base.objects["rect-1"] as unknown as { text: TextSlots }).text,
 				"body",
@@ -120,5 +122,31 @@ describe("canvasReducer END_TEXT_EDIT", () => {
 		});
 		expect(after.textEditState).toBeNull();
 		expect(after.history.past).toHaveLength(0);
+	});
+});
+
+describe("Escape out of a one-body shape's edit", () => {
+	it("steps out three times, as on a slot type: the edit, the body pick, the object", () => {
+		const opened = applyActions(
+			createTestState(styledRectDoc, { selection: selectionOf(["rect-1"]) }),
+			[command("start-text-edit")],
+		);
+		expect(opened.textEditState?.kind).toBe("shape");
+		expect(opened.selection).toEqual(
+			selectionOf(["rect-1"], textSlotPartSelection("body")),
+		);
+
+		// The editor's Escape cancels the session and leaves the body picked.
+		const cancelled = applyActions(opened, [
+			{ type: "END_TEXT_EDIT", commit: false },
+		]);
+		expect(cancelled.textEditState).toBeNull();
+		expect(cancelled.selection).toBe(opened.selection);
+
+		const unpicked = applyActions(cancelled, [command("escapeSelection")]);
+		expect(unpicked.selection).toEqual(selectionOf(["rect-1"]));
+
+		const deselected = applyActions(unpicked, [command("escapeSelection")]);
+		expect(deselected.selection.objectIds).toEqual([]);
 	});
 });

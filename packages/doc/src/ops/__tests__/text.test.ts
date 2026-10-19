@@ -8,12 +8,16 @@ import {
 	twoConnectedRects,
 	twoRects,
 } from "./support/docFixtures";
-import { cardDefinition, sourceBodyDefinition } from "./support/pluginFixtures";
+import {
+	cardDefinition,
+	cellGridDefinition,
+	sourceBodyDefinition,
+} from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import { createFrameObjectFactory } from "../../model/objects/utils/createFrameObjectFactory";
 import { createDocOps } from "../createDocOps";
-import { DocOperationError } from "../errors";
+import { DocOperationError, TextKeptInOwnFieldsError } from "../errors";
 
 describe("setText", () => {
 	it("rewrites a single-body shape's text", () => {
@@ -481,6 +485,105 @@ describe("setInlineTextStyles", () => {
 		]);
 
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
+	});
+});
+
+describe("a slotted type keeping its text outside `text`", () => {
+	const gridOps = createDocOps({
+		plugins: [
+			{
+				id: "grid-plugin",
+				objects: {
+					"cell-grid": cellGridDefinition,
+					"slot-card": cardDefinition,
+				},
+			},
+		],
+	});
+	const gridDoc = (): CanvasDoc => ({
+		version: 1,
+		root: [
+			{
+				id: "grid-1",
+				type: "cell-grid",
+				x: 0,
+				y: 0,
+				width: 200,
+				height: 80,
+				cells: [["A", "B"]],
+			} as unknown as ObjectDoc,
+			{
+				id: "card-1",
+				type: "slot-card",
+				x: 300,
+				y: 0,
+				width: 180,
+				height: 90,
+				text: {},
+			} as unknown as ObjectDoc,
+		],
+	});
+	/** The refusal's text after "to be <action>", which is the same for every op. */
+	const ownPropertiesTail =
+		": this type keeps its texts in fields of its own, which the text ops do not reach";
+
+	it("tells setText the text lives in the type's own properties", () => {
+		expect(() => gridOps.setText(gridDoc(), "grid-1", "x")).toThrow(
+			`grid-1 ("cell-grid") holds no text under \`text\` to be set${ownPropertiesTail}`,
+		);
+	});
+
+	it("tells getText the text lives in the type's own properties", () => {
+		expect(() => gridOps.getText(gridDoc(), "grid-1")).toThrow(
+			`grid-1 ("cell-grid") holds no text under \`text\` to be read${ownPropertiesTail}`,
+		);
+	});
+
+	it("tells setInlineTextStyle the text lives in the type's own properties", () => {
+		expect(() =>
+			gridOps.setInlineTextStyle(gridDoc(), "grid-1", {
+				match: "A",
+				fontWeight: "bold",
+			}),
+		).toThrow(
+			`grid-1 ("cell-grid") holds no text under \`text\` to be styled${ownPropertiesTail}`,
+		);
+	});
+
+	it("names the refused object and its type on the error itself", () => {
+		let refusal: unknown;
+		try {
+			gridOps.getText(gridDoc(), "grid-1");
+		} catch (error) {
+			refusal = error;
+		}
+
+		expect(refusal).toBeInstanceOf(TextKeptInOwnFieldsError);
+		expect(refusal).toMatchObject({
+			objectId: "grid-1",
+			objectType: "cell-grid",
+		});
+	});
+
+	it("keeps the refusal as the cause of a batch op's failure", () => {
+		let failure: unknown;
+		try {
+			gridOps.setTexts(gridDoc(), [{ id: "grid-1", text: "x" }]);
+		} catch (error) {
+			failure = error;
+		}
+
+		expect(failure).toBeInstanceOf(DocOperationError);
+		expect((failure as Error).cause).toBeInstanceOf(TextKeptInOwnFieldsError);
+	});
+
+	it("still says a `text` map with no entry has no text slot", () => {
+		expect(() => gridOps.setText(gridDoc(), "card-1", "x")).toThrow(
+			'card-1 ("slot-card") has no text slot',
+		);
+		expect(() => gridOps.getText(gridDoc(), "card-1")).toThrow(
+			'card-1 ("slot-card") has no text slot',
+		);
 	});
 });
 

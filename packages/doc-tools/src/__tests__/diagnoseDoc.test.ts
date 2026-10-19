@@ -2,22 +2,40 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import type { CanvasDoc, ObjectDocDefinition } from "@jiscribe/doc";
+import { isMissingBounds } from "@jiscribe/doc";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
 import { validateDoc } from "../validateDoc";
 
-const readFixture = (name: string): CanvasDoc => {
-	const path = fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
-	const result = validateDoc(readFileSync(path, "utf8"));
+/**
+ * Parse a document written out here, failing the test when it does not parse: the
+ * checks read a parsed doc, and a hand-built one would skip the very validation
+ * that decides what reaches them.
+ *
+ * @param source - The document, as its file text or as the object it parses to
+ * @param label - Named in the failure so a broken document is identified
+ */
+const parseDoc = (source: string | object, label: string): CanvasDoc => {
+	const text = typeof source === "string" ? source : JSON.stringify(source);
+	const result = validateDoc(text);
 	if (result.doc === undefined) {
 		throw new Error(
-			`${name} does not parse: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
+			`${label} does not parse: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
 		);
 	}
 	return result.doc;
 };
+
+const readFixture = (name: string): CanvasDoc =>
+	parseDoc(
+		readFileSync(
+			fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)),
+			"utf8",
+		),
+		name,
+	);
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -277,5 +295,287 @@ describe("diagnoseDoc", () => {
 		const diagnostics = diagnoseDoc(readFixture("overflowing.jis.json"));
 		expect(diagnostics.every((one) => one.severity === "warning")).toBe(true);
 		expect(diagnostics[0].message).toMatch(/rect declares no text region/);
+	});
+
+	describe("a point-geometry type that declares no box", () => {
+		/** A document holding one text, the shipped type whose doc stores no size. */
+		const textDoc = (): CanvasDoc =>
+			parseDoc(
+				{
+					version: 1,
+					root: [{ id: "label", type: "text", x: 0, y: 0, text: "hi" }],
+				},
+				"the one-text doc",
+			);
+
+		it("is warned about rather than passed over", () => {
+			// Unreachable with the shipped set (see the case below), so the gap is
+			// staged here — which is what the warning is a guard against.
+			const text = standardObjectDocDefinitions.get(
+				"text",
+			) as ObjectDocDefinition;
+			vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation(
+				(type) =>
+					type === "text" ? { ...text, bounds: undefined } : undefined,
+			);
+
+			const diagnostics = diagnoseDoc(textDoc());
+
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0]).toMatchObject({
+				severity: "warning",
+				objectId: "label",
+			});
+			expect(diagnostics[0].message).toMatch(/text stores no size/);
+		});
+
+		it("is not in the shipped set: every point type declares its own box", () => {
+			const undeclared = [...standardObjectDocDefinitions]
+				.filter(([, definition]) => isMissingBounds(definition))
+				.map(([type]) => type);
+
+			expect(undeclared).toEqual([]);
+			expect(diagnoseDoc(textDoc())).toEqual([]);
+		});
+	});
+
+	it("reports what any type's declared overflow check returns, as errors on the object", () => {
+		// No shipped type but the record declares one, so the check is staged on a
+		// type that otherwise has nothing to report.
+		const rect = standardObjectDocDefinitions.get(
+			"rect",
+		) as ObjectDocDefinition;
+		const diagnoseOverflow = vi.fn(() => ["first overflow", "second overflow"]);
+		vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation((type) =>
+			type === "rect" ? { ...rect, diagnoseOverflow } : undefined,
+		);
+
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [{ id: "box", type: "rect", x: 0, y: 0, width: 80, height: 40 }],
+			},
+			"the one-rect doc",
+		);
+		expect(diagnoseDoc(doc)).toEqual([
+			{ severity: "error", objectId: "box", message: "first overflow" },
+			{ severity: "error", objectId: "box", message: "second overflow" },
+		]);
+		expect(diagnoseOverflow).toHaveBeenCalledWith(
+			expect.objectContaining({ id: "box", width: 80, height: 40 }),
+		);
+	});
+
+	describe("a record too short for its compartments", () => {
+		/**
+		 * A record titled "User" over the given attribute rows. A band is one 14px
+		 * line box (21px) plus 7px of padding, and a compartment its rows' line
+		 * boxes — at least one — plus 4px, so three rows need 28 + 67 = 95px.
+		 */
+		const recordDoc = (height: number, attributes: string[]): CanvasDoc =>
+			parseDoc(
+				{
+					version: 1,
+					root: [
+						{
+							id: "user",
+							type: "record",
+							x: 0,
+							y: 0,
+							width: 180,
+							height,
+							text: {
+								name: { text: "User" },
+								attributes: { text: attributes },
+							},
+						},
+					],
+				},
+				"record",
+			);
+		const threeRows = ["- id: string", "- name: string", "- email: string"];
+
+		it("reports nothing for a record exactly as tall as its rows need", () => {
+			expect(diagnoseDoc(recordDoc(95, threeRows))).toEqual([]);
+		});
+
+		it("reports the shortfall and the two ways to fix it", () => {
+			const diagnostics = diagnoseDoc(recordDoc(60, threeRows));
+			expect(diagnostics).toEqual([
+				{
+					severity: "error",
+					objectId: "user",
+					message:
+						"rows overflow record 180x60: its compartments need 95px but the box is 60px tall, 35px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or resize_object it to height 95",
+				},
+			]);
+		});
+
+		it("counts an empty compartment as one row's worth", () => {
+			expect(diagnoseDoc(recordDoc(53, []))).toEqual([]);
+			expect(diagnoseDoc(recordDoc(40, []))).toMatchObject([
+				{ severity: "error", objectId: "user" },
+			]);
+		});
+
+		it("passes over a record taller than its rows need", () => {
+			expect(diagnoseDoc(recordDoc(300, threeRows))).toEqual([]);
+		});
+	});
+});
+
+describe("diagnoseDoc on an erEntity", () => {
+	/**
+	 * An entity whose stated name and type widths are far narrower than its texts:
+	 * the shape widens a slot to its text on its own, so nothing is drawn past an
+	 * edge however short the stated widths are.
+	 */
+	const crampedEntity = {
+		id: "users",
+		type: "erEntity",
+		x: 0,
+		y: 0,
+		nameWidth: 24,
+		typeWidth: 60,
+		name: { text: "a_rather_long_entity_name", fontSize: 28 },
+		columns: [
+			{ key: "PK", name: "id", type: "bigint" },
+			{
+				key: "FK",
+				name: "a_rather_long_column_name_for_the_slot",
+				type: "varchar(255) not null default 'unknown'",
+			},
+			{ name: { text: "email", fontSize: 24 }, type: "text" },
+		],
+	};
+
+	it("reports no overflow for texts wider than the stated slot widths", () => {
+		const doc = parseDoc({ version: 1, root: [crampedEntity] }, "entity");
+
+		expect(diagnoseDoc(doc)).toEqual([]);
+	});
+
+	it("reports a column text holding a line break, which its one-line row clips", () => {
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					{
+						id: "users",
+						type: "erEntity",
+						x: 0,
+						y: 0,
+						name: "users",
+						columns: [{ key: "PK", name: "first\nname", type: "text" }],
+					},
+				],
+			},
+			"entity with a line break",
+		);
+
+		expect(diagnoseDoc(doc)).toEqual([
+			{
+				severity: "error",
+				objectId: "users",
+				message:
+					"line break in column 0 name: a column's key, name and type are one line tall, so the text after the line break is clipped and not drawn; rewrite it on one line with er_entity_set_texts",
+			},
+		]);
+	});
+
+	it("leaves typography written at the root to the validation, as an error on the field", () => {
+		const result = validateDoc(
+			JSON.stringify({
+				version: 1,
+				root: [{ ...crampedEntity, fontSize: 18 }],
+			}),
+		);
+
+		expect(
+			result.diagnostics
+				.filter((diagnostic) => diagnostic.severity === "error")
+				.map((diagnostic) => diagnostic.path),
+		).toEqual(["root[0].fontSize"]);
+		expect(result.doc).toBeUndefined();
+	});
+});
+
+describe("diagnoseDoc on connector ends naming connect points", () => {
+	const entity = {
+		id: "users",
+		type: "erEntity",
+		x: 0,
+		y: 0,
+		name: "users",
+		columns: [
+			{ key: "PK", name: "id", type: "bigint" },
+			{ name: "email", type: "text" },
+		],
+	};
+	const box = { id: "box", type: "rect", x: 400, y: 0, width: 120, height: 80 };
+	/** A connector from `sourceId`'s `sourcePointId` to the box's left edge. */
+	const connectorFrom = (
+		id: string,
+		sourceId: string,
+		sourcePointId: string,
+	) => ({
+		id,
+		type: "connector",
+		source: {
+			owner: { id: sourceId },
+			anchor: { kind: "connectPoint", id: sourcePointId },
+		},
+		target: {
+			owner: { id: "box" },
+			anchor: { kind: "connectPoint", id: "leftCenter" },
+		},
+		points: [],
+	});
+
+	it("passes over ends on edge midpoints and on the points the owner's type declares", () => {
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					entity,
+					box,
+					connectorFrom("toColumn", "users", "col:1:right"),
+					connectorFrom("toEdge", "users", "bottomCenter"),
+				],
+			},
+			"declared points",
+		);
+
+		expect(diagnoseDoc(doc)).toEqual([]);
+	});
+
+	it("warns about an end on a point the owner no longer offers, which is drawn at its center", () => {
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					entity,
+					box,
+					connectorFrom("toGoneColumn", "users", "col:2:right"),
+					connectorFrom("toRectColumn", "box", "col:0:left"),
+				],
+			},
+			"undeclared points",
+		);
+
+		expect(diagnoseDoc(doc)).toEqual([
+			{
+				severity: "warning",
+				objectId: "toGoneColumn",
+				message:
+					'the source end names connect point "col:2:right", which users (erEntity) does not offer, so it is drawn at the center of users: the part of users it belonged to is gone (on an erEntity, a column deleted since); re-anchor it with update_connector',
+			},
+			{
+				severity: "warning",
+				objectId: "toRectColumn",
+				message:
+					'the source end names connect point "col:0:left", which box (rect) does not offer, so it is drawn at the center of box: rect offers only topCenter, rightCenter, bottomCenter, leftCenter; re-anchor it with update_connector',
+			},
+		]);
 	});
 });

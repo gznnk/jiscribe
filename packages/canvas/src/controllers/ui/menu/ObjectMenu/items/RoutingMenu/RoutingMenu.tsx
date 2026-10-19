@@ -3,9 +3,9 @@ import { memo, useRef } from "react";
 
 import { RoutingMenuRow } from "./RoutingMenuStyled";
 import {
-	commandPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	toggleAction,
+} from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { getSelectedRouting } from "../../../../../utils/getSelectedRouting";
@@ -69,20 +69,20 @@ const ROUTING_OPTIONS: RoutingOption[] = [
  */
 const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedConnectorId,
+	selection,
 	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentRouting = getSelectedRouting(selectedConnectorId, objects);
+	const currentRouting = getSelectedRouting({ objects, selection });
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
-	if (isSelectedConnectorSelfLoop(selectedConnectorId, objects)) {
+	if (isSelectedConnectorSelfLoop({ objects, selection })) {
 		return null;
 	}
 
@@ -95,7 +95,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuConnectorRouting}
 			>
 				<CurrentIcon title={messages.menuConnectorRouting} />
@@ -111,7 +111,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							<ObjectMenuButton
 								key={routing}
 								isActive={routing === currentRouting}
-								data-part={commandPart(commandId)}
+								data-action={commandAction(commandId)}
 								title={messages[messageKey]}
 							>
 								<Icon title={messages[messageKey]} />

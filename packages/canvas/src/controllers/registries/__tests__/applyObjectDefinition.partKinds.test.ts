@@ -1,0 +1,123 @@
+import { describe, expect, it } from "vitest";
+
+import { defineObject } from "../../../plugin/ObjectTypeDefinition";
+import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
+import type { ObjectPartKindDefinition } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
+import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
+import { applyObjectDefinition } from "../applyObjectDefinition";
+import { createTestRegistries } from "../createCanvasRegistries";
+
+// Minimal stand-in for an object type, mirroring buildFakeDefinition in
+// createCanvasRegistries.test.ts.
+const buildFakeDefinition = (
+	type: string,
+	text: "slots" | "body" | undefined,
+): ObjectTypeDefinition =>
+	defineObject({
+		features: { type, geometry: "rect", ...(text ? { text } : {}) },
+		validateDoc: () => [],
+		mapper: {
+			toDoc: (state) => ({ id: state.id, type }),
+			toState: (doc) => ({ id: doc.id, type }),
+		},
+		stateValidator: () => true,
+		component: () => null,
+		behavior: {
+			moveByDelta: (state) => state,
+			transformByGroup: (state) => state,
+			rotateByGroup: (state) => state,
+		},
+		menu: [],
+	});
+
+describe("applyObjectDefinition: partKinds", () => {
+	it("gives a slots type the textSlot kind without it declaring one", () => {
+		const registries = createTestRegistries();
+		applyObjectDefinition(
+			registries,
+			"record",
+			buildFakeDefinition("record", "slots"),
+		);
+
+		const part = registries.objectPartKind.get("record", TEXT_SLOT_PART_KIND);
+		expect(
+			part?.has({ text: { name: { text: "User" } } } as never, "name"),
+		).toBe(true);
+		expect(
+			part?.has({ text: { name: { text: "User" } } } as never, "rows"),
+		).toBe(false);
+	});
+
+	it("lets the type's own textSlot declaration replace the automatic one", () => {
+		const registries = createTestRegistries();
+		const declared: ObjectPartKindDefinition = {
+			kind: TEXT_SLOT_PART_KIND,
+			has: () => true,
+		};
+		applyObjectDefinition(
+			registries,
+			"record",
+			defineObject({
+				...buildFakeDefinition("record", "slots"),
+				partKinds: [declared],
+			}),
+		);
+
+		const registered = registries.objectPartKind.get(
+			"record",
+			TEXT_SLOT_PART_KIND,
+		);
+		expect(registered?.has).toBe(declared.has);
+		// Registration attaches the region the type's text regions place.
+		expect(registered?.region).toBeDefined();
+	});
+
+	it("gives a one-body type the textSlot kind too, naming its body alone", () => {
+		const registries = createTestRegistries();
+		applyObjectDefinition(
+			registries,
+			"note",
+			buildFakeDefinition("note", "body"),
+		);
+
+		const part = registries.objectPartKind.get("note", TEXT_SLOT_PART_KIND);
+		const note = { text: { body: { text: "hi" } } } as never;
+		expect(part?.has(note, "body")).toBe(true);
+		expect(part?.has(note, "title")).toBe(false);
+		expect(part?.list?.(note)).toEqual(["body"]);
+	});
+
+	it("gives a type holding no text no textSlot kind", () => {
+		const registries = createTestRegistries();
+		applyObjectDefinition(
+			registries,
+			"marker",
+			buildFakeDefinition("marker", undefined),
+		);
+
+		expect(
+			registries.objectPartKind.get("marker", TEXT_SLOT_PART_KIND),
+		).toBeUndefined();
+	});
+
+	it("keeps the kinds a slots type declares alongside the automatic one", () => {
+		const registries = createTestRegistries();
+		const vertex: ObjectPartKindDefinition = {
+			kind: "vertex",
+			has: () => true,
+		};
+		applyObjectDefinition(
+			registries,
+			"record",
+			defineObject({
+				...buildFakeDefinition("record", "slots"),
+				partKinds: [vertex],
+			}),
+		);
+
+		expect(registries.objectPartKind.get("record", "vertex")).toBe(vertex);
+		expect(
+			registries.objectPartKind.get("record", TEXT_SLOT_PART_KIND),
+		).toBeDefined();
+	});
+});

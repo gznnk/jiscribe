@@ -8,6 +8,7 @@
 // of truth: `z.toJSONSchema(z.object(inputSchema))` derives the JSON Schema, and
 // there is no way back.
 
+import { AI_FONT_WEIGHTS, textSlotStyleSchema } from "@jiscribe/ai-tools-sdk";
 import {
 	ArrowTypes,
 	ConnectorRoutings,
@@ -16,7 +17,6 @@ import {
 	OPACITY_MIN,
 	TextLayouts,
 } from "@jiscribe/doc";
-import type { AnchorHandleId } from "@jiscribe/doc";
 import { z } from "zod";
 
 import type { CanvasApiRef } from "./canvasApiRef";
@@ -92,11 +92,18 @@ const defineCanvasTool = <Shape extends z.ZodRawShape>(
 	drives: options.drives,
 });
 
-/** The named anchors of AnchorHandleId; its edge anchors (`{ side, t }`) are not offered to the AI */
-const ANCHOR_HANDLE_IDS = [
-	"center",
-	...ConnectPointIds,
-] as const satisfies readonly AnchorHandleId[];
+/**
+ * What an anchor argument may name, said once for all four connector anchors. The
+ * edge anchors of AnchorHandleId (`{ side, t }`) are not offered to the AI.
+ */
+const ANCHOR_ID_NOTE = [
+	`"center" or an edge midpoint (${ConnectPointIds.join(" / ")}) works on every connectable object.`,
+	'A type may declare connect points of its own, which are checked against the object as it stands — e.g. an erEntity\'s column points "col:<index>:left" / "col:<index>:right" (er_entity_read lists the columns).',
+].join(" ");
+
+/** One anchor argument: an open set of ids, since a type may declare its own. */
+const anchorIdSchema = (purpose: string) =>
+	z.string().min(1).optional().describe(`${purpose} ${ANCHOR_ID_NOTE}`);
 
 const ALIGN_EDGES = [
 	"left",
@@ -125,7 +132,8 @@ const HEIGHT_MODES = [
 ] as const satisfies readonly AiHeightMode[];
 
 /**
- * The shared style vocabulary; add_object and set_style speak the same one.
+ * The shared style vocabulary; add_object and set_style speak the same one. The
+ * typography is the one plugin tools styling text slots declare too (textSlotStyleSchema).
  * Properties a type has no place for (fill on a connector, an arrowhead on a rect,
  * a font colour on a shape without text) are dropped by docOps, which says so in the
  * tool result.
@@ -181,36 +189,7 @@ const styleSchema = {
 			"Arrowhead at the end of the line, the one that carries the direction (FilledTriangle for a flow). Only for polyline and connector.",
 		),
 	rx: z.number().min(0).optional().describe("Corner radius in px; rect only."),
-	fontColor: z.string().optional().describe("Text color, any CSS color."),
-	fontSize: z.number().min(1).optional().describe("Text size in px."),
-	fontFamily: z
-		.string()
-		.optional()
-		.describe(
-			'Font family for the whole body, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace), \'Caveat, "Klee One", cursive\' (handwriting). A family outside those is drawn by whatever the viewer has, and measured by estimate.',
-		),
-	fontWeight: z
-		.enum(["normal", "400", "500", "600", "700", "bold"])
-		.optional()
-		.describe(
-			'Text weight, from the ladder the canvas ships faces for: "normal" (400), "500", "600", "bold" (700). "400" and "700" are the same two rungs written as a design token would spell them, and are stored as "normal" and "bold".',
-		),
-	fontStyle: z
-		.enum(["normal", "italic"])
-		.optional()
-		.describe('Slant of the whole body; "normal" stands it upright again.'),
-	textDecoration: z
-		.enum(["none", "underline", "line-through", "underline line-through"])
-		.optional()
-		.describe('Line drawn on the whole body; "none" removes it.'),
-	textAlign: z
-		.enum(["left", "center", "right"])
-		.optional()
-		.describe("Horizontal text alignment inside the shape."),
-	verticalAlign: z
-		.enum(["top", "middle", "bottom"])
-		.optional()
-		.describe("Vertical text alignment inside the shape."),
+	...textSlotStyleSchema,
 };
 
 const pointSchema = z
@@ -244,7 +223,7 @@ const inlineTextStyleSchema = {
 			'Font family for the matched characters, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace, e.g. for a code term inside a sentence), \'Caveat, "Klee One", cursive\' (handwriting).',
 		),
 	fontWeight: z
-		.enum(["normal", "400", "500", "600", "700", "bold"])
+		.enum(AI_FONT_WEIGHTS)
 		.optional()
 		.describe(
 			'Weight of the matched characters, from the shipped ladder "normal" (400) / "500" / "600" / "bold" (700); "400" and "700" are those two rungs written as a design token would spell them, and are stored as "normal" and "bold". "normal" takes the emphasis off again.',
@@ -312,14 +291,8 @@ const connectorDrawSchema = {
 		.describe(
 			"World coordinate to stand the target end at instead of attaching it. Cannot be combined with targetId or targetAnchor, and the source end must then be attached.",
 		),
-	sourceAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Anchor on the source (default center)."),
-	targetAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Anchor on the target (default center)."),
+	sourceAnchor: anchorIdSchema("Anchor on the source (default center)."),
+	targetAnchor: anchorIdSchema("Anchor on the target (default center)."),
 	startArrow: z
 		.enum(ArrowTypes)
 		.optional()
@@ -373,14 +346,8 @@ const connectorChangeSchema = {
 		.describe(
 			"Detach the target end and stand it at this world coordinate. Cannot be combined with targetId or targetAnchor, and is refused when it would leave both ends unattached.",
 		),
-	sourceAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Move the source end to this anchor."),
-	targetAnchor: z
-		.enum(ANCHOR_HANDLE_IDS)
-		.optional()
-		.describe("Move the target end to this anchor."),
+	sourceAnchor: anchorIdSchema("Move the source end to this anchor."),
+	targetAnchor: anchorIdSchema("Move the target end to this anchor."),
 	startArrow: z
 		.enum(ArrowTypes)
 		.optional()
@@ -657,7 +624,8 @@ export const createCanvasToolDescriptors = (
 		"list_types",
 		[
 			"List every object type this canvas knows and what each one can be asked to do: whether add_object can create it, whether connect may put an endpoint on it, what text it carries (one body, named slots, or none) and how its shape is stored.",
-			"The geometry answers which ops apply: only a poly type takes set_points, and a type stored as a point takes its size from its content rather than resize_object.",
+			'The geometry answers which ops apply: only a poly type takes set_points, and a type stored as a point takes its size from its content rather than from add_object or resize_object, which refuse a width or height for it. What lays that content out is its own properties (extraProps); the one exception is a text in textLayout "block", which takes the width it wraps in.',
+			"A type a plugin offers tools of its own for lists their names under tools: those tools are how to read and edit what the generic ops do not reach on it, such as texts kept in fields of its own.",
 			"Read it when a call was refused for the type rather than the arguments, and before writing a named slot with set_text.",
 			"It describes the canvas rather than the drawing, so it answers the same on an empty one.",
 		].join(" "),
@@ -685,14 +653,14 @@ export const createCanvasToolDescriptors = (
 			.min(0)
 			.optional()
 			.describe(
-				'Width of the bounding box in px (default: the shape\'s own default); on an ellipse that is the whole width, twice the rx a document stores. For a text this is refused, its box being its content — unless textLayout is "block", where this is the width the text wraps in.',
+				'Width of the bounding box in px (default: the shape\'s own default); on an ellipse that is the whole width, twice the rx a document stores. For a type stored as a point (list_types shows its geometry) this is refused, its box being its content: set the properties that lay the content out through extraProps instead. The one exception is a text with textLayout "block", where this is the width the text wraps in.',
 			),
 		height: z
 			.number()
 			.min(0)
 			.optional()
 			.describe(
-				"Height of the bounding box in px (default: the shape's own default, which is written into the document all the same — autoHeight is what leaves a height out); on an ellipse that is the whole height, twice the ry. Refused for a text, whose height is always measured.",
+				"Height of the bounding box in px (default: the shape's own default, which is written into the document all the same — autoHeight is what leaves a height out); on an ellipse that is the whole height, twice the ry. Refused for a type stored as a point (a text, say), whose height is always measured.",
 			),
 		autoHeight: z
 			.boolean()
@@ -718,7 +686,7 @@ export const createCanvasToolDescriptors = (
 			.string()
 			.optional()
 			.describe(
-				"Label text inside the object. Only for shapes with a single text body: record keeps its title and rows in keyed text slots and rejects a plain string, so use set_text there, and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.",
+				'Label text inside the object. Only for shapes with a single text body: a type keeping named texts (list_types shows text "slots") rejects a plain string — record keeps its title and rows in keyed text slots, so use set_text there, and a type keeping its texts in properties of its own rather than slots takes them through extraProps, as its entry in the drawing guide names them; and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.',
 			),
 		points: z
 			.array(pointSchema)
@@ -903,7 +871,7 @@ export const createCanvasToolDescriptors = (
 
 	const resizeObjectTool = defineCanvasTool(
 		"resize_object",
-		"Resize one object, keeping its top-left corner. Give at least one of width / height. A group scales its children with it.",
+		'Resize one object, keeping its top-left corner. Give at least one of width / height. A group scales its children with it. A type stored as a point is refused, its box being measured from its content (set_extra_props changes what lays it out); a text in textLayout "block" is the one exception, taking a width alone (the width it wraps in) and never a height.',
 		{
 			id: z.string().describe("id of the object to resize."),
 			width: z.number().min(1).optional().describe("New width in px."),
@@ -1163,7 +1131,7 @@ export const createCanvasToolDescriptors = (
 			"One object at a time, because these names belong to a single type — read the type's own schema for the names it has.",
 			"Unlike set_style nothing is silently skipped: a name the type does not have, or a value it rejects, comes back as an error with the reason, and the object is left as it was.",
 			'This is also how an existing text is moved between its layouts — `textLayout` with the `width` a "block" wraps in, always together: a `width` on a text that is not being a block is refused, nothing reading it there. A text you are about to create takes both on add_object instead, in one call.',
-			'One name is shared by every shape holding its label inside its box rather than belonging to a single type: `textVerticalBasis` ("region" / "frame") decides whether the label is placed in the area the shape keeps clear of its own decoration or on its whole height — set "frame" on a row of mixed shapes drawn at one height so their labels line up. A shape drawing its label outside its box (actor and the like) refuses it: there is nothing for the placement to move.',
+			'One name is shared by several types rather than belonging to a single one: `textVerticalBasis` ("region" / "frame") decides whether the label is placed in the area the shape\'s outline leaves clear or on its whole height. Only a type whose label area is shorter than the shape (a cylinder\'s caps, a document\'s wavy foot, a header band, the box inside an ellipse or diamond) takes it, and its schema lists it; every other type (rect, stadium, hexagon, sticky, text, …) refuses it, its label already sitting on the whole height. Set "frame" on such a shape in a row drawn at one height so its label lines up with its neighbours\'.',
 		].join(" "),
 		{
 			id: z.string().describe("id of the object to change."),

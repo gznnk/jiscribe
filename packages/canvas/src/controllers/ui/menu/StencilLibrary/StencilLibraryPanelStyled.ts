@@ -86,7 +86,10 @@ export const StencilLibrarySearchBox = styled.div`
 	}
 `;
 
-/** Search field filtering the listed stencils by label. */
+/**
+ * Search field: matches the listed stencils by label, and reaches the rest of a
+ * category through its own `search`.
+ */
 export const StencilLibrarySearchInput = styled.input`
 	box-sizing: border-box;
 	width: 100%;
@@ -184,4 +187,34 @@ export const StencilLibraryEmptyMessage = styled.div`
 	padding: 8px 12px;
 	font-size: 12px;
 	color: ${theme.foregroundMuted};
+`;
+
+/** Line under the search results telling that categories cut their matches short. */
+export const StencilLibraryMoreMatchesMessage = styled.div`
+	padding: 0 12px 8px;
+	font-size: 11px;
+	color: ${theme.foregroundMuted};
+`;
+
+/**
+ * Text button under a section holding more presets than it lists; it moves the
+ * focus to the search box. Opts out of the gesture system (`data-gesture="none"`
+ * on the element) so the press reaches React's onClick instead of the panel's
+ * handler, and the focus it moves is not taken back.
+ */
+export const StencilLibraryMoreViaSearchButton = styled.button`
+	display: block;
+	margin: -4px 12px 8px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: ${theme.foregroundMuted};
+	font-size: 11px;
+	text-align: left;
+	cursor: pointer;
+
+	&:hover {
+		color: ${theme.foreground};
+		text-decoration: underline;
+	}
 `;

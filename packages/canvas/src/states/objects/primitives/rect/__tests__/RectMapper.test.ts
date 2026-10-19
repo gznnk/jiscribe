@@ -1,11 +1,8 @@
 import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import {
-	rectToDoc,
-	rectToState,
-} from "../../../../../states/objects/primitives/rect/RectMapper";
-import type { RectState } from "../../../../../states/objects/primitives/rect/RectState";
+import { rectToDoc, rectToState } from "../RectMapper";
+import type { RectState } from "../RectState";
 
 describe("RectMapper", () => {
 	describe("rectToState", () => {

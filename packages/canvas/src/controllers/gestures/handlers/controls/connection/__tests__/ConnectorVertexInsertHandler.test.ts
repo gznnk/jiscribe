@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { VertexControlHandler } from "../../vertex/VertexControlHandler";
 import { VertexInsertHandler } from "../../vertex/VertexInsertHandler";
@@ -15,14 +16,14 @@ const registries = createTestRegistries();
 /** A minimal event carrying only targetKind / targetId, for verifying supports(). */
 const controlEvent = (
 	targetId: string | undefined,
-	targetPart: string | undefined,
+	targetAction: string | undefined,
 	targetKind = "control",
 ): CanvasEvent =>
 	({
 		type: "dragStart",
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		button: 0,
 	}) as unknown as CanvasEvent;
 
@@ -40,16 +41,14 @@ const makeState = (points: Point[]): CanvasControllerState => {
 	return {
 		objects: { "conn-1": connector },
 		rootIds: ["conn-1"],
-		selectedIds: [],
-		selectedConnectorId: "conn-1",
-		selectedVertex: null,
+		selection: selectionOf(["conn-1"]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "conn-1": connector },
 				keyPoints: {},
 				snapCandidates: null,
-				selectedIds: [],
+				selection: selectionOf([]),
 				selectedIdsWithDescendants: new Set(),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -69,7 +68,7 @@ const insertEvent = (
 		type,
 		targetKind: "control",
 		targetId: "conn-1",
-		targetPart: `waypoint-insert:${segmentIndex}`,
+		targetAction: `waypoint-insert:${segmentIndex}`,
 		button,
 		last,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -153,6 +152,22 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(ended.edgeScrollEnabled).toBe(false);
 	});
 
+	it("commits the inserted waypoint once, at dragEnd only", () => {
+		const started = insertHandler.handle(
+			{ ...makeState([]), commitVersion: 3 },
+			insertEvent("dragStart", { x: 50, y: 50 }, 0),
+			registries,
+		);
+		expect(started.commitVersion).toBe(3);
+
+		const ended = insertHandler.handle(
+			started,
+			insertEvent("dragEnd", { x: 60, y: 60 }, 0),
+			registries,
+		);
+		expect(ended.commitVersion).toBe(4);
+	});
+
 	// Non-left buttons never reach the strategies: ControlEventHandler.supports
 	// requires button === 0, pinned by the routing-exclusivity test (#110).
 
@@ -199,15 +214,21 @@ describe("ConnectorVertexInsertHandler.supports / routing conflicts", () => {
 		).toBe(false);
 	});
 
-	it("sibling handlers with confusing part subtypes do not steal waypoint-insert", () => {
+	it("sibling handlers with confusing action subtypes do not steal waypoint-insert", () => {
 		// ControlEventHandler routes to the first strategy whose supports() is true, so
 		// pin down that VertexInsertHandler / ConnectionAnchorEventHandler
 		// do not grab it by mistake.
 		const event = controlEvent("c", "waypoint-insert:0");
 		expect(vertexInsert.supports(event)).toBe(false);
 		expect(connectionAnchor.supports(event)).toBe(false);
-		// Reverse: this handler does not grab others' controls
-		expect(insertHandler.supports(controlEvent("c", "vertex:0"))).toBe(false);
+		// Reverse: this handler does not grab others' controls. A vertex handle
+		// addresses a model part, so its string arrives on targetPart, not
+		// targetAction.
+		const vertexHandleEvent = {
+			...controlEvent("c", undefined),
+			targetPart: "vertex:0",
+		} as CanvasEvent;
+		expect(insertHandler.supports(vertexHandleEvent)).toBe(false);
 	});
 });
 
@@ -229,7 +250,7 @@ describe("moving a connector waypoint via VertexControlHandler (reuse check)", (
 			mods: { shift: false, alt: false, ctrl: false, meta: false },
 		} as unknown as CanvasEvent;
 
-		const next = moveHandler.handle(state, event);
+		const next = moveHandler.handle(state, event, registries);
 		expect(pointsOf(next)).toEqual([
 			{ x: 0, y: 0 },
 			{ x: 120, y: 40 },
@@ -250,13 +271,13 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 
 	/** doubleClick on the waypoint-insert handle, with a stubbed hover stack. */
 	const doubleClickEvent = (
-		hovered: { id: string; kind: string; part?: string }[],
+		hovered: { id: string; kind: string; action?: string }[],
 	): CanvasEvent =>
 		({
 			type: "doubleClick",
 			targetKind: "control",
 			targetId: "conn-1",
-			targetPart: "waypoint-insert:0",
+			targetAction: "waypoint-insert:0",
 			button: 0,
 			last: { x: 50, y: 50 },
 			getHovered: () => hovered,
@@ -269,11 +290,8 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			doubleClickEvent([]),
 			registries,
 		);
-		expect(next.textEditState).toEqual({
-			kind: "connectorLabel",
-			objectId: "conn-1",
-			text: "",
-		});
+		expect(next.textEditState).toEqual({ kind: "connectorLabel", text: "" });
+		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
 		// No waypoint is inserted by the double click
 		expect(pointsOf(next)).toEqual([]);
 	});
@@ -281,14 +299,11 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 	it("with a committed label whose box is in the hover stack, opens the editor prefilled (the handle covers the default midpoint placement)", () => {
 		const next = insertHandler.handle(
 			makeLabeledState("Yes"),
-			doubleClickEvent([{ id: "conn-1", kind: "connector", part: "label" }]),
+			doubleClickEvent([{ id: "conn-1", kind: "connector", action: "label" }]),
 			registries,
 		);
-		expect(next.textEditState).toEqual({
-			kind: "connectorLabel",
-			objectId: "conn-1",
-			text: "Yes",
-		});
+		expect(next.textEditState).toEqual({ kind: "connectorLabel", text: "Yes" });
+		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
 	});
 
 	it("with a committed label elsewhere (box not in the hover stack), selects without opening the editor", () => {
@@ -298,13 +313,13 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			registries,
 		);
 		expect(next.textEditState).toBeUndefined();
-		expect(next.selectedConnectorId).toBe("conn-1");
+		expect(next.selection.objectIds).toEqual(["conn-1"]);
 	});
 
 	it("a hover stack entry of another connector's label does not count as a label hit", () => {
 		const next = insertHandler.handle(
 			makeLabeledState("Yes"),
-			doubleClickEvent([{ id: "conn-2", kind: "connector", part: "label" }]),
+			doubleClickEvent([{ id: "conn-2", kind: "connector", action: "label" }]),
 			registries,
 		);
 		expect(next.textEditState).toBeUndefined();

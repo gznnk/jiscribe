@@ -8,7 +8,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const ExportCommand: ExecutableCommand = {
 	id: "export",
-	label: "Export…",
+	label: { en: "Export…", ja: "エクスポート…" },
 	canExecute: () => true,
 
 	execute: (state) =>

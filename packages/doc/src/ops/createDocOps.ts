@@ -13,6 +13,8 @@ import {
 	type ConnectParams,
 	getConnectedObjects,
 	getConnectors,
+	remapConnectPoints,
+	type RemappedConnectorEnd,
 	updateConnector,
 	type UpdateConnectorEntry,
 	updateConnectors,
@@ -61,6 +63,7 @@ import {
 	type ObjectFilter,
 	type ObjectSummary,
 } from "./query";
+import { replaceObject } from "./replace";
 import {
 	setPoints,
 	type SetPointsEntry,
@@ -85,8 +88,10 @@ import type { StyleParams } from "./utils/styleFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ViewDoc } from "../model/canvas/ViewDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
+import type { OwnedEndpointRef } from "../model/objects/types/EndpointRef";
 import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
 import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
+import { createDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
 
 /**
  * The whole set of programmatic edits to a CanvasDoc: building it up (`addObject` /
@@ -225,6 +230,16 @@ export type DocOps = {
 		extraProps: Readonly<Record<string, unknown>>,
 	): string[];
 	/**
+	 * Swap one object for a whole new doc of the same id and type — what a caller that
+	 * reworks a type's own structure (a plugin's AI tool rebuilding a table) writes back
+	 * with. The replacement is held to what the parser keeps: the type's `validateDoc`,
+	 * `meta`, and the names the type holds, an unknown one being refused rather than left
+	 * for the next save to drop.
+	 * Throws `DocOperationError` for a missing id, a changed id or type, a group, or a
+	 * replacement those checks reject, having written nothing.
+	 */
+	replaceObject(doc: CanvasDoc, id: string, replacement: ObjectDoc): void;
+	/**
 	 * Turn several objects to the same angle, in clockwise degrees about each one's own centre,
 	 * skipping and reporting the types that have no rotation.
 	 * Throws `DocOperationError` for an angle that is not finite, or for a missing id.
@@ -313,6 +328,18 @@ export type DocOps = {
 		doc: CanvasDoc,
 		entries: readonly UpdateConnectorEntry[],
 	): void;
+	/**
+	 * Re-point the connector ends on one object's connect points after the object moved
+	 * them, every end looked up once against the id it had, and return the ends moved.
+	 * Throws `DocOperationError` for a missing owner, or a value that is not a center, edge
+	 * or connectPoint anchor naming an id the owner offers as `doc` now holds it, having
+	 * changed nothing.
+	 */
+	remapConnectPoints(
+		doc: CanvasDoc,
+		ownerId: string,
+		remap: Readonly<Record<string, OwnedEndpointRef["anchor"]>>,
+	): RemappedConnectorEnd[];
 	/**
 	 * Read the ids of the connectors with an end on this object, in drawing order; pass one to
 	 * `getObject` for the connector itself. Throws `DocOperationError` when the id is not in
@@ -429,6 +456,7 @@ export type DocOps = {
  */
 export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 	const definitions = resolveDocDefinitions(config);
+	const validatorRegistry = createDocValidatorRegistry(config);
 	return {
 		addObject: (doc, type, params) => addObject(doc, type, params, definitions),
 		addObjects: (doc, entries) => addObjects(doc, entries, definitions),
@@ -450,6 +478,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		setView,
 		setExtraProps: (doc, id, extraProps) =>
 			setExtraProps(doc, id, extraProps, definitions),
+		replaceObject: (doc, id, replacement) =>
+			replaceObject(doc, id, replacement, validatorRegistry),
 		setInlineTextStyle: (doc, id, params) =>
 			setInlineTextStyle(doc, id, params, definitions),
 		setInlineTextStyles: (doc, entries) =>
@@ -468,6 +498,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 			updateConnector(doc, id, params, definitions),
 		updateConnectors: (doc, entries) =>
 			updateConnectors(doc, entries, definitions),
+		remapConnectPoints: (doc, ownerId, remap) =>
+			remapConnectPoints(doc, ownerId, remap, definitions),
 		getConnectors: (doc, id) => getConnectors(doc, id),
 		getConnectedObjects: (doc, id) => getConnectedObjects(doc, id),
 		alignObjects: (doc, ids, edge) => alignObjects(doc, ids, edge, definitions),

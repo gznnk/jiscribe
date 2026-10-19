@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createVisualExtentRegistries } from "../../__tests__/support/visualExtentRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { calcSelectionBounds } from "../calcSelectionBounds";
+
+const registries = createTestRegistries();
 
 /** Axis-aligned Frame-family state: bbox is left=cx-w/2, top=cy-h/2, ... */
 const rect = (
@@ -48,13 +51,17 @@ const toRecord = (objects: ObjectState[]): Record<string, ObjectState> =>
 describe("calcSelectionBounds", () => {
 	it("returns null for an empty selection", () => {
 		expect(
-			calcSelectionBounds([], toRecord([rect("a", 0, 0, 20, 20)])),
+			calcSelectionBounds([], toRecord([rect("a", 0, 0, 20, 20)]), registries),
 		).toBeNull();
 	});
 
 	it("returns the object's own box for a single selected object", () => {
 		expect(
-			calcSelectionBounds(["a"], toRecord([rect("a", 50, 50, 100, 60)])),
+			calcSelectionBounds(
+				["a"],
+				toRecord([rect("a", 50, 50, 100, 60)]),
+				registries,
+			),
 		).toEqual({ left: 0, top: 20, right: 100, bottom: 80 });
 	});
 
@@ -64,7 +71,7 @@ describe("calcSelectionBounds", () => {
 			rect("b", 100, 100, 20, 20),
 			rect("far", 1000, 1000, 20, 20),
 		]);
-		expect(calcSelectionBounds(["a", "b"], objects)).toEqual({
+		expect(calcSelectionBounds(["a", "b"], objects, registries)).toEqual({
 			left: -10,
 			top: -10,
 			right: 110,
@@ -78,7 +85,7 @@ describe("calcSelectionBounds", () => {
 			rect("b", 100, 100, 20, 20),
 			group("g", ["a", "b"]),
 		]);
-		expect(calcSelectionBounds(["g"], objects)).toEqual({
+		expect(calcSelectionBounds(["g"], objects, registries)).toEqual({
 			left: -10,
 			top: -10,
 			right: 110,
@@ -93,7 +100,7 @@ describe("calcSelectionBounds", () => {
 			group("inner", ["b"]),
 			group("outer", ["a", "inner"]),
 		]);
-		expect(calcSelectionBounds(["outer"], objects)).toEqual({
+		expect(calcSelectionBounds(["outer"], objects, registries)).toEqual({
 			left: -10,
 			top: -10,
 			right: 210,
@@ -106,7 +113,7 @@ describe("calcSelectionBounds", () => {
 			rect("a", 500, 500, 100, 100),
 			group("g", ["a"]),
 		]);
-		expect(calcSelectionBounds(["g"], objects)).toEqual({
+		expect(calcSelectionBounds(["g"], objects, registries)).toEqual({
 			left: 450,
 			top: 450,
 			right: 550,
@@ -115,12 +122,14 @@ describe("calcSelectionBounds", () => {
 	});
 
 	it("returns null for a group with no children", () => {
-		expect(calcSelectionBounds(["g"], toRecord([group("g", [])]))).toBeNull();
+		expect(
+			calcSelectionBounds(["g"], toRecord([group("g", [])]), registries),
+		).toBeNull();
 	});
 
 	it("skips ids absent from the map", () => {
 		const objects = toRecord([rect("a", 0, 0, 20, 20)]);
-		expect(calcSelectionBounds(["a", "missing"], objects)).toEqual({
+		expect(calcSelectionBounds(["a", "missing"], objects, registries)).toEqual({
 			left: -10,
 			top: -10,
 			right: 10,
@@ -129,12 +138,12 @@ describe("calcSelectionBounds", () => {
 	});
 
 	it("returns null when every selected id is unknown", () => {
-		expect(calcSelectionBounds(["nope"], {})).toBeNull();
+		expect(calcSelectionBounds(["nope"], {}, registries)).toBeNull();
 	});
 
 	it("skips selected objects with no extent", () => {
 		const objects = toRecord([rect("a", 0, 0, 20, 20), emptyPolyline("p")]);
-		expect(calcSelectionBounds(["a", "p"], objects)).toEqual({
+		expect(calcSelectionBounds(["a", "p"], objects, registries)).toEqual({
 			left: -10,
 			top: -10,
 			right: 10,
@@ -144,7 +153,7 @@ describe("calcSelectionBounds", () => {
 
 	it("returns null when nothing selected contributes an extent", () => {
 		expect(
-			calcSelectionBounds(["p"], toRecord([emptyPolyline("p")])),
+			calcSelectionBounds(["p"], toRecord([emptyPolyline("p")]), registries),
 		).toBeNull();
 	});
 
@@ -154,27 +163,31 @@ describe("calcSelectionBounds", () => {
 			rect("b", 100, 100, 20, 20),
 			group("g", ["a", "b"]),
 		]);
-		expect(calcSelectionBounds(["g", "a"], objects)).toEqual(
-			calcSelectionBounds(["g"], objects),
+		expect(calcSelectionBounds(["g", "a"], objects, registries)).toEqual(
+			calcSelectionBounds(["g"], objects, registries),
 		);
 	});
 
 	it("keeps a zero-sized object as a degenerate extent rather than dropping it", () => {
 		expect(
-			calcSelectionBounds(["a"], toRecord([rect("a", 10, 10, 0, 0)])),
+			calcSelectionBounds(
+				["a"],
+				toRecord([rect("a", 10, 10, 0, 0)]),
+				registries,
+			),
 		).toEqual({ left: 10, top: 10, right: 10, bottom: 10 });
 	});
 
 	describe("visual bounds", () => {
 		/** Stands in for a type drawing a 10px-tall strip below its box. */
-		const stripBelowBox: Pick<ObjectVisualBoundsRegistry, "get"> = {
+		const stripBelowBox = createVisualExtentRegistries({
 			get: () => (state) => ({
 				x: -state.width / 2,
 				y: -state.height / 2,
 				width: state.width,
 				height: state.height + 10,
 			}),
-		};
+		});
 
 		it("includes what a type draws outside its box, so a fit cannot crop it", () => {
 			const objects = toRecord([rect("a", 50, 50, 100, 60)]);
@@ -184,13 +197,6 @@ describe("calcSelectionBounds", () => {
 				right: 100,
 				bottom: 90,
 			});
-		});
-
-		it("reproduces the geometry-only result when the registry is omitted", () => {
-			const objects = toRecord([rect("a", 50, 50, 100, 60)]);
-			expect(calcSelectionBounds(["a"], objects, null)).toEqual(
-				calcSelectionBounds(["a"], objects),
-			);
 		});
 	});
 });

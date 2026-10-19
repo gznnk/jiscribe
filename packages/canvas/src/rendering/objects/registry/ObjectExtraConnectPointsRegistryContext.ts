@@ -9,7 +9,7 @@ import {
  * Rendering-layer context that distributes the per-canvas
  * `ObjectExtraConnectPointsRegistry` to the connector renderer and
  * connection-anchor dots (handed down separately from the controllers-layer
- * bundle for the same reason as ObjectTextRegionRegistryContext).
+ * bundle for the same reason as ObjectComponentRegistryContext).
  *
  * The default is a fresh empty registry, so rendering without a Provider offers
  * only the four edge midpoints. `Canvas` always provides the canvas's own

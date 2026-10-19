@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ObjectMenuHandler } from "../ObjectMenuHandler";
 
@@ -27,10 +29,7 @@ const makeState = (): CanvasControllerState =>
 		registries,
 		objects: { "rect-1": makeRect("rect-1") },
 		rootIds: ["rect-1"],
-		selectedIds: ["rect-1"],
-		selectedConnectorId: null,
-		selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
-		selectedTextSlot: null,
+		selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 		multiSelectGroup: null,
 		textEditState: null,
 		objectMenuOpenId: null,
@@ -41,7 +40,7 @@ const makeState = (): CanvasControllerState =>
 
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick" | "dragStart" | "drag" | "dragEnd",
-	targetPart: string | undefined,
+	targetAction: string | undefined,
 	inputValue?: string,
 	targetKind = "menu",
 	targetId = "object-menu",
@@ -50,7 +49,7 @@ const makeEvent = (
 		type,
 		targetKind,
 		targetId,
-		targetPart,
+		targetAction,
 		inputValue,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -79,7 +78,7 @@ describe("ObjectMenuHandler", () => {
 	});
 
 	describe("set:{property}:{value}", () => {
-		it("updates the selected object's property, bumps commitVersion, and clears selectedVertex", () => {
+		it("updates the selected object's property, bumps commitVersion, and keeps the part selection", () => {
 			const next = ObjectMenuHandler.handle(
 				makeState(),
 				makeEvent("click", "set:fill:#dc2626"),
@@ -87,7 +86,8 @@ describe("ObjectMenuHandler", () => {
 			);
 			expect(fillOf(next)).toBe("#dc2626");
 			expect(next.commitVersion).toBe(6);
-			expect(next.selectedVertex).toBeNull();
+			// Styling renumbers nothing, so what is picked below the object stays picked.
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a doubleClick activates like a click (a rapid second press of a value-dependent toggle, e.g. bold → normal, arrives as doubleClick)", () => {
@@ -131,7 +131,8 @@ describe("ObjectMenuHandler", () => {
 					.strokeWidth,
 			).toBe(4);
 			expect(next.commitVersion).toBe(5);
-			expect(next.selectedVertex).toBeNull();
+			// Styling renumbers nothing, so what is picked below the object stays picked.
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a dragEnd commits the final value (commitVersion bumped)", () => {
@@ -158,7 +159,8 @@ describe("ObjectMenuHandler", () => {
 					.strokeWidth,
 			).toBe(7);
 			expect(next.commitVersion).toBe(6);
-			expect(next.selectedVertex).toBeNull();
+			// Styling renumbers nothing, so what is picked below the object stays picked.
+			expect(next.selection.part).toEqual(vertexPartSelection(0));
 		});
 
 		it("a doubleClick on the track commits like a click (two rapid track clicks pair up)", () => {
@@ -202,7 +204,7 @@ describe("ObjectMenuHandler", () => {
 		});
 	});
 
-	describe("menu chrome (no part)", () => {
+	describe("menu chrome (no action)", () => {
 		it("a pressed closes the context menu; a click does nothing", () => {
 			const pressed = ObjectMenuHandler.handle(
 				makeState(),

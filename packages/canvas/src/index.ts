@@ -42,7 +42,7 @@ export type { ResolveImage } from "./controllers/hooks/useDocImages";
 export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
 export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
 export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
-export type { ResolvedSelection } from "./controllers/utils/resolveRequestedSelection";
+export type { RequestedSelection } from "./controllers/selection/writers/selectRequestedIds";
 export {
 	exportCanvasToPng,
 	exportCanvasToSvg,
@@ -85,6 +85,8 @@ export {
 export {
 	basicStencilCategory,
 	type StencilCategory,
+	type StencilCategorySearch,
+	type StencilCategorySearchResult,
 } from "./controllers/ui/objects/StencilCategory";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {
@@ -159,14 +161,14 @@ export type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 export type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 export type { ObjectState } from "./states/objects/base/ObjectState";
 export type { MetaState } from "./states/objects/base/MetaState";
+// A connector as the canvas holds it, for a plugin whose edit moves the ends
+// attached to its own shape (a renumbered connect point) in the same transition.
+export type { ConnectorState } from "./states/objects/connector/ConnectorState";
+export { isConnectorState } from "./states/objects/connector/ConnectorState";
 export type { CreateObjectType } from "@jiscribe/doc/model/objects/types/CreateObjectType";
 export type { CreateObjectState } from "./states/objects/types/CreateObjectState";
 export type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 export type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
-export type {
-	ExtraStylePropertyDescriptor,
-	StyleValueType,
-} from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 export type {
 	ObjectFactory,
 	ObjectDimensions,
@@ -180,6 +182,8 @@ export type { ObjectStateValidator } from "./states/registry/ObjectStateValidato
 export type {
 	ObjectContentResizer,
 	ObjectContentResizeContext,
+	ResizedAxes,
+	ResizeHeldEdge,
 } from "./states/registry/ObjectContentResizerRegistry";
 export type {
 	ObjectBehaviorEntry,
@@ -187,6 +191,12 @@ export type {
 	TransformByGroupFunction,
 	RotateByGroupFunction,
 } from "./controllers/gestures/registry/ObjectBehaviorTypes";
+// What an ObjectMenu item and a sidebar row are handed as their `selection`.
+export type {
+	CanvasSelection,
+	ObjectPartRange,
+	ObjectPartSelection,
+} from "./controllers/selection/CanvasSelection";
 export type {
 	ObjectMenuSection,
 	ObjectMenuItem,
@@ -194,7 +204,7 @@ export type {
 	CustomItem,
 	BuiltinItemKey,
 	ObjectMenuItemProps,
-	StylePropertyUpdater,
+	StyleIntentUpdater,
 	OpenReferencePayload,
 	OpenReferenceHandler,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -209,11 +219,22 @@ export type {
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 export type {
+	SelectionControlClickEvent,
 	SelectionControlContext,
 	SelectionControlDefinition,
+	SelectionControlDragEvent,
 	SelectionControlEvent,
+	SelectionControlEventType,
+	SelectionControlLayer,
 	SelectionControlProps,
+	SelectionControlResult,
 } from "./controllers/ui/controls/SelectionControlTypes";
+export { DEFAULT_SELECTION_CONTROL_EVENTS } from "./controllers/gestures/registry/RegisteredSelectionControl";
+export type { ObjectPartKindDefinition } from "./rendering/objects/registry/ObjectPartKindRegistry";
+// The `data-part` a text slot's element carries: a shape that draws one hit
+// region per slot marks each region with it, which is how a click picks that
+// slot and a double click opens it for editing.
+export { textSlotPart } from "./controllers/gestures/handlers/utils/partAddress";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-body shape (`features.text: "body"` / `"source"`)
 // holds, i.e. the key its `state.text` carries. A shape with several slots names
@@ -224,7 +245,13 @@ export type {
 	CanvasFontFamily,
 	CanvasFontFamilyId,
 } from "@jiscribe/doc/text/style/fontFamilies";
-export type { ObjectTextRegionCalculator } from "./rendering/objects/registry/ObjectTextRegionRegistry";
+// Where a type places its text slots: the calculators the `"textSlot"` part
+// kind takes (`createTextSlotPartKindDefinition({ region | regions })`).
+export type {
+	ObjectTextRegionCalculator,
+	ObjectTextSlotRegionsCalculator,
+	TextSlotRegionCalculators,
+} from "./controllers/selection/partKinds/ObjectTextRegionCalculatorTypes";
 // Per-type, per-slot text-style defaults: the registry a canvas resolves an
 // unset text style through, reachable as
 // `CanvasRegistries["objectTextStyleDefaults"]`.
@@ -240,15 +267,24 @@ export type {
 export type {
 	ObjectShapeStyleDefaults,
 	ObjectShapeStyleDefaultsRegistry,
-	ResolvedShapeStyle,
-	ShapeStyleGroup,
 } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+export type { ResolvedShapeStyle } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
+export type {
+	ObjectTextEditLineBreaksResolver,
+	TextEditLineBreaks,
+} from "./controllers/ui/editors/ObjectTextEditLineBreaksTypes";
 export type { ObjectOutlineCalculator } from "./rendering/objects/registry/ObjectOutlineRegistry";
 export type { ObjectAnchorRegionCalculator } from "./rendering/objects/registry/ObjectAnchorRegionRegistry";
+export type {
+	ConnectionAnchorSpec,
+	ConnectionAnchors,
+	ObjectConnectionAnchorsCalculator,
+	ObjectConnectionAnchorsDeclaration,
+} from "./rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 export type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsCalculator,

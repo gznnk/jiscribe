@@ -53,7 +53,7 @@ test.describe("adding polygon vertices", () => {
 		// Drag segment 0's midpoint handle outward to insert one vertex
 		await dragControlBy(
 			canvas,
-			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			`[data-id="${id}"][data-action="vertex-insert:0"]`,
 			{ dx: 0, dy: 80 },
 		);
 
@@ -80,7 +80,7 @@ test.describe("adding polygon vertices", () => {
 		expect(before).toBe(5);
 
 		// Click the vertex 0 (straight up) handle to select it; a selected handle takes the selection fill.
-		// Delete only after that fill change lands, which is when selectedVertex is committed.
+		// Delete only after that fill change lands, which is when the vertex pick is committed.
 		const selectedFill = await canvas.normalizeColor("#0d99ff");
 		await canvas.page.click(`[data-id="${id}"][data-part="vertex:0"]`);
 		await expect

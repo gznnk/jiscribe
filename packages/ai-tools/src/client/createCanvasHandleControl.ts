@@ -26,17 +26,8 @@ export const createCanvasHandleControl = (
 		if (canvas === null) {
 			return { selectedIds: [], ignoredIds: ids };
 		}
-		const { selectedIds, selectedConnectorId, ignoredIds } =
-			canvas.selection.select(ids);
-		// How the selection is split into channels is the canvas's own business, so
-		// the AI gets it levelled into one list of "the ids that were selected"
-		return {
-			selectedIds:
-				selectedConnectorId === null
-					? selectedIds
-					: [...selectedIds, selectedConnectorId],
-			ignoredIds,
-		};
+		const { selectedIds, ignoredIds } = canvas.selection.select(ids);
+		return { selectedIds, ignoredIds };
 	},
 
 	getSelectedIds: () => getCanvas()?.selection.getSelectedIds() ?? [],

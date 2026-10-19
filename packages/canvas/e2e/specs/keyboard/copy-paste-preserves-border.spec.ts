@@ -52,10 +52,13 @@ async function drawBorderedRect(
 	await canvas.setNumberInput("strokeWidth", 6);
 	await canvas.page.click(selectors.objectMenuSet("strokeDashType", "dashed"));
 
-	await expect.poll(async () => (await borderAttrs(canvas, id)).rx).toBe("16");
+	// The dash is the last edit, so waiting on it waits on the two before it too.
+	await expect
+		.poll(async () => (await borderAttrs(canvas, id)).dash)
+		.not.toBeNull();
 	const attrs = await borderAttrs(canvas, id);
+	expect(attrs.rx).toBe("16");
 	expect(attrs.strokeWidth).toBe("6");
-	expect(attrs.dash).not.toBeNull();
 
 	// Focus left in a number input would swallow Ctrl+C/V/D, so deselect to hand
 	// focus back to the canvas.

@@ -1,6 +1,6 @@
 {
 	"name": "jiscribe-mcp",
-	"version": "0.11.0",
+	"version": "0.12.0",
 	"description": "An MCP server that gives an AI the Jiscribe canvas tool set, with a local viewer a person can edit alongside it.",
 	"keywords": [
 		"mcp",
@@ -55,6 +55,7 @@
 		"@fontsource/source-sans-3": "5.3.0",
 		"@fontsource/source-serif-4": "5.3.0",
 		"@jiscribe/ai-tools": "workspace:*",
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/doc-schema": "workspace:*",
@@ -77,6 +78,6 @@
 		"vite": "catalog:",
 		"vitest": "catalog:",
 		"ws": "^8.21.3",
-		"zod": "^4.4.3"
+		"zod": "catalog:"
 	}
 }

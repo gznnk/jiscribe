@@ -17,13 +17,15 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",
-		"zod": "^4.4.3"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@jiscribe/plugin-container-shapes": "workspace:*",
+		"@jiscribe/plugin-er-shapes": "workspace:*",
 		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
 		"@jiscribe/plugin-markdown-shape": "workspace:*",
 		"@jiscribe/plugin-uml-shapes": "workspace:*",

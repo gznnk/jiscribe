@@ -92,8 +92,13 @@ async function textBoxHeightOf(
 			throw new Error(`the injected shape "${targetId}" is not on the canvas`);
 		}
 		let sibling = shape.nextElementSibling;
+		// The overlay is either a sibling of its own or inside the group
+		// createFrameObject draws every overlay of a shape in.
 		while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
-			sibling = sibling.nextElementSibling;
+			const nested: Element | null = sibling.hasAttribute("data-id")
+				? null
+				: sibling.querySelector("foreignObject");
+			sibling = nested ?? sibling.nextElementSibling;
 		}
 		if (!sibling) {
 			throw new Error(`no text overlay is drawn over "${targetId}"`);

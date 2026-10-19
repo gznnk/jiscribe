@@ -1,6 +1,6 @@
 import { useToolbarCommandState } from "./ToolbarCommandStateContext";
 import { ToolbarIconButton, ZoomReadout } from "./ToolbarStyled";
-import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { ZoomInIcon } from "../../icons/ZoomInIcon";
 import { ZoomOutIcon } from "../../icons/ZoomOutIcon";
@@ -36,7 +36,7 @@ export const ToolbarZoomGroup: React.FC<ToolbarZoomGroupProps> = ({ zoom }) => {
 				aria-label={messages.toolbarZoomOut}
 				title={messages.toolbarZoomOut}
 				disabled={resolveCommand("zoomOut")?.enabled !== true}
-				data-part={commandPart("zoomOut")}
+				data-action={commandAction("zoomOut")}
 			>
 				<ZoomOutIcon />
 			</ToolbarIconButton>
@@ -44,7 +44,7 @@ export const ToolbarZoomGroup: React.FC<ToolbarZoomGroupProps> = ({ zoom }) => {
 				type="button"
 				aria-label={messages.toolbarResetZoom}
 				title={messages.toolbarResetZoom}
-				data-part={commandPart("resetZoom")}
+				data-action={commandAction("resetZoom")}
 			>
 				{Math.round(zoom * 100)}%
 			</ZoomReadout>
@@ -53,7 +53,7 @@ export const ToolbarZoomGroup: React.FC<ToolbarZoomGroupProps> = ({ zoom }) => {
 				aria-label={messages.toolbarZoomIn}
 				title={messages.toolbarZoomIn}
 				disabled={resolveCommand("zoomIn")?.enabled !== true}
-				data-part={commandPart("zoomIn")}
+				data-action={commandAction("zoomIn")}
 			>
 				<ZoomInIcon />
 			</ToolbarIconButton>

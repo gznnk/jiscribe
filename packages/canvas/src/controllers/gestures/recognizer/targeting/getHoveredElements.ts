@@ -12,7 +12,7 @@ import type { HoveredElement } from "../GestureRecognizerTypes";
 export const createGetHovered = (
 	x: number,
 	y: number,
-	exclude?: { id: string; part?: string },
+	exclude?: { id: string; part?: string; action?: string },
 	rootElement?: Element | null,
 ): (() => HoveredElement[]) => {
 	let memoizedHovered: HoveredElement[] | null = null;
@@ -24,7 +24,8 @@ export const createGetHovered = (
  * Get the hovered elements at a coordinate (deduplicated, excluding the drag
  * origin). Passing rootElement excludes elements outside the canvas.
  *
- * The exclusion matches the origin element's full identity (id AND part), not
+ * The exclusion matches the origin element's full identity (id, part AND
+ * action), not
  * the id alone: several controls share their owner entity's UUID as data-id, so
  * excluding by id would blind the hover detection to every one of its siblings.
  * A connector's vertex-insert handle and its label box are such a pair — telling
@@ -34,7 +35,7 @@ export const createGetHovered = (
 export const getHoveredElements = (
 	x: number,
 	y: number,
-	exclude?: { id: string; part?: string },
+	exclude?: { id: string; part?: string; action?: string },
 	rootElement?: Element | null,
 ): HoveredElement[] => {
 	const allElements = document.elementsFromPoint(x, y);
@@ -63,7 +64,12 @@ export const getHoveredElements = (
 		// checked before seenIds.add so that an excluded control (one whose data-id is
 		// its owner entity's UUID) does not consume the id slot — otherwise a lower
 		// element sharing that id would be silently deduped away.
-		if (exclude && item.id === exclude.id && item.part === exclude.part) {
+		if (
+			exclude &&
+			item.id === exclude.id &&
+			item.part === exclude.part &&
+			item.action === exclude.action
+		) {
 			continue;
 		}
 

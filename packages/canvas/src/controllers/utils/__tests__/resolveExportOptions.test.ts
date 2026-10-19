@@ -56,7 +56,11 @@ const emptyState = { objects: {}, rootIds: [], viewport: testViewport };
 describe("resolveExportOptions", () => {
 	it("applies EXPORT_FIT_PADDING as the default margin around the content bounds", () => {
 		const state = createStateWithRect();
-		const options = resolveExportOptions(state, registries.objectMapper);
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries,
+		);
 		expect(options.viewBox).toEqual({
 			x: -EXPORT_FIT_PADDING,
 			y: -EXPORT_FIT_PADDING,
@@ -70,7 +74,7 @@ describe("resolveExportOptions", () => {
 		const options = resolveExportOptions(
 			state,
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			{
 				margin: 5,
 			},
@@ -79,7 +83,11 @@ describe("resolveExportOptions", () => {
 	});
 
 	it("omits the viewBox on an empty canvas (falls back to the current view)", () => {
-		const options = resolveExportOptions(emptyState, registries.objectMapper);
+		const options = resolveExportOptions(
+			emptyState,
+			registries.objectMapper,
+			registries,
+		);
 		expect(options.viewBox).toBeUndefined();
 	});
 
@@ -100,7 +108,7 @@ describe("resolveExportOptions", () => {
 		const options = resolveExportOptions(
 			state,
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			{
 				margin: 0,
 				includeSource: false,
@@ -116,7 +124,11 @@ describe("resolveExportOptions", () => {
 
 	it("embeds the source doc by default", () => {
 		const state = createStateWithRect();
-		const options = resolveExportOptions(state, registries.objectMapper);
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries,
+		);
 		expect(options.source?.root.map((obj) => obj.id)).toEqual(["rect-1"]);
 	});
 
@@ -125,7 +137,7 @@ describe("resolveExportOptions", () => {
 		const options = resolveExportOptions(
 			state,
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			{
 				includeSource: false,
 			},
@@ -138,7 +150,7 @@ describe("resolveExportOptions", () => {
 		const options = resolveExportOptions(
 			state,
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			{ region: "viewport", margin: 50 },
 		);
 		expect(options.viewBox).toEqual({ x: 20, y: 10, width: 400, height: 300 });
@@ -152,7 +164,7 @@ describe("resolveExportOptions", () => {
 		const options = resolveExportOptions(
 			state,
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			{ region: { ids: ["rect-2"] }, margin: 5 },
 		);
 		expect(options.viewBox).toEqual({
@@ -168,7 +180,7 @@ describe("resolveExportOptions", () => {
 		const options = resolveExportOptions(
 			state,
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			{ region: { ids: ["missing"] } },
 		);
 		expect(options.viewBox).toBeUndefined();
@@ -179,7 +191,7 @@ describe("resolveExportOptions", () => {
 		const options = resolveExportOptions(
 			state,
 			registries.objectMapper,
-			registries.objectVisualBounds,
+			registries,
 			{ region: { x: 1, y: 2, width: 30, height: 40 }, margin: 50 },
 		);
 		expect(options.viewBox).toEqual({ x: 1, y: 2, width: 30, height: 40 });
@@ -187,17 +199,13 @@ describe("resolveExportOptions", () => {
 
 	it('maps transparentBackground to "transparent", default to undefined (live theme background)', () => {
 		expect(
-			resolveExportOptions(
-				emptyState,
-				registries.objectMapper,
-				registries.objectVisualBounds,
-				{
-					transparentBackground: true,
-				},
-			).background,
+			resolveExportOptions(emptyState, registries.objectMapper, registries, {
+				transparentBackground: true,
+			}).background,
 		).toBe("transparent");
 		expect(
-			resolveExportOptions(emptyState, registries.objectMapper).background,
+			resolveExportOptions(emptyState, registries.objectMapper, registries)
+				.background,
 		).toBeUndefined();
 	});
 
@@ -216,46 +224,34 @@ describe("resolveExportOptions", () => {
 			});
 			// The rect is 0,0..10,10.
 			expect(
-				resolveExportOptions(
-					state,
-					registries.objectMapper,
-					registries.objectVisualBounds,
-				).viewBox,
+				resolveExportOptions(state, registries.objectMapper, registries)
+					.viewBox,
 			).toEqual({ x: -64, y: -48, width: 138, height: 122 });
 		});
 
 		it("treats a side the document left out as 0", () => {
 			const state = createStateWithViewPadding({ left: 20 });
 			expect(
-				resolveExportOptions(
-					state,
-					registries.objectMapper,
-					registries.objectVisualBounds,
-				).viewBox,
+				resolveExportOptions(state, registries.objectMapper, registries)
+					.viewBox,
 			).toEqual({ x: -20, y: 0, width: 30, height: 10 });
 		});
 
 		it("lets an explicit margin option override the document's padding", () => {
 			const state = createStateWithViewPadding({ top: 48, left: 64 });
 			expect(
-				resolveExportOptions(
-					state,
-					registries.objectMapper,
-					registries.objectVisualBounds,
-					{ margin: 5 },
-				).viewBox,
+				resolveExportOptions(state, registries.objectMapper, registries, {
+					margin: 5,
+				}).viewBox,
 			).toEqual({ x: -5, y: -5, width: 20, height: 20 });
 		});
 
 		it("ignores the document's padding for a region taken exactly", () => {
 			const state = createStateWithViewPadding({ top: 48, left: 64 });
 			expect(
-				resolveExportOptions(
-					state,
-					registries.objectMapper,
-					registries.objectVisualBounds,
-					{ region: "viewport" },
-				).viewBox,
+				resolveExportOptions(state, registries.objectMapper, registries, {
+					region: "viewport",
+				}).viewBox,
 			).toEqual({ x: 20, y: 10, width: 400, height: 300 });
 		});
 
@@ -263,7 +259,8 @@ describe("resolveExportOptions", () => {
 			const state = createStateWithRect();
 			expect(state.view).toBeUndefined();
 			expect(
-				resolveExportOptions(state, registries.objectMapper).viewBox,
+				resolveExportOptions(state, registries.objectMapper, registries)
+					.viewBox,
 			).toEqual({
 				x: -EXPORT_FIT_PADDING,
 				y: -EXPORT_FIT_PADDING,
@@ -278,7 +275,8 @@ describe("resolveExportOptions", () => {
 				view: { open: "fit-all" as const },
 			};
 			expect(
-				resolveExportOptions(state, registries.objectMapper).viewBox?.x,
+				resolveExportOptions(state, registries.objectMapper, registries).viewBox
+					?.x,
 			).toBe(-EXPORT_FIT_PADDING);
 		});
 	});

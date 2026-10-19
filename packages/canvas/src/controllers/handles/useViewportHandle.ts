@@ -198,28 +198,23 @@ export const useViewportHandle = (
 							height: viewport.height,
 							padding: options?.padding,
 						},
-						registries.objectVisualBounds,
+						registries,
 					),
 				);
 			},
 
 			fitToSelection: (options) => {
-				const { objects, selectedIds, selectedConnectorId, viewport } =
-					canvasStateRef.current;
-				const targetIds =
-					selectedConnectorId === null
-						? selectedIds
-						: [...selectedIds, selectedConnectorId];
+				const { objects, selection, viewport } = canvasStateRef.current;
 				return applyFitted(
 					calcSelectionFitViewport(
-						targetIds,
+						selection.objectIds,
 						objects,
 						{
 							width: viewport.width,
 							height: viewport.height,
 							padding: options?.padding,
 						},
-						registries.objectVisualBounds,
+						registries,
 					),
 				);
 			},

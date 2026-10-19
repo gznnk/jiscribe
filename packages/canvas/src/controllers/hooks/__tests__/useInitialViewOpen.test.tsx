@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createVisualExtentRegistries } from "../../__tests__/support/visualExtentRegistries";
 import type { CanvasAction } from "../../reducer/CanvasActions";
 import { useInitialViewOpen } from "../useInitialViewOpen";
 
@@ -39,7 +40,9 @@ const rectAt = (
 const objects: Record<string, ObjectState> = { r1: rectAt(0, 0, 800, 400) };
 
 /** Registry stand-in: no shape draws outside its geometry box here. */
-const visualBounds = { get: () => undefined };
+const visualExtentRegistries = createVisualExtentRegistries({
+	get: () => undefined,
+});
 
 const roots: { unmount: () => void }[] = [];
 
@@ -76,7 +79,7 @@ const mountWithContainerSize = (
 			containerRef,
 			viewportSize: reportedSize,
 			objects: mappedObjects,
-			visualBounds,
+			visualExtentRegistries,
 			dispatch,
 		});
 		return null;
@@ -307,7 +310,7 @@ describe("useInitialViewOpen", () => {
 				containerRef,
 				viewportSize: { width: 1000, height: 500 },
 				objects: {},
-				visualBounds,
+				visualExtentRegistries,
 				dispatch,
 			});
 			return null;

@@ -88,11 +88,7 @@ export const limitViewScroll = (
 			? scrollLimit
 			: {
 					hostConfig: scrollLimit.hostConfig,
-					rect: calcScrollBounds(
-						wallPadding,
-						nextState.objects,
-						registries.objectVisualBounds,
-					),
+					rect: calcScrollBounds(wallPadding, nextState.objects, registries),
 					measuredFrom: nextState.objects,
 					measuredView: nextState.view,
 				};

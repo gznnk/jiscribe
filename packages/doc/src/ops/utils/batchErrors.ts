@@ -15,7 +15,8 @@ import { DocOperationError } from "../errors";
  * @param cause - The lower-level failure; an `Error`'s `message` is used verbatim,
  *   anything else is passed through `String()`
  * @returns A {@link DocOperationError} reading
- *   `${list}[${index}] (${subject}): <reason> — the document was left unchanged`
+ *   `${list}[${index}] (${subject}): <reason> — the document was left unchanged`, with
+ *   `cause` as its own `cause` so a caller can still tell what kind of failure it was
  */
 export const batchItemError = (
 	list: string,
@@ -27,5 +28,6 @@ export const batchItemError = (
 	const subjectSuffix = subject === undefined ? "" : ` (${subject})`;
 	return new DocOperationError(
 		`${list}[${index}]${subjectSuffix}: ${reason} — the document was left unchanged`,
+		cause,
 	);
 };

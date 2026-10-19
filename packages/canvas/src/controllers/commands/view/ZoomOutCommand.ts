@@ -6,7 +6,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const ZoomOutCommand: ExecutableCommand = {
 	id: "zoomOut",
-	label: "Zoom Out",
+	label: { en: "Zoom Out", ja: "ズームアウト" },
 	category: "view",
 	shortcuts: {
 		mac: [{ code: "Minus", meta: true }],

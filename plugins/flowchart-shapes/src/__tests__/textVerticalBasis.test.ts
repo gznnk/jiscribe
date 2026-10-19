@@ -1,5 +1,4 @@
 import type { ObjectDocDefinition } from "@jiscribe/doc";
-import { hasInsetTextRegion } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 import { flowchartDocPlugin } from "../doc";
@@ -12,21 +11,22 @@ const docDefinitions = flowchartDocPlugin.objects as Record<
 >;
 
 /**
- * Which flowchart shapes are worth offering the `textVerticalBasis` switch on:
- * the ones whose declared region gives up part of their own height, so the two
- * bases put the body in different places (`hasInsetTextRegion`). Pinned over the
- * real declarations because this is the set the ObjectMenu shows the switch for,
- * and a region reshaped for the outline's sake would move a shape between the
- * two lists without anyone noticing.
+ * Which flowchart shapes declare `features.textVerticalBasis`: the ones whose
+ * region gives up part of their own height, so the two bases put the body in
+ * different places. Pinned over the real declarations because this is the set
+ * the ObjectMenu shows the switch for, and the declaration agreeing with the
+ * region is the parse-check suite's business rather than this one's.
  */
 describe("the flowchart shapes the vertical-basis switch moves", () => {
 	it("names the shapes that keep their text off a band of their own height", () => {
-		const inset = Object.entries(docDefinitions)
-			.filter(([, definition]) => hasInsetTextRegion(definition))
+		const declared = Object.entries(docDefinitions)
+			.filter(
+				([, definition]) => definition.features.textVerticalBasis === true,
+			)
 			.map(([type]) => type)
 			.sort();
 
-		expect(inset).toEqual([
+		expect(declared).toEqual([
 			"card",
 			"db",
 			"diamond",
@@ -50,7 +50,9 @@ describe("the flowchart shapes the vertical-basis switch moves", () => {
 			"subroutine",
 			"trapezoid",
 		]) {
-			expect(hasInsetTextRegion(docDefinitions[type]), type).toBe(false);
+			expect(docDefinitions[type].features.textVerticalBasis, type).toBe(
+				undefined,
+			);
 		}
 	});
 
@@ -58,12 +60,14 @@ describe("the flowchart shapes the vertical-basis switch moves", () => {
 		// A stadium's caps sit left and right while it is wider than tall and top
 		// and bottom once it is not, so the switch would move its text at some
 		// sizes and not at others.
-		expect(hasInsetTextRegion(docDefinitions.stadium)).toBe(false);
+		expect(docDefinitions.stadium.features.textVerticalBasis).toBe(undefined);
 	});
 
 	it("leaves out the shapes whose label is drawn outside the box", () => {
 		for (const type of ["cross", "extract"]) {
-			expect(hasInsetTextRegion(docDefinitions[type]), type).toBe(false);
+			expect(docDefinitions[type].features.textVerticalBasis, type).toBe(
+				undefined,
+			);
 		}
 	});
 });

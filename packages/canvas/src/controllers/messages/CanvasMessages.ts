@@ -4,7 +4,6 @@ import {
 	resolveLocaleMessages,
 	type LocaleMessages,
 } from "./resolveLocaleMessages";
-import type { Command } from "../commands/CommandTypes";
 
 /** English defaults. Hosts override parts of this via the `messages` prop of Canvas. */
 export const defaultCanvasMessages: CanvasMessages = {
@@ -18,6 +17,8 @@ export const defaultCanvasMessages: CanvasMessages = {
 	stencilLibraryClose: "Close",
 	stencilLibrarySearchPlaceholder: "Search shapes",
 	stencilLibraryNoMatch: "No matching shapes",
+	stencilLibraryMoreMatches: "More matches than shown; refine the search",
+	stencilLibraryMoreViaSearch: "Find more shapes",
 
 	propertyPanelTitle: "Properties",
 	propertyPanelClose: "Close",
@@ -106,7 +107,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuAlignTop: "Top",
 	menuAlignMiddle: "Middle",
 	menuAlignBottom: "Bottom",
-	menuTextFormat: "Text Format",
 	menuBold: "Bold",
 	menuItalic: "Italic",
 	menuUnderline: "Underline",
@@ -169,9 +169,17 @@ const builtinCanvasMessagesByLocale: LocaleMessages<CanvasMessages> = {
 };
 
 /**
- * Resolves the effective messages for a locale, then applies host overrides.
+ * Resolves the effective messages for a locale, then layers the host's
+ * overrides on top.
+ *
  * Flat keys: English defaults ← built-in locale dictionary ← overrides. Record
- * fields are merged key by key (built-in locale record ← overrides record).
+ * fields are merged key by key, built-in locale record ← overrides record, so an
+ * entry the host leaves out keeps the built-in wording.
+ *
+ * @param locale - BCP-47-ish tag picking the built-in dictionary (`"ja-JP"`
+ * falls back to `"ja"`, then to `"en"`).
+ * @param overrides - The host's own strings, any subset; a record field passed
+ * here is merged into the resolved one, not substituted for it.
  */
 export const resolveCanvasMessages = (
 	locale: string,
@@ -185,7 +193,10 @@ export const resolveCanvasMessages = (
 		...defaultCanvasMessages,
 		...localized,
 		...overrides,
-		commandLabels: { ...localized.commandLabels, ...overrides?.commandLabels },
+		commandLabels: {
+			...localized.commandLabels,
+			...overrides?.commandLabels,
+		},
 		stencilLabels: {
 			...localized.stencilLabels,
 			...overrides?.stencilLabels,
@@ -201,9 +212,3 @@ export const resolveCanvasMessages = (
 		},
 	};
 };
-
-/** Resolves a command's display label: override by id, else the command's English label. */
-export const getCommandLabel = (
-	messages: CanvasMessages,
-	command: Pick<Command, "id" | "label">,
-): string => messages.commandLabels[command.id] ?? command.label;

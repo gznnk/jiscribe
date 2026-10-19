@@ -1,5 +1,6 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import {
 	memo,
 	useCallback,
@@ -22,6 +23,11 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
+import type { ResolveImageBlob } from "../export";
+import { SelectNextTextSlotCommand } from "./commands/selection/SelectNextTextSlotCommand";
+import { SelectPreviousTextSlotCommand } from "./commands/selection/SelectPreviousTextSlotCommand";
+import { CommitTextEditCommand } from "./commands/text/CommitTextEditCommand";
+import { toggleTextFormatCommandId } from "./commands/text/ToggleTextFormatCommands";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -52,13 +58,14 @@ import { usePropertyPanelState } from "./hooks/usePropertyPanelState";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
+import { useTextEditDraftState } from "./hooks/useTextEditDraftState";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import type { ResolveImageBlob } from "../export";
+import type { TextFormat } from "./style/TextFormat";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -80,7 +87,7 @@ import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type {
-	StylePropertyUpdater,
+	StyleIntentUpdater,
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -103,10 +110,9 @@ import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { readOpenTextEdit } from "./utils/readOpenTextEdit";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {
 	// ── Document ──
@@ -221,13 +227,18 @@ type CanvasProps = {
 	};
 	/**
 	 * Active locale (default `"en"`). Selects the built-in dictionary (en / ja)
-	 * and is exposed to plugins via `useCanvasLocale`. Resolution is exact →
-	 * language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
+	 * and each command's own label dictionary, and is exposed to plugins via
+	 * `useCanvasLocale` so they can resolve theirs. Resolution is exact →
+	 * language subtag (`"ja-JP"` → `"ja"`) → `"en"`, per dictionary, so a plugin
+	 * that ships no `ja` falls back to its own English rather than dragging the
+	 * canvas back to English.
 	 */
 	locale?: string;
 	/**
 	 * Partial overrides on top of the locale-resolved dictionary (tooltips,
 	 * menus, toasts). Tweaks individual strings; `locale` picks the language.
+	 * They outrank a contributed command's own label as well as the built-ins,
+	 * named by command id under `commandLabels`.
 	 */
 	messages?: Partial<CanvasMessages>;
 
@@ -387,6 +398,9 @@ const CanvasComponent = ({
 		collectRequests: () =>
 			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
 		onFacesChanged: () => {
+			// First, so the re-measure is not answered from a measurement cached
+			// against the fallback face.
+			advanceTextMeasurementGeneration();
 			dispatch({ type: "REMEASURE_TEXT" });
 		},
 	});
@@ -411,24 +425,24 @@ const CanvasComponent = ({
 
 	useClipboardWrite(state.internalClipboard, notifyError);
 
-	const { pointerHandlers, wheelHandler, resetGestureState } =
-		useGestureRecognizer({
-			dispatch,
-			containerRef: rootRef,
-			svgRef,
-			canvasState: state,
-			gestureHandling,
-		});
+	const {
+		pointerHandlers,
+		wheelHandler,
+		resetGestureState,
+		processPendingGestures,
+	} = useGestureRecognizer({
+		dispatch,
+		containerRef: rootRef,
+		svgRef,
+		canvasState: state,
+		gestureHandling,
+	});
 
 	// Shared between the save-delivery and external-sync hooks so overlapping saves that
 	// fold back out of order are still recognized as self-saves (#29).
 	const selfSaveNonceTracker = useSelfSaveNonceTracker();
 
-	useNotifySelectionChange(
-		state.selectedIds,
-		state.selectedConnectorId,
-		onSelectionChange,
-	);
+	useNotifySelectionChange(state.selection.objectIds, onSelectionChange);
 
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
@@ -478,7 +492,7 @@ const CanvasComponent = ({
 		containerRef: canvasRef,
 		viewportSize: state.viewport,
 		objects: state.objects,
-		visualBounds: registries.objectVisualBounds,
+		visualExtentRegistries: registries,
 		dispatch,
 	});
 
@@ -501,6 +515,7 @@ const CanvasComponent = ({
 		canvasState: state,
 		dispatch,
 		callbacks: { undo: onUndo, redo: onRedo, paste: handlePaste },
+		processPendingGestures,
 		registries,
 	});
 
@@ -508,15 +523,9 @@ const CanvasComponent = ({
 	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleStylePropertyUpdate = useCallback<StylePropertyUpdater>(
-		(property, value, commit, coalesceHistory = false) => {
-			dispatch({
-				type: "STYLE_PROPERTY_UPDATE",
-				property,
-				value,
-				commit,
-				coalesceHistory,
-			});
+	const handleStyleIntent = useCallback<StyleIntentUpdater>(
+		(intent, commit, coalesceHistory = false) => {
+			dispatch({ type: "STYLE_INTENT", intent, commit, coalesceHistory });
 		},
 		[dispatch],
 	);
@@ -595,6 +604,10 @@ const CanvasComponent = ({
 		[],
 	);
 
+	// Neither memo below reads the caret, so both key on the session held through
+	// caret-only moves.
+	const textEditDraftState = useTextEditDraftState(state.textEditState);
+
 	// The slot being edited carries the uncommitted editor text, so geometry derived from
 	// it follows every keystroke instead of jumping on commit. Rendering, selection
 	// feedback, editor placement and the menu anchor only — hit testing and snapping
@@ -602,12 +615,36 @@ const CanvasComponent = ({
 	const draftObjects = useMemo(
 		() =>
 			graftTextEditDraft(
-				state.objects,
-				state.textEditState,
+				{
+					objects: state.objects,
+					selection: state.selection,
+					textEditState: textEditDraftState,
+				},
 				registries.objectContentResizer,
 			),
-		[state.objects, state.textEditState, registries],
+		[state.objects, state.selection, textEditDraftState, registries],
 	);
+
+	// What the open editing session is on, for the layers that only need to know
+	// which object and slot the in-place editor covers (culling keeps it rendered,
+	// the overlay hands its slot over to the editor).
+	const textEdit = useMemo(
+		() =>
+			readOpenTextEdit({
+				objects: state.objects,
+				selection: state.selection,
+				textEditState: textEditDraftState,
+			}),
+		[state.objects, state.selection, textEditDraftState],
+	);
+	const textEditObjectId =
+		textEdit === null
+			? null
+			: textEdit.kind === "shape"
+				? textEdit.object.id
+				: textEdit.connector.id;
+	const editingTextSlotId =
+		textEdit?.kind === "shape" ? textEdit.textSlotId : null;
 
 	// The menu is anchored below the drawn extent, which during a text edit is the
 	// draft-grafted box (a keystroke regrows an auto-sized text before commit), so
@@ -648,11 +685,45 @@ const CanvasComponent = ({
 		},
 		[dispatch],
 	);
+	// The editor's keystrokes never reach useKeyboardShortcuts (it skips an
+	// editable target), so the editor raises the format's command itself — the
+	// same one the canvas shortcut and the format buttons run. A host that left
+	// the command out of `config.commands` gets the keystroke swallowed and nothing
+	// else, as it would on the canvas.
 	const handleTextEditToggleFormat = useCallback(
-		(format: TextEditFormat) => {
-			dispatch({ type: "TOGGLE_TEXT_FORMAT", format });
+		(format: TextFormat) => {
+			const commandId = toggleTextFormatCommandId(format);
+			if (registries.command.get(commandId) === undefined) {
+				return;
+			}
+			dispatch({ type: "COMMAND", commandId });
 		},
-		[dispatch],
+		[dispatch, registries],
+	);
+
+	// Cmd/Ctrl+Enter in the editor commits through its command, so a host that
+	// left it out of `config.commands` gets the keystroke swallowed instead.
+	const handleTextEditCommit = useCallback(() => {
+		if (registries.command.get(CommitTextEditCommand.id) === undefined) {
+			return;
+		}
+		dispatch({ type: "COMMAND", commandId: CommitTextEditCommand.id });
+	}, [dispatch, registries]);
+
+	// Tab in the editor walks the slots as Tab on the canvas does, so a host that
+	// left that walk out of `config.commands` gets the keystroke swallowed instead.
+	const handleTextEditTab = useCallback(
+		(step: 1 | -1) => {
+			const commandId =
+				step === 1
+					? SelectNextTextSlotCommand.id
+					: SelectPreviousTextSlotCommand.id;
+			if (registries.command.get(commandId) === undefined) {
+				return;
+			}
+			dispatch({ type: "STEP_TEXT_EDIT", step });
+		},
+		[dispatch, registries],
 	);
 
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
@@ -661,8 +732,8 @@ const CanvasComponent = ({
 		state.objects,
 		state.rootIds,
 		state.viewport,
-		state.textEditState?.objectId ?? null,
-		registries.objectVisualBounds,
+		textEditObjectId,
+		registries,
 	);
 
 	const canvasHandle = useCanvasHandle({
@@ -697,8 +768,6 @@ const CanvasComponent = ({
 	);
 	const { minX, minY, zoom } = drawnViewport;
 
-	const selectedTextSlot = resolveSelectedTextSlot(state);
-
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
 	// What the bar's command buttons read to draw themselves disabled. A plain
@@ -717,6 +786,12 @@ const CanvasComponent = ({
 				registries.stencil,
 			),
 		[stencilLibrary?.sections, registries],
+	);
+
+	// A stable reference, so the memoized panel does not re-render on every dispatch.
+	const resolveLibraryPreset = useCallback(
+		(presetId: string) => registries.stencil.get(presetId),
+		[registries],
 	);
 
 	return (
@@ -758,6 +833,7 @@ const CanvasComponent = ({
 								state.stencilLibraryPanel.collapsedSectionIds
 							}
 							activePresetId={state.shapeDrawing?.preset.id ?? null}
+							resolvePreset={resolveLibraryPreset}
 						/>
 					)}
 					<Viewport
@@ -773,12 +849,8 @@ const CanvasComponent = ({
 								viewport={drawnViewport}
 								svgRef={svgRef}
 								isContentHidden={isContentHidden}
-								textEditObjectId={state.textEditState?.objectId ?? null}
-								textEditSlotId={
-									state.textEditState?.kind === "shape"
-										? state.textEditState.slotId
-										: null
-								}
+								textEditObjectId={textEditObjectId}
+								editingTextSlotId={editingTextSlotId}
 								isDrawMode={!!state.shapeDrawing}
 								visibleObjectIds={visibleObjectIds}
 								showGrid={grid?.show}
@@ -791,28 +863,34 @@ const CanvasComponent = ({
 									objects={state.objects}
 								/>
 								<SelectionOverlay
-									selectedIds={state.selectedIds}
+									selection={state.selection}
 									objects={draftObjects}
 									multiSelectGroup={state.multiSelectGroup}
-									selectedTextSlot={selectedTextSlot}
+									isTextEditing={!!state.textEditState}
 								/>
-								<ConnectorControlsLayer
-									selectedConnectorId={state.selectedConnectorId}
+								<SelectionControlsLayer
+									layer="belowHandles"
+									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
-									selectedVertex={state.selectedVertex}
+									isTextEditing={!!state.textEditState}
+									activeDragKind={state.activeDrag?.kind ?? null}
+								/>
+								<ConnectorControlsLayer
+									selection={state.selection}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
 								/>
 								<TransformControlsLayer
-									selectedIds={state.selectedIds}
+									selection={state.selection}
 									objects={state.objects}
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={selectedTextSlot !== null}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer
-									selectedIds={state.selectedIds}
+									selectedIds={state.selection.objectIds}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									connectorDraft={state.connectorDraft}
@@ -820,16 +898,18 @@ const CanvasComponent = ({
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<VertexControlsLayer
-									selectedIds={state.selectedIds}
+									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
-									selectedVertex={state.selectedVertex}
+									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<SelectionControlsLayer
-									selectedIds={state.selectedIds}
+									layer="aboveHandles"
+									selection={state.selection}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
+									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
 								<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
@@ -853,12 +933,15 @@ const CanvasComponent = ({
 							>
 								<TextEditorLayer
 									textEditState={state.textEditState}
+									selection={state.selection}
 									objects={draftObjects}
 									onTextChange={handleTextEditChange}
 									onEscape={handleTextEditEscape}
+									onCommit={handleTextEditCommit}
 									onCaretMove={revealCaret}
 									onSelectionChange={handleTextEditSelectionChange}
 									onToggleFormat={handleTextEditToggleFormat}
+									onTab={handleTextEditTab}
 								/>
 							</ZoomScaledOverlay>
 							{/* HTML whose position follows zoom but whose size does not */}
@@ -867,7 +950,7 @@ const CanvasComponent = ({
 							>
 								<ObjectMenu
 									canvasState={menuCanvasState}
-									onPropertyUpdate={handleStylePropertyUpdate}
+									onStyleIntent={handleStyleIntent}
 									onOpenReference={handleOpenReference}
 								/>
 							</ScrollSyncedOverlay>
@@ -884,7 +967,7 @@ const CanvasComponent = ({
 					{state.propertyPanel.isOpen && (
 						<PropertyPanel
 							canvasState={propertyPanelState}
-							onPropertyUpdate={handleStylePropertyUpdate}
+							onStyleIntent={handleStyleIntent}
 							onTransformUpdate={handleTransformUpdate}
 							onDocumentUpdate={handleDocumentUpdate}
 							onMetaUpdate={handleMetaUpdate}

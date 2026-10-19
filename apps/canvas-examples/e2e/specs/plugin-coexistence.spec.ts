@@ -2,7 +2,7 @@ import { test, expect, selectors } from "@jiscribe/canvas/testing";
 import type { CanvasDriver } from "@jiscribe/canvas/testing";
 
 /**
- * All nine shipped plugins registered on one canvas. Each plugin's own e2e suite
+ * All ten shipped plugins registered on one canvas. Each plugin's own e2e suite
  * loads a harness holding that plugin alone, so nothing there can see what only
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
@@ -50,6 +50,7 @@ const LIBRARY_SECTIONS = [
 	{ id: "basic", ownPresetId: "markdown" },
 	{ id: "flowchart", ownPresetId: "diamond" },
 	{ id: "uml", ownPresetId: "class" },
+	{ id: "er", ownPresetId: "erEntity" },
 	{ id: "container", ownPresetId: "frame" },
 	{ id: "general", ownPresetId: "actor" },
 	{ id: "annotation", ownPresetId: "callout" },
@@ -59,10 +60,10 @@ const LIBRARY_SECTIONS = [
 ];
 
 /** Every toolbar category button, pinned presets excluded. */
-const CATEGORY_TOGGLES = '[data-id="stencil-category"][data-part^="toggle:"]';
+const CATEGORY_TOGGLES = '[data-id="stencil-category"][data-action^="toggle:"]';
 
 /** Every sidebar section header, in display order. */
-const LIBRARY_SECTION_HEADERS = `[data-kind="menu"][data-id="stencil-library-panel"] [data-part^="section:"]`;
+const LIBRARY_SECTION_HEADERS = `[data-kind="menu"][data-id="stencil-library-panel"] [data-action^="section:"]`;
 
 /** Preset ids of the stencil buttons under `scopeSelector`, in DOM order. */
 async function readPresetIds(
@@ -70,10 +71,10 @@ async function readPresetIds(
 	scopeSelector: string,
 ): Promise<string[]> {
 	return canvas.page
-		.locator(`${scopeSelector} [data-part^="item:"]`)
+		.locator(`${scopeSelector} [data-action^="item:"]`)
 		.evaluateAll((elements) =>
 			elements.map((element) =>
-				(element.getAttribute("data-part") ?? "").replace(/^item:/, ""),
+				(element.getAttribute("data-action") ?? "").replace(/^item:/, ""),
 			),
 		);
 }
@@ -308,7 +309,7 @@ test.describe("plugin coexistence", () => {
 			.locator(CATEGORY_TOGGLES)
 			.evaluateAll((elements) =>
 				elements.map((element) =>
-					(element.getAttribute("data-part") ?? "").slice("toggle:".length),
+					(element.getAttribute("data-action") ?? "").slice("toggle:".length),
 				),
 			);
 		expect(categoryIds).toEqual([FLYOUT_CATEGORY.id]);
@@ -323,7 +324,7 @@ test.describe("plugin coexistence", () => {
 			.locator(LIBRARY_SECTION_HEADERS)
 			.evaluateAll((elements) =>
 				elements.map((element) =>
-					(element.getAttribute("data-part") ?? "").slice("section:".length),
+					(element.getAttribute("data-action") ?? "").slice("section:".length),
 				),
 			);
 		expect(sectionIds).toEqual(LIBRARY_SECTIONS.map((section) => section.id));

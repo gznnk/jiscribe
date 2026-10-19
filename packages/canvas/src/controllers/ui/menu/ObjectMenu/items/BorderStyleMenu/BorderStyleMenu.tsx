@@ -5,30 +5,22 @@ import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
-	setPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+	setAction,
+	toggleAction,
+} from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
-import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
-import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
-import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
-import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import {
-	DEFAULT_CORNER_RADIUS,
-	readSelectionCornerRadius,
-} from "../../../utils/readSelectionCornerRadius";
-import {
-	readSelectionShapeStyle,
-	UNDECLARED_STROKE_DASH,
-} from "../../../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
 	selectionValueOrFirst,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
+import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
+import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
+import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
+import { useSelectionStyle } from "../../../SelectionStyleReaderContext";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -36,7 +28,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "border-style";
 
@@ -55,7 +47,7 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 };
 
 /**
@@ -65,24 +57,19 @@ type BorderStyleMenuProps = {
 const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,
 	showRadius = true,
-	onPropertyUpdate,
+	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const { strokeWidth, strokeDashType } = readSelectionShapeStyle(
-		canvasState.selectedIds,
-		canvasState.objects,
-		objectShapeStyleDefaults,
-		"stroke",
-	);
+	const strokeWidth = useSelectionStyle("strokeWidth");
+	const strokeDashType = useSelectionStyle("strokeDashType");
 	const isDashMixed = isMixedSelectionValue(strokeDashType);
-	const dashType = selectionValueOr(strokeDashType, UNDECLARED_STROKE_DASH);
-	const cornerRadius = readSelectionCornerRadius(
-		canvasState.selectedIds,
-		canvasState.objects,
+	const dashType = selectionValueOr(
+		strokeDashType,
+		SHAPE_STYLE_FALLBACK.strokeDashType,
 	);
+	const cornerRadius = useSelectionStyle("cornerRadius");
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -92,7 +79,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuBorderStyle}
 			>
 				<DashedCircleIcon title={messages.menuBorderStyle} />
@@ -108,21 +95,21 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 						<BorderStyleSection>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "solid"}
-								data-part={setPart("strokeDashType", "solid")}
+								data-action={setAction("strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
 								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dashed"}
-								data-part={setPart("strokeDashType", "dashed")}
+								data-action={setAction("strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
 								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dotted"}
-								data-part={setPart("strokeDashType", "dotted")}
+								data-action={setAction("strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>
 								<DottedLineIcon title={messages.menuDottedLine} />
@@ -140,7 +127,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							max={MAX_STROKE_WIDTH}
 							sliderMax={SLIDER_MAX_STROKE_WIDTH}
 							property="strokeWidth"
-							onPropertyUpdate={onPropertyUpdate}
+							onStyleIntent={onStyleIntent}
 						/>
 
 						{showRadius && (
@@ -148,14 +135,14 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								label={messages.menuCornerRadius}
 								value={selectionValueOrFirst(
 									cornerRadius,
-									DEFAULT_CORNER_RADIUS,
+									SHAPE_STYLE_FALLBACK.rx,
 								)}
 								isMixed={isMixedSelectionValue(cornerRadius)}
 								min={MIN_CORNER_RADIUS}
 								max={MAX_CORNER_RADIUS}
 								sliderMax={SLIDER_MAX_CORNER_RADIUS}
 								property="rx"
-								onPropertyUpdate={onPropertyUpdate}
+								onStyleIntent={onStyleIntent}
 							/>
 						)}
 					</BorderStyleMenuWrapper>

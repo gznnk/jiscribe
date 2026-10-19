@@ -12,7 +12,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const UndoCommand: ExecutableCommand = {
 	id: "undo",
-	label: "Undo",
+	label: { en: "Undo", ja: "元に戻す" },
 	category: "edit",
 
 	shortcuts: {

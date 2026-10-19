@@ -1,6 +1,6 @@
 import { calcContentBounds } from "./calcContentBounds";
 import { calcViewportForBounds } from "./calcViewportForBounds";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
@@ -23,15 +23,15 @@ type FitOptions = {
  *
  * @param objects - The object map to fit; groups contribute through their children
  * @param options - Viewport size in screen px plus the margin kept around the content
- * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; omitting it fits
- *   to the geometry boxes and crops what a shape draws outside them
+ * @param visualExtentRegistries - Per-canvas registries measuring what is drawn
+ *   (see calcContentBounds), so nothing drawn outside the geometry is cropped
  */
 export const calcFitViewport = (
 	objects: Record<string, ObjectState>,
 	{ width, height, padding = 48 }: FitOptions,
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
+	visualExtentRegistries: VisualExtentRegistries,
 ): Viewport | null => {
-	const bounds = calcContentBounds(objects, visualBounds);
+	const bounds = calcContentBounds(objects, visualExtentRegistries);
 	if (!bounds) {
 		return null;
 	}

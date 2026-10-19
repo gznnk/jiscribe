@@ -5,6 +5,8 @@ import type { PolylineDoc } from "@jiscribe/doc/model/objects/primitives/polylin
 import { PolylineFeatures } from "@jiscribe/doc/model/objects/primitives/polyline/PolylineDoc";
 import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
+import { TextFeatures } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
 import type { CreateObjectType } from "@jiscribe/doc/model/objects/types/CreateObjectType";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { describe, expect, it } from "vitest";
@@ -14,6 +16,7 @@ import type { EllipseState } from "../../primitives/ellipse/EllipseState";
 import type { PolylineState } from "../../primitives/polyline/PolylineState";
 import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";
 import type { RectState } from "../../primitives/rect/RectState";
+import type { TextState } from "../../primitives/text/TextState";
 import type { CreateObjectState } from "../../types/CreateObjectState";
 import { createFrameMapper } from "../FrameMapper";
 import { createPolyMapper } from "../PolyMapper";
@@ -199,6 +202,10 @@ describe("mapper factories reject a features / Doc / State mismatch", () => {
 		// Correct pairings, including connector whose Doc narrows points to optional.
 		createFrameMapper<RectDoc, RectState>(RectFeatures);
 		createPolyMapper<ConnectorDoc, ConnectorState>(ConnectorFeatures);
+
+		// @ts-expect-error a point doc carries no box for this mapper to convert, so
+		// such a type maps itself (TextMapper)
+		createFrameMapper<TextDoc, TextState>(TextFeatures);
 
 		// @ts-expect-error EllipseState.type is "ellipse", so it cannot pair with RectDoc
 		createFrameMapper<RectDoc, EllipseState>(RectFeatures);

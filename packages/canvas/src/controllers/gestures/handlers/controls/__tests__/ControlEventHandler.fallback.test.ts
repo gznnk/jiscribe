@@ -17,18 +17,19 @@ const makeContainer = (): ObjectState =>
 const makeState = (): CanvasControllerState =>
 	({
 		objects: { "container-1": makeContainer() },
+		selection: { objectIds: ["container-1"], part: null },
 		activeDrag: {
 			startSnapshot: { objects: { "container-1": makeContainer() } },
 			kind: "other",
 		},
 	}) as unknown as CanvasControllerState;
 
-const makeEvent = (targetPart: string): CanvasEvent =>
+const makeEvent = (targetAction: string): CanvasEvent =>
 	({
 		type: "drag",
 		targetKind: "control",
 		targetId: "container-1",
-		targetPart,
+		targetAction,
 		button: 0,
 		start: { x: 0, y: 0 },
 		last: { x: 0, y: 0 },
@@ -47,7 +48,7 @@ const objectMark = (state: CanvasControllerState): string | undefined =>
 /** Static strategy that marks the state so the test can observe the route. */
 class StaticMarkerStrategy extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
-		return event.targetPart === "resize:topLeft";
+		return event.targetAction === "resize:topLeft";
 	}
 
 	handle(state: CanvasControllerState): CanvasControllerState {
@@ -61,23 +62,24 @@ class StaticMarkerStrategy extends ControlStrategy {
 const makeSelectionControlRegistry = (): SelectionControlRegistry => {
 	const registry = new SelectionControlRegistry();
 	// Marks the routed object so the test can observe the route
-	// (part: selection:container:headerHeight).
+	// (action: selection:container:headerHeight).
 	registry.register("container", [
 		{
 			name: "headerHeight",
 			Component: () => null,
-			handle: (context) =>
-				({
+			handle: (context) => ({
+				object: {
 					...context.startObject,
 					handledBy: "selection-control",
-				}) as unknown as ObjectState,
+				} as unknown as ObjectState,
+			}),
 		},
 	]);
 	return registry;
 };
 
 describe("ControlEventHandler selection-control fallback", () => {
-	it("routes to the registered control via the self-describing data-part", () => {
+	it("routes to the registered control via the self-describing data-action", () => {
 		const handler = new ControlEventHandler(
 			[new StaticMarkerStrategy()],
 			makeSelectionControlRegistry(),

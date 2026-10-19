@@ -1,23 +1,27 @@
+import { textSlotPart } from "@jiscribe/canvas";
 import { createFrameObject } from "@jiscribe/canvas-sdk";
 import type { Rect } from "@jiscribe/geometry";
 
-import { calcRecordSlotRegions } from "./calcRecordSlotRegions";
+import { calcRecordTextSlotRegions } from "./calcRecordTextSlotRegions";
 import {
 	RecordCompartment,
 	RecordDivider,
 	RecordOutline,
 } from "./RecordBoxStyled";
-import { isRecordListSlotId, RECORD_SLOT_IDS } from "../schema/RecordDoc";
+import {
+	isRecordListTextSlotId,
+	RECORD_TEXT_SLOT_IDS,
+} from "../schema/RecordDoc";
 import type { RecordState } from "../state/RecordState";
 
 /**
  * Record presentation: a title band, optionally under a stereotype line, over one
  * or two compartments of rows. Shared Frame logic (transform, color resolution,
- * per-slot text overlays placed by calcRecordTextRegion, memo) lives in
+ * per-slot text overlays placed by calcRecordTextSlotRegions, memo) lives in
  * createFrameObject; here we draw the compartments and the linework. The wrapping
  * <g> carries the object's data-kind/data-id, and each compartment carries its
- * slot id as data-part, so a double click resolves to the compartment it landed
- * in (getGestureTarget).
+ * slot's address as data-part (textSlotPart), so a click picks the compartment it
+ * landed in and a double click opens it (getGestureTarget).
  *
  * Every fill is laid down before any line, so a compartment's fill can never
  * cover the divider above it.
@@ -37,10 +41,10 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 
 	const { width, height } = state;
 	const regions: Record<string, Rect | undefined> =
-		calcRecordSlotRegions(state);
+		calcRecordTextSlotRegions(state);
 	// Top to bottom: the canonical slot order, minus the compartments this box
 	// does not have.
-	const compartments = RECORD_SLOT_IDS.flatMap((slotId) => {
+	const compartments = RECORD_TEXT_SLOT_IDS.flatMap((slotId) => {
 		const region = regions[slotId];
 		return region === undefined ? [] : [{ slotId, region }];
 	});
@@ -49,7 +53,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 	// compartments take one — and the title always being present keeps the line
 	// off the box's own top edge.
 	const dividedCompartments = compartments.filter(({ slotId }) =>
-		isRecordListSlotId(slotId),
+		isRecordListTextSlotId(slotId),
 	);
 
 	return (
@@ -57,7 +61,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 			{compartments.map(({ slotId, region }) => (
 				<RecordCompartment
 					key={slotId}
-					data-part={slotId}
+					data-part={textSlotPart(slotId)}
 					x={region.x}
 					y={region.y}
 					width={region.width}

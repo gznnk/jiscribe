@@ -4,6 +4,7 @@ import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import {
+	listConnectorPathPoints,
 	resolveConnectorPoints,
 	resolveEndpointOwner,
 } from "../../../../connectors/endpoints";
@@ -12,18 +13,19 @@ import type { ConnectorLabelPlacement } from "../../../../connectors/label/calcC
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
-import type { ObjectTextRegionCalculator } from "../../../../rendering/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectPartKindDefinition } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import {
-	isTextStyleState,
-	type TextStyleState,
-} from "../../../../states/objects/base/TextStyleState";
+import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
-import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
+import type { TextFormat } from "../../../style/TextFormat";
+import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
+import { resolveTextEditLineBreaks } from "../ObjectTextEditLineBreaksRegistry";
+import type { ObjectTextEditLineBreaksResolver } from "../ObjectTextEditLineBreaksTypes";
 import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
 import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
 import { TextEditor } from "../TextEditor";
@@ -33,12 +35,16 @@ type EditorHandlers = {
 	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
 	onChange: (text: RichText) => void;
 	onEscape: () => void;
+	/** Cmd+Enter / Ctrl+Enter in either editor: commit and close, as a press outside does. */
+	onCommit: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
 	onSelectionChange: (selection: { start: number; end: number }) => void;
-	/** A bold / italic / underline keystroke over that selection. */
-	onToggleFormat: (format: TextEditFormat) => void;
+	/** A bold / italic / underline / strikethrough keystroke over that selection. */
+	onToggleFormat: (format: TextFormat) => void;
+	/** Tab (1) / Shift+Tab (-1) in a shape's editor; a label editor keeps the keystroke to itself. */
+	onTab: (step: 1 | -1) => void;
 };
 
 /**
@@ -86,7 +92,7 @@ function renderConnectorLabelEditor(
 		return null;
 	}
 
-	const points = [resolved.source, ...resolved.waypoints, resolved.target];
+	const points = listConnectorPathPoints(resolved);
 	const anchor = calcConnectorLabelAnchor(
 		points,
 		pendingPlacement?.position ?? connector.label?.position,
@@ -110,6 +116,7 @@ function renderConnectorLabelEditor(
 			strokeDashType={connector.label?.strokeDashType}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
+			onCommit={handlers.onCommit}
 			onCaretMove={handlers.onCaretMove}
 		/>
 	);
@@ -133,8 +140,9 @@ function renderConnectorLabelEditor(
  * @param handlers - Input and exit handlers
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, so a field
  *   the slot leaves unset is drawn with the same value the overlay uses
- * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
+ * @param textSlotKind - The `"textSlot"` part kind registered for the type, which places the slot. Omitted = full bbox
  * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
+ * @param textEditLineBreaksResolver - Per-type resolver from ObjectTextEditLineBreaksRegistry. Omitted = the slot takes line breaks
  * @returns The text editor
  */
 function renderTextEditor(
@@ -144,11 +152,12 @@ function renderTextEditor(
 	richText: RichText,
 	handlers: EditorHandlers,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
-	textRegionCalculator?: ObjectTextRegionCalculator,
+	textSlotKind?: ObjectPartKindDefinition,
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
+	textEditLineBreaksResolver?: ObjectTextEditLineBreaksResolver,
 ): React.ReactElement {
-	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
-	const style = textStyleDefaults.resolveSlotStyle(
+	const textRegion = calcTextRegion(target, slotId, textSlotKind);
+	const style = textStyleDefaults.resolveTextSlotStyle(
 		target.type,
 		slotId,
 		target.text?.[slotId],
@@ -157,8 +166,11 @@ function renderTextEditor(
 	// shape's bottom edge (local coordinates, origin at the shape center). A region
 	// already at or below that edge yields 0 rather than a negative length.
 	const growLimit = Math.max(target.height / 2 - textRegion.y, 0);
+	// Keyed by the slot so a Tab onto the next one mounts a fresh editor, which
+	// takes the focus and places the caret as an editor opened by Enter does.
 	return (
 		<TextEditor
+			key={`${objectId}/${slotId}`}
 			objectId={objectId}
 			richText={richText}
 			cx={target.cx}
@@ -171,6 +183,7 @@ function renderTextEditor(
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
 			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
+			lineBreaks={resolveTextEditLineBreaks(slotId, textEditLineBreaksResolver)}
 			growLimit={growLimit}
 			textAlign={style.textAlign}
 			verticalAlign={style.verticalAlign}
@@ -184,6 +197,8 @@ function renderTextEditor(
 			onSelectionChange={handlers.onSelectionChange}
 			onToggleFormat={handlers.onToggleFormat}
 			onEscape={handlers.onEscape}
+			onCommit={handlers.onCommit}
+			onTab={handlers.onTab}
 			onCaretMove={handlers.onCaretMove}
 		/>
 	);
@@ -191,16 +206,22 @@ function renderTextEditor(
 
 type TextEditorLayerProps = {
 	textEditState: CanvasControllerState["textEditState"];
+	/** Who the session belongs to; the object and the slot are read off it (readOpenTextEdit). */
+	selection: CanvasControllerState["selection"];
 	objects: CanvasControllerState["objects"];
 	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
 	onTextChange: (text: RichText) => void;
 	onEscape: () => void;
+	/** Cmd+Enter / Ctrl+Enter in either editor: commit and close, as a press outside does. */
+	onCommit: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
 	/** What the editor has selected, for the styling that addresses a stretch of the text. */
 	onSelectionChange: (selection: { start: number; end: number }) => void;
-	/** A bold / italic / underline keystroke over that selection. */
-	onToggleFormat: (format: TextEditFormat) => void;
+	/** A bold / italic / underline / strikethrough keystroke over that selection. */
+	onToggleFormat: (format: TextFormat) => void;
+	/** Tab (1) / Shift+Tab (-1) in a shape's editor: commit, step to the adjacent slot, edit it. */
+	onTab: (step: 1 | -1) => void;
 };
 
 /**
@@ -209,41 +230,42 @@ type TextEditorLayerProps = {
  */
 const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	textEditState,
+	selection,
 	objects,
 	onTextChange,
 	onEscape,
+	onCommit,
 	onCaretMove,
 	onSelectionChange,
 	onToggleFormat,
+	onTab,
 }) => {
 	const registries = useCanvasRegistries();
 
 	if (!textEditState) {
 		return null;
 	}
-
-	const targetObject = objects[textEditState.objectId];
-	if (!targetObject) {
+	const openEdit = readOpenTextEdit({ textEditState, selection, objects });
+	if (openEdit === null) {
 		return null;
 	}
 
 	const handlers: EditorHandlers = {
 		onChange: onTextChange,
 		onEscape,
+		onCommit,
 		onCaretMove,
 		onSelectionChange,
 		onToggleFormat,
+		onTab,
 	};
 
-	if (textEditState.kind === "connectorLabel") {
-		if (targetObject.type !== "connector") {
-			return null;
-		}
+	if (openEdit.kind === "connectorLabel") {
 		return renderConnectorLabelEditor(
-			targetObject as ConnectorState,
+			openEdit.connector,
 			objects,
-			textEditState.text,
-			textEditState.placement,
+			openEdit.text,
+			openEdit.placement,
 			handlers,
 			registries.objectOutline,
 			registries.objectAnchorRegion,
@@ -251,29 +273,20 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		);
 	}
 
-	// Any other slot id is a key of the shape's own text; one the shape does not
-	// have has no region to place the editor in, so nothing is rendered.
-	if (
-		isTextStyleState(targetObject) &&
-		targetObject.text !== undefined &&
-		textEditState.slotId in targetObject.text
-	) {
-		// Shapes with text also carry geometry (cx/cy/width...).
-		const geometryObject = targetObject as typeof targetObject &
-			TransformedFrame;
-		return renderTextEditor(
-			geometryObject,
-			textEditState.objectId,
-			textEditState.slotId,
-			textEditState.text,
-			handlers,
-			registries.objectTextStyleDefaults,
-			registries.objectTextRegion.get(targetObject.type),
-			registries.objectTextEditOverflow.get(targetObject.type),
-		);
-	}
-
-	return null;
+	// Shapes with text also carry geometry (cx/cy/width...).
+	const geometryObject = openEdit.object as typeof openEdit.object &
+		TransformedFrame;
+	return renderTextEditor(
+		geometryObject,
+		openEdit.object.id,
+		openEdit.textSlotId,
+		openEdit.text,
+		handlers,
+		registries.objectTextStyleDefaults,
+		registries.objectPartKind.get(openEdit.object.type, TEXT_SLOT_PART_KIND),
+		registries.objectTextEditOverflow.get(openEdit.object.type),
+		registries.objectTextEditLineBreaks.get(openEdit.object.type),
+	);
 };
 
 export const TextEditorLayer = memo(TextEditorLayerComponent);

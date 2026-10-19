@@ -10,12 +10,12 @@ export type PropertySegmentedOption = {
 	/** Distinguishes the option within the control; not written anywhere. */
 	id: string;
 	/**
-	 * The `data-part` the press carries into the sidebar (PropertyPanelHandler):
+	 * The `data-action` the press carries into the sidebar (PropertyPanelHandler):
 	 * `set:{property}:{value}` for a plain value, `command:{commandId}` for a
 	 * toggle the canvas computes itself, or `doc:{property}:{value}` for a
 	 * document setting.
 	 */
-	part: string;
+	action: string;
 	/** title / aria-label of the button. */
 	title: string;
 	/** What the button draws: an icon, or a word for a control with no icon set. */
@@ -38,7 +38,7 @@ type PropertySegmentedControlProps = {
 
 /**
  * A row of mutually visible choices, each writing straight through the gesture
- * system — the buttons carry only a data-part, so a press resolves to the
+ * system — the buttons carry only a data-action, so a press resolves to the
  * sidebar that contains them — and landing one property update and one history
  * entry, with no callback in between.
  */
@@ -56,7 +56,7 @@ const PropertySegmentedControlComponent: React.FC<
 					aria-pressed={isActive}
 					title={option.title}
 					aria-label={option.title}
-					data-part={option.part}
+					data-action={option.action}
 				>
 					{option.content}
 				</PropertySegmentButton>

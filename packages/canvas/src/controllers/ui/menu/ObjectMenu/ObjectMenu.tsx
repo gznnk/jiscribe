@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useRef, useState } from "react";
 
+import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
 import { useMenuSections } from "./hooks/useMenuSections";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import { AlignmentMenu } from "./items/AlignmentMenu";
@@ -23,25 +24,27 @@ import {
 } from "./ObjectMenuStyled";
 import type {
 	ObjectMenuItem,
-	StylePropertyUpdater,
+	StyleIntentUpdater,
 	ObjectMenuSection,
 	OpenReferenceHandler,
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
+import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { readPickedPartStyleIntentKinds } from "../../../selection/readers/readPickedPartStyleIntentKinds";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: StylePropertyUpdater;
+	onStyleIntent: StyleIntentUpdater;
 	onOpenReference?: OpenReferenceHandler;
 };
 
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
-	onPropertyUpdate: StylePropertyUpdater,
+	onStyleIntent: StyleIntentUpdater,
 	onOpenReference: OpenReferenceHandler | undefined,
 ): React.ReactNode => {
 	switch (item.type) {
@@ -52,7 +55,7 @@ const renderItem = (
 				<LineColorMenu
 					key="lineColor"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "lineStyle":
@@ -60,7 +63,7 @@ const renderItem = (
 				<LineStyleMenu
 					key="lineStyle"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "backgroundColor":
@@ -68,7 +71,7 @@ const renderItem = (
 				<BackgroundColorMenu
 					key="backgroundColor"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "borderColor":
@@ -76,7 +79,7 @@ const renderItem = (
 				<StrokeColorMenu
 					key="borderColor"
 					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "borderStyle":
@@ -85,7 +88,7 @@ const renderItem = (
 					key="borderStyle"
 					canvasState={canvasState}
 					showRadius={item.radius}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 		case "font":
@@ -94,16 +97,16 @@ const renderItem = (
 					<FontFamilyMenu canvasState={canvasState} />
 					<FontSizeMenu
 						canvasState={canvasState}
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 					<FontColorMenu
 						canvasState={canvasState}
-						onPropertyUpdate={onPropertyUpdate}
+						onStyleIntent={onStyleIntent}
 					/>
 				</React.Fragment>
 			);
 		case "textFormat":
-			return <TextFormatMenu key="textFormat" canvasState={canvasState} />;
+			return <TextFormatMenu key="textFormat" />;
 		case "textAlignment":
 			return (
 				<AlignmentMenu
@@ -132,10 +135,9 @@ const renderItem = (
 				<item.component
 					key={item.id}
 					objects={canvasState.objects}
-					selectedIds={canvasState.selectedIds}
-					selectedConnectorId={canvasState.selectedConnectorId}
+					selection={canvasState.selection}
 					openSectionId={canvasState.objectMenuOpenId}
-					onPropertyUpdate={onPropertyUpdate}
+					onStyleIntent={onStyleIntent}
 				/>
 			);
 	}
@@ -147,7 +149,8 @@ const buildSystemSections = (
 ): ObjectMenuSection[] => {
 	const systemSections: ObjectMenuSection[] = [];
 
-	const { selectedIds, objects } = canvasState;
+	const { objectIds: selectedIds } = canvasState.selection;
+	const { objects } = canvasState;
 	const singleSelected =
 		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
 
@@ -176,13 +179,15 @@ const buildSystemSections = (
  */
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
-	onPropertyUpdate,
+	onStyleIntent,
 	onOpenReference,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
+	const readStyle = useSelectionStyleReader(canvasState);
+	const { objectPartKind } = useCanvasRegistries();
 	// Reported to the positioning hook, which holds the menu still while it is
-	// under the pointer — the flat format buttons resize an auto-sized text on
-	// every toggle, and the menu must not walk away between two presses.
+	// under the pointer — the Bold toggle resizes an auto-sized text on every
+	// press, and the menu must not walk away between two presses.
 	// The dropdown panels are DOM children of the container, so moving onto one
 	// is not a leave.
 	const [isPointerOverMenu, setIsPointerOverMenu] = useState(false);
@@ -196,13 +201,12 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
-	// None of the system sections acts on a text slot, so they all go while one is
-	// selected — and likewise while an editor is open, where the menu is there to
-	// style the text being edited.
+	// None of the system sections acts on a picked part, so they all go while one
+	// narrows the menu (readPickedPartStyleIntentKinds) — and likewise while an editor is
+	// open, where the menu is there to style the text being edited.
 	const showSystemSections =
 		shouldRender &&
-		resolveSelectedTextSlot(canvasState) === null &&
-		canvasState.textEditState?.kind !== "shape";
+		readPickedPartStyleIntentKinds(canvasState, objectPartKind) === null;
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
 		: [];
@@ -228,7 +232,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 			}
 			renderedItemKeys.add(key);
 			sectionItems.push(
-				renderItem(item, canvasState, onPropertyUpdate, onOpenReference),
+				renderItem(item, canvasState, onStyleIntent, onOpenReference),
 			);
 		});
 		return (
@@ -248,7 +252,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				onPointerEnter={handlePointerEnter}
 				onPointerLeave={handlePointerLeave}
 			>
-				{sections}
+				<SelectionStyleReaderContext.Provider value={readStyle}>
+					{sections}
+				</SelectionStyleReaderContext.Provider>
 				{/* The way into the sidebar, after every per-type section. Not a
 				    section itself, so a custom menu cannot drop it and the "nothing
 				    to show" check above does not count it. */}

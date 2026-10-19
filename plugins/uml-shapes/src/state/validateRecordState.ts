@@ -4,19 +4,19 @@ import { createFrameStateValidator } from "@jiscribe/canvas-sdk";
 import type { StateRecord } from "@jiscribe/canvas-sdk";
 
 import {
-	isRecordSlotId,
-	RECORD_LIST_SLOT_IDS,
-	RECORD_NAME_SLOT_ID,
-	RECORD_STEREOTYPE_SLOT_ID,
+	isRecordTextSlotId,
+	RECORD_LIST_TEXT_SLOT_IDS,
+	RECORD_NAME_TEXT_SLOT_ID,
+	RECORD_STEREOTYPE_TEXT_SLOT_ID,
 	RecordFeatures,
 } from "../schema/RecordDoc";
 
 /** A compartment holds rows: an array of strings, and only that. */
-const isRowsSlot = (value: unknown): boolean =>
+const isRowsTextSlot = (value: unknown): boolean =>
 	isObject(value) && Array.isArray(value.text) && value.text.every(isString);
 
 /** A text band holds one string, newlines and all. */
-const isBandSlot = (value: unknown): boolean =>
+const isBandTextSlot = (value: unknown): boolean =>
 	isObject(value) && isString(value.text);
 
 /**
@@ -36,18 +36,18 @@ const hasRecordTextSlots = (o: StateRecord): boolean => {
 	if (!isObject(text)) {
 		return false;
 	}
-	if (Object.keys(text).some((key) => !isRecordSlotId(key))) {
+	if (Object.keys(text).some((key) => !isRecordTextSlotId(key))) {
 		return false;
 	}
-	if (!isBandSlot(text[RECORD_NAME_SLOT_ID])) {
+	if (!isBandTextSlot(text[RECORD_NAME_TEXT_SLOT_ID])) {
 		return false;
 	}
-	const stereotype = text[RECORD_STEREOTYPE_SLOT_ID];
-	if (stereotype !== undefined && !isBandSlot(stereotype)) {
+	const stereotype = text[RECORD_STEREOTYPE_TEXT_SLOT_ID];
+	if (stereotype !== undefined && !isBandTextSlot(stereotype)) {
 		return false;
 	}
-	return RECORD_LIST_SLOT_IDS.every(
-		(slotId) => text[slotId] === undefined || isRowsSlot(text[slotId]),
+	return RECORD_LIST_TEXT_SLOT_IDS.every(
+		(slotId) => text[slotId] === undefined || isRowsTextSlot(text[slotId]),
 	);
 };
 

@@ -122,7 +122,11 @@ const TILE_DOC_DEFAULTS: Omit<TileDoc, "id"> = {
 	strokeWidth: 2,
 } as const as TileDoc;
 
-/** Drag-drawn shape; the only member of the `spec` category flyout. */
+/**
+ * Drag-drawn shape; `tile` is the only member of the `spec` category flyout, and
+ * `brick` (a second preset of the same type) is registered but listed nowhere, so
+ * the sidebar reaches it only through the category's `search`.
+ */
 const tileDefinition: ObjectTypeDefinition<TileDoc, TileState> = {
 	features: TileFeatures,
 	validateDoc: createFrameDocValidator(TileFeatures),
@@ -133,6 +137,7 @@ const tileDefinition: ObjectTypeDefinition<TileDoc, TileState> = {
 	component: createFrameObject<TileState>(drawSpecShapeBox),
 	stencils: [
 		{ id: "tile", objectType: "tile", label: "Tile", icon: SpecShapeIcon },
+		{ id: "brick", objectType: "tile", label: "Brick", icon: SpecShapeIcon },
 	],
 };
 
@@ -445,14 +450,28 @@ export const specShapesPlugin: CanvasPlugin = {
 	},
 };
 
+/** Every preset the `spec` category holds, listed in `presetIds` or not. */
+const SPEC_CATEGORY_PRESETS = [
+	{ id: "tile", label: "Tile" },
+	{ id: "brick", label: "Brick" },
+];
+
 /**
- * Category holding the `tile` preset, so the flyout spec has a category to
- * open. Composed into the harness `toolbarItems` and `stencilLibrarySections`
- * the same way a host composes a plugin's own category.
+ * Category listing the `tile` preset, so the flyout spec has a category to
+ * open, and holding `brick` beyond it for the sidebar search to reach. Composed
+ * into the harness `toolbarItems` and `stencilLibrarySections` the same way a
+ * host composes a plugin's own category.
  */
 export const specShapesStencilCategory: StencilCategory = {
 	id: "spec",
 	label: "Spec",
 	icon: SpecShapeIcon,
 	presetIds: ["tile"],
+	search: (query) => {
+		const needle = query.toLowerCase();
+		const presetIds = SPEC_CATEGORY_PRESETS.filter((preset) =>
+			preset.label.toLowerCase().includes(needle),
+		).map((preset) => preset.id);
+		return { presetIds, matchCount: presetIds.length };
+	},
 };

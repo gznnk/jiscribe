@@ -1,4 +1,4 @@
-import { updateGroupBoundsFromRoot } from "./updateGroupBoundsFromRoot";
+import { updateGroupBoundsFromRoots } from "./updateGroupBoundsFromRoot";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -9,21 +9,17 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * The whole root subtree is recomputed per selected id rather than the chain
  * above it, since a resized group's own frame is derived from the children the
  * resize just scaled. Shared by the transform drag's `dragEnd` and by the
- * property panel's `TRANSFORM_PROPERTY_UPDATE`, which have to leave the same
- * bounds behind.
+ * property panel's size and rotation edits (`TRANSFORM_PROPERTY_UPDATE`), which
+ * have to leave the same bounds behind.
  *
- * @param state - The state holding the already-transformed objects; its `selectedIds` name what moved
+ * The batch call is what keeps a multi-selection to one copy of the objects map
+ * (issue #160); ids naming nothing, and ids whose topmost ancestor is not a
+ * group, are dropped by `findRootGroupId` rather than filtered here.
+ *
+ * @param state - The state holding the already-transformed objects; its `selection.objectIds` name what moved
  * @returns `state` itself when nothing selected is a group or lives in one
  */
 export const updateGroupBoundsForSelection = (
 	state: CanvasControllerState,
-): CanvasControllerState => {
-	let nextState = state;
-	for (const selectedId of nextState.selectedIds) {
-		const object = nextState.objects[selectedId];
-		if (object && (object.type === "group" || object.parentId)) {
-			nextState = updateGroupBoundsFromRoot(nextState, selectedId);
-		}
-	}
-	return nextState;
-};
+): CanvasControllerState =>
+	updateGroupBoundsFromRoots(state, state.selection.objectIds);

@@ -1,7 +1,16 @@
 import type { CreateObjectState } from "@jiscribe/canvas";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "@jiscribe/canvas/unstable";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
-import { calcFullBoxTextRegion, calcOutsideBoxTextRegion } from "@jiscribe/doc";
+import {
+	calcFullBoxTextRegion,
+	calcOutsideBoxTextRegion,
+	supportsAutoHeight,
+} from "@jiscribe/doc";
 import { AUTO_COLOR } from "@jiscribe/doc/unstable";
+import type { Dimensions } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import { createFrameObjectDoc } from "../../schema/createFrameObjectDoc";
@@ -83,7 +92,7 @@ describe("createFrameObjectDefinition", () => {
 		expect(definition.stencils).toEqual([]);
 	});
 
-	it("carries the doc's verdict on a height that may follow the text", () => {
+	it("keeps the doc's own region and verdict on a height that may follow the text", () => {
 		const inTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: createFrameObjectDoc({
 				features: DemoFeatures,
@@ -94,9 +103,9 @@ describe("createFrameObjectDefinition", () => {
 			textRegion: calcFullBoxTextRegion,
 		});
 		// The shape labelled below its outline: its doc says the box holds no text,
-		// while its UI region is the caption box it draws that label in. Only the
-		// doc's answer decides, so the UI one must not talk the canvas into offering
-		// a height the parser then refuses.
+		// while its canvas region is the caption box it draws that label in. Only
+		// the doc's answer decides, so the canvas one must not talk the canvas into
+		// offering a height the parser then refuses.
 		const belowTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: createFrameObjectDoc({
 				features: DemoFeatures,
@@ -112,8 +121,9 @@ describe("createFrameObjectDefinition", () => {
 			}),
 		});
 
-		expect(inTheBox.autoHeight).toBeUndefined();
-		expect(belowTheBox.autoHeight).toBe(false);
+		expect(belowTheBox.textRegion).toBe(calcOutsideBoxTextRegion);
+		expect(supportsAutoHeight(inTheBox)).toBe(true);
+		expect(supportsAutoHeight(belowTheBox)).toBe(false);
 	});
 
 	it("carries an explicit denial across untouched", () => {
@@ -129,6 +139,50 @@ describe("createFrameObjectDefinition", () => {
 		});
 
 		expect(denied.autoHeight).toBe(false);
+	});
+
+	it("builds the text slot part kind from textRegion, after the declared kinds", () => {
+		const captionRegion = ({ width, height }: Dimensions) => ({
+			x: -width / 2,
+			y: height / 2,
+			width,
+			height: 20,
+		});
+		const vertexKind = { kind: "vertex", has: () => false };
+		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: demoDocDefinition,
+			component: DemoComponent,
+			textRegion: captionRegion,
+			partKinds: [vertexKind],
+		});
+
+		expect(definition.partKinds?.map((part) => part.kind)).toEqual([
+			"vertex",
+			TEXT_SLOT_PART_KIND,
+		]);
+		expect(definition.partKinds?.[1].region).toBe(captionRegion);
+	});
+
+	it("declares no part kind when given no textRegion", () => {
+		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: demoDocDefinition,
+			component: DemoComponent,
+		});
+
+		expect(definition.partKinds).toBeUndefined();
+	});
+
+	it("refuses textRegion next to a declared text slot kind, naming the type", () => {
+		expect(() =>
+			createFrameObjectDefinition<DemoDoc, DemoState>({
+				doc: demoDocDefinition,
+				component: DemoComponent,
+				textRegion: calcFullBoxTextRegion,
+				partKinds: [createTextSlotPartKindDefinition()],
+			}),
+		).toThrow(
+			'createFrameObjectDefinition "sdkDemo": declares textRegion and a "textSlot" part kind',
+		);
 	});
 
 	it("derives a mapper that converts geometry both ways", () => {

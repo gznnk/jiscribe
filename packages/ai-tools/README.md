@@ -8,9 +8,14 @@ is transported, and applied through the same package.
 - The operation vocabulary (`AiCanvasOp` and everything it is built from) — a
   facade over the canvas docOps and the canvas view, and the only contract the
   declaring side and the applying side share.
-- `createCanvasToolDescriptors(capabilities)` — one `CanvasToolDescriptor` per
-  tool: its name, the wording the model reads, the argument schema as a zod raw
-  shape, and `toOp`, which turns validated arguments into an operation.
+- `createCanvasToolSet(capabilities, aiToolPlugins)` — the tool set a host offers:
+  one `CanvasToolDescriptor` per tool (its name, the wording the model reads, the
+  argument schema as a zod raw shape, and `toOp`, which turns validated arguments
+  into an operation), the built-ins followed by the object tools the plugins offer
+  for their own types (`AiToolPlugin`, declared in `@jiscribe/ai-tools-sdk`, whose argument
+  schemas are zod raw shapes put into the descriptor as they are). Hand the same
+  set to `applyCanvasOp`, which resolves a plugin tool's op through it, so a tool
+  that is declared is always one that can be applied.
 - `toCanvasCapabilities(docPlugins)` — the shape types the descriptors may name,
   derived from a doc plugin set.
 
@@ -32,7 +37,8 @@ into `center_view`. What is not allowed is leaving the correspondence implied �
 that is how `move_objects` came to call `translateObjects` while a differently
 meaning `moveObjects` existed beside it. Every descriptor therefore states its
 `drives`, a list of `CanvasApiRef` (`docOps.<member>`, `handle.<namespace>.<member>`,
-or `"agent"` for what the host owns rather than the canvas), typed off the real
+`"agent"` for what the host owns rather than the canvas, or `"plugin"` for a
+plugin's own tool code), typed off the real
 `DocOps` and `CanvasHandle` declarations so a member that does not exist cannot be
 named.
 
@@ -59,13 +65,15 @@ implementation lives here beside the declaration it mirrors.
 ## Usage
 
 ```typescript
-import type { AiCanvasOp } from "@jiscribe/ai-tools";
-import {
-	createCanvasToolDescriptors,
-	toCanvasCapabilities,
-} from "@jiscribe/ai-tools";
+import { createCanvasToolSet, toCanvasCapabilities } from "@jiscribe/ai-tools";
+import { applyCanvasOp } from "@jiscribe/ai-tools/apply";
+import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
+import { standardAiToolPlugins } from "@jiscribe/standard-shapes/tools";
 
-const descriptors = createCanvasToolDescriptors(
-	toCanvasCapabilities([flowchartDocPlugin]),
+const toolSet = createCanvasToolSet(
+	toCanvasCapabilities(standardDocPlugins),
+	standardAiToolPlugins,
 );
+// Declare toolSet.descriptors to the model, then apply what comes back with
+// applyCanvasOp(op, docBridge, history, docOps, toolSet)
 ```

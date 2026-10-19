@@ -11,10 +11,11 @@
 		"./svg-source": "./src/svg-source.ts",
 		"./parse": "./src/parse/index.ts",
 		"./ops": "./src/ops/index.ts",
+		"./testing": "./testing/index.ts",
 		"./*": "./src/*.ts"
 	},
 	"comments": {
-		"exports./*": "The wildcard is for @jiscribe/canvas only: the canvas layers map every built-in Doc type one by one, so they reach modules no curated entry names. Every other consumer is held to ./, ./unstable, ./png-source and ./svg-source by the docCuratedEntriesOnly fence in eslint.config.js, which exempts packages/canvas/src/** alone."
+		"exports./*": "The wildcard is for @jiscribe/canvas only: the canvas layers map every built-in Doc type one by one, so they reach modules no curated entry names. Every other consumer is held to ./, ./unstable, ./png-source, ./svg-source and ./testing by the docCuratedEntriesOnly fence in eslint.config.js, which exempts packages/canvas/src/** alone."
 	},
 	"scripts": {
 		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",

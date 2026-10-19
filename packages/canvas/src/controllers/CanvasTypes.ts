@@ -1,16 +1,23 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
-import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
+import type {
+	BoundingBox,
+	FrameKeyPoints,
+	Point,
+	Transform,
+} from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorLabelPlacement";
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
+import type { CanvasSelection } from "./selection/CanvasSelection";
 import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
+import type { ResizedAxes } from "../states/registry/ObjectContentResizerRegistry";
 
 // ---------------------------------------------------------------------------
 // Save request types (stored in CanvasControllerState)
@@ -257,7 +264,7 @@ export type DragStartSnapshot = {
 	bboxes: Record<string, BoundingBox>;
 	/** Candidates over all objects; exclusions are passed to findSnap separately */
 	snapCandidates: SnapCandidates;
-	selectedIds: string[];
+	selectedIds: readonly string[];
 	/** Selected objects plus all descendants; the exclusion set for findSnap / buildSnapFeedback */
 	selectedIdsWithDescendants: ReadonlySet<string>;
 	/** null when there is no multi-selection */
@@ -296,6 +303,23 @@ export type ActiveDrag = {
 	 * distinguished overwrites the kind in its own dragStart.
 	 */
 	kind: DragKind;
+	/**
+	 * What a transform-handle resize writes, set by the transform handler's
+	 * dragStart. Absent on the rotation knob and on every other kind, so its
+	 * presence alone says a handle is resizing.
+	 */
+	resize?: TransformDragResize;
+};
+
+/**
+ * A transform-handle resize, stated in the frame whose handle is dragged; each
+ * object the drag scales reads it in its own frame (calcObjectResizedAxes).
+ */
+export type TransformDragResize = {
+	/** The axes the handle writes and the edges it holds, in `frame`'s terms */
+	readonly axes: ResizedAxes;
+	/** Rotation (degrees) and flips of the dragged frame at dragStart: the selected object's own, or the multi-select group's */
+	readonly frame: Transform;
 };
 
 /**
@@ -418,7 +442,11 @@ export type CanvasControllerState = CanvasState & {
 
 	history: HistoryState;
 
-	selectedIds: string[];
+	/**
+	 * What the canvas is pointed at: the objects picked, and the parts picked one
+	 * level below them (see {@link CanvasSelection}).
+	 */
+	selection: CanvasSelection;
 
 	/** null when no gesture is in progress */
 	activeDrag: ActiveDrag | null;
@@ -477,7 +505,7 @@ export type CanvasControllerState = CanvasState & {
 	};
 
 	/**
-	 * Incremented when a new edit is confirmed (dragEnd, command execution, etc.).
+	 * Advanced by the writer that confirms an edit of the document (commitEdit).
 	 * Internal signal read exclusively by recordHistoryIfNeeded.
 	 */
 	commitVersion: number;
@@ -547,7 +575,7 @@ export type CanvasControllerState = CanvasState & {
 		 * held at dragStart; every frame selects these plus the current hit set. Empty
 		 * for a plain marquee, which replaces the selection.
 		 */
-		baseIds: string[];
+		baseIds: readonly string[];
 	} | null;
 
 	/** null means all ObjectMenu sections are collapsed */
@@ -577,18 +605,35 @@ export type CanvasControllerState = CanvasState & {
 	propertyPanel: PropertyPanelState;
 
 	/**
-	 * Group state covering a multi-selection: while non-null every object in selectedIds is
+	 * Group state covering a multi-selection: while non-null every object in selection.objectIds is
 	 * treated as its child. null when the selection is not grouped.
 	 */
 	multiSelectGroup: GroupState | null;
 
-	/** null when not editing text */
+	/**
+	 * The open editing session's draft, null when not editing text. What is being
+	 * edited is `selection`, not named here, which is what keeps the two from
+	 * drifting apart. Read through readOpenTextEdit, which pairs the draft with
+	 * its owner again.
+	 *
+	 * Three invariants every writer keeps:
+	 * - non-null means `selection.objectIds` holds exactly one id, the owner's
+	 * - `kind: "shape"` means that object holds text and `selection.part` is one
+	 *   collapsed textSlot range naming the slot being edited, whatever the type's
+	 *   text shape (a one-body type's slot is its `body`); nothing else there, no
+	 *   pick or a pick of another kind included, keeps the session alive
+	 * - `kind: "connectorLabel"` means that one id is a connector, with
+	 *   `selection.part` null
+	 *
+	 * And one duty: a writer that moves `selection.objectIds` while a session is
+	 * open runs commitTextEditIfNeeded first (SET_SELECTION, the press handlers).
+	 * The reducer's reconcileSelection only catches an owner that is gone or
+	 * cannot hold the session; a draft left over a move to another text-holding
+	 * object is indistinguishable from one started there, and commits into it.
+	 */
 	textEditState:
 		| {
 				kind: "shape";
-				objectId: string;
-				/** Key of the object's `state.text` */
-				slotId: string;
 				/**
 				 * The draft body, styling included; a slot holding rows is joined with
 				 * "\n" while editing. Every keystroke advances it with the same
@@ -601,14 +646,13 @@ export type CanvasControllerState = CanvasState & {
 				 * What the editor currently has selected, in UTF-16 offsets of `text`.
 				 * Reported by the editor on every caret and selection change, and read
 				 * by the styling that applies to a stretch of the text rather than to the
-				 * whole slot (toggleTextEditFormat). Collapsed (start === end) for a
-				 * plain caret, and absent until the editor has reported once.
+				 * whole slot (readOpenTextEditForStyle). Collapsed (start === end) for
+				 * a plain caret, and absent until the editor has reported once.
 				 */
 				selection?: { start: number; end: number };
 		  }
 		| {
 				kind: "connectorLabel";
-				objectId: string;
 				text: string;
 				/**
 				 * Placement the label being created takes on commit: the double-clicked point
@@ -625,25 +669,6 @@ export type CanvasControllerState = CanvasState & {
 	/** Set while dragging from a connection anchor; committed or discarded on dragEnd */
 	connectorDraft: ConnectorDraft | null;
 
-	/** Managed independently from selectedIds (shapes only), guaranteeing mutual exclusion */
-	selectedConnectorId: string | null;
-
-	/** Only valid when exactly one polyline/polygon is selected */
-	selectedVertex: {
-		objectId: string;
-		vertexIndex: number;
-	} | null;
-
-	/**
-	 * Text slot addressed one level below the object selection. Only valid while that
-	 * object is the sole selection and still holds the slot; a stale value is neutralized
-	 * on read (resolveSelectedTextSlot) instead of being cleared at every selection write.
-	 */
-	selectedTextSlot: {
-		objectId: string;
-		slotId: string;
-	} | null;
-
 	/** Non-null only while snapping; cleared on dragEnd */
 	snapFeedback: SnapFeedback | null;
 
@@ -658,7 +683,7 @@ export type CanvasControllerState = CanvasState & {
 
 	/**
 	 * Previous Duplicate or Paste (both write it), for move-aware offset calculation: on the
-	 * next Duplicate or Paste, if selectedIds still equals newIds, an unmoved selection reuses
+	 * next Duplicate or Paste, if the selection still equals newIds, an unmoved selection reuses
 	 * `offset` and a moved one adopts the delta as the new offset.
 	 */
 	lastDuplicate: {

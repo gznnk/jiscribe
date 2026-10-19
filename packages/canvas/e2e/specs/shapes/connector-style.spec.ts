@@ -69,7 +69,7 @@ test.describe("connector style", () => {
 		// Click the line to select it; the connector ObjectMenu appears.
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-color"]'),
+			canvas.page.locator('[data-action="toggle:line-color"]'),
 		).toBeVisible();
 
 		const customStroke = await canvas.normalizeColor("#e11d48");
@@ -92,7 +92,7 @@ test.describe("connector style", () => {
 
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-style"]'),
+			canvas.page.locator('[data-action="toggle:line-style"]'),
 		).toBeVisible();
 
 		// The default is solid, with no dasharray.
@@ -114,7 +114,7 @@ test.describe("connector style", () => {
 		// Select the connector and set its line color.
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-color"]'),
+			canvas.page.locator('[data-action="toggle:line-color"]'),
 		).toBeVisible();
 		const customStroke = await canvas.normalizeColor("#e11d48");
 		await canvas.setColor("line-color", "#e11d48");

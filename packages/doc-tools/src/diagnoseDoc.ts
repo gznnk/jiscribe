@@ -1,12 +1,17 @@
 import type {
 	CanvasDoc,
+	EndpointRef,
 	ObjectDoc,
 	ObjectDocDefinition,
 	RichText,
 	TextSlotStyle,
 } from "@jiscribe/doc";
 import {
+	isMissingBounds,
+	isOwnedEndpointRef,
 	isTextVerticalBasis,
+	listConnectPointIds,
+	readTextSlotStyleDefaults,
 	richTextToPlain,
 	supportsAutoHeight,
 } from "@jiscribe/doc";
@@ -91,11 +96,14 @@ type TextBodyDoc = ObjectDoc & {
 const resolveBodyStyleDefaults = (
 	definition: ObjectDocDefinition,
 ): TextSlotStyle | undefined =>
-	extractTextSlotStyleDefaults(
-		definition.features,
-		definition.defaults,
-		definition.textSlotStyleDefaults,
-	)?.[BODY_TEXT_SLOT_ID];
+	readTextSlotStyleDefaults(
+		extractTextSlotStyleDefaults(
+			definition.features,
+			definition.defaults,
+			definition.textSlotStyleDefaults,
+		),
+		BODY_TEXT_SLOT_ID,
+	);
 
 /**
  * The font the object's body is drawn with: what the document sets, over what
@@ -462,6 +470,51 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 };
 
 /**
+ * What the object's type reports about content it lays out itself and the box
+ * cannot hold (`ObjectDocDefinition.diagnoseOverflow`), each message an error on
+ * the object. Empty for a type that declares no such check.
+ */
+const diagnoseDeclaredOverflow = (object: ObjectDoc): Diagnostic[] => {
+	const diagnoseOverflow = standardObjectDocDefinitions.get(
+		object.type,
+	)?.diagnoseOverflow;
+	if (diagnoseOverflow === undefined) {
+		return [];
+	}
+	offerNodeTextMeasurement();
+	return diagnoseOverflow(object).map((message) => ({
+		severity: "error",
+		objectId: object.id,
+		message,
+	}));
+};
+
+/**
+ * The finding about an object of a `geometry: "point"` type that declares no box,
+ * empty for every other object. Such a doc holds the corner it is drawn from and
+ * nothing else, so the declaration is the only statement of its box
+ * (`ObjectDocDefinition.bounds`): without one the object has no box at all, and
+ * every op working off one — reporting bounds, aligning, distributing, finding
+ * overlaps — passes it over.
+ *
+ * A warning rather than an error, and reported the same way a missing text region
+ * is: the document is sound, and the gap is in the shape set.
+ */
+const diagnoseObjectBounds = (object: ObjectDoc): Diagnostic[] => {
+	const definition = standardObjectDocDefinitions.get(object.type);
+	if (definition === undefined || !isMissingBounds(definition)) {
+		return [];
+	}
+	return [
+		{
+			severity: "warning",
+			objectId: object.id,
+			message: `${object.type} stores no size and declares no box of its own, so it has no box at all: it is left out of bounds, alignment, distribution and overlap checks (ObjectDocDefinition.bounds)`,
+		},
+	];
+};
+
+/**
  * The finding about one connector's label, empty when it has room to be drawn in.
  *
  * A warning rather than an error: what the label runs over is the shapes' fill,
@@ -515,6 +568,66 @@ const diagnoseConnectorLabelLineStarts = (
 	];
 };
 
+/** The connector fields {@link diagnoseConnectorConnectPoints} reads. */
+type ConnectorEndsDoc = ObjectDoc & {
+	source?: EndpointRef;
+	target?: EndpointRef;
+};
+
+/**
+ * The findings about a connector's ends naming connect points their owners do not
+ * offer (`listConnectPointIds`), one per such end; empty for any other object. An
+ * end whose owner is missing or of a type outside the shipped set is passed over,
+ * since what that type offers is unknown.
+ *
+ * A warning rather than an error: the drawing falls back to the owner's center, so
+ * the line is still there, just not where the author put it.
+ */
+const diagnoseConnectorConnectPoints = (
+	connector: ObjectDoc,
+	objectsById: ReadonlyMap<string, ObjectDoc>,
+): Diagnostic[] => {
+	if (connector.type !== "connector") {
+		return [];
+	}
+	const ends = connector as ConnectorEndsDoc;
+	return (["source", "target"] as const).flatMap((end): Diagnostic[] => {
+		const endpoint = ends[end];
+		if (
+			endpoint === undefined ||
+			!isOwnedEndpointRef(endpoint) ||
+			endpoint.anchor.kind !== "connectPoint"
+		) {
+			return [];
+		}
+		const ownerId = endpoint.owner.id;
+		const owner = objectsById.get(ownerId);
+		if (owner === undefined) {
+			return [];
+		}
+		const definition = standardObjectDocDefinitions.get(owner.type);
+		if (definition === undefined) {
+			return [];
+		}
+		const connectPointId = endpoint.anchor.id;
+		const offeredIds = listConnectPointIds(owner, definition);
+		if (offeredIds.includes(connectPointId)) {
+			return [];
+		}
+		const cause =
+			definition.extraConnectPointIds === undefined
+				? `${owner.type} offers only ${offeredIds.join(", ")}`
+				: `the part of ${ownerId} it belonged to is gone (on an erEntity, a column deleted since)`;
+		return [
+			{
+				severity: "warning",
+				objectId: connector.id,
+				message: `the ${end} end names connect point "${connectPointId}", which ${ownerId} (${owner.type}) does not offer, so it is drawn at the center of ${ownerId}: ${cause}; re-anchor it with update_connector`,
+			},
+		];
+	});
+};
+
 /**
  * Checks every object's text against the space its shape actually leaves for it:
  * the text is wrapped at
@@ -543,6 +656,15 @@ const diagnoseConnectorLabelLineStarts = (
  * promises the shape's own decoration is not
  * ({@link diagnoseDecorationOverlap}).
  *
+ * Content a type lays out by a rule of its own — a `record`'s compartments, an
+ * `erEntity`'s one-line column slots — is checked by the type itself where it
+ * declares how (`ObjectDocDefinition.diagnoseOverflow`), each finding an error
+ * on the object ({@link diagnoseDeclaredOverflow}).
+ *
+ * A connector end naming a connect point its owner does not offer — a column an
+ * ER entity no longer has — is drawn at the owner's center, and is a warning
+ * ({@link diagnoseConnectorConnectPoints}).
+ *
  * Only text that cannot be read where it is drawn is reported as an error.
  * Spacing, aspect ratio and the other matters of style are deliberately left out:
  * the errors answer "would a reader see the text cut off", which is a fact about
@@ -557,13 +679,15 @@ const diagnoseConnectorLabelLineStarts = (
  * looked at, the width being the author's. A shipped type that holds text but
  * declares no region is reported as a warning rather than passed over silently —
  * nothing measures it, and that is a gap in the shape set rather than a fact
- * about the document. A type whose body is source its own renderer lays out
- * (`features.text: "source"`, Markdown) is not measured either, and the
- * objects of it holding text are named in one document-wide warning per type,
- * after the per-object findings.
+ * about the document. A `geometry: "point"` object whose type declares no size is
+ * reported for the same reason ({@link diagnoseObjectBounds}): nothing can
+ * measure a box the type never stated. A type whose body is source its own
+ * renderer lays out (`features.text: "source"`, Markdown) is not measured
+ * either, and the objects of it holding text are named in one document-wide
+ * warning per type, after the per-object findings.
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per object of a text-bearing type that declares no region, and per `"source"` type whose text went unmeasured (no `objectId`; its objects are listed in the message); empty when everything fits
+ * @returns One error per overflowing object and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, and per `"source"` type whose text went unmeasured (no `objectId`; its objects are listed in the message); empty when everything fits
  */
 export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	const objects = flattenObjects(doc.root);
@@ -571,8 +695,11 @@ export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	return [
 		...objects.flatMap((object) => [
 			...diagnoseObjectText(object),
+			...diagnoseDeclaredOverflow(object),
+			...diagnoseObjectBounds(object),
 			...diagnoseConnectorLabel(object, objectsById),
 			...diagnoseConnectorLabelLineStarts(object),
+			...diagnoseConnectorConnectPoints(object, objectsById),
 		]),
 		...diagnoseUncheckedSourceText(objects),
 	];

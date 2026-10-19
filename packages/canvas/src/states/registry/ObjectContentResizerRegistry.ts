@@ -4,6 +4,26 @@ import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextS
 import type { ObjectState } from "../objects/base/ObjectState";
 
 /**
+ * The edge of a box a resize keeps in place along one axis, in the box's own
+ * frame, flips included: `"start"` is the edge its left or top key points lie on,
+ * `"end"` the opposite one, `"center"` the middle — where a proportional resize
+ * from a side handle grows the axis that handle does not move.
+ */
+export type ResizeHeldEdge = "start" | "center" | "end";
+
+/**
+ * Which axes of a box a resize through a transform handle writes, each with the
+ * edge it holds (calcResizedAxes decides them from the handle and the modifiers;
+ * calcObjectResizedAxes restates them for each object a group resize scales).
+ */
+export type ResizedAxes = {
+	/** The edge the width grows and shrinks from; absent when the resize leaves the width alone */
+	readonly width?: ResizeHeldEdge;
+	/** The edge the height grows and shrinks from; absent when the resize leaves the height alone */
+	readonly height?: ResizeHeldEdge;
+};
+
+/**
  * What a resizer needs beyond the object's own state.
  */
 export type ObjectContentResizeContext = {
@@ -15,6 +35,17 @@ export type ObjectContentResizeContext = {
 	 * type that declares none.
 	 */
 	textStyleDefaults?: TextSlotStyle;
+	/**
+	 * The axes a transform-handle drag is writing onto the box, in the box's own
+	 * frame (also for an object a group or multi-select resize scales): present on
+	 * every frame of a resize drag and on the transition that closes it (the
+	 * dragEnd), absent everywhere else — load, undo/redo, external sync, text
+	 * edits, commands. A resizer reads a written axis as an input only while this
+	 * is present; otherwise the box is its content's answer. A box the content
+	 * keeps from the written size grows from the held edge, so the side the drag
+	 * left alone stays put.
+	 */
+	resizedAxes?: ResizedAxes;
 };
 
 /**
@@ -22,7 +53,8 @@ export type ObjectContentResizeContext = {
  * stores no size (`geometry: "point"`). The doc coordinate is the box's drawn
  * top-left corner, so an implementation grows the box along the object's own
  * axes — right and down before any rotation or flip — and leaves that corner,
- * and hence the doc coordinate, where it was (see GeometryType).
+ * and hence the doc coordinate, where it was (see GeometryType). Along an axis a
+ * resize drag writes, it holds `context.resizedAxes`' edge instead.
  *
  * Implementations declare the state they accept via `TState`, which
  * `ObjectTypeDefinition` ties to the type's own state; the registry stores the

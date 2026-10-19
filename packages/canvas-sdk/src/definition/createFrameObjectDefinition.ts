@@ -2,7 +2,9 @@ import type {
 	ObjectDoc,
 	ObjectDocDefinition,
 	ObjectFeatures,
+	ObjectPartKindDefinition,
 	ObjectState,
+	ObjectTextRegionCalculator,
 	ObjectTypeDefinition,
 } from "@jiscribe/canvas";
 import type { StateRecord } from "@jiscribe/canvas/unstable";
@@ -10,8 +12,9 @@ import {
 	createFrameBehavior,
 	createFrameMapper,
 	createFrameStateValidator,
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
 } from "@jiscribe/canvas/unstable";
-import { supportsAutoHeight } from "@jiscribe/doc";
 import type { TransformedFrame } from "@jiscribe/geometry";
 
 /** Arguments of {@link createFrameObjectDefinition}. */
@@ -20,13 +23,7 @@ export type FrameObjectDefinitionParams<
 	TState extends ObjectState & TransformedFrame & { type: TDoc["type"] },
 > = Omit<
 	ObjectTypeDefinition<TDoc, TState>,
-	// `textRegion` is excluded from the exclusion: the doc definition declares the
-	// region over a doc, and a shape whose UI region is sized from its own text
-	// (a below-label caption) passes the UI calculator here.
-	| Exclude<keyof ObjectDocDefinition, "textRegion">
-	| "mapper"
-	| "stateValidator"
-	| "behavior"
+	keyof ObjectDocDefinition | "mapper" | "stateValidator" | "behavior"
 > & {
 	/**
 	 * The shape's headless definition, usually from `createFrameObjectDoc` in
@@ -34,6 +31,16 @@ export type FrameObjectDefinitionParams<
 	 * what the mapper and the state validator are derived from.
 	 */
 	doc: ObjectDocDefinition;
+
+	/**
+	 * Where the shape draws, edits and outlines its text: built into the
+	 * `"textSlot"` part kind's `region` (createTextSlotPartKindDefinition) and
+	 * appended to `partKinds`, so declaring that kind there as well is refused.
+	 * Usually the very calculator `doc.textRegion` declares; a shape whose region
+	 * is sized from its own text (a below-label caption) passes it here while its
+	 * doc answers null. Omitted = the whole box.
+	 */
+	textRegion?: ObjectTextRegionCalculator<TState>;
 
 	/**
 	 * State checks beyond the ones features implies, run last in the type-guard
@@ -44,36 +51,60 @@ export type FrameObjectDefinitionParams<
 };
 
 /**
+ * The type's part kinds with the text slot kind `textRegion` describes appended,
+ * refusing a `"textSlot"` kind already among them: the two would both claim to
+ * place the slots, and merging them would hide which one wins.
+ */
+const appendTextSlotPartKind = <TState extends ObjectState & TransformedFrame>(
+	type: string,
+	partKinds: ObjectPartKindDefinition<TState>[] | undefined,
+	textRegion: ObjectTextRegionCalculator<TState> | undefined,
+): ObjectPartKindDefinition<TState>[] | undefined => {
+	if (textRegion === undefined) {
+		return partKinds;
+	}
+	if (partKinds?.some((part) => part.kind === TEXT_SLOT_PART_KIND)) {
+		throw new Error(
+			`createFrameObjectDefinition "${type}": declares textRegion and a "${TEXT_SLOT_PART_KIND}" part kind; place the slots on the part kind alone`,
+		);
+	}
+	return [
+		...(partKinds ?? []),
+		createTextSlotPartKindDefinition<TState>({ region: textRegion }),
+	];
+};
+
+/**
  * Builds the whole {@link ObjectTypeDefinition} of a Frame-family shape
  * (`geometry: "rect"` + `transform`) from its doc definition and its renderer:
- * mapper / state validator / behavior are derived from `doc.features`, and every
- * other UI-side field (`textRegion` / `outline` / `visualBounds` / `stencils` /
- * `menu` …) is passed through untouched. Replaces the per-shape `*Mapper.ts` /
- * `validate*State.ts` pair.
+ * mapper / state validator / behavior are derived from `doc.features`, the doc
+ * definition is spread whole (its `textRegion` and `autoHeight` included, which
+ * is what the auto-height verdict reads), `textRegion` becomes the `"textSlot"`
+ * part kind, and every other UI-side field (`outline` / `visualBounds` /
+ * `stencils` / `menu` …) is passed through untouched. Replaces the per-shape
+ * `*Mapper.ts` / `validate*State.ts` pair.
  *
  * Declaring an `ObjectTypeDefinition` by hand stays supported — this is sugar, and
  * a shape that needs a behavior of its own (not the shared frame one) declares the
  * definition itself.
  *
  * @param params - `doc` and `component` are required; the rest is the optional
- *   part of `ObjectTypeDefinition` plus the two derivation hooks (see
+ *   part of `ObjectTypeDefinition` plus `textRegion` and the derivation hook (see
  *   {@link FrameObjectDefinitionParams})
+ * @throws When `textRegion` is given and `partKinds` already holds a `"textSlot"` kind, naming the type
  */
 export const createFrameObjectDefinition = <
 	TDoc extends ObjectDoc,
 	TState extends ObjectState & TransformedFrame & { type: TDoc["type"] },
 >({
 	doc,
+	textRegion,
 	isExtraStateValid,
 	...definition
 }: FrameObjectDefinitionParams<TDoc, TState>): ObjectTypeDefinition<
 	TDoc,
 	TState
 > => {
-	// The doc-side text region answers over a doc and may answer "not in the box
-	// at all"; the UI one answers over a state, per slot. Only the latter belongs
-	// on the result, so the doc's declaration is dropped rather than spread.
-	const { textRegion: _docTextRegion, ...docDefinition } = doc;
 	// ObjectDocDefinition widens `features`; the frame helpers are keyed to this
 	// shape's own type and rect/ellipse geometry.
 	const features = doc.features as ObjectFeatures & {
@@ -82,18 +113,17 @@ export const createFrameObjectDefinition = <
 	};
 
 	return {
-		...docDefinition,
-		// The doc's verdict on whether a document of this shape may leave `height`
-		// out rides along, since the declaration it is derived from is the one being
-		// dropped above: a shape whose UI region is sized from its own text answers a
-		// rectangle here and `null` there, and re-deriving the verdict from this
-		// definition would offer the switch where the parser refuses the result.
-		...(supportsAutoHeight(doc) ? {} : { autoHeight: false as const }),
+		...doc,
 		// The shape's own field names come from the doc definition, which is where they
 		// are declared once for the mapper and doc-ops alike.
 		mapper: createFrameMapper<TDoc, TState>(features, doc.extraKeys),
 		stateValidator: createFrameStateValidator(features, isExtraStateValid),
 		behavior: createFrameBehavior<TState>(),
 		...definition,
+		partKinds: appendTextSlotPartKind(
+			features.type,
+			definition.partKinds,
+			textRegion,
+		),
 	};
 };

@@ -57,7 +57,7 @@ test.describe("connector", () => {
 
 		// The connector ObjectMenu (line color) is absent, meaning nothing is selected.
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-color"]'),
+			canvas.page.locator('[data-action="toggle:line-color"]'),
 		).toHaveCount(0);
 	});
 
@@ -76,7 +76,7 @@ test.describe("connector", () => {
 
 		// The connector ObjectMenu (line color) appears, meaning it is selected.
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-color"]'),
+			canvas.page.locator('[data-action="toggle:line-color"]'),
 		).toBeVisible();
 	});
 
@@ -99,7 +99,7 @@ test.describe("connector", () => {
 		// Wait until the click-based selection is applied (the connector ObjectMenu appears) before
 		// deleting. Pressing Delete before the selection commits deletes nothing and is flaky.
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-color"]'),
+			canvas.page.locator('[data-action="toggle:line-color"]'),
 		).toBeVisible();
 		await canvas.deleteSelection();
 

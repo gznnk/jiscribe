@@ -75,10 +75,10 @@ test.describe("flowchart palette", () => {
 		await expect(flyout).toBeVisible();
 
 		const offered = await flyout
-			.locator('[data-part^="item:"]')
+			.locator('[data-action^="item:"]')
 			.evaluateAll((items) =>
 				items.map((item) =>
-					(item.getAttribute("data-part") ?? "").replace("item:", ""),
+					(item.getAttribute("data-action") ?? "").replace("item:", ""),
 				),
 			);
 		expect(offered).toEqual(PRESETS.map(({ presetId }) => presetId));

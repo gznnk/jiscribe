@@ -56,6 +56,17 @@ export { createFrameBehavior } from "./controllers/behaviors/base/FrameControlle
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";
 
+// The state-side parts a `geometry: "point"` type's own mapper is assembled from,
+// that family being refused by createFrameMapper above (its doc holds no box to
+// convert, so it measures its own in `toState` — TextMapper is the worked
+// example): the id / type / meta conversion every type shares, and the two
+// directions of the transform group.
+export { ObjectMapper } from "./states/objects/base/ObjectMapper";
+export {
+	mapTransformDocToState,
+	mapTransformStateToDoc,
+} from "./states/objects/base/TransformMapper";
+
 export { createFrameStateValidator } from "./states/objects/utils/createFrameStateValidator";
 export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 
@@ -74,9 +85,11 @@ export type { TextSlots } from "./states/objects/types/TextSlots";
 // (the sticky's shadowed paper, say): the same two derivations createFrameObject
 // makes internally. `calcTextRegion` is the seam the in-place editor also goes
 // through, so a renderer that places text itself must use it or the text jumps
-// on entering edit mode.
+// on entering edit mode. Both region readers take the type's registered
+// `"textSlot"` part kind (`objectPartKind.get(type, TEXT_SLOT_PART_KIND)`).
 export {
 	calcTextRegion,
+	calcTextSlotRegions,
 	calcFullTextRegion,
 } from "./rendering/objects/utils/calcTextRegion";
 export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform";
@@ -128,19 +141,28 @@ export { getResizeCursorForRotation } from "./controllers/ui/utils";
 // ---------------------------------------------------------------------------
 // ObjectMenu UI kit (packages/canvas/docs/12-plugin-architecture.md)
 // ---------------------------------------------------------------------------
-// Grammar ObjectMenuHandler resolves for `data-part` under `data-kind="menu"`:
+// Grammar ObjectMenuHandler resolves for `data-action` under `data-kind="menu"`:
 //   - `toggle:{sectionId}`     open/close a section
 //   - `set:{property}:{value}` update the selected object's property, committing at once
 //   - `command:{commandId}`    run a command
 //   - `slider:{property}`      slider (drag previews; dragEnd and a track click commit)
 // See packages/canvas/docs/04-gesture-system.md. Plugins should combine the shared parts
-// below or call `onPropertyUpdate`; writing `data-part` directly couples them to internals
+// below or call `onStyleIntent`; writing `data-action` directly couples them to internals
 // and is discouraged.
 
 export {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuStyled";
+
+// A custom item is dropped while a picked part narrows the menu (its kind's
+// `styleIntentKinds`), unless it names that kind in `pickedPartKinds`. A command
+// button names its command the way the sidebar's do (resolveCommandLabel), with
+// the key it answers to on this platform, as the context menu writes it.
+export {
+	formatShortcut,
+	getPlatformShortcuts,
+} from "./controllers/commands/CommandUtils";
 
 // The swatch shown on a color menu's toggle button (a filled circle, checkered
 // when transparent). Pair it with a dropdown panel of your own swatches when the
@@ -154,10 +176,72 @@ export { ObjectMenuSlider } from "./controllers/ui/menu/ObjectMenu/common/Object
 export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 
-export { getFirstSelectedWithProp } from "./controllers/ui/menu/utils/getFirstSelectedWithProp";
-export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/utils/getFirstSelectedWithStyleGroup";
-export { getFirstSelectedPropValue } from "./controllers/ui/menu/utils/getFirstSelectedPropValue";
-export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedShapeStyle";
+// The current value a row of either surface states (packages/canvas/docs/10-style-properties.md).
+// `useSelectionStyle(name)` answers what the whole selection says about one style
+// property — the value of exactly the objects a write of the same name would
+// reach, so a row cannot disagree with its own write. A core name ("fill",
+// "fontSize") comes back typed; a kind a type declares for itself comes
+// back `unknown` under that name alone, the engine not knowing what the
+// declaration holds, so a row of the declaring type passes its table instead —
+// `useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")` — and the answer is typed
+// from the declaration. The helpers fold the three cases into something
+// drawable, and SHAPE_STYLE_FALLBACK is the last resort a row shows when nothing
+// the selection reaches carries the property at all.
+//
+// A row writes through the mirror of that read: `onStyleIntent(intent, commit)`
+// (StyleIntentUpdater), where a core name goes as its typed intent
+// (`{ kind: "fill", color }`) and a type's own kind as `{ kind, value }`, the
+// value either typed as the declaration holds it or left as the transport
+// string. `toStyleIntent(property, value)` is there for a widget that holds a
+// name and a string from the DOM instead.
+export { useSelectionStyle } from "./controllers/ui/menu/SelectionStyleReaderContext";
+export type {
+	CoreStyleIntent,
+	CoreStyleIntentKind,
+	ExtraStyleIntent,
+	StyleIntent,
+} from "./controllers/style/StyleIntent";
+export { toStyleIntent } from "./controllers/style/intent/toStyleIntent";
+export type { SelectionValue } from "./controllers/style/SelectionValue";
+export {
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "./controllers/style/SelectionValue";
+export { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+
+// What a type declares about its own styles (packages/canvas/docs/10-style-properties.md).
+// A type's table is `ObjectTypeDefinition.styleEntries`: one `{ apply, read }` pair per
+// intent kind, composed onto the ones its `features` derive — and a kind
+// declared there replaces the derived one, which is how a type whose storage
+// differs from the core guess (a table whose fill lives on its cells) says where
+// the edit lands. `declaredFieldEntry(path, valueType)` is the entry for a
+// field of the type's own, dots being a path into a nested object;
+// `objectFieldEntry` / `textSlotFieldEntry` / `runOrTextSlotEntry` are the ones
+// the engine builds its own entries from, for a type replacing a derived kind. A declared table is a `DeclaredStyleTable`:
+// every entry states the fields it writes (`[]` for nothing the doc stores), and
+// one stating none, or a field the type's doc cannot hold (`extraKeys`), is
+// refused at registration. Which slots a text write reaches is not the table's
+// to say but the picked part kind's (`ObjectPartKindDefinition.textSlotIds`):
+// `resolveTextSlotIds(object, pick, ctx)` is that answer, for an entry of the type's
+// own that writes into the slots a pick reaches (a table's cell fill), and
+// `TEXT_STYLE_INTENT_KINDS` the kinds a part reaching text lists in its
+// `styleIntentKinds`.
+export { declaredFieldEntry } from "./controllers/style/entries/declaredFieldEntry";
+export { objectFieldEntry } from "./controllers/style/entries/objectFieldEntry";
+export { runOrTextSlotEntry } from "./controllers/style/entries/runOrTextSlotEntry";
+export { textSlotFieldEntry } from "./controllers/style/entries/textSlotFieldEntry";
+export { resolveTextSlotIds } from "./controllers/style/entries/utils/resolveTextSlotIds";
+export { TEXT_STYLE_INTENT_KINDS } from "./controllers/style/StyleIntent";
+export type { StyleValueType } from "./controllers/style/intent/coerceStyleValue";
+export type {
+	DeclaredStyleEntry,
+	DeclaredStyleTable,
+	StyleContext,
+	StyleEntry,
+	StyleTable,
+} from "./controllers/style/StyleEntry";
 
 // ---------------------------------------------------------------------------
 // Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)
@@ -165,16 +249,16 @@ export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedSh
 // A type declares its sidebar sections in `propertyPanel`, and a row it draws
 // itself is a `{ type: "custom"; id; component }` item among the built-in ones.
 // The component is handed PropertyPanelItemProps and nothing else: the selection
-// and the objects it names, plus `onPropertyUpdate` for a style property and
+// and the objects it names, plus `onStyleIntent` for a style property and
 // `onTransformUpdate` for one of the frame's five numbers. Build the row out of
 // the widgets below so it lines up with the built-in ones — PropertyRow supplies
 // the label column every row shares, except PropertyCheckbox, which is a row of
 // its own from the section's left edge. The widgets that write do it either through
-// the callback (PropertyColorField) or through the same `data-part` grammar the
+// the callback (PropertyColorField) or through the same `data-action` grammar the
 // ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
-// `data-part` by hand is discouraged for the same reason as there.
-// Custom rows are dropped while a text slot is selected, since a plugin row has
-// no way to say it is slot-aware.
+// `data-action` by hand is discouraged for the same reason as there.
+// Custom rows are dropped while a picked part narrows the sidebar (its kind's
+// `styleIntentKinds`), unless the row names that kind in `pickedPartKinds`.
 // A section may also carry `isShown`, asked about the selection
 // (PropertyPanelSelection) before the section is drawn: a section whose every row
 // would return null uses it to take its heading away with them.
@@ -188,6 +272,9 @@ export type {
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 
+// The sections a type omitting `propertyPanel` is registered with, for a
+// declaration that only adds to them.
+export { createDefaultPropertyPanel } from "./controllers/ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
 export { PropertyRow } from "./controllers/ui/menu/PropertyPanel/common/PropertyRow";
 export { PropertyNumberField } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
 export type { PropertyNumberUpdater } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
@@ -196,16 +283,24 @@ export { PropertyDropdownField } from "./controllers/ui/menu/PropertyPanel/commo
 export { PropertySegmentedControl } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export type { PropertySegmentedOption } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export { PropertyCheckbox } from "./controllers/ui/menu/PropertyPanel/common/PropertyCheckbox";
+// Command buttons, the way the Arrange section draws stacking order: a button
+// per command, named by its label (resolveCommandLabel), run through
+// `data-action={commandAction(id)}`, two to a row inside the grid.
+export {
+	PropertyCommandButton,
+	PropertyCommandGrid,
+} from "./controllers/ui/menu/PropertyPanel/common/PropertyControlsStyled";
+export { resolveCommandLabel } from "./controllers/commands/CommandUtils";
 
-// The `data-part` grammar the menu targets are read by (command: / toggle: /
+// The `data-action` grammar the menu targets are read by (command: / toggle: /
 // set: / slider:). Build the strings with these rather than spelling the
 // prefixes, so a plugin's buttons and the core's are read by the same rule.
 export {
-	commandPart,
-	setPart,
-	sliderPart,
-	togglePart,
-} from "./controllers/gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	setAction,
+	sliderAction,
+	toggleAction,
+} from "./controllers/gestures/handlers/menu/utils/menuActions";
 
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";
@@ -220,8 +315,55 @@ export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessage
 // (see theme/CanvasTheme.ts).
 export { theme as canvasThemeCssVars } from "./theme/themeTokens";
 
+// The selection outline's stroke width, for a plugin control drawn against that
+// outline and meant to read as the same weight of line.
+export { SELECTION_OUTLINE_WIDTH } from "./controllers/ui/feedback/utils/selectionOutline";
+
+// How much thicker a handle's stroke is drawn while its part is selected, so a
+// plugin's own pick handle thickens by the same factor as the canvas's pills.
+export { SELECTED_HANDLE_STROKE_SCALE } from "./controllers/ui/utils/selectedHandleStrokeScale";
+
 // The scrollbar the canvas's own scrollable panels wear (the text editor, the shortcut
 // help). A plugin panel that scrolls has no other way to match them, and a default
 // browser scrollbar next to a custom one is exactly the kind of seam a plugin should not
 // be introducing.
 export { SCROLLBAR_WIDTH, scrollbarStyles } from "./theme/themeScrollbarStyles";
+
+// What a plugin's own commands are written against (`CanvasPlugin.commands`).
+// A command is a pure state transition, so its two parameter types come along:
+// the controller state it reads and returns, and the registry bundle it resolves
+// per-type declarations through. Both are the canvas's working surface rather
+// than a settled contract — they live here, and not on the stable entry, because
+// a command has to see them to be one at all.
+export type {
+	Command,
+	ExecutableCommand,
+	KeyBinding,
+	PlatformKeyBindings,
+} from "./controllers/commands/CommandTypes";
+export type { CanvasControllerState } from "./controllers/CanvasTypes";
+// A command that edits the document says so itself: the reducer records history
+// and raises a save off `commitVersion`, and the COMMAND path does not advance it.
+export { commitEdit } from "./controllers/utils/commitEdit";
+// A command that renumbers an object's connect points carries the connectors on
+// them along by the same rule a part kind's `delete` answers with
+// (`connectPointRemap`), which core applies through this.
+export { remapConnectorEnds } from "./controllers/utils/remapConnectorEnds";
+export type {
+	CanvasSelection,
+	ObjectPartRange,
+	ObjectPartSelection,
+} from "./controllers/selection/CanvasSelection";
+// The `"textSlot"` kind core registers for a type holding text, for a type
+// declaring it itself to place its slots (`region` / `regions`) or to add what
+// core cannot derive (a range that is not a slice of the slot order, a Delete):
+// spread the definition and add to it.
+export {
+	createTextSlotPartKindDefinition,
+	isTextSlotPart,
+	TEXT_SLOT_PART_KIND,
+} from "./controllers/selection/partKinds/textSlotPartKind";
+export { collectObjectPartIds } from "./controllers/selection/readers/collectObjectPartIds";
+export { readActivePartFocusId } from "./controllers/selection/readers/readActivePartFocusId";
+export { getSelectedConnectorId } from "./controllers/selection/readers/getSelectedConnectorId";
+export type { ICanvasRegistries } from "./controllers/registries/ICanvasRegistries";

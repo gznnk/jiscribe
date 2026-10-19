@@ -1,4 +1,5 @@
 import { type Dispatch, type RefObject, useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
@@ -22,6 +23,13 @@ export type UseKeyboardShortcutsParams = {
 	 */
 	callbacks?: Partial<Record<string, () => void>>;
 	/**
+	 * Dispatches the gestures of pointer events still waiting for the recognizer's
+	 * next frame (useGestureRecognizer's processPendingGestures). Run before a key the
+	 * canvas claims, so a key pressed in the frame that ended a drag is decided
+	 * against the state after that drag, not refused as if it were still under way.
+	 */
+	processPendingGestures: () => void;
+	/**
 	 * Passed in explicitly (not read via context) because Canvas is the provider
 	 * of the registries context and so cannot consume it via a hook.
 	 */
@@ -36,6 +44,7 @@ export const useKeyboardShortcuts = ({
 	canvasState,
 	dispatch,
 	callbacks,
+	processPendingGestures,
 	registries,
 }: UseKeyboardShortcutsParams): void => {
 	const commandRegistry = registries.command;
@@ -68,29 +77,45 @@ export const useKeyboardShortcuts = ({
 				return;
 			}
 
-			const command = commandRegistry.findByShortcut(event);
-			if (!command) {
+			// A binding may be claimed by several commands that are available in
+			// different contexts, so the keystroke is offered to each in turn —
+			// plugin-contributed ones ahead of the built-ins
+			// (CommandRegistry.findAllByShortcut) — instead of stopping at the first.
+			const matched = commandRegistry.findAllByShortcut(event);
+			if (matched.length === 0) {
 				return;
 			}
 
-			// Callback-executed commands (undo/redo when externally owned, paste)
-			// are delegated without checking canExecute (see callbacks JSDoc).
-			const callback = callbacksRef.current?.[command.id];
-			if (callback) {
-				event.preventDefault();
-				event.stopPropagation();
-				callback();
-				return;
+			// flushSync commits the drained gestures before canExecute below reads
+			// canvasStateRef, which only a render refreshes.
+			flushSync(() => {
+				processPendingGestures();
+			});
+
+			// The first command that takes the key wins: a callback-executed one
+			// (undo/redo when externally owned, paste) takes it without checking
+			// canExecute (see callbacks JSDoc), any other only when it can execute.
+			// Checked in that one order so a contributed command sharing paste's key
+			// still claims it while its canExecute is true.
+			const callbacks = callbacksRef.current;
+			for (const command of matched) {
+				const callback = callbacks?.[command.id];
+				if (callback) {
+					event.preventDefault();
+					event.stopPropagation();
+					callback();
+					return;
+				}
+				if (command.canExecute(canvasStateRef.current, registries)) {
+					event.preventDefault();
+					event.stopPropagation();
+					dispatch({ type: "COMMAND", commandId: command.id });
+					return;
+				}
 			}
-			// A binding the command cannot execute right now is left to the browser,
-			// so Tab keeps moving focus (and arrows keep scrolling) while the
-			// matching command is unavailable.
-			if (!command.canExecute(canvasStateRef.current, registries)) {
-				return;
-			}
-			event.preventDefault();
-			event.stopPropagation();
-			dispatch({ type: "COMMAND", commandId: command.id });
+			// A binding no matching command can execute right now is left to the
+			// browser, so Tab keeps moving focus (and arrows keep scrolling) while
+			// every command claiming it is unavailable.
 		};
 
 		// Scoped to the container: keydown reaches here only while focus is inside
@@ -99,5 +124,11 @@ export const useKeyboardShortcuts = ({
 		return () => {
 			container.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [containerRef, dispatch, commandRegistry, registries]);
+	}, [
+		containerRef,
+		dispatch,
+		processPendingGestures,
+		commandRegistry,
+		registries,
+	]);
 };

@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { theme } from "../../../../theme/themeTokens";
+import { SELECTED_HANDLE_STROKE_SCALE } from "../../utils/selectedHandleStrokeScale";
 
 /** Pill dimensions in screen pixels — distinct from the circular resize anchors. */
 const PILL_WIDTH = 18;
@@ -15,9 +16,15 @@ type SelectionControlPillProps = {
 	rotation: number;
 	zoom: number;
 	objectId: string;
-	/** data-part value (the control's derived `selection:<objectType>:<name>`). */
-	part: string;
+	/** data-action value (the control's derived `selection:<objectType>:<name>`). */
+	action: string;
 	cursor: string;
+	/**
+	 * Whether the part this pill stands for is selected. Swaps fill and stroke
+	 * and thickens the stroke (SELECTED_HANDLE_STROKE_SCALE). Omitted = not
+	 * selected.
+	 */
+	selected?: boolean;
 };
 
 /**
@@ -32,13 +39,17 @@ const SelectionControlPillComponent: React.FC<SelectionControlPillProps> = ({
 	rotation,
 	zoom,
 	objectId,
-	part,
+	action,
 	cursor,
+	selected = false,
 }) => {
 	const { handleDimensions } = useCanvasTheme();
 	const pillWidth = PILL_WIDTH / zoom;
 	const pillHeight = PILL_HEIGHT / zoom;
-	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
+	const adjustedStrokeWidth =
+		(handleDimensions.anchorStrokeWidth *
+			(selected ? SELECTED_HANDLE_STROKE_SCALE : 1)) /
+		zoom;
 
 	return (
 		<g transform={`translate(${cx} ${cy}) rotate(${rotation})`}>
@@ -51,10 +62,10 @@ const SelectionControlPillComponent: React.FC<SelectionControlPillProps> = ({
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id={objectId}
-				data-part={part}
+				data-action={action}
 				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
+					fill: selected ? theme.handleAccent : theme.handleFill,
+					stroke: selected ? theme.handleFill : theme.handleAccent,
 					cursor,
 				}}
 			/>

@@ -8,15 +8,15 @@ import { selectors } from "../../support/selectors";
  *
  * The sidebar is its own component with its own parts, so a write from here
  * takes a different route to the document than the same write from the floating
- * menu: the row reads the selection through readSelectionTextStyle /
- * readSelectionShapeStyle, and the press travels control -> gesture -> property
- * update -> re-render. Only the real DOM runs that end to end, so each test
- * states a value and then reads the drawn result out of computed style.
+ * menu: the row reads the selection through readSelectionStyle, and the press
+ * travels control -> gesture -> property update -> re-render. Only the real DOM
+ * runs that end to end, so each test states a value and then reads the drawn
+ * result out of computed style.
  *
  * The opacity rows are the exception: they are read back through the row itself,
  * having been dropped and taken up again by a re-selection. The row states the
- * percent of what readSelectionShapeStyle finds on the object, so the number
- * coming back is the 0..1 value the object now carries.
+ * percent of what readSelectionStyle finds on the object, so the number coming
+ * back is the 0..1 value the object now carries.
  */
 
 /** The rectangle the tests draw, kept clear of the sidebar's own width. */
@@ -118,12 +118,71 @@ test.describe("Properties sidebar Text rows", () => {
 			"the segment reads back what the text is now drawn with",
 		).toHaveAttribute("aria-pressed", "true");
 
-		// The segment writes the value the press should land on, not a toggle
-		// command, so the second press has to state "normal" from the lit state.
+		// The segment flips from what the text is drawn with, so the second press
+		// takes the weight back off.
 		await bold.click();
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("400");
+	});
+
+	test("sets font-style to italic with the Italic segment and back to normal on a second press", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.page.click(selectors.propertyPanelCommand("toggleItalic"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
+			.toBe("italic");
+
+		await canvas.page.click(selectors.propertyPanelCommand("toggleItalic"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
+			.toBe("normal");
+	});
+
+	test("sets text-decoration to underline with the Underline segment and back to none on a second press", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.page.click(selectors.propertyPanelCommand("toggleUnderline"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
+
+		await canvas.page.click(selectors.propertyPanelCommand("toggleUnderline"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("none");
+	});
+
+	test("keeps the underline while the strikethrough is toggled on and off", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.page.click(selectors.propertyPanelCommand("toggleUnderline"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
+
+		// With the underline on, the Strikethrough segment adds its line beside it.
+		await canvas.page.click(
+			selectors.propertyPanelCommand("toggleStrikethrough"),
+		);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline line-through");
+
+		// Turning the strikethrough back off leaves the underline standing.
+		await canvas.page.click(
+			selectors.propertyPanelCommand("toggleStrikethrough"),
+		);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
 	});
 
 	test("moves the text to the side the Horizontal segments state", async ({

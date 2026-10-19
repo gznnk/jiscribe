@@ -12,8 +12,10 @@
 //
 // The single source of truth is one .jis file in the workspace. Only the queries
 // the file has no answer for (capture, camera, selection, measurement) are put to
-// the windows under a requestId (runHandleOp); the one other round trip is the
-// flush the windows are asked for before the file on display changes (flushViewers).
+// the windows under a requestId (runHandleOp), each one after the file on display
+// has been passed on and naming the revision to be drawn first; the one other
+// round trip is the flush the windows are asked for before the file on display
+// changes (flushViewers).
 //
 // The window is either one a person looks at or a headless one the AI looks
 // through. Both are viewers as far as everything here is concerned; where they
@@ -279,6 +281,15 @@ export async function startCanvasHost(
 		getOpenPath: fileMirror.getOpenPath,
 		flushViewers,
 		runHandleOp: async (op) => {
+			// The watch would get a tool's write to the windows one poll later, and the
+			// op would be answered against the drawing from before it
+			const fileSync = await fileMirror.syncOpenFile();
+			if (fileSync.kind === "unreadable") {
+				return {
+					ok: false,
+					text: `the file on display, ${fileSync.relPath}, cannot be read, so the viewer has nothing current to answer from: ${fileSync.reason}`,
+				};
+			}
 			// Ask every open tab and take the first answer.
 			//
 			// Not narrowing it to one, because the socket on the other end is not
@@ -299,6 +310,9 @@ export async function startCanvasHost(
 					type: "handleOpRequest",
 					requestId,
 					op,
+					...(fileSync.kind === "synced"
+						? { expectedRevision: fileSync.revision }
+						: {}),
 				}),
 				timeoutMs: HANDLE_OP_TIMEOUT_MS,
 				calcTimeoutOutcome: () => ({

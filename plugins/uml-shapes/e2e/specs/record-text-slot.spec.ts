@@ -5,15 +5,18 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
  * Selecting one text slot inside a multi-slot shape, one level below the object.
  * record is the type that has several, so it is the vehicle here. Guarded behavior:
  * - clicking a compartment of the already-selected record selects that slot, and
- *   the slot's own outline is drawn on top of the object's
- * - while the slot is selected the object outline turns dashed and the transform
- *   handles go away, so only the slot box reads as the operated target
+ *   the slot's own outline is drawn in place of the object's
+ * - while the slot is selected the object outline and the transform handles go
+ *   away, so only the slot box reads as the operated target
  * - a style change then lands on that slot alone, leaving the others as they were
  * - the object menu drops to the text items, since nothing else applies to a slot,
- *   and its text format buttons come out of their dropdown onto the menu itself
+ *   Bold among them, laid out on the menu itself as it is for the whole object
  * - Escape steps out one level at a time: the slot first, the object next
  * - Tab walks the slots down the box and wraps around, over three slots as well as two
  * - Enter opens the selected slot for editing
+ * - a Shift-click widens the selection to the run of compartments between the
+ *   anchor and the clicked one, a style change then landing on all of them, and a
+ *   plain click or a Tab collapses it back to one
  *
  * Coordinate note (shared with record.spec): created at 220x80, a title band
  * holding a one-line title is the top 28px (content y=[200,228]) and the row
@@ -51,36 +54,6 @@ async function createFilledRecord(canvas: CanvasDriver): Promise<string> {
 	return id;
 }
 
-/**
- * The `height` attribute of every outline rect in the selection overlay: the
- * object's own outline first, the selected slot's (if any) last. Read as
- * attributes rather than by visibility, since an outline is a fill-less rect.
- */
-async function selectionOutlineHeights(
-	canvas: CanvasDriver,
-): Promise<number[]> {
-	return canvas.page.evaluate(() =>
-		[...document.querySelectorAll('[data-layer="selection-overlay"] rect')].map(
-			(rect) => Number(rect.getAttribute("height")),
-		),
-	);
-}
-
-/**
- * `stroke-dasharray` of the object's own outline, which the overlay draws before the
- * slot's. Absent (null) while the object itself is the operated target.
- */
-async function objectOutlineDashArray(
-	canvas: CanvasDriver,
-): Promise<string | null> {
-	return canvas.page.evaluate(() => {
-		const outline = document.querySelector(
-			'[data-layer="selection-overlay"] rect',
-		);
-		return outline?.getAttribute("stroke-dasharray") ?? null;
-	});
-}
-
 /** How many resize/rotation handles are on screen; they all carry data-id="transform". */
 async function transformHandleCount(canvas: CanvasDriver): Promise<number> {
 	const controlDescriptors = await canvas.visibleControlIds();
@@ -111,39 +84,74 @@ async function textColorByContent(
 }
 
 /**
- * The `data-part` of the compartment the selected slot outline sits on, or
- * undefined while no slot is selected. The overlay carries no slot id, so the
- * slot is named by matching the outline's rect against the compartments'. A
- * stereotype and a title band are the same height, so height alone would not
- * name them.
+ * The id of the slot the selected slot outline sits on, or undefined while no
+ * slot is selected. The overlay carries no slot id, so the slot is named by
+ * matching the outline's rect against the compartments' and reading the id out
+ * of the matched compartment's `data-part` (`textSlot:<slotId>`). A stereotype
+ * and a title band are the same height, so height alone would not name them.
  */
-async function selectedSlotPart(
+async function selectedSlotId(
 	canvas: CanvasDriver,
 	id: string,
 ): Promise<string | undefined> {
-	return canvas.page.evaluate((objectId) => {
-		const outlines = [
-			...document.querySelectorAll('[data-layer="selection-overlay"] rect'),
-		];
-		// The object's own outline comes first and the slot's last, so fewer than
-		// two means only the object is selected.
-		if (outlines.length < 2) {
-			return undefined;
-		}
-		const slotOutline = outlines[outlines.length - 1];
-		const compartments = [
-			...document.querySelectorAll(
-				`[data-kind="object"][data-id="${objectId}"] [data-part]`,
-			),
-		];
-		const matched = compartments.find(
-			(compartment) =>
-				compartment.getAttribute("y") === slotOutline.getAttribute("y") &&
-				compartment.getAttribute("height") ===
-					slotOutline.getAttribute("height"),
-		);
-		return matched?.getAttribute("data-part") ?? undefined;
-	}, id);
+	return canvas.page.evaluate(
+		({ objectId, partOutlineSelector }) => {
+			const slotOutline = document.querySelector(partOutlineSelector);
+			if (slotOutline === null) {
+				return undefined;
+			}
+			const compartments = [
+				...document.querySelectorAll(
+					`[data-kind="object"][data-id="${objectId}"] [data-part]`,
+				),
+			];
+			const matched = compartments.find(
+				(compartment) =>
+					compartment.getAttribute("y") === slotOutline.getAttribute("y") &&
+					compartment.getAttribute("height") ===
+						slotOutline.getAttribute("height"),
+			);
+			const address = matched?.getAttribute("data-part");
+			return address?.startsWith("textSlot:")
+				? address.slice("textSlot:".length)
+				: undefined;
+		},
+		{ objectId: id, partOutlineSelector: selectors.partOutline },
+	);
+}
+
+/**
+ * The slot id of every compartment the selection outlines, in the order the
+ * overlay draws them. Read off each compartment's `data-part` address
+ * (`textSlot:<slotId>`). Empty while only the object is selected.
+ */
+async function selectedSlotIds(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<string[]> {
+	return canvas.page.evaluate(
+		({ objectId, partOutlineSelector }) => {
+			const outlines = [...document.querySelectorAll(partOutlineSelector)];
+			const compartments = [
+				...document.querySelectorAll(
+					`[data-kind="object"][data-id="${objectId}"] [data-part]`,
+				),
+			];
+			return outlines.map((outline) => {
+				const matched = compartments.find(
+					(compartment) =>
+						compartment.getAttribute("y") === outline.getAttribute("y") &&
+						compartment.getAttribute("height") ===
+							outline.getAttribute("height"),
+				);
+				const address = matched?.getAttribute("data-part") ?? "";
+				return address.startsWith("textSlot:")
+					? address.slice("textSlot:".length)
+					: "";
+			});
+		},
+		{ objectId: id, partOutlineSelector: selectors.partOutline },
+	);
 }
 
 /** Selects the record, then its title band as a slot (two different spots, so no dblclick). */
@@ -151,10 +159,10 @@ async function selectNameSlot(canvas: CanvasDriver): Promise<void> {
 	await canvas.selectAt(ATTRIBUTES_SPOT);
 	await canvas.clickAt(NAME_SPOT);
 	await expect
-		.poll(async () => (await selectionOutlineHeights(canvas)).length, {
-			message: "the slot outline joins the object outline",
+		.poll(() => canvas.selectionOutlineKinds(), {
+			message: "the slot outline replaces the object outline",
 		})
-		.toBe(2);
+		.toEqual(["part"]);
 }
 
 test.describe("record: selecting one text slot", () => {
@@ -163,39 +171,37 @@ test.describe("record: selecting one text slot", () => {
 	}) => {
 		await createFilledRecord(canvas);
 
-		// The first click only selects the object, so there is one outline.
+		// The first click only selects the object, so its outline is the one drawn.
 		await canvas.selectAt(ATTRIBUTES_SPOT);
-		expect(await selectionOutlineHeights(canvas)).toHaveLength(1);
+		expect(await canvas.selectionOutlineKinds()).toEqual(["object"]);
 
 		await canvas.clickAt(NAME_SPOT);
-		await expect
-			.poll(async () => (await selectionOutlineHeights(canvas)).length)
-			.toBe(2);
+		await expect.poll(() => canvas.selectionOutlineKinds()).toEqual(["part"]);
 	});
 
-	test("dashes the object outline and drops the transform handles while a slot is selected", async ({
+	test("drops the object outline and the transform handles while a slot is selected", async ({
 		canvas,
 	}) => {
 		await createFilledRecord(canvas);
 
 		await canvas.selectAt(ATTRIBUTES_SPOT);
-		expect(await objectOutlineDashArray(canvas)).toBeNull();
+		expect(await canvas.selectionOutlineKinds()).toEqual(["object"]);
 		expect(await transformHandleCount(canvas)).toBeGreaterThan(0);
 
 		await canvas.clickAt(NAME_SPOT);
 		await expect
-			.poll(() => objectOutlineDashArray(canvas), {
-				message: "the object outline goes dashed once a slot is selected",
+			.poll(() => canvas.selectionOutlineKinds(), {
+				message: "the slot outline replaces the object outline",
 			})
-			.not.toBeNull();
+			.toEqual(["part"]);
 		expect(await transformHandleCount(canvas)).toBe(0);
 
 		await canvas.pressEscape();
 		await expect
-			.poll(() => objectOutlineDashArray(canvas), {
-				message: "leaving the slot restores the solid outline",
+			.poll(() => canvas.selectionOutlineKinds(), {
+				message: "leaving the slot restores the object outline",
 			})
-			.toBeNull();
+			.toEqual(["object"]);
 		expect(await transformHandleCount(canvas)).toBeGreaterThan(0);
 	});
 
@@ -242,10 +248,10 @@ test.describe("record: selecting one text slot", () => {
 
 		await canvas.clickAt(NAME_SPOT);
 		await expect
-			.poll(async () => (await selectionOutlineHeights(canvas)).length, {
-				message: "the slot outline joins the object outline",
+			.poll(() => canvas.selectionOutlineKinds(), {
+				message: "the slot outline replaces the object outline",
 			})
-			.toBe(2);
+			.toEqual(["part"]);
 
 		await expect(backgroundColorToggle).toHaveCount(0);
 		await expect(fontSizeToggle).toBeVisible();
@@ -270,7 +276,7 @@ test.describe("record: selecting one text slot", () => {
 			.toBeLessThanOrEqual(2);
 	});
 
-	test("lays the text format buttons out flat while a slot is selected", async ({
+	test("offers Bold alone on the menu itself, with the object or a slot selected", async ({
 		canvas,
 	}) => {
 		await createFilledRecord(canvas);
@@ -278,29 +284,25 @@ test.describe("record: selecting one text slot", () => {
 		const textFormatToggle = canvas.page.locator(
 			selectors.objectMenuToggle("text-format"),
 		);
-		// Matched on the property alone: each button carries the value its *next* press
-		// lands on, and the name slot ships bold and underlined.
-		const bold = canvas.page.locator('[data-part^="set:fontWeight:"]');
-		const italic = canvas.page.locator('[data-part^="set:fontStyle:"]');
+		const bold = canvas.page.locator(selectors.objectMenuCommand("toggleBold"));
+		const otherFormats = canvas.page.locator(
+			`${selectors.objectMenuCommand("toggleItalic")}, ${selectors.objectMenuCommand("toggleUnderline")}, ${selectors.objectMenuCommand("toggleStrikethrough")}`,
+		);
 
-		// The whole object selected: the four stay behind the dropdown.
 		await canvas.selectAt(ATTRIBUTES_SPOT);
-		await expect(textFormatToggle).toBeVisible();
-		await expect(bold).toHaveCount(0);
+		await expect(bold).toBeVisible();
+		await expect(textFormatToggle).toHaveCount(0);
+		await expect(otherFormats).toHaveCount(0);
 
 		await canvas.clickAt(NAME_SPOT);
 		await expect
-			.poll(async () => (await selectionOutlineHeights(canvas)).length, {
-				message: "the slot outline joins the object outline",
+			.poll(() => canvas.selectionOutlineKinds(), {
+				message: "the slot outline replaces the object outline",
 			})
-			.toBe(2);
-		await expect(textFormatToggle).toHaveCount(0);
+			.toEqual(["part"]);
 		await expect(bold).toBeVisible();
-		await expect(italic).toBeVisible();
-
-		await canvas.pressEscape();
-		await expect(textFormatToggle).toBeVisible();
-		await expect(bold).toHaveCount(0);
+		await expect(textFormatToggle).toHaveCount(0);
+		await expect(otherFormats).toHaveCount(0);
 	});
 
 	test("steps out of the slot on the first Escape and clears the selection on the second", async ({
@@ -311,10 +313,10 @@ test.describe("record: selecting one text slot", () => {
 
 		await canvas.pressEscape();
 		await expect
-			.poll(async () => (await selectionOutlineHeights(canvas)).length, {
+			.poll(() => canvas.selectionOutlineKinds(), {
 				message: "the first Escape drops only the slot",
 			})
-			.toBe(1);
+			.toEqual(["object"]);
 		expect(await canvas.hasAnyControl()).toBe(true);
 
 		await canvas.pressEscape();
@@ -336,7 +338,7 @@ test.describe("record: selecting one text slot", () => {
 		for (const expectedPart of ["name", "attributes", "name"]) {
 			await canvas.page.keyboard.press("Tab");
 			await expect
-				.poll(() => selectedSlotPart(canvas, id), {
+				.poll(() => selectedSlotId(canvas, id), {
 					message: `Tab reaches the ${expectedPart} slot`,
 				})
 				.toBe(expectedPart);
@@ -367,11 +369,82 @@ test.describe("record: selecting one text slot", () => {
 		]) {
 			await canvas.page.keyboard.press("Tab");
 			await expect
-				.poll(() => selectedSlotPart(canvas, id), {
+				.poll(() => selectedSlotId(canvas, id), {
 					message: `Tab reaches the ${expectedPart} slot`,
 				})
 				.toBe(expectedPart);
 		}
+	});
+
+	test("widens the selection to the run of compartments on a Shift-click", async ({
+		canvas,
+	}) => {
+		const id = await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		expect(await selectedSlotIds(canvas, id)).toEqual(["name"]);
+
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+		await expect
+			.poll(() => selectedSlotIds(canvas, id), {
+				message: "both compartments are outlined",
+			})
+			.toEqual(["name", "attributes"]);
+		// The record stays the selection; the modifier did not toggle it off.
+		expect(await canvas.hasAnyControl()).toBe(true);
+	});
+
+	test("applies a font color to every compartment of the range", async ({
+		canvas,
+	}) => {
+		await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+
+		await canvas.setColor("font-color", "#ff0000");
+		await expect
+			.poll(async () => (await textColorByContent(canvas))[NAME_TEXT], {
+				message: "the anchor compartment takes the new font color",
+			})
+			.toBe("rgb(255, 0, 0)");
+		expect((await textColorByContent(canvas))[ATTRIBUTES_TEXT]).toBe(
+			"rgb(255, 0, 0)",
+		);
+	});
+
+	test("collapses the range back to the one compartment a plain click lands in", async ({
+		canvas,
+	}) => {
+		const id = await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+		await expect
+			.poll(() => selectedSlotIds(canvas, id))
+			.toEqual(["name", "attributes"]);
+
+		// A different spot from the Shift-click, so the pair is not read as a double click.
+		await canvas.clickAt(NAME_SPOT);
+		await expect
+			.poll(() => selectedSlotIds(canvas, id), {
+				message: "the plain click leaves only the compartment it landed in",
+			})
+			.toEqual(["name"]);
+	});
+
+	test("collapses the range and steps on with Tab", async ({ canvas }) => {
+		const id = await createFilledRecord(canvas);
+		await selectNameSlot(canvas);
+		await canvas.shiftClickAt(ATTRIBUTES_SPOT);
+		await expect
+			.poll(() => selectedSlotIds(canvas, id))
+			.toEqual(["name", "attributes"]);
+
+		// Forward from the last of the range, which wraps back to the title band.
+		await canvas.page.keyboard.press("Tab");
+		await expect
+			.poll(() => selectedSlotIds(canvas, id), {
+				message: "Tab leaves one compartment selected",
+			})
+			.toEqual(["name"]);
 	});
 
 	test("opens the selected slot for editing on Enter", async ({ canvas }) => {

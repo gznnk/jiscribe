@@ -1,11 +1,22 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
-import { collectCowChangedKeys, copyObjectsRecord } from "./cowObjects";
+import { calcObjectResizedAxes } from "./calcObjectResizedAxes";
+import {
+	collectCowChangedKeys,
+	copyObjectsRecord,
+	createCowObjects,
+	isCowObjects,
+} from "./cowObjects";
+import { textSlotsOf } from "./textSlotsOf";
 import { updateAffectedGroupBounds } from "./updateAffectedGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextState } from "../../states/objects/primitives/text/TextState";
-import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
+import type {
+	ObjectContentResizeContext,
+	ObjectContentResizerRegistry,
+	ResizedAxes,
+} from "../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -23,8 +34,9 @@ const derivesHeightAlone = (object: ObjectState): boolean =>
  * The position and the transform are applied after the local box a text region
  * is declared in, so no derivation reads them — a move or a rotation must not
  * re-measure every frame of its drag. The rest are compared on their own terms
- * above them: height only where it alone is derived, since a label text's
- * derived box would otherwise fight the group resize that scaled it.
+ * above them: height only where it alone is derived or where a resize drag is
+ * writing it, since a label text's derived box would otherwise fight the group
+ * resize that scaled it.
  */
 const FIELDS_COMPARED_APART: ReadonlySet<string> = new Set([
 	"cx",
@@ -70,25 +82,34 @@ const FIELDS_COMPARED_APART: ReadonlySet<string> = new Set([
  * drag is rebuilt from the gesture's opening snapshot, which puts the opening
  * height back under an unchanged width, and the inputs alone would call that
  * nothing to do and let the drag end on it.
+ *
+ * The height is compared as well while a transform-handle drag writes it: the
+ * written axis is an input to the resizer (`ObjectContentResizeContext`), and
+ * since every frame of a drag is rebuilt from the snapshot, the box is all that
+ * changes on the first frame of a drag on the top or bottom edge.
  */
 const holdsSameContentInputs = (
 	previousObject: ObjectState | undefined,
 	object: ObjectState,
+	resizedAxes: ResizedAxes | undefined,
 ): boolean => {
+	if (previousObject === object) {
+		return true;
+	}
 	if (
 		previousObject === undefined ||
 		previousObject.type !== object.type ||
 		previousObject.autoHeight !== object.autoHeight ||
 		(previousObject as Partial<TextState>).textLayout !==
 			(object as Partial<TextState>).textLayout ||
-		(derivesHeightAlone(object) &&
-			(previousObject as Partial<Dimensions>).height !==
-				(object as Partial<Dimensions>).height) ||
+		((previousObject as Partial<Dimensions>).height !==
+			(object as Partial<Dimensions>).height &&
+			(derivesHeightAlone(object) || resizedAxes?.height !== undefined)) ||
 		(previousObject as Partial<Dimensions>).width !==
 			(object as Partial<Dimensions>).width ||
 		(previousObject as TextStyleState).textVerticalBasis !==
 			(object as TextStyleState).textVerticalBasis ||
-		(previousObject as TextStyleState).text !== (object as TextStyleState).text
+		textSlotsOf(previousObject) !== textSlotsOf(object)
 	) {
 		return false;
 	}
@@ -139,7 +160,7 @@ const holdsSameContentInputs = (
  * @param previousState - The state the transition started from, supplying the slots compared against
  * @param contentResizer - The per-canvas content-resizer registry; every type absent from it is skipped outright, so a canvas whose types all store their box does no work here
  * @param forceRemeasure - Re-measures every object even though its slots are untouched. For the one case the slots cannot express: the same family resolving to different faces than it did before (web fonts finishing after the first paint)
- * @returns The same state reference when no box moved; otherwise a state with the re-measured objects swapped in and the ancestor groups' cached frames recomputed
+ * @returns The same state reference when no box moved; otherwise a state with the re-measured objects swapped in and the ancestor groups' cached frames recomputed. Its `objects` is a copy-on-write view when `state.objects` was one, so a caller handing over a view still flattens the result
  */
 export const reconcileObjectContentSizes = (
 	state: CanvasControllerState,
@@ -147,12 +168,22 @@ export const reconcileObjectContentSizes = (
 	contentResizer: ObjectContentResizerRegistry,
 	forceRemeasure = false,
 ): CanvasControllerState => {
+	if (!forceRemeasure && state.objects === previousState.objects) {
+		return state;
+	}
+
 	// A family now resolving to a face that was not loaded yet invalidates every
 	// measurement at once, so the narrowed set says nothing about what needs
 	// re-measuring and the full scan is the only correct pass.
 	const changedIds = forceRemeasure
 		? null
 		: collectCowChangedKeys(state.objects, previousState.objects);
+
+	// The drag under way, or the one this transition's dragEnd just dropped:
+	// handleGesture clears it before this pass runs, and the dragEnd frame is
+	// rebuilt from the snapshot like every other frame.
+	const drag = state.activeDrag ?? previousState.activeDrag;
+	const resize = drag?.kind === "transform" ? drag.resize : undefined;
 
 	let resizedObjects: Record<string, ObjectState> | null = null;
 	const resizedIds: string[] = [];
@@ -162,18 +193,35 @@ export const reconcileObjectContentSizes = (
 		if (!resizeToContent) {
 			return;
 		}
+		const previousObject = previousState.objects[object.id];
+		// Ahead of restating the axes, which a full scan would otherwise pay for
+		// every object the frame left alone.
+		if (!forceRemeasure && previousObject === object) {
+			return;
+		}
+		// Each object reads the drag in its own frame: a child a group resize
+		// scales may be turned or flipped against the dragged one.
+		const resizedAxes = resize && calcObjectResizedAxes(resize, object);
 		if (
 			!forceRemeasure &&
-			holdsSameContentInputs(previousState.objects[object.id], object)
+			holdsSameContentInputs(previousObject, object, resizedAxes)
 		) {
 			return;
 		}
-		const resized = resizeToContent(object, {});
+		const context: ObjectContentResizeContext = resizedAxes
+			? { resizedAxes }
+			: {};
+		const resized = resizeToContent(object, context);
 		if (resized === object) {
 			return;
 		}
 		if (!resizedObjects) {
-			resizedObjects = copyObjectsRecord(state.objects);
+			// A view stays a view, as in updateAffectedGroupBounds: flattening it
+			// here would cost O(all objects) per slider or resize frame and leave the
+			// next frame's collectCowChangedKeys no shared base to narrow to.
+			resizedObjects = isCowObjects(state.objects)
+				? createCowObjects(state.objects)
+				: copyObjectsRecord(state.objects);
 		}
 		resizedObjects[object.id] = resized;
 		resizedIds.push(object.id);
@@ -199,6 +247,12 @@ export const reconcileObjectContentSizes = (
 	}
 	// A group's frame is cached, not derived on read, so a box that grew inside one
 	// leaves the ancestor outlines behind until they are recomputed here.
+	//
+	// Only for the boxes *this* pass moved, though. An edit that hands over an
+	// object whose box it derived itself never reaches this line at all — the
+	// resizer finds nothing to do, the early return above takes the state out by
+	// reference, and its groups go unsettled. `reconcileGroupBounds` is the pass
+	// that covers those (see updateAffectedGroupBounds for the whole picture).
 	return updateAffectedGroupBounds(
 		{ ...state, objects: resizedObjects },
 		resizedIds,

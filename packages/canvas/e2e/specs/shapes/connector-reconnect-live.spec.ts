@@ -65,7 +65,7 @@ test.describe("live preview while reconnecting a connector", () => {
 		// Select the connector to show the target endpoint handle.
 		await canvas.clickAt({ x: 500, y: 350 });
 		const handle = canvas.page.locator(
-			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
+			`[data-id="${connectorId}"][data-action="endpoint:target"]`,
 		);
 		await expect(handle).toBeVisible();
 		const box = await handle.boundingBox();

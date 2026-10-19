@@ -522,14 +522,14 @@ const LABEL_STROKE_WIDTH = 2;
 /** Locator for the label box, i.e. the LabelBox div inside the foreignObject. */
 const labelBoxOf = (canvas: CanvasDriver) =>
 	canvas.page
-		.locator("foreignObject[data-kind=connector][data-part=label]")
+		.locator("foreignObject[data-kind=connector][data-action=label]")
 		.locator("div")
 		.first();
 
 /** Geometry attributes of the label foreignObject, i.e. the label box in world coordinates. */
 const labelForeignObjectBox = async (canvas: CanvasDriver): Promise<Box> => {
 	const attributes = await canvas.page
-		.locator("foreignObject[data-kind=connector][data-part=label]")
+		.locator("foreignObject[data-kind=connector][data-action=label]")
 		.evaluate((element) => ({
 			x: element.getAttribute("x"),
 			y: element.getAttribute("y"),

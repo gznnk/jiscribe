@@ -61,6 +61,8 @@ export const CANONICAL_TYPE_ORDER = [
 	// The rest of uml-shapes: notation shapes that are one box each, unlike record
 	"umlPackage",
 	"umlComponent",
+	// The ER notation of er-shapes: an entity whose columns are structured data
+	"erEntity",
 	// The two shapes of aws-shapes: one AWS Architecture Icon, and the boundary
 	// frame drawn around a group of them
 	"awsIcon",
@@ -70,6 +72,7 @@ export const CANONICAL_TYPE_ORDER = [
 	"group",
 	"container",
 	"sticky",
+	"table",
 	"svg",
 	"image",
 	"connector",
@@ -86,6 +89,8 @@ export type CanonicalType = (typeof CANONICAL_TYPE_ORDER)[number];
 export const TEMPLATE_DEF_TYPES: ReadonlySet<string> = new Set([
 	"markdown",
 	"record",
+	"erEntity",
+	"table",
 	"polyline",
 	"polygon",
 	"group",

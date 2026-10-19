@@ -11,6 +11,8 @@ import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeStat
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { applyStyleIntent } from "../../../../../style/walk/applyStyleIntent";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -158,14 +160,14 @@ const stateWithConnectors = (
 const dragEvent = (
 	type: "dragStart" | "dragEnd",
 	targetId: string,
-	targetPart: string,
+	targetAction: string,
 	last: Point,
 ): CanvasEvent =>
 	({
 		type,
 		target: null,
 		targetId,
-		targetPart,
+		targetAction,
 		targetKind: "control",
 		start: { x: 0, y: 0 },
 		last,
@@ -277,12 +279,12 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			registries,
 		);
 
-		// The objects reference is unchanged = handleGesture's auto-commit check does not fire
 		expect(afterEnd.objects).toBe(state.objects);
 		expect(afterEnd.connectorDraft).toBeNull();
+		expect(afterEnd.commitVersion).toBe(state.commitVersion);
 	});
 
-	it("changes the objects reference for an edit that moves the endpoint (subject to commit)", () => {
+	it("commits an edit that moves the endpoint, once", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
@@ -311,6 +313,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			point: { x: 99, y: 99 },
 		});
 		expect(afterEnd.rootIds).toEqual(["c1"]);
+		expect(afterEnd.commitVersion).toBe(state.commitVersion + 1);
 	});
 
 	it("inserts a newly created connector at the end of rootIds (frontmost)", () => {
@@ -347,6 +350,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		expect(afterEnd.rootIds[0]).toBe("rect-1");
 		const newId = afterEnd.rootIds[1];
 		expect(afterEnd.objects[newId]?.type).toBe("connector");
+		expect(afterEnd.commitVersion).toBe(state.commitVersion + 1);
 	});
 
 	/**
@@ -383,9 +387,10 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 	};
 
 	// Regression guard for #167: a connector created via the gesture must carry the
-	// features descriptor. The style-property handlers read state.features directly to gate
-	// style updates, so a freshly created connector without it silently ignores every
-	// stroke change until a save/reload re-stamps features through the registry.
+	// features descriptor. The sides that read state.features directly gate on it
+	// (which rows the style menus offer), so a freshly created connector without it
+	// is offered no stroke control until a save/reload re-stamps features through
+	// the registry.
 	describe("a newly created connector is immediately style-editable (regression #167)", () => {
 		it("stamps the shared ConnectorFeatures descriptor (same reference, for memo stability)", () => {
 			const { state, connectorId } = createConnectorFromRect();
@@ -395,35 +400,34 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		it("applies stroke-group updates dispatched by the style menu (dash / color / width)", () => {
 			const { state, connectorId } = createConnectorFromRect();
-			// The style menu targets the selected connector via selectedConnectorId.
+			// The style menu targets the selected connector.
 			const selected: CanvasControllerState = {
 				...state,
-				selectedIds: [],
-				selectedConnectorId: connectorId,
+				selection: selectionOf([connectorId]),
 			};
 
-			const dashed = registries.styleProperty.apply(
+			const dashed = applyStyleIntent(
 				selected,
-				"strokeDashType",
-				"dashed",
+				{ kind: "strokeDashType", dash: "dashed" },
+				registries,
 			);
 			expect(
 				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
 			).toBe("dashed");
 
-			const colored = registries.styleProperty.apply(
+			const colored = applyStyleIntent(
 				selected,
-				"stroke",
-				"#ff0000",
+				{ kind: "stroke", color: "#ff0000" },
+				registries,
 			);
 			expect((colored.objects[connectorId] as ConnectorState).stroke).toBe(
 				"#ff0000",
 			);
 
-			const widened = registries.styleProperty.apply(
+			const widened = applyStyleIntent(
 				selected,
-				"strokeWidth",
-				"7",
+				{ kind: "strokeWidth", width: 7 },
+				registries,
 			);
 			expect((widened.objects[connectorId] as ConnectorState).strokeWidth).toBe(
 				7,
@@ -565,6 +569,50 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			expect(updated.target.anchor).toEqual({ kind: "center" });
 			// Explicit orthogonal is kept even though the target is now a center anchor.
 			expect(updated.routing).toBe("orthogonal");
+		});
+	});
+
+	describe("a type's hidden connection anchors", () => {
+		// Just inside the target's top edge, 3px from its topCenter (80, -20).
+		const nearTopCenter = { x: 80, y: -17 };
+
+		const dropNearTopCenter = (
+			dropRegistries: ReturnType<typeof createTestRegistries>,
+		): ConnectorState => {
+			const state = withTarget(
+				stateWithConnectors([edgeSourceConnector("c1", { x: 10, y: 10 })]),
+			);
+			const afterStart = handler.handle(
+				state,
+				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+				dropRegistries,
+			);
+			const afterEnd = handler.handle(
+				afterStart,
+				dragEvent("dragEnd", "c1", "endpoint:target", nearTopCenter),
+				dropRegistries,
+			);
+			return afterEnd.objects["c1"] as ConnectorState;
+		};
+
+		it("snaps onto the edge midpoint the type offers", () => {
+			expect(dropNearTopCenter(registries).target.anchor).toEqual({
+				kind: "connectPoint",
+				id: "topCenter",
+			});
+		});
+
+		it("lands on the edge position instead of an edge midpoint the type hides", () => {
+			const hidingRegistries = createTestRegistries();
+			hidingRegistries.objectConnectionAnchors.register("rect", {
+				topCenter: { hidden: true },
+			});
+
+			expect(dropNearTopCenter(hidingRegistries).target.anchor).toEqual({
+				kind: "edge",
+				side: "top",
+				t: 0.5,
+			});
 		});
 	});
 });

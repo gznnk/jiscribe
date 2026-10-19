@@ -2,9 +2,9 @@ import type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { describe, expect, it } from "vitest";
 
-import type { MetaState } from "../../../../states/objects/base/MetaState";
-import { ObjectMapper } from "../../../../states/objects/base/ObjectMapper";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { MetaState } from "../MetaState";
+import { ObjectMapper } from "../ObjectMapper";
+import type { ObjectState } from "../ObjectState";
 
 describe("ObjectMapper", () => {
 	describe("toState", () => {

@@ -5,6 +5,9 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
+import type { CanvasSelection } from "../../../selection/CanvasSelection";
+import { applyStyleIntent } from "../../../style/walk/applyStyleIntent";
 import { GroupCommand } from "../GroupCommand";
 
 const registries = createTestRegistries();
@@ -29,14 +32,13 @@ const makeRect = (
 	}) as ObjectState;
 
 const makeState = (params: {
-	selectedIds: string[];
+	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 	multiSelectGroup?: GroupState | null;
 }): CanvasControllerState =>
 	({
 		multiSelectGroup: null,
-		selectedTextSlot: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,
 		commitVersion: 0,
@@ -45,12 +47,12 @@ const makeState = (params: {
 
 describe("GroupCommand", () => {
 	// Regression guard: the created group must carry the shared GroupFeatures
-	// descriptor (the style-property handlers gate lockAspectRatio on
-	// features.transform), and the marquee's multiSelectGroup must not survive —
-	// stale, it swallows lockAspectRatio reads/writes meant for the real group.
+	// descriptor (its table, and with it the lock, is derived from the type's
+	// features), and the marquee's multiSelectGroup must not survive — stale, it
+	// swallows lockAspectRatio reads/writes meant for the real group.
 	it("stamps GroupFeatures and clears multiSelectGroup so lockAspectRatio hits the group", () => {
 		const state = makeState({
-			selectedIds: ["a", "b"],
+			selection: selectionOf(["a", "b"]),
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
 			rootIds: ["a", "b"],
 			multiSelectGroup: { lockAspectRatio: true } as GroupState,
@@ -63,10 +65,10 @@ describe("GroupCommand", () => {
 		expect(group.lockAspectRatio).toBe(true);
 		expect(next.multiSelectGroup).toBeNull();
 
-		const unlocked = registries.styleProperty.apply(
+		const unlocked = applyStyleIntent(
 			next,
-			"lockAspectRatio",
-			"false",
+			{ kind: "lockAspectRatio", locked: false },
+			registries,
 		);
 		expect((unlocked.objects[groupId] as GroupState).lockAspectRatio).toBe(
 			false,
@@ -75,7 +77,7 @@ describe("GroupCommand", () => {
 
 	it("combines two root elements into a single new group", () => {
 		const state = makeState({
-			selectedIds: ["a", "b"],
+			selection: selectionOf(["a", "b"]),
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
 			rootIds: ["a", "b"],
 		});
@@ -92,13 +94,13 @@ describe("GroupCommand", () => {
 		expect(next.objects["a"]?.parentId).toBe(groupId);
 		expect(next.objects["b"]?.parentId).toBe(groupId);
 		// the new group is selected
-		expect(next.selectedIds).toEqual([groupId]);
+		expect(next.selection.objectIds).toEqual([groupId]);
 		expect(next.commitVersion).toBe(1);
 	});
 
 	it("the new group's bounds contain its children", () => {
 		const state = makeState({
-			selectedIds: ["a", "b"],
+			selection: selectionOf(["a", "b"]),
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
 			rootIds: ["a", "b"],
 		});
@@ -123,7 +125,7 @@ describe("GroupCommand", () => {
 		it("clamps a degenerate axis when grouping collinear children", () => {
 			// two horizontal polylines on the same y → the OBB's height would be 0
 			const state = makeState({
-				selectedIds: ["p1", "p2"],
+				selection: selectionOf(["p1", "p2"]),
 				objects: {
 					p1: makePolyline("p1", [
 						{ x: 0, y: 50 },
@@ -148,7 +150,7 @@ describe("GroupCommand", () => {
 			const noGeometry = (id: string): ObjectState =>
 				({ id, type: "mystery" }) as unknown as ObjectState;
 			const state = makeState({
-				selectedIds: ["a", "b"],
+				selection: selectionOf(["a", "b"]),
 				objects: { a: noGeometry("a"), b: noGeometry("b") },
 				rootIds: ["a", "b"],
 			});
@@ -160,7 +162,7 @@ describe("GroupCommand", () => {
 	describe("canExecute", () => {
 		it("is executable with a selection of two or more elements", () => {
 			const state = makeState({
-				selectedIds: ["a", "b"],
+				selection: selectionOf(["a", "b"]),
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 0, 0) },
 				rootIds: ["a", "b"],
 			});
@@ -169,7 +171,7 @@ describe("GroupCommand", () => {
 
 		it("is not executable with a single selection", () => {
 			const state = makeState({
-				selectedIds: ["a"],
+				selection: selectionOf(["a"]),
 				objects: { a: makeRect("a", 0, 0) },
 				rootIds: ["a"],
 			});

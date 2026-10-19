@@ -6,8 +6,8 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
-	setPart,
-	togglePart,
+	setAction,
+	toggleAction,
 } from "@jiscribe/canvas-sdk";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 
@@ -21,12 +21,15 @@ import {
 	AwsIconPickerPanel,
 	AwsIconSearchInput,
 } from "./AwsIconPickerMenuStyled";
-import { AWS_ICON_CATEGORIES, searchAwsIcons } from "./searchAwsIcons";
 import { awsShapesMessagesByLocale } from "../messages/awsShapesMessages";
 import { DEFAULT_AWS_ICON_NAME } from "../schema/AwsIconDoc";
 import type { AwsIconTier } from "../schema/icon/AwsIconNode";
 import { AWS_ICON_TIERS } from "../schema/icon/AwsIconNode";
 import { resolveAwsIconName } from "../schema/icon/resolveAwsIconName";
+import {
+	AWS_ICON_CATEGORIES,
+	searchAwsIcons,
+} from "../schema/icon/searchAwsIcons";
 
 /**
  * Kept apart from the toolbar category's id (also "aws"). Both put a
@@ -48,7 +51,7 @@ const FilterChip: React.FC<React.ComponentProps<typeof AwsFilterChip>> = (
 
 /** The icon the selected shape draws, as its canonical name. */
 const readSelectedIcon = (
-	selectedIds: string[],
+	selectedIds: readonly string[],
 	objects: ObjectMenuItemProps["objects"],
 ): string => {
 	const first = objects[selectedIds[0] ?? ""] as
@@ -68,7 +71,7 @@ const readSelectedIcon = (
  * category). A term alone does not always cut 781 down, and "show me the Compute
  * services" is an ordinary way to look for one when drawing an architecture.
  *
- * A cell sends its value through `data-part` rather than `onClick`: holding the
+ * A cell sends its value through `data-action` rather than `onClick`: holding the
  * press makes the canvas capture the pointer and no click fires, so a React
  * handler would only ever catch the quick ones. It is declared the way the
  * shared colour swatches are, and the canvas's own path dispatches it. For the
@@ -80,7 +83,7 @@ const readSelectedIcon = (
  */
 const AwsIconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
-	selectedIds,
+	selection,
 	openSectionId,
 }) => {
 	const locale = useCanvasLocale();
@@ -90,7 +93,7 @@ const AwsIconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const [query, setQuery] = useState("");
 	const [tier, setTier] = useState<AwsIconTier | undefined>(undefined);
 	const [category, setCategory] = useState<string | undefined>(undefined);
-	const currentIcon = readSelectedIcon(selectedIds, objects);
+	const currentIcon = readSelectedIcon(selection.objectIds, objects);
 	const { names, total } = useMemo(
 		() => searchAwsIcons({ query, tier, category }),
 		[query, tier, category],
@@ -121,7 +124,7 @@ const AwsIconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-part={togglePart(SECTION_ID)}
+				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuIcon}
 			>
 				<AwsIconGlyph name={currentIcon} size={18} />
@@ -194,7 +197,7 @@ const AwsIconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									key={name}
 									type="button"
 									selected={name === currentIcon}
-									data-part={setPart("icon", name)}
+									data-action={setAction("icon", name)}
 									title={name}
 								>
 									<AwsIconGlyph name={name} size={24} />

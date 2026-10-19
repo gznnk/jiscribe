@@ -200,3 +200,46 @@ describe("GestureRecognizer batch ordering (#42)", () => {
 		expect(dragEnd?.last.x).toBe(30);
 	});
 });
+
+describe("GestureRecognizer processPendingBatch", () => {
+	it("feeds the queued events synchronously and the cancelled RAF does not feed them again", () => {
+		const { events, recognizer, dispatch } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 0));
+		dispatch(makeEvent("pointermove", 5, 0, 8));
+		dispatch(makeEvent("pointerup", 5, 0, 16));
+		recognizer.processPendingBatch();
+
+		expect(events.map((e) => e.type)).toEqual([
+			"pressed",
+			"dragStart",
+			"dragEnd",
+		]);
+		expect(rafCallbacks).toHaveLength(0);
+		flushRaf();
+		expect(events).toHaveLength(3);
+	});
+
+	it("does nothing when no batch is scheduled", () => {
+		const { events, recognizer } = setup();
+		const cancelSpy = vi.fn();
+		vi.stubGlobal("cancelAnimationFrame", cancelSpy);
+
+		recognizer.processPendingBatch();
+
+		expect(events).toEqual([]);
+		expect(cancelSpy).not.toHaveBeenCalled();
+	});
+
+	it("leaves later events to be scheduled on the next frame as usual", () => {
+		const { events, recognizer, dispatch } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 0));
+		recognizer.processPendingBatch();
+		dispatch(makeEvent("pointerup", 0, 0, 4));
+
+		expect(events.map((e) => e.type)).toEqual(["pressed"]);
+		flushRaf();
+		expect(events.map((e) => e.type)).toEqual(["pressed", "click"]);
+	});
+});

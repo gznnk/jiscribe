@@ -6,6 +6,7 @@ import { createTestState } from "./support/createTestState";
 import { applyActions, command } from "./support/dispatch";
 import { rectDoc } from "./support/fixtures";
 import type { CanvasControllerState, DocSnapshot } from "../../CanvasTypes";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
 
 /**
@@ -101,12 +102,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("is a no-op while a text edit is open, like undo itself", () => {
 			const state = createState({
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "",
-				},
+				textEditState: { kind: "shape", text: "" },
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);
@@ -132,7 +128,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("keeps the viewport, an open modal, and a selection the target still holds", () => {
 			const state = createState({
-				selectedIds: ["rect-1"],
+				selection: selectionOf(["rect-1"]),
 				activeModal: "export",
 				// Shows the rect at every x the entries put it, margin included.
 				viewport: { minX: -93, minY: -91, width: 800, height: 600, zoom: 2 },
@@ -141,7 +137,7 @@ describe("canvasReducer (integration)", () => {
 
 			expect(reverted.viewport).toBe(state.viewport);
 			expect(reverted.activeModal).toBe("export");
-			expect(reverted.selectedIds).toEqual(["rect-1"]);
+			expect(reverted.selection.objectIds).toEqual(["rect-1"]);
 		});
 	});
 });

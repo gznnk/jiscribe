@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * Text style applied in bulk to a multi-selection.
@@ -61,11 +62,77 @@ test.describe("bulk text style application to a multi-selection", () => {
 		const { left, right } = await drawTwoLabeledRects(canvas);
 		await marqueeSelectBoth(canvas);
 
-		await canvas.setTextFormat("fontWeight", "bold");
+		await canvas.pressBold();
 
 		await expect
 			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
 			.toBe("700");
 		expect((await canvas.textStyleOf(right))?.fontWeight).toBe("700");
+	});
+
+	test("Ctrl/Cmd+B brings a selection mixing bold and plain all bold, then all plain", async ({
+		canvas,
+	}) => {
+		const { left, right } = await drawTwoLabeledRects(canvas);
+		// One shape bolded on its own first, from the keyboard with no editor open.
+		await canvas.selectAt({ x: 405, y: 240 });
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
+			.toBe("700");
+		expect((await canvas.textStyleOf(right))?.fontWeight).toBe("400");
+
+		await marqueeSelectBoth(canvas);
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(right))?.fontWeight)
+			.toBe("700");
+		expect((await canvas.textStyleOf(left))?.fontWeight).toBe("700");
+
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
+			.toBe("400");
+		expect((await canvas.textStyleOf(right))?.fontWeight).toBe("400");
+
+		// Each press is one undo entry for the whole selection.
+		await canvas.undo();
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)
+			.toBe("700");
+		expect((await canvas.textStyleOf(right))?.fontWeight).toBe("700");
+	});
+
+	test("the sidebar's Underline reads lit over shapes all underlined, and a press keeps each one's strikethrough", async ({
+		canvas,
+	}) => {
+		const { left, right } = await drawTwoLabeledRects(canvas);
+		await canvas.selectAt({ x: 405, y: 240 });
+		await canvas.page.keyboard.press("ControlOrMeta+u");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.textDecoration)
+			.toBe("underline");
+		await canvas.selectAt({ x: 625, y: 240 });
+		await canvas.page.keyboard.press("ControlOrMeta+u");
+		await canvas.page.keyboard.press("ControlOrMeta+Shift+x");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(right))?.textDecoration)
+			.toBe("underline line-through");
+
+		await marqueeSelectBoth(canvas);
+		await canvas.openPropertyPanel();
+		const underline = canvas.page.locator(
+			`${selectors.propertyPanel} [aria-label="Underline"]`,
+		);
+		await expect(underline).toHaveAttribute("aria-pressed", "true");
+
+		await underline.click();
+		await expect
+			.poll(async () => (await canvas.textStyleOf(left))?.textDecoration)
+			.toBe("none");
+		expect((await canvas.textStyleOf(right))?.textDecoration).toBe(
+			"line-through",
+		);
+		await expect(underline).toHaveAttribute("aria-pressed", "false");
 	});
 });

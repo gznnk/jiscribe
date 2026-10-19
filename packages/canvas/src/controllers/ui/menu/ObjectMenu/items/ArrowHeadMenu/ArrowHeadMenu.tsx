@@ -1,25 +1,23 @@
 ﻿import { ArrowTypes } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo, useRef } from "react";
 
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import { MixedArrowHeadIcon } from "./MixedArrowHeadIcon";
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
-	commandPart,
-	setPart,
-	togglePart,
-} from "../../../../../gestures/handlers/menu/utils/menuParts";
+	commandAction,
+	setAction,
+	toggleAction,
+} from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
-import {
-	readSelectionArrowType,
-	UNSET_ARROW_TYPE,
-} from "../../../utils/readSelectionArrowType";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
-} from "../../../utils/SelectionValue";
+} from "../../../../../style/SelectionValue";
+import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
+import { useSelectionStyle } from "../../../SelectionStyleReaderContext";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
@@ -49,12 +47,15 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	const isStartOpen = canvasState.objectMenuOpenId === SECTION_ID_START;
 	const isEndOpen = canvasState.objectMenuOpenId === SECTION_ID_END;
 
-	const startArrow = readSelectionArrowType(canvasState, "startArrow");
-	const endArrow = readSelectionArrowType(canvasState, "endArrow");
+	const startArrow = useSelectionStyle("startArrow");
+	const endArrow = useSelectionStyle("endArrow");
 	const isStartMixed = isMixedSelectionValue(startArrow);
 	const isEndMixed = isMixedSelectionValue(endArrow);
-	const currentStart = selectionValueOr(startArrow, UNSET_ARROW_TYPE);
-	const currentEnd = selectionValueOr(endArrow, UNSET_ARROW_TYPE);
+	const currentStart = selectionValueOr(
+		startArrow,
+		SHAPE_STYLE_FALLBACK.startArrow,
+	);
+	const currentEnd = selectionValueOr(endArrow, SHAPE_STYLE_FALLBACK.endArrow);
 
 	const {
 		submenuRef: startSubmenuRef,
@@ -73,7 +74,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<ObjectMenuItemPositioner ref={startRef}>
 				<ObjectMenuButton
 					isActive={isStartOpen}
-					data-part={togglePart(SECTION_ID_START)}
+					data-action={toggleAction(SECTION_ID_START)}
 					title={messages.menuStartArrow}
 				>
 					{isStartMixed ? (
@@ -93,7 +94,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`start-${type}`}
 									isActive={!isStartMixed && currentStart === type}
-									data-part={setPart("startArrow", type)}
+									data-action={setAction("startArrow", type)}
 									title={messages.arrowTypeNames[type] ?? type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="start" />
@@ -106,7 +107,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 
 			{/* Swap Button */}
 			<ObjectMenuButton
-				data-part={commandPart("swapArrows")}
+				data-action={commandAction("swapArrows")}
 				title={messages.menuSwapArrows}
 			>
 				<ArrowSwapIcon fill="currentColor" width={24} height={24} />
@@ -116,7 +117,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<ObjectMenuItemPositioner ref={endRef}>
 				<ObjectMenuButton
 					isActive={isEndOpen}
-					data-part={togglePart(SECTION_ID_END)}
+					data-action={toggleAction(SECTION_ID_END)}
 					title={messages.menuEndArrow}
 				>
 					{isEndMixed ? (
@@ -136,7 +137,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`end-${type}`}
 									isActive={!isEndMixed && currentEnd === type}
-									data-part={setPart("endArrow", type)}
+									data-action={setAction("endArrow", type)}
 									title={messages.arrowTypeNames[type] ?? type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="end" />

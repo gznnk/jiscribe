@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "../../../utils/snap/calcSnapCandidates";
 import { VertexInsertHandler } from "../VertexInsertHandler";
@@ -26,15 +27,14 @@ const makeState = (points: Point[]): CanvasControllerState => {
 	return {
 		objects: { "poly-1": poly },
 		rootIds: ["poly-1"],
-		selectedIds: [],
-		selectedVertex: null,
+		selection: selectionOf([]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		activeDrag: {
 			startSnapshot: {
 				objects: { "poly-1": poly },
 				keyPoints: {},
 				snapCandidates: null,
-				selectedIds: [],
+				selection: selectionOf([]),
 				selectedIdsWithDescendants: new Set(),
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -53,7 +53,7 @@ const makeEvent = (
 		type,
 		targetKind: "control",
 		targetId: "poly-1",
-		targetPart: `vertex-insert:${segmentIndex}`,
+		targetAction: `vertex-insert:${segmentIndex}`,
 		button: 0,
 		last,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -104,6 +104,28 @@ describe("VertexInsertHandler - handleDragEnd", () => {
 		expect(next.edgeScrollEnabled).toBe(false);
 		// The frozen input state must be left untouched
 		expect(pointsOf(frozen)[1]).toEqual({ x: 50, y: 0 });
+	});
+
+	it("commits the inserted vertex once, at dragEnd only", () => {
+		const state = {
+			...makeState([
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			]),
+			commitVersion: 3,
+		};
+		const afterStart = handler.handle(
+			state,
+			makeEvent("dragStart", { x: 50, y: 0 }),
+		);
+		expect(afterStart.commitVersion).toBe(3);
+
+		const next = handler.handle(
+			afterStart,
+			makeEvent("dragEnd", { x: 60, y: 40 }),
+		);
+
+		expect(next.commitVersion).toBe(4);
 	});
 });
 

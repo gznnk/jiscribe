@@ -22,7 +22,7 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 | 7   | [External Sync / VSCode Integration](./07-external-sync.md)      | `useSyncExternalDoc` / `SYNC_EXTERNAL` and the saveNonce round-trip                                                    |
 | 8   | [Rendering and Theme](./08-rendering-and-theme.md)               | Pure rendering in rendering, color usage conventions, and VSCode theme tokens                                          |
 | 9   | [Testing](./09-testing.md)                                       | Unit / integration (vitest), E2E (Playwright), and circular dependency checks (madge)                                  |
-| 10  | [Style Property System](./10-style-properties.md)                | StylePropertyRegistry, feature-gated / shape-declared property declarations, and dot-notation nested writes            |
+| 10  | [Style System](./10-style-properties.md)                         | StyleIntent, per-type `{ apply, read }` tables, the two walkers, and how a shape declares a style of its own           |
 | 11  | [Shape Design Decisions](./11-shape-design.md)                   | The criteria for adding or extending a shape (e.g., splitting geometry into user-specified vs. engine-derived)         |
 | 12  | [Plugin Architecture](./12-plugin-architecture.md)               | `CanvasPlugin` contributions, the UI / headless split, the public API tiers, and state ownership                       |
 | 13  | [Authoring Plugins](./13-authoring-plugins.md)                   | Shape package layout, the `@jiscribe/canvas-sdk` kit, the enforced boundaries, and the wiring checklist                |

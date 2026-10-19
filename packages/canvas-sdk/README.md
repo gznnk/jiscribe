@@ -9,15 +9,16 @@ canvas プラグイン（図形パッケージ）作者向けの量産キット�
 
 ## エントリ
 
-| エントリ                                         | 用途                                                                                         |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas-sdk`                           | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                        |
-| `@jiscribe/canvas-sdk/doc`                       | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない |
-| `@jiscribe/canvas-sdk/testing`                   | ユニットテスト専用（vitest 前提）。ランタイム barrel には混ぜない                            |
-| `@jiscribe/canvas-sdk/testing/e2e`               | e2e の spec ファイル用。fixtures・CanvasDriver・selectors                                    |
-| `@jiscribe/canvas-sdk/testing/playwright-config` | `playwright.config.ts` 用                                                                    |
-| `@jiscribe/canvas-sdk/testing/vite-config`       | ハーネスの `vite.config.ts` 用                                                               |
-| `@jiscribe/canvas-sdk/testing/harness`           | ハーネスのエントリモジュール用（ブラウザコード）                                             |
+| エントリ                                         | 用途                                                                                                           |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas-sdk`                           | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                                          |
+| `@jiscribe/canvas-sdk/doc`                       | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない                   |
+| `@jiscribe/canvas-sdk/tools`                     | 図形用の AI ツールを書く契約（`defineObjectAiTool` ほか）。`@jiscribe/ai-tools-sdk` の再エクスポート。headless |
+| `@jiscribe/canvas-sdk/testing`                   | ユニットテスト専用（vitest 前提）。ランタイム barrel には混ぜない                                              |
+| `@jiscribe/canvas-sdk/testing/e2e`               | e2e の spec ファイル用。fixtures・CanvasDriver・selectors                                                      |
+| `@jiscribe/canvas-sdk/testing/playwright-config` | `playwright.config.ts` 用                                                                                      |
+| `@jiscribe/canvas-sdk/testing/vite-config`       | ハーネスの `vite.config.ts` 用                                                                                 |
+| `@jiscribe/canvas-sdk/testing/harness`           | ハーネスのエントリモジュール用（ブラウザコード）                                                               |
 
 e2e 用が 4 つに分かれているのは、spec / playwright config / vite config / ブラウザ
 コードがそれぞれ別のローダーに読まれ、互いの import を許さないためである

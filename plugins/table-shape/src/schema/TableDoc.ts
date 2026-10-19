@@ -1,0 +1,235 @@
+import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
+import type {
+	CreateObjectType,
+	ObjectFeatures,
+	RichText,
+	TextSlot,
+	TextSlotStyle,
+} from "@jiscribe/doc";
+
+import { readTableCellTextSlotId } from "./tableCellTextSlotIdCache";
+import type { Prettify } from "../../../../packages/utility-types/src";
+
+/**
+ * A grid of cells. `geometry: "point"` because the doc stores where the table is
+ * drawn from and nothing about its size: the width is the column widths summed,
+ * and the height the resolved row heights summed (see calcTableLayout), so a
+ * stored pair could only ever disagree with them.
+ *
+ * `fill: true` — a table has a background of its own, as every frame shape
+ * does, and it is what a cell with no `fill` shows. A cell's own `fill`
+ * (see {@link TableCell}) paints over it.
+ *
+ * `text: "slots"` describes the **state**, where each cell is one text slot
+ * keyed by {@link tableCellTextSlotId}. The doc spells the same cells out as a grid
+ * (`cells`) instead of a keyed map, so that a table reads as a table in the
+ * file; the mapper is what moves between the two forms.
+ */
+export const TableFeatures = {
+	type: "table",
+	geometry: "point",
+	transform: true,
+	stroke: true,
+	fill: true,
+	text: "slots",
+	connectable: true,
+} as const satisfies ObjectFeatures;
+
+/**
+ * One cell: a text slot that also carries a background. Shared verbatim between
+ * doc and state (as `TextSlot` itself is), so the mapper only ever moves cells
+ * between the grid and the keyed map without touching what is inside one.
+ *
+ * `fill` is the type's own field on a slot. Every shared slot writer copies a
+ * slot with `{ ...slot }` and so preserves it; `tableCellFill.test.ts` is what
+ * holds that true.
+ */
+/**
+ * What a cell with no `fill` of its own paints, and what the Fill control reads
+ * such a cell as: nothing, so the table's body shows through (see
+ * {@link TableCell}).
+ */
+export const UNFILLED_CELL_FILL = "transparent";
+
+export type TableCell = Prettify<
+	TextSlot<RichText> & {
+		/**
+		 * Cell background: any CSS color, or `"auto"` to follow the theme's shape
+		 * surface. Omitted paints nothing of the cell's own, so the table's own
+		 * `fill` shows through (Table), and a `"transparent"` cell draws the same.
+		 * The two stay apart in the document only: the Fill control reads an
+		 * omitted cell as `"transparent"` and clears a cell by writing that, never
+		 * by taking the field away (tableFillEntry).
+		 */
+		fill?: string;
+	}
+>;
+
+/**
+ * A cell as a document may write it: the whole object, or just its text when
+ * nothing about it is styled. Reading accepts both and `toDoc` writes the short
+ * form back wherever a cell carries text alone, so a plain grid stays plain.
+ */
+export type TableCellDoc = RichText | TableCell;
+
+/** One column. The width is stored because nothing derives it. */
+export type TableColumnDoc = {
+	/** Column width in px, at least {@link TABLE_MIN_COLUMN_WIDTH}. */
+	width: number;
+};
+
+/** One row. The height is a lower bound, never the drawn height. */
+export type TableRowDoc = {
+	/**
+	 * Lowest the row may be drawn, in px. Omitted lets the row be exactly as tall
+	 * as its tallest cell's text needs; a row whose text outgrows this value is
+	 * drawn taller, never clipped.
+	 */
+	height?: number;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const TableDocBrand: unique symbol;
+
+export type TableDoc = CreateObjectType<
+	typeof TableFeatures,
+	typeof TableDocBrand,
+	{
+		columns: TableColumnDoc[];
+		rows: TableRowDoc[];
+		/** `[row][column]`, exactly `rows.length` by `columns.length`. */
+		cells: TableCellDoc[][];
+	}
+>;
+
+/** Doc fields the type carries beyond what its features imply. */
+export const TABLE_EXTRA_KEYS = [
+	"columns",
+	"rows",
+	"cells",
+] as const satisfies readonly (keyof TableDoc)[];
+
+/**
+ * Narrowest a column may be, in px. Two cells' worth of the shared horizontal
+ * text padding plus one character's room: below this a cell has no width left to
+ * wrap text in, and every line would overflow whatever the text said.
+ */
+export const TABLE_MIN_COLUMN_WIDTH = 24;
+
+/**
+ * Lowest a row's stored height may be, in px. Zero rather than a text's height:
+ * the value is a floor the cells raise, so a row asking for nothing is exactly as
+ * tall as what it holds.
+ */
+export const TABLE_MIN_ROW_HEIGHT = 0;
+
+/** Text size a cell is drawn at unless it says otherwise. */
+export const TABLE_CELL_FONT_SIZE = 14;
+
+/**
+ * What every cell's omitted typography resolves to. One value for all of them
+ * rather than a map keyed by cell id, the cells being as many as the grid is
+ * wide and tall (see the `everyTextSlot` entry in the doc definition).
+ *
+ * `fontColor` is `AUTO_COLOR` so cell text follows the theme; left unset it
+ * would resolve to the shared fallback's literal black and stay black on a dark
+ * canvas.
+ */
+export const TABLE_CELL_STYLE_DEFAULTS = {
+	textAlign: "center",
+	verticalAlign: "middle",
+	fontColor: AUTO_COLOR,
+	fontSize: TABLE_CELL_FONT_SIZE,
+	fontWeight: "normal",
+} as const satisfies TextSlotStyle;
+
+/**
+ * The slot id one cell is keyed by in state, and the id half of the `data-part`
+ * its element carries (textSlotPart).
+ * Never written to a document: the grid position is what the file holds, and the
+ * ids are rebuilt from it on every read, so inserting a row renames nothing the
+ * file can see.
+ *
+ * The `r` / `c` are not decoration. An integer-like key ("0", "1", …) is refused
+ * by the slot map, JS enumerating such keys in numeric order ahead of the
+ * insertion order and so reordering the cells (see TextSlots).
+ *
+ * @param row - Row index, 0-based from the top
+ * @param column - Column index, 0-based from the left
+ * @returns The slot id, e.g. `r0c2` for the third cell of the first row
+ */
+export const tableCellTextSlotId = (row: number, column: number): string =>
+	readTableCellTextSlotId(row, column);
+
+/** The grammar {@link tableCellTextSlotId} writes, and the only spelling read back. */
+const TABLE_CELL_TEXT_SLOT_ID_PATTERN = /^r(\d+)c(\d+)$/;
+
+/**
+ * The grid position one cell id names — the inverse of {@link tableCellTextSlotId},
+ * for the operations that have to move a cell when a row or a column is inserted
+ * ahead of it.
+ *
+ * Only the exact spelling is read back: a slot id from somewhere else
+ * (`BODY_TEXT_SLOT_ID`, a record's compartment name) is refused rather than
+ * coerced into a position the grid never had.
+ *
+ * @param slotId - A cell's slot id as `state.text` keys it, e.g. `r0c2`
+ * @returns The 0-based position, or null when the id is not a cell id at all
+ */
+export const parseTableCellTextSlotId = (
+	slotId: string,
+): { row: number; column: number } | null => {
+	const matched = TABLE_CELL_TEXT_SLOT_ID_PATTERN.exec(slotId);
+	return matched === null
+		? null
+		: { row: Number(matched[1]), column: Number(matched[2]) };
+};
+
+/**
+ * The cell ids of a grid, in the order they are keyed into state: row by row
+ * from the top, left to right within a row. That order is what makes the first
+ * key the top-left cell (the slot Enter opens) and what Tab walks.
+ *
+ * @param rowCount - Number of rows; 0 yields an empty list
+ * @param columnCount - Number of columns; 0 yields an empty list
+ * @returns Freshly built ids the caller may keep
+ */
+export const tableCellTextSlotIds = (
+	rowCount: number,
+	columnCount: number,
+): string[] => {
+	const ids: string[] = [];
+	for (let row = 0; row < rowCount; row++) {
+		for (let column = 0; column < columnCount; column++) {
+			ids.push(tableCellTextSlotId(row, column));
+		}
+	}
+	return ids;
+};
+
+/**
+ * Theme-derived doc defaults for a newly created table: a 2x2 grid of empty
+ * cells. The cells are written out as the short form, which is what a table
+ * carrying no styling saves as.
+ *
+ * `fill` is `AUTO_COLOR` so the grid sits on the theme's shape surface; left
+ * unset it would resolve to the shared fallback's `"transparent"` and the canvas
+ * would show through every unfilled cell.
+ */
+export const TABLE_DOC_DEFAULTS: Omit<TableDoc, "id"> = {
+	type: "table",
+	x: 0,
+	y: 0,
+	// Typed rather than left to `as const`, which would make these readonly
+	// tuples and stop them overlapping the doc's arrays (as in RecordDoc).
+	columns: [{ width: 120 }, { width: 120 }] as TableColumnDoc[],
+	rows: [{}, {}] as TableRowDoc[],
+	cells: [
+		["", ""],
+		["", ""],
+	] as TableCellDoc[][],
+	fill: AUTO_COLOR,
+	stroke: AUTO_COLOR,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
+} as const as TableDoc;

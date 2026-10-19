@@ -2,7 +2,7 @@ import type { Point } from "@jiscribe/geometry";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
-import { materializeObjects } from "../../utils/cowObjects";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -24,12 +24,12 @@ const ARROW_CODE: Record<NudgeDirection, string> = {
 	right: "ArrowRight",
 };
 
-/** Display label per direction (for the shortcuts list) */
-const DIRECTION_LABEL: Record<NudgeDirection, string> = {
-	up: "Move Up",
-	down: "Move Down",
-	left: "Move Left",
-	right: "Move Right",
+/** Display label per direction, in every locale the canvas ships (for the shortcuts list) */
+const DIRECTION_LABEL: Record<NudgeDirection, { en: string; ja: string }> = {
+	up: { en: "Move Up", ja: "上へ移動" },
+	down: { en: "Move Down", ja: "下へ移動" },
+	left: { en: "Move Left", ja: "左へ移動" },
+	right: { en: "Move Right", ja: "右へ移動" },
 };
 
 /** Builds a move vector from a direction and distance (screen coordinates: down is +y) */
@@ -55,30 +55,43 @@ const createMoveCommand = (
 	step: number,
 ): ExecutableCommand => {
 	const isLarge = step === NUDGE_STEP_LARGE;
+	// e.g. "Move Up" / "Move Up (10px)" (larger move when Shift is held). The
+	// suffix reads the same in every locale, so it is appended rather than
+	// spelled out per entry.
+	const distanceSuffix = isLarge ? ` (${NUDGE_STEP_LARGE}px)` : "";
+	const directionLabel = DIRECTION_LABEL[direction];
 	return {
 		id: `move-${direction}${isLarge ? "-large" : ""}`,
-		// e.g. "Move Up" / "Move Up (10px)" (larger move when Shift is held)
-		label: `${DIRECTION_LABEL[direction]}${isLarge ? ` (${NUDGE_STEP_LARGE}px)` : ""}`,
+		label: {
+			en: `${directionLabel.en}${distanceSuffix}`,
+			ja: `${directionLabel.ja}${distanceSuffix}`,
+		},
 		category: "arrange",
 		shortcuts: {
 			default: [{ code: ARROW_CODE[direction], shift: isLarge }],
 		},
-		// Disabled during text editing so caret movement takes priority
+		// Disabled during text editing so caret movement takes priority. A lone
+		// connector is not nudged either: it follows its endpoints.
 		canExecute: (state: CanvasControllerState) =>
-			state.selectedIds.length > 0 && state.textEditState === null,
+			state.selection.objectIds.length > 0 &&
+			state.textEditState === null &&
+			getSelectedConnectorId(state) === null,
 		execute: (state: CanvasControllerState, registries: ICanvasRegistries) => {
 			const { objects, multiSelectGroup } = moveSelection({
-				selectedIds: state.selectedIds,
+				selectedIds: state.selection.objectIds,
 				srcObjects: state.objects,
 				srcMultiSelectGroup: state.multiSelectGroup,
 				delta: calcNudgeDelta(direction, step),
 				objectBehavior: registries.objectBehavior,
 			});
 			// A nudge is a committing operation, so recompute and commit the parent group bounds each time.
-			// The moveSelection result is a COW view; flatten it before it enters history.
+			// The moveSelection result is a COW view, left one so the passes after this
+			// narrow their scan to the moved IDs (collectCowChangedKeys); every route a
+			// command result takes into history flattens it (the COMMAND reducer case,
+			// handleGesture's close-out for a menu click).
 			const moved = updateAffectedGroupBounds(
-				{ ...state, objects: materializeObjects(objects), multiSelectGroup },
-				state.selectedIds,
+				{ ...state, objects, multiSelectGroup },
+				state.selection.objectIds,
 			);
 			// Coalesce consecutive nudges to the same selection (including key repeat) into
 			// a single undo. Since the selection IDs are part of the key, a changed target
@@ -89,7 +102,7 @@ const createMoveCommand = (
 				commitVersion: state.commitVersion + 1,
 				historyCoalesce: {
 					...state.historyCoalesce,
-					pending: `${MOVE_COALESCE_PREFIX}:${state.selectedIds.join(",")}`,
+					pending: `${MOVE_COALESCE_PREFIX}:${state.selection.objectIds.join(",")}`,
 				},
 			};
 		},

@@ -54,7 +54,7 @@ export type StyleParams = FillStyleDoc &
 	ArrowStyleDoc &
 	Omit<TextSlot, "text">;
 
-/** Label styling a connector accepts, in the order ConnectorExtraStyleProperties declares it. */
+/** Label styling a connector accepts: the label's own fields that {@link StyleParams} also names. */
 const CONNECTOR_LABEL_KEYS = [
 	"fill",
 	"fontColor",

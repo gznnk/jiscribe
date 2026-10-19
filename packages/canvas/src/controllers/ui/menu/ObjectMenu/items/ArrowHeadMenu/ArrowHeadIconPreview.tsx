@@ -1,3 +1,4 @@
+import { DEFAULT_ARROW } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { memo } from "react";
 
@@ -28,7 +29,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 	direction,
 }) => {
 	const isStart = direction === "start";
-	const type = arrowType ?? "None";
+	const type = arrowType ?? DEFAULT_ARROW;
 
 	const baseInset = getArrowLineInset(type);
 	const scale =

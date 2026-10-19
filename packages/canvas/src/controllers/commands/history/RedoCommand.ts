@@ -12,7 +12,7 @@ import type { ExecutableCommand } from "../CommandTypes";
  */
 export const RedoCommand: ExecutableCommand = {
 	id: "redo",
-	label: "Redo",
+	label: { en: "Redo", ja: "やり直し" },
 	category: "edit",
 
 	shortcuts: {

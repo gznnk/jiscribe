@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { LocaleMessages } from "../messages/resolveLocaleMessages";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**
@@ -48,9 +49,16 @@ export type PlatformKeyBindings = {
 export type Command = {
 	/** Unique identifier of the command */
 	id: string;
-	/** Label shown in the menu */
-	label: string;
-	/** Category of the command */
+	/**
+	 * Label shown in the menu: a plain string or a per-locale dictionary.
+	 * Resolved via `messages.commandLabels[id]` (host override) → this label.
+	 */
+	label: string | LocaleMessages<string>;
+	/**
+	 * Category of the command. Only a `"view"` command runs while a drag is under
+	 * way; any other, or one without a category, is refused until the drag ends
+	 * (see handleCommand).
+	 */
 	category?: "edit" | "view" | "arrange" | "selection";
 
 	/**

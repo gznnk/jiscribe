@@ -12,7 +12,7 @@ import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
-import type { TextEditFormat } from "../utils/toggleTextEditFormat";
+import type { StyleIntent } from "../style/StyleIntent";
 
 /**
  * Gesture action - handles user gestures
@@ -144,21 +144,12 @@ export type UpdateTextEditAction = {
 
 /**
  * Update text edit selection action - records what the open editor has selected,
- * so styling can address that stretch of the text (toggleTextEditFormat).
+ * so styling can address that stretch of the text (readOpenTextEditForStyle).
  */
 export type UpdateTextEditSelectionAction = {
 	type: "UPDATE_TEXT_EDIT_SELECTION";
 	/** UTF-16 offsets into the text being edited; collapsed (start === end) for a plain caret. */
 	selection: { start: number; end: number };
-};
-
-/**
- * Toggle text format action - turns bold / italic / underline on or off over the
- * text the open editor has selected, leaving the rest of the slot as it is.
- */
-export type ToggleTextFormatAction = {
-	type: "TOGGLE_TEXT_FORMAT";
-	format: TextEditFormat;
 };
 
 /**
@@ -170,19 +161,40 @@ export type EndTextEditAction = {
 };
 
 /**
- * Style property update action - a style property written through
- * StylePropertyRegistry with live preview and commit, from the inputs that fire
- * no gesture: the ObjectMenu's number input and keyboard-driven slider, and the
- * properties sidebar's callback-writing controls.
+ * Step text edit action - Tab / Shift+Tab inside the editor of a shape whose
+ * text slots form a cycle (getTextSlotCycle), or Tab on the last slot of one
+ * that grows past it (extendPastLastTextSlot), its sole slot included: commits
+ * the draft into the slot being edited, moves the slot selection one step along
+ * the cycle (selectAdjacentTextSlot) or onto the grown slots, and opens the
+ * editor on the slot it lands on, as Enter would. Leaves the state as it is for
+ * any other session.
  */
-export type StylePropertyUpdateAction = {
-	type: "STYLE_PROPERTY_UPDATE";
-	property: string;
-	value: string;
+export type StepTextEditAction = {
+	type: "STEP_TEXT_EDIT";
+	/** 1 for the next slot, -1 for the previous; wraps at either end. */
+	step: 1 | -1;
+};
+
+/**
+ * Style intent action - states one style edit of the selection, with live
+ * preview and commit, from every surface that fires no gesture: the ObjectMenu's
+ * number input and keyboard-driven slider and the properties sidebar's
+ * callback-writing controls. The format toggles are commands instead
+ * (ToggleTextFormatCommands), whatever raises them.
+ *
+ * The first of the four property routes, and the only one whose payload is
+ * already in the shape the layer below takes: the intent reaches
+ * `applyStyleIntent` as it stands, the names and strings the DOM carries having
+ * been read (toStyleIntent) by whoever held them.
+ */
+export type StyleIntentAction = {
+	type: "STYLE_INTENT";
+	/** What to reflect: one of the core kinds with its value, or a name a shape declared for itself (ExtraStyleIntent). */
+	intent: StyleIntent;
 	/** true: recorded in history (blur/Enter), false: preview only */
 	commit: boolean;
 	/**
-	 * true: merge this commit with the preceding one for the same property and
+	 * true: merge this commit with the preceding one for the same intent kind and
 	 * selection into a single undo entry (slider key repeat). Ignored when
 	 * `commit` is false. Omitted means every commit is its own entry.
 	 */
@@ -199,8 +211,8 @@ export type TransformProperty = "x" | "y" | "width" | "height" | "rotation";
  * Transform property update action - states one number of the selection's frame
  * outright, where the transform handles would have dragged it there.
  *
- * The sibling of {@link StylePropertyUpdateAction} for the geometry the style
- * registry does not own: the frame it edits is the selected object's, or the
+ * The sibling of {@link StyleIntentAction} for the geometry no StyleIntent
+ * names: the frame it edits is the selected object's, or the
  * multiSelectGroup's for a multi-selection, and the result matches the
  * corresponding drag (groups scale their children, connectors follow, a height
  * stated by hand stops following the text).
@@ -263,7 +275,7 @@ export type DocumentPropertyUpdate<
  * Document property update action - states a setting of the document itself,
  * which is what the properties sidebar offers while nothing is selected.
  *
- * The third property route beside {@link StylePropertyUpdateAction} and
+ * The third property route beside {@link StyleIntentAction} and
  * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
  * selection: it mirrors the headless `setBackground` / `setView` ops, down to
  * `null` meaning "drop the field and let the host decide" rather than "set it to
@@ -293,7 +305,7 @@ export type MetaProperty = "name" | "description";
 /**
  * Meta property update action - states one of the selected object's meta fields.
  *
- * The fourth property route beside {@link StylePropertyUpdateAction},
+ * The fourth property route beside {@link StyleIntentAction},
  * {@link TransformPropertyUpdateAction} and {@link DocumentPropertyUpdateAction}.
  * Its target is the one object the sidebar names — a single selected object, or
  * the selected connector — and never a selected group's descendants: a group
@@ -371,9 +383,9 @@ export type CanvasAction =
 	| RevertHistoryAction
 	| UpdateTextEditAction
 	| UpdateTextEditSelectionAction
-	| ToggleTextFormatAction
 	| EndTextEditAction
-	| StylePropertyUpdateAction
+	| StepTextEditAction
+	| StyleIntentAction
 	| TransformPropertyUpdateAction
 	| DocumentPropertyUpdateAction
 	| MetaPropertyUpdateAction

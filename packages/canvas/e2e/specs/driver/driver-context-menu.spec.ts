@@ -135,7 +135,7 @@ test.describe("driver: context menu", () => {
 	});
 
 	// The two item kinds are wired differently: a callback item drops its onClick
-	// when disabled, while a command item keeps its data-part whatever its state.
+	// when disabled, while a command item keeps its data-action whatever its state.
 	// What holds the press back is then the native button's `disabled` and nothing
 	// else — a MenuItem that stopped being a <button>, or that moved the part onto
 	// an inner element, would hand every press straight to ContextMenuHandler. So

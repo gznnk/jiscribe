@@ -55,7 +55,7 @@ const reveal = (
 			registries.objectMapper,
 			registries.objectContentResizer,
 		).objects,
-		registries.objectVisualBounds,
+		registries,
 		scrollWallPadding,
 	);
 
@@ -135,25 +135,24 @@ describe("calcViewportToRevealHistoryChange", () => {
 
 	it("centres an axis the change does not fit on, and keeps the zoom", () => {
 		const zoomed: Viewport = { ...viewport, zoom: 2 };
-		// Two objects 2000 apart: wider than the 400 world units shown at zoom 2,
-		// but only 10 tall, so y takes the smallest pan.
-		const leftDoc = docOf([rect("a", 0, 1000), rect("b", 2000, 1000)]);
-		const restoredDoc = docOf([rect("a", 0, 1001), rect("b", 2000, 1001)]);
+		// Two objects 2000 apart and off screen: wider than the 400 world units
+		// shown at zoom 2, but only 10 tall, so y takes the smallest pan.
+		const leftDoc = docOf([rect("a", 3000, 1000), rect("b", 5000, 1000)]);
+		const restoredDoc = docOf([rect("a", 3000, 1001), rect("b", 5000, 1001)]);
 
 		const revealed = reveal(zoomed, leftDoc, restoredDoc);
 
-		// x: centre 1005 minus half of 400; y: bottom 1011 plus 24 minus 300.
-		expect(revealed).toEqual({ ...zoomed, minX: 805, minY: 735 });
+		// x: centre 4005 minus half of 400; y: bottom 1011 plus 24 minus 300.
+		expect(revealed).toEqual({ ...zoomed, minX: 3805, minY: 735 });
 	});
 
-	it("centres an oversized change even when the view already lies inside it", () => {
+	it("leaves an oversized change where it is while part of it is in view", () => {
+		// A table wider than the view, one cell changed in the part on screen: the
+		// diff is per object, so the change is the whole table.
 		const leftDoc = docOf([rect("a", -1000, 100), rect("b", 1000, 100)]);
 		const restoredDoc = docOf([rect("a", -1000, 101), rect("b", 1000, 101)]);
 
-		expect(reveal(viewport, leftDoc, restoredDoc)).toEqual({
-			...viewport,
-			minX: -395,
-		});
+		expect(reveal(viewport, leftDoc, restoredDoc)).toBe(viewport);
 	});
 
 	it("does not move for a background or stacking-order change alone", () => {

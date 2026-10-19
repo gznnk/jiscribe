@@ -13,10 +13,13 @@ import type {
 	OwnedEndpointRef,
 } from "../../model/objects/types/EndpointRef";
 import {
+	ConnectPointIds,
 	EdgeAnchorSides,
+	isConnectPointId,
 	isEdgeAnchorSide,
 	isOwnedEndpointRef,
 } from "../../model/objects/types/EndpointRef";
+import { listConnectPointIds } from "../../plugin/listConnectPointIds";
 
 /** Which end of a connector an operation is working on; names the parameters in errors. */
 export type ConnectorEnd = "source" | "target";
@@ -33,11 +36,15 @@ export type EdgeAnchorHandle = {
 };
 
 /**
- * Selectable anchor position. "center" becomes a CenterAnchorSpec, an edge midpoint id
+ * Selectable anchor position. "center" becomes a CenterAnchorSpec, any other string
  * becomes a connectPoint, and an {@link EdgeAnchorHandle} becomes an EdgeAnchorSpec;
- * "center" is never a connectPoint id.
+ * "center" is never a connectPoint id. A string other than an edge midpoint id must be
+ * one the owner's type declares (`ObjectDocDefinition.extraConnectPointIds`, an ER
+ * entity's `col:<i>:left`), which the ops check against the owner as it stands.
  */
-export type AnchorHandleId = "center" | ConnectPointId | EdgeAnchorHandle;
+export type AnchorHandleId =
+	// `string & {}` keeps the named ids offered as completions next to the open set.
+	"center" | ConnectPointId | (string & {}) | EdgeAnchorHandle;
 
 /**
  * Check an endpoint candidate and return its id.
@@ -89,8 +96,10 @@ const buildEdgeAnchor = (handle: EdgeAnchorHandle): EdgeAnchorSpec => {
 /**
  * Anchor spec for a handle id; an omitted handle means the shape's centre.
  *
- * @param anchorId - "center", an edge midpoint id, or an {@link EdgeAnchorHandle} for a
- *   free position along one edge; undefined reads the same as "center"
+ * @param anchorId - "center", a connect point id, or an {@link EdgeAnchorHandle} for a
+ *   free position along one edge; undefined reads the same as "center". Whether the
+ *   owner offers a connect point id is not checked here (see
+ *   {@link requireOfferedConnectPoint})
  * @returns The anchor to store on an owned endpoint
  * @throws {@link DocOperationError} when an edge handle carries a side outside
  *   top / right / bottom / left, or a `t` that is not a finite number in 0..1
@@ -107,17 +116,85 @@ export const buildAnchor = (
 	return buildEdgeAnchor(anchorId);
 };
 
+/** Declared ids past this many are elided in a refusal, keeping the first and last pairs. */
+const MAX_LISTED_DECLARED_CONNECT_POINT_IDS = 6;
+
+/** The connect point ids an object offers, as one clause of a refusal. */
+const describeOfferedConnectPointIds = (
+	offeredIds: readonly string[],
+): string => {
+	const declaredIds = offeredIds.slice(ConnectPointIds.length);
+	const listedIds =
+		declaredIds.length > MAX_LISTED_DECLARED_CONNECT_POINT_IDS
+			? [...declaredIds.slice(0, 2), "…", ...declaredIds.slice(-2)]
+			: declaredIds;
+	const builtinList = ConnectPointIds.join(", ");
+	if (declaredIds.length === 0) {
+		return builtinList;
+	}
+	return `${builtinList} and the ${declaredIds.length} its type declares: ${listedIds.join(", ")}`;
+};
+
+/**
+ * Check that a connectPoint anchor names an id its owner offers: an edge midpoint id, or
+ * one the owner's type declares for it as it stands (see listConnectPointIds). Any other
+ * anchor kind passes unchecked.
+ *
+ * @param doc - Searched but not modified; must already hold the owner as the end will see it
+ * @param ownerId - The object the end attaches to, looked up through group children as well
+ * @param anchor - The anchor about to be stored on that end
+ * @param definitions - Type table the owner's `extraConnectPointIds` is read from; a type
+ *   missing from it offers the edge midpoints only
+ * @returns `anchor` unchanged, so the check reads as a step in building the endpoint
+ * @throws {@link DocOperationError} naming the id, the owner and every id it offers when
+ *   the owner does not offer the id, or when the owner is not in the doc
+ */
+export const requireOfferedConnectPoint = (
+	doc: CanvasDoc,
+	ownerId: string,
+	anchor: OwnedEndpointRef["anchor"],
+	definitions: DocDefinitions,
+): OwnedEndpointRef["anchor"] => {
+	if (anchor.kind !== "connectPoint" || isConnectPointId(anchor.id)) {
+		return anchor;
+	}
+	const found = findObject(doc, ownerId);
+	if (found === undefined) {
+		throw new DocOperationError(`object not found: ${ownerId}`);
+	}
+	const offeredIds = listConnectPointIds(
+		found.object,
+		definitions.get(found.object.type) ?? {},
+	);
+	if (offeredIds.includes(anchor.id)) {
+		return anchor;
+	}
+	throw new DocOperationError(
+		`${JSON.stringify(anchor.id)} is not a connect point of "${ownerId}" (${found.object.type}); it offers ${describeOfferedConnectPointIds(offeredIds)}`,
+	);
+};
+
 /**
  * Endpoint owned by `ownerId`, anchored where `anchorId` says (centre when omitted).
  *
- * @throws {@link DocOperationError} for an unusable edge handle; see {@link buildAnchor}
+ * @param doc - Searched but not modified, for the connect points the owner offers
+ * @param definitions - Type table the owner's declared connect points are read from
+ * @throws {@link DocOperationError} for an unusable edge handle (see {@link buildAnchor})
+ *   or a connect point the owner does not offer (see {@link requireOfferedConnectPoint})
  */
 export const buildEndpoint = (
+	doc: CanvasDoc,
 	ownerId: string,
 	anchorId: AnchorHandleId | undefined,
+	definitions: DocDefinitions,
 ): OwnedEndpointRef => ({
 	owner: { id: ownerId },
-	anchor: buildAnchor(anchorId),
+	anchor: requireOfferedConnectPoint(
+		doc,
+		ownerId,
+		buildAnchor(anchorId),
+		definitions,
+	),
 });
 
 /**

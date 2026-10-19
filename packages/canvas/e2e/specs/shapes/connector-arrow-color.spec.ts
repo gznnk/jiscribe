@@ -70,7 +70,7 @@ test.describe("connector arrow color following", () => {
 		const red = "#e11d48";
 		await canvas.clickAt({ x: 610, y: 250 });
 		await expect(
-			canvas.page.locator('[data-part="toggle:line-color"]'),
+			canvas.page.locator('[data-action="toggle:line-color"]'),
 		).toBeVisible();
 		await canvas.setColor("line-color", red);
 		await canvas.deselect();

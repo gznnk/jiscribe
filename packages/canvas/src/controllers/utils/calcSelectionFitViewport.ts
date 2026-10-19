@@ -1,6 +1,6 @@
 import { calcSelectionBounds } from "./calcSelectionBounds";
 import { calcViewportForBounds } from "./calcViewportForBounds";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
@@ -24,16 +24,20 @@ type FitOptions = {
  * @param selectedIds - Ids to fit; a selected group contributes through its children
  * @param objects - Flat object map, used to resolve group children and geometry
  * @param options - Viewport size in screen px plus the margin kept around the selection
- * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; omitting it fits
- *   to the geometry boxes and crops what a shape draws outside them
+ * @param visualExtentRegistries - Per-canvas registries measuring what is drawn
+ *   (see calcSelectionBounds), so nothing drawn outside the geometry is cropped
  */
 export const calcSelectionFitViewport = (
 	selectedIds: readonly string[],
 	objects: Record<string, ObjectState>,
 	{ width, height, padding = 48 }: FitOptions,
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
+	visualExtentRegistries: VisualExtentRegistries,
 ): Viewport | null => {
-	const bounds = calcSelectionBounds(selectedIds, objects, visualBounds);
+	const bounds = calcSelectionBounds(
+		selectedIds,
+		objects,
+		visualExtentRegistries,
+	);
 	if (!bounds) {
 		return null;
 	}

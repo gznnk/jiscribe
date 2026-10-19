@@ -14,9 +14,9 @@ AI が続きを描いても、丸ごと描き直されることはなく、手�
 
 作図に必要なものの多くは、はじめから揃っている。コアが 8 つの基本型（`rect` /
 `ellipse` / `text` / `polyline` / `polygon` / `group` / `connector` / `svg`）を
-受け持ち、フローチャート・UML・付箋・Markdown・コンテナ・注釈・汎用ピクトグラム・
-Lucide アイコン・AWS アーキテクチャといった図形セットはプラグインとして同梱して
-いる。図形セットは今後も増やしていく。
+受け持ち、フローチャート・UML・ER 図・表・付箋・Markdown・コンテナ・注釈・
+汎用ピクトグラム・Lucide アイコン・AWS アーキテクチャといった図形セットは
+プラグインとして同梱している。図形セットは今後も増やしていく。
 
 ## 何が作れるか
 
@@ -25,6 +25,7 @@ Lucide アイコン・AWS アーキテクチャといった図形セットはプ
 | ![注文ドメインの UML クラス図](./docs/images/gallery-uml-class-diagram.jis.png)<br>**UML・クラス図** — パッケージ、インターフェース、コンポジション、多重度、ノート                      | ![3 層構成の AWS アーキテクチャ図](./docs/images/gallery-aws-architecture.jis.png)<br>**アーキテクチャ図** — AWS のアイコンと境界のグループを、リージョンからサブネットまで               |
 | ![アイソメトリック格子の上に描いたクラウド構成図](./docs/images/gallery-isometric-topology.jis.png)<br>**寸法どおりに描くインフラ図** — 立体はすべて、30° 格子に沿って置いた素のポリゴン | ![取引端末のモック](./docs/images/gallery-trading-terminal.jis.png)<br>**UI モック** — 取引端末: ローソク足・板・歩み値を、仕様書に使える精度で                                           |
 | ![スイススタイルのカンファレンスポスター](./docs/images/gallery-conference-poster.jis.png)<br>**ポスター・印刷物** — タイポグラフィのグリッドも、図形とテキストの組み合わせにすぎない    | ![4 レーンにまたがる返金依頼のフロー](./docs/images/gallery-refund-swimlane.jis.png)<br>**フロー図・スイムレーン** — 受け渡し・判断・例外系、そして各ステップが触るシステムを示すアイコン |
+| ![注文スキーマの ER 図](./docs/images/gallery-er-diagram.jis.png)<br>**ER 図** — IE 記法のエンティティ。リレーションは外部キーの列から、参照先のキーへ結ぶ                               | ![プランの比較表](./docs/images/gallery-feature-matrix.jis.png)<br>**表** — セルはそれぞれが独立したテキストで、塗りも書式もセルごとに持つ。行は中身に合わせて伸びる                      |
 
 ![1 枚に収めた障害のポストモーテム](./docs/images/gallery-postmortem.jis.png)
 
@@ -37,7 +38,7 @@ Lucide アイコン・AWS アーキテクチャといった図形セットはプ
 
 ## AI のために設計している。後付けではない
 
-- **1 手ずつ編集する。丸ごと作り直さない。** stdio 越しに提供する 69 個のツールは、
+- **1 手ずつ編集する。丸ごと作り直さない。** stdio 越しに提供する 83 個のツールは、
   人がエディタで行う操作と同じ粒度だ。追加・接続・整列・等間隔配置・グループ化・
   スタイル変更・重なり順・選択。編集はいま手元にある文書に加えられるので、人が手で
   置いたものはそのまま残り、`undo` が戻すのは AI 自身の操作だけになる。
@@ -147,25 +148,25 @@ DOM にも依存せずに `CanvasDoc` の解析・検証・編集・計測がで
 
 ## 全体の構成
 
-| パッケージ                   | 内容                                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態                                                              |
-| `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデル・パーサー・編集 ops・`.jis.*` の入出力                         |
-| `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている                              |
-| `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                                                |
-| `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                                                     |
-| `@jiscribe/basic-validators` | 基本的な実行時バリデーター                                                                                    |
-| `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                                            |
-| `@jiscribe/doc-schema`       | 標準図形セットから生成した JSON Schema・AI 向けリファレンス・Claude Code スキル                               |
-| `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）と、その適用                                         |
-| `@jiscribe/standard-shapes`  | 標準図形セットを全ホスト向けに 1 か所で束ねたもの（doc 面 / presentation 面の 2 エントリ）                    |
-| `@jiscribe/doc-tools`        | 標準図形セットに対する検証・計測・診断（Node 計測バックエンド込み）                                           |
-| `plugins/*`                  | 標準図形セットの実体 — flowchart、UML、container、general、annotation、sticky、markdown、Lucide アイコン、AWS |
-| `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                                                       |
-| `apps/cli`                   | `jiscribe` コマンド。validate / diagnose / measure / render / preview                                         |
-| `apps/mcp`                   | MCP サーバー。stdio でツールを提供し、ローカルにキャンバスビューアを立てる                                    |
-| `apps/claude-plugin`         | Claude Code プラグイン。MCP サーバーと、自動生成の作図スキル                                                  |
-| `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                                                       |
+| パッケージ                   | 内容                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態                                                                         |
+| `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデル・パーサー・編集 ops・`.jis.*` の入出力                                    |
+| `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている                                         |
+| `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                                                           |
+| `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                                                                |
+| `@jiscribe/basic-validators` | 基本的な実行時バリデーター                                                                                               |
+| `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                                                       |
+| `@jiscribe/doc-schema`       | 標準図形セットから生成した JSON Schema・AI 向けリファレンス・Claude Code スキル                                          |
+| `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）と、その適用                                                    |
+| `@jiscribe/standard-shapes`  | 標準図形セットを全ホスト向けに 1 か所で束ねたもの（doc 面 / presentation 面の 2 エントリ）                               |
+| `@jiscribe/doc-tools`        | 標準図形セットに対する検証・計測・診断（Node 計測バックエンド込み）                                                      |
+| `plugins/*`                  | 標準図形セットの実体 — flowchart、UML、ER、table、container、general、annotation、sticky、markdown、Lucide アイコン、AWS |
+| `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                                                                  |
+| `apps/cli`                   | `jiscribe` コマンド。validate / diagnose / measure / render / preview                                                    |
+| `apps/mcp`                   | MCP サーバー。stdio でツールを提供し、ローカルにキャンバスビューアを立てる                                               |
+| `apps/claude-plugin`         | Claude Code プラグイン。MCP サーバーと、自動生成の作図スキル                                                             |
+| `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                                                                  |
 
 `plugins/` ディレクトリは意図的に*外部*として扱っている。これらのパッケージは
 `@jiscribe/canvas`・`@jiscribe/doc`・`@jiscribe/canvas-sdk` の公開 API しか使えず、

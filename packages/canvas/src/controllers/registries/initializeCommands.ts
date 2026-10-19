@@ -1,4 +1,5 @@
 import type { CanvasRegistries } from "./CanvasRegistries";
+import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import { BringForwardCommand } from "../commands/arrange/BringForwardCommand";
 import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
 import { moveCommands } from "../commands/arrange/MoveCommands";
@@ -27,9 +28,12 @@ import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
 import { SelectNextTextSlotCommand } from "../commands/selection/SelectNextTextSlotCommand";
 import { SelectPreviousTextSlotCommand } from "../commands/selection/SelectPreviousTextSlotCommand";
 import { ToggleAutoHeightCommand } from "../commands/shape/ToggleAutoHeightCommand";
+import { ToggleLockAspectRatioCommand } from "../commands/shape/ToggleLockAspectRatioCommand";
 import { ToggleTextLayoutCommand } from "../commands/shape/ToggleTextLayoutCommand";
 import { ToggleTextVerticalBasisCommand } from "../commands/shape/ToggleTextVerticalBasisCommand";
+import { CommitTextEditCommand } from "../commands/text/CommitTextEditCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
+import { toggleTextFormatCommands } from "../commands/text/ToggleTextFormatCommands";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
 import { TogglePropertyPanelCommand } from "../commands/view/TogglePropertyPanelCommand";
@@ -78,10 +82,14 @@ export const ALL_COMMANDS: Command[] = [
 	UngroupCommand,
 	// Shape commands
 	ToggleAutoHeightCommand,
+	ToggleLockAspectRatioCommand,
 	ToggleTextLayoutCommand,
 	ToggleTextVerticalBasisCommand,
 	// Text commands
 	StartTextEditCommand,
+	CommitTextEditCommand,
+	// Text format commands: bold / italic / underline / strikethrough
+	...toggleTextFormatCommands,
 	// View commands
 	ZoomInCommand,
 	ZoomOutCommand,
@@ -105,15 +113,27 @@ export const ALL_COMMANDS: Command[] = [
  * @param registries Target bundle to populate.
  * @param commandIds When provided, only commands whose id is included are
  * registered (enables per-canvas command restriction). Defaults to all.
+ * @param plugins Command-contributing plugins, registered after `ALL_COMMANDS` in
+ * declaration order and marked as contributed, so a keystroke they share with a
+ * built-in is offered to them first (`CommandRegistry.findAllByShortcut`): a
+ * contributed command claims the key whenever its `canExecute` is true. They
+ * pass through the same `commandIds` filter, so a host still narrows the
+ * built-in and the contributed set with one list. A contributed id that is
+ * already taken throws (`CommandRegistry.register`).
  */
 export const initializeCommands = (
 	registries: CanvasRegistries,
 	commandIds?: readonly string[],
+	plugins?: readonly CanvasPlugin[],
 ): void => {
 	registries.command.clear();
+	const contributed = (plugins ?? []).flatMap(
+		(plugin) => plugin.commands ?? [],
+	);
 	const enabled = commandIds ? new Set(commandIds) : undefined;
-	const commands = enabled
-		? ALL_COMMANDS.filter((command) => enabled.has(command.id))
-		: ALL_COMMANDS;
-	registries.command.registerAll(commands);
+	const isEnabled = (command: Command): boolean =>
+		enabled === undefined || enabled.has(command.id);
+	registries.command
+		.registerAll(ALL_COMMANDS.filter(isEnabled))
+		.registerAll(contributed.filter(isEnabled), "contributed");
 };

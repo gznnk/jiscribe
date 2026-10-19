@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import { commandAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { EllipsisIcon } from "../../../../icons/EllipsisIcon";
 import {
@@ -21,7 +21,7 @@ const PropertyPanelMenuComponent: React.FC = () => {
 	return (
 		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
-				data-part={commandPart("togglePropertyPanel")}
+				data-action={commandAction("togglePropertyPanel")}
 				aria-label={title}
 				title={title}
 			>

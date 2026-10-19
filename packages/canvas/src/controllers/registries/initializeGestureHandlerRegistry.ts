@@ -21,7 +21,7 @@ import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHand
  * presses whatever they land on. Exclusivity at the registry level is therefore
  * structural and registration order never decides routing; the invariant is
  * pinned by initializeGestureHandlerRegistry.exclusivity.test.ts (#110).
- * Sub-routing by targetId, data-part, or event type is each router's own
+ * Sub-routing by targetId, data-action / data-part, or event type is each router's own
  * concern.
  *
  * Gesture handlers are object-type independent, so `createCanvasRegistries`

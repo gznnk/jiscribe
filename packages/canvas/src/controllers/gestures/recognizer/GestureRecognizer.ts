@@ -151,6 +151,8 @@ export type Pressed = {
 	targetKind?: string;
 	/** Nearest [data-part] within the pressed element (see getGestureTarget); undefined when it marks none. */
 	targetPart?: string;
+	/** Nearest [data-action] within the pressed element (see getGestureTarget); undefined when it marks none. */
+	targetAction?: string;
 	/** Modifier snapshot at pointerdown. Fired gestures use the current event's mods; this copy is what the synthesized long press replays. */
 	mods: Mods;
 	/**
@@ -352,6 +354,25 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * Run the batch the RAF is waiting on right now instead of at the next frame, so
+	 * input that does not go through the queue (a keyboard shortcut) reaches the
+	 * reducer after the pointer events that happened before it. The RAF is cancelled,
+	 * so the batch never runs twice; with nothing scheduled this is a no-op. The fling
+	 * frame is left alone (it consumes no queued events).
+	 */
+	public processPendingBatch(): void {
+		if (!this.scheduled) {
+			return;
+		}
+		if (this.rafId !== null) {
+			cancelAnimationFrame(this.rafId);
+			this.rafId = null;
+		}
+		this.scheduled = false;
+		this.processBatch();
+	}
+
+	/**
 	 * Batch-end settlement: per-frame aggregates fire here, once per RAF batch.
 	 * Currently that is the pending pinch — both fingers may have moved this batch,
 	 * and their combined effect must fire exactly once per frame (see pinchPending).
@@ -387,7 +408,9 @@ export class GestureRecognizer {
 			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
-				target === null ? undefined : { id: target.id, part: target.part },
+				target === null
+					? undefined
+					: { id: target.id, part: target.part, action: target.action },
 				this.containerRef.current,
 			);
 
@@ -519,6 +542,7 @@ export class GestureRecognizer {
 			const targetId = target?.id;
 			const targetKind = target?.kind;
 			const targetPart = target?.part;
+			const targetAction = target?.action;
 			const isNativePointer = isNativePointerTarget(e.target);
 
 			// Sliders and the like keep the browser's native drag behavior, so they are
@@ -539,6 +563,7 @@ export class GestureRecognizer {
 				targetId,
 				targetKind,
 				targetPart,
+				targetAction,
 				mods,
 				dragging: false,
 				button: e.button,
@@ -1161,6 +1186,7 @@ export class GestureRecognizer {
 			targetId: pressed.targetId,
 			targetKind: pressed.targetKind,
 			targetPart: pressed.targetPart,
+			targetAction: pressed.targetAction,
 			start: pressed.start,
 			last: current.last,
 			delta: current.delta,
@@ -1173,7 +1199,11 @@ export class GestureRecognizer {
 				current.clientLast.y,
 				pressed.targetId === undefined
 					? undefined
-					: { id: pressed.targetId, part: pressed.targetPart },
+					: {
+							id: pressed.targetId,
+							part: pressed.targetPart,
+							action: pressed.targetAction,
+						},
 				this.containerRef.current,
 			),
 			time: current.time,

@@ -28,6 +28,12 @@ export type UseGestureRecognizerReturn = {
 	pointerHandlers: PointerEventHandlers;
 	wheelHandler: (e: WheelEvent) => void;
 	resetGestureState: () => void;
+	/**
+	 * Dispatches the gestures of the pointer events still queued for the next frame,
+	 * synchronously (see GestureRecognizer.processPendingBatch); a no-op when none are
+	 * queued. For input that dispatches outside the recognizer and must land after them.
+	 */
+	processPendingGestures: () => void;
 };
 
 /**
@@ -110,6 +116,8 @@ export const useGestureRecognizer = ({
 			pointerHandlers: recognizerRef.current!.getHandlers(),
 			wheelHandler: recognizerRef.current!.getWheelHandler(),
 			resetGestureState: () => recognizerRef.current?.cancelPendingGesture(),
+			processPendingGestures: () =>
+				recognizerRef.current?.processPendingBatch(),
 		}),
 		[],
 	);

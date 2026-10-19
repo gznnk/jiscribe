@@ -1,12 +1,12 @@
-import { DocOperationError } from "./errors";
+import { DocOperationError, TextKeptInOwnFieldsError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
 import { type ObjectRecord, requireObject } from "./utils/objectAccess";
 import { type DocDefinitions, isConnectorObject } from "./utils/objectGeometry";
 import {
 	readConnectorLabelText,
-	readSlots,
+	readTextSlots,
 	readTextField,
-	requireSlotId,
+	requireTextSlotId,
 } from "./utils/textFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { InlineTextStyle } from "../model/objects/types/text/InlineTextStyle";
@@ -47,6 +47,23 @@ const setConnectorLabelText = (object: ObjectRecord, text: string): void => {
 	}
 	object.label = { text };
 };
+
+/**
+ * The refusal for a `"slots"` type whose doc has no `text` map: its text lives in
+ * properties of its own (a table's `cells`), which the text ops do not reach.
+ *
+ * @param action - The verb the refused op performs, as it reads after "to be"
+ */
+const textKeptInOwnPropertiesError = (
+	object: ObjectRecord,
+	id: string,
+	action: "set" | "read" | "styled",
+): TextKeptInOwnFieldsError =>
+	new TextKeptInOwnFieldsError(
+		`${id} ("${object.type}") holds no text under \`text\` to be ${action}: this type keeps its texts in fields of its own, which the text ops do not reach`,
+		id,
+		object.type,
+	);
 
 /**
  * Where one rewrite will be written, resolved while nothing has been mutated yet.
@@ -110,17 +127,19 @@ const planTextWrite = (
 		);
 	}
 
-	const slots = readSlots(object);
-	const slotIds = slots === null ? [] : Object.keys(slots);
-	if (slots === null || slotIds.length === 0) {
+	const slots = readTextSlots(object);
+	if (slots === null) {
+		throw textKeptInOwnPropertiesError(object, id, "set");
+	}
+	const textSlotIds = Object.keys(slots);
+	if (textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
 	return {
 		kind: "slot",
-		slot: slots[requireSlotId(object, id, slotIds, slot, "write")] as Record<
-			string,
-			unknown
-		>,
+		slot: slots[
+			requireTextSlotId(object, id, textSlotIds, slot, "write")
+		] as Record<string, unknown>,
 		text,
 	};
 };
@@ -261,12 +280,17 @@ export const getText = (
 		);
 	}
 
-	const slots = readSlots(object);
-	const slotIds = slots === null ? [] : Object.keys(slots);
-	if (slots === null || slotIds.length === 0) {
+	const slots = readTextSlots(object);
+	if (slots === null) {
+		throw textKeptInOwnPropertiesError(object, id, "read");
+	}
+	const textSlotIds = Object.keys(slots);
+	if (textSlotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
-	return readTextField(slots[requireSlotId(object, id, slotIds, slot, "read")]);
+	return readTextField(
+		slots[requireTextSlotId(object, id, textSlotIds, slot, "read")],
+	);
 };
 
 /**
@@ -500,11 +524,11 @@ const resolveTextTarget = (
 			`${id} ("${object.type}") holds no text that can be styled`,
 		);
 	}
-	const slots = readSlots(object);
+	const slots = readTextSlots(object);
 	if (slots === null) {
-		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
+		throw textKeptInOwnPropertiesError(object, id, "styled");
 	}
-	const targetSlotId = requireSlotId(
+	const targetSlotId = requireTextSlotId(
 		object,
 		id,
 		Object.keys(slots),

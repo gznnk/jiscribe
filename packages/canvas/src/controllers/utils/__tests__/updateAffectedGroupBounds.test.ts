@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { createCowObjects, materializeObjects } from "../cowObjects";
+import {
+	collectCowChangedKeys,
+	createCowObjects,
+	isCowObjects,
+} from "../cowObjects";
 import { updateAffectedGroupBounds } from "../updateAffectedGroupBounds";
 
 const rect = (
@@ -95,6 +99,22 @@ describe("updateAffectedGroupBounds", () => {
 		expect(updatedOuter.cx).toBeCloseTo(50);
 	});
 
+	it("an ancestor still encloses a sibling subtree that was not affected", () => {
+		const r1 = rect("r1", 50, 50, "innerA");
+		const r2 = rect("r2", 150, 50, "innerB");
+		const innerA = group("innerA", ["r1"], "outer");
+		const innerB = group("innerB", ["r2"], "outer");
+		const outer = group("outer", ["innerA", "innerB"]);
+		const state = makeState({ r1, r2, innerA, innerB, outer });
+		const result = updateAffectedGroupBounds(state, ["r1"]);
+		const updatedOuter = result.objects["outer"] as unknown as {
+			cx: number;
+			width: number;
+		};
+		expect(updatedOuter.cx).toBeCloseTo(100);
+		expect(updatedOuter.width).toBeCloseTo(120);
+	});
+
 	it("the original state.objects is not mutated (immutable)", () => {
 		const r1 = rect("r1", 100, 100, "g1");
 		const g1 = group("g1", ["r1"]);
@@ -105,9 +125,10 @@ describe("updateAffectedGroupBounds", () => {
 		expect(originalG1.cx).toBe(0); // the original value is unchanged
 	});
 
-	it("a copy-on-write view is read through and flattened, never mutated", () => {
-		// The dragEnd path: the moved object still lives in the view's overlay when
-		// the ancestor frames are recomputed.
+	it("a copy-on-write view stays a view, never mutated", () => {
+		// A drag frame: the moved object still lives in the view's overlay when the
+		// ancestor frames are recomputed, and the passes after this one narrow their
+		// scan to what the view wrote.
 		const baseObjects = { g1: group("g1", ["r1"]), r1: rect("r1", 0, 0, "g1") };
 		const objects = createCowObjects(baseObjects);
 		objects.r1 = rect("r1", 100, 100, "g1");
@@ -115,8 +136,18 @@ describe("updateAffectedGroupBounds", () => {
 
 		const updatedG1 = result.objects["g1"] as unknown as { cx: number };
 		expect(updatedG1.cx).toBeCloseTo(100);
-		// Plain, so the group frames are not re-read through the Proxy afterwards
-		expect(materializeObjects(result.objects)).toBe(result.objects);
+		expect(isCowObjects(result.objects)).toBe(true);
+		expect(collectCowChangedKeys(result.objects, baseObjects)).toEqual(
+			new Set(["r1", "g1"]),
+		);
 		expect((objects.g1 as unknown as { cx: number }).cx).toBe(0);
+	});
+
+	it("a plain record comes back as a plain record", () => {
+		const r1 = rect("r1", 100, 100, "g1");
+		const g1 = group("g1", ["r1"]);
+		const result = updateAffectedGroupBounds(makeState({ g1, r1 }), ["r1"]);
+
+		expect(isCowObjects(result.objects)).toBe(false);
 	});
 });

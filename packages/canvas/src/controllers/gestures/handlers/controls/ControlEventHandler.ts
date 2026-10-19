@@ -15,7 +15,7 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 /**
  * Main handler for all control-level events.
  * Routes each event to the first strategy whose supports() accepts it
- * (the strategies' data-part namespaces are mutually exclusive), then falls
+ * (the strategies' data-action namespaces are mutually exclusive), then falls
  * back to the type-specific selection controls.
  */
 export class ControlEventHandler implements GestureHandler {
@@ -75,17 +75,17 @@ export class ControlEventHandler implements GestureHandler {
 
 	/**
 	 * Resolves the selection control whose supports() accepts the event.
-	 * Selection-control data-parts are self-describing
+	 * Selection-control data-actions are self-describing
 	 * (`selection:<objectType>:<partName>`), so the object type comes from the
-	 * part itself — no state lookup involved.
+	 * action itself — no state lookup involved.
 	 */
 	private resolveSelectionControlStrategy(
 		event: CanvasEvent,
 	): ControlStrategy | undefined {
-		if (!this.selectionControls || !event.targetPart) {
+		if (!this.selectionControls || !event.targetAction) {
 			return undefined;
 		}
-		const objectType = parseSelectionControlObjectType(event.targetPart);
+		const objectType = parseSelectionControlObjectType(event.targetAction);
 		if (!objectType) {
 			return undefined;
 		}

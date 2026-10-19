@@ -12,6 +12,7 @@ import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
 import { describe, expect, it } from "vitest";
 
 import type { AiDocOp } from "../../canvasOps";
+import { createCanvasToolSet } from "../../canvasToolSet";
 import { applyCanvasOp } from "../applyCanvasOp";
 import { createCanvasOpHistory } from "../canvasOpHistory";
 import type { AiDocBridge } from "../docBridge";
@@ -25,6 +26,9 @@ const docPlugins: readonly CanvasDocPlugin[] = [
 ];
 
 const docOps = createDocOps({ plugins: docPlugins });
+
+/** The built-in tools alone; the plugin tools have a suite of their own (applyCanvasOpObjectTool) */
+const builtinToolSet = createCanvasToolSet(null, []);
 
 /** The smallest stand-in for a host's docBridge; it keeps what was replaced so the test can inspect it */
 const createFakeDocBridge = (
@@ -45,7 +49,8 @@ const createFakeDocBridge = (
 		history,
 		replacedDocs,
 		currentDoc: () => doc,
-		apply: (op: AiDocOp) => applyCanvasOp(op, bridge, history, docOps),
+		apply: (op: AiDocOp) =>
+			applyCanvasOp(op, bridge, history, docOps, builtinToolSet),
 	};
 };
 

@@ -25,6 +25,7 @@ import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
+import { erPlugin, erStencilCategory } from "@jiscribe/plugin-er-shapes";
 import {
 	flowchartPlugin,
 	flowchartStencilCategory,
@@ -39,6 +40,7 @@ import {
 } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
+import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 // One plugin ships one shape family, complete with its doc schema, its rendering and
@@ -51,14 +53,17 @@ import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 //   sticky     sticky
 //   markdown   markdown
 //   lucide     lucideIcon
-// Only rect / ellipse / polyline / polygon / text / connector are core. The aws plugin is
-// registered alongside them; its shapes are reached through the shape library below.
+// Only rect / ellipse / polyline / polygon / text / connector are core. The aws and er
+// plugins are registered alongside them; their shapes are reached through the shape
+// library below.
 const plugins = [
 	flowchartPlugin,
 	containerPlugin,
 	markdownPlugin,
 	stickyPlugin,
+	tablePlugin,
 	umlPlugin,
+	erPlugin,
 	generalPlugin,
 	annotationPlugin,
 	lucideIconPlugin,
@@ -111,10 +116,16 @@ const toolbarSections: ToolbarSection[] = [
 const stencilLibrarySections: StencilCategory[] = [
 	{
 		...basicStencilCategory,
-		presetIds: [...basicStencilCategory.presetIds, "sticky", "markdown"],
+		presetIds: [
+			...basicStencilCategory.presetIds,
+			"sticky",
+			"markdown",
+			"table",
+		],
 	},
 	flowchartStencilCategory,
 	umlStencilCategory,
+	erStencilCategory,
 	containerStencilCategory,
 	generalStencilCategory,
 	annotationStencilCategory,
@@ -340,7 +351,7 @@ const buildPluginsDoc = (): CanvasDoc => {
 const pluginsDoc = buildPluginsDoc();
 
 /**
- * Assembling a canvas out of shape plugins: the nine shipped plugins are registered at
+ * Assembling a canvas out of shape plugins: the ten shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
  * the shape library (the toggle at the toolbar's far left) to draw more of them.
  */

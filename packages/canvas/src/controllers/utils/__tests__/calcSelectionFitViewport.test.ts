@@ -1,11 +1,14 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createVisualExtentRegistries } from "../../__tests__/support/visualExtentRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { calcSelectionBounds } from "../calcSelectionBounds";
 import { calcSelectionFitViewport } from "../calcSelectionFitViewport";
 import { calcViewportForBounds } from "../calcViewportForBounds";
 import { ZOOM } from "../zoom";
+
+const registries = createTestRegistries();
 
 /** Axis-aligned Frame-family state: bbox is left=cx-w/2, top=cy-h/2, ... */
 const rect = (
@@ -51,7 +54,9 @@ describe("calcSelectionFitViewport", () => {
 	it("centers the selection at the zoom that fits it", () => {
 		// Selection 100x100 centered at (100, 100); 200x200 available -> zoom 2.
 		const objects = toRecord([rect("a", 100, 100, 100, 100)]);
-		expect(calcSelectionFitViewport(["a"], objects, viewportSize)).toEqual({
+		expect(
+			calcSelectionFitViewport(["a"], objects, viewportSize, registries),
+		).toEqual({
 			width: 296,
 			height: 296,
 			zoom: 2,
@@ -66,8 +71,10 @@ describe("calcSelectionFitViewport", () => {
 			rect("b", 150, 150, 100, 100),
 			group("g", ["a", "b"]),
 		]);
-		expect(calcSelectionFitViewport(["g"], objects, viewportSize)).toEqual(
-			calcSelectionFitViewport(["a", "b"], objects, viewportSize),
+		expect(
+			calcSelectionFitViewport(["g"], objects, viewportSize, registries),
+		).toEqual(
+			calcSelectionFitViewport(["a", "b"], objects, viewportSize, registries),
 		);
 	});
 
@@ -80,58 +87,84 @@ describe("calcSelectionFitViewport", () => {
 			["a"],
 			objects,
 			viewportSize,
+			registries,
 		)?.zoom;
 		const wholeZoom = calcSelectionFitViewport(
 			["a", "far"],
 			objects,
 			viewportSize,
+			registries,
 		)?.zoom;
 		expect(selectionZoom).toBeGreaterThan(wholeZoom!);
 	});
 
 	it("returns null when there is no extent to fit", () => {
 		const objects = toRecord([rect("a", 0, 0, 20, 20)]);
-		expect(calcSelectionFitViewport([], objects, viewportSize)).toBeNull();
 		expect(
-			calcSelectionFitViewport(["missing"], objects, viewportSize),
+			calcSelectionFitViewport([], objects, viewportSize, registries),
+		).toBeNull();
+		expect(
+			calcSelectionFitViewport(["missing"], objects, viewportSize, registries),
 		).toBeNull();
 		expect(
 			calcSelectionFitViewport(
 				["a"],
 				toRecord([rect("a", 10, 10, 0, 0)]),
 				viewportSize,
+				registries,
 			),
 		).toBeNull();
 	});
 
 	it("defaults the padding to 48 screen px", () => {
 		const objects = toRecord([rect("a", 100, 100, 100, 100)]);
-		expect(calcSelectionFitViewport(["a"], objects, viewportSize)).toEqual(
-			calcSelectionFitViewport(["a"], objects, {
-				...viewportSize,
-				padding: 48,
-			}),
+		expect(
+			calcSelectionFitViewport(["a"], objects, viewportSize, registries),
+		).toEqual(
+			calcSelectionFitViewport(
+				["a"],
+				objects,
+				{
+					...viewportSize,
+					padding: 48,
+				},
+				registries,
+			),
 		);
 	});
 
 	it("zooms in further as the padding shrinks", () => {
 		const objects = toRecord([rect("a", 100, 100, 100, 100)]);
-		const padded = calcSelectionFitViewport(["a"], objects, {
-			...viewportSize,
-			padding: 48,
-		});
-		const tight = calcSelectionFitViewport(["a"], objects, {
-			...viewportSize,
-			padding: 0,
-		});
+		const padded = calcSelectionFitViewport(
+			["a"],
+			objects,
+			{
+				...viewportSize,
+				padding: 48,
+			},
+			registries,
+		);
+		const tight = calcSelectionFitViewport(
+			["a"],
+			objects,
+			{
+				...viewportSize,
+				padding: 0,
+			},
+			registries,
+		);
 		expect(tight!.zoom).toBeGreaterThan(padded!.zoom);
 	});
 
 	it("clamps the zoom for a selection far smaller than the viewport", () => {
 		const objects = toRecord([rect("a", 0, 0, 1, 1)]);
 		expect(
-			calcSelectionFitViewport(["a"], objects, { width: 1000, height: 1000 })
-				?.zoom,
+			calcSelectionFitViewport(
+				["a"],
+				objects,
+				{ width: 1000, height: 1000 },
+				registries,
+			)?.zoom,
 		).toBe(ZOOM.MAX);
 	});
 
@@ -141,22 +174,22 @@ describe("calcSelectionFitViewport", () => {
 			rect("a", 0, 0, 100, 40),
 			rect("b", 300, 200, 100, 40),
 		]);
-		const bounds = calcSelectionBounds(["a", "b"], objects);
-		expect(calcSelectionFitViewport(["a", "b"], objects, viewportSize)).toEqual(
-			calcViewportForBounds(bounds!, { ...viewportSize, padding: 48 }),
-		);
+		const bounds = calcSelectionBounds(["a", "b"], objects, registries);
+		expect(
+			calcSelectionFitViewport(["a", "b"], objects, viewportSize, registries),
+		).toEqual(calcViewportForBounds(bounds!, { ...viewportSize, padding: 48 }));
 	});
 
 	it("keeps what a type draws outside its box inside the fit", () => {
 		/** Stands in for a type drawing a 10px-tall strip below its box. */
-		const stripBelowBox: Pick<ObjectVisualBoundsRegistry, "get"> = {
+		const stripBelowBox = createVisualExtentRegistries({
 			get: () => (state) => ({
 				x: -state.width / 2,
 				y: -state.height / 2,
 				width: state.width,
 				height: state.height + 10,
 			}),
-		};
+		});
 		const objects = toRecord([rect("a", 100, 100, 100, 100)]);
 		const withStrip = calcSelectionFitViewport(
 			["a"],
@@ -166,7 +199,7 @@ describe("calcSelectionFitViewport", () => {
 		);
 		// The taller extent has to fit in the same viewport, so the zoom drops.
 		expect(withStrip!.zoom).toBeLessThan(
-			calcSelectionFitViewport(["a"], objects, viewportSize)!.zoom,
+			calcSelectionFitViewport(["a"], objects, viewportSize, registries)!.zoom,
 		);
 	});
 });

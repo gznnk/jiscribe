@@ -4,8 +4,9 @@ import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * Record sub-parts. The compartment rects are the shape's hit regions and carry
- * `data-part` (the slot id), which is what a double click resolves the edited
- * slot from. They capture pointer events even when the fill is transparent, so an
+ * `data-part` (the slot's address, textSlotPart), which is what a click picks the
+ * slot by and a double click resolves the edited slot from. They capture pointer
+ * events even when the fill is transparent, so an
  * unfilled record is still grabbable.
  *
  * Only the wrapping <g> carries data-kind/data-id: one object is one

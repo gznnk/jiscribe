@@ -1,3 +1,5 @@
+import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
+import type { ObjectDocOverflowDiagnoser } from "./ObjectDocOverflow";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
@@ -38,17 +40,56 @@ export type ObjectDocDefinition = {
 	extraKeys?: readonly string[];
 
 	/**
-	 * Where the type lays its text out, given a doc of it: the rectangle the
-	 * rendering layer's `textRegion` resolves, answerable with no rendering layer
-	 * present. The single declaration of the shape's text region — the UI
-	 * definition registers the same calculator, so a headless overflow check
-	 * (`@jiscribe/doc-tools`) and the canvas can never disagree about it.
+	 * The box this type's doc implies, where the geometry does not settle it on its
+	 * own — a `geometry: "point"` type, whose doc stores the corner it is drawn from
+	 * and no size (see {@link ObjectDocBoundsCalculator}). A declaration outranks the
+	 * geometry's own rule whatever that geometry is; every type but a point one
+	 * leaves it out and is measured from the fields it stores.
 	 *
-	 * `null` from the calculator means the box does not hold the text (a label
-	 * drawn outside the outline, bands sized from their own text); omitting the
-	 * field means the type has not declared one at all, which a checker reports
-	 * rather than guessing at. Declaring a rectangle is also what lets a document
-	 * leave the type's `height` out and have it follow the text
+	 * A point type measuring its own box is why nothing shared has to: the
+	 * conversion from the stored corner to the box is one call
+	 * (`calcPointDocCenter`), and what differs — the measurement — is the type's
+	 * alone. Hand that same measurement to the type's factory
+	 * (`createPointObjectFactory`), so where a new shape is placed and where a saved
+	 * one is measured, aligned and distributed cannot disagree.
+	 *
+	 * Every `geometry: "point"` type has to declare one; omitting it leaves the type
+	 * with no box at all, which is checked rather than guessed at
+	 * ({@link import("./isMissingBounds").isMissingBounds}) — a plugin's own
+	 * parse-check suite fails on it, and `diagnoseDoc` reports it against a document
+	 * already holding one.
+	 */
+	bounds?: ObjectDocBoundsCalculator;
+
+	/**
+	 * The connect point ids a doc of this type offers beyond the built-in four
+	 * (`topCenter` …): what a connector end may name as `{ kind: "connectPoint", id }`
+	 * besides those. Answered per doc, since the set may follow its content (an ER
+	 * entity's `col:<i>:left|right`, one pair per column). Must list exactly the ids
+	 * the presentation's `extraConnectPoints` places, in the same order. Omitted = the
+	 * type offers none, so the doc ops refuse any other id on it.
+	 */
+	extraConnectPointIds?: (doc: ObjectDoc) => readonly string[];
+
+	/**
+	 * Where the type lays one text slot out, given a doc of it: the rectangle the
+	 * canvas places that slot in, answerable with no rendering layer present. A
+	 * declaration for any text form — the one `body` of a `"body"` / `"source"`
+	 * type, a cell or a band of a `"slots"` type — the headless counterpart of the
+	 * `"textSlot"` part kind's `region` on the canvas side, which the UI
+	 * definition builds from the same calculator wherever it can, so a headless
+	 * check (`@jiscribe/doc-tools`) and the canvas do not disagree about it.
+	 *
+	 * Today's readers ask for the body alone (the overflow check, the content box,
+	 * {@link import("./supportsAutoHeight").supportsAutoHeight}), and each gates on
+	 * `features.text` itself, so a `"slots"` type may leave this out until a
+	 * reader asks for its slots.
+	 *
+	 * `null` from the calculator means the box does not hold that slot (a label
+	 * drawn outside the outline); omitting the field means the type has not
+	 * declared one at all, which a checker reports rather than guessing at.
+	 * Declaring a rectangle is also what lets a document leave the type's
+	 * `height` out and have it follow the text
 	 * ({@link import("./supportsAutoHeight").supportsAutoHeight}), so a
 	 * `geometry: "rect"` type's declaration decides the shape of its schema too.
 	 * Every type holding a single body (`features.text: "body"` / `"source"`)
@@ -58,6 +99,17 @@ export type ObjectDocDefinition = {
 	 * drawn outside the outline.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Reports content the type places itself that its box is too small for (see
+	 * {@link ObjectDocOverflowDiagnoser}): what the shared typesetting cannot
+	 * measure, because the type stacks or sizes it by a rule of its own — a
+	 * record's compartments, an ER entity's one-line columns. `diagnoseDoc`
+	 * calls it for any type that declares one and reports each message as an
+	 * error on the object. Omitted means the type has nothing beyond
+	 * {@link textRegion} to check.
+	 */
+	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
 
 	/**
 	 * Set to `false` by a type whose box must not be sized from the text laid out
@@ -99,9 +151,12 @@ export type ObjectDocDefinition = {
 	defaults?: Omit<ObjectDoc, "id"> & Readonly<Record<string, unknown>>;
 
 	/**
-	 * Draw-time text-style defaults of a `features.text: "slots"` type, keyed by
-	 * slot id: what each slot's typography falls back to where the document sets
-	 * none (ObjectTextStyleDefaultsRegistry). Declared here because a keyed type's
+	 * Draw-time text-style defaults of a `features.text: "slots"` type: what each
+	 * slot's typography falls back to where the document sets none
+	 * (ObjectTextStyleDefaultsRegistry). Declared as `byTextSlot` for the slots the
+	 * type names (a map, or a function of the slot id), or as `everyTextSlot` by a
+	 * type whose slot set is not fixed (see
+	 * {@link ObjectTextSlotStyleDefaults}). Declared here because a keyed type's
 	 * styling has no flat doc field for {@link defaults} to carry it in; a
 	 * `"body"` type needs none, its single slot's defaults being read off
 	 * {@link defaults} instead.

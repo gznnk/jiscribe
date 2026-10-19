@@ -126,7 +126,7 @@ export const useMeasureHandle = (
 				const bounds = calcObjectsBoundingBox(
 					ids,
 					canvasStateRef.current.objects,
-					registries.objectVisualBounds,
+					registries,
 				);
 				return bounds ? convertBoundingBoxToRect(bounds) : null;
 			},
@@ -154,13 +154,17 @@ export const useMeasureHandle = (
 				if (!object || !isConnectorState(object)) {
 					return null;
 				}
-				return collectConnectorPoints(
+				const path = collectConnectorPoints(
 					object,
 					objects,
 					registries.objectOutline,
 					registries.objectAnchorRegion,
 					registries.objectExtraConnectPoints,
+					registries.objectGeometryKey,
 				);
+				// The points are the renderer's cached route; a host writing to one
+				// must not move the drawn line.
+				return path?.map((point) => ({ x: point.x, y: point.y })) ?? null;
 			},
 
 			findOverlaps: (ids) =>

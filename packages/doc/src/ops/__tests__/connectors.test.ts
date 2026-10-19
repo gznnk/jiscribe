@@ -9,9 +9,19 @@ import {
 	twoConnectedRects,
 	twoRects,
 } from "./support/docFixtures";
+import { columnCardDefinition } from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
+import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import type { EdgeAnchorSide } from "../../model/objects/types/EndpointRef";
+import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
+
+/** Doc-ops that also know {@link columnCardDefinition}, the type declaring `col:<i>:*` points. */
+const columnOps = createDocOps({
+	plugins: [
+		{ id: "column-plugin", objects: { "column-card": columnCardDefinition } },
+	],
+});
 
 describe("connect", () => {
 	it("connects two top-level objects into a valid document", () => {
@@ -837,5 +847,398 @@ describe("getConnectors / getConnectedObjects", () => {
 		expect(() => docOps.getConnectedObjects(doc, "missing")).toThrow(
 			"object not found: missing",
 		);
+	});
+});
+
+describe("connect points the owner offers", () => {
+	/** A four-column card `column-card-1` at the origin and `rect-1` to its right. */
+	const cardAndRect = (): CanvasDoc => {
+		const doc = emptyDoc();
+		columnOps.addObject(doc, "column-card", { x: 0, y: 0 });
+		columnOps.addObject(doc, "rect", { x: 300, y: 0 });
+		return doc;
+	};
+	const sourceAnchorOf = (doc: CanvasDoc, id: string) =>
+		(readObject(doc, id).source as { anchor: unknown }).anchor;
+
+	it("stores a connect point the owner's type declares", () => {
+		const doc = cardAndRect();
+
+		const id = columnOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "rect-1",
+			sourceAnchor: "col:3:right",
+		});
+
+		expect(sourceAnchorOf(doc, id)).toEqual({
+			kind: "connectPoint",
+			id: "col:3:right",
+		});
+	});
+
+	it("still takes the edge midpoints on a type declaring points of its own", () => {
+		const doc = cardAndRect();
+
+		const id = columnOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "rect-1",
+			sourceAnchor: "rightCenter",
+			targetAnchor: "leftCenter",
+		});
+
+		expect(sourceAnchorOf(doc, id)).toEqual({
+			kind: "connectPoint",
+			id: "rightCenter",
+		});
+	});
+
+	it("refuses an id the owner does not declare, listing what it offers", () => {
+		const doc = cardAndRect();
+		const before = structuredClone(doc);
+
+		expect(() =>
+			columnOps.connect(doc, {
+				sourceId: "column-card-1",
+				targetId: "rect-1",
+				sourceAnchor: "col:4:left",
+			}),
+		).toThrow(
+			new DocOperationError(
+				'"col:4:left" is not a connect point of "column-card-1" (column-card); it offers topCenter, rightCenter, bottomCenter, leftCenter and the 8 its type declares: col:0:left, col:0:right, …, col:3:left, col:3:right',
+			),
+		);
+		expect(doc).toEqual(before);
+	});
+
+	it("lists every declared id when there are few, read off the doc as it stands", () => {
+		const doc = cardAndRect();
+		(doc.root[0] as Record<string, unknown>).columns = 2;
+
+		expect(() =>
+			columnOps.connect(doc, {
+				sourceId: "column-card-1",
+				targetId: "rect-1",
+				sourceAnchor: "col:3:left",
+			}),
+		).toThrow(
+			"it offers topCenter, rightCenter, bottomCenter, leftCenter and the 4 its type declares: col:0:left, col:0:right, col:1:left, col:1:right",
+		);
+	});
+
+	it("refuses anything but the edge midpoints on a type declaring none", () => {
+		const doc = cardAndRect();
+
+		expect(() =>
+			columnOps.connect(doc, {
+				sourceId: "column-card-1",
+				targetId: "rect-1",
+				targetAnchor: "col:0:left",
+			}),
+		).toThrow(
+			new DocOperationError(
+				'"col:0:left" is not a connect point of "rect-1" (rect); it offers topCenter, rightCenter, bottomCenter, leftCenter',
+			),
+		);
+	});
+
+	it("names the entry at fault in connectMany", () => {
+		const doc = cardAndRect();
+
+		expect(() =>
+			columnOps.connectMany(doc, [
+				{ sourceId: "column-card-1", targetId: "rect-1" },
+				{
+					sourceId: "column-card-1",
+					targetId: "rect-1",
+					sourceAnchor: "col:9:right",
+				},
+			]),
+		).toThrow(
+			/^entries\[1\].*"col:9:right" is not a connect point of "column-card-1"/,
+		);
+		expect(rootIds(doc)).toEqual(["column-card-1", "rect-1"]);
+	});
+
+	it("refuses re-anchoring onto an undeclared id in updateConnector and updateConnectors", () => {
+		const doc = cardAndRect();
+		columnOps.connect(doc, { sourceId: "column-card-1", targetId: "rect-1" });
+		const before = structuredClone(doc);
+
+		expect(() =>
+			columnOps.updateConnector(doc, "connector-1", {
+				sourceAnchor: "col:7:left",
+			}),
+		).toThrow('"col:7:left" is not a connect point of "column-card-1"');
+		expect(() =>
+			columnOps.updateConnectors(doc, [
+				{ id: "connector-1", sourceAnchor: "col:7:left" },
+			]),
+		).toThrow('"col:7:left" is not a connect point of "column-card-1"');
+		expect(doc).toEqual(before);
+
+		columnOps.updateConnector(doc, "connector-1", {
+			sourceAnchor: "col:0:left",
+		});
+		expect(sourceAnchorOf(doc, "connector-1")).toEqual({
+			kind: "connectPoint",
+			id: "col:0:left",
+		});
+	});
+
+	it("refuses moving an end to an owner that does not offer the connect point it keeps", () => {
+		const doc = cardAndRect();
+		columnOps.addObject(doc, "rect", { x: 600, y: 0 });
+		columnOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "rect-1",
+			sourceAnchor: "col:1:right",
+		});
+
+		expect(() =>
+			columnOps.updateConnector(doc, "connector-1", { sourceId: "rect-2" }),
+		).toThrow('"col:1:right" is not a connect point of "rect-2" (rect)');
+	});
+});
+
+describe("remapConnectPoints", () => {
+	/** Two four-column cards, `column-card-1` at the origin and `column-card-2` to its right. */
+	const twoColumnCards = (): CanvasDoc => {
+		const doc = emptyDoc();
+		columnOps.addObject(doc, "column-card", { x: 0, y: 0 });
+		columnOps.addObject(doc, "column-card", { x: 300, y: 0 });
+		return doc;
+	};
+	/**
+	 * {@link twoColumnCards} with `connector-1` from `column-card-1`'s `col:1:right` and
+	 * `connector-2` from its `col:2:right`, both to `column-card-2`'s `leftCenter`.
+	 */
+	const columnDoc = (): CanvasDoc => {
+		const doc = twoColumnCards();
+		columnOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "column-card-2",
+			sourceAnchor: "col:1:right",
+			targetAnchor: "leftCenter",
+		});
+		columnOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "column-card-2",
+			sourceAnchor: "col:2:right",
+			targetAnchor: "leftCenter",
+		});
+		return doc;
+	};
+	const sourceAnchorOf = (doc: CanvasDoc, id: string) =>
+		(readObject(doc, id).source as { anchor: unknown }).anchor;
+	const targetAnchorOf = (doc: CanvasDoc, id: string) =>
+		(readObject(doc, id).target as { anchor: unknown }).anchor;
+
+	it("swaps two connect points without mapping either end twice", () => {
+		const doc = columnDoc();
+
+		const moved = columnOps.remapConnectPoints(doc, "column-card-1", {
+			"col:1:right": { kind: "connectPoint", id: "col:2:right" },
+			"col:2:right": { kind: "connectPoint", id: "col:1:right" },
+		});
+
+		expect(sourceAnchorOf(doc, "connector-1")).toEqual({
+			kind: "connectPoint",
+			id: "col:2:right",
+		});
+		expect(sourceAnchorOf(doc, "connector-2")).toEqual({
+			kind: "connectPoint",
+			id: "col:1:right",
+		});
+		expect(moved).toEqual([
+			{
+				connectorId: "connector-1",
+				end: "source",
+				anchor: { kind: "connectPoint", id: "col:2:right" },
+			},
+			{
+				connectorId: "connector-2",
+				end: "source",
+				anchor: { kind: "connectPoint", id: "col:1:right" },
+			},
+		]);
+		expectValid(doc);
+	});
+
+	it("reaches a connector held inside a group", () => {
+		const doc = twoColumnCards();
+		doc.root.push({
+			id: "group-1",
+			type: "group",
+			children: [
+				{
+					id: "connector-9",
+					type: "connector",
+					source: {
+						owner: { id: "column-card-1" },
+						anchor: { kind: "connectPoint", id: "col:1:right" },
+					},
+					target: {
+						owner: { id: "column-card-2" },
+						anchor: { kind: "center" },
+					},
+					points: [],
+				},
+			],
+		} as unknown as ObjectDoc);
+
+		const moved = columnOps.remapConnectPoints(doc, "column-card-1", {
+			"col:1:right": { kind: "connectPoint", id: "col:3:right" },
+		});
+
+		expect(moved.map(({ connectorId }) => connectorId)).toEqual([
+			"connector-9",
+		]);
+		expect(sourceAnchorOf(doc, "connector-9")).toEqual({
+			kind: "connectPoint",
+			id: "col:3:right",
+		});
+	});
+
+	it("moves both ends of a connector looping back onto its owner", () => {
+		const doc = twoColumnCards();
+		columnOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "column-card-1",
+			sourceAnchor: "col:1:right",
+			targetAnchor: "col:2:left",
+		});
+
+		const moved = columnOps.remapConnectPoints(doc, "column-card-1", {
+			"col:1:right": { kind: "connectPoint", id: "col:2:right" },
+			"col:2:left": { kind: "connectPoint", id: "col:3:left" },
+		});
+
+		expect(moved.map(({ end }) => end)).toEqual(["source", "target"]);
+		expect(targetAnchorOf(doc, "connector-1")).toEqual({
+			kind: "connectPoint",
+			id: "col:3:left",
+		});
+	});
+
+	it("leaves ends on ids absent from the map, on other anchor kinds and on other owners alone", () => {
+		const doc = columnDoc();
+		columnOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "column-card-2",
+			targetAnchor: "col:1:right",
+		});
+		const before = structuredClone(doc);
+
+		const moved = columnOps.remapConnectPoints(doc, "column-card-1", {
+			"col:9:right": { kind: "connectPoint", id: "col:1:right" },
+			// column-card-1's own center end and column-card-2's col:1:right must both stay put
+			center: { kind: "connectPoint", id: "col:1:right" },
+		});
+
+		expect(moved).toEqual([]);
+		expect(doc).toEqual(before);
+	});
+
+	it("neither moves nor reports an end mapped to the id it already names", () => {
+		const doc = columnDoc();
+		const before = structuredClone(doc);
+
+		const moved = columnOps.remapConnectPoints(doc, "column-card-1", {
+			"col:1:right": { kind: "connectPoint", id: "col:1:right" },
+		});
+
+		expect(moved).toEqual([]);
+		expect(doc).toEqual(before);
+	});
+
+	it("moves an end onto an edge position", () => {
+		const doc = columnDoc();
+
+		const moved = columnOps.remapConnectPoints(doc, "column-card-1", {
+			"col:2:right": { kind: "edge", side: "right", t: 0.62 },
+		});
+
+		expect(moved).toEqual([
+			{
+				connectorId: "connector-2",
+				end: "source",
+				anchor: { kind: "edge", side: "right", t: 0.62 },
+			},
+		]);
+		expect(sourceAnchorOf(doc, "connector-2")).toEqual({
+			kind: "edge",
+			side: "right",
+			t: 0.62,
+		});
+		expectValid(doc);
+	});
+
+	it("re-derives the routing of a connector that never stored one when an end lands on a center", () => {
+		const doc = columnDoc();
+
+		columnOps.remapConnectPoints(doc, "column-card-1", {
+			"col:1:right": { kind: "center" },
+		});
+
+		expect(sourceAnchorOf(doc, "connector-1")).toEqual({ kind: "center" });
+		expect(readObject(doc, "connector-1").routing).toBe("straight");
+		expect(readObject(doc, "connector-2").routing).toBeUndefined();
+	});
+
+	it.each([
+		["an unknown kind", { kind: "free", point: { x: 0, y: 0 } }, "kind"],
+		["an empty connectPoint id", { kind: "connectPoint", id: "" }, "id"],
+		[
+			"center as a connectPoint id",
+			{ kind: "connectPoint", id: "center" },
+			"center",
+		],
+		["an unknown edge side", { kind: "edge", side: "middle", t: 0.5 }, "side"],
+		["an edge t outside 0..1", { kind: "edge", side: "top", t: 1.5 }, "t must"],
+		[
+			"an edge t that is not finite",
+			{ kind: "edge", side: "top", t: Number.NaN },
+			"t must",
+		],
+	])("refuses %s, having written nothing", (_label, value, fragment) => {
+		const doc = columnDoc();
+		const before = structuredClone(doc);
+
+		expect(() =>
+			columnOps.remapConnectPoints(doc, "column-card-1", {
+				"col:1:right": { kind: "connectPoint", id: "col:2:right" },
+				"col:2:right": value as never,
+			}),
+		).toThrow(DocOperationError);
+		expect(() =>
+			columnOps.remapConnectPoints(doc, "column-card-1", {
+				"col:2:right": value as never,
+			}),
+		).toThrow(new RegExp(`^connect point remap "col:2:right": .*${fragment}`));
+		expect(doc).toEqual(before);
+	});
+
+	it("refuses a connect point the owner does not offer after the change, having written nothing", () => {
+		const doc = columnDoc();
+		(doc.root[0] as Record<string, unknown>).columns = 2;
+		const before = structuredClone(doc);
+
+		expect(() =>
+			columnOps.remapConnectPoints(doc, "column-card-1", {
+				"col:1:right": { kind: "connectPoint", id: "col:0:right" },
+				"col:2:right": { kind: "connectPoint", id: "col:3:right" },
+			}),
+		).toThrow(
+			new DocOperationError(
+				'connect point remap "col:2:right": "col:3:right" is not a connect point of "column-card-1" (column-card); it offers topCenter, rightCenter, bottomCenter, leftCenter and the 4 its type declares: col:0:left, col:0:right, col:1:left, col:1:right',
+			),
+		);
+		expect(doc).toEqual(before);
+	});
+
+	it("refuses an owner the document does not hold", () => {
+		expect(() =>
+			columnOps.remapConnectPoints(columnDoc(), "missing", {}),
+		).toThrow("object not found: missing");
 	});
 });

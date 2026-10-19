@@ -1,7 +1,7 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
@@ -15,13 +15,14 @@ import { isGroupState } from "../../states/objects/primitives/group/GroupState";
  *
  * @param objects - The object map; groups are skipped because the loop already
  *   visits their children directly
- * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry. Both consumers of
- *   this extent frame the drawing, so they pass it; omitting it crops whatever a
- *   shape draws outside its geometry box
+ * @param visualExtentRegistries - Per-canvas registries measuring what is drawn
+ *   (see calcObjectBoundingBox): what a shape draws outside its geometry box and a
+ *   connector route leaving its owners are part of the extent. Required because
+ *   every consumer of this extent frames the drawing
  */
 export const calcContentBounds = (
 	objects: Record<string, ObjectState>,
-	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
+	visualExtentRegistries: VisualExtentRegistries,
 ): BoundingBox | null => {
 	let minX = Infinity,
 		maxX = -Infinity,
@@ -36,7 +37,7 @@ export const calcContentBounds = (
 			continue;
 		}
 
-		const bbox = calcObjectBoundingBox(obj, objects, visualBounds);
+		const bbox = calcObjectBoundingBox(obj, objects, visualExtentRegistries);
 		if (!bbox) {
 			continue;
 		}

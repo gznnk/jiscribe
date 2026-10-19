@@ -2,11 +2,10 @@ import { useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
-import { getEffectiveSelectedIds } from "../utils/getEffectiveSelectedIds";
 
 /**
  * Everything the properties sidebar reads, as one flat list to compare entry by
- * entry. The selection fields come first; after them, the objects the selection
+ * entry. The selection comes first; after it, the objects the selection
  * names — each selected object and, for a group, its descendants — which is the
  * only part of `objects` any row looks at (a row's frame, style, note and parent
  * are all fields of those objects).
@@ -15,16 +14,15 @@ import { getEffectiveSelectedIds } from "../utils/getEffectiveSelectedIds";
  * panel's reads and left out here goes stale on screen without a warning.
  */
 const readPropertyPanelKey = (state: CanvasControllerState): unknown[] => {
-	const selectedObjects = getEffectiveSelectedIds(state).flatMap((id) => [
+	const selectedObjects = state.selection.objectIds.flatMap((id) => [
 		state.objects[id],
 		...collectDescendantIds(id, state.objects).map(
 			(descendantId) => state.objects[descendantId],
 		),
 	]);
 	return [
-		state.selectedIds,
-		state.selectedConnectorId,
-		state.selectedTextSlot,
+		state.selection.objectIds,
+		state.selection.part,
 		state.textEditState,
 		state.multiSelectGroup,
 		state.background,
@@ -51,16 +49,26 @@ const isSameKey = (previous: unknown[], next: unknown[]): boolean =>
  * see `readPropertyPanelKey` for the reads it does make.
  *
  * @param state - The state the sidebar would otherwise be given: the draft-grafted one, so a keystroke mid-edit moves the selected object's reference and reaches the rows
- * @returns `state` itself on a change the sidebar shows; the previously returned state otherwise
+ * @returns `state` itself on a change the sidebar shows, and whenever the sidebar is closed; the previously returned state otherwise
  */
 export const usePropertyPanelState = (
 	state: CanvasControllerState,
 ): CanvasControllerState => {
+	const latchedRef = useRef<{
+		key: unknown[];
+		state: CanvasControllerState;
+	} | null>(null);
+	// The sidebar is mounted only while it is open (Canvas), so a closed one reads
+	// nothing: no key is built, which a drag of a large selection would otherwise
+	// pay on every frame, and opening it latches the state of that moment.
+	if (!state.propertyPanel.isOpen) {
+		latchedRef.current = null;
+		return state;
+	}
 	const key = readPropertyPanelKey(state);
 	// Latched during render rather than in an effect: the sidebar reads the
 	// result in the same render, so the decision has to be made before it.
-	const latchedRef = useRef({ key, state });
-	if (!isSameKey(latchedRef.current.key, key)) {
+	if (latchedRef.current === null || !isSameKey(latchedRef.current.key, key)) {
 		latchedRef.current = { key, state };
 	}
 	return latchedRef.current.state;

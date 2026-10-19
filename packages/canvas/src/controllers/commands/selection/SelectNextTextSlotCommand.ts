@@ -1,18 +1,24 @@
-import type { ExecutableCommand } from "../CommandTypes";
 import {
-	getTextSlotCycleTarget,
+	getTextSlotCycle,
 	selectAdjacentTextSlot,
-} from "./utils/selectAdjacentTextSlot";
+} from "../../selection/writers/selectAdjacentTextSlot";
+import type { ExecutableCommand } from "../CommandTypes";
 
 export const SelectNextTextSlotCommand: ExecutableCommand = {
 	id: "selectNextTextSlot",
-	label: "Select Next Text Slot",
+	label: { en: "Select Next Text Slot", ja: "次のテキストスロットを選択" },
 	category: "selection",
 	shortcuts: {
 		default: [{ code: "Tab" }],
 	},
 
-	canExecute: (state) => getTextSlotCycleTarget(state) !== null,
+	// Disabled while a text edit is open: the draft is bound to the slot
+	// `selection.part` names and would follow a step to another slot. The
+	// editor's own Tab commits before it steps (STEP_TEXT_EDIT).
+	canExecute: (state, registries) =>
+		state.textEditState === null &&
+		getTextSlotCycle(state, registries.objectPartKind) !== null,
 
-	execute: (state) => selectAdjacentTextSlot(state, 1),
+	execute: (state, registries) =>
+		selectAdjacentTextSlot(state, 1, registries.objectPartKind),
 };

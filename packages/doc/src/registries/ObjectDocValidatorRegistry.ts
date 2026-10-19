@@ -47,8 +47,9 @@ type ValidatorEntry = DocKeyDeclaration & {
 /**
  * Every field name a type of these features may write on the object itself: the
  * ones every object has, the geometry's coordinates, the style groups the
- * features enable, the text group in the form the text kind takes, and the names
- * the type declares for itself. Anything else the document writes is reported as
+ * features enable, the text group in the form the text kind takes, the body
+ * placement a type declaring `textVerticalBasis` holds, and the names the type
+ * declares for itself. Anything else the document writes is reported as
  * unknown and dropped on save, so a name missing here is a value silently lost —
  * the set is built from the very constants each group is defined by rather than
  * restated.
@@ -66,9 +67,10 @@ const collectKnownKeys = (
 		// carries the `text` record and nothing more; which slot ids it may hold is
 		// the type's own to check, and its `validateDoc` is where it does it.
 		...(features.text !== undefined ? ["text"] : []),
-		...(isSingleBodyText(features.text)
-			? [...textStyleKeysOf(features.text), ...TEXT_BODY_KEYS]
-			: []),
+		...(isSingleBodyText(features.text) ? textStyleKeysOf(features.text) : []),
+		// The placement of the one body against the shape, which only a type
+		// declaring the feature holds (TEXT_BODY_KEYS).
+		...(features.textVerticalBasis ? TEXT_BODY_KEYS : []),
 		...extraKeys,
 	]);
 

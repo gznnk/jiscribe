@@ -40,7 +40,7 @@ type TransformControlsProps = {
  *
  * Each anchor has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="transform" + data-part="resize:<anchorType>" / "rotation" for identifying which anchor was interacted with
+ * - data-id="transform" + data-action="resize:<anchorType>" / "rotation" for identifying which anchor was interacted with
  */
 const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	frame,
@@ -126,7 +126,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:topLeft"
+						data-action="resize:topLeft"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -140,7 +140,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:topRight"
+						data-action="resize:topRight"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -154,7 +154,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:bottomLeft"
+						data-action="resize:bottomLeft"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -168,7 +168,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:bottomRight"
+						data-action="resize:bottomRight"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -184,7 +184,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:topCenter"
+						data-action="resize:topCenter"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -198,7 +198,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:bottomCenter"
+						data-action="resize:bottomCenter"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -218,7 +218,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:rightCenter"
+						data-action="resize:rightCenter"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -232,7 +232,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform"
-						data-part="resize:leftCenter"
+						data-action="resize:leftCenter"
 						style={{
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
@@ -257,7 +257,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						fill="transparent"
 						data-kind="control"
 						data-id="transform"
-						data-part="rotation"
+						data-action="rotation"
 						style={{ cursor: "grab" }}
 					/>
 				</>

@@ -1,21 +1,15 @@
-// The one place a weight an AI wrote reaches its canonical form before it is
-// stored. The tool declaration lets a model write the numeric weights it copies
+// Where a weight a built-in tool's op carries reaches its canonical form before it
+// is stored. The tool declaration lets a model write the numeric weights it copies
 // out of a design token, but the document keeps only "normal" / "bold" for those
 // two rungs — the UI's bold toggle matches on those spellings — so the mapping
 // has to happen on the applying side, which every transport goes through
-// (jiscribe-mcp, studio and desktop all apply through applyCanvasOp).
+// (jiscribe-mcp, studio and desktop all apply through applyCanvasOp). The mapping
+// itself is canonicalizeFontWeight, which a plugin's object tool applies to its own
+// arguments (its op carries no style this could reach).
+
+import { canonicalizeFontWeight } from "@jiscribe/ai-tools-sdk";
 
 import type { AiDocOp } from "../canvasOps";
-
-/**
- * The numeric weights that name a rung the document spells out in words, and the
- * spelling it keeps. The middle rungs ("500" / "600") have no other spelling and
- * are stored as they arrive.
- */
-const FONT_WEIGHT_ALIASES: Readonly<Record<string, string>> = {
-	"400": "normal",
-	"700": "bold",
-};
 
 /**
  * The same style bag with an aliased weight rewritten. The bag itself is
@@ -25,11 +19,13 @@ const FONT_WEIGHT_ALIASES: Readonly<Record<string, string>> = {
 const withCanonicalFontWeight = <Style extends { fontWeight?: string }>(
 	style: Style,
 ): Style => {
-	const canonical =
-		style.fontWeight === undefined
-			? undefined
-			: FONT_WEIGHT_ALIASES[style.fontWeight];
-	return canonical === undefined ? style : { ...style, fontWeight: canonical };
+	if (style.fontWeight === undefined) {
+		return style;
+	}
+	const canonical = canonicalizeFontWeight(style.fontWeight);
+	return canonical === style.fontWeight
+		? style
+		: { ...style, fontWeight: canonical };
 };
 
 /**

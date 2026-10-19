@@ -18,6 +18,26 @@
 
 プラグインの型は `CanvasPlugin`（`packages/canvas/src/plugin/CanvasPlugin.ts`）で、
 中身の本体は `objects` である。`ObjectType` をキーに、その型の定義を値に取る。
+もう 1 つのコントリビューションが `commands` で、`Command` の配列を組み込みの後に
+プラグインの宣言順で登録し、絞り込みは `config.commands` の同じ 1 本のリストで効く。
+
+## 文言は宣言が自分で持つ
+
+`Command` の `label` はただの文字列か `LocaleMessages<string>`（ロケールタグをキーに
+取り、`en` が必須の辞書）のどちらかである。プラグインが足したコマンドも、自分が
+出荷する言語ぶんの名前を宣言の上だけで名乗る。`Stencil.label` とステンシル
+カテゴリのラベルも同じ書き方である。キャンバスはこれを `locale` で解決し
+（完全一致 → 言語サブタグ（`"ja-JP"` → `"ja"`）→ `"en"`）、解決は宣言ごとなので、
+`ja` を持たないコマンドは自分の英語に落ちるだけでキャンバス全体を英語へは引き戻さない。
+
+最終決定権はホストにある。`messages.commandLabels[id]` は、組み込みでもプラグインでも
+コマンド自身の `label` より強い（`resolveCommandLabel`）。
+
+プラグインが自分で描く文字列（メニューの見出し・フィールドのラベル）は、そもそも
+キャンバスへ渡さない。プラグインが自分の `LocaleMessages` を持ち、`useCanvasLocale` /
+`resolveLocaleMessages` で解決する。共有する名前空間が無いので衝突しようがなく、
+core のキーにも届かない。実例は
+`plugins/container-shapes/src/messages/containerMessages.ts`。
 
 ホストは `initialConfig` から配線する。
 
@@ -54,11 +74,23 @@ UI への寄与は任意である。どのフィールドがあるかはこの�
 headless 半分である。パース層がその型を知り、doc を検証し、doc から生成するのに
 要るもの（`features` / `validateDoc` など）と、スキーマ・AI ドキュメントの生成器が
 読むメタデータを持つ。どのフィールドがあるかはこの型定義が正本。
-`ObjectTypeDefinition` はこれに UI 層の契約を足したもので、`textRegion` だけは
-描画側の計算関数の型に差し替えている（doc 側の宣言は「箱が文字を持たない」を
-`null` で答えられるが、描画側にはその答えの使い道が無い）。それ以外はそのまま
-引き継いでおり、だから `CanvasPlugin` は `CanvasDocPlugin` に**構造的に代入できる**
-— 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
+`ObjectTypeDefinition` はこれに UI 層の契約を足したもので、doc のフィールドは
+`textRegion` も含めてそのまま引き継ぐ。だから `CanvasPlugin` は `CanvasDocPlugin` に
+**構造的に代入できる** — 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
+
+doc の `textRegion` は headless の答え（はみ出し検査・高さ自動の判定）で、「箱が
+文字を持たない」を `null` で答えられるので、キャンバスが文字を描く位置ではない。
+キャンバス上の置き場所は `"textSlot"` 部分種別の `region`（`(state, slotId) => Rect`。
+1 スロットずつ）か `regions`（`(state) => Record<slotId, Rect>`。全スロットを 1 回で）
+で宣言する。`createTextSlotPartKindDefinition({ region })` /
+`createTextSlotPartKindDefinition({ regions })` で作って `partKinds` に置き、
+`createFrameObjectDefinition({ textRegion })` なら前者を代わりに作る。枠の描画は
+種別の `regions` を描画 1 回につき 1 度だけ呼んで全スロットの領域を受け取る（スロット
+ごとには呼ばない）ので、1 つのスロットを置くのに全体のレイアウトが要る型（表のセル、
+record の区画）もレイアウトは 1 回で済む。どちらもローカル座標（原点は図形の中心、
+左上基準）で答え、`regions` は `state.text` の全キーを含まなければならない。登録時に
+core は登録する種別を包み、どちらも宣言しなければ箱全体を当て、その上にオブジェクトの
+`textVerticalBasis` を掛ける。両方を宣言した種別は作る時点で拒否する。
 
 分けてある理由は、ドキュメントを検証するだけの消費者に React を読ませないため。
 VSCode 拡張の診断も MCP サーバーも Node プロセスで `.jis` をパースする。
@@ -84,9 +116,18 @@ const result = parser.parse(text);
   非目標である。登録を外した直後の型のオブジェクトが doc に残りうるのに、それを
   どう扱うべきかに整合的な答えが無い
 - **マージ順**は `presetDefinitions` → `plugins` の宣言順
-- **型の重複は構築時に throw する。**last-wins にはしない。2 つのプラグインが
-  偶然衝突したとき、どちらの図形が描かれるかが黙って変わるより、大きな音を立てて
-  失敗するほうがよい。意図的な差し替えは「除去 + 追加」で表現する
+- **型の重複も、コマンド id の重複も構築時に throw する。**last-wins にはしない。
+  2 つのプラグインが偶然衝突したとき、どちらの図形が描かれるか・メニューの項目が
+  どのコマンドを走らせるかが黙って変わるより、大きな音を立てて失敗するほうがよい。
+  意図的な差し替えは「除去 + 追加」で表現する
+- **キーバインドの共有は `canExecute` で解き、プラグインのコマンドを先に問う。**
+  同じキーストロークを複数のコマンドが名乗ってよく、実行されるのは最初に「今は
+  使える」と答えたもの、どれも答えなければブラウザへ渡す。プラグインが足した
+  コマンドは組み込みより先に問われるので、`canExecute` が true の間は組み込みの
+  キーを奪う（表の素の矢印キーが、表を動かす代わりにセルの選択を動かす）。
+  したがってプラグインは `canExecute` を自分の持つ文脈に絞らなければならない。
+  組み込み同士でバインドを共有するコマンドは、排他的な文脈でしか使えてはならない。
+  `initializeCommands.exclusivity.test.ts` の掃き出しがそれを守らせる
 - プラグインが増えても検証境界は動かない。パーサーがドキュメントを検査する唯一の
   場所であり、その先は正当性を前提にする（[設計思想](./01-design-philosophy.ja.md)）
 
@@ -102,6 +143,8 @@ const result = parser.parse(text);
 @jiscribe/doc/unstable        tier 2・headless
 @jiscribe/canvas-sdk          プラグイン向けの面（unstable の再エクスポート + 量産キット）
 @jiscribe/canvas-sdk/doc      その headless 版
+@jiscribe/canvas-sdk/tools    headless: プラグインが AI ツールを出す契約
+                              （@jiscribe/ai-tools-sdk の再エクスポート）
 ```
 
 headless な 2 つのエントリは独立したパッケージである。`@jiscribe/canvas` 側に
@@ -185,7 +228,14 @@ CodeMirror の `EditorView`）。
 
 **`menu`。**optional で 3 通りの意味を持つ。省略は `features` からの既定導出、
 配列の宣言は全置換、`[]` はメニュー無し。導出規則は `createDefaultMenu` と
-その unit テストが正である。
+その unit テストが正である。プラグインが自分で描く項目は
+`{ type: "custom"; id; component }`（`CustomItem`）で、`ObjectMenuItemProps` を
+受け取る。選ばれた部分がメニューを絞っている間は落ちるが、その種別を
+`pickedPartKinds` に並べた項目は残る（後述のサイドバーのカスタム行と同じ規則）。
+自前のボタンは `ObjectMenuItemPositioner` の中の `ObjectMenuButton` で組み込みの
+ボタンと同じ見た目になる。コマンドを走らせるなら、名前は `resolveCommandLabel`、
+キーは `getPlatformShortcuts` / `formatShortcut` で添え、`commandAction` で
+走らせる（表の挿入セクション）
 
 **`propertyPanel`。**プロパティサイドバーのセクションで、意味は `menu` と同じ
 3 通り。省略は `features` からの既定導出、配列の宣言は全置換、`[]` は
@@ -198,7 +248,7 @@ CodeMirror の `EditorView`）。
 **`propertyPanel` のカスタム行。**プラグインが自分で描く行は組み込みの行に混ぜる
 `{ type: "custom"; id; component }`（`PropertyPanelCustomItem`）で、ObjectMenu の
 カスタム項目と同じ形である。コンポーネントが受け取るのは `PropertyPanelItemProps`
-だけで、選択の切片と、スタイルを書く `onPropertyUpdate`・フレームの数値を書く
+だけで、選択の切片と、スタイルを書く `onStyleIntent`・フレームの数値を書く
 `onTransformUpdate` が入っている（どちらの型も
 `packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts` が正本）。
 組み込みの行が読むコントローラ state は渡らない。使ってよいのは
@@ -207,14 +257,27 @@ CodeMirror の `EditorView`）。
 その隣に置く入力部品（`PropertyNumberField` / `PropertyColorField` など）、
 単体で 1 行になる `PropertyCheckbox`（セクションの左端から、ボックスと右側の
 ラベル）がある。キットに何があるかは `packages/canvas/src/unstable.ts` の export
-が正本。
-書く前に知っておく規約は 2 つ:
+が正本。行が**述べる**値はキット唯一の読み取り API `useSelectionStyle(name)` から
+取る。そのプロパティについて選択全体が何を言っているかを、同名の書き込みが届くのと
+まったく同じ object について返すので、プラグインの行も組み込みの行と同じように
+mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参照）。自前の型が
+宣言したプロパティの行は、kind の手前にその型の表を渡す
+（`useSelectionStyle(CONTAINER_STYLE_ENTRIES, "headerFill")`）。宣言から型が付く。
+書き込みはその鏡で、`onStyleIntent(intent, commit)` は名前と文字列ではなく述べられた
+編集そのものを取る。型自身の kind は `{ kind, value }` と書く（宣言した名前と、
+宣言どおり型付けした値か transport の文字列）。書く前に知っておく規約は 2 つ:
 
 - 複数型のマージが行を突き合わせる鍵は `id` である。同じ行を出す型どうしは同じ
   綴りにすること。綴りが違う型が混ざった選択ではその行は落ちる（片方しか持たない
   組み込みの行種が落ちるのと同じ）
-- テキストスロット選択中はカスタム行が落ちる。プラグインの行には「スロット対応で
-  ある」と申告する手段が無いためで、ObjectMenu がカスタム項目に課すのと同じ規則
+- 受け取るスタイル種別（後述の `partKinds` の `styleIntentKinds`）を宣言した種別の部分を
+  選んでいる間 — テキストスロットがそれで、図形の文字の編集中に選ばれているスロットも
+  含む — サイドバーに残るのは、扱う種別がすべてその中にある組み込みの行だけ。カスタム行は
+  何を書くかを申告できないので落ちる。部分選択に向けたカスタム行は、残る部分の
+  種別を `pickedPartKinds` に並べる（表の挿入行なら `row` / `column` / `textSlot`）。
+  ボタンでコマンドを走らせるなら、組み込みの「重ね順」セクションと同じく
+  `PropertyCommandGrid` / `PropertyCommandButton`・`resolveCommandLabel`・
+  `commandAction` で組む。ObjectMenu も項目を同じ規則で絞る
 
 **`propertyPanel` のセクション表示。**セクションは `isShown(selection)` を持てる。
 描く前に、行が読むのと同じ選択の切片（`PropertyPanelSelection`）を渡して
@@ -223,35 +286,183 @@ CodeMirror の `EditorView`）。
 上に残るためである。コア自身の用例はコネクターの「ラベル」「ラベルの枠線」セクションで、ラベルに
 文字があるときだけ出る。省略は常に出す。
 
-実例は `plugins/container-shapes` である。`header-fill` 行が
-`PropertyColorField` から `onPropertyUpdate` 経由で `headerFill` を書き、Fill
-セクションの本体色の下に並ぶ。`header-height` 行は `PropertyNumberField` から
-extra スタイルプロパティ `headerHeight` を書き、Layout セクションのサイズの下に
-並ぶ。文言はどちらもプラグイン自身の辞書から取る。
+実例は `plugins/container-shapes` である。自前のスタイル 2 つを自分の表
+（`src/style/containerStyleEntries.ts`）として宣言し、`createFrameObjectDefinition` の
+`styleEntries` へ渡す:
 
-**i18n。**プラグインは自分の辞書を持ち、`useCanvasLocale` /
+```ts
+export const CONTAINER_STYLE_ENTRIES = {
+	headerFill: declaredFieldEntry("headerFill", "string"),
+	headerHeight: declaredFieldEntry("headerHeight", "number"),
+} satisfies DeclaredStyleTable<ContainerState>;
+```
+
+宣言する表のエントリは、どれも自分が書くフィールドを述べる（`fields`。Doc に保存する
+ものを何も書かないなら `[]`）。述べないエントリは登録時に拒否する。`declaredFieldEntry` は
+これを自分で埋める。
+
+`header-fill` 行が `PropertyColorField` から `onStyleIntent` 経由で `headerFill`
+を書き、Fill セクションの本体色の下に並ぶ。`header-height` 行は
+`PropertyNumberField` から `headerHeight` を書き、Layout セクションのサイズの下に
+並ぶ。現在値はどちらも `useSelectionStyle(CONTAINER_STYLE_ENTRIES, …)` で述べ、宣言から型が
+付くので自前で絞るものは無い。文言はどちらもプラグイン自身の辞書から取る。
+
+宣言した種別は `features` から導いた種別を置き換える。core の種別の書き込む先を型が
+変えるにはこれを使う。`plugins/table-shape` は `fill` を宣言し直し、pick で書き先を
+振り分けている（何も選んでいなければ自分の背景へ、選んでいれば pick が届くセルの
+`fill` へ。届くセルは文字系のエントリと同じ `resolveTextSlotIds` の答えで、後述の
+`partKinds` の `textSlotIds` 参照）:
+
+```ts
+const TABLE_STYLE_ENTRIES = {
+	fill: tableFillEntry,
+} satisfies DeclaredStyleTable<TableState>;
+```
+
+文字スタイルがどのスロットに届くかは、表が宣言するものではない。core の文字系の
+エントリが選ばれた種別の `textSlotIds` に従うので、表は文字系の種別を 1 つも宣言しない。
+
+**コマンド。**プラグインが足したコマンドの `execute` は遷移のすべてを担い、
+Doc を編集したと述べることもそこに含む。返す状態を `commitEdit(state)`
+（`@jiscribe/canvas/unstable`、したがって `@jiscribe/canvas-sdk` から取れる）に通す。
+reducer は、これが進める `commitVersion` を見て履歴を積み、保存を起こす。COMMAND の
+経路は `execute` の後で祖先グループの枠・内容から決まる箱・部分選択を整えるが、commit は
+しない。`commitEdit` を通さずに Doc を変えたコマンドは、undo できず保存もされない。
+選択だけを動かすコマンドは状態をそのまま返す。
+
+**i18n。**プラグインが足したコマンドは自分の `label` をロケール別に宣言する。
+プラグインが自分で描く文字列はプラグインが持つ辞書から取り、`useCanvasLocale` /
 `resolveLocaleMessages` で解決する。core の文言キーにプラグインの語彙は足さない。
 
 **`selectionControls`。**プレーンな宣言（`SelectionControlDefinition`。ハンドルを
 描く `Component` と、ジェスチャーを解釈する `handle` の組）で、基底クラス継承は無い。`handle` に渡すのは自オブジェクトの情報（現フレーム + ジェスチャー開始
-スナップショット）とカーソルだけである。part の導出・スナップショットのガード・
+スナップショット）とカーソルだけである。ハンドルに付ける `data-action` の導出
+（`selection:<objectType>:<name>`。`Component` に `action` prop として渡り、末尾に足した
+`:<sub>` は `SelectionControlEvent.subAction` として戻る）・スナップショットのガード・
 COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わりする。
+
+`handle` が呼ばれるのは `events` に挙げたイベント種だけで、省略すれば drag / dragEnd
+（`DEFAULT_SELECTION_CONTROL_EVENTS`）。`"click"` / `"doubleClick"` を挙げれば押しただけの
+操作も届き、そのイベントに `start` / `delta` は無い。戻り値は `{ object?, selection? }`
+で、`object` は自オブジェクトの置き換え（クリックならその場で確定する。drag はどこかの
+フレームで書いていれば、`events` に dragEnd が無くても dragEnd の `handle` が `object` を
+返さなくても、core が dragEnd で 1 回だけ確定する）、`selection` は自オブジェクトの上の部分選択（`null` で解除、省略なら
+そのまま）。`selection` の `kind` は `partKinds` に宣言したものでなければ落とされる。
+選択だけを返したクリックは編集にならない。いま立っている部分選択は `Component` に
+`selectedPart` として、`handle` にも `context.selectedPart` として渡るので、ハンドルは
+自分が選ばれていることを描け、修飾キー付きのクリック（`event.mods`）は選択を置き換えずに
+伸ばしたり削ったりできる。オブジェクトの
+移動中と変形ハンドルでのリサイズ中は `Component` を描かない（接続アンカーと同じ）。
+コントロール自身のドラッグ中は描いたままになる。
+
+押下は上に描かれたものが取るので、`layer` でコアのハンドル群（コネクタの端点・
+変形枠のハンドルと回転・接続アンカー・頂点）との上下を決める。`"belowHandles"` は
+その下に、`"aboveHandles"`（既定）は上に描く。どちらも選択の外枠より上で、同じ層の
+中では `selectionControls` で後に宣言したコントロールが押下を取る。ハンドルの載る辺に
+沿うが他の場所でも押せるもの（辺の全長に沿うヒットストリップや、オブジェクトの外に
+並べる見出し。表の境界・末尾の辺・行列のグリップ）は下に置く。ドラッグする対象を
+動かす唯一の手段で、ハンドルと同じ位置に来うるものは上に残す。
+
+**`partKinds`。**その型がオブジェクトを分割する部分 id の名前空間（`kind`）ごとに
+`ObjectPartKindDefinition` を 1 つ宣言し、`has`（その id がまだそのオブジェクトの部分を
+指すか）と `delete` を述べる。core は部分 id を不透明な文字列として運び、型へ渡し
+返すだけなので、`"3"` や `"cell:2,1"` の意味を知っているのは型だけである。省略すれば
+そのオブジェクトは不可分で、Delete は全体の削除へ落ちる。`delete` は
+`{ object, connectPointRemap? }` を返す（断るなら null）。接続点を振り直したり消したり
+する削除（ER エンティティの列）は、各接続点の行き先を元の id をキーにして答え、core が
+そのオブジェクトに付いたコネクターの端を同じ undo 1 手で付け替える。AI ツールの
+`connectPointRemap` と同じ写像で、キャンバス側では `remapConnectorEnds` が
+適用する。組み込みの `vertex` が
+実例で、polyline / polygon / connector がそれぞれ、削除を断る頂点数の下限とともに
+宣言している。`features.text` を持つ型には `"textSlot"` の種別が宣言なしで
+付き、部分 id は自分の `text` のキーになる（1 ボディの型なら `body` だけで、テキスト
+編集中はこのスロットが選ばれている）。自分で `"textSlot"` を宣言すれば、
+衝突ではなくその既定を置き換える。core が導くものを残して足りない分だけ足すなら、
+`createTextSlotPartKindDefinition()` を spread する（表は `range` と
+`delete` を足し、`styleIntentKinds` に fill を足している）。スロットの置き場所は
+`region` / `regions` として渡す。どちらの場合も、登録する種別の `region` / `regions`
+は core が箱全体への代替と垂直基準で包むので、スロットは描かれ編集される位置に
+枠が出る。
+
+部分を押せるようにするには、その要素の `data-part` に `<kind>:<partId>` の住所を
+書くだけでよい（`controllers/gestures/handlers/utils/partAddress.ts`。テキストスロットの
+組み立て関数は `@jiscribe/canvas` の `textSlotPart`）。`data-part` が運ぶのはこの住所
+だけで、押すと何かが始まる要素——メニューの行や選択コントロールのハンドル——は
+代わりに `data-action` を持つ。メニュー用の文字列は `@jiscribe/canvas/unstable` の
+`commandAction` / `toggleAction` / `setAction` / `sliderAction` で組む（文法は
+`04-gesture-system.ja.md`）。
+
+選択に関わる宣言は 5 つあり、どれも省略できる。
+
+- `region` — 部分のオブジェクトローカル座標での矩形。宣言した種別は、選ばれた部分
+  ごとに枠が描かれ、持ち主自身の枠は描かない。null を返した部分は枠を描かない。
+  枠が 1 つでも描かれている間は、それと競う transform のハンドルが隠れる。
+  `vertex` は宣言しない（頂点には自前のハンドルがある）ので、枠もハンドルの隠れも
+  起きない
+- `regions` — 全部分の矩形を 1 回で返す（部分 id がキー、座標は `region` と同じ）。
+  1 つの部分を置くのに全体のレイアウトが要る種別（表のセル）向け。両方を宣言した
+  種別は、どちらからも同じ矩形を答える
+- `list` — その時点の全部分 id。Tab が巡る順序で、Shift クリックで伸ばした範囲の
+  既定の解決（アンカーとフォーカスの間の区間）もこの順序で取る
+- `range` — アンカーとフォーカスから範囲に含まれる部分を返す。部分が一列に並ばない
+  型（表のセルの矩形範囲のような 2 次元の型）向けで、省略すれば `list` の区間になる。
+  返す id はどれも `has` を通るもので、型自身の順序で並べる。空は返せない（範囲は
+  少なくともフォーカスを含む）
+- `multiPick` — true にすると、選ばれている種別の部分を Ctrl / Meta クリックしたとき、
+  その部分を単独の範囲として選択に足すか、選択から外す。外す部分を含んでいた範囲は、
+  残る部分 1 つずつの範囲へ分かれる（何を含むかは `range` か `list` で解く）。
+  省略すれば Ctrl / Meta クリックは持ち主のオブジェクトごとの切り替えになる。
+  `"textSlot"` は宣言し、`vertex` は宣言しない
+
+開いているテキストエディタに関わる宣言が 1 つある。
+
+- `extend` — `"textSlot"` 種別にだけ、エディタの Tab が最後のスロットを離れるときに
+  問い合わせる。`{ object, landingPartId? }` を返す。`object` は `list` が挙げる
+  最後の部分の後ろに部分を足したオブジェクト（既存の部分は同じ id のまま残す）。
+  Tab は先頭へ戻らずに `landingPartId` の部分へ進み、省けば足された最初の部分へ
+  進む。足した部分以外を `landingPartId` に指すと throw する。足したオブジェクトは
+  構造の編集と同じく型の content resizer で整えられ、スロットの確定と合わせて
+  1 回の undo で戻る。null を返すか省略すれば先頭へ戻り、Shift+Tab とエディタ外の
+  Tab は常に戻る。表は最後の行と同じ体裁の行を足すために宣言する。ER エンティティは
+  カラムを足し、キーを飛ばして名前に進む
+
+pick へのスタイルに関わる宣言がさらに 2 つある。
+
+- `styleIntentKinds` — この種別の pick が受け取るスタイル種別（core の種別も型自身の種別も）。
+  宣言すれば、ObjectMenu とサイドバーは選ばれた種別に従う。扱う種別がすべてこの中に
+  ある組み込みの操作だけを残し、それ以外と、`pickedPartKinds` にこの種別を
+  並べていないカスタム項目を落とし、システムセクションと Meta セクションを隠す。省略すれば、この種別の pick のもとでも全操作の主語は
+  オブジェクトのまま（`vertex`）。core が付ける `"textSlot"` は文字系の種別
+  （`TEXT_STYLE_INTENT_KINDS`）を宣言している
+- `textSlotIds` — この種別の pick が届くテキストスロット。範囲を展開済みの、pick が覆う
+  id を受け取る。文字系のエントリはこのスロットに書き、ここから読む
+  （`resolveTextSlotIds`）。省略すれば pick は全スロットに届く。`"textSlot"` は選ばれた
+  スロットそのものを答える
+
+表の `row` / `column` は両方を宣言する。トラックの pick はセルの pick と同じく文字系の
+種別と `fill` を受け取り、そのトラックが通るセルに届く。行を選んで色や太字を選べば
+その行のセルに当たり、メニューには文字と背景の操作が出る — 表が文字系の種別を
+自前で宣言することなく。`fillOpacity` は表の背景だけのものなので含まれず、どの pick の
+もとでもその行は隠れる。
 
 ## まだ拡張できないもの
 
 無いものを前提に設計しないよう、限界を明示しておく。
 
-| 領域                         | 現状                                                                                                                                                                                            |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 組み込み UI                  | ObjectMenu / ContextMenu は無条件にマウントされ、ホストから隠す・差し替える手段が無い（Toolbar は `toolbar.show: false` で隠せ、`toolbar.sections` で中身を差し替えられる）                     |
-| UI スロット                  | ツールバーの `{ type: "slot" }` 項目だけ。オーバーレイ層のスロットは無い。プロパティサイドバーは、型が宣言したセクションの 1 行としてしかコンポーネントを受け取らない（パネル単位では渡せない） |
-| 細粒度のプロパティ書き戻し   | ハンドルに `updateProperties` が無い。`doc` prop の差し替えは外部変更扱いで選択状態がリセットされ履歴境界も切られるため、編集経路に使えない                                                     |
-| インタラクションの調整       | スナップ閾値などが定数でハードコードされている。エッジスクロールとパン/ズームも外部から無効化できない                                                                                           |
-| コマンド                     | `config.commands` で組み込みを減らせるが、プラグインからの追加もショートカット再割当もできない                                                                                                  |
-| ObjectMenu の項目種          | 組み込みの項目種は switch 固定で、データ駆動なのは `custom` コンポーネント項目だけ                                                                                                              |
-| プロパティサイドバーの項目種 | 組み込みの項目種は固定の引き当てで、データ駆動なのは `custom` コンポーネント行だけ。その行は「スロット対応」と申告できない                                                                      |
+| 領域                         | 現状                                                                                                                                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 組み込み UI                  | ObjectMenu / ContextMenu は無条件にマウントされ、ホストから隠す・差し替える手段が無い（Toolbar は `toolbar.show: false` で隠せ、`toolbar.sections` で中身を差し替えられる）                                       |
+| UI スロット                  | ツールバーの `{ type: "slot" }` 項目だけ。オーバーレイ層のスロットは無い。プロパティサイドバーは、型が宣言したセクションの 1 行としてしかコンポーネントを受け取らない（パネル単位では渡せない）                   |
+| 細粒度のプロパティ書き戻し   | ハンドルに `updateProperties` が無い。`doc` prop の差し替えは外部変更扱いで選択状態がリセットされ履歴境界も切られるため、編集経路に使えない                                                                       |
+| インタラクションの調整       | スナップ閾値などが定数でハードコードされている。エッジスクロールとパン/ズームも外部から無効化できない                                                                                                             |
+| コマンドのショートカット     | プラグインはコマンドを追加でき（`CanvasPlugin.commands`）、既存コマンドと同じバインドを名乗ることもできるが、そのコマンド自身のショートカットを付け替える・外すことはできない                                     |
+| ObjectMenu の項目種          | 組み込みの項目種は switch 固定で、データ駆動なのは `custom` コンポーネント項目だけ                                                                                                                                |
+| プロパティサイドバーの項目種 | 組み込みの項目種は固定の引き当てで、データ駆動なのは `custom` コンポーネント行だけ。その行は選ばれた部分がサイドバーを絞っている間（`styleIntentKinds`）は、その種別を並べていない限り（`pickedPartKinds`）落ちる |
 
 一方で**できること**: 独自の doc スキーマ・検証・描画・ステンシル・メニュー・
 プロパティサイドバーのセクション・スタイルプロパティ・輪郭/スナップ挙動・
-型固有の選択コントロール・共有 SVG defs・
-自前の i18n を持つ図形型を、外部パッケージから追加できる。
+型固有の選択コントロール・共有 SVG defs・自前のコマンド・
+自前の i18n を持つ図形型を、外部パッケージから追加できる。コマンドは
+`@jiscribe/canvas-sdk` の `Command` に対して書く。コントローラの状態と
+レジストリ束を受け取る型なので、これらは unstable 面に置いてある——コマンドは
+確定した契約ではなくキャンバスの作業状態そのものを読んで返すため。

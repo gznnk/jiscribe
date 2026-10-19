@@ -30,8 +30,13 @@ async function renderedBody(
 	return canvas.page.evaluate((targetId) => {
 		const shape = document.querySelector(`[data-id="${targetId}"]`);
 		let sibling = shape?.nextElementSibling ?? null;
+		// The overlay is either a sibling of its own or inside the group
+		// createFrameObject draws every overlay of a shape in.
 		while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
-			sibling = sibling.nextElementSibling;
+			const nested: Element | null = sibling.hasAttribute("data-id")
+				? null
+				: sibling.querySelector("foreignObject");
+			sibling = nested ?? sibling.nextElementSibling;
 		}
 		const content = sibling?.firstElementChild?.firstElementChild;
 		if (!(content instanceof HTMLElement)) {
@@ -119,15 +124,10 @@ test.describe("styling a Markdown source body", () => {
 		await expect(
 			canvas.page.locator(selectors.objectMenuToggle("font-size")),
 		).toBeVisible();
-		// The four buttons are laid out flat while text is edited, so their absence
-		// is the absence of the `set:` parts themselves.
+		// The Bold toggle sits on the menu itself, so its absence is the absence of
+		// its command.
 		await expect(
-			canvas.page.locator(
-				`${selectors.objectMenu} [data-part^="set:fontWeight:"]`,
-			),
-		).toHaveCount(0);
-		await expect(
-			canvas.page.locator(selectors.objectMenuToggle("text-format")),
+			canvas.page.locator(selectors.objectMenuCommand("toggleBold")),
 		).toHaveCount(0);
 	});
 
@@ -143,7 +143,7 @@ test.describe("styling a Markdown source body", () => {
 			canvas.page.locator(selectors.propertyPanelField("fontSize")),
 		).toBeVisible();
 		await expect(
-			canvas.page.locator(selectors.propertyPanelSet("fontWeight", "bold")),
+			canvas.page.locator(selectors.propertyPanelCommand("toggleBold")),
 		).toHaveCount(0);
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSet("textAlign", "left")),

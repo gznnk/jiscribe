@@ -288,8 +288,8 @@ const hasDeclaredTextSlots = (
 	if (!isSingleBodyText(textType)) {
 		return true;
 	}
-	const slotIds = Object.keys(text ?? {});
-	return slotIds.length === 1 && slotIds[0] === BODY_TEXT_SLOT_ID;
+	const textSlotIds = Object.keys(text ?? {});
+	return textSlotIds.length === 1 && textSlotIds[0] === BODY_TEXT_SLOT_ID;
 };
 
 /**

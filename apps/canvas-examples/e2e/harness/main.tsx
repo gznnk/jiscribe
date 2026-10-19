@@ -13,6 +13,7 @@ import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
+import { erPlugin, erStencilCategory } from "@jiscribe/plugin-er-shapes";
 import {
 	flowchartPlugin,
 	flowchartStencilCategory,
@@ -27,6 +28,7 @@ import {
 } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
+import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 // The faces the shipped font stacks name. No other e2e harness loads them, which
 // is why the PNG export's font embedding — which embeds only what the page has
@@ -40,7 +42,7 @@ import "katex/dist/katex.min.css";
 // category left on it as a flyout so that mechanism stays covered, and the shape library
 // sidebar holding the whole set as sections. The shipped hosts leave no flyout on the bar
 // (standardToolbarToolsSection pins the six presets and nothing else). The markdown / sticky
-// presets and the eight categories are all plugin-supplied and absent from core's default
+// presets and the nine categories are all plugin-supplied and absent from core's default
 // bar.
 mountPluginHarness({
 	plugins: [
@@ -48,7 +50,9 @@ mountPluginHarness({
 		containerPlugin,
 		markdownPlugin,
 		stickyPlugin,
+		tablePlugin,
 		umlPlugin,
+		erPlugin,
 		generalPlugin,
 		annotationPlugin,
 		lucideIconPlugin,
@@ -66,10 +70,16 @@ mountPluginHarness({
 	stencilLibrarySections: [
 		{
 			...basicStencilCategory,
-			presetIds: [...basicStencilCategory.presetIds, "sticky", "markdown"],
+			presetIds: [
+				...basicStencilCategory.presetIds,
+				"sticky",
+				"markdown",
+				"table",
+			],
 		},
 		flowchartStencilCategory,
 		umlStencilCategory,
+		erStencilCategory,
 		containerStencilCategory,
 		generalStencilCategory,
 		annotationStencilCategory,

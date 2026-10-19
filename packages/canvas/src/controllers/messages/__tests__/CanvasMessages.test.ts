@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 
 import {
 	defaultCanvasMessages,
-	getCommandLabel,
 	resolveCanvasMessages,
 } from "../CanvasMessages";
 import { jaCanvasMessages } from "../jaCanvasMessages";
@@ -17,9 +16,9 @@ describe("resolveCanvasMessages", () => {
 	});
 
 	it("exact locale match -> the built-in dictionary for that locale", () => {
-		const merged = resolveCanvasMessages("ja");
-		expect(merged.toolbarZoomIn).toBe(jaCanvasMessages.toolbarZoomIn);
-		expect(merged.commandLabels.undo).toBe(jaCanvasMessages.commandLabels.undo);
+		expect(resolveCanvasMessages("ja").toolbarZoomIn).toBe(
+			jaCanvasMessages.toolbarZoomIn,
+		);
 	});
 
 	it("language subtag fallback -> ja-JP resolves to the ja dictionary", () => {
@@ -45,14 +44,14 @@ describe("resolveCanvasMessages", () => {
 
 	it("record override merges per key over the locale record", () => {
 		const merged = resolveCanvasMessages("ja", {
-			commandLabels: { undo: "Custom undo", newId: "New" },
+			colorNames: { Red: "朱", Chartreuse: "黄緑" },
 		});
-		// overridden id wins
-		expect(merged.commandLabels.undo).toBe("Custom undo");
-		// added id is present
-		expect(merged.commandLabels.newId).toBe("New");
-		// non-overridden id keeps the ja value
-		expect(merged.commandLabels.redo).toBe(jaCanvasMessages.commandLabels.redo);
+		// overridden key wins
+		expect(merged.colorNames.Red).toBe("朱");
+		// added key is present
+		expect(merged.colorNames.Chartreuse).toBe("黄緑");
+		// non-overridden key keeps the ja value
+		expect(merged.colorNames.Blue).toBe(jaCanvasMessages.colorNames.Blue);
 	});
 
 	it("does not mutate the defaults", () => {
@@ -96,27 +95,5 @@ describe("resolveLocalizedLabel", () => {
 		expect(resolveLocalizedLabel({ en: "Frame", ja: "枠" }, "de")).toBe(
 			"Frame",
 		);
-	});
-});
-
-describe("getCommandLabel", () => {
-	const command = { id: "undo", label: "Undo" };
-
-	it("no override -> the command's English label", () => {
-		expect(getCommandLabel(defaultCanvasMessages, command)).toBe("Undo");
-	});
-
-	it("override present -> the override wins", () => {
-		const merged = resolveCanvasMessages("en", {
-			commandLabels: { undo: "Custom undo" },
-		});
-		expect(getCommandLabel(merged, command)).toBe("Custom undo");
-	});
-
-	it("override for another id -> falls back to the command's label", () => {
-		const merged = resolveCanvasMessages("en", {
-			commandLabels: { redo: "Custom redo" },
-		});
-		expect(getCommandLabel(merged, command)).toBe("Undo");
 	});
 });

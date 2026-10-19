@@ -16,9 +16,9 @@ agent's tools are another.
 
 Most of what you need to draw is already in the box. The core carries eight
 primitive types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
-`connector` / `svg`), and the richer shape sets — flowchart, UML, sticky,
-markdown, container, annotation, general pictograms, Lucide icons, AWS
-architecture — ship as plugins. More sets are on the way.
+`connector` / `svg`), and the richer shape sets — flowchart, UML, ER diagrams,
+tables, sticky, markdown, container, annotation, general pictograms, Lucide
+icons, AWS architecture — ship as plugins. More sets are on the way.
 
 ## What you can make
 
@@ -27,6 +27,7 @@ architecture — ship as plugins. More sets are on the way.
 | ![A UML class diagram of an order domain](./docs/images/gallery-uml-class-diagram.jis.png)<br>**UML and class diagrams** — packages, interfaces, composition, multiplicities, notes           | ![A three-tier AWS architecture](./docs/images/gallery-aws-architecture.jis.png)<br>**Architecture diagrams** — AWS icons and boundary groups, from region down to subnet                                 |
 | ![Regional cloud topology on an isometric lattice](./docs/images/gallery-isometric-topology.jis.png)<br>**Infrastructure, drawn to scale** — every solid is a native polygon on a 30° lattice | ![A trading terminal mock](./docs/images/gallery-trading-terminal.jis.png)<br>**UI mockups** — a trading terminal: candles, order book, tape, at the fidelity a spec needs                                |
 | ![A Swiss-style conference poster](./docs/images/gallery-conference-poster.jis.png)<br>**Posters and print** — a typographic grid is just shapes and text                                     | ![A refund request flow across four swimlanes](./docs/images/gallery-refund-swimlane.jis.png)<br>**Flows and swimlanes** — handoffs, decisions, exceptions, and the icon that says what each step touches |
+| ![An ER diagram of an order schema](./docs/images/gallery-er-diagram.jis.png)<br>**ER diagrams** — IE notation; a relationship runs from a foreign key to the key it references               | ![A plan comparison table](./docs/images/gallery-feature-matrix.jis.png)<br>**Tables** — every cell is a text of its own, with its own fill and type, and rows grow to fit                                |
 
 ![An incident postmortem on one page](./docs/images/gallery-postmortem.jis.png)
 
@@ -40,7 +41,7 @@ write and a person can move by hand.
 
 ## Built for agents, not bolted onto them
 
-- **It edits one move at a time; it does not regenerate.** 69 tools over
+- **It edits one move at a time; it does not regenerate.** 83 tools over
   stdio, the same moves you make in the editor: add and connect, align and
   distribute, group, restyle, reorder, select. An edit lands on the document
   you have, so what you placed by hand stays where you put it, and `undo` takes
@@ -154,25 +155,26 @@ that is the package to take.
 
 ## How it fits together
 
-| Package                      | What it is                                                                                                |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                                          |
-| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser, its editing ops and its `.jis.*` file I/O |
-| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                             |
-| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                              |
-| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                             |
-| `@jiscribe/basic-validators` | Primitive runtime validators                                                                              |
-| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                           |
-| `@jiscribe/doc-schema`       | Generated JSON Schema, AI reference and Claude Code skill for the shipped shape set                       |
-| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied                          |
-| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                           |
-| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                         |
-| `plugins/*`                  | The shipped shape sets — flowchart, UML, container, general, annotation, sticky, markdown, Lucide, AWS    |
-| `apps/canvas-examples`       | Integration examples (one example = one file)                                                             |
-| `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                  |
-| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                           |
-| `apps/claude-plugin`         | The Claude Code plugin: the MCP server and a generated drawing skill                                      |
-| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                             |
+| Package                      | What it is                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                                                    |
+| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser, its editing ops and its `.jis.*` file I/O           |
+| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                                       |
+| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                                        |
+| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                                       |
+| `@jiscribe/basic-validators` | Primitive runtime validators                                                                                        |
+| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                                     |
+| `@jiscribe/doc-schema`       | Generated JSON Schema, AI reference and Claude Code skill for the shipped shape set                                 |
+| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied                                    |
+| `@jiscribe/ai-tools-sdk`     | The contract a plugin offers AI tools for its own shapes through; plugins take it from `@jiscribe/canvas-sdk/tools` |
+| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                                     |
+| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                                   |
+| `plugins/*`                  | The shipped shape sets — flowchart, UML, ER, table, container, general, annotation, sticky, markdown, Lucide, AWS   |
+| `apps/canvas-examples`       | Integration examples (one example = one file)                                                                       |
+| `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                            |
+| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                                     |
+| `apps/claude-plugin`         | The Claude Code plugin: the MCP server and a generated drawing skill                                                |
+| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                                       |
 
 The `plugins/` directory is deliberately treated as _external_: those packages
 may only use the public API of `@jiscribe/canvas`, `@jiscribe/doc` and

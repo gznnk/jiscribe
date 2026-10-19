@@ -10,7 +10,7 @@ export type MoveSelectionParams = {
 	/**
 	 * The selected IDs to move
 	 */
-	selectedIds: string[];
+	selectedIds: readonly string[];
 	/**
 	 * The source object map.
 	 * On drag, pass the drag-start snapshot; on command, pass the current state.objects.

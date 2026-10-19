@@ -6,7 +6,7 @@ import { test, expect } from "../../fixtures";
  * The existing nudge.spec guards 1px / 10px movement of a single shape, but
  * whether everything moves by the same amount when an arrow key is pressed with
  * several shapes selected was not checked. Nudge adds the same delta to every
- * entry of selectedIds, and a regression that moves only a single selection, or
+ * entry of selection.objectIds, and a regression that moves only a single selection, or
  * only part of the selection, is easy to introduce in a refactor. Guarded by the
  * transform of both shapes.
  */

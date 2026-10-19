@@ -65,6 +65,12 @@ import { useCanvasCommitWait } from "./useCanvasCommitWait";
  */
 const SAVE_DEBOUNCE_MS = 500;
 
+/**
+ * How many revisions of the document drawn are remembered as adopted. A query
+ * names the newest one the host sent, so only the last few are ever asked about
+ */
+const MAX_ADOPTED_REVISIONS = 64;
+
 /** Put under the parse error while the text from the host cannot be read */
 const BROKEN_FILE_NOTE =
 	"ファイルが壊れています。読めるようになるまで、この画面の編集は保存されません";
@@ -191,6 +197,14 @@ const mergeUnsavedEdits = (
 		: { kind: "failed" };
 };
 
+/**
+ * The error bar's text while the file cannot be parsed.
+ *
+ * @param parseErrorMessage What the parser said of the text (formatParseError)
+ */
+const formatBrokenFileError = (parseErrorMessage: string): string =>
+	`${parseErrorMessage}\n${BROKEN_FILE_NOTE}`;
+
 const formatParseError = (
 	result: Exclude<ReturnType<typeof canvasParser.parse>, { kind: "ok" }>,
 ): string => {
@@ -231,6 +245,23 @@ export type DocSyncOptions = {
 	 */
 	readWorkInHand: () => WorkInHand | null;
 };
+
+/**
+ * How far one revision of the file has got on this page (see
+ * DocSync.readRevisionStatus)
+ */
+export type RevisionStatus =
+	/**
+	 * Taken in — drawn, or recognised as what is drawn already — and what is drawn
+	 * is no older now
+	 */
+	| { kind: "drawn" }
+	/** Arrived, and held back behind the person's gesture until they let go */
+	| { kind: "held" }
+	/** Arrived and could not be parsed, so the version before it stays drawn */
+	| { kind: "unparsable"; parseErrorMessage: string }
+	/** Not arrived, or arrived for a document no longer drawn */
+	| { kind: "unknown" };
 
 /** A doc frame as it arrived, kept until it can be taken in */
 type DocFrame = { identity: DocIdentity; docText: string; revision: string };
@@ -286,6 +317,21 @@ export type DocSync = {
 	flushPendingSave: (options?: {
 		isLeavingDocument?: boolean;
 	}) => Promise<boolean>;
+	/**
+	 * Says how far the file under one revision has got on this page. Drawn means
+	 * the doc handed to the canvas is that file or newer — merged with edits of the
+	 * person's the file did not hold yet, if there were any — not that the canvas
+	 * has rendered it yet.
+	 *
+	 * @param revision A revision the host sent on a doc frame
+	 */
+	readRevisionStatus: (revision: string) => RevisionStatus;
+	/**
+	 * How many times a doc has been handed to the canvas, counted when it is handed
+	 * over rather than when the canvas has rendered it. A query compares it with the
+	 * count it last waited out a render for, and waits again only when it moved.
+	 */
+	readDocHandOverCount: () => number;
 };
 
 /**
@@ -312,12 +358,23 @@ export function useDocSync({
 	// The last text known to be the same here as on the host. Kept so a save's echo
 	// does not cause a redraw
 	const syncedTextRef = useRef<string | null>(null);
-	// The host's revision of that text, quoted by the next write
+	// The host's revision of that text, quoted by the next write. Set through
+	// adoptRevision alone
 	const revisionRef = useRef<string | null>(null);
-	// The error bar's text while the file cannot be parsed, null while it can. It
-	// doubles as the block on saving: what is drawn is older than the file, and
-	// writing it out would take the outside editor's work with it
-	const brokenFileErrorRef = useRef<string | null>(null);
+	// Every revision adopted for the document drawn, oldest first. What is drawn is
+	// no older than any of them: a newer file is only ever drawn over what the page
+	// had, never the other way round. A query names the one the host sent last,
+	// and a save of the person's landing meanwhile moves revisionRef past it
+	const adoptedRevisionsRef = useRef(new Set<string>());
+	// Bumped beside every setDoc (readDocHandOverCount)
+	const docHandOverCountRef = useRef(0);
+	// The text that could not be parsed — why, and its revision — null while the
+	// file can be. It doubles as the block on saving: what is drawn is older than
+	// the file, and writing it out would take the outside editor's work with it
+	const brokenFileRef = useRef<{
+		parseErrorMessage: string;
+		revision: string;
+	} | null>(null);
 	// Set while the host cannot read the file drawn (gone, no permission). Saving
 	// is not blocked — writing recreates the file, and there is nothing outside to
 	// overwrite — but the synced text coming back is then a recovery, not an echo
@@ -363,6 +420,26 @@ export function useDocSync({
 	// The watch goes through this, for the same reason
 	const takeInHeldFrameRef = useRef<(() => void) | null>(null);
 	const waitForCanvasCommit = useCanvasCommitWait();
+
+	/**
+	 * Takes a revision as the one the host holds for the doc drawn, the one the next
+	 * write quotes.
+	 *
+	 * @param revision Of a frame taken in, or of a write of this page's that landed
+	 */
+	const adoptRevision = useCallback((revision: string): void => {
+		revisionRef.current = revision;
+		const adoptedRevisions = adoptedRevisionsRef.current;
+		// Re-adding moves it to the newest end, so the cap drops the oldest
+		adoptedRevisions.delete(revision);
+		adoptedRevisions.add(revision);
+		if (adoptedRevisions.size > MAX_ADOPTED_REVISIONS) {
+			const oldestRevision = adoptedRevisions.values().next().value;
+			if (oldestRevision !== undefined) {
+				adoptedRevisions.delete(oldestRevision);
+			}
+		}
+	}, []);
 
 	// The document the canvas's commits are made on. It trails openDoc: the canvas
 	// takes a new document up in an effect of the render that hands it over, so a
@@ -410,8 +487,10 @@ export function useDocSync({
 			// host's protocol
 			throw new Error(`no revision is known for ${targetDoc.relPath}`);
 		}
-		if (brokenFileErrorRef.current !== null) {
-			reportError(brokenFileErrorRef.current);
+		if (brokenFileRef.current !== null) {
+			reportError(
+				formatBrokenFileError(brokenFileRef.current.parseErrorMessage),
+			);
 			return false;
 		}
 		// The file has moved on to the one held back, so this write would only be
@@ -497,7 +576,7 @@ export function useDocSync({
 		// that landed in the meantime brought the revision belonging to its own text,
 		// and has settled what is owed on top of it
 		if (syncedTextRef.current === text) {
-			revisionRef.current = result.revision;
+			adoptRevision(result.revision);
 			// Edits committed while the write was out are the ones still owed, and
 			// they were made on top of what it wrote
 			const currentDoc = latestDocRef.current;
@@ -515,7 +594,7 @@ export function useDocSync({
 		isFileMissingRef.current = false;
 		reportError(null);
 		return true;
-	}, [reportError, reportLostEdits]);
+	}, [adoptRevision, reportError, reportLostEdits]);
 
 	const saveNow = useCallback(async (): Promise<boolean> => {
 		const precedingSave = inFlightSaveRef.current;
@@ -574,7 +653,7 @@ export function useDocSync({
 					identity: latestDocRef.current?.identity ?? null,
 					syncedText: syncedTextRef.current,
 					isFileUnusable:
-						brokenFileErrorRef.current !== null || isFileMissingRef.current,
+						brokenFileRef.current !== null || isFileMissingRef.current,
 					hasUndeliveredEdits: hasUndeliveredEditsRef.current,
 				},
 			);
@@ -582,7 +661,7 @@ export function useDocSync({
 				// The drawing is already this text; all that is new is the revision the
 				// next write has to quote. The host holding the whole drawing also settles
 				// what the write's own answer, still on its way, would have
-				revisionRef.current = revision;
+				adoptRevision(revision);
 				if (
 					latestDocRef.current !== null &&
 					serializeDoc(latestDocRef.current.doc) === docText
@@ -595,8 +674,8 @@ export function useDocSync({
 				// The drawing is still this text plus whatever was edited while the file
 				// could not be used or could not be reached. Those edits were made on this
 				// very text, so writing them now overwrites nothing from outside
-				revisionRef.current = revision;
-				brokenFileErrorRef.current = null;
+				adoptRevision(revision);
+				brokenFileRef.current = null;
 				isFileMissingRef.current = false;
 				saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
 				reportError(null);
@@ -605,12 +684,13 @@ export function useDocSync({
 			}
 			const result = canvasParser.parse(docText);
 			if (result.kind !== "ok") {
-				brokenFileErrorRef.current = `${formatParseError(result)}\n${BROKEN_FILE_NOTE}`;
+				const parseErrorMessage = formatParseError(result);
+				brokenFileRef.current = { parseErrorMessage, revision };
 				isFileMissingRef.current = false;
-				reportError(brokenFileErrorRef.current);
+				reportError(formatBrokenFileError(parseErrorMessage));
 				return;
 			}
-			brokenFileErrorRef.current = null;
+			brokenFileRef.current = null;
 			isFileMissingRef.current = false;
 			const previousDoc = latestDocRef.current?.identity ?? null;
 			const isSameDocument = isSameDoc(previousDoc, identity);
@@ -664,9 +744,13 @@ export function useDocSync({
 				saveRetryTimerRef.current = null;
 			}
 			syncedTextRef.current = docText;
-			revisionRef.current = revision;
+			if (!isSameDocument) {
+				adoptedRevisionsRef.current.clear();
+			}
+			adoptRevision(revision);
 			latestDocRef.current = { identity, doc: docToDraw };
 			setOpenDoc(identity);
+			docHandOverCountRef.current += 1;
 			setDoc(docToDraw);
 			// The file is drawn, so nothing the bar said of the one before holds
 			reportError(null);
@@ -696,7 +780,7 @@ export function useDocSync({
 				);
 			}
 		},
-		[reportError, reportLostEdits, saveNow, saveWithoutDebounce],
+		[adoptRevision, reportError, reportLostEdits, saveNow, saveWithoutDebounce],
 	);
 
 	/** Forgets the file held back, and stops watching for the gesture to end */
@@ -802,7 +886,7 @@ export function useDocSync({
 					identity: latestDocRef.current?.identity ?? null,
 					syncedText: syncedTextRef.current,
 					isFileUnusable:
-						brokenFileErrorRef.current !== null || isFileMissingRef.current,
+						brokenFileRef.current !== null || isFileMissingRef.current,
 					hasUndeliveredEdits: hasUndeliveredEditsRef.current,
 				}) === "new" &&
 				isSameDoc(identity, latestDocRef.current?.identity ?? null);
@@ -853,6 +937,7 @@ export function useDocSync({
 			if (unsavedEditsRef.current === null && syncedTextRef.current !== null) {
 				unsavedEditsRef.current = { baseText: syncedTextRef.current };
 			}
+			docHandOverCountRef.current += 1;
 			setDoc(committedDoc);
 			if (saveTimerRef.current !== null) {
 				window.clearTimeout(saveTimerRef.current);
@@ -865,6 +950,29 @@ export function useDocSync({
 		[reportLostEdits, saveNow],
 	);
 
+	const readRevisionStatus = useCallback((revision: string): RevisionStatus => {
+		// Looked at ahead of the adopted ones: a file that came back to a text it
+		// held before arrives under a revision adopted already
+		if (heldFrameRef.current?.revision === revision) {
+			return { kind: "held" };
+		}
+		const brokenFile = brokenFileRef.current;
+		if (brokenFile?.revision === revision) {
+			return {
+				kind: "unparsable",
+				parseErrorMessage: brokenFile.parseErrorMessage,
+			};
+		}
+		return adoptedRevisionsRef.current.has(revision)
+			? { kind: "drawn" }
+			: { kind: "unknown" };
+	}, []);
+
+	const readDocHandOverCount = useCallback(
+		(): number => docHandOverCountRef.current,
+		[],
+	);
+
 	return {
 		doc,
 		openDoc,
@@ -872,5 +980,7 @@ export function useDocSync({
 		applyDocError,
 		handleCommit,
 		flushPendingSave,
+		readRevisionStatus,
+		readDocHandOverCount,
 	};
 }

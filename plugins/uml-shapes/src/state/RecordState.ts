@@ -8,13 +8,13 @@ import type { RecordFeatures } from "../schema/RecordDoc";
  * slot the doc left out stays out — the key set is what gives the box its
  * compartments (createFrameObject enumerates it). The keys are in the order the
  * compartments stack, the stereotype ahead of the title
- * (see calcRecordSlotRegions), which also makes the stereotype the first key —
+ * (see calcRecordTextSlotRegions), which also makes the stereotype the first key —
  * and so the default slot — on a box that has one (see normalizeRecordText).
  *
  * Structurally the same as RecordTextDoc: a keyed doc and its state hold the same
  * slot shape, the mapper only forcing the content kind each slot id fixes.
  * Omitted typography stays omitted here too, and is resolved per read against
- * RECORD_SLOT_STYLE_DEFAULTS_BY_ID (ObjectTextStyleDefaultsRegistry).
+ * RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID (ObjectTextStyleDefaultsRegistry).
  */
 export type RecordTextState = {
 	/** Stereotype line drawn above the title; absent when the box has no stereotype band. */

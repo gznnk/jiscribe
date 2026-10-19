@@ -4,21 +4,21 @@ import { type ObjectRecord, readChildren } from "./objectAccess";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
-import {
-	resolveTextSlotStyle,
-	BODY_TEXT_SLOT_ID,
-} from "../../model/objects/types/text/TextSlot";
+import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
+import { calcPointDocDrawnTopLeft } from "../../model/objects/utils/pointDocDrawnTopLeft";
+import { roundDocCoordinate } from "../../model/objects/utils/roundDocNumbers";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
-import { extractTextSlotStyleDefaults } from "../../registries/ObjectTextStyleDefaultsRegistry";
+import {
+	extractTextSlotStyleDefaults,
+	readTextSlotStyleDefaults,
+} from "../../registries/ObjectTextStyleDefaultsRegistry";
 import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import type { TextMeasurement } from "../../text/measure/TextMeasurement";
 import { adoptTextMeasurement } from "../../text/measure/textMeasurementSlot";
-import { calcTextObjectFrameSize } from "../../text/object/calcTextObjectFrameSize";
-import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
-import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
+import { resolveDocBodyFont } from "../../text/object/resolveDocBodyFont";
 import { DocOperationError } from "../errors";
 
 /** Type table every geometry helper resolves `features.geometry` through. */
@@ -43,39 +43,21 @@ const readPoints = (value: unknown): Point[] =>
 	Array.isArray(value) ? (value as Point[]) : [];
 
 /**
- * Font the body of `object` is measured with: the type's own body defaults
- * resolved into whatever the object states itself, and the shared last resort
- * for whatever neither sets. A separate resolution from the canvas's
- * `resolveTextObjectFont` because that one reads a state's slot and this one
- * reads the flat fields a root-form doc (`text: "body"` / `"source"`) spells its
- * styling out in; the two fill in the same fallbacks and must keep doing so.
+ * Font the body of `object` is measured with: the type's own body defaults resolved
+ * into whatever the object states itself ({@link resolveDocBodyFont}), the defaults
+ * being the one part of it this layer has to look up.
  */
 const resolveBodyFont = (
 	object: ObjectRecord,
 	definition: ObjectDocDefinition,
-): TextMeasureFont => {
-	const style = resolveTextSlotStyle(
-		extractTextSlotStyleDefaults(definition.features, definition.defaults)?.[
-			BODY_TEXT_SLOT_ID
-		],
-		{
-			fontSize:
-				typeof object.fontSize === "number" ? object.fontSize : undefined,
-			fontFamily:
-				typeof object.fontFamily === "string" ? object.fontFamily : undefined,
-			fontWeight:
-				typeof object.fontWeight === "string" ? object.fontWeight : undefined,
-			fontStyle:
-				typeof object.fontStyle === "string" ? object.fontStyle : undefined,
-		},
+): TextMeasureFont =>
+	resolveDocBodyFont(
+		object,
+		readTextSlotStyleDefaults(
+			extractTextSlotStyleDefaults(definition.features, definition.defaults),
+			BODY_TEXT_SLOT_ID,
+		),
 	);
-	return {
-		fontSize: style.fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
-		fontFamily: style.fontFamily ?? DEFAULT_FONT_FAMILY,
-		fontWeight: style.fontWeight ?? TEXT_STYLE_FALLBACK.fontWeight,
-		fontStyle: style.fontStyle,
-	};
-};
 
 /**
  * Fields of an object that cannot move its derived height, so that changing one
@@ -196,28 +178,14 @@ export const unionBounds = (boxes: readonly Rect[]): Rect | null => {
 };
 
 /**
- * Axis-aligned bounding box of an object in world coordinates, in the same top-left
- * form `addObject` takes. Rotation is ignored: the doc's `rotation` turns the shape
- * around its own centre, and every placement op here works on the untransformed box.
- *
- * A shape that states no `height` is measured at the height its text needs
- * ({@link readObjectHeight}), so it is placed, aligned and distributed by the box it is
- * actually drawn at rather than by a flat one.
- *
- * @param object - Any doc object; a group is measured from its children, which is where
- *   its frame comes from (see GroupDoc)
- * @param definitions - Type table `features.geometry` and, for a stated-no-height shape,
- *   `textRegion` are read from
- * @returns The box, or null for a connector, an empty group, and a type this instance
- *   does not know
+ * The box a type's geometry settles on its own, from the fields the doc stores.
+ * What a type declaring no `bounds` is measured by; a `geometry: "point"` doc
+ * stores no size, so there is nothing here to measure one from.
  */
-export const getObjectBounds = (
+const calcDefaultObjectBounds = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
 ): Rect | null => {
-	if (isConnectorObject(object)) {
-		return null;
-	}
 	switch (geometryOf(object, definitions)) {
 		case "rect":
 			return {
@@ -247,30 +215,8 @@ export const getObjectBounds = (
 						height: box.bottom - box.top,
 					};
 		}
-		case "point": {
-			// A point shape stores where it is drawn from and nothing about its size, so
-			// the box is measured from the content every time — through the same layout
-			// rule the canvas maps one into a frame with, so both agree on where it ends.
-			// A type this instance does not know has no font to measure with; it falls
-			// through to null the way an unknown geometry does.
-			const definition = definitions.get(object.type);
-			if (definition === undefined) {
-				return null;
-			}
-			const size = calcTextObjectFrameSize(
-				isRichText(object.text) ? object.text : "",
-				resolveBodyFont(object, definition),
-				object.textLayout === "block" && typeof object.width === "number"
-					? object.width
-					: undefined,
-			);
-			return {
-				x: readNumber(object.x),
-				y: readNumber(object.y),
-				width: size.width,
-				height: size.height,
-			};
-		}
+		case "point":
+			return null;
 		case "none":
 			return unionBounds(
 				readChildren(object).flatMap((child) => {
@@ -281,6 +227,37 @@ export const getObjectBounds = (
 		default:
 			return null;
 	}
+};
+
+/**
+ * Axis-aligned bounding box of an object in world coordinates, in the same top-left
+ * form `addObject` takes. Rotation is ignored: the doc's `rotation` turns the shape
+ * around its own centre, and every placement op here works on the untransformed box.
+ *
+ * A type declaring a box of its own (`ObjectDocDefinition.bounds`) is measured by
+ * that declaration; every other type is measured from the fields its geometry
+ * stores. A shape that states no `height` is measured at the height its text needs
+ * ({@link readObjectHeight}), so it is placed, aligned and distributed by the box it is
+ * actually drawn at rather than by a flat one.
+ *
+ * @param object - Any doc object; a group is measured from its children, which is where
+ *   its frame comes from (see GroupDoc)
+ * @param definitions - Type table the box declaration, `features.geometry` and a
+ *   stated-no-height shape's `textRegion` are read from
+ * @returns The box, or null for a connector, an empty group, a type this instance does
+ *   not know, and a `geometry: "point"` type declaring no box
+ */
+export const getObjectBounds = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): Rect | null => {
+	if (isConnectorObject(object)) {
+		return null;
+	}
+	const declaredBounds = definitions.get(object.type)?.bounds;
+	return declaredBounds === undefined
+		? calcDefaultObjectBounds(object, definitions)
+		: declaredBounds(object);
 };
 
 /**
@@ -306,6 +283,36 @@ export const requireObjectBounds = (
 		);
 	}
 	return bounds;
+};
+
+/**
+ * Refuses an object whose size is not the document's to set: a `geometry: "point"`
+ * shape, whose box is measured from its own content every time it is read, so there
+ * is no extent for a resize to write. A block text (isBlockLayoutText) never reaches
+ * here: the resize rewrites the width it wraps in instead. Every other geometry keeps
+ * its box in fields a resize rewrites.
+ *
+ * Separate from {@link requireObjectBounds} because such a shape does have a box:
+ * it reports one, aligns and distributes by it, and is moved by it. Only stating a
+ * size for it is refused, which is why the check sits with the op that states one
+ * rather than with the measurement — and why a group scale, which states a layout
+ * rather than any one shape's size, goes through and moves such a shape
+ * ({@link scaleObject}).
+ *
+ * @param object - Object a resize is about to be planned for
+ * @param definitions - Type table `features.geometry` is read from
+ * @throws {@link DocOperationError} for a point-geometry object, pointing at the fields its content is laid out in instead
+ */
+export const requireResizableObject = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): void => {
+	if (geometryOf(object, definitions) !== "point") {
+		return;
+	}
+	throw new DocOperationError(
+		`${object.id} ("${object.type}") has no size of its own to set: its box is measured from its content, so change the fields that content is laid out in — a text's textLayout, say — rather than the box`,
+	);
 };
 
 /**
@@ -357,6 +364,12 @@ export const translateObject = (
  * A shape that states no `height` keeps stating none when `scaleY` is exactly 1, and
  * has the height it was drawn at written in otherwise: the scale is the caller stating
  * a height, and only a width-only change leaves the height to the text.
+ *
+ * A `geometry: "point"` shape has only its position scaled: its box is its content's,
+ * so there is no extent to write. One named directly never reaches here, a resize
+ * being a caller stating a size it has no field for
+ * ({@link requireResizableObject}); one inside a group does, a group scale being a
+ * change to the layout rather than to any one shape's size.
  *
  * @param object - Mutated in place
  * @param origin - World point that keeps its coordinates; the bounding box's top-left
@@ -410,6 +423,33 @@ export const scaleObject = (
 		case "poly":
 			object.points = readPoints(object.points).map(scalePoint);
 			break;
+		case "point": {
+			// Its box is its content's, so only where the box sits scales. The centre is
+			// what moves, not the stored corner: every other geometry's centre lands on
+			// `scalePoint(centre)` — the corner moves and the size scales with it — so a
+			// label centred under an icon stays centred under it only if this one does
+			// the same. Scaling the corner instead would leave the label at the icon's
+			// old centre, half the icon's growth to its left.
+			const bounds = getObjectBounds(object, definitions);
+			if (bounds === null) {
+				break;
+			}
+			const size = { width: bounds.width, height: bounds.height };
+			const drawnTopLeft = calcPointDocDrawnTopLeft(
+				scalePoint({
+					x: bounds.x + size.width / 2,
+					y: bounds.y + size.height / 2,
+				}),
+				size,
+				object,
+			);
+			// Rounded, unlike the corner the rect case writes: that one comes off a
+			// multiply, this one off an affine transform, whose float tail the doc would
+			// otherwise keep (same rule as createPointObjectFactory).
+			object.x = roundDocCoordinate(drawnTopLeft.x);
+			object.y = roundDocCoordinate(drawnTopLeft.y);
+			break;
+		}
 		case "none":
 			for (const child of readChildren(object)) {
 				scaleObject(child, origin, scaleX, scaleY, definitions);

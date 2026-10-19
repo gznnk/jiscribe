@@ -1,13 +1,16 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { runCommands } from "./support/dispatch";
-import { twoRectsDoc } from "./support/fixtures";
+import { rectDoc, twoRectsDoc } from "./support/fixtures";
+import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 
 // Start with rect-1 selected (cx=5, cy=5)
 const createState = (): CanvasControllerState =>
-	createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
+	createTestState(twoRectsDoc, { selection: selectionOf(["rect-1"]) });
 
 const cxOf = (state: CanvasControllerState) =>
 	(state.objects["rect-1"] as unknown as { cx: number }).cx;
@@ -64,12 +67,8 @@ describe("canvasReducer (integration)", () => {
 			// Reproduce a state where an editing session has started
 			state = {
 				...state,
-				textEditState: {
-					kind: "shape",
-					objectId: "rect-1",
-					slotId: "body",
-					text: "editing",
-				},
+				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
+				textEditState: { kind: "shape", text: "editing" },
 			};
 
 			// undo while editing is a no-op (past is not consumed)
@@ -95,15 +94,15 @@ describe("canvasReducer (integration)", () => {
 			state = runCommands(state, "move-right", "undo");
 			expect(cxOf(state)).toBe(5);
 			// The shape is selected again, so the next try needs no re-selection
-			expect(state.selectedIds).toEqual(["rect-1"]);
+			expect(state.selection.objectIds).toEqual(["rect-1"]);
 		});
 
 		it("rebuilds the multi-select group for a surviving multi-selection", () => {
 			let state = createTestState(twoRectsDoc, {
-				selectedIds: ["rect-1", "rect-2"],
+				selection: selectionOf(["rect-1", "rect-2"]),
 			});
 			state = runCommands(state, "move-right", "undo");
-			expect(state.selectedIds).toEqual(["rect-1", "rect-2"]);
+			expect(state.selection.objectIds).toEqual(["rect-1", "rect-2"]);
 			expect(state.multiSelectGroup).not.toBeNull();
 		});
 
@@ -112,14 +111,14 @@ describe("canvasReducer (integration)", () => {
 			// Deleting clears the selection, so the undo has nothing to carry back
 			state = runCommands(state, "delete", "undo");
 			expect(state.objects["rect-1"]).toBeDefined();
-			expect(state.selectedIds).toEqual([]);
+			expect(state.selection.objectIds).toEqual([]);
 
 			// Selected again, then the deletion is redone: the shape is gone, and the
 			// selection with it
-			state = { ...state, selectedIds: ["rect-1"] };
+			state = { ...state, selection: selectionOf(["rect-1"]) };
 			state = runCommands(state, "redo");
 			expect(state.objects["rect-1"]).toBeUndefined();
-			expect(state.selectedIds).toEqual([]);
+			expect(state.selection.objectIds).toEqual([]);
 			expect(state.multiSelectGroup).toBeNull();
 		});
 
@@ -157,6 +156,42 @@ describe("canvasReducer (integration)", () => {
 			state = runCommands(state, "undo");
 			expect(state.historyCoalesce.recorded).toBeNull();
 			expect(state.historyCoalesce.pending).toBeNull();
+		});
+
+		it("undoing an underline press over the whole slot restores the runs it rewrote", () => {
+			const originalBody = {
+				text: [
+					{ text: "he", textDecoration: "underline line-through" },
+					{ text: "llo" },
+				],
+				textDecoration: "underline",
+			};
+			// Seeded through the doc so the history baseline holds the runs too
+			const runDoc = {
+				version: 1,
+				root: [{ ...(rectDoc("rect-1", 0, 0) as object), ...originalBody }],
+			} as unknown as CanvasDoc;
+			let state = createTestState(runDoc, {
+				selection: selectionOf(["rect-1"]),
+			});
+			const bodyOf = (current: CanvasControllerState): unknown =>
+				(current.objects["rect-1"] as unknown as { text: { body: unknown } })
+					.text.body;
+
+			expect(bodyOf(state)).toEqual(originalBody);
+
+			state = runCommands(state, "toggleUnderline");
+			// The press reaches into the run, so the undo has more than the slot to put back
+			expect(bodyOf(state)).toEqual({
+				text: [{ text: "he", textDecoration: "line-through" }, { text: "llo" }],
+				textDecoration: "none",
+			});
+			expect(state.history.past).toHaveLength(1);
+
+			state = runCommands(state, "undo");
+			expect(bodyOf(state)).toEqual(originalBody);
+			expect(state.history.past).toHaveLength(0);
+			expect(state.history.future).toHaveLength(1);
 		});
 	});
 });

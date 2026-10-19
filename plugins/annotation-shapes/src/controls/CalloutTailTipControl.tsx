@@ -18,12 +18,12 @@ import type { CalloutState } from "../state/callout/CalloutState";
  * normalizes the pointer into tail side + position. Rendered as a pill on the
  * bounding-box edge the tail sits on, oriented along that edge.
  *
- * data-kind="control" + data-id=<objectId> + data-part={part}
- * (part comes from the selectionControls registration via SelectionControlsLayer).
+ * data-kind="control" + data-id=<objectId> + data-action={action}
+ * (action comes from the selectionControls registration via SelectionControlsLayer).
  */
 const CalloutTailTipControlComponent: React.FC<
 	SelectionControlProps<CalloutState>
-> = ({ object, zoom, part }) => {
+> = ({ object, zoom, action }) => {
 	const { id, cx, cy, width, height, rotation, scaleX, scaleY } = object;
 
 	const tail = resolveCalloutTail(object);
@@ -46,7 +46,7 @@ const CalloutTailTipControlComponent: React.FC<
 			rotation={rotation + (isVerticalTailSide(tail.side) ? 90 : 0)}
 			zoom={zoom}
 			objectId={id}
-			part={part}
+			action={action}
 			cursor="move"
 		/>
 	);

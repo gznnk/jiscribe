@@ -41,7 +41,7 @@ describe("recordToState", () => {
 
 	it("leaves the typography a slot omits unset, for the draw side to resolve", () => {
 		// The per-slot look is registered as the type's draw-time defaults
-		// (RECORD_SLOT_STYLE_DEFAULTS_BY_ID), so materializing it here would put
+		// (RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID), so materializing it here would put
 		// six fields per slot into a document that never wrote them.
 		const state = recordToState(
 			makeDoc({

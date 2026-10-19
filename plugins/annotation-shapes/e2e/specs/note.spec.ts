@@ -20,11 +20,13 @@ async function noteTextBoxWidth(
 ): Promise<number | null> {
 	return canvas.page.evaluate((objectId) => {
 		const shape = document.querySelector(`[data-id="${objectId}"]`);
-		const sibling = shape?.nextElementSibling;
-		if (sibling?.tagName.toLowerCase() !== "foreignobject") {
+		// Drawn inside the group createFrameObject puts every overlay of a shape in.
+		const foreignObject =
+			shape?.nextElementSibling?.querySelector("foreignObject");
+		if (!foreignObject) {
 			return null;
 		}
-		return Number(sibling.getAttribute("width"));
+		return Number(foreignObject.getAttribute("width"));
 	}, id);
 }
 

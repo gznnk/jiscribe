@@ -2,11 +2,12 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { computeDuplicateOffset } from "./utils/computeDuplicateOffset";
-import { getSelectionCenter } from "./utils/getSelectionCenter";
-import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
+import { collectConnectorsAttachedToSelection } from "../../selection/readers/collectConnectorsAttachedToSelection";
+import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
+import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
+import { getSelectionCenter } from "../../selection/readers/getSelectionCenter";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { cloneObjects } from "../../utils/cloneObjects";
-import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
@@ -14,7 +15,7 @@ import type { ExecutableCommand } from "../CommandTypes";
 
 export const DuplicateCommand: ExecutableCommand = {
 	id: "duplicate",
-	label: "Duplicate",
+	label: { en: "Duplicate", ja: "複製" },
 	category: "edit",
 	shortcuts: {
 		mac: [{ code: "KeyD", meta: true }],
@@ -22,10 +23,15 @@ export const DuplicateCommand: ExecutableCommand = {
 		default: [{ code: "KeyD", ctrl: true }],
 	},
 
-	canExecute: (state) => state.selectedIds.length > 0,
+	// Not offered for a lone connector: a connector is duplicated as part of the
+	// shapes it runs between (collectConnectorsAttachedToSelection), never on its
+	// own.
+	canExecute: (state) =>
+		state.selection.objectIds.length > 0 &&
+		getSelectedConnectorId(state) === null,
 
 	execute: (state, registries) => {
-		const { selectedIds } = state;
+		const { objectIds: selectedIds } = state.selection;
 
 		// ── 1. Collect the objects to duplicate ─────────────────────────────────────
 		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
@@ -42,7 +48,7 @@ export const DuplicateCommand: ExecutableCommand = {
 		}
 
 		// Only duplicate connectors whose both endpoints are within the selection (same check as CopyCommand)
-		const connectorIds = selectConnectorsInSelection(
+		const connectorIds = collectConnectorsAttachedToSelection(
 			getRootConnectorIds(state.objects, state.rootIds),
 			state.objects,
 			selectedIdsWithDescendants,
@@ -129,7 +135,7 @@ export const DuplicateCommand: ExecutableCommand = {
 			...state,
 			objects: mergedObjects,
 			rootIds: updatedRootIds,
-			selectedIds: newObjectIds,
+			selection: { objectIds: newObjectIds, part: null },
 			multiSelectGroup: createMultiSelectGroup(
 				newObjectIds,
 				mergedObjects,

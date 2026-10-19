@@ -1,8 +1,10 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 
 import { StencilLibraryItem } from "./StencilLibraryItem";
 import {
 	StencilLibraryEmptyMessage,
+	StencilLibraryMoreMatchesMessage,
+	StencilLibraryMoreViaSearchButton,
 	StencilLibraryPanelCloseButton,
 	StencilLibraryPanelContainer,
 	StencilLibraryPanelGrid,
@@ -21,11 +23,13 @@ import {
 	resolveStencilCategoryLabel,
 	resolveStencilLabel,
 } from "./utils/resolveStencilLabel";
+import { searchStencilLibrary } from "./utils/searchStencilLibrary";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
 import { SearchIcon } from "../../icons/SearchIcon";
+import type { Stencil } from "../../objects/Stencil";
 
 type StencilLibraryPanelProps = {
 	/** Sections in display order, each already resolved against the registry. */
@@ -34,6 +38,11 @@ type StencilLibraryPanelProps = {
 	collapsedSectionIds: readonly string[];
 	/** Preset id currently in drawing mode, to highlight the matching item. */
 	activePresetId: string | null;
+	/**
+	 * Looks a preset up by id, for the ids a category's `search` answers beyond its
+	 * listed presets. Keep it stable: the panel is memoized.
+	 */
+	resolvePreset: (presetId: string) => Stencil | undefined;
 };
 
 const CHEVRON_SIZE = 12;
@@ -47,7 +56,7 @@ const SEARCH_ICON_SIZE = 14;
  *
  * The panel is one gesture target (`data-kind="menu" data-id="stencil-library-panel"`)
  * handled by StencilLibraryPanelHandler: its section headers and close button carry
- * only a data-part. The stencil items keep their own `data-kind` / `data-id`
+ * only a data-action. The stencil items keep their own `data-kind` / `data-id`
  * ("stencil-library"), so click-to-draw and drag-to-place stay with
  * StencilLibraryItemHandler exactly as in the toolbar.
  *
@@ -60,39 +69,28 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 	sections,
 	collapsedSectionIds,
 	activePresetId,
+	resolvePreset,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 	const [query, setQuery] = useState("");
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	const trimmedQuery = query.trim();
 
 	// While searching, the sections collapse into one list: a shape is looked up
-	// by name, not by where it was filed. Section order still decides the order,
-	// and a preset listed in two sections is kept once.
-	const matchedPresets = useMemo(() => {
-		if (trimmedQuery === "") {
-			return [];
-		}
-		const needle = trimmedQuery.toLowerCase();
-		const seenIds = new Set<string>();
-		return sections.flatMap((section) =>
-			section.presets.filter((preset) => {
-				if (seenIds.has(preset.id)) {
-					return false;
-				}
-				if (
-					!resolveStencilLabel(preset, messages, locale)
-						.toLowerCase()
-						.includes(needle)
-				) {
-					return false;
-				}
-				seenIds.add(preset.id);
-				return true;
-			}),
-		);
-	}, [sections, trimmedQuery, messages, locale]);
+	// by name, not by where it was filed.
+	const searchResult = useMemo(
+		() =>
+			searchStencilLibrary(
+				sections,
+				trimmedQuery,
+				(preset) => resolveStencilLabel(preset, messages, locale),
+				resolvePreset,
+			),
+		[sections, trimmedQuery, messages, locale, resolvePreset],
+	);
+	const matchedPresets = searchResult.presets;
 
 	return (
 		<StencilLibraryPanelContainer
@@ -108,7 +106,7 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 					type="button"
 					aria-label={messages.stencilLibraryClose}
 					title={messages.stencilLibraryClose}
-					data-part="close"
+					data-action="close"
 				>
 					<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
 				</StencilLibraryPanelCloseButton>
@@ -118,6 +116,7 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 				<SearchIcon width={SEARCH_ICON_SIZE} height={SEARCH_ICON_SIZE} />
 				<StencilLibrarySearchInput
 					type="text"
+					ref={searchInputRef}
 					value={query}
 					placeholder={messages.stencilLibrarySearchPlaceholder}
 					aria-label={messages.stencilLibrarySearchPlaceholder}
@@ -128,15 +127,22 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 			<StencilLibraryPanelList>
 				{trimmedQuery !== "" ? (
 					matchedPresets.length > 0 ? (
-						<StencilLibraryPanelGrid>
-							{matchedPresets.map((preset) => (
-								<StencilLibraryItem
-									key={preset.id}
-									preset={preset}
-									isActive={activePresetId === preset.id}
-								/>
-							))}
-						</StencilLibraryPanelGrid>
+						<>
+							<StencilLibraryPanelGrid>
+								{matchedPresets.map((preset) => (
+									<StencilLibraryItem
+										key={preset.id}
+										preset={preset}
+										isActive={activePresetId === preset.id}
+									/>
+								))}
+							</StencilLibraryPanelGrid>
+							{searchResult.hiddenMatchCount > 0 && (
+								<StencilLibraryMoreMatchesMessage>
+									{messages.stencilLibraryMoreMatches}
+								</StencilLibraryMoreMatchesMessage>
+							)}
+						</>
 					) : (
 						<StencilLibraryEmptyMessage>
 							{messages.stencilLibraryNoMatch}
@@ -153,7 +159,7 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 								<StencilLibrarySectionHeader
 									type="button"
 									aria-expanded={isExpanded}
-									data-part={`section:${section.category.id}`}
+									data-action={`section:${section.category.id}`}
 								>
 									<StencilLibrarySectionChevron isExpanded={isExpanded}>
 										<ChevronRightIcon
@@ -186,6 +192,15 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 											/>
 										))}
 									</StencilLibraryPanelGrid>
+								)}
+								{isExpanded && section.category.search !== undefined && (
+									<StencilLibraryMoreViaSearchButton
+										type="button"
+										data-gesture="none"
+										onClick={() => searchInputRef.current?.focus()}
+									>
+										{messages.stencilLibraryMoreViaSearch}
+									</StencilLibraryMoreViaSearchButton>
 								)}
 							</div>
 						);

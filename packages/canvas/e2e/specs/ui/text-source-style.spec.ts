@@ -68,15 +68,10 @@ test.describe("styling a source-language body", () => {
 		await expect(
 			canvas.page.locator(selectors.objectMenuToggle("font-size")),
 		).toBeVisible();
-		// The four buttons are laid out flat while text is edited, so their absence
-		// is the absence of the `set:` parts themselves.
+		// The Bold toggle sits on the menu itself, so its absence is the absence of
+		// its command.
 		await expect(
-			canvas.page.locator(
-				`${selectors.objectMenu} [data-part^="set:fontWeight:"]`,
-			),
-		).toHaveCount(0);
-		await expect(
-			canvas.page.locator(selectors.objectMenuToggle("text-format")),
+			canvas.page.locator(selectors.objectMenuCommand("toggleBold")),
 		).toHaveCount(0);
 	});
 
@@ -92,7 +87,7 @@ test.describe("styling a source-language body", () => {
 			canvas.page.locator(selectors.propertyPanelField("fontSize")),
 		).toBeVisible();
 		await expect(
-			canvas.page.locator(selectors.propertyPanelSet("fontWeight", "bold")),
+			canvas.page.locator(selectors.propertyPanelCommand("toggleBold")),
 		).toHaveCount(0);
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSet("textAlign", "left")),

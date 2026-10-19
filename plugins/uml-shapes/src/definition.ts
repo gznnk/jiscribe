@@ -5,6 +5,7 @@ import type {
 import {
 	createFrameBehavior,
 	createFrameObjectDefinition,
+	createTextSlotPartKindDefinition,
 	createTypeStencils,
 } from "@jiscribe/canvas-sdk";
 
@@ -13,12 +14,12 @@ import {
 	umlComponentDocDefinition,
 	umlPackageDocDefinition,
 } from "./doc";
-import { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
+import { calcRecordTextSlotRegions } from "./presentation/calcRecordTextSlotRegions";
 import { RecordBox } from "./presentation/RecordBox";
 import { UmlComponentBox } from "./presentation/UmlComponentBox";
 import { UmlPackageBox } from "./presentation/UmlPackageBox";
 import { umlPackageOutline } from "./presentation/umlPackageOutline";
-import { isRecordListSlotId } from "./schema/RecordDoc";
+import { isRecordListTextSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
 import { calcUmlPackageTextRegion } from "./schema/textRegions";
 import type { UmlComponentDoc } from "./schema/UmlComponentDoc";
@@ -34,22 +35,23 @@ import { UmlPackageIcon } from "./stencil/UmlPackageIcon";
 
 /**
  * A text band (the title, the stereotype above it) is sized from its own text
- * (calcRecordSlotRegions), so it follows the draft while it is typed and the
+ * (calcRecordTextSlotRegions), so it follows the draft while it is typed and the
  * editor may grow with it, down to the box's bottom edge. A row compartment stays
  * `"scroll"`: its region already follows the draft where it can, and letting the
  * editor pass it would spill over the compartment below.
  */
 const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
 	slotId,
-) => (isRecordListSlotId(slotId) ? "scroll" : "grow");
+) => (isRecordListTextSlotId(slotId) ? "scroll" : "grow");
 
 /**
  * The record's text slots need no declaration here: the keys of `state.text`
- * are the authority, and the per-type contributions are `textRegion` and
- * `textEditOverflow`, which both take the slot id (see calcRecordTextRegion).
+ * are the authority, and the per-type contributions are the `"textSlot"` part
+ * kind's `regions`, which places every compartment in one call
+ * (calcRecordTextSlotRegions), and `textEditOverflow`, which takes the slot id.
  *
  * The `text` menu section keeps fontStyle / textAlignment: with no slot picked
- * a menu edit writes into every slot at once (TextSlotStyleProperty), so the
+ * a menu edit writes into every slot at once (resolveTextSlotIds), so the
  * title band and the rows — the bulk of the box — change together; clicking one
  * slot first narrows the same edit to it.
  *
@@ -62,9 +64,13 @@ export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 	mapper: { toDoc: recordToDoc, toState: recordToState },
 	stateValidator: isValidRecordState,
 	component: RecordBox,
-	textRegion: calcRecordTextRegion,
 	textEditOverflow: resolveRecordTextEditOverflow,
 	behavior: createFrameBehavior<RecordState>(),
+	partKinds: [
+		createTextSlotPartKindDefinition<RecordState>({
+			regions: calcRecordTextSlotRegions,
+		}),
+	],
 	stencils: RecordStencils,
 	menu: [
 		{

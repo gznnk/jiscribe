@@ -1,0 +1,25 @@
+{
+	"name": "@jiscribe/ai-tools-sdk",
+	"version": "0.0.0",
+	"private": true,
+	"description": "The contract a plugin offers AI tools for its own shapes through; the host that runs them is @jiscribe/ai-tools",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"scripts": {
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@jiscribe/doc": "workspace:*"
+	},
+	"peerDependencies": {
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"typescript": "catalog:",
+		"vitest": "catalog:",
+		"zod": "catalog:"
+	}
+}

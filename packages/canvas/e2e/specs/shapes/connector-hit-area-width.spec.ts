@@ -15,7 +15,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /** Locator for the ObjectMenu line-color toggle that appears when a connector is selected */
 function lineColorToggle(canvas: CanvasDriver) {
-	return canvas.page.locator('[data-part="toggle:line-color"]');
+	return canvas.page.locator('[data-action="toggle:line-color"]');
 }
 
 /** Joins two side-by-side rectangles rightCenter → leftCenter into a horizontal straight connector. */

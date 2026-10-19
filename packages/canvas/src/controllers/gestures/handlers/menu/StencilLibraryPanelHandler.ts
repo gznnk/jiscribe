@@ -8,7 +8,7 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * GestureHandler for the shape library sidebar's own chrome.
  * Handles events with targetKind "menu" and targetId "stencil-library-panel".
  *
- * targetPart format:
+ * targetAction format:
  * - `section:{sectionId}` → collapse that section, or expand it when already
  *   collapsed (click acts as a toggle).
  * - `close` → close the panel.
@@ -22,7 +22,7 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * persistent chrome, so a press on it never closes the panel.
  */
 const SECTION_PREFIX = "section:";
-const CLOSE_PART = "close";
+const CLOSE_ACTION = "close";
 
 export const StencilLibraryPanelHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -45,11 +45,11 @@ export const StencilLibraryPanelHandler: GestureHandler = {
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		if (!isActivation || event.targetPart === undefined) {
+		if (!isActivation || event.targetAction === undefined) {
 			return nextState;
 		}
 
-		if (event.targetPart === CLOSE_PART) {
+		if (event.targetAction === CLOSE_ACTION) {
 			return {
 				...nextState,
 				stencilLibraryPanel: {
@@ -59,8 +59,8 @@ export const StencilLibraryPanelHandler: GestureHandler = {
 			};
 		}
 
-		if (event.targetPart.startsWith(SECTION_PREFIX)) {
-			const sectionId = event.targetPart.slice(SECTION_PREFIX.length);
+		if (event.targetAction.startsWith(SECTION_PREFIX)) {
+			const sectionId = event.targetAction.slice(SECTION_PREFIX.length);
 			const collapsedIds = nextState.stencilLibraryPanel.collapsedSectionIds;
 			return {
 				...nextState,
