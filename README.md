@@ -16,9 +16,9 @@ agent's tools are another.
 
 Most of what you need to draw is already in the box. The core carries eight
 primitive types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
-`connector` / `svg`), and the richer shape sets — flowchart, UML, sticky,
-markdown, container, annotation, general pictograms, Lucide icons, AWS
-architecture — ship as plugins. More sets are on the way.
+`connector` / `svg`), and the richer shape sets — flowchart, UML, ER diagrams,
+tables, sticky, markdown, container, annotation, general pictograms, Lucide
+icons, AWS architecture — ship as plugins. More sets are on the way.
 
 ## What you can make
 
@@ -27,6 +27,7 @@ architecture — ship as plugins. More sets are on the way.
 | ![A UML class diagram of an order domain](./docs/images/gallery-uml-class-diagram.jis.png)<br>**UML and class diagrams** — packages, interfaces, composition, multiplicities, notes           | ![A three-tier AWS architecture](./docs/images/gallery-aws-architecture.jis.png)<br>**Architecture diagrams** — AWS icons and boundary groups, from region down to subnet                                 |
 | ![Regional cloud topology on an isometric lattice](./docs/images/gallery-isometric-topology.jis.png)<br>**Infrastructure, drawn to scale** — every solid is a native polygon on a 30° lattice | ![A trading terminal mock](./docs/images/gallery-trading-terminal.jis.png)<br>**UI mockups** — a trading terminal: candles, order book, tape, at the fidelity a spec needs                                |
 | ![A Swiss-style conference poster](./docs/images/gallery-conference-poster.jis.png)<br>**Posters and print** — a typographic grid is just shapes and text                                     | ![A refund request flow across four swimlanes](./docs/images/gallery-refund-swimlane.jis.png)<br>**Flows and swimlanes** — handoffs, decisions, exceptions, and the icon that says what each step touches |
+| ![An ER diagram of an order schema](./docs/images/gallery-er-diagram.jis.png)<br>**ER diagrams** — IE notation; a relationship runs from a foreign key to the key it references               | ![A plan comparison table](./docs/images/gallery-feature-matrix.jis.png)<br>**Tables** — every cell is a text of its own, with its own fill and type, and rows grow to fit                                |
 
 ![An incident postmortem on one page](./docs/images/gallery-postmortem.jis.png)
 
@@ -168,7 +169,7 @@ that is the package to take.
 | `@jiscribe/ai-tools-sdk`     | The contract a plugin offers AI tools for its own shapes through; plugins take it from `@jiscribe/canvas-sdk/tools` |
 | `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                                     |
 | `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                                   |
-| `plugins/*`                  | The shipped shape sets — flowchart, UML, container, general, annotation, sticky, markdown, Lucide, AWS              |
+| `plugins/*`                  | The shipped shape sets — flowchart, UML, ER, table, container, general, annotation, sticky, markdown, Lucide, AWS   |
 | `apps/canvas-examples`       | Integration examples (one example = one file)                                                                       |
 | `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                            |
 | `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                                     |
