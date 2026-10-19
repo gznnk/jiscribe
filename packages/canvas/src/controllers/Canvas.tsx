@@ -425,14 +425,18 @@ const CanvasComponent = ({
 
 	useClipboardWrite(state.internalClipboard, notifyError);
 
-	const { pointerHandlers, wheelHandler, resetGestureState } =
-		useGestureRecognizer({
-			dispatch,
-			containerRef: rootRef,
-			svgRef,
-			canvasState: state,
-			gestureHandling,
-		});
+	const {
+		pointerHandlers,
+		wheelHandler,
+		resetGestureState,
+		processPendingGestures,
+	} = useGestureRecognizer({
+		dispatch,
+		containerRef: rootRef,
+		svgRef,
+		canvasState: state,
+		gestureHandling,
+	});
 
 	// Shared between the save-delivery and external-sync hooks so overlapping saves that
 	// fold back out of order are still recognized as self-saves (#29).
@@ -511,6 +515,7 @@ const CanvasComponent = ({
 		canvasState: state,
 		dispatch,
 		callbacks: { undo: onUndo, redo: onRedo, paste: handlePaste },
+		processPendingGestures,
 		registries,
 	});
 

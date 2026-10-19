@@ -354,6 +354,25 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * Run the batch the RAF is waiting on right now instead of at the next frame, so
+	 * input that does not go through the queue (a keyboard shortcut) reaches the
+	 * reducer after the pointer events that happened before it. The RAF is cancelled,
+	 * so the batch never runs twice; with nothing scheduled this is a no-op. The fling
+	 * frame is left alone (it consumes no queued events).
+	 */
+	public processPendingBatch(): void {
+		if (!this.scheduled) {
+			return;
+		}
+		if (this.rafId !== null) {
+			cancelAnimationFrame(this.rafId);
+			this.rafId = null;
+		}
+		this.scheduled = false;
+		this.processBatch();
+	}
+
+	/**
 	 * Batch-end settlement: per-frame aggregates fire here, once per RAF batch.
 	 * Currently that is the pending pinch — both fingers may have moved this batch,
 	 * and their combined effect must fire exactly once per frame (see pinchPending).

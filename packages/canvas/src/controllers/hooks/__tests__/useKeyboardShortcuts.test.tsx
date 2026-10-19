@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCommandState } from "../../commands/__tests__/support/createCommandState";
 import { twoRectsWithConnectorDoc } from "../../commands/__tests__/support/fixtures";
 import type { Command } from "../../commands/CommandTypes";
@@ -14,7 +15,8 @@ import { useKeyboardShortcuts } from "../useKeyboardShortcuts";
 /**
  * Which command a keystroke reaches when several share its binding: the matches
  * are walked in registry order (contributed ahead of built-ins), and the first
- * that has a callback or can execute takes the key.
+ * that has a callback or can execute takes the key. Also that the recognizer's
+ * pending gestures are dispatched and committed before the key is decided.
  */
 
 // Without this React treats every `act` below as unsupported and warns.
@@ -31,20 +33,44 @@ const contributedPasteCommand = (canExecute: boolean): Command => ({
 	execute: (state) => state,
 });
 
+/** A contributed command bound to Ctrl+K that runs only while something is selected. */
+const selectionOnlyCommand: Command = {
+	id: "plugin.selectionOnly",
+	label: "Selection only",
+	shortcuts: { default: [{ code: "KeyK", ctrl: true }] },
+	canExecute: (state) => state.selection.objectIds.length > 0,
+	execute: (state) => state,
+};
+
+const initialCanvasState = createCommandState(twoRectsWithConnectorDoc);
+
 const mountShortcuts = (
 	registries: CanvasRegistries,
 	callbacks: Partial<Record<string, () => void>>,
+	/**
+	 * Stands in for the recognizer's drain; receives the Probe's state setter so it
+	 * can play the gesture actions it would dispatch.
+	 */
+	onProcessPendingGestures: (
+		setCanvasState: (canvasState: CanvasControllerState) => void,
+	) => void = () => {},
 ) => {
 	const containerElement = document.createElement("div");
 	document.body.appendChild(containerElement);
 	const dispatch = vi.fn();
+	const processPendingGestures = vi.fn();
 
 	const Probe = () => {
+		const [canvasState, setCanvasState] = useState(initialCanvasState);
 		useKeyboardShortcuts({
 			containerRef: { current: containerElement },
-			canvasState: createCommandState(twoRectsWithConnectorDoc),
+			canvasState,
 			dispatch,
 			callbacks,
+			processPendingGestures: () => {
+				processPendingGestures();
+				onProcessPendingGestures(setCanvasState);
+			},
 			registries,
 		});
 		return null;
@@ -58,6 +84,7 @@ const mountShortcuts = (
 
 	return {
 		dispatch,
+		processPendingGestures,
 		/** Fires Ctrl+<code> on the container and reports whether it was claimed. */
 		pressCtrl: (code: string) => {
 			const event = new KeyboardEvent("keydown", {
@@ -145,5 +172,57 @@ describe("useKeyboardShortcuts", () => {
 			type: "COMMAND",
 			commandId: "selectAll",
 		});
+	});
+
+	it("decides the key against the state the pending gestures leave behind", () => {
+		const registries = createTestRegistries();
+		registries.command.register(selectionOnlyCommand, "contributed");
+		const { dispatch, processPendingGestures, pressCtrl } = mountShortcuts(
+			registries,
+			{},
+			(setCanvasState) => {
+				// Plays a marquee's dragEnd selecting a shape, as the drain would dispatch it.
+				setCanvasState({
+					...initialCanvasState,
+					selection: {
+						...initialCanvasState.selection,
+						objectIds: ["rect-1"],
+					},
+				});
+			},
+		);
+
+		expect(pressCtrl("KeyK")).toBe(true);
+		expect(processPendingGestures).toHaveBeenCalledTimes(1);
+		expect(processPendingGestures.mock.invocationCallOrder[0]).toBeLessThan(
+			dispatch.mock.invocationCallOrder[0],
+		);
+		expect(dispatch).toHaveBeenCalledWith({
+			type: "COMMAND",
+			commandId: "plugin.selectionOnly",
+		});
+	});
+
+	it("drains the pending gestures ahead of a callback-executed command", () => {
+		const paste = vi.fn();
+		const { processPendingGestures, pressCtrl } = mountShortcuts(
+			createTestRegistries(),
+			{ paste },
+		);
+
+		expect(pressCtrl("KeyV")).toBe(true);
+		expect(processPendingGestures.mock.invocationCallOrder[0]).toBeLessThan(
+			paste.mock.invocationCallOrder[0],
+		);
+	});
+
+	it("leaves the pending gestures to their frame for a key no command claims", () => {
+		const { processPendingGestures, pressCtrl } = mountShortcuts(
+			createTestRegistries(),
+			{},
+		);
+
+		expect(pressCtrl("KeyQ")).toBe(false);
+		expect(processPendingGestures).not.toHaveBeenCalled();
 	});
 });
