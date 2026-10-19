@@ -25,6 +25,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **Dragging a table out of the shape library shows its ghost on an empty
   canvas.** In Chromium the ghost stayed in the DOM but was never drawn while
   nothing on the canvas gave it a snap guide.
+- **The table tools no longer tell an AI to write a cell through `set_text`.**
+  Their descriptions named a cell's text slot as something `set_text` and
+  `set_text_style` take, but both refuse a table; cell texts are written with
+  `table_fill_cells` and styled with `table_set_cell_style`.
 
 ## [0.12.0] - 2026-10-19
 
