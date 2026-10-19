@@ -77,13 +77,11 @@ export const createCanvasReducer =
 
 			case "COMMAND": {
 				const executed = handleCommand(state, action.commandId, registries);
-				// A command may write through a view (applyStyleIntent) and this path
-				// bypasses handleGesture, so flatten it here like the routes below (#213).
-				const selectionResult = settleTransition(
-					materializeStateObjects(executed),
-					state,
-					registries,
-				);
+				// A command may write through a view (applyStyleIntent, a nudge) and this
+				// path bypasses handleGesture, so the settling flattens it (#213).
+				const selectionResult = settleTransition(executed, state, registries, {
+					flattensObjects: true,
+				});
 				// Pointer gestures pick what is already under the pointer; a command
 				// moving the pick (an arrow key, Tab) may land it off screen.
 				const revealedViewport = calcViewportToRevealActivePart(
@@ -703,17 +701,26 @@ const commitPropertyUpdate = (
  * slider drag must not clip its own text — while the vertex pass keeps one,
  * since settling vertices is a commit-time step. Then the selection last, once
  * the objects and the selection it refers to have settled.
+ *
+ * @param options.flattensObjects - Flattens a copy-on-write objects view right after the
+ *   box pass (see materializeStateObjects), for COMMAND, which bypasses
+ *   handleGesture. GESTURE leaves it false: a drag frame's view must survive to
+ *   the next frame, and the close-out has already flattened it
  */
 const settleTransition = (
 	result: CanvasControllerState,
 	previousState: CanvasControllerState,
 	registries: CanvasRegistries,
+	{ flattensObjects = false }: { flattensObjects?: boolean } = {},
 ): CanvasControllerState => {
-	const resizedResult = reconcileObjectContentSizes(
+	const measuredResult = reconcileObjectContentSizes(
 		result,
 		previousState,
 		registries.objectContentResizer,
 	);
+	const resizedResult = flattensObjects
+		? materializeStateObjects(measuredResult)
+		: measuredResult;
 	const reconciledResult = reconcileConnectorVerticesIfCommitted(
 		resizedResult,
 		previousState,
@@ -739,7 +746,7 @@ const commitOpenTextEdit = (
  * handleGesture, the one place that otherwise does it (#213). A state already
  * holding a plain Record comes back as the same reference.
  *
- * The property routes call it after the re-measure rather than before it:
+ * Every caller runs it after the re-measure rather than before it:
  * reconcileObjectContentSizes narrows its scan to the view's written IDs
  * (collectCowChangedKeys), which a flattened map no longer offers.
  */
