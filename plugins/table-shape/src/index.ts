@@ -50,30 +50,6 @@ export { distributeTableWidthToColumns } from "./layout/distributeTableWidthToCo
 export { calcTableTextSlotRegions } from "./presentation/calcTableTextSlotRegions";
 export { Table } from "./presentation/Table";
 
-export {
-	calcTableLocalDragDelta,
-	calcSegmentPlacement,
-	createTableTrackGripHandler,
-	handleTableColumnBoundary,
-	handleTableRowBoundary,
-	parseTableBoundaryIndex,
-	readTableBoundaryDragMode,
-	calcTableColumnBoundaryDrag,
-	calcTableRowBoundaryDrag,
-	TableBoundaryStrip,
-	TableColumnBoundaryControl,
-	TableColumnGripControl,
-	TableRowBoundaryControl,
-	TableRowGripControl,
-	TableTrackGrip,
-	TableTrackGrips,
-} from "./controls";
-export type {
-	SegmentPlacement,
-	TableBoundaryDragMode,
-	TableEdgeSegment,
-} from "./controls";
-
 export { TableIcon } from "./stencil/TableIcon";
 export { TableStencils } from "./stencil/TableStencils";
 

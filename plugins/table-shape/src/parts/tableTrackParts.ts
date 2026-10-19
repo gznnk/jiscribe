@@ -40,7 +40,7 @@ const calcTrackRegion = (
 
 /**
  * The part definition for whole rows or whole columns — the kind a grip's click
- * writes ({@link import("../controls/createTableTrackGripHandler").createTableTrackGripHandler}).
+ * writes ({@link import("../controls/grip/createTableTrackGripHandler").createTableTrackGripHandler}).
  *
  * Kept apart from the cells, which ride core's `"textSlot"` kind, because the two
  * answer Delete differently: a row selected as a row is removed, where the very
