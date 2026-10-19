@@ -5,6 +5,123 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-10-19
+
+Two new shapes: a `table` you fill in cell by cell, and an `erEntity` for ER
+diagrams, its relationship lines attached to the columns they join. Both, and a
+UML record's compartments, are picked and edited part by part — Tab carries an
+open text edit on to the next cell, and Ctrl+Enter (Cmd+Enter) closes it. Bold,
+italic, underline and strikethrough now act alike from the keys and the
+buttons. The shape set is now 56 drawable types.
+
+### Security
+
+- **A long `markdown` card no longer stalls the editor.** The Markdown renderer
+  linkifies URLs, and markdown-it 15.0.0 spent quadratic time doing it, so a
+  few hundred KB of text in a file you opened could freeze the canvas for tens
+  of seconds. The bundled markdown-it is now 15.0.2.
+
+### Added
+
+#### Shapes
+
+- **A `table`.** A grid of cells, in the shape library's **Basic** section. Each
+  cell is a text of its own, with the same formatting and in-place editing as
+  any other shape's text, and may carry a fill over the table's background. The
+  table stores no box: its width is its columns summed and its height its rows,
+  each row growing to fit its text. Rows and columns are picked, inserted and
+  deleted from lettered and numbered headings, as in a spreadsheet. Cells are
+  picked by clicking, Shift-clicking a block or Ctrl/Cmd-clicking, or with the
+  arrows and Shift+arrows, and the corner where the headings meet selects every cell.
+  Column and row boundaries, the right and bottom edges and the transform frame
+  resize it.
+- **An `erEntity` for ER diagrams (IE notation)**, in a new **ER** section of
+  the shape library. An entity is a title band over its columns, each a key, a
+  name and a type drawn in lanes of their own; its width is the three lanes
+  summed and its height follows the columns. Columns are picked, inserted and
+  deleted, and the lanes picked and resized, as a table's rows and columns are.
+  Each column offers a connect point on its left and right, so a relationship
+  line runs from a foreign key to the primary key it references and stays on
+  its column when columns are inserted or deleted above it. The key, name and
+  type hold one line each.
+- The shape set is now **56 drawable types**.
+
+#### Editing
+
+- **A UML record's compartments are picked as a table's cells are**:
+  Shift-click picks a run, Ctrl/Cmd-click adds or removes one, ↑ / ↓ move the
+  pick and Shift+↑ / Shift+↓ widen it. A style change lands on every picked
+  compartment.
+- **Tab moves an open text edit on to the next cell, compartment or slot**,
+  committing the one left, and Shift+Tab goes back. From a table's last cell it
+  appends a row, and from an entity's last slot a column.
+- **Ctrl+Enter (Cmd+Enter) commits an open text edit and closes the editor.**
+- **Bold, italic, underline and strikethrough work the same from the keys and
+  the buttons.** Ctrl/Cmd+B / I / U / Shift+X act on the selected shapes
+  without opening the editor, and on the whole text being edited when nothing
+  in it is highlighted. A selection that disagrees turns the style on for all
+  of it first, in one undo step. Underline and strikethrough toggle
+  independently of each other. Ctrl/Cmd+Shift+B / I / U no longer toggle
+  anything, and on a Mac the keys take Cmd alone.
+
+### Changed
+
+- **A picked part is shown by its own box.** With a text slot, a cell, a row or
+  a column picked, that box is tinted and outlined in place of the shape's
+  selection outline, and the object menu hangs under it. Editing a shape's
+  single text outlines its text area the same way, and Escape steps out in
+  three presses: the editor, the text, the shape.
+- **The object menu offers Bold alone for text formatting.** The text-format
+  dropdown is gone; italic, underline and strikethrough stay in the sidebar and
+  on their keys.
+- **Moving the pick from the keyboard keeps it in view.** The view pans just
+  far enough to show the cell, compartment or slot the arrows or Tab land on;
+  the zoom is never changed.
+- **Undo and redo no longer jump to the middle of a large shape still on
+  screen.** The view stays put on each axis where part of the change is in
+  view, and centres only on a change wholly off screen.
+- **A right click selects the shape it lands on before opening the context
+  menu**, keeping the selection when the shape is already in it.
+- **A shape placed from the toolbar or the shape library lands centered on the
+  cursor**, a `text` included. What the file holds is unchanged.
+- **A double click on a shape with several texts picks the one it opens**, and
+  one on a shape inside a group or a multi-selection narrows the selection to
+  that shape.
+- **A shape's own on-canvas controls are hidden while it is moved or resized**,
+  as the connection anchors already were.
+- **An AWS group frame no longer offers the Text box row**, which only moved
+  its title band into the middle of the frame.
+- **`Set up AI` writes a guide that covers tables and ER entities.**
+
+### Fixed
+
+- **Zoom to Fit and image export no longer crop a line that runs outside the
+  shapes it joins**, when an end sits on a connect point a shape declares, such
+  as a group marker's tip.
+- **The shape library's search reaches every icon, not just the ones laid
+  out**, so `lambda` or `bicycle` is found; for AWS a term also matches the
+  service category.
+- **A shape that fails to draw no longer takes the canvas down.** It is drawn as
+  nothing, and every other shape stays drawn, editable and saved.
+- **A group's frame no longer goes stale when a shape inside it is edited from
+  its own on-canvas controls**, which left typing a size into the group scaling
+  its children by the wrong ratio.
+- **A sidebar row states what the selection carries, and a change lands where
+  the row said.** A selection that disagrees shows as **Mixed**, and an unset
+  value shows as the shape draws it.
+- **A `text` follows the layout when the group around it is resized**, rather
+  than staying where it started.
+- **A shortcut pressed mid-drag no longer records an edit the canvas then
+  throws away.** Shortcuts that edit the document are refused until the drag
+  ends; the view shortcuts still run.
+
+### Performance
+
+- **Moving or rotating a shape no longer redraws its text**: a 300-cell table
+  drags about three times faster. An exported image is unchanged.
+- **Resizing or moving several shapes inside a group** no longer copies the
+  whole drawing once per selected shape.
+
 ## [0.11.0] - 2026-09-29
 
 ### Security

@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.11.0+650f24c8 -->
+<!-- jiscribe guide 0.12.0+650f24c8 -->
 
 # The Jiscribe file format
 
