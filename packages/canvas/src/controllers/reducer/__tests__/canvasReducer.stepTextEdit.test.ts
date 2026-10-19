@@ -311,6 +311,72 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 		expect(after.textEditState).toEqual({ kind: "shape", text: "" });
 	});
 
+	describe("on an object of one slot", () => {
+		/** rect-1 mid-edit on its sole slot `a`, the draft still the committed body. */
+		const soleSlotEditingState = (): CanvasControllerState =>
+			createTestState(twoRectsDoc, {
+				objects: {
+					...baseObjects,
+					"rect-1": {
+						...baseObjects["rect-1"],
+						text: { a: { text: "A" } },
+					} as unknown as ObjectState,
+				},
+				selection: selectionOf(["rect-1"], textSlotPartSelection("a")),
+				textEditState: { kind: "shape", text: "A" },
+			});
+
+		it("grows the object on Tab, the sole slot being the last", () => {
+			const extendingReducer = createExtendingReducer(appendTwoSlots);
+
+			const after = [reportEdit("x"), tab].reduce(
+				extendingReducer,
+				soleSlotEditingState(),
+			);
+
+			expect(slotIdsOf(after)).toEqual(["a", "d", "e"]);
+			expect(slotOf(after, "a")).toBe("x");
+			expect(after.selection).toEqual(
+				selectionOf(["rect-1"], textSlotPartSelection("d")),
+			);
+			expect(after.textEditState).toEqual({ kind: "shape", text: "" });
+			expect(after.history.past).toHaveLength(1);
+		});
+
+		it("leaves the edit as it is on Shift+Tab, with nowhere to wrap to", () => {
+			const extend = vi.fn(appendTwoSlots);
+			const extendingReducer = createExtendingReducer(extend);
+			const state = extendingReducer(soleSlotEditingState(), reportEdit("x"));
+
+			expect(extendingReducer(state, shiftTab)).toBe(state);
+			expect(extend).not.toHaveBeenCalled();
+		});
+
+		it("leaves the edit as it is on Tab when extend declines", () => {
+			const extendingReducer = createExtendingReducer(() => null);
+			const state = extendingReducer(soleSlotEditingState(), reportEdit("x"));
+
+			expect(extendingReducer(state, tab)).toBe(state);
+		});
+
+		it("leaves Tab on the canvas, with no edit open, without growing", () => {
+			const extend = vi.fn(appendTwoSlots);
+			const extendingReducer = createExtendingReducer(extend);
+			const state = {
+				...soleSlotEditingState(),
+				textEditState: null,
+			};
+
+			const after = extendingReducer(state, {
+				type: "COMMAND",
+				commandId: "selectNextTextSlot",
+			});
+
+			expect(extend).not.toHaveBeenCalled();
+			expect(after.objects).toBe(state.objects);
+		});
+	});
+
 	it.each(["b", "c", "z"])(
 		"throws when extend names %s, not a slot it added, to land on",
 		(landingPartId) => {

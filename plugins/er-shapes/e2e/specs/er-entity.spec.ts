@@ -975,6 +975,29 @@ test.describe("erEntity columns", () => {
 		expect(await boxHeight(canvas, id)).toBeCloseTo(heightBefore, 0);
 	});
 
+	test("appends a column on Tab from the title of an entity with no columns", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		await clickColumnGrip(canvas, 0);
+		await clickColumnGrip(canvas, 2, "shift");
+		await canvas.deleteSelection();
+		await expect.poll(() => columnCount(canvas, id)).toBe(0);
+		const title = await slotRect(canvas, id, "name");
+		await canvas.page.mouse.dblclick(
+			title.x + title.width / 2,
+			title.y + title.height / 2,
+		);
+		await canvas.waitForTextEditor();
+
+		await canvas.page.keyboard.press("Tab");
+
+		await expect.poll(() => columnCount(canvas, id)).toBe(1);
+		await expect(canvas.textEditorSurface()).toBeFocused();
+		expect(await pickedSlotIds(canvas, id)).toEqual(["col:0:name"]);
+		expect(await canvas.textEditorText()).toBe("");
+	});
+
 	test("outlines a picked slot and a picked column exactly on the row, the rows tiling with no gap", async ({
 		canvas,
 	}) => {

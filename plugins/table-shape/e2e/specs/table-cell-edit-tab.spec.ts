@@ -2,8 +2,10 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 import {
+	cellCenter,
 	cellCount,
 	cellRect,
+	clickTrackGrip,
 	drawnTextCenter,
 	selectedCellIds,
 	tableOutlineRect,
@@ -118,6 +120,38 @@ test.describe("table cell editing: Tab", () => {
 		await canvas.commitText();
 		expect(await isDrawnInsideCell(canvas, id, "last", "r1c1")).toBe(true);
 		expect(await isDrawnInsideCell(canvas, id, "next", "r2c0")).toBe(true);
+	});
+
+	test("appends a row on Tab from the only cell of a 1x1 table", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Table");
+		await canvas.selectAt(await cellCenter(canvas, id, "r0c1"));
+		await clickTrackGrip(canvas, "rowGrip", 1);
+		await canvas.deleteSelection();
+		await expect.poll(async () => cellCount(canvas, id)).toBe(2);
+		await clickTrackGrip(canvas, "columnGrip", 1);
+		await canvas.deleteSelection();
+		await expect.poll(async () => cellCount(canvas, id)).toBe(1);
+		const onlyCell = await cellRect(canvas, id, "r0c0");
+		await canvas.page.mouse.dblclick(
+			onlyCell.x + onlyCell.width / 2,
+			onlyCell.y + onlyCell.height / 2,
+		);
+		await canvas.waitForTextEditor();
+		await canvas.page.keyboard.type("only");
+
+		await canvas.page.keyboard.press("Tab");
+
+		await expect.poll(async () => cellCount(canvas, id)).toBe(2);
+		await expect(canvas.textEditorSurface()).toBeFocused();
+		expect(await selectedCellIds(canvas, id)).toEqual(["r1c0"]);
+		expect(await canvas.textEditorText()).toBe("");
+		await canvas.page.keyboard.type("next");
+
+		await canvas.commitText();
+		expect(await isDrawnInsideCell(canvas, id, "only", "r0c0")).toBe(true);
+		expect(await isDrawnInsideCell(canvas, id, "next", "r1c0")).toBe(true);
 	});
 
 	test("takes the appended row and the last cell's text back in one undo", async ({
