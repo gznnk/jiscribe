@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { useLatestRef } from "./useLatestRef";
+
 /**
  * Notifies the host when the selection changes.
  *

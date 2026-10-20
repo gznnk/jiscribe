@@ -27,7 +27,7 @@ export type ResolveImage = (src: string) => Promise<Blob>;
 type DocImages = {
 	/** What the image shapes draw from, keyed by `src`. */
 	lookupResolvedImage: ResolvedImageLookup;
-	/** The bytes behind a `src`, or undefined until it has resolved. */
+	/** The bytes behind a `src`, or undefined until it is `ready` (and for good once it has failed). */
 	resolveImageBlob: ResolveImageBlob;
 };
 
