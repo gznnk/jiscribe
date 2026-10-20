@@ -121,14 +121,21 @@ export type { InlineTextStyle } from "./model/objects/types/text/InlineTextStyle
 export { TEXT_INLINE_STYLE_KEYS } from "./model/objects/types/text/InlineTextStyle";
 // One body of a slot's text: the plain string it is until part of it is styled on
 // its own, and the runs it is written as once it is.
-export type { RichText, TextRun } from "./model/objects/types/text/RichText";
+export type {
+	RichText,
+	RichTextMatch,
+	RichTextMatchStyling,
+	TextRun,
+} from "./model/objects/types/text/RichText";
 export {
+	clearInlineStyleFromRuns,
 	isRichText,
 	isTextRun,
 	normalizeRichText,
 	remapRichText,
 	richTextToPlain,
 	sliceRichText,
+	styleRichTextMatches,
 	styleRichTextRange,
 } from "./model/objects/types/text/RichText";
 // Which of those a type's text actually accepts, whether the emphasis half is

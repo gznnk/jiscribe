@@ -108,7 +108,7 @@ const setUp = () => {
 };
 
 describe("the table's tool bundle", () => {
-	it("declares its seven tools after the built-ins, each taking the target id", () => {
+	it("declares its eight tools after the built-ins, each taking the target id", () => {
 		const tableToolNames = toolSet.descriptors
 			.map((descriptor) => descriptor.name)
 			.filter((name) => name.startsWith("table_"));
@@ -121,6 +121,7 @@ describe("the table's tool bundle", () => {
 			"table_clear_cells",
 			"table_set_track_sizes",
 			"table_set_cell_style",
+			"table_set_text_style",
 		]);
 	});
 
@@ -536,5 +537,215 @@ describe("table_set_cell_style", () => {
 		expect(outcome.ok).toBe(false);
 		expect(outcome.text).toContain("must be a safe CSS color value");
 		expect(currentDoc()).toEqual(before);
+	});
+});
+
+describe("table_set_text_style", () => {
+	it("decorates the stretch in one cell, a design-token weight stored as its word", () => {
+		const { callTool, readTable } = setUp();
+
+		const outcome = callTool("table_set_text_style", {
+			id: "t1",
+			row: 1,
+			column: 1,
+			match: "c1",
+			fontWeight: "700",
+		});
+
+		expect(outcome).toEqual({
+			ok: true,
+			text: 'set fontWeight on "c1" in cell [1,1]',
+		});
+		// A cell carrying nothing but its text keeps the short form, runs and all.
+		expect(readTable().cells[1][1]).toEqual([
+			{ text: "r1" },
+			{ text: "c1", fontWeight: "bold" },
+		]);
+	});
+
+	it("decorates every cell of a range that holds the stretch and leaves the rest", () => {
+		const { callTool, readTable } = setUp();
+
+		const outcome = callTool("table_set_text_style", {
+			id: "t1",
+			row: 0,
+			column: 0,
+			rowCount: 3,
+			columnCount: 2,
+			match: "r1",
+			fontColor: "#d33",
+		});
+
+		expect(outcome).toEqual({
+			ok: true,
+			text: 'set fontColor on "r1" in 2 of 6 cells (rows 0-2 x columns 0-1): [1,0], [1,1]',
+		});
+		expect(readTable().cells[0]).toEqual([
+			"r0c0",
+			{ text: "r0c1", fill: "#eeeeee" },
+		]);
+		expect(readTable().cells[1][0]).toEqual([
+			{ text: "r1", fontColor: "#d33" },
+			{ text: "c0" },
+		]);
+	});
+
+	it("decorates only the occurrence picked, counted within each cell", () => {
+		const { callTool, readTable } = setUp();
+		callTool("table_fill_cells", {
+			id: "t1",
+			row: 2,
+			column: 0,
+			values: [["a-a", "a"]],
+		});
+
+		const outcome = callTool("table_set_text_style", {
+			id: "t1",
+			row: 2,
+			column: 0,
+			columnCount: 2,
+			match: "a",
+			occurrence: 2,
+			textDecoration: "underline",
+		});
+
+		expect(outcome).toEqual({
+			ok: true,
+			text: 'set textDecoration on occurrence 2 of "a" in 1 of 2 cells (row 2 x columns 0-1): [2,0]',
+		});
+		expect(readTable().cells[2]).toEqual([
+			[{ text: "a-" }, { text: "a", textDecoration: "underline" }],
+			"a",
+		]);
+	});
+
+	it("refuses a range where no cell holds the stretch, or none holds the occurrence", () => {
+		const { callTool, currentDoc } = setUp();
+		const before = structuredClone(currentDoc());
+
+		expect(
+			callTool("table_set_text_style", {
+				id: "t1",
+				row: 0,
+				column: 0,
+				columnCount: 2,
+				match: "zz",
+				fontWeight: "bold",
+			}),
+		).toEqual({
+			ok: false,
+			text: 'no cell of 2 cells (row 0 x columns 0-1) contains "zz"',
+		});
+		expect(
+			callTool("table_set_text_style", {
+				id: "t1",
+				row: 0,
+				column: 0,
+				match: "c0",
+				occurrence: 2,
+				fontWeight: "bold",
+			}),
+		).toEqual({
+			ok: false,
+			text: 'cell [0,0] contains "c0" 1 time(s), so occurrence 2 does not exist',
+		});
+		expect(currentDoc()).toEqual(before);
+	});
+
+	it("refuses a call giving no style", () => {
+		const { callTool } = setUp();
+
+		expect(
+			callTool("table_set_text_style", {
+				id: "t1",
+				row: 0,
+				column: 0,
+				match: "r0",
+			}).text,
+		).toBe(
+			"no style given: pass at least one of fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration",
+		);
+	});
+
+	it("names the one cell a single-cell call misses", () => {
+		const { callTool } = setUp();
+
+		expect(
+			callTool("table_set_text_style", {
+				id: "t1",
+				row: 0,
+				column: 0,
+				match: "zz",
+				fontWeight: "bold",
+			}).text,
+		).toBe('cell [0,0] does not contain "zz"');
+	});
+
+	it("gives only the count once more cells are decorated than a result lists", () => {
+		const { callTool } = setUp();
+		callTool("table_fill_cells", {
+			id: "t1",
+			row: 0,
+			column: 0,
+			values: Array.from({ length: 7 }, () => ["x", "x", "x"]),
+			grow: true,
+		});
+
+		expect(
+			callTool("table_set_text_style", {
+				id: "t1",
+				row: 0,
+				column: 0,
+				rowCount: 7,
+				columnCount: 3,
+				match: "x",
+				fontWeight: "bold",
+			}),
+		).toEqual({
+			ok: true,
+			text: 'set fontWeight on "x" in 21 of 21 cells (rows 0-6 x columns 0-2)',
+		});
+	});
+
+	it("keeps the cell's fill and own style, until a later table_set_cell_style sets the same property on the cell", () => {
+		const { callTool, readTable } = setUp();
+
+		callTool("table_set_text_style", {
+			id: "t1",
+			row: 0,
+			column: 1,
+			match: "c1",
+			fontWeight: "bold",
+		});
+		expect(readTable().cells[0][1]).toEqual({
+			text: [{ text: "r0" }, { text: "c1", fontWeight: "bold" }],
+			fill: "#eeeeee",
+		});
+
+		callTool("table_set_cell_style", {
+			id: "t1",
+			row: 0,
+			column: 1,
+			fontColor: "#ff0000",
+		});
+		expect(readTable().cells[0][1]).toEqual({
+			text: [{ text: "r0" }, { text: "c1", fontWeight: "bold" }],
+			fill: "#eeeeee",
+			fontColor: "#ff0000",
+		});
+
+		callTool("table_set_cell_style", {
+			id: "t1",
+			row: 0,
+			column: 1,
+			fontWeight: "normal",
+		});
+		expect(readTable().cells[0][1]).toEqual({
+			text: "r0c1",
+			fill: "#eeeeee",
+			fontColor: "#ff0000",
+			fontWeight: "normal",
+		});
+		expect(readTable().cells[0][0]).toBe("r0c0");
 	});
 });

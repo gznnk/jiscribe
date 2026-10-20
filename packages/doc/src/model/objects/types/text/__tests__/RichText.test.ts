@@ -11,6 +11,7 @@ import {
 	richTextLength,
 	richTextToPlain,
 	sliceRichText,
+	styleRichTextMatches,
 	styleRichTextRange,
 } from "../RichText";
 
@@ -256,6 +257,76 @@ describe("styleRichTextRange", () => {
 			{ text: "😀", fontWeight: "bold" },
 			{ text: "b" },
 		]);
+	});
+});
+
+describe("styleRichTextMatches", () => {
+	const bold = { fontWeight: "bold" };
+
+	it("styles every occurrence when none is picked", () => {
+		expect(styleRichTextMatches("a-b-a", { match: "a" }, bold)).toEqual({
+			kind: "styled",
+			styled: [
+				{ text: "a", fontWeight: "bold" },
+				{ text: "-b-" },
+				{ text: "a", fontWeight: "bold" },
+			],
+			occurrenceCount: 2,
+		});
+	});
+
+	it("styles only the picked occurrence, counted from 1", () => {
+		expect(
+			styleRichTextMatches("a-b-a", { match: "a", occurrence: 2 }, bold),
+		).toEqual({
+			kind: "styled",
+			styled: [{ text: "a-b-" }, { text: "a", fontWeight: "bold" }],
+			occurrenceCount: 2,
+		});
+	});
+
+	it("counts occurrences without overlap", () => {
+		const styling = styleRichTextMatches("aaaa", { match: "aa" }, bold);
+		expect(styling.kind === "styled" && styling.occurrenceCount).toBe(2);
+	});
+
+	it("matches across the runs a body is already split into", () => {
+		expect(
+			styleRichTextMatches(
+				[{ text: "he", fontColor: "#d33" }, { text: "llo" }],
+				{ match: "ell" },
+				bold,
+			),
+		).toEqual({
+			kind: "styled",
+			styled: [
+				{ text: "h", fontColor: "#d33" },
+				{ text: "e", fontColor: "#d33", fontWeight: "bold" },
+				{ text: "ll", fontWeight: "bold" },
+				{ text: "o" },
+			],
+			occurrenceCount: 1,
+		});
+	});
+
+	it("reports an empty match, a missing one and an occurrence past the last", () => {
+		expect(styleRichTextMatches("hello", { match: "" }, bold)).toEqual({
+			kind: "emptyMatch",
+		});
+		expect(styleRichTextMatches("hello", { match: "x" }, bold)).toEqual({
+			kind: "notFound",
+		});
+		for (const occurrence of [0, 3, 1.5]) {
+			expect(
+				styleRichTextMatches("hello", { match: "l", occurrence }, bold),
+			).toEqual({ kind: "occurrenceOutOfRange", occurrenceCount: 2 });
+		}
+	});
+
+	it("leaves the body it was given untouched", () => {
+		const body = [{ text: "hello" }];
+		styleRichTextMatches(body, { match: "ell" }, bold);
+		expect(body).toEqual([{ text: "hello" }]);
 	});
 });
 

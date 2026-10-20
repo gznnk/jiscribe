@@ -20,6 +20,37 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `@jiscribe/markdown` uses, so no drawing was exposed; the bump keeps the
   shipped version off the advisory list.
 
+### Added
+
+- **`table_set_text_style` decorates part of a cell's text** — a word in bold,
+  a term in another color — the way `set_text_style` does for one object's
+  text. It names the stretch by its characters (`match`, with `occurrence`
+  counted within each cell) and works over a range of cells, leaving those
+  that do not hold the stretch as they are; it fails only when no cell of the
+  range is decorated. `table_set_cell_style` still styles whole cells.
+- **`styleRichTextMatches` in `@jiscribe/doc`** finds a stretch of a rich text
+  by its characters and styles every occurrence or one of them, reporting an
+  empty match, a stretch not found or an occurrence past the last as a result
+  rather than an error. It is what `setInlineTextStyle` runs on.
+  `clearInlineStyleFromRuns`, which `setStyle` drops a whole-text property
+  from the styled stretches with, is exported beside it.
+- **`textMatchSchema` and `inlineTextStyleSchema` in
+  `@jiscribe/canvas-sdk/tools`** (from `@jiscribe/ai-tools-sdk`): the
+  `match` / `occurrence` arguments and the inline typography `set_text_style`
+  declares, for a plugin tool decorating part of a text of its own.
+
+### Changed
+
+- **`setInlineTextStyle` / `setInlineTextStyles` refuse an `occurrence` that is
+  not a whole number**, as they already refused one below 1 or past the last
+  occurrence. The AI tools' schema already took integers only, so only a
+  direct caller of the doc ops sees it.
+- **`table_set_cell_style` overrides what part of a cell's text set for the
+  same property.** A cell typed bold in part and then set to `fontWeight:
+"normal"` stayed bold in that part; it now drops the property from the
+  stretches, as `set_style` does on a shape's text and as styling a cell on
+  the canvas already did.
+
 ### Fixed
 
 - **Dragging a table out of the shape library shows its ghost on an empty

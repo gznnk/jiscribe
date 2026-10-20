@@ -8,7 +8,11 @@
 // of truth: `z.toJSONSchema(z.object(inputSchema))` derives the JSON Schema, and
 // there is no way back.
 
-import { AI_FONT_WEIGHTS, textSlotStyleSchema } from "@jiscribe/ai-tools-sdk";
+import {
+	inlineTextStyleSchema,
+	textMatchSchema,
+	textSlotStyleSchema,
+} from "@jiscribe/ai-tools-sdk";
 import {
 	ArrowTypes,
 	ConnectorRoutings,
@@ -200,65 +204,11 @@ const pointSchema = z
 	.strict();
 
 /**
- * The typography a stretch of characters carries on its own; set_text_style and
- * set_text_styles decorate part of a body with it. Alignment is absent on purpose:
- * it places the whole body, so it lives in the styleSchema set_style speaks.
- */
-const inlineTextStyleSchema = {
-	fontColor: z
-		.string()
-		.optional()
-		.describe("Color of the matched characters, any CSS color."),
-	fontSize: z
-		.number()
-		.min(1)
-		.optional()
-		.describe(
-			"Size of the matched characters in px; the rest of the body keeps the shape's own size.",
-		),
-	fontFamily: z
-		.string()
-		.optional()
-		.describe(
-			'Font family for the matched characters, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace, e.g. for a code term inside a sentence), \'Caveat, "Klee One", cursive\' (handwriting).',
-		),
-	fontWeight: z
-		.enum(AI_FONT_WEIGHTS)
-		.optional()
-		.describe(
-			'Weight of the matched characters, from the shipped ladder "normal" (400) / "500" / "600" / "bold" (700); "400" and "700" are those two rungs written as a design token would spell them, and are stored as "normal" and "bold". "normal" takes the emphasis off again.',
-		),
-	fontStyle: z
-		.enum(["normal", "italic"])
-		.optional()
-		.describe(
-			'Slant of the matched characters; "normal" stands them upright again.',
-		),
-	textDecoration: z
-		.enum(["none", "underline", "line-through", "underline line-through"])
-		.optional()
-		.describe('Line drawn on the matched characters; "none" removes it.'),
-};
-
-/**
- * Which characters to decorate: the text itself rather than an offset, since an
- * offset is something the model would have to count out of a string it wrote.
+ * Which characters to decorate (textMatchSchema), plus which of an object's named
+ * texts holds them.
  */
 const textStretchSchema = {
-	match: z
-		.string()
-		.min(1)
-		.describe(
-			"The characters to decorate, matched literally against the object's own text. Must occur in it — a stretch that does not is an error, not a silent no-op.",
-		),
-	occurrence: z
-		.number()
-		.int()
-		.min(1)
-		.optional()
-		.describe(
-			"Which occurrence to decorate when the text holds several, counted from 1. Omit to decorate every occurrence.",
-		),
+	...textMatchSchema,
 	slot: z
 		.string()
 		.optional()
