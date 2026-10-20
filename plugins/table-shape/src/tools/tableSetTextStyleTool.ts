@@ -20,6 +20,9 @@ import { writeTableDocGrid } from "./writeTableDocGrid";
 import { readTableDocGrid } from "../grid/readTableDocGrid";
 import type { TableDoc } from "../schema/TableDoc";
 
+/** The most decorated cells a result lists by address; past it, only their count is given. */
+const MAX_LISTED_CELL_COUNT = 20;
+
 /** The style arguments, named in the refusal of a call that gives none. */
 const INLINE_TEXT_STYLE_ARG_NAMES = Object.keys(inlineTextStyleSchema);
 
@@ -94,21 +97,29 @@ export const tableSetTextStyleTool = defineObjectAiTool({
 
 		const quotedMatch = JSON.stringify(match);
 		const rangeText = describeTableCellRange(range);
+		const isSingleCell = range.cellIds.length === 1;
 		if (mostOccurrences === 0) {
-			throw new Error(`no cell of ${rangeText} contains ${quotedMatch}`);
+			throw new Error(
+				isSingleCell
+					? `${rangeText} does not contain ${quotedMatch}`
+					: `no cell of ${rangeText} contains ${quotedMatch}`,
+			);
 		}
 		if (decoratedCells.length === 0) {
 			throw new Error(
-				`no cell of ${rangeText} contains ${quotedMatch} more than ${mostOccurrences} time(s), so occurrence ${occurrence} does not exist in any of them`,
+				isSingleCell
+					? `${rangeText} contains ${quotedMatch} ${mostOccurrences} time(s), so occurrence ${occurrence} does not exist`
+					: `no cell of ${rangeText} contains ${quotedMatch} more than ${mostOccurrences} time(s), so occurrence ${occurrence} does not exist in any of them`,
 			);
 		}
 		const stretchText =
 			occurrence === undefined
 				? quotedMatch
 				: `occurrence ${occurrence} of ${quotedMatch}`;
-		const cellsText =
-			range.cellIds.length === 1
-				? rangeText
+		const cellsText = isSingleCell
+			? rangeText
+			: decoratedCells.length > MAX_LISTED_CELL_COUNT
+				? `${decoratedCells.length} of ${rangeText}`
 				: `${decoratedCells.length} of ${rangeText}: ${decoratedCells.join(", ")}`;
 		return {
 			doc: writeTableDocGrid(table, { ...grid, text }),

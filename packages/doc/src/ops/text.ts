@@ -425,7 +425,7 @@ const applyTextStyle = (write: TextStyleWrite): void => {
  *   text a stretch can be styled in (a connector label, a slot of rows and a
  *   `text: "source"` body are all styled as a whole, through `setStyle`), when
  *   `slot` is absent or unknown on a slotted type, when `match` does not occur in
- *   the text, or when `occurrence` is past the last one
+ *   the text, or when `occurrence` is not a whole number from 1 to the count found
  */
 export const setInlineTextStyle = (
 	doc: CanvasDoc,

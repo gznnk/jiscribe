@@ -647,7 +647,7 @@ describe("table_set_text_style", () => {
 			}),
 		).toEqual({
 			ok: false,
-			text: 'no cell of cell [0,0] contains "c0" more than 1 time(s), so occurrence 2 does not exist in any of them',
+			text: 'cell [0,0] contains "c0" 1 time(s), so occurrence 2 does not exist',
 		});
 		expect(currentDoc()).toEqual(before);
 	});
@@ -665,6 +665,46 @@ describe("table_set_text_style", () => {
 		).toBe(
 			"no style given: pass at least one of fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration",
 		);
+	});
+
+	it("names the one cell a single-cell call misses", () => {
+		const { callTool } = setUp();
+
+		expect(
+			callTool("table_set_text_style", {
+				id: "t1",
+				row: 0,
+				column: 0,
+				match: "zz",
+				fontWeight: "bold",
+			}).text,
+		).toBe('cell [0,0] does not contain "zz"');
+	});
+
+	it("gives only the count once more cells are decorated than a result lists", () => {
+		const { callTool } = setUp();
+		callTool("table_fill_cells", {
+			id: "t1",
+			row: 0,
+			column: 0,
+			values: Array.from({ length: 7 }, () => ["x", "x", "x"]),
+			grow: true,
+		});
+
+		expect(
+			callTool("table_set_text_style", {
+				id: "t1",
+				row: 0,
+				column: 0,
+				rowCount: 7,
+				columnCount: 3,
+				match: "x",
+				fontWeight: "bold",
+			}),
+		).toEqual({
+			ok: true,
+			text: 'set fontWeight on "x" in 21 of 21 cells (rows 0-6 x columns 0-2)',
+		});
 	});
 
 	it("keeps the cell's fill and own style, until a later table_set_cell_style sets the same property on the cell", () => {

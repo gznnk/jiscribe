@@ -41,6 +41,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **`setInlineTextStyle` / `setInlineTextStyles` refuse an `occurrence` that is
+  not a whole number**, as they already refused one below 1 or past the last
+  occurrence. The AI tools' schema already took integers only, so only a
+  direct caller of the doc ops sees it.
 - **`table_set_cell_style` overrides what part of a cell's text set for the
   same property.** A cell typed bold in part and then set to `fontWeight:
 "normal"` stayed bold in that part; it now drops the property from the
