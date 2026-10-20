@@ -10,6 +10,7 @@ import { tableFillCellsTool } from "./tools/tableFillCellsTool";
 import { tableInsertTracksTool } from "./tools/tableInsertTracksTool";
 import { tableReadTool } from "./tools/tableReadTool";
 import { tableSetCellStyleTool } from "./tools/tableSetCellStyleTool";
+import { tableSetTextStyleTool } from "./tools/tableSetTextStyleTool";
 import { tableSetTrackSizesTool } from "./tools/tableSetTrackSizesTool";
 
 /**
@@ -27,5 +28,6 @@ export const tableAiToolPlugin: AiToolPlugin = {
 		tableClearCellsTool,
 		tableSetTrackSizesTool,
 		tableSetCellStyleTool,
+		tableSetTextStyleTool,
 	],
 };

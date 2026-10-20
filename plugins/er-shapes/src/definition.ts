@@ -80,7 +80,8 @@ const ER_ENTITY_TRANSFORM_HANDLES: ObjectTransformHandles = {
 
 /**
  * The slot boundaries, the trailing edge, the column grips and the lane grips,
- * all drawn under the core handles.
+ * all drawn under the core handles; the grips under the selection outline too,
+ * which then runs over their side against the entity.
  *
  * The slot boundaries are two strips (key / name and name / type) under the
  * title band, each shown by a dashed guide; a drag resizes the slot left of the boundary and the box with it,
@@ -113,14 +114,14 @@ const ER_ENTITY_SELECTION_CONTROLS: SelectionControlDefinition<ErEntityState>[] 
 		},
 		{
 			name: "columnGrip",
-			layer: "belowHandles",
+			layer: "belowOutline",
 			events: ["click"],
 			Component: ErEntityColumnGripControl,
 			handle: handleErEntityColumnGrip,
 		},
 		{
 			name: "laneGrip",
-			layer: "belowHandles",
+			layer: "belowOutline",
 			events: ["click"],
 			Component: ErEntityLaneGripControl,
 			handle: handleErEntityLaneGrip,

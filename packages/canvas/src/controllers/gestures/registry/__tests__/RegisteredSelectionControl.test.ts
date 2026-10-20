@@ -351,9 +351,9 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 	it("carries the layer a definition names", () => {
 		const { layer } = createRegisteredSelectionControl("container", {
 			...markingDefinition(),
-			layer: "belowHandles",
+			layer: "belowOutline",
 		});
-		expect(layer).toBe("belowHandles");
+		expect(layer).toBe("belowOutline");
 	});
 
 	it("routes a click to a definition that asked for it and commits its object", () => {

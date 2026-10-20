@@ -12,18 +12,18 @@ import {
 import type { DeclaredStyleTable } from "@jiscribe/canvas-sdk";
 
 import { TABLE_INSERT_PICKED_PART_KINDS } from "./commands/tableInsertCommands";
-import { createTableTrackGripHandler } from "./controls/createTableTrackGripHandler";
-import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
-import { handleTableCornerGrip } from "./controls/handleTableCornerGrip";
-import { handleTableRowBoundary } from "./controls/handleTableRowBoundary";
-import { handleTableTrailingEdge } from "./controls/handleTableTrailingEdge";
-import { TableColumnBoundaryControl } from "./controls/TableColumnBoundaryControl";
-import { TableColumnGripControl } from "./controls/TableColumnGripControl";
-import { TableCornerGripControl } from "./controls/TableCornerGripControl";
-import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
-import { TableRowGripControl } from "./controls/TableRowGripControl";
-import { calcConnectionAnchorOffsetPastGrips } from "./controls/TableTrackGrip";
-import { TableTrailingEdgeControl } from "./controls/TableTrailingEdgeControl";
+import { handleTableColumnBoundary } from "./controls/boundary/handleTableColumnBoundary";
+import { handleTableRowBoundary } from "./controls/boundary/handleTableRowBoundary";
+import { TableColumnBoundaryControl } from "./controls/boundary/TableColumnBoundaryControl";
+import { TableRowBoundaryControl } from "./controls/boundary/TableRowBoundaryControl";
+import { createTableTrackGripHandler } from "./controls/grip/createTableTrackGripHandler";
+import { handleTableCornerGrip } from "./controls/grip/handleTableCornerGrip";
+import { TableColumnGripControl } from "./controls/grip/TableColumnGripControl";
+import { TableCornerGripControl } from "./controls/grip/TableCornerGripControl";
+import { calcConnectionAnchorOffsetPastGrips } from "./controls/grip/tableGripMetrics";
+import { TableRowGripControl } from "./controls/grip/TableRowGripControl";
+import { handleTableTrailingEdge } from "./controls/trailingEdge/handleTableTrailingEdge";
+import { TableTrailingEdgeControl } from "./controls/trailingEdge/TableTrailingEdgeControl";
 import { tableDocDefinition } from "./doc";
 import { clearTableGridCells } from "./grid/clearTableGridCells";
 import { collectTableCellRange } from "./grid/collectTableCellRange";
@@ -88,7 +88,8 @@ const calcTableConnectionAnchors = (
  * All six are drawn under the core handles: the strips and grips run along the
  * edges the resize handles sit on, and one covered at a handle's spot is still
  * reachable along the rest of its length, where the handle can be pressed
- * nowhere else.
+ * nowhere else. The grips go lower still, under the selection outline, which
+ * then runs over their side against the table.
  */
 const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	{
@@ -111,21 +112,21 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	},
 	{
 		name: "rowGrip",
-		layer: "belowHandles",
+		layer: "belowOutline",
 		events: ["click"],
 		Component: TableRowGripControl,
 		handle: createTableTrackGripHandler(TABLE_ROW_PART_KIND),
 	},
 	{
 		name: "columnGrip",
-		layer: "belowHandles",
+		layer: "belowOutline",
 		events: ["click"],
 		Component: TableColumnGripControl,
 		handle: createTableTrackGripHandler(TABLE_COLUMN_PART_KIND),
 	},
 	{
 		name: "cornerGrip",
-		layer: "belowHandles",
+		layer: "belowOutline",
 		events: ["click"],
 		Component: TableCornerGripControl,
 		handle: handleTableCornerGrip,

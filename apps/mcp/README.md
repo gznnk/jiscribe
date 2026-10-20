@@ -59,7 +59,7 @@ and a link to a file of another kind is refused. The one exception is an
 and cannot climb out of it — so a drawing and the pictures it names travel
 together.
 
-Four families of tools, 83 in all:
+Four families of tools, 84 in all:
 
 - Seven of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
   `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse`.
@@ -71,11 +71,12 @@ Four families of tools, 83 in all:
   capture, camera, selection, measurement — run over the viewer's WebSocket.
   The one that measures a slot as drawn is registered as `measure_rendered_text`,
   since `measure_text` above answers from dimensions alone
-- 14 that the shape plugins offer for their own shapes — the table's
+- 15 that the shape plugins offer for their own shapes — the table's
   `table_read` / `table_insert_tracks` / `table_delete_tracks` /
   `table_fill_cells` / `table_clear_cells` / `table_set_track_sizes` /
-  `table_set_cell_style`, the record's `record_set_compartments`, which
-  adds and removes compartments and fits the height to them, and the ER
+  `table_set_cell_style` / `table_set_text_style`, the record's
+  `record_set_compartments`, which adds and removes compartments and fits the
+  height to them, and the ER
   entity's `er_entity_read` / `er_entity_insert_columns` /
   `er_entity_delete_columns` / `er_entity_move_columns` /
   `er_entity_set_texts` / `er_entity_set_text_style`, whose column edits carry

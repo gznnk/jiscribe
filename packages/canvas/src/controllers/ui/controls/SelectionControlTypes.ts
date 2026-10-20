@@ -14,20 +14,25 @@ export type SelectionControlEventType =
 	"click" | "doubleClick" | "drag" | "dragEnd";
 
 /**
- * Where a selection control is drawn relative to the core handles — the
- * connector endpoints, the transform frame's handles and rotation, the
- * connection anchors and the vertices. Presses go to whatever is drawn on top,
- * so this is also which of the two takes a press where they overlap. Both
- * layers are drawn above the selection outline (SelectionOverlay), and within a
- * layer the control declared later in `selectionControls` takes the press.
+ * Where a selection control is drawn in the selection's stack. From the bottom:
+ * `"belowOutline"`, the selection outline (SelectionOverlay, the outlines of the
+ * selected parts included), `"belowHandles"`, the core handles — the connector
+ * endpoints, the transform frame's handles and rotation, the connection anchors
+ * and the vertices — then `"aboveHandles"`. Presses go to whatever is drawn on
+ * top (the outline takes none), so this is also which control takes a press
+ * where two overlap. Within a layer the control declared later in
+ * `selectionControls` takes the press.
  *
+ * - `"belowOutline"`: for controls that touch the outline and lose nothing by
+ *   being drawn under it — a grip or heading hugging the object's edge.
  * - `"belowHandles"`: for controls that may lie under a handle without being the
  *   only way to do something there — a hit strip running the full length of an
  *   edge, a heading laid outside the object.
  * - `"aboveHandles"`: for a control that is the only way to drag what it drags
  *   and may land on a handle's spot.
  */
-export type SelectionControlLayer = "belowHandles" | "aboveHandles";
+export type SelectionControlLayer =
+	"belowOutline" | "belowHandles" | "aboveHandles";
 
 /** Props passed to a selection control's handle renderer. */
 export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
@@ -148,8 +153,9 @@ export type SelectionControlDefinition<
 	 */
 	events?: readonly SelectionControlEventType[];
 	/**
-	 * Whether the handles are drawn under or over the core handles, and so which
-	 * of the two takes a press where they overlap (see SelectionControlLayer).
+	 * Where the handles are drawn against the selection outline and the core
+	 * handles, and so what takes a press where they overlap (see
+	 * SelectionControlLayer).
 	 * Omitted = `"aboveHandles"`.
 	 */
 	layer?: SelectionControlLayer;

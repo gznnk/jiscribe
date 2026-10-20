@@ -13,6 +13,29 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
+## [0.12.1] - 2026-10-20
+
+### Added
+
+- **`table_set_text_style` decorates part of a cell's text**, as
+  `set_text_style` does for one object's: the stretch is named by `match`
+  (with `occurrence` counted within each cell), and cells of the range that do
+  not hold it are left as they are. 84 tools in all.
+
+### Changed
+
+- **`table_set_cell_style` overrides what part of a cell's text set for the
+  same property**, as `set_style` does on a shape's text and as styling a cell
+  in the viewer already did; before, a stretch styled on its own kept its
+  styling.
+
+### Security
+
+- **The bundled MCP SDK is now 1.32.1** (with hono 4.13.13 and fast-uri 3.1.8
+  under it). The SDK advisory concerns its OAuth client sending credentials to
+  an authorization server the MCP server picks; this server speaks stdio and
+  uses no OAuth client, so it was not exposed.
+
 ## [0.12.0] - 2026-10-19
 
 ### Added

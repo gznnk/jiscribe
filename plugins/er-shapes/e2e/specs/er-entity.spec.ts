@@ -877,11 +877,39 @@ test.describe("erEntity columns", () => {
 		).boundingBox();
 		const firstKey = await slotRect(canvas, id, "col:0:key");
 		const title = await slotRect(canvas, id, "name");
-		expect(rowFace!.x + rowFace!.width).toBeCloseTo(firstKey.x, 0);
-		expect(rowFace!.y).toBeCloseTo(firstKey.y, 0);
-		expect(laneFace!.y + laneFace!.height).toBeCloseTo(title.y, 0);
-		expect(laneFace!.x).toBeCloseTo(firstKey.x, 0);
-		expect(laneFace!.width).toBeCloseTo(firstKey.width, 0);
+		// The face's box takes in half its border's width on every side, so each
+		// side is allowed that much past the slot it abuts.
+		expect(
+			Math.abs(rowFace!.x + rowFace!.width - firstKey.x),
+		).toBeLessThanOrEqual(1);
+		expect(Math.abs(rowFace!.y - firstKey.y)).toBeLessThanOrEqual(1);
+		expect(
+			Math.abs(laneFace!.y + laneFace!.height - title.y),
+		).toBeLessThanOrEqual(1);
+		expect(Math.abs(laneFace!.x - firstKey.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(laneFace!.width - firstKey.width)).toBeLessThanOrEqual(2);
+	});
+
+	test("draws the grips under the selection outline, the slot-boundary and trailing-edge strips over it", async ({
+		canvas,
+	}) => {
+		await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+
+		expect(
+			await canvas.isDrawnUnderSelectionOutline(columnGrip(canvas, 0)),
+		).toBe(true);
+		expect(
+			await canvas.isDrawnUnderSelectionOutline(
+				grip(canvas, "laneGrip", "key"),
+			),
+		).toBe(true);
+		for (const action of ["slotBoundary:0", "trailingEdge"]) {
+			expect(
+				await canvas.isDrawnUnderSelectionOutline(
+					canvas.page.locator(`[data-action="selection:erEntity:${action}"]`),
+				),
+			).toBe(false);
+		}
 	});
 
 	test("inserts below a picked slot from the menu", async ({ canvas }) => {

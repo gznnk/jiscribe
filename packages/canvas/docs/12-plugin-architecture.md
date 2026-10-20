@@ -398,15 +398,19 @@ object is being moved or resized through a transform handle (as the connection
 anchors are not); a control's own drag keeps it drawn.
 
 Presses go to whatever is drawn on top, so `layer` decides where the handles
-stand against the core ones — the connector endpoints, the transform frame's
-handles and rotation, the connection anchors and the vertices:
-`"belowHandles"` draws them under those, `"aboveHandles"` (the default) over
-them. Both layers sit above the selection outline, and within a layer the
-control declared later in `selectionControls` takes the press. Put a control
-below when it lies along an edge a handle sits on but can be pressed elsewhere
-too — a hit strip running an edge's full length, a heading laid outside the
-object (the table's boundaries, trailing edges and track grips). Keep it above
-when it is the only way to drag what it drags and may land on a handle's spot.
+stand against the selection outline and the core handles — the connector
+endpoints, the transform frame's handles and rotation, the connection anchors
+and the vertices. From the bottom: `"belowOutline"` under the outline (the
+outlines of picked parts included), `"belowHandles"` over the outline and under
+the core handles, `"aboveHandles"` (the default) over those. The outline takes
+no press, and within a layer the control declared later in `selectionControls`
+takes the press. Put a control below the handles when it lies along an edge a
+handle sits on but can be pressed elsewhere too — a hit strip running an edge's
+full length (the table's boundaries and trailing edges). Put it below the
+outline as well when it touches the outline and loses nothing by being drawn
+under it — a grip or heading hugging the object's edge (the table's track and
+corner grips). Keep it above when it is the only way to drag what it drags and
+may land on a handle's spot.
 
 **`partKinds`.** One `ObjectPartKindDefinition` per part-id namespace (`kind`) the type
 divides its objects into, stating `has` — whether an id still names a part of

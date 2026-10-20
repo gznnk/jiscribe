@@ -13,6 +13,66 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-10-20
+
+### Security
+
+- **DOMPurify is now 3.4.16.** The advisories fixed there concern `IN_PLACE`
+  sanitizing and `afterSanitize` hooks, neither of which `@jiscribe/canvas` or
+  `@jiscribe/markdown` uses, so no drawing was exposed; the bump keeps the
+  shipped version off the advisory list.
+
+### Added
+
+- **`table_set_text_style` decorates part of a cell's text** — a word in bold,
+  a term in another color — the way `set_text_style` does for one object's
+  text. It names the stretch by its characters (`match`, with `occurrence`
+  counted within each cell) and works over a range of cells, leaving those
+  that do not hold the stretch as they are; it fails only when no cell of the
+  range is decorated. `table_set_cell_style` still styles whole cells.
+- **`styleRichTextMatches` in `@jiscribe/doc`** finds a stretch of a rich text
+  by its characters and styles every occurrence or one of them, reporting an
+  empty match, a stretch not found or an occurrence past the last as a result
+  rather than an error. It is what `setInlineTextStyle` runs on.
+  `clearInlineStyleFromRuns`, which `setStyle` drops a whole-text property
+  from the styled stretches with, is exported beside it.
+- **`textMatchSchema` and `inlineTextStyleSchema` in
+  `@jiscribe/canvas-sdk/tools`** (from `@jiscribe/ai-tools-sdk`): the
+  `match` / `occurrence` arguments and the inline typography `set_text_style`
+  declares, for a plugin tool decorating part of a text of its own.
+- **For plugin authors: a selection control can be drawn under the selection
+  outline.** `layer: "belowOutline"` puts it below the outline, the outlines of
+  picked parts included, where `"belowHandles"` and `"aboveHandles"` (still the
+  default) both sit above it.
+
+### Changed
+
+- **`setInlineTextStyle` / `setInlineTextStyles` refuse an `occurrence` that is
+  not a whole number**, as they already refused one below 1 or past the last
+  occurrence. The AI tools' schema already took integers only, so only a
+  direct caller of the doc ops sees it.
+- **`table_set_cell_style` overrides what part of a cell's text set for the
+  same property.** A cell typed bold in part and then set to `fontWeight:
+"normal"` stayed bold in that part; it now drops the property from the
+  stretches, as `set_style` does on a shape's text and as styling a cell on
+  the canvas already did.
+- **The selection outline is drawn over the grips of a table and an ER
+  entity.** The row, column and corner grips of a table and the column and lane
+  grips of an `erEntity` covered the outer half of the outline where they abut
+  the shape; the outline now runs unbroken over them, and each grip's border is
+  closed on all four sides and stops at the shape's box instead of running half
+  its width into it.
+
+### Fixed
+
+- **Dragging a table out of the shape library shows its ghost on an empty
+  canvas.** In Chromium the ghost stayed in the DOM but was never drawn while
+  nothing on the canvas gave it a snap guide.
+- **The table tools no longer tell an AI to write a cell through `set_text`.**
+  Their descriptions named a cell's text slot as something `set_text` and
+  `set_text_style` take, but both refuse a table; cell texts are written with
+  `table_fill_cells` and styled with `table_set_cell_style`.
+
 ## [0.12.0] - 2026-10-19
 
 ### Security
@@ -549,7 +609,8 @@ The first release in this repository.
 Earlier versions were released before this repository was public and are not
 recorded here.
 
-[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/gznnk/jiscribe/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/gznnk/jiscribe/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/gznnk/jiscribe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gznnk/jiscribe/compare/v0.9.0...v0.10.0

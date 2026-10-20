@@ -65,6 +65,11 @@ test.describe("dragging a table out of the shape library", () => {
 		expect(ghost.x + ghost.width / 2).toBeCloseTo(to.x, 0);
 		expect(ghost.y + ghost.height / 2).toBeCloseTo(to.y, 0);
 
+		// The ghost lingers in the DOM for a moment after the release, and until it
+		// is gone it is the last object drawn.
+		await canvas.page
+			.locator(`[data-id="${GHOST_ID}"]`)
+			.waitFor({ state: "detached" });
 		const placed = (await canvas.captureObjects()).at(-1);
 		expect(placed?.id).toBeDefined();
 		const dropped = await drawnBox(canvas, placed!.id!);
@@ -74,5 +79,42 @@ test.describe("dragging a table out of the shape library", () => {
 		expect(dropped.y).toBeCloseTo(ghost.y, 0);
 		expect(dropped.width).toBeCloseTo(ghost.width, 0);
 		expect(dropped.height).toBeCloseTo(ghost.height, 0);
+	});
+
+	test("paints the ghost on an empty canvas", async ({ canvas }) => {
+		await canvas.openStencilLibrary();
+		const item = canvas.page.locator(
+			selectors.stencilLibraryPanelItem("table"),
+		);
+		const to = canvas.toScreen(DROP_POINT);
+		const around = { x: to.x - 40, y: to.y - 20, width: 80, height: 40 };
+		const before = await canvas.page.screenshot({ clip: around });
+
+		const panel = await canvas.page
+			.locator(selectors.stencilLibraryPanel)
+			.boundingBox();
+		const itemBox = await item.boundingBox();
+
+		await item.hover();
+		await canvas.page.mouse.down();
+		try {
+			// The drag starts at the panel's far edge, so the ghost is first drawn
+			// wholly under the panel, where Chromium culls it, and is only then moved
+			// out onto the canvas.
+			await canvas.page.mouse.move(panel!.x + 1, itemBox!.y);
+			await canvas.page
+				.locator(`[data-id="${GHOST_ID}"]`)
+				.waitFor({ state: "attached" });
+			await canvas.page.mouse.move(to.x, to.y, { steps: 12 });
+			// Being in the DOM is not being drawn: with nothing on the canvas to
+			// snap to, no guide repaints the ghost on its behalf.
+			await expect
+				.poll(async () =>
+					(await canvas.page.screenshot({ clip: around })).equals(before),
+				)
+				.toBe(false);
+		} finally {
+			await canvas.page.mouse.up();
+		}
 	});
 });

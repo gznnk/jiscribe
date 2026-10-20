@@ -862,6 +862,14 @@ const CanvasComponent = ({
 									connectorDraft={state.connectorDraft}
 									objects={state.objects}
 								/>
+								<SelectionControlsLayer
+									layer="belowOutline"
+									selection={state.selection}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									isTextEditing={!!state.textEditState}
+									activeDragKind={state.activeDrag?.kind ?? null}
+								/>
 								<SelectionOverlay
 									selection={state.selection}
 									objects={draftObjects}
