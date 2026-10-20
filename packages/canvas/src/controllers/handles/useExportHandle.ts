@@ -1,10 +1,11 @@
 import type { Rect } from "@jiscribe/geometry";
-import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
+import { type RefObject, useCallback, useMemo } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import { canvasToSvgString, rasterizeSvgToPng } from "../../export";
 import type { ResolveImageBlob } from "../../export";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { useLatestRef } from "../hooks/useLatestRef";
 import type { CanvasRegistries } from "../registries";
 import { calcVisibleWorldRect } from "../utils/calcVisibleWorldRect";
 import {
@@ -102,10 +103,7 @@ export const useExportHandle = (
 
 	// Read at export time, so a file arriving does not rebuild the handle a host
 	// may be holding on to.
-	const resolveImageBlobRef = useRef(resolveImageBlob);
-	useEffect(() => {
-		resolveImageBlobRef.current = resolveImageBlob;
-	});
+	const resolveImageBlobRef = useLatestRef(resolveImageBlob);
 
 	// registries is fixed at mount (see the `initialConfig` prop doc), so this
 	// callback — and the handle built on it — is stable for the canvas lifetime.
@@ -119,7 +117,7 @@ export const useExportHandle = (
 			),
 			resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
 		}),
-		[canvasStateRef, registries],
+		[canvasStateRef, resolveImageBlobRef, registries],
 	);
 
 	return useMemo(

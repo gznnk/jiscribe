@@ -1,12 +1,7 @@
-import {
-	type Dispatch,
-	type RefObject,
-	useCallback,
-	useEffect,
-	useRef,
-} from "react";
+import { type Dispatch, type RefObject, useCallback } from "react";
 
 import type { NotifyError } from "./useErrorNotification";
+import { useLatestRef } from "./useLatestRef";
 import {
 	canvasToSvgString,
 	exportCanvasToPng,
@@ -131,24 +126,15 @@ export const useExportDialog = ({
 }: UseExportDialogParams): ((values: ExportSubmitValues) => void) => {
 	// Always-fresh mirror of the state, read at export time rather than at render
 	// time, so the callback below never has to be rebuilt.
-	const canvasStateRef = useRef(canvasState);
-	useEffect(() => {
-		canvasStateRef.current = canvasState;
-	});
+	const canvasStateRef = useLatestRef(canvasState);
 
 	// onExportImage goes through a ref so a host passing a new function each
 	// render cannot re-create the submit handler.
-	const onExportImageRef = useRef(onExportImage);
-	useEffect(() => {
-		onExportImageRef.current = onExportImage;
-	});
+	const onExportImageRef = useLatestRef(onExportImage);
 
 	// Mirrored like the state: it changes identity as files arrive, and the submit
 	// handler is meant to survive that.
-	const resolveImageBlobRef = useRef(resolveImageBlob);
-	useEffect(() => {
-		resolveImageBlobRef.current = resolveImageBlob;
-	});
+	const resolveImageBlobRef = useLatestRef(resolveImageBlob);
 
 	// Export dialog (opened by ExportCommand): pick format + margin, OK
 	return useCallback(
@@ -176,6 +162,15 @@ export const useExportDialog = ({
 				),
 			);
 		},
-		[svgRef, registries, dispatch, notifyError, withCullingSuspended],
+		[
+			svgRef,
+			canvasStateRef,
+			onExportImageRef,
+			resolveImageBlobRef,
+			registries,
+			dispatch,
+			notifyError,
+			withCullingSuspended,
+		],
 	);
 };

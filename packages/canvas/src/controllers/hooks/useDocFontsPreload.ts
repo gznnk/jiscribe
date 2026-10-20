@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
+import { useLatestRef } from "./useLatestRef";
 import type { DocFontRequest } from "../utils/collectDocFontRequests";
 
 /**
@@ -42,12 +43,8 @@ export const useDocFontsPreload = (
 
 	// Both are read once, in the mount effect below, so neither has to hold its
 	// identity across renders.
-	const collectRequestsRef = useRef(collectRequests);
-	const onSettledRef = useRef(onSettled);
-	useEffect(() => {
-		collectRequestsRef.current = collectRequests;
-		onSettledRef.current = onSettled;
-	});
+	const collectRequestsRef = useLatestRef(collectRequests);
+	const onSettledRef = useLatestRef(onSettled);
 
 	useEffect(() => {
 		const fonts = getFontFaceSet();
@@ -93,7 +90,7 @@ export const useDocFontsPreload = (
 			hasSettled = true;
 			window.clearTimeout(timeoutId);
 		};
-	}, []);
+	}, [collectRequestsRef, onSettledRef]);
 
 	return isSettled;
 };
