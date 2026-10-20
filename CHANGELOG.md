@@ -38,6 +38,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `@jiscribe/canvas-sdk/tools`** (from `@jiscribe/ai-tools-sdk`): the
   `match` / `occurrence` arguments and the inline typography `set_text_style`
   declares, for a plugin tool decorating part of a text of its own.
+- **For plugin authors: a selection control can be drawn under the selection
+  outline.** `layer: "belowOutline"` puts it below the outline, the outlines of
+  picked parts included, where `"belowHandles"` and `"aboveHandles"` (still the
+  default) both sit above it.
 
 ### Changed
 
@@ -50,6 +54,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 "normal"` stayed bold in that part; it now drops the property from the
   stretches, as `set_style` does on a shape's text and as styling a cell on
   the canvas already did.
+- **The selection outline is drawn over the grips of a table and an ER
+  entity.** The row, column and corner grips of a table and the column and lane
+  grips of an `erEntity` covered the outer half of the outline where they abut
+  the shape; the outline now runs unbroken over them, and each grip's border is
+  closed on all four sides and stops at the shape's box instead of running half
+  its width into it.
 
 ### Fixed
 

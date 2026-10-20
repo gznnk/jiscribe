@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
 	selectors,
@@ -367,6 +367,25 @@ export class CanvasDriver {
 				partOutlineSelector: selectors.partOutline,
 			},
 		);
+	}
+
+	/**
+	 * Whether `element` comes before the selection overlay in the DOM, which is
+	 * what draws it under the outlines, SVG painting in document order. Throws
+	 * when no outline layer is drawn, nothing being selected.
+	 */
+	async isDrawnUnderSelectionOutline(element: Locator): Promise<boolean> {
+		return element.evaluate((node, overlaySelector) => {
+			const overlay = document.querySelector(overlaySelector);
+			if (overlay === null) {
+				throw new Error("no selection overlay drawn");
+			}
+			return (
+				(node.compareDocumentPosition(overlay) &
+					Node.DOCUMENT_POSITION_FOLLOWING) !==
+				0
+			);
+		}, selectors.selectionOverlay);
 	}
 
 	/**

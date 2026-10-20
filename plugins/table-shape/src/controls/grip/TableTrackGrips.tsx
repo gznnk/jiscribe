@@ -98,7 +98,6 @@ const TableTrackGripsComponent: React.FC<TableTrackGripsProps> = ({
 						key={`${axis}-${index}`}
 						from={toWorld(lead, start)}
 						to={toWorld(lead, end)}
-						edgeMid={toWorld(edge, (start + end) / 2)}
 						objectId={id}
 						action={`${action}:${tableTrackPartId(index)}`}
 						label={formatTableTrackLabel(axis, index)}

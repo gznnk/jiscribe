@@ -25,13 +25,6 @@ type TableTrackGripProps = {
 	from: Point;
 	/** Its end, in world coordinates; swapping the two only turns the grip end for end. */
 	to: Point;
-	/**
-	 * The point on the table's edge the grip's middle faces, in world
-	 * coordinates: which side of the centre line the table is on, read off the
-	 * drawing rather than assumed, so a flipped or rotated table still gets it
-	 * right.
-	 */
-	edgeMid: Point;
 	/** The table the grip belongs to, as `data-id`. */
 	objectId: string;
 	/** The whole `data-action`, track index included, which is what routes the click to a track. */
@@ -58,15 +51,15 @@ type TableTrackGripProps = {
  * takes no pointer; an unpainted rect on top, covering the whole cell, carries
  * the control data attributes the gesture layer routes on (`data-kind="control"`
  * + the table's id + the action naming the track). The label takes no pointer
- * either, so no press resolves to it instead of the control. Where the resize
- * handle at the middle of the left or top edge overlaps the cell, the handle
- * takes the press, the grips being drawn under the core handles (the table's
- * `selectionControls`).
+ * either, so no press resolves to it instead of the control. The grips are
+ * drawn under the selection outline (the table's `selectionControls`), which
+ * runs over the cell's side against the table, and under the core handles; so
+ * the resize handle at the middle of the left or top edge takes the press where
+ * it overlaps the cell.
  */
 const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 	from,
 	to,
-	edgeMid,
 	objectId,
 	action,
 	label,
@@ -78,17 +71,6 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 	const ink = selected ? theme.handleAccent : theme.foregroundMuted;
 	const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
 
-	// The placed group's +y axis is the centre line turned a quarter turn
-	// clockwise on screen; the table lies on that side when its edge does.
-	const tableOnPositiveSide =
-		-(to.y - from.y) * (edgeMid.x - mid.x) +
-			(to.x - from.x) * (edgeMid.y - mid.y) >
-		0;
-	// The border leaves out the side against the table, where it would be
-	// drawn over the selection outline.
-	const tableSideY = tableOnPositiveSide ? thickness / 2 : -thickness / 2;
-	const borderPath = `M ${-length / 2} ${tableSideY} V ${-tableSideY} H ${length / 2} V ${tableSideY}`;
-
 	return (
 		<>
 			<g transform={transform}>
@@ -97,15 +79,10 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 					y={-thickness / 2}
 					width={length}
 					height={thickness}
-					style={{ fill, pointerEvents: "none" }}
-				/>
-				<path
-					d={borderPath}
-					fill="none"
 					// World units, not divided by the zoom: the selection outline it
 					// abuts scales with the content, and the two read as one line weight.
 					strokeWidth={SELECTION_OUTLINE_WIDTH}
-					style={{ stroke: theme.borderSubtle, pointerEvents: "none" }}
+					style={{ fill, stroke: theme.borderSubtle, pointerEvents: "none" }}
 				/>
 			</g>
 			<text

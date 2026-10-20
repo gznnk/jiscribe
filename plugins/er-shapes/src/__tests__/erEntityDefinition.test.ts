@@ -3,7 +3,7 @@ import type { ConnectionAnchors } from "@jiscribe/canvas";
 import { TEXT_SLOT_PART_KIND } from "@jiscribe/canvas-sdk";
 import { describe, expect, it } from "vitest";
 
-import { GRIP_THICKNESS } from "../controls/ErEntityGrip";
+import { GRIP_REACH } from "../controls/ErEntityGrip";
 import { erEntityDefinition } from "../definition";
 import { erPlugin } from "../plugin";
 import { calcErEntityTextSlotRegions } from "../presentation/calcErEntityTextSlotRegions";
@@ -45,7 +45,7 @@ describe("erEntityDefinition.connectionAnchors", () => {
 		expect(anchors["col:1:left"]?.offset).toBeGreaterThan(0);
 	});
 
-	it("pushes the left points and the top midpoint out past the grips, by the grips' thickness on screen", () => {
+	it("pushes the left points and the top midpoint out past the grips, by the grips' reach on screen", () => {
 		const columns = [{ name: "id" }, { name: "email" }];
 		const atOne = anchorsOf(columns, 1);
 		const atTwo = anchorsOf(columns, 2);
@@ -53,11 +53,11 @@ describe("erEntityDefinition.connectionAnchors", () => {
 		expect(atOne["col:1:right"]).toBeUndefined();
 		expect(atOne.bottomCenter).toBeUndefined();
 		// The grips are sized in world units, so twice the zoom puts the left
-		// points and the top midpoint a grip's thickness further out on screen.
+		// points and the top midpoint the grips' reach further out on screen.
 		for (const anchorId of ["col:0:left", "col:1:left", "topCenter"]) {
 			expect(
 				(atTwo[anchorId]?.offset ?? 0) - (atOne[anchorId]?.offset ?? 0),
-			).toBe(GRIP_THICKNESS);
+			).toBe(GRIP_REACH);
 		}
 	});
 

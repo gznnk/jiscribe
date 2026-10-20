@@ -80,7 +80,6 @@ const ErEntityGripStripComponent: React.FC<ErEntityGripStripProps> = ({
 					key={partId}
 					from={toWorld(lead, start)}
 					to={toWorld(lead, end)}
-					edgeMid={toWorld(edge, (start + end) / 2)}
 					objectId={id}
 					action={`${action}:${partId}`}
 					label={label}

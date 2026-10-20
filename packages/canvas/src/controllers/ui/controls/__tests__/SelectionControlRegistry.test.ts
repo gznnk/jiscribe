@@ -26,6 +26,7 @@ describe("SelectionControlRegistry", () => {
 		const registry = new SelectionControlRegistry();
 		registry.register("container", [
 			{ ...makeControl("strip"), layer: "belowHandles" },
+			{ ...makeControl("heading"), layer: "belowOutline" },
 			makeControl("headerHeight"),
 			{ ...makeControl("grip"), layer: "aboveHandles" },
 		]);
@@ -36,6 +37,7 @@ describe("SelectionControlRegistry", () => {
 				?.map(({ action, layer }) => [action, layer] as const),
 		).toEqual([
 			["selection:container:strip", "belowHandles"],
+			["selection:container:heading", "belowOutline"],
 			["selection:container:headerHeight", "aboveHandles"],
 			["selection:container:grip", "aboveHandles"],
 		]);

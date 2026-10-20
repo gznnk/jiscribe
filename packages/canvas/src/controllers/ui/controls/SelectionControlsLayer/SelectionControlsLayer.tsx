@@ -8,7 +8,7 @@ import { isObjectBeingMovedOrTransformed } from "../../utils/isObjectBeingMovedO
 import type { SelectionControlLayer } from "../SelectionControlTypes";
 
 type SelectionControlsLayerProps = {
-	/** Which of the two layers this instance draws; the controls declaring the other are left to its twin. */
+	/** Which of the three layers this instance draws; the controls declaring another are left to its siblings. */
 	layer: SelectionControlLayer;
 	/**
 	 * `state.selection` as it stands. Its `part` reaches every control of the sole
@@ -30,9 +30,10 @@ type SelectionControlsLayerProps = {
  * layers stay separate because they key on capabilities or controller state
  * rather than the object type.
  *
- * Mounted twice, once on each side of those layers, each instance drawing the
- * controls that declared its `layer` (SelectionControlLayer), so a control's
- * place in the press order is its own declaration rather than core's.
+ * Mounted three times — under the selection outline, and on each side of those
+ * layers — each instance drawing the controls that declared its `layer`
+ * (SelectionControlLayer), so a control's place in the press order is its own
+ * declaration rather than core's.
  *
  * Hidden while the object is moved or resized through a transform handle, as
  * the connection anchors are: the controls would only trail the shape, and none

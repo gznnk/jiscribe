@@ -88,7 +88,8 @@ const calcTableConnectionAnchors = (
  * All six are drawn under the core handles: the strips and grips run along the
  * edges the resize handles sit on, and one covered at a handle's spot is still
  * reachable along the rest of its length, where the handle can be pressed
- * nowhere else.
+ * nowhere else. The grips go lower still, under the selection outline, which
+ * then runs over their side against the table.
  */
 const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	{
@@ -111,21 +112,21 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	},
 	{
 		name: "rowGrip",
-		layer: "belowHandles",
+		layer: "belowOutline",
 		events: ["click"],
 		Component: TableRowGripControl,
 		handle: createTableTrackGripHandler(TABLE_ROW_PART_KIND),
 	},
 	{
 		name: "columnGrip",
-		layer: "belowHandles",
+		layer: "belowOutline",
 		events: ["click"],
 		Component: TableColumnGripControl,
 		handle: createTableTrackGripHandler(TABLE_COLUMN_PART_KIND),
 	},
 	{
 		name: "cornerGrip",
-		layer: "belowHandles",
+		layer: "belowOutline",
 		events: ["click"],
 		Component: TableCornerGripControl,
 		handle: handleTableCornerGrip,

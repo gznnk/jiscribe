@@ -141,6 +141,33 @@ test.describe("table track grips", () => {
 		expect(await isResizeHandleOnTop(canvas, "topCenter")).toBe(true);
 	});
 
+	test("is drawn under the selection outline, the boundary and trailing-edge strips over it", async ({
+		canvas,
+	}) => {
+		await canvas.placeShape("Table");
+
+		expect(
+			await canvas.isDrawnUnderSelectionOutline(
+				trackGrip(canvas, "rowGrip", 0),
+			),
+		).toBe(true);
+		expect(
+			await canvas.isDrawnUnderSelectionOutline(
+				trackGrip(canvas, "columnGrip", 0),
+			),
+		).toBe(true);
+		expect(await canvas.isDrawnUnderSelectionOutline(cornerGrip(canvas))).toBe(
+			true,
+		);
+		for (const action of ["columnBoundary:0", "trailingEdge:column"]) {
+			expect(
+				await canvas.isDrawnUnderSelectionOutline(
+					canvas.page.locator(`[data-action="selection:table:${action}"]`),
+				),
+			).toBe(false);
+		}
+	});
+
 	test("runs the length of its track, meeting the next grip at the boundary", async ({
 		canvas,
 	}) => {

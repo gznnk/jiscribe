@@ -228,6 +228,9 @@ export const selectors = {
 	/** Every handle shown on selection. */
 	control: "[data-kind=control]",
 
+	/** The layer holding the selection outlines (SelectionOverlay). */
+	selectionOverlay: '[data-layer="selection-overlay"]',
+
 	/**
 	 * Every outline the selection overlay draws: an object's frame, or the box of a
 	 * part picked inside it, which replaces its owner's (SelectionOverlay).
