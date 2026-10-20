@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useLatestRef } from "./useLatestRef";
+import type { ResolveImageBlob } from "../../export";
 import type {
 	ResolvedImage,
 	ResolvedImageLookup,
@@ -22,6 +24,13 @@ import {
  */
 export type ResolveImage = (src: string) => Promise<Blob>;
 
+type DocImages = {
+	/** What the image shapes draw from, keyed by `src`. */
+	lookupResolvedImage: ResolvedImageLookup;
+	/** The bytes behind a `src`, or undefined until it is `ready` (and for good once it has failed). */
+	resolveImageBlob: ResolveImageBlob;
+};
+
 /**
  * The image side of a canvas: the files a document names, fetched once each and
  * handed to the rendering layer as one lookup.
@@ -38,18 +47,15 @@ export type ResolveImage = (src: string) => Promise<Blob>;
  *
  * @param objects - The state's object map, re-read on every change so an image added or removed after mount is picked up
  * @param resolveImage - The host's resolver, or undefined to resolve nothing at all — every image then stays `loading`, i.e. draws its placeholder
- * @returns The lookup to publish through `ResolvedImagesContext`; its identity changes on every resolution, and only then
+ * @returns `lookupResolvedImage`, the lookup to publish through `ResolvedImagesContext`, and `resolveImageBlob`, the same lookup reduced to the bytes an export carries; both change identity on every resolution, and only then
  */
 export const useDocImages = (
 	objects: Record<string, ObjectState>,
 	resolveImage: ResolveImage | undefined,
-): ResolvedImageLookup => {
+): DocImages => {
 	// Read only from the effects below, so the callback does not have to hold its
 	// identity across renders.
-	const resolveImageRef = useRef(resolveImage);
-	useEffect(() => {
-		resolveImageRef.current = resolveImage;
-	});
+	const resolveImageRef = useLatestRef(resolveImage);
 
 	// Mutable rather than state: the entries outlive every render and are keyed
 	// by src alone, and the counter below is what announces a change to them.
@@ -147,10 +153,10 @@ export const useDocImages = (
 		}
 		// A resolver arriving after the document (a host that learns the file's
 		// directory late) has to start the fetches the earlier run skipped; a
-		// change of function alone does not, hence the boolean rather than the ref.
-	}, [objects, hasResolver]);
+		// change of function alone does not, hence the boolean rather than the function.
+	}, [objects, hasResolver, resolveImageRef]);
 
-	return useMemo(
+	const lookupResolvedImage = useMemo<ResolvedImageLookup>(
 		() => (src: string) =>
 			resolvedBySrcRef.current.get(src) ?? UNRESOLVED_IMAGE,
 		// The counter is an invalidation signal, not an argument: a fresh identity
@@ -158,4 +164,16 @@ export const useDocImages = (
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[resolvedNonce],
 	);
+
+	// An export cannot carry the blob URL a live <image> draws from — it names
+	// nothing outside this tab — so it takes the bytes themselves.
+	const resolveImageBlob = useCallback<ResolveImageBlob>(
+		(src) => {
+			const resolved = lookupResolvedImage(src);
+			return resolved.status === "ready" ? resolved.blob : undefined;
+		},
+		[lookupResolvedImage],
+	);
+
+	return { lookupResolvedImage, resolveImageBlob };
 };

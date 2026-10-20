@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { useLatestRef } from "./useLatestRef";
 import type {
 	CanvasSidebarsState,
 	PropertyPanelState,
@@ -41,10 +42,7 @@ export const useNotifySidebarsChange = (
 	propertyPanel: PropertyPanelState,
 	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void,
 ): void => {
-	const onSidebarsChangeRef = useRef(onSidebarsChange);
-	useEffect(() => {
-		onSidebarsChangeRef.current = onSidebarsChange;
-	});
+	const onSidebarsChangeRef = useLatestRef(onSidebarsChange);
 
 	// null marks "before the first render"; the mount render only records the
 	// baseline so the starting panel state is not delivered as a change.
@@ -61,7 +59,7 @@ export const useNotifySidebarsChange = (
 			return;
 		}
 		onSidebarsChangeRef.current?.(sidebars);
-	}, [stencilLibraryPanel, propertyPanel]);
+	}, [stencilLibraryPanel, propertyPanel, onSidebarsChangeRef]);
 };
 
 /** True when both edges and every panel of `a` are in the same state as those of `b`. */

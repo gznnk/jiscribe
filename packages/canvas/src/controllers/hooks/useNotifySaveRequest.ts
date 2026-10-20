@@ -2,6 +2,7 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { useConstant } from "./useConstant";
+import { useLatestRef } from "./useLatestRef";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";
@@ -36,10 +37,7 @@ export const useNotifySaveRequest = (
 
 	// onCommit goes through a ref so a parent passing a new function on every
 	// render cannot re-fire the effect below and resend the same saveNonce.
-	const onCommitRef = useRef(onCommit);
-	useEffect(() => {
-		onCommitRef.current = onCommit;
-	});
+	const onCommitRef = useLatestRef(onCommit);
 
 	// Always-fresh mirror of state so a deferred (debounced) notification
 	// delivers the latest committed Doc, not the one from the render that

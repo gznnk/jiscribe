@@ -74,7 +74,10 @@ const renderHook = (
 	const Probe = ({ objects }: { objects: Record<string, ObjectState> }) => {
 		const [currentObjects, setObjects] = useState(objects);
 		swapObjects = setObjects;
-		latestLookup = useDocImages(currentObjects, resolveImage);
+		latestLookup = useDocImages(
+			currentObjects,
+			resolveImage,
+		).lookupResolvedImage;
 		return null;
 	};
 	const root = createRoot(document.createElement("div"));

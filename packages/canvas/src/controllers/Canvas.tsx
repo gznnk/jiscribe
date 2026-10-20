@@ -3,7 +3,6 @@ import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/tex
 import {
 	memo,
 	useCallback,
-	useEffect,
 	useImperativeHandle,
 	useMemo,
 	useRef,
@@ -22,7 +21,6 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
-import type { ResolveImageBlob } from "../export";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -35,7 +33,7 @@ import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
-import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
+import { useDevicePixelSnappedViewport } from "./hooks/useDevicePixelSnappedViewport";
 import { useDocFonts } from "./hooks/useDocFonts";
 import type { ResolveImage } from "./hooks/useDocImages";
 import { useDocImages } from "./hooks/useDocImages";
@@ -45,6 +43,7 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useLatestRef } from "./hooks/useLatestRef";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
@@ -73,8 +72,8 @@ import type {
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
+import { useResolvedStencilLibrary } from "./ui/menu/StencilLibrary/hooks/useResolvedStencilLibrary";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
-import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
 import {
 	DEFAULT_TOOLBAR_SECTIONS,
 	Toolbar,
@@ -86,7 +85,6 @@ import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
-import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 
 type CanvasProps = {
 	// ── Document ──
@@ -382,16 +380,9 @@ const CanvasComponent = ({
 	// The files the document names, fetched once each. A shape component is
 	// synchronous, so the awaiting happens here and reaches the rendering layer as
 	// a lookup (see useDocImages).
-	const lookupResolvedImage = useDocImages(state.objects, resolveImage);
-
-	// An export cannot carry the blob URL a live <image> draws from — it names
-	// nothing outside this tab — so it takes the bytes themselves.
-	const resolveImageBlob = useCallback<ResolveImageBlob>(
-		(src) => {
-			const resolved = lookupResolvedImage(src);
-			return resolved.status === "ready" ? resolved.blob : undefined;
-		},
-		[lookupResolvedImage],
+	const { lookupResolvedImage, resolveImageBlob } = useDocImages(
+		state.objects,
+		resolveImage,
 	);
 
 	// Single toast slot shared by every error source (clipboard, export).
@@ -507,17 +498,14 @@ const CanvasComponent = ({
 	// The host callback is read through a ref, so passing a new function each
 	// render does not defeat ObjectMenu's memo. Only adding or removing the prop
 	// changes the identity, which is also what decides whether the item shows.
-	const onOpenReferenceRef = useRef(onOpenReference);
-	useEffect(() => {
-		onOpenReferenceRef.current = onOpenReference;
-	});
+	const onOpenReferenceRef = useLatestRef(onOpenReference);
 	const hasOpenReferenceHandler = onOpenReference !== undefined;
 	const handleOpenReference = useMemo<OpenReferenceHandler | undefined>(
 		() =>
 			hasOpenReferenceHandler
 				? (payload) => onOpenReferenceRef.current?.(payload)
 				: undefined,
-		[hasOpenReferenceHandler],
+		[hasOpenReferenceHandler, onOpenReferenceRef],
 	);
 
 	// Shared by every modal: only one can be open, so closing needs no kind.
@@ -581,15 +569,9 @@ const CanvasComponent = ({
 
 	useImperativeHandle(ref, () => canvasHandle, [canvasHandle]);
 
-	// The committed camera moved onto the device pixel grid (see
-	// snapViewportToDevicePixels). Every layer that positions itself from the
-	// camera must take this one, or the SVG and the HTML overlays above it would
-	// sit a fraction of a pixel apart.
-	const devicePixelRatio = useDevicePixelRatio();
-	const drawnViewport = useMemo(
-		() => snapViewportToDevicePixels(state.viewport, devicePixelRatio),
-		[state.viewport, devicePixelRatio],
-	);
+	// Every layer that positions itself from the camera takes this one (see
+	// useDevicePixelSnappedViewport).
+	const drawnViewport = useDevicePixelSnappedViewport(state.viewport);
 	const { minX, minY, zoom } = drawnViewport;
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
@@ -600,22 +582,9 @@ const CanvasComponent = ({
 	const resolveToolbarCommandState = (commandId: string) =>
 		resolveCommandState(state, registries, commandId);
 
-	// Sections whose ids resolve to registered presets. Resolved here (not in the
-	// panel) so an unmounted-but-declared library still decides whether the
-	// sidebar can open at all.
-	const librarySections = useMemo(
-		() =>
-			resolveStencilCategories(
-				stencilLibrary?.sections ?? [],
-				registries.stencil,
-			),
-		[stencilLibrary?.sections, registries],
-	);
-
-	// A stable reference, so the memoized panel does not re-render on every dispatch.
-	const resolveLibraryPreset = useCallback(
-		(presetId: string) => registries.stencil.get(presetId),
-		[registries],
+	const { librarySections, resolveLibraryPreset } = useResolvedStencilLibrary(
+		stencilLibrary?.sections,
+		registries,
 	);
 
 	return (

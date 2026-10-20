@@ -1,6 +1,7 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { type Dispatch, useEffect, useRef } from "react";
 
+import { useLatestRef } from "./useLatestRef";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
@@ -68,10 +69,7 @@ export const useSyncExternalDoc = ({
 
 	// Always-fresh mirror of state so the sync effect below does not need to
 	// depend on (and re-run for) every state change.
-	const stateRef = useRef(canvasState);
-	useEffect(() => {
-		stateRef.current = canvasState;
-	});
+	const stateRef = useLatestRef(canvasState);
 
 	useEffect(() => {
 		if (!hasMountedRef.current) {
@@ -128,5 +126,6 @@ export const useSyncExternalDoc = ({
 		selfSaveNonceTracker,
 		objectMapper,
 		objectContentResizer,
+		stateRef,
 	]);
 };
