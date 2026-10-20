@@ -5,6 +5,27 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.1] - 2026-10-20
+
+### Security
+
+- **The bundled DOMPurify is now 3.4.16.** The advisories fixed there concern
+  options and hooks the editor does not use, so no drawing was exposed; the
+  bump keeps the shipped version off the advisory list.
+
+### Changed
+
+- **The selection outline is drawn over the grips of a table and an ER
+  entity.** The row, column and corner grips of a table and the column and lane
+  grips of an `erEntity` covered the outer half of the outline where they abut
+  the shape; the outline now runs unbroken over them.
+
+### Fixed
+
+- **Dragging a table out of the shape library shows its ghost on an empty
+  canvas.** The ghost was never drawn while nothing on the canvas gave it a
+  snap guide.
+
 ## [0.12.0] - 2026-10-19
 
 Two new shapes: a `table` you fill in cell by cell, and an `erEntity` for ER

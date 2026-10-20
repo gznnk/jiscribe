@@ -13,6 +13,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-10-20
+
 ### Security
 
 - **DOMPurify is now 3.4.16.** The advisories fixed there concern `IN_PLACE`
@@ -607,7 +609,8 @@ The first release in this repository.
 Earlier versions were released before this repository was public and are not
 recorded here.
 
-[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/gznnk/jiscribe/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/gznnk/jiscribe/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/gznnk/jiscribe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gznnk/jiscribe/compare/v0.9.0...v0.10.0
