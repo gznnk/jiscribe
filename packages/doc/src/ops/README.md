@@ -32,6 +32,10 @@ and ESLint both enforce it (see `eslint.config.js`). It reads and writes the pla
 | `utils/`          | What the ops share: id allocation, object lookup, geometry, endpoint building, style/transform field writing, argument checks |
 | `__tests__/`      | One suite per `ops/` file plus `createDocOps.test.ts`, with shared fixtures in `__tests__/support/`                           |
 
+The ops export no building blocks: per-object logic a plugin's own tools need as well moves
+down to `model/` (or whichever layer it belongs to), is exported from the package root, and
+the ops use it from there — `styleRichTextMatches` behind `setInlineTextStyle` is one.
+
 ## The contract every op holds
 
 Every editing op mutates `doc` in place, and checks its arguments **before** it writes. A call that

@@ -30,6 +30,7 @@ export const tableSetCellStyleTool = defineObjectAiTool({
 	description: [
 		"Style a rectangle of cells: each one gets the background and typography given, and keeps what is not given.",
 		"This is how a table's text is styled — a table has no shape-wide font settings, so set_style reaches only its own fill and outline, while every cell carries its own typography. A whole row or column is a range one track wide.",
+		"The typography reaches all of a cell's text except what table_set_text_style decorated, which keeps its own; use that tool to style part of a cell's text.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",

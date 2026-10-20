@@ -230,6 +230,14 @@ the built-in `set_style` declares, descriptions included. Its `fontWeight` accep
 writing it (the document keeps `"normal"` / `"bold"`). Both come from
 `@jiscribe/canvas-sdk/tools`; the table's `table_set_cell_style` is the example.
 
+A tool that decorates part of a text of its own does the same with what the
+built-in `set_text_style` declares: `textMatchSchema` (`match` / `occurrence`,
+the stretch named by its characters) and `inlineTextStyleSchema` (the typography
+a run carries on its own). `styleRichTextMatches` from `@jiscribe/doc` finds and
+styles the stretch, the same function behind `set_text_style`, and reports what
+it could not find for the tool to word. The table's `table_set_text_style` is
+the example.
+
 ## Giving the package an e2e suite
 
 Every plugin owns a Playwright suite driving **a harness that holds that plugin alone**.

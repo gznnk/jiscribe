@@ -11,14 +11,16 @@ import {
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { InlineTextStyle } from "../model/objects/types/text/InlineTextStyle";
 import { TEXT_INLINE_STYLE_KEYS } from "../model/objects/types/text/InlineTextStyle";
-import type { RichText } from "../model/objects/types/text/RichText";
+import type {
+	RichText,
+	RichTextMatch,
+} from "../model/objects/types/text/RichText";
 import {
 	isRichText,
 	joinRichTextLines,
 	remapRichText,
-	richTextToPlain,
 	splitRichTextLines,
-	styleRichTextRange,
+	styleRichTextMatches,
 } from "../model/objects/types/text/RichText";
 import { isTextRows } from "../model/objects/types/text/TextSlot";
 import type { TextType } from "../model/objects/types/text/TextType";
@@ -314,51 +316,25 @@ export type InlineTextStyleParams = InlineTextStyle & {
 	slot?: string;
 };
 
-/** The occurrences of `match` in `plain`, as the offsets they start at. */
-const findOccurrences = (plain: string, match: string): number[] => {
-	const offsets: number[] = [];
-	for (
-		let found = plain.indexOf(match);
-		found !== -1;
-		found = plain.indexOf(match, found + match.length)
-	) {
-		offsets.push(found);
-	}
-	return offsets;
-};
-
 /** The styling fields the params actually ask for, `match` / `occurrence` / `slot` left out. */
 const requestedStyle = (params: InlineTextStyleParams): InlineTextStyle =>
 	pickDefined(params, TEXT_INLINE_STYLE_KEYS);
 
-/** Styles every requested occurrence, last one first so the earlier offsets still hold. */
-const styleOccurrences = (
-	content: RichText,
-	offsets: readonly number[],
-	length: number,
-	style: InlineTextStyle,
-): RichText =>
-	[...offsets]
-		.reverse()
-		.reduce(
-			(styled, offset) =>
-				styleRichTextRange(styled, offset, offset + length, style),
-			content,
-		);
+/** The body a styling job reads: a target holding no text yet reads as empty. */
+const readStyledBody = (target: ObjectRecord): RichText =>
+	isRichText(target.text) ? target.text : "";
 
 /**
- * One validated styling job: where the text lives, the offsets `match` was found
- * at, and the styling to lay over them. The content is read again at write time so
- * that two jobs on the same body stack — styling only splits runs and never changes
- * the characters, so the offsets stay valid in between.
+ * One validated styling job: where the text lives, the stretch to find in it, and
+ * the styling to lay over it. The stretch is found again at write time so that two
+ * jobs on the same body stack — styling only splits runs and never changes the
+ * characters, so what was found while planning is still there.
  */
 type TextStyleWrite = {
 	/** The record holding the text: the object itself, or one of its slots. */
 	target: ObjectRecord;
-	/** Where each styled stretch starts, in characters of the plain text. */
-	offsets: readonly number[];
-	/** How many characters each stretch spans, i.e. `match.length`. */
-	matchLength: number;
+	/** The stretch to style, already checked against the text. */
+	stretch: RichTextMatch;
 	/** The styling to apply to every one of those stretches. */
 	style: InlineTextStyle;
 };
@@ -389,53 +365,46 @@ const planTextStyle = (
 			`${id} ("${object.type}") holds its text as a plain string that takes no styling on part of it, so use setStyle to style the whole of it`,
 		);
 	}
-	const content = target.text;
-	if (isTextRows(content)) {
+	if (isTextRows(target.text)) {
 		throw new DocOperationError(
 			`${id} ("${object.type}") holds rows in that slot, which are styled as a whole through setStyle`,
 		);
 	}
-	const body: RichText = isRichText(content) ? content : "";
 
-	const plain = richTextToPlain(body);
-	if (params.match === "") {
+	const stretch: RichTextMatch = {
+		match: params.match,
+		occurrence: params.occurrence,
+	};
+	const style = requestedStyle(params);
+	const styling = styleRichTextMatches(readStyledBody(target), stretch, style);
+	if (styling.kind === "emptyMatch") {
 		throw new DocOperationError(`${id}: match must not be empty`);
 	}
-	const offsets = findOccurrences(plain, params.match);
-	if (offsets.length === 0) {
+	if (styling.kind === "notFound") {
 		throw new DocOperationError(
 			`${id} does not contain ${JSON.stringify(params.match)}`,
 		);
 	}
-	if (params.occurrence !== undefined) {
-		if (params.occurrence < 1 || params.occurrence > offsets.length) {
-			throw new DocOperationError(
-				`${id} contains ${JSON.stringify(params.match)} ${offsets.length} time(s), so occurrence ${params.occurrence} does not exist`,
-			);
-		}
+	if (styling.kind === "occurrenceOutOfRange") {
+		throw new DocOperationError(
+			`${id} contains ${JSON.stringify(params.match)} ${styling.occurrenceCount} time(s), so occurrence ${params.occurrence} does not exist`,
+		);
 	}
-
-	return {
-		target,
-		offsets:
-			params.occurrence === undefined
-				? offsets
-				: [offsets[params.occurrence - 1]],
-		matchLength: params.match.length,
-		style: requestedStyle(params),
-	};
+	return { target, stretch, style };
 };
 
 /** Carry out a planned styling job over the content as it stands now. */
 const applyTextStyle = (write: TextStyleWrite): void => {
-	const content = write.target.text;
-	const body: RichText = isRichText(content) ? content : "";
-	write.target.text = styleOccurrences(
-		body,
-		write.offsets,
-		write.matchLength,
+	const styling = styleRichTextMatches(
+		readStyledBody(write.target),
+		write.stretch,
 		write.style,
 	);
+	// Always "styled": planning found the stretch, and styling since has not
+	// changed a character.
+	if (styling.kind === "styled") {
+		write.target.text = styling.styled;
+	}
 };
 
 /**

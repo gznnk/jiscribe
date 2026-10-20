@@ -356,6 +356,108 @@ export const styleRichTextRange = (
 };
 
 /**
+ * Which characters {@link styleRichTextMatches} styles, named by the text they
+ * hold rather than by offsets: an offset is something a caller would have to
+ * count out of the string, and a miscount styles the wrong words without failing.
+ */
+export type RichTextMatch = {
+	/** The characters to style, matched literally against the plain text. */
+	match: string;
+	/**
+	 * Which occurrence to style when the text holds several, counted from 1.
+	 * Omitted styles every occurrence.
+	 */
+	occurrence?: number;
+};
+
+/**
+ * What {@link styleRichTextMatches} made of a body. The failures carry no message
+ * of their own, so each caller words them with whatever names the text (an
+ * object id, a cell address).
+ */
+export type RichTextMatchStyling =
+	| {
+			kind: "styled";
+			/** The body with the requested occurrences styled, in canonical form. */
+			styled: RichText;
+			/** How many times `match` occurs in the body, at least 1. */
+			occurrenceCount: number;
+	  }
+	| {
+			/** `match` is the empty string, which would match everywhere and nowhere. */
+			kind: "emptyMatch";
+	  }
+	| {
+			/** `match` does not occur in the body. */
+			kind: "notFound";
+	  }
+	| {
+			/** `occurrence` is not one of 1 to `occurrenceCount`. */
+			kind: "occurrenceOutOfRange";
+			/** How many times `match` does occur in the body, at least 1. */
+			occurrenceCount: number;
+	  };
+
+/** The offsets the occurrences of `match` start at, without overlap, left to right. */
+const findMatchOffsets = (plain: string, match: string): number[] => {
+	const offsets: number[] = [];
+	for (
+		let found = plain.indexOf(match);
+		found !== -1;
+		found = plain.indexOf(match, found + match.length)
+	) {
+		offsets.push(found);
+	}
+	return offsets;
+};
+
+/**
+ * Styles the characters of a body that read as a given text, leaving the rest of
+ * it as it is: {@link styleRichTextRange} with the range found by its contents.
+ *
+ * Occurrences are found in the plain text left to right without overlapping, so
+ * "aa" occurs twice in "aaaa" and not three times.
+ *
+ * @param rich - The body to style; not modified
+ * @param target - The text to look for, and which of its occurrences to style
+ * @param style - The fields to override on the matched characters; an omitted field leaves what the runs already carry, as in {@link styleRichTextRange}
+ * @returns `kind: "styled"` with the new body, or the reason nothing was styled: an empty `match`, a `match` the body does not contain, or an `occurrence` that is not an integer from 1 to the count found (the count comes with it)
+ */
+export const styleRichTextMatches = (
+	rich: RichText,
+	target: RichTextMatch,
+	style: InlineTextStyle,
+): RichTextMatchStyling => {
+	if (target.match === "") {
+		return { kind: "emptyMatch" };
+	}
+	const offsets = findMatchOffsets(richTextToPlain(rich), target.match);
+	if (offsets.length === 0) {
+		return { kind: "notFound" };
+	}
+	const { occurrence } = target;
+	if (
+		occurrence !== undefined &&
+		(!Number.isInteger(occurrence) ||
+			occurrence < 1 ||
+			occurrence > offsets.length)
+	) {
+		return { kind: "occurrenceOutOfRange", occurrenceCount: offsets.length };
+	}
+	const styledOffsets =
+		occurrence === undefined ? offsets : [offsets[occurrence - 1]];
+	// Last one first, so the offsets still ahead of it hold.
+	const styled = [...styledOffsets]
+		.reverse()
+		.reduce(
+			(body, offset) =>
+				styleRichTextRange(body, offset, offset + target.match.length, style),
+			rich,
+		);
+	return { kind: "styled", styled, occurrenceCount: offsets.length };
+};
+
+/**
  * The styling every character of a range shares: a field carries a value only
  * when all of them are drawn with the same one, and is `undefined` when the range
  * mixes two — which is what a format toggle reads to decide whether pressing it

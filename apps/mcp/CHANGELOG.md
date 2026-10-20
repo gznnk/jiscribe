@@ -15,6 +15,13 @@ covers that.
 
 ## [Unreleased]
 
+### Added
+
+- **`table_set_text_style` decorates part of a cell's text**, as
+  `set_text_style` does for one object's: the stretch is named by `match`
+  (with `occurrence` counted within each cell), and cells of the range that do
+  not hold it are left as they are. 84 tools in all.
+
 ### Security
 
 - **The bundled MCP SDK is now 1.32.1** (with hono 4.13.13 and fast-uri 3.1.8
