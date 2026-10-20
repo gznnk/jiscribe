@@ -1,5 +1,4 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import {
 	memo,
@@ -24,10 +23,6 @@ import {
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import type { ResolveImageBlob } from "../export";
-import { SelectNextTextSlotCommand } from "./commands/selection/SelectNextTextSlotCommand";
-import { SelectPreviousTextSlotCommand } from "./commands/selection/SelectPreviousTextSlotCommand";
-import { CommitTextEditCommand } from "./commands/text/CommitTextEditCommand";
-import { toggleTextFormatCommandId } from "./commands/text/ToggleTextFormatCommands";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -55,48 +50,29 @@ import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { usePropertyPanelState } from "./hooks/usePropertyPanelState";
-import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
+import { usePropertyUpdaters } from "./hooks/usePropertyUpdaters";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
-import { useTextEditDraftState } from "./hooks/useTextEditDraftState";
+import { useTextEditSession } from "./hooks/useTextEditSession";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
-import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import type { TextFormat } from "./style/TextFormat";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
-import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
-import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
-import { SelectionControlsLayer } from "./ui/controls/SelectionControlsLayer";
-import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
-import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
+import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
-import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
-import { AxisLockGuide } from "./ui/feedback/AxisLockGuide";
-import { DragGhost } from "./ui/feedback/DragGhost";
-import { DrawingPreviewOverlay } from "./ui/feedback/DrawingPreviewOverlay";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
-import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
-import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
-import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type {
-	StyleIntentUpdater,
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
-import type {
-	PropertyPanelDocumentUpdater,
-	PropertyPanelMetaUpdater,
-	PropertyPanelTransformUpdater,
-} from "./ui/menu/PropertyPanel/PropertyPanelTypes";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
 import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
 import {
@@ -109,8 +85,6 @@ import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
-import { graftTextEditDraft } from "./utils/graftTextEditDraft";
-import { readOpenTextEdit } from "./utils/readOpenTextEdit";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 
@@ -523,53 +497,12 @@ const CanvasComponent = ({
 	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleStyleIntent = useCallback<StyleIntentUpdater>(
-		(intent, commit, coalesceHistory = false) => {
-			dispatch({ type: "STYLE_INTENT", intent, commit, coalesceHistory });
-		},
-		[dispatch],
-	);
-
-	const handleTransformUpdate = useCallback<PropertyPanelTransformUpdater>(
-		(property, value, commit, coalesceHistory = false) => {
-			dispatch({
-				type: "TRANSFORM_PROPERTY_UPDATE",
-				property,
-				value,
-				commit,
-				coalesceHistory,
-			});
-		},
-		[dispatch],
-	);
-
-	const handleDocumentUpdate = useCallback<PropertyPanelDocumentUpdater>(
-		(property, value, commit, coalesceHistory = false) => {
-			// The updater's type parameter ties `value` to `property`, but TS cannot
-			// carry that tie into the discriminated union the action is.
-			const update = { property, value } as DocumentPropertyUpdate;
-			dispatch({
-				type: "DOCUMENT_PROPERTY_UPDATE",
-				...update,
-				commit,
-				coalesceHistory,
-			});
-		},
-		[dispatch],
-	);
-
-	const handleMetaUpdate = useCallback<PropertyPanelMetaUpdater>(
-		(property, value, commit, coalesceHistory = false) => {
-			dispatch({
-				type: "META_PROPERTY_UPDATE",
-				property,
-				value,
-				commit,
-				coalesceHistory,
-			});
-		},
-		[dispatch],
-	);
+	const {
+		handleStyleIntent,
+		handleTransformUpdate,
+		handleDocumentUpdate,
+		handleMetaUpdate,
+	} = usePropertyUpdaters(dispatch);
 
 	// The host callback is read through a ref, so passing a new function each
 	// render does not defeat ObjectMenu's memo. Only adding or removing the prop
@@ -604,127 +537,18 @@ const CanvasComponent = ({
 		[],
 	);
 
-	// Neither memo below reads the caret, so both key on the session held through
-	// caret-only moves.
-	const textEditDraftState = useTextEditDraftState(state.textEditState);
-
-	// The slot being edited carries the uncommitted editor text, so geometry derived from
-	// it follows every keystroke instead of jumping on commit. Rendering, selection
-	// feedback, editor placement and the menu anchor only — hit testing and snapping
-	// still read committed state.objects.
-	const draftObjects = useMemo(
-		() =>
-			graftTextEditDraft(
-				{
-					objects: state.objects,
-					selection: state.selection,
-					textEditState: textEditDraftState,
-				},
-				registries.objectContentResizer,
-			),
-		[state.objects, state.selection, textEditDraftState, registries],
-	);
-
-	// What the open editing session is on, for the layers that only need to know
-	// which object and slot the in-place editor covers (culling keeps it rendered,
-	// the overlay hands its slot over to the editor).
-	const textEdit = useMemo(
-		() =>
-			readOpenTextEdit({
-				objects: state.objects,
-				selection: state.selection,
-				textEditState: textEditDraftState,
-			}),
-		[state.objects, state.selection, textEditDraftState],
-	);
-	const textEditObjectId =
-		textEdit === null
-			? null
-			: textEdit.kind === "shape"
-				? textEdit.object.id
-				: textEdit.connector.id;
-	const editingTextSlotId =
-		textEdit?.kind === "shape" ? textEdit.textSlotId : null;
-
-	// The menu is anchored below the drawn extent, which during a text edit is the
-	// draft-grafted box (a keystroke regrows an auto-sized text before commit), so
-	// the menu reads the same objects the rendering layers draw.
-	const menuCanvasState = useMemo(
-		() =>
-			draftObjects === state.objects
-				? state
-				: { ...state, objects: draftObjects },
-		[state, draftObjects],
-	);
+	const {
+		draftObjects,
+		textEditObjectId,
+		editingTextSlotId,
+		menuCanvasState,
+		editorHandlers,
+	} = useTextEditSession({ canvasState: state, dispatch, registries });
 
 	// The sidebar stays on screen through every pan and drag, unlike the ObjectMenu,
 	// which hides itself while the view moves; so its memo is protected here instead,
 	// by handing it the same state object until something it shows has changed.
 	const propertyPanelState = usePropertyPanelState(menuCanvasState);
-
-	const revealCaret = useRevealTextEditCaret({
-		viewport: state.viewport,
-		dispatch,
-	});
-
-	// Editor handlers with stable identities: TextEditorLayer is memoized, and
-	// TextEditor keys its native-listener effects on these, so inline literals
-	// here would re-attach those listeners on every canvas dispatch mid-edit.
-	const handleTextEditChange = useCallback(
-		(text: RichText) => {
-			dispatch({ type: "UPDATE_TEXT_EDIT", text });
-		},
-		[dispatch],
-	);
-	const handleTextEditEscape = useCallback(() => {
-		dispatch({ type: "END_TEXT_EDIT", commit: false });
-	}, [dispatch]);
-	const handleTextEditSelectionChange = useCallback(
-		(selection: { start: number; end: number }) => {
-			dispatch({ type: "UPDATE_TEXT_EDIT_SELECTION", selection });
-		},
-		[dispatch],
-	);
-	// The editor's keystrokes never reach useKeyboardShortcuts (it skips an
-	// editable target), so the editor raises the format's command itself — the
-	// same one the canvas shortcut and the format buttons run. A host that left
-	// the command out of `config.commands` gets the keystroke swallowed and nothing
-	// else, as it would on the canvas.
-	const handleTextEditToggleFormat = useCallback(
-		(format: TextFormat) => {
-			const commandId = toggleTextFormatCommandId(format);
-			if (registries.command.get(commandId) === undefined) {
-				return;
-			}
-			dispatch({ type: "COMMAND", commandId });
-		},
-		[dispatch, registries],
-	);
-
-	// Cmd/Ctrl+Enter in the editor commits through its command, so a host that
-	// left it out of `config.commands` gets the keystroke swallowed instead.
-	const handleTextEditCommit = useCallback(() => {
-		if (registries.command.get(CommitTextEditCommand.id) === undefined) {
-			return;
-		}
-		dispatch({ type: "COMMAND", commandId: CommitTextEditCommand.id });
-	}, [dispatch, registries]);
-
-	// Tab in the editor walks the slots as Tab on the canvas does, so a host that
-	// left that walk out of `config.commands` gets the keystroke swallowed instead.
-	const handleTextEditTab = useCallback(
-		(step: 1 | -1) => {
-			const commandId =
-				step === 1
-					? SelectNextTextSlotCommand.id
-					: SelectPreviousTextSlotCommand.id;
-			if (registries.command.get(commandId) === undefined) {
-				return;
-			}
-			dispatch({ type: "STEP_TEXT_EDIT", step });
-		},
-		[dispatch, registries],
-	);
 
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
 	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
@@ -858,77 +682,9 @@ const CanvasComponent = ({
 								background={state.background}
 								surfaceColor={theme.tokens.canvasBg}
 							>
-								<PendingConnectorOverlay
-									connectorDraft={state.connectorDraft}
-									objects={state.objects}
-								/>
-								<SelectionControlsLayer
-									layer="belowOutline"
-									selection={state.selection}
-									objects={state.objects}
-									zoom={state.viewport.zoom}
-									isTextEditing={!!state.textEditState}
-									activeDragKind={state.activeDrag?.kind ?? null}
-								/>
-								<SelectionOverlay
-									selection={state.selection}
-									objects={draftObjects}
-									multiSelectGroup={state.multiSelectGroup}
-									isTextEditing={!!state.textEditState}
-								/>
-								<SelectionControlsLayer
-									layer="belowHandles"
-									selection={state.selection}
-									objects={state.objects}
-									zoom={state.viewport.zoom}
-									isTextEditing={!!state.textEditState}
-									activeDragKind={state.activeDrag?.kind ?? null}
-								/>
-								<ConnectorControlsLayer
-									selection={state.selection}
-									objects={state.objects}
-									zoom={state.viewport.zoom}
-								/>
-								<TransformControlsLayer
-									selection={state.selection}
-									objects={state.objects}
-									multiSelectGroup={state.multiSelectGroup}
-									zoom={state.viewport.zoom}
-									isTextEditing={!!state.textEditState}
-									activeDragKind={state.activeDrag?.kind ?? null}
-								/>
-								<ConnectionAnchorsLayer
-									selectedIds={state.selection.objectIds}
-									objects={state.objects}
-									zoom={state.viewport.zoom}
-									connectorDraft={state.connectorDraft}
-									isTextEditing={!!state.textEditState}
-									activeDragKind={state.activeDrag?.kind ?? null}
-								/>
-								<VertexControlsLayer
-									selection={state.selection}
-									objects={state.objects}
-									zoom={state.viewport.zoom}
-									activeDragKind={state.activeDrag?.kind ?? null}
-								/>
-								<SelectionControlsLayer
-									layer="aboveHandles"
-									selection={state.selection}
-									objects={state.objects}
-									zoom={state.viewport.zoom}
-									isTextEditing={!!state.textEditState}
-									activeDragKind={state.activeDrag?.kind ?? null}
-								/>
-								<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
-								<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
-								<AreaSelectionRect areaSelection={state.areaSelection} />
-								<SnapGuides
-									snapFeedback={state.snapFeedback}
-									zoom={state.viewport.zoom}
-								/>
-								<AxisLockGuide
-									axisLockFeedback={state.axisLockFeedback}
-									viewport={state.viewport}
+								<CanvasControlLayers
+									canvasState={state}
+									draftObjects={draftObjects}
 								/>
 							</CanvasView>
 							{/* HTML that follows scroll and scales with zoom */}
@@ -943,13 +699,7 @@ const CanvasComponent = ({
 									textEditState={state.textEditState}
 									selection={state.selection}
 									objects={draftObjects}
-									onTextChange={handleTextEditChange}
-									onEscape={handleTextEditEscape}
-									onCommit={handleTextEditCommit}
-									onCaretMove={revealCaret}
-									onSelectionChange={handleTextEditSelectionChange}
-									onToggleFormat={handleTextEditToggleFormat}
-									onTab={handleTextEditTab}
+									{...editorHandlers}
 								/>
 							</ZoomScaledOverlay>
 							{/* HTML whose position follows zoom but whose size does not */}

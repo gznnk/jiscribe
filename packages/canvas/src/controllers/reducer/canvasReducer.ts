@@ -248,7 +248,7 @@ export const createCanvasReducer =
 
 			case "STYLE_INTENT": {
 				// Style writes take two paths.
-				// (1) This case: dispatched from Canvas.tsx's onStyleIntent callback via React
+				// (1) This case: dispatched from usePropertyUpdaters' handleStyleIntent via React
 				//     onChange events — the ObjectMenu's number input and keyboard-driven slider and
 				//     the properties sidebar's callback-writing controls — none of which fires a
 				//     gesture.

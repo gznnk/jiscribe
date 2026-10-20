@@ -15,7 +15,7 @@ type ConnectorControlsLayerProps = Pick<
 /**
  * Layer that renders controls for the currently selected connector.
  * Placed alongside other control layers (TransformControlsLayer, VertexControlsLayer, etc.)
- * in Canvas.tsx, so it receives state directly from the controller.
+ * in CanvasControlLayers, so it receives state directly from the controller.
  */
 const ConnectorControlsLayerComponent: React.FC<
 	ConnectorControlsLayerProps
