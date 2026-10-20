@@ -27,16 +27,25 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   text. It names the stretch by its characters (`match`, with `occurrence`
   counted within each cell) and works over a range of cells, leaving those
   that do not hold the stretch as they are; it fails only when no cell of the
-  range is decorated. `table_set_cell_style` still styles whole cells, and the
-  decorated stretches keep their own styling under it.
+  range is decorated. `table_set_cell_style` still styles whole cells.
 - **`styleRichTextMatches` in `@jiscribe/doc`** finds a stretch of a rich text
   by its characters and styles every occurrence or one of them, reporting an
   empty match, a stretch not found or an occurrence past the last as a result
   rather than an error. It is what `setInlineTextStyle` runs on.
+  `clearInlineStyleFromRuns`, which `setStyle` drops a whole-text property
+  from the styled stretches with, is exported beside it.
 - **`textMatchSchema` and `inlineTextStyleSchema` in
   `@jiscribe/canvas-sdk/tools`** (from `@jiscribe/ai-tools-sdk`): the
   `match` / `occurrence` arguments and the inline typography `set_text_style`
   declares, for a plugin tool decorating part of a text of its own.
+
+### Changed
+
+- **`table_set_cell_style` overrides what part of a cell's text set for the
+  same property.** A cell typed bold in part and then set to `fontWeight:
+"normal"` stayed bold in that part; it now drops the property from the
+  stretches, as `set_style` does on a shape's text and as styling a cell on
+  the canvas already did.
 
 ### Fixed
 

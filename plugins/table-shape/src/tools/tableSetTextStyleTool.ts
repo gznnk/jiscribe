@@ -28,7 +28,7 @@ export const tableSetTextStyleTool = defineObjectAiTool({
 	name: "table_set_text_style",
 	description: [
 		"Decorate part of the text in a rectangle of cells — a few words in bold, one term in another color, a phrase struck through — leaving the rest of each cell's text as it was.",
-		"For whole cells use table_set_cell_style instead: it sets the background, the alignment and the typography of all of a cell's text. What you set here stays drawn over that typography, so a later table_set_cell_style does not undo it.",
+		"For whole cells use table_set_cell_style instead: it sets the background, the alignment and the typography of all of a cell's text. A later table_set_cell_style setting the same property on the cell overrides what you set here.",
 		"The stretch is named by the characters themselves (match), never by an offset; occurrence picks which one when a cell holds several, counted within each cell, and omitting it decorates every occurrence.",
 		"Only typography a run of characters carries on its own is settable: fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration.",
 		"A cell of the range that does not hold match, or holds fewer than occurrence of it, is left as it was; the call fails only when no cell of the range is decorated.",

@@ -128,6 +128,7 @@ export type {
 	TextRun,
 } from "./model/objects/types/text/RichText";
 export {
+	clearInlineStyleFromRuns,
 	isRichText,
 	isTextRun,
 	normalizeRichText,

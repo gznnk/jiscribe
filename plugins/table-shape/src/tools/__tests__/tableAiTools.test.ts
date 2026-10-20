@@ -667,7 +667,7 @@ describe("table_set_text_style", () => {
 		);
 	});
 
-	it("keeps the cell's fill and own style, which a later table_set_cell_style does not clear from the stretch", () => {
+	it("keeps the cell's fill and own style, until a later table_set_cell_style sets the same property on the cell", () => {
 		const { callTool, readTable } = setUp();
 
 		callTool("table_set_text_style", {
@@ -677,16 +677,33 @@ describe("table_set_text_style", () => {
 			match: "c1",
 			fontWeight: "bold",
 		});
+		expect(readTable().cells[0][1]).toEqual({
+			text: [{ text: "r0" }, { text: "c1", fontWeight: "bold" }],
+			fill: "#eeeeee",
+		});
+
+		callTool("table_set_cell_style", {
+			id: "t1",
+			row: 0,
+			column: 1,
+			fontColor: "#ff0000",
+		});
+		expect(readTable().cells[0][1]).toEqual({
+			text: [{ text: "r0" }, { text: "c1", fontWeight: "bold" }],
+			fill: "#eeeeee",
+			fontColor: "#ff0000",
+		});
+
 		callTool("table_set_cell_style", {
 			id: "t1",
 			row: 0,
 			column: 1,
 			fontWeight: "normal",
 		});
-
 		expect(readTable().cells[0][1]).toEqual({
-			text: [{ text: "r0" }, { text: "c1", fontWeight: "bold" }],
+			text: "r0c1",
 			fill: "#eeeeee",
+			fontColor: "#ff0000",
 			fontWeight: "normal",
 		});
 		expect(readTable().cells[0][0]).toBe("r0c0");

@@ -22,6 +22,13 @@ covers that.
   (with `occurrence` counted within each cell), and cells of the range that do
   not hold it are left as they are. 84 tools in all.
 
+### Changed
+
+- **`table_set_cell_style` overrides what part of a cell's text set for the
+  same property**, as `set_style` does on a shape's text and as styling a cell
+  in the viewer already did; before, a stretch styled on its own kept its
+  styling.
+
 ### Security
 
 - **The bundled MCP SDK is now 1.32.1** (with hono 4.13.13 and fast-uri 3.1.8

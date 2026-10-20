@@ -3,6 +3,11 @@ import {
 	defineObjectAiTool,
 	textSlotStyleSchema,
 } from "@jiscribe/canvas-sdk/tools";
+import {
+	clearInlineStyleFromRuns,
+	type InlineTextStyle,
+	TEXT_INLINE_STYLE_KEYS,
+} from "@jiscribe/doc";
 import { z } from "zod";
 
 import {
@@ -30,7 +35,7 @@ export const tableSetCellStyleTool = defineObjectAiTool({
 	description: [
 		"Style a rectangle of cells: each one gets the background and typography given, and keeps what is not given.",
 		"This is how a table's text is styled — a table has no shape-wide font settings, so set_style reaches only its own fill and outline, while every cell carries its own typography. A whole row or column is a range one track wide.",
-		"The typography reaches all of a cell's text except what table_set_text_style decorated, which keeps its own; use that tool to style part of a cell's text.",
+		"The typography reaches all of a cell's text: a property given here replaces what table_set_text_style set for it on part of that text, as set_style does on a shape's text. Use table_set_text_style to style part of a cell's text.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",
@@ -68,9 +73,20 @@ export const tableSetCellStyleTool = defineObjectAiTool({
 			rowCount,
 			columnCount,
 		});
+		// A value set on the whole cell has to win over the stretches it was set on
+		// part of it, as set_style and the canvas's own cell styling have it.
+		const inlineKeys = styledFields.filter(
+			(key): key is keyof InlineTextStyle =>
+				(TEXT_INLINE_STYLE_KEYS as readonly string[]).includes(key),
+		);
 		const text = { ...grid.text };
 		for (const cellId of range.cellIds) {
-			text[cellId] = { ...text[cellId], ...cellStyle };
+			const cell = text[cellId];
+			text[cellId] = {
+				...cell,
+				text: clearInlineStyleFromRuns(cell.text, inlineKeys),
+				...cellStyle,
+			};
 		}
 		return {
 			doc: writeTableDocGrid(table, { ...grid, text }),
