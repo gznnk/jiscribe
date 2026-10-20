@@ -19,7 +19,9 @@ import { selectors } from "../../support/selectors";
  *
  * The body carries the property sections of what is selected: the accordions the
  * selected types share, the fields that state the frame, and the controls that
- * write a style through the same gesture route the floating menu uses.
+ * write a style through the same gesture route the floating menu uses. A style
+ * neither the text nor its type states reads as what the drawing falls back to,
+ * so the lit control is the one the text is drawn with.
  */
 
 /**
@@ -91,6 +93,46 @@ async function writtenView(
 		throw new Error("the export embeds no source");
 	}
 	return (JSON.parse(sourceText) as CanvasModule.CanvasDoc).view ?? null;
+}
+
+/** Centre of the injected card, in content coordinates. */
+const CARD_CENTER = { x: 300, y: 260 };
+
+/**
+ * A card whose body states no alignment of its own. The spec harness's card
+ * registers no creation defaults either, so its alignment is left to the drawing's
+ * last resort (TEXT_STYLE_FALLBACK); placing one from the toolbar would write the
+ * factory's alignment into the slot instead, hence the injection.
+ */
+const unalignedCardDocText = JSON.stringify({
+	version: 1,
+	root: [
+		{
+			id: "unaligned-card",
+			type: "card",
+			x: CARD_CENTER.x - 100,
+			y: CARD_CENTER.y - 60,
+			width: 200,
+			height: 120,
+			// Opaque so a press at the centre lands on a painted face.
+			fill: "#cbd5e1",
+			text: "no alignment of its own",
+		},
+	],
+});
+
+async function loadDoc(canvas: CanvasDriver, docText: string) {
+	await canvas.page.evaluate((text) => {
+		const hook = (
+			window as unknown as { __setHarnessDoc?: (docText: string) => void }
+		).__setHarnessDoc;
+		if (!hook) {
+			throw new Error(
+				"__setHarnessDoc is undefined (harness hook not installed)",
+			);
+		}
+		hook(text);
+	}, docText);
 }
 
 test.describe("Properties sidebar", () => {
@@ -465,6 +507,28 @@ test.describe("Properties sidebar", () => {
 		// re-selection
 		await canvas.page.click(selectors.propertyPanelCommand("sendToBack"));
 		await expect.poll(() => canvas.objectIndex(a)).toBe(0);
+	});
+
+	test("lights the alignment a text is drawn at when neither it nor its type states one", async ({
+		canvas,
+	}) => {
+		await loadDoc(canvas, unalignedCardDocText);
+		const id = "unaligned-card";
+		await expect(canvas.objectById(id)).toHaveCount(1);
+		await canvas.openPropertyPanel();
+		await canvas.selectAt(CARD_CENTER);
+
+		const drawnAlign = (await canvas.textStyleOf(id))?.textAlign;
+		expect(drawnAlign, "the drawing falls back to the centre").toBe("center");
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSet("textAlign", "center")),
+			"the lit segment is the one the text is drawn at",
+		).toHaveAttribute("aria-pressed", "true");
+		for (const unlit of ["left", "right"]) {
+			await expect(
+				canvas.page.locator(selectors.propertyPanelSet("textAlign", unlit)),
+			).toHaveAttribute("aria-pressed", "false");
+		}
 	});
 
 	test("keeps a collapsed section collapsed across close and reopen", async ({
