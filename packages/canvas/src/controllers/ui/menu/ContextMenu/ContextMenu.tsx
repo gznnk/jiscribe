@@ -75,7 +75,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 	];
 
 	return (
-		<Menu ref={menuRef} left={left} top={top}>
+		<Menu ref={menuRef} style={{ left, top }}>
 			{menuItems.map((item, index) => {
 				if (item.type === "separator") {
 					return <MenuSeparator key={`sep-${index}`} />;

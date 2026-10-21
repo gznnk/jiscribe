@@ -4,6 +4,7 @@ import type { Rect } from "@jiscribe/geometry";
 
 import { buildOutsideSheetClipPath } from "./buildOutsideSheetClipPath";
 import { calcMultiDocumentSheets } from "./calcMultiDocumentSheets";
+import { MultiDocumentRootGroup } from "./MultiDocumentStyled";
 import type { MultiDocumentState } from "../../state/multiDocument/MultiDocumentState";
 import { buildDocumentPath } from "../Document/buildDocumentPath";
 
@@ -59,7 +60,7 @@ export const MultiDocument = createFrameObject<MultiDocumentState>(
 		const outsideFrontId = buildClipId(state.id, "front");
 
 		return (
-			<g data-kind="object" data-id={state.id} style={{ cursor: "grab" }}>
+			<MultiDocumentRootGroup data-kind="object" data-id={state.id}>
 				<defs>
 					<clipPath id={outsideFrontId}>
 						<path
@@ -91,7 +92,7 @@ export const MultiDocument = createFrameObject<MultiDocumentState>(
 					</g>
 					<Sheet d={frontPath} shape={shape} />
 				</g>
-			</g>
+			</MultiDocumentRootGroup>
 		);
 	},
 );

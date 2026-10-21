@@ -5,14 +5,17 @@ import { theme } from "../../../../../../theme/themeTokens";
 /**
  * Styled root of the dropdown panel. Rendered centered below or above the button.
  *
- * Placement (top/bottom) and the horizontal correction (translateX with
- * offsetX) are measured values that can change every frame while the menu
- * follows the selection, so ObjectMenuDropdownPanel applies them via the `style` prop
- * instead of emotion interpolation (see #131).
+ * The horizontal correction (translateX with offsetX) is a measured value that
+ * can change every frame while the menu follows the selection, so
+ * ObjectMenuDropdownPanel applies it via the `style` prop instead of emotion
+ * interpolation (see #131).
  */
-export const ObjectMenuDropdownPanelRoot = styled.div`
+export const ObjectMenuDropdownPanelRoot = styled.div<{
+	placement?: "down" | "up";
+}>`
 	position: absolute;
 	left: 50%;
+	${({ placement }) => (placement === "up" ? "bottom: 40px;" : "top: 40px;")}
 	z-index: 1100;
 	display: flex;
 	align-items: center;

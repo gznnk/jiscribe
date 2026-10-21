@@ -29,8 +29,8 @@ export const ObjectMenuDropdownPanel = forwardRef<
 	<ObjectMenuDropdownPanelRoot
 		ref={ref}
 		data-action="panel"
+		placement={placement}
 		style={{
-			...(placement === "up" ? { bottom: 40 } : { top: 40 }),
 			transform: `translateX(calc(-50% + ${offsetX}px))`,
 			...style,
 		}}

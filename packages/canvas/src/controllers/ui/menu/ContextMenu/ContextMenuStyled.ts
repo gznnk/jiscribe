@@ -2,10 +2,12 @@ import styled from "@emotion/styled";
 
 import { theme } from "../../../../theme/themeTokens";
 
-export const Menu = styled.div<{ left: number; top: number }>`
+/**
+ * left / top follow the pointer, so they are passed via the `style` prop
+ * instead of emotion interpolation (see #131).
+ */
+export const Menu = styled.div`
 	position: fixed;
-	left: ${(props) => props.left}px;
-	top: ${(props) => props.top}px;
 	background: ${theme.surface};
 	border: 1px solid ${theme.border};
 	border-radius: ${theme.radius};

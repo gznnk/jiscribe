@@ -7,6 +7,7 @@ import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { calcSegmentPlacement } from "./calcSegmentPlacement";
+import { ErEntityGripHitArea, ErEntityGripLabel } from "./ErEntityGripStyled";
 
 /**
  * How thick a grip is drawn, in world units, so it grows and shrinks with the
@@ -121,22 +122,23 @@ const ErEntityGripComponent: React.FC<ErEntityGripProps> = ({
 					// World units, not divided by the zoom: the selection outline it
 					// abuts scales with the content, and the two read as one line weight.
 					strokeWidth={SELECTION_OUTLINE_WIDTH}
-					style={{ fill, stroke: theme.borderSubtle, pointerEvents: "none" }}
+					pointerEvents="none"
+					style={{ fill, stroke: theme.borderSubtle }}
 				/>
 			</g>
-			<text
+			<ErEntityGripLabel
 				x={mid.x}
 				y={mid.y}
 				textAnchor="middle"
 				dominantBaseline="central"
 				fontSize={GRIP_LABEL_FONT_SIZE}
 				fontFamily={GRIP_LABEL_FONT_FAMILY}
-				style={{ fill: ink, pointerEvents: "none", userSelect: "none" }}
+				style={{ fill: ink }}
 			>
 				{label}
-			</text>
+			</ErEntityGripLabel>
 			<g transform={transform}>
-				<rect
+				<ErEntityGripHitArea
 					x={-length / 2}
 					y={-thickness / 2}
 					width={length}
@@ -144,7 +146,6 @@ const ErEntityGripComponent: React.FC<ErEntityGripProps> = ({
 					data-kind="control"
 					data-id={objectId}
 					data-action={action}
-					style={{ fill: "none", pointerEvents: "all", cursor: "pointer" }}
 				/>
 			</g>
 		</>
