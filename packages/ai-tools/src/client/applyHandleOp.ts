@@ -184,7 +184,7 @@ const applyFitView = (
 			}
 			return {
 				ok: true,
-				text: `fitted the view around ${quoteIds(region.ids)}, which draw ${formatRect(bounds)}; ${describeCamera(camera)}. The window's proportions decide how much extra is on screen, so read get_view for what actually shows`,
+				text: `fitted the view around ${quoteIds(region.ids)}, drawn within ${formatRect(bounds)}; ${describeCamera(camera)}. The window's proportions decide how much extra is on screen, so read get_view for what actually shows`,
 			};
 		}
 		case "all":
