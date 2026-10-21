@@ -114,7 +114,7 @@ const ConnectionTargetAnchorsComponent: React.FC<
 	];
 
 	return (
-		<g data-layer="connection-target-anchors" style={{ pointerEvents: "none" }}>
+		<g data-layer="connection-target-anchors" pointerEvents="none">
 			{anchors.map(({ id, x, y }) => {
 				const isActive = id === activeAnchorId;
 				return (

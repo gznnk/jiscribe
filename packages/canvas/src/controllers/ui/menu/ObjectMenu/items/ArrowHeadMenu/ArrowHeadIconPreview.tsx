@@ -51,7 +51,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 			viewBox="0 6 24 12"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
-			style={{ pointerEvents: "none" }}
+			pointerEvents="none"
 		>
 			<line
 				x1={lineX1}

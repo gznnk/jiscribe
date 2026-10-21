@@ -1,6 +1,7 @@
 import { calcEuclideanDistance, type Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { ConnectorSegmentMoveHitArea } from "./ConnectorStyled";
 import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connector/isConnectorSegmentFreelyMovable";
 import { LINE_HIT_STROKE_WIDTH } from "../../utils/hitStrokeWidth";
 
@@ -80,7 +81,7 @@ const ConnectorSegmentMoveHitAreasComponent: React.FC<
 	return (
 		<>
 			{bands.map(({ segmentIndex, start, end }) => (
-				<line
+				<ConnectorSegmentMoveHitArea
 					key={segmentIndex}
 					x1={start.x}
 					y1={start.y}
@@ -89,13 +90,7 @@ const ConnectorSegmentMoveHitAreasComponent: React.FC<
 					data-kind="connector"
 					data-id={id}
 					data-action={`segment-move:${segmentIndex}`}
-					style={{
-						stroke: "transparent",
-						strokeWidth: LINE_HIT_STROKE_WIDTH,
-						pointerEvents: disablePointerEvents ? "none" : "stroke",
-						// The segment goes wherever the cursor does, so the cursor says so.
-						cursor: "move",
-					}}
+					disablePointerEvents={disablePointerEvents}
 				/>
 			))}
 		</>

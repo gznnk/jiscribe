@@ -23,7 +23,7 @@ const MixedArrowHeadIconComponent: React.FC = () => (
 		viewBox="0 6 24 12"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
-		style={{ pointerEvents: "none" }}
+		pointerEvents="none"
 	>
 		{DOT_CENTERS_X.map((centerX) => (
 			// var() is not resolved in presentation attributes, so apply it via style.
