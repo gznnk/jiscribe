@@ -13,6 +13,18 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
+## [Unreleased]
+
+### Added
+
+- **`capture_canvas` takes a region**: the current selection
+  (`target: "selection"`), the objects named by `ids`, or a world `rect`, so one
+  part of a large drawing comes back at a resolution the AI can read. Nothing
+  given still captures the whole drawing. The picture crops rather than
+  filters, and the result now says which world rect the image covers and its
+  pixel size, so a spot in it can be turned into a world point for `hit_test`.
+  `fit_view` takes the same `ids`, framing what those objects draw.
+
 ## [0.12.1] - 2026-10-20
 
 ### Added

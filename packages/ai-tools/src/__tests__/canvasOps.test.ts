@@ -18,6 +18,7 @@ describe("isAiDocOp", () => {
 
 	it("rejects everything that needs a mounted canvas, measurements included", () => {
 		expect(isAiDocOp({ kind: "captureCanvas" })).toBe(false);
+		expect(isAiDocOp({ kind: "captureCanvas", ids: ["a"] })).toBe(false);
 		expect(isAiDocOp({ kind: "fitView", target: "all" })).toBe(false);
 		expect(isAiDocOp({ kind: "measureText", id: "rect-1" })).toBe(false);
 		expect(isAiDocOp({ kind: "findOverlaps" })).toBe(false);

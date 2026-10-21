@@ -21,6 +21,7 @@ import type { Point, Rect } from "@jiscribe/geometry";
 
 import type { AiCanvasOpOutcome, AiHandleOp, AiRect } from "../canvasOps";
 import { MAX_SVG_CHARS } from "../canvasOps";
+import { resolveAiRegion } from "./resolveAiRegion";
 import type { AiHandleControl } from "./types";
 import {
 	describeRectEdges,
@@ -148,6 +149,64 @@ const applyFitToRect = (
 	};
 };
 
+/** fit_view: the whole drawing, the selection, named objects, or a world rect */
+const applyFitView = (
+	op: Extract<AiHandleOp, { kind: "fitView" }>,
+	handleControl: AiHandleControl,
+): AiCanvasOpOutcome => {
+	const resolution = resolveAiRegion(op);
+	if (!resolution.ok) {
+		return resolution;
+	}
+	const { region } = resolution;
+	switch (region.kind) {
+		case "none":
+			return {
+				ok: false,
+				text: 'nothing was given to fit the view to: pass target "all" or "selection", ids, or a rect',
+			};
+		case "rect":
+			return applyFitToRect(region.rect, handleControl);
+		case "ids": {
+			const bounds = handleControl.measureVisualBounds(region.ids);
+			if (bounds === null) {
+				return {
+					ok: false,
+					text: `nothing to frame at ${quoteIds(region.ids)}: none of those ids is on the canvas, or none of them draws anything`,
+				};
+			}
+			const camera = handleControl.fitViewToRect(bounds);
+			if (camera === null) {
+				return {
+					ok: false,
+					text: `${quoteIds(region.ids)} draw ${formatRect(bounds)}, which has no extent on either axis, so there was nothing to fit the view to`,
+				};
+			}
+			return {
+				ok: true,
+				text: `fitted the view around ${quoteIds(region.ids)}, which draw ${formatRect(bounds)}; ${describeCamera(camera)}. The window's proportions decide how much extra is on screen, so read get_view for what actually shows`,
+			};
+		}
+		case "all":
+		case "selection": {
+			const camera = handleControl.fitView(region.kind);
+			if (camera === null) {
+				return {
+					ok: false,
+					text:
+						region.kind === "selection"
+							? "nothing is selected, so there was nothing to fit the view to"
+							: "the canvas is empty, so there was nothing to fit the view to",
+				};
+			}
+			return {
+				ok: true,
+				text: `fitted the view to ${region.kind === "selection" ? "the selection" : "the whole drawing"}; ${describeCamera(camera)}`,
+			};
+		}
+	}
+};
+
 /** One overlapping pair. Containment is usually deliberate, so which of the two this is always comes with it */
 const describeOverlap = ({ ids, overlap, covers }: ObjectOverlap): string => {
 	const [first, second] = ids;
@@ -230,38 +289,8 @@ export const applyHandleOp = async (
 				text: `${describeCamera(viewport)} in a drawing area of ${formatNumber(viewport.width)} x ${formatNumber(viewport.height)} screen px, so the user is looking at ${describeRectEdges(visibleWorldRect)}. Anything placed inside that rect lands in front of them; hand these minX / minY / zoom back to set_view to return here later`,
 			};
 		}
-		case "fitView": {
-			const { target, rect } = op;
-			if (target !== undefined && rect !== undefined) {
-				return {
-					ok: false,
-					text: 'give either target or rect, not both: "all" and "selection" frame what the canvas holds, a rect frames the region you name',
-				};
-			}
-			if (rect !== undefined) {
-				return applyFitToRect(rect, handleControl);
-			}
-			if (target === undefined) {
-				return {
-					ok: false,
-					text: 'nothing was given to fit the view to: pass target "all" or "selection", or a rect',
-				};
-			}
-			const camera = handleControl.fitView(target);
-			if (camera === null) {
-				return {
-					ok: false,
-					text:
-						target === "selection"
-							? "nothing is selected, so there was nothing to fit the view to"
-							: "the canvas is empty, so there was nothing to fit the view to",
-				};
-			}
-			return {
-				ok: true,
-				text: `fitted the view to ${target === "selection" ? "the selection" : "the whole drawing"}; ${describeCamera(camera)}`,
-			};
-		}
+		case "fitView":
+			return applyFitView(op, handleControl);
 		case "measureText": {
 			const measurement = handleControl.measureText(op.id, op.slot);
 			if (measurement === null) {

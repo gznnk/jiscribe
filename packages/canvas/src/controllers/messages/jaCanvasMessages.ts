@@ -71,6 +71,9 @@ export const jaCanvasMessages: CanvasMessages = {
 	propertyPanelFieldRotation: "回転",
 
 	exportDialogTitle: "画像をエクスポート",
+	exportDialogScope: "範囲",
+	exportDialogScopeAll: "図面全体",
+	exportDialogScopeSelection: "選択中の図形",
 	exportDialogFormat: "形式",
 	exportDialogFormatPng: "PNG",
 	exportDialogFormatSvg: "SVG",

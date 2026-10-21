@@ -19,6 +19,14 @@ import { ModalShell } from "../ModalShell";
 export type ExportImageFormat = "png" | "svg";
 
 /**
+ * What part of the drawing the export dialog exports: `"all"` is the whole
+ * drawing, `"selection"` the extent of the selected objects with the margin
+ * around it. Both crop rather than filter: anything drawn inside the extent is
+ * exported, the rest of the drawing is not hidden.
+ */
+export type ExportScope = "all" | "selection";
+
+/**
  * Upper bound of the margin input (world px). Keeps a typo (e.g. an extra
  * digit) from ballooning the fit-to-content output size.
  */
@@ -33,6 +41,8 @@ const BLOCKED_MARGIN_KEYS = ["-", "+", "e", "E", "."];
 
 /** What the user confirmed in the export dialog. */
 export type ExportSubmitValues = {
+	/** What part of the drawing to export (see {@link ExportScope}) */
+	scope: ExportScope;
 	format: ExportImageFormat;
 	/** Margin (world px) kept around the content */
 	margin: number;
@@ -45,22 +55,31 @@ export type ExportSubmitValues = {
 type ExportDialogProps = {
 	/** Initial value of the margin input (the canvas-wide default margin) */
 	defaultMargin: number;
+	/**
+	 * Whether anything is selected; the "Selection" scope is disabled otherwise.
+	 * The scope still starts at "all" when this is true.
+	 */
+	canExportSelection: boolean;
 	onClose: () => void;
 	onSubmit: (values: ExportSubmitValues) => void;
 };
 
 /**
- * Modal dialog for image export: pick the format (PNG / editable SVG), the
- * margin kept around the content, and whether to embed the source data, then
- * confirm. Opened from the context menu; closes on backdrop click, the close
- * button, or Escape.
+ * Modal dialog for image export: pick the scope (whole drawing / selection),
+ * the format (PNG / editable SVG), the margin kept around the content, and
+ * whether to embed the source data, then confirm. Opened from the context
+ * menu; closes on backdrop click, the close button, or Escape.
  */
 export const ExportDialog: React.FC<ExportDialogProps> = ({
 	defaultMargin,
+	canExportSelection,
 	onClose,
 	onSubmit,
 }) => {
 	const messages = useCanvasMessages();
+	// Always "all" at first: a right-click selects its target before the menu
+	// opens, so starting at "selection" would change the default for everyone
+	const [scope, setScope] = useState<ExportScope>("all");
 	const [format, setFormat] = useState<ExportImageFormat>("png");
 	const [includeSource, setIncludeSource] = useState(true);
 	const [transparentBackground, setTransparentBackground] = useState(false);
@@ -103,6 +122,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 					event.preventDefault();
 					if (isMarginValid) {
 						onSubmit({
+							scope,
 							format,
 							margin,
 							includeSource,
@@ -112,6 +132,32 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 				}}
 			>
 				<FieldGrid>
+					<FieldLabel>{messages.exportDialogScope}</FieldLabel>
+					<RadioGroup role="radiogroup" aria-label={messages.exportDialogScope}>
+						<RadioOption>
+							<input
+								type="radio"
+								name="export-scope"
+								value="all"
+								checked={scope === "all"}
+								data-testid="export-dialog:scope-all"
+								onChange={() => setScope("all")}
+							/>
+							{messages.exportDialogScopeAll}
+						</RadioOption>
+						<RadioOption>
+							<input
+								type="radio"
+								name="export-scope"
+								value="selection"
+								checked={scope === "selection"}
+								disabled={!canExportSelection}
+								data-testid="export-dialog:scope-selection"
+								onChange={() => setScope("selection")}
+							/>
+							{messages.exportDialogScopeSelection}
+						</RadioOption>
+					</RadioGroup>
 					<FieldLabel>{messages.exportDialogFormat}</FieldLabel>
 					<RadioGroup
 						role="radiogroup"

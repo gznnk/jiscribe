@@ -30,6 +30,7 @@ const exportOptions = {} as BuildExportSvgOptions;
 const createValues = (
 	format: ExportSubmitValues["format"],
 ): ExportSubmitValues => ({
+	scope: "all",
 	format,
 	margin: 16,
 	includeSource: true,

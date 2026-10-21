@@ -4,10 +4,16 @@
 // it is kept on a route of its own rather than mixed into either that or
 // applyCanvasOp.
 
-import type { CanvasPngExportOptions } from "@jiscribe/canvas";
+import type {
+	CanvasExportRegion,
+	CanvasPngCapture,
+	CanvasPngExportOptions,
+} from "@jiscribe/canvas";
 
-import type { AiCanvasOpOutcome } from "../canvasOps";
-import type { CapturePng } from "./types";
+import type { AiCanvasOpOutcome, AiHandleOp } from "../canvasOps";
+import { formatNumber, formatRect, quoteIds } from "../resultText";
+import { resolveAiRegion } from "./resolveAiRegion";
+import type { AiHandleControl, CapturePng } from "./types";
 
 /**
  * The longest edge (px) of the image handed to the AI. It travels over IPC as
@@ -43,25 +49,137 @@ const toBase64 = (bytes: Uint8Array): string => {
 	return btoa(chunks.join(""));
 };
 
+const NO_CANVAS_TEXT =
+	"no canvas is on screen right now, so there is nothing to capture";
+
+/** The export region to capture, and how the result names it; or why there is nothing to capture */
+type CapturePlan =
+	| { ok: true; region: CanvasExportRegion; subject: string; isWhole: boolean }
+	| { ok: false; text: string };
+
+const planCapture = (
+	op: Extract<AiHandleOp, { kind: "captureCanvas" }>,
+	handleControl: AiHandleControl,
+): CapturePlan => {
+	const resolution = resolveAiRegion(op);
+	if (!resolution.ok) {
+		return resolution;
+	}
+	const { region } = resolution;
+	switch (region.kind) {
+		case "none":
+		case "all":
+			return {
+				ok: true,
+				region: "content",
+				subject: "the whole drawing",
+				isWhole: true,
+			};
+		case "selection": {
+			const selectedIds = handleControl.getSelectedIds();
+			if (selectedIds.length === 0) {
+				return {
+					ok: false,
+					text: "nothing is selected, so there is nothing to capture; select_objects first, or name ids / a rect",
+				};
+			}
+			return {
+				ok: true,
+				region: { ids: selectedIds },
+				subject: `the ${selectedIds.length} selected object(s)`,
+				isWhole: false,
+			};
+		}
+		case "ids":
+			// The canvas falls back to the live view when no id draws anything, so
+			// that has to be caught here
+			if (handleControl.measureVisualBounds(region.ids) === null) {
+				return {
+					ok: false,
+					text: `nothing to capture at ${quoteIds(region.ids)}: none of those ids is on the canvas, or none of them draws anything`,
+				};
+			}
+			return {
+				ok: true,
+				region: { ids: region.ids },
+				subject: quoteIds(region.ids),
+				isWhole: false,
+			};
+		case "rect":
+			if (region.rect.width === 0 || region.rect.height === 0) {
+				return {
+					ok: false,
+					text: `${formatRect(region.rect)} has no extent on one axis, and an image needs extent on both`,
+				};
+			}
+			return {
+				ok: true,
+				region: region.rect,
+				subject: formatRect(region.rect),
+				isWhole: false,
+			};
+	}
+};
+
+/** Says what the image covers in world terms, which is what lets a spot in it be turned back into a world point */
+const describeCapture = (
+	{ region, pixelWidth, pixelHeight }: CanvasPngCapture,
+	subject: string,
+	isWhole: boolean,
+): string => {
+	const pixelSize = `${formatNumber(pixelWidth)} x ${formatNumber(pixelHeight)} px`;
+	return [
+		`captured ${subject}, covering world rect ${formatRect(region)} at ${pixelSize}.`,
+		isWhole
+			? null
+			: "The picture is cropped, not filtered: anything else drawn inside that rect is in it too.",
+		`A position (imageX, imageY) in the image is world (${formatNumber(region.x)} + imageX / ${formatNumber(pixelWidth)} * ${formatNumber(region.width)}, ${formatNumber(region.y)} + imageY / ${formatNumber(pixelHeight)} * ${formatNumber(region.height)}); hand that to hit_test to name what is there.`,
+		"Still never read exact coordinates or sizes off the picture — describe_canvas has the numbers.",
+	]
+		.filter((sentence) => sentence !== null)
+		.join(" ");
+};
+
 /**
  * Captures the canvas and builds the PNG (base64) the tool result carries.
  *
+ * @param op - The capture_canvas operation; its region arguments pick what is
+ *   captured, and none of them takes the whole drawing
  * @param capturePng - The image-making function received from the host
  *   application; it returns null while the canvas is not mounted
- * @returns The tool result; imagePngBase64 is filled in when ok=true
+ * @param handleControl - The way in to the canvas on screen, read for the
+ *   selection and to check that named ids draw something before capturing
+ * @returns The tool result; imagePngBase64 is filled in when ok=true, and the
+ *   text names the world rect the image covers and its pixel size
  */
 export const captureCanvasImage = async (
+	op: Extract<AiHandleOp, { kind: "captureCanvas" }>,
 	capturePng: CapturePng,
+	handleControl: AiHandleControl,
 ): Promise<AiCanvasOpOutcome> => {
 	try {
-		const pngBlob = await capturePng(CAPTURE_OPTIONS);
-		if (pngBlob === null) {
+		// Checked before the region is read: with no canvas the selection reads as
+		// empty and ids as drawing nothing, which would answer with the wrong reason
+		if (!handleControl.isAvailable()) {
+			return { ok: false, text: NO_CANVAS_TEXT };
+		}
+		const plan = planCapture(op, handleControl);
+		if (!plan.ok) {
+			return plan;
+		}
+		const capture = await capturePng({
+			...CAPTURE_OPTIONS,
+			region: plan.region,
+		});
+		if (capture === null) {
 			return { ok: false, text: "the canvas is not ready to be captured yet" };
 		}
 		return {
 			ok: true,
-			text: "captured the canvas: the image is the whole drawing fitted to its content and scaled to fit, so do not read coordinates or sizes off it — use describe_canvas for exact numbers",
-			imagePngBase64: toBase64(new Uint8Array(await pngBlob.arrayBuffer())),
+			text: describeCapture(capture, plan.subject, plan.isWhole),
+			imagePngBase64: toBase64(
+				new Uint8Array(await capture.blob.arrayBuffer()),
+			),
 		};
 	} catch (error) {
 		return {

@@ -26,6 +26,8 @@ import { selectors } from "../../support/selectors";
  *   foreignObject (B1), and rasterized in PNG too
  * - Derived geometry: a block text and a height-less shape survive the trip with
  *   the fields they left out still left out
+ * - Selection scope: the viewBox covers the selected shape plus the margin and
+ *   not the shape left unselected; the scope is disabled with nothing selected
  *
  * The multi-slot case (record, #167) belongs to the shape that has the slots, so it
  * lives in the uml plugin's own suite (plugins/uml-shapes/e2e/specs/record-image-export).
@@ -33,8 +35,8 @@ import { selectors } from "../../support/selectors";
 
 /**
  * Export through the context menu and dialog, picking the format (and
- * optionally the margin and whether to embed the data), and return the
- * downloaded file's contents as base64.
+ * optionally the scope, the margin and whether to embed the data), and return
+ * the downloaded file's contents as base64.
  */
 const downloadViaExportDialog = async (
 	page: Page,
@@ -42,6 +44,7 @@ const downloadViaExportDialog = async (
 	menuPoint: { x: number; y: number },
 	format: "png" | "svg",
 	options: {
+		scope?: "all" | "selection";
 		margin?: number;
 		includeSource?: boolean;
 		transparentBackground?: boolean;
@@ -51,6 +54,9 @@ const downloadViaExportDialog = async (
 	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
+	if (options.scope !== undefined) {
+		await page.getByTestId(`export-dialog:scope-${options.scope}`).check();
+	}
 	await page.getByTestId(`export-dialog:format-${format}`).check();
 	if (options.margin !== undefined) {
 		await page.getByTestId("export-dialog:margin").fill(String(options.margin));
@@ -634,6 +640,48 @@ const parseViewBox = (svgText: string): Box => {
 	const [x, y, width, height] = viewBoxMatch![1].split(/\s+/).map(Number);
 	return { x, y, width, height };
 };
+
+test("exports only the selected shape's extent when the scope is the selection", async ({
+	canvas,
+	page,
+}) => {
+	await canvas.drawShape("Rectangle", { x: 150, y: 120 }, { x: 400, y: 260 });
+	await canvas.deselect();
+	await canvas.drawShape("Ellipse", { x: 600, y: 420 }, { x: 760, y: 540 });
+	await canvas.deselect();
+
+	// With nothing selected the scope cannot be the selection.
+	await canvas.openContextMenu({ x: 900, y: 650 });
+	await canvas.clickContextMenuCommand("export");
+	await expect(page.getByTestId("export-dialog")).toBeVisible();
+	await expect(
+		page.getByTestId("export-dialog:scope-selection"),
+	).toBeDisabled();
+	await expect(page.getByTestId("export-dialog:scope-all")).toBeChecked();
+	await page.keyboard.press("Escape");
+	await expect(page.getByTestId("export-dialog")).toHaveCount(0);
+
+	// Right-clicking empty space keeps the selection made beforehand.
+	await canvas.selectAt({ x: 275, y: 190 });
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 900, y: 650 },
+		"svg",
+		{ scope: "selection" },
+	);
+	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
+
+	// The rect (150,120-400,260) plus the default margin of 16, with the
+	// ellipse starting at x 600 left outside.
+	const viewBox = parseViewBox(svgText);
+	expect(Math.abs(viewBox.x - (150 - 16))).toBeLessThanOrEqual(2);
+	expect(Math.abs(viewBox.y - (120 - 16))).toBeLessThanOrEqual(2);
+	expect(Math.abs(viewBox.width - (250 + 32))).toBeLessThanOrEqual(4);
+	expect(Math.abs(viewBox.height - (140 + 32))).toBeLessThanOrEqual(4);
+	expect(viewBox.x + viewBox.width).toBeLessThan(600);
+	expect(viewBox.y + viewBox.height).toBeLessThan(420);
+});
 
 test("writes connector labels as <text> plus a box <rect> rather than a foreignObject", async ({
 	canvas,

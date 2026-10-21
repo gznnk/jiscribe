@@ -227,7 +227,7 @@ export function App() {
 
 	const capturePng = useCallback<CapturePng>(
 		async (options?: CanvasPngExportOptions) =>
-			(await canvasHandleRef.current?.export.capturePng(options))?.blob ?? null,
+			(await canvasHandleRef.current?.export.capturePng(options)) ?? null,
 		[],
 	);
 
@@ -290,7 +290,7 @@ export function App() {
 					}
 				}
 				return op.kind === "captureCanvas"
-					? await captureCanvasImage(capturePng)
+					? await captureCanvasImage(op, capturePng, handleControl)
 					: await applyHandleOp(op, handleControl);
 			} catch (error) {
 				// Throwing without answering would leave the host with nothing to do but

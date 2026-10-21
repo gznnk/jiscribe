@@ -44,7 +44,7 @@ export type AiCanvasOp = AiDocOp | AiHandleOp;
  * touches the document, and a host that merely holds one cannot run any of them.
  */
 export type AiHandleOp =
-	| { kind: "captureCanvas" }
+	| ({ kind: "captureCanvas" } & AiRegionArgs)
 	// An empty ids clears the selection
 	| { kind: "selectObjects"; ids: string[] }
 	// Puts world (x, y) at the centre of the screen; omitting zoom keeps the current one
@@ -53,13 +53,7 @@ export type AiHandleOp =
 	| { kind: "setView"; minX: number; minY: number; zoom: number }
 	// Reads the camera together with the world rect currently on screen
 	| { kind: "getView" }
-	| {
-			kind: "fitView";
-			/** What the canvas holds; exclusive with rect, and one of the two is required */
-			target?: AiFitTarget;
-			/** A region worked out by the caller; exclusive with target */
-			rect?: AiRect;
-	  }
+	| ({ kind: "fitView" } & AiRegionArgs)
 	| {
 			kind: "measureText";
 			id: string;
@@ -104,6 +98,20 @@ export type AiViewScroll = "content" | "infinite";
 
 /** What fitView frames when it is not given a rect: the whole drawing, or the current selection */
 export type AiFitTarget = "all" | "selection";
+
+/**
+ * The region a screen tool works on: the whole drawing, the current selection,
+ * named objects, or a world rect. At most one of the three fields is given;
+ * what giving none means is up to the tool.
+ */
+export type AiRegionArgs = {
+	/** What the canvas holds right now; exclusive with ids and rect */
+	target?: AiFitTarget;
+	/** Objects named by id, taken as the union of what they draw; exclusive with target and rect */
+	ids?: string[];
+	/** A world rect worked out by the caller, taken as it is; exclusive with target and ids */
+	rect?: AiRect;
+};
 
 /**
  * Every {@link AiHandleOp} kind, written as a map so that a variant added to the
