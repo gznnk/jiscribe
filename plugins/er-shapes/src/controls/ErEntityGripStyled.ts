@@ -1,5 +1,10 @@
 import styled from "@emotion/styled";
 
+/** A grip's cell. Its paints are theme vars, so they go on through `style`. */
+export const ErEntityGripCell = styled.rect`
+	pointer-events: none;
+`;
+
 /** The heading's text. Its ink is a theme var, so it goes on through `style`. */
 export const ErEntityGripLabel = styled.text`
 	pointer-events: none;

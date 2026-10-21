@@ -7,7 +7,11 @@ import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { calcSegmentPlacement } from "./calcSegmentPlacement";
-import { ErEntityGripHitArea, ErEntityGripLabel } from "./ErEntityGripStyled";
+import {
+	ErEntityGripCell,
+	ErEntityGripHitArea,
+	ErEntityGripLabel,
+} from "./ErEntityGripStyled";
 
 /**
  * How thick a grip is drawn, in world units, so it grows and shrinks with the
@@ -114,7 +118,7 @@ const ErEntityGripComponent: React.FC<ErEntityGripProps> = ({
 	return (
 		<>
 			<g transform={transform}>
-				<rect
+				<ErEntityGripCell
 					x={-length / 2}
 					y={-thickness / 2}
 					width={length}
@@ -122,7 +126,6 @@ const ErEntityGripComponent: React.FC<ErEntityGripProps> = ({
 					// World units, not divided by the zoom: the selection outline it
 					// abuts scales with the content, and the two read as one line weight.
 					strokeWidth={SELECTION_OUTLINE_WIDTH}
-					pointerEvents="none"
 					style={{ fill, stroke: theme.borderSubtle }}
 				/>
 			</g>

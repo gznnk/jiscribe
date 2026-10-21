@@ -6,7 +6,11 @@ import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { GRIP_THICKNESS } from "./tableGripMetrics";
-import { TableGripHitArea, TableGripLabel } from "./TableGripStyled";
+import {
+	TableGripCell,
+	TableGripHitArea,
+	TableGripLabel,
+} from "./TableGripStyled";
 import { calcSegmentPlacement } from "../shared/calcSegmentPlacement";
 
 /**
@@ -75,7 +79,7 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 	return (
 		<>
 			<g transform={transform}>
-				<rect
+				<TableGripCell
 					x={-length / 2}
 					y={-thickness / 2}
 					width={length}
@@ -83,7 +87,6 @@ const TableTrackGripComponent: React.FC<TableTrackGripProps> = ({
 					// World units, not divided by the zoom: the selection outline it
 					// abuts scales with the content, and the two read as one line weight.
 					strokeWidth={SELECTION_OUTLINE_WIDTH}
-					pointerEvents="none"
 					style={{ fill, stroke: theme.borderSubtle }}
 				/>
 			</g>
