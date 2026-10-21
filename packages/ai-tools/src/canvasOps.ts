@@ -44,7 +44,11 @@ export type AiCanvasOp = AiDocOp | AiHandleOp;
  * touches the document, and a host that merely holds one cannot run any of them.
  */
 export type AiHandleOp =
-	| ({ kind: "captureCanvas" } & AiRegionArgs)
+	| ({
+			kind: "captureCanvas";
+			/** Draw only the objects the region names (ids or the selection); omitted or false crops */
+			isolate?: boolean;
+	  } & AiRegionArgs)
 	// An empty ids clears the selection
 	| { kind: "selectObjects"; ids: string[] }
 	// Puts world (x, y) at the centre of the screen; omitting zoom keeps the current one

@@ -5,7 +5,8 @@ import { expect, test } from "../support/fixtures";
 // capture_canvas given ids, a rect or the selection answers with that part of the
 // drawing, and says which world rect the picture covers. The region is checked
 // through the page itself: one rect is painted red, and a picture of the other
-// one must hold none of that red.
+// one must hold none of that red — unless the red lies inside the other one's
+// extent, where only isolate keeps it out.
 
 /** The margin the canvas keeps around ids on a document declaring no view.padding */
 const EXPORT_MARGIN = 16;
@@ -125,6 +126,67 @@ test("captures what the user has selected", async ({
 	});
 	expect(captured.text).toContain("captured the 1 selected object(s)");
 	expect(await countMarkerPixels(page, captured)).toBe(0);
+});
+
+test("isolate draws the ids alone, leaving out what lies inside their extent", async ({
+	page,
+	mcp,
+	workspace,
+	openInViewer,
+}) => {
+	const markerId = "marker";
+	const filePath = await workspace.writeDoc("drawing.jis.json", {
+		version: 1,
+		root: [
+			{ type: "rect", ...SINGLE_RECT, text: "hello" },
+			// On top of SINGLE_RECT, well inside its extent
+			{
+				type: "rect",
+				id: markerId,
+				x: SINGLE_RECT.x + 20,
+				y: SINGLE_RECT.y + 20,
+				width: 40,
+				height: 30,
+				fill: MARKER_FILL,
+			},
+		],
+	});
+	await openInViewer(filePath);
+
+	const cropped = await mcp.callTool("capture_canvas", {
+		ids: [SINGLE_RECT.id],
+	});
+	expect(cropped.text).toContain("cropped, not filtered");
+	expect(await countMarkerPixels(page, cropped)).toBeGreaterThan(0);
+
+	const isolated = await mcp.callTool("capture_canvas", {
+		ids: [SINGLE_RECT.id],
+		isolate: true,
+	});
+	expect(isolated.isError).toBe(false);
+	expect(isolated.text).toContain("The picture is isolated");
+	// The extent is SINGLE_RECT's alone, as it is without isolate
+	expect(parseCoverage(isolated.text)).toEqual(parseCoverage(cropped.text));
+	expect(await countMarkerPixels(page, isolated)).toBe(0);
+
+	const selected = await mcp.callTool("select_objects", {
+		ids: [SINGLE_RECT.id],
+	});
+	expect(selected.text).not.toContain("error:");
+	const isolatedSelection = await mcp.callTool("capture_canvas", {
+		target: "selection",
+		isolate: true,
+	});
+	expect(await countMarkerPixels(page, isolatedSelection)).toBe(0);
+
+	const withRect = await mcp.callTool("capture_canvas", {
+		rect: { x: 0, y: 0, width: 100, height: 100 },
+		isolate: true,
+	});
+	expect(withRect.text).toContain("error:");
+	expect(withRect.text).toContain(
+		'isolate works with ids or target "selection" only',
+	);
 });
 
 test("refuses a region there is nothing to capture in, naming the reason", async ({

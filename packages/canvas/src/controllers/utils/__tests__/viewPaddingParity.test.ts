@@ -142,7 +142,7 @@ const measureThreeWays = (
 		registries.objectMapper,
 		visualExtentRegistries,
 		{ includeSource: false },
-	).viewBox;
+	).svgOptions.viewBox;
 	if (exportViewBox === undefined) {
 		throw new Error("the fixture has no content, so nothing was framed");
 	}

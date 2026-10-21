@@ -1,11 +1,8 @@
 import { isTransformedFrame } from "@jiscribe/geometry";
 
 import type { ClipboardData } from "./ClipboardData";
-import { collectConnectorsAttachedToSelection } from "../../selection/readers/collectConnectorsAttachedToSelection";
+import { collectSelectionSubset } from "../../selection/readers/collectSelectionSubset";
 import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
-import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
-import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
-import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -30,27 +27,19 @@ export const CopyCommand: ExecutableCommand = {
 		getSelectedConnectorId(state) === null,
 
 	execute: (state) => {
-		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
+		// Connectors come along only when attached to the selection (same test as DuplicateCommand)
+		const subset = collectSelectionSubset(
 			state.selection.objectIds,
 			state.objects,
+			state.rootIds,
 		);
 
 		const objects: ClipboardData["objects"] = {};
-		for (const id of selectedIdsWithDescendants) {
+		for (const id of subset.objectIds) {
 			const obj = state.objects[id];
 			if (obj) {
 				objects[id] = obj;
 			}
-		}
-
-		// Copy only connectors whose both endpoints are within the selection (same test as DuplicateCommand)
-		const connectorIds = collectConnectorsAttachedToSelection(
-			getRootConnectorIds(state.objects, state.rootIds),
-			state.objects,
-			selectedIdsWithDescendants,
-		);
-		for (const connId of connectorIds) {
-			objects[connId] = state.objects[connId];
 		}
 
 		const firstObj = state.objects[state.selection.objectIds[0]];
@@ -61,21 +50,13 @@ export const CopyCommand: ExecutableCommand = {
 					? { x: firstObj.cx, y: firstObj.cy }
 					: { x: 0, y: 0 };
 
-		// Order the copied top-level elements (objects + connectors) by z-order (back → front)
-		// and place them on the clipboard. On paste they are stacked to the front in this order,
-		// preserving their relative stacking. Connectors are kept mixed into rootIds rather than a
-		// separate array (same representation as state's rootIds).
-		const rootIds = sortObjectIdsByZOrder(
-			[...state.selection.objectIds, ...connectorIds],
-			state.objects,
-			state.rootIds,
-		);
-
 		const data: ClipboardData = {
 			__type: "jiscribe-canvas-clipboard",
 			version: 1,
 			objects,
-			rootIds,
+			// Back to front: on paste the elements are stacked to the front in this
+			// order, preserving their relative stacking.
+			rootIds: subset.rootIds,
 			center,
 		};
 

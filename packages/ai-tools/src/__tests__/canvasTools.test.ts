@@ -312,12 +312,20 @@ describe("createCanvasToolDescriptors", () => {
 		},
 	);
 
-	it("shares one region schema between capture_canvas and fit_view", () => {
+	it("shares the region fields between capture_canvas and fit_view, and gives isolate to capture_canvas alone", () => {
 		const descriptors = createCanvasToolDescriptors(capabilities);
+		const captureSchema = findDescriptor(
+			descriptors,
+			"capture_canvas",
+		).inputSchema;
+		const fitSchema = findDescriptor(descriptors, "fit_view").inputSchema;
 
-		expect(findDescriptor(descriptors, "capture_canvas").inputSchema).toBe(
-			findDescriptor(descriptors, "fit_view").inputSchema,
-		);
+		expect(Object.keys(fitSchema).sort()).toEqual(["ids", "rect", "target"]);
+		for (const field of ["ids", "rect", "target"]) {
+			expect(captureSchema[field]).toBe(fitSchema[field]);
+		}
+		expect(z.safeParse(captureSchema.isolate, true).success).toBe(true);
+		expect(z.safeParse(captureSchema.isolate, undefined).success).toBe(true);
 	});
 
 	it("takes a point or a rect on hit_test", () => {
@@ -393,6 +401,12 @@ describe("CanvasToolDescriptor.toOp", () => {
 		expect(
 			findDescriptor(descriptors, "capture_canvas").toOp({ rect }),
 		).toEqual({ kind: "captureCanvas", rect });
+		expect(
+			findDescriptor(descriptors, "capture_canvas").toOp({
+				ids: ["a"],
+				isolate: true,
+			}),
+		).toEqual({ kind: "captureCanvas", ids: ["a"], isolate: true });
 		expect(
 			findDescriptor(descriptors, "fit_view").toOp({ target: "selection" }),
 		).toEqual({ kind: "fitView", target: "selection" });

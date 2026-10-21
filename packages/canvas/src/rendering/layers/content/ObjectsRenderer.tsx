@@ -16,11 +16,12 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	 */
 	editingTextSlotId?: string | null;
 	/**
-	 * Viewport culling (issue #212): when set, only these IDs are rendered.
-	 * Omit to render the full tree — required for paths that need every object
-	 * in the DOM (export clones the live SVG; thumbnails fit all content).
+	 * When set, only these IDs are rendered: the objects on screen (viewport
+	 * culling, issue #212), or what an export snapshot draws in their place (see
+	 * resolveRenderedObjectIds). A group must be in the set for any of its
+	 * descendants to be drawn. Omit to render the full tree.
 	 */
-	visibleObjectIds?: ReadonlySet<string>;
+	renderedObjectIds?: ReadonlySet<string>;
 };
 
 /**
@@ -37,14 +38,14 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	rootIds,
 	textEditObjectId,
 	editingTextSlotId,
-	visibleObjectIds,
+	renderedObjectIds,
 }) => {
 	const objectComponentRegistry = useObjectComponentRegistry();
 
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
-		// Culling gate: groups with any visible descendant are in the set, so
-		// this single check also prunes fully offscreen subtrees.
-		if (visibleObjectIds && !visibleObjectIds.has(id)) {
+		// Render gate: a group is in the set only when a descendant is to be
+		// drawn, so this single check also prunes whole subtrees.
+		if (renderedObjectIds && !renderedObjectIds.has(id)) {
 			return;
 		}
 

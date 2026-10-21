@@ -30,6 +30,7 @@ export type {
 	CanvasInteractionStatus,
 } from "./controllers/handles/useInteractionHandle";
 export type {
+	CanvasExportIdsRegion,
 	CanvasExportOptions,
 	CanvasExportRegion,
 	CanvasPngExportOptions,

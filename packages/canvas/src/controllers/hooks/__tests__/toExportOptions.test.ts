@@ -23,10 +23,10 @@ describe("toExportOptions", () => {
 		});
 	});
 
-	it("crops to the selected ids for the selection scope, keeping the margin", () => {
+	it("isolates the selected ids for the selection scope, keeping the margin", () => {
 		const selectedIds = ["rect-1", "ellipse-2"];
 		expect(toExportOptions(createValues("selection"), selectedIds)).toEqual({
-			region: { ids: selectedIds },
+			region: { ids: selectedIds, isolate: true },
 			margin: 24,
 			includeSource: false,
 			transparentBackground: true,

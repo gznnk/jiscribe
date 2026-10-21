@@ -51,9 +51,10 @@ import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { usePropertyPanelState } from "./hooks/usePropertyPanelState";
 import { usePropertyUpdaters } from "./hooks/usePropertyUpdaters";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
+import { useSnapshotRenderScope } from "./hooks/useSnapshotRenderScope";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useTextEditSession } from "./hooks/useTextEditSession";
-import { useViewportCulling } from "./hooks/useViewportCulling";
+import { useVisibleObjectIds } from "./hooks/useVisibleObjectIds";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
@@ -85,6 +86,7 @@ import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
+import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
 
 type CanvasProps = {
 	// ── Document ──
@@ -539,13 +541,19 @@ const CanvasComponent = ({
 	const propertyPanelState = usePropertyPanelState(menuCanvasState);
 
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
-	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
-	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
+	// the live SVG DOM, so it renders its own scope in place of that for the snapshot.
+	const culledObjectIds = useVisibleObjectIds(
 		state.objects,
 		state.rootIds,
 		state.viewport,
 		textEditObjectId,
 		registries,
+	);
+	const { snapshotRenderScope, withSnapshotRenderScope } =
+		useSnapshotRenderScope();
+	const renderedObjectIds = resolveRenderedObjectIds(
+		snapshotRenderScope,
+		culledObjectIds,
 	);
 
 	const canvasHandle = useCanvasHandle({
@@ -553,7 +561,7 @@ const CanvasComponent = ({
 		canvasState: state,
 		registries,
 		svgRef,
-		withCullingSuspended,
+		withSnapshotRenderScope,
 		resolveImageBlob,
 	});
 	const handleExportSubmit = useExportDialog({
@@ -563,7 +571,7 @@ const CanvasComponent = ({
 		onExportImage,
 		dispatch,
 		notifyError,
-		withCullingSuspended,
+		withSnapshotRenderScope,
 		resolveImageBlob,
 	});
 
@@ -645,7 +653,7 @@ const CanvasComponent = ({
 								textEditObjectId={textEditObjectId}
 								editingTextSlotId={editingTextSlotId}
 								isDrawMode={!!state.shapeDrawing}
-								visibleObjectIds={visibleObjectIds}
+								renderedObjectIds={renderedObjectIds}
 								showGrid={grid?.show}
 								gridSize={grid?.size}
 								background={state.background}

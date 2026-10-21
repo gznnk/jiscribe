@@ -179,7 +179,8 @@ export const inlineExportImages = async (
  * - When `source` is given, embeds the `.jis` in `<metadata>`
  *
  * It stays synchronous so a caller holding the live tree open (viewport culling
- * suspended) has the whole clone in hand before it yields. The `<image>` bytes
+ * replaced by the export's render scope) has the whole clone in hand before it
+ * yields. The `<image>` bytes
  * are the one thing that cannot be read that way, and are inlined afterwards by
  * {@link inlineExportImages} — until then the clone still carries the live blob
  * URLs.

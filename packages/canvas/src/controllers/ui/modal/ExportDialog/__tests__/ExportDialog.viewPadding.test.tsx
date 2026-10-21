@@ -131,7 +131,7 @@ describe("the export dialog against a document that declared its own padding", (
 			registries,
 			toExportOptions(onSubmit.mock.calls[0][0], []),
 		);
-		expect(options.viewBox).toEqual({
+		expect(options.svgOptions.viewBox).toEqual({
 			x: -EXPORT_FIT_PADDING,
 			y: -EXPORT_FIT_PADDING,
 			width: 10 + EXPORT_FIT_PADDING * 2,

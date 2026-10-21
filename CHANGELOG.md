@@ -18,20 +18,37 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **`capture_canvas` can take a picture of one part of the drawing.** It
   still captures the whole drawing by default, and now takes `ids`, a world
   `rect` or `target: "selection"` to get one corner of a large diagram at a
-  legible resolution. The region crops rather than filters, so whatever else
-  is drawn inside it is in the picture; the result names the world rect the
-  image covers and its pixel size, so a spot in the picture can be turned into
+  legible resolution. By default the region crops rather than filters, so
+  whatever else is drawn inside it is in the picture; with `isolate: true`
+  (taken with `ids` or the selection only, an error with anything else) the
+  picture holds just the objects named, with their descendants and the
+  connectors whose attached ends are all on them. The result names the world
+  rect the image covers and its pixel size, so a spot in the picture can be turned into
   a world point and handed to `hit_test`. `fit_view` takes the same `ids`
   argument, and the three region arguments are declared once for both
   (`AiRegionArgs` in `@jiscribe/ai-tools`); the `CapturePng` a host injects
   now hands back the canvas's `CanvasPngCapture` rather than the bare blob.
+- **An export can draw the named objects alone.** The export handle's
+  `{ ids }` region takes `isolate: true` (`CanvasExportIdsRegion`), which draws
+  only those objects, their descendants and the connectors whose attached ends
+  are all on them —
+  the set Copy takes — leaving out whatever else lies inside their extent; a
+  child of a group is drawn without its siblings. The extent takes in those
+  connectors' routes, and the embedded `.jis` source holds the same set under
+  the document's background and view, so dropping the image back on a canvas
+  gives what pasting the objects would. Without `isolate` the region still
+  crops. With or without it, an `{ ids }` region none of whose ids draws
+  anything makes `toSvgString` / `capturePng` reject instead of exporting the
+  current view.
 - **The Export dialog can export only the selected shapes.** A "Scope" row
-  chooses between the whole drawing and the selection, which is exported
-  through the same `{ ids }` region the handle offers: the extent of the
-  selected objects plus the margin, cropping rather than hiding the rest, with
-  the whole document still embedded as the `.jis` source. The scope starts at
-  the selection whenever something is selected, so exporting from a shape's
-  context menu exports that shape.
+  chooses between the whole drawing and the selection. The selection is
+  exported on its own, through the isolated `{ ids }` region: only the
+  selected shapes (with their contents and the connectors whose attached ends
+  are all on them)
+  are drawn, framed by their extent plus the margin, and the embedded `.jis`
+  source holds just those shapes. The scope starts at the selection whenever
+  something is selected, so exporting from a shape's context menu exports that
+  shape.
 
 ## [0.12.1] - 2026-10-20
 

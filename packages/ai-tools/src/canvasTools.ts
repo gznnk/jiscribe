@@ -1365,12 +1365,21 @@ export const createCanvasToolDescriptors = (
 			"See the canvas as a picture: renders it to a PNG and hands it back to you.",
 			"Use it to judge what only the eye catches — a line crossing a shape, overlapping objects, a label spilling out of its box, a lopsided layout — after finishing a drawing or a batch of edits, and fix what you see.",
 			'Given nothing, the picture is the whole drawing fitted to its content. A large drawing is scaled down past reading that way, so give ids or rect (or target "selection") to get one part of it at a legible resolution.',
-			"The picture crops rather than filters: anything else drawn inside the area captured is in it too.",
+			"By default the picture crops rather than filters: anything else drawn inside the area captured is in it too. With isolate it draws only what ids or the selection name.",
 			"A rect is taken exactly, with no margin, and needs extent on both axes; ids and the selection get the document's margin around what they draw.",
 			"The result says which world rect the image covers and its pixel size, so a spot in the image can be turned into a world point and handed to hit_test to name what is there.",
 			"Even so, never read exact coordinates or sizes off the picture; describe_canvas is where the exact numbers are.",
 		].join(" "),
-		regionSchema,
+		{
+			...regionSchema,
+			// capture_canvas only: regionSchema is shared with fit_view
+			isolate: z
+				.boolean()
+				.optional()
+				.describe(
+					'With ids or target "selection" only (an error with anything else). true draws just the objects named — with their descendants and the connectors whose attached ends are all on them — and nothing else inside the area, so the picture shows them on their own. The default false crops: whatever else is drawn around them is in the picture too, which is what to use to check overlaps or things spilling into them.',
+				),
+		},
 		(args) => ({ kind: "captureCanvas", ...args }),
 		{ isReadOnly: true, drives: ["handle.export.capturePng"] },
 	);

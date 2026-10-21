@@ -133,7 +133,7 @@ describe("captureCanvasImage", () => {
 		expect(result.text).toContain("cropped");
 	});
 
-	it("refuses ids that draw nothing without capturing, since the canvas would fall back to the live view", async () => {
+	it("refuses ids that draw nothing without capturing, so the answer names the ids rather than the canvas error", async () => {
 		const { capturePng, passedOptions } = createRecordingCapturePng();
 		const result = await captureCanvasImage(
 			{ kind: "captureCanvas", ids: ["missing"] },
@@ -152,7 +152,10 @@ describe("captureCanvasImage", () => {
 		const result = await captureCanvasImage(
 			{ kind: "captureCanvas", target: "selection" },
 			capturePng,
-			createFakeHandleControl({ getSelectedIds: () => ["s1", "s2"] }),
+			createFakeHandleControl({
+				getSelectedIds: () => ["s1", "s2"],
+				measureVisualBounds: () => ({ x: 0, y: 0, width: 100, height: 50 }),
+			}),
 		);
 
 		expect(passedOptions).toEqual([
@@ -160,6 +163,96 @@ describe("captureCanvasImage", () => {
 		]);
 		expect(result.ok).toBe(true);
 		expect(result.text).toContain("the 2 selected object(s)");
+	});
+
+	it("isolates named ids when asked, and says the rest is left out", async () => {
+		const { capturePng, passedOptions } = createRecordingCapturePng();
+		const result = await captureCanvasImage(
+			{ kind: "captureCanvas", ids: ["a", "b"], isolate: true },
+			capturePng,
+			createFakeHandleControl({
+				measureVisualBounds: () => ({ x: 0, y: 0, width: 100, height: 50 }),
+			}),
+		);
+
+		expect(passedOptions).toEqual([
+			{ ...BASE_OPTIONS, region: { ids: ["a", "b"], isolate: true } },
+		]);
+		expect(result.ok).toBe(true);
+		expect(result.text).toContain("isolated");
+		expect(result.text).not.toContain("cropped");
+	});
+
+	it("isolates the selection when asked", async () => {
+		const { capturePng, passedOptions } = createRecordingCapturePng();
+		await captureCanvasImage(
+			{ kind: "captureCanvas", target: "selection", isolate: true },
+			capturePng,
+			createFakeHandleControl({
+				getSelectedIds: () => ["s1"],
+				measureVisualBounds: () => ({ x: 0, y: 0, width: 100, height: 50 }),
+			}),
+		);
+
+		expect(passedOptions).toEqual([
+			{ ...BASE_OPTIONS, region: { ids: ["s1"], isolate: true } },
+		]);
+	});
+
+	it("crops as before when isolate is false", async () => {
+		const { capturePng, passedOptions } = createRecordingCapturePng();
+		const result = await captureCanvasImage(
+			{ kind: "captureCanvas", ids: ["a"], isolate: false },
+			capturePng,
+			createFakeHandleControl({
+				measureVisualBounds: () => ({ x: 0, y: 0, width: 100, height: 50 }),
+			}),
+		);
+
+		expect(passedOptions).toEqual([
+			{ ...BASE_OPTIONS, region: { ids: ["a"] } },
+		]);
+		expect(result.text).toContain("cropped");
+	});
+
+	it.each([
+		["a rect", { rect: { x: 0, y: 0, width: 10, height: 10 } }],
+		['target "all"', { target: "all" as const }],
+		["no region", {}],
+	])(
+		"refuses isolate with %s without capturing",
+		async (_label, regionArgs) => {
+			const { capturePng, passedOptions } = createRecordingCapturePng();
+			const result = await captureCanvasImage(
+				{ kind: "captureCanvas", ...regionArgs, isolate: true },
+				capturePng,
+				createFakeHandleControl(),
+			);
+
+			expect(result.ok).toBe(false);
+			expect(result.text).toContain(
+				'isolate works with ids or target "selection" only',
+			);
+			expect(passedOptions).toEqual([]);
+		},
+	);
+
+	it("refuses a selection that draws nothing without capturing", async () => {
+		const { capturePng, passedOptions } = createRecordingCapturePng();
+		const result = await captureCanvasImage(
+			{ kind: "captureCanvas", target: "selection" },
+			capturePng,
+			createFakeHandleControl({
+				getSelectedIds: () => ["empty-group"],
+				measureVisualBounds: () => null,
+			}),
+		);
+
+		expect(result.ok).toBe(false);
+		expect(result.text).toContain(
+			"none of the selected objects draws anything",
+		);
+		expect(passedOptions).toEqual([]);
 	});
 
 	it("refuses an empty selection without capturing", async () => {
