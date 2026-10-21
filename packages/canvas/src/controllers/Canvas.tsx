@@ -706,6 +706,7 @@ const CanvasComponent = ({
 				{state.activeModal === "export" && (
 					<ExportDialog
 						defaultMargin={EXPORT_FIT_PADDING}
+						canExportSelection={state.selection.objectIds.length > 0}
 						onClose={closeModal}
 						onSubmit={handleExportSubmit}
 					/>

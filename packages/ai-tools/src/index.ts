@@ -21,6 +21,7 @@ export {
 	type AiObjectFilter,
 	type AiPoint,
 	type AiRect,
+	type AiRegionArgs,
 	type AiRouting,
 	type AiSetPointsEntry,
 	type AiSetPositionEntry,

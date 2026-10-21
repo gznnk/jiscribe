@@ -75,6 +75,9 @@ export const defaultCanvasMessages: CanvasMessages = {
 	propertyPanelFieldRotation: "Rotation",
 
 	exportDialogTitle: "Export Image",
+	exportDialogScope: "Scope",
+	exportDialogScopeAll: "Whole drawing",
+	exportDialogScopeSelection: "Selection",
 	exportDialogFormat: "Format",
 	exportDialogFormatPng: "PNG",
 	exportDialogFormatSvg: "SVG",

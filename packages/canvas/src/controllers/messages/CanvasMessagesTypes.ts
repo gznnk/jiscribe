@@ -137,6 +137,9 @@ export type CanvasMessageStrings = {
 
 	// Export dialog
 	exportDialogTitle: string;
+	exportDialogScope: string;
+	exportDialogScopeAll: string;
+	exportDialogScopeSelection: string;
 	exportDialogFormat: string;
 	exportDialogFormatPng: string;
 	exportDialogFormatSvg: string;

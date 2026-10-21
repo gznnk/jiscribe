@@ -17,6 +17,7 @@ import type {
 	ExportSubmitValues,
 } from "../ui/modal/ExportDialog";
 import { resolveExportOptions } from "../utils/resolveExportOptions";
+import type { CanvasExportOptions } from "../utils/resolveExportOptions";
 
 /**
  * Exported image handed to the `onExportImage` prop: the encoded bytes plus
@@ -29,6 +30,30 @@ export type CanvasExportImagePayload = {
 	/** Whether the `.jis` source is embedded (re-editable image) */
 	includesSource: boolean;
 };
+
+/**
+ * Maps what the export dialog confirmed onto the options `resolveExportOptions`
+ * takes. The `"selection"` scope becomes an `{ ids }` region, so it crops to the
+ * selected objects' extent (margin included) rather than hiding the rest.
+ *
+ * @param values - What the dialog submitted; its `format` plays no part here
+ * @param selectedIds - The selection at submit time. When empty, a
+ *   `"selection"` scope falls back to the whole drawing (`"content"`), since an
+ *   `{ ids }` region with nothing to measure would export the current view
+ * @returns The region, margin, source embedding and background to export with
+ */
+export const toExportOptions = (
+	values: ExportSubmitValues,
+	selectedIds: readonly string[],
+): CanvasExportOptions => ({
+	region:
+		values.scope === "selection" && selectedIds.length > 0
+			? { ids: selectedIds }
+			: "content",
+	margin: values.margin,
+	includeSource: values.includeSource,
+	transparentBackground: values.transparentBackground,
+});
 
 /**
  * Runs the chosen export (with source: SVG embeds the .jis in
@@ -153,7 +178,10 @@ export const useExportDialog = ({
 							canvasStateRef.current,
 							registries.objectMapper,
 							registries,
-							values,
+							toExportOptions(
+								values,
+								canvasStateRef.current.selection.objectIds,
+							),
 						),
 						resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
 					},

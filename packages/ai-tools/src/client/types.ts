@@ -6,6 +6,7 @@
 import type {
 	Camera,
 	CanvasInteractionStatus,
+	CanvasPngCapture,
 	CanvasPngExportOptions,
 	ObjectOverlap,
 	TextSlotMeasurement,
@@ -18,12 +19,13 @@ import type { AiFitTarget } from "../canvasOps";
 /**
  * Burns the current canvas into a PNG. By default it is fitted to the whole
  * drawing and owes nothing to the pan and zoom on screen (pass `options.region`
- * to cut out the visible area or particular shapes instead). Returns null while
- * the canvas is not mounted.
+ * to cut out the visible area, particular shapes or a world rect instead).
+ * Resolves to the PNG together with the world rect it covers and its pixel
+ * size, or to null while the canvas is not mounted.
  */
 export type CapturePng = (
 	options?: CanvasPngExportOptions,
-) => Promise<Blob | null>;
+) => Promise<CanvasPngCapture | null>;
 
 /** The result of selectObjects: which of the ids asked for got through, and which were dropped */
 export type AiSelectionResult = {

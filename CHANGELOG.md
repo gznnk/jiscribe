@@ -13,6 +13,24 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Added
+
+- **`capture_canvas` can take a picture of one part of the drawing.** It
+  still captures the whole drawing by default, and now takes `ids`, a world
+  `rect` or `target: "selection"` to get one corner of a large diagram at a
+  legible resolution. The region crops rather than filters, so whatever else
+  is drawn inside it is in the picture; the result names the world rect the
+  image covers and its pixel size, so a spot in the picture can be turned into
+  a world point and handed to `hit_test`. `fit_view` takes the same `ids`
+  argument, and the three region arguments are declared once for both
+  (`AiRegionArgs` in `@jiscribe/ai-tools`); the `CapturePng` a host injects
+  now hands back the canvas's `CanvasPngCapture` rather than the bare blob.
+- **The Export dialog can export only the selected shapes.** A "Scope" row
+  chooses between the whole drawing and the selection, which is exported
+  through the same `{ ids }` region the handle offers: the extent of the
+  selected objects plus the margin, cropping rather than hiding the rest, with
+  the whole document still embedded as the `.jis` source.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security
