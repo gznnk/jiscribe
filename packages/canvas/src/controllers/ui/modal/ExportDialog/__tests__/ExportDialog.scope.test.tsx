@@ -77,13 +77,12 @@ describe("the export dialog's scope", () => {
 		expect(selectionRadio.name).toBe("export-scope");
 	});
 
-	it("starts at the whole drawing even when something is selected", () => {
+	it("starts at the selection when something is selected", () => {
 		const { allRadio, selectionRadio, onSubmit, submit } = mountDialog(true);
-		expect(allRadio.checked).toBe(true);
-		expect(selectionRadio.checked).toBe(false);
-		expect(selectionRadio.disabled).toBe(false);
+		expect(selectionRadio.checked).toBe(true);
+		expect(allRadio.checked).toBe(false);
 		submit();
-		expect(onSubmit.mock.calls[0][0].scope).toBe("all");
+		expect(onSubmit.mock.calls[0][0].scope).toBe("selection");
 	});
 
 	it("disables the selection scope when nothing is selected", () => {
@@ -93,16 +92,16 @@ describe("the export dialog's scope", () => {
 		expect(allRadio.checked).toBe(true);
 	});
 
-	it("submits the selection scope once it is chosen", () => {
-		const { selectionRadio, onSubmit, submit } = mountDialog(true);
+	it("submits the whole drawing once it is chosen over the selection", () => {
+		const { allRadio, onSubmit, submit } = mountDialog(true);
 		act(() => {
-			selectionRadio.click();
+			allRadio.click();
 		});
-		expect(selectionRadio.checked).toBe(true);
+		expect(allRadio.checked).toBe(true);
 		submit();
 		expect(onSubmit).toHaveBeenCalledTimes(1);
 		expect(onSubmit.mock.calls[0][0]).toEqual({
-			scope: "selection",
+			scope: "all",
 			format: "png",
 			margin: 16,
 			includeSource: true,

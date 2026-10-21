@@ -56,8 +56,8 @@ type ExportDialogProps = {
 	/** Initial value of the margin input (the canvas-wide default margin) */
 	defaultMargin: number;
 	/**
-	 * Whether anything is selected; the "Selection" scope is disabled otherwise.
-	 * The scope still starts at "all" when this is true.
+	 * Whether anything is selected. When true the scope starts at "selection";
+	 * otherwise it starts at "all" and "selection" is disabled.
 	 */
 	canExportSelection: boolean;
 	onClose: () => void;
@@ -77,9 +77,11 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 	onSubmit,
 }) => {
 	const messages = useCanvasMessages();
-	// Always "all" at first: a right-click selects its target before the menu
-	// opens, so starting at "selection" would change the default for everyone
-	const [scope, setScope] = useState<ExportScope>("all");
+	// A right-click on a shape selects it before the menu opens, so a menu opened
+	// on a shape starts at that shape; one on the background keeps the selection
+	const [scope, setScope] = useState<ExportScope>(
+		canExportSelection ? "selection" : "all",
+	);
 	const [format, setFormat] = useState<ExportImageFormat>("png");
 	const [includeSource, setIncludeSource] = useState(true);
 	const [transparentBackground, setTransparentBackground] = useState(false);

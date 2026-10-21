@@ -29,7 +29,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   chooses between the whole drawing and the selection, which is exported
   through the same `{ ids }` region the handle offers: the extent of the
   selected objects plus the margin, cropping rather than hiding the rest, with
-  the whole document still embedded as the `.jis` source.
+  the whole document still embedded as the `.jis` source. The scope starts at
+  the selection whenever something is selected, so exporting from a shape's
+  context menu exports that shape.
 
 ## [0.12.1] - 2026-10-20
 
