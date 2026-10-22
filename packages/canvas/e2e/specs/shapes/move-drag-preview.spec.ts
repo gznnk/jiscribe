@@ -108,4 +108,67 @@ test.describe("move drag preview", () => {
 		expect(droppedDrawn.centerX).toBeCloseTo(startDrawn.centerX + 90, 0);
 		expect(droppedDrawn.centerY).toBeCloseTo(startDrawn.centerY + 55, 0);
 	});
+
+	test("shifts a connector between two dragged shapes with its route as drawn at the start, and routes it on drop", async ({
+		canvas,
+	}) => {
+		// A centered at (270,200), B at (670,450); the connector runs from A's
+		// right edge to B's left edge, routed orthogonally by default.
+		await canvas.drawShape("Rectangle", { x: 200, y: 150 }, { x: 340, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 600, y: 400 }, { x: 740, y: 500 });
+		await canvas.deselect();
+		await canvas.selectAt({ x: 270, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 600,
+			y: 450,
+		});
+		await canvas.deselect();
+		await canvas.selectAt({ x: 270, y: 200 });
+		await canvas.shiftClickAt({ x: 670, y: 450 });
+
+		/** The connector's own `points` attribute and its wrapper's transform, as written. */
+		const readConnectorAttributes = () =>
+			canvas.page.evaluate((targetId) => {
+				const line = document.querySelector(
+					`polyline[data-kind="connector"][data-id="${targetId}"]`,
+				);
+				return {
+					points: line?.getAttribute("points") ?? null,
+					wrapperTransform:
+						line
+							?.closest('g[data-canvas-export="flatten"]')
+							?.getAttribute("transform") ?? null,
+				};
+			}, connectorId);
+
+		const start = await readConnectorAttributes();
+		expect(start.wrapperTransform).toBeNull();
+		const startPoints = await canvas.connectorPoints(connectorId);
+		const delta = { x: 60, y: 40 };
+		const shifted = startPoints.map((point) => ({
+			x: point.x + delta.x,
+			y: point.y + delta.y,
+		}));
+
+		await canvas.dragInspecting(
+			{ x: 270, y: 200 },
+			{ x: 270 + delta.x, y: 200 + delta.y },
+			async () => {
+				await expect
+					.poll(async () => (await readConnectorAttributes()).wrapperTransform)
+					.toBe(`translate(${delta.x} ${delta.y})`);
+				expect((await readConnectorAttributes()).points).toBe(start.points);
+				// The kit reads the drawn path, wrapper included.
+				expect(await canvas.connectorPoints(connectorId)).toEqual(shifted);
+			},
+		);
+
+		await expect
+			.poll(async () => (await readConnectorAttributes()).wrapperTransform, {
+				message: "the drop leaves the wrapper unshifted",
+			})
+			.toBeNull();
+		expect(await canvas.connectorPoints(connectorId)).toEqual(shifted);
+	});
 });

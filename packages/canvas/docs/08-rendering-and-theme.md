@@ -58,7 +58,9 @@ inside a `<g transform="translate(dx dy)">`. The start state keeps its identity 
   boundary, carries no `data-*` of its own beyond `data-canvas-export="flatten"`, and is never shared:
   a group of the moved objects would reorder the stacking and remount whatever enters or leaves it.
 - The renderer never guesses. An id the preview does not list, one whose state is still its start
-  state, and the object under text edit are drawn from their current state.
+  state, and the object under text edit are drawn from their current state. The reducer keeps the list
+  true: a drag frame drops the ids its settling rewrote (a box re-measured mid-drag), and any other
+  transition that changes the objects drops the preview until the next frame declares it again.
 - A connector without stored vertices is shifted when both its owners are; one with vertices (which
   stay put while the owners move) or with one owner moved is routed live. Orthogonal routing rounds its
   crossover to whole units, so a shifted orthogonal path may sit up to 0.5 world units off the live

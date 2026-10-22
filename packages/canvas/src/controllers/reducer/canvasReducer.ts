@@ -14,6 +14,10 @@ import { handleCommand } from "../commands/handlers/handleCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
+import {
+	dropCarriedOverMovePreview,
+	pruneMovePreview,
+} from "../utils/holdMovePreviewToState";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import {
@@ -54,8 +58,21 @@ import {
  * signature, so the bundle is captured here (rather than passed per dispatch)
  * and handed to each handler that needs it — the registries are dependencies,
  * not state (#165).
+ *
+ * A move preview never outlives the objects it speaks for: the drag frame that
+ * declares it keeps only the ids its settling left alone, and any other
+ * transition that rewrites the objects drops it (see holdMovePreviewToState).
  */
-export const createCanvasReducer =
+export const createCanvasReducer = (registries: CanvasRegistries) => {
+	const reduceAction = createActionReducer(registries);
+	return (
+		state: CanvasControllerState,
+		action: CanvasAction,
+	): CanvasControllerState =>
+		dropCarriedOverMovePreview(reduceAction(state, action), state);
+};
+
+const createActionReducer =
 	(registries: CanvasRegistries) =>
 	(
 		state: CanvasControllerState,
@@ -70,7 +87,10 @@ export const createCanvasReducer =
 					action.gestureHandling,
 				);
 				return recordHistoryIfNeeded(
-					settleTransition(gestureResult, state, registries),
+					pruneMovePreview(
+						settleTransition(gestureResult, state, registries),
+						gestureResult.objects,
+					),
 					state,
 				);
 			}

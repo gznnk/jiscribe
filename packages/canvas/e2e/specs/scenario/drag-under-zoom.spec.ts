@@ -130,13 +130,6 @@ test.describe("shape drag under zoom", () => {
 			y: grab.y + screenDelta.y,
 		});
 
-		// The shape keeps its start transform until the release is processed (a move
-		// drag shifts its wrapper instead), so wait for the drop to land.
-		await expect
-			.poll(async () => (await worldCenter(canvas, id)).x, {
-				message: "the drop moves the shape",
-			})
-			.not.toBe(worldBefore.x);
 		const worldAfter = await worldCenter(canvas, id);
 
 		// worldDelta = screenDelta x scale. Forgetting to divide by the zoom factor
