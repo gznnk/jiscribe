@@ -5,6 +5,7 @@
 // startup and held in memory; the latter is served as the directory it is (50MB in
 // total, far more than can be folded in).
 
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,9 +15,33 @@ import { CanvasHostError } from "./canvasHostError";
 export type ViewerAssets = {
 	/** The whole HTML returned at `/` */
 	viewerHtml: string;
+	/**
+	 * The SHA-256 of each inline script in viewerHtml, base64, in document order:
+	 * what the page's Content-Security-Policy names so that those scripts run and
+	 * no other inline script does
+	 */
+	viewerScriptHashes: readonly string[];
 	/** The directory served under `/assets/` (absolute path) */
 	assetRootPath: string;
 };
+
+const INLINE_SCRIPT_PATTERN = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+
+/**
+ * Hashes every inline script in the HTML the way a CSP `'sha256-…'` source wants
+ * it: over the script's text exactly as served, encoded as UTF-8.
+ *
+ * @param html - The page as it is sent; a `<script src>` has no inline text and
+ *   contributes nothing
+ * @returns Base64 digests in document order, empty when the page has no inline script
+ */
+export const calcInlineScriptHashes = (html: string): readonly string[] =>
+	Array.from(html.matchAll(INLINE_SCRIPT_PATTERN))
+		.map((match) => match[1])
+		.filter((scriptText) => scriptText.trim() !== "")
+		.map((scriptText) =>
+			createHash("sha256").update(scriptText, "utf8").digest("base64"),
+		);
 
 /**
  * The candidate locations of the viewer, in the order they are looked for.
@@ -39,7 +64,8 @@ const calcViewerRootCandidates = (): readonly string[] => {
 /**
  * Reads the viewer's HTML and returns it along with where the assets are.
  *
- * @returns The HTML already read in, and the directory the fonts are served from
+ * @returns The HTML already read in, the hashes of its inline scripts, and the
+ *   directory the fonts are served from
  * @throws CanvasHostError When it has not been built. Quietly going on returning
  *   404s tells nobody anything beyond "the screen is blank", so it fails at startup
  */
@@ -48,8 +74,10 @@ export function resolveViewerAssets(): ViewerAssets {
 	for (const rootPath of candidates) {
 		const htmlPath = path.join(rootPath, "index.html");
 		if (existsSync(htmlPath)) {
+			const viewerHtml = readFileSync(htmlPath, "utf8");
 			return {
-				viewerHtml: readFileSync(htmlPath, "utf8"),
+				viewerHtml,
+				viewerScriptHashes: calcInlineScriptHashes(viewerHtml),
 				assetRootPath: path.join(rootPath, "assets"),
 			};
 		}

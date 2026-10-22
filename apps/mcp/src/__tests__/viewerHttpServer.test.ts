@@ -8,6 +8,7 @@
 // canvasHostViewerLink): here it stands in as a fake, so that what each of its
 // outcomes comes back to the browser as can be read off one place.
 
+import { createHash } from "node:crypto";
 import {
 	chmod,
 	mkdir,
@@ -32,8 +33,16 @@ import {
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
 
+/** The script folded into the page, standing in for the viewer's own */
+const VIEWER_SCRIPT = "console.log('viewer')";
+
 /** What `/` returns. The real one is the whole viewer folded into a file */
-const VIEWER_HTML = "<!doctype html><title>viewer</title>";
+const VIEWER_HTML = `<!doctype html><title>viewer</title><script type="module">${VIEWER_SCRIPT}</script>`;
+
+/** The hash the policy names so that VIEWER_SCRIPT runs */
+const VIEWER_SCRIPT_HASH = createHash("sha256")
+	.update(VIEWER_SCRIPT, "utf8")
+	.digest("base64");
 
 /** What the host under test hands out at /api/session */
 const SESSION_TOKEN = "11111111-2222-3333-4444-555555555555";
@@ -145,6 +154,7 @@ beforeEach(async () => {
 	server = createViewerHttpServer({
 		workspaceRoot,
 		viewerHtml: VIEWER_HTML,
+		viewerScriptHashes: [VIEWER_SCRIPT_HASH],
 		assetRootPath,
 		sessionToken: SESSION_TOKEN,
 		writeOpenFile: (relPath, body, ifMatch) => {
@@ -573,6 +583,26 @@ describe("GET /", () => {
 		);
 		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 		expect(await response.text()).toBe(VIEWER_HTML);
+	});
+
+	it("names the page's own script in a policy that lets nothing else run or load from elsewhere", async () => {
+		// Markup from a drawing that got past the canvas's sanitizing would run on
+		// this origin, where the session token is there for the asking
+		const response = await fetch(`${baseUrl}/`);
+
+		expect(response.headers.get("content-security-policy")).toBe(
+			[
+				"default-src 'none'",
+				`script-src 'self' 'sha256-${VIEWER_SCRIPT_HASH}'`,
+				"style-src 'unsafe-inline'",
+				"img-src blob: data:",
+				"font-src 'self'",
+				`connect-src 'self' ws://localhost:${port} ws://127.0.0.1:${port} ws://[::1]:${port}`,
+				"frame-ancestors 'none'",
+				"base-uri 'none'",
+				"form-action 'none'",
+			].join("; "),
+		);
 	});
 
 	it("answers 404 for anything else", async () => {
