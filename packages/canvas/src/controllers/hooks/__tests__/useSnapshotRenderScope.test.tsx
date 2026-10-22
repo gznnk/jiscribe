@@ -6,10 +6,14 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { SnapshotRenderScope } from "../../utils/SnapshotRenderScope";
 import { useSnapshotRenderScope } from "../useSnapshotRenderScope";
+import type { WritableCanvasZoomStore } from "../utils/createCanvasZoomStore";
+import { createCanvasZoomStore } from "../utils/createCanvasZoomStore";
 
 type ScopeProbe = {
 	/** The scope on the newest render */
 	latestScope: () => SnapshotRenderScope | null;
+	/** The zoom store the hook was handed */
+	zoomStore: WritableCanvasZoomStore;
 	withSnapshotRenderScope: <T>(
 		renderScope: SnapshotRenderScope,
 		snapshot: () => T,
@@ -26,8 +30,9 @@ afterEach(() => {
 const mountScope = (): ScopeProbe => {
 	let scope: SnapshotRenderScope | null = null;
 	let runSnapshot: ScopeProbe["withSnapshotRenderScope"] | null = null;
+	const zoomStore = createCanvasZoomStore(1);
 	const Probe = () => {
-		const snapshotScope = useSnapshotRenderScope();
+		const snapshotScope = useSnapshotRenderScope(zoomStore);
 		scope = snapshotScope.snapshotRenderScope;
 		runSnapshot = snapshotScope.withSnapshotRenderScope;
 		return null;
@@ -37,6 +42,7 @@ const mountScope = (): ScopeProbe => {
 	unmount = () => act(() => root.unmount());
 	return {
 		latestScope: () => scope,
+		zoomStore,
 		// Inside act, so the clear the hook schedules has landed when this returns
 		withSnapshotRenderScope: (renderScope, snapshot) => {
 			const run = runSnapshot;
@@ -84,7 +90,16 @@ describe("useSnapshotRenderScope", () => {
 		expect(probe.latestScope()).toBeNull();
 	});
 
-	it("clears the scope when the snapshot throws", () => {
+	it("holds the zoom store in its snapshot state for the snapshot alone", () => {
+		const probe = mountScope();
+		const seen = probe.withSnapshotRenderScope("all", () =>
+			probe.zoomStore.isSnapshotRendering(),
+		);
+		expect(seen).toBe(true);
+		expect(probe.zoomStore.isSnapshotRendering()).toBe(false);
+	});
+
+	it("clears the scope and the snapshot state when the snapshot throws", () => {
 		const probe = mountScope();
 		expect(() =>
 			probe.withSnapshotRenderScope("all", () => {
@@ -92,5 +107,6 @@ describe("useSnapshotRenderScope", () => {
 			}),
 		).toThrow("clone failed");
 		expect(probe.latestScope()).toBeNull();
+		expect(probe.zoomStore.isSnapshotRendering()).toBe(false);
 	});
 });
