@@ -22,6 +22,27 @@
 
 「純粋描画に徹する」ことで、表示は state の関数として決まり、テストや再利用がしやすくなる。
 
+## 小さすぎて読めない文字は描かない
+
+最大の文字サイズが画面上で **4 CSS px**（`fontSize × zoom`）を下回る文字は描かず、その
+foreignObject に `display="none"` を付ける。テキストオーバーレイはズームアウトしたドラッグの
+毎フレームでブラウザがレイアウトし直すが、その大きさでは読めるものが何も無い。規則と閾値は
+`useIsTextLegible`（`rendering/objects/useIsTextLegible.ts`）1 つに置き、`TextOverlayFrame` と
+`ConnectorLabel` がこれを呼ぶ。
+
+- ズームは数値ではなくストア（`CanvasZoomStoreContext`）で届けるので、ズームの 1 段で再描画される
+  のは閾値をまたいだ文字だけになる。ストアは `<Canvas>` が持つ（`useCanvasZoomStore`）。キャンバスの
+  外（テスト・プレビュー）では context が null で、文字はすべて描く。
+- 隠している間も要素はマウントしたままにする。ズームを戻したときに全ボックスが一斉に再マウント
+  されないようにするため。
+- エクスポートは生きた DOM を複製して文字を読み戻すので、エクスポートの描画範囲と同じ `flushSync`
+  の中でストアをスナップショット状態にし（`useSnapshotRenderScope`）、その間はズームに関係なく
+  すべての文字を描く。
+- 中身が `fontSize` より大きく描かれるボックスは `TextOverlayFrame` に `maxFontSize` を渡す。
+  `TextOverlay` はラン中の最大サイズ、Markdown プラグインは最大の見出しを渡す。
+- 隠れていてもテキストオブジェクトは拾える。計算したヒット帯で拾い、オーバーレイでは拾わない
+  ため。隠れたコネクターのラベルはズームを戻すまで当たり判定に乗らないが、コネクターの線は乗る。
+
 ## 色は「presentation 属性」か「CSS」かを使い分ける
 
 判断軸は emotion か inline style かではなく、**presentation 属性で足りるか / CSS 関数の解決が要るか**。

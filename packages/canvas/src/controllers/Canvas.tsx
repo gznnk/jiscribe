@@ -28,6 +28,7 @@ import { useBlockBrowserZoom } from "./hooks/useBlockBrowserZoom";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
+import { useCanvasZoomStore } from "./hooks/useCanvasZoomStore";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
@@ -549,8 +550,11 @@ const CanvasComponent = ({
 		textEditObjectId,
 		registries,
 	);
+	// Read by the text overlays, which stop drawing text too small to read; a
+	// snapshot lifts that for as long as it clones the SVG.
+	const canvasZoomStore = useCanvasZoomStore(state.viewport.zoom);
 	const { snapshotRenderScope, withSnapshotRenderScope } =
-		useSnapshotRenderScope();
+		useSnapshotRenderScope(canvasZoomStore);
 	const renderedObjectIds = resolveRenderedObjectIds(
 		snapshotRenderScope,
 		culledObjectIds,
@@ -602,6 +606,7 @@ const CanvasComponent = ({
 			messages={mergedMessages}
 			registries={registries}
 			fontsNonce={fontsNonce}
+			zoomStore={canvasZoomStore}
 			lookupResolvedImage={lookupResolvedImage}
 			viewportElementRef={canvasRef}
 		>

@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { flushSync } from "react-dom";
 
+import type { WritableCanvasZoomStore } from "./utils/createCanvasZoomStore";
 import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 type UseSnapshotRenderScopeResult = {
@@ -22,20 +23,31 @@ type UseSnapshotRenderScopeResult = {
 	) => T;
 };
 
-/** Owns what a DOM snapshot (export) renders while it clones the live SVG. */
-export const useSnapshotRenderScope = (): UseSnapshotRenderScopeResult => {
+/**
+ * Owns what a DOM snapshot (export) renders while it clones the live SVG.
+ *
+ * @param zoomStore - Raised into its snapshot state for the same span, so a text
+ *   hidden for being too small at the current zoom is drawn into the clone
+ */
+export const useSnapshotRenderScope = (
+	zoomStore: WritableCanvasZoomStore,
+): UseSnapshotRenderScopeResult => {
 	const [snapshotRenderScope, setSnapshotRenderScope] =
 		useState<SnapshotRenderScope | null>(null);
 	const withSnapshotRenderScope = useCallback(
 		<T>(renderScope: SnapshotRenderScope, snapshot: () => T): T => {
-			flushSync(() => setSnapshotRenderScope(renderScope));
+			flushSync(() => {
+				setSnapshotRenderScope(renderScope);
+				zoomStore.setSnapshotRendering(true);
+			});
 			try {
 				return snapshot();
 			} finally {
 				setSnapshotRenderScope(null);
+				zoomStore.setSnapshotRendering(false);
 			}
 		},
-		[],
+		[zoomStore],
 	);
 	return { snapshotRenderScope, withSnapshotRenderScope };
 };

@@ -24,6 +24,26 @@ Main structure:
 
 By committing to pure rendering, the presentation is determined purely as a function of state, making it easy to test and reuse.
 
+## Text too small to read is not drawn
+
+A text whose largest type size would show below **4 CSS px on screen** (`fontSize × zoom`) is not
+drawn: its foreignObject gets `display="none"`. Every text overlay is laid out by the browser on each
+frame of a zoomed-out drag, and at that size there is nothing to read. The rule and the threshold live
+in one hook, `useIsTextLegible` (`rendering/objects/useIsTextLegible.ts`), which `TextOverlayFrame` and
+`ConnectorLabel` call.
+
+- The zoom reaches it as a store (`CanvasZoomStoreContext`), not as a number, so a zoom step re-renders
+  only the texts it moves across the threshold. `<Canvas>` owns the store (`useCanvasZoomStore`); with no
+  canvas around (tests, previews) the context is null and every text is drawn.
+- The element stays mounted while hidden, so zooming back in does not remount every box at once.
+- An export clones the live DOM and reads the text back off it, so the store is put in its snapshot state
+  inside the same `flushSync` as the export's render scope (`useSnapshotRenderScope`), and every text is
+  drawn for that span whatever the zoom.
+- A box whose content draws larger than its `fontSize` passes its `maxFontSize` to `TextOverlayFrame`:
+  `TextOverlay` the largest run size, the Markdown plugin its largest heading.
+- A text object is still picked while hidden: it is hit through computed bands, not through its overlay.
+  A hidden connector label is not a target until zoomed back in; its connector's line still is.
+
 ## Choose between "presentation attribute" and "CSS" for color
 
 The deciding factor is not emotion vs. inline style, but rather **whether a presentation attribute suffices, or whether CSS-function resolution is required**.

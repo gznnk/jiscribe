@@ -9,6 +9,7 @@ import {
 	readRichTextRangeStyle,
 	remapRichText,
 	richTextLength,
+	richTextMaxFontSize,
 	richTextToPlain,
 	sliceRichText,
 	styleRichTextMatches,
@@ -65,6 +66,33 @@ describe("richTextToPlain / richTextLength", () => {
 		expect(richTextLength("hello")).toBe(5);
 		expect(richTextLength([{ text: "he" }, { text: "llo" }])).toBe(5);
 		expect(richTextLength([])).toBe(0);
+	});
+});
+
+describe("richTextMaxFontSize", () => {
+	it("answers the slot's size for a plain string or runs that set none", () => {
+		expect(richTextMaxFontSize("hello", 16)).toBe(16);
+		expect(richTextMaxFontSize([{ text: "he", fontWeight: "bold" }], 16)).toBe(
+			16,
+		);
+		expect(richTextMaxFontSize([], 16)).toBe(16);
+	});
+
+	it("answers the largest run size above the slot's", () => {
+		expect(
+			richTextMaxFontSize(
+				[
+					{ text: "a", fontSize: 24 },
+					{ text: "b" },
+					{ text: "c", fontSize: 40 },
+				],
+				16,
+			),
+		).toBe(40);
+	});
+
+	it("never answers below the slot's size", () => {
+		expect(richTextMaxFontSize([{ text: "a", fontSize: 8 }], 16)).toBe(16);
 	});
 });
 

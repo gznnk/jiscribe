@@ -11,6 +11,7 @@ import {
 	TextContent,
 	TextWrapper,
 } from "./TextOverlayFrameStyled";
+import { useIsTextLegible } from "../../useIsTextLegible";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../utils/verticalAlignToAlignItems";
 
@@ -41,6 +42,14 @@ export type TextOverlayFrameProps = {
 	fontColor?: string;
 	/** Font size in pixels. Default: TEXT_STYLE_FALLBACK (16). */
 	fontSize?: number;
+	/**
+	 * The largest type size anything inside the box is drawn at, in pixels at
+	 * zoom 1, when the content draws parts of itself larger than `fontSize` (runs
+	 * set larger, a heading scaled by `em`). Default: `fontSize`. The box is not
+	 * drawn while this times the canvas zoom is below 4 CSS px, except while an
+	 * export clones the canvas (useIsTextLegible).
+	 */
+	maxFontSize?: number;
 	/** Font family; falls back to DEFAULT_FONT_FAMILY when omitted, which is where it lives rather than in TEXT_STYLE_FALLBACK because doc creation shares it. */
 	fontFamily?: string;
 	/** CSS font-weight. Default: TEXT_STYLE_FALLBACK ("normal"). */
@@ -64,6 +73,9 @@ export type TextOverlayFrameProps = {
  * something other than plain text (Markdown, for one) render their own element
  * as `children` instead of duplicating the box.
  *
+ * Text too small to read at the canvas's zoom is hidden with `display="none"`
+ * rather than unmounted, so zooming back in does not remount every box at once.
+ *
  * The DOM shape is load-bearing: `foreignObject > wrapper > content`. Image
  * export walks exactly these two levels and reads the computed style off the
  * content element (see foreignObjectToSvgText), so children must nest *inside*
@@ -83,6 +95,7 @@ export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 	verticalAlign = TEXT_STYLE_FALLBACK.verticalAlign,
 	fontColor = TEXT_STYLE_FALLBACK.fontColor,
 	fontSize = TEXT_STYLE_FALLBACK.fontSize,
+	maxFontSize = fontSize,
 	fontFamily = DEFAULT_FONT_FAMILY,
 	fontWeight = TEXT_STYLE_FALLBACK.fontWeight,
 	fontStyle = TEXT_STYLE_FALLBACK.fontStyle,
@@ -91,6 +104,7 @@ export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 }) => {
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const resolvedColor = resolveAutoColor(fontColor, "ink");
+	const isLegible = useIsTextLegible(maxFontSize);
 
 	return (
 		<ForeignObjectElement
@@ -114,6 +128,7 @@ export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 					: `${transform} translate(${x} ${y})`
 			}
 			pointerEvents="none"
+			display={isLegible ? undefined : "none"}
 		>
 			<TextWrapper
 				style={{ alignItems: verticalAlignToAlignItems[verticalAlign] }}

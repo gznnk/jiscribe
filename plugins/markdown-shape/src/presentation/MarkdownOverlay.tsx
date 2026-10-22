@@ -5,6 +5,7 @@ import { renderMarkdown } from "@jiscribe/markdown";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef } from "react";
 
+import { calcMarkdownMaxFontScale } from "./calcMarkdownMaxFontScale";
 import { MarkdownBody } from "./MarkdownStyled";
 
 const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
@@ -34,6 +35,11 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 		[source],
 	);
 
+	const maxFontScale = useMemo(
+		() => calcMarkdownMaxFontScale(renderedHtml),
+		[renderedHtml],
+	);
+
 	// isEditing stays in deps: while editing this component renders null, so the
 	// body div remounts on close and innerHTML must be set again even though
 	// renderedHtml is unchanged.
@@ -60,6 +66,9 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 			verticalAlign={verticalAlign}
 			fontColor={fontColor}
 			fontSize={fontSize}
+			// Headings are scaled in `em` of fontSize; with no fontSize the frame's
+			// own default applies to both.
+			maxFontSize={fontSize === undefined ? undefined : fontSize * maxFontScale}
 			fontFamily={fontFamily}
 		>
 			<MarkdownBody ref={bodyRef} />

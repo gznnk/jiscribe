@@ -49,6 +49,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   source holds just those shapes. The scope starts at the selection whenever
   something is selected, so exporting from a shape's context menu exports that
   shape.
+- **For plugin authors: `TextOverlayFrame` takes `maxFontSize`**, the largest
+  size anything inside the box is drawn at, for content that draws parts of
+  itself larger than `fontSize`. It decides when the box counts as too small to
+  read (below); omitted, `fontSize` does. The Markdown shape passes its largest
+  heading.
+
+### Changed
+
+- **Text too small to read is not drawn.** A shape's text or a connector's
+  label whose largest type size would show below 4 CSS px at the current zoom
+  is hidden, and comes back on zooming in. With a few thousand shapes zoomed
+  out to fit, dragging or marquee-selecting takes about half as long per frame.
+  Exported images and `capture_canvas` pictures still hold every text at any
+  zoom, and a hidden label's connector can still be picked by its line.
 
 ## [0.12.1] - 2026-10-20
 
