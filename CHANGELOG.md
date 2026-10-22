@@ -15,6 +15,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Security
 
+- **The markup of an `svg` object can no longer reach outside its own box.**
+  It was sanitized with DOMPurify's defaults, which keep `<style>`, `<a>` and an
+  `href` to any `http(s):` URL, and never look at `url()` in a presentation
+  attribute or an inline `style`. An inline `<style>` applies to the whole page,
+  so one shape in a shared `.jis` could hide or restyle the editor around it,
+  and an `<image href="https://…">` or `fill="url(https://…)"` had the reader's
+  browser fetch a URL of the file author's choosing. `<style>` and `<a>` are now
+  dropped, and every `href` / `xlink:href` / `url()` that is not a `#fragment`
+  is removed, a `data:` image on `<image>` excepted. The drawing guide says the
+  same (`canvas-prompt.md`, regenerated).
 - **A `.jis.svg` can no longer stall the reader for minutes.** The embedded
   `jiscribe:source` element was located with a regex whose lazy body rescanned
   to the end of the file for every open tag without a close tag, so a crafted
