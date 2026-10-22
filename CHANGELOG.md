@@ -13,6 +13,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Security
+
+- **A `.jis.svg` can no longer stall the reader for minutes.** The embedded
+  `jiscribe:source` element was located with a regex whose lazy body rescanned
+  to the end of the file for every open tag without a close tag, so a crafted
+  file of a few hundred KB took seconds and a few MB took minutes, on the
+  thread that opens the file. The element is now found with a linear scan. A
+  character reference past U+10FFFF inside it (`&#x110000;`) is kept as
+  written instead of throwing out of the reader.
+- **An object whose `id` is `__proto__` is rejected by the parser.** Hosts key
+  plain objects by id, and `objects["__proto__"] = x` sets the prototype
+  instead of adding an entry: the object vanished from every scan while its id
+  stayed in the tree, and the first edit after opening failed with `Mapper for
+object type 'undefined' not found`, leaving the document unsaveable. Any id
+  that is a property name of `Object.prototype` is now a structural error.
+
 ### Added
 
 - **`capture_canvas` can take a picture of one part of the drawing.** It

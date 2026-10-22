@@ -72,6 +72,14 @@ function validateObjectNode(
 			message: "must be a non-empty string",
 			severity: "error",
 		});
+	} else if (o.id in Object.prototype) {
+		// Hosts key plain objects by id; `objects["__proto__"] = x` sets the
+		// prototype instead of an entry, and the object is lost from every scan
+		errors.push({
+			path: `${path}.id`,
+			message: `must not be "${o.id}" (a property name of Object.prototype)`,
+			severity: "error",
+		});
 	}
 
 	if (!isString(o.type)) {

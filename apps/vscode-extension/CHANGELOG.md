@@ -5,6 +5,17 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- **A crafted `.jis.svg` can no longer freeze the extension host.** Locating
+  the embedded source took time quadratic in the file's size when it held open
+  tags without close tags, and the image editor does that on open, on every
+  change on disk and on save; the scan is now linear (see the engine
+  changelog). A character reference past U+10FFFF in the embedded source no
+  longer keeps the editor from opening.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security

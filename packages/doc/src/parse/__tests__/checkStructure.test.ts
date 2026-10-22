@@ -353,6 +353,14 @@ describe("checkStructure: common node fields", () => {
 		expect(has(errors, "root[0].id", "non-empty string")).toBe(true);
 	});
 
+	it.each(["__proto__", "constructor", "hasOwnProperty"])(
+		"an id that is a property name of Object.prototype (%s) is an error",
+		(id) => {
+			const errors = checkStructure(doc([{ type: "rect", id }]));
+			expect(has(errors, "root[0].id", "Object.prototype")).toBe(true);
+		},
+	);
+
 	it("a missing type yields only a type error and skips per-type validation (early return)", () => {
 		// Even with a broken width, without a type it does not proceed to rect validation
 		const errors = checkStructure(doc([{ id: "x", width: "bad" }]));

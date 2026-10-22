@@ -48,6 +48,40 @@ describe("extractCanvasSourceFromSvgText", () => {
 	it("returns null when the embedded element is empty", () => {
 		expect(extractCanvasSourceFromSvgText(buildExportedSvg("  "))).toBeNull();
 	});
+
+	it("keeps a character reference past U+10FFFF as written instead of throwing", () => {
+		const svgText = buildExportedSvg(
+			'{"text":"&#x110000; &#99999999999; &#65;"}',
+		);
+		expect(extractCanvasSourceFromSvgText(svgText)).toBe(
+			'{"text":"&#x110000; &#99999999999; A"}',
+		);
+	});
+
+	it("does not take an element whose name merely starts with jiscribe:source", () => {
+		const svgText =
+			`<svg xmlns="http://www.w3.org/2000/svg"><jiscribe:sourcex>{}</jiscribe:sourcex>` +
+			`<jiscribe:source>{"a":1}</jiscribe:source></svg>`;
+		expect(extractCanvasSourceFromSvgText(svgText)).toBe('{"a":1}');
+	});
+
+	it("returns null for an open tag with no close tag", () => {
+		expect(
+			extractCanvasSourceFromSvgText(
+				`<svg xmlns="http://www.w3.org/2000/svg"><jiscribe:source>{}</svg>`,
+			),
+		).toBeNull();
+	});
+
+	// A lazy-body regex took seconds per hundred KB of this input; the scan must
+	// stay linear so a crafted .jis.svg cannot stall the extension host
+	it("scans many unclosed open tags in linear time", () => {
+		const svgText = "<jiscribe:source>".repeat(50_000);
+		const startedAt = performance.now();
+		expect(extractCanvasSourceFromSvgText(svgText)).toBeNull();
+		expect(replaceCanvasSourceInSvgText(svgText, "{}")).toBeNull();
+		expect(performance.now() - startedAt).toBeLessThan(500);
+	});
 });
 
 describe("replaceCanvasSourceInSvgText", () => {
