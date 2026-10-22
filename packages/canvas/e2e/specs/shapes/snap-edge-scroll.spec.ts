@@ -23,16 +23,32 @@ async function viewBoxMinY(canvas: CanvasDriver): Promise<number> {
 	return Number(raw.trim().split(/\s+/)[1]);
 }
 
-/** Center X of a shape, read off its transform (`matrix(1, 0, 0, 1, cx, cy)`). */
+/**
+ * Center X of a shape as drawn, read off its transform (`matrix(1, 0, 0, 1, cx, cy)`)
+ * plus the `translate(dx dy)` its wrapper carries while a move drag holds it, the
+ * shape itself staying drawn from where the drag started (MovePreview).
+ */
 async function centerX(canvas: CanvasDriver, id: string): Promise<number> {
-	const shape = (await canvas.captureObjects()).find((obj) => obj.id === id);
+	const transforms = await canvas.page.evaluate((targetId) => {
+		const shape = document.querySelector(
+			`[data-kind="object"][data-id="${targetId}"]`,
+		);
+		return {
+			shape: shape?.getAttribute("transform") ?? "",
+			wrapper:
+				shape
+					?.closest('g[data-canvas-export="flatten"]')
+					?.getAttribute("transform") ?? "",
+		};
+	}, id);
 	const matched = /matrix\([^)]*?,\s*([-\d.]+),\s*[-\d.]+\)/.exec(
-		shape?.transform ?? "",
+		transforms.shape,
 	);
 	if (!matched) {
 		throw new Error(`cannot read the transform of ${id}`);
 	}
-	return Number(matched[1]);
+	const shift = /translate\(([-\d.e]+)/.exec(transforms.wrapper);
+	return Number(matched[1]) + (shift ? Number(shift[1]) : 0);
 }
 
 test.describe("snapping during an edge scroll", () => {

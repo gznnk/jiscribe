@@ -895,3 +895,73 @@ describe("ObjectEventHandler - commit", () => {
 		expect(ended.commitVersion).toBe(4);
 	});
 });
+
+describe("ObjectEventHandler - move preview", () => {
+	it("declares the snapped delta, the translated ids and the start snapshot it moved from", () => {
+		const state = makeSnapDragState(22);
+		const next = ObjectEventHandler.handle(
+			state,
+			makeScrollingDragEvent("drag", { x: 20, y: 0 }),
+			registries,
+		);
+
+		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
+		const movePreview = next.activeDrag?.movePreview;
+		expect(movePreview?.delta).toEqual({ x: 22, y: 0 });
+		expect([...(movePreview?.translatedIds ?? [])]).toEqual(["rect-1"]);
+		expect(movePreview?.startObjects).toBe(
+			state.activeDrag?.startSnapshot.objects,
+		);
+	});
+
+	it("lists a moved group's descendants, and neither a selected connector nor an unselected object", () => {
+		const group = {
+			id: "group-1",
+			type: "group",
+			cx: 0,
+			cy: 0,
+			width: 30,
+			height: 10,
+			childIds: ["rect-1", "rect-2"],
+		} as unknown as ObjectState;
+		const connector = {
+			id: "connector-1",
+			type: "connector",
+			source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+			target: { owner: { id: "rect-3" }, anchor: { kind: "center" } },
+			points: [],
+		} as unknown as ObjectState;
+		const objects = {
+			"group-1": group,
+			"rect-1": makeRect("rect-1", -10, 0),
+			"rect-2": makeRect("rect-2", 10, 0),
+			"rect-3": makeRect("rect-3", 100, 0),
+			"connector-1": connector,
+		};
+		const base = makeDragState();
+		const state = {
+			...base,
+			objects,
+			rootIds: ["group-1", "rect-3", "connector-1"],
+			selection: selectionOf(["group-1", "connector-1"]),
+			activeDrag: {
+				...base.activeDrag,
+				startSnapshot: {
+					...base.activeDrag?.startSnapshot,
+					objects,
+					keyPoints: {},
+				},
+			},
+		} as unknown as CanvasControllerState;
+
+		const next = ObjectEventHandler.handle(
+			state,
+			{ ...makeDragEvent({ x: 5, y: 5 }, false), targetId: "rect-1" },
+			registries,
+		);
+
+		expect(
+			[...(next.activeDrag?.movePreview?.translatedIds ?? [])].sort(),
+		).toEqual(["group-1", "rect-1", "rect-2"]);
+	});
+});

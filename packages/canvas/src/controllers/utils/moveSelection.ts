@@ -37,6 +37,11 @@ export type MoveSelectionResult = {
 	objects: Record<string, ObjectState>;
 	/** The translated multiSelectGroup (null if src was null) */
 	multiSelectGroup: GroupState | null;
+	/**
+	 * Ids whose moveByDelta returned a new state, descendants of moved groups
+	 * included; connectors (whose moveByDelta is a no-op) never are
+	 */
+	translatedIds: ReadonlySet<string>;
 };
 
 /**
@@ -63,11 +68,19 @@ export function moveSelection(
 
 	// COW view: per-frame drag clones must not copy the whole map (#213)
 	const objects = createCowObjects(srcObjects);
+	const translatedIds = new Set<string>();
 
 	// Each selected object is translated through the registry; groups additionally propagate
 	// the move to their descendants. (read: srcObjects / write: objects)
 	for (const selectedId of selectedIds) {
-		moveObjectTree(selectedId, srcObjects, objects, delta, objectBehavior);
+		moveObjectTree(
+			selectedId,
+			srcObjects,
+			objects,
+			delta,
+			objectBehavior,
+			translatedIds,
+		);
 	}
 
 	const multiSelectGroup: GroupState | null = srcMultiSelectGroup
@@ -78,5 +91,5 @@ export function moveSelection(
 			}
 		: null;
 
-	return { objects, multiSelectGroup };
+	return { objects, multiSelectGroup, translatedIds };
 }

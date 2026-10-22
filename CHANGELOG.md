@@ -63,6 +63,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   out to fit, dragging or marquee-selecting takes about half as long per frame.
   Exported images and `capture_canvas` pictures still hold every text at any
   zoom, and a hidden label's connector can still be picked by its line.
+- **Dragging objects no longer redraws them on every frame.** The dragged
+  shapes keep the elements they had when the drag started, and each is shifted
+  by the transform of a group of its own, so a frame changes one attribute per
+  shape, and React skips every object the frame leaves alone. Dragging a
+  selection of a few thousand shapes takes about half as long per frame. A connector
+  without vertices whose two ends both move is shifted the same way; an
+  orthogonal one may sit up to half a unit off its route until the drop routes
+  it again. Every other connector is routed live as before. The
+  document is still updated on every frame, so snapping, the controls and the
+  properties panel are unchanged, and the drop draws the moved shapes
+  themselves. Every object and connector on the canvas now sits in that group,
+  which image export folds away. For plugin authors: a type's `moveByDelta`
+  must move its drawing as a whole and change nothing else, since the drag
+  draws the start state shifted rather than what `moveByDelta` returned.
 
 ## [0.12.1] - 2026-10-20
 

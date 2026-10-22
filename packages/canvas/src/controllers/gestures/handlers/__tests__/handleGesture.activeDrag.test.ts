@@ -77,6 +77,29 @@ describe("handleGesture - activeDrag", () => {
 		expect(state.activeDrag).toBeNull();
 	});
 
+	it("carries the move preview for the length of an object drag and drops it with the drag", () => {
+		let state = stateWithSelectedRect();
+		const startObjects = state.objects;
+		state = handleGesture(
+			state,
+			dragGesture("dragStart", { targetKind: "object", targetId: "r1" }),
+			registries,
+		);
+		expect(state.activeDrag?.movePreview).toEqual({
+			delta: { x: 20, y: 20 },
+			translatedIds: new Set(["r1"]),
+			startObjects,
+		});
+
+		state = handleGesture(
+			state,
+			dragGesture("dragEnd", { targetKind: "object", targetId: "r1" }),
+			registries,
+		);
+		expect(state.activeDrag).toBeNull();
+		expect(state.objects.r1).toMatchObject({ cx: 120, cy: 120 });
+	});
+
 	it("is 'transform' for a resize handle drag", () => {
 		let state = stateWithSelectedRect();
 		state = handleGesture(
@@ -89,6 +112,7 @@ describe("handleGesture - activeDrag", () => {
 			registries,
 		);
 		expect(state.activeDrag?.kind).toBe("transform");
+		expect(state.activeDrag?.movePreview).toBeUndefined();
 	});
 
 	it("is 'other' for a marquee on the canvas", () => {

@@ -1,9 +1,12 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "./ConnectorRenderer";
+import { useElementReuse } from "./hooks/useElementReuse";
+import type { MovePreview } from "./MovePreview";
 import { ObjectRenderBoundary } from "./ObjectRenderBoundary";
 import { resolveEndpointOwner } from "../../../connectors/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { useObjectComponentRegistry } from "../../objects/registry/ObjectComponentRegistryContext";
@@ -22,7 +25,62 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	 * descendants to be drawn. Omit to render the full tree.
 	 */
 	renderedObjectIds?: ReadonlySet<string>;
+	/**
+	 * The move drag under way, as its handler declared it. Each object it
+	 * translated is drawn from its start state inside a shifted wrapper, so the
+	 * object's component is not re-rendered per frame. Omit outside a move drag.
+	 */
+	movePreview?: MovePreview;
 };
+
+/**
+ * The drag-start state to draw `id` from, shifted, or null to draw its current
+ * state: only an object the move translated, and only while its state is not
+ * the start state itself.
+ */
+const readShiftedStartState = (
+	id: string | undefined,
+	movePreview: MovePreview | undefined,
+	objects: Record<string, ObjectState>,
+): ObjectState | null => {
+	if (
+		id === undefined ||
+		movePreview === undefined ||
+		!movePreview.translatedIds.has(id)
+	) {
+		return null;
+	}
+	const startState = movePreview.startObjects[id];
+	return startState !== undefined && startState !== objects[id]
+		? startState
+		: null;
+};
+
+/**
+ * Whether a connector is drawn from its owners' start states, shifted with
+ * them: both owners translated, and no stored vertices, which stay where they
+ * are while the owners move (alignVertexPath bends the path to them). An
+ * orthogonal route qualifies even though it is not exactly a translation: the
+ * router rounds its crossover to whole units (elbowCandidates), so the shifted
+ * path may sit up to 0.5 world units off the live one until the drop routes it.
+ */
+const isConnectorShiftedWithOwners = (
+	connectorState: ConnectorState,
+	movePreview: MovePreview,
+	objects: Record<string, ObjectState>,
+): boolean =>
+	movePreview.startObjects[connectorState.id] === connectorState &&
+	connectorState.points.length === 0 &&
+	readShiftedStartState(
+		connectorState.source.owner?.id,
+		movePreview,
+		objects,
+	) !== null &&
+	readShiftedStartState(
+		connectorState.target.owner?.id,
+		movePreview,
+		objects,
+	) !== null;
 
 /**
  * Unified renderer that traverses rootIds (in z-order) to draw content.
@@ -32,6 +90,17 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
  * - connector → drawn by the dedicated ConnectorRenderer since it needs endpoint resolution
  * - otherwise → the component from the registry, each inside its own
  *   ObjectRenderBoundary so one object's throw leaves the rest drawn
+ *
+ * Every drawn object and connector sits in a wrapper `<g>` of its own, outside
+ * the boundary, which carries the move preview's shift while a move drag draws
+ * it from its start state (see MovePreview). The wrapper is there whether or
+ * not it is shifted, so a drag that starts or ends moves no subtree; export
+ * folds it away (`data-canvas-export="flatten"`).
+ *
+ * The element built for an id is handed back as the very same object while
+ * everything it is built from holds (useElementReuse), so React bails out on it
+ * without visiting the wrapper or the boundary: a frame that moves a few objects
+ * costs React those few, not every object drawn.
  */
 const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
@@ -39,8 +108,14 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	textEditObjectId,
 	editingTextSlotId,
 	renderedObjectIds,
+	movePreview,
 }) => {
 	const objectComponentRegistry = useObjectComponentRegistry();
+	const shiftTransform = movePreview
+		? `translate(${movePreview.delta.x} ${movePreview.delta.y})`
+		: undefined;
+
+	const reuseElement = useElementReuse();
 
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		// Render gate: a group is in the set only when a descendant is to be
@@ -64,19 +139,43 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 		// Connectors need dynamic resolution of their endpoints (source/target), so draw them with the dedicated renderer.
 		if (objState.type === "connector") {
 			const connectorState = objState as ConnectorState;
+			const isEditing = id === textEditObjectId;
+			const isShifted =
+				movePreview !== undefined &&
+				!isEditing &&
+				isConnectorShiftedWithOwners(connectorState, movePreview, objects);
+			// The start owners keep their identities for the whole drag, so a shifted
+			// connector's memo holds and its route is not resolved again.
+			const ownerObjects = isShifted ? movePreview.startObjects : objects;
 			// Extract only the endpoint owners here so ConnectorRenderer's memo works:
 			// their identities are stable across commits that touch unrelated objects,
 			// unlike the objects map itself.
+			const sourceObj = resolveEndpointOwner(
+				ownerObjects,
+				connectorState.source,
+			);
+			const targetObj = resolveEndpointOwner(
+				ownerObjects,
+				connectorState.target,
+			);
+			const transform = isShifted ? shiftTransform : undefined;
 			result.push(
-				<ConnectorRenderer
-					key={id}
-					connectorState={connectorState}
-					sourceObj={resolveEndpointOwner(objects, connectorState.source)}
-					targetObj={resolveEndpointOwner(objects, connectorState.target)}
-					// Derived here so only the edited connector's prop changes and
-					// starting/ending an edit does not break the others' memo.
-					isEditing={id === textEditObjectId}
-				/>,
+				reuseElement(
+					id,
+					[connectorState, sourceObj, targetObj, isEditing, transform],
+					() => (
+						<g key={id} data-canvas-export="flatten" transform={transform}>
+							<ConnectorRenderer
+								connectorState={connectorState}
+								sourceObj={sourceObj}
+								targetObj={targetObj}
+								// Derived here so only the edited connector's prop changes and
+								// starting/ending an edit does not break the others' memo.
+								isEditing={isEditing}
+							/>
+						</g>
+					),
+				),
 			);
 			return;
 		}
@@ -89,20 +188,34 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 
 		// When text editing, add the isEditing prop
 		const isEditing = id === textEditObjectId;
+		// The edited object is drawn from its draft, which its start state lacks.
+		const shiftedStartState = isEditing
+			? null
+			: readShiftedStartState(id, movePreview, objects);
+		const drawnState = shiftedStartState ?? objState;
+		const transform = shiftedStartState ? shiftTransform : undefined;
+		// Only the edited object receives the slot id; for the rest the prop stays
+		// undefined so starting/ending an edit does not break their memo.
+		const drawnSlotId = isEditing
+			? (editingTextSlotId ?? undefined)
+			: undefined;
 		result.push(
-			<ObjectRenderBoundary
-				key={id}
-				objectId={id}
-				objectType={objState.type}
-				objectState={objState}
-				component={ObjectComponent}
-				isEditing={isEditing}
-				// Only the edited object receives the slot id; for the rest the prop
-				// stays undefined so starting/ending an edit does not break their memo.
-				editingTextSlotId={
-					isEditing ? (editingTextSlotId ?? undefined) : undefined
-				}
-			/>,
+			reuseElement(
+				id,
+				[drawnState, isEditing, drawnSlotId, transform, ObjectComponent],
+				() => (
+					<g key={id} data-canvas-export="flatten" transform={transform}>
+						<ObjectRenderBoundary
+							objectId={id}
+							objectType={drawnState.type}
+							objectState={drawnState}
+							component={ObjectComponent}
+							isEditing={isEditing}
+							editingTextSlotId={drawnSlotId}
+						/>
+					</g>
+				),
+			),
 		);
 	};
 

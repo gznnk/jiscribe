@@ -5,6 +5,7 @@ import { ContentGroup, Svg } from "./CanvasViewStyled";
 import { CanvasDefs } from "./defs/CanvasDefs";
 import { deriveGridLineColor } from "./layers/background/deriveGridLineColor";
 import { Grid } from "./layers/background/Grid";
+import type { MovePreview } from "./layers/content/MovePreview";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
 import type { Viewport } from "./Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
@@ -28,6 +29,8 @@ type CanvasViewProps = {
 	isContentHidden?: boolean;
 	/** IDs to render (see ObjectsRenderer). Omit to render the full tree. */
 	renderedObjectIds?: ReadonlySet<string>;
+	/** The move drag under way, drawn as a shift of its start states (see ObjectsRenderer). */
+	movePreview?: MovePreview;
 	/** Render the background grid (default false). See {@link Grid}. */
 	showGrid?: boolean;
 	/** Base grid spacing in world units (default 25), passed to Grid. */
@@ -57,6 +60,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 	isDrawMode = false,
 	isContentHidden = false,
 	renderedObjectIds,
+	movePreview,
 	showGrid = false,
 	gridSize = 25,
 	background,
@@ -116,6 +120,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 					textEditObjectId={textEditObjectId}
 					editingTextSlotId={editingTextSlotId}
 					renderedObjectIds={renderedObjectIds}
+					movePreview={movePreview}
 				/>
 				{/* Overlay layers injected from parent. These are control UI
 				    (selection handles, control frames, snap guides, ...), so they

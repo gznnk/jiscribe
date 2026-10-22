@@ -659,6 +659,7 @@ const CanvasComponent = ({
 								editingTextSlotId={editingTextSlotId}
 								isDrawMode={!!state.shapeDrawing}
 								renderedObjectIds={renderedObjectIds}
+								movePreview={state.activeDrag?.movePreview}
 								showGrid={grid?.show}
 								gridSize={grid?.size}
 								background={state.background}

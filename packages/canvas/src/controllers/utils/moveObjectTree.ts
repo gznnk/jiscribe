@@ -19,6 +19,8 @@ import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavior
  * @param dstObjects - Target objects to write updates to (mutated)
  * @param delta - Movement delta {x, y}
  * @param objectBehavior - The canvas's object behavior registry (per-shape moveByDelta)
+ * @param translatedIds - Receives every id whose moveByDelta returned a new state; a no-op
+ *   moveByDelta (the connector's) and a type with none registered add nothing. Omit when unused
  */
 export function moveObjectTree(
 	id: string,
@@ -26,6 +28,7 @@ export function moveObjectTree(
 	dstObjects: Record<string, ObjectState>,
 	delta: Point,
 	objectBehavior: ObjectBehaviorRegistry,
+	translatedIds?: Set<string>,
 ): void {
 	const src = srcObjects[id];
 	if (!src) {
@@ -34,13 +37,24 @@ export function moveObjectTree(
 
 	const moveByDeltaFn = objectBehavior.getMoveByDelta(src.type);
 	if (moveByDeltaFn) {
-		dstObjects[id] = moveByDeltaFn(src, delta);
+		const moved = moveByDeltaFn(src, delta);
+		dstObjects[id] = moved;
+		if (translatedIds && moved !== src) {
+			translatedIds.add(id);
+		}
 	}
 
 	// Propagate to descendants: only groups own a containment subtree.
 	if (isGroupState(src)) {
 		for (const childId of src.childIds) {
-			moveObjectTree(childId, srcObjects, dstObjects, delta, objectBehavior);
+			moveObjectTree(
+				childId,
+				srcObjects,
+				dstObjects,
+				delta,
+				objectBehavior,
+				translatedIds,
+			);
 		}
 	}
 }
