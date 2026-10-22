@@ -90,6 +90,47 @@ describe("handleCalloutTailTip", () => {
 		expect(next?.tail).toEqual({ side: "right", position: 0.5 });
 	});
 
+	it("derives side=left and side=top for the opposite drags", () => {
+		const callout = makeCallout();
+		expect(
+			objectOf(
+				handleCalloutTailTip(
+					makeContext(callout),
+					makeEvent({ x: -50, y: 60 }),
+				),
+			)?.tail,
+		).toEqual({ side: "left", position: 0.25 });
+		expect(
+			objectOf(
+				handleCalloutTailTip(
+					makeContext(callout),
+					makeEvent({ x: 150, y: -200 }),
+				),
+			)?.tail,
+		).toEqual({ side: "top", position: 0.75 });
+	});
+
+	it("puts the tail at the middle of an edge of no length rather than dividing by zero", () => {
+		// No width: any vertical offset wins, and the edge it picks has no length.
+		expect(
+			objectOf(
+				handleCalloutTailTip(
+					makeContext(makeCallout({ width: 0 })),
+					makeEvent({ x: 300, y: 120 }),
+				),
+			)?.tail,
+		).toEqual({ side: "bottom", position: 0.5 });
+		// No height: the horizontal axis wins, and its edge has no length either.
+		expect(
+			objectOf(
+				handleCalloutTailTip(
+					makeContext(makeCallout({ height: 0 })),
+					makeEvent({ x: 120, y: 300 }),
+				),
+			)?.tail,
+		).toEqual({ side: "right", position: 0.5 });
+	});
+
 	it("returns the updated object without mutating the input", () => {
 		const callout = makeCallout();
 		const next = objectOf(

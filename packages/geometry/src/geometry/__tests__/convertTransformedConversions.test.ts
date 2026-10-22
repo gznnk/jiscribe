@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { convertTransformedEllipseToFrame } from "../../geometry/convertTransformedEllipseToFrame";
+import { convertTransformedFrameToEllipse } from "../../geometry/convertTransformedFrameToEllipse";
 import { convertTransformedRectToFrame } from "../../geometry/convertTransformedRectToFrame";
 
 describe("convertTransformedRectToFrame", () => {
@@ -63,5 +64,30 @@ describe("convertTransformedEllipseToFrame", () => {
 			scaleX: 1,
 			scaleY: 1,
 		});
+	});
+});
+
+describe("convertTransformedFrameToEllipse", () => {
+	it("halves the frame into radii, carrying rotation and flips over", () => {
+		const frame = {
+			cx: 10,
+			cy: 20,
+			width: 100,
+			height: 60,
+			rotation: 30,
+			scaleX: -1,
+			scaleY: 1,
+		} as const;
+		const ellipse = convertTransformedFrameToEllipse(frame);
+		expect(ellipse).toEqual({
+			cx: 10,
+			cy: 20,
+			rx: 50,
+			ry: 30,
+			rotation: 30,
+			scaleX: -1,
+			scaleY: 1,
+		});
+		expect(convertTransformedEllipseToFrame(ellipse)).toEqual(frame);
 	});
 });

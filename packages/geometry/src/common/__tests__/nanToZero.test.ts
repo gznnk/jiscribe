@@ -12,4 +12,9 @@ describe("nanToZero", () => {
 		expect(nanToZero(0)).toBe(0);
 		expect(nanToZero(-3)).toBe(-3);
 	});
+
+	it("passes infinities through: only NaN is caught", () => {
+		expect(nanToZero(Infinity)).toBe(Infinity);
+		expect(nanToZero(-Infinity)).toBe(-Infinity);
+	});
 });

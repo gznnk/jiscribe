@@ -455,6 +455,38 @@ describe("the file watch", () => {
 		expect(calcChangedTexts(viewer)).toEqual([savedDocText, outsideText]);
 	});
 
+	it("passes a person's save on to every other window, with the revision it was written as", async () => {
+		// A headless window left on the text before the save would answer capture
+		// with a drawing the person has already changed
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const savingViewer = await connectFakeViewer(host);
+		const otherViewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			[savingViewer, otherViewer].every((viewer) =>
+				viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+			),
+		);
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			savedDocText,
+			readLatestRevision(savingViewer),
+		);
+
+		expect(outcome.status).toBe(200);
+		await waitFor(() => calcChangedTexts(otherViewer).length > 0);
+		expect(calcChangedTexts(otherViewer)).toEqual([savedDocText]);
+		expect(readLatestRevision(otherViewer)).toBe(
+			readLatestRevision(savingViewer),
+		);
+		expect(outcome.body).toMatchObject({
+			revision: readLatestRevision(otherViewer),
+		});
+	});
+
 	it("stops watching the file it was told to stop showing", async () => {
 		await writeOpenFile(emptyDocText);
 		await writeFile(join(workspaceRoot, OTHER_REL_PATH), emptyDocText, "utf8");

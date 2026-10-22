@@ -16,4 +16,12 @@ describe("calcNonZeroSign", () => {
 		expect(calcNonZeroSign(-1)).toBe(-1);
 		expect(calcNonZeroSign(-100)).toBe(-1);
 	});
+
+	it("returns 1 for -0", () => {
+		expect(calcNonZeroSign(-0)).toBe(1);
+	});
+
+	it("returns -1 for NaN", () => {
+		expect(calcNonZeroSign(NaN)).toBe(-1);
+	});
 });

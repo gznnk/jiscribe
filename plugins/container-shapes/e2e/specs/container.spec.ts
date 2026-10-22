@@ -252,6 +252,34 @@ test.describe("container palette / behavior", () => {
 			.toContain("100");
 	});
 
+	test("keeps the header height when the box is resized, the body taking the change", async ({
+		canvas,
+	}) => {
+		// Container of height 220, its 28px header ending at content y=248.
+		const frame = await createFromFlyout(
+			canvas,
+			"frame",
+			{ x: 300, y: 220 },
+			{ x: 560, y: 440 },
+		);
+		// The body's and the header band's heights: the first two rects the container draws.
+		const bodyAndHeaderHeights = () =>
+			canvas.page.evaluate((id) => {
+				const rects = document.querySelectorAll(`[data-id="${id}"] rect`);
+				return [0, 1].map((index) =>
+					Number(rects[index]?.getAttribute("height")),
+				);
+			}, frame.id);
+		expect(await bodyAndHeaderHeights()).toEqual([220, 28]);
+
+		// Selected right after creation, so the handles are up.
+		await canvas.dragTransformHandle("bottomCenter", { x: 430, y: 520 });
+		await expect.poll(bodyAndHeaderHeights).toEqual([300, 28]);
+
+		await canvas.dragTransformHandle("topCenter", { x: 430, y: 300 });
+		await expect.poll(bodyAndHeaderHeights).toEqual([220, 28]);
+	});
+
 	test("changes the header color from the sidebar's own row and undoes it", async ({
 		canvas,
 	}) => {

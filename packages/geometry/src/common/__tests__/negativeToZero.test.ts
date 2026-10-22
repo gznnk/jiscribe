@@ -16,4 +16,8 @@ describe("negativeToZero", () => {
 		expect(negativeToZero(1)).toBe(1);
 		expect(negativeToZero(100)).toBe(100);
 	});
+
+	it("passes NaN through, since it is not negative", () => {
+		expect(negativeToZero(NaN)).toBeNaN();
+	});
 });
