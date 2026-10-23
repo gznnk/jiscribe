@@ -148,6 +148,7 @@ const applyResizedFrame = (
 		const recalculatedBounds = calcMultiSelectGroupBounds(
 			state.selection.objectIds,
 			nextState.objects,
+			registries,
 			updatedGroup,
 		);
 		if (!recalculatedBounds) {

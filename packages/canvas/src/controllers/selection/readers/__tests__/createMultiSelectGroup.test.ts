@@ -3,10 +3,13 @@ import { describe, it, expect } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import { MIN_GROUP_DIMENSION } from "../../../../states/utils/groupDimensions";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import {
 	MULTI_SELECT_GROUP,
 	createMultiSelectGroup,
 } from "../createMultiSelectGroup";
+
+const registries = createTestRegistries();
 
 const rect = (
 	id: string,
@@ -29,23 +32,23 @@ const rect = (
 
 describe("createMultiSelectGroup", () => {
 	it("0 selectedIds -> null", () => {
-		expect(createMultiSelectGroup([], {})).toBeNull();
+		expect(createMultiSelectGroup([], {}, registries)).toBeNull();
 	});
 
 	it("1 selectedId -> null", () => {
 		const objects = { r1: rect("r1", 50, 50, 40, 40) };
-		expect(createMultiSelectGroup(["r1"], objects)).toBeNull();
+		expect(createMultiSelectGroup(["r1"], objects, registries)).toBeNull();
 	});
 
 	it("no valid objects found (all missing) -> null", () => {
-		expect(createMultiSelectGroup(["a", "b"], {})).toBeNull();
+		expect(createMultiSelectGroup(["a", "b"], {}, registries)).toBeNull();
 	});
 
 	it("two rects -> returns a GroupState with the correct cx/cy/width/height", () => {
 		const r1 = rect("r1", 50, 50, 40, 40); // left=30, right=70, top=30, bottom=70
 		const r2 = rect("r2", 150, 150, 40, 40); // left=130, right=170, top=130, bottom=170
 		const objects = { r1, r2 };
-		const result = createMultiSelectGroup(["r1", "r2"], objects);
+		const result = createMultiSelectGroup(["r1", "r2"], objects, registries);
 		expect(result).not.toBeNull();
 		expect(result?.cx).toBeCloseTo(100); // (30+170)/2
 		expect(result?.cy).toBeCloseTo(100);
@@ -56,21 +59,21 @@ describe("createMultiSelectGroup", () => {
 	it("the returned GroupState has MULTI_SELECT_GROUP.ID", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 100, 0, 10, 10);
-		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
+		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 }, registries);
 		expect(result?.id).toBe(MULTI_SELECT_GROUP.ID);
 	});
 
 	it("the returned GroupState's childIds are the selectedIds", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 100, 0, 10, 10);
-		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
+		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 }, registries);
 		expect(result?.childIds).toEqual(["r1", "r2"]);
 	});
 
 	it("returns with rotation=0 / scaleX=1 / scaleY=1", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 50, 0, 10, 10);
-		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
+		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 }, registries);
 		expect(result?.rotation).toBe(0);
 		expect(result?.scaleX).toBe(1);
 		expect(result?.scaleY).toBe(1);
@@ -80,14 +83,19 @@ describe("createMultiSelectGroup", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 50, 0, 10, 10);
 		const existing = { lockAspectRatio: false } as GroupState;
-		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 }, existing);
+		const result = createMultiSelectGroup(
+			["r1", "r2"],
+			{ r1, r2 },
+			registries,
+			existing,
+		);
 		expect(result?.lockAspectRatio).toBe(false);
 	});
 
 	it("lockAspectRatio defaults to true when there is no existingMultiSelectGroup", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 50, 0, 10, 10);
-		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
+		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 }, registries);
 		expect(result?.lockAspectRatio).toBe(true);
 	});
 
@@ -101,7 +109,11 @@ describe("createMultiSelectGroup", () => {
 			source: { anchor: { kind: "free", point: { x: 10, y: 20 } } },
 			target: { anchor: { kind: "free", point: { x: 110, y: 70 } } },
 		} as unknown as ObjectState;
-		const result = createMultiSelectGroup(["r1", "c1"], { r1, c1: connector });
+		const result = createMultiSelectGroup(
+			["r1", "c1"],
+			{ r1, c1: connector },
+			registries,
+		);
 		expect(result).not.toBeNull();
 		// Union of rect (250..350) and connector endpoints (10..110 / 20..70)
 		expect(result?.cx).toBeCloseTo((10 + 350) / 2);
@@ -125,11 +137,15 @@ describe("createMultiSelectGroup", () => {
 			childIds: ["c1"],
 		} as unknown as ObjectState;
 		const r2 = rect("r2", 300, 50, 20, 20); // 290..310 x, 40..60 y
-		const result = createMultiSelectGroup(["g", "r2"], {
-			c1: connector,
-			g,
-			r2,
-		});
+		const result = createMultiSelectGroup(
+			["g", "r2"],
+			{
+				c1: connector,
+				g,
+				r2,
+			},
+			registries,
+		);
 		expect(result).not.toBeNull();
 		expect(result?.cx).toBeCloseTo((0 + 310) / 2);
 		expect(result?.cy).toBeCloseTo((0 + 100) / 2);
@@ -145,6 +161,7 @@ describe("createMultiSelectGroup", () => {
 		const result = createMultiSelectGroup(
 			["r1", "r2"],
 			{ r1, r2 },
+			registries,
 			null,
 			precomputedBBoxes,
 		);
@@ -172,7 +189,7 @@ describe("createMultiSelectGroup", () => {
 			{ x: 60, y: 50 },
 			{ x: 100, y: 50 },
 		]);
-		const result = createMultiSelectGroup(["p1", "p2"], { p1, p2 });
+		const result = createMultiSelectGroup(["p1", "p2"], { p1, p2 }, registries);
 		expect(result).not.toBeNull();
 		expect(result?.width).toBeCloseTo(100);
 		expect(result?.height).toBe(MIN_GROUP_DIMENSION);
@@ -187,7 +204,7 @@ describe("createMultiSelectGroup", () => {
 		} as unknown as ObjectState;
 		const r2 = rect("r2", 100, 0, 20, 20);
 		const objects = { r1, r2, inner: innerGroup };
-		const result = createMultiSelectGroup(["inner", "r2"], objects);
+		const result = createMultiSelectGroup(["inner", "r2"], objects, registries);
 		expect(result).not.toBeNull();
 		// inner's child r1: cx=0,cy=0,w=20,h=20 -> left=-10, right=10
 		// r2: cx=100,cy=0,w=20,h=20 -> left=90, right=110

@@ -139,6 +139,7 @@ export const DuplicateCommand: ExecutableCommand = {
 			multiSelectGroup: createMultiSelectGroup(
 				newObjectIds,
 				mergedObjects,
+				registries,
 				null,
 			),
 			commitVersion: state.commitVersion + 1,

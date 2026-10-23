@@ -127,6 +127,14 @@ export const readTextSlot = (
 ): string => richTextToPlain(readRichTextSlot(text, slotId));
 
 /**
+ * A body as the rows form stores it: one row per line, and `[]` for an empty
+ * body. The newlines a body carries between rows are the split points, not
+ * characters of any row, so their styling (invisible either way) is dropped.
+ */
+const splitIntoTextRows = (body: RichText) =>
+	richTextToPlain(body) === "" ? [] : splitRichTextLines(body);
+
+/**
  * Writes one body of text back into one slot, splitting at its newlines when
  * that slot holds rows (the inverse of {@link readRichTextSlot}; an emptied body
  * writes `[]`, not `[""]`, so the empty rows form stays canonical). The slot's
@@ -148,13 +156,7 @@ export const writeRichTextSlot = (
 	if (slot === undefined) {
 		return { ...text, [slotId]: { text: body } };
 	}
-	// The newlines a body carries between rows are the split points, not
-	// characters of any row, so their styling (invisible either way) is dropped.
-	const content = isTextRows(slot.text)
-		? richTextToPlain(body) === ""
-			? []
-			: splitRichTextLines(body)
-		: body;
+	const content = isTextRows(slot.text) ? splitIntoTextRows(body) : body;
 	return {
 		...text,
 		[slotId]: { ...slot, text: content },

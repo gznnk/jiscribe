@@ -103,6 +103,8 @@ export default tseslint.config(
 			// builds @vscode/test-electron downloads next to them.
 			"apps/vscode-extension/out",
 			"apps/vscode-extension/.vscode-test",
+			// The desktop app's electron-vite output, and what is staged into it.
+			"apps/desktop/out",
 		],
 	},
 	{
@@ -202,6 +204,7 @@ export default tseslint.config(
 			"object-shorthand": "error",
 			"prefer-template": "error",
 			curly: ["error", "all"],
+			"no-nested-ternary": "error",
 		},
 	},
 	{
@@ -568,7 +571,11 @@ export default tseslint.config(
 	},
 	{
 		// Node programs, not browser ones: process / console are theirs to use.
-		files: ["packages/doc-tools/src/**", "apps/cli/src/**"],
+		files: [
+			"packages/doc-tools/src/**",
+			"apps/cli/src/**",
+			"apps/desktop/src/**",
+		],
 		languageOptions: {
 			globals: globals.node,
 		},

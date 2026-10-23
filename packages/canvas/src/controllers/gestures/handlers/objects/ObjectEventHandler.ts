@@ -35,7 +35,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { ORIGIN_SNAP_PX } from "../utils/axisLock";
+import { calcLockedAxis, ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { parsePartAddress, readTextSlotPart } from "../utils/partAddress";
@@ -130,15 +130,9 @@ function handleObjectDrag(
 	const selectedIds = canvasState.selection.objectIds;
 
 	// --- Axis lock via Shift ---
-	// While Shift is held, movement is locked to one axis. The locked axis (lockedAxis)
-	// is the one with the smaller absolute cumulative delta, and movement occurs only
-	// along the direction with the larger absolute value. Since it is judged by the
-	// cumulative amount, the locked axis follows if the larger direction swaps during the drag.
-	const lockedAxis: "x" | "y" | null = mods.shift
-		? Math.abs(delta.x) >= Math.abs(delta.y)
-			? "y"
-			: "x"
-		: null;
+	// The axis comes from calcLockedAxis on the cumulative delta, so the lock
+	// follows if the dominant direction swaps during the drag.
+	const lockedAxis = mods.shift ? calcLockedAxis(delta) : null;
 
 	const zoom = canvasState.viewport.zoom;
 
@@ -322,6 +316,7 @@ function handleObjectDragStart(
 				? createMultiSelectGroup(
 						selectedIds,
 						eventStartObjects,
+						registries,
 						canvasState.multiSelectGroup,
 					)
 				: null;
@@ -463,6 +458,7 @@ export const ObjectEventHandler: GestureHandler = {
 				nextState,
 				targetObject,
 				event.mods,
+				registries,
 			);
 			// A click that leaves the selection as it was, on the object that is already
 			// the whole selection, addresses a part inside it instead. Any modifier

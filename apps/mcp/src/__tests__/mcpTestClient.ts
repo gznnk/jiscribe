@@ -1,7 +1,10 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
-import { createJiscribeMcpServer } from "../server";
+import {
+	createJiscribeMcpServer,
+	type JiscribeMcpServerOptions,
+} from "../server";
 
 /**
  * The result of one `tools/call`. The text is the content's text blocks joined
@@ -75,11 +78,16 @@ export type McpTestClient = {
  * It is faster for standing up no child process, but what it goes through is
  * the same JSON-RPC path as stdio, so tool registration and zod's argument
  * validation still apply as they are.
+ *
+ * @param serverOptions What the server is built with; a shared `runtime` is how
+ *   two clients reach one host
  */
-export async function connectMcpTestClient(): Promise<McpTestClient> {
+export async function connectMcpTestClient(
+	serverOptions?: JiscribeMcpServerOptions,
+): Promise<McpTestClient> {
 	const [clientTransport, serverTransport] =
 		InMemoryTransport.createLinkedPair();
-	const server = createJiscribeMcpServer();
+	const server = createJiscribeMcpServer(serverOptions);
 	const client = new Client({ name: "mcp-test", version: "0.0.0" });
 	await Promise.all([
 		server.connect(serverTransport),

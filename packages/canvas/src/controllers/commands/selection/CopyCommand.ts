@@ -1,9 +1,23 @@
 import { isTransformedFrame } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import type { ClipboardData } from "./ClipboardData";
+import type { CanvasControllerState } from "../../CanvasTypes";
 import { collectSelectionSubset } from "../../selection/readers/collectSelectionSubset";
 import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import type { ExecutableCommand } from "../CommandTypes";
+
+/** The selection's center for ClipboardData's `center`: the multiSelectGroup's, else the first object's frame's, else the origin. */
+const resolveClipboardCenter = (state: CanvasControllerState): Point => {
+	if (state.multiSelectGroup != null) {
+		return { x: state.multiSelectGroup.cx, y: state.multiSelectGroup.cy };
+	}
+	const firstObj = state.objects[state.selection.objectIds[0]];
+	if (firstObj && isTransformedFrame(firstObj)) {
+		return { x: firstObj.cx, y: firstObj.cy };
+	}
+	return { x: 0, y: 0 };
+};
 
 /**
  * Command that copies the current selection (including descendants and fully
@@ -42,14 +56,6 @@ export const CopyCommand: ExecutableCommand = {
 			}
 		}
 
-		const firstObj = state.objects[state.selection.objectIds[0]];
-		const center =
-			state.multiSelectGroup != null
-				? { x: state.multiSelectGroup.cx, y: state.multiSelectGroup.cy }
-				: firstObj && isTransformedFrame(firstObj)
-					? { x: firstObj.cx, y: firstObj.cy }
-					: { x: 0, y: 0 };
-
 		const data: ClipboardData = {
 			__type: "jiscribe-canvas-clipboard",
 			version: 1,
@@ -57,7 +63,7 @@ export const CopyCommand: ExecutableCommand = {
 			// Back to front: on paste the elements are stacked to the front in this
 			// order, preserving their relative stacking.
 			rootIds: subset.rootIds,
-			center,
+			center: resolveClipboardCenter(state),
 		};
 
 		return { ...state, internalClipboard: data };

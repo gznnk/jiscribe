@@ -16,7 +16,7 @@ export const SelectAllCommand: ExecutableCommand = {
 		return state.rootIds.length > 0;
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		// Connectors are mixed into rootIds but are only ever selected on their own,
 		// so Select All leaves them out (otherwise Group would grab them). Paste
 		// applies the same filter (handlePaste).
@@ -30,6 +30,7 @@ export const SelectAllCommand: ExecutableCommand = {
 			multiSelectGroup: createMultiSelectGroup(
 				selectableIds,
 				state.objects,
+				registries,
 				state.multiSelectGroup,
 			),
 			objectMenuOpenId: null,

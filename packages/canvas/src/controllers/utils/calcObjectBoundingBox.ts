@@ -56,9 +56,13 @@ const unionVisualBounds = (
  * @param visualExtentRegistries - Per-canvas registries measuring what is drawn:
  *   a frame shape's box widened by what it draws outside its geometry (an actor's
  *   label, say), a connector's path resolved as the renderer routes it. Pass them
- *   only from the visual-extent consumers (zoom-to-fit, export viewBox, culling,
- *   menu placement); omitting them yields the geometry box, which is what
- *   selection, snapping and group bounds must keep using
+ *   from the visual-extent consumers (zoom-to-fit, export viewBox, culling, menu
+ *   placement). Omitted, a frame keeps its geometry box but a connector's path is
+ *   not the drawn route (see calcConnectorBoundingBox). Of the bundle, only
+ *   `objectVisualBounds` must stay out of a geometry-box consumer; as this takes
+ *   the bundle whole, such a consumer resolves connectors through
+ *   ConnectorRouteRegistries instead — the multi-select frame takes its extent
+ *   from collectObjectPoints that way
  * @returns The bounding box, or null when the object has no valid extent
  *   (unresolvable connector, group without valid children, empty poly, unknown kind)
  */

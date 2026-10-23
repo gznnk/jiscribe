@@ -435,15 +435,14 @@ export class CanvasDriver {
 				[...document.querySelectorAll(controlSelector)]
 					.map((el) => {
 						const id = el.getAttribute("data-id");
+						if (id === null) {
+							return null;
+						}
 						// Vertex handles address a model part; every other control
 						// carries an action.
 						const marker =
 							el.getAttribute("data-action") ?? el.getAttribute("data-part");
-						return id === null
-							? null
-							: marker === null
-								? id
-								: `${id}/${marker}`;
+						return marker === null ? id : `${id}/${marker}`;
 					})
 					.filter((descriptor): descriptor is string => descriptor !== null),
 			selectors.control,

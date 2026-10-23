@@ -78,6 +78,11 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	const isMixed = mixedValues !== undefined;
 	const resolveSwatchColor = (color: string): string =>
 		color === "transparent" ? color : resolveAutoColor(color, role);
+	const singleColorLabel = isAuto ? (
+		<PropertyColorAutoLabel>{messages.colorPickerAuto}</PropertyColorAutoLabel>
+	) : (
+		value
+	);
 
 	return (
 		<PropertyDropdownField
@@ -102,12 +107,8 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 							<PropertyMixedLabel>
 								{messages.propertyPanelMixed}
 							</PropertyMixedLabel>
-						) : isAuto ? (
-							<PropertyColorAutoLabel>
-								{messages.colorPickerAuto}
-							</PropertyColorAutoLabel>
 						) : (
-							value
+							singleColorLabel
 						)}
 					</PropertyDropdownTriggerLabel>
 				</>

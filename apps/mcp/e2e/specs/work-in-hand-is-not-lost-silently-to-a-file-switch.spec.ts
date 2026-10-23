@@ -63,7 +63,6 @@ const readLostEditsNoticeLog = async (page: Page): Promise<string[]> =>
 /** Presses the rectangle and drags it, leaving the button down */
 async function dragWithoutReleasing(page: Page): Promise<void> {
 	const rect = page.locator(`[data-id="${SINGLE_RECT.id}"]`).first();
-	const placedTransform = await rect.getAttribute("transform");
 	const box = await rect.boundingBox();
 	if (box === null) {
 		throw new Error(`${SINGLE_RECT.id} is not drawn, so it cannot be dragged`);
@@ -72,9 +71,12 @@ async function dragWithoutReleasing(page: Page): Promise<void> {
 	await page.mouse.move(center.x, center.y);
 	await page.mouse.down();
 	await page.mouse.move(center.x + DRAG_DX, center.y, { steps: 6 });
+	// A move drag shifts the wrapper <g> around the shape and leaves the shape's
+	// own transform at its start value until the drop (MovePreview), so the drag
+	// is seen in where the shape is drawn, not in its attribute
 	await expect
-		.poll(async () => rect.getAttribute("transform"))
-		.not.toBe(placedTransform);
+		.poll(async () => (await rect.boundingBox())?.x ?? box.x)
+		.toBeGreaterThan(box.x);
 }
 
 // A regression for work a person had in hand when open_canvas moved the page to

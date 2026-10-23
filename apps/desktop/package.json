@@ -1,0 +1,31 @@
+{
+	"name": "jiscribe-desktop",
+	"private": true,
+	"version": "0.0.0",
+	"description": "The Jiscribe MCP server as a desktop app (PoC): AI clients connect to it over Streamable HTTP, and its own window shows the canvas viewer.",
+	"type": "module",
+	"main": "./out/main/index.js",
+	"scripts": {
+		"dev": "electron-vite dev",
+		"build": "tsc --noEmit && electron-vite build",
+		"start": "electron-vite preview --skipBuild",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"comments": {
+		"dependencies": "Bundled into out/main/index.js along with everything they pull in (externalizeDeps is off). What jiscribe-mcp resolves at run time instead of importing — the viewer, the drawing guides and the measuring fonts — is copied out of its built dist/ by stageMcpRuntime.mjs, so jiscribe-mcp has to be built first."
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.31.0",
+		"jiscribe-mcp": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"electron": "^43.3.0",
+		"electron-vite": "^5.0.0",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}

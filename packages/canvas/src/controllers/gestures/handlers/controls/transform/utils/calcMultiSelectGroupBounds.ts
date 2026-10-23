@@ -1,31 +1,37 @@
-import { calcOrientedFrameFromPoints } from "@jiscribe/geometry";
+import {
+	calcOrientedFrameFromPoints,
+	calcPolyBoundingBox,
+} from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import { MIN_GROUP_DIMENSION } from "../../../../../../states/utils/groupDimensions";
-import { calcObjectsBoundingBox } from "../../../../../utils/calcObjectBoundingBox";
-import { collectObjectPoints } from "../../../../../utils/collectObjectPoints";
+import { collectObjectsPoints } from "../../../../../utils/collectObjectPoints";
+import type { ConnectorRouteRegistries } from "../../../../../utils/VisualExtentRegistries";
 
 /**
  * Computes the bounding box of the multiSelectGroup (accounting for rotation).
  * When existingGroup is given, computes an Oriented Bounding Box that accounts for its rotation/scale.
+ * Both paths read the points createMultiSelectGroup builds the frame from
+ * (collectObjectPoints), so connectors count along their drawn route and without their labels.
+ *
+ * @param registries - Per-canvas registries a selected connector's path is resolved through
  */
 export function calcMultiSelectGroupBounds(
 	selectedIds: readonly string[],
 	allObjects: Record<string, ObjectState>,
+	registries: ConnectorRouteRegistries,
 	existingGroup?: GroupState | null,
 ): { cx: number; cy: number; width: number; height: number } | null {
 	if (selectedIds.length <= 1) {
 		return null;
 	}
 
+	// Collect all points of the selected objects (recursively expanding groups)
+	const allPoints = collectObjectsPoints(selectedIds, allObjects, registries);
+
 	// When existingGroup is given, compute an OBB that accounts for its rotation/scale
 	if (existingGroup) {
-		// Collect all points of the selected objects (recursively expanding groups)
-		const allPoints = selectedIds.flatMap((selectedId) => {
-			const obj = allObjects[selectedId];
-			return obj ? collectObjectPoints(obj, allObjects) : [];
-		});
 		if (allPoints.length === 0) {
 			return null;
 		}
@@ -58,7 +64,7 @@ export function calcMultiSelectGroupBounds(
 	}
 
 	// When there is no existingGroup, compute an axis-aligned bounding box
-	const bounds = calcObjectsBoundingBox(selectedIds, allObjects);
+	const bounds = calcPolyBoundingBox(allPoints);
 	if (!bounds) {
 		return null;
 	}

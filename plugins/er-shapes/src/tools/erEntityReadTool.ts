@@ -18,12 +18,10 @@ const describeSlotWidth = (
 	widthKey: (typeof ER_ENTITY_SLOT_WIDTH_KEYS)[number],
 ): string => {
 	const statedWidth = entity[widthKey];
+	const unsetText =
+		widthKey === "keyWidth" ? "unset (widest key)" : "unset (default)";
 	const statedText =
-		statedWidth !== undefined
-			? String(statedWidth)
-			: widthKey === "keyWidth"
-				? "unset (widest key)"
-				: "unset (default)";
+		statedWidth !== undefined ? String(statedWidth) : unsetText;
 	return `${widthKey} ${statedText}, drawn ${layout[widthKey]}`;
 };
 

@@ -14,28 +14,19 @@ import type {
 	TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { collectConnectorPoints } from "./calcConnectorBoundingBox";
+import {
+	calcConnectorPathBoundingBox,
+	collectDrawnConnectorPoints,
+} from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import { sortObjectIdsByZOrder } from "./sortObjectIdsByZOrder";
-import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
-import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ConnectorRouteRegistries } from "./VisualExtentRegistries";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 /** Extra reach (world px) a line-like shape is hit from, beyond half its stroke. */
 export const DEFAULT_HIT_TOLERANCE = 4;
-
-/** The registries a hit test resolves drawn silhouettes and connector routes through. */
-export type HitTestRegistries = {
-	objectOutline: Pick<ObjectOutlineRegistry, "get">;
-	objectAnchorRegion: Pick<ObjectAnchorRegionRegistry, "get">;
-	objectExtraConnectPoints: Pick<ObjectExtraConnectPointsRegistry, "get">;
-	/** Omitted = connector paths are routed afresh rather than read from the renderer's cache. */
-	objectGeometryKey?: Pick<ObjectGeometryKeyRegistry, "get">;
-};
 
 /** How close (world px) the point must come to a line-like shape to hit it. */
 const resolveLineReach = (object: ObjectState, tolerance: number): number => {
@@ -68,7 +59,7 @@ const isPointNearPath = (
 const isPointOnFrame = (
 	point: Point,
 	object: ObjectState & TransformedFrame,
-	registries: HitTestRegistries,
+	registries: ConnectorRouteRegistries,
 ): boolean => {
 	// The flips are ±1 and the rotation is always present (TransformedFrame), so
 	// the inverse always exists.
@@ -106,7 +97,7 @@ const isPointOnFrame = (
  * @param point - World point to test
  * @param object - The candidate; a group or a `geometry: "none"` type always misses
  * @param objects - The full object map, needed to walk a connector's endpoint owners
- * @param registries - Silhouette and route lookups (see {@link HitTestRegistries})
+ * @param registries - Silhouette and route lookups (see {@link ConnectorRouteRegistries})
  * @param tolerance - Extra reach (world px) for line-like shapes; ignored by
  *   area-bearing ones
  * @returns True when the point is on the drawn shape
@@ -115,7 +106,7 @@ export const isPointOnObject = (
 	point: Point,
 	object: ObjectState,
 	objects: Record<string, ObjectState>,
-	registries: HitTestRegistries,
+	registries: ConnectorRouteRegistries,
 	tolerance: number,
 ): boolean => {
 	if (isGroupState(object) || object.features?.geometry === "none") {
@@ -123,14 +114,7 @@ export const isPointOnObject = (
 	}
 
 	if (isConnectorState(object)) {
-		const path = collectConnectorPoints(
-			object,
-			objects,
-			registries.objectOutline,
-			registries.objectAnchorRegion,
-			registries.objectExtraConnectPoints,
-			registries.objectGeometryKey,
-		);
+		const path = collectDrawnConnectorPoints(object, objects, registries);
 		return (
 			path !== null &&
 			isPointNearPath(point, path, resolveLineReach(object, tolerance))
@@ -182,7 +166,7 @@ const isRectTarget = (target: Point | Rect): target is Rect =>
  * @param rootIds - The canvas's root id list, which decides the z-order the
  *   result is sorted in
  * @param registries - Silhouette and connector-route lookups (see
- *   {@link HitTestRegistries})
+ *   {@link ConnectorRouteRegistries})
  * @param tolerance - How far (world px) beyond its stroke a line-like shape —
  *   a connector, a polyline — still counts as hit. Defaults to
  *   {@link DEFAULT_HIT_TOLERANCE}; ignored by area-bearing shapes
@@ -193,7 +177,7 @@ export const hitTestObjects = (
 	target: Point | Rect,
 	objects: Record<string, ObjectState>,
 	rootIds: string[],
-	registries: HitTestRegistries,
+	registries: ConnectorRouteRegistries,
 	tolerance: number = DEFAULT_HIT_TOLERANCE,
 ): string[] => {
 	const targetBox = isRectTarget(target)
@@ -206,7 +190,13 @@ export const hitTestObjects = (
 			if (isGroupState(object)) {
 				continue;
 			}
-			const box = calcObjectBoundingBox(object, objects);
+			let box: BoundingBox | null;
+			if (isConnectorState(object)) {
+				const path = collectDrawnConnectorPoints(object, objects, registries);
+				box = path && calcConnectorPathBoundingBox(object, path);
+			} else {
+				box = calcObjectBoundingBox(object, objects);
+			}
 			if (box && doBoxesIntersect(box, targetBox)) {
 				hitIds.push(object.id);
 			}

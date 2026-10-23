@@ -1,0 +1,14 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"jsx": "react-jsx",
+		"types": ["node"]
+	},
+	"include": [
+		"src",
+		"electron.vite.config.ts",
+		"vitest.config.ts",
+		"stageMcpRuntime.mjs"
+	]
+}

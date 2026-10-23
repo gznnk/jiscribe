@@ -2,16 +2,16 @@ import type { BoundingBox, Point } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ObjectMapperRegistry } from "../../../../../../states/registry/ObjectMapperRegistry";
-import type { HitTestRegistries } from "../../../../../utils/hitTestObjects";
 import {
 	DEFAULT_HIT_TOLERANCE,
 	isPointOnObject,
 } from "../../../../../utils/hitTestObjects";
 import { isConnectableObject } from "../../../../../utils/isConnectableObject";
 import { sortObjectIdsByZOrder } from "../../../../../utils/sortObjectIdsByZOrder";
+import type { ConnectorRouteRegistries } from "../../../../../utils/VisualExtentRegistries";
 
 /** The lookups the search reads: silhouettes and routes, plus the connectable feature. */
-export type ConnectableTargetRegistries = HitTestRegistries & {
+export type ConnectableTargetRegistries = ConnectorRouteRegistries & {
 	objectMapper: Pick<ObjectMapperRegistry, "getFeatures">;
 };
 

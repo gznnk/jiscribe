@@ -10,6 +10,10 @@ import type { AxisLockFeedback } from "../../../CanvasTypes";
  */
 export const ORIGIN_SNAP_PX = 6;
 
+/** The axis a Shift-drag locks: the one with the smaller absolute displacement; ties lock Y (horizontal move). */
+export const calcLockedAxis = (delta: Point): "x" | "y" =>
+	Math.abs(delta.x) >= Math.abs(delta.y) ? "y" : "x";
+
 /** Result of {@link applyAxisLock}. */
 export type AxisLockResult = {
 	/** Cursor position with the locked axis (or both, on origin snap) replaced by the origin's coordinate */
@@ -50,7 +54,7 @@ export const applyAxisLock = (
 
 	const dx = cursor.x - origin.x;
 	const dy = cursor.y - origin.y;
-	const lockedAxis: "x" | "y" = Math.abs(dx) >= Math.abs(dy) ? "y" : "x";
+	const lockedAxis = calcLockedAxis({ x: dx, y: dy });
 
 	const freeAxisDelta = lockedAxis === "x" ? dy : dx;
 	const snapToOrigin =

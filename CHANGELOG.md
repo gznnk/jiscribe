@@ -125,6 +125,14 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   the sidebar to its left, level with the trigger and as wide as its content,
   for a panel too wide for the sidebar. A `"beside"` panel the canvas row has
   no room for opens `"under"` instead, decided again on every opening.
+- **A desktop app holds the MCP server (proof of concept).** `apps/desktop`
+  (`jiscribe-desktop`, not published) runs first and stays up, serving the
+  `jiscribe-mcp` tool set over Streamable HTTP on `127.0.0.1`, so AI clients
+  connect to it by URL rather than starting a process each. Every client
+  session shares one canvas host, one set of file locks and one undo history,
+  and the viewer opens in the app's own window instead of a spawned browser.
+  There is no installer or tray yet: closing the window hides it, starting the
+  app again brings it back, and File → Quit ends it.
 
 ### Changed
 
@@ -179,6 +187,15 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   While the label is still the one the old icon comes with (the short name a
   stencil places, `S3`), picking another icon replaces it with the new one's
   (`Lambda`). A label that was edited, or emptied, is left as it is.
+
+### Fixed
+
+- **The frame around a multi-selection follows the connectors as they are
+  drawn.** It used to route them without the shapes' outlines and declared
+  anchors, so a connector ending on a diamond, or the stubs of an orthogonal
+  route between two ER entities' columns, could stick out of the frame. A
+  connector's label is now left out of the frame from the start, so the frame
+  no longer shrinks on the first frame of a resize.
 
 ## [0.12.1] - 2026-10-20
 

@@ -1,4 +1,5 @@
 import { calcFrameKeyPoints, isTransformedFrame } from "@jiscribe/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 
@@ -14,6 +15,19 @@ export type SelectedFrameValues = {
 	rotation: number;
 };
 
+/** The frame getSelectedFrameValues reads; null for a selection that carries none. */
+const getSelectedFrame = (
+	state: CanvasControllerState,
+): TransformedFrame | null => {
+	const { objectIds } = state.selection;
+	if (objectIds.length === 0) {
+		return null;
+	}
+	const frame =
+		objectIds.length > 1 ? state.multiSelectGroup : state.objects[objectIds[0]];
+	return frame && isTransformedFrame(frame) ? frame : null;
+};
+
 /**
  * The frame the layout rows show: the selected object's, or the multiSelectGroup's
  * for a multi-selection — the same one the transform handles are drawn around, and
@@ -25,13 +39,8 @@ export type SelectedFrameValues = {
 export const getSelectedFrameValues = (
 	state: CanvasControllerState,
 ): SelectedFrameValues | null => {
-	const frame =
-		state.selection.objectIds.length > 1
-			? state.multiSelectGroup
-			: state.selection.objectIds.length === 1
-				? state.objects[state.selection.objectIds[0]]
-				: null;
-	if (!frame || !isTransformedFrame(frame)) {
+	const frame = getSelectedFrame(state);
+	if (frame === null) {
 		return null;
 	}
 	const topLeft = calcFrameKeyPoints(frame).topLeft;

@@ -282,23 +282,17 @@ const createSvgText = (
 	const leftX = box.x + box.insetX;
 	const centerX = box.x + box.width / 2;
 	const rightX = box.x + box.width - box.insetX;
-	const anchorX =
-		style.anchor === "start"
-			? leftX
-			: style.anchor === "end"
-				? rightX
-				: centerX;
+	const anchorX = { start: leftX, middle: centerX, end: rightX }[style.anchor];
 
 	// y: top of the text block according to the vertical placement. Flex
 	// centers the overflowing block too (it spills equally on both sides),
 	// so the middle case is intentionally not clamped at the padding edge.
 	const blockHeight = lineBoxes.reduce((total, line) => total + line.height, 0);
-	const blockTop =
-		style.placement === "top"
-			? box.y + box.insetY
-			: style.placement === "bottom"
-				? box.y + box.height - box.insetY - blockHeight
-				: box.y + (box.height - blockHeight) / 2;
+	const blockTop = {
+		top: box.y + box.insetY,
+		middle: box.y + (box.height - blockHeight) / 2,
+		bottom: box.y + box.height - box.insetY - blockHeight,
+	}[style.placement];
 
 	const textElement = document.createElementNS(SVG_NS, "text");
 	textElement.setAttribute("fill", style.fill);
