@@ -138,3 +138,144 @@ test.describe("icon picker chrome", () => {
 		).toBeVisible();
 	});
 });
+
+test.describe("icon picker in the properties sidebar", () => {
+	/** The icon section, as the lucideIcon definition names it. */
+	const PANEL_SECTION = "lucideIcon";
+	const TRIGGER = `${selectors.propertyPanel} button[aria-label="Icon"]`;
+	const PANEL_GRID = `${selectors.propertyPanelDropdown} ${GRID}`;
+	const PANEL_SEARCH = `${selectors.propertyPanelDropdown} ${SEARCH}`;
+
+	/** Screen rectangle of the first match, failing the test when it is not laid out. */
+	async function boxOf(canvas: CanvasDriver, selector: string) {
+		const box = await canvas.page.locator(selector).first().boundingBox();
+		if (box === null) {
+			throw new Error(`cannot get the box of ${selector}`);
+		}
+		return box;
+	}
+
+	test("leads the sidebar, ahead of Layout", async ({ canvas }) => {
+		await canvas.openPropertyPanel();
+		await canvas.placeShapeFromFlyout("icon", "lucideIconUser");
+
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection(PANEL_SECTION)),
+		).toBeVisible();
+		const sectionIds = await canvas.page
+			.locator(`${selectors.propertyPanel} [data-action^="toggle:"]`)
+			.evaluateAll((toggles) =>
+				toggles.map((toggle) => toggle.getAttribute("data-action")),
+			);
+		expect(sectionIds[0]).toBe(`toggle:${PANEL_SECTION}`);
+		expect(sectionIds[1]).toBe("toggle:layout");
+	});
+
+	test("replaces the icon with the one pressed in the grid", async ({
+		canvas,
+	}) => {
+		await canvas.openPropertyPanel();
+		const id = await canvas.placeShapeFromFlyout("icon", "lucideIconUser");
+		const shape = canvas.objectById(id);
+		await expect(canvas.page.locator(TRIGGER)).toContainText("user");
+
+		await canvas.page.click(TRIGGER);
+		await canvas.page.fill(PANEL_SEARCH, "lock");
+		const cell = canvas.page.locator(
+			`${PANEL_GRID} [data-action="set:icon:lock"]`,
+		);
+		await expect(cell).toBeVisible();
+		const lockArt = await cell.locator("path").first().getAttribute("d");
+
+		// Held the way a hand presses, as in the ObjectMenu's spec above.
+		const box = await cell.boundingBox();
+		if (box === null) {
+			throw new Error("the lock cell is not laid out");
+		}
+		await canvas.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+		await canvas.page.mouse.down();
+		await canvas.page.waitForTimeout(150);
+		await canvas.page.mouse.up();
+
+		await expect
+			.poll(async () => shape.locator("path").first().getAttribute("d"))
+			.toBe(lockArt);
+		await expect(canvas.page.locator(TRIGGER)).toContainText("lock");
+	});
+
+	test("opens left of the sidebar, as wide as the ObjectMenu's picker", async ({
+		canvas,
+	}) => {
+		await canvas.openPropertyPanel();
+		await canvas.placeShapeFromFlyout("icon", "lucideIconUser");
+		const triggerBox = await boxOf(canvas, TRIGGER);
+
+		await canvas.page.click(TRIGGER);
+
+		await expect(canvas.page.locator(PANEL_GRID)).toBeVisible();
+		const panelBox = await boxOf(canvas, selectors.propertyPanelDropdown);
+		const sidebar = await boxOf(canvas, selectors.propertyPanel);
+		expect(panelBox.x + panelBox.width).toBeLessThan(sidebar.x);
+		expect(Math.abs(panelBox.y - triggerBox.y)).toBeLessThanOrEqual(1);
+		// The frame's 284px, plus the panel's border.
+		expect(Math.round(panelBox.width)).toBe(286);
+	});
+
+	test("rises to end above the sidebar's bottom in a short window", async ({
+		canvas,
+	}) => {
+		await canvas.page.setViewportSize({ width: 1000, height: 400 });
+		await canvas.openPropertyPanel();
+		await canvas.placeShapeFromFlyout("icon", "lucideIconUser");
+
+		await canvas.page.click(TRIGGER);
+
+		await expect(canvas.page.locator(PANEL_GRID)).toBeVisible();
+		const panelBox = await boxOf(canvas, selectors.propertyPanelDropdown);
+		const sidebar = await boxOf(canvas, selectors.propertyPanel);
+		expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(
+			sidebar.y + sidebar.height,
+		);
+		expect(panelBox.x + panelBox.width).toBeLessThan(sidebar.x);
+	});
+
+	test("opens under the trigger, narrowed to the sidebar, when the canvas has no room", async ({
+		canvas,
+	}) => {
+		await canvas.openPropertyPanel();
+		await canvas.placeShapeFromFlyout("icon", "lucideIconUser");
+		await canvas.page.setViewportSize({ width: 560, height: 720 });
+		const triggerBox = await boxOf(canvas, TRIGGER);
+
+		await canvas.page.click(TRIGGER);
+
+		await expect(canvas.page.locator(PANEL_GRID)).toBeVisible();
+		const panelBox = await boxOf(canvas, selectors.propertyPanelDropdown);
+		const sidebar = await boxOf(canvas, selectors.propertyPanel);
+		expect(panelBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height);
+		expect(panelBox.x).toBeGreaterThanOrEqual(sidebar.x);
+		expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(
+			sidebar.x + sidebar.width,
+		);
+
+		// The narrowed grid still writes.
+		await canvas.page.fill(PANEL_SEARCH, "lock");
+		await canvas.page.click(`${PANEL_GRID} [data-action="set:icon:lock"]`);
+		await expect(canvas.page.locator(TRIGGER)).toContainText("lock");
+	});
+
+	test("starts every opening from an empty search", async ({ canvas }) => {
+		await canvas.openPropertyPanel();
+		await canvas.placeShapeFromFlyout("icon", "lucideIconUser");
+
+		await canvas.page.click(TRIGGER);
+		await canvas.page.fill(PANEL_SEARCH, "lock");
+		await canvas.page.keyboard.press("Escape");
+		await expect(
+			canvas.page.locator(selectors.propertyPanelDropdown),
+		).toHaveCount(0);
+
+		await canvas.page.click(TRIGGER);
+		await expect(canvas.page.locator(PANEL_SEARCH)).toHaveValue("");
+	});
+});

@@ -85,6 +85,21 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   itself larger than `fontSize`. It decides when the box counts as too small to
   read (below); omitted, `fontSize` does. The Markdown shape passes its largest
   heading.
+- **The AWS icon and the Lucide icon can be changed from the property
+  sidebar.** The icon picker was reachable only from the object menu, so a host
+  that hides the menu left no way to change an icon. Both shapes now lead their
+  sidebar with an Icon section: a field showing the current icon and its name,
+  opening the same picker (search and, for AWS, the layer and category filters)
+  beside the sidebar, over the canvas. Where the canvas has no room for it
+  there, it opens under the field inside the sidebar, narrowed to fit. A
+  selection drawing different icons shows the field as mixed, and the object
+  menu's picker then highlights no cell rather than the first shape's icon.
+- **For plugin authors: `PropertyDropdownField` takes `placement`.**
+  `"under"` (the default, unchanged) opens the panel under the trigger inside
+  the sidebar, now never wider than the sidebar; `"beside"` opens it outside
+  the sidebar to its left, level with the trigger and as wide as its content,
+  for a panel too wide for the sidebar. A `"beside"` panel the canvas row has
+  no room for opens `"under"` instead, decided again on every opening.
 
 ### Changed
 
@@ -116,6 +131,10 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   bound reaches the screen; a connector shifted with its dragged shapes is
   judged by its drag-start path moved by the drag, as it is drawn. Which
   objects are drawn does not change.
+- **Swapping an `awsIcon`'s icon from the menu carries its label along.**
+  While the label is still the one the old icon comes with (the short name a
+  stencil places, `S3`), picking another icon replaces it with the new one's
+  (`Lambda`). A label that was edited, or emptied, is left as it is.
 
 ## [0.12.1] - 2026-10-20
 

@@ -3,12 +3,8 @@ import type { Stencil } from "@jiscribe/canvas";
 import { createAwsStencilIcon } from "./createAwsStencilIcon";
 import { toAwsIconStencilId } from "./toAwsIconStencilId";
 import { AWS_ICON_ENTRIES } from "../schema/icon/iconData.generated";
+import { readAwsIconLabel } from "../schema/icon/readAwsIconLabel";
 import { AWS_TIER1_ICONS } from "../schema/icon/tier1Icons";
-
-/** The short name tier 1 gives an icon, which wins over the asset's display label. */
-const TIER1_LABEL_BY_ICON = new Map<string, string>(
-	AWS_TIER1_ICONS.map(({ icon, label }) => [icon, label]),
-);
 
 /** Every icon name, tier 1 first in palette order, then the rest of the set. */
 const ALL_ICON_NAMES: readonly string[] = [
@@ -28,13 +24,12 @@ const ALL_ICON_NAMES: readonly string[] = [
  * to — every awsIcon would go by the same name.
  */
 export const AwsIconStencils: Stencil[] = ALL_ICON_NAMES.map((icon) => {
-	const entry = AWS_ICON_ENTRIES[icon];
-	if (entry === undefined) {
+	const label = readAwsIconLabel(icon);
+	if (label === null) {
 		throw new Error(
 			`AwsIconStencils: tier 1 names the icon "${icon}", which the icon set does not hold`,
 		);
 	}
-	const label = TIER1_LABEL_BY_ICON.get(icon) ?? entry.label;
 	return {
 		id: toAwsIconStencilId(icon),
 		objectType: "awsIcon",
