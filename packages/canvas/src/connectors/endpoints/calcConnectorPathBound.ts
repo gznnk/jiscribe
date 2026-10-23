@@ -12,10 +12,11 @@ import { calcOrthogonalRouteBound } from "../routing";
 /**
  * A box that contains the path resolveConnectorPoints resolves, found
  * without routing it: the endpoints are resolved as for the path, and only the
- * route between them is bounded instead of chosen. A straight line or a stored
- * vertex list is boxed exactly (alignVertexPath only slides the end vertices
- * onto the endpoints' coordinates); a route the router chooses is bounded by
- * calcOrthogonalRouteBound.
+ * route between them is bounded instead of chosen. A straight line is boxed
+ * exactly; a stored vertex list is boxed with its endpoints, which contains the
+ * aligned path (alignVertexPath only slides the end vertices onto coordinates
+ * the endpoints or their neighbours already have); a route the router chooses is
+ * bounded by calcOrthogonalRouteBound.
  *
  * @param connectorState - The connector to bound; only its endpoints, routing and `points` are read
  * @param sourceObj - The owner shape of the source endpoint; null/undefined for a free endpoint or a missing owner
