@@ -1,6 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 
 /**
  * What a move drag lets the renderer draw without re-rendering the moved
@@ -31,3 +32,52 @@ export type MovePreview = {
 	/** The drag-start snapshot the translation was taken from, keyed by id. */
 	readonly startObjects: Record<string, ObjectState>;
 };
+
+/**
+ * The drag-start state to draw `id` from, shifted, or null to draw its current
+ * state: only an object the move translated, and only while its state is not
+ * the start state itself.
+ */
+export const readShiftedStartState = (
+	id: string | undefined,
+	movePreview: MovePreview | undefined,
+	objects: Record<string, ObjectState>,
+): ObjectState | null => {
+	if (
+		id === undefined ||
+		movePreview === undefined ||
+		!movePreview.translatedIds.has(id)
+	) {
+		return null;
+	}
+	const startState = movePreview.startObjects[id];
+	return startState !== undefined && startState !== objects[id]
+		? startState
+		: null;
+};
+
+/**
+ * Whether a connector is drawn from its owners' start states, shifted with
+ * them: both owners translated, and no stored vertices, which stay where they
+ * are while the owners move (alignVertexPath bends the path to them). An
+ * orthogonal route qualifies even though it is not exactly a translation: the
+ * router rounds its crossover to whole units (elbowCandidates), so the shifted
+ * path may sit up to 0.5 world units off the live one until the drop routes it.
+ */
+export const isConnectorShiftedWithOwners = (
+	connectorState: ConnectorState,
+	movePreview: MovePreview,
+	objects: Record<string, ObjectState>,
+): boolean =>
+	movePreview.startObjects[connectorState.id] === connectorState &&
+	connectorState.points.length === 0 &&
+	readShiftedStartState(
+		connectorState.source.owner?.id,
+		movePreview,
+		objects,
+	) !== null &&
+	readShiftedStartState(
+		connectorState.target.owner?.id,
+		movePreview,
+		objects,
+	) !== null;

@@ -5,6 +5,7 @@ export {
 	listConnectorPathPoints,
 	resolveConnectorPoints,
 } from "./resolveConnectorPoints";
+export { calcConnectorPathBound } from "./calcConnectorPathBound";
 export { readOwnerGeometry } from "./readOwnerGeometry";
 export { resolveConnectorPointsCached } from "./resolveConnectorPointsCached";
 export { resolveEndpointOwner } from "./resolveEndpointOwner";

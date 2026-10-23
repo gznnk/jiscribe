@@ -1,9 +1,13 @@
-import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_LABEL_DEFAULTS,
+	type ConnectorLabel,
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { calcPolyBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
 import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import {
+	calcConnectorPathBound,
 	listConnectorPathPoints,
 	resolveConnectorPoints,
 	resolveConnectorPointsCached,
@@ -176,3 +180,53 @@ export const calcConnectorPathBoundingBox = (
 		...connectorPoints,
 		...collectLabelCorners(connector.label, connectorPoints),
 	]);
+
+/**
+ * A box that contains {@link calcConnectorPathBoundingBox} of the connector's
+ * drawn path, found without routing it (calcConnectorPathBound), so a caller
+ * that only needs to know the connector is somewhere else can skip the router.
+ * The label is bounded by its own box around any anchor on the path: the anchor
+ * is a point of the path moved at most `|offset|` along each axis.
+ *
+ * @param connector - The connector to bound
+ * @param sourceOwner - The source endpoint's owner as resolveEndpointOwner returns it; null for a free endpoint or a missing owner
+ * @param targetOwner - The target endpoint's owner, likewise
+ * @param visualExtentRegistries - The registries the path is drawn through; only the three
+ *   geometry ones the endpoints resolve through are read
+ * @returns null where no bound is known and the path has to be resolved instead:
+ *   an endpoint that does not resolve, or a label whose offset or measured box is not finite
+ */
+export const calcConnectorExtentBound = (
+	connector: ConnectorState,
+	sourceOwner: ObjectState | null,
+	targetOwner: ObjectState | null,
+	visualExtentRegistries: VisualExtentRegistries,
+): BoundingBox | null => {
+	const pathBound = calcConnectorPathBound(
+		connector,
+		sourceOwner,
+		targetOwner,
+		visualExtentRegistries.objectOutline,
+		visualExtentRegistries.objectAnchorRegion,
+		visualExtentRegistries.objectExtraConnectPoints,
+	);
+	const label = connector.label;
+	if (!pathBound || !label || label.text === "") {
+		return pathBound;
+	}
+
+	const offset = Math.abs(label.offset ?? CONNECTOR_LABEL_DEFAULTS.offset);
+	const { width, height } = resolveConnectorLabelBox(label);
+	// 1 unit of slack for the float error of interpolating the anchor along a segment.
+	const reachX = offset + width / 2 + 1;
+	const reachY = offset + height / 2 + 1;
+	if (!Number.isFinite(reachX) || !Number.isFinite(reachY)) {
+		return null;
+	}
+	return {
+		left: pathBound.left - reachX,
+		top: pathBound.top - reachY,
+		right: pathBound.right + reachX,
+		bottom: pathBound.bottom + reachY,
+	};
+};
