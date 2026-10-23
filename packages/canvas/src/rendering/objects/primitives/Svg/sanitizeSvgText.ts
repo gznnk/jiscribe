@@ -1,13 +1,21 @@
 import DOMPurify from "dompurify";
 
-import { SVG_NAMESPACE } from "./SvgConstants";
+import { isValidSvgString } from "./isValidSvgString";
+import { ERROR_SVG_ICON_STRING, SVG_NAMESPACE } from "./SvgConstants";
 
 // On top of what DOMPurify drops on its own (scripts, event handlers, <use>,
-// <foreignObject>, the animation elements): a <style> inlined here applies to the
+// <foreignObject>, <animate> and <set>): a <style> inlined here applies to the
 // whole page rather than to this one object, and an <a> would navigate the editor.
 const FORBIDDEN_TAGS = ["style", "a"];
 
-const URL_FUNCTION_PATTERN = /url\(/gi;
+// The CSS functions that load something: url() is checked for a fragment target,
+// the image functions take a bare string and are external by definition
+const LOADING_FUNCTION_PATTERN =
+	/(-webkit-image-set|image-set|cross-fade|image|src|url)\(/gi;
+
+// A CSS escape: `\` then up to six hex digits and an optional space, or any one
+// other character (CSS Syntax §4.3.7)
+const CSS_ESCAPE_PATTERN = /\\(?:([0-9a-fA-F]{1,6})\s?|(.))/gs;
 
 const isCssWhitespace = (character: string): boolean =>
 	character === " " ||
@@ -17,24 +25,44 @@ const isCssWhitespace = (character: string): boolean =>
 	character === "\f";
 
 /**
- * Whether the value holds a `url()` whose target is not a fragment. A CSS escape
- * such as `url(\23 id)` is taken as external too, and lost; the paint servers,
+ * Resolves CSS escapes, so that `u\72l(` is seen as the `url(` the browser's
+ * tokenizer makes of it. A code point outside Unicode becomes U+FFFD, as it does
+ * there.
+ */
+const decodeCssEscapes = (value: string): string =>
+	value.replace(CSS_ESCAPE_PATTERN, (_, hex: string | undefined, other) => {
+		if (hex === undefined) {
+			return other;
+		}
+		const codePoint = Number.parseInt(hex, 16);
+		return codePoint === 0 || codePoint > 0x10ffff
+			? "�"
+			: String.fromCodePoint(codePoint);
+	});
+
+/**
+ * Whether the value holds a CSS function that would load another document: an
+ * image function, or a `url()` whose target is not a fragment. The paint servers,
  * filters, masks and clip paths an object's markup can point at are all in the
  * markup itself, as `#id`.
  */
-const hasExternalUrlFunction = (value: string): boolean => {
-	for (const match of value.matchAll(URL_FUNCTION_PATTERN)) {
+const hasExternalLoadingFunction = (value: string): boolean => {
+	const decoded = decodeCssEscapes(value);
+	for (const match of decoded.matchAll(LOADING_FUNCTION_PATTERN)) {
+		if (match[1].toLowerCase() !== "url") {
+			return true;
+		}
 		let position = match.index + match[0].length;
-		while (isCssWhitespace(value.charAt(position))) {
+		while (isCssWhitespace(decoded.charAt(position))) {
 			position += 1;
 		}
-		if (value.charAt(position) === '"' || value.charAt(position) === "'") {
+		if (decoded.charAt(position) === '"' || decoded.charAt(position) === "'") {
 			position += 1;
-			while (isCssWhitespace(value.charAt(position))) {
+			while (isCssWhitespace(decoded.charAt(position))) {
 				position += 1;
 			}
 		}
-		const target = value.charAt(position);
+		const target = decoded.charAt(position);
 		if (target !== "#" && target !== ")" && target !== "") {
 			return true;
 		}
@@ -62,39 +90,48 @@ const isAllowedHref = (element: Element, value: string): boolean => {
 };
 
 /**
- * Sanitizes the markup of an `svg` object for inline injection into the editor's
- * document. The references it leaves in are checked by
- * {@link removeExternalReferences} once the markup is parsed.
- *
- * @param svgText - Markup as the document holds it; anything DOMPurify does not
- *   allow in the SVG namespace is dropped, and so are `<style>` and `<a>`
- * @returns The sanitized markup, possibly empty when nothing survived
- */
-export const sanitizeSvgText = (svgText: string): string =>
-	DOMPurify.sanitize(svgText, {
-		NAMESPACE: SVG_NAMESPACE,
-		FORBID_TAGS: FORBIDDEN_TAGS,
-	});
-
-/**
  * Removes every reference to another document: an `href` / `xlink:href` that is not
  * a `#fragment` (a `data:` image on `<image>` excepted), and any attribute whose
- * value names one through `url()`. DOMPurify lets an `http(s):` href through and
- * does not read `url()` in a presentation attribute or an inline `style` at all,
- * so both are checked here, on the parsed element.
- *
- * @param root - The sanitized element; it and every descendant are rewritten in place
+ * value loads one through a CSS function. DOMPurify lets an `http(s):` href through
+ * and does not read `url()` in a presentation attribute or an inline `style` at
+ * all, so both are checked here, on the parsed element. The whole attribute goes,
+ * `style` included, rather than the one declaration.
  */
-export const removeExternalReferences = (root: Element): void => {
+const removeExternalReferences = (root: Element): void => {
 	const elements = [root, ...Array.from(root.querySelectorAll("*"))];
 	for (const element of elements) {
 		for (const attribute of Array.from(element.attributes)) {
 			const isExternal = isHrefAttribute(attribute.name)
 				? !isAllowedHref(element, attribute.value)
-				: hasExternalUrlFunction(attribute.value);
+				: hasExternalLoadingFunction(attribute.value);
 			if (isExternal) {
 				element.removeAttribute(attribute.name);
 			}
 		}
 	}
+};
+
+/**
+ * Sanitizes the markup of an `svg` object and parses it, for inline injection into
+ * the editor's document.
+ *
+ * @param svgText - Markup as the document holds it; anything DOMPurify does not
+ *   allow in the SVG namespace is dropped, and so are `<style>` (its rules with it,
+ *   so `class`-styled markup loses those styles), `<a>`, and every reference to
+ *   another document (see {@link removeExternalReferences})
+ * @returns The root `<svg>` element of an inert document, never attached to a
+ *   page; the error icon when nothing parseable survived
+ */
+export const parseSanitizedSvg = (svgText: string): SVGElement => {
+	let sanitized = DOMPurify.sanitize(svgText, {
+		NAMESPACE: SVG_NAMESPACE,
+		FORBID_TAGS: FORBIDDEN_TAGS,
+	});
+	if (!isValidSvgString(sanitized)) {
+		sanitized = ERROR_SVG_ICON_STRING;
+	}
+	const element = new DOMParser().parseFromString(sanitized, "image/svg+xml")
+		.documentElement as unknown as SVGElement;
+	removeExternalReferences(element);
+	return element;
 };

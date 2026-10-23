@@ -1,9 +1,7 @@
 import type React from "react";
 import { memo, useEffect, useMemo, useRef } from "react";
 
-import { isValidSvgString } from "./isValidSvgString";
-import { removeExternalReferences, sanitizeSvgText } from "./sanitizeSvgText";
-import { ERROR_SVG_ICON_STRING } from "./SvgConstants";
+import { parseSanitizedSvg } from "./sanitizeSvgText";
 import { SvgContentGroup, SvgHitRect } from "./SvgStyled";
 import type { SvgState } from "../../../../states/objects/primitives/svg/SvgState";
 import { createSvgTransform } from "../../utils/createSvgTransform";
@@ -29,14 +27,7 @@ const parseLength = (value: string | null): number | undefined => {
  * the box exactly.
  */
 const buildSvgElement = (svgText: string): SVGElement => {
-	let sanitized = sanitizeSvgText(svgText);
-	if (!isValidSvgString(sanitized)) {
-		sanitized = ERROR_SVG_ICON_STRING;
-	}
-
-	const element = new DOMParser().parseFromString(sanitized, "image/svg+xml")
-		.documentElement as unknown as SVGElement;
-	removeExternalReferences(element);
+	const element = parseSanitizedSvg(svgText);
 
 	if (!element.getAttribute("viewBox")) {
 		const intrinsicWidth = parseLength(element.getAttribute("width")) ?? 100;

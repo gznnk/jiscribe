@@ -160,12 +160,14 @@ nodes, and arrows; they stay editable, themeable, and connectable.
 - It is an **opaque box**: its position and size define where and how big it is
   drawn, and the SVG content is scaled to fit that box.
 - The markup must be **self-contained**: no `<script>`, no event handlers
-  (`on*`), no `<style>` element, no `<a>`, and no reference to anything outside
-  the markup (an `href` / `xlink:href` or a `url()` that is not `#id`; a
-  `data:` image on `<image>` is the one exception). These are stripped at
-  render time, so anything relying on them will not show. Inline `<defs>` /
-  gradients / `<path>` are fine, and so are `style="..."` and presentation
-  attributes on the elements themselves.
+  (`on*`), no `<style>` element, no `<a>`, no `<use>`, and no reference to
+  anything outside the markup (an `href` / `xlink:href` or a `url()` that is
+  not `#id`; a `data:` image on `<image>` is the one exception). These are
+  stripped at render time, so anything relying on them will not show: a
+  stylesheet inside the markup goes with its rules, so `class`-styled markup
+  (Illustrator's "internal CSS" export) loses its colours — export with
+  presentation attributes or `style="..."` on the elements instead. Inline
+  `<defs>` / gradients / `<path>` are fine.
 - `svg` has **no** text / stroke / fill / `rx` of its own (style lives inside the
   markup).
 - When you place **multiple** `svg` objects, give every internal `id` (gradients,
