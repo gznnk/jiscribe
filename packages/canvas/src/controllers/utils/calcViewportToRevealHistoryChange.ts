@@ -1,7 +1,4 @@
-import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
-import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
-import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcCameraToRevealBox } from "./calcCameraToRevealBox";
@@ -21,47 +18,32 @@ const HISTORY_REVEAL_PADDING = 48;
 
 /** Ids an entry swap touched, split by which side still holds the object. */
 type HistoryChange = {
-	/** In the restored doc and changed or new there; measured in its objects. */
+	/** In the restored objects and changed or new there; measured in them. */
 	restoredIds: string[];
-	/** Only in the doc being left; measured in the objects before the swap. */
+	/** Only in the objects being left; measured in them. */
 	removedIds: string[];
 };
 
 /**
- * Every non-group object of the tree by id, serialized for comparison. Groups
- * are skipped: their children and the connectors say where anything moved.
+ * What an entry swap changed, object by object, by reference: an entry hands
+ * back the very ObjectStates it was committed with, and none is ever mutated in
+ * place, so an object the swap left alone is the same reference on both sides.
+ * An object rewritten with the same content reads as changed — at worst a
+ * reveal that was not needed. Groups are skipped: their children and the
+ * connectors say where anything moved.
  */
-const flattenDocObjects = (doc: CanvasDoc): Map<string, string> => {
-	const serializedObjects = new Map<string, string>();
-	const visit = (objDocs: readonly ObjectDoc[]) => {
-		for (const objDoc of objDocs) {
-			if (objDoc.type === "group") {
-				visit((objDoc as GroupDoc).children);
-				continue;
-			}
-			serializedObjects.set(objDoc.id, JSON.stringify(objDoc));
-		}
-	};
-	visit(doc.root);
-	return serializedObjects;
-};
-
-/**
- * What an entry swap changed, object by object. Compared as JSON strings, so
- * the same object with its keys in another order reads as modified (the same
- * caveat as isSameCanvasDocContent): at worst a reveal that was not needed.
- */
-const diffDocObjects = (leftDoc: CanvasDoc, restoredDoc: CanvasDoc) => {
-	const leftObjects = flattenDocObjects(leftDoc);
-	const restoredObjects = flattenDocObjects(restoredDoc);
+const diffObjectsByReference = (
+	leftObjects: Record<string, ObjectState>,
+	restoredObjects: Record<string, ObjectState>,
+): HistoryChange => {
 	const change: HistoryChange = { restoredIds: [], removedIds: [] };
-	for (const [id, serialized] of restoredObjects) {
-		if (leftObjects.get(id) !== serialized) {
+	for (const [id, restoredObject] of Object.entries(restoredObjects)) {
+		if (restoredObject.type !== "group" && leftObjects[id] !== restoredObject) {
 			change.restoredIds.push(id);
 		}
 	}
-	for (const id of leftObjects.keys()) {
-		if (!restoredObjects.has(id)) {
+	for (const [id, leftObject] of Object.entries(leftObjects)) {
+		if (leftObject.type !== "group" && !(id in restoredObjects)) {
 			change.removedIds.push(id);
 		}
 	}
@@ -113,13 +95,11 @@ const unionObjectBoxes = (
  * @param viewport - The viewport before the swap; returned as is (same
  *   reference) when nothing needs to move, including while it is unmeasured
  *   (either side 0 or less)
- * @param leftDoc - The doc of the entry being left
  * @param leftObjects - The objects before the swap, where removed objects are
  *   measured
- * @param restoredDoc - The doc of the entry being restored; the same reference
- *   as `leftDoc` short-cuts to no change
  * @param restoredObjects - The objects after the swap, where added and modified
- *   objects are measured
+ *   objects are measured; the same reference as `leftObjects` short-cuts to no
+ *   change
  * @param visualExtentRegistries - Measures each box as drawn: what a shape draws
  *   outside its geometry, a connector's route as rendered (see
  *   calcObjectBoundingBox), the wall's content extent included
@@ -132,18 +112,19 @@ const unionObjectBoxes = (
  */
 export const calcViewportToRevealHistoryChange = (
 	viewport: Viewport,
-	leftDoc: CanvasDoc,
 	leftObjects: Record<string, ObjectState>,
-	restoredDoc: CanvasDoc,
 	restoredObjects: Record<string, ObjectState>,
 	visualExtentRegistries: VisualExtentRegistries,
 	scrollWallPadding: ResolvedViewPadding | null,
 ): Viewport => {
-	if (leftDoc === restoredDoc) {
+	if (leftObjects === restoredObjects) {
 		return viewport;
 	}
 
-	const { restoredIds, removedIds } = diffDocObjects(leftDoc, restoredDoc);
+	const { restoredIds, removedIds } = diffObjectsByReference(
+		leftObjects,
+		restoredObjects,
+	);
 	const changedBox = unionObjectBoxes(
 		unionObjectBoxes(
 			null,

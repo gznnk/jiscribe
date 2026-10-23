@@ -112,7 +112,9 @@ describe("CommitTextEditCommand", () => {
 			// Re-measured to the longer text, so the box and the vertex settling
 			// behind it are part of what the two routes are compared on.
 			expect(widthOf(byCommand)).toBeGreaterThan(widthOf(start));
-			expect(byCommand.history.past).toEqual([start.history.present]);
+			expect(byCommand.history.past.map((entry) => entry.source)).toEqual([
+				start.history.present.source,
+			]);
 			expect(outcomeOf(byCommand)).toEqual(outcomeOf(byPressOutside));
 		});
 

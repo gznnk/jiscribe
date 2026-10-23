@@ -169,8 +169,8 @@ export type AxisLockFeedback = {
 };
 
 /**
- * The slice of CanvasState a snapshot needs to rebuild its CanvasDoc later.
- * Holding these references is safe because every state update path replaces
+ * The slice of CanvasState a history entry holds: what undo / redo restore,
+ * and what its CanvasDoc is built from. Holding these references is safe because every state update path replaces
  * objects immutably; the committed map can never change under the snapshot.
  */
 export type DocSnapshotSource = Pick<
@@ -179,27 +179,42 @@ export type DocSnapshotSource = Pick<
 >;
 
 /**
- * A history entry whose CanvasDoc is materialized lazily.
+ * A history entry: the committed state it restores, plus its CanvasDoc as a
+ * cache held by the present entry only.
  *
- * Rebuilding the Doc tree (`canvasToDoc`) is O(N) over all objects, which is
- * too expensive to run on every commit during key-repeat nudges. Instead the
- * history stack stores either an already-resolved Doc or a reference to the
- * committed state, and `resolveDocSnapshot` converts on first read only.
+ * Undo / redo restore `source` as is, so every object the swap does not
+ * change keeps its identity and the per-object caches downstream (memoized
+ * renders, connector routes, text layout) still hold. Rebuilding the Doc tree
+ * (`canvasToDoc`) is O(N) over all objects, so `doc` is only built when
+ * something reads the present entry as a Doc (`resolveDocSnapshot`: the save,
+ * the external-sync comparison), and an entry leaving `present` is replaced by
+ * one without it (`dropDocCache`) so past and future hold state only.
  *
- * Invariant: neither ObjectState contents nor a resolved Doc may ever be
+ * Invariants: neither ObjectState contents nor a resolved Doc may ever be
  * mutated in place — mappers share inner arrays (e.g. Poly `points`) by
- * reference between the two representations.
+ * reference between the two representations, and restoring hands `source`
+ * back to the live state. `source` is also the entry's identity: dropping the
+ * cache yields a new object around the same `source`, so whatever pins an
+ * entry (a history mark) pins its `source`.
  */
 export type DocSnapshot = {
-	/** Resolved Doc (memoized). null until first resolution. */
+	/** The committed state the entry restores; shared with that state, never copied. */
+	readonly source: DocSnapshotSource;
+	/**
+	 * `readTextMeasurementGeneration()` when the entry was created. A restore
+	 * under another generation rebuilds the objects through the Doc so their
+	 * boxes are measured against the fonts now loaded.
+	 */
+	readonly textMeasurementGeneration: number;
+	/** The Doc of `source`, memoized on first resolve; null until then and on every past or future entry. */
 	doc: CanvasDoc | null;
-	/** Committed-state references for lazy conversion. null once resolved (or when created from a Doc). */
-	source: DocSnapshotSource | null;
 };
 
 /**
- * State of the history stack. Entries are lazy DocSnapshots: the Doc tree is materialized
- * only when an entry is read (undo/redo restore, save notification, external-sync comparison).
+ * State of the history stack (see {@link DocSnapshot}). `source` of the
+ * present entry is the state last committed or restored, not necessarily the
+ * live one: a pass that is no commit (a re-measure after fonts load) moves the
+ * live objects on without touching it.
  */
 export type HistoryState = {
 	past: DocSnapshot[];

@@ -43,7 +43,10 @@ import {
 } from "../utils/reconcileConnectorVertices";
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
-import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
+import {
+	createDocSnapshotFromState,
+	dropDocCache,
+} from "../utils/resolveDocSnapshot";
 import {
 	canNavigateHistory,
 	restoreHistorySnapshot,
@@ -105,7 +108,11 @@ export const createCanvasReducer =
 
 			case "REVERT_HISTORY": {
 				const { past, present, future } = state.history;
-				const markIndex = past.findIndex((entry) => entry === action.entry);
+				// By source: an entry leaving present is replaced by a copy without its
+				// Doc cache, so the source is what stays the same (see DocSnapshot).
+				const markIndex = past.findIndex(
+					(entry) => entry.source === action.entry,
+				);
 				// Off the stack, or already the present one: either way there is
 				// nothing to undo back to (see RevertHistoryAction).
 				if (markIndex < 0 || !canNavigateHistory(state)) {
@@ -119,7 +126,11 @@ export const createCanvasReducer =
 					{
 						past: past.slice(0, markIndex),
 						present: past[markIndex],
-						future: [...past.slice(markIndex + 1), present, ...future],
+						future: [
+							...past.slice(markIndex + 1),
+							dropDocCache(present),
+							...future,
+						],
 					},
 					registries,
 				);
@@ -435,7 +446,7 @@ export const createCanvasReducer =
 				return reconcileSelection(
 					adoptDocumentState(state, action.payload, [
 						...state.history.past,
-						state.history.present,
+						dropDocCache(state.history.present),
 					]),
 					registries.objectPartKind,
 				);
@@ -806,7 +817,7 @@ const recordHistoryIfNeeded = (
 
 	const past = canMerge
 		? state.history.past
-		: [...state.history.past, state.history.present].slice(-50);
+		: [...state.history.past, dropDocCache(state.history.present)].slice(-50);
 
 	return {
 		...state,

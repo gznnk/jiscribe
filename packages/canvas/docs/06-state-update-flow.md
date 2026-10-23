@@ -62,6 +62,28 @@ fresh `nonce`; see [External Sync / VSCode Integration](./07-external-sync.md)).
 History lives in `state.history` (`past` / `present` / `future`). `past` is trimmed to
 the most recent 50 entries.
 
+### What an entry holds
+
+Each entry (`DocSnapshot`) holds the committed state itself (`source`: `objects`,
+`rootIds`, `background`, `view`, `opaqueObjects`), shared with the state that committed
+it rather than copied. Undo, redo and revert hand that `source` back as is
+(`restoreHistorySnapshot`), so an object the swap leaves alone keeps its identity: the
+per-object caches downstream (memoized renders, connector routes, text layout) still hit,
+and the settling passes after the swap compare by reference and only touch what changed.
+The camera's reveal (`calcViewportToRevealHistoryChange`) diffs the two object maps by
+reference too.
+
+- **The Doc is a cache of the present entry only.** `resolveDocSnapshot` builds it on first
+  read (the save, the external-sync comparison) and memoizes it on the entry; the initial
+  entry starts with the opened document as its cache. An entry leaving `present` is replaced
+  by a copy without it (`dropDocCache`), never written to, so past and future hold state only.
+- **An entry's identity is its `source`.** Dropping the cache yields a new entry object, so
+  a history mark (`ref.current.history.mark()`) and `REVERT_HISTORY` pin the `source`.
+- **Font generation.** Each entry records the text measurement generation it was created
+  under. An entry restored after the generation moved on (web fonts finished loading) is
+  rebuilt through its Doc instead, so its derived boxes are measured against the fonts now
+  loaded.
+
 ## Coalescing Consecutive Operations
 
 To merge consecutive operations, such as repeated nudges with the arrow keys, into a
