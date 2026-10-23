@@ -4,6 +4,7 @@
 export { routeOrthogonalConnector } from "./routeOrthogonalConnector";
 export { routeSelfLoop } from "./selfLoop";
 export { resolveOrthogonalRoute } from "./resolveOrthogonalRoute";
+export { calcOrthogonalRouteBound } from "./calcOrthogonalRouteBound";
 export type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,

@@ -549,6 +549,7 @@ const CanvasComponent = ({
 		state.viewport,
 		textEditObjectId,
 		registries,
+		state.activeDrag?.movePreview,
 	);
 	// Read by the text overlays, which stop drawing text too small to read; a
 	// snapshot lifts that for as long as it clones the SVG.

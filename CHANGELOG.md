@@ -108,6 +108,14 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   which image export folds away. For plugin authors: a type's `moveByDelta`
   must move its drawing as a whole and change nothing else, since the drag
   draws the start state shifted rather than what `moveByDelta` returned.
+- **Connectors off screen are no longer routed to decide that they are.**
+  Viewport culling bounded each connector by its routed path, so every frame
+  of a drag and the first draw of a document routed every connector whose
+  shapes had changed, on screen or not. It now first bounds a connector from
+  its ends, vertices and shapes without routing it, and routes only one whose
+  bound reaches the screen; a connector shifted with its dragged shapes is
+  judged by its drag-start path moved by the drag, as it is drawn. Which
+  objects are drawn does not change.
 
 ## [0.12.1] - 2026-10-20
 
