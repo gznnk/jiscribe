@@ -13,14 +13,16 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { UndoCommand } from "../../commands/history/UndoCommand";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { createDocSnapshotFromState } from "../../utils/resolveDocSnapshot";
+import {
+	createDocSnapshotFromState,
+	resolveDocSnapshot,
+} from "../../utils/resolveDocSnapshot";
 
 /**
  * Undo, redo and revert restore the state an entry holds as is, so whatever
  * the swap leaves alone keeps its identity — what lets every per-object cache
- * downstream hit. The one exception is an entry measured under an older text
- * measurement generation, which is rebuilt so its boxes follow the fonts now
- * loaded.
+ * downstream hit. An entry recorded under an older text measurement generation
+ * is covered on its own (canvasReducer.historyFonts.test.ts).
  */
 
 const threeRectsDoc = {
@@ -32,13 +34,28 @@ const threeRectsDoc = {
 	],
 } as unknown as CanvasDoc;
 
+/** A document whose own form a save of its rebuild would not keep (more decimals than a save writes, a default spelled out). */
+const unnormalizedDoc = (): CanvasDoc =>
+	({
+		version: 1,
+		root: [
+			{
+				id: "rect-1",
+				type: "rect",
+				x: 0.123456,
+				y: 10,
+				width: 10,
+				height: 10,
+				rotation: 0,
+			},
+			rectDoc("rect-2", 100, 10),
+		],
+	}) as unknown as CanvasDoc;
+
 const textDoc = {
 	version: 1,
 	root: [{ id: "text-1", type: "text", x: 100, y: 60, text: "Hello world" }],
 } as unknown as CanvasDoc;
-
-const sizeOf = (object: ObjectState) =>
-	object as unknown as { width: number; height: number };
 
 /**
  * The text state with a box no measurement gives, in the one past entry: what
@@ -110,6 +127,27 @@ describe("canvasReducer (integration)", () => {
 			expect(reverted.objects["rect-2"]).toBe(start.objects["rect-2"]);
 		});
 
+		for (const fontsArrived of [false, true]) {
+			it(`saves the opened document verbatim after undoing back to it${fontsArrived ? ", across a font load" : ""}`, () => {
+				const start = createTestState(unnormalizedDoc(), {
+					selection: selectionOf(["rect-2"]),
+				});
+				const moved = runCommands(start, "move-right");
+				if (fontsArrived) {
+					advanceTextMeasurementGeneration();
+				}
+
+				const undone = runCommands(moved, "undo");
+				const saved = resolveDocSnapshot(
+					undone.history.present,
+					testReducerRegistries.objectMapper,
+				);
+
+				expect(saved).toBe(start.history.present.openedDoc);
+				expect(saved).toEqual(unnormalizedDoc());
+			});
+		}
+
 		it("restores an entry of the current generation as it is, box included", () => {
 			const { state, staleText } = withStaleTextEntry();
 
@@ -118,22 +156,6 @@ describe("canvasReducer (integration)", () => {
 			const undone = UndoCommand.execute(state, testReducerRegistries);
 
 			expect(undone.objects["text-1"]).toBe(staleText);
-		});
-
-		it("re-measures an entry from an older generation on the way back", () => {
-			const { state, staleText } = withStaleTextEntry();
-			advanceTextMeasurementGeneration();
-
-			const undone = UndoCommand.execute(state, testReducerRegistries);
-			const restoredText = undone.objects["text-1"];
-
-			expect(restoredText).not.toBe(staleText);
-			expect(sizeOf(restoredText).width).toBe(
-				sizeOf(state.objects["text-1"]).width,
-			);
-			expect(sizeOf(restoredText).height).toBe(
-				sizeOf(state.objects["text-1"]).height,
-			);
 		});
 	});
 });

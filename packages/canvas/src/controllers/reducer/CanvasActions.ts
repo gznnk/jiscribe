@@ -113,10 +113,10 @@ export type CommandAction = {
  * entries lie in between (`ref.current.history.revertTo`).
  *
  * Not the undo command repeated: each undo restores and settles the state it
- * lands on, so repeating it would do that work once per entry when only the last
- * one is ever seen. This lands on the target directly and moves the
- * entries it passed over to the redo stack in one go, leaving exactly the stacks
- * the repeated undos would have.
+ * lands on, so repeating it would do that work once per entry when only the
+ * last one is ever seen. This lands on the target directly and moves the
+ * entries it passed over to the redo stack in one go, leaving exactly the
+ * stacks the repeated undos would have.
  */
 export type RevertHistoryAction = {
 	type: "REVERT_HISTORY";
@@ -125,9 +125,8 @@ export type RevertHistoryAction = {
 	 * identity against the undo stack's sources and never read, which is why it
 	 * is typed as `object`: the public mark (`CanvasHistoryMark`) carries one of
 	 * these without the internal DocSnapshot type having to become part of the
-	 * API. An entry that is no
-	 * longer on the stack — already undone past, or dropped by the 50-entry cap —
-	 * leaves the document where it is.
+	 * API. An entry that is no longer on the stack — already undone past, or
+	 * dropped by the 50-entry cap — leaves the document where it is.
 	 */
 	entry: object;
 };

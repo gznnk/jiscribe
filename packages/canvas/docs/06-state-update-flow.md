@@ -70,19 +70,23 @@ it rather than copied. Undo, redo and revert hand that `source` back as is
 (`restoreHistorySnapshot`), so an object the swap leaves alone keeps its identity: the
 per-object caches downstream (memoized renders, connector routes, text layout) still hit,
 and the settling passes after the swap compare by reference and only touch what changed.
-The camera's reveal (`calcViewportToRevealHistoryChange`) diffs the two object maps by
-reference too.
+The camera's reveal (`calcViewportToRevealHistoryChange`) diffs the two entries' committed
+object maps by reference too, so boxes a re-measure renewed since do not read as changed.
 
 - **The Doc is a cache of the present entry only.** `resolveDocSnapshot` builds it on first
-  read (the save, the external-sync comparison) and memoizes it on the entry; the initial
-  entry starts with the opened document as its cache. An entry leaving `present` is replaced
-  by a copy without it (`dropDocCache`), never written to, so past and future hold state only.
+  read (the save, the external-sync comparison) and memoizes it on the entry. An entry leaving
+  `present` is replaced by a copy without it (`dropDocCache`), never written to, so past and
+  future hold state only.
+- **The initial entry keeps the opened document.** It holds the host's doc verbatim
+  (`openedDoc`) for its whole life, so undoing back to it saves the host's own bytes, and an
+  echo of them is recognized as the same content.
 - **An entry's identity is its `source`.** Dropping the cache yields a new entry object, so
   a history mark (`ref.current.history.mark()`) and `REVERT_HISTORY` pin the `source`.
 - **Font generation.** Each entry records the text measurement generation it was created
-  under. An entry restored after the generation moved on (web fonts finished loading) is
-  rebuilt through its Doc instead, so its derived boxes are measured against the fonts now
-  loaded.
+  under. An entry restored after the generation moved on (a web font face finished loading)
+  has its content-sized boxes re-measured, as `REMEASURE_TEXT` does for the live state. A
+  resizer hands back the very object whose box did not move, so only the boxes the new faces
+  change become new objects.
 
 ## Coalescing Consecutive Operations
 

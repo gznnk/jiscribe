@@ -3,11 +3,16 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasAction } from "../CanvasActions";
 import { createTestState } from "./support/createTestState";
-import { applyActions, command } from "./support/dispatch";
+import {
+	applyActions,
+	command,
+	testReducerRegistries,
+} from "./support/dispatch";
 import { rectDoc } from "./support/fixtures";
 import { createTestSnapshot } from "../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState, DocSnapshot } from "../../CanvasTypes";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 
 /**
  * REVERT_HISTORY stands in for however many undos it takes to reach an entry, so
@@ -91,21 +96,26 @@ describe("canvasReducer (integration)", () => {
 		});
 
 		it("finds an entry pinned while it was present after a commit moved it onto past", () => {
-			// The initial present holds the opened doc as its cache, so moving it
-			// onto past replaces the entry object; the pin is its source.
-			const start = createTestState(docAt(30), {
-				selection: selectionOf(["rect-1"]),
-			});
-			const pinned = start.history.present.source;
-			const state = applyActions(start, [command("move-right")]);
-			expect(state.history.past[0]).not.toBe(start.history.present);
-			expect(state.history.past[0].doc).toBeNull();
+			// A saved present holds its Doc cache, so moving it onto past replaces
+			// the entry object; the pin is its source.
+			const committed = applyActions(
+				createTestState(docAt(30), { selection: selectionOf(["rect-1"]) }),
+				[command("move-right")],
+			);
+			resolveDocSnapshot(
+				committed.history.present,
+				testReducerRegistries.objectMapper,
+			);
+			const pinned = committed.history.present.source;
+			const state = applyActions(committed, [command("toggleLockAspectRatio")]);
+			expect(state.history.past[1]).not.toBe(committed.history.present);
+			expect(state.history.past[1].doc).toBeNull();
 
 			const reverted = applyActions(state, [
 				{ type: "REVERT_HISTORY", entry: pinned },
 			]);
 
-			expect(cxOf(reverted)).toBe(35);
+			expect(cxOf(reverted)).toBe(36);
 			expect(reverted.history.present.source).toBe(pinned);
 		});
 

@@ -25,25 +25,30 @@ type HistoryChange = {
 };
 
 /**
- * What an entry swap changed, object by object, by reference: an entry hands
- * back the very ObjectStates it was committed with, and none is ever mutated in
- * place, so an object the swap left alone is the same reference on both sides.
- * An object rewritten with the same content reads as changed — at worst a
- * reveal that was not needed. Groups are skipped: their children and the
- * connectors say where anything moved.
+ * What an entry swap changed, object by object, by reference between the two
+ * entries' committed objects: an entry holds the very ObjectStates it was
+ * committed with, and none is ever mutated in place, so an object the swap
+ * left alone is the same reference in both. The live maps would not do: a
+ * re-measure after fonts arrive renews boxes without a commit, on either side
+ * of the swap. An object rewritten with the same content reads as changed — at
+ * worst a reveal that was not needed. Groups are skipped: their children and
+ * the connectors say where anything moved.
  */
-const diffObjectsByReference = (
-	leftObjects: Record<string, ObjectState>,
-	restoredObjects: Record<string, ObjectState>,
+const diffEntryObjects = (
+	leftEntryObjects: Record<string, ObjectState>,
+	restoredEntryObjects: Record<string, ObjectState>,
 ): HistoryChange => {
 	const change: HistoryChange = { restoredIds: [], removedIds: [] };
-	for (const [id, restoredObject] of Object.entries(restoredObjects)) {
-		if (restoredObject.type !== "group" && leftObjects[id] !== restoredObject) {
+	for (const [id, restoredObject] of Object.entries(restoredEntryObjects)) {
+		if (
+			restoredObject.type !== "group" &&
+			leftEntryObjects[id] !== restoredObject
+		) {
 			change.restoredIds.push(id);
 		}
 	}
-	for (const [id, leftObject] of Object.entries(leftObjects)) {
-		if (leftObject.type !== "group" && !(id in restoredObjects)) {
+	for (const [id, leftObject] of Object.entries(leftEntryObjects)) {
+		if (leftObject.type !== "group" && !(id in restoredEntryObjects)) {
 			change.removedIds.push(id);
 		}
 	}
@@ -95,11 +100,16 @@ const unionObjectBoxes = (
  * @param viewport - The viewport before the swap; returned as is (same
  *   reference) when nothing needs to move, including while it is unmeasured
  *   (either side 0 or less)
- * @param leftObjects - The objects before the swap, where removed objects are
- *   measured
+ * @param leftEntryObjects - The objects of the entry being left as committed
+ *   (its `source`), compared against `restoredEntryObjects` by reference to
+ *   find what the swap changed
+ * @param leftObjects - The live objects before the swap, where removed objects
+ *   are measured
+ * @param restoredEntryObjects - The objects of the entry being restored as
+ *   committed; the same reference as `leftEntryObjects` short-cuts to no change
  * @param restoredObjects - The objects after the swap, where added and modified
- *   objects are measured; the same reference as `leftObjects` short-cuts to no
- *   change
+ *   objects are measured; they differ from `restoredEntryObjects` only by boxes
+ *   re-measured since
  * @param visualExtentRegistries - Measures each box as drawn: what a shape draws
  *   outside its geometry, a connector's route as rendered (see
  *   calcObjectBoundingBox), the wall's content extent included
@@ -112,18 +122,20 @@ const unionObjectBoxes = (
  */
 export const calcViewportToRevealHistoryChange = (
 	viewport: Viewport,
+	leftEntryObjects: Record<string, ObjectState>,
 	leftObjects: Record<string, ObjectState>,
+	restoredEntryObjects: Record<string, ObjectState>,
 	restoredObjects: Record<string, ObjectState>,
 	visualExtentRegistries: VisualExtentRegistries,
 	scrollWallPadding: ResolvedViewPadding | null,
 ): Viewport => {
-	if (leftObjects === restoredObjects) {
+	if (leftEntryObjects === restoredEntryObjects) {
 		return viewport;
 	}
 
-	const { restoredIds, removedIds } = diffObjectsByReference(
-		leftObjects,
-		restoredObjects,
+	const { restoredIds, removedIds } = diffEntryObjects(
+		leftEntryObjects,
+		restoredEntryObjects,
 	);
 	const changedBox = unionObjectBoxes(
 		unionObjectBoxes(

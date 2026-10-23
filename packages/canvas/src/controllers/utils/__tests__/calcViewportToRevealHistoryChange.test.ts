@@ -65,12 +65,17 @@ const reveal = (
 	scrollWallPadding: ResolvedViewPadding | null = null,
 ): Viewport => {
 	const leftObjects = objectsOf(leftDoc);
+	const restoredObjects =
+		leftDoc === restoredDoc
+			? leftObjects
+			: restoredObjectsOf(leftObjects, restoredDoc);
+	// The live maps are the entries' own here: nothing re-measured in between.
 	return calcViewportToRevealHistoryChange(
 		from,
 		leftObjects,
-		leftDoc === restoredDoc
-			? leftObjects
-			: restoredObjectsOf(leftObjects, restoredDoc),
+		leftObjects,
+		restoredObjects,
+		restoredObjects,
 		registries,
 		scrollWallPadding,
 	);
@@ -95,11 +100,41 @@ describe("calcViewportToRevealHistoryChange", () => {
 			calcViewportToRevealHistoryChange(
 				viewport,
 				leftObjects,
+				leftObjects,
+				recreatedObjects,
 				recreatedObjects,
 				registries,
 				null,
 			),
 		).toEqual({ ...viewport, minX: 4258 });
+	});
+
+	it("diffs the entries, not live objects renewed by a re-measure since", () => {
+		// a is off screen; only b moved between the two entries.
+		const leftEntryObjects = objectsOf(
+			docOf([rect("a", 5000, 100), rect("b", 100, 100)]),
+		);
+		const restoredEntryObjects = {
+			...leftEntryObjects,
+			b: objectsOf(docOf([rect("b", 200, 100)])).b,
+		};
+		// Both live maps hold a copy of every object, as a re-measure leaves them.
+		const renewed = (objects: Record<string, ObjectState>) =>
+			Object.fromEntries(
+				Object.entries(objects).map(([id, object]) => [id, { ...object }]),
+			);
+
+		expect(
+			calcViewportToRevealHistoryChange(
+				viewport,
+				leftEntryObjects,
+				renewed(leftEntryObjects),
+				restoredEntryObjects,
+				renewed(restoredEntryObjects),
+				registries,
+				null,
+			),
+		).toBe(viewport);
 	});
 
 	it("returns the same viewport for the same doc", () => {

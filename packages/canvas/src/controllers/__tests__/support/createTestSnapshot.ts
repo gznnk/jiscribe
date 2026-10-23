@@ -14,18 +14,20 @@ const registries = createTestRegistries();
  *
  * @param doc - Loaded through the full built-in registries; pass one already
  *   shaped like a parsed doc, since nothing here validates it
- * @param cachedDoc - Held as the entry's Doc cache, as the present entry holds
- *   the document a canvas was opened on; omitted, the entry has none
+ * @param cachedDoc - Held as the entry's Doc cache, as a present entry holds
+ *   one once it has been saved; omitted, the entry has none
  */
 export const createTestSnapshot = (
 	doc: CanvasDoc,
 	cachedDoc: CanvasDoc | null = null,
-): DocSnapshot =>
-	createDocSnapshotFromState(
+): DocSnapshot => {
+	const snapshot = createDocSnapshotFromState(
 		canvasToState(
 			doc,
 			registries.objectMapper,
 			registries.objectContentResizer,
 		),
-		cachedDoc,
 	);
+	snapshot.doc = cachedDoc;
+	return snapshot;
+};

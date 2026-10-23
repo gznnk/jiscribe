@@ -170,8 +170,9 @@ export type AxisLockFeedback = {
 
 /**
  * The slice of CanvasState a history entry holds: what undo / redo restore,
- * and what its CanvasDoc is built from. Holding these references is safe because every state update path replaces
- * objects immutably; the committed map can never change under the snapshot.
+ * and what its CanvasDoc is built from. Holding these references is safe
+ * because every state update path replaces objects immutably; the committed
+ * map can never change under the snapshot.
  */
 export type DocSnapshotSource = Pick<
 	CanvasState,
@@ -202,11 +203,17 @@ export type DocSnapshot = {
 	readonly source: DocSnapshotSource;
 	/**
 	 * `readTextMeasurementGeneration()` when the entry was created. A restore
-	 * under another generation rebuilds the objects through the Doc so their
-	 * boxes are measured against the fonts now loaded.
+	 * under a later generation re-measures the content-sized boxes of `source`,
+	 * which were measured against the faces loaded back then.
 	 */
 	readonly textMeasurementGeneration: number;
-	/** The Doc of `source`, memoized on first resolve; null until then and on every past or future entry. */
+	/**
+	 * The document the canvas was opened on, held verbatim for the entry's whole
+	 * life, so undoing back to it saves the host's own bytes rather than their
+	 * normalized rebuild. Set on the initial entry only; null on every other.
+	 */
+	readonly openedDoc: CanvasDoc | null;
+	/** The Doc of `source`, memoized on first resolve; null until then, on every past or future entry, and while `openedDoc` answers instead. */
 	doc: CanvasDoc | null;
 };
 

@@ -138,8 +138,9 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   objects, so their routes, text layout and rendering are reused and only what
   changed is redrawn; the camera's reveal compares objects the same way. The
   document is built only for the current entry, when it is saved or compared
-  against an external change. An entry recorded before web fonts finished
-  loading is still rebuilt, so its text boxes follow the fonts now loaded.
+  against an external change. An entry recorded before a web font face
+  finished loading has its text boxes re-measured on the way back, so they
+  follow the fonts now loaded; only the boxes the new face changes are redrawn.
 - **Swapping an `awsIcon`'s icon from the menu carries its label along.**
   While the label is still the one the old icon comes with (the short name a
   stencil places, `S3`), picking another icon replaces it with the new one's

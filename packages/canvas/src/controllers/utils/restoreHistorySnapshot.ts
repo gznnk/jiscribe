@@ -1,16 +1,10 @@
 import { readTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 
 import { calcViewportToRevealHistoryChange } from "./calcViewportToRevealHistoryChange";
+import { reconcileObjectContentSizes } from "./reconcileObjectContentSizes";
 import { resetUiState } from "./resetUiState";
-import { resolveDocSnapshot } from "./resolveDocSnapshot";
 import { resolveScrollWallPadding } from "./resolveScrollWallPadding";
-import { canvasToState } from "../../states/canvas/CanvasMapper";
-import type { CanvasState } from "../../states/canvas/CanvasState";
-import type {
-	CanvasControllerState,
-	DocSnapshot,
-	HistoryState,
-} from "../CanvasTypes";
+import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 import { createMultiSelectGroup } from "../selection/readers/createMultiSelectGroup";
 import { selectRequestedIds } from "../selection/writers/selectRequestedIds";
@@ -46,25 +40,6 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
 	canOfferHistoryNavigation(state) && state.activeDrag === null;
 
 /**
- * The document half of the state an entry restores: its `source` as is, or,
- * when it was measured under another text measurement generation, its objects
- * rebuilt through its Doc with every derived box measured again.
- */
-const restoreEntryState = (
-	entry: DocSnapshot,
-	registries: ICanvasRegistries,
-): CanvasState => {
-	if (entry.textMeasurementGeneration === readTextMeasurementGeneration()) {
-		return entry.source;
-	}
-	return canvasToState(
-		resolveDocSnapshot(entry, registries.objectMapper),
-		registries.objectMapper,
-		registries.objectContentResizer,
-	);
-};
-
-/**
  * Moves the canvas onto another history entry — the one state transition undo,
  * redo and revert all make. Only the stacks differ between them, so the caller
  * hands in the history it wants to end up with and this restores its `present`.
@@ -87,16 +62,17 @@ const restoreEntryState = (
  * The objects are the entry's own (its `source`), not a rebuild of them: every
  * object the swap leaves alone is the very reference the canvas already holds,
  * so the passes after it and the renders below it redo only what changed. An
- * entry measured under another text measurement generation (web fonts arrived
- * since) is the exception, rebuilt through its Doc so its boxes are measured
- * against the fonts now loaded.
+ * entry recorded under an older text measurement generation (a web font face
+ * arrived since) has its content-sized boxes measured again, as REMEASURE_TEXT
+ * does for the live state; the resizers hand back the very object whose box
+ * did not move, so only the boxes the fonts changed are new objects.
  *
  * @param state - The state being navigated away from
  * @param history - The stacks to end up with; its `present` is the entry
  *   restored, and the caller is what decides where the other entries went
  *   (each entry leaving `present` without its Doc cache, see dropDocCache)
- * @param registries - The canvas's registries; the mapper and the content
- *   resizer rebuild an entry measured under a stale generation, and the visual
+ * @param registries - The canvas's registries; the content resizer
+ *   re-measures an entry recorded under an older generation, and the visual
  *   bounds measure what the camera reveals and the wall it stops at
  * @returns The restored state
  */
@@ -105,32 +81,18 @@ export const restoreHistorySnapshot = (
 	history: HistoryState,
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
-	const restoredState = restoreEntryState(history.present, registries);
+	const entry = history.present;
 	const { selectedIds } = selectRequestedIds(
 		state.selection.objectIds,
-		restoredState.objects,
+		entry.source.objects,
 	);
-
-	return {
-		...restoredState,
+	const swappedState: CanvasControllerState = {
+		...entry.source,
 		...resetUiState(),
 		selection: { objectIds: selectedIds, part: null },
-		// Rebuilt rather than carried: the objects it wraps may have moved or gone.
-		multiSelectGroup: createMultiSelectGroup(
-			selectedIds,
-			restoredState.objects,
-			state.multiSelectGroup,
-		),
-		viewport: calcViewportToRevealHistoryChange(
-			state.viewport,
-			state.objects,
-			restoredState.objects,
-			registries,
-			resolveScrollWallPadding(
-				state.scrollLimit.hostConfig,
-				restoredState.view,
-			),
-		),
+		// Both settled below, once the objects are final.
+		multiSelectGroup: null,
+		viewport: state.viewport,
 		// Only the host's half of the wall is carried over; the rest of the entry is
 		// the measurement cache, and limitViewScroll notices the swapped objects and
 		// `view` and re-measures on the next view scroll.
@@ -151,5 +113,36 @@ export const restoreHistorySnapshot = (
 		stencilLibraryPanel: state.stencilLibraryPanel,
 		propertyPanel: state.propertyPanel,
 		history,
+	};
+	const restoredState =
+		entry.textMeasurementGeneration === readTextMeasurementGeneration()
+			? swappedState
+			: reconcileObjectContentSizes(
+					swappedState,
+					swappedState,
+					registries.objectContentResizer,
+					true,
+				);
+
+	return {
+		...restoredState,
+		// Rebuilt rather than carried: the objects it wraps may have moved or gone.
+		multiSelectGroup: createMultiSelectGroup(
+			selectedIds,
+			restoredState.objects,
+			state.multiSelectGroup,
+		),
+		viewport: calcViewportToRevealHistoryChange(
+			state.viewport,
+			state.history.present.source.objects,
+			state.objects,
+			entry.source.objects,
+			restoredState.objects,
+			registries,
+			resolveScrollWallPadding(
+				state.scrollLimit.hostConfig,
+				restoredState.view,
+			),
+		),
 	};
 };

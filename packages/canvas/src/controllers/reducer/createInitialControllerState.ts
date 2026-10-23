@@ -94,9 +94,9 @@ export const createInitialControllerState = (
 		internalClipboard: null,
 		history: {
 			past: [],
-			// The original doc is kept verbatim as the cache (no round-trip through
-			// canvasToDoc), so the initial present compares byte-for-byte against
-			// the host's doc.
+			// The original doc is kept verbatim for the entry's whole life (no
+			// round-trip through canvasToDoc), so this entry, present now or undone
+			// back to later, compares byte-for-byte against the host's doc.
 			present: createDocSnapshotFromState(baseState, initialDoc),
 			future: [],
 		},

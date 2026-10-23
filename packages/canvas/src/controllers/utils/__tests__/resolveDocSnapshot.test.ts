@@ -56,7 +56,7 @@ describe("DocSnapshot", () => {
 		toDocSpy.mockRestore();
 	});
 
-	it("a snapshot created with its doc returns that doc verbatim without any conversion", () => {
+	it("a snapshot created with the doc it was opened on returns that doc verbatim without any conversion", () => {
 		const state = canvasToState(rectDoc, mapper, contentResizer);
 		const snapshot = createDocSnapshotFromState(state, rectDoc);
 
@@ -69,7 +69,8 @@ describe("DocSnapshot", () => {
 
 	it("dropping the doc cache yields a new entry around the same state and leaves the old one as it was", () => {
 		const state = canvasToState(rectDoc, mapper, contentResizer);
-		const snapshot = createDocSnapshotFromState(state, rectDoc);
+		const snapshot = createDocSnapshotFromState(state);
+		const resolvedDoc = resolveDocSnapshot(snapshot, mapper);
 
 		const dropped = dropDocCache(snapshot);
 
@@ -79,7 +80,20 @@ describe("DocSnapshot", () => {
 		expect(dropped.textMeasurementGeneration).toBe(
 			snapshot.textMeasurementGeneration,
 		);
-		expect(snapshot.doc).toBe(rectDoc);
+		expect(snapshot.doc).toBe(resolvedDoc);
+	});
+
+	it("keeps the doc it was opened on when it leaves present, that being no cache", () => {
+		const snapshot = createDocSnapshotFromState(
+			canvasToState(rectDoc, mapper, contentResizer),
+			rectDoc,
+		);
+		resolveDocSnapshot(snapshot, mapper);
+
+		const dropped = dropDocCache(snapshot);
+
+		expect(dropped).toBe(snapshot);
+		expect(resolveDocSnapshot(dropped, mapper)).toBe(rectDoc);
 	});
 
 	it("dropping the doc cache of an entry without one returns that entry", () => {
