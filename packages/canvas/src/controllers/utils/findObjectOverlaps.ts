@@ -27,6 +27,17 @@ const doesCover = (outer: BoundingBox, inner: BoundingBox): boolean =>
 	outer.right >= inner.right &&
 	outer.bottom >= inner.bottom;
 
+/** ObjectOverlap's `covers` for the pair (firstBox, secondBox). */
+const resolveCovers = (
+	firstBox: BoundingBox,
+	secondBox: BoundingBox,
+): ObjectOverlap["covers"] => {
+	if (doesCover(firstBox, secondBox)) {
+		return "first";
+	}
+	return doesCover(secondBox, firstBox) ? "second" : null;
+};
+
 /** An object whose box takes part in the comparison, paired with that box. */
 type BoxedObject = { id: string; box: BoundingBox };
 
@@ -95,11 +106,7 @@ export const findObjectOverlaps = (
 			overlaps.push({
 				ids: [current.id, other.id],
 				overlap: { x: left, y: top, width: right - left, height: bottom - top },
-				covers: doesCover(current.box, other.box)
-					? "first"
-					: doesCover(other.box, current.box)
-						? "second"
-						: null,
+				covers: resolveCovers(current.box, other.box),
 			});
 		}
 	}

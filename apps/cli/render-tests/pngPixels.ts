@@ -20,6 +20,24 @@ const parseHeader = (body: Buffer) => ({
 	interlace: body[12],
 });
 
+/** Channels per pixel by IHDR colour type: 6 is truecolour with alpha, 2 truecolour. */
+const CHANNELS_BY_COLOR_TYPE = new Map([
+	[6, 4],
+	[2, 3],
+]);
+
+/** The neighbour the Paeth filter (filter type 4) predicts from. */
+const paethPredictor = (left: number, up: number, upLeft: number): number => {
+	const predicted = left + up - upLeft;
+	const toLeft = Math.abs(predicted - left);
+	const toUp = Math.abs(predicted - up);
+	const toUpLeft = Math.abs(predicted - upLeft);
+	if (toLeft <= toUp && toLeft <= toUpLeft) {
+		return left;
+	}
+	return toUp <= toUpLeft ? up : upLeft;
+};
+
 /**
  * Decodes a PNG far enough to compare two of them. Handles what the canvas's
  * own export writes and nothing more: 8 bits per sample, truecolour with or
@@ -54,8 +72,8 @@ export const readPng = (file: string): DecodedPng => {
 	if (header.depth !== 8 || header.interlace !== 0) {
 		throw new Error(`${file}: unsupported PNG ${JSON.stringify(header)}`);
 	}
-	const channels = header.colorType === 6 ? 4 : header.colorType === 2 ? 3 : 0;
-	if (channels === 0) {
+	const channels = CHANNELS_BY_COLOR_TYPE.get(header.colorType);
+	if (channels === undefined) {
 		throw new Error(`${file}: unsupported colour type ${header.colorType}`);
 	}
 
@@ -82,16 +100,7 @@ export const readPng = (file: string): DecodedPng => {
 			} else if (filter === 3) {
 				value += (left + up) >> 1;
 			} else if (filter === 4) {
-				const predicted = left + up - upLeft;
-				const toLeft = Math.abs(predicted - left);
-				const toUp = Math.abs(predicted - up);
-				const toUpLeft = Math.abs(predicted - upLeft);
-				value +=
-					toLeft <= toUp && toLeft <= toUpLeft
-						? left
-						: toUp <= toUpLeft
-							? up
-							: upLeft;
+				value += paethPredictor(left, up, upLeft);
 			}
 			row[x] = value & 0xff;
 		}

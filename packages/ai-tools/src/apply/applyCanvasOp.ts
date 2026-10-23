@@ -134,6 +134,17 @@ const emptiedGroupsNote = (droppedGroupIds: readonly string[]): string =>
 		? ""
 		: ` (${quoteIds(droppedGroupIds)} went with them: a group with nothing left in it is dropped)`;
 
+/** The note for an object already at the top or bottom of its siblings, where one reorder_objects placement would change nothing; empty otherwise */
+const zOrderPlaceNote = (index: number, total: number): string => {
+	if (index === total - 1) {
+		return '; it is already drawn over its siblings, so reorder_objects "front" would change nothing';
+	}
+	if (index === 0) {
+		return '; it is already behind its siblings, so reorder_objects "back" would change nothing';
+	}
+	return "";
+};
+
 /**
  * Applies an operation that only reads the document, and builds the result text
  * to hand back to the AI. Zero results, no match and null are not failures, so
@@ -190,13 +201,7 @@ const applyDocRead = (
 		}
 		case "getZOrder": {
 			const { index, total } = docOps.getZOrder(doc, op.id);
-			const placeNote =
-				index === total - 1
-					? '; it is already drawn over its siblings, so reorder_objects "front" would change nothing'
-					: index === 0
-						? '; it is already behind its siblings, so reorder_objects "back" would change nothing'
-						: "";
-			return `"${op.id}" stands at index ${index} of ${total} sibling(s), counting from the back within the parent holding it (index ${total - 1} is drawn on top)${placeNote}`;
+			return `"${op.id}" stands at index ${index} of ${total} sibling(s), counting from the back within the parent holding it (index ${total - 1} is drawn on top)${zOrderPlaceNote(index, total)}`;
 		}
 		case "getParentGroup": {
 			const parentId = docOps.getParentGroup(doc, op.id);

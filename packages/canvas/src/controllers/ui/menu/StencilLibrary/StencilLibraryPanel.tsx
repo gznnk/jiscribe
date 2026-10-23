@@ -91,6 +91,29 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 		[sections, trimmedQuery, messages, locale, resolvePreset],
 	);
 	const matchedPresets = searchResult.presets;
+	const searchResultList =
+		matchedPresets.length > 0 ? (
+			<>
+				<StencilLibraryPanelGrid>
+					{matchedPresets.map((preset) => (
+						<StencilLibraryItem
+							key={preset.id}
+							preset={preset}
+							isActive={activePresetId === preset.id}
+						/>
+					))}
+				</StencilLibraryPanelGrid>
+				{searchResult.hiddenMatchCount > 0 && (
+					<StencilLibraryMoreMatchesMessage>
+						{messages.stencilLibraryMoreMatches}
+					</StencilLibraryMoreMatchesMessage>
+				)}
+			</>
+		) : (
+			<StencilLibraryEmptyMessage>
+				{messages.stencilLibraryNoMatch}
+			</StencilLibraryEmptyMessage>
+		);
 
 	return (
 		<StencilLibraryPanelContainer
@@ -125,87 +148,64 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 			</StencilLibrarySearchBox>
 
 			<StencilLibraryPanelList>
-				{trimmedQuery !== "" ? (
-					matchedPresets.length > 0 ? (
-						<>
-							<StencilLibraryPanelGrid>
-								{matchedPresets.map((preset) => (
-									<StencilLibraryItem
-										key={preset.id}
-										preset={preset}
-										isActive={activePresetId === preset.id}
-									/>
-								))}
-							</StencilLibraryPanelGrid>
-							{searchResult.hiddenMatchCount > 0 && (
-								<StencilLibraryMoreMatchesMessage>
-									{messages.stencilLibraryMoreMatches}
-								</StencilLibraryMoreMatchesMessage>
-							)}
-						</>
-					) : (
-						<StencilLibraryEmptyMessage>
-							{messages.stencilLibraryNoMatch}
-						</StencilLibraryEmptyMessage>
-					)
-				) : (
-					sections.map((section) => {
-						const Icon = section.category.icon;
-						const isExpanded = !collapsedSectionIds.includes(
-							section.category.id,
-						);
-						return (
-							<div key={section.category.id}>
-								<StencilLibrarySectionHeader
-									type="button"
-									aria-expanded={isExpanded}
-									data-action={`section:${section.category.id}`}
-								>
-									<StencilLibrarySectionChevron isExpanded={isExpanded}>
-										<ChevronRightIcon
-											width={CHEVRON_SIZE}
-											height={CHEVRON_SIZE}
-										/>
-									</StencilLibrarySectionChevron>
-									<StencilLibrarySectionIcon>
-										<Icon
-											width={SECTION_ICON_SIZE}
-											height={SECTION_ICON_SIZE}
-										/>
-									</StencilLibrarySectionIcon>
-									<StencilLibrarySectionLabel>
-										{resolveStencilCategoryLabel(
-											section.category.id,
-											section.category.label,
-											messages,
-											locale,
-										)}
-									</StencilLibrarySectionLabel>
-								</StencilLibrarySectionHeader>
-								{isExpanded && (
-									<StencilLibraryPanelGrid>
-										{section.presets.map((preset) => (
-											<StencilLibraryItem
-												key={preset.id}
-												preset={preset}
-												isActive={activePresetId === preset.id}
-											/>
-										))}
-									</StencilLibraryPanelGrid>
-								)}
-								{isExpanded && section.category.search !== undefined && (
-									<StencilLibraryMoreViaSearchButton
+				{trimmedQuery !== ""
+					? searchResultList
+					: sections.map((section) => {
+							const Icon = section.category.icon;
+							const isExpanded = !collapsedSectionIds.includes(
+								section.category.id,
+							);
+							return (
+								<div key={section.category.id}>
+									<StencilLibrarySectionHeader
 										type="button"
-										data-gesture="none"
-										onClick={() => searchInputRef.current?.focus()}
+										aria-expanded={isExpanded}
+										data-action={`section:${section.category.id}`}
 									>
-										{messages.stencilLibraryMoreViaSearch}
-									</StencilLibraryMoreViaSearchButton>
-								)}
-							</div>
-						);
-					})
-				)}
+										<StencilLibrarySectionChevron isExpanded={isExpanded}>
+											<ChevronRightIcon
+												width={CHEVRON_SIZE}
+												height={CHEVRON_SIZE}
+											/>
+										</StencilLibrarySectionChevron>
+										<StencilLibrarySectionIcon>
+											<Icon
+												width={SECTION_ICON_SIZE}
+												height={SECTION_ICON_SIZE}
+											/>
+										</StencilLibrarySectionIcon>
+										<StencilLibrarySectionLabel>
+											{resolveStencilCategoryLabel(
+												section.category.id,
+												section.category.label,
+												messages,
+												locale,
+											)}
+										</StencilLibrarySectionLabel>
+									</StencilLibrarySectionHeader>
+									{isExpanded && (
+										<StencilLibraryPanelGrid>
+											{section.presets.map((preset) => (
+												<StencilLibraryItem
+													key={preset.id}
+													preset={preset}
+													isActive={activePresetId === preset.id}
+												/>
+											))}
+										</StencilLibraryPanelGrid>
+									)}
+									{isExpanded && section.category.search !== undefined && (
+										<StencilLibraryMoreViaSearchButton
+											type="button"
+											data-gesture="none"
+											onClick={() => searchInputRef.current?.focus()}
+										>
+											{messages.stencilLibraryMoreViaSearch}
+										</StencilLibraryMoreViaSearchButton>
+									)}
+								</div>
+							);
+						})}
 			</StencilLibraryPanelList>
 		</StencilLibraryPanelContainer>
 	);

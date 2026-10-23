@@ -71,12 +71,11 @@ export const calcCaretContentOffset = ({
 		),
 		lineWidth,
 	);
-	const lineLeft =
-		textAlign === "center"
-			? (contentWidth - lineWidth) / 2
-			: textAlign === "right"
-				? contentWidth - lineWidth
-				: 0;
+	const lineLeft = {
+		left: 0,
+		center: (contentWidth - lineWidth) / 2,
+		right: contentWidth - lineWidth,
+	}[textAlign];
 
 	return { x: lineLeft + prefixWidth, y, height: line.height };
 };

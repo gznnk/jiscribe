@@ -78,6 +78,22 @@ const resolveAnchorGeometry = (
 };
 
 /**
+ * The connector being dragged, from where it lives: creation holds it in the
+ * draft, while a re-anchor rewrites the entity in `objects` on every frame.
+ */
+const resolveEditingConnector = (
+	connectorDraft: ConnectorDraft | null | undefined,
+	objects: Record<string, ObjectState>,
+): ConnectorState | null | undefined => {
+	if (connectorDraft?.kind === "create") {
+		return connectorDraft.connector;
+	}
+	return connectorDraft
+		? (objects[connectorDraft.connectorId] as ConnectorState | undefined)
+		: null;
+};
+
+/**
  * Renders ConnectionAnchors for connectable frame-based objects when exactly one
  * is selected.
  * Shows the four edge connection anchors, placed on the shape's outline and
@@ -113,14 +129,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	const draggedEndpoint =
 		connectorDraft?.kind === "edit" ? connectorDraft.endpoint : "target";
 
-	// Where the connector being dragged lives: creation holds it in the draft,
-	// while a re-anchor rewrites the entity in `objects` on every frame.
-	const editingConnector =
-		connectorDraft?.kind === "create"
-			? connectorDraft.connector
-			: connectorDraft
-				? (objects[connectorDraft.connectorId] as ConnectorState | undefined)
-				: null;
+	const editingConnector = resolveEditingConnector(connectorDraft, objects);
 
 	const editingEndpointRef =
 		draggedEndpoint === "source"

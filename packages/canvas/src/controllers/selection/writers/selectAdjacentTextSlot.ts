@@ -30,6 +30,27 @@ export const getTextSlotCycle = (
 };
 
 /**
+ * The index in the slot order a step lands on: the slot next to the end of the
+ * covered indices it travels towards, wrapping around. When that end is not in
+ * the order (nothing picked, or -1 from indexOf) it enters at the first slot
+ * going forwards and the last going back.
+ */
+const calcNextTextSlotIndex = (
+	coveredIndices: readonly number[],
+	step: 1 | -1,
+	slotCount: number,
+): number => {
+	if (coveredIndices.length > 0) {
+		const currentIndex =
+			step === 1 ? Math.max(...coveredIndices) : Math.min(...coveredIndices);
+		if (currentIndex !== -1) {
+			return (currentIndex + step + slotCount) % slotCount;
+		}
+	}
+	return step === 1 ? 0 : slotCount - 1;
+};
+
+/**
  * Moves the slot selection one step along the object's own slot order (the
  * `textSlot` part definition's `list`), wrapping around at either end.
  *
@@ -68,18 +89,11 @@ export const selectAdjacentTextSlot = (
 				textSlotIds.indexOf(slotId),
 			)
 		: [];
-	const currentIndex =
-		coveredIndices.length === 0
-			? -1
-			: step === 1
-				? Math.max(...coveredIndices)
-				: Math.min(...coveredIndices);
-	const nextIndex =
-		currentIndex === -1
-			? step === 1
-				? 0
-				: textSlotIds.length - 1
-			: (currentIndex + step + textSlotIds.length) % textSlotIds.length;
+	const nextIndex = calcNextTextSlotIndex(
+		coveredIndices,
+		step,
+		textSlotIds.length,
+	);
 
 	return {
 		...state,

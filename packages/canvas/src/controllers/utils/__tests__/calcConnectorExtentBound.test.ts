@@ -85,6 +85,20 @@ const createOwner = (
 	} as unknown as ObjectState;
 };
 
+const createOwnedAnchor = (random: () => number) => {
+	const roll = random();
+	if (roll < 0.25) {
+		return { kind: "center" };
+	}
+	if (roll < 0.55) {
+		return { kind: "connectPoint", id: pick(random, CONNECT_POINT_IDS) };
+	}
+	if (roll < 0.8) {
+		return { kind: "edge", side: pick(random, EDGE_SIDES), t: random() };
+	}
+	return { kind: "connectPoint", id: "tip" };
+};
+
 const createEndpoint = (
 	random: () => number,
 	owner: ObjectState | null,
@@ -93,16 +107,28 @@ const createEndpoint = (
 	if (!owner) {
 		return { anchor: { kind: "free", point: freePoint } };
 	}
-	const roll = random();
-	const anchor =
-		roll < 0.25
-			? { kind: "center" }
-			: roll < 0.55
-				? { kind: "connectPoint", id: pick(random, CONNECT_POINT_IDS) }
-				: roll < 0.8
-					? { kind: "edge", side: pick(random, EDGE_SIDES), t: random() }
-					: { kind: "connectPoint", id: "tip" };
-	return { owner: { id: owner.id }, anchor };
+	return { owner: { id: owner.id }, anchor: createOwnedAnchor(random) };
+};
+
+/** The other owner: the source itself (a self-loop), none, or a second shape. */
+const createTarget = (
+	random: () => number,
+	source: ObjectState,
+): ObjectState | null => {
+	const layout = random();
+	if (layout < 0.1) {
+		return source;
+	}
+	if (layout < 0.2) {
+		return null;
+	}
+	return createOwner(
+		random,
+		"target",
+		// Gaps from overlapping to far apart, any relative direction.
+		randomBetween(random, -700, 700),
+		randomBetween(random, -700, 700),
+	);
 };
 
 /**
@@ -112,19 +138,7 @@ const createEndpoint = (
  */
 const createCase = (random: () => number) => {
 	const source = createOwner(random, "source", 0, 0);
-	const layout = random();
-	const target =
-		layout < 0.1
-			? source
-			: layout < 0.2
-				? null
-				: createOwner(
-						random,
-						"target",
-						// Gaps from overlapping to far apart, any relative direction.
-						randomBetween(random, -700, 700),
-						randomBetween(random, -700, 700),
-					);
+	const target = createTarget(random, source);
 	const isSourceFree = target !== source && random() < 0.1;
 	const vertices =
 		random() < 0.25

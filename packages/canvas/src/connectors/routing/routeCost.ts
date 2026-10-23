@@ -261,6 +261,14 @@ const comparePaths = (a: Point[], b: Point[]): number => {
 	return a.length - b.length;
 };
 
+/** Orders two topology signatures by UTF-16 code units (no locale collation). */
+const compareSignatures = (a: string, b: string): number => {
+	if (a < b) {
+		return -1;
+	}
+	return a > b ? 1 : 0;
+};
+
 /**
  * **Total order** over route candidates: crossings → reversals → intrusions → aesthetic →
  * symmetric (centered crossover first) → topology signature (alphabetical) → concrete path
@@ -274,6 +282,6 @@ const comparePaths = (a: Point[], b: Point[]): number => {
  */
 export const compareRouteChoices = (a: RouteChoice, b: RouteChoice): number =>
 	compareCost(a.cost, b.cost) ||
-	(a.symmetric === b.symmetric ? 0 : a.symmetric ? -1 : 1) ||
-	(a.signature < b.signature ? -1 : a.signature > b.signature ? 1 : 0) ||
+	Number(b.symmetric) - Number(a.symmetric) ||
+	compareSignatures(a.signature, b.signature) ||
 	comparePaths(a.path, b.path);
