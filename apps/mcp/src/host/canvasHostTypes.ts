@@ -199,8 +199,10 @@ export type CanvasHostOptions = {
 	 */
 	withFileLock: <T>(filePath: string, task: () => Promise<T>) => Promise<T>;
 	/**
-	 * What launches the browser. It is only ever passed by tests, which have no
-	 * browser to launch and want the URL the window would have been given
+	 * What puts a viewer window up; openBrowser when omitted. A host embedded in
+	 * an app passes one that opens the app's own window, and a test one that
+	 * records the URL. A window nobody sees is asked for with mode `"headless"`
+	 * and a URL carrying the headless query
 	 */
 	launchBrowser?: (url: string, browserOptions: BrowserOpenOptions) => void;
 };

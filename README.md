@@ -173,6 +173,7 @@ that is the package to take.
 | `apps/canvas-examples`       | Integration examples (one example = one file)                                                                       |
 | `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                            |
 | `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                                     |
+| `apps/desktop`               | The MCP server as a desktop app (proof of concept): Streamable HTTP, the viewer in its own window                   |
 | `apps/claude-plugin`         | The Claude Code plugin: the MCP server and a generated drawing skill                                                |
 | `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                                       |
 

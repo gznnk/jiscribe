@@ -85,6 +85,14 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   itself larger than `fontSize`. It decides when the box counts as too small to
   read (below); omitted, `fontSize` does. The Markdown shape passes its largest
   heading.
+- **A desktop app holds the MCP server (proof of concept).** `apps/desktop`
+  (`jiscribe-desktop`, not published) runs first and stays up, serving the
+  `jiscribe-mcp` tool set over Streamable HTTP on `127.0.0.1`, so AI clients
+  connect to it by URL rather than starting a process each. Every client
+  session shares one canvas host, one set of file locks and one undo history,
+  and the viewer opens in the app's own window instead of a spawned browser.
+  There is no installer or tray yet: closing the window hides it, starting the
+  app again brings it back, and File → Quit ends it.
 
 ### Changed
 
