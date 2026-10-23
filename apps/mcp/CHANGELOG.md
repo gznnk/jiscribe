@@ -15,6 +15,16 @@ covers that.
 
 ## [Unreleased]
 
+### Security
+
+- **The viewer page carries a Content-Security-Policy.** The page is served
+  with a policy that lets its own folded-in script run (named by hash), its
+  inline styles apply, its fonts load from the host and its WebSocket and image
+  reads reach the host, and nothing else: no other script, and no request to
+  another origin. Markup a drawing brings to the page, however it got past the
+  canvas's sanitizing, can then neither run nor have the browser fetch a URL of
+  the file author's choosing.
+
 ### Added
 
 - **`capture_canvas` takes a region**: the current selection

@@ -33,5 +33,9 @@ export default defineConfig({
 		// Placed next to the bundled server (dist/index.mjs), which serves it statically
 		outDir: "../../dist/client",
 		emptyOutDir: true,
+		// A font subset under vite's 4 KB default would be folded into the CSS as a
+		// data: URL, which the page's Content-Security-Policy (font-src 'self') does
+		// not load; every font stays a file under assets/
+		assetsInlineLimit: 0,
 	},
 });

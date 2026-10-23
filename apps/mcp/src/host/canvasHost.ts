@@ -119,7 +119,8 @@ export async function startCanvasHost(
 	options: CanvasHostOptions,
 ): Promise<CanvasHost> {
 	const workspaceRoot = path.resolve(options.workspaceRoot);
-	const { viewerHtml, assetRootPath } = resolveViewerAssets();
+	const { viewerHtml, viewerScriptHashes, assetRootPath } =
+		resolveViewerAssets();
 
 	// One token per host, handed out at /api/session and demanded of every write and
 	// every WebSocket. A window left over from the host that served another
@@ -129,6 +130,7 @@ export async function startCanvasHost(
 	const server = createViewerHttpServer({
 		workspaceRoot,
 		viewerHtml,
+		viewerScriptHashes,
 		assetRootPath,
 		sessionToken,
 		writeOpenFile: (relPath, body, ifMatch) =>

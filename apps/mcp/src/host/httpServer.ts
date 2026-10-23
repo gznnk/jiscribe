@@ -29,7 +29,11 @@ import { pipeline } from "node:stream";
 import { resolveDocImageMimeType } from "@jiscribe/doc";
 
 import type { WriteOpenFileOutcome } from "./canvasHostTypes";
-import { isAllowedHostHeader, isAllowedOrigin } from "./requestGuards";
+import {
+	isAllowedHostHeader,
+	isAllowedOrigin,
+	loopbackHostNames,
+} from "./requestGuards";
 import {
 	resolveWorkspacePath,
 	resolveWorkspacePathReal,
@@ -318,6 +322,42 @@ const serveAsset = async (
 	}
 };
 
+/**
+ * The Content-Security-Policy of the viewer page. The page is one file with its
+ * script and styles folded in, so the script is named by hash, the styles are
+ * inline (Emotion adds more at runtime), the fonts come from `/assets/`, and the
+ * images a drawing points at arrive through `fetch` as blob URLs. A drawing's own
+ * markup, however it got past the canvas's sanitizing, can then neither run a
+ * script nor load anything from another origin.
+ *
+ * @param scriptHashes The base64 SHA-256 of each inline script in the page; no
+ *   other script runs, same-origin ones included
+ * @param listeningPort The port the page's WebSocket comes back to. `'self'`
+ *   covers the ws: scheme in current browsers; the loopback names are spelled out
+ *   for the ones where it does not, except `[::1]`, which CSP's host grammar
+ *   cannot write and `'self'` alone covers
+ */
+export const buildViewerContentSecurityPolicy = (
+	scriptHashes: readonly string[],
+	listeningPort: number,
+): string => {
+	const scriptSources = scriptHashes.map((hash) => `'sha256-${hash}'`);
+	const socketSources = loopbackHostNames
+		.filter((hostName) => !hostName.startsWith("["))
+		.map((hostName) => `ws://${hostName}:${listeningPort}`);
+	return [
+		"default-src 'none'",
+		`script-src ${scriptSources.join(" ")}`,
+		"style-src 'unsafe-inline'",
+		"img-src blob: data:",
+		"font-src 'self'",
+		`connect-src 'self' ${socketSources.join(" ")}`,
+		"frame-ancestors 'none'",
+		"base-uri 'none'",
+		"form-action 'none'",
+	].join("; ");
+};
+
 export type ViewerHttpServerOptions = {
 	/**
 	 * What image reads are relative to (absolute path). Nothing outside it can be
@@ -326,6 +366,12 @@ export type ViewerHttpServerOptions = {
 	workspaceRoot: string;
 	/** The viewer's HTML, folded into one file and embedded at build time */
 	viewerHtml: string;
+	/**
+	 * The SHA-256 (base64) of each inline script in viewerHtml. The page's
+	 * Content-Security-Policy lets exactly those run, so that markup reaching the
+	 * page from a drawing cannot bring a script of its own
+	 */
+	viewerScriptHashes: readonly string[];
 	/** The directory of assets the HTML refers to, such as the fonts (absolute path) */
 	assetRootPath: string;
 	/**
@@ -364,7 +410,13 @@ export type ViewerHttpServerOptions = {
 export function createViewerHttpServer(
 	options: ViewerHttpServerOptions,
 ): http.Server {
-	const { workspaceRoot, viewerHtml, assetRootPath, sessionToken } = options;
+	const {
+		workspaceRoot,
+		viewerHtml,
+		viewerScriptHashes,
+		assetRootPath,
+		sessionToken,
+	} = options;
 	return http.createServer((request, response) => {
 		void (async () => {
 			// Nothing served from here is ever a type the browser should be left to
@@ -432,6 +484,10 @@ export function createViewerHttpServer(
 				} else if (isReadMethod && requestUrl.pathname === "/") {
 					response.writeHead(200, {
 						"Content-Type": "text/html; charset=utf-8",
+						"Content-Security-Policy": buildViewerContentSecurityPolicy(
+							viewerScriptHashes,
+							listeningPort,
+						),
 					});
 					response.end(viewerHtml);
 				} else {
