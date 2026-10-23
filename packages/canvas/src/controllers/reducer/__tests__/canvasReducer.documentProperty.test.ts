@@ -1,4 +1,5 @@
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
+import type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
@@ -245,5 +246,73 @@ describe("canvasReducer / DOCUMENT_PROPERTY_UPDATE (view)", () => {
 		state = canvasReducer(state, { type: "COMMAND", commandId: "undo" });
 
 		expect(state.view).toBeUndefined();
+	});
+});
+
+describe("canvasReducer / DOCUMENT_PROPERTY_UPDATE (meta)", () => {
+	const metaState = (meta?: Record<string, unknown>): CanvasControllerState =>
+		createTestState({
+			...twoRectsDoc,
+			...(meta ? { meta: meta as MetaDoc } : {}),
+		});
+
+	it("states the name and the description, keeping the other members", () => {
+		let state = updateDocument(metaState({ reference: "./other.jis" }), {
+			property: "meta.name",
+			value: "Overview",
+		});
+		state = updateDocument(state, {
+			property: "meta.description",
+			value: "line 1\nline 2",
+		});
+
+		expect(state.meta).toEqual({
+			reference: "./other.jis",
+			name: "Overview",
+			description: "line 1\nline 2",
+		});
+	});
+
+	it("drops a field on null or an empty string, and meta once nothing is left", () => {
+		let state = updateDocument(metaState({ name: "A", description: "B" }), {
+			property: "meta.name",
+			value: "",
+		});
+		expect(state.meta).toEqual({ description: "B" });
+
+		state = updateDocument(state, {
+			property: "meta.description",
+			value: null,
+		});
+		expect(state.meta).toBeUndefined();
+	});
+
+	it("previews without recording, then records the commit of the previewed text once", () => {
+		const before = metaState();
+
+		const previewed = updateDocument(
+			before,
+			{ property: "meta.name", value: "Over" },
+			{ commit: false },
+		);
+		expect(previewed.meta).toEqual({ name: "Over" });
+		expect(previewed.history.past).toHaveLength(0);
+
+		const committed = updateDocument(previewed, {
+			property: "meta.name",
+			value: "Over",
+		});
+		expect(committed.history.past).toHaveLength(1);
+	});
+
+	it("undoes a stated name back to no meta at all", () => {
+		let state = updateDocument(metaState(), {
+			property: "meta.name",
+			value: "Overview",
+		});
+
+		state = canvasReducer(state, { type: "COMMAND", commandId: "undo" });
+
+		expect(state.meta).toBeUndefined();
 	});
 });

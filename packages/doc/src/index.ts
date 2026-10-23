@@ -37,6 +37,8 @@ export type {
 export { isViewOpenMode, isViewScrollMode } from "./model/canvas/ViewDoc";
 export { resolveViewPadding } from "./model/canvas/resolveViewPadding";
 export type { ObjectDoc } from "./model/objects/base/ObjectDoc";
+// The note a document or an object carries (`meta`), which nothing is drawn from.
+export type { MetaDoc } from "./model/objects/base/MetaDoc";
 // An object of a type the reader does not know, which the parser, the doc-ops and
 // the canvas all keep in place and write back as it was.
 export type { OpaqueObjectDoc } from "./model/objects/base/OpaqueObjectDoc";
@@ -227,6 +229,7 @@ export {
 	type SetPositionParams,
 	type SetRotationResult,
 	type SetStyleResult,
+	type SetMetaParams,
 	type SetViewParams,
 	type SetTextEntry,
 	type StyleParams,

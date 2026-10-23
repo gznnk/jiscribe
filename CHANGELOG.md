@@ -46,6 +46,21 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
 
 ### Added
 
+- **A document can carry a name and a description.** The `.jis` root takes
+  `meta`, the same record an object carries (`name` / `description` /
+  `reference`, open to a host's own keys), checked by the parser the way an
+  object's is and round-tripped through the canvas, history and save. The
+  properties sidebar's Canvas section edits the name and description (one
+  undo step per field, an emptied field drops it, and `meta` goes once nothing
+  is left), an SVG export opens with them as `<title>` and `<desc>`, and the
+  isolated export's embedded source keeps them. Headless, `docOps.setMeta`
+  writes them — or, given an `id`, one object's — and `@jiscribe/ai-tools`
+  declares it as `set_meta`, which names the document without `id` and an
+  object (a group or a connector included) with one;
+  `describe_canvas` now lists the document's own fields ahead of `root`, so a
+  cut-off result still says what the document is. The JSON schema and the
+  authoring guide describe the field (regenerated). `MetaDoc` is exported from
+  `@jiscribe/doc`.
 - **`capture_canvas` can take a picture of one part of the drawing.** It
   still captures the whole drawing by default, and now takes `ids`, a world
   `rect` or `target: "selection"` to get one corner of a large diagram at a

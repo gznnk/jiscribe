@@ -12,6 +12,7 @@ export const createDocSnapshotFromState = (
 	source: {
 		objects: source.objects,
 		rootIds: source.rootIds,
+		meta: source.meta,
 		background: source.background,
 		view: source.view,
 		opaqueObjects: source.opaqueObjects,

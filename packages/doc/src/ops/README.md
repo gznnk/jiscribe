@@ -20,17 +20,17 @@ and ESLint both enforce it (see `eslint.config.js`). It reads and writes the pla
 
 ## Directory structure
 
-| Path              | Description                                                                                                                   |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `createDocOps.ts` | The `DocOps` type and its factory. Every op is bound to the resolved definitions here, and this is where a new op is wired    |
-| `index.ts`        | What the directory exports, re-exported in turn by `src/index.ts`                                                             |
-| `errors.ts`       | `DocOperationError` — the only exception these ops throw — and its subclasses                                                 |
-| `ops/`            | The ops. Named for the group they belong to, not for one op, so adding an op does not make a file name a lie                  |
-| `ops/query.ts`    | The reads that answer about the doc as a whole rather than about one group of ops                                             |
-| `ops/types.ts`    | `listTypes`, the one op that answers from the definitions instead of from a doc                                               |
-| `ops/surface.ts`  | The ops writing the document's own properties rather than the drawing in `root` (background, view declaration)                |
-| `utils/`          | What the ops share: id allocation, object lookup, geometry, endpoint building, style/transform field writing, argument checks |
-| `__tests__/`      | One suite per `ops/` file plus `createDocOps.test.ts`, with shared fixtures in `__tests__/support/`                           |
+| Path              | Description                                                                                                                                                          |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createDocOps.ts` | The `DocOps` type and its factory. Every op is bound to the resolved definitions here, and this is where a new op is wired                                           |
+| `index.ts`        | What the directory exports, re-exported in turn by `src/index.ts`                                                                                                    |
+| `errors.ts`       | `DocOperationError` — the only exception these ops throw — and its subclasses                                                                                        |
+| `ops/`            | The ops. Named for the group they belong to, not for one op, so adding an op does not make a file name a lie                                                         |
+| `ops/query.ts`    | The reads that answer about the doc as a whole rather than about one group of ops                                                                                    |
+| `ops/types.ts`    | `listTypes`, the one op that answers from the definitions instead of from a doc                                                                                      |
+| `ops/surface.ts`  | The ops writing the document's own properties rather than the drawing in `root` (background, view declaration, meta; `setMeta` given an id writes one object's note) |
+| `utils/`          | What the ops share: id allocation, object lookup, geometry, endpoint building, style/transform field writing, argument checks                                        |
+| `__tests__/`      | One suite per `ops/` file plus `createDocOps.test.ts`, with shared fixtures in `__tests__/support/`                                                                  |
 
 The ops export no building blocks: per-object logic a plugin's own tools need as well moves
 down to `model/` (or whichever layer it belongs to), is exported from the package root, and

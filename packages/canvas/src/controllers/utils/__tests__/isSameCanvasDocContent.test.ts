@@ -45,6 +45,14 @@ describe("isSameCanvasDocContent", () => {
 		expect(isSameCanvasDocContent(docA, docB)).toBe(true);
 	});
 
+	it("judged different when the document's meta differs", () => {
+		const docA = parseDoc(
+			`{ "version": 1, "meta": { "name": "A" }, "root": [] }`,
+		);
+		const docB = parseDoc(`{ "version": 1, "root": [] }`);
+		expect(isSameCanvasDocContent(docA, docB)).toBe(false);
+	});
+
 	it("judged different when the surface background differs", () => {
 		const docA = parseDoc(`{ "version": 1, "background": "#fff", "root": [] }`);
 		const docB = parseDoc(`{ "version": 1, "background": "#000", "root": [] }`);

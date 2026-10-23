@@ -175,7 +175,7 @@ export type AxisLockFeedback = {
  */
 export type DocSnapshotSource = Pick<
 	CanvasState,
-	"objects" | "rootIds" | "background" | "view" | "opaqueObjects"
+	"objects" | "rootIds" | "meta" | "background" | "view" | "opaqueObjects"
 >;
 
 /**

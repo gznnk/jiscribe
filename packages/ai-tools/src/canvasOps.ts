@@ -260,6 +260,17 @@ export type AiDocOp =
 			open?: AiViewOpen | null;
 			scroll?: AiViewScroll | null;
 	  }
+	/**
+	 * A name and description (the `meta`) on the object `id` names, or on the document
+	 * itself when `id` is left out. Only the fields given are written, and a field
+	 * given as null is dropped
+	 */
+	| {
+			kind: "setMeta";
+			id?: string;
+			name?: string | null;
+			description?: string | null;
+	  }
 	/** Writes the properties a type holds of its own (lucideIcon's icon, callout's tail) */
 	| {
 			kind: "setExtraProps";

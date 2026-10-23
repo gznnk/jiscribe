@@ -203,3 +203,127 @@ describe("setDocumentView", () => {
 		expect(currentDoc().view).toEqual({ padding: { top: 24 } });
 	});
 });
+
+describe("setMeta", () => {
+	it("writes the name and description, and says what the document is now", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+
+		const result = apply({
+			kind: "setMeta",
+			name: "Overview",
+			description: "line 1\nline 2",
+		});
+
+		expect(result.ok).toBe(true);
+		expect(result.text).toBe(
+			'the document is now named "Overview" and described',
+		);
+		expect(currentDoc().meta).toEqual({
+			name: "Overview",
+			description: "line 1\nline 2",
+		});
+	});
+
+	it("keeps a field it is not given, and drops one given as null", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({ kind: "setMeta", name: "Overview", description: "d" });
+
+		apply({ kind: "setMeta", description: null });
+
+		expect(currentDoc().meta).toEqual({ name: "Overview" });
+	});
+
+	it("drops meta altogether once nothing is left, and says so", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({ kind: "setMeta", name: "Overview" });
+
+		const result = apply({ kind: "setMeta", name: null });
+
+		expect(result.text).toBe("the document now carries no name or description");
+		expect(currentDoc()).not.toHaveProperty("meta");
+	});
+
+	it("returns ok:false when neither field is given", () => {
+		const { apply, replacedDocs } = createFakeDocBridge();
+
+		const result = apply({ kind: "setMeta" });
+
+		expect(result.ok).toBe(false);
+		expect(replacedDocs).toHaveLength(0);
+	});
+
+	describe("given an id", () => {
+		/** One 100x100 rect, `rect-1`, and nothing else */
+		const oneRectDoc = (): CanvasDoc => {
+			const doc: CanvasDoc = { version: 1, root: [] };
+			docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 100 });
+			return doc;
+		};
+
+		it("writes that object's note, names it in what it says, and leaves the document's alone", () => {
+			const { apply, currentDoc } = createFakeDocBridge(oneRectDoc());
+
+			const result = apply({
+				kind: "setMeta",
+				id: "rect-1",
+				name: "Gateway",
+				description: "d",
+			});
+
+			expect(result.ok).toBe(true);
+			expect(result.text).toBe('"rect-1" is now named "Gateway" and described');
+			expect(currentDoc().root[0]?.meta).toEqual({
+				name: "Gateway",
+				description: "d",
+			});
+			expect(currentDoc()).not.toHaveProperty("meta");
+		});
+
+		it("drops the object's meta once nothing is left, and says so", () => {
+			const { apply, currentDoc } = createFakeDocBridge(oneRectDoc());
+			apply({ kind: "setMeta", id: "rect-1", name: "Gateway" });
+
+			const result = apply({ kind: "setMeta", id: "rect-1", name: null });
+
+			expect(result.text).toBe('"rect-1" now carries no name or description');
+			expect(currentDoc().root[0]).not.toHaveProperty("meta");
+		});
+
+		it("returns ok:false for an id no object carries, and writes nothing", () => {
+			const { apply, replacedDocs } = createFakeDocBridge(oneRectDoc());
+
+			const result = apply({ kind: "setMeta", id: "missing", name: "x" });
+
+			expect(result.ok).toBe(false);
+			expect(result.text).toContain("object not found: missing");
+			expect(replacedDocs).toHaveLength(0);
+		});
+
+		it("is taken back by undo", () => {
+			const { apply, currentDoc } = createFakeDocBridge(oneRectDoc());
+			apply({ kind: "setMeta", id: "rect-1", name: "Gateway" });
+
+			expect(apply({ kind: "undo" }).ok).toBe(true);
+
+			expect(currentDoc().root[0]).not.toHaveProperty("meta");
+		});
+	});
+});
+
+describe("describeCanvas", () => {
+	it("puts the document's own fields ahead of root, whatever order the file holds", () => {
+		const { apply } = createFakeDocBridge({
+			version: 1,
+			root: [],
+			meta: { name: "Overview" },
+		} as unknown as CanvasDoc);
+
+		const result = apply({ kind: "describeCanvas" });
+
+		expect(Object.keys(JSON.parse(result.text) as object)).toEqual([
+			"version",
+			"meta",
+			"root",
+		]);
+	});
+});

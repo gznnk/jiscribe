@@ -139,6 +139,41 @@ describe("CanvasMapper", () => {
 			expect(roundTripped.root[1].type).toBe("connector");
 		});
 
+		it("carries the document's meta through the round trip, ahead of root", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				meta: { name: "Overview", description: "a\nb", owner: "x" },
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const state = canvasToState(
+				doc,
+				objectMapperRegistry,
+				contentResizerRegistry,
+			);
+			expect(state.meta).toEqual(doc.meta);
+
+			const roundTripped = canvasToDoc(state, objectMapperRegistry);
+			expect(roundTripped.meta).toEqual(doc.meta);
+			expect(Object.keys(roundTripped)).toEqual(["version", "meta", "root"]);
+		});
+
+		it("omits meta when the doc has none, yet states it on the state so adopting clears an old one", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const state = canvasToState(
+				doc,
+				objectMapperRegistry,
+				contentResizerRegistry,
+			);
+			expect("meta" in state).toBe(true);
+			expect(state.meta).toBeUndefined();
+			expect("meta" in canvasToDoc(state, objectMapperRegistry)).toBe(false);
+		});
+
 		it("carries a doc-authored background through the round trip", () => {
 			const doc: CanvasDoc = {
 				version: 1,

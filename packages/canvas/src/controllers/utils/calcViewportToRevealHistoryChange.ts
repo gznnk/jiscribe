@@ -104,7 +104,7 @@ const unionObjectBoxes = (
  * while part of it is on screen, and centred on that axis otherwise. The diff
  * is per object, so one cell of a large table reads as the whole table changed:
  * centring it would jump away from the cell being worked on.
- * Changes to `background`, `view` or stacking order alone move nothing.
+ * Changes to `meta`, `background`, `view` or stacking order alone move nothing.
  *
  * The pan stops at the scroll wall the way a view scroll does
  * (clampScrolledCamera): the reveal margin gives way to the wall, while a view

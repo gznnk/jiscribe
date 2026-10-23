@@ -72,7 +72,13 @@ import {
 	type SetRotationResult,
 } from "./reshape";
 import { setStyle, type SetStyleResult } from "./style";
-import { setBackground, setView, type SetViewParams } from "./surface";
+import {
+	setBackground,
+	setMeta,
+	setView,
+	type SetMetaParams,
+	type SetViewParams,
+} from "./surface";
 import {
 	getText,
 	setText,
@@ -87,6 +93,7 @@ import { listTypes, type ObjectTypeSummary } from "./types";
 import type { StyleParams } from "./utils/styleFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ViewDoc } from "../model/canvas/ViewDoc";
+import type { MetaDoc } from "../model/objects/base/MetaDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { OwnedEndpointRef } from "../model/objects/types/EndpointRef";
 import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
@@ -98,7 +105,8 @@ import { createDocValidatorRegistry } from "../registries/ObjectDocValidatorRegi
  * `connect`) and reworking what is already there (delete / move / resize / rotate / reshape /
  * restack / style / retext / re-route / align / group), plus reading back what is there.
  * A few ops address the document itself rather than the drawing inside it — `setBackground`
- * writes the surface the shapes are drawn on, `setView` how the document is presented.
+ * writes the surface the shapes are drawn on, `setView` how the document is presented, `setMeta`
+ * what the document is called and is about (and, given an id, what one object is).
  * Built-in and plugin types alike are handled uniformly, following the factory / features
  * passed to `createDocOps`.
  *
@@ -217,6 +225,14 @@ export type DocOps = {
 	 * Throws `DocOperationError` when no part is given, or a value is out of range.
 	 */
 	setView(doc: CanvasDoc, params: SetViewParams): ViewDoc | null;
+	/**
+	 * Write a name and description (the `meta`) on the document itself, or on the object
+	 * `params.id` names. Only the fields given are written, and one given as null or `""`
+	 * is dropped; other `meta` members are kept, and the field goes away once nothing is
+	 * left. Returns the note as it now stands, null once there is none.
+	 * Throws `DocOperationError` when neither field is given, or for a missing id.
+	 */
+	setMeta(doc: CanvasDoc, params: SetMetaParams): MetaDoc | null;
 	/**
 	 * Set the properties belonging to the type itself on one object (the callout's `tail`,
 	 * the container's `headerHeight`), and return the names written. One object at a time,
@@ -476,6 +492,7 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),
 		setBackground,
 		setView,
+		setMeta,
 		setExtraProps: (doc, id, extraProps) =>
 			setExtraProps(doc, id, extraProps, definitions),
 		replaceObject: (doc, id, replacement) =>

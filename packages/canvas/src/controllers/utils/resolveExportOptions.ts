@@ -229,6 +229,7 @@ const isolatedSubsetToDoc = (
 		{
 			objects: subsetObjects,
 			rootIds: isolatedSubset.rootIds,
+			meta: state.meta,
 			background: state.background,
 			view: state.view,
 		},
@@ -327,6 +328,8 @@ export const resolveExportOptions = (
 				includeSource,
 				isolatedSubset,
 			),
+			title: state.meta?.name,
+			description: state.meta?.description,
 			// "transparent" skips the background rect (buildExportSvg);
 			// undefined falls back to the live theme background
 			background: transparentBackground ? "transparent" : undefined,

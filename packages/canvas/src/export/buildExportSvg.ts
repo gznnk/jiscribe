@@ -25,6 +25,16 @@ export type BuildExportSvgOptions = {
 	/** Editing source (`.jis`) to embed. Omit to skip the metadata. */
 	source?: CanvasDoc;
 	/**
+	 * Written as the root's `<title>`, the name a viewer or screen reader gives
+	 * the image (the document's `meta.name`). Omit, or pass `""`, for none.
+	 */
+	title?: string;
+	/**
+	 * Written as the root's `<desc>`, after the `<title>` (the document's
+	 * `meta.description`). Omit, or pass `""`, for none.
+	 */
+	description?: string;
+	/**
 	 * Background color. When omitted, the live SVG's computed
 	 * `background-color` is used. Pass `"transparent"` to skip the
 	 * background rect entirely.
@@ -116,6 +126,23 @@ const bakeComputedStyles = (
 	}
 };
 
+/**
+ * Puts a text-only element ahead of everything else in `svg`; an absent or empty
+ * text puts nothing. The text goes in as `textContent`, which serialization escapes.
+ */
+const prependTextElement = (
+	svg: SVGSVGElement,
+	tagName: "title" | "desc",
+	text: string | undefined,
+): void => {
+	if (text === undefined || text === "") {
+		return;
+	}
+	const textElement = document.createElementNS(SVG_NS, tagName);
+	textElement.textContent = text;
+	svg.insertBefore(textElement, svg.firstChild);
+};
+
 /** Returns the logical size (CSS pixels) of the SVG. */
 export const getSvgSize = (
 	svg: SVGSVGElement,
@@ -176,6 +203,7 @@ export const inlineExportImages = async (
  *   their box as a `<rect>` (avoids canvas taint and works on GitHub, which
  *   sanitizes foreignObject away)
  * - Lays a solid background `<rect>`
+ * - Writes `title` / `description` as the root's first children, `<title>` then `<desc>`
  * - When `source` is given, embeds the `.jis` in `<metadata>`
  *
  * It stays synchronous so a caller holding the live tree open (viewport culling
@@ -270,6 +298,11 @@ export const buildExportSvg = (
 		backgroundRect.setAttribute("fill", background);
 		cloned.insertBefore(backgroundRect, cloned.firstChild);
 	}
+
+	// Prepended last, desc before title, so the root opens with <title><desc>
+	// whatever was laid above.
+	prependTextElement(cloned, "desc", options.description);
+	prependTextElement(cloned, "title", options.title);
 
 	// Declare namespaces explicitly since the file is parsed as a standalone document
 	cloned.setAttribute("xmlns", SVG_NS);

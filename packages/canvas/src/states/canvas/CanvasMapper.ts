@@ -11,6 +11,7 @@ import type {
 } from "./OpaqueObjectPlacement";
 import { collectOpaqueDocs } from "./utils/collectOpaqueDocs";
 import { restoreOpaqueObjects } from "./utils/restoreOpaqueObjects";
+import { MetaMapper } from "../objects/base/MetaMapper";
 import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
 import type { ObjectContentResizerRegistry } from "../registry/ObjectContentResizerRegistry";
@@ -158,6 +159,9 @@ export const canvasToState = (
 	return {
 		objects,
 		rootIds,
+		// Set even when absent, so adopting a document without one clears the
+		// previous document's (adoptDocumentState spreads this over the old state).
+		meta: doc.meta === undefined ? undefined : MetaMapper.toState(doc.meta),
 		background: doc.background,
 		view: doc.view,
 		...(opaqueObjects.length > 0 ? { opaqueObjects } : {}),
@@ -167,15 +171,15 @@ export const canvasToState = (
 /**
  * Converts CanvasState (flat structure) to CanvasDoc (tree structure).
  * This reconstructs the tree for serialization/storage.
- * Only the object map, root order, surface background, display declaration and
- * opaque objects are read, so any state carrying those fields (e.g. a DocSnapshot
+ * Only the object map, root order, document meta, surface background, display
+ * declaration and opaque objects are read, so any state carrying those fields (e.g. a DocSnapshot
  * source) can be converted. The opaque objects go back where they sat
  * ({@link restoreOpaqueObjects}).
  */
 export const canvasToDoc = (
 	state: Pick<
 		CanvasState,
-		"objects" | "rootIds" | "background" | "view" | "opaqueObjects"
+		"objects" | "rootIds" | "meta" | "background" | "view" | "opaqueObjects"
 	>,
 	mapper: ObjectMapperRegistry,
 ): CanvasDoc => {
@@ -206,6 +210,9 @@ export const canvasToDoc = (
 
 	return {
 		version: 1,
+		// Same rule as background below. Written ahead of `root` so a reader that
+		// cuts a long document off still sees what it is called.
+		...(state.meta !== undefined ? { meta: MetaMapper.toDoc(state.meta) } : {}),
 		// Only emitted when set, so a doc that never had a background round-trips
 		// byte-identically (absent = follow theme).
 		...(state.background !== undefined ? { background: state.background } : {}),

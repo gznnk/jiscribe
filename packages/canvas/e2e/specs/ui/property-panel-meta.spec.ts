@@ -1,4 +1,8 @@
+import type * as CanvasModule from "@jiscribe/canvas";
+import { extractCanvasSourceFromSvgText } from "@jiscribe/doc/svg-source";
+
 import { test, expect } from "../../fixtures";
+import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
@@ -17,6 +21,40 @@ const RECT_TO = { x: 320, y: 280 };
 
 /** A point inside the drawn rectangle, for selecting it back. */
 const RECT_INSIDE = { x: 220, y: 215 };
+
+/** The global mountPluginHarness publishes the default page's handle on. */
+type HarnessWindow = { __canvasHandle?: CanvasModule.CanvasHandle | null };
+
+/**
+ * What an SVG export holds of the document's note: the `meta` of the `.jis` source
+ * it embeds — the same state-to-document conversion a save goes through — and
+ * the `<title>` it opens with.
+ */
+async function exportedDocumentMeta(canvas: CanvasDriver): Promise<{
+	meta: CanvasModule.CanvasDoc["meta"] | null;
+	title: string | null;
+}> {
+	const svgText = await canvas.page.evaluate(() => {
+		const handle = (window as unknown as HarnessWindow).__canvasHandle;
+		if (!handle) {
+			throw new Error(
+				"__canvasHandle is undefined (harness hook not installed)",
+			);
+		}
+		return handle.export.toSvgString();
+	});
+	if (svgText === null) {
+		throw new Error("the canvas is not mounted");
+	}
+	const sourceText = extractCanvasSourceFromSvgText(svgText);
+	if (sourceText === null) {
+		throw new Error("the export embeds no source");
+	}
+	return {
+		meta: (JSON.parse(sourceText) as CanvasModule.CanvasDoc).meta ?? null,
+		title: /<title>([^<]*)<\/title>/.exec(svgText)?.[1] ?? null,
+	};
+}
 
 test.describe("Properties sidebar meta section", () => {
 	test("writes a typed name onto the selected object, and one undo takes it back", async ({
@@ -63,5 +101,44 @@ test.describe("Properties sidebar meta section", () => {
 			section,
 			"and the canvas section is what stands with nothing selected",
 		).toHaveCount(0);
+	});
+});
+
+test.describe("Properties sidebar canvas section, the document's note", () => {
+	test("writes a typed name and description onto the document, and one undo per field takes them back", async ({
+		canvas,
+	}) => {
+		await canvas.openPropertyPanel();
+		const name = canvas.page.locator(
+			selectors.propertyPanelField("canvasMetaName"),
+		);
+		const description = canvas.page.locator(
+			selectors.propertyPanelField("canvasMetaDescription"),
+		);
+		await expect(name).toHaveValue("");
+		expect(await exportedDocumentMeta(canvas)).toEqual({
+			meta: null,
+			title: null,
+		});
+
+		await name.fill("Order flow");
+		await canvas.page.locator(selectors.propertyPanelHeader).click();
+		await description.fill("From cart\nto shipment");
+		await canvas.page.locator(selectors.propertyPanelHeader).click();
+
+		await expect
+			.poll(() => exportedDocumentMeta(canvas))
+			.toEqual({
+				meta: { name: "Order flow", description: "From cart\nto shipment" },
+				title: "Order flow",
+			});
+
+		await canvas.undo();
+		await expect(description).toHaveValue("");
+		await canvas.undo();
+		await expect(name).toHaveValue("");
+		await expect
+			.poll(() => exportedDocumentMeta(canvas))
+			.toEqual({ meta: null, title: null });
 	});
 });

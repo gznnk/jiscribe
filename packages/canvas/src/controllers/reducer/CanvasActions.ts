@@ -240,10 +240,15 @@ export type TransformPropertyUpdateAction = {
  * The document's own settings the properties sidebar states, as opposed to the
  * selection's, each with the value it takes. The `view.*` entries name one part
  * of the display declaration (`CanvasDoc.view`) apiece, and padding one side
- * apiece, so each field of the Canvas section is its own property — and its own
- * undo coalescing run.
+ * apiece, and the `meta.*` entries one field of the document's note
+ * (`CanvasDoc.meta`) apiece, so each field of the Canvas section is its own
+ * property — and its own undo coalescing run.
  */
 export type DocumentPropertyValueMap = {
+	/** The document's name; null or `""` drops the field (and `meta` with it once nothing is left). */
+	"meta.name": string | null;
+	/** What the document is about, as multi-line text; null or `""` drops the field. */
+	"meta.description": string | null;
 	/** A literal CSS color, or null to drop the field so the host theme decides again. */
 	background: string | null;
 	/** How the view is framed on open, or null to leave it to the host. */
@@ -277,7 +282,7 @@ export type DocumentPropertyUpdate<
  *
  * The third property route beside {@link StyleIntentAction} and
  * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
- * selection: it mirrors the headless `setBackground` / `setView` ops, down to
+ * selection: it mirrors the headless `setBackground` / `setView` / `setMeta` ops, down to
  * `null` meaning "drop the field and let the host decide" rather than "set it to
  * some default".
  */

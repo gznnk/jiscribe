@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { DocOperationError } from "../errors";
-import { docOps, emptyDoc, expectValid } from "./support/docFixtures";
+import {
+	docOps,
+	emptyDoc,
+	expectValid,
+	readObject,
+	twoConnectedRects,
+} from "./support/docFixtures";
 
 describe("setBackground", () => {
 	it("writes the color the document states its surface with", () => {
@@ -168,5 +174,121 @@ describe("setView", () => {
 		docOps.setView(doc, { open: "fit-all" });
 
 		expect(doc.root).toEqual(before);
+	});
+});
+
+describe("setMeta", () => {
+	it("writes the document's name and description", () => {
+		const doc = emptyDoc();
+
+		const meta = docOps.setMeta(doc, { name: "Overview", description: "a\nb" });
+
+		expect(doc.meta).toEqual({ name: "Overview", description: "a\nb" });
+		expect(meta).toBe(doc.meta);
+		expectValid(doc);
+	});
+
+	it("leaves a field it is not given, and every other member, as they were", () => {
+		const doc = emptyDoc();
+		docOps.setMeta(doc, { name: "Overview", description: "old" });
+		(doc.meta as Record<string, unknown>).reference = "./other.jis";
+
+		docOps.setMeta(doc, { description: "new" });
+
+		expect(doc.meta).toEqual({
+			name: "Overview",
+			description: "new",
+			reference: "./other.jis",
+		});
+	});
+
+	it("drops a field given as null or the empty string", () => {
+		const doc = emptyDoc();
+		docOps.setMeta(doc, { name: "Overview", description: "d" });
+
+		docOps.setMeta(doc, { name: null, description: "" });
+
+		// Nothing is left, so the key goes altogether rather than staying as `meta: {}`.
+		expect(Object.hasOwn(doc, "meta")).toBe(false);
+	});
+
+	it("returns null once the document states nothing", () => {
+		const doc = emptyDoc();
+
+		expect(docOps.setMeta(doc, { name: null })).toBeNull();
+		expect(Object.hasOwn(doc, "meta")).toBe(false);
+	});
+
+	it("refuses a call that names no field, leaving the document alone", () => {
+		const doc = emptyDoc();
+
+		expect(() => docOps.setMeta(doc, {})).toThrow(DocOperationError);
+		expect(Object.hasOwn(doc, "meta")).toBe(false);
+	});
+
+	describe("given an id", () => {
+		it("writes that object's note instead of the document's", () => {
+			const doc = twoConnectedRects();
+
+			const meta = docOps.setMeta(doc, {
+				id: "rect-1",
+				name: "Gateway",
+				description: "d",
+			});
+
+			expect(readObject(doc, "rect-1").meta).toEqual({
+				name: "Gateway",
+				description: "d",
+			});
+			expect(meta).toBe(readObject(doc, "rect-1").meta);
+			expect(Object.hasOwn(doc, "meta")).toBe(false);
+			expectValid(doc);
+		});
+
+		it("reaches a connector and an object inside a group", () => {
+			const doc = twoConnectedRects();
+			const groupId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+			docOps.setMeta(doc, { id: "connector-1", name: "calls" });
+			docOps.setMeta(doc, { id: "rect-2", name: "Store" });
+			docOps.setMeta(doc, { id: groupId, name: "Backend" });
+
+			expect(readObject(doc, "connector-1").meta).toEqual({ name: "calls" });
+			expect(readObject(doc, "rect-2").meta).toEqual({ name: "Store" });
+			expect(readObject(doc, groupId).meta).toEqual({ name: "Backend" });
+			expectValid(doc);
+		});
+
+		it("keeps a reference while dropping the fields it empties", () => {
+			const doc = twoConnectedRects();
+			docOps.setMeta(doc, { id: "rect-1", name: "Gateway" });
+			(readObject(doc, "rect-1").meta as Record<string, unknown>).reference =
+				"./gateway.jis";
+
+			const meta = docOps.setMeta(doc, { id: "rect-1", name: null });
+
+			expect(meta).toEqual({ reference: "./gateway.jis" });
+			expect(readObject(doc, "rect-1").meta).toEqual({
+				reference: "./gateway.jis",
+			});
+		});
+
+		it("drops the object's meta key once nothing is left", () => {
+			const doc = twoConnectedRects();
+			docOps.setMeta(doc, { id: "rect-1", name: "Gateway" });
+
+			expect(docOps.setMeta(doc, { id: "rect-1", name: "" })).toBeNull();
+			expect(Object.hasOwn(readObject(doc, "rect-1"), "meta")).toBe(false);
+		});
+
+		it("refuses an id no object carries, leaving the document alone", () => {
+			const doc = twoConnectedRects();
+			const before = structuredClone(doc);
+
+			expect(() => docOps.setMeta(doc, { id: "missing", name: "x" })).toThrow(
+				DocOperationError,
+			);
+			expect(doc).toEqual(before);
+		});
 	});
 });

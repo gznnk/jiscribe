@@ -22,7 +22,7 @@ export { type ObjectFilter, type ObjectSummary } from "./query";
 export { type SetPointsEntry, type SetRotationResult } from "./reshape";
 export { setExtraProps } from "./extraProps";
 export { type SetStyleResult } from "./style";
-export { type SetViewParams } from "./surface";
+export { type SetMetaParams, type SetViewParams } from "./surface";
 export {
 	type InlineTextStyleParams,
 	type SetInlineTextStyleEntry,

@@ -29,7 +29,10 @@ import { describeRectEdges, formatNumber, quoteIds } from "../resultText";
 import type { AiDocBridge } from "./docBridge";
 
 const describeCanvas = (doc: CanvasDoc): string => {
-	const json = JSON.stringify(doc, null, 2);
+	// The document's own fields ahead of root whatever order the file holds them
+	// in, so a cut-off result still says what the document is called
+	const { root, ...frame } = doc;
+	const json = JSON.stringify({ ...frame, root }, null, 2);
 	if (json.length <= MAX_DESCRIBE_CHARS) {
 		return json;
 	}
@@ -410,6 +413,27 @@ const applyDocChange = (
 					: `scrolling "${declaration.scroll}"`,
 			].filter((part) => part !== null);
 			return `the document now declares ${parts.join(", ")}`;
+		}
+		case "setMeta": {
+			const meta = docOps.setMeta(draftDoc, {
+				...(op.id === undefined ? {} : { id: op.id }),
+				...(op.name === undefined ? {} : { name: op.name }),
+				...(op.description === undefined
+					? {}
+					: { description: op.description }),
+			});
+			const owner =
+				op.id === undefined ? "the document" : JSON.stringify(op.id);
+			if (meta === null) {
+				return `${owner} now carries no name or description`;
+			}
+			const parts = [
+				meta.name === undefined ? null : `named ${JSON.stringify(meta.name)}`,
+				meta.description === undefined ? null : "described",
+			].filter((part) => part !== null);
+			return parts.length === 0
+				? `${owner} now carries no name or description`
+				: `${owner} is now ${parts.join(" and ")}`;
 		}
 		case "setStyle": {
 			const { styledIds, ignored } = docOps.setStyle(

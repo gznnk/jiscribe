@@ -5,6 +5,8 @@ import { ArrowHeadsItem } from "./items/ArrowHeadsItem";
 import type { BuiltinItemProps } from "./items/BuiltinItemProps";
 import {
 	BackgroundItem,
+	DocumentDescriptionItem,
+	DocumentNameItem,
 	ViewOpenItem,
 	ViewPaddingItem,
 	ViewScrollItem,
@@ -255,6 +257,14 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								)}
 								isExpanded={!collapsedSectionIds.includes(CANVAS_SECTION_ID)}
 							>
+								<DocumentNameItem
+									meta={canvasState.meta}
+									onDocumentUpdate={onDocumentUpdate}
+								/>
+								<DocumentDescriptionItem
+									meta={canvasState.meta}
+									onDocumentUpdate={onDocumentUpdate}
+								/>
 								<BackgroundItem
 									background={canvasState.background}
 									onDocumentUpdate={onDocumentUpdate}

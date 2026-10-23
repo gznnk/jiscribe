@@ -10,6 +10,7 @@ import {
 } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useCallback } from "react";
 
+import type { MetaState } from "../../../../../states/objects/base/MetaState";
 import { documentAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
@@ -19,8 +20,70 @@ import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
 import { PropertySegmentedControl } from "../common/PropertySegmentedControl";
+import { PropertyTextField } from "../common/PropertyTextField";
 import { PropertyPanelFieldGrid } from "../PropertyPanelStyled";
 import type { PropertyPanelDocumentUpdater } from "../PropertyPanelTypes";
+
+type DocumentMetaItemProps = {
+	/** The document's note; undefined means it states none. */
+	meta: MetaState | undefined;
+	onDocumentUpdate: PropertyPanelDocumentUpdater;
+};
+
+/**
+ * The name the document goes by — the title an exported SVG carries, and what an
+ * AI reading the file is told it is. Emptying the field drops it again, as the
+ * Meta section's own field does for an object.
+ */
+const DocumentNameItemComponent: React.FC<DocumentMetaItemProps> = ({
+	meta,
+	onDocumentUpdate,
+}) => {
+	const messages = useCanvasMessages();
+
+	return (
+		<PropertyRow label={messages.propertyPanelRowName}>
+			<PropertyTextField
+				value={meta?.name ?? ""}
+				ariaLabel={messages.propertyPanelRowName}
+				testId="property-field:canvasMetaName"
+				onUpdate={(value, commit) =>
+					onDocumentUpdate("meta.name", value === "" ? null : value, commit)
+				}
+			/>
+		</PropertyRow>
+	);
+};
+
+export const DocumentNameItem = memo(DocumentNameItemComponent);
+
+/** What the document is about, over several lines: Enter breaks the line, Ctrl/Cmd+Enter commits. */
+const DocumentDescriptionItemComponent: React.FC<DocumentMetaItemProps> = ({
+	meta,
+	onDocumentUpdate,
+}) => {
+	const messages = useCanvasMessages();
+
+	return (
+		<PropertyRow label={messages.propertyPanelRowDescription}>
+			<PropertyTextField
+				value={meta?.description ?? ""}
+				multiline
+				ariaLabel={messages.propertyPanelRowDescription}
+				testId="property-field:canvasMetaDescription"
+				onUpdate={(value, commit) =>
+					onDocumentUpdate(
+						"meta.description",
+						value === "" ? null : value,
+						commit,
+					)
+				}
+			/>
+		</PropertyRow>
+	);
+};
+
+export const DocumentDescriptionItem = memo(DocumentDescriptionItemComponent);
 
 type BackgroundItemProps = {
 	/** The document's surface color; undefined means it declares none. */

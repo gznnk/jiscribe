@@ -27,6 +27,12 @@ covers that.
 
 ### Added
 
+- **`set_meta` names a document, or one object in it, and says what it is
+  about.** Without `id` it writes the `.jis` root's `meta`; with `id` that
+  object's, a group or a connector included (`name` / `description`; a field
+  left out is kept, null drops it); nothing is drawn from either.
+  `describe_canvas` now returns the document's own fields ahead of `root`.
+  85 tools in all.
 - **`capture_canvas` takes a region**: the current selection
   (`target: "selection"`), the objects named by `ids`, or a world `rect`, so one
   part of a large drawing comes back at a resolution the AI can read. Nothing

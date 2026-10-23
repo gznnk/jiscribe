@@ -169,6 +169,7 @@ const createMemoizedCanvasToDoc = (): ((
 
 		return {
 			version: 1,
+			...(state.meta !== undefined ? { meta: state.meta } : {}),
 			...(state.background !== undefined
 				? { background: state.background }
 				: {}),
@@ -197,6 +198,7 @@ const buildHistory = (
 	let live: DocSnapshotSource = {
 		objects: initial.objects,
 		rootIds: initial.rootIds,
+		meta: initial.meta,
 		background: initial.background,
 		view: initial.view,
 	};

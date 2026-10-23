@@ -1555,11 +1555,11 @@
 		}
 	},
 	"MetaDoc": {
-		"description": "Optional metadata attached to any object. Beyond the keys listed here it accepts any custom key, which jiscribe carries through untouched.",
+		"description": "Optional metadata attached to the document or to any object. Beyond the keys listed here it accepts any custom key, which jiscribe carries through untouched.",
 		"type": "object",
 		"properties": {
 			"name": {
-				"description": "Display name of the object.",
+				"description": "Display name of the document or object.",
 				"type": "string"
 			},
 			"description": {
