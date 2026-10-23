@@ -64,8 +64,8 @@ Then, by impact:
 - **Unit tests for what you touched**: `pnpm --filter @jiscribe/canvas test`
 - **Behaviour or rendering**: run e2e from the suite that owns what you touched, and
   only the related specs.
-  - `packages/canvas/src/{gestures,controllers,rendering,states}`: select by
-    keyword, e.g. `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`.
+  - `packages/canvas/src/{controllers,rendering,states}` (gestures live under
+    `controllers/`): select by keyword, e.g. `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`.
     Do not run that suite in full (160+ spec files); CI does it on pull requests to
     `main`.
   - a plugin's shapes: run its whole suite, which is a handful of specs, e.g.
