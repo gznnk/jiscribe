@@ -59,7 +59,7 @@ export type {
 	ViewerCloseOutcome,
 } from "./canvasHostTypes";
 
-/** The port tried first. Kept apart from studio's 5180 */
+/** The port tried first; a taken port hands over to the next one up */
 const DEFAULT_PORT = 5190;
 
 /**
