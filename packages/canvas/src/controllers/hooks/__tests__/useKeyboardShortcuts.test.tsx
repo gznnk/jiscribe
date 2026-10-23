@@ -85,15 +85,22 @@ const mountShortcuts = (
 	return {
 		dispatch,
 		processPendingGestures,
-		/** Fires Ctrl+<code> on the container and reports whether it was claimed. */
-		pressCtrl: (code: string) => {
+		/**
+		 * Fires Ctrl+<code> and reports whether it was claimed. `targetElement` is
+		 * appended inside the container and fires the key, as a focused field would;
+		 * omitted, the container fires it.
+		 */
+		pressCtrl: (code: string, targetElement?: HTMLElement) => {
 			const event = new KeyboardEvent("keydown", {
 				code,
 				ctrlKey: true,
 				bubbles: true,
 				cancelable: true,
 			});
-			containerElement.dispatchEvent(event);
+			if (targetElement) {
+				containerElement.appendChild(targetElement);
+			}
+			(targetElement ?? containerElement).dispatchEvent(event);
 			return event.defaultPrevented;
 		},
 	};
@@ -214,6 +221,46 @@ describe("useKeyboardShortcuts", () => {
 		expect(processPendingGestures.mock.invocationCallOrder[0]).toBeLessThan(
 			paste.mock.invocationCallOrder[0],
 		);
+	});
+
+	it.each([
+		["an input", () => document.createElement("input")],
+		["a textarea", () => document.createElement("textarea")],
+		["a select", () => document.createElement("select")],
+		[
+			"a contenteditable element",
+			() => {
+				const editableElement = document.createElement("div");
+				editableElement.contentEditable = "true";
+				// jsdom does not implement isContentEditable, which the hook reads.
+				Object.defineProperty(editableElement, "isContentEditable", {
+					value: true,
+				});
+				return editableElement;
+			},
+		],
+	])("leaves a key fired from %s to that field", (_, createField) => {
+		const undo = vi.fn();
+		const { dispatch, processPendingGestures, pressCtrl } = mountShortcuts(
+			createTestRegistries(),
+			{ undo },
+		);
+
+		expect(pressCtrl("KeyA", createField())).toBe(false);
+		expect(pressCtrl("KeyZ", createField())).toBe(false);
+		expect(dispatch).not.toHaveBeenCalled();
+		expect(undo).not.toHaveBeenCalled();
+		expect(processPendingGestures).not.toHaveBeenCalled();
+	});
+
+	it("still takes a key fired from an element that is not a field", () => {
+		const { dispatch, pressCtrl } = mountShortcuts(createTestRegistries(), {});
+
+		expect(pressCtrl("KeyA", document.createElement("button"))).toBe(true);
+		expect(dispatch).toHaveBeenCalledWith({
+			type: "COMMAND",
+			commandId: "selectAll",
+		});
 	});
 
 	it("leaves the pending gestures to their frame for a key no command claims", () => {
