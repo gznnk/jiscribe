@@ -180,4 +180,75 @@ describe("useSyncExternalDoc", () => {
 
 		expect(dispatch).not.toHaveBeenCalled();
 	});
+	it("skips a doc that differs from the one on screen in key order only", () => {
+		const { dispatch, syncFromHost } = mountWithDoc(docWithRectAt(0), "file-a");
+
+		syncFromHost(
+			{
+				root: [
+					{ height: 10, width: 10, y: 0, x: 0, type: "rect", id: "rect-1" },
+				],
+				version: 1,
+			} as unknown as CanvasDoc,
+			"file-a",
+		);
+
+		expect(dispatch).not.toHaveBeenCalled();
+	});
+
+	it("syncs an edit keeping the objects it leaves alone, along with the host's doc", () => {
+		const twoRectsAt = (x: number): CanvasDoc =>
+			({
+				version: 1,
+				root: [
+					{ id: "rect-1", type: "rect", x, y: 0, width: 10, height: 10 },
+					{ id: "rect-2", type: "rect", x: 100, y: 0, width: 10, height: 10 },
+				],
+			}) as unknown as CanvasDoc;
+		const canvasState = createInitialControllerState(twoRectsAt(0), registries);
+		const { dispatch, syncFromHost } = mountWithDoc(
+			twoRectsAt(0),
+			"file-a",
+			canvasState,
+		);
+
+		const editedDoc = twoRectsAt(50);
+		syncFromHost(editedDoc, "file-a");
+
+		const action = dispatch.mock.calls[0][0];
+		if (action.type !== "SYNC_EXTERNAL") {
+			throw new Error(`expected SYNC_EXTERNAL, got ${action.type}`);
+		}
+		expect(action.doc).toBe(editedDoc);
+		expect(action.payload.objects["rect-2"]).toBe(
+			canvasState.objects["rect-2"],
+		);
+		expect(action.payload.objects["rect-1"]).not.toBe(
+			canvasState.objects["rect-1"],
+		);
+	});
+
+	it("loads another document without reusing any object of the one on screen", () => {
+		const canvasState = createInitialControllerState(
+			docWithRectAt(0),
+			registries,
+		);
+		const { dispatch, syncFromHost } = mountWithDoc(
+			docWithRectAt(0),
+			"file-a",
+			canvasState,
+		);
+
+		const loadedDoc = docWithRectAt(0);
+		syncFromHost(loadedDoc, "file-b");
+
+		const action = dispatch.mock.calls[0][0];
+		if (action.type !== "LOAD_DOCUMENT") {
+			throw new Error(`expected LOAD_DOCUMENT, got ${action.type}`);
+		}
+		expect(action.doc).toBe(loadedDoc);
+		expect(action.payload.objects["rect-1"]).not.toBe(
+			canvasState.objects["rect-1"],
+		);
+	});
 });

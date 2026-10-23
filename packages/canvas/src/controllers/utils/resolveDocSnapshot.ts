@@ -11,9 +11,10 @@ import type { DocSnapshot, DocSnapshotSource } from "../CanvasTypes";
  *
  * @param source - The committed state; only the fields a snapshot holds are
  *   kept, so the rest of the controller state is not retained by history
- * @param openedDoc - The document this state was loaded from, held verbatim
- *   for the entry's whole life and answered in place of a rebuild (the initial
- *   entry); omitted, the Doc is built from `source` on first resolve
+ * @param openedDoc - The document this state was built from, held verbatim
+ *   for the entry's whole life and answered in place of a rebuild (an entry
+ *   the host's doc created); omitted, the Doc is built from `source` on first
+ *   resolve
  */
 export const createDocSnapshotFromState = (
 	source: DocSnapshotSource,

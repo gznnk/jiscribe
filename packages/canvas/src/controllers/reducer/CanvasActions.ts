@@ -1,3 +1,4 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type {
 	ViewOpenMode,
 	ViewPaddingDoc,
@@ -49,7 +50,10 @@ export type ContainerResizeAction = {
  */
 export type SyncExternalAction = {
 	type: "SYNC_EXTERNAL";
+	/** The state of `doc`. */
 	payload: CanvasState;
+	/** The document as the host passed it, kept verbatim as the new entry's `openedDoc`. */
+	doc: CanvasDoc;
 };
 
 /**
@@ -62,7 +66,10 @@ export type SyncExternalAction = {
  */
 export type LoadDocumentAction = {
 	type: "LOAD_DOCUMENT";
+	/** The state of `doc`. */
 	payload: CanvasState;
+	/** The document as the host passed it, kept verbatim as the new entry's `openedDoc`. */
+	doc: CanvasDoc;
 };
 
 /**

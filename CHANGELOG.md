@@ -174,6 +174,15 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   against an external change. An entry recorded before a web font face
   finished loading has its text boxes re-measured on the way back, so they
   follow the fonts now loaded; only the boxes the new face changes are redrawn.
+- **An external change no longer rebuilds the whole document.** When the host
+  passes a new version of the document on screen (an edit in another editor,
+  or the host's own undo of the file), each object is compared with the one the
+  canvas holds, key order aside, and every object that did not change stays the
+  same object, so its route, text layout and rendering are reused; a group is
+  rebuilt only when it or one of its members changed. A document that differs
+  only in key order is now recognized as unchanged. The entry an external
+  change or a loaded document creates keeps the host's document as it was
+  passed, so undoing back to it saves those bytes rather than a rebuild.
 - **Swapping an `awsIcon`'s icon from the menu carries its label along.**
   While the label is still the one the old icon comes with (the short name a
   stencil places, `S3`), picking another icon replaces it with the new one's

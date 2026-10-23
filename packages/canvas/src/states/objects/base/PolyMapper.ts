@@ -77,7 +77,7 @@ export const createPolyMapper = <
 				// contributes no key at all: the Doc spelling of "engine routes" is an
 				// absent `points` (ConnectorDoc), so a doc authored without it must
 				// round-trip without it — an emitted `points: []` would read as a content
-				// change (isSameCanvasDocContent) and trigger a needless external sync.
+				// change (canvasToStateReusing) and trigger a needless external sync.
 				// Polygon / polyline are unaffected: their validators require ≥ 3 / ≥ 2
 				// points, so a valid state never reaches this with an empty array.
 				...(points.length > 0 ? { points: roundDocPoints(points) } : {}),

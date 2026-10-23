@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
 import { rectDoc } from "./support/fixtures";
-import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import {
+	canvasToDoc,
+	canvasToState,
+} from "../../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
@@ -103,10 +106,15 @@ describe("canvasReducer: objects of a type the canvas does not carry", () => {
 				registries.objectMapper,
 				registries.objectContentResizer,
 			),
+			doc: docWithUnknownObject,
 		});
-		expect(rootIdsOf(savedDoc(synced))).toEqual(
-			rootIdsOf(docWithUnknownObject),
-		);
+		// The entry answers the host's doc itself (openedDoc), so the state is
+		// what has to hold the opaque objects
+		expect(
+			rootIdsOf(
+				canvasToDoc(synced.history.present.source, registries.objectMapper),
+			),
+		).toEqual(rootIdsOf(docWithUnknownObject));
 
 		const after = command(
 			canvasReducer(synced, { type: "SET_SELECTION", ids: ["rect-2"] }),
