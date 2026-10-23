@@ -63,6 +63,10 @@ test.describe("the AWS icon picker", () => {
 		await expect
 			.poll(async () => shape.locator("path").first().getAttribute("d"))
 			.toBe(lambdaArt);
+		// The label was still the one the stencil placed, so it follows the icon.
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id)).map((run) => run.text))
+			.toEqual(["Lambda"]);
 	});
 });
 
