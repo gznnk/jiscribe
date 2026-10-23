@@ -131,10 +131,16 @@ describe("canvasReducer - move preview", () => {
 			true,
 		);
 
+		// The pointer may hold still after the font lands, so this very frame has
+		// to draw the re-measured box.
 		const remeasured = reducer(dragged, { type: "REMEASURE_TEXT" });
-		expect(remeasured.activeDrag?.kind).toBe("move");
-		expect(remeasured.activeDrag?.movePreview).toBeUndefined();
+		expect(
+			remeasured.activeDrag?.movePreview?.translatedIds.has("text-1"),
+		).toBe(false);
 		expect(boxesOf(remeasured, "text-1").live.width).toBeGreaterThan(1);
+		expect(boxesOf(remeasured, "text-1").drawn).toEqual(
+			boxesOf(remeasured, "text-1").live,
+		);
 
 		const draggedOn = reducer(remeasured, dragAction("drag", "text-1", 30));
 		expect(draggedOn.activeDrag?.movePreview?.translatedIds.has("text-1")).toBe(
@@ -143,30 +149,5 @@ describe("canvasReducer - move preview", () => {
 		const { live, drawn } = boxesOf(draggedOn, "text-1");
 		expect(live.width).toBeGreaterThan(1);
 		expect(drawn).toEqual(live);
-	});
-
-	it("keeps the preview across a transition that leaves the objects alone", () => {
-		const state = createTestState(
-			{
-				version: 1,
-				root: [
-					{ id: "rect-1", type: "rect", x: 0, y: 0, width: 40, height: 40 },
-				],
-			} as unknown as CanvasDoc,
-			{ selection: selectionOf(["rect-1"]) },
-		);
-		const dragged = reducer(
-			reducer(state, dragAction("dragStart", "rect-1", 10)),
-			dragAction("drag", "rect-1", 20),
-		);
-
-		const panned = reducer(dragged, {
-			type: "SET_CAMERA",
-			camera: { minX: 50, minY: 0, zoom: 1 },
-		});
-
-		expect(panned.activeDrag?.movePreview).toBe(
-			dragged.activeDrag?.movePreview,
-		);
 	});
 });

@@ -14,10 +14,7 @@ import { handleCommand } from "../commands/handlers/handleCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
-import {
-	dropCarriedOverMovePreview,
-	pruneMovePreview,
-} from "../utils/holdMovePreviewToState";
+import { pruneMovePreview } from "../utils/holdMovePreviewToState";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import {
@@ -58,21 +55,8 @@ import {
  * signature, so the bundle is captured here (rather than passed per dispatch)
  * and handed to each handler that needs it — the registries are dependencies,
  * not state (#165).
- *
- * A move preview never outlives the objects it speaks for: the drag frame that
- * declares it keeps only the ids its settling left alone, and any other
- * transition that rewrites the objects drops it (see holdMovePreviewToState).
  */
-export const createCanvasReducer = (registries: CanvasRegistries) => {
-	const reduceAction = createActionReducer(registries);
-	return (
-		state: CanvasControllerState,
-		action: CanvasAction,
-	): CanvasControllerState =>
-		dropCarriedOverMovePreview(reduceAction(state, action), state);
-};
-
-const createActionReducer =
+export const createCanvasReducer =
 	(registries: CanvasRegistries) =>
 	(
 		state: CanvasControllerState,
@@ -166,7 +150,12 @@ const createActionReducer =
 					registries.objectContentResizer,
 					true,
 				);
-				return reconcileSelection(resizedResult, registries.objectPartKind);
+				// Mid-drag, a re-measured box is no longer the move's translation of
+				// its start state, so it has to be drawn from the state from now on.
+				return reconcileSelection(
+					pruneMovePreview(resizedResult, state.objects),
+					registries.objectPartKind,
+				);
 			}
 
 			case "CONTAINER_RESIZE": {
