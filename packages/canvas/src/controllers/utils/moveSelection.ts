@@ -1,6 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { createCowObjects } from "./cowObjects";
+import { collectCowChangedKeys, createCowObjects } from "./cowObjects";
 import { moveObjectTree } from "./moveObjectTree";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
@@ -37,6 +37,11 @@ export type MoveSelectionResult = {
 	objects: Record<string, ObjectState>;
 	/** The translated multiSelectGroup (null if src was null) */
 	multiSelectGroup: GroupState | null;
+	/**
+	 * Ids whose moveByDelta returned a new state, descendants of moved groups
+	 * included; connectors (whose moveByDelta is a no-op) never are
+	 */
+	translatedIds: ReadonlySet<string>;
 };
 
 /**
@@ -70,6 +75,16 @@ export function moveSelection(
 		moveObjectTree(selectedId, srcObjects, objects, delta, objectBehavior);
 	}
 
+	// Read off the view's own record of what was written; a no-op moveByDelta
+	// writes back the same object and drops out. A fresh view always shares
+	// srcObjects' base, so the null fallback (nothing shifted) is never taken.
+	const translatedIds = new Set<string>();
+	for (const id of collectCowChangedKeys(objects, srcObjects) ?? []) {
+		if (objects[id] !== srcObjects[id]) {
+			translatedIds.add(id);
+		}
+	}
+
 	const multiSelectGroup: GroupState | null = srcMultiSelectGroup
 		? {
 				...srcMultiSelectGroup,
@@ -78,5 +93,5 @@ export function moveSelection(
 			}
 		: null;
 
-	return { objects, multiSelectGroup };
+	return { objects, multiSelectGroup, translatedIds };
 }

@@ -9,6 +9,7 @@ import type {
 } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorLabelPlacement";
+import type { MovePreview } from "../rendering/layers/content/MovePreview";
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
@@ -309,6 +310,12 @@ export type ActiveDrag = {
 	 * presence alone says a handle is resizing.
 	 */
 	resize?: TransformDragResize;
+	/**
+	 * What the object drag handler translated this frame, set on every frame of
+	 * a "move" drag and absent on every other kind. It goes when the drag does,
+	 * so the frame that commits the drop is drawn from the state alone.
+	 */
+	movePreview?: MovePreview;
 };
 
 /**

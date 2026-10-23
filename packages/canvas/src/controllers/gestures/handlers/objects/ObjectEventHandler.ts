@@ -239,20 +239,33 @@ function handleObjectDrag(
 	// Dragging moves by the cumulative delta from the drag-start snapshot as the source.
 	// Parent group bounds updates are done together on dragEnd, not here.
 	const eventStartMultiSelectGroup = dragStartSnapshot.multiSelectGroup;
-	const { objects: updatedObjects, multiSelectGroup: movedMultiSelectGroup } =
-		moveSelection({
-			selectedIds,
-			srcObjects: eventStartObjects,
-			srcMultiSelectGroup: eventStartMultiSelectGroup,
-			delta: adjustedDelta,
-			objectBehavior: registries.objectBehavior,
-		});
+	const {
+		objects: updatedObjects,
+		multiSelectGroup: movedMultiSelectGroup,
+		translatedIds,
+	} = moveSelection({
+		selectedIds,
+		srcObjects: eventStartObjects,
+		srcMultiSelectGroup: eventStartMultiSelectGroup,
+		delta: adjustedDelta,
+		objectBehavior: registries.objectBehavior,
+	});
 
 	const nextState = {
 		...canvasState,
 		objects: updatedObjects,
 		snapFeedback,
 		axisLockFeedback,
+		// Lets the renderer draw the translated objects from their start states
+		// (see MovePreview); the state above stays the truth for everything else.
+		activeDrag: canvasState.activeDrag && {
+			...canvasState.activeDrag,
+			movePreview: {
+				delta: adjustedDelta,
+				translatedIds,
+				startObjects: eventStartObjects,
+			},
+		},
 	};
 
 	// Move multiSelectGroup in sync as well (only when multi-selection is maintained during the drag)

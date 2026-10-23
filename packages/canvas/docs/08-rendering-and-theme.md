@@ -44,6 +44,34 @@ in one hook, `useIsTextLegible` (`rendering/objects/useIsTextLegible.ts`), which
 - A text object is still picked while hidden: it is hit through computed bands, not through its overlay.
   A hidden connector label is not a target until zoomed back in; its connector's line still is.
 
+## A move drag shifts start states instead of re-rendering
+
+While objects are dragged, the reducer still writes their moved positions on every frame, so snapping,
+culling, the controls and every other reader of the state see the truth. Only the drawing takes a
+shortcut. The object drag handler declares what it moved as `activeDrag.movePreview`
+(`rendering/layers/content/MovePreview.ts`: the delta it applied, the ids whose `moveByDelta` returned a
+new state, the drag-start objects), and `ObjectsRenderer` draws each of those ids from its start state
+inside a `<g transform="translate(dx dy)">`. The start state keeps its identity for the whole drag, so
+`ObjectRenderBoundary` bails out and a frame changes one attribute per moved object.
+
+- Every drawn object and connector has that wrapper `<g>`, unshifted outside a drag. It sits outside the
+  boundary, carries no `data-*` of its own beyond `data-canvas-export="flatten"`, and is never shared:
+  a group of the moved objects would reorder the stacking and remount whatever enters or leaves it.
+- The renderer never guesses. An id the preview does not list, one whose state is still its start
+  state, and the object under text edit are drawn from their current state. The reducer keeps the list
+  true: a drag frame drops the ids its settling rewrote, and a font landing mid-drag (`REMEASURE_TEXT`)
+  drops the ids whose box it re-measured. Other edits do not outlive a move drag frame: they are
+  refused, or the next frame rebuilds the objects from the start snapshot.
+- A connector without stored vertices is shifted when both its owners are; one with vertices (which
+  stay put while the owners move) or with one owner moved is routed live. Orthogonal routing rounds its
+  crossover to whole units, so a shifted orthogonal path may sit up to 0.5 world units off the live
+  route until the drop routes it.
+- Each id's element is handed back as the same object while what it is built from holds
+  (`useElementReuse`), so React skips the wrapper and the boundary of every object the frame left alone.
+- It rests on `moveByDelta` being a pure translation of the drawing (see `MoveByDeltaFunction`). The
+  drop clears the preview in the same state that holds the final positions, so the frame that commits
+  draws from the state alone.
+
 ## Choose between "presentation attribute" and "CSS" for color
 
 The deciding factor is not emotion vs. inline style, but rather **whether a presentation attribute suffices, or whether CSS-function resolution is required**.

@@ -15,6 +15,7 @@ import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
 import { isSameCamera } from "../utils/isSameCamera";
+import { pruneMovePreview } from "../utils/pruneMovePreview";
 import { handlePaste } from "./handlers/handlePaste";
 import {
 	canApplyTransformProperty,
@@ -70,7 +71,10 @@ export const createCanvasReducer =
 					action.gestureHandling,
 				);
 				return recordHistoryIfNeeded(
-					settleTransition(gestureResult, state, registries),
+					pruneMovePreview(
+						settleTransition(gestureResult, state, registries),
+						gestureResult.objects,
+					),
 					state,
 				);
 			}
@@ -146,7 +150,12 @@ export const createCanvasReducer =
 					registries.objectContentResizer,
 					true,
 				);
-				return reconcileSelection(resizedResult, registries.objectPartKind);
+				// Mid-drag, a re-measured box is no longer the move's translation of
+				// its start state, so it has to be drawn from the state from now on.
+				return reconcileSelection(
+					pruneMovePreview(resizedResult, state.objects),
+					registries.objectPartKind,
+				);
 			}
 
 			case "CONTAINER_RESIZE": {
