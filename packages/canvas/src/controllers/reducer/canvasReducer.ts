@@ -14,8 +14,8 @@ import { handleCommand } from "../commands/handlers/handleCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
-import { pruneMovePreview } from "../utils/holdMovePreviewToState";
 import { isSameCamera } from "../utils/isSameCamera";
+import { pruneMovePreview } from "../utils/pruneMovePreview";
 import { handlePaste } from "./handlers/handlePaste";
 import {
 	canApplyTransformProperty,
