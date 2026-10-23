@@ -109,6 +109,16 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   there, it opens under the field inside the sidebar, narrowed to fit. A
   selection drawing different icons shows the field as mixed, and the object
   menu's picker then highlights no cell rather than the first shape's icon.
+- **The property sidebar can group, ungroup and open a reference.** These
+  were the two things the object menu offered and the sidebar did not, though
+  the menu is hidden while the sidebar is open. The Arrange
+  section ends with a Group button for a multi-selection and an Ungroup button
+  for a selected group, offered under the same rule as the menu's; the section
+  now also shows for a selection across different parents, which can be
+  grouped though not reordered, with the stacking-order buttons disabled. The
+  Meta section carries an "Open Reference" button for an object whose
+  `meta.reference` is set, calling the same `onOpenReference` as the menu, and
+  only while the host passes one.
 - **For plugin authors: `PropertyDropdownField` takes `placement`.**
   `"under"` (the default, unchanged) opens the panel under the trigger inside
   the sidebar, now never wider than the sidebar; `"beside"` opens it outside
@@ -146,6 +156,16 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   bound reaches the screen; a connector shifted with its dragged shapes is
   judged by its drag-start path moved by the drag, as it is drawn. Which
   objects are drawn does not change.
+- **Undo and redo no longer rebuild the whole document.** Each history entry
+  now keeps the state it was committed with, and undo, redo and
+  `history.revertTo` hand it back as is instead of rebuilding every object
+  from the entry's document. Objects the step leaves alone stay the same
+  objects, so their routes, text layout and rendering are reused and only what
+  changed is redrawn; the camera's reveal compares objects the same way. The
+  document is built only for the current entry, when it is saved or compared
+  against an external change. An entry recorded before a web font face
+  finished loading has its text boxes re-measured on the way back, so they
+  follow the fonts now loaded; only the boxes the new face changes are redrawn.
 - **Swapping an `awsIcon`'s icon from the menu carries its label along.**
   While the label is still the one the old icon comes with (the short name a
   stencil places, `S3`), picking another icon replaces it with the new one's

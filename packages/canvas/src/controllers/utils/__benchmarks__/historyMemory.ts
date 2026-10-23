@@ -2,14 +2,15 @@
  * Measures what one history entry actually costs in memory, for the three ways
  * the history layer can hold its snapshots:
  *
- * - `lazy`      — the entry stays an unresolved DocSnapshot (references into the
- *                 committed state; unchanged ObjectStates are shared).
- * - `resolved`  — the entry's Doc is materialized, which is what really happens
- *                 today: useNotifySaveRequest resolves `history.present` on every
- *                 commit when the host passes `onCommit`, and resolveDocSnapshot
- *                 then drops `source`.
+ * - `lazy`      — no Doc is ever built: every entry holds only its `source`
+ *                 (references into the committed state; unchanged ObjectStates
+ *                 are shared).
+ * - `resolved`  — what really happens when the host saves: useNotifySaveRequest
+ *                 resolves `history.present` on every commit, and the Doc cache
+ *                 is dropped (dropDocCache) when the entry moves onto past, so
+ *                 past entries hold `source` alone.
  * - `memoized`  — same, but `canvasToDoc` reuses the ObjectDoc it already built
- *                 for an unchanged ObjectState (the proposed fix).
+ *                 for an unchanged ObjectState.
  *
  * Run with:
  *   node --expose-gc --import tsx src/controllers/utils/__benchmarks__/historyMemory.ts
@@ -37,6 +38,7 @@ import { materializeObjects } from "../cowObjects";
 import { moveSelection } from "../moveSelection";
 import {
 	createDocSnapshotFromState,
+	dropDocCache,
 	resolveDocSnapshot,
 } from "../resolveDocSnapshot";
 
@@ -206,7 +208,7 @@ const buildHistory = (
 	const past: DocSnapshot[] = [];
 
 	for (let commit = 0; commit < HISTORY_DEPTH; commit++) {
-		past.push(present);
+		past.push(dropDocCache(present));
 		live = commitOneMove(live, commit, registries.objectBehavior);
 		present = createDocSnapshotFromState(live);
 
@@ -215,11 +217,7 @@ const buildHistory = (
 			resolveDocSnapshot(present, mapper);
 		}
 		if (mode === "memoized" && memoizedCanvasToDoc) {
-			present.doc = memoizedCanvasToDoc(
-				present.source as DocSnapshotSource,
-				mapper,
-			);
-			present.source = null;
+			present.doc = memoizedCanvasToDoc(present.source, mapper);
 		}
 	}
 

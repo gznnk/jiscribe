@@ -509,6 +509,52 @@ test.describe("Properties sidebar", () => {
 		await expect.poll(() => canvas.objectIndex(a)).toBe(0);
 	});
 
+	test("groups the selection from the Arrange section, and ungroups a selected group", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 120, y: 150 }, { x: 240, y: 240 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 420, y: 240 });
+		await canvas.openPropertyPanel();
+		const groupButton = canvas.page.locator(
+			selectors.propertyPanelCommand("group"),
+		);
+		const ungroupButton = canvas.page.locator(
+			selectors.propertyPanelCommand("ungroup"),
+		);
+		await expect(
+			groupButton,
+			"a sole shape is neither groupable nor ungroupable",
+		).toHaveCount(0);
+		await expect(ungroupButton).toHaveCount(0);
+
+		await canvas.selectAll();
+		await expect(groupButton).toBeEnabled();
+		await groupButton.click();
+		await expect(
+			ungroupButton,
+			"the new group is what is selected now",
+		).toBeEnabled();
+		await expect(groupButton).toHaveCount(0);
+
+		// A press on a member selects the whole group, which the button then takes apart
+		await canvas.deselect();
+		await canvas.selectAt({ x: 180, y: 195 });
+		await ungroupButton.click();
+		await expect(
+			groupButton,
+			"the members are left selected, so they can be grouped again",
+		).toBeEnabled();
+		await expect(ungroupButton).toHaveCount(0);
+
+		await canvas.deselect();
+		await canvas.selectAt({ x: 180, y: 195 });
+		await expect(
+			groupButton,
+			"and a press on one now selects it alone",
+		).toHaveCount(0);
+	});
+
 	test("lights the alignment a text is drawn at when neither it nor its type states one", async ({
 		canvas,
 	}) => {
