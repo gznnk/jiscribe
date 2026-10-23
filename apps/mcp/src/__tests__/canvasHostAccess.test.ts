@@ -11,6 +11,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import WebSocket, { type ClientOptions } from "ws";
 
 import { readSessionToken } from "./hostSessionToken";
+import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import { createPathLock } from "../pathLock";
 import {
@@ -38,7 +39,7 @@ const openSockets: WebSocket[] = [];
  */
 beforeAll(async () => {
 	viewerRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-viewer-"));
-	await writeFile(join(viewerRoot, "index.html"), "<!doctype html>", "utf8");
+	await writeFile(join(viewerRoot, "index.html"), VIEWER_STUB_HTML, "utf8");
 	previousViewerRoot = process.env.JISCRIBE_MCP_VIEWER_ROOT;
 	process.env.JISCRIBE_MCP_VIEWER_ROOT = viewerRoot;
 	workspaceRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-ws-"));

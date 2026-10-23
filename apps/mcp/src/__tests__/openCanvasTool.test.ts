@@ -11,6 +11,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { readSessionToken } from "./hostSessionToken";
 import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
+import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import { REVISION_HEADER, SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";
 
 /**
@@ -29,7 +30,7 @@ const emptyDocText = '{"version":1,"root":[]}\n';
 
 beforeAll(async () => {
 	viewerRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-viewer-"));
-	await writeFile(join(viewerRoot, "index.html"), "<!doctype html>", "utf8");
+	await writeFile(join(viewerRoot, "index.html"), VIEWER_STUB_HTML, "utf8");
 	for (const name of [
 		"JISCRIBE_MCP_VIEWER_ROOT",
 		"JISCRIBE_MCP_NO_OPEN",

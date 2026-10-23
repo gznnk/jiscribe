@@ -29,7 +29,11 @@ import { pipeline } from "node:stream";
 import { resolveDocImageMimeType } from "@jiscribe/doc";
 
 import type { WriteOpenFileOutcome } from "./canvasHostTypes";
-import { isAllowedHostHeader, isAllowedOrigin } from "./requestGuards";
+import {
+	isAllowedHostHeader,
+	isAllowedOrigin,
+	loopbackHostNames,
+} from "./requestGuards";
 import {
 	resolveWorkspacePath,
 	resolveWorkspacePathReal,
@@ -318,9 +322,6 @@ const serveAsset = async (
 	}
 };
 
-/** The host names a page may reach this server by; what isAllowedHostHeader takes */
-const LOOPBACK_HOST_NAMES = ["localhost", "127.0.0.1", "[::1]"] as const;
-
 /**
  * The Content-Security-Policy of the viewer page. The page is one file with its
  * script and styles folded in, so the script is named by hash, the styles are
@@ -329,22 +330,21 @@ const LOOPBACK_HOST_NAMES = ["localhost", "127.0.0.1", "[::1]"] as const;
  * markup, however it got past the canvas's sanitizing, can then neither run a
  * script nor load anything from another origin.
  *
- * @param scriptHashes - The base64 SHA-256 of each inline script in the page
- * @param listeningPort - The port the page's WebSocket comes back to; `'self'`
- *   covers the ws: scheme in current browsers, and the loopback names are spelled
- *   out for the ones where it does not
+ * @param scriptHashes The base64 SHA-256 of each inline script in the page; no
+ *   other script runs, same-origin ones included
+ * @param listeningPort The port the page's WebSocket comes back to. `'self'`
+ *   covers the ws: scheme in current browsers; the loopback names are spelled out
+ *   for the ones where it does not, except `[::1]`, which CSP's host grammar
+ *   cannot write and `'self'` alone covers
  */
 export const buildViewerContentSecurityPolicy = (
 	scriptHashes: readonly string[],
 	listeningPort: number,
 ): string => {
-	const scriptSources = [
-		"'self'",
-		...scriptHashes.map((hash) => `'sha256-${hash}'`),
-	];
-	const socketSources = LOOPBACK_HOST_NAMES.map(
-		(hostName) => `ws://${hostName}:${listeningPort}`,
-	);
+	const scriptSources = scriptHashes.map((hash) => `'sha256-${hash}'`);
+	const socketSources = loopbackHostNames
+		.filter((hostName) => !hostName.startsWith("["))
+		.map((hostName) => `ws://${hostName}:${listeningPort}`);
 	return [
 		"default-src 'none'",
 		`script-src ${scriptSources.join(" ")}`,

@@ -7,7 +7,7 @@
  * The names this server answers to. Everything else is a name that resolved to
  * 127.0.0.1 without being one of ours, which is what DNS rebinding looks like
  */
-const loopbackHostNames: readonly string[] = [
+export const loopbackHostNames: readonly string[] = [
 	"localhost",
 	"127.0.0.1",
 	"[::1]",

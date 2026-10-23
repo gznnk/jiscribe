@@ -25,21 +25,23 @@ export type ViewerAssets = {
 	assetRootPath: string;
 };
 
-const INLINE_SCRIPT_PATTERN = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+const SCRIPT_ELEMENT_PATTERN = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
 
 /**
  * Hashes every inline script in the HTML the way a CSP `'sha256-…'` source wants
  * it: over the script's text exactly as served, encoded as UTF-8.
  *
- * @param html - The page as it is sent; a `<script src>` has no inline text and
- *   contributes nothing
+ * @param html The page as it is sent. A `<script src>` is skipped, whatever text
+ *   it carries, since the browser runs the file and not the text
  * @returns Base64 digests in document order, empty when the page has no inline script
  */
 export const calcInlineScriptHashes = (html: string): readonly string[] =>
-	Array.from(html.matchAll(INLINE_SCRIPT_PATTERN))
-		.map((match) => match[1])
-		.filter((scriptText) => scriptText.trim() !== "")
-		.map((scriptText) =>
+	Array.from(html.matchAll(SCRIPT_ELEMENT_PATTERN))
+		.filter(
+			([, attributes, scriptText]) =>
+				!/\bsrc\s*=/i.test(attributes) && scriptText.trim() !== "",
+		)
+		.map(([, , scriptText]) =>
 			createHash("sha256").update(scriptText, "utf8").digest("base64"),
 		);
 
@@ -66,8 +68,10 @@ const calcViewerRootCandidates = (): readonly string[] => {
  *
  * @returns The HTML already read in, the hashes of its inline scripts, and the
  *   directory the fonts are served from
- * @throws CanvasHostError When it has not been built. Quietly going on returning
- *   404s tells nobody anything beyond "the screen is blank", so it fails at startup
+ * @throws CanvasHostError When it has not been built, or built without being folded
+ *   into one file. Quietly going on returning 404s or a page whose script the
+ *   policy refuses tells nobody anything beyond "the screen is blank", so it fails
+ *   at startup
  */
 export function resolveViewerAssets(): ViewerAssets {
 	const candidates = calcViewerRootCandidates();
@@ -75,9 +79,18 @@ export function resolveViewerAssets(): ViewerAssets {
 		const htmlPath = path.join(rootPath, "index.html");
 		if (existsSync(htmlPath)) {
 			const viewerHtml = readFileSync(htmlPath, "utf8");
+			const viewerScriptHashes = calcInlineScriptHashes(viewerHtml);
+			// A vite build that build.mjs has not folded refers to its script by src,
+			// which the policy does not let run: a blank page with a console error,
+			// the quiet failure this function exists to refuse
+			if (viewerScriptHashes.length === 0) {
+				throw new CanvasHostError(
+					`canvas viewer at ${htmlPath} holds no inline script, so it was built without build.mjs folding it. Run \`pnpm --filter jiscribe-mcp build\`.`,
+				);
+			}
 			return {
 				viewerHtml,
-				viewerScriptHashes: calcInlineScriptHashes(viewerHtml),
+				viewerScriptHashes,
 				assetRootPath: path.join(rootPath, "assets"),
 			};
 		}

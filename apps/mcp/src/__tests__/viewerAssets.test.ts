@@ -33,13 +33,16 @@ afterEach(async () => {
 
 describe("resolveViewerAssets", () => {
 	it("reads the viewer JISCRIBE_MCP_VIEWER_ROOT names", async () => {
-		const html = "<!doctype html><title>viewer</title>";
+		const html =
+			'<!doctype html><title>viewer</title><script type="module">run()</script>';
 		await writeFile(path.join(viewerRoot, "index.html"), html, "utf8");
 		process.env.JISCRIBE_MCP_VIEWER_ROOT = viewerRoot;
 
 		expect(resolveViewerAssets()).toEqual({
 			viewerHtml: html,
-			viewerScriptHashes: [],
+			viewerScriptHashes: [
+				createHash("sha256").update("run()", "utf8").digest("base64"),
+			],
 			// The fonts stay on disk beside the html, too large to fold into it
 			assetRootPath: path.join(viewerRoot, "assets"),
 		});
@@ -48,7 +51,7 @@ describe("resolveViewerAssets", () => {
 	it("takes a relative override as relative to the working directory", async () => {
 		await writeFile(
 			path.join(viewerRoot, "index.html"),
-			"<!doctype html>",
+			"<!doctype html><script>run()</script>",
 			"utf8",
 		);
 		process.env.JISCRIBE_MCP_VIEWER_ROOT = path.relative(
@@ -59,6 +62,20 @@ describe("resolveViewerAssets", () => {
 		expect(resolveViewerAssets().assetRootPath).toBe(
 			path.join(viewerRoot, "assets"),
 		);
+	});
+
+	it("fails with build guidance when the viewer was not folded into one file", async () => {
+		// A plain vite build refers to its script by src; the page's policy lets only
+		// the folded inline script run, so this would be a blank screen
+		await writeFile(
+			path.join(viewerRoot, "index.html"),
+			'<!doctype html><script type="module" src="/assets/index.js"></script>',
+			"utf8",
+		);
+		process.env.JISCRIBE_MCP_VIEWER_ROOT = viewerRoot;
+
+		expect(() => resolveViewerAssets()).toThrow(CanvasHostError);
+		expect(() => resolveViewerAssets()).toThrow(/build\.mjs/);
 	});
 
 	it("fails with build guidance when the named directory holds no viewer", () => {
@@ -86,6 +103,7 @@ describe("calcInlineScriptHashes", () => {
 		const html =
 			`<script type="module">${first}</script>` +
 			`<script src="/assets/x.js"></script>` +
+			`<script src="/assets/y.js">fallback()</script>` +
 			`<script>${second}</script>`;
 
 		expect(calcInlineScriptHashes(html)).toEqual([

@@ -593,11 +593,11 @@ describe("GET /", () => {
 		expect(response.headers.get("content-security-policy")).toBe(
 			[
 				"default-src 'none'",
-				`script-src 'self' 'sha256-${VIEWER_SCRIPT_HASH}'`,
+				`script-src 'sha256-${VIEWER_SCRIPT_HASH}'`,
 				"style-src 'unsafe-inline'",
 				"img-src blob: data:",
 				"font-src 'self'",
-				`connect-src 'self' ws://localhost:${port} ws://127.0.0.1:${port} ws://[::1]:${port}`,
+				`connect-src 'self' ws://localhost:${port} ws://127.0.0.1:${port}`,
 				"frame-ancestors 'none'",
 				"base-uri 'none'",
 				"form-action 'none'",

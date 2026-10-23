@@ -71,6 +71,14 @@ const inlineViewerHtml = async () => {
 	const stylePattern = /<link\b[^>]*\bhref="\/assets\/([^"]+\.css)"[^>]*>/g;
 	for (const [tag, fileName] of [...html.matchAll(stylePattern)]) {
 		const css = await readFile(join(clientDir, "assets", fileName), "utf8");
+		// ページの CSP は font-src 'self' なので、data: URL に畳まれたフォントは
+		// 読まれず、その範囲の字だけ黙って代替書体になる（vite.config.ts の
+		// assetsInlineLimit が 0 である限り出ない）
+		if (/url\(\s*["']?data:/i.test(css)) {
+			throw new Error(
+				`${fileName} holds a data: URL, which the viewer's Content-Security-Policy does not load. Keep build.assetsInlineLimit at 0 in vite.config.ts.`,
+			);
+		}
 		html = html.replace(
 			tag,
 			() => `<style>${escapeForInlineTag(css, "style")}</style>`,
