@@ -40,3 +40,9 @@ export const awsShapesMessagesByLocale: LocaleMessages<AwsShapesMessages> = {
 		categoryAll: "すべてのカテゴリ",
 	},
 };
+
+/** Heading of the awsIcon's section in the properties sidebar. */
+export const awsIconPropertySectionLabelByLocale: LocaleMessages<string> = {
+	en: "Icon",
+	ja: "アイコン",
+};

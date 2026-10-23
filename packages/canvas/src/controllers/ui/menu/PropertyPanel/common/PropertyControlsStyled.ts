@@ -126,9 +126,9 @@ export const PropertyDropdownTrigger = styled.button`
 `;
 
 /**
- * Positioning context of a dropdown field, and the column its open panel is
- * stacked into: the panel drops into the flow rather than floating, so the
- * sidebar's scrolling body cannot clip it.
+ * A dropdown field's box in its row, stretching the trigger to the row's width.
+ * The open panel is not inside it but portalled to the sidebar's root (see
+ * PropertyDropdownField).
  */
 export const PropertyDropdownFieldRoot = styled.div`
 	flex: 1;
