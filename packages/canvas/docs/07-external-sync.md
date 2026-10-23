@@ -11,14 +11,44 @@ round-trip of "canvas → host" saves are handled.
 
 The parent (host) passes the latest `CanvasDoc` in via Props. `useSyncExternalDoc`
 (`controllers/hooks/useSyncExternalDoc.ts`) detects that change, converts it to
-State with `canvasToState`, and dispatches `SYNC_EXTERNAL`.
+State with `canvasToStateReusing`, and dispatches `SYNC_EXTERNAL` with that state and
+the doc itself.
 
 Skip conditions:
 
 - **Initial mount**: The reducer's initialization already used the same doc, so this is skipped
   (dispatching here would produce a redundant history entry).
-- **Doc with identical content**: `isSameCanvasDocContent` compares against the current `history.present`,
-  and if they are identical the sync is skipped. This avoids aborting an in-progress gesture, clearing UI state, or creating a meaningless history entry.
+- **Doc with identical content**: the doc is compared with the current `history.present`'s doc,
+  key order aside, and if they are identical the sync is skipped. This avoids aborting an in-progress gesture, clearing UI state, or creating a meaningless history entry.
+
+### Keeping the objects an external change leaves alone
+
+An external change usually touches a few objects, so the doc is not rebuilt whole.
+`canvasToStateReusing` (`states/canvas/CanvasMapper.ts`) makes the same walk as
+`canvasToState`, and compares each incoming object with the node of the same id in the
+present entry's doc (`resolveDocSnapshot`) as JSON, key order aside (`isSameJsonValue`).
+The same walk answers the identical-content skip above.
+
+- **An object** keeps its live state when its node is equal, it sits under the same
+  parent, and the live state is still the entry's (`objects[id] === source.objects[id]`).
+  A state that moved on since (a drag preview, a re-measure after a font load) is
+  rebuilt.
+- **A group** keeps its state only when its own fields are equal and every member kept
+  its state, in the same order. Otherwise the group is rebuilt (its bounds computed
+  again) and each member is judged on its own.
+- **Opaque objects** are placed afresh every time, as `canvasToState` does.
+- **Font generation**: when the entry was measured under an older text measurement
+  generation, each kept state goes through its content resizer again.
+
+A kept state equals what a rebuild gives: exactly so when the entry's doc is the
+host's own (`openedDoc`, see below), and by the mapper round trip
+(`toState(toDoc(state))` equals `state`) after a local commit. Kept states are
+never written to. `LOAD_DOCUMENT` builds with plain `canvasToState`: the objects of
+another document must not be mixed with the current one's, even under the same ids.
+
+The entry `SYNC_EXTERNAL` and `LOAD_DOCUMENT` create holds the doc as the host passed
+it (`openedDoc`, see [State Update Flow](./06-state-update-flow.md)), so the next sync
+is compared with exactly that doc, and undoing back to the entry saves it verbatim.
 
 Before ingestion, `resetGestureState()` discards any in-progress gesture.
 

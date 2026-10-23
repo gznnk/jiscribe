@@ -103,6 +103,7 @@ describe("canvasReducer: objects of a type the canvas does not carry", () => {
 				registries.objectMapper,
 				registries.objectContentResizer,
 			),
+			doc: docWithUnknownObject,
 		});
 		expect(rootIdsOf(savedDoc(synced))).toEqual(
 			rootIdsOf(docWithUnknownObject),

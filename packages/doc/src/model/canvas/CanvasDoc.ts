@@ -26,7 +26,7 @@ export type CanvasDocV1 = {
 	 * path (`canvasToDoc`) drops it, because CanvasState has no place to hold it and
 	 * reintroducing a persisted schema pointer only re-creates the confusion the removal
 	 * was meant to end. So "edit a `$schema` file and the line disappears on save" is
-	 * intended behavior, not a bug. `isSameCanvasDocContent` likewise ignores it.
+	 * intended behavior, not a bug. The canvas's external-sync comparison likewise ignores it.
 	 */
 	$schema?: string;
 	version: 1;

@@ -1,3 +1,4 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import {
 	normalizeRichText,
 	richTextToPlain,
@@ -444,7 +445,7 @@ export const createCanvasReducer =
 				// usable: the current present moves onto past and the edit becomes
 				// undoable like any local commit.
 				return reconcileSelection(
-					adoptDocumentState(state, action.payload, [
+					adoptDocumentState(state, action.payload, action.doc, [
 						...state.history.past,
 						dropDocCache(state.history.present),
 					]),
@@ -457,7 +458,7 @@ export const createCanvasReducer =
 				// them would restore the old contents under the new document's name
 				// (see LoadDocumentAction).
 				return reconcileSelection(
-					adoptDocumentState(state, action.payload, []),
+					adoptDocumentState(state, action.payload, action.doc, []),
 					registries.objectPartKind,
 				);
 			}
@@ -621,6 +622,10 @@ export const createCanvasReducer =
  * old objects is reset with them; the viewport alone survives, since it belongs
  * to the person looking rather than to the document.
  *
+ * @param payload - The state of `doc`
+ * @param doc - The document as the host passed it, held as the new entry's
+ *   `openedDoc`: saving or comparing the entry answers the host's own doc, not
+ *   a rebuild of it
  * @param past - The undo stack to keep, capped here at the newest 50 entries.
  *   The one thing the two actions disagree on: an external edit to the same
  *   document keeps the stack, another document drops it (pass `[]`)
@@ -628,6 +633,7 @@ export const createCanvasReducer =
 const adoptDocumentState = (
 	state: CanvasControllerState,
 	payload: CanvasState,
+	doc: CanvasDoc,
 	past: readonly DocSnapshot[],
 ): CanvasControllerState => ({
 	...state,
@@ -641,7 +647,7 @@ const adoptDocumentState = (
 	historyCoalesce: { recorded: null, pending: null },
 	history: {
 		past: past.slice(-50),
-		present: createDocSnapshotFromState(payload),
+		present: createDocSnapshotFromState(payload, doc),
 		// Cleared either way: a redo would reapply an edit that the incoming
 		// document knows nothing about.
 		future: [],

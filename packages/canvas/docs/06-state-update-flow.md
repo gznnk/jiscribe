@@ -77,9 +77,10 @@ object maps by reference too, so boxes a re-measure renewed since do not read as
   read (the save, the external-sync comparison) and memoizes it on the entry. An entry leaving
   `present` is replaced by a copy without it (`dropDocCache`), never written to, so past and
   future hold state only.
-- **The initial entry keeps the opened document.** It holds the host's doc verbatim
-  (`openedDoc`) for its whole life, so undoing back to it saves the host's own bytes, and an
-  echo of them is recognized as the same content.
+- **An entry the host's doc created keeps that doc.** The initial entry and those
+  `SYNC_EXTERNAL` / `LOAD_DOCUMENT` create hold the host's doc verbatim (`openedDoc`) for
+  their whole life, so undoing back to one saves the host's own bytes, and an echo of them
+  is recognized as the same content.
 - **An entry's identity is its `source`.** Dropping the cache yields a new entry object, so
   a history mark (`ref.current.history.mark()`) and `REVERT_HISTORY` pin the `source`.
 - **Font generation.** Each entry records the text measurement generation it was created
@@ -107,6 +108,8 @@ External changes are treated as history boundaries. Rather than going through
 setting the new doc as `present`), and `future` is cleared.
 UI state such as selection and in-progress operations is also explicitly reset (only the
 viewport is preserved).
+Objects the change leaves alone enter the new `present` as the same references (see
+[External Sync / VSCode Integration](./07-external-sync.md)).
 Fold-backs of the canvas's own save are filtered out before reaching the reducer, so every
 `SYNC_EXTERNAL` seen here is a genuine external change. For how fold-backs are identified, see
 [External Sync / VSCode Integration](./07-external-sync.md).

@@ -69,9 +69,10 @@ undo / redo / revert はその `source` をそのまま戻す（`restoreHistoryS
   （保存・外部同期の比較）で組み立ててエントリにメモ化する。`present` を離れるエントリは
   書き換えず、キャッシュを外した複製（`dropDocCache`）に置き換えるので、past と future は
   状態だけを持つ。
-- **初期エントリは開いた文書を持ち続ける。**ホストの文書をそのまま（`openedDoc`）生涯
-  持つので、そこまで undo すればホストのバイト列そのものが保存され、そのエコーも同じ内容と
-  認識される。
+- **ホストの文書から作ったエントリはその文書を持ち続ける。**初期エントリと、
+  `SYNC_EXTERNAL` / `LOAD_DOCUMENT` が作るエントリは、ホストの文書をそのまま（`openedDoc`）
+  生涯持つので、そこまで undo すればホストのバイト列そのものが保存され、そのエコーも同じ
+  内容と認識される。
 - **エントリの同一性は `source` で決まる。**キャッシュを外すとエントリのオブジェクトは
   新しくなるので、履歴のマーク（`ref.current.history.mark()`）と `REVERT_HISTORY` は
   `source` を指す。
@@ -96,6 +97,7 @@ undo / redo / revert はその `source` をそのまま戻す（`restoreHistoryS
 外部からの変更は履歴の境界として扱う。`recordHistoryIfNeeded` を通さずに
 `past` を直接積み（`present` を `past` に移して新 doc を `present` に）、`future` をクリアする。
 あわせて選択・進行中の操作など UI state も明示的にリセットする（viewport のみ維持）。
+変更が触れないオブジェクトは同じ参照のまま新しい `present` に入る（[外部同期・VSCode 連携](./07-external-sync.ja.md) 参照）。
 自分の保存の折り返し（fold-back）は reducer に届く前に除外されるため、ここに来る `SYNC_EXTERNAL` は
 常に本物の外部変更である。折り返しの識別方法は [外部同期・VSCode 連携](./07-external-sync.ja.md) を参照。
 

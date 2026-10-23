@@ -69,6 +69,7 @@ const adoptDoc = (
 		registries.objectMapper,
 		registries.objectContentResizer,
 	),
+	doc,
 });
 
 describe("canvasReducer / selection.part reconciliation", () => {

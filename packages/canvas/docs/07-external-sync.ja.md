@@ -9,15 +9,40 @@ canvas は VSCode 拡張の Webview として動くとき、ホスト（拡張�
 ## 取り込み：useSyncExternalDoc / SYNC_EXTERNAL
 
 親（ホスト）から最新の `CanvasDoc` が Props で渡る。`useSyncExternalDoc`
-（`controllers/hooks/useSyncExternalDoc.ts`）がその変更を検知し、`canvasToState` で
-State に変換して `SYNC_EXTERNAL` を dispatch する。
+（`controllers/hooks/useSyncExternalDoc.ts`）がその変更を検知し、`canvasToStateReusing` で
+State に変換して、その State と doc 自身を載せた `SYNC_EXTERNAL` を dispatch する。
 
 スキップ条件:
 
 - **初回マウント**: reducer の初期化で同じ doc を使用済みなので skip
   （dispatch すると冗長な履歴エントリが生まれる）。
-- **内容が同一の doc**: `isSameCanvasDocContent` で現在の `history.present` と比較し、
+- **内容が同一の doc**: 現在の `history.present` の doc とキー順を無視して比較し、
   同一なら skip。進行中のジェスチャー中断・UI state クリア・無意味な履歴エントリを避ける。
+
+### 外部変更が触れないオブジェクトを保つ
+
+外部変更が触れるのはたいてい数個のオブジェクトなので、doc を丸ごと作り直さない。
+`canvasToStateReusing`（`states/canvas/CanvasMapper.ts`）は `canvasToState` と同じ走査で、
+届いた各オブジェクトを present エントリの doc（`resolveDocSnapshot`）の同じ id のノードと
+JSON としてキー順を無視して比べる（`isSameJsonValue`）。上の同一内容の skip もこの走査で判定する。
+
+- **オブジェクト**は、ノードが等しく、親が同じで、ライブの状態がエントリのもののまま
+  （`objects[id] === source.objects[id]`）なら、ライブの状態を保つ。その後に進んだ状態
+  （ドラッグのプレビュー、フォント到着後の再計測）は作り直す。
+- **グループ**は、自身のフィールドが等しく、全メンバーが同じ順で状態を保ったときだけ状態を
+  保つ。それ以外はグループを作り直し（境界も計算し直す）、メンバーは個別に判定する。
+- **不透明オブジェクト**は `canvasToState` と同じく毎回置き直す。
+- **フォント世代**: エントリが古いテキスト計測世代で測られていれば、保った状態も
+  content resizer に通し直す。
+
+保った状態は作り直したものと等しい。エントリの doc がホスト自身のもの（`openedDoc`、
+下記）なら厳密に、ローカルのコミット後ならマッパーの往復（`toState(toDoc(state))` が
+`state` に等しい）によって。保った状態には書き込まない。`LOAD_DOCUMENT` は素の
+`canvasToState` で作る。同じ id でも、別ドキュメントのオブジェクトを今のものと混ぜないため。
+
+`SYNC_EXTERNAL` と `LOAD_DOCUMENT` が作るエントリは、ホストが渡した doc をそのまま持つ
+（`openedDoc`、[状態更新フロー](./06-state-update-flow.ja.md) 参照）。次の同期はまさにその doc と
+比べられ、そのエントリまで undo すればそれがそのまま保存される。
 
 取り込み前に `resetGestureState()` で進行中のジェスチャーを破棄する。
 

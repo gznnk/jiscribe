@@ -1,13 +1,16 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import { readTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import { type Dispatch, useEffect, useRef } from "react";
 
 import { useLatestRef } from "./useLatestRef";
-import { canvasToState } from "../../states/canvas/CanvasMapper";
+import {
+	canvasToState,
+	canvasToStateReusing,
+} from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import type { createSelfSaveNonceTracker } from "./utils/createSelfSaveNonceTracker";
-import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
 import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";
 
 export type UseSyncExternalDocParams = {
@@ -22,7 +25,7 @@ export type UseSyncExternalDocParams = {
 	 * doc an external edit to the same document.
 	 */
 	docLoadId: string | undefined;
-	/** Canvas's current state (used for content comparison) */
+	/** Canvas's current state (compared with, and reused from, on each incoming doc) */
 	canvasState: CanvasControllerState;
 	/** Canvas reducer dispatch */
 	dispatch: Dispatch<CanvasAction>;
@@ -85,6 +88,7 @@ export const useSyncExternalDoc = ({
 			dispatch({
 				type: "LOAD_DOCUMENT",
 				payload: canvasToState(canvasDoc, objectMapper, objectContentResizer),
+				doc: canvasDoc,
 			});
 			return;
 		}
@@ -96,26 +100,33 @@ export const useSyncExternalDoc = ({
 		if (selfSaveNonceTracker.consumeIfSelfSave(syncNonce)) {
 			return;
 		}
-		// Content-identical doc (e.g. the parent re-created the object): skip
-		// entirely. Proceeding would interrupt an in-progress gesture, clear all UI
-		// state, and push a redundant history entry even though nothing changed.
-		if (
-			isSameCanvasDocContent(
-				canvasDoc,
-				resolveDocSnapshot(stateRef.current.history.present, objectMapper),
-			)
-		) {
-			return;
-		}
-		const newState = canvasToState(
+		// One pass both compares the doc with the one on screen and builds its
+		// state, keeping every object the change leaves alone (canvasToStateReusing).
+		const { history, objects } = stateRef.current;
+		const { state: newState, isSameAsReference } = canvasToStateReusing(
 			canvasDoc,
 			objectMapper,
 			objectContentResizer,
+			{
+				referenceDoc: resolveDocSnapshot(history.present, objectMapper),
+				committedObjects: history.present.source.objects,
+				liveObjects: objects,
+				remeasure:
+					history.present.textMeasurementGeneration !==
+					readTextMeasurementGeneration(),
+			},
 		);
+		// Content-identical doc (e.g. the parent re-created the object): skip
+		// entirely. Proceeding would interrupt an in-progress gesture, clear all UI
+		// state, and push a redundant history entry even though nothing changed.
+		if (isSameAsReference) {
+			return;
+		}
 		resetGestureState();
 		dispatch({
 			type: "SYNC_EXTERNAL",
 			payload: newState,
+			doc: canvasDoc,
 		});
 	}, [
 		canvasDoc,

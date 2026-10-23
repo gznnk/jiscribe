@@ -208,9 +208,10 @@ export type DocSnapshot = {
 	 */
 	readonly textMeasurementGeneration: number;
 	/**
-	 * The document the canvas was opened on, held verbatim for the entry's whole
-	 * life, so undoing back to it saves the host's own bytes rather than their
-	 * normalized rebuild. Set on the initial entry only; null on every other.
+	 * The document the entry was adopted from, held verbatim for the entry's
+	 * whole life, so undoing back to it saves the host's own bytes rather than
+	 * their normalized rebuild. Set on the entries the host's doc created (the
+	 * initial one, SYNC_EXTERNAL, LOAD_DOCUMENT); null on every committed one.
 	 */
 	readonly openedDoc: CanvasDoc | null;
 	/** The Doc of `source`, memoized on first resolve; null until then, on every past or future entry, and while `openedDoc` answers instead. */
