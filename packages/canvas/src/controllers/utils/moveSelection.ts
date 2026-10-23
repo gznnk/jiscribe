@@ -1,6 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { createCowObjects } from "./cowObjects";
+import { collectCowChangedKeys, createCowObjects } from "./cowObjects";
 import { moveObjectTree } from "./moveObjectTree";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
@@ -68,19 +68,21 @@ export function moveSelection(
 
 	// COW view: per-frame drag clones must not copy the whole map (#213)
 	const objects = createCowObjects(srcObjects);
-	const translatedIds = new Set<string>();
 
 	// Each selected object is translated through the registry; groups additionally propagate
 	// the move to their descendants. (read: srcObjects / write: objects)
 	for (const selectedId of selectedIds) {
-		moveObjectTree(
-			selectedId,
-			srcObjects,
-			objects,
-			delta,
-			objectBehavior,
-			translatedIds,
-		);
+		moveObjectTree(selectedId, srcObjects, objects, delta, objectBehavior);
+	}
+
+	// Read off the view's own record of what was written; a no-op moveByDelta
+	// writes back the same object and drops out. A fresh view always shares
+	// srcObjects' base, so the null fallback (nothing shifted) is never taken.
+	const translatedIds = new Set<string>();
+	for (const id of collectCowChangedKeys(objects, srcObjects) ?? []) {
+		if (objects[id] !== srcObjects[id]) {
+			translatedIds.add(id);
+		}
 	}
 
 	const multiSelectGroup: GroupState | null = srcMultiSelectGroup
