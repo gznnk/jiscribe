@@ -1,10 +1,12 @@
+import { calcPolyBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { MIN_GROUP_DIMENSION } from "../../../states/utils/groupDimensions";
 import { calcUnionBoundingBox } from "../../utils/buildObjectBBoxes";
-import { calcObjectsBoundingBox } from "../../utils/calcObjectBoundingBox";
+import { collectObjectsPoints } from "../../utils/collectObjectPoints";
+import type { ConnectorRouteRegistries } from "../../utils/VisualExtentRegistries";
 
 export const MULTI_SELECT_GROUP = {
 	/** Fixed ID for the temporary multi-select group object */
@@ -18,8 +20,14 @@ export const MULTI_SELECT_GROUP = {
  * nested groups) and returns an axis-aligned group (rotation 0, no flip) centered on it.
  * Returns null when one or fewer objects are selected, or when no valid bounds are found.
  *
+ * The bounds come from the same points the resize drag re-derives them from
+ * (collectObjectPoints), so the frame does not jump on the drag's first frame:
+ * connectors count along their drawn route, and their labels are left out.
+ *
  * @param selectedIds - IDs of the currently selected objects
  * @param allObjects - All objects, used to resolve children and geometry
+ * @param registries - Per-canvas registries a selected connector's path is resolved
+ *   through, as the renderer draws it; not read on the `precomputedBBoxes` path
  * @param existingMultiSelectGroup - Prior multi-select group, whose lockAspectRatio is preserved
  * @param precomputedBBoxes - Optional "id → root-level bbox" map (from DragStartSnapshot).
  *   When supplied, bounds are the union of the selected ids' precomputed bboxes instead of a
@@ -29,6 +37,7 @@ export const MULTI_SELECT_GROUP = {
 export function createMultiSelectGroup(
 	selectedIds: readonly string[],
 	allObjects: Record<string, ObjectState>,
+	registries: ConnectorRouteRegistries,
 	existingMultiSelectGroup?: GroupState | null,
 	precomputedBBoxes?: Record<string, BoundingBox>,
 ): GroupState | null {
@@ -38,7 +47,9 @@ export function createMultiSelectGroup(
 
 	const bounds = precomputedBBoxes
 		? calcUnionBoundingBox(selectedIds, precomputedBBoxes)
-		: calcObjectsBoundingBox(selectedIds, allObjects);
+		: calcPolyBoundingBox(
+				collectObjectsPoints(selectedIds, allObjects, registries),
+			);
 
 	// No valid points were found
 	if (!bounds) {

@@ -23,7 +23,7 @@ export const UngroupCommand: ExecutableCommand = {
 		);
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		const updatedObjects = { ...state.objects };
 		let updatedRootIds = [...state.rootIds];
 		const promotedChildIds: string[] = [];
@@ -81,6 +81,7 @@ export const UngroupCommand: ExecutableCommand = {
 			multiSelectGroup: createMultiSelectGroup(
 				promotedChildIds,
 				updatedObjects,
+				registries,
 				null,
 			),
 			objectMenuOpenId: null,

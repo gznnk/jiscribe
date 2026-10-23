@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { collectObjectPoints } from "../collectObjectPoints";
+
+const registries = createTestRegistries();
 
 const rect = (
 	id: string,
@@ -58,7 +61,9 @@ const sortPoints = (points: Array<{ x: number; y: number }>) =>
 describe("collectObjectPoints", () => {
 	it("returns the four corners of an axis-aligned rect", () => {
 		const obj = rect("r", 100, 100, 100, 50);
-		expect(sortPoints(collectObjectPoints(obj, { r: obj }))).toEqual([
+		expect(
+			sortPoints(collectObjectPoints(obj, { r: obj }, registries)),
+		).toEqual([
 			{ x: 50, y: 75 },
 			{ x: 50, y: 125 },
 			{ x: 150, y: 75 },
@@ -69,7 +74,9 @@ describe("collectObjectPoints", () => {
 	it("returns transformed corners for a rotated rect", () => {
 		// A 100x50 rect rotated 90 degrees: corners land on a 50x100 extent
 		const obj = rect("r", 100, 100, 100, 50, 90);
-		expect(sortPoints(collectObjectPoints(obj, { r: obj }))).toEqual([
+		expect(
+			sortPoints(collectObjectPoints(obj, { r: obj }, registries)),
+		).toEqual([
 			{ x: 75, y: 50 },
 			{ x: 75, y: 150 },
 			{ x: 125, y: 50 },
@@ -83,7 +90,7 @@ describe("collectObjectPoints", () => {
 			{ x: 50, y: 80 },
 		];
 		const obj = poly("pl", points);
-		expect(collectObjectPoints(obj, { pl: obj })).toEqual(points);
+		expect(collectObjectPoints(obj, { pl: obj }, registries)).toEqual(points);
 	});
 
 	it("recursively collects points from group children", () => {
@@ -92,7 +99,7 @@ describe("collectObjectPoints", () => {
 		const innerGroup = group("inner", ["pl"]);
 		const outerGroup = group("outer", ["r", "inner", "missing"]);
 		const objects = { r, pl, inner: innerGroup };
-		const collected = collectObjectPoints(outerGroup, objects);
+		const collected = collectObjectPoints(outerGroup, objects, registries);
 		expect(collected).toHaveLength(5); // 4 rect corners + 1 poly vertex
 		expect(collected).toContainEqual({ x: -5, y: -5 });
 	});
@@ -100,7 +107,7 @@ describe("collectObjectPoints", () => {
 	it("returns resolved endpoints plus waypoints for a connector", () => {
 		const connector = freeConnector({ points: [{ x: 60, y: 200 }] });
 		expect(
-			collectObjectPoints(connector, { "connector-1": connector }),
+			collectObjectPoints(connector, { "connector-1": connector }, registries),
 		).toEqual([
 			{ x: 10, y: 20 },
 			{ x: 60, y: 200 },
@@ -116,12 +123,14 @@ describe("collectObjectPoints", () => {
 			},
 		});
 		expect(
-			collectObjectPoints(connector, { "connector-1": connector }),
+			collectObjectPoints(connector, { "connector-1": connector }, registries),
 		).toEqual([]);
 	});
 
 	it("returns an empty array for an object of unknown shape", () => {
 		const unknownObj = { id: "u", type: "mystery" } as unknown as ObjectState;
-		expect(collectObjectPoints(unknownObj, { u: unknownObj })).toEqual([]);
+		expect(
+			collectObjectPoints(unknownObj, { u: unknownObj }, registries),
+		).toEqual([]);
 	});
 });

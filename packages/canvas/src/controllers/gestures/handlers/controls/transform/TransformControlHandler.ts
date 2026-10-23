@@ -347,10 +347,12 @@ export class TransformControlHandler extends ControlStrategy {
 						nextState.objects,
 						startGroup,
 						updatedGroup,
+						registries,
 					)
 				: calcMultiSelectGroupBounds(
 						state.selection.objectIds,
 						nextState.objects,
+						registries,
 						nextState.multiSelectGroup,
 					);
 			if (recalculatedBounds && nextState.multiSelectGroup) {

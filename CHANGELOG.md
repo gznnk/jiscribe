@@ -179,6 +179,15 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   stencil places, `S3`), picking another icon replaces it with the new one's
   (`Lambda`). A label that was edited, or emptied, is left as it is.
 
+### Fixed
+
+- **The frame around a multi-selection follows the connectors as they are
+  drawn.** It used to route them without the shapes' outlines and declared
+  anchors, so a connector ending on a diamond, or the stubs of an orthogonal
+  route between two ER entities' columns, could stick out of the frame. A
+  connector's label is now left out of the frame from the start, so the frame
+  no longer shrinks on the first frame of a resize.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security

@@ -316,6 +316,7 @@ function handleObjectDragStart(
 				? createMultiSelectGroup(
 						selectedIds,
 						eventStartObjects,
+						registries,
 						canvasState.multiSelectGroup,
 					)
 				: null;
@@ -457,6 +458,7 @@ export const ObjectEventHandler: GestureHandler = {
 				nextState,
 				targetObject,
 				event.mods,
+				registries,
 			);
 			// A click that leaves the selection as it was, on the object that is already
 			// the whole selection, addresses a part inside it instead. Any modifier

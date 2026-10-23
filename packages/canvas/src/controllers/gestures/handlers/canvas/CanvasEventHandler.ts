@@ -112,7 +112,11 @@ export const CanvasEventHandler: GestureHandler = {
 			return {
 				// Selecting first: the menu has to act on what was pressed
 				// (see selectContextMenuTarget).
-				...selectContextMenuTarget(commitTextEditIfNeeded(nextState), event),
+				...selectContextMenuTarget(
+					commitTextEditIfNeeded(nextState),
+					event,
+					registries,
+				),
 				contextMenuPosition: {
 					clientX: event.clientLast.x,
 					clientY: event.clientLast.y,
@@ -132,7 +136,7 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					// Selecting first: the menu has to act on what was clicked
 					// (see selectContextMenuTarget).
-					...selectContextMenuTarget(nextState, event),
+					...selectContextMenuTarget(nextState, event, registries),
 					contextMenuPosition: {
 						clientX: event.clientLast.x,
 						clientY: event.clientLast.y,
@@ -424,6 +428,7 @@ export const CanvasEventHandler: GestureHandler = {
 					multiSelectGroup = createMultiSelectGroup(
 						selectedIds,
 						nextState.objects,
+						registries,
 						state.multiSelectGroup,
 						bboxes,
 					);

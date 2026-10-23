@@ -242,6 +242,7 @@ export const createCanvasReducer =
 					multiSelectGroup: createMultiSelectGroup(
 						selectedIds,
 						committedResult.objects,
+						registries,
 						committedResult.multiSelectGroup,
 					),
 					objectMenuOpenId: null,

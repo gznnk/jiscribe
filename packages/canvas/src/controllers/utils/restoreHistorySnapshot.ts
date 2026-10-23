@@ -130,6 +130,7 @@ export const restoreHistorySnapshot = (
 		multiSelectGroup: createMultiSelectGroup(
 			selectedIds,
 			restoredState.objects,
+			registries,
 			state.multiSelectGroup,
 		),
 		viewport: calcViewportToRevealHistoryChange(

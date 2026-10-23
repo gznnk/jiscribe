@@ -136,7 +136,12 @@ export const handlePaste = (
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
 		selection: { objectIds: newObjectIds, part: null },
-		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),
+		multiSelectGroup: createMultiSelectGroup(
+			newObjectIds,
+			mergedObjects,
+			registries,
+			null,
+		),
 		contextMenuPosition: null,
 		commitVersion: state.commitVersion + 1,
 	};

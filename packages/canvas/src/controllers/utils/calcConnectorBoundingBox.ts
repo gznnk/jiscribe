@@ -5,7 +5,10 @@ import {
 import { calcPolyBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
-import type { VisualExtentRegistries } from "./VisualExtentRegistries";
+import type {
+	ConnectorRouteRegistries,
+	VisualExtentRegistries,
+} from "./VisualExtentRegistries";
 import {
 	calcConnectorPathBound,
 	listConnectorPathPoints,
@@ -93,6 +96,31 @@ export const collectConnectorPoints = (
 };
 
 /**
+ * {@link collectConnectorPoints} through a whole registries bundle: the path as
+ * the renderer draws it, read from the route cache it fills.
+ *
+ * @param connector - The connector whose path is collected
+ * @param objects - The object map, used to resolve the endpoint owners
+ * @param registries - Per-canvas registries; a bundle with `objectVisualBounds`
+ *   (VisualExtentRegistries, ICanvasRegistries) is accepted and that one is not read
+ * @returns null if an endpoint cannot be resolved; otherwise a new array whose point
+ *   objects are shared with the renderer's cached route — copy a point before writing to it
+ */
+export const collectDrawnConnectorPoints = (
+	connector: ConnectorState,
+	objects: Record<string, ObjectState>,
+	registries: ConnectorRouteRegistries,
+): Point[] | null =>
+	collectConnectorPoints(
+		connector,
+		objects,
+		registries.objectOutline,
+		registries.objectAnchorRegion,
+		registries.objectExtraConnectPoints,
+		registries.objectGeometryKey,
+	);
+
+/**
  * Two opposite corners of the label box, which is enough to widen an
  * axis-aligned bound (the label is never rotated). Empty when there is nothing
  * to draw or the anchor is unresolvable.
@@ -148,14 +176,7 @@ export const calcConnectorBoundingBox = (
 	visualExtentRegistries?: VisualExtentRegistries | null,
 ): BoundingBox | null => {
 	const connectorPoints = visualExtentRegistries
-		? collectConnectorPoints(
-				connector,
-				objects,
-				visualExtentRegistries.objectOutline,
-				visualExtentRegistries.objectAnchorRegion,
-				visualExtentRegistries.objectExtraConnectPoints,
-				visualExtentRegistries.objectGeometryKey,
-			)
+		? collectDrawnConnectorPoints(connector, objects, visualExtentRegistries)
 		: collectConnectorPoints(connector, objects);
 	if (!connectorPoints) {
 		return null;
