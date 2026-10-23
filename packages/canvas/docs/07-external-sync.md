@@ -42,8 +42,11 @@ The same walk answers the identical-content skip above.
 
 A kept state equals what a rebuild gives: exactly so when the entry's doc is the
 host's own (`openedDoc`, see below), and by the mapper round trip
-(`toState(toDoc(state))` equals `state`) after a local commit. Kept states are
-never written to. `LOAD_DOCUMENT` builds with plain `canvasToState`: the objects of
+(`toState(toDoc(state))` equals `state`) after a local commit. One exception: an
+auto-height box whose height nothing derives keeps its last measured height
+(`resizeAutoHeightStateToContent`), where a rebuild starts from the one-line
+fallback; undo and `REMEASURE_TEXT` keep it the same way, so nothing jumps. Kept
+states are never written to. `LOAD_DOCUMENT` builds with plain `canvasToState`: the objects of
 another document must not be mixed with the current one's, even under the same ids.
 
 The entry `SYNC_EXTERNAL` and `LOAD_DOCUMENT` create holds the doc as the host passed

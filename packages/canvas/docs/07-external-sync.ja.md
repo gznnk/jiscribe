@@ -37,7 +37,10 @@ JSON としてキー順を無視して比べる（`isSameJsonValue`）。上の�
 
 保った状態は作り直したものと等しい。エントリの doc がホスト自身のもの（`openedDoc`、
 下記）なら厳密に、ローカルのコミット後ならマッパーの往復（`toState(toDoc(state))` が
-`state` に等しい）によって。保った状態には書き込まない。`LOAD_DOCUMENT` は素の
+`state` に等しい）によって。例外が 1 つある。何からも高さが決まらない自動高さの箱は、
+保つと最後に測った高さのまま（`resizeAutoHeightStateToContent`）、作り直すと 1 行分の
+フォールバックから始まる。undo と `REMEASURE_TEXT` も同じく保つので、表示は跳ばない。
+保った状態には書き込まない。`LOAD_DOCUMENT` は素の
 `canvasToState` で作る。同じ id でも、別ドキュメントのオブジェクトを今のものと混ぜないため。
 
 `SYNC_EXTERNAL` と `LOAD_DOCUMENT` が作るエントリは、ホストが渡した doc をそのまま持つ

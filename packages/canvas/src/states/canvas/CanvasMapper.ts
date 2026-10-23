@@ -114,6 +114,10 @@ export type ReusingCanvasStateResult = {
  * state the canvas holds: exactly so when `referenceDoc` is the document the
  * states were built from, and by the mapper round trip
  * (`toState(toDoc(state))` equals `state`) when it was converted from them.
+ * One exception: an auto-height box whose height nothing derives keeps its
+ * last measured height (resizeAutoHeightStateToContent), where a rebuild
+ * starts from the one-line fallback; undo and REMEASURE_TEXT keep it the same
+ * way, so nothing jumps.
  *
  * @param doc - A doc that has passed `createCanvasParser` (see {@link canvasToState})
  * @param mapper - The per-canvas object mapper registry, the one the reused states were built with

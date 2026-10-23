@@ -1,13 +1,25 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { createCanvasParser } from "@jiscribe/doc/parse";
-import { describe, expect, it } from "vitest";
+import type { TextMeasurement } from "@jiscribe/doc/text/measure/TextMeasurement";
+import {
+	advanceTextMeasurementGeneration,
+	offerTextMeasurement,
+	readTextMeasurementGeneration,
+	resetTextMeasurementForTests,
+} from "@jiscribe/doc/text/measure/textMeasurementSlot";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { deepFreezeState } from "../../../controllers/__tests__/support/deepFreezeState";
+import type { CanvasControllerState } from "../../../controllers/CanvasTypes";
+import type { CanvasAction } from "../../../controllers/reducer/CanvasActions";
+import { createCanvasReducer } from "../../../controllers/reducer/canvasReducer";
 import { createInitialControllerState } from "../../../controllers/reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../controllers/registries/createCanvasRegistries";
 import {
 	createDocSnapshotFromState,
 	resolveDocSnapshot,
 } from "../../../controllers/utils/resolveDocSnapshot";
+import type { ObjectState } from "../../objects/base/ObjectState";
 import {
 	canvasToDoc,
 	canvasToState,
@@ -21,6 +33,30 @@ import {
 
 const registries = createTestRegistries();
 const { objectMapper, objectContentResizer } = registries;
+const canvasReducer = createCanvasReducer(registries);
+
+/** Width per character per px of font size; raised by {@link loadWiderFace}. */
+let characterWidthRatio = 0.5;
+
+/** A renderer stand-in whose answers change when a face loads, so a re-measure is observable. */
+const switchingMeasurement: TextMeasurement = {
+	source: "renderer",
+	createMeasurer: (font) => (text) =>
+		text.length * font.fontSize * characterWidthRatio,
+};
+
+resetTextMeasurementForTests();
+offerTextMeasurement(switchingMeasurement);
+
+/** What the browser host does when a face finishes loading (Canvas, useDocFonts). */
+const loadWiderFace = (): void => {
+	characterWidthRatio = 0.9;
+	advanceTextMeasurementGeneration();
+};
+
+beforeEach(() => {
+	characterWidthRatio = 0.5;
+});
 
 type JsonNode = Record<string, unknown> & { id: string; type: string };
 
@@ -42,8 +78,12 @@ const leafDoc = (id: string, random: () => number): JsonNode => {
 	const x = Math.round(random() * 800);
 	const y = Math.round(random() * 600);
 	const roll = random();
-	if (roll < 0.4) {
+	if (roll < 0.2) {
 		return { id, type: "rect", x, y, width: 40, height: 30 };
+	}
+	if (roll < 0.4) {
+		// A body text, so toggleAutoHeight / toggleBold have something to act on
+		return { id, type: "rect", x, y, width: 80, height: 30, text: `Box ${id}` };
 	}
 	if (roll < 0.7) {
 		return { id, type: "ellipse", cx: x, cy: y, rx: 25, ry: 20 };
@@ -160,7 +200,7 @@ const applyRandomEdit = (root: JsonNode[], random: () => number): void => {
 	): void => {
 		siblings[siblings.indexOf(node)] = next;
 	};
-	const edit = Math.floor(random() * 11);
+	const edit = Math.floor(random() * 13);
 	switch (edit) {
 		case 0: {
 			const { node, siblings } = pick(leaves, random);
@@ -266,6 +306,30 @@ const applyRandomEdit = (root: JsonNode[], random: () => number): void => {
 			}
 			return;
 		}
+		case 10: {
+			const opaque = nodes.find(({ node }) => node.type === "hexagram");
+			if (opaque !== undefined) {
+				replaceNode(opaque.siblings, opaque.node, {
+					...opaque.node,
+					x: (opaque.node.x as number) + 1,
+				});
+			}
+			return;
+		}
+		case 11: {
+			// Move the opaque object into another container
+			const opaque = nodes.find(({ node }) => node.type === "hexagram");
+			if (opaque === undefined) {
+				return;
+			}
+			opaque.siblings.splice(opaque.siblings.indexOf(opaque.node), 1);
+			const target = pick(
+				containers.filter((container) => container !== opaque.siblings),
+				random,
+			);
+			target.splice(Math.floor(random() * (target.length + 1)), 0, opaque.node);
+			return;
+		}
 		default: {
 			// Same content, other key order: nothing to rebuild
 			const { node, siblings } = pick(nodes, random);
@@ -367,4 +431,240 @@ describe("canvasToStateReusing (property)", () => {
 			expect(reusedCount).toBeGreaterThan(TRIALS * 5);
 		},
 	);
+});
+
+/** Ids of every object of a kind, in map order. */
+const idsOfType = (
+	state: CanvasControllerState,
+	predicate: (objState: ObjectState) => boolean,
+): string[] =>
+	Object.values(state.objects)
+		.filter(predicate)
+		.map((objState) => objState.id);
+
+/**
+ * One random local edit, committed through the reducer as the canvas would:
+ * a selection, then a command. A command that does not apply to what was
+ * picked leaves the state as it is, which is a case worth keeping too.
+ */
+const applyRandomLocalCommit = (
+	state: CanvasControllerState,
+	random: () => number,
+): CanvasControllerState => {
+	const groups = idsOfType(state, (objState) => objState.type === "group");
+	const texts = idsOfType(
+		state,
+		(objState) => objState.type === "text" || objState.type === "rect",
+	);
+	const rootLeaves = state.rootIds.filter(
+		(id) => !["group", "connector"].includes(state.objects[id].type),
+	);
+	const connectors = idsOfType(
+		state,
+		(objState) => objState.type === "connector",
+	);
+	const select = (ids: string[], ...commandIds: string[]): CanvasAction[] => [
+		{ type: "SET_SELECTION", ids },
+		...commandIds.map((commandId): CanvasAction => ({
+			type: "COMMAND",
+			commandId,
+		})),
+	];
+	const choices: (() => CanvasAction[])[] = [
+		// Moves include the rotated group whenever it is still there
+		() =>
+			select(
+				[pick(state.rootIds, random)],
+				pick(["move-right", "move-down"], random),
+			),
+		() => (groups.length > 0 ? select([pick(groups, random)], "ungroup") : []),
+		() =>
+			rootLeaves.length > 1
+				? select([rootLeaves[0], rootLeaves[rootLeaves.length - 1]], "group")
+				: [],
+		() => select([pick(texts, random)], "toggleAutoHeight"),
+		() => select([pick(texts, random)], "toggleTextLayout"),
+		() => select([pick(texts, random)], "toggleBold"),
+		() => select([pick(rootLeaves, random)], "duplicate"),
+		() =>
+			select(
+				[pick(connectors, random)],
+				pick(
+					["setRoutingStraight", "setRoutingOrthogonal", "swapArrows"],
+					random,
+				),
+			),
+	];
+	return pick(choices, random)().reduce(
+		(current, action) => canvasReducer(current, action),
+		state,
+	);
+};
+
+/** The base document opened, then edited locally 1–3 times. */
+const openAndEditLocally = (random: () => number): CanvasControllerState => {
+	let state = createInitialControllerState(
+		parse(createBaseDoc(random)),
+		registries,
+	);
+	const commitCount = 1 + Math.floor(random() * 3);
+	for (let index = 0; index < commitCount; index += 1) {
+		state = applyRandomLocalCommit(state, random);
+	}
+	// Frozen, so a write to a state the pass reuses throws
+	return deepFreezeState(state);
+};
+
+/** Builds `doc` reusing `state`, as useSyncExternalDoc does. */
+const buildReusing = (
+	state: CanvasControllerState,
+	doc: CanvasDoc,
+	liveObjects: Readonly<Record<string, ObjectState>> = state.objects,
+) =>
+	canvasToStateReusing(doc, objectMapper, objectContentResizer, {
+		referenceDoc: resolveDocSnapshot(state.history.present, objectMapper),
+		committedObjects: state.history.present.source.objects,
+		liveObjects,
+		remeasure:
+			state.history.present.textMeasurementGeneration !==
+			readTextMeasurementGeneration(),
+	});
+
+const savedDocOf = (state: CanvasControllerState): CanvasDoc =>
+	resolveDocSnapshot(state.history.present, objectMapper);
+
+/** The saved doc with random external edits, read back as the host would. */
+const editExternally = (doc: CanvasDoc, random: () => number): CanvasDoc => {
+	const incoming = cloneDoc(doc);
+	const editCount = 1 + Math.floor(random() * 4);
+	for (let index = 0; index < editCount; index += 1) {
+		applyRandomEdit(incoming.root as unknown as JsonNode[], random);
+	}
+	return parse(incoming);
+};
+
+describe("canvasToStateReusing after local commits (property)", () => {
+	const TRIALS = 150;
+
+	it("reads the saved doc echoed back as unchanged, keeping every object", () => {
+		let committedCount = 0;
+		for (let seed = 1; seed <= TRIALS; seed += 1) {
+			const local = openAndEditLocally(createRandom(seed));
+			if (local.history.past.length > 0) {
+				committedCount += 1;
+			}
+
+			const { state, isSameAsReference } = buildReusing(
+				local,
+				parse(savedDocOf(local)),
+			);
+
+			expect(isSameAsReference, `seed ${seed}`).toBe(true);
+			expect(Object.keys(state.objects).sort(), `seed ${seed}`).toEqual(
+				Object.keys(local.objects).sort(),
+			);
+			Object.entries(state.objects).forEach(([id, objState]) => {
+				expect(objState, `seed ${seed}: ${id}`).toBe(local.objects[id]);
+			});
+		}
+		// Guards against trials whose commands all missed
+		expect(committedCount).toBeGreaterThan(TRIALS / 2);
+	});
+
+	it("builds what canvasToState builds for the saved doc edited externally", () => {
+		let reusedCount = 0;
+		for (let seed = 1; seed <= TRIALS; seed += 1) {
+			const random = createRandom(seed);
+			const local = openAndEditLocally(random);
+			const incomingDoc = editExternally(savedDocOf(local), random);
+
+			const reused = buildReusing(local, incomingDoc);
+			const rebuilt = canvasToState(
+				incomingDoc,
+				objectMapper,
+				objectContentResizer,
+			);
+
+			expect(documentFields(reused.state), `seed ${seed}`).toStrictEqual(
+				documentFields(rebuilt),
+			);
+			expect(reused.isSameAsReference, `seed ${seed}`).toBe(
+				stringifySorted(incomingDoc) === stringifySorted(savedDocOf(local)),
+			);
+			reusedCount += Object.entries(reused.state.objects).filter(
+				([id, objState]) => objState === local.objects[id],
+			).length;
+		}
+		expect(reusedCount).toBeGreaterThan(TRIALS * 5);
+	});
+
+	it("rebuilds the objects whose live state moved on from the committed one", () => {
+		for (let seed = 1; seed <= TRIALS; seed += 1) {
+			const random = createRandom(seed);
+			const local = openAndEditLocally(random);
+			const incomingDoc = editExternally(savedDocOf(local), random);
+			// What a drag preview leaves in the live state
+			const divergedIds = [
+				pick(Object.keys(local.objects), random),
+				pick(Object.keys(local.objects), random),
+			];
+			const liveObjects = { ...local.objects };
+			divergedIds.forEach((id) => {
+				liveObjects[id] = { ...liveObjects[id], cx: 9999 } as ObjectState;
+			});
+
+			const reused = buildReusing(local, incomingDoc, liveObjects);
+
+			expect(documentFields(reused.state), `seed ${seed}`).toStrictEqual(
+				documentFields(
+					canvasToState(incomingDoc, objectMapper, objectContentResizer),
+				),
+			);
+			divergedIds.forEach((id) => {
+				expect(reused.state.objects[id], `seed ${seed}: ${id}`).not.toBe(
+					liveObjects[id],
+				);
+			});
+		}
+	});
+
+	it("re-measures what it keeps once a face loaded since the entry was measured", () => {
+		let remeasuredCount = 0;
+		for (let seed = 1; seed <= TRIALS; seed += 1) {
+			characterWidthRatio = 0.5;
+			const random = createRandom(seed);
+			const local = openAndEditLocally(random);
+			const incomingDoc = editExternally(savedDocOf(local), random);
+			loadWiderFace();
+
+			const reused = buildReusing(local, incomingDoc);
+			const rebuilt = canvasToState(
+				incomingDoc,
+				objectMapper,
+				objectContentResizer,
+			);
+
+			expect(documentFields(reused.state), `seed ${seed}`).toStrictEqual(
+				documentFields(rebuilt),
+			);
+			// Not vacuous: without the re-measure some kept object would differ
+			const stale = canvasToStateReusing(
+				incomingDoc,
+				objectMapper,
+				objectContentResizer,
+				{
+					referenceDoc: savedDocOf(local),
+					committedObjects: local.history.present.source.objects,
+					liveObjects: local.objects,
+					remeasure: false,
+				},
+			);
+			remeasuredCount += Object.keys(rebuilt.objects).filter(
+				(id) =>
+					stringifySorted(stale.state.objects[id]) !==
+					stringifySorted(rebuilt.objects[id]),
+			).length;
+		}
+		expect(remeasuredCount).toBeGreaterThan(0);
+	});
 });
