@@ -10,6 +10,12 @@ they hold.
 - `src/server.ts` — `createJiscribeMcpServer()`: every tool definition and the
   handshake `instructions`. Its header comment is the authoritative list of the
   tool families. `src/index.ts` only wires stdio and shutdown.
+- `src/runtime.ts` — `createJiscribeMcpRuntime()`: what every session of the
+  process shares (the host, the path locks, the callBarrier, the undo history,
+  and `open_canvas` / `close_canvas` themselves). A server given no runtime
+  makes its own and folds it when its client leaves; given one, its owner
+  folds it. `apps/desktop` builds one and shares it across its HTTP sessions,
+  plugging its windows in through `launchViewer` / `raiseVisibleViewer`.
 - `src/host/` — the HTTP + WebSocket host `open_canvas` starts. `canvasHost.ts`
   is wiring only: `viewerRegistry` (sockets, host lifetime),
   `viewerRequestBroker` (requestId round trips), `fileMirror` (the file on
