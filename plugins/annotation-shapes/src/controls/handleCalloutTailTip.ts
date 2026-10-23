@@ -6,17 +6,12 @@ import type {
 import {
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,
-	roundToDecimal,
-	snapToDirection,
 } from "@jiscribe/geometry";
 import type { OrthogonalDirection } from "@jiscribe/geometry";
 
-import { calcEdgeRatio } from "./calcEdgeRatio";
+import { calcEdgeDirectionAndPosition } from "./calcEdgeDirectionAndPosition";
 import type { CalloutTailSide } from "../schema/callout/CalloutDoc";
 import type { CalloutState } from "../state/callout/CalloutState";
-
-/** Decimal places for tail.position (a 0..1 ratio; 4 ≒ sub-pixel up to ~10k px boxes). */
-const TAIL_POSITION_PRECISION = 4;
 
 /** The tail side each snapped direction names. */
 const TAIL_SIDE_BY_DIRECTION: Record<OrthogonalDirection, CalloutTailSide> = {
@@ -38,7 +33,6 @@ export const handleCalloutTailTip = (
 	event: SelectionControlEvent,
 ): SelectionControlResult<CalloutState> => {
 	const startCallout = context.startObject;
-	const { width, height } = startCallout;
 
 	const radians = degreesToRadians(startCallout.rotation);
 	const localPoint = calcInverseAffineTransformedPoint(
@@ -51,21 +45,12 @@ export const handleCalloutTailTip = (
 		startCallout.cy,
 	);
 
-	// Side from the dominant axis (local coordinates normalized to half extents)
-	const normalizedX = width === 0 ? 0 : localPoint.x / (width / 2);
-	const normalizedY = height === 0 ? 0 : localPoint.y / (height / 2);
-	const side =
-		TAIL_SIDE_BY_DIRECTION[snapToDirection(normalizedX, normalizedY)];
-
-	// Position from the projection onto the chosen edge, clamped to [0, 1]
-	const rawPosition =
-		side === "top" || side === "bottom"
-			? calcEdgeRatio(localPoint.x, width)
-			: calcEdgeRatio(localPoint.y, height);
-	const position = roundToDecimal(
-		Math.min(Math.max(rawPosition, 0), 1),
-		TAIL_POSITION_PRECISION,
+	const { direction, position } = calcEdgeDirectionAndPosition(
+		localPoint,
+		startCallout.width,
+		startCallout.height,
 	);
+	const side = TAIL_SIDE_BY_DIRECTION[direction];
 
 	return { object: { ...startCallout, tail: { side, position } } };
 };

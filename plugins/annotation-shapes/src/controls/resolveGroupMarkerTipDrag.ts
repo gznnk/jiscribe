@@ -5,16 +5,11 @@ import type {
 import {
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,
-	roundToDecimal,
-	snapToDirection,
 } from "@jiscribe/geometry";
 
-import { calcEdgeRatio } from "./calcEdgeRatio";
+import { calcEdgeDirectionAndPosition } from "./calcEdgeDirectionAndPosition";
 import type { GroupMarkerDirection } from "../schema/shared/GroupMarkerFields";
 import type { GroupMarkerControlState } from "../state/shared/GroupMarkerControlState";
-
-/** Decimal places for tipPosition (a 0..1 ratio; 4 ≒ sub-pixel up to ~10k px boxes). */
-const TIP_POSITION_PRECISION = 4;
 
 /**
  * Normalizes a tip drag into the group marker model: `direction` from the
@@ -36,7 +31,6 @@ export const resolveGroupMarkerTipDrag = (
 	event: SelectionControlEvent,
 ): { direction: GroupMarkerDirection; tipPosition: number } => {
 	const startMarker = context.startObject;
-	const { width, height } = startMarker;
 
 	const radians = degreesToRadians(startMarker.rotation);
 	const localPoint = calcInverseAffineTransformedPoint(
@@ -49,20 +43,11 @@ export const resolveGroupMarkerTipDrag = (
 		startMarker.cy,
 	);
 
-	// Direction from the dominant axis (local coordinates normalized to half extents)
-	const normalizedX = width === 0 ? 0 : localPoint.x / (width / 2);
-	const normalizedY = height === 0 ? 0 : localPoint.y / (height / 2);
-	const direction = snapToDirection(normalizedX, normalizedY);
-
-	// Position from the projection onto the chosen edge, clamped to [0, 1]
-	const rawPosition =
-		direction === "up" || direction === "down"
-			? calcEdgeRatio(localPoint.x, width)
-			: calcEdgeRatio(localPoint.y, height);
-	const tipPosition = roundToDecimal(
-		Math.min(Math.max(rawPosition, 0), 1),
-		TIP_POSITION_PRECISION,
+	const { direction, position } = calcEdgeDirectionAndPosition(
+		localPoint,
+		startMarker.width,
+		startMarker.height,
 	);
 
-	return { direction, tipPosition };
+	return { direction, tipPosition: position };
 };
