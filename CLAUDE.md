@@ -45,6 +45,9 @@ all eleven plugins on a single canvas). Each has its own `playwright.config.ts` 
 as `pnpm --filter <package> test:e2e`. They share canvas's kit, which plugins reach
 through `@jiscribe/canvas-sdk/testing/*` — see `packages/canvas/docs/09-testing.md`.
 
+`apps/mcp` and `apps/vscode-extension` carry their own `CLAUDE.md` with
+implementation notes for work inside them.
+
 ## After making a change
 
 Always:
@@ -62,8 +65,8 @@ Then, by impact:
 - **Unit tests for what you touched**: `pnpm --filter @jiscribe/canvas test`
 - **Behaviour or rendering**: run e2e from the suite that owns what you touched, and
   only the related specs.
-  - `packages/canvas/src/{gestures,controllers,rendering,states}`: select by
-    keyword, e.g. `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`.
+  - `packages/canvas/src/{controllers,rendering,states}` (gestures live under
+    `controllers/`): select by keyword, e.g. `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`.
     Do not run that suite in full (160+ spec files); CI does it on pull requests to
     `main`.
   - a plugin's shapes: run its whole suite, which is a handful of specs, e.g.

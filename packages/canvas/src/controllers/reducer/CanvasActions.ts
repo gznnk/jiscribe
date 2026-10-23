@@ -112,21 +112,21 @@ export type CommandAction = {
  * Undoes back to one specific history entry in a single step, however many
  * entries lie in between (`ref.current.history.revertTo`).
  *
- * Not the undo command repeated: each undo materializes the document it lands on,
- * so repeating it would rebuild the whole object tree once per entry when only
- * the last one is ever seen. This lands on the target directly and moves the
- * entries it passed over to the redo stack in one go, leaving exactly the stacks
- * the repeated undos would have.
+ * Not the undo command repeated: each undo restores and settles the state it
+ * lands on, so repeating it would do that work once per entry when only the
+ * last one is ever seen. This lands on the target directly and moves the
+ * entries it passed over to the redo stack in one go, leaving exactly the
+ * stacks the repeated undos would have.
  */
 export type RevertHistoryAction = {
 	type: "REVERT_HISTORY";
 	/**
-	 * The history entry to make present again. Compared by identity against the
-	 * undo stack and never read, which is why it is typed as `object`: the public
-	 * mark (`CanvasHistoryMark`) carries one of these without the internal
-	 * DocSnapshot type having to become part of the API. An entry that is no
-	 * longer on the stack — already undone past, or dropped by the 50-entry cap —
-	 * leaves the document where it is.
+	 * The `source` of the history entry to make present again. Compared by
+	 * identity against the undo stack's sources and never read, which is why it
+	 * is typed as `object`: the public mark (`CanvasHistoryMark`) carries one of
+	 * these without the internal DocSnapshot type having to become part of the
+	 * API. An entry that is no longer on the stack — already undone past, or
+	 * dropped by the 50-entry cap — leaves the document where it is.
 	 */
 	entry: object;
 };
@@ -240,10 +240,15 @@ export type TransformPropertyUpdateAction = {
  * The document's own settings the properties sidebar states, as opposed to the
  * selection's, each with the value it takes. The `view.*` entries name one part
  * of the display declaration (`CanvasDoc.view`) apiece, and padding one side
- * apiece, so each field of the Canvas section is its own property — and its own
- * undo coalescing run.
+ * apiece, and the `meta.*` entries one field of the document's note
+ * (`CanvasDoc.meta`) apiece, so each field of the Canvas section is its own
+ * property — and its own undo coalescing run.
  */
 export type DocumentPropertyValueMap = {
+	/** The document's name; null or `""` drops the field (and `meta` with it once nothing is left). */
+	"meta.name": string | null;
+	/** What the document is about, as multi-line text; null or `""` drops the field. */
+	"meta.description": string | null;
 	/** A literal CSS color, or null to drop the field so the host theme decides again. */
 	background: string | null;
 	/** How the view is framed on open, or null to leave it to the host. */
@@ -277,7 +282,7 @@ export type DocumentPropertyUpdate<
  *
  * The third property route beside {@link StyleIntentAction} and
  * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
- * selection: it mirrors the headless `setBackground` / `setView` ops, down to
+ * selection: it mirrors the headless `setBackground` / `setView` / `setMeta` ops, down to
  * `null` meaning "drop the field and let the host decide" rather than "set it to
  * some default".
  */

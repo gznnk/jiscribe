@@ -16,6 +16,10 @@
 			"type": "integer",
 			"const": 1
 		},
+		"meta": {
+			"description": "The document's own name and description, in the same record an object carries. Nothing is drawn from it; an image export writes them as the SVG's <title> and <desc>. Omit it when the document states none.",
+			"$ref": "#/$defs/MetaDoc"
+		},
 		"background": {
 			"description": "Canvas surface color as a literal CSS color string (a concrete color, not a var(...), so the file stays portable). Omit to follow the theme background. When set it is the surface for both display and image export, and the grid line color is derived from it.",
 			"type": "string"

@@ -70,6 +70,7 @@ describe("createCanvasToolDescriptors", () => {
 			"set_style",
 			"set_background",
 			"set_document_view",
+			"set_meta",
 			"set_extra_props",
 			"set_text",
 			"set_texts",
@@ -413,6 +414,20 @@ describe("CanvasToolDescriptor.toOp", () => {
 		expect(
 			findDescriptor(descriptors, "fit_view").toOp({ ids: ["a"] }),
 		).toEqual({ kind: "fitView", ids: ["a"] });
+	});
+
+	it("carries the id of set_meta only when one is given, so leaving it out addresses the document", () => {
+		const descriptors = createCanvasToolDescriptors(capabilities);
+
+		expect(
+			findDescriptor(descriptors, "set_meta").toOp({ name: "Overview" }),
+		).toEqual({ kind: "setMeta", name: "Overview" });
+		expect(
+			findDescriptor(descriptors, "set_meta").toOp({
+				id: "rect-1",
+				description: null,
+			}),
+		).toEqual({ kind: "setMeta", id: "rect-1", description: null });
 	});
 
 	it("builds the argument-less operations from their kind alone", () => {

@@ -1,5 +1,8 @@
 import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
-import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
+import type {
+	ResolvedViewPadding,
+	ViewPaddingDoc,
+} from "@jiscribe/doc/model/canvas/ViewDoc";
 import { convertRectToBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Rect } from "@jiscribe/geometry";
 
@@ -118,6 +121,20 @@ const uniformMargin = (margin: number): ResolvedViewPadding => ({
 	left: margin,
 });
 
+/** The margin an export asks for: the caller's `margin`, else the document's `view.padding`, else EXPORT_FIT_PADDING. */
+const resolveRequestedMargin = (
+	margin: number | undefined,
+	viewPadding: ViewPaddingDoc | undefined,
+): ResolvedViewPadding => {
+	if (margin !== undefined) {
+		return uniformMargin(margin);
+	}
+	if (viewPadding !== undefined) {
+		return resolveViewPadding(viewPadding);
+	}
+	return uniformMargin(EXPORT_FIT_PADDING);
+};
+
 /** The bounds an export region resolves to, with the margin that still applies to it. */
 type ResolvedExportRegion = {
 	/** Null only for `"content"` on an empty canvas (an `{ ids }` region that draws nothing throws). */
@@ -229,6 +246,7 @@ const isolatedSubsetToDoc = (
 		{
 			objects: subsetObjects,
 			rootIds: isolatedSubset.rootIds,
+			meta: state.meta,
 			background: state.background,
 			view: state.view,
 		},
@@ -293,12 +311,7 @@ export const resolveExportOptions = (
 		transparentBackground = false,
 	}: CanvasExportOptions = {},
 ): ResolvedCanvasExport => {
-	const requestedMargin =
-		margin !== undefined
-			? uniformMargin(margin)
-			: state.view?.padding !== undefined
-				? resolveViewPadding(state.view.padding)
-				: uniformMargin(EXPORT_FIT_PADDING);
+	const requestedMargin = resolveRequestedMargin(margin, state.view?.padding);
 	const resolved = resolveExportRegion(
 		state,
 		visualExtentRegistries,
@@ -327,6 +340,8 @@ export const resolveExportOptions = (
 				includeSource,
 				isolatedSubset,
 			),
+			title: state.meta?.name,
+			description: state.meta?.description,
 			// "transparent" skips the background rect (buildExportSvg);
 			// undefined falls back to the live theme background
 			background: transparentBackground ? "transparent" : undefined,

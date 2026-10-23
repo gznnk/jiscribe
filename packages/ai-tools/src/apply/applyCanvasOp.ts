@@ -29,7 +29,10 @@ import { describeRectEdges, formatNumber, quoteIds } from "../resultText";
 import type { AiDocBridge } from "./docBridge";
 
 const describeCanvas = (doc: CanvasDoc): string => {
-	const json = JSON.stringify(doc, null, 2);
+	// The document's own fields ahead of root whatever order the file holds them
+	// in, so a cut-off result still says what the document is called
+	const { root, ...frame } = doc;
+	const json = JSON.stringify({ ...frame, root }, null, 2);
 	if (json.length <= MAX_DESCRIBE_CHARS) {
 		return json;
 	}
@@ -131,6 +134,17 @@ const emptiedGroupsNote = (droppedGroupIds: readonly string[]): string =>
 		? ""
 		: ` (${quoteIds(droppedGroupIds)} went with them: a group with nothing left in it is dropped)`;
 
+/** The note for an object already at the top or bottom of its siblings, where one reorder_objects placement would change nothing; empty otherwise */
+const zOrderPlaceNote = (index: number, total: number): string => {
+	if (index === total - 1) {
+		return '; it is already drawn over its siblings, so reorder_objects "front" would change nothing';
+	}
+	if (index === 0) {
+		return '; it is already behind its siblings, so reorder_objects "back" would change nothing';
+	}
+	return "";
+};
+
 /**
  * Applies an operation that only reads the document, and builds the result text
  * to hand back to the AI. Zero results, no match and null are not failures, so
@@ -187,13 +201,7 @@ const applyDocRead = (
 		}
 		case "getZOrder": {
 			const { index, total } = docOps.getZOrder(doc, op.id);
-			const placeNote =
-				index === total - 1
-					? '; it is already drawn over its siblings, so reorder_objects "front" would change nothing'
-					: index === 0
-						? '; it is already behind its siblings, so reorder_objects "back" would change nothing'
-						: "";
-			return `"${op.id}" stands at index ${index} of ${total} sibling(s), counting from the back within the parent holding it (index ${total - 1} is drawn on top)${placeNote}`;
+			return `"${op.id}" stands at index ${index} of ${total} sibling(s), counting from the back within the parent holding it (index ${total - 1} is drawn on top)${zOrderPlaceNote(index, total)}`;
 		}
 		case "getParentGroup": {
 			const parentId = docOps.getParentGroup(doc, op.id);
@@ -410,6 +418,27 @@ const applyDocChange = (
 					: `scrolling "${declaration.scroll}"`,
 			].filter((part) => part !== null);
 			return `the document now declares ${parts.join(", ")}`;
+		}
+		case "setMeta": {
+			const meta = docOps.setMeta(draftDoc, {
+				...(op.id === undefined ? {} : { id: op.id }),
+				...(op.name === undefined ? {} : { name: op.name }),
+				...(op.description === undefined
+					? {}
+					: { description: op.description }),
+			});
+			const owner =
+				op.id === undefined ? "the document" : JSON.stringify(op.id);
+			if (meta === null) {
+				return `${owner} now carries no name or description`;
+			}
+			const parts = [
+				meta.name === undefined ? null : `named ${JSON.stringify(meta.name)}`,
+				meta.description === undefined ? null : "described",
+			].filter((part) => part !== null);
+			return parts.length === 0
+				? `${owner} now carries no name or description`
+				: `${owner} is now ${parts.join(" and ")}`;
 		}
 		case "setStyle": {
 			const { styledIds, ignored } = docOps.setStyle(

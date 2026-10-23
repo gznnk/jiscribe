@@ -1,4 +1,5 @@
 import { DocOperationError } from "./errors";
+import { requireObject } from "./utils/objectAccess";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import { mergeViewDoc, type ViewParams } from "../model/canvas/mergeViewDoc";
 import {
@@ -8,6 +9,11 @@ import {
 	type ViewDoc,
 	type ViewPaddingDoc,
 } from "../model/canvas/ViewDoc";
+import type { MetaDoc } from "../model/objects/base/MetaDoc";
+import {
+	mergeMetaDoc,
+	type MetaParams,
+} from "../model/objects/utils/mergeMetaDoc";
 
 /**
  * Set or clear the canvas surface color, mutating `doc` in place.
@@ -115,4 +121,51 @@ export const setView = (
 	}
 	doc.view = nextView;
 	return nextView;
+};
+
+/**
+ * What {@link setMeta} writes, and to whom. A field left out keeps whatever the note
+ * already states; a field given as null — or as the empty string — drops it.
+ */
+export type SetMetaParams = MetaParams & {
+	/**
+	 * Id of the object whose note to write — any object in the tree, group and
+	 * connector included. Left out, the document's own note is written instead.
+	 */
+	id?: string;
+};
+
+/**
+ * Write a note — a name and description, the `meta` record — on the document itself or
+ * on one object, mutating `doc` in place.
+ *
+ * Only `name` and `description` are written; any other member already there (a
+ * `reference`, a host's own keys) is kept. The whole `meta` field goes away once no
+ * member is left, so whatever states nothing carries nothing.
+ *
+ * @param doc - Mutated in place
+ * @param params - The fields to write, each optional, null or `""` to drop that field;
+ *   `id` picks the object, and leaving it out writes the document's own note
+ * @returns The note as it now stands, or null once its owner carries none
+ * @throws {@link DocOperationError} when neither field is given, or when `id` names no
+ *   object in the tree
+ */
+export const setMeta = (
+	doc: CanvasDoc,
+	params: SetMetaParams,
+): MetaDoc | null => {
+	if (params.name === undefined && params.description === undefined) {
+		throw new DocOperationError(
+			"nothing to write: give name and / or description, or null to drop one",
+		);
+	}
+	const owner: { meta?: MetaDoc } =
+		params.id === undefined ? doc : requireObject(doc, params.id).object;
+	const nextMeta = mergeMetaDoc(owner.meta, params);
+	if (nextMeta === undefined) {
+		delete owner.meta;
+		return null;
+	}
+	owner.meta = nextMeta as MetaDoc;
+	return owner.meta;
 };

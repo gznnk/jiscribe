@@ -22,3 +22,9 @@ export const lucideIconMessagesByLocale: LocaleMessages<LucideIconMessages> = {
 		moreMatches: (shown, total) => `${total} 件中 ${shown} 件`,
 	},
 };
+
+/** Heading of the lucideIcon's section in the properties sidebar. */
+export const lucideIconPropertySectionLabelByLocale: LocaleMessages<string> = {
+	en: "Icon",
+	ja: "アイコン",
+};

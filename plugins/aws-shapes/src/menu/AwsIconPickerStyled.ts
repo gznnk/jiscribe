@@ -4,13 +4,27 @@ import {
 	scrollbarStyles,
 } from "@jiscribe/canvas-sdk";
 
+/**
+ * The picker's own box. It takes the width of whatever holds it; a dropdown
+ * panel shrinks to its content, so each host wraps it in AwsIconPickerFrame.
+ */
 export const AwsIconPickerPanel = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+	box-sizing: border-box;
+	width: 100%;
 	padding: 8px;
-	width: 300px;
 	color: ${theme.foreground};
+`;
+
+/**
+ * Gives the picker its width in a dropdown panel. `max-width` lets a panel that
+ * caps its own width (the sidebar's, when it opens under its trigger) narrow it.
+ */
+export const AwsIconPickerFrame = styled.div`
+	width: 300px;
+	max-width: 100%;
 `;
 
 export const AwsIconSearchInput = styled.input`
@@ -73,7 +87,9 @@ export const AwsFilterChip = styled.button<{ selected: boolean }>`
 
 export const AwsIconGrid = styled.div<{ isEmpty: boolean }>`
 	display: grid;
-	grid-template-columns: repeat(7, 1fr);
+	/* As many 36px cells as the width holds: seven at the frame's full width,
+	   fewer where a panel narrows it. */
+	grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
 	/* With nothing in it, the one line inside goes in the middle rather than at the top. */
 	align-content: ${({ isEmpty }) => (isEmpty ? "center" : "start")};
 	gap: 2px;

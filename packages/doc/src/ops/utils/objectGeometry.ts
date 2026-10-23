@@ -260,6 +260,20 @@ export const getObjectBounds = (
 		: declaredBounds(object);
 };
 
+/** Why {@link getObjectBounds} found no box for `object`, as requireObjectBounds reports it. */
+const describeMissingBounds = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): string => {
+	if (isConnectorObject(object)) {
+		return `${object.id} is a connector: it follows the objects it joins, so move or resize those instead`;
+	}
+	if (definitions.has(object.type)) {
+		return `${object.id} ("${object.type}") has no position that can be changed`;
+	}
+	return `${object.id} is "${object.type}", a type this build does not know: it is kept as it is, so it cannot be moved or resized — only restacked, grouped or deleted`;
+};
+
 /**
  * {@link getObjectBounds} that fails instead of returning null.
  *
@@ -274,13 +288,7 @@ export const requireObjectBounds = (
 ): Rect => {
 	const bounds = getObjectBounds(object, definitions);
 	if (bounds === null) {
-		throw new DocOperationError(
-			isConnectorObject(object)
-				? `${object.id} is a connector: it follows the objects it joins, so move or resize those instead`
-				: definitions.has(object.type)
-					? `${object.id} ("${object.type}") has no position that can be changed`
-					: `${object.id} is "${object.type}", a type this build does not know: it is kept as it is, so it cannot be moved or resized — only restacked, grouped or deleted`,
-		);
+		throw new DocOperationError(describeMissingBounds(object, definitions));
 	}
 	return bounds;
 };

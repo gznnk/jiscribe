@@ -59,14 +59,14 @@ and a link to a file of another kind is refused. The one exception is an
 and cannot climb out of it — so a drawing and the pictures it names travel
 together.
 
-Four families of tools, 84 in all:
+Four families of tools, 85 in all:
 
 - Seven of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
   `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse`.
   `open_canvas` takes `headless`, which gives the AI a canvas to look at without
   putting a window on screen
-- 46 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
-  align, group, style, read, undo — each given a `path` so it names a file
+- 47 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
+  align, group, style, name the document or a shape, read, undo — each given a `path` so it names a file
 - 16 more from the same declarations that only a mounted canvas can answer —
   capture, camera, selection, measurement — run over the viewer's WebSocket.
   The one that measures a slot as drawn is registered as `measure_rendered_text`,

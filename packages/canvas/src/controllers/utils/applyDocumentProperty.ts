@@ -8,15 +8,40 @@ import type {
 	ViewPaddingDoc,
 } from "@jiscribe/doc/model/canvas/ViewDoc";
 
+import { applyMetaField } from "./applyMetaField";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type {
 	DocumentProperty,
 	DocumentPropertyUpdate,
+	MetaProperty,
 } from "../reducer/CanvasActions";
 
 type ViewPaddingProperty = Extract<DocumentProperty, `view.padding.${string}`>;
 
 type ViewPaddingUpdate = DocumentPropertyUpdate<ViewPaddingProperty>;
+
+type DocumentMetaProperty = Extract<DocumentProperty, `meta.${string}`>;
+
+type DocumentMetaUpdate = DocumentPropertyUpdate<DocumentMetaProperty>;
+
+const META_FIELD_BY_PROPERTY: Record<DocumentMetaProperty, MetaProperty> = {
+	"meta.name": "name",
+	"meta.description": "description",
+};
+
+/**
+ * Whether a name is one of the two `meta.*` document settings.
+ *
+ * @param property - Any name, typically read out of a DOM part; only the exact two pass
+ */
+export const isDocumentMetaProperty = (
+	property: string,
+): property is DocumentMetaProperty =>
+	Object.prototype.hasOwnProperty.call(META_FIELD_BY_PROPERTY, property);
+
+const isDocumentMetaUpdate = (
+	update: DocumentPropertyUpdate,
+): update is DocumentMetaUpdate => isDocumentMetaProperty(update.property);
 
 const PADDING_SIDE_BY_PROPERTY: Record<
 	ViewPaddingProperty,
@@ -66,7 +91,10 @@ const isSameViewDoc = (
 /** The params one `view.*` update amounts to; a padding side is merged into the sides already declared. */
 const toViewParams = (
 	srcView: ViewDoc | undefined,
-	update: Exclude<DocumentPropertyUpdate, { property: "background" }>,
+	update: Exclude<
+		DocumentPropertyUpdate,
+		{ property: "background" } | DocumentMetaUpdate
+	>,
 ): ViewParams => {
 	switch (update.property) {
 		case "view.open":
@@ -102,7 +130,8 @@ export const canApplyDocumentProperty = (
 };
 
 /**
- * States one of the document's own settings on the controller state: the
+ * States one of the document's own settings on the controller state: one field
+ * of its note (applyMetaField, the rule an object's note is written by), the
  * surface color, or one part of the display declaration normalized by
  * `mergeViewDoc`, the rules the headless `setView` op writes by too.
  *
@@ -110,8 +139,8 @@ export const canApplyDocumentProperty = (
  * sidebar's gesture route (PropertyPanelHandler), which differ only in how the
  * change reaches history.
  *
- * @param state - The state to edit; only `background` / `view` are read and written
- * @param update - The setting and its value; null drops that setting
+ * @param state - The state to edit; only `meta` / `background` / `view` are read and written
+ * @param update - The setting and its value; null drops that setting, and so does `""` for a `meta.*` one
  * @returns `state` itself when the document already says the same thing (a
  *   padding side of 0 agrees with an omitted one), and when
  *   {@link canApplyDocumentProperty} refuses the value
@@ -122,6 +151,17 @@ export const applyDocumentProperty = (
 ): CanvasControllerState => {
 	if (!canApplyDocumentProperty(update)) {
 		return state;
+	}
+	if (isDocumentMetaUpdate(update)) {
+		const meta = applyMetaField(
+			state.meta,
+			META_FIELD_BY_PROPERTY[update.property],
+			update.value,
+		);
+		if (meta === state.meta) {
+			return state;
+		}
+		return { ...state, meta };
 	}
 	if (update.property === "background") {
 		const background = update.value ?? undefined;

@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { createTestSnapshot } from "../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { twoRectsWithConnectorDoc } from "../../commands/__tests__/support/fixtures";
 import { createTestState } from "../../reducer/__tests__/support/createTestState";
@@ -13,7 +14,6 @@ import {
 	createCanvasRegistries,
 	createTestRegistries,
 } from "../../registries/createCanvasRegistries";
-import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
 import {
 	type CanvasHistoryHandle,
 	useHistoryHandle,
@@ -38,8 +38,8 @@ afterEach(() => {
 	});
 });
 
-const olderEntry = createDocSnapshotFromDoc(twoRectsWithConnectorDoc);
-const newerEntry = createDocSnapshotFromDoc(twoRectsWithConnectorDoc);
+const olderEntry = createTestSnapshot(twoRectsWithConnectorDoc);
+const newerEntry = createTestSnapshot(twoRectsWithConnectorDoc);
 
 /** A canvas one entry past `olderEntry`, with `newerEntry` redoable. */
 const stateWithHistory = (): CanvasControllerState => {
@@ -85,11 +85,11 @@ describe("useHistoryHandle", () => {
 		expect(handle.canRedo()).toBe(true);
 		expect(handle.undo()).toBe(true);
 		expect(handle.redo()).toBe(true);
-		expect(handle.revertTo({ entry: olderEntry })).toBe(true);
+		expect(handle.revertTo({ entry: olderEntry.source })).toBe(true);
 		expect(dispatch.mock.calls.map(([action]) => action)).toEqual([
 			{ type: "COMMAND", commandId: "undo" },
 			{ type: "COMMAND", commandId: "redo" },
-			{ type: "REVERT_HISTORY", entry: olderEntry },
+			{ type: "REVERT_HISTORY", entry: olderEntry.source },
 		]);
 	});
 
@@ -102,7 +102,7 @@ describe("useHistoryHandle", () => {
 		expect(handle.canRedo()).toBe(false);
 		expect(handle.undo()).toBe(false);
 		expect(handle.redo()).toBe(false);
-		expect(handle.revertTo({ entry: olderEntry })).toBe(false);
+		expect(handle.revertTo({ entry: olderEntry.source })).toBe(false);
 		expect(dispatch).not.toHaveBeenCalled();
 	});
 
@@ -111,7 +111,7 @@ describe("useHistoryHandle", () => {
 			stateWithHistory(),
 			createTestRegistries(),
 		);
-		expect(handle.revertTo({ entry: newerEntry })).toBe(false);
+		expect(handle.revertTo({ entry: newerEntry.source })).toBe(false);
 		expect(dispatch).not.toHaveBeenCalled();
 	});
 

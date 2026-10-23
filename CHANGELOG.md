@@ -46,6 +46,21 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
 
 ### Added
 
+- **A document can carry a name and a description.** The `.jis` root takes
+  `meta`, the same record an object carries (`name` / `description` /
+  `reference`, open to a host's own keys), checked by the parser the way an
+  object's is and round-tripped through the canvas, history and save. The
+  properties sidebar's Canvas section edits the name and description (one
+  undo step per field, an emptied field drops it, and `meta` goes once nothing
+  is left), an SVG export opens with them as `<title>` and `<desc>`, and the
+  isolated export's embedded source keeps them. Headless, `docOps.setMeta`
+  writes them — or, given an `id`, one object's — and `@jiscribe/ai-tools`
+  declares it as `set_meta`, which names the document without `id` and an
+  object (a group or a connector included) with one;
+  `describe_canvas` now lists the document's own fields ahead of `root`, so a
+  cut-off result still says what the document is. The JSON schema and the
+  authoring guide describe the field (regenerated). `MetaDoc` is exported from
+  `@jiscribe/doc`.
 - **`capture_canvas` can take a picture of one part of the drawing.** It
   still captures the whole drawing by default, and now takes `ids`, a world
   `rect` or `target: "selection"` to get one corner of a large diagram at a
@@ -85,6 +100,31 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   itself larger than `fontSize`. It decides when the box counts as too small to
   read (below); omitted, `fontSize` does. The Markdown shape passes its largest
   heading.
+- **The AWS icon and the Lucide icon can be changed from the property
+  sidebar.** The icon picker was reachable only from the object menu, so a host
+  that hides the menu left no way to change an icon. Both shapes now lead their
+  sidebar with an Icon section: a field showing the current icon and its name,
+  opening the same picker (search and, for AWS, the layer and category filters)
+  beside the sidebar, over the canvas. Where the canvas has no room for it
+  there, it opens under the field inside the sidebar, narrowed to fit. A
+  selection drawing different icons shows the field as mixed, and the object
+  menu's picker then highlights no cell rather than the first shape's icon.
+- **The property sidebar can group, ungroup and open a reference.** These
+  were the two things the object menu offered and the sidebar did not, though
+  the menu is hidden while the sidebar is open. The Arrange
+  section ends with a Group button for a multi-selection and an Ungroup button
+  for a selected group, offered under the same rule as the menu's; the section
+  now also shows for a selection across different parents, which can be
+  grouped though not reordered, with the stacking-order buttons disabled. The
+  Meta section carries an "Open Reference" button for an object whose
+  `meta.reference` is set, calling the same `onOpenReference` as the menu, and
+  only while the host passes one.
+- **For plugin authors: `PropertyDropdownField` takes `placement`.**
+  `"under"` (the default, unchanged) opens the panel under the trigger inside
+  the sidebar, now never wider than the sidebar; `"beside"` opens it outside
+  the sidebar to its left, level with the trigger and as wide as its content,
+  for a panel too wide for the sidebar. A `"beside"` panel the canvas row has
+  no room for opens `"under"` instead, decided again on every opening.
 - **A desktop app holds the MCP server (proof of concept).** `apps/desktop`
   (`jiscribe-desktop`, not published) runs first and stays up, serving the
   `jiscribe-mcp` tool set over Streamable HTTP on `127.0.0.1`, so AI clients
@@ -116,6 +156,28 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   which image export folds away. For plugin authors: a type's `moveByDelta`
   must move its drawing as a whole and change nothing else, since the drag
   draws the start state shifted rather than what `moveByDelta` returned.
+- **Connectors off screen are no longer routed to decide that they are.**
+  Viewport culling bounded each connector by its routed path, so every frame
+  of a drag and the first draw of a document routed every connector whose
+  shapes had changed, on screen or not. It now first bounds a connector from
+  its ends, vertices and shapes without routing it, and routes only one whose
+  bound reaches the screen; a connector shifted with its dragged shapes is
+  judged by its drag-start path moved by the drag, as it is drawn. Which
+  objects are drawn does not change.
+- **Undo and redo no longer rebuild the whole document.** Each history entry
+  now keeps the state it was committed with, and undo, redo and
+  `history.revertTo` hand it back as is instead of rebuilding every object
+  from the entry's document. Objects the step leaves alone stay the same
+  objects, so their routes, text layout and rendering are reused and only what
+  changed is redrawn; the camera's reveal compares objects the same way. The
+  document is built only for the current entry, when it is saved or compared
+  against an external change. An entry recorded before a web font face
+  finished loading has its text boxes re-measured on the way back, so they
+  follow the fonts now loaded; only the boxes the new face changes are redrawn.
+- **Swapping an `awsIcon`'s icon from the menu carries its label along.**
+  While the label is still the one the old icon comes with (the short name a
+  stencil places, `S3`), picking another icon replaces it with the new one's
+  (`Lambda`). A label that was edited, or emptied, is left as it is.
 
 ## [0.12.1] - 2026-10-20
 

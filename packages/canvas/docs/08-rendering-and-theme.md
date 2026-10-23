@@ -47,8 +47,8 @@ in one hook, `useIsTextLegible` (`rendering/objects/useIsTextLegible.ts`), which
 ## A move drag shifts start states instead of re-rendering
 
 While objects are dragged, the reducer still writes their moved positions on every frame, so snapping,
-culling, the controls and every other reader of the state see the truth. Only the drawing takes a
-shortcut. The object drag handler declares what it moved as `activeDrag.movePreview`
+the controls and every other reader of the state see the truth. Only the drawing takes a shortcut, and
+viewport culling follows it for connectors (see below). The object drag handler declares what it moved as `activeDrag.movePreview`
 (`rendering/layers/content/MovePreview.ts`: the delta it applied, the ids whose `moveByDelta` returned a
 new state, the drag-start objects), and `ObjectsRenderer` draws each of those ids from its start state
 inside a `<g transform="translate(dx dy)">`. The start state keeps its identity for the whole drag, so
@@ -66,6 +66,13 @@ inside a `<g transform="translate(dx dy)">`. The start state keeps its identity 
   stay put while the owners move) or with one owner moved is routed live. Orthogonal routing rounds its
   crossover to whole units, so a shifted orthogonal path may sit up to 0.5 world units off the live
   route until the drop routes it.
+- Viewport culling (`controllers/utils/calcVisibleObjectIds.ts`) judges a shifted connector the way it is
+  drawn: the box of its start path, moved by the delta (`isConnectorShiftedWithOwners`, shared with
+  `ObjectsRenderer`). The start owners keep their identities, so that box is routed once per drag. For
+  every other connector culling first takes a bound that needs no routing (`calcConnectorExtentBound`:
+  the endpoints, stored vertices and owner boxes grown by the router's margin, plus the label's reach);
+  only a connector whose bound reaches the screen is routed for its exact box, so dragging shapes whose
+  connectors run off screen does not route those connectors.
 - Each id's element is handed back as the same object while what it is built from holds
   (`useElementReuse`), so React skips the wrapper and the boundary of every object the frame left alone.
 - It rests on `moveByDelta` being a pure translation of the drawing (see `MoveByDeltaFunction`). The

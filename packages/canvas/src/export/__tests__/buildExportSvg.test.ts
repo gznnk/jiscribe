@@ -2,7 +2,11 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildExportSvg, inlineExportImages } from "../buildExportSvg";
+import {
+	buildExportSvg,
+	inlineExportImages,
+	serializeSvg,
+} from "../buildExportSvg";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -167,5 +171,52 @@ describe("inlineExportImages", () => {
 		expect(exported.querySelector("image")?.getAttribute("href")).toBe(
 			"blob:stub/0",
 		);
+	});
+});
+
+describe("buildExportSvg with a title and description", () => {
+	it("opens the root with <title> then <desc>, ahead of the background rect", () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvg(false);
+
+		const exported = buildExportSvg(liveSvg, {
+			title: "Overview",
+			description: "line 1\nline 2",
+			background: "#ffffff",
+		});
+
+		const [first, second, third] = Array.from(exported.children);
+		expect(first.tagName).toBe("title");
+		expect(first.textContent).toBe("Overview");
+		expect(second.tagName).toBe("desc");
+		expect(second.textContent).toBe("line 1\nline 2");
+		expect(third.tagName).toBe("rect");
+	});
+
+	it("escapes markup in the text rather than writing it as elements", () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvg(false);
+
+		const xml = serializeSvg(
+			buildExportSvg(liveSvg, {
+				title: "<b>A & B</b>",
+				background: "transparent",
+			}),
+		);
+
+		expect(xml).toContain("<title>&lt;b&gt;A &amp; B&lt;/b&gt;</title>");
+	});
+
+	it("writes neither element for an absent or empty text", () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvg(false);
+
+		const exported = buildExportSvg(liveSvg, {
+			title: "",
+			background: "transparent",
+		});
+
+		expect(exported.querySelector("title")).toBeNull();
+		expect(exported.querySelector("desc")).toBeNull();
 	});
 });

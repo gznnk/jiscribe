@@ -33,6 +33,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { readPickedPartStyleIntentKinds } from "../../../selection/readers/readPickedPartStyleIntentKinds";
+import { isGroupingOffered } from "../../../utils/isGroupingOffered";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
 type ObjectMenuProps = {
@@ -149,14 +150,7 @@ const buildSystemSections = (
 ): ObjectMenuSection[] => {
 	const systemSections: ObjectMenuSection[] = [];
 
-	const { objectIds: selectedIds } = canvasState.selection;
-	const { objects } = canvasState;
-	const singleSelected =
-		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
-
-	const shouldShowGroup =
-		selectedIds.length > 1 || singleSelected?.type === "group";
-	if (shouldShowGroup) {
+	if (isGroupingOffered(canvasState)) {
 		systemSections.push({
 			id: "system-group",
 			items: [{ type: "group" }],

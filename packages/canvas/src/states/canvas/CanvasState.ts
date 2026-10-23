@@ -1,6 +1,7 @@
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 
 import type { OpaqueObjectPlacement } from "./OpaqueObjectPlacement";
+import type { MetaState } from "../objects/base/MetaState";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 /**
@@ -23,6 +24,13 @@ export type CanvasState = {
 	 * directly under root.
 	 */
 	rootIds: string[];
+
+	/**
+	 * The document's own name and description (doc content, round-tripped
+	 * through save/history). Undefined means the document states none (see
+	 * CanvasDoc.meta).
+	 */
+	meta?: MetaState;
 
 	/**
 	 * Canvas surface color (doc content, round-tripped through save/history).

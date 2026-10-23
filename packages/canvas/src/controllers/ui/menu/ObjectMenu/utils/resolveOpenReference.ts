@@ -3,7 +3,7 @@ import type { OpenReferencePayload } from "../ObjectMenuTypes";
 
 /**
  * Reads the `meta.reference` of the sole selected object, which is what the
- * "open reference" menu item acts on.
+ * "open reference" buttons act on (the ObjectMenu's and the property sidebar's).
  *
  * `meta` is an open record, so the reference arrives untyped and is accepted
  * only as a non-empty string.

@@ -12,6 +12,7 @@ import {
 	calcConnectPoint,
 	calcConnectPointDirection,
 } from "../../calcConnectPoint";
+import { calcPathSignature } from "../pathSignature";
 import { countReversals } from "../routeCost";
 import type { OrthogonalConnectorEndpoint } from "../types";
 
@@ -222,26 +223,6 @@ export type ConfigMeasure = {
 	signature: string;
 };
 
-const signatureOf = (path: Point[]): string => {
-	let s = "";
-	for (let i = 1; i < path.length; i++) {
-		const ddx = path[i].x - path[i - 1].x;
-		const ddy = path[i].y - path[i - 1].y;
-		if (ddx === 0 && ddy === 0) {
-			continue;
-		}
-		s +=
-			Math.abs(ddx) >= Math.abs(ddy)
-				? ddx > 0
-					? "R"
-					: "L"
-				: ddy > 0
-					? "D"
-					: "U";
-	}
-	return s;
-};
-
 /** Routes and measures one configuration (source box at origin, target box at (dx, dy)). */
 export const measure = (
 	sourceFace: Face,
@@ -274,7 +255,7 @@ export const measure = (
 		turns: countTurns(path),
 		points: path.length,
 		path,
-		signature: signatureOf(path),
+		signature: calcPathSignature(path),
 	};
 };
 

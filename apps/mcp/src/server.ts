@@ -43,7 +43,7 @@ export type { BrowserOpenOptions } from "./host/openBrowser";
  * The tool definitions of the Jiscribe MCP server. Starting it over stdio is
  * `./index`'s job.
  *
- * The tools it exposes, 84 in all, come in four groups.
+ * The tools it exposes, 85 in all, come in four groups.
  *
  * 1. The ones this server has of its own (written out directly below)
  *    - `read_drawing_guide`: hands back one of the two guides `@jiscribe/doc-schema`
@@ -64,7 +64,8 @@ export type { BrowserOpenOptions } from "./host/openBrowser";
  *      most frequently used shapes
  * 2. The ones `@jiscribe/ai-tools` declares that a document alone can answer
  *    (`registerDocTools`). Adding, moving, aligning, grouping, style, the colour
- *    of the canvas surface, declaring the view, reading, undo and so on.
+ *    of the canvas surface, declaring the view, naming the document or an object,
+ *    reading, undo and so on.
  *    The declarations are written assuming "the document
  *    currently open", so a `path` that picks the target is added to read them as
  *    file operations

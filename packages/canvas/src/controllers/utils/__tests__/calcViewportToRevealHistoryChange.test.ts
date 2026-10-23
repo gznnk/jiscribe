@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../rendering/Viewport";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { calcViewportToRevealHistoryChange } from "../calcViewportToRevealHistoryChange";
 
@@ -31,6 +32,28 @@ const viewport: Viewport = {
 	zoom: 1,
 };
 
+const objectsOf = (doc: CanvasDoc): Record<string, ObjectState> =>
+	canvasToState(doc, registries.objectMapper, registries.objectContentResizer)
+		.objects;
+
+/**
+ * The objects `restoredDoc` loads to, holding the very object `left` holds
+ * wherever the two load the same: what an entry hands back for everything the
+ * swap left alone.
+ */
+const restoredObjectsOf = (
+	left: Record<string, ObjectState>,
+	restoredDoc: CanvasDoc,
+): Record<string, ObjectState> =>
+	Object.fromEntries(
+		Object.entries(objectsOf(restoredDoc)).map(([id, restoredObject]) => [
+			id,
+			JSON.stringify(left[id]) === JSON.stringify(restoredObject)
+				? left[id]
+				: restoredObject,
+		]),
+	);
+
 /**
  * The reveal for a swap from `leftDoc` to `restoredDoc`, seen from `from`,
  * inside a wall of `scrollWallPadding` (none by default).
@@ -40,24 +63,23 @@ const reveal = (
 	leftDoc: CanvasDoc,
 	restoredDoc: CanvasDoc,
 	scrollWallPadding: ResolvedViewPadding | null = null,
-): Viewport =>
-	calcViewportToRevealHistoryChange(
+): Viewport => {
+	const leftObjects = objectsOf(leftDoc);
+	const restoredObjects =
+		leftDoc === restoredDoc
+			? leftObjects
+			: restoredObjectsOf(leftObjects, restoredDoc);
+	// The live maps are the entries' own here: nothing re-measured in between.
+	return calcViewportToRevealHistoryChange(
 		from,
-		leftDoc,
-		canvasToState(
-			leftDoc,
-			registries.objectMapper,
-			registries.objectContentResizer,
-		).objects,
-		restoredDoc,
-		canvasToState(
-			restoredDoc,
-			registries.objectMapper,
-			registries.objectContentResizer,
-		).objects,
+		leftObjects,
+		leftObjects,
+		restoredObjects,
+		restoredObjects,
 		registries,
 		scrollWallPadding,
 	);
+};
 
 /** A wall flush with the content on every side. */
 const flushWall: ResolvedViewPadding = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -68,6 +90,51 @@ describe("calcViewportToRevealHistoryChange", () => {
 		const restoredDoc = docOf([rect("a", 200, 100)]);
 
 		expect(reveal(viewport, leftDoc, restoredDoc)).toBe(viewport);
+	});
+
+	it("reveals an object rewritten with the same content, compared by reference", () => {
+		const leftObjects = objectsOf(docOf([rect("a", 5000, 100)]));
+		const recreatedObjects = objectsOf(docOf([rect("a", 5000, 100)]));
+
+		expect(
+			calcViewportToRevealHistoryChange(
+				viewport,
+				leftObjects,
+				leftObjects,
+				recreatedObjects,
+				recreatedObjects,
+				registries,
+				null,
+			),
+		).toEqual({ ...viewport, minX: 4258 });
+	});
+
+	it("diffs the entries, not live objects renewed by a re-measure since", () => {
+		// a is off screen; only b moved between the two entries.
+		const leftEntryObjects = objectsOf(
+			docOf([rect("a", 5000, 100), rect("b", 100, 100)]),
+		);
+		const restoredEntryObjects = {
+			...leftEntryObjects,
+			b: objectsOf(docOf([rect("b", 200, 100)])).b,
+		};
+		// Both live maps hold a copy of every object, as a re-measure leaves them.
+		const renewed = (objects: Record<string, ObjectState>) =>
+			Object.fromEntries(
+				Object.entries(objects).map(([id, object]) => [id, { ...object }]),
+			);
+
+		expect(
+			calcViewportToRevealHistoryChange(
+				viewport,
+				leftEntryObjects,
+				renewed(leftEntryObjects),
+				restoredEntryObjects,
+				renewed(restoredEntryObjects),
+				registries,
+				null,
+			),
+		).toBe(viewport);
 	});
 
 	it("returns the same viewport for the same doc", () => {

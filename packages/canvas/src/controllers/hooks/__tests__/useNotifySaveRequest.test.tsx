@@ -5,10 +5,10 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 
+import { createTestSnapshot } from "../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
 import { useNotifySaveRequest } from "../useNotifySaveRequest";
 import { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
 
@@ -41,7 +41,7 @@ const committedState = (
 		recorded: isCoalescing ? { key: "move:rect-1", time: version } : null,
 		pending: null,
 	},
-	history: { ...initialState.history, present: createDocSnapshotFromDoc(doc) },
+	history: { ...initialState.history, present: createTestSnapshot(doc, doc) },
 });
 
 /**

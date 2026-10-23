@@ -63,7 +63,7 @@ export const replaceObject = (
 	);
 	const problems: SemanticDiagnostic[] = [
 		...typeDiagnostics.filter(isSemanticError),
-		...validateMetaFields(candidate, id).filter(isSemanticError),
+		...validateMetaFields(candidate.meta, `${id}.meta`).filter(isSemanticError),
 		// Every key diagnostic counts, the unknown-name warnings included
 		...validateDocKeys(candidate, id, keyDeclaration, typeDiagnostics),
 	];

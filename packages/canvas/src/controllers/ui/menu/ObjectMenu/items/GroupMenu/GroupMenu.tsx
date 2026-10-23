@@ -6,6 +6,7 @@ import { commandAction } from "../../../../../gestures/handlers/menu/utils/menuA
 import { useCommandState } from "../../../../../hooks/useCommandState";
 import { useCanvasLocale } from "../../../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { resolveGroupingCommandId } from "../../../../../utils/resolveGroupingCommandId";
 import { GroupIcon } from "../../../../icons/GroupIcon";
 import {
 	ObjectMenuButton,
@@ -20,14 +21,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 	const resolveCommand = useCommandState(canvasState);
-	// Determine if the single selected item is a group (→ show ungroup)
-	const singleSelected =
-		canvasState.selection.objectIds.length === 1
-			? canvasState.objects[canvasState.selection.objectIds[0]]
-			: undefined;
-	const isGroup = singleSelected?.type === "group";
-
-	const commandId = isGroup ? "ungroup" : "group";
+	const commandId = resolveGroupingCommandId(canvasState);
 	const resolved = resolveCommand(commandId);
 	if (!resolved) {
 		return null;
@@ -38,7 +32,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	return (
 		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
-				isActive={isGroup}
+				isActive={commandId === "ungroup"}
 				disabled={!enabled}
 				data-action={commandAction(commandId)}
 			>

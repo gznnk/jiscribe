@@ -100,7 +100,7 @@ function validateObjectNode(
 
 	// A field every type carries, so it is checked here rather than by any one of
 	// them. Reached only for a registered type: an opaque object is never looked into.
-	errors.push(...validateMetaFields(o, path));
+	errors.push(...validateMetaFields(o.meta, `${path}.meta`));
 
 	// Per-type validation is the registry's; the names the type does not hold are
 	// this stage's own check, held against what the registry built at registration.
@@ -169,7 +169,7 @@ function validateObjectNode(
 /**
  * Checks the structural rules of a CanvasDoc: the version constant, the removal of
  * the legacy top-level `connectors` field, the `$schema` pointer, the canvas
- * surface color, the `view` declaration, each object's `meta`, and each entry in
+ * surface color, the `view` declaration, the document's and each object's `meta`, and each entry in
  * `root` (delegating per-type checks to the registry and recursing into group
  * children). Every name the frame does not hold — at the root, in `view` and in
  * `view.padding` — is reported as a warning and asked to be removed, the way the
@@ -293,6 +293,10 @@ export function checkStructure(
 			}
 		}
 	}
+
+	// The document's own note: the same record an object carries (see MetaDoc),
+	// open past its named members, so nothing in it is reported as unknown.
+	errors.push(...validateMetaFields(d.meta, "meta"));
 
 	if (!isArray(d.root)) {
 		errors.push({

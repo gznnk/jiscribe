@@ -4,13 +4,27 @@ import {
 	scrollbarStyles,
 } from "@jiscribe/canvas-sdk";
 
+/**
+ * The picker's own box. It takes the width of whatever holds it; a dropdown
+ * panel shrinks to its content, so each host wraps it in IconPickerFrame.
+ */
 export const IconPickerPanel = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+	box-sizing: border-box;
+	width: 100%;
 	padding: 8px;
-	width: 268px;
 	color: ${theme.foreground};
+`;
+
+/**
+ * Gives the picker its width in a dropdown panel. `max-width` lets a panel that
+ * caps its own width (the sidebar's, when it opens under its trigger) narrow it.
+ */
+export const IconPickerFrame = styled.div`
+	width: 284px;
+	max-width: 100%;
 `;
 
 export const IconSearchInput = styled.input`
@@ -36,7 +50,9 @@ export const IconSearchInput = styled.input`
 
 export const IconGrid = styled.div<{ isEmpty: boolean }>`
 	display: grid;
-	grid-template-columns: repeat(8, 1fr);
+	/* As many 30px cells as the width holds: eight at the frame's full width,
+	   fewer where a panel narrows it. */
+	grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
 	/* Nothing to show means the one message inside sits in the middle of the empty box
 	   rather than clinging to its top edge. */
 	align-content: ${({ isEmpty }) => (isEmpty ? "center" : "start")};

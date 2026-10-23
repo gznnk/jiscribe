@@ -204,6 +204,7 @@ export default tseslint.config(
 			"object-shorthand": "error",
 			"prefer-template": "error",
 			curly: ["error", "all"],
+			"no-nested-ternary": "error",
 		},
 	},
 	{

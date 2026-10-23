@@ -224,6 +224,27 @@ describe("resolveExportOptions", () => {
 		).toBeUndefined();
 	});
 
+	it("hands the document's meta name / description to the SVG as title / desc", () => {
+		const state = {
+			...createStateWithRect(),
+			meta: { name: "Overview", description: "about it" },
+		} as Parameters<typeof resolveExportOptions>[0];
+		const { svgOptions } = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries,
+		);
+		expect(svgOptions.title).toBe("Overview");
+		expect(svgOptions.description).toBe("about it");
+		expect(
+			resolveExportOptions(
+				createStateWithRect(),
+				registries.objectMapper,
+				registries,
+			).svgOptions.title,
+		).toBeUndefined();
+	});
+
 	describe("view.padding", () => {
 		const createStateWithViewPadding = (padding: Record<string, number>) => ({
 			...createStateWithRect(),
@@ -317,6 +338,7 @@ describe("resolveExportOptions", () => {
 			});
 			const doc = {
 				version: 1,
+				meta: { name: "Isolated" },
 				background: "#fafafa",
 				root: [
 					{
@@ -417,6 +439,7 @@ describe("resolveExportOptions", () => {
 				{ region: { ids: ["c", "g"], isolate: true } },
 			);
 			expect(svgOptions.source?.background).toBe("#fafafa");
+			expect(svgOptions.source?.meta).toEqual({ name: "Isolated" });
 			expect(svgOptions.source?.root.map((obj) => obj.id)).toEqual([
 				"g",
 				"c",

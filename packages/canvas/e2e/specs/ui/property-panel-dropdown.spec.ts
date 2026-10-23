@@ -9,7 +9,9 @@ import { selectors } from "../../support/selectors";
  * floats over the rows under the trigger instead of pushing them down, and flips
  * above the trigger when it would run past the sidebar's bottom edge. It stays
  * open while choices are tried and closes on a press outside it or on the rows
- * scrolling away under it.
+ * scrolling away under it. A field asking for `placement: "beside"` (the spec
+ * tile's wide fill row) opens it outside the sidebar to its left instead, and
+ * under the trigger when the canvas leaves no room there.
  */
 
 /** The box every test drags out, clear of the panel's own width. */
@@ -214,5 +216,108 @@ test.describe("Properties sidebar dropdowns", () => {
 		await expect(
 			canvas.page.locator(selectors.propertyPanelDropdown),
 		).toHaveCount(0);
+	});
+});
+
+test.describe("Properties sidebar dropdowns opened beside the sidebar", () => {
+	/** The spec tile's wide fill row (TileWideFillProperty in specShapesPlugin). */
+	const WIDE_FILL_TRIGGER = `${selectors.propertyPanel} [aria-label="Wide Fill"]`;
+	const WIDE_FILL_PANEL = '[data-testid="tile-wide-fill-panel"]';
+
+	/**
+	 * Viewport whose canvas row, left of the sidebar, is narrower than the wide
+	 * fill panel, so the panel has no room beside the sidebar.
+	 */
+	const NARROW_VIEWPORT = { width: 560, height: 720 };
+
+	async function drawTileWithSidebar(canvas: CanvasDriver): Promise<string> {
+		const id = await canvas.drawShapeFromFlyout(
+			"spec",
+			"tile",
+			SHAPE_FROM,
+			SHAPE_TO,
+		);
+		await canvas.openPropertyPanel();
+		return id;
+	}
+
+	test("opens left of the sidebar, level with the trigger", async ({
+		canvas,
+	}) => {
+		await drawTileWithSidebar(canvas);
+		const triggerBox = await boxOf(canvas, WIDE_FILL_TRIGGER);
+
+		await canvas.page.locator(WIDE_FILL_TRIGGER).click();
+
+		const panelBox = await boxOf(canvas, selectors.propertyPanelDropdown);
+		const sidebar = await boxOf(canvas, selectors.propertyPanel);
+		const gapToSidebar = sidebar.x - (panelBox.x + panelBox.width);
+		expect(
+			gapToSidebar,
+			"the panel ends just short of the sidebar",
+		).toBeGreaterThan(0);
+		expect(gapToSidebar).toBeLessThanOrEqual(8);
+		expect(Math.abs(panelBox.y - triggerBox.y)).toBeLessThanOrEqual(1);
+		expect(
+			panelBox.width,
+			"the panel is as wide as its content, wider than the sidebar",
+		).toBeGreaterThan(sidebar.width);
+	});
+
+	test("writes from a press inside it and stays open", async ({ canvas }) => {
+		const id = await drawTileWithSidebar(canvas);
+		await canvas.page.locator(WIDE_FILL_TRIGGER).click();
+
+		await canvas.page.click(
+			`${selectors.propertyPanelDropdown} [data-action="set:fill:#dc2626"]`,
+		);
+
+		await expect
+			.poll(() => canvas.computedColor(id, "fill"))
+			.toBe(await canvas.normalizeColor("#dc2626"));
+		await expect(
+			canvas.page.locator(selectors.propertyPanelDropdown),
+		).toBeVisible();
+	});
+
+	test("closes on a press on the canvas outside it", async ({ canvas }) => {
+		await drawTileWithSidebar(canvas);
+		await canvas.page.locator(WIDE_FILL_TRIGGER).click();
+		await expect(
+			canvas.page.locator(selectors.propertyPanelDropdown),
+		).toBeVisible();
+
+		const panelBox = await boxOf(canvas, selectors.propertyPanelDropdown);
+		// Under the panel, clear of it and of the tile.
+		await canvas.page.mouse.click(
+			panelBox.x + panelBox.width / 2,
+			panelBox.y + panelBox.height + 200,
+		);
+
+		await expect(
+			canvas.page.locator(selectors.propertyPanelDropdown),
+		).toHaveCount(0);
+	});
+
+	test("opens under the trigger when the canvas has no room for it", async ({
+		canvas,
+	}) => {
+		await drawTileWithSidebar(canvas);
+		await canvas.page.setViewportSize(NARROW_VIEWPORT);
+		const triggerBox = await boxOf(canvas, WIDE_FILL_TRIGGER);
+
+		await canvas.page.locator(WIDE_FILL_TRIGGER).click();
+
+		const panelBox = await boxOf(canvas, selectors.propertyPanelDropdown);
+		const sidebar = await boxOf(canvas, selectors.propertyPanel);
+		expect(panelBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height);
+		expect(panelBox.x, "inside the sidebar").toBeGreaterThanOrEqual(sidebar.x);
+		expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(
+			sidebar.x + sidebar.width,
+		);
+		expect(
+			(await boxOf(canvas, WIDE_FILL_PANEL)).width,
+			"the content narrows to the panel the sidebar caps",
+		).toBeLessThanOrEqual(panelBox.width);
 	});
 });

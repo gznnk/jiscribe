@@ -43,6 +43,21 @@ const countReversals = (points: { x: number; y: number }[]): number => {
 	return reversals;
 };
 
+/** How far `y` clears the y-span [spanTop, spanBottom] vertically; -1 for a `y` inside it (a crossing). */
+const calcClearanceFromSpan = (
+	y: number,
+	spanTop: number,
+	spanBottom: number,
+): number => {
+	if (y <= spanTop) {
+		return spanTop - y;
+	}
+	if (y >= spanBottom) {
+		return y - spanBottom;
+	}
+	return -1;
+};
+
 describe("routeOrthogonalConnector", () => {
 	it("the full path includes the endpoints and every segment is horizontal/vertical", () => {
 		const source: OrthogonalConnectorEndpoint = {
@@ -313,13 +328,9 @@ describe("routeOrthogonalConnector", () => {
 				if (!spansTarget) {
 					continue;
 				}
-				const clearance =
-					a.y <= targetTop
-						? targetTop - a.y
-						: a.y >= targetBottom
-							? a.y - targetBottom
-							: -1; // inside the span → would cross; must not happen for a pass-by
-				expect(clearance).toBeGreaterThanOrEqual(margin);
+				expect(
+					calcClearanceFromSpan(a.y, targetTop, targetBottom),
+				).toBeGreaterThanOrEqual(margin);
 			}
 		}
 	});
