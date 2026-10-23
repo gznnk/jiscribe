@@ -35,6 +35,13 @@
   オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
 - **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
   毎フレーム以上の状態更新が走らないようにする（[設計思想](./01-design-philosophy.ja.md) の性能優先）。
+  1 フレーム分のジェスチャー（イベントのバッチ、または慣性スクロールの 1 フレーム）は `flushSync` の中で
+  dispatch する（recognizer の `wrapFrameDispatch`）。これでそのフレームの描画前にコミットされ、1 フレーム遅れない。
+  ただし予算を超えるフレームが続いたら（重い文書）コミットを React のスケジューラへ戻し、1 フレームの遅れと
+  引き換えにフレームレートを保つ。その間も一定フレームごとに同期コミットを試して収まれば戻り、フレームが閾値より
+  長く途切れたときも同期コミットへ戻る（閾値は `createAdaptiveFrameCommit` の定数）。切り替わるたびに User Timing の mark
+  （`jiscribe:frame-commit:scheduler` / `jiscribe:frame-commit:sync`）を打つので、ドラッグが重いときの
+  パフォーマンストレースで同フレームコミットが切れていた区間が分かる。
 - **2本指ピンチ（タッチ）**: 1本目のタッチがドラッグ確定する前に2本目の pointerdown が来ると、
   保留中の press を破棄してピンチモードに入る。`pinch` は `zoomScale`（指間距離比）と
   `scrollDelta`（中点移動）を載せ、1フレーム1発火に集約される（`settleBatch`）。

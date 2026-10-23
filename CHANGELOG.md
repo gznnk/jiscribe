@@ -197,6 +197,17 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   connector's label is now left out of the frame from the start, so the frame
   no longer shrinks on the first frame of a resize.
 
+- **Drag, wheel and fling updates show up in the frame that processed the
+  input instead of the next one.** The canvas handles pointer and wheel input
+  once per animation frame, but the resulting state update was scheduled on
+  React's default lane and committed after that frame had painted, so every
+  drag, wheel scroll or zoom, and inertial scroll lagged one frame (about
+  16ms) behind. Each frame's gestures are now committed synchronously inside
+  the frame. On heavy documents, where that would push the frame past its
+  budget and halve the frame rate, the canvas falls back to the previous
+  one-frame-late commit after two slow frames and tries the synchronous commit
+  again every 30 frames and after a pause in the input.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security

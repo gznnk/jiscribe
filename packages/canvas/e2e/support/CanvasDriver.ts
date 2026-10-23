@@ -687,8 +687,10 @@ export class CanvasDriver {
 	 * GestureRecognizer batches pointer input into one requestAnimationFrame run, while
 	 * keyboard shortcuts are handled synchronously on keydown. A keystroke sent right after
 	 * a click therefore reaches the canvas first: Enter opens the text editor, and the
-	 * click's batch a frame later reselects the shape and closes it again. Two frames,
-	 * because the batch runs in the first and React commits its update before the second.
+	 * click's batch a frame later reselects the shape and closes it again. Two frames:
+	 * the batch commits inside the first (useGestureRecognizer wraps it in flushSync),
+	 * and the second covers the fallback where a heavy document hands the commit back to
+	 * React's scheduler.
 	 *
 	 * Not a timed wait — it rests on the frame boundary the recognizer schedules against.
 	 * A click that changes the DOM is followed by an assertion on that change; this covers

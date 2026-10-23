@@ -140,6 +140,7 @@ const setup = () => {
 		// Mirrors the policy the canvas injects: the recognizer's contract is "ask
 		// the policy", not "know which buttons pan".
 		shouldFlingFromDrag: (button) => button === 1 || button === 2,
+		wrapFrameDispatch: (dispatchFrame) => dispatchFrame(),
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

@@ -154,6 +154,7 @@ const setup = () => {
 				viewport: sim.viewport,
 			},
 		},
+		wrapFrameDispatch: (dispatchFrame) => dispatchFrame(),
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();
