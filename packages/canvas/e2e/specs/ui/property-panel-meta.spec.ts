@@ -13,6 +13,10 @@ import { selectors } from "../../support/selectors";
  * read back the only way the drawing can show it — by leaving the selection and
  * coming back, which redraws the rows off the object rather than off what the
  * field is holding.
+ *
+ * The section also carries the "open reference" button for an object whose note
+ * names a `meta.reference`; the harness stands in for the host and logs what a
+ * press hands over (`window.__openedReferences`).
  */
 
 /** The rectangle the tests draw: 200 x 130, clear of the panel's own width. */
@@ -22,8 +26,71 @@ const RECT_TO = { x: 320, y: 280 };
 /** A point inside the drawn rectangle, for selecting it back. */
 const RECT_INSIDE = { x: 220, y: 215 };
 
-/** The global mountPluginHarness publishes the default page's handle on. */
-type HarnessWindow = { __canvasHandle?: CanvasModule.CanvasHandle | null };
+/** The reference the injected rectangle names, handed to the host untouched. */
+const REFERENCE = "notes/server.md";
+
+/** A point inside the injected rectangle that carries a reference. */
+const REFERENCED_INSIDE = { x: 220, y: 215 };
+
+/** A point inside the injected rectangle that carries none. */
+const UNREFERENCED_INSIDE = { x: 430, y: 195 };
+
+/**
+ * Two rectangles, one naming a reference in its note and one not. Injected
+ * because nothing in the sidebar writes a reference. Opaque, so a press inside
+ * lands on a painted face.
+ */
+const referenceDocText = JSON.stringify({
+	version: 1,
+	root: [
+		{
+			id: "referenced-rect",
+			type: "rect",
+			x: RECT_FROM.x,
+			y: RECT_FROM.y,
+			width: RECT_TO.x - RECT_FROM.x,
+			height: RECT_TO.y - RECT_FROM.y,
+			fill: "#cbd5e1",
+			meta: { name: "Server", reference: REFERENCE },
+		},
+		{
+			id: "unreferenced-rect",
+			type: "rect",
+			x: 380,
+			y: 150,
+			width: 100,
+			height: 90,
+			fill: "#cbd5e1",
+		},
+	],
+});
+
+/** The window globals mountPluginHarness installs that this spec reads. */
+type HarnessWindow = {
+	__canvasHandle?: CanvasModule.CanvasHandle | null;
+	__setHarnessDoc?: (docText: string) => void;
+	__openedReferences?: CanvasModule.OpenReferencePayload[];
+};
+
+async function loadDoc(canvas: CanvasDriver, docText: string) {
+	await canvas.page.evaluate((text) => {
+		const hook = (window as unknown as HarnessWindow).__setHarnessDoc;
+		if (!hook) {
+			throw new Error(
+				"__setHarnessDoc is undefined (harness hook not installed)",
+			);
+		}
+		hook(text);
+	}, docText);
+}
+
+async function openedReferences(
+	canvas: CanvasDriver,
+): Promise<CanvasModule.OpenReferencePayload[]> {
+	return canvas.page.evaluate(
+		() => (window as unknown as HarnessWindow).__openedReferences ?? [],
+	);
+}
 
 /**
  * What an SVG export holds of the document's note: the `meta` of the `.jis` source
@@ -101,6 +168,36 @@ test.describe("Properties sidebar meta section", () => {
 			section,
 			"and the canvas section is what stands with nothing selected",
 		).toHaveCount(0);
+	});
+
+	test("hands the object's reference to the host from the open-reference button", async ({
+		canvas,
+	}) => {
+		await loadDoc(canvas, referenceDocText);
+		await expect(canvas.objectById("referenced-rect")).toHaveCount(1);
+		await canvas.openPropertyPanel();
+		const openReference = canvas.page
+			.locator(selectors.propertyPanel)
+			.getByRole("button", { name: "Open Reference" });
+
+		await canvas.selectAt(UNREFERENCED_INSIDE);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("meta")),
+		).toBeVisible();
+		await expect(
+			openReference,
+			"an object naming no reference offers nothing to open",
+		).toHaveCount(0);
+
+		await canvas.selectAt(REFERENCED_INSIDE);
+		await openReference.click();
+		await expect
+			.poll(() => openedReferences(canvas))
+			.toEqual([{ objectId: "referenced-rect", reference: REFERENCE }]);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("metaName")),
+			"the press leaves the selection and the panel as they were",
+		).toHaveValue("Server");
 	});
 });
 

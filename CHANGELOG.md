@@ -109,6 +109,16 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   there, it opens under the field inside the sidebar, narrowed to fit. A
   selection drawing different icons shows the field as mixed, and the object
   menu's picker then highlights no cell rather than the first shape's icon.
+- **The property sidebar can group, ungroup and open a reference.** These
+  were the two things the object menu offered and the sidebar did not, though
+  the menu is hidden while the sidebar is open. The Arrange
+  section ends with a Group button for a multi-selection and an Ungroup button
+  for a selected group, offered under the same rule as the menu's; the section
+  now also shows for a selection across different parents, which can be
+  grouped though not reordered, with the stacking-order buttons disabled. The
+  Meta section carries an "Open Reference" button for an object whose
+  `meta.reference` is set, calling the same `onOpenReference` as the menu, and
+  only while the host passes one.
 - **For plugin authors: `PropertyDropdownField` takes `placement`.**
   `"under"` (the default, unchanged) opens the panel under the trigger inside
   the sidebar, now never wider than the sidebar; `"beside"` opens it outside

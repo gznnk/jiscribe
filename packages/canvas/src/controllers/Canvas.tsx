@@ -160,8 +160,9 @@ type CanvasProps = {
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
 	/**
 	 * Called when "open reference" is pressed for an object carrying
-	 * `meta.reference`. Omit it and the menu item is never offered. The reference
-	 * is passed through untouched: the canvas neither resolves nor validates it.
+	 * `meta.reference`, from the ObjectMenu or the property sidebar's Meta
+	 * section. Omit it and neither offers the button. The reference is passed
+	 * through untouched: the canvas neither resolves nor validates it.
 	 */
 	onOpenReference?: (payload: OpenReferencePayload) => void;
 	/**
@@ -499,8 +500,9 @@ const CanvasComponent = ({
 	} = usePropertyUpdaters(dispatch);
 
 	// The host callback is read through a ref, so passing a new function each
-	// render does not defeat ObjectMenu's memo. Only adding or removing the prop
-	// changes the identity, which is also what decides whether the item shows.
+	// render does not defeat the memo of ObjectMenu or PropertyPanel. Only adding
+	// or removing the prop changes the identity, which is also what decides
+	// whether the button shows.
 	const onOpenReferenceRef = useLatestRef(onOpenReference);
 	const hasOpenReferenceHandler = onOpenReference !== undefined;
 	const handleOpenReference = useMemo<OpenReferenceHandler | undefined>(
@@ -713,6 +715,7 @@ const CanvasComponent = ({
 							onTransformUpdate={handleTransformUpdate}
 							onDocumentUpdate={handleDocumentUpdate}
 							onMetaUpdate={handleMetaUpdate}
+							onOpenReference={handleOpenReference}
 						/>
 					)}
 				</CanvasBody>

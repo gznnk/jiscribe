@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 
+import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
 import { usePropertyPanelSections } from "./hooks/usePropertyPanelSections";
 import { ArrowHeadsItem } from "./items/ArrowHeadsItem";
 import type { BuiltinItemProps } from "./items/BuiltinItemProps";
@@ -11,6 +12,7 @@ import {
 	ViewPaddingItem,
 	ViewScrollItem,
 } from "./items/CanvasItems";
+import { GroupingItem } from "./items/GroupingItem";
 import {
 	AutoHeightItem,
 	LockAspectRatioItem,
@@ -18,7 +20,11 @@ import {
 	RotationItem,
 	SizeItem,
 } from "./items/LayoutItems";
-import { MetaDescriptionItem, MetaNameItem } from "./items/MetaItems";
+import {
+	MetaDescriptionItem,
+	MetaNameItem,
+	MetaOpenReferenceItem,
+} from "./items/MetaItems";
 import {
 	FillItem,
 	FillOpacityItem,
@@ -57,7 +63,9 @@ import type {
 	PropertyPanelMetaUpdater,
 	PropertyPanelTransformUpdater,
 } from "./PropertyPanelTypes";
+import { isArrangeSectionShown } from "./utils/isArrangeSectionShown";
 import { isCanvasSectionShown } from "./utils/isCanvasSectionShown";
+import { isGroupingItemShown } from "./utils/isGroupingItemShown";
 import { isMetaSectionShown } from "./utils/isMetaSectionShown";
 import { resolvePropertyPanelSectionLabel } from "./utils/resolvePropertyPanelSectionLabel";
 import type { CanvasControllerState } from "../../../CanvasTypes";
@@ -69,12 +77,13 @@ import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader"
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
-import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
-import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
-import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
+import type {
+	OpenReferenceHandler,
+	StyleIntentUpdater,
+} from "../ObjectMenu/ObjectMenuTypes";
 
 type PropertyPanelProps = {
 	/** The state the rows read: the draft-grafted objects, so a keystroke mid-edit shows here too. */
@@ -87,6 +96,8 @@ type PropertyPanelProps = {
 	onDocumentUpdate: PropertyPanelDocumentUpdater;
 	/** States one field of the selected object's note, for the Meta section. */
 	onMetaUpdate: PropertyPanelMetaUpdater;
+	/** The host's "open reference" handler; omitted, the Meta section offers no such button. */
+	onOpenReference?: OpenReferenceHandler;
 };
 
 const CLOSE_ICON_SIZE = 14;
@@ -102,18 +113,18 @@ const CANVAS_SECTION_ID = "canvas";
 const CANVAS_SECTION_LABEL = "Canvas";
 
 /**
- * Identity and English wording of the Arrange section: the stacking-order
- * commands, which belong to the selection rather than to any type, so the
- * panel adds the section itself after the per-type ones. The floating menu
- * offers no stacking order; the sidebar, the context menu and the shortcuts do.
+ * Identity and English wording of the Arrange section: the stacking-order and
+ * grouping commands, which belong to the selection rather than to any type, so
+ * the panel adds the section itself after the per-type ones.
  */
 const ARRANGE_SECTION_ID = "arrange";
 const ARRANGE_SECTION_LABEL = "Arrange";
 
 /**
  * Identity and English wording of the Meta section: the note the selected object
- * carries in the document, which belongs to the object rather than to its type,
- * so the panel adds it itself after the per-type sections and the Arrange one.
+ * carries in the document, and the way to the file its `meta.reference` names,
+ * which belong to the object rather than to its type, so the panel adds it itself
+ * after the per-type sections and the Arrange one.
  */
 const META_SECTION_ID = "meta";
 const META_SECTION_LABEL = "Meta";
@@ -188,8 +199,8 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * edge from the shape library. With nothing selected it holds the Canvas section
  * instead — the document's own settings, which is the panel's empty state. The
  * per-type sections are followed by the Arrange section whenever the selection
- * can be reordered, and by the Meta section whenever it names a single object —
- * both of which belong to the selection rather than to any of its types.
+ * can be reordered or grouped, and by the Meta section whenever it names a single
+ * object — both of which belong to the selection rather than to any of its types.
  *
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
  * handled by PropertyPanelHandler: everything inside it — its chrome, the
@@ -198,7 +209,8 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * toolbar's own toggle; a selection's controls write through the same `set:` /
  * `slider:` / `command:` grammar the floating menu uses and land one history
  * entry; the Canvas section's buttons write the document through `doc:` actions.
- * The fields that take typing opt out of gestures entirely.
+ * The fields that take typing opt out of gestures entirely, and so does the
+ * "open reference" button, which calls the host rather than the reducer.
  *
  * Open and collapse state are reducer state, so this component is render-only.
  */
@@ -208,6 +220,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 	onTransformUpdate,
 	onDocumentUpdate,
 	onMetaUpdate,
+	onOpenReference,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
@@ -217,7 +230,8 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 	const { collapsedSectionIds } = canvasState.propertyPanel;
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
 	const showsArrangeSection =
-		!showsCanvasSection && isArrangeableSelection(canvasState);
+		!showsCanvasSection && isArrangeSectionShown(canvasState, objectPartKind);
+	const showsGroupingItem = isGroupingItemShown(canvasState, objectPartKind);
 	const showsMetaSection =
 		!showsCanvasSection && isMetaSectionShown(canvasState, objectPartKind);
 	// State rather than a ref, so the fields re-render once the host element exists.
@@ -332,6 +346,9 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								isExpanded={!collapsedSectionIds.includes(ARRANGE_SECTION_ID)}
 							>
 								<StackOrderItem canvasState={canvasState} />
+								{showsGroupingItem && (
+									<GroupingItem canvasState={canvasState} />
+								)}
 							</PropertyPanelAccordion>
 						)}
 						{showsMetaSection && (
@@ -353,6 +370,12 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 									canvasState={canvasState}
 									onMetaUpdate={onMetaUpdate}
 								/>
+								{onOpenReference && (
+									<MetaOpenReferenceItem
+										canvasState={canvasState}
+										onOpenReference={onOpenReference}
+									/>
+								)}
 							</PropertyPanelAccordion>
 						)}
 					</PropertyPanelOverlayHostContext.Provider>
