@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { clickPlacedPlugin } from "../../../__tests__/support/clickPlacedPlugin";
+import { createTestSnapshot } from "../../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
@@ -13,7 +14,6 @@ import {
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { SelectionControlDefinition } from "../../../ui/controls/SelectionControlTypes";
 import { collectCowChangedKeys } from "../../../utils/cowObjects";
-import { createDocSnapshotFromDoc } from "../../../utils/resolveDocSnapshot";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
@@ -94,8 +94,8 @@ const docWithRect = {
 	version: 1,
 	root: [{ id: "r1", type: "rect", x: 0, y: 0, width: 100, height: 100 }],
 } as unknown as CanvasDoc;
-const snapshotEmpty = createDocSnapshotFromDoc(emptyDoc);
-const snapshotWithRect = createDocSnapshotFromDoc(docWithRect);
+const snapshotEmpty = createTestSnapshot(emptyDoc);
+const snapshotWithRect = createTestSnapshot(docWithRect);
 
 /** A gesture aimed at the control, with the fields every handler on the way reads. */
 const controlGesture = (type: "dragStart" | "drag" | "dragEnd"): Gesture =>

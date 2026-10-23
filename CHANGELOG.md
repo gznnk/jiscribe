@@ -156,6 +156,16 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   bound reaches the screen; a connector shifted with its dragged shapes is
   judged by its drag-start path moved by the drag, as it is drawn. Which
   objects are drawn does not change.
+- **Undo and redo no longer rebuild the whole document.** Each history entry
+  now keeps the state it was committed with, and undo, redo and
+  `history.revertTo` hand it back as is instead of rebuilding every object
+  from the entry's document. Objects the step leaves alone stay the same
+  objects, so their routes, text layout and rendering are reused and only what
+  changed is redrawn; the camera's reveal compares objects the same way. The
+  document is built only for the current entry, when it is saved or compared
+  against an external change. An entry recorded before a web font face
+  finished loading has its text boxes re-measured on the way back, so they
+  follow the fonts now loaded; only the boxes the new face changes are redrawn.
 - **Swapping an `awsIcon`'s icon from the menu carries its label along.**
   While the label is still the one the old icon comes with (the short name a
   stencil places, `S3`), picking another icon replaces it with the new one's

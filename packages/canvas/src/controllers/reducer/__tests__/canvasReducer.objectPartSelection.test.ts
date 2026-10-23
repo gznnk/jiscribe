@@ -119,7 +119,7 @@ describe("canvasReducer / selection.part reconciliation", () => {
 
 		const reverted = canvasReducer(nudged, {
 			type: "REVERT_HISTORY",
-			entry: nudged.history.past[0],
+			entry: nudged.history.past[0].source,
 		});
 
 		expect(reverted.selection.part).toBeNull();

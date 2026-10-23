@@ -217,7 +217,9 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 		// holds both the committed slot and the grown ones. Asserted on the
 		// snapshots: a rect's document has one body, so restoring one would fold
 		// the slots this test gives it.
-		expect(stepped.history.past).toEqual([start.history.present]);
+		expect(stepped.history.past.map((entry) => entry.source)).toEqual([
+			start.history.present.source,
+		]);
 		const steppedObject = stepped.history.present.source?.objects["rect-1"];
 		expect(steppedObject).toBe(stepped.objects["rect-1"]);
 		expect(slotOf(stepped, "c")).toBe("x");
@@ -225,12 +227,16 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 
 		const undone = [cancelEdit, undo].reduce(extendingReducer, stepped);
 		expect(undone.history.past).toEqual([]);
-		expect(undone.history.present).toBe(start.history.present);
-		expect(undone.history.future).toEqual([stepped.history.present]);
+		expect(undone.history.present.source).toBe(start.history.present.source);
+		expect(undone.history.future.map((entry) => entry.source)).toEqual([
+			stepped.history.present.source,
+		]);
 
 		const redone = extendingReducer(undone, redo);
-		expect(redone.history.past).toEqual([start.history.present]);
-		expect(redone.history.present).toBe(stepped.history.present);
+		expect(redone.history.past.map((entry) => entry.source)).toEqual([
+			start.history.present.source,
+		]);
+		expect(redone.history.present.source).toBe(stepped.history.present.source);
 	});
 
 	it("wraps to the first slot when extend declines", () => {

@@ -7,8 +7,8 @@ import {
 } from "../../../states/canvas/CanvasMapper";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import {
-	createDocSnapshotFromDoc,
 	createDocSnapshotFromState,
+	dropDocCache,
 	resolveDocSnapshot,
 } from "../resolveDocSnapshot";
 
@@ -39,8 +39,8 @@ describe("DocSnapshot", () => {
 
 		const resolvedDoc = resolveDocSnapshot(snapshot, mapper);
 		expect(resolvedDoc).toEqual(canvasToDoc(state, mapper));
-		// The source refs are released once resolved
-		expect(snapshot.source).toBeNull();
+		// The state is kept once resolved: it is what undo restores
+		expect(snapshot.source.objects).toBe(state.objects);
 	});
 
 	it("resolve is memoized: the second call returns the same doc without reconverting", () => {
@@ -56,12 +56,51 @@ describe("DocSnapshot", () => {
 		toDocSpy.mockRestore();
 	});
 
-	it("a from-doc snapshot returns the original doc verbatim without any conversion", () => {
-		const snapshot = createDocSnapshotFromDoc(rectDoc);
+	it("a snapshot created with the doc it was opened on returns that doc verbatim without any conversion", () => {
+		const state = canvasToState(rectDoc, mapper, contentResizer);
+		const snapshot = createDocSnapshotFromState(state, rectDoc);
 
 		const toDocSpy = vi.spyOn(mapper, "toDoc");
 		expect(resolveDocSnapshot(snapshot, mapper)).toBe(rectDoc);
 		expect(toDocSpy).not.toHaveBeenCalled();
 		toDocSpy.mockRestore();
+		expect(snapshot.source.objects).toBe(state.objects);
+	});
+
+	it("dropping the doc cache yields a new entry around the same state and leaves the old one as it was", () => {
+		const state = canvasToState(rectDoc, mapper, contentResizer);
+		const snapshot = createDocSnapshotFromState(state);
+		const resolvedDoc = resolveDocSnapshot(snapshot, mapper);
+
+		const dropped = dropDocCache(snapshot);
+
+		expect(dropped).not.toBe(snapshot);
+		expect(dropped.doc).toBeNull();
+		expect(dropped.source).toBe(snapshot.source);
+		expect(dropped.textMeasurementGeneration).toBe(
+			snapshot.textMeasurementGeneration,
+		);
+		expect(snapshot.doc).toBe(resolvedDoc);
+	});
+
+	it("keeps the doc it was opened on when it leaves present, that being no cache", () => {
+		const snapshot = createDocSnapshotFromState(
+			canvasToState(rectDoc, mapper, contentResizer),
+			rectDoc,
+		);
+		resolveDocSnapshot(snapshot, mapper);
+
+		const dropped = dropDocCache(snapshot);
+
+		expect(dropped).toBe(snapshot);
+		expect(resolveDocSnapshot(dropped, mapper)).toBe(rectDoc);
+	});
+
+	it("dropping the doc cache of an entry without one returns that entry", () => {
+		const snapshot = createDocSnapshotFromState(
+			canvasToState(rectDoc, mapper, contentResizer),
+		);
+
+		expect(dropDocCache(snapshot)).toBe(snapshot);
 	});
 });

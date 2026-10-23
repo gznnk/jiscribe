@@ -52,7 +52,7 @@ export type CanvasHistoryHandle = {
 	mark(): CanvasHistoryMark;
 	/**
 	 * Undoes back to a mark, however many entries that takes, in one step — the
-	 * document is materialized once, not once per entry undone.
+	 * canvas is restored and settled once, not once per entry undone.
 	 *
 	 * Redo is unaffected: everything undone stays redoable, one entry at a time,
 	 * exactly as it would be after that many separate undos.
@@ -109,11 +109,13 @@ export const useHistoryHandle = (
 			undo: () => run("undo"),
 			redo: () => run("redo"),
 
-			mark: () => ({ entry: canvasStateRef.current.history.present }),
+			// The entry's source, not the entry: the entry object is replaced when it
+			// leaves present (see DocSnapshot), its source never is.
+			mark: () => ({ entry: canvasStateRef.current.history.present.source }),
 
 			revertTo: (mark) => {
 				const { history } = canvasStateRef.current;
-				if (history.present === mark.entry) {
+				if (history.present.source === mark.entry) {
 					return true;
 				}
 				// The reducer checks reachability again (it must, being dispatchable
@@ -121,7 +123,7 @@ export const useHistoryHandle = (
 				// keeps revert unavailable wherever undo itself is — a canvas
 				// configured without the undo command has no back door here.
 				if (
-					!history.past.some((entry) => entry === mark.entry) ||
+					!history.past.some((entry) => entry.source === mark.entry) ||
 					!canRun("undo")
 				) {
 					return false;

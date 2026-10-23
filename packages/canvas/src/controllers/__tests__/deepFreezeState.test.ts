@@ -64,6 +64,7 @@ describe("deepFreezeState", () => {
 		);
 		expect(resolvedDoc).not.toBeNull();
 		expect(state.history.present.doc).toBe(resolvedDoc);
-		expect(state.history.present.source).toBeNull();
+		// The state stays: it is what undo restores
+		expect(state.history.present.source.objects).toBe(base.objects);
 	});
 });

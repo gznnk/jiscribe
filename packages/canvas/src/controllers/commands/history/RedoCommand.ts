@@ -1,3 +1,4 @@
+import { dropDocCache } from "../../utils/resolveDocSnapshot";
 import {
 	canNavigateHistory,
 	canOfferHistoryNavigation,
@@ -43,7 +44,7 @@ export const RedoCommand: ExecutableCommand = {
 		return restoreHistorySnapshot(
 			state,
 			{
-				past: [...past, present],
+				past: [...past, dropDocCache(present)],
 				present: future[0],
 				future: future.slice(1),
 			},
