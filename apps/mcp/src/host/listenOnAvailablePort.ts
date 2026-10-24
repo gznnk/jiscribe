@@ -4,8 +4,9 @@
 
 import type http from "node:http";
 
+import { isErrnoWithCode } from "@jiscribe/doc-tools/file";
+
 import { CanvasHostError } from "./canvasHostError";
-import { isErrnoWithCode } from "../nodeErrors";
 
 /** How many times to step one port up when the port is already in use */
 const PORT_ATTEMPT_COUNT = 20;

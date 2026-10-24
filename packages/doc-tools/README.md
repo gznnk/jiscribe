@@ -1,12 +1,14 @@
 # @jiscribe/doc-tools
 
-Checking, measuring and diagnosing `.jis` documents from Node. React- and
-DOM-free: the document layer is reached through `@jiscribe/doc` and
-`@jiscribe/doc/unstable` alone, so this runs in a CI job, an MCP server or a CLI without a
-browser anywhere.
+Checking, measuring and diagnosing `.jis` documents from Node, reading and
+writing them (`./file`), the editing tool set over the shipped shapes
+(`./canvas-tools`) and the drawing guides (`./guides`). React- and DOM-free:
+the document layer is reached through `@jiscribe/doc` and
+`@jiscribe/doc/unstable`, and the tool set through `@jiscribe/ai-tools`, so this
+runs in a CI job, an MCP server or a CLI without a browser anywhere.
 
 `@jiscribe/cli` is the command-line mouth on it (`jiscribe validate` /
-`diagnose` / `measure`); the same functions are what an MCP tool should call, so
+`diagnose` / `measure` / `op` / `guide`); the same functions are what an MCP tool should call, so
 the answers an AI gets and the answers CI gets cannot drift.
 
 ## API
@@ -17,6 +19,48 @@ the answers an AI gets and the answers CI gets cannot drift.
 | `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                       |
 | `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                         |
 | `diagnoseDoc(doc)`                                | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? |
+| `formatDiagnostics(diagnostics)`                  | What do those findings read as, one line each, for a person or an AI?                                                                                                                                                 |
+
+### Canvas files: `@jiscribe/doc-tools/file`
+
+Reading and writing `.jis` files. The root has no file reading or writing layer;
+this entry is where it lives.
+
+- `toCanvasFilePath(path)` — the one gate every path goes through: absolute, a
+  canvas extension (`CANVAS_FILE_EXTENSIONS`), resolved through its links.
+- `loadCanvasFile(path)` / `readCanvasFileText(path)` — the file parsed with the
+  same parser `validateDoc` runs, or its raw text for diagnosing a broken one.
+- `saveCanvasFile(path, doc, { validatorName, loaded, isNewFile })` — written back
+  only if the edit adds no finding the loaded file did not carry, and only if the
+  file has not changed since it was loaded. `validatorName` is what the caller's
+  user knows the validation by (an MCP tool, a CLI command); the refusal names it.
+  With no `loaded`, `isNewFile: true` refuses the write if a file has appeared at
+  the path since the caller found it missing.
+- `ensureCanvasFile(path)` — creates an empty canvas, or checks an existing one.
+- `createEmptyCanvasDoc()` — the empty document a missing file starts as.
+- `prepareAtomicWrite` / `writeFileAtomically` / `readFileSnapshot` — the temp file
+  and rename under every write, and the file identity a write-back checks against.
+- `realpathDeepestExisting(path)` / `isErrnoWithCode(error, code)` — the link
+  resolution under `toCanvasFilePath`, and the Node error test the layer uses.
+
+Every refusal is a `CanvasFileError` whose message can be shown as it is.
+
+### Canvas tools: `@jiscribe/doc-tools/canvas-tools`
+
+`standardCanvasToolSet` and `standardDocOps`: the `@jiscribe/ai-tools`
+declarations over the shipped shape set, with the doc-ops `applyCanvasOp` edits
+through, built once from `standardDocPlugins` / `standardAiToolPlugins`.
+jiscribe-mcp and the CLI's `jiscribe op` take theirs from here, so a tool is
+declared and applied the same way in both. Importing it offers the Node text
+measurement, which the doc-ops need for a shape that leaves its height out.
+
+### Drawing guides: `@jiscribe/doc-tools/guides`
+
+`readDrawingGuide(name)` reads one of the two guides `@jiscribe/doc-schema`
+generates (`DRAWING_GUIDE_NAMES`: `drawing`, `json-format`) through node
+resolution, and throws a `DrawingGuideError` when it is missing or empty rather
+than returning nothing. A host that bundles this stages the guide files where
+its bundle resolves them (jiscribe-mcp's `build.mjs`).
 
 ## Why validation is the parser
 

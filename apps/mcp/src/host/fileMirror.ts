@@ -22,16 +22,17 @@ import { unwatchFile, watchFile } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { WriteOpenFileOutcome } from "./canvasHostTypes";
-import { resolveWorkspacePathReal } from "./workspacePaths";
 import {
+	formatParseResult,
+	isErrnoWithCode,
 	prepareAtomicWrite,
 	readFileSnapshot,
 	type FileSnapshot,
-} from "../atomicWrite";
+} from "@jiscribe/doc-tools/file";
+
+import type { WriteOpenFileOutcome } from "./canvasHostTypes";
+import { resolveWorkspacePathReal } from "./workspacePaths";
 import { canvasParser } from "../canvasDefinitions";
-import { formatParseResult } from "../canvasStore";
-import { isErrnoWithCode } from "../nodeErrors";
 import type { CanvasHostServerMessage } from "../shared/canvasHostProtocol";
 
 /**

@@ -27,6 +27,7 @@ import path from "node:path";
 import { pipeline } from "node:stream";
 
 import { resolveDocImageMimeType } from "@jiscribe/doc";
+import { isErrnoWithCode } from "@jiscribe/doc-tools/file";
 
 import type { WriteOpenFileOutcome } from "./canvasHostTypes";
 import {
@@ -39,7 +40,6 @@ import {
 	resolveWorkspacePathReal,
 	WorkspacePathError,
 } from "./workspacePaths";
-import { isErrnoWithCode } from "../nodeErrors";
 import {
 	FILE_API_PATH_PARAM,
 	FILE_API_PATHNAME,

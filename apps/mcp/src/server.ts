@@ -1,8 +1,9 @@
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-
 import {
 	isAiDocOp,
+	isCanvasHandleTool,
+	toDrivesMismatchText,
+	toOutcomeText,
+	toThrownText,
 	type AiCanvasOpOutcome,
 	type AiDocOp,
 	type CanvasToolArgs,
@@ -13,9 +14,15 @@ import type { Diagnostic } from "@jiscribe/doc-tools";
 import {
 	resolveContentBox,
 	diagnoseDoc,
+	formatDiagnostics,
 	measureWrappedText,
 	validateDoc,
 } from "@jiscribe/doc-tools";
+import {
+	DrawingGuideError,
+	readDrawingGuide as readDrawingGuideFile,
+	type DrawingGuideName,
+} from "@jiscribe/doc-tools/guides";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
@@ -25,7 +32,6 @@ import {
 	readCanvasFileText,
 	CANVAS_FILE_EXTENSIONS,
 } from "./canvasStore";
-import { formatDiagnostics } from "./diagnosticReport";
 import type { CanvasHost } from "./host/canvasHost";
 import { CanvasHostError } from "./host/canvasHostError";
 import { createJiscribeMcpRuntime, type JiscribeMcpRuntime } from "./runtime";
@@ -111,22 +117,6 @@ const DEFAULT_ELLIPSE_RY = 50;
 const DEFAULT_FONT_FAMILY = '"Source Sans 3", "Noto Sans JP", sans-serif';
 
 const pathArg = z.string().describe("Absolute path to the target .jis file.");
-
-const require = createRequire(import.meta.url);
-
-/**
- * The module specifier each `read_drawing_guide` value reads. Resolved at run
- * time through node rather than bundled in, so `@jiscribe/doc-schema` stays the
- * single source of the prose; `build.mjs` stages the two files beside
- * `dist/index.mjs` so a checkout is not needed.
- */
-const DRAWING_GUIDE_SPECIFIERS = {
-	drawing: "@jiscribe/doc-schema/canvas-prompt",
-	"json-format": "@jiscribe/doc-schema/authoring-json",
-} as const;
-
-/** The guides `read_drawing_guide` can be asked for; its enum names these keys. */
-type DrawingGuide = keyof typeof DRAWING_GUIDE_SPECIFIERS;
 
 /**
  * What the server tells a client about itself at handshake time. It stays in the
@@ -452,7 +442,7 @@ function registerDocTools(
 	applyToFile: (filePath: string, op: AiDocOp) => Promise<AiCanvasOpOutcome>,
 ): void {
 	for (const descriptor of descriptors) {
-		if (descriptor.drives.some((ref) => ref.startsWith("handle."))) {
+		if (isCanvasHandleTool(descriptor)) {
 			continue;
 		}
 		if (Object.hasOwn(descriptor.inputSchema, "path")) {
@@ -474,7 +464,7 @@ function registerDocTools(
 					if (!isAiDocOp(op)) {
 						// Only happens when the `drives` declaration and where toOp goes
 						// disagree
-						return `internal error: ${descriptor.name} is declared to need only a document but produced a canvas-handle operation`;
+						return toDrivesMismatchText(descriptor);
 					}
 					return toOutcomeText(await applyToFile(path, op));
 				}),
@@ -536,7 +526,7 @@ function registerHandleTools(
 	waitForEarlierCalls: () => Promise<void>,
 ): void {
 	for (const descriptor of descriptors) {
-		if (!descriptor.drives.some((ref) => ref.startsWith("handle."))) {
+		if (!isCanvasHandleTool(descriptor)) {
 			continue;
 		}
 		const note = HANDLE_TOOL_DESCRIPTION_NOTES[descriptor.name];
@@ -563,9 +553,7 @@ function registerHandleTools(
 				if (isAiDocOp(op)) {
 					// Only happens when the `drives` declaration and where toOp goes
 					// disagree
-					return textResult(
-						`internal error: ${descriptor.name} is declared to drive the canvas handle but produced a document operation`,
-					);
+					return textResult(toDrivesMismatchText(descriptor));
 				}
 				const outcome = await host.runHandleOp(op);
 				if (outcome.imagePngBase64 !== undefined) {
@@ -595,33 +583,23 @@ function round(value: number): number {
 }
 
 /**
- * Read one guide off disk, resolved through `@jiscribe/doc-schema`'s exports.
- *
- * A missing or empty file is thrown rather than answered with nothing: it means
- * the build failed to stage the guide, and an empty answer would let a
- * distribution ship without any of this and never say so.
+ * Read one guide off disk (see readDrawingGuide in @jiscribe/doc-tools/guides,
+ * whose files `build.mjs` stages beside `dist/index.mjs`).
  *
  * @param guide Which of the two guides to read; the tool's enum names the same
  *   keys, so an unknown one cannot reach here
  * @throws CanvasFileError when the guide cannot be resolved, read, or is empty
  */
-function readDrawingGuide(guide: DrawingGuide): string {
-	const specifier = DRAWING_GUIDE_SPECIFIERS[guide];
-	let markdown: string;
+function readDrawingGuide(guide: DrawingGuideName): string {
 	try {
-		markdown = readFileSync(require.resolve(specifier), "utf8");
+		return readDrawingGuideFile(guide);
 	} catch (error) {
-		const reason = error instanceof Error ? error.message : String(error);
-		throw new CanvasFileError(
-			`the "${guide}" guide could not be read from ${specifier}, so this installation is incomplete: ${reason}`,
-		);
+		// runTool shows a CanvasFileError's message as it is
+		if (error instanceof DrawingGuideError) {
+			throw new CanvasFileError(error.message);
+		}
+		throw error;
 	}
-	if (markdown.trim() === "") {
-		throw new CanvasFileError(
-			`the "${guide}" guide at ${specifier} is empty, so this installation is incomplete`,
-		);
-	}
-	return markdown;
 }
 
 /**
@@ -701,21 +679,6 @@ type ToolContent =
 /** One tool call's reply */
 type ToolReply = { content: ToolContent[] };
 
-/**
- * The text one applied operation is reported with. applyCanvasOp already writes
- * `internal error:` in front of a failure that is not the AI's doing, and that
- * prefix is kept rather than doubled up, so the first token of a reply is either
- * `error:` or `internal error:` — the same two runTool produces.
- */
-function toOutcomeText(outcome: AiCanvasOpOutcome): string {
-	if (outcome.ok) {
-		return outcome.text;
-	}
-	return outcome.text.startsWith("internal error:")
-		? outcome.text
-		: `error: ${outcome.text}`;
-}
-
 /** Build an MCP tool's return value (a single piece of text). */
 function textResult(text: string): ToolReply {
 	return { content: [{ type: "text", text }] };
@@ -732,14 +695,15 @@ async function runTool(handler: () => Promise<string>): Promise<ToolReply> {
 	try {
 		return textResult(await handler());
 	} catch (error) {
-		if (
-			error instanceof CanvasFileError ||
-			error instanceof CanvasHostError ||
-			error instanceof DocOperationError
-		) {
-			return textResult(`error: ${error.message}`);
-		}
-		const reason = error instanceof Error ? error.message : String(error);
-		return textResult(`internal error: ${reason}`);
+		return textResult(toThrownText(error, isUserFacingError));
 	}
+}
+
+/** The errors whose message runTool shows as the user's, after `error:`. */
+function isUserFacingError(error: unknown): error is Error {
+	return (
+		error instanceof CanvasFileError ||
+		error instanceof CanvasHostError ||
+		error instanceof DocOperationError
+	);
 }

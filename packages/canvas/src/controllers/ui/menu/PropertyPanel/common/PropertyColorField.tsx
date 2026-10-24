@@ -76,8 +76,6 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	const messages = useCanvasMessages();
 	const isAuto = isAutoColor(value);
 	const isMixed = mixedValues !== undefined;
-	const resolveSwatchColor = (color: string): string =>
-		color === "transparent" ? color : resolveAutoColor(color, role);
 	const singleColorLabel = isAuto ? (
 		<PropertyColorAutoLabel>{messages.colorPickerAuto}</PropertyColorAutoLabel>
 	) : (
@@ -94,13 +92,13 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 							{calcMixedColorSegments(mixedValues).map((segment) => (
 								<PropertyColorMixedSwatchSegment
 									key={segment.start}
-									swatchColor={resolveSwatchColor(segment.color)}
+									swatchColor={resolveAutoColor(segment.color, role)}
 									widthFraction={segment.end - segment.start}
 								/>
 							))}
 						</PropertyColorMixedSwatch>
 					) : (
-						<PropertyColorSwatch swatchColor={resolveSwatchColor(value)} />
+						<PropertyColorSwatch swatchColor={resolveAutoColor(value, role)} />
 					)}
 					<PropertyDropdownTriggerLabel>
 						{isMixed ? (
