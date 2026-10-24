@@ -8,6 +8,7 @@ import {
 	isConnectorLabelForeignObject,
 } from "./foreignObjectToSvgText";
 import { readBlobAsDataUri } from "./readBlobAsDataUri";
+import { isTransparentColor } from "../color/isTransparentColor";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -36,8 +37,10 @@ export type BuildExportSvgOptions = {
 	description?: string;
 	/**
 	 * Background color. When omitted, the live SVG's computed
-	 * `background-color` is used. Pass `"transparent"` to skip the
-	 * background rect entirely.
+	 * `background-color` is used. A color that paints nothing — `""`,
+	 * `"transparent"`, or a hex / `rgb()` / `rgba()` color with alpha 0 — skips
+	 * the background rect entirely. `hsl()`, named colors and `var(...)` are not
+	 * recognized as transparent and always get a rect.
 	 */
 	background?: string;
 	/**
@@ -284,11 +287,7 @@ export const buildExportSvg = (
 	// Lay the background color as a solid rect covering the whole viewBox
 	const background =
 		options.background ?? getComputedStyle(svg).backgroundColor;
-	const isTransparent =
-		!background ||
-		background === "transparent" ||
-		background === "rgba(0, 0, 0, 0)";
-	if (!isTransparent) {
+	if (!isTransparentColor(background)) {
 		const viewBox = cloned.viewBox.baseVal;
 		const backgroundRect = document.createElementNS(SVG_NS, "rect");
 		backgroundRect.setAttribute("x", String(viewBox.x));

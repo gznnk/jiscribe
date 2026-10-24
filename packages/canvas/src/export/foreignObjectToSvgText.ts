@@ -22,6 +22,7 @@ import { layoutVisualLines } from "@jiscribe/doc/text/layout/layoutVisualLines";
 import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 
 import { borderStyleToDasharray } from "./borderStyleToDasharray";
+import { isTransparentColor } from "../color/isTransparentColor";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -52,15 +53,6 @@ const toTextAnchor = (textAlign: string): "start" | "middle" | "end" => {
 const parsePxOr = (value: string, fallback: number): number => {
 	const parsed = Number.parseFloat(value);
 	return Number.isFinite(parsed) ? parsed : fallback;
-};
-
-/** True for a color that paints nothing (keyword or zero alpha). */
-const isFullyTransparent = (color: string): boolean => {
-	if (color === "" || color === "transparent") {
-		return true;
-	}
-	const alpha = color.match(/^rgba?\([^)]*,\s*([\d.]+)\s*\)$/);
-	return alpha !== null && Number.parseFloat(alpha[1]) === 0;
 };
 
 /** Geometry attributes of the cloned foreignObject (parent user units). */
@@ -441,10 +433,10 @@ const createLabelBoxRect = (
 	geometry: ForeignObjectGeometry,
 ): SVGRectElement | null => {
 	const background = boxStyle.backgroundColor;
-	const hasBackground = !isFullyTransparent(background);
+	const hasBackground = !isTransparentColor(background);
 	const borderWidth = parsePxOr(boxStyle.borderTopWidth, 0);
 	const borderColor = boxStyle.borderTopColor;
-	const hasBorder = borderWidth > 0 && !isFullyTransparent(borderColor);
+	const hasBorder = borderWidth > 0 && !isTransparentColor(borderColor);
 	if (!hasBackground && !hasBorder) {
 		return null;
 	}

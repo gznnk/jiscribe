@@ -1,12 +1,12 @@
 import { memo, useId } from "react";
 
-import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
-import { isTransparentPreviewColor } from "./utils/isTransparentPreviewColor";
 import {
 	calcClockSectorPath,
 	calcSegmentClockAngles,
 } from "./utils/mixedColorArcs";
+import { isTransparentColor } from "../../../color/isTransparentColor";
 import { theme } from "../../../theme/themeTokens";
+import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
 
 type ColorPreviewIconProps = {
 	color: string;
@@ -46,7 +46,7 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 	// fill may hold var(--jiscribe-*) (the auto-fill surface color).
 	// var() is not resolved in presentation attributes, so apply it via style.
 	const toFillStyle = (shownColor: string): React.CSSProperties => ({
-		fill: isTransparentPreviewColor(shownColor)
+		fill: isTransparentColor(shownColor)
 			? `url("#${transparentPatternId}")`
 			: shownColor,
 	});
@@ -59,7 +59,7 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			<title>{title}</title>
-			{shownColors.some(isTransparentPreviewColor) && (
+			{shownColors.some(isTransparentColor) && (
 				<defs>
 					<pattern
 						id={transparentPatternId}
