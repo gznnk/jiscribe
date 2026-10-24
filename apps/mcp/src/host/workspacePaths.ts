@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { realpathDeepestExisting } from "../realpathDeepestExisting";
+import { realpathDeepestExisting } from "@jiscribe/doc-tools/file";
 
 /**
  * An error standing for a request to reach outside the workspace. The HTTP layer

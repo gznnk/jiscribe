@@ -211,6 +211,15 @@ importers:
       '@fontsource/source-serif-4':
         specifier: 5.3.0
         version: 5.3.0
+      '@jiscribe/ai-tools':
+        specifier: workspace:*
+        version: link:../../packages/ai-tools
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
+      '@jiscribe/doc-schema':
+        specifier: workspace:*
+        version: link:../../packages/doc-schema
       '@jiscribe/doc-tools':
         specifier: workspace:*
         version: link:../../packages/doc-tools
@@ -220,13 +229,13 @@ importers:
       playwright-core:
         specifier: ^1.62.1
         version: 1.62.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.5.4
     devDependencies:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
-      '@jiscribe/doc':
-        specifier: workspace:*
-        version: link:../../packages/doc
       '@jiscribe/standard-shapes':
         specifier: workspace:*
         version: link:../../packages/standard-shapes
@@ -722,12 +731,18 @@ importers:
       '@fontsource/source-serif-4':
         specifier: 5.3.0
         version: 5.3.0
+      '@jiscribe/ai-tools':
+        specifier: workspace:*
+        version: link:../ai-tools
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
       '@jiscribe/doc':
         specifier: workspace:*
         version: link:../doc
+      '@jiscribe/doc-schema':
+        specifier: workspace:*
+        version: link:../doc-schema
       '@jiscribe/geometry':
         specifier: workspace:*
         version: link:../geometry
@@ -738,9 +753,6 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
     devDependencies:
-      '@jiscribe/doc-schema':
-        specifier: workspace:*
-        version: link:../doc-schema
       '@types/fontkit':
         specifier: ^2.0.9
         version: 2.0.9

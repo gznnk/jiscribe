@@ -45,3 +45,9 @@ export {
 	type AiCanvasCapabilities,
 	toCanvasCapabilities,
 } from "./capabilities";
+export {
+	isCanvasHandleTool,
+	toDrivesMismatchText,
+	toOutcomeText,
+	toThrownText,
+} from "./toolHosting";

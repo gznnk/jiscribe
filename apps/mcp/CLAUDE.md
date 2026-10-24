@@ -38,8 +38,9 @@ they hold.
 - **Routing is by the declaration's `drives`**: a tool that names a `handle.*`
   goes to the viewer, everything else to the file.
 - **Declaration and application come from one `canvasToolSet`**
-  (`canvasDefinitions.ts`), so a declared tool that cannot be applied cannot
-  exist. Plugin tools that move connect points declare it through
+  (`canvasDefinitions.ts`, re-exporting `@jiscribe/doc-tools/canvas-tools`,
+  which the CLI's `jiscribe op` shares), so a declared tool that cannot be
+  applied cannot exist. Plugin tools that move connect points declare it through
   `connectPointRemap`; `applyCanvasOp` rewrites the attached connector ends.
 - **Every name goes through `registerName`**, which throws on a duplicate at
   startup (the SDK would otherwise let the later one win silently).
@@ -52,24 +53,30 @@ they hold.
   `read_drawing_guide`). It costs context all session; the canvas model, shape
   usage, drawing craft and JSON format belong in the guides.
 - **`read_drawing_guide` resolves the guides through `@jiscribe/doc-schema`'s
-  exports** and errors when they are missing rather than returning empty.
+  exports** (`@jiscribe/doc-tools/guides`, shared with `jiscribe guide`) and
+  errors when they are missing rather than returning empty.
 - **`diagnose_canvas` is the only validation entry point.** Do not add a
   variant that takes the document text.
 
 ## Files and concurrency
 
-- **Every `path` goes through `toCanvasFilePath`** (`canvasStore.ts`): absolute,
-  a canvas extension, resolved through symlinks. Its result is the lock key, the
-  undo-history key and the path read and written. `add_rect` / `add_ellipse` go
+- **Every `path` goes through `toCanvasFilePath`** (`@jiscribe/doc-tools/file`):
+  absolute, a canvas extension, resolved through symlinks. Its result is the lock
+  key, the undo-history key and the path read and written. `add_rect` / `add_ellipse` go
   through `applyDocOpToFile` as `addObject`, so they share the lock and undo.
 - **Calls on one file are serialised** (`pathLock.ts`, entered through
   `canvasFileLock.ts`, which also admits calls in arrival order while their
   paths resolve). Every tool is load → modify → write back, and the AI sends
   independent adds in parallel by default, so without the lock parallel adds
   overwrite each other (`concurrency.test.ts`).
-- **Writes go through a temp file and rename** (`atomicWrite.ts`). The lock only
-  orders our own writers; the host's watch and outside editors read without it
-  and must never see a half-written file.
+- **`runtime.ts`, `canvasFileLock.ts` and `server.ts` reach the file layer
+  through `canvasStore.ts`**, which re-exports `@jiscribe/doc-tools/file` and
+  binds `saveCanvasFile`'s refusal to the name `diagnose_canvas`. Tests that
+  `vi.mock` a tool's file call mock it there; a tool importing doc-tools
+  directly would bypass them. `host/` imports doc-tools directly.
+- **Writes go through a temp file and rename** (`@jiscribe/doc-tools/file`'s
+  `atomicWrite.ts`). The lock only orders our own writers; the host's watch and
+  outside editors read without it and must never see a half-written file.
 - **A read-only op writes nothing back**: `applyDocOpToFile` saves only if the
   op called `replaceDoc`, so reads do not shake the viewer or consume undo
   history.

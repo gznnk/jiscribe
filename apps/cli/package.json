@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Command-line checking, measuring and diagnosing of jiscribe documents",
+	"description": "Command-line checking, measuring, diagnosing, drawing and editing of jiscribe documents, and their drawing guides",
 	"bin": {
 		"jiscribe": "dist/index.mjs"
 	},
@@ -16,8 +16,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
-		"dependencies": "Everything but fontkit is bundled into dist/index.mjs. The @fontsource packages stay listed because they are resolved by path at run time rather than imported, from dist/ upwards: they hold the font files the Node measurer reads (see @jiscribe/doc-tools). Drop one and the bundle still builds, then fails on first use.",
-		"devDependencies": "The canvas, the standard shape set, react and katex are the ingredients of the two browser pages: the render harness (harness/ -> dist/harness) and the preview page (preview/ -> dist/preview). Nothing under src/ imports them: the CLI itself stays headless."
+		"dependencies": "Everything but fontkit and @jiscribe/doc-schema is bundled into dist/index.mjs. Two kinds of file are resolved by path at run time rather than imported, from dist/ upwards: the @fontsource packages hold the font files the Node measurer reads (see @jiscribe/doc-tools), and @jiscribe/doc-schema holds the two guides `jiscribe guide` prints (see @jiscribe/doc-tools/guides). Drop one and the bundle still builds, then fails on first use.",
+		"devDependencies": "The canvas, the standard shape set, react and katex are the ingredients of the two browser pages: the render harness (harness/ -> dist/harness) and the preview page (preview/ -> dist/preview). Nothing under src/ imports them: the CLI itself stays headless, and takes the shape set it edits with from @jiscribe/doc-tools/canvas-tools."
 	},
 	"dependencies": {
 		"@fontsource/caveat": "5.3.0",
@@ -27,13 +27,16 @@
 		"@fontsource/source-code-pro": "5.3.0",
 		"@fontsource/source-sans-3": "5.3.0",
 		"@fontsource/source-serif-4": "5.3.0",
+		"@jiscribe/ai-tools": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
+		"@jiscribe/doc-schema": "workspace:*",
 		"@jiscribe/doc-tools": "workspace:*",
 		"fontkit": "^2.0.4",
-		"playwright-core": "^1.62.1"
+		"playwright-core": "^1.62.1",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@jiscribe/canvas": "workspace:*",
-		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
