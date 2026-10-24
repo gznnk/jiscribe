@@ -69,7 +69,7 @@ that applying and reading share, `tables/` holds the per-type style tables, and
 pair (see [Style System](./10-style-properties.md)).
 
 For each shape there is a corresponding `states/objects/.../<shape>/`,
-`controllers/behaviors/...`, and `rendering/objects/...`. The list of core types is
+a behavior (see **behaviors/** below), and `rendering/objects/...`. The list of core types is
 `ObjectTypes` in `@jiscribe/doc`'s `model/objects/types/ObjectType.ts`; every other
 shape comes from a plugin → [Plugin Architecture](./12-plugin-architecture.md).
 
@@ -95,7 +95,7 @@ Dependency: `rendering → states / @jiscribe/doc / theme` (types and pure funct
 ### Control Layer
 
 - **gestures/handlers/**: Receive gestures and update `CanvasState`. The per-target EventHandlers sit in subfolders (`objects/`, `controls/`, …), and `handleGesture.ts` dispatches to them.
-- **behaviors/**: `ObjectBehavior` implementations registered in `ObjectBehaviorRegistry` (the contract is `ObjectBehaviorEntry` in `gestures/registry/ObjectBehaviorTypes.ts`). Per-type Controllers live under `primitives/` and `connector/`. A type drawn as a frame (e.g. rect / ellipse) has no Controller of its own: its behavior comes from `createFrameBehavior` in `base/FrameController.ts`. The shared transform logic lives under `base/` too. Consumed via the registry from `gestures`, `commands`, `reducer`, and `utils`.
+- **behaviors/**: `ObjectBehavior` implementations registered in `ObjectBehaviorRegistry` (the contract is `ObjectBehaviorEntry` in `gestures/registry/ObjectBehaviorTypes.ts`). Per-type Controllers live under `primitives/` and `connector/`, for the types whose behavior is their own (e.g. text, connector). The rest have no Controller of their own: a type drawn as a frame (e.g. rect / ellipse / group) gets its behavior from `createFrameBehavior` in `base/FrameController.ts`, and a vertex-based type (e.g. polygon / polyline) from `createPolyBehavior` in `base/PolyController.ts`; `BUILTIN_OBJECT_DEFINITIONS` in `registries/applyObjectDefinition.ts` says which. The shared transform logic lives under `base/` too, including `GroupChildrenTransform.ts`, which carries a group transform or rotation down to every descendant. Consumed via the registry from `gestures`, `commands`, `reducer`, and `utils`.
 - **commands/**: Operations shared by shortcuts, menus, and the toolbar → [Command System](./05-command-system.md).
 - **reducer/**: Dispatches actions to the appropriate handlers → [State Update Flow](./06-state-update-flow.md).
 - **ui/**: UI control logic such as transform controls and menus.
@@ -220,7 +220,7 @@ Adding a core type. Thanks to the Registry pattern, the steps below are all it t
 1. **Doc**: `@jiscribe/doc`'s `model/objects/primitives/<shape>/<Shape>Doc.ts` (+ `validate<Shape>Doc.ts`, `<Shape>ObjectFactory.ts`). Add the type to the list of core types too (`ObjectTypes` in `model/objects/types/ObjectType.ts`)
 2. **State**: `states/objects/primitives/<shape>/<Shape>State.ts`
 3. **Mapper**: `states/objects/primitives/<shape>/<Shape>Mapper.ts` (Doc ↔ State)
-4. **Behavior**: `controllers/behaviors/primitives/<Shape>Controller.ts` (satisfying `ObjectBehaviorEntry`). A type drawn as a frame needs none: use `createFrameBehavior` from `behaviors/base/FrameController.ts`
+4. **Behavior**: a type drawn as a frame uses `createFrameBehavior` from `behaviors/base/FrameController.ts`, and a vertex-based type (its geometry is `points`) uses `createPolyBehavior` from `behaviors/base/PolyController.ts`. Only a type that fits neither needs its own `controllers/behaviors/primitives/<Shape>Controller.ts` (satisfying `ObjectBehaviorEntry`)
 5. **Component**: `rendering/objects/primitives/<Shape>/<Shape>.tsx`
 6. **Registration**: the definition comes in two tiers, headless and UI, and the UI one takes in the headless one.
    - `@jiscribe/doc`'s `plugin/builtinObjectDocDefinitions.ts` — the headless definition (Doc validator, features, factory, …). The definition set `createCanvasParser` / `createDocOps` use by default is built from it

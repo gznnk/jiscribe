@@ -1,57 +1,6 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { ObjectBehaviorRegistry } from "../../gestures/registry/ObjectBehaviorRegistry";
-import type {
-	MoveByDeltaFunction,
-	RotateByGroupFunction,
-	TransformByGroupFunction,
-} from "../../gestures/registry/ObjectBehaviorTypes";
-import {
-	transformGroupByGroup,
-	rotateGroupByGroup,
-} from "../base/GroupTransform";
-
-/**
- * Moves a Group object by a delta.
- * A GroupState is a Frame with its own center (cx, cy), so translate it like any other shape.
- * Descendants are propagated separately by moveObjectTree (the group is only responsible for
- * its own cached frame here).
- */
-export const moveByDelta: MoveByDeltaFunction<GroupState> = (state, delta) => ({
-	...state,
-	cx: state.cx + delta.x,
-	cy: state.cy + delta.y,
-});
-
-/**
- * Transforms a Group object when its parent group is transformed.
- */
-export const transformByGroup: TransformByGroupFunction<GroupState> = (
-	state,
-	groupStart,
-	groupEnd,
-) => {
-	return transformGroupByGroup(
-		state,
-		groupStart as GroupState,
-		groupEnd as GroupState,
-	);
-};
-
-/**
- * Rotates a Group object when its parent group is rotated.
- */
-export const rotateByGroup: RotateByGroupFunction<GroupState> = (
-	state,
-	rotationRootGroup,
-	endGroupRotation,
-) => {
-	return rotateGroupByGroup(
-		state,
-		rotationRootGroup as GroupState,
-		endGroupRotation,
-	);
-};
 
 /**
  * Recursively transforms a group's children.
