@@ -1,8 +1,8 @@
 import { memo } from "react";
 
-import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
-import { isTransparentPreviewColor } from "./utils/isTransparentPreviewColor";
+import { isTransparentColor } from "../../../color/isTransparentColor";
 import { theme } from "../../../theme/themeTokens";
+import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
 
 type FontColorIconProps = {
 	width?: number;
@@ -80,7 +80,7 @@ const FontColorIconComponent: React.FC<FontColorIconProps> = ({
 					height="2"
 					rx="0.5"
 					style={{
-						fill: isTransparentPreviewColor(segment.color)
+						fill: isTransparentColor(segment.color)
 							? theme.transparentChecker
 							: segment.color,
 					}}

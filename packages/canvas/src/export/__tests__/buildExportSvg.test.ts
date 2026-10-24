@@ -174,6 +174,33 @@ describe("inlineExportImages", () => {
 	});
 });
 
+describe("buildExportSvg background", () => {
+	it.each(["rgba(255, 255, 255, 0)", "rgb(0 0 0 / 0)", "#ffffff00", ""])(
+		"lays no background rect for %j, which paints nothing",
+		(background) => {
+			stubMeasureContext();
+			const liveSvg = mountCanvasSvg(false);
+
+			const exported = buildExportSvg(liveSvg, { background });
+
+			expect(exported.firstElementChild?.tagName).toBe("g");
+		},
+	);
+
+	it("lays a rect of the color over the whole viewBox for an opaque one", () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvg(false);
+
+		const exported = buildExportSvg(liveSvg, { background: "#ffffff" });
+
+		const backgroundRect = exported.firstElementChild;
+		expect(backgroundRect?.tagName).toBe("rect");
+		expect(backgroundRect?.getAttribute("fill")).toBe("#ffffff");
+		expect(backgroundRect?.getAttribute("width")).toBe("400");
+		expect(backgroundRect?.getAttribute("height")).toBe("300");
+	});
+});
+
 describe("buildExportSvg with a title and description", () => {
 	it("opens the root with <title> then <desc>, ahead of the background rect", () => {
 		stubMeasureContext();

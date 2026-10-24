@@ -23,6 +23,7 @@ packages/canvas/src/
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # per-shape State + Mapper
 │   └── registry/           # the states layer's registries (ObjectMapperRegistry, …)
+├── color/                  # CSS color strings: parsing hex / rgb() and telling whether a color paints nothing; imports nothing, shared by rendering / controllers / export
 ├── connectors/             # connector geometry (endpoint resolution, orthogonal routing, label placement); renders nothing, changes nothing, takes no value from rendering / controllers
 ├── controllers/            # state management + business logic
 │   ├── Canvas.tsx
