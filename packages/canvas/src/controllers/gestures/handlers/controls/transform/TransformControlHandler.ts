@@ -22,7 +22,7 @@ import type { TransformState } from "../../../../../states/objects/base/Transfor
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import { MIN_GROUP_DIMENSION } from "../../../../../states/utils/groupDimensions";
-import { transformChildren } from "../../../../behaviors/primitives/GroupController";
+import { transformChildren } from "../../../../behaviors/base/GroupChildrenTransform";
 import type {
 	CanvasControllerState,
 	SnapFeedback,

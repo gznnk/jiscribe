@@ -168,6 +168,9 @@ as? }` in order, where a later entry refers to the ids an earlier one created
   `@jiscribe/ai-tools` exports `isCanvasHandleTool`, `toOutcomeText`,
   `toThrownText` and `toDrivesMismatchText`, how a host routes a declaration
   and words what a call came to.
+- **`@jiscribe/geometry` exports `unionBoundingBoxes`**, the smallest box
+  enclosing a list of bounding boxes (`null` entries skipped, `null` when none
+  is left).
 
 ### Changed
 

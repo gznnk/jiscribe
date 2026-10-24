@@ -1,4 +1,7 @@
-import { calcKeyPointsBoundingBox } from "@jiscribe/geometry";
+import {
+	calcKeyPointsBoundingBox,
+	unionBoundingBoxes,
+} from "@jiscribe/geometry";
 import type { BoundingBox, FrameKeyPoints } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -49,7 +52,9 @@ export function buildObjectBBoxes(
 		if (isGroupState(obj)) {
 			// A group's own frame keyPoints are ignored; its extent is the union of its
 			// children, matching calcObjectBoundingBox's dispatch order (group before frame).
-			bbox = unionChildBoundingBoxes(obj.childIds, resolve);
+			bbox = unionBoundingBoxes(
+				obj.childIds.map((childId) => resolve(childId)),
+			);
 		} else {
 			const keyPointsForObject = keyPoints[id];
 			bbox = keyPointsForObject
@@ -74,44 +79,14 @@ export function buildObjectBBoxes(
  * Unions the bounding boxes of the given IDs, using precomputed per-object bboxes.
  *
  * IDs without an entry are skipped. Returns null when no ID resolves to a valid extent.
- * Used both for group composition inside {@link buildObjectBBoxes} and for the transient
- * multi-select group bounds during a marquee drag.
+ * Used for the transient multi-select group bounds during a marquee drag.
  *
  * @param ids - IDs to union
- * @param bboxes - Map of object ID → bounding box (may also be a `resolve` callback)
+ * @param bboxes - Map of object ID → bounding box, as {@link buildObjectBBoxes} builds it
  */
 export function calcUnionBoundingBox(
 	ids: Iterable<string>,
 	bboxes: Record<string, BoundingBox>,
 ): BoundingBox | null {
-	return unionChildBoundingBoxes(ids, (id) => bboxes[id] ?? null);
-}
-
-function unionChildBoundingBoxes(
-	ids: Iterable<string>,
-	resolve: (id: string) => BoundingBox | null,
-): BoundingBox | null {
-	let left = Infinity;
-	let top = Infinity;
-	let right = -Infinity;
-	let bottom = -Infinity;
-	let hasValidObject = false;
-
-	for (const id of ids) {
-		const bbox = resolve(id);
-		if (!bbox) {
-			continue;
-		}
-		left = Math.min(left, bbox.left);
-		top = Math.min(top, bbox.top);
-		right = Math.max(right, bbox.right);
-		bottom = Math.max(bottom, bbox.bottom);
-		hasValidObject = true;
-	}
-
-	if (!hasValidObject) {
-		return null;
-	}
-
-	return { left, top, right, bottom };
+	return unionBoundingBoxes(Array.from(ids, (id) => bboxes[id]));
 }
