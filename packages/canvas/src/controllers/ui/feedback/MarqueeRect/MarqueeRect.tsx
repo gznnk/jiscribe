@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import type { DragRect } from "../../../CanvasTypes";
 
-type AreaSelectionRectProps = {
+type MarqueeRectProps = {
 	/** The marquee being dragged; null when none is */
 	rect: DragRect | null;
 };
@@ -13,9 +13,7 @@ const STROKE_WIDTH = 1.5;
 const STROKE_DASHARRAY = "5, 3";
 const BORDER_RADIUS = 2;
 
-const AreaSelectionRectComponent: React.FC<AreaSelectionRectProps> = ({
-	rect,
-}) => {
+const MarqueeRectComponent: React.FC<MarqueeRectProps> = ({ rect }) => {
 	if (!rect) {
 		return null;
 	}
@@ -27,7 +25,7 @@ const AreaSelectionRectComponent: React.FC<AreaSelectionRectProps> = ({
 
 	return (
 		<rect
-			data-testid="area-selection-rect"
+			data-testid="marquee-rect"
 			x={x}
 			y={y}
 			width={width}
@@ -43,4 +41,4 @@ const AreaSelectionRectComponent: React.FC<AreaSelectionRectProps> = ({
 	);
 };
 
-export const AreaSelectionRect = memo(AreaSelectionRectComponent);
+export const MarqueeRect = memo(MarqueeRectComponent);

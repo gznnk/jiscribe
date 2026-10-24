@@ -1,9 +1,9 @@
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { AreaSelectionRect } from "../../feedback/AreaSelectionRect";
 import { AxisLockGuide } from "../../feedback/AxisLockGuide";
 import { DragGhost } from "../../feedback/DragGhost";
 import { DrawingPreviewOverlay } from "../../feedback/DrawingPreviewOverlay";
+import { MarqueeRect } from "../../feedback/MarqueeRect";
 import { PendingConnectorOverlay } from "../../feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "../../feedback/SelectionOverlay";
 import { SnapGuides } from "../../feedback/SnapGuides";
@@ -101,7 +101,7 @@ export const CanvasControlLayers = ({
 				preset={mode.kind === "draw" ? mode.preset : null}
 				rect={drag?.kind === "draw" ? drag.rect : null}
 			/>
-			<AreaSelectionRect rect={drag?.kind === "marquee" ? drag.rect : null} />
+			<MarqueeRect rect={drag?.kind === "marquee" ? drag.rect : null} />
 			<SnapGuides snapFeedback={drag?.snapFeedback ?? null} zoom={zoom} />
 			<AxisLockGuide
 				axisLockFeedback={drag?.axisLockFeedback ?? null}

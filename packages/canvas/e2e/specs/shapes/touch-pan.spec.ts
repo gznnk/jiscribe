@@ -30,7 +30,7 @@ test.afterEach(() => {
 });
 
 test.describe("one-finger touch pan", () => {
-	test("a background drag pans the viewport and shows no area-selection rect", async ({
+	test("a background drag pans the viewport and shows no marquee rect", async ({
 		canvas,
 		page,
 	}) => {
@@ -60,7 +60,7 @@ test.describe("one-finger touch pan", () => {
 
 		// No area selection was started
 		expect(
-			await canvas.page.locator('[data-testid="area-selection-rect"]').count(),
+			await canvas.page.locator('[data-testid="marquee-rect"]').count(),
 		).toBe(0);
 
 		await dispatchTouch(client, "touchEnd", []);
