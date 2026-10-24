@@ -39,13 +39,6 @@ export type AdaptiveFrameCommitOptions = {
 	commitSynchronously: (work: () => void) => void;
 	/** Monotonic clock in milliseconds (`performance.now` in production). */
 	now: () => number;
-	/**
-	 * Called with the new mode each time it actually flips: `false` on falling
-	 * back to the scheduler, `true` on returning to synchronous commits (after a
-	 * successful probe or an idle reset). Not called for the initial synchronous
-	 * mode nor for a probe that stays over budget.
-	 */
-	onModeChange?: (isCommittingSynchronously: boolean) => void;
 };
 
 /**
@@ -63,27 +56,18 @@ export type AdaptiveFrameCommitOptions = {
  *
  * Holds its state in a closure; create one per recognizer.
  *
- * @param options - `commitSynchronously`, `now` and `onModeChange` are the injected
- *   effects; the thresholds are the exported constants of this module.
+ * @param options - `commitSynchronously` and `now` are the injected effects; the
+ *   thresholds are the exported constants of this module.
  * @returns A wrapper that calls the given `dispatchFrame` exactly once per call.
  */
 export const createAdaptiveFrameCommit = ({
 	commitSynchronously,
 	now,
-	onModeChange,
 }: AdaptiveFrameCommitOptions): ((dispatchFrame: () => void) => void) => {
 	let isCommittingSynchronously = true;
 	let overBudgetStreak = 0;
 	let framesSinceFallBack = 0;
 	let lastFrameEndedAt = Number.NEGATIVE_INFINITY;
-
-	const setMode = (nextIsCommittingSynchronously: boolean): void => {
-		if (nextIsCommittingSynchronously === isCommittingSynchronously) {
-			return;
-		}
-		isCommittingSynchronously = nextIsCommittingSynchronously;
-		onModeChange?.(nextIsCommittingSynchronously);
-	};
 
 	/** Commits the frame synchronously and reports whether it stayed within budget. */
 	const commitAndMeasure = (
@@ -97,7 +81,7 @@ export const createAdaptiveFrameCommit = ({
 	return (dispatchFrame) => {
 		const startedAt = now();
 		if (startedAt - lastFrameEndedAt > IDLE_RESET_MS) {
-			setMode(true);
+			isCommittingSynchronously = true;
 			overBudgetStreak = 0;
 			framesSinceFallBack = 0;
 		}
@@ -109,14 +93,14 @@ export const createAdaptiveFrameCommit = ({
 				overBudgetStreak++;
 			}
 			if (overBudgetStreak >= OVER_BUDGET_FRAMES_TO_FALL_BACK) {
-				setMode(false);
+				isCommittingSynchronously = false;
 				framesSinceFallBack = 0;
 			}
 		} else {
 			framesSinceFallBack++;
 			if (framesSinceFallBack % SCHEDULER_PROBE_INTERVAL_FRAMES === 0) {
 				if (commitAndMeasure(dispatchFrame, startedAt)) {
-					setMode(true);
+					isCommittingSynchronously = true;
 					overBudgetStreak = 0;
 				}
 			} else {

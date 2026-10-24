@@ -42,9 +42,7 @@ Key points:
   recognizer's `wrapFrameDispatch`), so they commit before that frame paints rather than one frame late.
   When consecutive frames run over budget (heavy documents), the commit goes back to React's scheduler,
   trading a frame of latency for the frame rate; a synchronous commit is probed once per probe interval and
-  after an idle gap with no frame (`createAdaptiveFrameCommit`, which holds the thresholds). Each switch is
-  recorded as a User Timing mark (`jiscribe:frame-commit:scheduler` / `jiscribe:frame-commit:sync`), so a
-  performance trace of a laggy drag shows when the same-frame commit was off.
+  after an idle gap with no frame (`createAdaptiveFrameCommit`, which holds the thresholds).
 - **Two-finger pinch (touch)**: A second touch pointerdown arriving before the first touch confirms a drag
   discards the pending press and enters pinch mode; `pinch` gestures carry `zoomScale` (finger-distance
   ratio) and `scrollDelta` (midpoint movement), coalesced to one per frame (`settleBatch`).

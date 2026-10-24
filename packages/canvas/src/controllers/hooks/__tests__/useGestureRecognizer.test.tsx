@@ -11,8 +11,6 @@ import type * as RecognizerTargeting from "../../gestures/recognizer/targeting";
 import type * as RecognizerUtils from "../../gestures/recognizer/utils";
 import type { CanvasAction } from "../../reducer/CanvasActions";
 import {
-	FRAME_COMMIT_SCHEDULER_MARK,
-	FRAME_COMMIT_SYNC_MARK,
 	useGestureRecognizer,
 	type UseGestureRecognizerReturn,
 } from "../useGestureRecognizer";
@@ -183,7 +181,7 @@ describe("useGestureRecognizer", () => {
 		expect(dispatchedInsideFlushSync).toEqual([true]);
 	});
 
-	it("stops wrapping frames in flushSync once consecutive frames run over budget, returns after an idle gap, and marks both switches", async () => {
+	it("stops wrapping frames in flushSync once consecutive frames run over budget, and returns after an idle gap", async () => {
 		const { flushSync } = await import("react-dom");
 		// Every clock read advances past the budget, so every measured commit is over it
 		// while the gap between frames stays far below the idle threshold.
@@ -192,9 +190,6 @@ describe("useGestureRecognizer", () => {
 		vi.spyOn(performance, "now").mockImplementation(
 			() => (clockMs += clockStepMs),
 		);
-		const markSpy = vi
-			.spyOn(performance, "mark")
-			.mockImplementation(() => undefined as never);
 		const { dispatchedActions, dispatchedInsideFlushSync, recognizer } =
 			mountRecognizer();
 
@@ -209,9 +204,6 @@ describe("useGestureRecognizer", () => {
 			flushRaf();
 		}
 		expect(flushSync).toHaveBeenCalledTimes(OVER_BUDGET_FRAMES_TO_FALL_BACK);
-		expect(markSpy).toHaveBeenCalledExactlyOnceWith(
-			FRAME_COMMIT_SCHEDULER_MARK,
-		);
 		const actionCountBeforeFallBackFrame = dispatchedActions.length;
 
 		recognizer.pointerHandlers.onPointerMove(
@@ -243,8 +235,6 @@ describe("useGestureRecognizer", () => {
 		);
 		flushRaf();
 
-		expect(markSpy).toHaveBeenLastCalledWith(FRAME_COMMIT_SYNC_MARK);
-		expect(markSpy).toHaveBeenCalledTimes(2);
 		expect(flushSync).toHaveBeenCalledTimes(
 			OVER_BUDGET_FRAMES_TO_FALL_BACK + 1,
 		);

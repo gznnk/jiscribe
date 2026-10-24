@@ -21,7 +21,6 @@ const createHarness = () => {
 	let clockMs = 1000;
 	let nextFrameCostMs = 0;
 	let synchronousCommitCount = 0;
-	const modeChanges: boolean[] = [];
 	const wrapFrameDispatch = createAdaptiveFrameCommit({
 		commitSynchronously: (work) => {
 			synchronousCommitCount++;
@@ -29,9 +28,6 @@ const createHarness = () => {
 			clockMs += nextFrameCostMs;
 		},
 		now: () => clockMs,
-		onModeChange: (isCommittingSynchronously) => {
-			modeChanges.push(isCommittingSynchronously);
-		},
 	});
 
 	/**
@@ -53,7 +49,7 @@ const createHarness = () => {
 		return synchronousCommitCount > commitCountBefore;
 	};
 
-	return { runFrame, modeChanges };
+	return { runFrame };
 };
 
 /** Falls back by running the consecutive over-budget frames that trigger it. */
@@ -144,48 +140,5 @@ describe("createAdaptiveFrameCommit", () => {
 		const { runFrame } = createHarness();
 		fallBack(runFrame);
 		expect(runFrame(CHEAP_FRAME_MS, IDLE_RESET_MS)).toBe(false);
-	});
-
-	describe("onModeChange", () => {
-		it("is not called while the initial synchronous mode holds", () => {
-			const { runFrame, modeChanges } = createHarness();
-			for (let frame = 0; frame < 10; frame++) {
-				runFrame(CHEAP_FRAME_MS);
-			}
-			expect(modeChanges).toEqual([]);
-		});
-
-		it("reports the fallback once, and not the frames that follow", () => {
-			const { runFrame, modeChanges } = createHarness();
-			fallBack(runFrame);
-			expect(modeChanges).toEqual([false]);
-			runFramesUntilProbe(runFrame, HEAVY_FRAME_MS);
-			expect(modeChanges).toEqual([false]);
-		});
-
-		it("is not called for a probe that stays over budget", () => {
-			const { runFrame, modeChanges } = createHarness();
-			fallBack(runFrame);
-			runFramesUntilProbe(runFrame, HEAVY_FRAME_MS);
-			expect(runFrame(HEAVY_FRAME_MS)).toBe(true);
-			expect(modeChanges).toEqual([false]);
-		});
-
-		it("reports the return on a probe that fits", () => {
-			const { runFrame, modeChanges } = createHarness();
-			fallBack(runFrame);
-			runFramesUntilProbe(runFrame, CHEAP_FRAME_MS);
-			expect(runFrame(CHEAP_FRAME_MS)).toBe(true);
-			expect(modeChanges).toEqual([false, true]);
-		});
-
-		it("reports the return on an idle reset, and not an idle gap while already synchronous", () => {
-			const { runFrame, modeChanges } = createHarness();
-			runFrame(CHEAP_FRAME_MS, IDLE_RESET_MS + 1);
-			expect(modeChanges).toEqual([]);
-			fallBack(runFrame);
-			expect(runFrame(CHEAP_FRAME_MS, IDLE_RESET_MS + 1)).toBe(true);
-			expect(modeChanges).toEqual([false, true]);
-		});
 	});
 });

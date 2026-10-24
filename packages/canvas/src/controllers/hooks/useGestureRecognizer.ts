@@ -13,25 +13,9 @@ import type {
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { createAdaptiveFrameCommit } from "./utils/createAdaptiveFrameCommit";
 
-/** User Timing mark for frame commits switching back to synchronous (`flushSync`). */
-export const FRAME_COMMIT_SYNC_MARK = "jiscribe:frame-commit:sync";
-
-/** User Timing mark for frame commits falling back to React's scheduler. */
-export const FRAME_COMMIT_SCHEDULER_MARK = "jiscribe:frame-commit:scheduler";
-
 // Module scope: react-hooks/purity rejects reading the clock inside a component body,
 // even in a closure that only runs later from the recognizer's frame callback.
 const readFrameClock = (): number => performance.now();
-
-// A User Timing mark, so a performance trace of a laggy drag shows when the
-// same-frame commit was switched off and on.
-const markFrameCommitMode = (isCommittingSynchronously: boolean): void => {
-	performance.mark(
-		isCommittingSynchronously
-			? FRAME_COMMIT_SYNC_MARK
-			: FRAME_COMMIT_SCHEDULER_MARK,
-	);
-};
 
 export type UseGestureRecognizerParams = {
 	dispatch: Dispatch<CanvasAction>;
@@ -126,7 +110,6 @@ export const useGestureRecognizer = ({
 			wrapFrameDispatch: createAdaptiveFrameCommit({
 				commitSynchronously: flushSync,
 				now: readFrameClock,
-				onModeChange: markFrameCommitMode,
 			}),
 		});
 	}

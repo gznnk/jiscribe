@@ -39,9 +39,7 @@
   dispatch する（recognizer の `wrapFrameDispatch`）。これでそのフレームの描画前にコミットされ、1 フレーム遅れない。
   ただし予算を超えるフレームが続いたら（重い文書）コミットを React のスケジューラへ戻し、1 フレームの遅れと
   引き換えにフレームレートを保つ。その間も一定フレームごとに同期コミットを試して収まれば戻り、フレームが閾値より
-  長く途切れたときも同期コミットへ戻る（閾値は `createAdaptiveFrameCommit` の定数）。切り替わるたびに User Timing の mark
-  （`jiscribe:frame-commit:scheduler` / `jiscribe:frame-commit:sync`）を打つので、ドラッグが重いときの
-  パフォーマンストレースで同フレームコミットが切れていた区間が分かる。
+  長く途切れたときも同期コミットへ戻る（閾値は `createAdaptiveFrameCommit` の定数）。
 - **2本指ピンチ（タッチ）**: 1本目のタッチがドラッグ確定する前に2本目の pointerdown が来ると、
   保留中の press を破棄してピンチモードに入る。`pinch` は `zoomScale`（指間距離比）と
   `scrollDelta`（中点移動）を載せ、1フレーム1発火に集約される（`settleBatch`）。
