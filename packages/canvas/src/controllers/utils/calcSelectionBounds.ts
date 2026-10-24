@@ -1,3 +1,4 @@
+import { unionBoundingBoxes } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { buildSelectedIdsWithDescendants } from "./buildSelectedIdsWithDescendants";
@@ -28,12 +29,7 @@ export const calcSelectionBounds = (
 ): BoundingBox | null => {
 	const targetIds = buildSelectedIdsWithDescendants(selectedIds, objects);
 
-	let minX = Infinity,
-		maxX = -Infinity,
-		minY = Infinity,
-		maxY = -Infinity;
-	let hasValidObject = false;
-
+	const bboxes: (BoundingBox | null)[] = [];
 	for (const id of targetIds) {
 		const obj = objects[id];
 		// Skip groups: targetIds already contains their descendants,
@@ -42,21 +38,7 @@ export const calcSelectionBounds = (
 			continue;
 		}
 
-		const bbox = calcObjectBoundingBox(obj, objects, visualExtentRegistries);
-		if (!bbox) {
-			continue;
-		}
-
-		minX = Math.min(minX, bbox.left);
-		maxX = Math.max(maxX, bbox.right);
-		minY = Math.min(minY, bbox.top);
-		maxY = Math.max(maxY, bbox.bottom);
-		hasValidObject = true;
+		bboxes.push(calcObjectBoundingBox(obj, objects, visualExtentRegistries));
 	}
-
-	if (!hasValidObject) {
-		return null;
-	}
-
-	return { left: minX, top: minY, right: maxX, bottom: maxY };
+	return unionBoundingBoxes(bboxes);
 };
