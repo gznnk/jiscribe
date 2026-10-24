@@ -382,6 +382,13 @@ export type AiCanvasOpOutcome = {
 	 * host adds an image block to the tool result
 	 */
 	imagePngBase64?: string;
+	/**
+	 * The ids of the objects this op newly created, in the order it created them
+	 * (`addObjects` lists its objects in the order given, then the group
+	 * `groupNewObjects` wrapped them in). Absent when the op created nothing,
+	 * including a failure and an undo that brings deleted objects back
+	 */
+	createdIds?: string[];
 };
 
 /**

@@ -133,6 +133,41 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   and the viewer opens in the app's own window instead of a spawned browser.
   There is no installer or tray yet: closing the window hides it, starting the
   app again brings it back, and File → Quit ends it.
+- **`applyCanvasOp` reports the ids an op created.** `AiCanvasOpOutcome`
+  carries `createdIds`, set by `addObject` / `addObjects` / `connect` /
+  `connectMany` / `groupObjects` in the order the objects were created
+  (`addObjects` puts the group `groupNewObjects` made after the objects it
+  wraps), so a caller can hand them to a later op without reading them out of
+  `text`. It is absent when an op created nothing, an undo that brings deleted
+  objects back included. The result text is unchanged.
+- **The CLI edits documents: `jiscribe tools`, `jiscribe op` and `jiscribe
+guide`.** They drive the same `@jiscribe/ai-tools` declarations jiscribe-mcp
+  registers, so a tool's name, arguments, description and reply text are the
+  ones an MCP client sees. `jiscribe tools` lists the tools a document alone can
+  answer (the ones needing a viewer stay in jiscribe-mcp) and prints one's
+  argument JSON Schema. `jiscribe op <file> <tool> --args <json>` runs one;
+  `jiscribe op <file> --batch <@path | ->` runs a JSON array of `{ tool, args?,
+as? }` in order, where a later entry refers to the ids an earlier one created
+  as `"$name"` / `"$name.N"`. The file is read once and written back once, only
+  if something changed, through the same check jiscribe-mcp writes with; the
+  first entry that fails leaves the file as it was. `--create` starts a missing
+  file. The report is JSON by default, `--text` for lines. `undo` is not offered,
+  as a run keeps no history. `jiscribe guide <drawing | json-format>` prints the
+  guides `read_drawing_guide` hands back.
+- **`@jiscribe/doc-tools` reads and writes canvas files, and carries the
+  editing tool set and the guides.** `./file` is the file layer jiscribe-mcp
+  used to keep to itself: `toCanvasFilePath`, `loadCanvasFile`,
+  `saveCanvasFile` (refusing a write that adds findings the loaded file did not
+  have, or lands over a file changed since; with `isNewFile`, over one created
+  at the path after it was found missing), `ensureCanvasFile`,
+  `createEmptyCanvasDoc`, the atomic write under them and
+  `getStandardCanvasParser`. `./canvas-tools` is the tool set and doc-ops over
+  the shipped shape set (`standardCanvasToolSet`, `standardDocOps`), and
+  `./guides` reads the two drawing guides (`readDrawingGuide`). The root adds
+  `formatDiagnostics`. jiscribe-mcp and the CLI both take theirs from here.
+  `@jiscribe/ai-tools` exports `isCanvasHandleTool`, `toOutcomeText`,
+  `toThrownText` and `toDrivesMismatchText`, how a host routes a declaration
+  and words what a call came to.
 
 ### Changed
 

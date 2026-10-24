@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
-import type { Diagnostic } from "@jiscribe/doc-tools";
-import { validateDoc } from "@jiscribe/doc-tools";
+import type { Diagnostic } from "../Diagnostic";
+import { validateDoc } from "../validateDoc";
 
 /**
  * How many validated texts keep their diagnostic keys. The baseline of a write is
@@ -79,8 +79,8 @@ const readDiagnosticKeys = (text: string): ReadonlyMap<string, number> => {
 };
 
 /**
- * What `diagnose_canvas` would report for `nextText` that `baselineText` did not
- * already carry — the check a write-back runs so that an edit never leaves a file
+ * What `validateDoc` reports for `nextText` that `baselineText` did not already
+ * carry — the check a write-back runs so that an edit never leaves a file
  * in a worse state than it found it.
  *
  * Severity is not looked at. An error the edit introduced is a document that no
@@ -95,8 +95,8 @@ const readDiagnosticKeys = (text: string): ReadonlyMap<string, number> => {
  * same object id, the same property within it and the same complaint, wherever
  * that object moved; an object with no id is told apart by the complaint alone.
  *
- * Both texts go through `validateDoc` (the canvas parser, the validator
- * `diagnose_canvas` runs). The diagnostic keys of a validated text are cached by
+ * Both texts go through `validateDoc` (the canvas parser loaded with the shipped
+ * shape set). The diagnostic keys of a validated text are cached by
  * its digest, so the baseline of a write following one of this process's own
  * writes is not validated a second time.
  *

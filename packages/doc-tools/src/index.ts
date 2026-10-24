@@ -1,10 +1,13 @@
 // Headless checking, measuring and diagnosing of jiscribe documents: the core the
 // CLI (@jiscribe/cli) and the MCP servers are thin mouths on. Node-only and free of
-// React and the DOM — it reaches the canvas through ./doc and ./unstable-doc alone,
-// and supplies the text measurement a browser would have taken from a canvas by
+// React and the DOM — it reaches the document layer through @jiscribe/doc and its
+// ./unstable entry, and supplies the text measurement a browser would have taken from a canvas by
 // reading the very font files @jiscribe/canvas ships (measure/nodeTextMeasurer.ts).
 //
 // e.g. `import { validateDoc, diagnoseDoc } from "@jiscribe/doc-tools";`
+// Reading and writing canvas files is the ./file entry (file/index.ts), the
+// editing tool set over the shipped shapes ./canvas-tools (canvasTools.ts), and
+// the drawing guides ./guides (guides/index.ts).
 export type { Diagnostic, DiagnosticSeverity } from "./Diagnostic";
 
 export { validateDoc } from "./validateDoc";
@@ -20,6 +23,8 @@ export type {
 } from "./resolveContentBox";
 
 export { diagnoseDoc } from "./diagnoseDoc";
+
+export { formatDiagnostics } from "./formatDiagnostics";
 
 // The shape set everything above is defined against is @jiscribe/standard-shapes/doc.
 // A host composing its own parser takes `standardDocPlugins` from there, and validates

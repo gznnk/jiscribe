@@ -5,6 +5,12 @@
 	"type": "module",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./file": "./src/file/index.ts",
+		"./canvas-tools": "./src/canvasTools.ts",
+		"./guides": "./src/guides/index.ts"
+	},
 	"scripts": {
 		"generate:text-widths": "node scripts/buildChromiumTextWidths.mjs",
 		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
@@ -13,7 +19,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
-		"@jiscribe/doc-schema": "A devDependency: nothing here reads the schema at run time (validateDoc validates with the parser alone). __tests__/shippedPropertyNames.test.ts reads it as data, to hold the key constants to the shipped property names.",
+		"@jiscribe/doc-schema": "A dependency for its two guides, which ./guides reads off disk at run time through node resolution (a bundling host stages them beside its bundle). The schema itself is read only as data, by __tests__/shippedPropertyNames.test.ts; validateDoc validates with the parser alone.",
 		"@fontsource/*": "Not imported as modules: the Node measurer reads the .woff files and the unicode-range of the @font-face CSS off disk, resolved through Node's own resolution (measure/fontSourcePackages.ts). They are the very files @jiscribe/canvas ships to the browser, which is what keeps a headless measurement on the same faces as the drawing."
 	},
 	"dependencies": {
@@ -24,14 +30,15 @@
 		"@fontsource/source-code-pro": "5.3.0",
 		"@fontsource/source-sans-3": "5.3.0",
 		"@fontsource/source-serif-4": "5.3.0",
+		"@jiscribe/ai-tools": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
+		"@jiscribe/doc-schema": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"fontkit": "^2.0.4"
 	},
 	"devDependencies": {
-		"@jiscribe/doc-schema": "workspace:*",
 		"@types/fontkit": "^2.0.9",
 		"@types/node": "catalog:",
 		"playwright-core": "^1.62.1",
