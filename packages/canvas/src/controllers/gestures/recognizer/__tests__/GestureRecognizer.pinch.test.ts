@@ -148,6 +148,7 @@ const setup = (
 			},
 		},
 		shouldPinchFromDrag: options.shouldPinchFromDrag,
+		wrapFrameDispatch: (dispatchFrame) => dispatchFrame(),
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

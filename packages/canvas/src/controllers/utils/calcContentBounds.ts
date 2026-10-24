@@ -1,3 +1,4 @@
+import { unionBoundingBoxes } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
@@ -24,12 +25,7 @@ export const calcContentBounds = (
 	objects: Record<string, ObjectState>,
 	visualExtentRegistries: VisualExtentRegistries,
 ): BoundingBox | null => {
-	let minX = Infinity,
-		maxX = -Infinity,
-		minY = Infinity,
-		maxY = -Infinity;
-	let hasValidObject = false;
-
+	const bboxes: (BoundingBox | null)[] = [];
 	for (const obj of Object.values(objects)) {
 		// Skip groups: their children are iterated directly by this loop,
 		// so recursing into them would only duplicate work.
@@ -37,21 +33,7 @@ export const calcContentBounds = (
 			continue;
 		}
 
-		const bbox = calcObjectBoundingBox(obj, objects, visualExtentRegistries);
-		if (!bbox) {
-			continue;
-		}
-
-		minX = Math.min(minX, bbox.left);
-		maxX = Math.max(maxX, bbox.right);
-		minY = Math.min(minY, bbox.top);
-		maxY = Math.max(maxY, bbox.bottom);
-		hasValidObject = true;
+		bboxes.push(calcObjectBoundingBox(obj, objects, visualExtentRegistries));
 	}
-
-	if (!hasValidObject) {
-		return null;
-	}
-
-	return { left: minX, top: minY, right: maxX, bottom: maxY };
+	return unionBoundingBoxes(bboxes);
 };

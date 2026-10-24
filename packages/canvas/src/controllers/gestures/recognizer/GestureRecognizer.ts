@@ -236,7 +236,9 @@ const NO_MODS: Mods = { shift: false, alt: false, ctrl: false, meta: false };
  * scheduled in `schedule`): every event is fed in chronological order, then per-frame
  * aggregates fire in `settleBatch` (currently the pending pinch). enqueue thins
  * consecutive same-pointer pointermoves to one drag per frame while a single queue
- * keeps down→move→up arriving in the same frame in chronological order.
+ * keeps down→move→up arriving in the same frame in chronological order. Each frame's
+ * dispatches (a batch or a fling frame) run inside `wrapFrameDispatch`, so the consumer
+ * can commit them before that frame paints.
  *
  * Each Gesture carries world coordinates (start / last / delta) and screen coordinates
  * (clientStart / clientLast / clientDelta). The screen triple exists for the few readers
@@ -250,6 +252,7 @@ export class GestureRecognizer {
 	private canvasStateRef: React.RefObject<RecognizerCanvasState>;
 	private shouldPinchFromDrag: GestureRecognizerConfig["shouldPinchFromDrag"];
 	private shouldFlingFromDrag: GestureRecognizerConfig["shouldFlingFromDrag"];
+	private wrapFrameDispatch: GestureRecognizerConfig["wrapFrameDispatch"];
 
 	private pressed: Pressed | null = null;
 
@@ -300,6 +303,7 @@ export class GestureRecognizer {
 		this.canvasStateRef = config.canvasStateRef;
 		this.shouldPinchFromDrag = config.shouldPinchFromDrag;
 		this.shouldFlingFromDrag = config.shouldFlingFromDrag;
+		this.wrapFrameDispatch = config.wrapFrameDispatch;
 	}
 
 	/** Add an event to the queue and schedule processing. */
@@ -334,7 +338,7 @@ export class GestureRecognizer {
 		this.rafId = requestAnimationFrame(() => {
 			this.scheduled = false;
 			this.rafId = null;
-			this.processBatch();
+			this.wrapFrameDispatch(() => this.processBatch());
 		});
 	}
 
@@ -1039,7 +1043,7 @@ export class GestureRecognizer {
 	private scheduleFlingFrame(): void {
 		this.flingRafId = requestAnimationFrame((time) => {
 			this.flingRafId = null;
-			this.advanceFling(time);
+			this.wrapFrameDispatch(() => this.advanceFling(time));
 		});
 	}
 

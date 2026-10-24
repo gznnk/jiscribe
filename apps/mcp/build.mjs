@@ -104,7 +104,7 @@ const inlineViewerHtml = async () => {
 //
 // 計測用フォントと read_drawing_guide のガイド 2 枚は、バンドルされたコードから
 // ではなく node の解決規則で実行時に読む（doc-tools の fontSourcePackages の
-// resolveFontSourceDir と、server.ts の DRAWING_GUIDE_SPECIFIERS）。基準は
+// resolveFontSourceDir と、@jiscribe/doc-tools/guides の readDrawingGuide）。基準は
 // dist/index.mjs 自身なので、その隣に node_modules を作って必要なファイルだけ
 // 置けば、周りにリポジトリが無くても同じものが見つかる。
 //

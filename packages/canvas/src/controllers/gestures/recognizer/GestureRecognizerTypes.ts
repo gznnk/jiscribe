@@ -152,4 +152,15 @@ export type GestureRecognizerConfig = {
 	 *   2 right).
 	 */
 	shouldFlingFromDrag?: (button: number) => boolean;
+	/**
+	 * Wraps everything the recognizer dispatches from one animation frame (an event
+	 * batch, or one fling frame), so the consumer can commit it synchronously before
+	 * that frame paints (the canvas injects an adaptive `flushSync` commit, see
+	 * createAdaptiveFrameCommit). processPendingBatch does not go through it;
+	 * committing that drain is the caller's job.
+	 *
+	 * @param dispatchFrame - The frame's work; must be called exactly once,
+	 *   synchronously, before the wrapper returns.
+	 */
+	wrapFrameDispatch: (dispatchFrame: () => void) => void;
 };

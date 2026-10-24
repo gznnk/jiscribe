@@ -9,7 +9,7 @@ import {
 
 import { updateSingleGroupBounds } from "./updateSingleGroupBounds";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
-import { rotateChildren } from "../../../../../behaviors/primitives/GroupController";
+import { rotateChildren } from "../../../../../behaviors/base/GroupChildrenTransform";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../../registries/ICanvasRegistries";
 import { createCowObjects } from "../../../../../utils/cowObjects";

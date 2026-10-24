@@ -1,4 +1,5 @@
 import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
+import { unionBoundingBoxes } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcCameraToRevealBox } from "./calcCameraToRevealBox";
@@ -55,32 +56,21 @@ const diffEntryObjects = (
 	return change;
 };
 
-/** Union of the ids' boxes into `union`, or the first box found when it is null. */
+/** Union of `union` and the ids' boxes; null when neither yields a box. */
 const unionObjectBoxes = (
 	union: BoundingBox | null,
 	ids: readonly string[],
 	objects: Record<string, ObjectState>,
 	visualExtentRegistries: VisualExtentRegistries,
 ): BoundingBox | null => {
-	let merged = union;
+	const boxes: (BoundingBox | null)[] = [union];
 	for (const id of ids) {
 		const obj = objects[id];
-		const box = obj
-			? calcObjectBoundingBox(obj, objects, visualExtentRegistries)
-			: null;
-		if (!box) {
-			continue;
+		if (obj) {
+			boxes.push(calcObjectBoundingBox(obj, objects, visualExtentRegistries));
 		}
-		merged = merged
-			? {
-					left: Math.min(merged.left, box.left),
-					top: Math.min(merged.top, box.top),
-					right: Math.max(merged.right, box.right),
-					bottom: Math.max(merged.bottom, box.bottom),
-				}
-			: box;
 	}
-	return merged;
+	return unionBoundingBoxes(boxes);
 };
 
 /**

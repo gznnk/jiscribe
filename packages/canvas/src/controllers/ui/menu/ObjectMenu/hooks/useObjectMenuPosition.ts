@@ -1,4 +1,4 @@
-import { isTransformedFrame } from "@jiscribe/geometry";
+import { isTransformedFrame, unionBoundingBoxes } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 import {
 	type RefObject,
@@ -14,7 +14,6 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import type { CanvasSelection } from "../../../../selection/CanvasSelection";
-import { calcUnionBoundingBox } from "../../../../utils/buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
 import { calcTransformedRectBounds } from "../../../../utils/calcTransformedRectBounds";
 import { readTextEditDraft } from "../../../../utils/readTextEditDraft";
@@ -57,15 +56,11 @@ const calcOutlinedPartsBoundingBox = (
 	if (partOwner === undefined || !isTransformedFrame(partOwner)) {
 		return null;
 	}
-	const partBoundsById: Record<string, BoundingBox> = {};
-	for (const { partId, region } of collectOutlinedPartRegions(
-		objects,
-		objectPartKind,
-		selection,
-	)) {
-		partBoundsById[partId] = calcTransformedRectBounds(region, partOwner);
-	}
-	return calcUnionBoundingBox(Object.keys(partBoundsById), partBoundsById);
+	return unionBoundingBoxes(
+		collectOutlinedPartRegions(objects, objectPartKind, selection).map(
+			({ region }) => calcTransformedRectBounds(region, partOwner),
+		),
+	);
 };
 
 /**

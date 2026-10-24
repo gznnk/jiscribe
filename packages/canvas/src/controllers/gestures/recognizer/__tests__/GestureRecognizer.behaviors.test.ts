@@ -185,6 +185,7 @@ const setup = (options: { container?: HTMLElement } = {}) => {
 				drag: null,
 			},
 		},
+		wrapFrameDispatch: (dispatchFrame) => dispatchFrame(),
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

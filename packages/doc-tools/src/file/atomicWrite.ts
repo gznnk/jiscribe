@@ -185,7 +185,7 @@ export type PreparedAtomicWrite = {
  * check a read-only file would be replaced all the same.
  *
  * @param filePath The destination to replace. Its parent directory must exist
- * @param contents The contents to write
+ * @param contents Written byte for byte; a string is written as UTF-8
  * @throws The reason the destination may not be written or the temporary file
  *   could not be; nothing is left behind and filePath is untouched
  */
@@ -275,18 +275,18 @@ export async function prepareAtomicWrite(
  * change made after it read the file uses that with
  * {@link PreparedAtomicWrite.commitIfUnchanged} instead.
  *
- * What this guards is not what pathLock (src/pathLock.ts) guards. That one keeps
- * the tools' writes and the viewer's from cutting in on each other, and the host's
- * file watcher and outside editors do not go through it. This one holds for every
+ * What this guards is not what a lock around a host's own writers guards: that
+ * only keeps writers taking it from cutting in on each other, while a file
+ * watcher or an outside editor reads without it. This one holds for every
  * reader, by whichever route.
  *
  * When the destination is a symbolic link, the link itself is replaced by an
  * ordinary file (overwriting directly would rewrite what the link points at).
  * A caller that means to update what the link leads to resolves it first, as
- * toCanvasFilePath (src/canvasStore.ts) does for every tool.
+ * `toCanvasFilePath` does.
  *
  * @param filePath The destination to replace. Its parent directory must exist
- * @param contents The contents to write
+ * @param contents Written byte for byte; a string is written as UTF-8
  * @throws The reason the write or the replacement failed; filePath is left as it was
  */
 export async function writeFileAtomically(

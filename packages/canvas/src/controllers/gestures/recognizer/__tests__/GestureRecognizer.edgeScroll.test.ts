@@ -154,6 +154,7 @@ const setup = () => {
 				drag: { edgeScrollEnabled: true },
 			},
 		},
+		wrapFrameDispatch: (dispatchFrame) => dispatchFrame(),
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

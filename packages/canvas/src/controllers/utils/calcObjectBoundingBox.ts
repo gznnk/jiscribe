@@ -3,6 +3,7 @@ import {
 	calcBoundingBox,
 	calcPolyBoundingBox,
 	isTransformedFrame,
+	unionBoundingBoxes,
 } from "@jiscribe/geometry";
 import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 
@@ -117,33 +118,12 @@ export function calcObjectsBoundingBox(
 	objects: Record<string, ObjectState>,
 	visualExtentRegistries?: VisualExtentRegistries | null,
 ): BoundingBox | null {
-	let left = Infinity;
-	let top = Infinity;
-	let right = -Infinity;
-	let bottom = -Infinity;
-	let hasValidObject = false;
-
+	const bboxes: (BoundingBox | null)[] = [];
 	for (const id of ids) {
 		const obj = objects[id];
-		if (!obj) {
-			continue;
+		if (obj) {
+			bboxes.push(calcObjectBoundingBox(obj, objects, visualExtentRegistries));
 		}
-
-		const bbox = calcObjectBoundingBox(obj, objects, visualExtentRegistries);
-		if (!bbox) {
-			continue;
-		}
-
-		left = Math.min(left, bbox.left);
-		top = Math.min(top, bbox.top);
-		right = Math.max(right, bbox.right);
-		bottom = Math.max(bottom, bbox.bottom);
-		hasValidObject = true;
 	}
-
-	if (!hasValidObject) {
-		return null;
-	}
-
-	return { left, top, right, bottom };
+	return unionBoundingBoxes(bboxes);
 }

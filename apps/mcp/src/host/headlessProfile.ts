@@ -31,7 +31,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { isErrnoWithCode } from "../nodeErrors";
+import { isErrnoWithCode } from "@jiscribe/doc-tools/file";
 
 /** Where a headless Chromium is told to keep its profile, in the forms it can need */
 export type HeadlessProfilePaths = {
