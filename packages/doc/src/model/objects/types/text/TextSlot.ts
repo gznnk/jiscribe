@@ -6,7 +6,13 @@ import {
 	TEXT_INLINE_STYLE_KEYS,
 } from "./InlineTextStyle";
 import type { RichText } from "./RichText";
-import { isRichText } from "./RichText";
+import {
+	isRichText,
+	joinRichTextLines,
+	normalizeRichText,
+	richTextToPlain,
+	splitRichTextLines,
+} from "./RichText";
 import type { TextAlign } from "./TextAlign";
 import { isTextAlign } from "./TextAlign";
 import type { VerticalAlign } from "./VerticalAlign";
@@ -123,7 +129,7 @@ export const resolveTextSlotStyle = (
  * text. The one place the two array forms are told apart: a row is a whole body
  * (a string, or the runs it is styled in), while a styled body's entries are runs
  * (objects carrying `text`), and an empty array reads as empty rows — the form an
- * emptied row list is written back as (writeRichTextSlot), an empty body being `""`.
+ * emptied row list is written back as (writeTextSlotContent), an empty body being `""`.
  *
  * @param content - Any slot content; takes `unknown` so an untrusted value can be
  *   told apart before it is known to be content at all
@@ -131,6 +137,43 @@ export const resolveTextSlotStyle = (
  */
 export const isTextRows = (content: unknown): content is RichText[] =>
 	Array.isArray(content) && content.every((row) => isRichText(row));
+
+/**
+ * A slot's content as the single body of text it draws as: rows joined with
+ * "\n", one body as it is. What an edit of the slot starts from, and what
+ * {@link writeTextSlotContent} takes back.
+ *
+ * @param content - Either content kind; empty rows (`[]`) read as `""`
+ * @returns The joined rows in canonical form, or the body itself (not
+ *   normalized, and the same reference)
+ */
+export const readTextSlotContent = (content: TextSlotContent): RichText =>
+	isTextRows(content) ? joinRichTextLines(content) : content;
+
+/**
+ * One body of text as a slot stores it, in the content kind the slot already
+ * holds: split at its newlines into rows when `previous` is rows, one body
+ * otherwise. The inverse of {@link readTextSlotContent}.
+ *
+ * @param previous - The content being replaced; only its kind is read, never
+ *   its characters or styling (carrying those over is remapRichText's job)
+ * @param body - The new text, runs included; stored in canonical form. The
+ *   newlines between rows are split points, so their own styling is dropped
+ * @returns Rows, one per line and `[]` (not `[""]`) for an empty body; or the
+ *   canonical body, `""` for an empty one
+ */
+export const writeTextSlotContent = (
+	previous: TextSlotContent,
+	body: RichText,
+): TextSlotContent => {
+	const canonicalBody = normalizeRichText(body);
+	if (!isTextRows(previous)) {
+		return canonicalBody;
+	}
+	return richTextToPlain(canonicalBody) === ""
+		? []
+		: splitRichTextLines(canonicalBody);
+};
 
 /**
  * Type guard for one text slot. Structural only: `fontColor` / `fontFamily` /

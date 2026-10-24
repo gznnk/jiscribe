@@ -181,6 +181,48 @@ describe("setText on a slotted type", () => {
 		});
 	});
 
+	it('empties a rows slot to [] (not [""]) and a string slot to ""', () => {
+		const doc = slottedDoc();
+
+		slotOps.setText(doc, "card-1", "", "name");
+		slotOps.setText(doc, "card-1", "", "attributes");
+
+		expect(readObject(doc, "card-1").text).toEqual({
+			name: { text: "" },
+			attributes: { text: [] },
+		});
+	});
+
+	it("carries a row's styling over to the characters a rewrite kept", () => {
+		const doc = slottedDoc();
+		const slots = readObject(doc, "card-1").text as Record<
+			string,
+			{ text: unknown }
+		>;
+		slots.attributes.text = ["id", [{ text: "email", fontWeight: "bold" }]];
+
+		slotOps.setText(doc, "card-1", "id\nemail2\nrole", "attributes");
+
+		expect(slots.attributes.text).toEqual([
+			"id",
+			[{ text: "email2", fontWeight: "bold" }],
+			[{ text: "role", fontWeight: "bold" }],
+		]);
+	});
+
+	it("rewrites a slot whose content is neither a body nor rows as one body", () => {
+		const doc = slottedDoc();
+		const slots = readObject(doc, "card-1").text as Record<
+			string,
+			{ text: unknown }
+		>;
+		slots.name.text = 42;
+
+		slotOps.setText(doc, "card-1", "a\nb", "name");
+
+		expect(slots.name.text).toBe("a\nb");
+	});
+
 	it("names the available slots when the slot is missing or unknown", () => {
 		const doc = slottedDoc();
 

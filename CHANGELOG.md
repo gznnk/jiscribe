@@ -211,6 +211,13 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   one-frame-late commit after two slow frames and tries the synchronous commit
   again every 30 frames and after a pause in the input.
 
+- **Emptying a slot of rows headlessly writes `[]`, as the canvas does.**
+  `docOps.setText` (and with it `set_text` in `@jiscribe/ai-tools`) wrote an
+  empty text into a slot that holds rows, such as a UML record's attributes,
+  as `[""]`: one empty row, where the canvas writes no rows at all. It now
+  writes `[]`, the two sides sharing one conversion between a slot's content
+  and the single body of text it is edited as.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security
