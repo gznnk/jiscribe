@@ -211,6 +211,21 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   one-frame-late commit after two slow frames and tries the synchronous commit
   again every 30 frames and after a pause in the input.
 
+- **An exported image no longer gets a background rect for a background that
+  paints nothing.** Only the exact strings `transparent` and
+  `rgba(0, 0, 0, 0)` counted as transparent, so a fully transparent background
+  in any other color or spelling, such as `rgba(255, 255, 255, 0)` or
+  `#ffffff00`, still put a full-size rect of that invisible color under the
+  drawing. Any color with zero alpha now leaves the rect out. The color
+  swatches in the object menu and the properties panel follow the same rule
+  and show the transparency checker for every such color.
+
+- **A connector label whose background or border color has no blue keeps its
+  box in an exported image.** The export read the last number of an
+  `rgb(...)` color as its alpha, so an opaque color ending in 0, such as
+  `rgb(255, 255, 0)`, was taken for transparent and the label's background or
+  border was left out of the SVG and PNG.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security

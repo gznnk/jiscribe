@@ -23,6 +23,7 @@ packages/canvas/src/
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # 図形ごとの State + Mapper
 │   └── registry/           # states 層のレジストリ（ObjectMapperRegistry など）
+├── color/                  # CSS の色文字列（hex / rgb() のパースと、何も塗らない色かの判定）。何も import せず、rendering / controllers / export が共有する
 ├── connectors/             # コネクタの幾何（端点解決・直交ルーティング・ラベル配置）。描画も状態更新もせず、rendering / controllers から値を取らない
 ├── controllers/            # 状態管理 + ビジネスロジック
 │   ├── Canvas.tsx

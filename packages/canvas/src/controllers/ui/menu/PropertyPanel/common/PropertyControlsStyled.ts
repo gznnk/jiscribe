@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 
 import { theme } from "../../../../../theme/themeTokens";
+import { swatchBackground } from "../../utils/swatchBackground";
 
 /** Height every control in the panel is drawn at, so rows line up. */
 const CONTROL_HEIGHT = "28px";
@@ -166,15 +167,6 @@ const SWATCH_BOX = `
 	border: 1px solid ${theme.borderSubtle};
 	border-radius: ${theme.radius};
 `;
-
-/**
- * What a swatch is painted with. `transparent` draws the checker instead, so an
- * unfilled shape is not mistaken for a white one.
- */
-const swatchBackground = (swatchColor: string): string =>
-	swatchColor === "transparent"
-		? `repeating-conic-gradient(${theme.transparentChecker} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
-		: swatchColor;
 
 /** The color a swatch shows. */
 export const PropertyColorSwatch = styled.span<{ swatchColor: string }>`

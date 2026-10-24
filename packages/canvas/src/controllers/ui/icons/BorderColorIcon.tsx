@@ -1,12 +1,12 @@
 import { memo } from "react";
 
-import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
-import { isTransparentPreviewColor } from "./utils/isTransparentPreviewColor";
 import {
 	calcClockArcPath,
 	calcSegmentClockAngles,
 } from "./utils/mixedColorArcs";
+import { isTransparentColor } from "../../../color/isTransparentColor";
 import { theme } from "../../../theme/themeTokens";
+import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
 
 type BorderColorIconProps = {
 	color: string;
@@ -39,7 +39,7 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 	size = 24,
 	title = "Border Color",
 }) => {
-	const singleColorRing = isTransparentPreviewColor(color) ? (
+	const singleColorRing = isTransparentColor(color) ? (
 		/* Transparent indicator: a dashed ring. The dash is a faint overlay of the
 		   foreground color and the gap shows through, producing two tones whose
 		   contrast auto-inverts with the theme.
@@ -89,7 +89,7 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 								// too thin to hold the checker itself. The color may be
 								// var(--jiscribe-*), so apply it via style.
 								style={{
-									stroke: isTransparentPreviewColor(segment.color)
+									stroke: isTransparentColor(segment.color)
 										? theme.transparentChecker
 										: segment.color,
 								}}
