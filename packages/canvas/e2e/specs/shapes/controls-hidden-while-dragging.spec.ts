@@ -3,13 +3,13 @@ import { selectors } from "../../support/selectors";
 
 /**
  * The selection controls are hidden for the duration of a drag, driven by the
- * `activeDrag.kind` the gesture router resolves once per dragStart:
+ * `drag.kind` the handler names once per dragStart:
  *
  * - "move" hides both the transform frame and the connection anchors
  * - "transform" hides the anchors only — the handle being dragged has to stay
  *
  * A polyline's vertex and midpoint handles hide on both kinds as well, and stay
- * through a drag of one of them ("other").
+ * through a drag of one of them ("vertex").
  *
  * A type's own selection controls hide on both kinds too; this harness registers
  * no type that has any, so the table plugin's suite pins that

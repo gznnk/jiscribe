@@ -108,7 +108,7 @@ const collectSelectionSections = (
  * acting on the object.
  *
  * An open text editor narrows them the same way, through the slot it keeps picked
- * (see `textEditState`), for the same reason read the other way round: what the menu offers there has to be something a stretch of the text
+ * (see `CanvasMode`), for the same reason read the other way round: what the menu offers there has to be something a stretch of the text
  * being edited can take, and reshaping or restacking the shape mid-edit is not it.
  *
  * @param state - The current canvas controller state

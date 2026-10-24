@@ -2,6 +2,7 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import {
 	createInitialControllerState,
@@ -30,9 +31,9 @@ describe("createInitialControllerState", () => {
 
 		expect(state.objects["rect-1"]).toMatchObject({ cx: 5, cy: 5 });
 		expect(state.selection.objectIds).toEqual([]);
-		expect(state.activeDrag).toBeNull();
+		expect(state.drag).toBeNull();
 		expect(state.multiSelectGroup).toBeNull();
-		expect(state.textEditState).toBeNull();
+		expect(readTextEditDraft(state)).toBeNull();
 		expect(state.commitVersion).toBe(0);
 		expect(state.saveRequest.version).toBe(0);
 	});

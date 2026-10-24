@@ -48,7 +48,7 @@ in one hook, `useIsTextLegible` (`rendering/objects/useIsTextLegible.ts`), which
 
 While objects are dragged, the reducer still writes their moved positions on every frame, so snapping,
 the controls and every other reader of the state see the truth. Only the drawing takes a shortcut, and
-viewport culling follows it for connectors (see below). The object drag handler declares what it moved as `activeDrag.movePreview`
+viewport culling follows it for connectors (see below). The object drag handler declares what it moved as the `"move"` drag's `movePreview`
 (`rendering/layers/content/MovePreview.ts`: the delta it applied, the ids whose `moveByDelta` returned a
 new state, the drag-start objects), and `ObjectsRenderer` draws each of those ids from its start state
 inside a `<g transform="translate(dx dy)">`. The start state keeps its identity for the whole drag, so

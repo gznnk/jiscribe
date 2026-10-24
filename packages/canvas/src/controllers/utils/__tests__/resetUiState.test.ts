@@ -8,21 +8,14 @@ describe("resetUiState", () => {
 	it("clears every transient field to its empty value", () => {
 		expect(resetUiState()).toEqual({
 			selection: EMPTY_SELECTION,
-			activeDrag: null,
+			drag: null,
 			inertialScrolling: false,
 			dragStartCaches: { keyPoints: {}, snapCandidates: null },
-			edgeScrollEnabled: false,
 			contextMenuPosition: null,
-			stencilLibraryDrag: null,
-			areaSelection: null,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
 			multiSelectGroup: null,
-			textEditState: null,
-			connectorDraft: null,
-			snapFeedback: null,
-			axisLockFeedback: null,
-			shapeDrawing: null,
+			mode: { kind: "normal" },
 			lastDuplicate: null,
 		});
 	});

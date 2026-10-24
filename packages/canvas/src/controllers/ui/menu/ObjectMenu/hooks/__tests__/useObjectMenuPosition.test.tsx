@@ -162,12 +162,14 @@ describe("useObjectMenuPosition visibility", () => {
 		[
 			"a marquee is being drawn",
 			{
-				areaSelection: {
-					startX: 0,
-					startY: 0,
-					endX: 1,
-					endY: 1,
-				} as CanvasControllerState["areaSelection"],
+				// An open dropdown keeps the menu up through other drags, never a marquee.
+				objectMenuOpenId: "r1",
+				drag: {
+					kind: "marquee",
+					rect: { startX: 0, startY: 0, endX: 1, endY: 1 },
+					hitIds: [],
+					baseIds: [],
+				} as unknown as CanvasControllerState["drag"],
 			},
 		],
 		[
@@ -176,7 +178,9 @@ describe("useObjectMenuPosition visibility", () => {
 		],
 		[
 			"a connector label is being edited",
-			{ textEditState: { kind: "connectorLabel", text: "" } },
+			{
+				mode: { kind: "textEdit", draft: { kind: "connectorLabel", text: "" } },
+			},
 		],
 	])("hides while %s", (_condition, overrides) => {
 		const { first } = mountPosition(selectedRectState(box, overrides));

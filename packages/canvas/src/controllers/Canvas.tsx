@@ -543,6 +543,10 @@ const CanvasComponent = ({
 	// by handing it the same state object until something it shows has changed.
 	const propertyPanelState = usePropertyPanelState(menuCanvasState);
 
+	const movePreview =
+		state.drag?.kind === "move" ? state.drag.movePreview : undefined;
+	const drawingPresetId =
+		state.mode.kind === "draw" ? state.mode.preset.id : null;
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
 	// the live SVG DOM, so it renders its own scope in place of that for the snapshot.
 	const culledObjectIds = useVisibleObjectIds(
@@ -551,7 +555,7 @@ const CanvasComponent = ({
 		state.viewport,
 		textEditObjectId,
 		registries,
-		state.activeDrag?.movePreview,
+		movePreview,
 	);
 	// Read by the text overlays, which stop drawing text too small to read; a
 	// snapshot lifts that for as long as it clones the SVG.
@@ -624,7 +628,7 @@ const CanvasComponent = ({
 				{toolbar?.show !== false && (
 					<ToolbarCommandStateContext value={resolveToolbarCommandState}>
 						<Toolbar
-							activePresetId={state.shapeDrawing?.preset.id ?? null}
+							activePresetId={drawingPresetId}
 							openCategoryId={state.stencilLibraryOpenCategory}
 							zoom={state.viewport.zoom}
 							sections={toolbarSections}
@@ -641,7 +645,7 @@ const CanvasComponent = ({
 							collapsedSectionIds={
 								state.stencilLibraryPanel.collapsedSectionIds
 							}
-							activePresetId={state.shapeDrawing?.preset.id ?? null}
+							activePresetId={drawingPresetId}
 							resolvePreset={resolveLibraryPreset}
 						/>
 					)}
@@ -649,7 +653,7 @@ const CanvasComponent = ({
 						data-id="canvas"
 						data-kind="canvas"
 						ref={canvasRef}
-						cursor={state.shapeDrawing ? "crosshair" : undefined}
+						cursor={drawingPresetId !== null ? "crosshair" : undefined}
 					>
 						<Container>
 							<CanvasView
@@ -660,9 +664,9 @@ const CanvasComponent = ({
 								isContentHidden={isContentHidden}
 								textEditObjectId={textEditObjectId}
 								editingTextSlotId={editingTextSlotId}
-								isDrawMode={!!state.shapeDrawing}
+								isDrawMode={drawingPresetId !== null}
 								renderedObjectIds={renderedObjectIds}
-								movePreview={state.activeDrag?.movePreview}
+								movePreview={movePreview}
 								showGrid={grid?.show}
 								gridSize={grid?.size}
 								background={state.background}
@@ -682,7 +686,7 @@ const CanvasComponent = ({
 								}}
 							>
 								<TextEditorLayer
-									textEditState={state.textEditState}
+									mode={state.mode}
 									selection={state.selection}
 									objects={draftObjects}
 									{...editorHandlers}

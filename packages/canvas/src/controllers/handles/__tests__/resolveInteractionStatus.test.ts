@@ -20,12 +20,11 @@ const slottedRect = {
 } as unknown as ObjectState;
 
 const idleState: StatusInput = {
-	activeDrag: null,
+	drag: null,
 	inertialScrolling: false,
-	textEditState: null,
+	mode: { kind: "normal" },
 	selection: { objectIds: [], part: null },
 	objects: { r1: slottedRect },
-	shapeDrawing: null,
 	activeModal: null,
 };
 
@@ -33,19 +32,19 @@ const resolve = (overrides: Partial<StatusInput> = {}) =>
 	resolveInteractionStatus({ ...idleState, ...overrides } as StatusInput);
 
 /** A drag of the given kind; its start snapshot is never read by the status. */
-const dragOf = (kind: string): StatusInput["activeDrag"] =>
-	({ kind }) as unknown as StatusInput["activeDrag"];
+const dragOf = (kind: string): StatusInput["drag"] =>
+	({ kind }) as unknown as StatusInput["drag"];
 
 /** A session open on r1's body slot: the draft, plus the selection that owns it. */
 const textEdit: Partial<StatusInput> = {
-	textEditState: { kind: "shape", text: "" },
+	mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 	selection: { objectIds: ["r1"], part: textSlotPartSelection("body") },
 };
 
 const armedTool = {
+	kind: "draw",
 	preset: { id: "process", objectType: "rect" },
-	preview: null,
-} as unknown as StatusInput["shapeDrawing"];
+} as unknown as StatusInput["mode"];
 
 describe("resolveInteractionStatus", () => {
 	it("reports an untouched canvas as idle", () => {
@@ -59,10 +58,14 @@ describe("resolveInteractionStatus", () => {
 		});
 	});
 
+	it("reports the drag by its kind", () => {
+		expect(resolve({ drag: dragOf("marquee") }).drag).toBe("marquee");
+	});
+
 	it("is busy for a drag of any kind", () => {
-		expect(resolve({ activeDrag: dragOf("other") }).isBusy).toBe(true);
-		expect(resolve({ activeDrag: dragOf("move") }).isBusy).toBe(true);
-		expect(resolve({ activeDrag: dragOf("transform") }).isBusy).toBe(true);
+		expect(resolve({ drag: dragOf("inert") }).isBusy).toBe(true);
+		expect(resolve({ drag: dragOf("move") }).isBusy).toBe(true);
+		expect(resolve({ drag: dragOf("transform") }).isBusy).toBe(true);
 	});
 
 	it("is busy while the view coasts from a released pan", () => {
@@ -76,21 +79,14 @@ describe("resolveInteractionStatus", () => {
 	});
 
 	it("is not busy for an armed drawing tool, which waits on nobody's schedule", () => {
-		const status = resolve({ shapeDrawing: armedTool });
+		const status = resolve({ mode: armedTool });
 		expect(status.drawingShapeType).toBe("rect");
 		expect(status.drag).toBeNull();
 		expect(status.isBusy).toBe(false);
 	});
 
 	it("keeps reporting the tool through the drag that draws with it, which is busy", () => {
-		const drawing = {
-			preset: { id: "process", objectType: "rect" },
-			preview: { startX: 0, startY: 0, endX: 10, endY: 10 },
-		} as unknown as StatusInput["shapeDrawing"];
-		const status = resolve({
-			shapeDrawing: drawing,
-			activeDrag: dragOf("other"),
-		});
+		const status = resolve({ mode: armedTool, drag: dragOf("draw") });
 		expect(status.drawingShapeType).toBe("rect");
 		expect(status.isBusy).toBe(true);
 	});
@@ -104,10 +100,10 @@ describe("resolveInteractionStatus", () => {
 	it("derives isBusy from the fields it reports, so a true is always explainable", () => {
 		for (const overrides of [
 			{},
-			{ activeDrag: dragOf("move") },
+			{ drag: dragOf("move") },
 			{ inertialScrolling: true },
 			textEdit,
-			{ shapeDrawing: armedTool },
+			{ mode: armedTool },
 			{ activeModal: "export" as const },
 		]) {
 			const status = resolve(overrides);

@@ -14,6 +14,7 @@ import type {
 	SelectionControlLayer,
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
+import { claimDrag } from "../../utils/claimDrag";
 import { commitEdit } from "../../utils/commitEdit";
 import { createCowObjects } from "../../utils/cowObjects";
 import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
@@ -113,25 +114,20 @@ class SelectionControlStrategy extends ControlStrategy {
 		event: CanvasEvent,
 	): CanvasControllerState {
 		if (event.type === "dragStart") {
-			return {
-				...state,
-				edgeScrollEnabled: true,
-				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
-			};
+			return claimDrag(
+				{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+				{ kind: "selectionControl" },
+				{ edgeScroll: true },
+			);
 		}
-		// dragEnd always releases edge scrolling, even when the drag was a no-op or
-		// the definition did not ask for dragEnd.
-		const eventState =
-			event.type === "dragEnd" ? { ...state, edgeScrollEnabled: false } : state;
 		const appliedState = isOfferedEventType(this.definition, event.type)
-			? this.applyEvent(eventState, event, event.type)
-			: eventState;
+			? this.applyEvent(state, event, event.type)
+			: state;
 		// A dragEnd the definition answered with an object has committed already;
 		// any other end settles what the drag frames wrote.
 		if (
 			event.type !== "dragEnd" ||
-			appliedState.commitVersion !== eventState.commitVersion
+			appliedState.commitVersion !== state.commitVersion
 		) {
 			return appliedState;
 		}
@@ -248,7 +244,7 @@ class SelectionControlStrategy extends ControlStrategy {
 	): ObjectState | null {
 		const startObject =
 			type === "drag" || type === "dragEnd"
-				? state.activeDrag?.startSnapshot?.objects[objectId]
+				? state.drag?.startSnapshot?.objects[objectId]
 				: state.objects[objectId];
 		return startObject && startObject.type === this.objectType
 			? startObject

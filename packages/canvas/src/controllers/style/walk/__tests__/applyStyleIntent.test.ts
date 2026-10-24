@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
+import { readTextEditDraft } from "../../../utils/readTextEditDraft";
 import {
 	connectorOf,
 	editingStateOf,
@@ -166,7 +167,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 			editingStateOf({ a }, "a", "hello", { start: 0, end: 2 }),
 			"#d33",
 		);
-		expect(result.textEditState).toMatchObject({
+		expect(readTextEditDraft(result)).toMatchObject({
 			text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
 		});
 	});
@@ -192,7 +193,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 		});
 		// The written property leaves the draft's runs; the rest of their styling
 		// and the edited characters stay.
-		expect(result.textEditState).toMatchObject({
+		expect(readTextEditDraft(result)).toMatchObject({
 			text: [{ text: "he", fontWeight: "bold" }, { text: "llo!" }],
 		});
 	});
@@ -221,7 +222,7 @@ describe("applyStyleIntent while a shape editor is open", () => {
 		const result = paint(state, "#0f0");
 		expect(fillOf(result.objects["a"])).toBe("#0f0");
 		expect(readTextSlots(result.objects["a"])).toBe(readTextSlots(a));
-		expect(result.textEditState).toBe(state.textEditState);
+		expect(readTextEditDraft(result)).toBe(readTextEditDraft(state));
 	});
 
 	it("an intent the edited object does not take → the draft is dropped with the rest", () => {

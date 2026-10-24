@@ -7,7 +7,7 @@ import { selectors, type ToolTitle } from "../../support/selectors";
  *
  * 1. Pressing a shape that does not support drawing (Pin and other shapes without
  *    bounds drawing). Those are placed immediately on press and never enter drawing
- *    mode, so shapeDrawing is set to null on click to keep a previous drawing mode from
+ *    mode, so the drawing mode is cleared on click to keep a previous drawing mode from
  *    lingering.
  * 2. Starting a D&D with any shape. Drag placement is a path of its own, so drawing
  *    mode is cleared at dragStart.

@@ -11,6 +11,7 @@ const makeState = (
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		stencilLibraryPanel: { isOpen: false, collapsedSectionIds: ["basic"] },
 		stencilLibraryOpenCategory: "flowchart",
 		selection: selectionOf(["a"]),

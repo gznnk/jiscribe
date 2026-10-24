@@ -172,6 +172,7 @@ const stateOf = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: {},
 		selection: selectionOf([]),
 		multiSelectGroup: null,
@@ -481,7 +482,7 @@ describe("getPropertyPanelSections", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
 			selection: selectionOf(["r-1"], textSlotPartSelection("body")),
-			textEditState: { kind: "shape" },
+			mode: { kind: "textEdit", draft: { kind: "shape" } },
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(
@@ -516,7 +517,7 @@ describe("getPropertyPanelSections", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "filled-rect") },
 			selection: selectionOf(["r-1"], textSlotPartSelection("body")),
-			textEditState: { kind: "shape" },
+			mode: { kind: "textEdit", draft: { kind: "shape" } },
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(

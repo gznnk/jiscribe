@@ -48,6 +48,7 @@ const makeState = (
 	objectMenuOpenId: string | null = null,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: {
 			"rec-1": slotShape("rec-1"),
 			"poly-1": poly("poly-1"),

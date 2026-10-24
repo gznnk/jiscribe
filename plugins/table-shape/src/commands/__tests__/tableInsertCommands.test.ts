@@ -62,7 +62,7 @@ const canvasWith = (
 	({
 		objects: { [TABLE.id]: TABLE },
 		selection: { objectIds: [TABLE.id], part: partSelection },
-		textEditState: null,
+		mode: { kind: "normal" },
 		commitVersion: 7,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -282,10 +282,7 @@ describe("TABLE_INSERT_COMMANDS", () => {
 
 	it("is unavailable while a cell is being edited, the arrows being the caret's", () => {
 		const editing = canvasWith(cellSelection(["r0c0"]), {
-			textEditState: {
-				kind: "shape",
-				text: "",
-			},
+			mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(

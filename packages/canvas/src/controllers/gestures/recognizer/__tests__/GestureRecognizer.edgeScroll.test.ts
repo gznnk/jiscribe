@@ -149,9 +149,9 @@ const setup = () => {
 		svgRef: { current: null },
 		canvasStateRef: {
 			current: {
-				edgeScrollEnabled: true,
 				// Reference the same mutable viewport as getSvgPoint (share zoom / minX).
 				viewport: sim.viewport,
+				drag: { edgeScrollEnabled: true },
 			},
 		},
 	};

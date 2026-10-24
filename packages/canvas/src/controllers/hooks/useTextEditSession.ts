@@ -2,8 +2,8 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { BoundingBox } from "@jiscribe/geometry";
 import { type Dispatch, useCallback, useMemo } from "react";
 
+import { useModeHeldAcrossCaretMoves } from "./useModeHeldAcrossCaretMoves";
 import { useRevealTextEditCaret } from "./useRevealTextEditCaret";
-import { useTextEditDraftState } from "./useTextEditDraftState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { SelectNextTextSlotCommand } from "../commands/selection/SelectNextTextSlotCommand";
 import { SelectPreviousTextSlotCommand } from "../commands/selection/SelectPreviousTextSlotCommand";
@@ -83,7 +83,7 @@ export const useTextEditSession = ({
 }: TextEditSessionParams): TextEditSession => {
 	// Neither memo below reads the caret, so both key on the session held through
 	// caret-only moves.
-	const textEditDraftState = useTextEditDraftState(canvasState.textEditState);
+	const caretStableMode = useModeHeldAcrossCaretMoves(canvasState.mode);
 
 	// The slot being edited carries the uncommitted editor text, so geometry derived from
 	// it follows every keystroke instead of jumping on commit. Rendering, selection
@@ -95,16 +95,11 @@ export const useTextEditSession = ({
 				{
 					objects: canvasState.objects,
 					selection: canvasState.selection,
-					textEditState: textEditDraftState,
+					mode: caretStableMode,
 				},
 				registries.objectContentResizer,
 			),
-		[
-			canvasState.objects,
-			canvasState.selection,
-			textEditDraftState,
-			registries,
-		],
+		[canvasState.objects, canvasState.selection, caretStableMode, registries],
 	);
 
 	// What the open editing session is on, for the layers that only need to know
@@ -115,9 +110,9 @@ export const useTextEditSession = ({
 			readOpenTextEdit({
 				objects: canvasState.objects,
 				selection: canvasState.selection,
-				textEditState: textEditDraftState,
+				mode: caretStableMode,
 			}),
-		[canvasState.objects, canvasState.selection, textEditDraftState],
+		[canvasState.objects, canvasState.selection, caretStableMode],
 	);
 	const textEditObjectId = readTextEditObjectId(textEdit);
 	const editingTextSlotId =

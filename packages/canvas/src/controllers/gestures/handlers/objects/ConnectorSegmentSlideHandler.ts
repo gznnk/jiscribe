@@ -11,6 +11,7 @@ import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
+import { writeDragFeedback } from "../../../utils/writeDragFeedback";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -47,7 +48,7 @@ const resolveSegment = (
 	connectorId: string,
 	segmentIndex: number,
 ): DraggedSegment | null => {
-	const snapshot = state.activeDrag?.startSnapshot;
+	const snapshot = state.drag?.startSnapshot;
 	if (!snapshot) {
 		return null;
 	}
@@ -94,7 +95,7 @@ const handleDrag = (
 	connectorId: string,
 	segmentIndex: number,
 ): CanvasControllerState => {
-	const snapshot = state.activeDrag?.startSnapshot;
+	const snapshot = state.drag?.startSnapshot;
 	const segment = resolveSegment(state, registries, connectorId, segmentIndex);
 	if (!snapshot || !segment) {
 		return state;
@@ -140,11 +141,10 @@ const handleDrag = (
 	const updatedObjects = createCowObjects(state.objects);
 	updatedObjects[connectorId] = updatedConnector;
 
-	return {
-		...state,
-		objects: updatedObjects,
-		snapFeedback,
-	};
+	return writeDragFeedback(
+		{ ...state, objects: updatedObjects },
+		{ snapFeedback },
+	);
 };
 
 /**
@@ -195,15 +195,14 @@ export const ConnectorSegmentSlideHandler: GestureHandler = {
 			return beginConnectorReshape(state, connectorId);
 		}
 		if (event.type === "dragEnd") {
-			const closingState = { ...state, edgeScrollEnabled: false };
 			const draggedState = handleDrag(
-				closingState,
+				state,
 				event,
 				registries,
 				connectorId,
 				segmentIndex,
 			);
-			return commitEditIfChanged(closingState, draggedState);
+			return commitEditIfChanged(state, draggedState);
 		}
 		return handleDrag(state, event, registries, connectorId, segmentIndex);
 	},

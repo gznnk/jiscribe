@@ -2,13 +2,14 @@ import { createObjectDoc } from "@jiscribe/doc/model/objects/utils/createObjectD
 import type { Point } from "@jiscribe/geometry";
 import React, { memo } from "react";
 
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { CanvasDragDetail } from "../../../CanvasTypes";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { Stencil } from "../../objects/Stencil";
 
 type DragGhostProps = {
-	stencilLibraryDrag: CanvasControllerState["stencilLibraryDrag"];
+	/** The drag off the StencilLibrary; null during any other drag, or none */
+	stencilDrag: Extract<CanvasDragDetail, { kind: "stencil" }> | null;
 };
 
 const GHOST_ID = "drag-ghost";
@@ -52,20 +53,18 @@ const createGhostElement = (
  * Renders a semi-transparent ghost of the shape being dragged from the stencil library.
  * Renders nothing when no drag is in progress.
  */
-const DragGhostComponent: React.FC<DragGhostProps> = ({
-	stencilLibraryDrag,
-}) => {
+const DragGhostComponent: React.FC<DragGhostProps> = ({ stencilDrag }) => {
 	const registries = useCanvasRegistries();
 
-	if (!stencilLibraryDrag) {
+	if (!stencilDrag) {
 		return null;
 	}
 
 	return (
 		<g opacity={0.5} pointerEvents="none">
 			{createGhostElement(
-				stencilLibraryDrag.preset,
-				stencilLibraryDrag.ghostPosition,
+				stencilDrag.preset,
+				stencilDrag.ghostPosition,
 				registries,
 			)}
 		</g>

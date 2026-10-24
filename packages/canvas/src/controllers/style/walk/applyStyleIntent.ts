@@ -13,6 +13,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCowObjects } from "../../utils/cowObjects";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import { textSlotsOf } from "../../utils/textSlotsOf";
 import { styleEntryOf } from "../tables/styleEntryOf";
 
@@ -32,17 +33,17 @@ const redraftTextEdit = (
 	state: CanvasControllerState,
 	edited: ObjectState,
 	textEdit: StyleTextEdit,
-): Pick<CanvasControllerState, "textEditState"> | undefined => {
-	const { textEditState } = state;
+): Pick<CanvasControllerState, "mode"> | undefined => {
+	const draft = readTextEditDraft(state);
 	const slots = textSlotsOf(edited);
-	if (textEditState?.kind !== "shape" || slots === undefined) {
+	if (draft?.kind !== "shape" || slots === undefined) {
 		return undefined;
 	}
 	const content = readRichTextSlot(slots, textEdit.textSlotId);
 	if (isSameRichText(content, textEdit.draft)) {
 		return undefined;
 	}
-	return { textEditState: { ...textEditState, text: content } };
+	return { mode: { kind: "textEdit", draft: { ...draft, text: content } } };
 };
 
 /**

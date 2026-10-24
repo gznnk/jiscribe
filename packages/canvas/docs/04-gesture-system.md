@@ -90,31 +90,55 @@ handler is a router delegating to sub-handlers inside its own folder.
 | `menu/`       | Menu UI (toolbar, context menu, ObjectMenu, properties panel, stencil library, and so on)                           | `MenuEventHandler.ts` (router; `MENU_HANDLERS` in the same file is the source of truth for its sub-handlers), `ToolbarHandler.ts`, `ObjectMenuHandler.ts`, `PropertyPanelHandler.ts`, and others |
 | `objects/`    | Shapes and connectors themselves (move, select, launch text editing, drag a connector label or one of its segments) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts` (router; `CONNECTOR_HANDLERS` in the same file is the source of truth for its sub-handlers), `ConnectorClickHandler.ts`, and others          |
 
-On `dragStart`, `handleGesture` opens the state's `activeDrag` (typed `ActiveDrag` in
-`controllers/CanvasTypes.ts`) and sets it back to `null` on `dragEnd`. `activeDrag.startSnapshot` holds the
+What the canvas is in the middle of lives on two axes of `CanvasControllerState`
+(`controllers/CanvasTypes.ts`). `mode` (`CanvasMode`) lasts across drags: `"normal"`, `"textEdit"` (the
+open session's draft) or `"draw"` (the drawing tool armed from the StencilLibrary) — one at a time,
+so a text edit and an armed tool cannot both be up. `drag` (`CanvasDrag`) lasts one drag: on `dragStart`,
+`handleGesture` opens it and it is set back to `null` on `dragEnd`. `drag.startSnapshot` holds the
 objects / keyPoints / snapCandidates, etc. at the start of the operation, and the drag's calculations are
-measured from it.
+measured from it; everything else that belongs to one drag rides on it too — the snap and axis-lock
+guides, whether the edge scrolls, a marquee's rectangle, a connector being pulled out, a preset dragged
+off the StencilLibrary, the bounds being drawn — so the close-out that drops `drag` ends all of it.
+
+One rule holds across the two axes and is kept by the handlers rather than the types: a drag on
+canvas content never runs beside an open text edit. Each handler whose drag works on canvas content
+commits the edit in its own `dragStart`, ahead of its first frame, through
+`commitTextEditIntoDragSnapshot`: `handleGesture` froze the snapshot before routing, and every frame is
+rebuilt from it, so the committed text is written into the snapshot too. The drags that leave the edit
+open — a one-finger touch pan of the background, a drag on a menu other than a StencilLibrary item —
+simply do not call it. A mouse press, a middle- or right-button one included, has committed the edit
+already; the `dragStart` commit is what catches a touch drag, whose press waits to see whether it
+becomes a pinch. While a drag holds a session open,
+the reducer also refuses, as a defensive guard no current path reaches, the text-edit actions that
+would write the document (a committing `END_TEXT_EDIT`, `STEP_TEXT_EDIT`): a menu slider holds an
+uncommitted preview in the objects mid-drag, which a history entry recorded then would keep as if it
+had been chosen. A draw drag
+leaves `mode` at `"draw"` until its `dragEnd`, which disarms the tool.
 
 `dragEnd`, `click` and `doubleClick` are the gesture close-out (`EVENT_CLOSE_OUT_TYPES`): each flattens the
-copy-on-write objects view and drops the drag bookkeeping. The close-out never advances `commitVersion`;
+copy-on-write objects view and drops `drag`. The close-out never advances `commitVersion`;
 the handler that edited the document does, at the event that completes the edit (`commitEdit` — see
 [State Update Flow](./06-state-update-flow.md)). A drag writer advances it on its `dragEnd`, a click that
 edits — a style swatch, a stencil placed by a click — on that click. A click is part of the close-out
 because it is a whole gesture of its own: the copy-on-write view a swatch writes through is flattened
 before history and persistence see it.
 
-`activeDrag.kind` (`DragKind`) says what the drag is doing. `handleGesture` opens every drag as
-`"other"`, so `activeDrag !== null` always means "a drag is under way". A handler whose drag needs to be
-told apart overwrites the kind in its own `dragStart` — e.g. `ObjectEventHandler` sets `"move"` and
-`TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame while a
-selection is moved, and the connection anchors, the vertex handles and a type's own selection controls
-while it is moved or transformed (`controllers/ui/utils/isObjectBeingMovedOrTransformed.ts`); a drag of
-one of those controls stays `"other"` and keeps them. The ObjectMenu
+`drag.kind` (`DragKind`) says what the drag is doing. `handleGesture` opens every drag as
+`"inert"`, so `drag !== null` always means "a drag is under way", and the handler the drag reaches names
+it in its own `dragStart` through `claimDrag` (`"move"` from `ObjectEventHandler`, `"marquee"` from
+`CanvasEventHandler`; the full list is `DragKind`, with what each kind holds in `CanvasDragDetail`);
+one no handler takes up stays `"inert"`. The control layers take one prop per axis, each layer taking
+only the props it reads: `isTextEditing` from `mode`, and `selectionDragKind` from `drag`, narrowed to
+`"move"` / `"transform"` (`controllers/ui/utils/readSelectionDragKind.ts`). The transform frame, the
+connection anchors and a type's own selection controls hide while a text edit is open; the transform
+frame also hides while a selection is moved, and the connection anchors, the vertex handles and a type's
+own selection controls while it is moved or transformed; a drag of one of those controls is of another
+kind and keeps them. The ObjectMenu
 hides for any kind of drag, except while one of its dropdowns is open (`objectMenuOpenId !== null`), so
 its sliders stay usable mid-drag (`controllers/ui/menu/ObjectMenu/hooks/useObjectMenuPosition.ts`).
 
 `inertialScrolling` is the fling's counterpart and deliberately a separate field: no pointer is down
-and no drag is open during a fling, so folding it into `activeDrag` would break its opening and
+and no drag is open during a fling, so folding it into `drag` would break its opening and
 closing as a pair on `dragStart` / `dragEnd`. Readers include the ObjectMenu, which hides for the fling
 the way it hides for the pan that preceded it, and `resolveInteractionStatus`
 (`controllers/handles/useInteractionHandle.ts`), which reports it as `isInertialScrolling` and `isBusy`.
@@ -190,7 +214,7 @@ With a committed label, only a double click on the label box (not the bare line)
 and dragging the box moves the label along the path (`label.position` / `label.offset`),
 with `offset` snapping to 0 within `SNAP_THRESHOLD_PX` of the line (bypassed by holding Ctrl).
 With no label yet, a double click on the bare line creates one at the clicked point (projected onto
-the path and snapped the same way), carried in `textEditState` until the edit is committed.
+the path and snapped the same way), carried in the `"textEdit"` mode's draft until the edit is committed.
 A multi-slot shape uses the nested form instead: for example, the `<g data-kind="object">` of the UML
 `record` shape (`plugins/uml-shapes/src/presentation/RecordBox.tsx`) wraps one rect per compartment the box
 has, each carrying that slot's part address as its `data-part` (`data-part="textSlot:name"`,

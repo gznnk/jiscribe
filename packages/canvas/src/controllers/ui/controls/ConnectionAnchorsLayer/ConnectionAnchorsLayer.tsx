@@ -16,10 +16,10 @@ import type { ObjectOutlineRegistry } from "../../../../rendering/objects/regist
 import { useObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistryContext";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
-import type { ConnectorDraft, DragKind } from "../../../CanvasTypes";
+import type { ConnectorDraft } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { isConnectableObject } from "../../../utils/isConnectableObject";
-import { isObjectBeingMovedOrTransformed } from "../../utils/isObjectBeingMovedOrTransformed";
+import type { SelectionDragKind } from "../../utils/readSelectionDragKind";
 import { ConnectionAnchors } from "../ConnectionAnchors";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
 
@@ -32,9 +32,10 @@ type ConnectionAnchorsLayerProps = {
 	 * Its dragged end decides which object the receiving anchors are shown on.
 	 */
 	connectorDraft?: ConnectorDraft | null;
+	/** Whether a text edit is open (`mode.kind === "textEdit"`) */
 	isTextEditing: boolean;
-	/** Kind of the drag in progress; null when none is */
-	activeDragKind: DragKind | null;
+	/** The drag changing the selection's geometry (readSelectionDragKind); null for none or any other drag */
+	selectionDragKind: SelectionDragKind | null;
 };
 
 type ResolvedAnchorGeometry = {
@@ -111,7 +112,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	zoom = 1,
 	connectorDraft,
 	isTextEditing,
-	activeDragKind,
+	selectionDragKind,
 }) => {
 	const registries = useCanvasRegistries();
 	const outlineRegistry = useObjectOutlineRegistry();
@@ -194,10 +195,10 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	}
 
 	// Hidden while the selection is moved or transformed: the dots would just ride along
-	// the geometry being changed. A connection drag ("other") keeps them, since the anchor
+	// the geometry being changed. A connection drag keeps them, since the anchor
 	// being dragged from is one of them.
 	const showSourceAnchors =
-		!isObjectBeingMovedOrTransformed(activeDragKind) &&
+		selectionDragKind === null &&
 		selectedObject != null &&
 		isConnectableObject(selectedObject, registries.objectMapper) &&
 		isTransformedFrame(selectedObject);

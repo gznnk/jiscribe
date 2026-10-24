@@ -13,6 +13,7 @@ import {
 } from "../../../selection/partKinds/textSlotPartKind";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import { readTextEditDraft } from "../../../utils/readTextEditDraft";
 import { StartTextEditCommand } from "../StartTextEditCommand";
 
 const registries = createTestRegistries();
@@ -74,7 +75,7 @@ describe("StartTextEditCommand", () => {
 		const state = stateWithSelection("rect-1");
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
 		const after = StartTextEditCommand.execute(state, registries);
-		expect(after.textEditState).toMatchObject({ kind: "shape" });
+		expect(readTextEditDraft(after)).toMatchObject({ kind: "shape" });
 		// The one body is the slot being edited, picked like any other.
 		expect(after.selection).toEqual({
 			objectIds: ["rect-1"],
@@ -88,7 +89,7 @@ describe("StartTextEditCommand", () => {
 			selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
 		});
 		const after = StartTextEditCommand.execute(state, registries);
-		expect(after.textEditState).toMatchObject({ kind: "shape" });
+		expect(readTextEditDraft(after)).toMatchObject({ kind: "shape" });
 		expect(after.selection).toBe(state.selection);
 	});
 
@@ -97,8 +98,8 @@ describe("StartTextEditCommand", () => {
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
 
 		const after = StartTextEditCommand.execute(state, registries);
-		const { textEditState } = after;
-		expect(textEditState).toMatchObject({
+		const draft = readTextEditDraft(after);
+		expect(draft).toMatchObject({
 			kind: "connectorLabel",
 			text: "",
 			placement: DEFAULT_LABEL_PLACEMENT,
@@ -113,7 +114,7 @@ describe("StartTextEditCommand", () => {
 		// midpoint (both keys dropped) rather than the stale 0.9 / 12.
 		const committed = commitTextEditIfNeeded({
 			...state,
-			textEditState: { ...textEditState, text: "Hi" },
+			mode: { kind: "textEdit", draft: { ...draft, text: "Hi" } },
 		} as typeof state);
 		expect(
 			(committed.objects["connector-1"] as { label?: object }).label,
@@ -134,7 +135,7 @@ describe("StartTextEditCommand", () => {
 		} as typeof base);
 
 		expect(
-			StartTextEditCommand.execute(state, registries).textEditState,
+			readTextEditDraft(StartTextEditCommand.execute(state, registries)),
 		).not.toHaveProperty("placement");
 	});
 
@@ -160,7 +161,7 @@ describe("StartTextEditCommand", () => {
 				ranges: [{ anchorId: "rows", focusId: "rows" }],
 			});
 			const after = StartTextEditCommand.execute(state, registries);
-			expect(after.textEditState).toMatchObject({
+			expect(readTextEditDraft(after)).toMatchObject({
 				kind: "shape",
 				text: "id: string",
 			});
@@ -171,7 +172,7 @@ describe("StartTextEditCommand", () => {
 		it("edits the first slot when no slot is selected, and selects it", () => {
 			const state = stateWithSlotSelection(null);
 			const after = StartTextEditCommand.execute(state, registries);
-			expect(after.textEditState).toMatchObject({
+			expect(readTextEditDraft(after)).toMatchObject({
 				kind: "shape",
 				text: "User",
 			});

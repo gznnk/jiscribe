@@ -10,9 +10,11 @@ import { createCanvasRegistries } from "../../../../registries/createCanvasRegis
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import { reconcileSelection } from "../../../../selection/writers/reconcileSelection";
+import { readTextEditDraft } from "../../../../utils/readTextEditDraft";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 import { ConnectorClickHandler } from "../ConnectorClickHandler";
+import { ConnectorEventHandler } from "../ConnectorEventHandler";
 
 const registries = createCanvasRegistries({ plugins: [outlinedPlugin] });
 
@@ -36,8 +38,9 @@ const makeState = (labelText: string): CanvasControllerState =>
 		rootIds: ["c1", "c2"],
 		selection: selectionOf([]),
 		multiSelectGroup: null,
-		textEditState: null,
+		mode: { kind: "normal" },
 		commitVersion: 5,
+		drag: null,
 		contextMenuPosition: { x: 1, y: 1 },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 	}) as unknown as CanvasControllerState;
@@ -51,7 +54,10 @@ const makeEditState = (
 	({
 		...makeState(labelText),
 		selection: selectionOf([editingId]),
-		textEditState: { kind: "connectorLabel", text: pendingText },
+		mode: {
+			kind: "textEdit",
+			draft: { kind: "connectorLabel", text: pendingText },
+		},
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
@@ -77,10 +83,10 @@ const labelText = (state: CanvasControllerState, id: string) =>
 	(state.objects[id] as ConnectorState).label?.text;
 
 /** The pending placement carried by the label editing session, if any. */
-const pendingPlacement = (state: CanvasControllerState) =>
-	state.textEditState?.kind === "connectorLabel"
-		? state.textEditState.placement
-		: undefined;
+const pendingPlacement = (state: CanvasControllerState) => {
+	const draft = readTextEditDraft(state);
+	return draft?.kind === "connectorLabel" ? draft.placement : undefined;
+};
 
 describe("ConnectorClickHandler - double click edit target", () => {
 	it("with a committed label, a double click on the bare line selects without opening the editor", () => {
@@ -89,7 +95,7 @@ describe("ConnectorClickHandler - double click edit target", () => {
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.selection.objectIds).toEqual(["c1"]);
 	});
 
@@ -99,7 +105,7 @@ describe("ConnectorClickHandler - double click edit target", () => {
 			makeEvent("doubleClick", "c1", "label"),
 			registries,
 		);
-		expect(next.textEditState).toEqual({
+		expect(readTextEditDraft(next)).toEqual({
 			kind: "connectorLabel",
 			text: "Yes",
 		});
@@ -112,7 +118,7 @@ describe("ConnectorClickHandler - double click edit target", () => {
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
-		expect(next.textEditState).toEqual({
+		expect(readTextEditDraft(next)).toEqual({
 			kind: "connectorLabel",
 			text: "",
 		});
@@ -155,7 +161,7 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 
 	it("projects the clicked point onto the path", () => {
 		const next = dblclickAt(stateWith(), { x: 150, y: 0 });
-		expect(next.textEditState).toEqual({
+		expect(readTextEditDraft(next)).toEqual({
 			kind: "connectorLabel",
 			text: "",
 			placement: { position: 0.75, offset: 0 },
@@ -244,7 +250,7 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 			{ x: 150, y: 0 },
 			"label",
 		);
-		expect(next.textEditState).toEqual({
+		expect(readTextEditDraft(next)).toEqual({
 			kind: "connectorLabel",
 			text: "Yes",
 		});
@@ -252,25 +258,25 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 	});
 });
 
-describe("ConnectorClickHandler - clicks while editing commit", () => {
+describe("ConnectorClickHandler (through ConnectorEventHandler) - clicks while editing commit", () => {
 	it("a pressed on the edited connector's line commits the pending label (the label box itself is covered by the editor overlay)", () => {
-		const next = ConnectorClickHandler.handle(
+		const next = ConnectorEventHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c1"),
 			registries,
 		);
 		expect(labelText(next, "c1")).toBe("new");
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.commitVersion).toBe(6);
 	});
 
 	it("a double click on the edited connector's line commits once and does not re-open the editor", () => {
-		const afterPressed = ConnectorClickHandler.handle(
+		const afterPressed = ConnectorEventHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c1"),
 			registries,
 		);
-		const afterDouble = ConnectorClickHandler.handle(
+		const afterDouble = ConnectorEventHandler.handle(
 			afterPressed,
 			makeEvent("doubleClick", "c1"),
 			registries,
@@ -278,20 +284,20 @@ describe("ConnectorClickHandler - clicks while editing commit", () => {
 		// Exactly one commit (from the pressed); the committed label now exists,
 		// so the line double click only selects.
 		expect(labelText(afterDouble, "c1")).toBe("new");
-		expect(afterDouble.textEditState).toBeNull();
+		expect(readTextEditDraft(afterDouble)).toBeNull();
 		expect(afterDouble.commitVersion).toBe(6);
 		expect(afterDouble.selection.objectIds).toEqual(["c1"]);
 	});
 
 	it("a pressed on a different connector commits the pending edit", () => {
-		const next = ConnectorClickHandler.handle(
+		const next = ConnectorEventHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c2"),
 			registries,
 		);
 		// The edit is committed to c1 and the session is cleared.
 		expect(labelText(next, "c1")).toBe("new");
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.commitVersion).toBe(6);
 	});
 });
@@ -336,32 +342,32 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 	});
 });
 
-describe("ConnectorClickHandler - touch press defers the pending label commit", () => {
+describe("ConnectorClickHandler (through ConnectorEventHandler) - touch press defers the pending label commit", () => {
 	it("a touch pressed on another connector keeps the edit session (the press may still become a pinch)", () => {
 		const state = makeEditState("c1", "Yes", "pending");
-		const next = ConnectorClickHandler.handle(
+		const next = ConnectorEventHandler.handle(
 			state,
 			makeEvent("pressed", "c2", undefined, { x: 0, y: 0 }, "touch"),
 			registries,
 		);
-		expect(next.textEditState).toBe(state.textEditState);
+		expect(readTextEditDraft(next)).toBe(readTextEditDraft(state));
 		expect(labelText(next, "c1")).toBe("Yes");
 		// The context-menu close on pressed is deliberately not deferred.
 		expect(next.contextMenuPosition).toBeNull();
 	});
 
 	it("the touch tap that resolves (click) commits the pending label", () => {
-		const afterPressed = ConnectorClickHandler.handle(
+		const afterPressed = ConnectorEventHandler.handle(
 			makeEditState("c1", "Yes", "pending"),
 			makeEvent("pressed", "c2", undefined, { x: 0, y: 0 }, "touch"),
 			registries,
 		);
-		const next = ConnectorClickHandler.handle(
+		const next = ConnectorEventHandler.handle(
 			afterPressed,
 			makeEvent("click", "c2", undefined, { x: 0, y: 0 }, "touch"),
 			registries,
 		);
 		expect(labelText(next, "c1")).toBe("pending");
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 	});
 });

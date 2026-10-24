@@ -15,8 +15,8 @@ export type CanvasInteractionStatus = {
 	 * What the drag in progress is doing, or null when no pointer is down
 	 * (see {@link DragKind}). Every drag raises it, whichever handler runs — a
 	 * marquee, a connector being pulled out of an anchor, a shape being drawn,
-	 * a stencil dragged off the palette are all in here, so there is no separate
-	 * flag for any of them.
+	 * a stencil dragged off the palette each have a kind of their own here, so
+	 * there is no separate flag for any of them.
 	 */
 	drag: DragKind | null;
 	/** Whether the view is still coasting from a released pan (inertial scrolling). */
@@ -81,7 +81,7 @@ export type CanvasInteractionHandle = {
  * The object whose text the in-place editor is open on, or null when none is.
  */
 const resolveEditedObjectId = (
-	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
+	state: Pick<CanvasControllerState, "mode" | "selection" | "objects">,
 ): string | null => {
 	const openEdit = readOpenTextEdit(state);
 	if (openEdit === null) {
@@ -102,28 +102,26 @@ const resolveEditedObjectId = (
 export const resolveInteractionStatus = (
 	state: Pick<
 		CanvasControllerState,
-		| "activeDrag"
+		| "drag"
 		| "inertialScrolling"
-		| "textEditState"
+		| "mode"
 		| "selection"
 		| "objects"
-		| "shapeDrawing"
 		| "activeModal"
 	>,
 ): CanvasInteractionStatus => ({
-	drag: state.activeDrag?.kind ?? null,
+	drag: state.drag?.kind ?? null,
 	isInertialScrolling: state.inertialScrolling,
 	editingTextId: resolveEditedObjectId(state),
-	drawingShapeType: state.shapeDrawing?.preset.objectType ?? null,
+	drawingShapeType:
+		state.mode.kind === "draw" ? state.mode.preset.objectType : null,
 	modal: state.activeModal,
-	// The transient states of the individual drags (a pending connector, a
-	// marquee, a stencil dragged off the palette) are not read here:
-	// handleGesture opens activeDrag on every dragStart and drops it on
-	// every dragEnd, so a drag of any kind is already this.
+	// handleGesture opens `drag` on every dragStart and drops it on every
+	// dragEnd, so a drag of any kind is already this.
 	isBusy:
-		state.activeDrag !== null ||
+		state.drag !== null ||
 		state.inertialScrolling ||
-		state.textEditState !== null,
+		state.mode.kind === "textEdit",
 });
 
 /**

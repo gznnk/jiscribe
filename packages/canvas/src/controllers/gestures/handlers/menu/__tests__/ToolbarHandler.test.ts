@@ -15,7 +15,7 @@ const makeState = (): CanvasControllerState =>
 		rootIds: [],
 		selection: selectionOf([]),
 		multiSelectGroup: null,
-		textEditState: null,
+		mode: { kind: "normal" },
 		contextMenuPosition: { x: 1, y: 1 },
 		stencilLibraryOpenCategory: "flowchart",
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },

@@ -48,7 +48,7 @@ const settleHeights = (
  * frame of the drag is rebuilt from that snapshot; without it the flag would come
  * straight back and the derivation would fight the drag frame by frame.
  *
- * @param state - The state the resize starts from; its `activeDrag` names the ids when a
+ * @param state - The state the resize starts from; its `drag` names the ids when a
  *   drag opened one, and off a drag (a stated size) the descendants are collected here instead
  * @param resize - The resize about to start, in the dragged frame's terms; null for the rotation knob, which changes no extent
  * @returns `state` itself when the resize leaves the height alone or nothing in the selection was following its text
@@ -61,7 +61,7 @@ export const dropAutoHeightOnResize = (
 		return state;
 	}
 	const ids =
-		state.activeDrag?.startSnapshot.selectedIdsWithDescendants ??
+		state.drag?.startSnapshot.selectedIdsWithDescendants ??
 		buildSelectedIdsWithDescendants(state.selection.objectIds, state.objects);
 	const objects = settleHeights(state.objects, ids, resize);
 	if (objects === state.objects) {
@@ -70,15 +70,11 @@ export const dropAutoHeightOnResize = (
 	return {
 		...state,
 		objects,
-		activeDrag: state.activeDrag && {
-			...state.activeDrag,
+		drag: state.drag && {
+			...state.drag,
 			startSnapshot: {
-				...state.activeDrag.startSnapshot,
-				objects: settleHeights(
-					state.activeDrag.startSnapshot.objects,
-					ids,
-					resize,
-				),
+				...state.drag.startSnapshot,
+				objects: settleHeights(state.drag.startSnapshot.objects, ids, resize),
 			},
 		},
 	};

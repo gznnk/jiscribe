@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
+import { NORMAL_MODE } from "./normalMode";
 import { EMPTY_SELECTION } from "../selection/CanvasSelection";
 
 /**
@@ -18,21 +19,14 @@ import { EMPTY_SELECTION } from "../selection/CanvasSelection";
 export type UiStateReset = Pick<
 	CanvasControllerState,
 	| "selection"
-	| "activeDrag"
+	| "mode"
+	| "drag"
 	| "inertialScrolling"
 	| "dragStartCaches"
-	| "edgeScrollEnabled"
 	| "contextMenuPosition"
-	| "stencilLibraryDrag"
-	| "areaSelection"
 	| "objectMenuOpenId"
 	| "stencilLibraryOpenCategory"
 	| "multiSelectGroup"
-	| "textEditState"
-	| "connectorDraft"
-	| "snapFeedback"
-	| "axisLockFeedback"
-	| "shapeDrawing"
 	| "lastDuplicate"
 >;
 
@@ -48,24 +42,18 @@ export type UiStateReset = Pick<
  */
 export const resetUiState = (): UiStateReset => ({
 	selection: EMPTY_SELECTION,
+	// Both an open text edit and an armed drawing tool go with the document.
+	mode: NORMAL_MODE,
 	// cancelPendingGesture() drops an in-flight drag without firing dragEnd, so this
 	// reset is what keeps the drag from outliving the gesture on an external swap.
-	activeDrag: null,
-	// Same reason as activeDrag: cancelPendingGesture() may kill a fling during
+	drag: null,
+	// Same reason as drag: cancelPendingGesture() may kill a fling during
 	// the swap, and the flag must not outlive it.
 	inertialScrolling: false,
 	dragStartCaches: { keyPoints: {}, snapCandidates: null },
-	edgeScrollEnabled: false,
 	contextMenuPosition: null,
-	stencilLibraryDrag: null,
-	areaSelection: null,
 	objectMenuOpenId: null,
 	stencilLibraryOpenCategory: null,
 	multiSelectGroup: null,
-	textEditState: null,
-	connectorDraft: null,
-	snapFeedback: null,
-	axisLockFeedback: null,
-	shapeDrawing: null,
 	lastDuplicate: null,
 });

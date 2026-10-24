@@ -24,7 +24,7 @@ import { selectRequestedIds } from "../selection/writers/selectRequestedIds";
  */
 export const canOfferHistoryNavigation = (
 	state: CanvasControllerState,
-): boolean => state.textEditState === null;
+): boolean => state.mode.kind !== "textEdit";
 
 /**
  * Whether the history may actually be navigated right now — the guard on the
@@ -37,7 +37,7 @@ export const canOfferHistoryNavigation = (
  *   is an entry to move to, which each caller checks for its own direction
  */
 export const canNavigateHistory = (state: CanvasControllerState): boolean =>
-	canOfferHistoryNavigation(state) && state.activeDrag === null;
+	canOfferHistoryNavigation(state) && state.drag === null;
 
 /**
  * Moves the canvas onto another history entry — the one state transition undo,

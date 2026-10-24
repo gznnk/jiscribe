@@ -11,10 +11,10 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
  *
  * @param targetKind - The drag's data-kind target fixed at pointerdown;
  *   undefined for targets with no [data-kind] ancestor.
- * @param canvasState - Current controller state; only shapeDrawing is consulted
- *   (drawing claims canvas-target drags for itself).
+ * @param canvasState - Current controller state; only `mode` is consulted
+ *   (an armed drawing tool claims canvas-target drags for itself).
  */
 export const isViewportPanDrag = (
 	targetKind: string | undefined,
 	canvasState: CanvasControllerState,
-): boolean => targetKind === "canvas" && !canvasState.shapeDrawing;
+): boolean => targetKind === "canvas" && canvasState.mode.kind !== "draw";

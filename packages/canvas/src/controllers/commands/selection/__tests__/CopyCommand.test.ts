@@ -62,6 +62,7 @@ const makeState = (params: {
 	connectorIds: string[];
 }): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: params.selection,
 		objects: params.objects,
 		// connectors are managed interleaved in rootIds rather than a separate array, so include them in rootIds.

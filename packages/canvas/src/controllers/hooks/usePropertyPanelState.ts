@@ -23,7 +23,7 @@ const readPropertyPanelKey = (state: CanvasControllerState): unknown[] => {
 	return [
 		state.selection.objectIds,
 		state.selection.part,
-		state.textEditState,
+		state.mode,
 		state.multiSelectGroup,
 		state.meta,
 		state.background,

@@ -28,6 +28,7 @@ const rect = (id: string, strokeWidth: number): ObjectState =>
 
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: selectionOf(shapes.map((shape) => shape.id)),
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),
 	}) as unknown as CanvasControllerState;

@@ -81,15 +81,15 @@ describe("handleGesture - area selection (marquee)", () => {
 			dragGesture("dragStart", 0, 0, 0, 0),
 			registries,
 		);
-		expect(state.activeDrag).not.toBeNull();
-		expect(state.activeDrag?.startSnapshot.bboxes.r1).toEqual({
+		expect(state.drag).not.toBeNull();
+		expect(state.drag?.startSnapshot.bboxes.r1).toEqual({
 			left: 30,
 			top: 30,
 			right: 70,
 			bottom: 70,
 		});
 		// Connectors / the far rect aside, the map covers the on-canvas shapes.
-		expect(state.activeDrag?.startSnapshot.bboxes.far).toBeDefined();
+		expect(state.drag?.startSnapshot.bboxes.far).toBeDefined();
 
 		// drag a rectangle that fully contains r1 + r2 but not `far`.
 		state = handleGesture(
@@ -139,6 +139,6 @@ describe("handleGesture - area selection (marquee)", () => {
 			dragGesture("dragEnd", 0, 0, 200, 200),
 			registries,
 		);
-		expect(state.activeDrag).toBeNull();
+		expect(state.drag).toBeNull();
 	});
 });

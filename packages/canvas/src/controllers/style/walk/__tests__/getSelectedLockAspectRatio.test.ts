@@ -15,6 +15,7 @@ const obj = (id: string, extra?: Record<string, unknown>): ObjectState =>
 
 const state = (over: Partial<CanvasControllerState>): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: {},
 		selection: selectionOf([]),
 		multiSelectGroup: null,

@@ -51,7 +51,7 @@ export const handleCommand = (
 		return state;
 	}
 
-	if (state.activeDrag !== null && !canRunDuringDrag(command)) {
+	if (state.drag !== null && !canRunDuringDrag(command)) {
 		return state;
 	}
 

@@ -16,7 +16,7 @@ export const SelectNextTextSlotCommand: ExecutableCommand = {
 	// `selection.part` names and would follow a step to another slot. The
 	// editor's own Tab commits before it steps (STEP_TEXT_EDIT).
 	canExecute: (state, registries) =>
-		state.textEditState === null &&
+		state.mode.kind !== "textEdit" &&
 		getTextSlotCycle(state, registries.objectPartKind) !== null,
 
 	execute: (state, registries) =>

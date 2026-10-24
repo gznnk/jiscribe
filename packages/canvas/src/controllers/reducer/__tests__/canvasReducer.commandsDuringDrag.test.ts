@@ -8,6 +8,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
 /**
@@ -16,15 +17,43 @@ import { createCanvasReducer } from "../canvasReducer";
  * frame while its commit stayed in the history. Only view commands run then.
  */
 
-const midDrag = { startSnapshot: {}, kind: "move" } as const;
+const midDrag = {
+	kind: "move",
+	startSnapshot: {},
+	snapFeedback: null,
+	axisLockFeedback: null,
+	edgeScrollEnabled: true,
+} as const;
 
 const createState = (dragging: boolean): CanvasControllerState =>
 	createTestState(twoRectsDoc, {
 		selection: selectionOf(["rect-1"]),
 		...(dragging && {
-			activeDrag: midDrag as unknown as CanvasControllerState["activeDrag"],
+			drag: midDrag as unknown as CanvasControllerState["drag"],
 		}),
 	});
+
+/** A mouse gesture on the canvas background, from (-20, -20) to `last`. */
+const canvasGesture = (
+	type: "dragStart" | "drag" | "dragEnd",
+	last: { x: number; y: number },
+): CanvasAction =>
+	({
+		type: "GESTURE",
+		gesture: {
+			type,
+			button: 0,
+			pointerType: "mouse",
+			targetKind: "canvas",
+			targetId: "canvas",
+			start: { x: -20, y: -20 },
+			last,
+			clientLast: last,
+			delta: { x: last.x + 20, y: last.y + 20 },
+			clientDelta: { x: last.x + 20, y: last.y + 20 },
+			mods: { shift: false, alt: false, ctrl: false, meta: false },
+		},
+	}) as unknown as CanvasAction;
 
 /** A contributed command declaring no category, as a plugin's commonly does. */
 const bumpPlugin: CanvasPlugin = {
@@ -88,10 +117,31 @@ describe("canvasReducer (integration)", () => {
 			expect(reducer(idle, bump).commitVersion).toBe(idle.commitVersion + 1);
 		});
 
+		it.each(["selectAll", "delete", "escapeSelection", "deselectAll"])(
+			"refuses %s mid-marquee",
+			(commandId) => {
+				// rect-1 spans (0, 0)-(10, 10); the marquee from (-20, -20) encloses it.
+				const marqueeing = applyActions(createState(false), [
+					canvasGesture("dragStart", { x: -15, y: -15 }),
+					canvasGesture("drag", { x: 30, y: 30 }),
+				]);
+				expect(marqueeing.drag?.kind).toBe("marquee");
+				expect(runCommands(marqueeing, commandId)).toBe(marqueeing);
+			},
+		);
+
+		it.each(["escapeSelection", "deselectAll"])(
+			"refuses %s during a move drag",
+			(commandId) => {
+				const state = createState(true);
+				expect(runCommands(state, commandId)).toBe(state);
+			},
+		);
+
 		it("refuses a paste mid-drag", () => {
 			const copied = runCommands(createState(false), "copy");
 			const clipboard = copied.internalClipboard as ClipboardData;
-			const dragging = { ...copied, activeDrag: createState(true).activeDrag };
+			const dragging = { ...copied, drag: createState(true).drag };
 
 			expect(applyActions(dragging, [{ type: "PASTE", data: clipboard }])).toBe(
 				dragging,

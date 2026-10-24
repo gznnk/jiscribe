@@ -187,9 +187,34 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   While the label is still the one the old icon comes with (the short name a
   stencil places, `S3`), picking another icon replaces it with the new one's
   (`Lambda`). A label that was edited, or emptied, is left as it is.
+- **`interaction.getStatus().drag` names every kind of drag.** It was `"move"`,
+  `"transform"` or `"other"`; it is now one of `"move"`, `"transform"`,
+  `"marquee"`, `"pan"`, `"menu"`, `"connector"`, `"stencil"`, `"draw"`,
+  `"vertex"`, `"label"`, `"segment"`, `"selectionControl"`, or `"inert"` for a
+  drag nothing acts on. `DragKind` follows. `null` still means no drag.
+- **For plugin authors, breaking changes to `CanvasControllerState`:** what the
+  canvas is in the middle of is two fields. `mode` is `{ kind: "normal" }`,
+  `{ kind: "textEdit", draft }` (the former `textEditState`, now `draft`) or
+  `{ kind: "draw", preset }` (the former `shapeDrawing` while armed).
+  `drag` is the drag in progress or `null` (the former `activeDrag`), named by
+  `kind`; what belonged to one drag rides on it — the former `areaSelection`
+  (`kind: "marquee"`), `connectorDraft` (`"connector"`), `stencilLibraryDrag`
+  (`"stencil"`), `shapeDrawing.preview` (`"draw"`), and `snapFeedback`,
+  `axisLockFeedback` and `edgeScrollEnabled` on every kind. The removed fields
+  are `textEditState`, `activeDrag`, `shapeDrawing`, `areaSelection`,
+  `stencilLibraryDrag`, `connectorDraft`, `snapFeedback`, `axisLockFeedback`
+  and `edgeScrollEnabled`. A command that tested `textEditState !== null` tests
+  `mode.kind === "textEdit"`; one that opens an editor writes
+  `mode: { kind: "textEdit", draft }`. Hosts are unaffected.
 
 ### Fixed
 
+- **Opening a text edit while a drawing tool is armed disarms the tool.**
+  Enter after Select All, or a double click on a shape, used to leave the tool
+  armed under the editor, so the next drag on the canvas drew a shape.
+- **A touch drag on a shape keeps the text being edited in it.** The edit was
+  committed after the drag had already taken the shape's starting state, so
+  the first frame of the drag put the old text back.
 - **The frame around a multi-selection follows the connectors as they are
   drawn.** It used to route them without the shapes' outlines and declared
   anchors, so a connector ending on a diamond, or the stubs of an orthogonal

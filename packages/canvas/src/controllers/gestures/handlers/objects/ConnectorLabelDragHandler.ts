@@ -14,8 +14,8 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { applyLabelPlacement } from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
+import { claimDrag } from "../../../utils/claimDrag";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
 	CanvasEvent,
@@ -50,7 +50,8 @@ const getLabeledConnector = (
 };
 
 /**
- * Selects the connector so its controls follow the label being dragged.
+ * Selects the connector so its controls follow the label being dragged (any
+ * open text edit was committed by ConnectorEventHandler before routing).
  * An unselected connector's label can be grabbed directly: the drag start
  * doubles as the selection.
  */
@@ -59,21 +60,23 @@ const handleDragStart = (
 	event: CanvasEvent,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const nextState = commitTextEditIfNeeded(state);
-	if (!connectorId || !getLabeledConnector(nextState.objects[connectorId])) {
-		return nextState;
+	if (!connectorId || !getLabeledConnector(state.objects[connectorId])) {
+		return state;
 	}
 
-	return {
-		...nextState,
-		selection: { objectIds: [connectorId], part: null },
-		multiSelectGroup: null,
-		// Close the submenu / category flyout on selection change
-		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
-		contextMenuPosition: null,
-		edgeScrollEnabled: true,
-	};
+	return claimDrag(
+		{
+			...state,
+			selection: { objectIds: [connectorId], part: null },
+			multiSelectGroup: null,
+			// Close the submenu / category flyout on selection change
+			objectMenuOpenId: null,
+			stencilLibraryOpenCategory: null,
+			contextMenuPosition: null,
+		},
+		{ kind: "label" },
+		{ edgeScroll: true },
+	);
 };
 
 /**
@@ -98,7 +101,7 @@ const handleDrag = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const snapshot = state.activeDrag?.startSnapshot;
+	const snapshot = state.drag?.startSnapshot;
 	if (!connectorId || !snapshot) {
 		return state;
 	}
@@ -168,10 +171,9 @@ const handleDragEnd = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const closingState = { ...state, edgeScrollEnabled: false };
-	const dragResult = handleDrag(closingState, event, registries);
+	const dragResult = handleDrag(state, event, registries);
 	const started = connectorId
-		? getLabeledConnector(state.activeDrag?.startSnapshot.objects[connectorId])
+		? getLabeledConnector(state.drag?.startSnapshot.objects[connectorId])
 		: null;
 	const finished = connectorId
 		? getLabeledConnector(dragResult.objects[connectorId])
@@ -199,9 +201,9 @@ const handleDragEnd = (
 		isSamePlacement(started.label, live.label);
 
 	if (isNoOp && isLiveAtStart) {
-		return closingState;
+		return state;
 	}
-	return commitEditIfChanged(closingState, dragResult);
+	return commitEditIfChanged(state, dragResult);
 };
 
 /**

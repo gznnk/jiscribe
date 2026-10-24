@@ -4,7 +4,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { commitEdit, commitEditIfChanged } from "../commitEdit";
 
 const makeState = (commitVersion: number): CanvasControllerState =>
-	({ commitVersion, edgeScrollEnabled: true }) as CanvasControllerState;
+	({ commitVersion, objectMenuOpenId: "a" }) as CanvasControllerState;
 
 describe("commitEdit", () => {
 	it("advances commitVersion by one without touching the rest", () => {
@@ -13,7 +13,7 @@ describe("commitEdit", () => {
 		const committed = commitEdit(state);
 
 		expect(committed.commitVersion).toBe(4);
-		expect(committed.edgeScrollEnabled).toBe(true);
+		expect(committed.objectMenuOpenId).toBe("a");
 		expect(state.commitVersion).toBe(3);
 	});
 });
@@ -27,12 +27,12 @@ describe("commitEditIfChanged", () => {
 
 	it("commits the result when the step returned anything else", () => {
 		const state = makeState(3);
-		const result = { ...state, edgeScrollEnabled: false };
+		const result = { ...state, objectMenuOpenId: null };
 
 		const committed = commitEditIfChanged(state, result);
 
 		expect(committed.commitVersion).toBe(4);
-		expect(committed.edgeScrollEnabled).toBe(false);
+		expect(committed.objectMenuOpenId).toBeNull();
 	});
 
 	it("commits a structurally equal copy, since identity is the signal", () => {

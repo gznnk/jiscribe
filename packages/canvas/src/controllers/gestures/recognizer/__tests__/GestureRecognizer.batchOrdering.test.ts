@@ -109,8 +109,8 @@ const setup = () => {
 		svgRef: { current: null },
 		canvasStateRef: {
 			current: {
-				edgeScrollEnabled: false,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+				drag: null,
 			},
 		},
 	};

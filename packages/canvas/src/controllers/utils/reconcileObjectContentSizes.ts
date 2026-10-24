@@ -182,7 +182,7 @@ export const reconcileObjectContentSizes = (
 	// The drag under way, or the one this transition's dragEnd just dropped:
 	// handleGesture clears it before this pass runs, and the dragEnd frame is
 	// rebuilt from the snapshot like every other frame.
-	const drag = state.activeDrag ?? previousState.activeDrag;
+	const drag = state.drag ?? previousState.drag;
 	const resize = drag?.kind === "transform" ? drag.resize : undefined;
 
 	let resizedObjects: Record<string, ObjectState> | null = null;

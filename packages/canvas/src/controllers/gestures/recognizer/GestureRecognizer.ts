@@ -513,7 +513,7 @@ export class GestureRecognizer {
 					!this.pressed.isNativePointerTarget &&
 					canConvertDrag
 				) {
-					// Close the pan drag first so the activeDrag lifecycle
+					// Close the pan drag first so the drag lifecycle
 					// completes (dragStart saved it; only dragEnd clears it). A pan
 					// changes no doc, so this dragEnd commits nothing.
 					if (this.pressed.dragging) {
@@ -653,7 +653,7 @@ export class GestureRecognizer {
 						deltaX: e.deltaX ?? 0,
 						deltaY: e.deltaY ?? 0,
 					};
-				} else if (canvasState.edgeScrollEnabled) {
+				} else if (canvasState.drag?.edgeScrollEnabled) {
 					const edgeProximity = detectEdgeProximity(
 						canvasState.viewport,
 						currentPos.x,

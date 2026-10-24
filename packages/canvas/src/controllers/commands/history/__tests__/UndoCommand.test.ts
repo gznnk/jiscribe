@@ -27,8 +27,8 @@ const makeState = (params: {
 	past: DocSnapshot[];
 	present: DocSnapshot;
 	future: DocSnapshot[];
-	activeDrag?: unknown;
-	textEditState?: unknown;
+	drag?: unknown;
+	mode?: unknown;
 	selection?: CanvasSelection;
 }): CanvasControllerState =>
 	({
@@ -47,8 +47,8 @@ const makeState = (params: {
 			measuredFrom: null,
 			measuredView: undefined,
 		},
-		activeDrag: params.activeDrag ?? null,
-		textEditState: params.textEditState ?? null,
+		drag: params.drag ?? null,
+		mode: params.mode ?? { kind: "normal" },
 		selection: params.selection ?? EMPTY_SELECTION,
 		multiSelectGroup: null,
 		internalClipboard: null,
@@ -125,7 +125,13 @@ describe("UndoCommand", () => {
 			past: [snapshotPrev],
 			present: snapshotCurrent,
 			future: [],
-			activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+			drag: {
+				kind: "inert",
+				startSnapshot: { foo: 1 },
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
+			},
 		});
 		expect(UndoCommand.execute(state, registries)).toBe(state);
 	});
@@ -160,7 +166,13 @@ describe("UndoCommand", () => {
 						past: [snapshotPrev],
 						present: snapshotCurrent,
 						future: [],
-						activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+						drag: {
+							kind: "inert",
+							startSnapshot: { foo: 1 },
+							snapFeedback: null,
+							axisLockFeedback: null,
+							edgeScrollEnabled: false,
+						},
 					}),
 					registries,
 				),
@@ -174,7 +186,7 @@ describe("UndoCommand", () => {
 						past: [snapshotPrev],
 						present: snapshotCurrent,
 						future: [],
-						textEditState: { kind: "shape", text: "" },
+						mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 					}),
 					registries,
 				),

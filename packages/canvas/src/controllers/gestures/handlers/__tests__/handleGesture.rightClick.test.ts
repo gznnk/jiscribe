@@ -102,7 +102,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 				clickOn(2, "menu", "stencil-library", "item:rect"),
 				registries,
 			);
-			expect(nextState.shapeDrawing).toBeNull();
+			expect(nextState.mode.kind).toBe("normal");
 		});
 	});
 

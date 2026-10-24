@@ -26,7 +26,7 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		selection: selectionOf([]),
-		textEditState: null,
+		mode: { kind: "normal" },
 		objects: {},
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -78,7 +78,7 @@ describe("isMetaSectionShown", () => {
 	it("hides it while a shape's text is being edited", () => {
 		const state = makeState({
 			selection: selectionOf(["card-1"], textSlotPartSelection("body")),
-			textEditState: { kind: "shape", text: [] },
+			mode: { kind: "textEdit", draft: { kind: "shape", text: [] } },
 			objects: { "card-1": slottedShape("card-1") },
 		});
 

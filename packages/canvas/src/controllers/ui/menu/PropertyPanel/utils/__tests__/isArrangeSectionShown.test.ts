@@ -17,7 +17,7 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		selection: selectionOf([]),
-		textEditState: null,
+		mode: { kind: "normal" },
 		objects: {},
 		...overrides,
 	}) as unknown as CanvasControllerState;

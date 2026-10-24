@@ -66,9 +66,12 @@ const editingState = (draftText?: string): CanvasControllerState => {
 	const base = createTestState(rectWithBodyDoc);
 	return createTestState(rectWithBodyDoc, {
 		selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-		textEditState: {
-			kind: "shape",
-			text: draftText ?? committedBodyOf(base),
+		mode: {
+			kind: "textEdit",
+			draft: {
+				kind: "shape",
+				text: draftText ?? committedBodyOf(base),
+			},
 		},
 	});
 };
@@ -137,7 +140,10 @@ describe("useTextEditSession derived state", () => {
 	it("names the connector for a label edit but no slot", () => {
 		const canvasState = createTestState(twoRectsWithConnectorDoc, {
 			selection: selectionOf(["conn-1"]),
-			textEditState: { kind: "connectorLabel", text: "label" },
+			mode: {
+				kind: "textEdit",
+				draft: { kind: "connectorLabel", text: "label" },
+			},
 		});
 		const { first } = mountSession(canvasState);
 		expect(first.textEditObjectId).toBe("conn-1");

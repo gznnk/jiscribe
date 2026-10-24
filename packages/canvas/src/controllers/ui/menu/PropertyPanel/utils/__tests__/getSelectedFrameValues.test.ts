@@ -40,6 +40,7 @@ const makeState = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: selectionOf([]),
 		multiSelectGroup: null,
 		objects: {},

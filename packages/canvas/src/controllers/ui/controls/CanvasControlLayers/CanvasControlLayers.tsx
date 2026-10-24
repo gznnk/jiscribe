@@ -7,6 +7,7 @@ import { DrawingPreviewOverlay } from "../../feedback/DrawingPreviewOverlay";
 import { PendingConnectorOverlay } from "../../feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "../../feedback/SelectionOverlay";
 import { SnapGuides } from "../../feedback/SnapGuides";
+import { readSelectionDragKind } from "../../utils/readSelectionDragKind";
 import { ConnectionAnchorsLayer } from "../ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "../ConnectorControlsLayer";
 import { SelectionControlsLayer } from "../SelectionControlsLayer";
@@ -31,16 +32,17 @@ export const CanvasControlLayers = ({
 	canvasState,
 	draftObjects,
 }: CanvasControlLayersProps) => {
-	const { selection, objects, multiSelectGroup, connectorDraft } = canvasState;
+	const { selection, objects, multiSelectGroup, mode, drag } = canvasState;
 	const zoom = canvasState.viewport.zoom;
-	const isTextEditing = !!canvasState.textEditState;
-	const activeDragKind = canvasState.activeDrag?.kind ?? null;
+	const isTextEditing = mode.kind === "textEdit";
+	const selectionDragKind = readSelectionDragKind(drag);
+	const connectorDraft = drag?.kind === "connector" ? drag.draft : null;
 	const selectionControlsProps = {
 		selection,
 		objects,
 		zoom,
 		isTextEditing,
-		activeDragKind,
+		selectionDragKind,
 	};
 
 	return (
@@ -74,7 +76,7 @@ export const CanvasControlLayers = ({
 				multiSelectGroup={multiSelectGroup}
 				zoom={zoom}
 				isTextEditing={isTextEditing}
-				activeDragKind={activeDragKind}
+				selectionDragKind={selectionDragKind}
 			/>
 			<ConnectionAnchorsLayer
 				selectedIds={selection.objectIds}
@@ -82,24 +84,27 @@ export const CanvasControlLayers = ({
 				zoom={zoom}
 				connectorDraft={connectorDraft}
 				isTextEditing={isTextEditing}
-				activeDragKind={activeDragKind}
+				selectionDragKind={selectionDragKind}
 			/>
 			<VertexControlsLayer
 				selection={selection}
 				objects={objects}
 				zoom={zoom}
-				activeDragKind={activeDragKind}
+				selectionDragKind={selectionDragKind}
 			/>
 			<SelectionControlsLayer
 				layer="aboveHandles"
 				{...selectionControlsProps}
 			/>
-			<DragGhost stencilLibraryDrag={canvasState.stencilLibraryDrag} />
-			<DrawingPreviewOverlay shapeDrawing={canvasState.shapeDrawing} />
-			<AreaSelectionRect areaSelection={canvasState.areaSelection} />
-			<SnapGuides snapFeedback={canvasState.snapFeedback} zoom={zoom} />
+			<DragGhost stencilDrag={drag?.kind === "stencil" ? drag : null} />
+			<DrawingPreviewOverlay
+				preset={mode.kind === "draw" ? mode.preset : null}
+				rect={drag?.kind === "draw" ? drag.rect : null}
+			/>
+			<AreaSelectionRect rect={drag?.kind === "marquee" ? drag.rect : null} />
+			<SnapGuides snapFeedback={drag?.snapFeedback ?? null} zoom={zoom} />
 			<AxisLockGuide
-				axisLockFeedback={canvasState.axisLockFeedback}
+				axisLockFeedback={drag?.axisLockFeedback ?? null}
 				viewport={canvasState.viewport}
 			/>
 		</>

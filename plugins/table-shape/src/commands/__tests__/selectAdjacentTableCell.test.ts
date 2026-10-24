@@ -37,8 +37,8 @@ const canvasWith = (
 			"rect-1": { id: "rect-1", type: "rect" },
 		},
 		selection: { objectIds: [TABLE.id], part },
-		textEditState: null,
-		activeDrag: null,
+		mode: { kind: "normal" },
+		drag: null,
 		objectMenuOpenId: "t-1",
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -225,7 +225,7 @@ describe("extendTableCellSelection", () => {
 		for (const state of [
 			canvasWith(null),
 			canvasWith(cellSelection(["r0c0"]), {
-				textEditState: { objectId: TABLE.id } as never,
+				mode: { kind: "textEdit" } as never,
 			}),
 		]) {
 			expect(extendTableCellSelection(state, "down")).toBe(state);
@@ -248,10 +248,10 @@ describe("canSelectAdjacentTableCell", () => {
 				ranges: [{ anchorId: "1", focusId: "1" }],
 			}),
 			"text edit open": canvasWith(cellSelection(["r0c0"]), {
-				textEditState: { objectId: TABLE.id } as never,
+				mode: { kind: "textEdit" } as never,
 			}),
 			"drag running": canvasWith(cellSelection(["r0c0"]), {
-				activeDrag: {} as never,
+				drag: {} as never,
 			}),
 			"another shape": canvasWith(null, {
 				selection: { objectIds: ["rect-1"], part: null },

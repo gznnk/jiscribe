@@ -1,12 +1,10 @@
 import { memo } from "react";
 
+import type { DragRect } from "../../../CanvasTypes";
+
 type AreaSelectionRectProps = {
-	areaSelection: {
-		startX: number;
-		startY: number;
-		endX: number;
-		endY: number;
-	} | null;
+	/** The marquee being dragged; null when none is */
+	rect: DragRect | null;
 };
 
 const FILL = "rgba(107, 114, 128, 0.06)";
@@ -16,16 +14,16 @@ const STROKE_DASHARRAY = "5, 3";
 const BORDER_RADIUS = 2;
 
 const AreaSelectionRectComponent: React.FC<AreaSelectionRectProps> = ({
-	areaSelection,
+	rect,
 }) => {
-	if (!areaSelection) {
+	if (!rect) {
 		return null;
 	}
 
-	const x = Math.min(areaSelection.startX, areaSelection.endX);
-	const y = Math.min(areaSelection.startY, areaSelection.endY);
-	const width = Math.abs(areaSelection.endX - areaSelection.startX);
-	const height = Math.abs(areaSelection.endY - areaSelection.startY);
+	const x = Math.min(rect.startX, rect.endX);
+	const y = Math.min(rect.startY, rect.endY);
+	const width = Math.abs(rect.endX - rect.startX);
+	const height = Math.abs(rect.endY - rect.startY);
 
 	return (
 		<rect

@@ -480,9 +480,9 @@ export class CanvasDriver {
 
 		await this.page.click(selectors.toolButton(tool));
 
-		// Clicking the tool sets drawing mode (state.shapeDrawing), but that is an async React
+		// Clicking the tool sets drawing mode (state.mode "draw"), but that is an async React
 		// update: dragging the canvas before it arms leaves CanvasEventHandler seeing
-		// shapeDrawing=null, giving area selection instead of drawing. An armed tool button
+		// no armed tool, giving area selection instead of drawing. An armed tool button
 		// takes cursor: crosshair (grab when not armed), so wait on that before dragging.
 		await expect
 			.poll(

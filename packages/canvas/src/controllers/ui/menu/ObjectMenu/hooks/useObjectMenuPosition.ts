@@ -17,6 +17,7 @@ import type { CanvasSelection } from "../../../../selection/CanvasSelection";
 import { calcUnionBoundingBox } from "../../../../utils/buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
 import { calcTransformedRectBounds } from "../../../../utils/calcTransformedRectBounds";
+import { readTextEditDraft } from "../../../../utils/readTextEditDraft";
 import { collectOutlinedPartRegions } from "../../../utils/collectOutlinedPartRegions";
 
 /** Distance between the ObjectMenu and the object (px) */
@@ -92,13 +93,16 @@ export function useObjectMenuPosition(
 		objects,
 		viewport,
 		contextMenuPosition,
-		areaSelection,
-		activeDrag,
+		drag,
 		inertialScrolling,
 		objectMenuOpenId,
-		textEditState,
 		propertyPanel,
 	} = state;
+	const isMarqueeDragging = drag?.kind === "marquee";
+	// The kind alone, which the menu measurement below keys on: what the session
+	// is open over is `selectedIdsString` and `partKey`, deps of the same
+	// measurement.
+	const textEditKind = readTextEditDraft(state)?.kind ?? null;
 
 	// The menu sits below the selection's drawn extent, so a shape whose label
 	// hangs outside its geometry box must not have the menu land on the label.
@@ -126,16 +130,13 @@ export function useObjectMenuPosition(
 			: `${part.kind}:${part.ranges
 					.map((range) => `${range.anchorId}-${range.focusId}`)
 					.join(",")}`;
-	// The kind alone: what the session is open over is `selectedIdsString` and
-	// `partKey`, which are deps of the same measurement.
-	const textEditKey = textEditState?.kind ?? null;
 
 	// Every way the view moves under the selection, as one state: dragging (except
 	// while an ObjectMenu dropdown is open, so its sliders stay usable) and the
 	// fling a released pan leaves behind. The linger is what keeps the handover
 	// between the two from flashing the menu (see REAPPEAR_DELAY_MS).
 	const isViewMoving =
-		(activeDrag !== null && objectMenuOpenId === null) || inertialScrolling;
+		(drag !== null && objectMenuOpenId === null) || inertialScrolling;
 	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
 
 	const shouldRender = useMemo(() => {
@@ -154,7 +155,7 @@ export function useObjectMenuPosition(
 		// dangling (U6).
 		// A connector label is still hidden: it is one text with one styling, so
 		// there is nothing the menu could do mid-edit that it cannot do after.
-		if (textEditState !== null && textEditState.kind !== "shape") {
+		if (textEditKind !== null && textEditKind !== "shape") {
 			return false;
 		}
 		// Away while the view moves under the selection — a drag of any kind, and
@@ -163,7 +164,7 @@ export function useObjectMenuPosition(
 		if (isViewUnsettled) {
 			return false;
 		}
-		if (areaSelection !== null) {
+		if (isMarqueeDragging) {
 			return false;
 		}
 		// The properties sidebar states everything the menu does, so while it is
@@ -177,8 +178,8 @@ export function useObjectMenuPosition(
 		selectedIds,
 		contextMenuPosition,
 		isViewUnsettled,
-		areaSelection,
-		textEditState,
+		isMarqueeDragging,
+		textEditKind,
 		propertyPanel.isOpen,
 	]);
 
@@ -187,7 +188,7 @@ export function useObjectMenuPosition(
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-	}, [menuRef, shouldRender, selectedIdsString, partKey, textEditKey]);
+	}, [menuRef, shouldRender, selectedIdsString, partKey, textEditKind]);
 
 	// Not measured while the menu is hidden: a drag hides it and moves the
 	// selection on every frame, which would re-measure every selected object for a
