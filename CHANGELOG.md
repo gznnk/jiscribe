@@ -236,14 +236,20 @@ as? }` in order, where a later entry refers to the ids an earlier one created
   `{ kind: "draw", preset }` (the former `shapeDrawing` while armed).
   `drag` is the drag in progress or `null` (the former `activeDrag`), named by
   `kind`; what belonged to one drag rides on it — the former `areaSelection`
-  (`kind: "marquee"`), `connectorDraft` (`"connector"`), `stencilLibraryDrag`
-  (`"stencil"`), `shapeDrawing.preview` (`"draw"`), and `snapFeedback`,
-  `axisLockFeedback` and `edgeScrollEnabled` on every kind. The removed fields
-  are `textEditState`, `activeDrag`, `shapeDrawing`, `areaSelection`,
+  (`kind: "marquee"`, its rectangle as `rect`), `connectorDraft`
+  (`"connector"`, as `draft`), `stencilLibraryDrag` (`"stencil"`),
+  `shapeDrawing.preview` (`"draw"`, as `rect`), and `snapFeedback`,
+  `axisLockFeedback` and `edgeScrollEnabled` on every kind. The former
+  `activeDrag.movePreview` and `activeDrag.resize` are on the `"move"` and
+  `"transform"` kinds only, so narrow on `kind` before reading them. The removed
+  fields are `textEditState`, `activeDrag`, `shapeDrawing`, `areaSelection`,
   `stencilLibraryDrag`, `connectorDraft`, `snapFeedback`, `axisLockFeedback`
   and `edgeScrollEnabled`. A command that tested `textEditState !== null` tests
   `mode.kind === "textEdit"`; one that opens an editor writes
-  `mode: { kind: "textEdit", draft }`. Hosts are unaffected.
+  `mode: { kind: "textEdit", draft }`. The types — `CanvasMode`,
+  `TextEditDraft`, `CanvasDrag`, `CanvasDragDetail` and `DragRect` — are on
+  `@jiscribe/canvas/unstable` beside `CanvasControllerState`. Hosts are
+  unaffected.
 
 ### Fixed
 

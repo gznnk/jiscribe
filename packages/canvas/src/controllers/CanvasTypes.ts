@@ -314,18 +314,15 @@ export type DragRect = {
 };
 
 /**
- * What a drag is doing, with whatever only that kind of drag holds. handleGesture
- * opens every drag as `"inert"`; the handler the drag reaches names it in its
- * own dragStart ({@link claimDrag}).
+ * What a drag is doing, with whatever only that kind of drag holds. What each
+ * kind means is written once, on {@link DragKind}. handleGesture opens every
+ * drag as `"inert"`; the handler the drag reaches names it in its own dragStart
+ * ({@link claimDrag}).
  */
 export type CanvasDragDetail =
-	/** No handler took the drag up: it holds the pointer until release and changes nothing */
 	| { kind: "inert" }
-	/** Moving the view: a middle- or right-button drag, or a one-finger touch drag on the background */
 	| { kind: "pan" }
-	/** Working a menu or sidebar control (an ObjectMenu slider, say); leaves an open text edit open */
 	| { kind: "menu" }
-	/** Moving objects: a shape, a group, or a multi-selection */
 	| {
 			kind: "move";
 			/**
@@ -335,7 +332,6 @@ export type CanvasDragDetail =
 			 */
 			movePreview?: MovePreview;
 	  }
-	/** Resizing or rotating through a transform handle */
 	| {
 			kind: "transform";
 			/**
@@ -344,7 +340,6 @@ export type CanvasDragDetail =
 			 */
 			resize?: TransformDragResize;
 	  }
-	/** Area selection over the background */
 	| {
 			kind: "marquee";
 			rect: DragRect;
@@ -360,15 +355,12 @@ export type CanvasDragDetail =
 			 */
 			baseIds: readonly string[];
 	  }
-	/** Drawing the shape `mode` is armed with; `mode` stays `"draw"` until dragEnd */
 	| {
 			kind: "draw";
 			/** The bounds the shape takes, `end` already snapped */
 			rect: DragRect;
 	  }
-	/** Pulling a connector out of a connection anchor, or re-anchoring one end of it */
 	| { kind: "connector"; draft: ConnectorDraft }
-	/** Dragging a preset off the StencilLibrary; the shape is added on dragEnd */
 	| {
 			kind: "stencil";
 			preset: Stencil;
@@ -377,30 +369,27 @@ export type CanvasDragDetail =
 			/** Cached at dragStart */
 			objectDimensions: { halfWidth: number; halfHeight: number };
 	  }
-	/** Moving a vertex of a polyline, polygon or connector, or inserting one */
 	| { kind: "vertex" }
-	/** Moving a connector's label along its line */
 	| { kind: "label" }
-	/** Moving or sliding a connector segment */
 	| { kind: "segment" }
-	/** Working a control a type contributes for its own selection (selectionControls) */
 	| { kind: "selectionControl" };
 
 /**
- * What a drag is doing, as `interaction.getStatus().drag` reports it:
- * - `"inert"`: no handler took the drag up; it holds the pointer and changes nothing
+ * What a drag is doing, as `interaction.getStatus().drag` reports it and as
+ * `drag.kind` holds it:
+ * - `"inert"`: no handler took the drag up; it holds the pointer until release and changes nothing
  * - `"pan"`: moving the view (middle or right button, or one finger on the background)
- * - `"menu"`: working a control of a menu or sidebar, such as an ObjectMenu slider
+ * - `"menu"`: working a control of a menu or sidebar, such as an ObjectMenu slider; leaves an open text edit open
  * - `"move"`: moving objects — a shape, a group or a multi-selection
  * - `"transform"`: resizing or rotating through a transform handle
  * - `"marquee"`: area selection over the background
- * - `"draw"`: drawing a shape with the armed drawing tool
+ * - `"draw"`: drawing the shape `mode` is armed with; `mode` stays `"draw"` until dragEnd
  * - `"connector"`: pulling a connector out of a connection anchor, or re-anchoring one end
- * - `"stencil"`: dragging a preset off the StencilLibrary onto the canvas
+ * - `"stencil"`: dragging a preset off the StencilLibrary; the shape is added on dragEnd
  * - `"vertex"`: moving or inserting a vertex of a polyline, polygon or connector
  * - `"label"`: moving a connector's label along its line
  * - `"segment"`: moving or sliding a connector segment
- * - `"selectionControl"`: working a control a shape type draws for its own selection
+ * - `"selectionControl"`: working a control a type contributes for its own selection (selectionControls)
  */
 export type DragKind = CanvasDragDetail["kind"];
 
@@ -411,9 +400,10 @@ export type DragKind = CanvasDragDetail["kind"];
  * it.
  *
  * Not in the type: a drag on canvas content (any kind but `"inert"`, `"pan"` and
- * `"menu"`) never coexists with `mode.kind === "textEdit"`. The handler that
- * claims such a drag commits the edit in its own dragStart, into `startSnapshot`
- * as well (commitTextEditIntoDragSnapshot).
+ * `"menu"`) never coexists with `mode.kind === "textEdit"`. The handlers that
+ * take canvas content commit the edit first, at dragStart into `startSnapshot`
+ * as well; which handlers, and at which event, is listed on
+ * commitTextEditIntoDragSnapshot.
  */
 export type CanvasDrag = CanvasDragDetail & {
 	/** Data frozen at dragStart, and the reference the whole drag is measured from */

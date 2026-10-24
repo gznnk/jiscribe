@@ -106,18 +106,16 @@ guides, whether the edge scrolls, a marquee's rectangle, a connector being pulle
 off the StencilLibrary, the bounds being drawn — so the close-out that drops `drag` ends all of it.
 
 One rule holds across the two axes and is kept by the handlers rather than the types: a drag on
-canvas content never runs beside an open text edit. Each handler whose drag works on canvas content
-commits the edit in its own `dragStart`, ahead of its first frame, through
-`commitTextEditIntoDragSnapshot`: `handleGesture` froze the snapshot before routing, and every frame is
-rebuilt from it, so the committed text is written into the snapshot too. The drags that leave the edit
-open — a one-finger touch pan of the background, a drag on a menu other than a StencilLibrary item —
-simply do not call it. A mouse press, a middle- or right-button one included, has committed the edit
-already; the `dragStart` commit is what catches a touch drag, whose press waits to see whether it
-becomes a pinch. While a drag holds a session open,
-the reducer also refuses, as a defensive guard no current path reaches, the text-edit actions that
-would write the document (a committing `END_TEXT_EDIT`, `STEP_TEXT_EDIT`): a menu slider holds an
-uncommitted preview in the objects mid-drag, which a history entry recorded then would keep as if it
-had been chosen. A draw drag
+canvas content never runs beside an open text edit. The handlers whose gestures can change canvas
+content commit the edit first, through `commitTextEditIntoDragSnapshot`, whose JSDoc is the one list
+of which handler commits at which event. At a `dragStart` the commit lands ahead of the drag's first frame, and since
+`handleGesture` froze the snapshot before routing and every frame is rebuilt from it, the committed
+text is written into the snapshot too. The drags that leave the edit open — a one-finger touch pan of
+the background, a drag on a menu other than a StencilLibrary item — are the ones no handler on their
+path commits for. While a drag holds a session open, the reducer also refuses, as a defensive guard
+no current path reaches, the text-edit actions that would write the document (a committing
+`END_TEXT_EDIT`, `STEP_TEXT_EDIT`): a menu slider holds an uncommitted preview in the objects
+mid-drag, which a history entry recorded then would keep as if it had been chosen. A draw drag
 leaves `mode` at `"draw"` until its `dragEnd`, which disarms the tool.
 
 `dragEnd`, `click` and `doubleClick` are the gesture close-out (`EVENT_CLOSE_OUT_TYPES`): each flattens the

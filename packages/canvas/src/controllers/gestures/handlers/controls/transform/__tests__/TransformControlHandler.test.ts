@@ -72,7 +72,6 @@ const makeGroupResizeState = (): CanvasControllerState => {
 		selection: selectionOf(["g"]),
 		viewport,
 		multiSelectGroup: null,
-		snapFeedback: { x: [], y: [] },
 		drag: {
 			kind: "inert",
 			snapFeedback: null,
