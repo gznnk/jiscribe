@@ -133,6 +133,9 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   and the viewer opens in the app's own window instead of a spawned browser.
   There is no installer or tray yet: closing the window hides it, starting the
   app again brings it back, and File → Quit ends it.
+- **`@jiscribe/geometry` exports `unionBoundingBoxes`**, the smallest box
+  enclosing a list of bounding boxes (`null` entries skipped, `null` when none
+  is left).
 
 ### Changed
 
