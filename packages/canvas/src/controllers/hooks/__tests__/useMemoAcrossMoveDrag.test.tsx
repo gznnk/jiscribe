@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type {
-	ActiveDrag,
+	CanvasDrag,
 	CanvasControllerState,
 	DragKind,
 } from "../../CanvasTypes";
@@ -42,8 +42,8 @@ const baseState = (): CanvasControllerState => {
 	};
 };
 
-const dragOf = (kind: DragKind): ActiveDrag =>
-	({ startSnapshot: {}, kind }) as unknown as ActiveDrag;
+const dragOf = (kind: DragKind): CanvasDrag =>
+	({ startSnapshot: {}, kind }) as unknown as CanvasDrag;
 
 /** The state one frame of a drag of `kind` produces: the rect moved, the rest as given. */
 const draggedTo = (
@@ -53,7 +53,7 @@ const draggedTo = (
 ): CanvasControllerState => ({
 	...state,
 	objects: { rect: rectAt(cx) },
-	activeDrag: kind === null ? null : dragOf(kind),
+	drag: kind === null ? null : dragOf(kind),
 });
 
 const roots: { unmount: () => void }[] = [];

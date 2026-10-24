@@ -38,6 +38,8 @@ import {
 } from "../utils/applyDocumentProperty";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
+import { NORMAL_MODE } from "../utils/normalMode";
+import { readTextEditDraft } from "../utils/readTextEditDraft";
 import {
 	reconcileConnectorVertices,
 	reconcileConnectorVerticesIfCommitted,
@@ -221,7 +223,7 @@ export const createCanvasReducer =
 				// (reconcileSelection). Otherwise a host restating the selection it just
 				// read would end typing it never asked about.
 				if (
-					state.textEditState &&
+					state.mode.kind === "textEdit" &&
 					selectedIds.length === state.selection.objectIds.length &&
 					selectedIds.every(
 						(id, index) => id === state.selection.objectIds[index],
@@ -230,7 +232,7 @@ export const createCanvasReducer =
 					return state;
 				}
 				// An open editing session belongs to the selection it sits on (see
-				// textEditState), so moving the selection ends the session rather than
+				// CanvasMode), so moving the selection ends the session rather than
 				// leaving it pointing at whatever was just selected. Committed, not
 				// discarded: the host asked for another selection, not for the typing
 				// to be thrown away.
@@ -249,7 +251,7 @@ export const createCanvasReducer =
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
 				};
-				if (!state.textEditState) {
+				if (state.mode.kind !== "textEdit") {
 					return selectedResult;
 				}
 				// The same tail the commit gets when Escape or a press ends it
@@ -465,68 +467,76 @@ export const createCanvasReducer =
 			}
 
 			case "UPDATE_TEXT_EDIT": {
-				if (!state.textEditState) {
+				const draft = readTextEditDraft(state);
+				if (draft === null) {
 					return state;
 				}
 				// The editor reports the body as it reads back off its surface, styling
 				// included, so the draft holds exactly what is on screen; a connector
 				// label holds only a plain string.
-				if (state.textEditState.kind === "shape") {
-					return {
-						...state,
-						textEditState: {
-							...state.textEditState,
-							text: normalizeRichText(action.text),
-						},
-					};
-				}
 				return {
 					...state,
-					textEditState: {
-						...state.textEditState,
-						text: richTextToPlain(action.text),
+					mode: {
+						kind: "textEdit",
+						draft:
+							draft.kind === "shape"
+								? { ...draft, text: normalizeRichText(action.text) }
+								: { ...draft, text: richTextToPlain(action.text) },
 					},
 				};
 			}
 
 			case "UPDATE_TEXT_EDIT_SELECTION": {
-				if (state.textEditState?.kind !== "shape") {
+				const draft = readTextEditDraft(state);
+				if (draft?.kind !== "shape") {
 					return state;
 				}
 				return {
 					...state,
-					textEditState: {
-						...state.textEditState,
-						selection: action.selection,
+					mode: {
+						kind: "textEdit",
+						draft: { ...draft, selection: action.selection },
 					},
 				};
 			}
 
 			case "END_TEXT_EDIT": {
-				if (!state.textEditState) {
+				if (state.mode.kind !== "textEdit") {
 					return state;
 				}
 
 				if (action.commit) {
+					// Defensive: no current path reaches this mid-drag (the editor
+					// cancels through here, and commits through CommitTextEditCommand,
+					// which the drag gate refuses). Only a drag not on canvas content
+					// runs beside a session (see CanvasDrag), and a menu slider holds its
+					// uncommitted preview in the objects meanwhile, which a commit
+					// recorded then would put into the history as if it had been chosen.
+					if (state.drag !== null) {
+						return state;
+					}
 					return recordHistoryIfNeeded(
 						commitOpenTextEdit(state, registries),
 						state,
 					);
 				}
 
-				// On cancel, clear only textEditState
+				// On cancel, close only the session: nothing reaches the document
 				return {
 					...state,
-					textEditState: null,
+					mode: NORMAL_MODE,
 				};
 			}
 
 			case "STEP_TEXT_EDIT": {
-				if (state.textEditState?.kind !== "shape") {
+				// Refused mid-drag for the reason END_TEXT_EDIT's commit is. Defensive
+				// too: the steps it takes already find no slot order mid-drag
+				// (readSelectedTextSlotOrder).
+				if (readTextEditDraft(state)?.kind !== "shape" || state.drag !== null) {
 					return state;
 				}
 				// Committed before the selection moves: the draft is bound to the slot
-				// the selection names (see textEditState).
+				// the selection names (see CanvasMode).
 				const committedResult = commitOpenTextEdit(state, registries);
 				// Only the editor's Tab grows the object: Shift+Tab and the canvas Tab
 				// wrap at the last slot.
@@ -587,7 +597,7 @@ export const createCanvasReducer =
 			case "PASTE": {
 				// Paste is a command executed by callback, so it misses the mid-drag
 				// refusal in handleCommand and takes the same one here.
-				if (state.activeDrag !== null) {
+				if (state.drag !== null) {
 					return state;
 				}
 				const pasteResult = handlePaste(state, action.data, registries);

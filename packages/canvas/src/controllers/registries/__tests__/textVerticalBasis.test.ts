@@ -31,6 +31,7 @@ const shapeOf = (
 /** A controller state selecting every object handed to it, in that order. */
 const controllerStateOf = (...objects: ObjectState[]): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: Object.fromEntries(objects.map((object) => [object.id, object])),
 		rootIds: objects.map((object) => object.id),
 		selection: selectionOf(objects.map((object) => object.id)),

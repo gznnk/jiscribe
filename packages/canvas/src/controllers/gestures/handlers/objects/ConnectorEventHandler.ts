@@ -8,6 +8,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
@@ -39,13 +40,17 @@ export const ConnectorEventHandler: GestureHandler = {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
+		// The one commit for every sub-handler, ahead of routing (deferred for a
+		// touch press): a dragStart's lands in the snapshot before any frame, and a
+		// drag no sub-handler claims (one on the bare line) ends the edit too.
+		const nextState = commitTextEditUnlessTouchPress(state, event);
 		for (const handler of CONNECTOR_HANDLERS) {
 			if (handler.supports(event)) {
-				return handler.handle(state, event, registries);
+				return handler.handle(nextState, event, registries);
 			}
 		}
 
 		// Events no sub-handler claims (a drag on the bare line, say) pass through
-		return state;
+		return nextState;
 	},
 };

@@ -12,7 +12,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * Whatever `build` reads off `objects` has to be placement-independent; the
  * rows that report placement read the state directly, not through this.
  *
- * @param canvasState - The state the value is built for; its `objects` and `activeDrag.kind` decide whether the held value still stands
+ * @param canvasState - The state the value is built for; its `objects` and `drag.kind` decide whether the held value still stands
  * @param build - Builds the value; called during render, only when it is not held
  * @param deps - Everything else `build` reads, compared entry by entry with `Object.is` whether or not a drag is under way
  * @returns The value built last time while it still stands, a freshly built one otherwise
@@ -28,7 +28,7 @@ export const useMemoAcrossMoveDrag = <T>(
 		value: T;
 	} | null>(null);
 	const { objects } = canvasState;
-	const isMoveDrag = canvasState.activeDrag?.kind === "move";
+	const isMoveDrag = canvasState.drag?.kind === "move";
 	const held = heldRef.current;
 	if (
 		held !== null &&

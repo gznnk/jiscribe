@@ -6,11 +6,15 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import type { Stencil } from "../../../ui/objects/Stencil";
+import { claimDrag } from "../../../utils/claimDrag";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import { NORMAL_MODE } from "../../../utils/normalMode";
+import { writeDragFeedback } from "../../../utils/writeDragFeedback";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { commitTextEditIntoDragSnapshot } from "../utils/commitTextEditIntoDragSnapshot";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import {
 	SNAP_THRESHOLD_PX,
@@ -120,7 +124,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
 					// Placing selects the new shape, and the open session is owned by the
-					// selection (see textEditState), so the draft has to be written back
+					// selection (see CanvasMode), so the draft has to be written back
 					// first or it rides over onto the shape just placed.
 					const committed = commitTextEditIfNeeded(state);
 					const placed = addObjectToState(
@@ -136,17 +140,18 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					// Using a shape item also dismisses any open category flyout (see objectMenu).
 					return {
 						...placed,
-						shapeDrawing: null,
+						mode: NORMAL_MODE,
 						stencilLibraryOpenCategory: null,
 					};
 				}
 
-				const isActive = state.shapeDrawing?.preset.id === presetId;
+				const isActive =
+					state.mode.kind === "draw" && state.mode.preset.id === presetId;
 
 				if (isActive) {
 					return {
 						...state,
-						shapeDrawing: null,
+						mode: NORMAL_MODE,
 						stencilLibraryOpenCategory: null,
 					};
 				}
@@ -155,7 +160,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 				const committed = commitTextEditIfNeeded(state);
 				return {
 					...committed,
-					shapeDrawing: { preset, preview: null },
+					mode: { kind: "draw", preset },
 					selection: EMPTY_SELECTION,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
@@ -164,17 +169,20 @@ export const StencilLibraryItemHandler: GestureHandler = {
 			}
 
 			case "dragStart": {
-				// Commit any text edit and clear the selection before starting drag-and-drop
-				// On drag-and-drop start, clear drawing mode (regardless of shape type)
-				const committed = commitTextEditIfNeeded(state);
-				return {
-					...committed,
-					shapeDrawing: null,
-					selection: EMPTY_SELECTION,
-					multiSelectGroup: null,
-					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
-					stencilLibraryDrag: {
+				// Commit any text edit and clear the selection before starting
+				// drag-and-drop, and drawing mode, regardless of shape type
+				const committed = commitTextEditIntoDragSnapshot(state);
+				return claimDrag(
+					{
+						...committed,
+						mode: committed.mode.kind === "draw" ? NORMAL_MODE : committed.mode,
+						selection: EMPTY_SELECTION,
+						multiSelectGroup: null,
+						objectMenuOpenId: null,
+						stencilLibraryOpenCategory: null,
+					},
+					{
+						kind: "stencil",
 						preset,
 						ghostPosition: event.last,
 						objectDimensions: calcObjectDimensions(
@@ -182,21 +190,25 @@ export const StencilLibraryItemHandler: GestureHandler = {
 							registries.objectFactory,
 						),
 					},
-					edgeScrollEnabled: true,
-				};
+					{ edgeScroll: true },
+				);
 			}
 
 			case "drag": {
-				const snapCandidates = state.activeDrag?.startSnapshot.snapCandidates;
-				const drag = state.stencilLibraryDrag;
+				const drag = state.drag;
+				if (drag?.kind !== "stencil") {
+					return state;
+				}
+				const snapCandidates = drag.startSnapshot.snapCandidates;
 
-				if (!snapCandidates || !drag || isSnapSuppressed(event)) {
+				if (!snapCandidates || isSnapSuppressed(event)) {
 					return {
 						...state,
-						stencilLibraryDrag: drag
-							? { ...drag, ghostPosition: event.last }
-							: null,
-						snapFeedback: null,
+						drag: {
+							...drag,
+							ghostPosition: event.last,
+							snapFeedback: null,
+						},
 					};
 				}
 
@@ -227,42 +239,40 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					bottom: rawBBox.bottom + result.delta.y,
 				};
 
-				return {
-					...state,
-					stencilLibraryDrag: {
-						...drag,
-						ghostPosition: {
-							x: pos.x + result.delta.x,
-							y: pos.y + result.delta.y,
+				return writeDragFeedback(
+					{
+						...state,
+						drag: {
+							...drag,
+							ghostPosition: {
+								x: pos.x + result.delta.x,
+								y: pos.y + result.delta.y,
+							},
 						},
 					},
-					snapFeedback: buildSnapFeedback(
-						actualBBox,
-						result.xResult,
-						result.yResult,
-						snapCandidates,
-					),
-				};
+					{
+						snapFeedback: buildSnapFeedback(
+							actualBBox,
+							result.xResult,
+							result.yResult,
+							snapCandidates,
+						),
+					},
+				);
 			}
 
 			case "dragEnd": {
 				// Use the last snapped ghostPosition as the placement coordinate
-				const drag = state.stencilLibraryDrag;
-				if (!drag) {
+				const drag = state.drag;
+				if (drag?.kind !== "stencil") {
 					return state;
 				}
-				const position = drag.ghostPosition ?? event.last;
-				const placed = addObjectToState(
+				return addObjectToState(
 					state,
 					drag.preset,
-					position,
+					drag.ghostPosition,
 					registries,
 				);
-				return {
-					...placed,
-					stencilLibraryDrag: null,
-					edgeScrollEnabled: false,
-				};
 			}
 
 			default:

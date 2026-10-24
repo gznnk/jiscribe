@@ -115,21 +115,20 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "body", focusId: "body" }],
 			}),
-			textEditState: { kind: "shape", text: "" },
+			mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 		}),
 	},
 	{
 		name: "object drag in progress",
 		state: buildState(rectsDoc, {
 			selection: selectionOf(["rect-1"]),
-			activeDrag: { startSnapshot: {} } as never,
+			drag: { kind: "move", startSnapshot: {} } as never,
 		}),
 	},
 	{
 		name: "area-selection drag in progress",
 		state: buildState(rectsDoc, {
-			activeDrag: { startSnapshot: {} } as never,
-			areaSelection: { x: 0, y: 0 } as never,
+			drag: { kind: "marquee", startSnapshot: {} } as never,
 		}),
 	},
 	{

@@ -16,10 +16,10 @@ export const pruneMovePreview = (
 	state: CanvasControllerState,
 	movedObjects: Record<string, ObjectState>,
 ): CanvasControllerState => {
-	const activeDrag = state.activeDrag;
-	const movePreview = activeDrag?.movePreview;
+	const { drag } = state;
+	const movePreview = drag?.kind === "move" ? drag.movePreview : undefined;
 	if (
-		activeDrag === null ||
+		drag?.kind !== "move" ||
 		movePreview === undefined ||
 		state.objects === movedObjects
 	) {
@@ -33,8 +33,8 @@ export const pruneMovePreview = (
 	const keptIds = new Set([...movePreview.translatedIds].filter(isStillMoved));
 	return {
 		...state,
-		activeDrag: {
-			...activeDrag,
+		drag: {
+			...drag,
 			movePreview: { ...movePreview, translatedIds: keptIds },
 		},
 	};

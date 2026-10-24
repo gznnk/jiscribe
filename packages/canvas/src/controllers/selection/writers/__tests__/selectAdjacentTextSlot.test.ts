@@ -25,9 +25,10 @@ const baseState = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { "rec-1": recordObject },
 		selection: selectionOf(["rec-1"]),
-		activeDrag: null,
+		drag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -85,7 +86,15 @@ describe("getTextSlotCycle", () => {
 	it("returns null during a drag", () => {
 		expect(
 			getTextSlotCycle(
-				baseState({ activeDrag: { foo: 1 } as never }),
+				baseState({
+					drag: {
+						kind: "inert",
+						foo: 1,
+						snapFeedback: null,
+						axisLockFeedback: null,
+						edgeScrollEnabled: false,
+					} as never,
+				}),
 				objectPartKind,
 			),
 		).toBeNull();

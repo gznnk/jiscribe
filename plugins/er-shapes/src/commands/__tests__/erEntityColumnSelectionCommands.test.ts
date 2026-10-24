@@ -45,8 +45,8 @@ const canvasWith = (
 	({
 		objects: { [ENTITY.id]: ENTITY },
 		selection: { objectIds: [ENTITY.id], part },
-		textEditState: null,
-		activeDrag: null,
+		mode: { kind: "normal" },
+		drag: null,
 		objectMenuOpenId: "column",
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -107,7 +107,7 @@ describe("erEntity column selection commands", () => {
 				canRun(
 					id,
 					canvasWith(pickOf([["col:0", "col:0"]]), {
-						textEditState: { kind: "shape", text: "email" },
+						mode: { kind: "textEdit", draft: { kind: "shape", text: "email" } },
 					} as Partial<CanvasControllerState>),
 				),
 			).toBe(false);

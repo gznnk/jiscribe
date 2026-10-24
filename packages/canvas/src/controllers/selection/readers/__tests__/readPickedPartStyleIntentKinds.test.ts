@@ -18,6 +18,7 @@ const stateOf = (
 	part: ObjectPartSelection | null,
 ): Pick<CanvasControllerState, "selection" | "objects"> =>
 	({
+		mode: { kind: "normal" },
 		objects: { "a-1": { id: "a-1", type } },
 		selection: selectionOf(["a-1"], part),
 	}) as unknown as CanvasControllerState;

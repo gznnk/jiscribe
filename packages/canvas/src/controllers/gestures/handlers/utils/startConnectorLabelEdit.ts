@@ -122,11 +122,14 @@ export const startConnectorLabelEdit = (
 			: null;
 	return {
 		...selectedState,
-		// The owner is the selection written just above (see textEditState).
-		textEditState: {
-			kind: "connectorLabel",
-			text: labelText,
-			...(placement ? { placement } : {}),
+		// The owner is the selection written just above (see CanvasMode).
+		mode: {
+			kind: "textEdit",
+			draft: {
+				kind: "connectorLabel",
+				text: labelText,
+				...(placement ? { placement } : {}),
+			},
 		},
 	};
 };

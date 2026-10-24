@@ -55,9 +55,9 @@ const dragGesture = (
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as Gesture;
 
-describe("handleGesture - activeDrag", () => {
+describe("handleGesture - drag", () => {
 	it("is null while no drag is in progress", () => {
-		expect(stateWithSelectedRect().activeDrag).toBeNull();
+		expect(stateWithSelectedRect().drag).toBeNull();
 	});
 
 	it("is 'move' for the length of an object drag", () => {
@@ -67,14 +67,14 @@ describe("handleGesture - activeDrag", () => {
 			dragGesture("dragStart", { targetKind: "object", targetId: "r1" }),
 			registries,
 		);
-		expect(state.activeDrag?.kind).toBe("move");
+		expect(state.drag?.kind).toBe("move");
 
 		state = handleGesture(
 			state,
 			dragGesture("dragEnd", { targetKind: "object", targetId: "r1" }),
 			registries,
 		);
-		expect(state.activeDrag).toBeNull();
+		expect(state.drag).toBeNull();
 	});
 
 	it("carries the move preview for the length of an object drag and drops it with the drag", () => {
@@ -85,7 +85,8 @@ describe("handleGesture - activeDrag", () => {
 			dragGesture("dragStart", { targetKind: "object", targetId: "r1" }),
 			registries,
 		);
-		expect(state.activeDrag?.movePreview).toEqual({
+		const { drag } = state;
+		expect(drag?.kind === "move" && drag.movePreview).toEqual({
 			delta: { x: 20, y: 20 },
 			translatedIds: new Set(["r1"]),
 			startObjects,
@@ -96,7 +97,7 @@ describe("handleGesture - activeDrag", () => {
 			dragGesture("dragEnd", { targetKind: "object", targetId: "r1" }),
 			registries,
 		);
-		expect(state.activeDrag).toBeNull();
+		expect(state.drag).toBeNull();
 		expect(state.objects.r1).toMatchObject({ cx: 120, cy: 120 });
 	});
 
@@ -111,17 +112,63 @@ describe("handleGesture - activeDrag", () => {
 			}),
 			registries,
 		);
-		expect(state.activeDrag?.kind).toBe("transform");
-		expect(state.activeDrag?.movePreview).toBeUndefined();
+		expect(state.drag?.kind).toBe("transform");
+		expect(state.drag).not.toHaveProperty("movePreview");
 	});
 
-	it("is 'other' for a marquee on the canvas", () => {
+	it("is 'marquee' for a left drag on the canvas, its rectangle with it", () => {
 		let state = stateWithSelectedRect();
 		state = handleGesture(
 			state,
 			dragGesture("dragStart", { targetKind: "canvas", targetId: "canvas" }),
 			registries,
 		);
-		expect(state.activeDrag?.kind).toBe("other");
+		expect(state.drag).toMatchObject({
+			kind: "marquee",
+			rect: { startX: 100, startY: 100, endX: 120, endY: 120 },
+			edgeScrollEnabled: true,
+		});
+	});
+
+	it("is 'pan' for a middle-button drag, which scrolls no edge", () => {
+		const state = handleGesture(
+			stateWithSelectedRect(),
+			{
+				...dragGesture("dragStart", { targetKind: "object", targetId: "r1" }),
+				button: 1,
+			} as Gesture,
+			registries,
+		);
+		expect(state.drag).toMatchObject({ kind: "pan", edgeScrollEnabled: false });
+	});
+
+	it("is 'menu' for a drag on a menu control", () => {
+		const state = handleGesture(
+			stateWithSelectedRect(),
+			dragGesture("dragStart", {
+				targetKind: "menu",
+				targetId: "object-menu",
+				targetAction: "slider:strokeWidth",
+			}),
+			registries,
+		);
+		expect(state.drag).toMatchObject({
+			kind: "menu",
+			edgeScrollEnabled: false,
+		});
+	});
+
+	it("stays 'inert' for a drag no handler takes up", () => {
+		const state = handleGesture(
+			stateWithSelectedRect(),
+			dragGesture("dragStart", { targetKind: "nothing-handles-this" }),
+			registries,
+		);
+		expect(state.drag).toMatchObject({
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
+		});
 	});
 });

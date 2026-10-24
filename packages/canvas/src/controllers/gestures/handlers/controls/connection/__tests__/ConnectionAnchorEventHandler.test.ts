@@ -102,20 +102,20 @@ const centerTargetBox: BoundingBox = {
  * makes it reachable.
  */
 const withTarget = (state: CanvasControllerState): CanvasControllerState => {
-	const activeDrag = state.activeDrag;
-	if (!activeDrag) {
+	const { drag } = state;
+	if (!drag) {
 		throw new Error("withTarget expects a state with a drag in progress");
 	}
 	return {
 		...state,
 		objects: { ...state.objects, [centerTarget.id]: centerTarget },
 		rootIds: [...state.rootIds, centerTarget.id],
-		activeDrag: {
-			...activeDrag,
+		drag: {
+			...drag,
 			startSnapshot: {
-				...activeDrag.startSnapshot,
+				...drag.startSnapshot,
 				bboxes: {
-					...activeDrag.startSnapshot.bboxes,
+					...drag.startSnapshot.bboxes,
 					[centerTarget.id]: centerTargetBox,
 				},
 			},
@@ -140,7 +140,11 @@ const stateWithConnectors = (
 		...base,
 		objects,
 		rootIds: [...base.rootIds, ...connectors.map((c) => c.id)],
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects,
 				keyPoints: {},
@@ -151,7 +155,6 @@ const stateWithConnectors = (
 				multiSelectGroup: null,
 				viewport: base.viewport,
 			},
-			kind: "other",
 		},
 	});
 };
@@ -181,13 +184,17 @@ const dragEvent = (
 		button: 0,
 	}) as unknown as CanvasEvent;
 
+/** What a connector drag is working on; null during any other drag, or none. */
+const connectorDraftOf = (state: CanvasControllerState) =>
+	state.drag?.kind === "connector" ? state.drag.draft : null;
+
 /** The connector held by a creation draft; null while re-anchoring or idle. */
 const draftedConnectorOf = (
 	state: CanvasControllerState,
-): ConnectorState | null =>
-	state.connectorDraft?.kind === "create"
-		? state.connectorDraft.connector
-		: null;
+): ConnectorState | null => {
+	const draft = connectorDraftOf(state);
+	return draft?.kind === "create" ? draft.connector : null;
+};
 
 describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)", () => {
 	const handler = new ConnectionAnchorEventHandler();
@@ -233,7 +240,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			registries,
 		);
 		// On dragStart, no connector is drafted; only the edit target is recorded
-		expect(afterStart.connectorDraft).toEqual({
+		expect(connectorDraftOf(afterStart)).toEqual({
 			kind: "edit",
 			connectorId: "c1",
 			endpoint: "target",
@@ -253,7 +260,6 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			kind: "free",
 			point: { x: 80, y: 80 },
 		});
-		expect(afterEnd.connectorDraft).toBeNull();
 	});
 
 	it("keeps the objects reference for a no-op edit that returns the endpoint to its original position (no commit)", () => {
@@ -280,7 +286,6 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		);
 
 		expect(afterEnd.objects).toBe(state.objects);
-		expect(afterEnd.connectorDraft).toBeNull();
 		expect(afterEnd.commitVersion).toBe(state.commitVersion);
 	});
 

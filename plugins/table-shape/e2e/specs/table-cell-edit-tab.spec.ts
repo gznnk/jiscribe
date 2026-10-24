@@ -54,7 +54,7 @@ async function placeTableEditingLastCell(
  * Tab while a cell is being edited: the draft is committed into the cell the
  * edit started on, and the editor opens on the next cell (Shift+Tab: the
  * previous one) with the focus in it, so typing carries on there. The draft is
- * bound to the picked cell (textEditState), so the order is what keeps it from
+ * bound to the picked cell (`CanvasControllerState.mode`), so the order is what keeps it from
  * being carried along: commit, then step, then open. Tab from the last cell
  * appends a row first and steps onto it (the textSlot kind's `extend`), in the
  * same undo step as the commit.

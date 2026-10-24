@@ -33,7 +33,7 @@ export function handleRotationDrag(
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
-	const dragStartSnapshot = state.activeDrag?.startSnapshot;
+	const dragStartSnapshot = state.drag?.startSnapshot;
 	if (!dragStartSnapshot) {
 		return state;
 	}

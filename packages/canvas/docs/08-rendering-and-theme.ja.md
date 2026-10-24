@@ -48,7 +48,7 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 オブジェクトをドラッグしている間も reducer は毎フレーム移動後の位置を書くので、スナップ・
 コントロールなど state を読むものはすべて本当の位置を見る。近道をするのは描画だけで、コネクターの
 ビューポートカリングはそれに合わせる（後述）。
-オブジェクトのドラッグハンドラが動かしたものを `activeDrag.movePreview` として宣言し
+オブジェクトのドラッグハンドラが動かしたものを `"move"` ドラッグの `movePreview` として宣言し
 （`rendering/layers/content/MovePreview.ts`。適用した差分・`moveByDelta` が新しい state を返した id・
 ドラッグ開始時のオブジェクト）、`ObjectsRenderer` はその id を開始時の state から
 `<g transform="translate(dx dy)">` の中に描く。開始時の state はドラッグの間ずっと同じ参照なので

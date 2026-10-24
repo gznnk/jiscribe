@@ -29,7 +29,11 @@ const makeState = (points: Point[]): CanvasControllerState => {
 		rootIds: ["poly-1"],
 		selection: selectionOf([]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects: { "poly-1": poly },
 				keyPoints: {},
@@ -39,7 +43,6 @@ const makeState = (points: Point[]): CanvasControllerState => {
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -91,6 +94,7 @@ describe("VertexInsertHandler - handleDragEnd", () => {
 			{ x: 50, y: 0 },
 			{ x: 100, y: 0 },
 		]);
+		expect(afterStart.drag?.kind).toBe("vertex");
 
 		// dragEnd commits the inserted vertex at the final pointer position
 		const frozen = deepFreeze(afterStart);
@@ -101,7 +105,6 @@ describe("VertexInsertHandler - handleDragEnd", () => {
 			{ x: 60, y: 40 },
 			{ x: 100, y: 0 },
 		]);
-		expect(next.edgeScrollEnabled).toBe(false);
 		// The frozen input state must be left untouched
 		expect(pointsOf(frozen)[1]).toEqual({ x: 50, y: 0 });
 	});
@@ -145,9 +148,7 @@ describe("VertexInsertHandler - snapping against the edited poly", () => {
 	/** Inserts a vertex on segment 1 and drags it, with candidates built the way handleGesture builds them. */
 	const dragInsertedVertexTo = (last: Point): Point => {
 		const base = makeState(polyPoints);
-		const baseDrag = base.activeDrag as NonNullable<
-			CanvasControllerState["activeDrag"]
-		>;
+		const baseDrag = base.drag as NonNullable<CanvasControllerState["drag"]>;
 		const objects = {
 			...base.objects,
 			"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
@@ -159,7 +160,7 @@ describe("VertexInsertHandler - snapping against the edited poly", () => {
 		const state = {
 			...base,
 			objects,
-			activeDrag: {
+			drag: {
 				...baseDrag,
 				startSnapshot: { ...baseDrag.startSnapshot, objects, snapCandidates },
 			},

@@ -12,6 +12,7 @@ const objects: Record<string, ObjectState> = {
 
 const makeState = (selectedIds: string[]): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects,
 		selection: selectionOf(selectedIds),
 		multiSelectGroup: { id: "ms" },

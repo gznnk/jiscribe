@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { CanvasControllerState } from "../../CanvasTypes";
+import type { CanvasControllerState, TextEditDraft } from "../../CanvasTypes";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
@@ -38,9 +38,13 @@ const objects: Record<string, ObjectState> = {
 };
 
 const input = (
-	textEditState: CanvasControllerState["textEditState"],
+	draft: TextEditDraft | null,
 	selection: CanvasControllerState["selection"],
-): ResolveInput => ({ textEditState, selection, objects });
+): ResolveInput => ({
+	mode: draft === null ? { kind: "normal" } : { kind: "textEdit", draft },
+	selection,
+	objects,
+});
 
 describe("readOpenTextEdit", () => {
 	it("returns null when no session is open", () => {

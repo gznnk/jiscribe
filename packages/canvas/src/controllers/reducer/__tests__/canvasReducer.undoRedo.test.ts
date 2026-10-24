@@ -68,7 +68,7 @@ describe("canvasReducer (integration)", () => {
 			state = {
 				...state,
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape", text: "editing" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "editing" } },
 			};
 
 			// undo while editing is a no-op (past is not consumed)

@@ -23,14 +23,10 @@ export const useSelectionStyleReader = (
 	canvasState: CanvasControllerState,
 ): SelectionStyleReader => {
 	const registries = useCanvasRegistries();
-	const { objects, selection, textEditState } = canvasState;
+	const { objects, selection, mode } = canvasState;
 	return useMemoAcrossMoveDrag(
 		canvasState,
-		() =>
-			createSelectionStyleReader(
-				{ objects, selection, textEditState },
-				registries,
-			),
-		[selection, textEditState, registries],
+		() => createSelectionStyleReader({ objects, selection, mode }, registries),
+		[selection, mode, registries],
 	);
 };

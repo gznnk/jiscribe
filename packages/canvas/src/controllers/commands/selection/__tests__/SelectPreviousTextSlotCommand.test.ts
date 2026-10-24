@@ -25,8 +25,8 @@ const baseState = (
 			},
 		},
 		selection: selectionOf(["rec-1"]),
-		activeDrag: null,
-		textEditState: null,
+		drag: null,
+		mode: { kind: "normal" },
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -77,7 +77,10 @@ describe("SelectPreviousTextSlotCommand", () => {
 						kind: TEXT_SLOT_PART_KIND,
 						ranges: [{ anchorId: "name", focusId: "name" }],
 					}),
-					textEditState: { kind: "shape", text: { text: "User" } } as never,
+					mode: {
+						kind: "textEdit",
+						draft: { kind: "shape", text: { text: "User" } },
+					} as never,
 				}),
 				registries,
 			),

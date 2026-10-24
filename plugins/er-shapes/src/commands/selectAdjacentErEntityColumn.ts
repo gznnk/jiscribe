@@ -40,7 +40,7 @@ type ErEntityColumnStepOrigin = {
 const readErEntityColumnStepOrigin = (
 	state: CanvasControllerState,
 ): ErEntityColumnStepOrigin | null => {
-	if (state.activeDrag !== null) {
+	if (state.drag !== null) {
 		return null;
 	}
 	const target = readErEntityCommandTarget(state);
@@ -69,7 +69,7 @@ const readErEntityColumnStepOrigin = (
  * and bottom row and for left and right too, where the step leaves the pick
  * where it is.
  *
- * @param state - The canvas to read; only the selection, `textEditState` and `activeDrag` are consulted
+ * @param state - The canvas to read; only the selection, `mode` and `drag` are consulted
  * @returns false for every other selection — a slot pick, a whole entity, any other type, several objects — so the keys stay with the built-in commands there
  */
 export const canSelectAdjacentErEntityColumn = (

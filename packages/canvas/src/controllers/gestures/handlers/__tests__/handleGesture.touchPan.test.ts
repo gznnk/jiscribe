@@ -43,21 +43,21 @@ const canvasDrag = (
 	}) as unknown as Gesture;
 
 describe("handleGesture - a touch canvas drag pans instead of area-selecting", () => {
-	it("pans the viewport by clientDelta and never creates an areaSelection", () => {
+	it("pans the viewport by clientDelta and never opens a marquee", () => {
 		const state0 = baseState();
 		const state1 = handleGesture(
 			state0,
 			canvasDrag("dragStart", { x: 4, y: 0 }, "touch"),
 			registries,
 		);
-		expect(state1.areaSelection).toBeNull();
+		expect(state1.drag?.kind).toBe("pan");
 
 		const state2 = handleGesture(
 			state1,
 			canvasDrag("drag", { x: 100, y: 50 }, "touch"),
 			registries,
 		);
-		expect(state2.areaSelection).toBeNull();
+		expect(state2.drag?.kind).toBe("pan");
 		// Content follows the finger: minX/minY move opposite to the drag
 		expect(state2.viewport.minX).toBeCloseTo(
 			state0.viewport.minX - 100 / state0.viewport.zoom,
@@ -85,7 +85,7 @@ describe("handleGesture - a touch canvas drag pans instead of area-selecting", (
 			registries,
 		);
 
-		expect(state3.activeDrag).toBeNull();
+		expect(state3.drag).toBeNull();
 		expect(state3.commitVersion).toBe(state0.commitVersion);
 		expect(state3.objects).toEqual(state0.objects);
 	});
@@ -96,7 +96,7 @@ describe("handleGesture - a touch canvas drag pans instead of area-selecting", (
 			canvasDrag("dragStart", { x: 4, y: 0 }),
 			registries,
 		);
-		expect(state1.areaSelection).not.toBeNull();
+		expect(state1.drag?.kind).toBe("marquee");
 		expect(state1.viewport).toEqual(baseState().viewport);
 	});
 });

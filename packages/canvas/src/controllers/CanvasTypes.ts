@@ -303,43 +303,188 @@ export type DragStartSnapshot = {
 export type CanvasModalKind = "export" | "shortcutHelp";
 
 /**
- * What an in-progress drag is doing. Only the distinctions the UI gates on are named;
- * a handler that does not name its drag leaves it at the "other" every drag starts from.
+ * A rectangle a drag spans, in SVG coordinates: where it started and where the
+ * pointer is now. Not normalized — `end` may lie left of or above `start`.
  */
-export type DragKind =
-	/** Moving objects: a shape, a group, or a multi-selection */
-	| "move"
-	/** Resizing or rotating through a transform handle */
-	| "transform"
-	/** Everything else: connectors, vertices, connection anchors, marquee, pan, menus */
-	| "other";
+export type DragRect = {
+	startX: number;
+	startY: number;
+	endX: number;
+	endY: number;
+};
+
+/**
+ * What a drag is doing, with whatever only that kind of drag holds. What each
+ * kind means is written once, on {@link DragKind}. handleGesture opens every
+ * drag as `"inert"`; the handler the drag reaches names it in its own dragStart
+ * ({@link claimDrag}).
+ */
+export type CanvasDragDetail =
+	| { kind: "inert" }
+	| { kind: "pan" }
+	| { kind: "menu" }
+	| {
+			kind: "move";
+			/**
+			 * What the object drag handler translated this frame, set on every frame.
+			 * It goes when the drag does, so the frame that commits the drop is drawn
+			 * from the state alone.
+			 */
+			movePreview?: MovePreview;
+	  }
+	| {
+			kind: "transform";
+			/**
+			 * What a resize writes. Absent on the rotation knob, so its presence alone
+			 * says a handle is resizing.
+			 */
+			resize?: TransformDragResize;
+	  }
+	| {
+			kind: "marquee";
+			rect: DragRect;
+			/**
+			 * Previous frame's marquee hit set. An identical hit set this frame skips
+			 * group folding and multiSelectGroup rebuilding (#219).
+			 */
+			hitIds: string[];
+			/**
+			 * Selection the marquee started from, kept only when an additive modifier
+			 * was held at dragStart; every frame selects these plus the current hit
+			 * set. Empty for a plain marquee, which replaces the selection.
+			 */
+			baseIds: readonly string[];
+	  }
+	| {
+			kind: "draw";
+			/** The bounds the shape takes, `end` already snapped */
+			rect: DragRect;
+	  }
+	| { kind: "connector"; draft: ConnectorDraft }
+	| {
+			kind: "stencil";
+			preset: Stencil;
+			/** SVG coordinates, snapped */
+			ghostPosition: Point;
+			/** Cached at dragStart */
+			objectDimensions: { halfWidth: number; halfHeight: number };
+	  }
+	| { kind: "vertex" }
+	| { kind: "label" }
+	| { kind: "segment" }
+	| { kind: "selectionControl" };
+
+/**
+ * What a drag is doing, as `interaction.getStatus().drag` reports it and as
+ * `drag.kind` holds it:
+ * - `"inert"`: no handler took the drag up; it holds the pointer until release and changes nothing
+ * - `"pan"`: moving the view (middle or right button, or one finger on the background)
+ * - `"menu"`: working a control of a menu or sidebar, such as an ObjectMenu slider; leaves an open text edit open
+ * - `"move"`: moving objects — a shape, a group or a multi-selection
+ * - `"transform"`: resizing or rotating through a transform handle
+ * - `"marquee"`: area selection over the background
+ * - `"draw"`: drawing the shape `mode` is armed with; `mode` stays `"draw"` until dragEnd
+ * - `"connector"`: pulling a connector out of a connection anchor, or re-anchoring one end
+ * - `"stencil"`: dragging a preset off the StencilLibrary; the shape is added on dragEnd
+ * - `"vertex"`: moving or inserting a vertex of a polyline, polygon or connector
+ * - `"label"`: moving a connector's label along its line
+ * - `"segment"`: moving or sliding a connector segment
+ * - `"selectionControl"`: working a control a type contributes for its own selection (selectionControls)
+ */
+export type DragKind = CanvasDragDetail["kind"];
 
 /**
  * The drag in progress. handleGesture owns the lifecycle — one is opened on every
- * dragStart and dropped on every dragEnd — so a non-null `activeDrag` is exactly
- * "a drag is under way" no matter which handler runs.
+ * dragStart and dropped on every dragEnd — so a non-null `drag` is exactly "a
+ * drag is under way" no matter which handler runs, and everything here goes with
+ * it.
+ *
+ * Not in the type: a drag on canvas content (any kind but `"inert"`, `"pan"` and
+ * `"menu"`) never coexists with `mode.kind === "textEdit"`. The handlers that
+ * take canvas content commit the edit first, at dragStart into `startSnapshot`
+ * as well; which handlers, and at which event, is listed on
+ * commitTextEditIntoDragSnapshot.
  */
-export type ActiveDrag = {
+export type CanvasDrag = CanvasDragDetail & {
 	/** Data frozen at dragStart, and the reference the whole drag is measured from */
 	startSnapshot: DragStartSnapshot;
-	/**
-	 * What the drag is doing. Opened as "other"; a handler that wants its drag
-	 * distinguished overwrites the kind in its own dragStart.
-	 */
-	kind: DragKind;
-	/**
-	 * What a transform-handle resize writes, set by the transform handler's
-	 * dragStart. Absent on the rotation knob and on every other kind, so its
-	 * presence alone says a handle is resizing.
-	 */
-	resize?: TransformDragResize;
-	/**
-	 * What the object drag handler translated this frame, set on every frame of
-	 * a "move" drag and absent on every other kind. It goes when the drag does,
-	 * so the frame that commits the drop is drawn from the state alone.
-	 */
-	movePreview?: MovePreview;
+	/** Non-null only while snapping. Drawn by SnapGuides */
+	snapFeedback: SnapFeedback | null;
+	/** Non-null only while axis-locked. Drawn by AxisLockGuide */
+	axisLockFeedback: AxisLockFeedback | null;
+	/** Whether dragging near a canvas edge scrolls the viewport; false until a handler claims the drag for content */
+	edgeScrollEnabled: boolean;
 };
+
+/**
+ * The open text-editing session's draft. What is being edited is `selection`,
+ * not named here (see {@link CanvasMode}).
+ */
+export type TextEditDraft =
+	| {
+			kind: "shape";
+			/**
+			 * The draft body, styling included; a slot holding rows is joined with
+			 * "\n" while editing. Every keystroke advances it with the same
+			 * carry-over the editor predicts with (remapRichText), and the editor is
+			 * handed this value back, so what it draws, what the draft holds and
+			 * what the commit writes never diverge.
+			 */
+			text: RichText;
+			/**
+			 * What the editor currently has selected, in UTF-16 offsets of `text`.
+			 * Reported by the editor on every caret and selection change, and read
+			 * by the styling that applies to a stretch of the text rather than to the
+			 * whole slot (readOpenTextEditForStyle). Collapsed (start === end) for
+			 * a plain caret, and absent until the editor has reported once.
+			 */
+			selection?: { start: number; end: number };
+	  }
+	| {
+			kind: "connectorLabel";
+			text: string;
+			/**
+			 * Placement the label being created takes on commit: the double-clicked point
+			 * projected onto the line, or the midpoint when creation started from the Enter
+			 * shortcut, which has no pointer position. Set only while creating, so a
+			 * re-edited label keeps its own placement; when present it wins over any
+			 * placement left on an emptied label. Nothing reaches the connector until the
+			 * edit is committed, so cancelling leaves no trace.
+			 */
+			placement?: ConnectorLabelPlacement;
+	  };
+
+/**
+ * What the canvas is in the middle of across drags: one of these at a time,
+ * so a text edit and an armed drawing tool cannot both be up.
+ *
+ * `"textEdit"` holds the open session's draft. Read it through readOpenTextEdit,
+ * which pairs the draft with its owner again. Three invariants every writer
+ * keeps:
+ * - `selection.objectIds` holds exactly one id, the owner's
+ * - a `"shape"` draft means that object holds text and `selection.part` is one
+ *   collapsed textSlot range naming the slot being edited, whatever the type's
+ *   text shape (a one-body type's slot is its `body`); nothing else there, no
+ *   pick or a pick of another kind included, keeps the session alive
+ * - a `"connectorLabel"` draft means that one id is a connector, with
+ *   `selection.part` null
+ *
+ * And one duty: a writer that moves `selection.objectIds` while a session is
+ * open runs commitTextEditIfNeeded first (SET_SELECTION, the press handlers).
+ * The reducer's reconcileSelection only catches an owner that is gone or
+ * cannot hold the session; a draft left over a move to another text-holding
+ * object is indistinguishable from one started there, and commits into it.
+ *
+ * `"draw"` is the drawing tool armed from the StencilLibrary; the drag that
+ * draws with it is the `"draw"` drag, the same activity's second phase. It outlasts
+ * pans, wheel, pinch, context menus and menu drags, and is left on, e.g., a
+ * draw's dragEnd, a canvas click, Escape, or a text edit opening, which
+ * replaces it.
+ */
+export type CanvasMode =
+	| { kind: "normal" }
+	| { kind: "textEdit"; draft: TextEditDraft }
+	| { kind: "draw"; preset: Stencil };
 
 /**
  * A transform-handle resize, stated in the frame whose handle is dragged; each
@@ -478,12 +623,15 @@ export type CanvasControllerState = CanvasState & {
 	 */
 	selection: CanvasSelection;
 
-	/** null when no gesture is in progress */
-	activeDrag: ActiveDrag | null;
+	/** What the canvas is in the middle of across drags (see {@link CanvasMode}) */
+	mode: CanvasMode;
+
+	/** The drag in progress, null when no pointer drag is under way (see {@link CanvasDrag}) */
+	drag: CanvasDrag | null;
 
 	/**
 	 * Whether the view is still coasting from a released pan (inertial scrolling).
-	 * Deliberately not folded into activeDrag: no pointer is down and no drag is
+	 * Deliberately not folded into `drag`: no pointer is down and no drag is
 	 * open, so the two would stop being set as a pair. handleGesture owns the
 	 * lifecycle — up on every fling frame, down on the recognizer's
 	 * inertialScrollEnd.
@@ -495,9 +643,6 @@ export type CanvasControllerState = CanvasState & {
 	 * and not subject to history management.
 	 */
 	dragStartCaches: DragStartCaches;
-
-	/** Whether dragging near a canvas edge scrolls the viewport */
-	edgeScrollEnabled: boolean;
 
 	/**
 	 * How far the view may be scrolled, applied by `limitViewScroll` at the end of
@@ -559,55 +704,6 @@ export type CanvasControllerState = CanvasState & {
 	 */
 	activeModal: CanvasModalKind | null;
 
-	/**
-	 * In-progress drag from the StencilLibrary. Non-null means a drag is under way; cleared
-	 * after the shape is added on dragEnd.
-	 */
-	stencilLibraryDrag: {
-		preset: Stencil;
-		/** SVG coordinates, snapped */
-		ghostPosition: Point;
-		/** Cached at dragStart */
-		objectDimensions: { halfWidth: number; halfHeight: number };
-	} | null;
-
-	/**
-	 * Drawing mode, entered from the StencilLibrary and left on completion, Escape, or a
-	 * canvas click. null is off; non-null with `preview` null is armed but not yet dragging.
-	 */
-	shapeDrawing: {
-		preset: Stencil;
-		/** SVG coordinates; null before the drag starts */
-		preview: {
-			startX: number;
-			startY: number;
-			endX: number;
-			endY: number;
-		} | null;
-	} | null;
-
-	/**
-	 * Area-selection rectangle in SVG coordinates. Set on a left-drag over the canvas and
-	 * cleared on dragEnd / Escape.
-	 */
-	areaSelection: {
-		startX: number;
-		startY: number;
-		endX: number;
-		endY: number;
-		/**
-		 * Previous frame's marquee hit set. An identical hit set this frame skips group
-		 * folding and multiSelectGroup rebuilding (#219).
-		 */
-		hitIds: string[];
-		/**
-		 * Selection the marquee started from, kept only when an additive modifier was
-		 * held at dragStart; every frame selects these plus the current hit set. Empty
-		 * for a plain marquee, which replaces the selection.
-		 */
-		baseIds: readonly string[];
-	} | null;
-
 	/** null means all ObjectMenu sections are collapsed */
 	objectMenuOpenId: string | null;
 
@@ -639,71 +735,6 @@ export type CanvasControllerState = CanvasState & {
 	 * treated as its child. null when the selection is not grouped.
 	 */
 	multiSelectGroup: GroupState | null;
-
-	/**
-	 * The open editing session's draft, null when not editing text. What is being
-	 * edited is `selection`, not named here, which is what keeps the two from
-	 * drifting apart. Read through readOpenTextEdit, which pairs the draft with
-	 * its owner again.
-	 *
-	 * Three invariants every writer keeps:
-	 * - non-null means `selection.objectIds` holds exactly one id, the owner's
-	 * - `kind: "shape"` means that object holds text and `selection.part` is one
-	 *   collapsed textSlot range naming the slot being edited, whatever the type's
-	 *   text shape (a one-body type's slot is its `body`); nothing else there, no
-	 *   pick or a pick of another kind included, keeps the session alive
-	 * - `kind: "connectorLabel"` means that one id is a connector, with
-	 *   `selection.part` null
-	 *
-	 * And one duty: a writer that moves `selection.objectIds` while a session is
-	 * open runs commitTextEditIfNeeded first (SET_SELECTION, the press handlers).
-	 * The reducer's reconcileSelection only catches an owner that is gone or
-	 * cannot hold the session; a draft left over a move to another text-holding
-	 * object is indistinguishable from one started there, and commits into it.
-	 */
-	textEditState:
-		| {
-				kind: "shape";
-				/**
-				 * The draft body, styling included; a slot holding rows is joined with
-				 * "\n" while editing. Every keystroke advances it with the same
-				 * carry-over the editor predicts with (remapRichText), and the editor is
-				 * handed this value back, so what it draws, what the draft holds and
-				 * what the commit writes never diverge.
-				 */
-				text: RichText;
-				/**
-				 * What the editor currently has selected, in UTF-16 offsets of `text`.
-				 * Reported by the editor on every caret and selection change, and read
-				 * by the styling that applies to a stretch of the text rather than to the
-				 * whole slot (readOpenTextEditForStyle). Collapsed (start === end) for
-				 * a plain caret, and absent until the editor has reported once.
-				 */
-				selection?: { start: number; end: number };
-		  }
-		| {
-				kind: "connectorLabel";
-				text: string;
-				/**
-				 * Placement the label being created takes on commit: the double-clicked point
-				 * projected onto the line, or the midpoint when creation started from the Enter
-				 * shortcut, which has no pointer position. Set only while creating, so a
-				 * re-edited label keeps its own placement; when present it wins over any
-				 * placement left on an emptied label. Nothing reaches the connector until the
-				 * edit is committed, so cancelling leaves no trace.
-				 */
-				placement?: ConnectorLabelPlacement;
-		  }
-		| null;
-
-	/** Set while dragging from a connection anchor; committed or discarded on dragEnd */
-	connectorDraft: ConnectorDraft | null;
-
-	/** Non-null only while snapping; cleared on dragEnd */
-	snapFeedback: SnapFeedback | null;
-
-	/** Non-null only while axis-locked; cleared on dragEnd. Drawn by AxisLockGuide */
-	axisLockFeedback: AxisLockFeedback | null;
 
 	/**
 	 * Set synchronously by CopyCommand regardless of whether the navigator.clipboard write

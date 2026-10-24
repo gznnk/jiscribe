@@ -31,7 +31,7 @@ export const readSelectedTextSlotOrder = (
 	state: CanvasControllerState,
 	objectPartKind: ObjectPartKindRegistry,
 ): SelectedTextSlotOrder | null => {
-	if (state.activeDrag !== null) {
+	if (state.drag !== null) {
 		return null;
 	}
 	if (state.selection.objectIds.length !== 1) {

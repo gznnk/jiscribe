@@ -55,6 +55,7 @@ const makeState = (
 	type = "record",
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { "rec-1": { ...slotShape("rec-1"), type } },
 		selection: selectionOf(["rec-1"], part),
 	}) as unknown as CanvasControllerState;
@@ -127,7 +128,7 @@ describe("getMenuSections", () => {
 	it("keeps it while the picked slot is being edited", () => {
 		const state = {
 			...makeState(NAME_TEXT_SLOT_PICK, "filled-record"),
-			textEditState: { kind: "shape" },
+			mode: { kind: "textEdit", draft: { kind: "shape" } },
 		} as unknown as CanvasControllerState;
 		expect(
 			getMenuSections(state, registry, partKindRegistry).map(

@@ -15,6 +15,7 @@ const makeState = (
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		propertyPanel: { isOpen: true, collapsedSectionIds: [] },
 		stencilLibraryOpenCategory: "flowchart",
 		selection: selectionOf(["a"]),
@@ -196,7 +197,7 @@ describe("PropertyPanelHandler", () => {
 				rootIds: ["rect-1"],
 				selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 				multiSelectGroup: null,
-				textEditState: null,
+				mode: { kind: "normal" },
 				commitVersion: 5,
 			});
 		const rectOf = (state: CanvasControllerState) =>

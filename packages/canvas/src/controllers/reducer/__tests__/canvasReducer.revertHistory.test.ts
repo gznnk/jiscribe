@@ -131,7 +131,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("is a no-op while a text edit is open, like undo itself", () => {
 			const state = createState({
-				textEditState: { kind: "shape", text: "" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);
@@ -139,7 +139,13 @@ describe("canvasReducer (integration)", () => {
 
 		it("is a no-op while a drag is in progress, like undo itself", () => {
 			const state = createState({
-				activeDrag: { startSnapshot: {}, kind: "other" },
+				drag: {
+					kind: "inert",
+					startSnapshot: {},
+					snapFeedback: null,
+					axisLockFeedback: null,
+					edgeScrollEnabled: false,
+				},
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);

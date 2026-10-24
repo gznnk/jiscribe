@@ -26,7 +26,7 @@ type GraftInput = Parameters<typeof graftTextEditDraft>[0];
 const noEdit = (objects: Record<string, ObjectState>): GraftInput => ({
 	objects,
 	selection: { objectIds: [], part: null },
-	textEditState: null,
+	mode: { kind: "normal" },
 });
 
 /** The objects with one slot edit open: the draft, and the selection that owns it. */
@@ -38,7 +38,7 @@ const shapeEdit = (
 ): GraftInput => ({
 	objects,
 	selection: { objectIds: [objectId], part: textSlotPartSelection(slotId) },
-	textEditState: { kind: "shape", text },
+	mode: { kind: "textEdit", draft: { kind: "shape", text } },
 });
 
 /** The objects with a connector label edit open. */
@@ -49,7 +49,7 @@ const labelEdit = (
 ): GraftInput => ({
 	objects,
 	selection: { objectIds: [connectorId], part: null },
-	textEditState: { kind: "connectorLabel", text },
+	mode: { kind: "textEdit", draft: { kind: "connectorLabel", text } },
 });
 
 describe("graftTextEditDraft", () => {

@@ -16,33 +16,36 @@ const baseState = (
 		objects: {},
 		selection: selectionOf([]),
 		multiSelectGroup: null,
-		areaSelection: null,
-		shapeDrawing: null,
-		activeDrag: null,
+		mode: { kind: "normal" },
+		drag: null,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
-		edgeScrollEnabled: false,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
 describe("DeselectAllCommand", () => {
-	it("clears all selection and editing state at once", () => {
+	it("clears all selection and editing state when nothing is part-selected", () => {
 		const state = baseState({
-			selection: selectionOf(["a", "b"], vertexPartSelection(0)),
+			selection: selectionOf(["a", "b"]),
 			multiSelectGroup: { id: "ms" } as never,
-			areaSelection: { x: 0, y: 0 } as never,
-			shapeDrawing: { type: "rect" } as never,
+			mode: { kind: "draw", preset: { objectType: "rect" } } as never,
 			objectMenuOpenId: "a",
-			edgeScrollEnabled: true,
 		});
 		const next = DeselectAllCommand.execute(state, registries);
 		expect(next.selection.objectIds).toEqual([]);
 		expect(next.selection.part).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
-		expect(next.areaSelection).toBeNull();
-		expect(next.shapeDrawing).toBeNull();
+		expect(next.mode.kind).toBe("normal");
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.edgeScrollEnabled).toBe(false);
+	});
+
+	it("leaves an open text edit's mode for reconcileSelection to settle", () => {
+		const mode = {
+			kind: "textEdit",
+			draft: { kind: "connectorLabel", text: "a" },
+		} as const;
+		const state = baseState({ selection: selectionOf(["a"]), mode });
+		expect(DeselectAllCommand.execute(state, registries).mode).toBe(mode);
 	});
 
 	it("clears the object selection too when a text slot is selected, without an intermediate step", () => {
@@ -117,23 +120,6 @@ describe("DeselectAllCommand", () => {
 					registries,
 				),
 			).toBe(true);
-		});
-
-		it("is not executable during an object drag (other than area selection)", () => {
-			const state = baseState({
-				selection: selectionOf(["a"]),
-				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
-				areaSelection: null,
-			});
-			expect(DeselectAllCommand.canExecute(state, registries)).toBe(false);
-		});
-
-		it("is executable during an area-selection drag", () => {
-			const state = baseState({
-				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
-				areaSelection: { x: 0, y: 0 } as never,
-			});
-			expect(DeselectAllCommand.canExecute(state, registries)).toBe(true);
 		});
 	});
 

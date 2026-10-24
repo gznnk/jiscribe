@@ -6,8 +6,10 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { claimDrag } from "../../../../utils/claimDrag";
 import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
+import { writeDragFeedback } from "../../../../utils/writeDragFeedback";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
@@ -136,26 +138,24 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 			[connectorId]: updatedConnector,
 		};
 
-		const nextState: CanvasControllerState = {
-			...state,
-			objects: updatedObjects,
-			// An insertion renumbers the waypoints after it, so a picked one is dropped
-			// rather than left addressing whoever took the number over.
-			selection: { ...state.selection, part: null },
-			edgeScrollEnabled: true,
-		};
-
-		if (state.activeDrag) {
-			nextState.activeDrag = {
-				...state.activeDrag,
-				startSnapshot: {
-					...state.activeDrag.startSnapshot,
+		const startSnapshot = state.drag?.startSnapshot;
+		return claimDrag(
+			{
+				...state,
+				objects: updatedObjects,
+				// An insertion renumbers the waypoints after it, so a picked one is dropped
+				// rather than left addressing whoever took the number over.
+				selection: { ...state.selection, part: null },
+			},
+			{ kind: "vertex" },
+			{
+				edgeScroll: true,
+				startSnapshot: startSnapshot && {
+					...startSnapshot,
 					objects: updatedObjects,
 				},
-			};
-		}
-
-		return nextState;
+			},
+		);
 	}
 
 	/**
@@ -167,7 +167,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		connectorId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		const dragStartSnapshot = state.drag?.startSnapshot;
 		if (!dragStartSnapshot) {
 			return state;
 		}
@@ -223,11 +223,10 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		const updatedObjects = createCowObjects(state.objects);
 		updatedObjects[connectorId] = updatedConnector;
 
-		return {
-			...state,
-			objects: updatedObjects,
-			snapFeedback,
-		};
+		return writeDragFeedback(
+			{ ...state, objects: updatedObjects },
+			{ snapFeedback },
+		);
 	}
 
 	/**
@@ -239,13 +238,12 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		connectorId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const closingState = { ...state, edgeScrollEnabled: false };
 		const draggedState = this.handleDrag(
-			closingState,
+			state,
 			event,
 			connectorId,
 			segmentIndex,
 		);
-		return commitEditIfChanged(closingState, draggedState);
+		return commitEditIfChanged(state, draggedState);
 	}
 }

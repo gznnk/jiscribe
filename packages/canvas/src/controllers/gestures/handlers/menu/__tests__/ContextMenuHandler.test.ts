@@ -10,6 +10,7 @@ const registries = createTestRegistries();
 
 const makeState = (): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		registries,
 		objects: {},
 		rootIds: [],

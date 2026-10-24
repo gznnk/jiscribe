@@ -13,7 +13,7 @@ import { readActivePartFocusId } from "../selection/readers/readActivePartFocusI
 
 /**
  * The open editing session paired with what it is editing: the draft off
- * `textEditState`, the owner off `selection`.
+ * `mode`, the owner off `selection`.
  */
 export type OpenTextEdit =
 	| {
@@ -22,7 +22,7 @@ export type OpenTextEdit =
 			object: ObjectState & TextStyleState;
 			/** The slot being edited; a key of `object.text`. */
 			textSlotId: string;
-			/** The draft body, styling included (see `textEditState`). */
+			/** The draft body, styling included (see `TextEditDraft`). */
 			text: RichText;
 			/** What the editor has selected, in UTF-16 offsets of `text`; absent until it has reported once. */
 			selection?: { start: number; end: number };
@@ -39,14 +39,15 @@ export type OpenTextEdit =
 
 /**
  * Reads the open text-editing session together with the selection that owns it.
- * The one read entry point for `textEditState`, so the draft and its owner are
- * never taken from two places.
+ * The entry point for a reader that needs what is being edited, so the draft
+ * and its owner are never taken from two places; the draft alone is
+ * readTextEditDraft.
  *
- * @param state - The controller state, read for the draft (`textEditState`), the
+ * @param state - The controller state, read for the draft (`mode`), the
  *   owner (`selection`) and the object it names; `objects` may be the draft map
  *   the rendering side grafts, which holds the same ids and slots
  * @returns null when no session is open; otherwise the draft with its owner
- * @throws When the state breaks one of the invariants `textEditState` documents
+ * @throws When the state breaks one of the invariants `CanvasMode` documents
  *   — the owner is not a lone selected object, a shape session's object holds no
  *   slot to edit or its `selection.part` is no textSlot pick naming a slot the
  *   object holds, a label session's owner is no connector. Unreachable for a
@@ -55,28 +56,29 @@ export type OpenTextEdit =
  *   with nothing to trace it back to
  */
 export const readOpenTextEdit = (
-	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
+	state: Pick<CanvasControllerState, "mode" | "selection" | "objects">,
 ): OpenTextEdit | null => {
-	const { textEditState, selection, objects } = state;
-	if (!textEditState) {
+	const { mode, selection, objects } = state;
+	if (mode.kind !== "textEdit") {
 		return null;
 	}
+	const { draft } = mode;
 
 	const { objectIds, part } = selection;
 	if (objectIds.length !== 1) {
 		throw new Error(
-			`Text edit (${textEditState.kind}) is open over ${objectIds.length} selected objects, which cannot own it`,
+			`Text edit (${draft.kind}) is open over ${objectIds.length} selected objects, which cannot own it`,
 		);
 	}
 	const objectId = objectIds[0];
 	const owner = objects[objectId];
 	if (owner === undefined) {
 		throw new Error(
-			`Text edit (${textEditState.kind}) is open over a selected object that is gone: ${objectId}`,
+			`Text edit (${draft.kind}) is open over a selected object that is gone: ${objectId}`,
 		);
 	}
 
-	if (textEditState.kind === "connectorLabel") {
+	if (draft.kind === "connectorLabel") {
 		if (owner.type !== "connector") {
 			throw new Error(
 				`Connector label edit is open over a "${owner.type}" object: ${objectId}`,
@@ -85,8 +87,8 @@ export const readOpenTextEdit = (
 		return {
 			kind: "connectorLabel",
 			connector: owner as ConnectorState,
-			text: textEditState.text,
-			placement: textEditState.placement,
+			text: draft.text,
+			placement: draft.placement,
 		};
 	}
 
@@ -114,7 +116,7 @@ export const readOpenTextEdit = (
 		kind: "shape",
 		object: owner,
 		textSlotId: slotId,
-		text: textEditState.text,
-		selection: textEditState.selection,
+		text: draft.text,
+		selection: draft.selection,
 	};
 };

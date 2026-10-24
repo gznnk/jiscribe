@@ -16,11 +16,15 @@ const makeContainer = (): ObjectState =>
 /** State whose current frame and start snapshot both hold a container. */
 const makeState = (): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { "container-1": makeContainer() },
 		selection: { objectIds: ["container-1"], part: null },
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: { objects: { "container-1": makeContainer() } },
-			kind: "other",
 		},
 	}) as unknown as CanvasControllerState;
 

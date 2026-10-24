@@ -82,7 +82,7 @@ export function readSelectionStyle(
 /** The fields of the state a selection's style is read from. */
 export type SelectionStyleSource = Pick<
 	CanvasControllerState,
-	"objects" | "selection" | "textEditState"
+	"objects" | "selection" | "mode"
 >;
 
 /** {@link readSelectionStyle} bound to one state, asked for one kind at a time. */

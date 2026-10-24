@@ -27,6 +27,7 @@ const stateOf = (
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { [object.id]: object },
 		selection: selectionOf([object.id]),
 		multiSelectGroup: null,

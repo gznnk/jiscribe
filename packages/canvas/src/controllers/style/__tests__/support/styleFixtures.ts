@@ -142,6 +142,7 @@ export const stateOf = (
 	part: ObjectPartSelection | null = null,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: selectionOf(selectedIds, part),
 		objects,
 	}) as CanvasControllerState;
@@ -165,7 +166,10 @@ export const editingStateOf = (
 	({
 		selection: selectionOf([ownerId], slotPickOf(BODY_TEXT_SLOT_ID)),
 		objects,
-		textEditState: { kind: "shape", text: draft, selection },
+		mode: {
+			kind: "textEdit",
+			draft: { kind: "shape", text: draft, selection },
+		},
 	}) as unknown as CanvasControllerState;
 
 /**

@@ -29,7 +29,7 @@ export type StyleTextEdit = {
 
 /**
  * The open shape editor, for both style walks: the one place they read
- * `textEditState` from, so writing a style and reporting it cannot disagree
+ * the draft from, so writing a style and reporting it cannot disagree
  * about what is being edited.
  *
  * This also owns the rule for when a selected stretch is one to style at all. A
@@ -39,11 +39,11 @@ export type StyleTextEdit = {
  * a run laid over part of it would be dropped on save and never drawn, and the
  * edit takes the whole slot instead.
  *
- * @param state - The canvas state; its `textEditState` and the selection that owns it are read
+ * @param state - The canvas state; its `mode` and the selection that owns it are read
  * @returns The edit, or null when no shape editor is open (a connector label is not one)
  */
 export const readOpenTextEditForStyle = (
-	state: Pick<CanvasControllerState, "textEditState" | "selection" | "objects">,
+	state: Pick<CanvasControllerState, "mode" | "selection" | "objects">,
 ): StyleTextEdit | null => {
 	const openEdit = readOpenTextEdit(state);
 	if (openEdit?.kind !== "shape") {

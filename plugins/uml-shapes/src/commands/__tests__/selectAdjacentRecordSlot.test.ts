@@ -49,8 +49,8 @@ const canvasWith = (
 			"rect-1": { id: "rect-1", type: "rect" },
 		},
 		selection: { objectIds: [FULL_RECORD.id], part },
-		textEditState: null,
-		activeDrag: null,
+		mode: { kind: "normal" },
+		drag: null,
 		objectMenuOpenId: FULL_RECORD.id,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -265,7 +265,7 @@ describe("extendRecordSlotSelection", () => {
 		for (const state of [
 			canvasWith(null),
 			canvasWith(slotSelection(["name"]), {
-				textEditState: { objectId: FULL_RECORD.id } as never,
+				mode: { kind: "textEdit" } as never,
 			}),
 		]) {
 			expect(extendRecordSlotSelection(state, "down")).toBe(state);
@@ -301,10 +301,10 @@ describe("canSelectAdjacentRecordSlot", () => {
 		const contexts: Record<string, CanvasControllerState> = {
 			"whole record": canvasWith(null),
 			"text edit open": canvasWith(slotSelection(["name"]), {
-				textEditState: { objectId: FULL_RECORD.id } as never,
+				mode: { kind: "textEdit" } as never,
 			}),
 			"drag running": canvasWith(slotSelection(["name"]), {
-				activeDrag: {} as never,
+				drag: {} as never,
 			}),
 			"another shape": canvasWith(null, {
 				selection: { objectIds: ["rect-1"], part: null },

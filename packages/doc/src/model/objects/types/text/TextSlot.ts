@@ -209,8 +209,8 @@ export const isTextSlot = (value: unknown): value is TextSlot => {
  * slot id names one editable text region: the key of `state.text`, which is the
  * authority on the slots a shape has, and what an editing session targets. Only
  * the shared one is named here — a shape with several slots names its own (see
- * TextSlots), and a connector's label is not a slot (textEditState kind
- * "connectorLabel").
+ * TextSlots), and a connector's label is not a slot (a text edit's draft of
+ * kind "connectorLabel").
  */
 export const BODY_TEXT_SLOT_ID = "body";
 

@@ -19,6 +19,7 @@ import type {
 	EventType,
 } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
+import { ConnectorEventHandler } from "../ConnectorEventHandler";
 import { ConnectorSegmentMoveHandler } from "../ConnectorSegmentMoveHandler";
 
 const registries = createTestRegistries();
@@ -92,7 +93,11 @@ const stateWith = (
 		...base,
 		objects,
 		rootIds: [...base.rootIds, "a", connector.id],
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects,
 				keyPoints: {},
@@ -103,7 +108,6 @@ const stateWith = (
 				multiSelectGroup: null,
 				viewport: base.viewport,
 			},
-			kind: "other",
 		},
 	});
 };
@@ -150,9 +154,9 @@ const withZoom = (
 	return {
 		...state,
 		viewport,
-		activeDrag: state.activeDrag && {
-			...state.activeDrag,
-			startSnapshot: { ...state.activeDrag.startSnapshot, viewport },
+		drag: state.drag && {
+			...state.drag,
+			startSnapshot: { ...state.drag.startSnapshot, viewport },
 		},
 	};
 };
@@ -251,7 +255,45 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		expect(next.contextMenuPosition).toBeNull();
-		expect(next.edgeScrollEnabled).toBe(true);
+		expect(next.drag?.edgeScrollEnabled).toBe(true);
+		expect(next.drag?.kind).toBe("segment");
+	});
+
+	it("has the router commit an open label edit into the snapshot, so the next frame keeps its text (touch)", () => {
+		// A touch press waits to see whether it becomes a pinch, so the edit is
+		// still open when the drag starts.
+		const state = {
+			...stateWith({
+				...connectorWithVertices(),
+				label: { text: "Yes" },
+			} as ConnectorState),
+			selection: selectionOf(["c1"]),
+			mode: {
+				kind: "textEdit",
+				draft: { kind: "connectorLabel", text: "No" },
+			},
+		} as unknown as CanvasControllerState;
+		const touch = (event: CanvasEvent): CanvasEvent =>
+			({ ...event, pointerType: "touch" }) as CanvasEvent;
+
+		const started = ConnectorEventHandler.handle(
+			state,
+			touch(dragEvent("dragStart", { x: 150, y: 0 }, { x: 150, y: 0 })),
+			registries,
+		);
+		expect(started.mode.kind).toBe("normal");
+		expect(connectorOf(started).label?.text).toBe("No");
+
+		const dragged = ConnectorEventHandler.handle(
+			started,
+			touch(dragEvent("drag", { x: 150, y: 0 }, { x: 150, y: 40 })),
+			registries,
+		);
+		expect(connectorOf(dragged).label?.text).toBe("No");
+		expect(pointsOf(dragged)).toEqual([
+			{ x: 100, y: 40 },
+			{ x: 200, y: 40 },
+		]);
 	});
 });
 
@@ -353,7 +395,7 @@ describe("ConnectorSegmentMoveHandler - drag", () => {
 			dragEvent("drag", { x: 150, y: 0 }, { x: 160, y: 0 }),
 			registries,
 		);
-		expect(next.snapFeedback).toEqual({
+		expect(next.drag?.snapFeedback).toEqual({
 			x: [
 				{
 					coordinate: 213,
@@ -376,7 +418,7 @@ describe("ConnectorSegmentMoveHandler - drag", () => {
 			{ x: 110, y: 0 },
 			{ x: 210, y: 0 },
 		]);
-		expect(next.snapFeedback).toEqual({ x: [], y: [] });
+		expect(next.drag?.snapFeedback).toEqual({ x: [], y: [] });
 	});
 
 	it("bypasses the snap while Ctrl is held", () => {
@@ -389,7 +431,7 @@ describe("ConnectorSegmentMoveHandler - drag", () => {
 			{ x: 110, y: 0 },
 			{ x: 210, y: 0 },
 		]);
-		expect(next.snapFeedback).toEqual({ x: [], y: [] });
+		expect(next.drag?.snapFeedback).toEqual({ x: [], y: [] });
 	});
 
 	it("measures the threshold in screen pixels, so zoom 4 narrows it in world units", () => {
@@ -487,7 +529,7 @@ describe("ConnectorSegmentMoveHandler - segments it refuses", () => {
 
 		const withoutSnapshot = {
 			...state,
-			activeDrag: null,
+			drag: null,
 		} as CanvasControllerState;
 		expect(
 			ConnectorSegmentMoveHandler.handle(
@@ -500,7 +542,7 @@ describe("ConnectorSegmentMoveHandler - segments it refuses", () => {
 });
 
 describe("ConnectorSegmentMoveHandler - dragEnd", () => {
-	it("applies the final frame and disables edge scrolling", () => {
+	it("applies the final frame", () => {
 		const state = stateWith(connectorWithVertices());
 		const afterStart = ConnectorSegmentMoveHandler.handle(
 			state,
@@ -518,11 +560,10 @@ describe("ConnectorSegmentMoveHandler - dragEnd", () => {
 			{ x: 210, y: -20 },
 		]);
 		expect(afterEnd.objects).not.toBe(afterStart.objects);
-		expect(afterEnd.edgeScrollEnabled).toBe(false);
 		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion + 1);
 	});
 
-	it("disables edge scrolling even on a segment it refuses to move", () => {
+	it("moves and commits nothing on a segment it refuses to move", () => {
 		const afterStart = ConnectorSegmentMoveHandler.handle(
 			stateWith(connectorWithVertices()),
 			dragEvent(
@@ -533,7 +574,7 @@ describe("ConnectorSegmentMoveHandler - dragEnd", () => {
 			),
 			registries,
 		);
-		expect(afterStart.edgeScrollEnabled).toBe(true);
+		expect(afterStart.drag?.edgeScrollEnabled).toBe(true);
 
 		const afterEnd = ConnectorSegmentMoveHandler.handle(
 			afterStart,
@@ -544,7 +585,6 @@ describe("ConnectorSegmentMoveHandler - dragEnd", () => {
 			{ x: 100, y: 0 },
 			{ x: 200, y: 0 },
 		]);
-		expect(afterEnd.edgeScrollEnabled).toBe(false);
 		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion);
 	});
 });

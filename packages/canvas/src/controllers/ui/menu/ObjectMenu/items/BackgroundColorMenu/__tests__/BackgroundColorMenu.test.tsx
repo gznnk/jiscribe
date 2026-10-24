@@ -31,6 +31,7 @@ const rect = (id: string, fill: string): ObjectState =>
 /** The selection with the menu's dropdown open, so the picker grid is drawn too. */
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: selectionOf(shapes.map((shape) => shape.id)),
 		objectMenuOpenId: "bg-color",
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),

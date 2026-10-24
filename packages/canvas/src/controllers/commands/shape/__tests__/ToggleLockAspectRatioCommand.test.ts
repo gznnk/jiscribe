@@ -22,7 +22,7 @@ const stateOf = (
 		selection: selectionOf(selectedIds),
 		objects,
 		multiSelectGroup,
-		textEditState: null,
+		mode: { kind: "normal" },
 		commitVersion: 0,
 	}) as unknown as CanvasControllerState;
 

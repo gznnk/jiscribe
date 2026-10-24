@@ -1,12 +1,16 @@
 import React, { memo } from "react";
 
 import { ghostifyPreviewState } from "./ghostifyPreviewState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { DragRect } from "../../../CanvasTypes";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import type { Stencil } from "../../objects/Stencil";
 
 type DrawingPreviewOverlayProps = {
-	shapeDrawing: CanvasControllerState["shapeDrawing"];
+	/** The preset the drawing tool is armed with; null when it is not armed */
+	preset: Stencil | null;
+	/** The bounds being drawn; null until a draw drag starts */
+	rect: DragRect | null;
 };
 
 /**
@@ -21,18 +25,18 @@ type DrawingPreviewOverlayProps = {
  * which is exactly when placement would create nothing.
  */
 const createPreviewElement = (
-	shapeDrawing: NonNullable<CanvasControllerState["shapeDrawing"]>,
+	preset: Stencil,
+	rect: DragRect,
 	registries: CanvasRegistries,
 ): React.ReactNode => {
-	const { preview } = shapeDrawing;
-	const { objectType, defaultOverrides } = shapeDrawing.preset;
+	const { objectType, defaultOverrides } = preset;
 	const factory = registries.objectFactory.get(objectType);
 	const component = registries.objectComponent.get(objectType);
-	if (!preview || !factory?.createDocFromBounds || !component) {
+	if (!factory?.createDocFromBounds || !component) {
 		return null;
 	}
 
-	const { startX, startY, endX, endY } = preview;
+	const { startX, startY, endX, endY } = rect;
 	const doc = factory.createDocFromBounds(
 		startX,
 		startY,
@@ -55,11 +59,12 @@ const createPreviewElement = (
  * drag-drawing is in progress.
  */
 const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
-	shapeDrawing,
+	preset,
+	rect,
 }) => {
 	const registries = useCanvasRegistries();
 
-	if (!shapeDrawing?.preview) {
+	if (preset === null || rect === null) {
 		return null;
 	}
 
@@ -68,7 +73,7 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 	// counting the transient preview as a committed object.
 	return (
 		<g pointerEvents="none" data-testid="drawing-preview">
-			{createPreviewElement(shapeDrawing, registries)}
+			{createPreviewElement(preset, rect, registries)}
 		</g>
 	);
 };

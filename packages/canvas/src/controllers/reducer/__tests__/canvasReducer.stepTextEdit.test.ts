@@ -12,6 +12,7 @@ import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -39,12 +40,15 @@ const editingState = (slotId: string): CanvasControllerState =>
 	createTestState(twoRectsDoc, {
 		objects: slottedObjects,
 		selection: selectionOf(["rect-1"], textSlotPartSelection(slotId)),
-		textEditState: {
-			kind: "shape",
-			text: readRichTextSlot(
-				(slottedObjects["rect-1"] as unknown as { text: TextSlots }).text,
-				slotId,
-			),
+		mode: {
+			kind: "textEdit",
+			draft: {
+				kind: "shape",
+				text: readRichTextSlot(
+					(slottedObjects["rect-1"] as unknown as { text: TextSlots }).text,
+					slotId,
+				),
+			},
 		},
 	});
 
@@ -75,7 +79,7 @@ describe("canvasReducer STEP_TEXT_EDIT", () => {
 		expect(after.selection).toEqual(
 			selectionOf(["rect-1"], textSlotPartSelection("b")),
 		);
-		expect(after.textEditState).toEqual({ kind: "shape", text: "B" });
+		expect(readTextEditDraft(after)).toEqual({ kind: "shape", text: "B" });
 	});
 
 	it("steps back on -1, wrapping from the first slot to the last", () => {
@@ -85,7 +89,7 @@ describe("canvasReducer STEP_TEXT_EDIT", () => {
 		expect(after.selection).toEqual(
 			selectionOf(["rect-1"], textSlotPartSelection("c")),
 		);
-		expect(after.textEditState).toEqual({ kind: "shape", text: "C" });
+		expect(readTextEditDraft(after)).toEqual({ kind: "shape", text: "C" });
 	});
 
 	it("records one undo step per committed slot and none for a slot left unchanged", () => {
@@ -112,7 +116,7 @@ describe("canvasReducer STEP_TEXT_EDIT", () => {
 					} as unknown as ObjectState,
 				},
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape", text: "hi!" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "hi!" } },
 			},
 		);
 
@@ -194,7 +198,7 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 		expect(after.selection).toEqual(
 			selectionOf(["rect-1"], textSlotPartSelection("d")),
 		);
-		expect(after.textEditState).toEqual({ kind: "shape", text: "" });
+		expect(readTextEditDraft(after)).toEqual({ kind: "shape", text: "" });
 		// Settled by the content resizer, as a structural edit is.
 		expect(heightOf(after)).toBe(50);
 	});
@@ -314,7 +318,7 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 		expect(after.selection).toEqual(
 			selectionOf(["rect-1"], textSlotPartSelection("e")),
 		);
-		expect(after.textEditState).toEqual({ kind: "shape", text: "" });
+		expect(readTextEditDraft(after)).toEqual({ kind: "shape", text: "" });
 	});
 
 	describe("on an object of one slot", () => {
@@ -329,7 +333,7 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 					} as unknown as ObjectState,
 				},
 				selection: selectionOf(["rect-1"], textSlotPartSelection("a")),
-				textEditState: { kind: "shape", text: "A" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "A" } },
 			});
 
 		it("grows the object on Tab, the sole slot being the last", () => {
@@ -345,8 +349,32 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 			expect(after.selection).toEqual(
 				selectionOf(["rect-1"], textSlotPartSelection("d")),
 			);
-			expect(after.textEditState).toEqual({ kind: "shape", text: "" });
+			expect(readTextEditDraft(after)).toEqual({ kind: "shape", text: "" });
 			expect(after.history.past).toHaveLength(1);
+		});
+
+		it("neither grows nor commits on Tab while a drag holds the session open", () => {
+			// A menu slider holds an uncommitted preview in the objects mid-drag,
+			// which a history entry recorded by the commit would keep.
+			const extend = vi.fn(appendTwoSlots);
+			const extendingReducer = createExtendingReducer(extend);
+			const typedState = extendingReducer(
+				soleSlotEditingState(),
+				reportEdit("x"),
+			);
+			const underDrag: CanvasControllerState = {
+				...typedState,
+				drag: {
+					kind: "menu",
+					startSnapshot: {},
+					snapFeedback: null,
+					axisLockFeedback: null,
+					edgeScrollEnabled: false,
+				} as unknown as CanvasControllerState["drag"],
+			};
+
+			expect(extendingReducer(underDrag, tab)).toBe(underDrag);
+			expect(extend).not.toHaveBeenCalled();
 		});
 
 		it("leaves the edit as it is on Shift+Tab, with nowhere to wrap to", () => {
@@ -368,9 +396,9 @@ describe("canvasReducer STEP_TEXT_EDIT past the last slot", () => {
 		it("leaves Tab on the canvas, with no edit open, without growing", () => {
 			const extend = vi.fn(appendTwoSlots);
 			const extendingReducer = createExtendingReducer(extend);
-			const state = {
+			const state: CanvasControllerState = {
 				...soleSlotEditingState(),
-				textEditState: null,
+				mode: { kind: "normal" },
 			};
 
 			const after = extendingReducer(state, {

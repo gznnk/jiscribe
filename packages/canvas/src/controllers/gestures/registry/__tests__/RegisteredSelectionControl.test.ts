@@ -24,22 +24,27 @@ const makeState = (
 	snapshotObject: ObjectState = object,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { "obj-1": object },
 		selection: { objectIds: ["obj-1"], part: null },
 		commitVersion: 0,
-		activeDrag: {
+		drag: {
+			kind: "selectionControl",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: true,
 			startSnapshot: { objects: { "obj-1": snapshotObject } },
-			kind: "other",
 		},
 	}) as unknown as CanvasControllerState;
 
 /** State with the current frame but no gesture-start snapshot. */
 const makeStateWithoutSnapshot = (object: ObjectState): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { "obj-1": object },
 		selection: { objectIds: ["obj-1"], part: null },
 		commitVersion: 0,
-		activeDrag: undefined,
+		drag: null,
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
@@ -85,13 +90,20 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			Component: () => null,
 			handle,
 		});
+		// As handleGesture opens it, before any handler has named it.
+		const opened = makeState(makeObject());
+		const state = {
+			...opened,
+			drag: { ...opened.drag, kind: "inert", edgeScrollEnabled: false },
+		} as CanvasControllerState;
 		const next = strategy.handle(
-			makeState(makeObject()),
+			state,
 			makeEvent("dragStart"),
 			undefined as never,
 		);
 		expect(handle).not.toHaveBeenCalled();
-		expect(next.edgeScrollEnabled).toBe(true);
+		expect(next.drag?.kind).toBe("selectionControl");
+		expect(next.drag?.edgeScrollEnabled).toBe(true);
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
@@ -105,10 +117,10 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		const next = strategy.handle(state, makeEvent("drag"), undefined as never);
 		expect(marked(next)).toBe(true);
 		expect(next.objects).not.toBe(state.objects);
-		expect(next.edgeScrollEnabled).toBeUndefined();
+		expect(next.drag).toBe(state.drag);
 	});
 
-	it("dragEnd writes the result back and disables edge scrolling", () => {
+	it("dragEnd writes the result back", () => {
 		const { strategy } = createRegisteredSelectionControl(
 			"container",
 			markingDefinition(),
@@ -119,7 +131,6 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			undefined as never,
 		);
 		expect(marked(next)).toBe(true);
-		expect(next.edgeScrollEnabled).toBe(false);
 	});
 
 	it("drag leaves state untouched when the definition reports no change", () => {
@@ -177,7 +188,6 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			undefined as never,
 		);
 		expect(next.objects).toBe(state.objects);
-		expect(next.edgeScrollEnabled).toBe(false);
 		expect(next.commitVersion).toBe(3);
 	});
 
@@ -203,7 +213,6 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			const ended = runDrag({ ...markingDefinition(), events: ["drag"] }, 2);
 			expect(marked(ended)).toBe(true);
 			expect(ended.commitVersion).toBe(4);
-			expect(ended.edgeScrollEnabled).toBe(false);
 		});
 
 		it("commits once when dragEnd returns null after drag frames wrote", () => {
@@ -235,23 +244,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		it("commits nothing for a drag that wrote nothing", () => {
 			const ended = runDrag({ ...noChangeDefinition(), events: ["drag"] }, 2);
 			expect(ended.commitVersion).toBe(3);
-			expect(ended.edgeScrollEnabled).toBe(false);
 		});
-	});
-
-	it("still disables edge scrolling on dragEnd when a guard fails", () => {
-		const { strategy } = createRegisteredSelectionControl(
-			"container",
-			markingDefinition(),
-		);
-		const state = makeStateWithoutSnapshot(makeObject());
-		const next = strategy.handle(
-			state,
-			makeEvent("dragEnd"),
-			undefined as never,
-		);
-		expect(marked(next)).toBe(false);
-		expect(next.edgeScrollEnabled).toBe(false);
 	});
 
 	it("guards a snapshot type mismatch", () => {
@@ -276,9 +269,12 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		});
 		const state = {
 			objects: {},
-			activeDrag: {
+			drag: {
+				kind: "inert",
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
 				startSnapshot: { objects: { "obj-1": makeObject() } },
-				kind: "other",
 			},
 		} as unknown as CanvasControllerState;
 		const next = strategy.handle(state, makeEvent("drag"), undefined as never);
@@ -395,23 +391,6 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 			mods: { shift: false, alt: false, ctrl: false, meta: false },
 			subAction: undefined,
 		});
-	});
-
-	it("releases edge scrolling on dragEnd even for a definition that did not ask for it", () => {
-		const handle = vi.fn();
-		const { strategy } = createRegisteredSelectionControl("container", {
-			name: "headerHeight",
-			events: ["click"],
-			Component: () => null,
-			handle,
-		});
-		const next = strategy.handle(
-			{ ...makeState(makeObject()), edgeScrollEnabled: true },
-			makeEvent("dragEnd"),
-			undefined as never,
-		);
-		expect(handle).not.toHaveBeenCalled();
-		expect(next.edgeScrollEnabled).toBe(false);
 	});
 
 	describe("part selection", () => {

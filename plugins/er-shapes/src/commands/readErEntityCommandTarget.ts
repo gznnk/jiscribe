@@ -34,7 +34,10 @@ export type ErEntityCommandTarget = {
 export const readErEntityCommandTarget = (
 	state: CanvasControllerState,
 ): ErEntityCommandTarget | null => {
-	if (state.textEditState !== null || state.selection.objectIds.length !== 1) {
+	if (
+		state.mode.kind === "textEdit" ||
+		state.selection.objectIds.length !== 1
+	) {
 		return null;
 	}
 	const objectId = state.selection.objectIds[0];

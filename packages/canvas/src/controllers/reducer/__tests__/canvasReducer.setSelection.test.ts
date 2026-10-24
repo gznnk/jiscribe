@@ -6,6 +6,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -89,7 +90,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 		const editingState = (): CanvasControllerState =>
 			createState({
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape", text: "typed" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "typed" } },
 			});
 
 		it("commits the edit before the selection moves off its owner", () => {
@@ -98,7 +99,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 			const next = canvasReducer(state, setSelection(["rect-2"]));
 
 			expect(bodyOf(next, "rect-1")).toBe("typed");
-			expect(next.textEditState).toBeNull();
+			expect(readTextEditDraft(next)).toBeNull();
 			expect(next.selection).toEqual({ objectIds: ["rect-2"], part: null });
 			// The owner is the selection, so had the draft outlived the move it would
 			// have landed on rect-2 (readOpenTextEdit cannot tell the two apart).
@@ -125,12 +126,12 @@ describe("canvasReducer / SET_SELECTION", () => {
 		it("records nothing when the draft was never changed", () => {
 			const state = createState({
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape", text: "" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 			});
 
 			const next = canvasReducer(state, setSelection(["rect-2"]));
 
-			expect(next.textEditState).toBeNull();
+			expect(readTextEditDraft(next)).toBeNull();
 			expect(next.history).toBe(state.history);
 			expect(next.commitVersion).toBe(state.commitVersion);
 		});

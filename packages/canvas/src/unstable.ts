@@ -341,7 +341,14 @@ export type {
 	KeyBinding,
 	PlatformKeyBindings,
 } from "./controllers/commands/CommandTypes";
-export type { CanvasControllerState } from "./controllers/CanvasTypes";
+export type {
+	CanvasControllerState,
+	CanvasDrag,
+	CanvasDragDetail,
+	CanvasMode,
+	DragRect,
+	TextEditDraft,
+} from "./controllers/CanvasTypes";
 // A command that edits the document says so itself: the reducer records history
 // and raises a save off `commitVersion`, and the COMMAND path does not advance it.
 export { commitEdit } from "./controllers/utils/commitEdit";

@@ -42,8 +42,8 @@ const canvasWith = (
 	({
 		objects: { [ENTITY.id]: ENTITY },
 		selection: { objectIds: [ENTITY.id], part },
-		textEditState: null,
-		activeDrag: null,
+		mode: { kind: "normal" },
+		drag: null,
 		objectMenuOpenId: "column",
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -102,7 +102,7 @@ describe("erEntity text slot selection commands", () => {
 				canRun(
 					id,
 					canvasWith(slotPick("col:0:name"), {
-						textEditState: { kind: "shape", text: "id" },
+						mode: { kind: "textEdit", draft: { kind: "shape", text: "id" } },
 					} as Partial<CanvasControllerState>),
 				),
 			).toBe(false);

@@ -6,7 +6,7 @@ import type { ErEntityState } from "../state/ErEntityState";
 /**
  * Opens the in-place editor on one slot of an entity, as the built-in Enter does
  * for a picked slot (StartTextEditCommand): the slot becomes the selection, which
- * is what names the slot being edited (see `textEditState`), and the session's
+ * is what names the slot being edited (see `CanvasControllerState.mode`), and the session's
  * draft starts from the slot's text.
  *
  * @param state - The canvas; `entity` must already be in its `objects` under its own id, slot included
@@ -29,8 +29,8 @@ export const openErEntityTextSlotEditor = (
 			ranges: [{ anchorId: slotId, focusId: slotId }],
 		},
 	},
-	textEditState: {
-		kind: "shape",
-		text: readRichTextSlot(entity.text, slotId),
+	mode: {
+		kind: "textEdit",
+		draft: { kind: "shape", text: readRichTextSlot(entity.text, slotId) },
 	},
 });

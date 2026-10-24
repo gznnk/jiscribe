@@ -24,7 +24,7 @@ export const CommitTextEditCommand: ExecutableCommand = {
 	category: "edit",
 	shortcuts: COMMIT_TEXT_EDIT_SHORTCUTS,
 
-	canExecute: (state) => state.textEditState !== null,
+	canExecute: (state) => state.mode.kind === "textEdit",
 
 	execute: (state) => commitTextEditIfNeeded(state),
 };

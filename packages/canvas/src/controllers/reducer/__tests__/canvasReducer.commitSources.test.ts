@@ -9,6 +9,7 @@ import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { readSelectionStyle } from "../../style/walk/readSelectionStyle";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -76,10 +77,13 @@ describe("canvasReducer (integration)", () => {
 		it("a format command lands one entry per press and styles the stretch", () => {
 			const editing = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: {
-					kind: "shape",
-					text: "hello",
-					selection: { start: 0, end: 5 },
+				mode: {
+					kind: "textEdit",
+					draft: {
+						kind: "shape",
+						text: "hello",
+						selection: { start: 0, end: 5 },
+					},
 				},
 			});
 			const registries = createTestRegistries();
@@ -102,33 +106,33 @@ describe("canvasReducer (integration)", () => {
 		it("END_TEXT_EDIT records when the text changes on commit", () => {
 			const state = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape", text: "hello" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "hello" } },
 			});
 			const after = canvasReducer(state, {
 				type: "END_TEXT_EDIT",
 				commit: true,
 			});
 			expect(after.history.past).toHaveLength(1);
-			expect(after.textEditState).toBeNull();
+			expect(readTextEditDraft(after)).toBeNull();
 		});
 
-		it("cancelling END_TEXT_EDIT does not record and only clears textEditState", () => {
+		it("cancelling END_TEXT_EDIT does not record and only closes the session", () => {
 			const state = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape", text: "hello" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "hello" } },
 			});
 			const after = canvasReducer(state, {
 				type: "END_TEXT_EDIT",
 				commit: false,
 			});
 			expect(after.history.past).toHaveLength(0);
-			expect(after.textEditState).toBeNull();
+			expect(readTextEditDraft(after)).toBeNull();
 		});
 
 		it("END_TEXT_EDIT does not record on commit if the text has not changed", () => {
 			let state = createTestState(twoRectsDoc, {
 				selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape", text: "hello" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "hello" } },
 			});
 			// First time: the text changes, so it is recorded
 			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
@@ -137,11 +141,11 @@ describe("canvasReducer (integration)", () => {
 			// Commit again with the same text → no diff, so commitVersion does not increase and nothing is recorded
 			state = {
 				...state,
-				textEditState: { kind: "shape", text: "hello" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "hello" } },
 			};
 			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
 			expect(state.history.past).toHaveLength(1);
-			expect(state.textEditState).toBeNull();
+			expect(readTextEditDraft(state)).toBeNull();
 		});
 
 		it("STYLE_INTENT records only once even when preview → commit follow in sequence", () => {
