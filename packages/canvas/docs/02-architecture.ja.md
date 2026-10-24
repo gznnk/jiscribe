@@ -66,7 +66,7 @@ intent を作るもの、`walk/` は書きと読みが共有する選択の歩�
 スタイル表、`entries/` は intent が型のデータのどこに着地するか（各エントリは
 `{ apply, read }` の対）→ [スタイルシステム](./10-style-properties.ja.md)。
 
-形状ごとに、`states/objects/.../<shape>/` と `controllers/behaviors/...`、
+形状ごとに、`states/objects/.../<shape>/` と挙動（下の **behaviors/** 参照）、
 `rendering/objects/...` が対応する。コアの型の一覧は `@jiscribe/doc` の
 `model/objects/types/ObjectType.ts`（`ObjectTypes`）が正本で、それ以外の図形はプラグインが足す
 → [プラグインアーキテクチャ](./12-plugin-architecture.ja.md)。
@@ -93,7 +93,7 @@ State を Props として受け取り SVG を描画するコンポーネント�
 ### 制御層（controllers）
 
 - **gestures/handlers/**: ジェスチャーを受けて `CanvasState` を更新する。対象ごとの EventHandler をサブフォルダ（`objects/` / `controls/` など）に置き、`handleGesture.ts` が振り分ける。
-- **behaviors/**: `ObjectBehaviorRegistry` に登録される `ObjectBehavior` 実装（契約は `gestures/registry/ObjectBehaviorTypes.ts` の `ObjectBehaviorEntry`）。型ごとの Controller は `primitives/` と `connector/` に置く。枠（Frame）で表せる型（例: rect / ellipse）は Controller を持たず、`base/FrameController.ts` の `createFrameBehavior` で作る。変形の共通ロジックも `base/` にある。`gestures` / `commands` / `reducer` / `utils` からレジストリ経由で使われる。
+- **behaviors/**: `ObjectBehaviorRegistry` に登録される `ObjectBehavior` 実装（契約は `gestures/registry/ObjectBehaviorTypes.ts` の `ObjectBehaviorEntry`）。型ごとの Controller は `primitives/` と `connector/` に置き、挙動が独自の型（例: text / connector）だけが持つ。それ以外は Controller を持たない。枠（Frame）で表せる型（例: rect / ellipse / group）は `base/FrameController.ts` の `createFrameBehavior` で、頂点ベースの型（例: polygon / polyline）は `base/PolyController.ts` の `createPolyBehavior` で作る（どれを使うかは `registries/applyObjectDefinition.ts` の `BUILTIN_OBJECT_DEFINITIONS` 参照）。変形の共通ロジックも `base/` にあり、グループの変形・回転を子孫すべてへ伝える `GroupChildrenTransform.ts` もここに置く。`gestures` / `commands` / `reducer` / `utils` からレジストリ経由で使われる。
 - **commands/**: ショートカット・メニュー・ツールバー共通の操作 → [コマンドシステム](./05-command-system.ja.md)。
 - **reducer/**: アクションを各ハンドラへ振り分ける → [状態更新フロー](./06-state-update-flow.ja.md)。
 - **ui/**: 変形コントロールやメニューなど UI 制御ロジック。
@@ -218,7 +218,7 @@ graph TD
 1. **Doc**: `@jiscribe/doc` の `model/objects/primitives/<shape>/<Shape>Doc.ts`（+ `validate<Shape>Doc.ts` / `<Shape>ObjectFactory.ts`）。コア型の一覧（`model/objects/types/ObjectType.ts` の `ObjectTypes`）にも足す
 2. **State**: `states/objects/primitives/<shape>/<Shape>State.ts`
 3. **Mapper**: `states/objects/primitives/<shape>/<Shape>Mapper.ts`（Doc ↔ State）
-4. **Behavior**: `controllers/behaviors/primitives/<Shape>Controller.ts`（`ObjectBehaviorEntry` を満たす）。枠（Frame）で表せる型なら書かずに `behaviors/base/FrameController.ts` の `createFrameBehavior` を使う
+4. **Behavior**: 枠（Frame）で表せる型は `behaviors/base/FrameController.ts` の `createFrameBehavior` を、頂点ベースの型（形状が `points`）は `behaviors/base/PolyController.ts` の `createPolyBehavior` を使う。どちらにも当てはまらない型だけ `controllers/behaviors/primitives/<Shape>Controller.ts`（`ObjectBehaviorEntry` を満たす）を書く
 5. **Component**: `rendering/objects/primitives/<Shape>/<Shape>.tsx`
 6. **登録**: 定義は headless 側と UI 側の 2 段で、UI 側が headless 側を取り込む。
    - `@jiscribe/doc` の `plugin/builtinObjectDocDefinitions.ts` — headless 側の定義（Doc バリデータ・features・factory など）。`createCanvasParser` / `createDocOps` が既定で使う定義集合はここから作られる
