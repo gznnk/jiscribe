@@ -261,6 +261,13 @@ as? }` in order, where a later entry refers to the ids an earlier one created
   `rgb(255, 255, 0)`, was taken for transparent and the label's background or
   border was left out of the SVG and PNG.
 
+- **Emptying a slot of rows headlessly writes `[]`, as the canvas does.**
+  `docOps.setText` (and with it `set_text` in `@jiscribe/ai-tools`) wrote an
+  empty text into a slot that holds rows, such as a UML record's attributes,
+  as `[""]`: one empty row, where the canvas writes no rows at all. It now
+  writes `[]`, the two sides sharing one conversion between a slot's content
+  and the single body of text it is edited as.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security
