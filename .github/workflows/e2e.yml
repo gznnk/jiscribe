@@ -18,7 +18,9 @@ permissions:
 jobs:
   e2e-full:
     name: full e2e
-    runs-on: ubuntu-latest
+    # Pinned while ubuntu-latest moves to 26.04: the Playwright suites run about
+    # 1.8x slower there (canvas 12.5m → 22.6m) and the job hits its timeout.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
