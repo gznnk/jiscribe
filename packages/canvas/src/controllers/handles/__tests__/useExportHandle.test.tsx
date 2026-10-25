@@ -4,8 +4,14 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { BuildExportSvgOptions, ResolveImageBlob } from "../../../export";
-import { canvasToSvgString, rasterizeSvgToPng } from "../../../export";
+import type {
+	BuildExportSvgOptions,
+	ResolveImageBlob,
+} from "../../../rendering/export";
+import {
+	canvasToSvgString,
+	rasterizeSvgToPng,
+} from "../../../rendering/export";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { twoRectsWithConnectorDoc } from "../../commands/__tests__/support/fixtures";
 import { createTestState } from "../../reducer/__tests__/support/createTestState";
@@ -20,7 +26,7 @@ import { type CanvasExportHandle, useExportHandle } from "../useExportHandle";
  * that stays the same object while the image resolver changes under it.
  */
 
-vi.mock("../../../export", () => ({
+vi.mock("../../../rendering/export", () => ({
 	canvasToSvgString: vi.fn(() => Promise.resolve("<svg/>")),
 	rasterizeSvgToPng: vi.fn(() =>
 		Promise.resolve({ blob: new Blob(), width: 320, height: 160 }),

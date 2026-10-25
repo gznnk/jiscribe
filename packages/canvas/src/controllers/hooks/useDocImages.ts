@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { ResolveImageBlob } from "../../export";
 import { useLatestRef } from "../../foundation/hooks/useLatestRef";
+import type { ResolveImageBlob } from "../../rendering/export";
 import type {
 	ResolvedImage,
 	ResolvedImageLookup,

@@ -7,7 +7,7 @@ import { useInteractionHandle } from "./useInteractionHandle";
 import { useMeasureHandle } from "./useMeasureHandle";
 import { useSelectionHandle } from "./useSelectionHandle";
 import { useViewportHandle } from "./useViewportHandle";
-import type { ResolveImageBlob } from "../../export";
+import type { ResolveImageBlob } from "../../rendering/export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";

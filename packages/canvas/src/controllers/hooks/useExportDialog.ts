@@ -1,14 +1,17 @@
 import { type Dispatch, type RefObject, useCallback } from "react";
 
 import type { NotifyError } from "./useErrorNotification";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import {
 	canvasToSvgString,
 	exportCanvasToPng,
 	exportCanvasToSvg,
 	rasterizeSvgToPng,
-} from "../../export";
-import type { BuildExportSvgOptions, ResolveImageBlob } from "../../export";
-import { useLatestRef } from "../../foundation/hooks/useLatestRef";
+} from "../../rendering/export";
+import type {
+	BuildExportSvgOptions,
+	ResolveImageBlob,
+} from "../../rendering/export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";

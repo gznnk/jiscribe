@@ -41,10 +41,10 @@ packages/canvas/src/
 │   ├── style/              # スタイルの intent とその行き先。intent のモデル + intent/ / walk/ / tables/ / entries/
 │   ├── ui/                 # 変形コントロール・メニュー・アイコンなど UI 制御（StencilRegistry / ObjectMenuRegistry などを含む）
 │   └── utils/
-├── rendering/              # 純粋な描画コンポーネント + Viewport 型
-│   └── objects/registry/   # 描画層のレジストリ（ObjectComponentRegistry など）
+├── rendering/              # 純粋な描画コンポーネント + Viewport 型 + 描いたものの PNG / SVG 出力
+│   ├── objects/registry/   # 描画層のレジストリ（ObjectComponentRegistry など）
+│   └── export/             # 描いたものの PNG / SVG 出力（フォント埋め込みと、`.jis.png` / `.jis.svg` へのソース埋め込み）
 ├── bootstrap/              # パッケージの読み込み時に、どの Canvas よりも前に一度だけ走るもの: ブラウザのテキスト計測を @jiscribe/doc の計測スロットへ差し出す（差し出した計測器は文字のレイアウトのたびに走る）
-├── export/                 # PNG / SVG 出力（フォント埋め込みと、`.jis.png` / `.jis.svg` へのソース埋め込み）
 └── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
 ```
 

@@ -13,7 +13,10 @@ import { calcVisibleWorldRect } from "./calcVisibleWorldRect";
 import { getTopLevelSelectedIds } from "./getTopLevelSelectedIds";
 import type { SnapshotRenderScope } from "./SnapshotRenderScope";
 import type { VisualExtentRegistries } from "./VisualExtentRegistries";
-import type { BuildExportSvgOptions, RasterizeSvgOptions } from "../../export";
+import type {
+	BuildExportSvgOptions,
+	RasterizeSvgOptions,
+} from "../../rendering/export";
 import type { Viewport } from "../../rendering/Viewport";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";

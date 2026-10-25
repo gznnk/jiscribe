@@ -12,7 +12,7 @@ import {
 /**
  * Verifies the conversion rules of resolveExportOptions (the pure function that
  * builds BuildExportSvgOptions from CanvasExportOptions at export time). SVG
- * generation and rasterization themselves are the responsibility of export/ and
+ * generation and rasterization themselves are the responsibility of rendering/export/ and
  * are not covered here.
  */
 

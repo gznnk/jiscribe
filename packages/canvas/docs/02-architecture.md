@@ -41,10 +41,10 @@ packages/canvas/src/
 │   ├── style/              # style intents and where they land: the intent model + intent/ / walk/ / tables/ / entries/
 │   ├── ui/                 # UI control (transform controls, menus, icons) incl. StencilRegistry / ObjectMenuRegistry, among others
 │   └── utils/
-├── rendering/              # pure rendering components + the Viewport type
-│   └── objects/registry/   # the rendering layer's registries (ObjectComponentRegistry, …)
+├── rendering/              # pure rendering components + the Viewport type + the PNG / SVG output of what they draw
+│   ├── objects/registry/   # the rendering layer's registries (ObjectComponentRegistry, …)
+│   └── export/             # PNG / SVG output of what is drawn (font embedding, and embedding the source into `.jis.png` / `.jis.svg`)
 ├── bootstrap/              # what runs once when the package is loaded, before any Canvas exists: offering the browser's text measurement into @jiscribe/doc's measurement slot (the measurer it offers runs on every text layout)
-├── export/                 # PNG / SVG output (font embedding, and embedding the source into `.jis.png` / `.jis.svg`)
 └── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 ```
 

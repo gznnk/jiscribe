@@ -56,7 +56,7 @@ export {
 	embedCanvasSourceInPng,
 	extractCanvasSourceFromPng,
 	downloadBlob,
-} from "./export";
+} from "./rendering/export";
 export type {
 	ExportCanvasToPngOptions,
 	ExportCanvasToSvgOptions,
@@ -64,7 +64,7 @@ export type {
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 	ResolveImageBlob,
-} from "./export";
+} from "./rendering/export";
 // Toolbar composition (issue #184). The sections are the single source of order
 // and category metadata: each item names, in display order, a pinned preset, a
 // category flyout, a command button, the zoom group, a sidebar toggle, a divider

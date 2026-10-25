@@ -285,8 +285,9 @@ export default tseslint.config(
 		// them and reach no controller, so a shape can be drawn by the export path and by
 		// isolated tests with nothing wired up. What separates it from controllers/ui is purity,
 		// not the kind of component — the menus, modals, icons and editors live under
-		// controllers/ui precisely because they are not pure. Types are allowed: a
-		// drawing component takes controller-owned types as Props.
+		// controllers/ui precisely because they are not pure. export/ sits here for the same
+		// reason: it turns what these components draw into PNG / SVG without a controller.
+		// Types are allowed: a drawing component takes controller-owned types as Props.
 		files: ["packages/canvas/src/rendering/**"],
 		ignores: ["**/__tests__/**", "**/__benchmarks__/**"],
 		rules: {
@@ -347,7 +348,6 @@ export default tseslint.config(
 								"**/rendering/**",
 								"**/controllers/**",
 								"**/connectors/**",
-								"**/export/**",
 								"**/bootstrap/**",
 								"**/plugin/**",
 								"**/index",
