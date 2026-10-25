@@ -13,14 +13,6 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
-### Changed
-
-- **jiscribe-desktop has no menu bar outside macOS; the viewer's own menu
-  opens a file or ends the app.** Open… and Quit sit in the viewer's toolbar.
-  A canvas is on display from the start — the one open at the last quit or
-  Open…, or a scratch `untitled.jis` of the app's own — and quitting writes
-  out a pending edit before closing.
-
 ## [0.12.2] - 2026-10-25
 
 ### Security
@@ -130,8 +122,11 @@ guide`.** They drive the same `@jiscribe/ai-tools` declarations jiscribe-mcp
   connect to it by URL rather than starting a process each. Every client
   session shares one canvas host, one set of file locks and one undo history,
   and the viewer opens in the app's own window instead of a spawned browser.
-  There is no installer or tray yet: closing the window hides it, starting the
-  app again brings it back, and File → Quit ends it.
+  There is no installer or tray yet: closing the window hides it and starting
+  the app again brings it back. Outside macOS there is no menu bar; Open… and
+  Quit sit in the viewer's toolbar. A canvas is on display from the start —
+  the one open at the last quit or Open…, or a scratch `untitled.jis` of the
+  app's own — and quitting writes out a pending edit before closing.
 - **`applyCanvasOp` reports the ids an op created.** `AiCanvasOpOutcome`
   carries `createdIds`, set by `addObject` / `addObjects` / `connect` /
   `connectMany` / `groupObjects` in the order the objects were created, and
