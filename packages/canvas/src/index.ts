@@ -1,7 +1,7 @@
 // Side-effect first: importing this package is what tells the document layer to
 // measure text the way this package draws it (see the module for why it is not
 // deferred to mount time).
-import "./text/offerRendererTextMeasurement";
+import "./bootstrap/offerRendererTextMeasurement";
 
 export { Canvas } from "./controllers/Canvas";
 export type { CanvasGestureHandling } from "./controllers/CanvasGestureHandling";

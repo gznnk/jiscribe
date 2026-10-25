@@ -43,7 +43,7 @@ packages/canvas/src/
 │   └── utils/
 ├── rendering/              # pure rendering components + the Viewport type
 │   └── objects/registry/   # the rendering layer's registries (ObjectComponentRegistry, …)
-├── text/                   # the renderer's text measurement (the browser measures; offered into @jiscribe/doc's measurement slot)
+├── bootstrap/              # what runs once when the package is loaded, before any Canvas exists: offering the browser's text measurement into @jiscribe/doc's measurement slot (the measurer it offers runs on every text layout)
 ├── export/                 # PNG / SVG output (font embedding, and embedding the source into `.jis.png` / `.jis.svg`)
 └── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 ```

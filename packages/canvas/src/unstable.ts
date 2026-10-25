@@ -12,7 +12,7 @@
 
 // Side-effect first, as in `.`: a host reaching the canvas through this entry
 // alone still gets the renderer's text measurement offered.
-import "./text/offerRendererTextMeasurement";
+import "./bootstrap/offerRendererTextMeasurement";
 
 export { createFrameObject } from "./rendering/objects/base/createFrameObject";
 export type {

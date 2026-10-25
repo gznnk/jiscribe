@@ -348,7 +348,7 @@ export default tseslint.config(
 								"**/controllers/**",
 								"**/connectors/**",
 								"**/export/**",
-								"**/text/**",
+								"**/bootstrap/**",
 								"**/plugin/**",
 								"**/index",
 								"**/unstable",

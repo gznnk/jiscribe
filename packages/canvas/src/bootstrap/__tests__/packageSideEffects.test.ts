@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 /**
  * The offer this package makes to the document layer is a side effect of
- * `src/index.ts` evaluating `./text/offerRendererTextMeasurement` — and a
+ * `src/index.ts` evaluating `./bootstrap/offerRendererTextMeasurement` — and a
  * bundler is free to drop a side-effect-only import from a package that declares
  * `"sideEffects": false`.
  *
@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
  * the manifest rather than on the behaviour.
  *
  * If this package ever does need the field, the import has to stop being the
- * mechanism first: `"sideEffects": ["./src/text/offerRendererTextMeasurement.ts"]`
+ * mechanism first: `"sideEffects": ["./src/bootstrap/offerRendererTextMeasurement.ts"]`
  * keeps that one module while letting the rest be dropped.
  */
 
