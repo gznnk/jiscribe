@@ -1,4 +1,4 @@
-import { parseRgbaColor } from "../../../color/parseRgbaColor";
+import { parseRgbaColor } from "../../../foundation/color/parseRgbaColor";
 
 /**
  * Fraction the surface color is nudged toward the contrasting luminance pole to

@@ -1,7 +1,7 @@
 import { useToolbarCommandState } from "./ToolbarCommandStateContext";
 import { ToolbarIconButton, ZoomReadout } from "./ToolbarStyled";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { ZoomInIcon } from "../../icons/ZoomInIcon";
 import { ZoomOutIcon } from "../../icons/ZoomOutIcon";
 

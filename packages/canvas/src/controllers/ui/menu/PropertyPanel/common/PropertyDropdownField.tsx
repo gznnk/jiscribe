@@ -14,7 +14,7 @@ import {
 	PropertyDropdownTrigger,
 	PropertyMixedLabel,
 } from "./PropertyControlsStyled";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { ChevronDownIcon } from "../../../icons/ChevronDownIcon";
 import { ObjectMenuDropdownPanel } from "../../ObjectMenu/common/ObjectMenuDropdownPanel";
 import { PropertyPanelOverlayHostContext } from "../PropertyPanelOverlayHostContext";

@@ -18,7 +18,7 @@ export const SCROLLBAR_WIDTH = 8;
  * same scrollbar.
  *
  * Usage:
- *   import { scrollbarStyles } from "../../theme/themeScrollbarStyles";
+ *   import { scrollbarStyles } from "../../foundation/theme/themeScrollbarStyles";
  *
  *   const MyStyledDiv = styled.div`
  *     overflow-y: auto;

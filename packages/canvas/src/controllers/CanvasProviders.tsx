@@ -1,19 +1,19 @@
 import type { ReactNode, RefObject } from "react";
 
 import { CanvasViewportElementRefContext } from "./CanvasViewportElementRefContext";
-import { CanvasLocaleContext } from "./messages/CanvasLocaleContext";
-import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
-import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { CanvasRegistries } from "./registries";
 import { CanvasRegistriesContext } from "./registries/CanvasRegistriesContext";
+import { CanvasLocaleContext } from "../foundation/i18n/CanvasLocaleContext";
+import { CanvasMessagesContext } from "../foundation/i18n/CanvasMessagesContext";
+import type { CanvasMessages } from "../foundation/i18n/CanvasMessagesTypes";
+import type { CanvasTheme } from "../foundation/theme/CanvasTheme";
+import { CanvasThemeContext } from "../foundation/theme/CanvasThemeContext";
 import type { CanvasZoomStore } from "../rendering/objects/CanvasZoomStoreContext";
 import { CanvasZoomStoreContext } from "../rendering/objects/CanvasZoomStoreContext";
 import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import type { ResolvedImageLookup } from "../rendering/objects/ResolvedImagesContext";
 import { ResolvedImagesContext } from "../rendering/objects/ResolvedImagesContext";
-import type { CanvasTheme } from "../theme/CanvasTheme";
-import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 
 type CanvasProvidersProps = {
 	theme: CanvasTheme;

@@ -1,11 +1,11 @@
 ﻿import { memo } from "react";
 
+import { useCanvasLocale } from "../../../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { resolveCommandLabel } from "../../../../../commands/CommandUtils";
 import { commandAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../../../hooks/useCommandState";
-import { useCanvasLocale } from "../../../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { resolveGroupingCommandId } from "../../../../../utils/resolveGroupingCommandId";
 import { GroupIcon } from "../../../../icons/GroupIcon";
 import {

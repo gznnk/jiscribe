@@ -8,6 +8,8 @@ import {
 	MenuSeparator,
 } from "./ContextMenuStyled";
 import { useContextMenuPosition } from "./useContextMenuPosition";
+import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import {
 	formatShortcut,
@@ -16,8 +18,6 @@ import {
 } from "../../../commands/CommandUtils";
 import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../hooks/useCommandState";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 /**
  * Both kinds resolve label / shortcut / enabled from the command registry;

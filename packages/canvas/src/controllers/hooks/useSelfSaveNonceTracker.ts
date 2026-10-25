@@ -1,5 +1,5 @@
-import { useConstant } from "./useConstant";
 import { createSelfSaveNonceTracker } from "./utils/createSelfSaveNonceTracker";
+import { useConstant } from "../../foundation/hooks/useConstant";
 
 /**
  * Provides the self-save nonce tracker as a single instance stable for the

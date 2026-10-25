@@ -1,7 +1,7 @@
 import { memo } from "react";
 
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { OpenReferenceIcon } from "../../../../icons/OpenReferenceIcon";
 import {
 	ObjectMenuButton,

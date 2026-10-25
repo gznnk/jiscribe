@@ -9,10 +9,10 @@ import {
 	calcOutwardVector,
 	type AnchorFrame,
 } from "../../../../connectors/calcConnectPoint";
+import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
+import { theme } from "../../../../foundation/theme/themeTokens";
 import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
-import { theme } from "../../../../theme/themeTokens";
 
 // Anchor colors may hold var(--jiscribe-*), so they are applied via style
 // (fill/stroke) rather than SVG presentation attributes.

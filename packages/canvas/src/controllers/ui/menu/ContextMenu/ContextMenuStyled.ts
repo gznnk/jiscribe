@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../theme/themeTokens";
+import { theme } from "../../../../foundation/theme/themeTokens";
 
 /**
  * left / top follow the pointer, so they are passed via the `style` prop

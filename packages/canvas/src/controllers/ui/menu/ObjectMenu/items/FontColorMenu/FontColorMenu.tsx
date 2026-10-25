@@ -1,10 +1,10 @@
 ﻿import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import { memo, useRef } from "react";
 
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,

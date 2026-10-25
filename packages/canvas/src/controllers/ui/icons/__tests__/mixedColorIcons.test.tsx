@@ -3,7 +3,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { theme } from "../../../../theme/themeTokens";
+import { theme } from "../../../../foundation/theme/themeTokens";
 import { BorderColorIcon } from "../BorderColorIcon";
 import { ColorPreviewIcon } from "../ColorPreviewIcon";
 import { FontColorIcon } from "../FontColorIcon";

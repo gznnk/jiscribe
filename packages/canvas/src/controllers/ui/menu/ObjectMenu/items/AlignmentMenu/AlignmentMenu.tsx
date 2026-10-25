@@ -1,13 +1,13 @@
 ﻿import { memo, useRef } from "react";
 
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
+import type { CanvasMessageStrings } from "../../../../../../foundation/i18n/CanvasMessagesTypes";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
 	setAction,
 	toggleAction,
 } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";

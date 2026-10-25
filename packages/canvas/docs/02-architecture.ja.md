@@ -23,7 +23,11 @@ packages/canvas/src/
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # 図形ごとの State + Mapper
 │   └── registry/           # states 層のレジストリ（ObjectMapperRegistry など）
-├── color/                  # CSS の色文字列（hex / rgb() のパースと、何も塗らない色かの判定）。何も import せず、rendering / controllers / export が共有する
+├── foundation/             # canvas の部品も @jiscribe/doc も知らない土台。外部パッケージだけに依存する
+│   ├── color/              # CSS の色文字列（hex / rgb() のパース、何も塗らない色かの判定、isCssColor）
+│   ├── theme/              # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
+│   ├── i18n/               # CanvasMessages・ロケール別の文言・ロケールと文言の Context
+│   └── hooks/              # canvas を知らない hook（useConstant / useLatestRef / useDevicePixelRatio）
 ├── connectors/             # コネクタの幾何（端点解決・直交ルーティング・ラベル配置）。描画も状態更新もせず、rendering / controllers から値を取らない
 ├── controllers/            # 状態管理 + ビジネスロジック
 │   ├── Canvas.tsx
@@ -41,8 +45,7 @@ packages/canvas/src/
 │   └── objects/registry/   # 描画層のレジストリ（ObjectComponentRegistry など）
 ├── text/                   # レンダラのテキスト計測（ブラウザが測り、@jiscribe/doc の計測スロットへ差し出す）
 ├── export/                 # PNG / SVG 出力（フォント埋め込みと、`.jis.png` / `.jis.svg` へのソース埋め込み）
-├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
-└── theme/                  # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
+└── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
 ```
 
 Doc モデルはこのパッケージには**無い**。canvas が依存する `@jiscribe/doc`
@@ -204,7 +207,7 @@ graph TD
     Plugin --> DocPackage
 ```
 
-`@jiscribe/doc` の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `theme/`（`theme` トークン）への直接参照はほぼ全域から存在するため、図では省略している。
+`@jiscribe/doc` の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `foundation/`（`theme` トークン・文言）への直接参照はほぼ全域から存在するため、図では省略している。
 
 **`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、`@jiscribe/doc` の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、`selection` の部分種別（テキストスロットの置き場所を含む）、rendering の component/outline 契約など）ため、`plugin` はこのパッケージの3レイヤーと doc パッケージのすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。`ui` のプロパティパネル導出（`derivePropertyPanel`）も `plugin` の判定関数を値で使う。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
 

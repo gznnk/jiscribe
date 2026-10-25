@@ -1,8 +1,8 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
-import { useConstant } from "./useConstant";
-import { useLatestRef } from "./useLatestRef";
+import { useConstant } from "../../foundation/hooks/useConstant";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
-import { defaultCanvasMessages } from "../../../../../messages/CanvasMessages";
-import { jaCanvasMessages } from "../../../../../messages/jaCanvasMessages";
-import type { LocaleMessages } from "../../../../../messages/resolveLocaleMessages";
+import { defaultCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessages";
+import { jaCanvasMessages } from "../../../../../../foundation/i18n/jaCanvasMessages";
+import type { LocaleMessages } from "../../../../../../foundation/i18n/resolveLocaleMessages";
 import { resolvePropertyPanelSectionLabel } from "../resolvePropertyPanelSectionLabel";
 
 describe("resolvePropertyPanelSectionLabel", () => {

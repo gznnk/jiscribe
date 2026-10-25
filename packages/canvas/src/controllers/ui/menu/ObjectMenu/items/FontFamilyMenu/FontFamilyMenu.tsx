@@ -1,9 +1,9 @@
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { memo, useRef } from "react";
 
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,

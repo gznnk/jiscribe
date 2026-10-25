@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { defaultCanvasMessages } from "../../../foundation/i18n/CanvasMessages";
 import { resolveCommandLabel } from "../../commands/CommandUtils";
 import { ToggleStencilLibraryCommand } from "../../commands/view/ToggleStencilLibraryCommand";
-import { defaultCanvasMessages } from "../../messages/CanvasMessages";
 import { ALL_COMMANDS } from "../initializeCommands";
 
 /**

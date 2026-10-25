@@ -1,5 +1,5 @@
-import { isTransparentColor } from "../../../../color/isTransparentColor";
-import { theme } from "../../../../theme/themeTokens";
+import { isTransparentColor } from "../../../../foundation/color/isTransparentColor";
+import { theme } from "../../../../foundation/theme/themeTokens";
 
 /**
  * What a color swatch is painted with. A color that paints nothing

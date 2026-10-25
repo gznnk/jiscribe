@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../theme/themeTokens";
+import { theme } from "../../../../foundation/theme/themeTokens";
 
 /**
  * The modal's background overlay. Click to close.

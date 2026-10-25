@@ -1,7 +1,6 @@
 import { type Dispatch, type RefObject, useCallback } from "react";
 
 import type { NotifyError } from "./useErrorNotification";
-import { useLatestRef } from "./useLatestRef";
 import {
 	canvasToSvgString,
 	exportCanvasToPng,
@@ -9,6 +8,7 @@ import {
 	rasterizeSvgToPng,
 } from "../../export";
 import type { BuildExportSvgOptions, ResolveImageBlob } from "../../export";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";

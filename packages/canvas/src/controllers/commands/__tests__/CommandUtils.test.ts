@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	defaultCanvasMessages,
 	resolveCanvasMessages,
-} from "../../messages/CanvasMessages";
+} from "../../../foundation/i18n/CanvasMessages";
 import { formatShortcutTokens, resolveCommandLabel } from "../CommandUtils";
 
 /** Pin getPlatform()'s detection via navigator.userAgent */

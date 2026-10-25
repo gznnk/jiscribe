@@ -10,10 +10,10 @@ import {
 } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useCallback } from "react";
 
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
+import type { CanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesTypes";
 import type { MetaState } from "../../../../../states/objects/base/MetaState";
 import { documentAction } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import type { StyleIntentUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyColorField } from "../common/PropertyColorField";

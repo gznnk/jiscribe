@@ -22,7 +22,7 @@ import { layoutVisualLines } from "@jiscribe/doc/text/layout/layoutVisualLines";
 import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 
 import { borderStyleToDasharray } from "./borderStyleToDasharray";
-import { isTransparentColor } from "../color/isTransparentColor";
+import { isTransparentColor } from "../foundation/color/isTransparentColor";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

@@ -3,11 +3,11 @@ import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef
 import { memo } from "react";
 
 import { resolveEndpointOwner } from "../../../../connectors/endpoints";
+import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
+import { theme } from "../../../../foundation/theme/themeTokens";
 import { useResolvedConnectorPoints } from "../../../../rendering/layers/content/hooks/useResolvedConnectorPoints";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
-import { theme } from "../../../../theme/themeTokens";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { readSelectedVertexIndex } from "../../../selection/readers/readSelectedVertexIndex";
 import { VertexControls, VertexInsertControls } from "../VertexControls";

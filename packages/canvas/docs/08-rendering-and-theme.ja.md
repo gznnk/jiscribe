@@ -101,11 +101,11 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 
 色には性質の異なる 2 種類があり、出所を必ず分ける。
 
-|            | UI クローム                                  | 図形データ                                     |
-| ---------- | -------------------------------------------- | ---------------------------------------------- |
-| 例         | メニュー・ツールバー・選択枠・スナップガイド | 図形の `fill` / `stroke` / `fontColor`         |
-| 出所       | `theme/themeTokens.ts` のテーマトークン      | ドキュメント（`.jis`）に保存される値           |
-| テーマ追従 | する（ホストが注入したテーマに従う）         | しない（ユーザーが指定したデータ）※auto を除く |
+|            | UI クローム                                        | 図形データ                                     |
+| ---------- | -------------------------------------------------- | ---------------------------------------------- |
+| 例         | メニュー・ツールバー・選択枠・スナップガイド       | 図形の `fill` / `stroke` / `fontColor`         |
+| 出所       | `foundation/theme/themeTokens.ts` のテーマトークン | ドキュメント（`.jis`）に保存される値           |
+| テーマ追従 | する（ホストが注入したテーマに従う）               | しない（ユーザーが指定したデータ）※auto を除く |
 
 ### `"auto"`（テーマ追従色）— 図形データの例外（issue #38）
 
@@ -168,12 +168,12 @@ style」という 2 方式混在を解消）。
 
 テーマはホストが注入する中立な仕組みで、canvas 自体は VSCode を知らない。
 
-- **中立トークン**: `theme`（`theme/themeTokens.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
+- **中立トークン**: `theme`（`foundation/theme/themeTokens.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
   参照し、フォールバックにはダークプリセット値を持つ（`var(--jiscribe-foreground, #cccccc)`）。
   テーマは CSS 解決時に決まるため、emotion スタイルは静的なモジュール定数のままでよい。
 - **注入**: ホストは Canvas の `theme` prop に `CanvasTheme`
-  （`theme/CanvasTheme.ts`）を渡す。Canvas ルートが `theme.tokens` を `--jiscribe-*`
-  カスタムプロパティとして注入する（`theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
+  （`foundation/theme/CanvasTheme.ts`）を渡す。Canvas ルートが `theme.tokens` を `--jiscribe-*`
+  カスタムプロパティとして注入する（`foundation/theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
   配下のすべてのスタイルが解決できる。
 - **2 つの伝搬経路**: CSS で消費するトークンはカスタムプロパティ経由。JS で消費する値
   （例: ズーム補正計算に使うハンドル寸法、後述の `colorScheme`）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、
@@ -221,7 +221,7 @@ style」という 2 方式混在を解消）。
     `fonts.css` を import していないホストが失うものは無い — 取りに行く字面が無いので、
     load は即座に解決する。
 - **標準テーマ**: `darkCanvasTheme`（既定。その値はトークンのフォールバックを兼ねる）と
-  `lightCanvasTheme` をパッケージから export する（`theme/themePresets.ts`）。
+  `lightCanvasTheme` をパッケージから export する（`foundation/theme/themePresets.ts`）。
 - **`colorScheme`**: 図形が JS の値として読むテーマ項目（`CanvasColorScheme`）。トークンが塗る地の明暗
   （`"light"` / `"dark"`）を名指し、地ごとに図版を出荷していてトークンでは塗り替えられない絵が使う —
   AWS アイコンはこれで公式の Light / Dark の図版を選ぶ（`plugins/aws-shapes/src/presentation/AwsIconArt.tsx`。

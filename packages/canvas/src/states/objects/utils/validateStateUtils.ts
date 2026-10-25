@@ -39,7 +39,7 @@ import {
 } from "@jiscribe/doc/model/objects/utils/opacity";
 import { validateEndpointRef } from "@jiscribe/doc/model/objects/validators/validateEndpointFields";
 
-import { isCssColor } from "./isCssColor";
+import { isCssColor } from "../../../foundation/color/isCssColor";
 import { isTextStyleState } from "../base/TextStyleState";
 import { isTransformState } from "../base/TransformState";
 import type { TextSlots } from "../types/TextSlots";

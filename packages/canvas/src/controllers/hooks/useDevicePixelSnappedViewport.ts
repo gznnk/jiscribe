@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { useDevicePixelRatio } from "./useDevicePixelRatio";
+import { useDevicePixelRatio } from "../../foundation/hooks/useDevicePixelRatio";
 import type { Viewport } from "../../rendering/Viewport";
 import { snapViewportToDevicePixels } from "../utils/snapViewportToDevicePixels";
 

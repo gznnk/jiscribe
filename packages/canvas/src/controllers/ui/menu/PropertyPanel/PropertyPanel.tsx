@@ -68,14 +68,14 @@ import { isCanvasSectionShown } from "./utils/isCanvasSectionShown";
 import { isGroupingItemShown } from "./utils/isGroupingItemShown";
 import { isMetaSectionShown } from "./utils/isMetaSectionShown";
 import { resolvePropertyPanelSectionLabel } from "./utils/resolvePropertyPanelSectionLabel";
+import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import {
 	commandAction,
 	toggleAction,
 } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useSelectionStyleReader } from "../../../hooks/useSelectionStyleReader";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";

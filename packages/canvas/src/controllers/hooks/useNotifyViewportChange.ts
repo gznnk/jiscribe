@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { useLatestRef } from "./useLatestRef";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { Viewport } from "../../rendering/Viewport";
 import type { Camera } from "../CanvasTypes";
 import { isSameCamera } from "../utils/isSameCamera";

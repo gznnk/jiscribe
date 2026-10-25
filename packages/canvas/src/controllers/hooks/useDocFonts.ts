@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useDocFontsPreload } from "./useDocFontsPreload";
 import { useFontsLoadedNonce } from "./useFontsLoadedNonce";
-import { useLatestRef } from "./useLatestRef";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { DocFontRequest } from "../utils/collectDocFontRequests";
 
 type UseDocFontsOptions = {

@@ -1,9 +1,9 @@
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { isSelectionAutoHeight } from "../../../../commands/shape/ToggleAutoHeightCommand";
 import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { resolveSelectedLockAspectRatio } from "../../../../style/walk/getSelectedLockAspectRatio";
 import { useSelectionStyle } from "../../SelectionStyleReaderContext";

@@ -24,8 +24,8 @@ import {
 	resolveStencilLabel,
 } from "./utils/resolveStencilLabel";
 import { searchStencilLibrary } from "./utils/searchStencilLibrary";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
 import { SearchIcon } from "../../icons/SearchIcon";

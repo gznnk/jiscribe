@@ -102,11 +102,11 @@ Relevant code examples:
 
 There are two kinds of color with different natures, and their origins must always be kept separate.
 
-|               | UI chrome                                      | Shape data                                   |
-| ------------- | ---------------------------------------------- | -------------------------------------------- |
-| Examples      | menus, toolbars, selection frames, snap guides | a shape's `fill` / `stroke` / `fontColor`    |
-| Origin        | theme tokens in `theme/themeTokens.ts`         | values saved in the document (`.jis`)        |
-| Follows theme | yes (follows the host-injected theme)          | no (data specified by the user) ※except auto |
+|               | UI chrome                                         | Shape data                                   |
+| ------------- | ------------------------------------------------- | -------------------------------------------- |
+| Examples      | menus, toolbars, selection frames, snap guides    | a shape's `fill` / `stroke` / `fontColor`    |
+| Origin        | theme tokens in `foundation/theme/themeTokens.ts` | values saved in the document (`.jis`)        |
+| Follows theme | yes (follows the host-injected theme)             | no (data specified by the user) ※except auto |
 
 ### `"auto"` (theme-following color) — an exception in shape data (issue #38)
 
@@ -177,12 +177,12 @@ and "attribute vs. style").
 
 Theming is host-injectable and neutral — the canvas knows nothing about VSCode.
 
-- **Neutral tokens**: `theme` (`theme/themeTokens.ts`) references neutral `--jiscribe-*` CSS custom
+- **Neutral tokens**: `theme` (`foundation/theme/themeTokens.ts`) references neutral `--jiscribe-*` CSS custom
   properties, each with the dark preset value as its fallback (`var(--jiscribe-foreground, #cccccc)`).
   emotion styles can stay static module-level constants because the theme resolves at CSS time.
-- **Injection**: the host passes a `CanvasTheme` (`theme/CanvasTheme.ts`) via the Canvas `theme`
+- **Injection**: the host passes a `CanvasTheme` (`foundation/theme/CanvasTheme.ts`) via the Canvas `theme`
   prop. The Canvas root injects `theme.tokens` as `--jiscribe-*` custom properties
-  (`theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
+  (`foundation/theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
 - **Two delivery paths**: CSS-consumed tokens flow through the custom properties; JS-consumed values
   (e.g. handle dimensions, for zoom-adjusted geometry, and `colorScheme` below) flow through `CanvasThemeContext`
   (`useCanvasTheme()`) and must be concrete values, never `var(...)` strings.
@@ -230,7 +230,7 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     document swapped in later goes through the nonce path alone. A host that never imported
     `fonts.css` loses nothing — with no face to fetch, the load resolves at once.
 - **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
-  `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).
+  `lightCanvasTheme` are exported from the package (`foundation/theme/themePresets.ts`).
 - **`colorScheme`**: a theme field shapes read as a JS value (`CanvasColorScheme`). It names the ground
   the tokens paint (`"light"` / `"dark"`) for artwork that ships a rendition per ground and cannot be
   recoloured through tokens — the AWS icons pick their official Light or Dark drawing by it

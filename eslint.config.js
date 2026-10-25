@@ -49,7 +49,6 @@ const docCuratedEntriesOnly = {
  * that runs the wrong way.
  */
 const CONTROLLER_LAYERS = [
-	"messages",
 	"utils",
 	"style",
 	"behaviors",
@@ -325,6 +324,50 @@ export default tseslint.config(
 							allowTypeImports: true,
 							message:
 								"connectors computes geometry and cannot take a value from rendering or controllers. Take what you need as a parameter (the registries already arrive that way).",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		// foundation/ is the base that knows no canvas component and no document: color
+		// strings, the theme, the messages and hooks that know nothing of the canvas. It
+		// depends on external packages only, types included, so every other folder can
+		// build on it.
+		files: ["packages/canvas/src/foundation/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: [
+								"**/states/**",
+								"**/rendering/**",
+								"**/controllers/**",
+								"**/connectors/**",
+								"**/export/**",
+								"**/text/**",
+								"**/plugin/**",
+								"**/index",
+								"**/unstable",
+								"!@jiscribe/**",
+							],
+							message:
+								"foundation knows no canvas component. Move what needs this import out of foundation.",
+						},
+						{
+							// Only the engine packages that sit below the document and the canvas.
+							group: [
+								"@jiscribe/*",
+								"@jiscribe/*/**",
+								"!@jiscribe/geometry",
+								"!@jiscribe/basic-validators",
+								"!@jiscribe/utility-types",
+							],
+							message:
+								"foundation knows no document and no canvas. Move what needs this import out of foundation.",
 						},
 					],
 				},

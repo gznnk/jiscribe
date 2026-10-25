@@ -8,8 +8,8 @@ import {
 	ObjectMenuSliderLabel,
 	ObjectMenuSliderNumberInput,
 } from "./ObjectMenuSliderStyled";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import { sliderAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { toStyleIntent } from "../../../../../style/intent/toStyleIntent";
 import type { StyleIntentUpdater } from "../../ObjectMenuTypes";
 

@@ -9,7 +9,7 @@ import {
 	PropertyNumberFieldUnit,
 } from "./PropertyControlsStyled";
 import { useCommitOnOutsidePointerDown } from "./useCommitOnOutsidePointerDown";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { ChevronDownIcon } from "../../../icons/ChevronDownIcon";
 
 /** Decimals a value is shown with; enough to read a snapped position back. */

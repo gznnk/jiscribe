@@ -12,7 +12,7 @@ import {
 	RadioOption,
 	SubmitButton,
 } from "./ExportDialogStyled";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { ModalShell } from "../ModalShell";
 
 /** Image formats offered by the export dialog. */

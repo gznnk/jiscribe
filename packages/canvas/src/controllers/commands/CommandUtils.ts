@@ -1,6 +1,6 @@
 import type { Command, KeyBinding, PlatformKeyBindings } from "./CommandTypes";
-import type { CanvasMessages } from "../messages/CanvasMessagesTypes";
-import { resolveLocalizedLabel } from "../messages/resolveLocaleMessages";
+import type { CanvasMessages } from "../../foundation/i18n/CanvasMessagesTypes";
+import { resolveLocalizedLabel } from "../../foundation/i18n/resolveLocaleMessages";
 
 // Type definitions for the User-Agent Client Hints API (experimental API)
 interface NavigatorUAData {

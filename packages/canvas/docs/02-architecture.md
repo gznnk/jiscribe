@@ -23,7 +23,11 @@ packages/canvas/src/
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # per-shape State + Mapper
 │   └── registry/           # the states layer's registries (ObjectMapperRegistry, …)
-├── color/                  # CSS color strings: parsing hex / rgb() and telling whether a color paints nothing; imports nothing, shared by rendering / controllers / export
+├── foundation/             # the base that knows no canvas component and no @jiscribe/doc; depends only on external packages
+│   ├── color/              # CSS color strings: parsing hex / rgb(), telling whether a color paints nothing, isCssColor
+│   ├── theme/              # CanvasTheme / presets / CSS vars + the `theme` token object styles read
+│   ├── i18n/               # CanvasMessages, the per-locale messages and the locale / messages contexts
+│   └── hooks/              # hooks that know nothing of the canvas (useConstant / useLatestRef / useDevicePixelRatio)
 ├── connectors/             # connector geometry (endpoint resolution, orthogonal routing, label placement); renders nothing, changes nothing, takes no value from rendering / controllers
 ├── controllers/            # state management + business logic
 │   ├── Canvas.tsx
@@ -41,8 +45,7 @@ packages/canvas/src/
 │   └── objects/registry/   # the rendering layer's registries (ObjectComponentRegistry, …)
 ├── text/                   # the renderer's text measurement (the browser measures; offered into @jiscribe/doc's measurement slot)
 ├── export/                 # PNG / SVG output (font embedding, and embedding the source into `.jis.png` / `.jis.svg`)
-├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
-└── theme/                  # CanvasTheme / presets / CSS vars + the `theme` token object styles read
+└── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 ```
 
 The Doc model is **not** in this package. It lives in `@jiscribe/doc`
@@ -206,7 +209,7 @@ graph TD
     Plugin --> DocPackage
 ```
 
-Direct references to `@jiscribe/doc` types/constants (`EndpointRef`, `AUTO_COLOR`, …) and to `theme/` (the `theme` token object) exist from nearly everywhere, so they are omitted from the graph.
+Direct references to `@jiscribe/doc` types/constants (`EndpointRef`, `AUTO_COLOR`, …) and to `foundation/` (the `theme` token object, the messages) exist from nearly everywhere, so they are omitted from the graph.
 
 **On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `@jiscribe/doc`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, part kinds (the text slots' placement among them) from `selection`, component/outline contracts from `rendering`, and so on), so `plugin` depends on all three layers of this package plus the doc package. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries), and `ui`'s properties-panel derivation (`derivePropertyPanel`) calls `plugin`'s predicates as values. At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
 

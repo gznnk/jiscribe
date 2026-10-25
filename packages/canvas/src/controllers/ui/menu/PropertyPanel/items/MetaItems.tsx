@@ -1,8 +1,8 @@
 import { memo } from "react";
 
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
 import type { OpenReferenceHandler } from "../../ObjectMenu/ObjectMenuTypes";
 import { resolveOpenReference } from "../../ObjectMenu/utils/resolveOpenReference";

@@ -2,8 +2,8 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { setAction } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,

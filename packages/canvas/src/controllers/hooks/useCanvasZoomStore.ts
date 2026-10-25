@@ -1,8 +1,8 @@
 import { useLayoutEffect } from "react";
 
-import { useConstant } from "./useConstant";
 import type { WritableCanvasZoomStore } from "./utils/createCanvasZoomStore";
 import { createCanvasZoomStore } from "./utils/createCanvasZoomStore";
+import { useConstant } from "../../foundation/hooks/useConstant";
 
 /**
  * Owns the zoom store the rendering layer reads through

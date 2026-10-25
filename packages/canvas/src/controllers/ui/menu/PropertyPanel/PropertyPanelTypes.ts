@@ -1,6 +1,6 @@
+import type { LocaleMessages } from "../../../../foundation/i18n/resolveLocaleMessages";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import type {
 	DocumentProperty,
 	DocumentPropertyValueMap,

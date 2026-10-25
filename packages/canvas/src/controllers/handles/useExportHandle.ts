@@ -4,8 +4,8 @@ import { type RefObject, useCallback, useMemo } from "react";
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import { canvasToSvgString, rasterizeSvgToPng } from "../../export";
 import type { ResolveImageBlob } from "../../export";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { useLatestRef } from "../hooks/useLatestRef";
 import type { CanvasRegistries } from "../registries";
 import { calcVisibleWorldRect } from "../utils/calcVisibleWorldRect";
 import {

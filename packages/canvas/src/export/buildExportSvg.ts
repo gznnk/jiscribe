@@ -8,7 +8,7 @@ import {
 	isConnectorLabelForeignObject,
 } from "./foreignObjectToSvgText";
 import { readBlobAsDataUri } from "./readBlobAsDataUri";
-import { isTransparentColor } from "../color/isTransparentColor";
+import { isTransparentColor } from "../foundation/color/isTransparentColor";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

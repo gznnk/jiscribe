@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { useLatestRef } from "./useLatestRef";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { DocFontRequest } from "../utils/collectDocFontRequests";
 
 /**

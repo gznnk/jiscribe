@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../../../theme/themeTokens";
+import { theme } from "../../../../../../foundation/theme/themeTokens";
 import { swatchBackground } from "../../../utils/swatchBackground";
 
 export const ColorPickerContainer = styled.div`

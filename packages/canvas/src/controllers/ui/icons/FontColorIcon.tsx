@@ -1,7 +1,7 @@
 import { memo } from "react";
 
-import { isTransparentColor } from "../../../color/isTransparentColor";
-import { theme } from "../../../theme/themeTokens";
+import { isTransparentColor } from "../../../foundation/color/isTransparentColor";
+import { theme } from "../../../foundation/theme/themeTokens";
 import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
 
 type FontColorIconProps = {

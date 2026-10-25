@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../../theme/themeTokens";
+import { theme } from "../../../../../foundation/theme/themeTokens";
 import { swatchBackground } from "../../utils/swatchBackground";
 
 /** Height every control in the panel is drawn at, so rows line up. */

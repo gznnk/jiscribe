@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../theme/themeTokens";
+import { theme } from "../foundation/theme/themeTokens";
 
 /**
  * Styled SVG element for rendering the diagram.

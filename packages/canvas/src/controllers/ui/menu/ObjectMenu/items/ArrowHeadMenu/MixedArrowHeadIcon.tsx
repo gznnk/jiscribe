@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { theme } from "../../../../../../theme/themeTokens";
+import { theme } from "../../../../../../foundation/theme/themeTokens";
 
 /** Centers of the three dots across the 24-wide icon, evenly spaced. */
 const DOT_CENTERS_X = [7, 12, 17];

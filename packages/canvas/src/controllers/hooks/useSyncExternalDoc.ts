@@ -2,7 +2,7 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { readTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import { type Dispatch, useEffect, useRef } from "react";
 
-import { useLatestRef } from "./useLatestRef";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import {
 	canvasToState,
 	canvasToStateReusing,

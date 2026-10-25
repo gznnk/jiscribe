@@ -89,18 +89,21 @@ export {
 	type StencilCategorySearch,
 	type StencilCategorySearchResult,
 } from "./controllers/ui/objects/StencilCategory";
-export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
+export { defaultCanvasMessages } from "./foundation/i18n/CanvasMessages";
 export type {
 	CanvasMessages,
 	CanvasMessageStrings,
-} from "./controllers/messages/CanvasMessagesTypes";
+} from "./foundation/i18n/CanvasMessagesTypes";
 export type {
 	CanvasTheme,
 	CanvasThemeTokens,
 	CanvasHandleDimensions,
 	CanvasColorScheme,
-} from "./theme/CanvasTheme";
-export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
+} from "./foundation/theme/CanvasTheme";
+export {
+	darkCanvasTheme,
+	lightCanvasTheme,
+} from "./foundation/theme/themePresets";
 export type { Viewport } from "./rendering/Viewport";
 export type {
 	Camera,
