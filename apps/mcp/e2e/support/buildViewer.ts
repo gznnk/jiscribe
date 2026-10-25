@@ -5,12 +5,16 @@
 // means the page under test is the one that ships — the single HTML with the JS and
 // CSS folded in — rather than vite's unfolded development output.
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import path from "node:path";
 
 import type { FullConfig } from "@playwright/test";
 
-/** What a person runs by hand when this fails, named in the error */
+/**
+ * What a person runs by hand when this fails, named in the error, and what runs
+ * here. It goes through a shell: on Windows pnpm is a `.cmd` shim, which cannot
+ * be started without one
+ */
 const BUILD_COMMAND = "pnpm --filter jiscribe-mcp build";
 
 /**
@@ -56,7 +60,7 @@ export default function buildViewer(config: FullConfig): void {
 			: path.dirname(config.configFile);
 	const engineRoot = path.join(packageRoot, "..", "..");
 	try {
-		execFileSync("pnpm", ["--filter", "jiscribe-mcp", "build"], {
+		execSync(BUILD_COMMAND, {
 			cwd: resolveWorkspaceRoot(engineRoot),
 			stdio: "inherit",
 		});
