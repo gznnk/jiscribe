@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   change on disk and on save; the scan is now linear (see the engine
   changelog). A character reference past U+10FFFF in the embedded source no
   longer keeps the editor from opening.
+- **markdown-it 15.0.3** replaces 15.0.2 in the bundle (GHSA-gfr2-rv44-r23c; see
+  the engine changelog).
 
 ## [0.12.1] - 2026-10-20
 

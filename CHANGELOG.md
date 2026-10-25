@@ -43,6 +43,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   stayed in the tree, and the first edit after opening failed with `Mapper for
 object type 'undefined' not found`, leaving the document unsaveable. Any id
   that is a property name of `Object.prototype` is now a structural error.
+- **A crafted link reference definition no longer stalls a `markdown` shape.**
+  markdown-it 15.0.2 → 15.0.3 (GHSA-gfr2-rv44-r23c): a single multi-line link
+  reference definition rendered in time quadratic in its length, so a shape of
+  a few hundred KB could stall the renderer. The other advisory fixed in 15.0.3
+  (GHSA-vfgh-jcmw-g37q) needs `html` on, which the renderer never enables. The
+  copy `@vscode/vsce` pulls in at build time moves 14.3.1 → 14.3.3, which also
+  closes its smartquotes advisory (GHSA-r7fv-28h4-cvq7).
 
 ### Added
 
