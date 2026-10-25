@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.1+9f74aee8 -->
+<!-- jiscribe guide 0.12.2+9f74aee8 -->
 
 # Drawing on a Jiscribe canvas
 

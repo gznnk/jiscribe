@@ -159,7 +159,7 @@ export function createJiscribeMcpServer(
 	const server = new McpServer(
 		{
 			name: "jiscribe",
-			version: "0.12.1",
+			version: "0.12.2",
 		},
 		{ instructions: SERVER_INSTRUCTIONS },
 	);

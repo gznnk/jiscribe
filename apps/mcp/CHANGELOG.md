@@ -15,15 +15,16 @@ covers that.
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-10-25
+
 ### Security
 
-- **The viewer page carries a Content-Security-Policy.** The page is served
-  with a policy that lets its own folded-in script run (named by hash), its
-  inline styles apply, its fonts load from the host and its WebSocket and image
-  reads reach the host, and nothing else: no other script, and no request to
-  another origin. Markup a drawing brings to the page, however it got past the
-  canvas's sanitizing, can then neither run nor have the browser fetch a URL of
-  the file author's choosing.
+- **The viewer page carries a Content-Security-Policy.** It lets the page's own
+  folded-in script run (named by hash), its inline styles apply, its fonts load
+  from the host and its WebSocket and image reads reach the host, and nothing
+  else: no other script, and no request to another origin. Markup a drawing
+  brings to the page, however it got past the canvas's sanitizing, can then
+  neither run nor have the browser fetch a URL of the file author's choosing.
 
 ### Added
 
@@ -36,17 +37,23 @@ covers that.
 - **`capture_canvas` takes a region**: the current selection
   (`target: "selection"`), the objects named by `ids`, or a world `rect`, so one
   part of a large drawing comes back at a resolution the AI can read. Nothing
-  given still captures the whole drawing. By default the picture crops rather than
-  filters, and the result now says which world rect the image covers and its
-  pixel size, so a spot in it can be turned into a world point for `hit_test`.
-  `fit_view` takes the same `ids`, framing what those objects draw.
-- **`capture_canvas` takes `isolate`.** With `ids` or `target: "selection"`,
-  `isolate: true` draws only the objects named — with their descendants and
-  the connectors whose attached ends are all on them — and leaves out whatever
-  else lies
-  inside the area, where the default still crops. Given with a `rect`,
+  given still captures the whole drawing. The result now says which world rect
+  the image covers and its pixel size, so a spot in it can be turned into a
+  world point for `hit_test`. `fit_view` takes the same `ids`, framing what
+  those objects draw.
+- **`capture_canvas` takes `isolate`.** By default a region crops, so whatever
+  else lies inside it is in the picture; with `ids` or `target: "selection"`,
+  `isolate: true` draws only the objects named, with their descendants and the
+  connectors whose attached ends are all on them. Given with a `rect`,
   `target: "all"` or no region, it is refused with an `error:` rather than
   ignored.
+
+### Changed
+
+- **`get_interaction_status` names the kind of drag in progress.** A drag that
+  is neither a move nor a transform used to be reported as `"other"`; it is now
+  named as what it is — `"marquee"`, `"pan"`, `"connector"`, `"vertex"` and so
+  on, or `"inert"` for a drag nothing acts on.
 
 ## [0.12.1] - 2026-10-20
 

@@ -13,125 +13,109 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-10-25
+
 ### Security
 
-- **The markup of an `svg` object can no longer reach outside its own box.**
-  It was sanitized with DOMPurify's defaults, which keep `<style>`, `<a>` and an
-  `href` to any `http(s):` URL, and never look at `url()` in a presentation
-  attribute or an inline `style`. An inline `<style>` applies to the whole page,
-  so one shape in a shared `.jis` could hide or restyle the editor around it,
+- **The markup of an `svg` object can no longer restyle the page or make the
+  browser fetch a URL.** It was sanitized with DOMPurify's defaults, which
+  keep `<style>`, `<a>` and an `href` to any `http(s):` URL, and never look at
+  `url()` in a presentation attribute or an inline `style`. An inline `<style>`
+  applies to the whole page, so one shape in a shared `.jis` could hide or
+  restyle the editor around it,
   and an `<image href="https://…">` or `filter="url(https://…)"` could have the
-  reader's browser fetch a URL of the file author's choosing (which references
-  load depends on the browser). `<style>` and `<a>` are now dropped, and every
-  attribute holding an `href` / `xlink:href` that is not a `#fragment`, or a
-  CSS function that loads something (`url()` to anything but a fragment,
-  `image-set()` and the like) is removed whole, CSS escapes resolved first; a
-  `data:` image on `<image>` stays. Dropping `<style>` takes its rules with it,
-  so `class`-styled markup such as Illustrator's "internal CSS" export loses
-  those styles; export with presentation attributes or inline `style` instead.
-  The drawing guide says the same (`canvas-prompt.md`, regenerated).
-- **A `.jis.svg` can no longer stall the reader for minutes.** The embedded
-  `jiscribe:source` element was located with a regex whose lazy body rescanned
-  to the end of the file for every open tag without a close tag, so a crafted
-  file of a few hundred KB took seconds and a few MB took minutes, on the
-  thread that opens the file. The element is now found with a linear scan. A
-  character reference past U+10FFFF inside it (`&#x110000;`) is kept as
-  written instead of throwing out of the reader.
+  reader's browser fetch a URL of the file author's choosing. `<style>` and
+  `<a>` are now dropped, and every attribute holding an `href` / `xlink:href`
+  that is not a `#fragment`, or a CSS function that loads something (`url()` to
+  anything but a fragment, `image-set()` and the like), is removed whole, CSS
+  escapes resolved first; a `data:` image on `<image>` stays. Dropping
+  `<style>` takes its rules with it, so `class`-styled markup such as
+  Illustrator's "internal CSS" export loses those styles; export with
+  presentation attributes or inline `style` instead.
+- **A `.jis.svg` can no longer stall the reader for minutes.** Locating the
+  embedded `jiscribe:source` element took time quadratic in the file's size
+  when it held open tags without close tags, so a crafted file of a few MB took
+  minutes on the thread that opens it; the scan is now linear. A character
+  reference past U+10FFFF inside it (`&#x110000;`) is kept as written instead
+  of throwing out of the reader.
 - **An object whose `id` is `__proto__` is rejected by the parser.** Hosts key
-  plain objects by id, and `objects["__proto__"] = x` sets the prototype
-  instead of adding an entry: the object vanished from every scan while its id
-  stayed in the tree, and the first edit after opening failed with `Mapper for
-object type 'undefined' not found`, leaving the document unsaveable. Any id
-  that is a property name of `Object.prototype` is now a structural error.
+  plain objects by id, so such an object vanished from every scan while its id
+  stayed in the tree, and the first edit after opening failed, leaving the
+  document unsaveable. Any id that is a property name of `Object.prototype` is
+  now a structural error.
 - **A crafted link reference definition no longer stalls a `markdown` shape.**
-  markdown-it 15.0.2 → 15.0.3 (GHSA-gfr2-rv44-r23c): a single multi-line link
-  reference definition rendered in time quadratic in its length, so a shape of
-  a few hundred KB could stall the renderer. The other advisory fixed in 15.0.3
-  (GHSA-vfgh-jcmw-g37q) needs `html` on, which the renderer never enables. The
-  copy `@vscode/vsce` pulls in at build time moves 14.3.1 → 14.3.3, which also
-  closes its smartquotes advisory (GHSA-r7fv-28h4-cvq7).
+  markdown-it is now 15.0.3 (GHSA-gfr2-rv44-r23c): a single multi-line link
+  reference definition rendered in time quadratic in its length. The other
+  advisory fixed in 15.0.3 (GHSA-vfgh-jcmw-g37q) needs `html` on, which the
+  renderer never enables.
 
 ### Added
 
 - **A document can carry a name and a description.** The `.jis` root takes
   `meta`, the same record an object carries (`name` / `description` /
-  `reference`, open to a host's own keys), checked by the parser the way an
-  object's is and round-tripped through the canvas, history and save. The
-  properties sidebar's Canvas section edits the name and description (one
-  undo step per field, an emptied field drops it, and `meta` goes once nothing
-  is left), an SVG export opens with them as `<title>` and `<desc>`, and the
-  isolated export's embedded source keeps them. Headless, `docOps.setMeta`
-  writes them — or, given an `id`, one object's — and `@jiscribe/ai-tools`
-  declares it as `set_meta`, which names the document without `id` and an
-  object (a group or a connector included) with one;
-  `describe_canvas` now lists the document's own fields ahead of `root`, so a
-  cut-off result still says what the document is. The JSON schema and the
-  authoring guide describe the field (regenerated). `MetaDoc` is exported from
+  `reference`, open to a host's own keys), checked by the parser as an object's
+  is. The properties sidebar's Canvas section edits the name and description,
+  and an SVG export opens with them as `<title>` and `<desc>`. Headless,
+  `docOps.setMeta` writes them — or, given an `id`, one object's — and
+  `@jiscribe/ai-tools` declares it as `set_meta`; `describe_canvas` now lists
+  the document's own fields ahead of `root`. `MetaDoc` is exported from
   `@jiscribe/doc`.
-- **`capture_canvas` can take a picture of one part of the drawing.** It
-  still captures the whole drawing by default, and now takes `ids`, a world
-  `rect` or `target: "selection"` to get one corner of a large diagram at a
-  legible resolution. By default the region crops rather than filters, so
-  whatever else is drawn inside it is in the picture; with `isolate: true`
-  (taken with `ids` or the selection only, an error with anything else) the
-  picture holds just the objects named, with their descendants and the
-  connectors whose attached ends are all on them. The result names the world
-  rect the image covers and its pixel size, so a spot in the picture can be turned into
-  a world point and handed to `hit_test`. `fit_view` takes the same `ids`
-  argument, and the three region arguments are declared once for both
-  (`AiRegionArgs` in `@jiscribe/ai-tools`); the `CapturePng` a host injects
-  now hands back the canvas's `CanvasPngCapture` rather than the bare blob.
+- **`capture_canvas` can take a picture of one part of the drawing**, named by
+  `ids`, a world `rect` or `target: "selection"`, and with `isolate: true`
+  draws only the objects named; `fit_view` takes the same `ids`. The result
+  names the world rect the image covers and its pixel size. The region
+  arguments are declared once for both tools (`AiRegionArgs` in
+  `@jiscribe/ai-tools`), and the `CapturePng` a host injects now hands back the
+  canvas's `CanvasPngCapture` rather than the bare blob.
 - **An export can draw the named objects alone.** The export handle's
   `{ ids }` region takes `isolate: true` (`CanvasExportIdsRegion`), which draws
   only those objects, their descendants and the connectors whose attached ends
-  are all on them —
-  the set Copy takes — leaving out whatever else lies inside their extent; a
-  child of a group is drawn without its siblings. The extent takes in those
-  connectors' routes, and the embedded `.jis` source holds the same set under
-  the document's background and view, so dropping the image back on a canvas
-  gives what pasting the objects would. Without `isolate` the region still
-  crops. With or without it, an `{ ids }` region none of whose ids draws
+  are all on them — the set Copy takes — leaving out whatever else lies inside
+  their extent. The embedded `.jis` source holds the same set, so dropping the
+  image back on a canvas gives what pasting the objects would. Without
+  `isolate` the region still crops. An `{ ids }` region none of whose ids draws
   anything makes `toSvgString` / `capturePng` reject instead of exporting the
   current view.
 - **The Export dialog can export only the selected shapes.** A "Scope" row
-  chooses between the whole drawing and the selection. The selection is
-  exported on its own, through the isolated `{ ids }` region: only the
-  selected shapes (with their contents and the connectors whose attached ends
-  are all on them)
-  are drawn, framed by their extent plus the margin, and the embedded `.jis`
-  source holds just those shapes. The scope starts at the selection whenever
-  something is selected, so exporting from a shape's context menu exports that
-  shape.
-- **For plugin authors: `TextOverlayFrame` takes `maxFontSize`**, the largest
-  size anything inside the box is drawn at, for content that draws parts of
-  itself larger than `fontSize`. It decides when the box counts as too small to
-  read (below); omitted, `fontSize` does. The Markdown shape passes its largest
-  heading.
+  chooses between the whole drawing and the selection, which is exported on its
+  own as above. The scope starts at the selection whenever something is
+  selected, so exporting from a shape's context menu exports that shape.
 - **The AWS icon and the Lucide icon can be changed from the property
-  sidebar.** The icon picker was reachable only from the object menu, so a host
-  that hides the menu left no way to change an icon. Both shapes now lead their
-  sidebar with an Icon section: a field showing the current icon and its name,
-  opening the same picker (search and, for AWS, the layer and category filters)
-  beside the sidebar, over the canvas. Where the canvas has no room for it
-  there, it opens under the field inside the sidebar, narrowed to fit. A
-  selection drawing different icons shows the field as mixed, and the object
-  menu's picker then highlights no cell rather than the first shape's icon.
-- **The property sidebar can group, ungroup and open a reference.** These
-  were the two things the object menu offered and the sidebar did not, though
-  the menu is hidden while the sidebar is open. The Arrange
-  section ends with a Group button for a multi-selection and an Ungroup button
-  for a selected group, offered under the same rule as the menu's; the section
-  now also shows for a selection across different parents, which can be
-  grouped though not reordered, with the stacking-order buttons disabled. The
-  Meta section carries an "Open Reference" button for an object whose
-  `meta.reference` is set, calling the same `onOpenReference` as the menu, and
-  only while the host passes one.
-- **For plugin authors: `PropertyDropdownField` takes `placement`.**
-  `"under"` (the default, unchanged) opens the panel under the trigger inside
-  the sidebar, now never wider than the sidebar; `"beside"` opens it outside
-  the sidebar to its left, level with the trigger and as wide as its content,
-  for a panel too wide for the sidebar. A `"beside"` panel the canvas row has
-  no room for opens `"under"` instead, decided again on every opening.
+  sidebar.** Both shapes now lead their sidebar with an Icon section opening
+  the same picker as the object menu, beside the sidebar, or under the field
+  where the canvas has no room for it. A selection drawing different icons
+  shows the field as mixed.
+- **The property sidebar can group, ungroup and open a reference.** The
+  Arrange section ends with a Group button for a multi-selection and an Ungroup
+  button for a selected group, offered under the same rule as the object
+  menu's, and now also shows for a selection across different parents, with the
+  stacking-order buttons disabled. The Meta section carries an "Open
+  Reference" button for an object whose `meta.reference` is set, while the host
+  passes `onOpenReference`.
+- **The CLI edits documents: `jiscribe tools`, `jiscribe op` and `jiscribe
+guide`.** They drive the same `@jiscribe/ai-tools` declarations jiscribe-mcp
+  registers, so a tool's name, arguments and reply text are the ones an MCP
+  client sees. `jiscribe tools` lists the tools a document alone can answer and
+  prints one's argument JSON Schema. `jiscribe op <file> <tool> --args <json>`
+  runs one; `jiscribe op <file> --batch <@path | ->` runs a JSON array of
+  `{ tool, args?, as? }` in order, where a later entry refers to the ids an
+  earlier one created as `"$name"` / `"$name.N"`. The file is written back once,
+  only if something changed, and the first entry that fails leaves it as it
+  was. The write goes through the same check jiscribe-mcp writes with, so an
+  edit that adds findings the loaded file did not have, or a file changed on
+  disk since it was read, fails the run with nothing written. `--create`
+  starts a missing file, and `--text` reports in lines rather than JSON.
+  `undo` is not offered. `jiscribe guide <drawing | json-format>`
+  prints the guides `read_drawing_guide` hands back.
+- **`@jiscribe/doc-tools` reads and writes canvas files, and carries the
+  editing tool set and the guides.** `./file` is the file layer jiscribe-mcp
+  used to keep to itself (`loadCanvasFile`, `saveCanvasFile`,
+  `ensureCanvasFile` and the rest), `./canvas-tools` the tool set and doc-ops
+  over the shipped shape set (`standardCanvasToolSet`, `standardDocOps`), and
+  `./guides` the two drawing guides (`readDrawingGuide`); the root adds
+  `formatDiagnostics`. `@jiscribe/ai-tools` exports `isCanvasHandleTool`,
+  `toOutcomeText`, `toThrownText` and `toDrivesMismatchText`, how a host routes
+  a declaration and words what a call came to.
 - **A desktop app holds the MCP server (proof of concept).** `apps/desktop`
   (`jiscribe-desktop`, not published) runs first and stays up, serving the
   `jiscribe-mcp` tool set over Streamable HTTP on `127.0.0.1`, so AI clients
@@ -142,39 +126,18 @@ object type 'undefined' not found`, leaving the document unsaveable. Any id
   app again brings it back, and File → Quit ends it.
 - **`applyCanvasOp` reports the ids an op created.** `AiCanvasOpOutcome`
   carries `createdIds`, set by `addObject` / `addObjects` / `connect` /
-  `connectMany` / `groupObjects` in the order the objects were created
-  (`addObjects` puts the group `groupNewObjects` made after the objects it
-  wraps), so a caller can hand them to a later op without reading them out of
-  `text`. It is absent when an op created nothing, an undo that brings deleted
-  objects back included. The result text is unchanged.
-- **The CLI edits documents: `jiscribe tools`, `jiscribe op` and `jiscribe
-guide`.** They drive the same `@jiscribe/ai-tools` declarations jiscribe-mcp
-  registers, so a tool's name, arguments, description and reply text are the
-  ones an MCP client sees. `jiscribe tools` lists the tools a document alone can
-  answer (the ones needing a viewer stay in jiscribe-mcp) and prints one's
-  argument JSON Schema. `jiscribe op <file> <tool> --args <json>` runs one;
-  `jiscribe op <file> --batch <@path | ->` runs a JSON array of `{ tool, args?,
-as? }` in order, where a later entry refers to the ids an earlier one created
-  as `"$name"` / `"$name.N"`. The file is read once and written back once, only
-  if something changed, through the same check jiscribe-mcp writes with; the
-  first entry that fails leaves the file as it was. `--create` starts a missing
-  file. The report is JSON by default, `--text` for lines. `undo` is not offered,
-  as a run keeps no history. `jiscribe guide <drawing | json-format>` prints the
-  guides `read_drawing_guide` hands back.
-- **`@jiscribe/doc-tools` reads and writes canvas files, and carries the
-  editing tool set and the guides.** `./file` is the file layer jiscribe-mcp
-  used to keep to itself: `toCanvasFilePath`, `loadCanvasFile`,
-  `saveCanvasFile` (refusing a write that adds findings the loaded file did not
-  have, or lands over a file changed since; with `isNewFile`, over one created
-  at the path after it was found missing), `ensureCanvasFile`,
-  `createEmptyCanvasDoc`, the atomic write under them and
-  `getStandardCanvasParser`. `./canvas-tools` is the tool set and doc-ops over
-  the shipped shape set (`standardCanvasToolSet`, `standardDocOps`), and
-  `./guides` reads the two drawing guides (`readDrawingGuide`). The root adds
-  `formatDiagnostics`. jiscribe-mcp and the CLI both take theirs from here.
-  `@jiscribe/ai-tools` exports `isCanvasHandleTool`, `toOutcomeText`,
-  `toThrownText` and `toDrivesMismatchText`, how a host routes a declaration
-  and words what a call came to.
+  `connectMany` / `groupObjects` in the order the objects were created, and
+  absent when an op created nothing. The result text is unchanged.
+- **For plugin authors: `TextOverlayFrame` takes `maxFontSize`**, the largest
+  size anything inside the box is drawn at, for content that draws parts of
+  itself larger than `fontSize`. It decides when the box counts as too small to
+  read (see Changed); omitted, `fontSize` does. The Markdown shape passes its
+  largest heading.
+- **For plugin authors: `PropertyDropdownField` takes `placement`.**
+  `"under"` (the default) opens the panel under the trigger inside the sidebar,
+  now never wider than the sidebar; `"beside"` opens it outside the sidebar to
+  its left, as wide as its content, falling back to `"under"` when the canvas
+  row has no room for it.
 - **`@jiscribe/geometry` exports `unionBoundingBoxes`**, the smallest box
   enclosing a list of bounding boxes (`null` entries skipped, `null` when none
   is left).
@@ -183,51 +146,27 @@ as? }` in order, where a later entry refers to the ids an earlier one created
 
 - **Text too small to read is not drawn.** A shape's text or a connector's
   label whose largest type size would show below 4 CSS px at the current zoom
-  is hidden, and comes back on zooming in. With a few thousand shapes zoomed
-  out to fit, dragging or marquee-selecting takes about half as long per frame.
-  Exported images and `capture_canvas` pictures still hold every text at any
-  zoom, and a hidden label's connector can still be picked by its line.
+  is hidden, and comes back on zooming in. Exported images and
+  `capture_canvas` pictures still hold every text at any zoom, and a hidden
+  label's connector can still be picked by its line.
 - **Dragging objects no longer redraws them on every frame.** The dragged
-  shapes keep the elements they had when the drag started, and each is shifted
-  by the transform of a group of its own, so a frame changes one attribute per
-  shape, and React skips every object the frame leaves alone. Dragging a
-  selection of a few thousand shapes takes about half as long per frame. A connector
-  without vertices whose two ends both move is shifted the same way; an
-  orthogonal one may sit up to half a unit off its route until the drop routes
-  it again. Every other connector is routed live as before. The
-  document is still updated on every frame, so snapping, the controls and the
-  properties panel are unchanged, and the drop draws the moved shapes
-  themselves. Every object and connector on the canvas now sits in that group,
-  which image export folds away. For plugin authors: a type's `moveByDelta`
-  must move its drawing as a whole and change nothing else, since the drag
-  draws the start state shifted rather than what `moveByDelta` returned.
-- **Connectors off screen are no longer routed to decide that they are.**
-  Viewport culling bounded each connector by its routed path, so every frame
-  of a drag and the first draw of a document routed every connector whose
-  shapes had changed, on screen or not. It now first bounds a connector from
-  its ends, vertices and shapes without routing it, and routes only one whose
-  bound reaches the screen; a connector shifted with its dragged shapes is
-  judged by its drag-start path moved by the drag, as it is drawn. Which
-  objects are drawn does not change.
-- **Undo and redo no longer rebuild the whole document.** Each history entry
-  now keeps the state it was committed with, and undo, redo and
-  `history.revertTo` hand it back as is instead of rebuilding every object
-  from the entry's document. Objects the step leaves alone stay the same
-  objects, so their routes, text layout and rendering are reused and only what
-  changed is redrawn; the camera's reveal compares objects the same way. The
-  document is built only for the current entry, when it is saved or compared
-  against an external change. An entry recorded before a web font face
-  finished loading has its text boxes re-measured on the way back, so they
-  follow the fonts now loaded; only the boxes the new face changes are redrawn.
-- **An external change no longer rebuilds the whole document.** When the host
-  passes a new version of the document on screen (an edit in another editor,
-  or the host's own undo of the file), each object is compared with the one the
-  canvas holds, key order aside, and every object that did not change stays the
-  same object, so its route, text layout and rendering are reused; a group is
-  rebuilt only when it or one of its members changed. A document that differs
-  only in key order is now recognized as unchanged. The entry an external
-  change or a loaded document creates keeps the host's document as it was
-  passed, so undoing back to it saves those bytes rather than a rebuild.
+  shapes keep the elements they had when the drag started and are shifted by a
+  transform, and a connector off screen is no longer routed, during a drag or
+  on a document's first draw, just to find that it is off screen. Dragging a
+  selection of a few thousand shapes takes about half as long per frame. An
+  orthogonal connector without vertices whose two ends both move may sit
+  up to half a unit off its route until the drop routes it again. Every object
+  and connector on the canvas now sits in a group of its own for that
+  transform, which image export folds away. For plugin authors: a type's
+  `moveByDelta` must move its drawing as a whole and change nothing else, since
+  the drag draws the start state shifted rather than what `moveByDelta`
+  returned.
+- **Undo, redo and an external change no longer rebuild the whole document.**
+  Objects a step or an external edit leaves alone stay the same objects, so
+  their routes, text layout and rendering are reused and only what changed is
+  redrawn. A document passed in that differs only in key order is recognized as
+  unchanged, and undoing back to a document the host passed saves those bytes
+  as they were.
 - **Swapping an `awsIcon`'s icon from the menu carries its label along.**
   While the label is still the one the old icon comes with (the short name a
   stencil places, `S3`), picking another icon replaces it with the new one's
@@ -261,59 +200,38 @@ as? }` in order, where a later entry refers to the ids an earlier one created
 ### Fixed
 
 - **An orthogonal connector no longer hugs one shape's margin when a route
-  centred between the shapes is just as good.** Two candidates of the same
-  turns and the same Manhattan length sum that length in a different order, so
-  their costs could differ by one floating-point ulp, and that noise decided
-  the route before the preference for the centred crossover was consulted.
-  Which one won depended on the trailing bits of the coordinates, which a drag
-  leaves unrounded and a save rounds away — so a connector drawn along a
-  table's right edge in the editor came back centred after the file was
-  reopened. Costs that differ by less than a millionth of a pixel now tie.
+  centred between the shapes is just as good.** Floating-point noise in two
+  equally good routes' costs decided between them before the preference for
+  the centred one was consulted, so a connector could change course between
+  the editor and the reopened file.
 - **Opening a text edit while a drawing tool is armed disarms the tool.**
   Enter after Select All, or a double click on a shape, used to leave the tool
   armed under the editor, so the next drag on the canvas drew a shape.
-- **A touch drag on a shape keeps the text being edited in it.** The edit was
-  committed after the drag had already taken the shape's starting state, so
-  the first frame of the drag put the old text back.
+- **A touch drag on a shape keeps the text being edited in it.** The first
+  frame of the drag put the old text back.
 - **The frame around a multi-selection follows the connectors as they are
-  drawn.** It used to route them without the shapes' outlines and declared
-  anchors, so a connector ending on a diamond, or the stubs of an orthogonal
-  route between two ER entities' columns, could stick out of the frame. A
-  connector's label is now left out of the frame from the start, so the frame
-  no longer shrinks on the first frame of a resize.
-
+  drawn.** A connector ending on a diamond, or the stubs of an orthogonal route
+  between two ER entities' columns, could stick out of the frame. A connector's
+  label is now left out of the frame from the start, so the frame no longer
+  shrinks on the first frame of a resize.
 - **Drag, wheel and fling updates show up in the frame that processed the
-  input instead of the next one.** The canvas handles pointer and wheel input
-  once per animation frame, but the resulting state update was scheduled on
-  React's default lane and committed after that frame had painted, so every
-  drag, wheel scroll or zoom, and inertial scroll lagged one frame (about
-  16ms) behind. Each frame's gestures are now committed synchronously inside
-  the frame. On heavy documents, where that would push the frame past its
-  budget and halve the frame rate, the canvas falls back to the previous
-  one-frame-late commit after two slow frames and tries the synchronous commit
-  again every 30 frames and after a pause in the input.
-
+  input instead of the next one**, about 16 ms sooner. On heavy documents,
+  where that would halve the frame rate, the canvas falls back to the
+  one-frame-late update after two slow frames and tries again now and then.
 - **An exported image no longer gets a background rect for a background that
-  paints nothing.** Only the exact strings `transparent` and
-  `rgba(0, 0, 0, 0)` counted as transparent, so a fully transparent background
-  in any other color or spelling, such as `rgba(255, 255, 255, 0)` or
-  `#ffffff00`, still put a full-size rect of that invisible color under the
-  drawing. Any color with zero alpha now leaves the rect out. The color
-  swatches in the object menu and the properties panel follow the same rule
-  and show the transparency checker for every such color.
-
+  paints nothing.** Only `transparent` and `rgba(0, 0, 0, 0)` counted as
+  transparent, so a background such as `rgba(255, 255, 255, 0)` or `#ffffff00`
+  still put a full-size invisible rect under the drawing. Any color with zero
+  alpha now leaves the rect out, and the color swatches show the transparency
+  checker for every such color.
 - **A connector label whose background or border color has no blue keeps its
-  box in an exported image.** The export read the last number of an
-  `rgb(...)` color as its alpha, so an opaque color ending in 0, such as
+  box in an exported image.** An opaque color ending in 0, such as
   `rgb(255, 255, 0)`, was taken for transparent and the label's background or
   border was left out of the SVG and PNG.
-
 - **Emptying a slot of rows headlessly writes `[]`, as the canvas does.**
-  `docOps.setText` (and with it `set_text` in `@jiscribe/ai-tools`) wrote an
-  empty text into a slot that holds rows, such as a UML record's attributes,
-  as `[""]`: one empty row, where the canvas writes no rows at all. It now
-  writes `[]`, the two sides sharing one conversion between a slot's content
-  and the single body of text it is edited as.
+  `docOps.setText` (and with it `set_text`) wrote an empty text into a slot
+  that holds rows, such as a UML record's attributes, as `[""]`: one empty row,
+  where the canvas writes no rows at all.
 
 ## [0.12.1] - 2026-10-20
 
@@ -911,7 +829,8 @@ The first release in this repository.
 Earlier versions were released before this repository was public and are not
 recorded here.
 
-[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.12.2...HEAD
+[0.12.2]: https://github.com/gznnk/jiscribe/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/gznnk/jiscribe/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/gznnk/jiscribe/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/gznnk/jiscribe/compare/v0.10.0...v0.11.0
