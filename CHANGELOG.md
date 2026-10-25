@@ -13,6 +13,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Changed
+
+- **jiscribe-desktop has no menu bar outside macOS; the viewer's own menu
+  opens a file or ends the app.** Open… and Quit sit in the viewer's toolbar.
+  A canvas is on display from the start — the one open at the last quit or
+  Open…, or a scratch `untitled.jis` of the app's own — and quitting writes
+  out a pending edit before closing.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

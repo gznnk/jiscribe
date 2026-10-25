@@ -15,6 +15,20 @@ covers that.
 
 ## [Unreleased]
 
+### Added
+
+- **The host can offer the viewer actions of the process that owns it.** An
+  embedding app (the desktop one) hands `createJiscribeMcpRuntime` a callback
+  per action it offers, `openFile` (its file open dialog) or `quit`;
+  `GET /api/session` lists the offered names beside the token, and the viewer
+  asks for one with `POST /api/action`, guarded exactly as a write is (same
+  origin, this host's token). This server offers none, so nothing changes for a
+  stdio client.
+- **The canvas viewer draws a small host menu** (「開く…」, 「終了」) in the
+  toolbar's file section when the host announces those actions on
+  `GET /api/session`, and asks for them through `POST /api/action`; a browser
+  viewer, whose host offers none, looks as before.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

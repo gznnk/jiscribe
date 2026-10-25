@@ -1,7 +1,9 @@
 // The name of the open file, shown in the toolbar's host slot.
 //
-// The viewer has no file menu (the AI decides what is open), so this is the one
-// place a person can tell which file the canvas is drawing.
+// In a browser viewer the AI decides what is open, so this is the one place a
+// person can tell which file the canvas is drawing. A host whose owner offers
+// actions (the desktop app) draws ./HostMenu ahead of it; the name stays the
+// same either way.
 
 import type { CanvasTheme } from "@jiscribe/canvas";
 import type { CSSProperties } from "react";

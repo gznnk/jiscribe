@@ -28,6 +28,7 @@ import {
 	startCanvasHost,
 	type CanvasHost,
 } from "./host/canvasHost";
+import type { HostActions } from "./host/canvasHostTypes";
 import { openBrowser, type BrowserOpenOptions } from "./host/openBrowser";
 import { createPathLock } from "./pathLock";
 
@@ -70,6 +71,16 @@ export type JiscribeMcpRuntimeOptions = {
 	 * front. Never called for a headless open
 	 */
 	raiseVisibleViewer?: () => void;
+	/**
+	 * What the viewer's own menu may ask this process to do, a callback per
+	 * action: the desktop app offers `openFile` (its file open dialog) and
+	 * `quit`. Every host this runtime starts offers the same set, the one that
+	 * replaces a host on a workspace switch included. Omitted, no host offers
+	 * anything and the viewer draws no such menu. The viewer flushes no edits
+	 * before asking; what a callback owes before it quits or switches files is
+	 * on HostActions
+	 */
+	hostActions?: HostActions;
 };
 
 export type JiscribeMcpRuntime = {
@@ -124,8 +135,9 @@ export type JiscribeMcpRuntime = {
 /**
  * Create the state the tools of every MCP server in this process share.
  *
- * @param options How viewer windows are put up and brought forward. Omitted,
- *   windows are spawned browsers and nothing is raised
+ * @param options How viewer windows are put up and brought forward, and what
+ *   the viewer may ask this process to do. Omitted, windows are spawned browsers,
+ *   nothing is raised and no action is offered
  * @returns A runtime with no host running; the first openCanvas starts one
  */
 export function createJiscribeMcpRuntime(
@@ -173,6 +185,7 @@ export function createJiscribeMcpRuntime(
 			// lands in the middle of a tool's load → modify → write back
 			withFileLock: withPathLock,
 			launchBrowser: launchViewer,
+			hostActions: options.hostActions,
 			onViewersGone: () => {
 				void (async () => {
 					// If another host has already taken over, this one is done with and

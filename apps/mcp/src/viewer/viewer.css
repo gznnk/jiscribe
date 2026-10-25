@@ -23,6 +23,75 @@ body {
 	height: 100%;
 }
 
+/* The host menu sits in the toolbar's host slot ahead of the file name, so its
+   colors come from the canvas theme (HostMenu puts them on as --app-*). The
+   button is the size of the bar's own icon buttons */
+.viewer-host-menu {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.viewer-host-menu-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--app-radius, 4px);
+	background: transparent;
+	color: var(--app-icon-foreground, currentColor);
+	cursor: pointer;
+	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.viewer-host-menu-button:hover {
+	background-color: var(--app-surface-hover, rgba(128, 128, 128, 0.2));
+}
+
+.viewer-host-menu-button:active,
+.viewer-host-menu-button[aria-expanded="true"] {
+	background-color: var(--app-surface-active, rgba(128, 128, 128, 0.3));
+}
+
+/* Floats under the button, over the canvas */
+.viewer-host-menu-dropdown {
+	position: absolute;
+	top: 36px;
+	left: 0;
+	z-index: 1000;
+	min-width: 160px;
+	padding: 4px;
+	border: 1px solid var(--app-border, rgba(128, 128, 128, 0.4));
+	border-radius: var(--app-radius, 4px);
+	background: var(--app-surface, #ffffff);
+	box-shadow: var(--app-shadow, 0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.viewer-host-menu-item {
+	display: block;
+	width: 100%;
+	padding: 6px 8px;
+	border: none;
+	border-radius: var(--app-radius, 4px);
+	background: transparent;
+	color: var(--app-foreground, currentColor);
+	font-size: 12px;
+	text-align: left;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.viewer-host-menu-item:hover {
+	background-color: var(--app-surface-hover, rgba(128, 128, 128, 0.2));
+}
+
+.viewer-host-menu-item:active {
+	background-color: var(--app-surface-active, rgba(128, 128, 128, 0.3));
+}
+
 /* Sits in the toolbar's host slot, so its colors come from the canvas theme */
 .viewer-file-label {
 	display: flex;

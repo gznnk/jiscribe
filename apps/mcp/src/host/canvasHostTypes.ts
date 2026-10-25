@@ -9,6 +9,7 @@
 import type { AiHandleOp } from "@jiscribe/ai-tools";
 
 import type { BrowserOpenOptions } from "./openBrowser";
+import type { HostActionName } from "../shared/hostActionsRoute";
 
 /** The answer to a handleOpRequest, in the shape the AI is handed it */
 export type HandleOpOutcome = {
@@ -59,8 +60,10 @@ export type CanvasHost = {
 	openFile: (relPath: string) => Promise<void>;
 	/**
 	 * The file currently on display (relative to workspaceRoot), or null when none
-	 * is set. Nothing in the server reads it: it is here for the tests, which have
-	 * no other way of telling which file a switch settled on
+	 * is set. Nothing in the server reads it: the desktop app joins it to
+	 * workspaceRoot to record the canvas on display (when it quits and after an
+	 * Open…), and the tests have no other way of telling which file a switch
+	 * settled on
 	 */
 	getOpenPath: () => string | null;
 	/**
@@ -142,6 +145,25 @@ export type CanvasHost = {
 	close: () => Promise<void>;
 };
 
+/**
+ * What the owner of a host hands it: a callback per action it offers. An action
+ * left out is not offered, and a request for it is answered 404. A callback may
+ * be asynchronous; the request is answered once it settles (a throw is answered
+ * as an error status, see handleHostAction).
+ *
+ * The viewer flushes nothing before asking, so a callback that ends the process
+ * has to call the host's `flushViewers` first, or an edit still on a window's
+ * save debounce goes with the window (the desktop app does so in `before-quit`).
+ * One that switches files through `runtime.openCanvas` is flushed by it, but has
+ * to settle before the switch tears the host down: a file in another directory
+ * closes the host the request came in on, and the request with it, so the
+ * callback starts that switch only after it has settled (the desktop app's
+ * `openFile` returns once the dialog closes and runs the open detached)
+ */
+export type HostActions = Partial<
+	Record<HostActionName, () => void | Promise<void>>
+>;
+
 export type CanvasHostOptions = {
 	/** The directory the file API is relative to (absolute path) */
 	workspaceRoot: string;
@@ -205,6 +227,14 @@ export type CanvasHostOptions = {
 	 * and a URL carrying the headless query
 	 */
 	launchBrowser?: (url: string, browserOptions: BrowserOpenOptions) => void;
+	/**
+	 * What the viewer's own menu may ask the process owning this host to do, a
+	 * callback per action (see HostActions): the desktop app offers its file open
+	 * dialog and quitting. Omitted, nothing is offered and the viewer draws no
+	 * such menu, which is the stdio server's case: it owns no window to put a
+	 * dialog on, and its client, not a menu, ends it
+	 */
+	hostActions?: HostActions;
 };
 
 /** What became of a write the viewer sent (see the file mirror's writeOpenFile) */

@@ -7,11 +7,16 @@ this file is the invariants behind it and why they hold.
 
 ## Layout
 
-- `src/main/` is all there is: `index.ts` (app lifecycle, menu, signals),
-  `mcpHttpServer.ts` (the Streamable HTTP endpoint and its sessions),
-  `viewerWindows.ts` (the windows). The renderer is one static placeholder page
-  printing the URL and an `.mcp.json` stub, and there is no preload: the viewer
-  is the page the canvas host serves, and it uses no Electron API.
+- `src/main/` is all there is: `index.ts` (app lifecycle, host actions,
+  signals), `applicationMenu.ts` (the per-platform menu template),
+  `lastCanvas.ts` (the remembered canvas, the scratch one, the fall-through
+  over the two, and the path of the one on display), `mcpHttpServer.ts` (the
+  Streamable HTTP endpoint and its sessions), `viewerWindows.ts` (the windows).
+  The renderer is one static placeholder page printing the URL, an `.mcp.json`
+  stub and, when the startup canvas could not be opened, why; all of it reaches
+  the page through the query string (`mcpUrl`, `openFailure`), and there is no
+  preload: the viewer is the page the canvas host serves, and it uses no
+  Electron API.
 - `createJiscribeMcpRuntime` / `createJiscribeMcpServer` come from
   `jiscribe-mcp/server`, a subpath export that points at `src/server.ts` of the
   workspace package. It is not in `dist/`, so the published tarball's
@@ -22,13 +27,43 @@ this file is the invariants behind it and why they hold.
 
 ## Windows and lifetime
 
+- **A canvas is opened at startup** (`openStartupCanvas` in `index.ts`), once
+  the endpoint and the windows exist: the path in `lastCanvas.json` under
+  `userData` if that file still exists, else `canvases/untitled.jis` under
+  `userData` (`listStartupCanvasCandidates`, which creates nothing;
+  `openCanvas` creates the missing file, directory included). A record that
+  cannot be used and a remembered file that is gone are each reported on
+  stderr as they are skipped. A candidate that fails to open falls through to
+  the next (`tryOpenCanvasCandidates`); with none left, the placeholder is
+  shown naming the last failure (`showOpenFailure`) and stderr has every one —
+  no dialog at startup. The record is written in `before-quit` and after a
+  successful Open… from the viewer, as `getDisplayedCanvasPath(host)`:
+  `host.workspaceRoot` joined with `host.getOpenPath()`. Nothing else writes
+  it, so a canvas the AI opened and closed in between is not what the next
+  start reopens; the README and the placeholder word it as the canvas open at
+  the last quit or Open…, not "the last canvas".
 - **Closing the main window hides it.** `close` is prevented, the window hides
   and loads the placeholder, which drops the viewer's WebSocket; that drop is
   how `close_canvas` and the host's idle fold learn the window is gone. It
   comes back on `open_canvas`, or on starting the app again (`second-instance`:
-  while the host is alive its viewer is loaded, not the placeholder). Quitting
-  is File → Quit / Ctrl+Q / SIGINT (`before-quit` closes the runtime and the
-  HTTP server before exit). SIGTERM is not handled: Electron dies at once.
+  while the host is alive its viewer is loaded, not the placeholder; with no
+  host, after `close_canvas`, the startup canvas is opened again — the only
+  way a person gets a canvas back without the AI). Quitting is the viewer's
+  Quit (the `quit` host action), Cmd+Q on macOS, or SIGINT: `before-quit`
+  records the open canvas, calls `host.flushViewers(FLUSH_EDITS_TIMEOUT_MS)`
+  (`runtime.close` only asks viewers to close and would lose a debounced
+  save), then closes the runtime and the HTTP server before exit. A forced
+  exit (`FORCED_EXIT_DELAY_MS`) is armed first: the flush timeout plus the
+  viewers' close timeout (`VIEWER_CLOSE_TIMEOUT_MS`, exported by
+  `jiscribe-mcp/server` for this) plus a margin for the host and HTTP closes,
+  so the shutdown's own waits are never cut short. SIGTERM is not handled:
+  Electron dies at once.
+- **No menu bar except on macOS** (`applicationMenu.ts`): Open… and Quit are
+  the viewer's menu, fed by the runtime's `hostActions` (`openFile` is the
+  file dialog, `quit` is `app.quit()`, so it shares `before-quit` with Cmd+Q).
+  macOS keeps `appMenu` (Quit and Cmd+Q live there) and `editMenu` (without it
+  Cmd+C / Cmd+V do nothing in a text field). No DevTools shortcut, by
+  decision.
 - **Headless windows live as long as the AI clients**, as the stdio server's
   headless Chromium does. When the last HTTP session ends,
   `closeHeadlessWindows` destroys them. A session ends on DELETE, or once the

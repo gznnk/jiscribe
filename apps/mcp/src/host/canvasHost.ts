@@ -135,6 +135,7 @@ export async function startCanvasHost(
 		sessionToken,
 		writeOpenFile: (relPath, body, ifMatch) =>
 			fileMirror.writeOpenFile(relPath, body, ifMatch),
+		hostActions: options.hostActions,
 	});
 	const port = await listenOnAvailablePort(
 		server,

@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { afterEach, beforeAll, afterAll, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
 import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import type { BrowserOpenOptions } from "../host/openBrowser";

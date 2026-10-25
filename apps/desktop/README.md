@@ -54,17 +54,28 @@ in the system browser, and pages are granted no permission but the clipboard.
 
 ## Windows and quitting
 
-- **File → Open…** opens a canvas file in the window, the same as `open_canvas`.
+- **A canvas is on display from the start**: the one that was open at the last
+  quit or Open…, or, when there is none or it is gone, the app's own scratch
+  canvas (`canvases/untitled.jis` under the app's user data directory). When
+  neither can be opened, the window says so and why, and an AI client can still
+  open one.
+- **There is no menu bar** (on macOS, only the app menu and Edit). The viewer
+  draws a menu of its own with **Open…**, which opens a canvas file in the
+  window the same as `open_canvas`, and **Quit**.
 - **Closing the window hides it**; the app keeps serving MCP. Starting the app
   again brings the window back instead of starting a second copy, showing the
   canvas again if one is still open.
 - `close_canvas` closes the window as well, and the next `open_canvas` opens a
-  new one.
+  new one. To get a canvas back without the AI, start the app again: with none
+  open, it reopens the canvas that was open at the last quit or Open… (or the
+  scratch one).
 - The hidden windows `open_canvas` with `headless: true` opens are closed once
   the last AI client has gone: when it ends its session, or when the event
   stream it holds open has been gone for 30 seconds. The main window is the
   person's and stays.
 - `JISCRIBE_MCP_NO_OPEN`, which keeps `jiscribe-mcp` from spawning a browser,
   is ignored: the window is the app's own.
-- **File → Quit** (Ctrl+Q, Cmd+Q on macOS) quits: the viewers are asked to close,
-  the canvas host and the MCP endpoint are shut down, and the app exits.
+- **Quit** in the viewer's menu (or Cmd+Q on macOS) quits: an edit still
+  waiting on the viewer's save debounce is written out first, then the viewers
+  are asked to close, the canvas host and the MCP endpoint are shut down, and
+  the app exits. The canvas on display is remembered for the next start.

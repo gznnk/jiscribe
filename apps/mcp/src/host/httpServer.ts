@@ -5,7 +5,8 @@
 // build time, and the fonts its CSS refers to (split by unicode-range, so the
 // browser only fetches the ranges it actually draws). On top of that it has an
 // endpoint for writing back what a person fixed, one for reading an image an
-// object points at, and one handing out this host's session token.
+// object points at, one handing out this host's session token along with the
+// actions the host's owner offers, and one those actions are asked through.
 //
 // Reading is for images alone: the doc reaches the viewer over the WebSocket, while
 // the files an image shape's `src` names are on disk only.
@@ -15,10 +16,13 @@
 // and the workspace: the Host header has to name this server (which is what a DNS
 // rebinding attack cannot produce), an Origin header that is there has to be this
 // server's own, and a write has to carry the token only a same-origin page can read.
+// Asking for an action is guarded as a write is: it reaches into the process that
+// owns the host, which is further than the workspace.
 //
 // What a write then does to the file is not decided here: the body is handed to
 // writeOpenFile, which takes the same per-file lock the AI's tools do and refuses a
-// write whose revision is no longer the one on disk.
+// write whose revision is no longer the one on disk. Nor is what an action does:
+// the owner's callback is run as it was handed over.
 
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
@@ -29,7 +33,7 @@ import { pipeline } from "node:stream";
 import { resolveDocImageMimeType } from "@jiscribe/doc";
 import { isErrnoWithCode } from "@jiscribe/doc-tools/file";
 
-import type { WriteOpenFileOutcome } from "./canvasHostTypes";
+import type { HostActions, WriteOpenFileOutcome } from "./canvasHostTypes";
 import {
 	isAllowedHostHeader,
 	isAllowedOrigin,
@@ -51,6 +55,14 @@ import {
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
+import {
+	HOST_ACTION_API_PATHNAME,
+	HOST_ACTION_DONE_STATUS,
+	HOST_ACTION_NAMES,
+	isHostActionName,
+	type HostActionName,
+	type SessionApiResponse,
+} from "../shared/hostActionsRoute";
 
 /**
  * Only what serving the fonts needs, which is everything there is to serve: the
@@ -161,6 +173,71 @@ const readRequestBody = (
 		request.on("error", reject);
 	});
 
+/**
+ * Answers a body readRequestBody gave up on with 413. The upload is cut off only
+ * once the answer is out: destroying the request takes the socket with it, and
+ * anything still buffered on it
+ */
+const sendBodyTooLarge = (
+	request: http.IncomingMessage,
+	response: http.ServerResponse,
+	error: RequestBodyTooLargeError,
+): void => {
+	response.writeHead(413, {
+		"Content-Type": "application/json; charset=utf-8",
+	});
+	response.end(JSON.stringify({ error: error.message }), () => {
+		request.destroy();
+	});
+};
+
+/**
+ * Whether a request is from a page of this host's own, by its Origin and the
+ * session token it carries, the refusal having been sent when it is not. It is
+ * what stands before anything that reaches past serving the page (a write, an
+ * action). A missing Origin is a client that is not a browser (curl, a test),
+ * which the Host check has already placed on this machine; a browser always sends
+ * one, so a foreign one is a page trying to act through the person looking at it.
+ * The token is what a page left over from the host before this one on the same
+ * port does not have
+ *
+ * @param listeningPort The port the request arrived on, which an Origin of ours
+ *   has to name
+ * @param sessionToken This host's own token, which the request's header has to
+ *   match exactly
+ */
+const admitSameOriginTokenRequest = (
+	request: http.IncomingMessage,
+	response: http.ServerResponse,
+	listeningPort: number,
+	sessionToken: string,
+): boolean => {
+	const originHeader = request.headers.origin;
+	if (
+		originHeader !== undefined &&
+		!isAllowedOrigin(originHeader, listeningPort)
+	) {
+		sendJson(response, 403, { error: "unexpected Origin header" });
+		return false;
+	}
+	if (request.headers[SESSION_TOKEN_HEADER.toLowerCase()] !== sessionToken) {
+		sendJson(response, INVALID_SESSION_STATUS, {
+			error: "invalid session token",
+		});
+		return false;
+	}
+	return true;
+};
+
+/**
+ * The names of the actions the owner handed a callback for, in the order a menu
+ * lists them (HOST_ACTION_NAMES), which is what GET /api/session announces
+ */
+const listOfferedActions = (
+	hostActions: HostActions | undefined,
+): HostActionName[] =>
+	HOST_ACTION_NAMES.filter((name) => hostActions?.[name] !== undefined);
+
 const readRelPathParam = (requestUrl: URL): string => {
 	const relPath = requestUrl.searchParams.get(FILE_API_PATH_PARAM) ?? "";
 	if (relPath === "") {
@@ -199,14 +276,7 @@ const handleWriteFile = async (
 		if (!(error instanceof RequestBodyTooLargeError)) {
 			throw error;
 		}
-		response.writeHead(413, {
-			"Content-Type": "application/json; charset=utf-8",
-		});
-		// The upload is cut off only once the answer is out: destroying the request
-		// takes the socket with it, and anything still buffered on it
-		response.end(JSON.stringify({ error: error.message }), () => {
-			request.destroy();
-		});
+		sendBodyTooLarge(request, response, error);
 		return;
 	}
 	const outcome = await options.writeOpenFile(relPath, body, ifMatch);
@@ -242,6 +312,59 @@ const handleWriteFile = async (
 		return;
 	}
 	sendJson(response, 200, { ok: true, revision: outcome.revision });
+};
+
+/**
+ * Runs the action the body names, once the guards have let the request through.
+ * The body is JSON of the HostActionRequestBody shape; anything else is a 400, and
+ * a name the owner handed no callback for a 404. A callback that throws is left to
+ * the caller's catch (sendApiError), so the viewer reads the failure off the same
+ * statuses a write's come back as
+ */
+const handleHostAction = async (
+	hostActions: HostActions | undefined,
+	request: http.IncomingMessage,
+	response: http.ServerResponse,
+): Promise<void> => {
+	let body: Buffer;
+	try {
+		// The cap is the write's: a body that nobody could mean as an action is cut
+		// off before it is held in full
+		body = await readRequestBody(request, MAX_WRITE_BODY_BYTES);
+	} catch (error) {
+		if (!(error instanceof RequestBodyTooLargeError)) {
+			throw error;
+		}
+		sendBodyTooLarge(request, response, error);
+		return;
+	}
+	let parsedBody: unknown;
+	try {
+		parsedBody = JSON.parse(body.toString("utf8"));
+	} catch {
+		sendJson(response, 400, { error: "the body is not JSON" });
+		return;
+	}
+	const actionName =
+		typeof parsedBody === "object" && parsedBody !== null
+			? (parsedBody as { action?: unknown }).action
+			: undefined;
+	if (!isHostActionName(actionName)) {
+		sendJson(response, 400, {
+			error: `the body names no action out of ${HOST_ACTION_NAMES.join(", ")}`,
+		});
+		return;
+	}
+	const action = hostActions?.[actionName];
+	if (action === undefined) {
+		sendJson(response, 404, { error: "action not offered" });
+		return;
+	}
+	// Answered once the callback settles, so a viewer asking to quit is not told
+	// "done" by a process that then fails to go
+	await action();
+	response.writeHead(HOST_ACTION_DONE_STATUS);
+	response.end();
 };
 
 const handleReadImageFile = async (
@@ -399,13 +522,21 @@ export type ViewerHttpServerOptions = {
 		body: Buffer,
 		ifMatch: string,
 	) => Promise<WriteOpenFileOutcome>;
+	/**
+	 * The actions the owner of this host offers the viewer, one callback per name
+	 * (see HostActions). Their names go out with the session token, and a POST to
+	 * HOST_ACTION_API_PATHNAME naming one runs it; omitted, the session announces
+	 * none and every POST is answered 404
+	 */
+	hostActions?: HostActions;
 };
 
 /**
  * Creates the HTTP server that serves the viewer. Listening is left to the caller.
  *
  * @param options Nothing outside workspaceRoot can be written or read. viewerHtml
- *   is returned as it is at `/`, and sessionToken is what a write has to carry
+ *   is returned as it is at `/`, and sessionToken is what a write or an action
+ *   request has to carry
  */
 export function createViewerHttpServer(
 	options: ViewerHttpServerOptions,
@@ -416,7 +547,12 @@ export function createViewerHttpServer(
 		viewerScriptHashes,
 		assetRootPath,
 		sessionToken,
+		hostActions,
 	} = options;
+	const sessionResponse: SessionApiResponse = {
+		token: sessionToken,
+		actions: listOfferedActions(hostActions),
+	};
 	return http.createServer((request, response) => {
 		void (async () => {
 			// Nothing served from here is ever a type the browser should be left to
@@ -448,24 +584,14 @@ export function createViewerHttpServer(
 					requestUrl.pathname === FILE_API_PATHNAME &&
 					request.method === "PUT"
 				) {
-					const originHeader = request.headers.origin;
-					// A missing Origin is a client that is not a browser (curl, a test),
-					// which the checks above have already placed on this machine. A
-					// browser always sends one, so a foreign one is a page trying to
-					// write through the person looking at it
 					if (
-						originHeader !== undefined &&
-						!isAllowedOrigin(originHeader, listeningPort)
+						!admitSameOriginTokenRequest(
+							request,
+							response,
+							listeningPort,
+							sessionToken,
+						)
 					) {
-						sendJson(response, 403, { error: "unexpected Origin header" });
-						return;
-					}
-					if (
-						request.headers[SESSION_TOKEN_HEADER.toLowerCase()] !== sessionToken
-					) {
-						sendJson(response, INVALID_SESSION_STATUS, {
-							error: "invalid session token",
-						});
 						return;
 					}
 					await handleWriteFile(options, request, requestUrl, response);
@@ -476,7 +602,22 @@ export function createViewerHttpServer(
 					isReadMethod
 				) {
 					response.setHeader("Cache-Control", "no-store");
-					sendJson(response, 200, { token: sessionToken });
+					sendJson(response, 200, sessionResponse);
+				} else if (
+					requestUrl.pathname === HOST_ACTION_API_PATHNAME &&
+					request.method === "POST"
+				) {
+					if (
+						!admitSameOriginTokenRequest(
+							request,
+							response,
+							listeningPort,
+							sessionToken,
+						)
+					) {
+						return;
+					}
+					await handleHostAction(hostActions, request, response);
 				} else if (requestUrl.pathname.startsWith("/api/")) {
 					sendJson(response, 404, { error: "unknown api" });
 				} else if (isReadMethod && requestUrl.pathname.startsWith("/assets/")) {

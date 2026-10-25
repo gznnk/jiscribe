@@ -8,9 +8,9 @@ import {
 	expect,
 	expectFileOnDisplay,
 	expectNoViewerError,
-	lostEditsNotice,
 	objectCenter,
 	test,
+	warningNotice,
 } from "../support/fixtures";
 
 /** How far the rectangle is dragged, in screen pixels */
@@ -126,7 +126,7 @@ test("a drag still held when the file switches is said to be lost", async ({
 	await expectFileOnDisplay(page, "c.jis.json");
 	await page.mouse.up();
 
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "ドラッグ中の操作"),
 	);
 	expect((await workspace.readDoc(firstPath)).root[0].x).toBe(SINGLE_RECT.x);
@@ -150,7 +150,7 @@ test("text still being typed when the file switches is said to be lost", async (
 	).toBe(false);
 	await expectFileOnDisplay(page, "c.jis.json");
 
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "入力中のテキスト"),
 	);
 	expect((await workspace.readDoc(firstPath)).root[0].text).toBe("hello");
@@ -202,7 +202,7 @@ test("an edit refused by the host of another directory is said to be lost once, 
 	const opening = mcp.callTool("open_canvas", { path: secondPath });
 	await isSocketHeld;
 	await canvas.commitText();
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "直前の変更"),
 	);
 
@@ -241,7 +241,7 @@ test("text still being typed when the page moves to another directory is said to
 	).toBe(false);
 	await expectFileOnDisplay(page, "b.jis.json");
 
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "入力中のテキスト"),
 	);
 	expect(await readLostEditsNoticeLog(page)).toHaveLength(1);

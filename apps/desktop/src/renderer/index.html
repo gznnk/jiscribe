@@ -32,17 +32,26 @@
 	</head>
 	<body>
 		<h1>Jiscribe</h1>
-		<p>
-			No canvas is open. Connect an AI client to this MCP server, then ask it to
-			open a canvas, or use File &rarr; Open&hellip;
+		<p id="canvas-status">
+			No canvas is open. One opens when the app starts; to get one back now,
+			start the app again (it reopens the canvas that was open at the last quit
+			or Open…).
 		</p>
+		<p>An AI client connected to this MCP server can open one as well.</p>
 		<p>MCP endpoint:</p>
 		<pre id="mcp-url"></pre>
 		<p><code>.mcp.json</code>:</p>
 		<pre id="mcp-config"></pre>
 		<script type="module">
-			const mcpUrl =
-				new URLSearchParams(window.location.search).get("mcpUrl") ?? "";
+			const query = new URLSearchParams(window.location.search);
+			const mcpUrl = query.get("mcpUrl") ?? "";
+			// Set when every canvas the app tried to open at startup failed; the
+			// reason is printed as text, never as markup
+			const openFailure = query.get("openFailure");
+			if (openFailure !== null) {
+				document.getElementById("canvas-status").textContent =
+					`Could not open a canvas: ${openFailure}`;
+			}
 			document.getElementById("mcp-url").textContent = mcpUrl;
 			document.getElementById("mcp-config").textContent = JSON.stringify(
 				{ mcpServers: { jiscribe: { type: "http", url: mcpUrl } } },

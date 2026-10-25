@@ -111,6 +111,9 @@ which is what DNS rebinding looks like from here. A WebSocket or a write from
 a page on another origin is refused too, and both carry a per-host session
 token the page fetches from `/api/session` (a window left over from a host
 that served another directory on the same port cannot write into this one).
+The same checks guard `POST /api/action`, through which the viewer's menu asks
+the process owning the host for what it offers (the desktop app's file dialog
+and quit; this server offers nothing, and `/api/session` says so).
 The file API writes only the file on display and reads only the images a
 diagram points at (reads check the `Host` alone, since a page elsewhere can
 embed such an image but not read it), never a path outside the diagram's

@@ -22,6 +22,14 @@ export type ViewerWindows = {
 	/** Shows the main window and brings it to the front, wherever it was */
 	showMainWindow: () => void;
 	/**
+	 * Shows the main window with the placeholder saying no canvas could be opened
+	 * and why, for when every startup candidate failed
+	 *
+	 * @param reason Plain text naming the file and what went wrong; the page
+	 *   prints it as text, so it may hold anything
+	 */
+	showOpenFailure: (reason: string) => void;
+	/**
 	 * Destroys every hidden window open_canvas headless opened. Nothing on screen
 	 * is touched
 	 */
@@ -33,13 +41,22 @@ export type ViewerWindows = {
 	allowClose: () => void;
 };
 
+/** Electron rejects a loadURL with this code when a later load cut it short */
+const isSupersededLoadError = (error: unknown): boolean =>
+	(error as { code?: unknown } | null)?.code === "ERR_ABORTED";
+
 /**
  * Load a page, reporting a failed load instead of leaving the rejection
- * unhandled. A load cut short by the next one rejects as well, which is normal
- * here (the viewer and the placeholder replace each other).
+ * unhandled. A load cut short by the next one rejects as well and is not
+ * reported: the viewer and the placeholder replace each other, the viewer
+ * superseding the placeholder on every start.
  */
 const loadInto = (window: BrowserWindow, url: string): void => {
 	window.loadURL(url).catch((error: unknown) => {
+		// Expected: a later load into this window replaced this one
+		if (isSupersededLoadError(error)) {
+			return;
+		}
 		console.error(`failed to load ${url}:`, error);
 	});
 };
@@ -104,17 +121,26 @@ export function createViewerWindows(mcpUrl: string): ViewerWindows {
 	let isClosingAllowed = false;
 	restrictPermissions();
 
-	const placeholderUrl = ((): string => {
-		const query = new URLSearchParams({ mcpUrl }).toString();
+	/**
+	 * The placeholder page's URL. What the page shows travels in the query string
+	 * (the page reads `mcpUrl` and `openFailure`), there being no preload to hand
+	 * it anything else
+	 */
+	const buildPlaceholderUrl = (openFailure?: string): string => {
+		const query = new URLSearchParams({ mcpUrl });
+		if (openFailure !== undefined) {
+			query.set("openFailure", openFailure);
+		}
 		// Set by electron-vite while the dev server is serving the renderer
 		const devServerUrl = process.env.ELECTRON_RENDERER_URL;
 		if (devServerUrl !== undefined && devServerUrl !== "") {
-			return `${devServerUrl}?${query}`;
+			return `${devServerUrl}?${query.toString()}`;
 		}
 		const pageUrl = new URL("../renderer/index.html", import.meta.url);
-		pageUrl.search = query;
+		pageUrl.search = query.toString();
 		return pageUrl.href;
-	})();
+	};
+	const placeholderUrl = buildPlaceholderUrl();
 
 	let mainWindow: BrowserWindow | null = null;
 	const headlessWindows = new Set<BrowserWindow>();
@@ -171,6 +197,17 @@ export function createViewerWindows(mcpUrl: string): ViewerWindows {
 		window.focus();
 	};
 
+	/** Load `pageUrl` into the main window, creating it when gone, and show it */
+	const showMainWindowWith = (pageUrl: string): void => {
+		const window = getLiveMainWindow();
+		if (window === null) {
+			createMainWindow(pageUrl);
+		} else {
+			loadInto(window, pageUrl);
+		}
+		showMainWindow();
+	};
+
 	const openHeadlessWindow = (url: string): void => {
 		const headlessWindow = new BrowserWindow({
 			show: false,
@@ -195,15 +232,12 @@ export function createViewerWindows(mcpUrl: string): ViewerWindows {
 				openHeadlessWindow(url);
 				return;
 			}
-			const window = getLiveMainWindow();
-			if (window === null) {
-				createMainWindow(url);
-			} else {
-				loadInto(window, url);
-			}
-			showMainWindow();
+			showMainWindowWith(url);
 		},
 		showMainWindow,
+		showOpenFailure: (reason) => {
+			showMainWindowWith(buildPlaceholderUrl(reason));
+		},
 		closeHeadlessWindows: () => {
 			// Destroyed outright: nothing in a page nobody sees may hold it open
 			for (const headlessWindow of [...headlessWindows]) {

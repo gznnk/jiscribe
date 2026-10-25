@@ -9,7 +9,7 @@ import { join } from "node:path";
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
 import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
 import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import { REVISION_HEADER, SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";

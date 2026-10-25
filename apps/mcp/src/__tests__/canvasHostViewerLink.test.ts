@@ -28,7 +28,7 @@ import {
 } from "vitest";
 import WebSocket from "ws";
 
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
 import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import { createPathLock } from "../pathLock";

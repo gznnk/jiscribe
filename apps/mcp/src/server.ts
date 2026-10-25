@@ -42,6 +42,8 @@ export {
 	type JiscribeMcpRuntimeOptions,
 } from "./runtime";
 export { listenOnAvailablePort } from "./host/listenOnAvailablePort";
+export { FLUSH_EDITS_TIMEOUT_MS } from "./host/canvasHost";
+export { VIEWER_CLOSE_TIMEOUT_MS } from "./host/viewerRegistry";
 export { CANVAS_FILE_EXTENSIONS } from "./canvasStore";
 export type { BrowserOpenOptions } from "./host/openBrowser";
 

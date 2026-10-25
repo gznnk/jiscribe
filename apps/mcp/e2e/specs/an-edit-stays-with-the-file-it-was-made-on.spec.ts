@@ -7,8 +7,8 @@ import {
 	expect,
 	expectFileOnDisplay,
 	expectNoViewerError,
-	lostEditsNotice,
 	test,
+	warningNotice,
 } from "../support/fixtures";
 
 /** How far the rectangle is dragged, in screen pixels */
@@ -188,7 +188,7 @@ test("an edit committed after another file arrived is not written into that file
 	expect((await workspace.readDoc(secondPath)).root).toEqual([]);
 	expect((await workspace.readDoc(firstPath)).root[0].x).toBe(SINGLE_RECT.x);
 	await expect(page.locator(`[data-id="${SINGLE_RECT.id}"]`)).toHaveCount(0);
-	await expect(lostEditsNotice(page)).toContainText("a.jis.json");
+	await expect(warningNotice(page)).toContainText("a.jis.json");
 });
 
 // The same release, let go as the host asks for pending edits to be written out:

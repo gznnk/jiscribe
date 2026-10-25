@@ -23,8 +23,10 @@ they hold.
   `httpServer` + `requestGuards` (HTTP surface and access checks).
 - `src/viewer/` — the SPA. `useCanvasHostSocket` owns connect/reconnect,
   `useDocSync` owns sync and saving.
-- `src/shared/` — what both sides read: WS frames (`canvasHostProtocol.ts`) and
-  the file API route, headers and status codes (`fileApiRoute.ts`).
+- `src/shared/` — what both sides read: WS frames (`canvasHostProtocol.ts`),
+  the file API route, headers and status codes (`fileApiRoute.ts`), and the
+  host actions' names, route and session answer (`hostActionsRoute.ts`; the
+  owner's callbacks themselves are `HostActions` in `host/canvasHostTypes.ts`).
 
 ## Tools
 
@@ -96,7 +98,11 @@ they hold.
   synced (SHA-256 of the doc text, carried on `openCanvas` / `docChanged`;
   428 when absent, 412 when stale, checked against a re-read under the lock),
   and takes the same pathLock as the tools. Containment checks go through
-  realpath.
+  realpath. `POST /api/action` (`shared/hostActionsRoute.ts`) runs one of the
+  callbacks the host's owner passed as `hostActions` (the desktop app's file
+  dialog and quit; the stdio server passes none) and is guarded exactly as PUT
+  is (Origin, then token); `GET /api/session` lists the offered names as
+  `actions`, so a viewer draws a menu only where something answers it.
 - **A person's save is broadcast** as `docChanged` to every window; the sender
   drops its own echo by text match and keeps the revision. There is no `saved`
   frame. Without this a headless window kept drawing the pre-edit doc and

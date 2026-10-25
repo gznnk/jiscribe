@@ -22,7 +22,7 @@ import {
 import WebSocket from "ws";
 
 import type * as canvasStoreModule from "../canvasStore";
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
 import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
 import type { TempCanvasWorkspace } from "./tempCanvasWorkspace";
 import { createTempCanvasWorkspace } from "./tempCanvasWorkspace";

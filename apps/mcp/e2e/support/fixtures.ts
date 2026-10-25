@@ -54,29 +54,29 @@ export async function expectFileOnDisplay(
 }
 
 /**
- * Asserts the viewer is showing no error bar and no notice of lost edits. Worth
- * stating wherever a test drives an edit through the page: a write that was
- * refused, or an edit that went nowhere, leaves the canvas looking right and says
- * so only there.
+ * Asserts the viewer is showing no error bar and no warning notice. Worth stating
+ * wherever a test drives an edit through the page: a write that was refused, or
+ * an edit that went nowhere, leaves the canvas looking right and says so only
+ * there.
  *
  * @param page The viewer page
  */
 export async function expectNoViewerError(page: Page): Promise<void> {
 	await expect(page.locator(".viewer-error")).toHaveCount(0);
-	await expect(lostEditsNotice(page)).toHaveCount(0);
+	await expect(warningNotice(page)).toHaveCount(0);
 }
 
 /** How long a notice saying edits did not reach the file stays up */
 export const LOST_EDITS_NOTICE_DURATION_MS = noticeDurationsMs.warning;
 
 /**
- * The notices saying edits of the person's did not reach the file. They are
- * alerts, where the Ctrl+S notice is a status, and unlike the error bar they go on
- * their own.
+ * The viewer's warning notices: edits of the person's that did not reach the
+ * file, and a host action the host refused. They are alerts, where the Ctrl+S
+ * notice is a status, and unlike the error bar they go on their own.
  *
  * @param page The viewer page
  */
-export function lostEditsNotice(page: Page): Locator {
+export function warningNotice(page: Page): Locator {
 	return page.locator(".viewer-notice[role=alert]");
 }
 

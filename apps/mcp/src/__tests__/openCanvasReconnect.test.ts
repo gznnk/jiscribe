@@ -21,7 +21,7 @@ import {
 } from "vitest";
 import WebSocket from "ws";
 
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
 import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
 import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import type * as canvasHostModule from "../host/canvasHost";
