@@ -1,23 +1,10 @@
 import type { ObjectDoc } from "@jiscribe/doc";
 import type { TextMeasureFont } from "@jiscribe/doc/unstable";
-import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/unstable";
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/unstable";
 import type { Rect } from "@jiscribe/geometry";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 
 import { measureWrappedText } from "./measureWrappedText";
-
-/**
- * Label style the canvas draws with where the document sets none, restated from
- * CONNECTOR_LABEL_DEFAULTS (@jiscribe/canvas,
- * rendering/objects/connector/geometry/label/connectorLabelLayout.ts).
- * Restated rather than imported because that module sits in the rendering layer,
- * which this package stays free of; the family alone has a headless home
- * (DEFAULT_FONT_FAMILY) and is taken from there.
- */
-const CONNECTOR_LABEL_FALLBACK = {
-	fontSize: 16,
-	fontWeight: "normal",
-} as const;
 
 /** A connector's label as it sits on the doc (see ConnectorDoc's ConnectorLabel). */
 type ConnectorLabelDoc = {
@@ -173,9 +160,9 @@ export const resolveConnectorLabel = (
 	return {
 		text: label.text,
 		font: {
-			fontSize: label.fontSize ?? CONNECTOR_LABEL_FALLBACK.fontSize,
-			fontFamily: label.fontFamily ?? DEFAULT_FONT_FAMILY,
-			fontWeight: label.fontWeight ?? CONNECTOR_LABEL_FALLBACK.fontWeight,
+			fontSize: label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize,
+			fontFamily: label.fontFamily ?? CONNECTOR_LABEL_DEFAULTS.fontFamily,
+			fontWeight: label.fontWeight ?? CONNECTOR_LABEL_DEFAULTS.fontWeight,
 		},
 	};
 };
