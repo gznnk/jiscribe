@@ -5,7 +5,7 @@ import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText"
 import { applyLabelPlacement } from "./applyLabelPlacement";
 import { NORMAL_MODE } from "./normalMode";
 import { readOpenTextEdit } from "./readOpenTextEdit";
-import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";

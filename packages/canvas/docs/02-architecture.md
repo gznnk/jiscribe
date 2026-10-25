@@ -28,7 +28,6 @@ packages/canvas/src/
 │   ├── theme/              # CanvasTheme / presets / CSS vars + the `theme` token object styles read
 │   ├── i18n/               # CanvasMessages, the per-locale messages and the locale / messages contexts
 │   └── hooks/              # hooks that know nothing of the canvas (useConstant / useLatestRef / useDevicePixelRatio)
-├── connectors/             # connector geometry (endpoint resolution, orthogonal routing, label placement); renders nothing, changes nothing, takes no value from rendering / controllers
 ├── controllers/            # state management + business logic
 │   ├── Canvas.tsx
 │   ├── gestures/           # gesture recognition + handlers + their registries (GestureHandlerRegistry / ObjectBehaviorRegistry)
@@ -43,6 +42,7 @@ packages/canvas/src/
 │   └── utils/
 ├── rendering/              # pure rendering components + the Viewport type + the PNG / SVG output of what they draw
 │   ├── objects/registry/   # the rendering layer's registries (ObjectComponentRegistry, …)
+│   ├── objects/connector/geometry/  # connector geometry (endpoint resolution, orthogonal routing, label placement); renders nothing, changes nothing, takes no value from the drawing components / controllers
 │   └── export/             # PNG / SVG output of what is drawn (font embedding, and embedding the source into `.jis.png` / `.jis.svg`)
 ├── bootstrap/              # what runs once when the package is loaded, before any Canvas exists: offering the browser's text measurement into @jiscribe/doc's measurement slot (the measurer it offers runs on every text layout)
 └── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
@@ -106,7 +106,7 @@ Dependency: `rendering → states / @jiscribe/doc / theme` (types and pure funct
 
 Dependencies: `controllers → rendering → states / @jiscribe/doc`. Sitting **above** the rendering layer is why a UI controller importing a rendering **component** (e.g. `PendingConnectorOverlay` → `ConnectorRenderer`, `ArrowHeadIconPreview` → `Arrow`) or a rendering-layer registry context (`RenderingRegistriesProvider`, etc.) is ordinary composition — an upper layer assembling the parts below it — not an exception.
 
-The pure geometry that renders nothing sits outside the rendering layer, in `connectors/`. Connector endpoint resolution, orthogonal routing and label placement (`connectors/endpoints` / `routing` / `label`) are consumed by `rendering` and equally by `ui`, `gestures` (free-endpoint snapping / re-anchoring) and `utils` (freeing endpoints on delete, bounding boxes, visibility); the free-endpoint coordinates persisted on delete go through the same resolution (deliberately, to capture the on-screen position at deletion time). Within canvas, the only values `connectors` imports are its own: the State types in `states/` and the registry types in `rendering/objects/registry/` are taken as types only. That reference to the registry types runs backwards against the layer order, but it follows the same invariant the rest of the codebase holds — every backward edge is a type contract — so it is not a cycle.
+The pure geometry that renders nothing sits beside the connector's drawing components, in `rendering/objects/connector/geometry/`. Connector endpoint resolution, orthogonal routing and label placement (`geometry/endpoints` / `routing` / `label`) are consumed by the drawing components and equally by `ui`, `gestures` (free-endpoint snapping / re-anchoring) and `utils` (freeing endpoints on delete, bounding boxes, visibility); the free-endpoint coordinates persisted on delete go through the same resolution (deliberately, to capture the on-screen position at deletion time). Within canvas, the only values the geometry imports are its own: the State types in `states/` and the registry types in `rendering/objects/registry/` are taken as types only.
 
 ### Registries (distributed — there is no single "registry" layer)
 

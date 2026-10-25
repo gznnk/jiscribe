@@ -1,7 +1,7 @@
 import { memo } from "react";
 
-import { resolveEndpointOwner } from "../../../../connectors/endpoints";
 import { ConnectorRenderer } from "../../../../rendering/layers/content/ConnectorRenderer";
+import { resolveEndpointOwner } from "../../../../rendering/objects/connector/geometry/endpoints";
 import type {
 	CanvasControllerState,
 	ConnectorDraft,

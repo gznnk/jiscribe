@@ -2,8 +2,8 @@ import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef"
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 import { resolveConnectorPoints } from "../resolveConnectorPoints";
 import { resolveConnectorPointsCached } from "../resolveConnectorPointsCached";
 

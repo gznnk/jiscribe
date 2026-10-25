@@ -4,11 +4,11 @@ import type React from "react";
 import { memo, useMemo } from "react";
 
 import { LabelBox } from "./ConnectorLabelStyled";
-import { resolveConnectorLabelBox } from "./utils/connectorLabelLayout";
 import { resolveLabelFill } from "./utils/resolveLabelFill";
 import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
+import { resolveConnectorLabelBox } from "../geometry/label/connectorLabelLayout";
 
 type ConnectorLabelProps = {
 	/** Parent connector id (placed in a data attribute so a hit can start editing). */

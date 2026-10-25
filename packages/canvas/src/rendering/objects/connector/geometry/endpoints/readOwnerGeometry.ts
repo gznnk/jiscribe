@@ -1,7 +1,7 @@
 import type { TransformedFrame } from "@jiscribe/geometry";
 
-import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ObjectGeometryKeyRegistry } from "../../../registry/ObjectGeometryKeyRegistry";
 
 type GeometryKeyRegistry = Pick<ObjectGeometryKeyRegistry, "get">;
 

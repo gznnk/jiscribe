@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { ExtraConnectPoint } from "../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../../../registry/ObjectExtraConnectPointsRegistry";
 import { calcEndpointDirection } from "../endpointDirection";
 
 /** A 100x60 frame centered at (200, 200), rotated by `rotation` degrees. */

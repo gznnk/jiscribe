@@ -3,7 +3,6 @@ import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef
 import { memo, useMemo } from "react";
 
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
-import { calcConnectorLabelAnchor } from "../../../connectors/label/calcConnectorLabelAnchor";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import {
@@ -12,6 +11,7 @@ import {
 	ConnectorSegmentSlideHitAreas,
 } from "../../objects/connector/Connector";
 import { ConnectorLabel } from "../../objects/connector/ConnectorLabel";
+import { calcConnectorLabelAnchor } from "../../objects/connector/geometry/label/calcConnectorLabelAnchor";
 
 /** Renders a connector along with its optional static label. */
 type ConnectorRendererProps = {

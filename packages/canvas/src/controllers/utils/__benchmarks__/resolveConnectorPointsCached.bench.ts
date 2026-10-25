@@ -6,7 +6,7 @@ import {
 	resolveConnectorPoints,
 	listConnectorPathPoints,
 	resolveConnectorPointsCached,
-} from "../../../connectors/endpoints";
+} from "../../../rendering/objects/connector/geometry/endpoints";
 import type { ObjectOutlineCalculator } from "../../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";

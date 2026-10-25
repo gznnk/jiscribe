@@ -16,7 +16,7 @@ import { findConnectableTargetAt } from "./utils/findConnectableTargetAt";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
-import { resolveEndpointOwner } from "../../../../../connectors/endpoints/resolveEndpointOwner";
+import { resolveEndpointOwner } from "../../../../../rendering/objects/connector/geometry/endpoints/resolveEndpointOwner";
 import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";

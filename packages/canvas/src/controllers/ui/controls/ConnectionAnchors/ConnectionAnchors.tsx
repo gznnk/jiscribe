@@ -3,14 +3,14 @@ import { calcNonZeroSign, degreesToRadians } from "@jiscribe/geometry";
 import type { Point, Rect } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
+import { theme } from "../../../../foundation/theme/themeTokens";
 import {
 	calcConnectPoint,
 	calcExtraConnectPoint,
 	calcOutwardVector,
 	type AnchorFrame,
-} from "../../../../connectors/calcConnectPoint";
-import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
-import { theme } from "../../../../foundation/theme/themeTokens";
+} from "../../../../rendering/objects/connector/geometry/calcConnectPoint";
 import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 

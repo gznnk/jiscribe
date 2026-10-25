@@ -7,9 +7,9 @@ import {
 	listConnectorPathPoints,
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../../../connectors/endpoints";
-import { calcConnectorLabelAnchor } from "../../../../connectors/label/calcConnectorLabelAnchor";
-import type { ConnectorLabelPlacement } from "../../../../connectors/label/calcConnectorLabelPlacement";
+} from "../../../../rendering/objects/connector/geometry/endpoints";
+import { calcConnectorLabelAnchor } from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";

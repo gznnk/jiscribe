@@ -6,13 +6,13 @@ import {
 } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import type { VisualExtentRegistries } from "./VisualExtentRegistries";
+import { isConnectorShiftedWithOwners } from "../../rendering/layers/content/MovePreview";
+import type { MovePreview } from "../../rendering/layers/content/MovePreview";
 import {
 	listConnectorPathPoints,
 	resolveConnectorPointsCached,
 	resolveEndpointOwner,
-} from "../../connectors/endpoints";
-import { isConnectorShiftedWithOwners } from "../../rendering/layers/content/MovePreview";
-import type { MovePreview } from "../../rendering/layers/content/MovePreview";
+} from "../../rendering/objects/connector/geometry/endpoints";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {

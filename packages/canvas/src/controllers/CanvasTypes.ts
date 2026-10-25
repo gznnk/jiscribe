@@ -8,8 +8,8 @@ import type {
 	Transform,
 } from "@jiscribe/geometry";
 
-import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorLabelPlacement";
 import type { MovePreview } from "../rendering/layers/content/MovePreview";
+import type { ConnectorLabelPlacement } from "../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";

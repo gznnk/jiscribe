@@ -1,6 +1,6 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
-import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,

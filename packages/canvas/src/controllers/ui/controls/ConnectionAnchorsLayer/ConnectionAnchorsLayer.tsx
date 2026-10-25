@@ -2,7 +2,7 @@ import { isTransformedFrame } from "@jiscribe/geometry";
 import type { Point, Rect } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 
-import { calcEdgeAnchorPoint } from "../../../../connectors/calcConnectPoint";
+import { calcEdgeAnchorPoint } from "../../../../rendering/objects/connector/geometry/calcConnectPoint";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { useObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistryContext";
 import type { ObjectConnectionAnchorsRegistry } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";

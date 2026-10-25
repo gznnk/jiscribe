@@ -1,12 +1,12 @@
 import { isSameOwnerGeometry, readOwnerGeometry } from "./readOwnerGeometry";
 import type { OwnerGeometry } from "./readOwnerGeometry";
 import { resolveConnectorPoints } from "./resolveConnectorPoints";
-import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
-import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
+import type { ObjectAnchorRegionRegistry } from "../../../registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyRegistry } from "../../../registry/ObjectGeometryKeyRegistry";
+import type { ObjectOutlineRegistry } from "../../../registry/ObjectOutlineRegistry";
 
 type OutlineRegistry = Pick<ObjectOutlineRegistry, "get">;
 type AnchorRegionRegistry = Pick<ObjectAnchorRegionRegistry, "get">;

@@ -1,9 +1,9 @@
 import type { Point } from "@jiscribe/geometry";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resolveConnectorPointsCached } from "../../../connectors/endpoints";
-import type * as RouteOrthogonalConnectorModule from "../../../connectors/routing/routeOrthogonalConnector";
 import type { MovePreview } from "../../../rendering/layers/content/MovePreview";
+import { resolveConnectorPointsCached } from "../../../rendering/objects/connector/geometry/endpoints";
+import type * as RouteOrthogonalConnectorModule from "../../../rendering/objects/connector/geometry/routing/routeOrthogonalConnector";
 import type { Viewport } from "../../../rendering/Viewport";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
@@ -17,7 +17,7 @@ import {
 // Counts the orthogonal router's runs, passing every call through.
 const routerCalls = vi.hoisted(() => ({ count: 0 }));
 vi.mock(
-	"../../../connectors/routing/routeOrthogonalConnector",
+	"../../../rendering/objects/connector/geometry/routing/routeOrthogonalConnector",
 	async (importOriginal) => {
 		const original =
 			await importOriginal<typeof RouteOrthogonalConnectorModule>();

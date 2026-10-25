@@ -306,14 +306,22 @@ export default tseslint.config(
 			],
 		},
 	},
-	{
-		// connectors/ is the connector geometry — endpoint resolution, orthogonal routing
-		// and label placement — pulled out of the drawing layer because none of it draws.
-		// It is read by rendering and, just as much, by ui / gestures / controllers-utils,
-		// so it has to sit under all of them. Types are allowed: the resolvers take
-		// ObjectState and the per-shape registries as parameters, which is the same
-		// "every backward edge is a type contract" invariant the controller layers hold.
-		files: ["packages/canvas/src/connectors/**"],
+	// rendering/objects/connector/geometry/ is the connector geometry — endpoint
+	// resolution, orthogonal routing and label placement. None of it draws, and it is
+	// read by the drawing components and, just as much, by ui / gestures /
+	// controllers-utils. It takes no value from outside its own folder other than
+	// states/ and foundation/: a specifier that climbs out of geometry/ and does not
+	// head for those two is rejected. Types are allowed: the resolvers take ObjectState
+	// and the per-shape registries as parameters. The climb is one "../" deeper for
+	// files in a subfolder, hence the two blocks.
+	...[
+		["packages/canvas/src/rendering/objects/connector/geometry/*", "\\.\\./"],
+		[
+			"packages/canvas/src/rendering/objects/connector/geometry/*/**",
+			"\\.\\./\\.\\./",
+		],
+	].map(([files, climbOut]) => ({
+		files: [files],
 		ignores: ["**/__tests__/**"],
 		rules: {
 			"@typescript-eslint/no-restricted-imports": [
@@ -321,16 +329,16 @@ export default tseslint.config(
 				{
 					patterns: [
 						{
-							group: ["**/controllers/**", "**/rendering/**"],
+							regex: `^${climbOut}(?!(?:\\.\\./)*(?:states|foundation)/)`,
 							allowTypeImports: true,
 							message:
-								"connectors computes geometry and cannot take a value from rendering or controllers. Take what you need as a parameter (the registries already arrive that way).",
+								"Connector geometry cannot take a value from outside its folder other than states/ and foundation/. Take what you need as a parameter (the registries already arrive that way).",
 						},
 					],
 				},
 			],
 		},
-	},
+	})),
 	{
 		// foundation/ is the base that knows no canvas component and no document: color
 		// strings, the theme, the messages and hooks that know nothing of the canvas. It
@@ -347,7 +355,6 @@ export default tseslint.config(
 								"**/states/**",
 								"**/rendering/**",
 								"**/controllers/**",
-								"**/connectors/**",
 								"**/bootstrap/**",
 								"**/plugin/**",
 								"**/index",

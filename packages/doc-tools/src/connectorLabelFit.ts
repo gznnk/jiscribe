@@ -9,7 +9,7 @@ import { measureWrappedText } from "./measureWrappedText";
 /**
  * Label style the canvas draws with where the document sets none, restated from
  * CONNECTOR_LABEL_DEFAULTS (@jiscribe/canvas,
- * rendering/objects/connector/ConnectorLabel/utils/connectorLabelLayout.ts).
+ * rendering/objects/connector/geometry/label/connectorLabelLayout.ts).
  * Restated rather than imported because that module sits in the rendering layer,
  * which this package stays free of; the family alone has a headless home
  * (DEFAULT_FONT_FAMILY) and is taken from there.

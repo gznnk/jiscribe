@@ -23,8 +23,8 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import type { ExtraConnectPoint } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectState } from "../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";
 
 /**
  * The shape an anchor is resolved on: its frame, plus the features descriptor

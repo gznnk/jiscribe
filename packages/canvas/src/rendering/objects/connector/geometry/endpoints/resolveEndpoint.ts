@@ -7,8 +7,8 @@ import {
 	type Rect,
 } from "@jiscribe/geometry";
 
-import type { ExtraConnectPoint } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../../registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcEdgeAnchorPoint,

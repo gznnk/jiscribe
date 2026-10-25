@@ -8,9 +8,9 @@ import {
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,
-} from "../../../../../connectors/calcConnectPoint";
-import { alignVertexPath } from "../../../../../connectors/routing";
-import type { OrthogonalConnectorEndpoint } from "../../../../../connectors/routing";
+} from "../../../../../rendering/objects/connector/geometry/calcConnectPoint";
+import { alignVertexPath } from "../../../../../rendering/objects/connector/geometry/routing";
+import type { OrthogonalConnectorEndpoint } from "../../../../../rendering/objects/connector/geometry/routing";
 
 /**
  * Shared harness for the slideConnectorSegment property tests: the .invariants sweep over the

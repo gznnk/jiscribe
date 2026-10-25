@@ -1,7 +1,7 @@
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { resolveEndpointOwner } from "../../../connectors/endpoints";
+import { resolveEndpointOwner } from "../../../rendering/objects/connector/geometry/endpoints";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";

@@ -6,7 +6,7 @@ import {
 } from "@jiscribe/geometry";
 
 import { DEFAULT_CONNECTOR_MARGIN } from "./routingConstants";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
  * Slack past the margin for the crossover channel, which elbowCandidates rounds

@@ -8,10 +8,10 @@ import {
 } from "./MovePreview";
 import type { MovePreview } from "./MovePreview";
 import { ObjectRenderBoundary } from "./ObjectRenderBoundary";
-import { resolveEndpointOwner } from "../../../connectors/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { resolveEndpointOwner } from "../../objects/connector/geometry/endpoints";
 import { useObjectComponentRegistry } from "../../objects/registry/ObjectComponentRegistryContext";
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {

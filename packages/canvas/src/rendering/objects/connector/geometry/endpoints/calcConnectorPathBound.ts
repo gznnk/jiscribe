@@ -2,11 +2,11 @@ import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connecto
 import { calcPolyBoundingBox, type BoundingBox } from "@jiscribe/geometry";
 
 import { resolveConnectorEnds } from "./resolveConnectorPoints";
-import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
+import type { ObjectAnchorRegionRegistry } from "../../../registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../../registry/ObjectOutlineRegistry";
 import { calcOrthogonalRouteBound } from "../routing";
 
 /**

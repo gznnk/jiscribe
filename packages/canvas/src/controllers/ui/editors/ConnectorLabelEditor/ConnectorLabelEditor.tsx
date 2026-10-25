@@ -7,10 +7,8 @@ import {
 	ConnectorLabelEditorWrapper,
 	ConnectorLabelTextArea,
 } from "./ConnectorLabelEditorStyled";
-import {
-	calcConnectorLabelBox,
-	resolveLabelFill,
-} from "../../../../rendering/objects/connector/ConnectorLabel";
+import { resolveLabelFill } from "../../../../rendering/objects/connector/ConnectorLabel";
+import { calcConnectorLabelBox } from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditCommand";
 import { useCaretReporter } from "../hooks/useCaretReporter";

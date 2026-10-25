@@ -2,7 +2,7 @@ import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/Conne
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { describe, it, expect } from "vitest";
 
-import type { ConnectorLabelPlacement } from "../../../connectors/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";

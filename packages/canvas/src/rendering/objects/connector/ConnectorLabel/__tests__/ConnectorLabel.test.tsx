@@ -7,8 +7,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCanvasZoomStore } from "../../../../../controllers/hooks/utils/createCanvasZoomStore";
 import { CanvasZoomStoreContext } from "../../../CanvasZoomStoreContext";
 import { FontsLoadedNonceContext } from "../../../FontsLoadedNonceContext";
+import type * as ConnectorLabelLayoutModule from "../../geometry/label/connectorLabelLayout";
 import { ConnectorLabel } from "../ConnectorLabel";
-import type * as ConnectorLabelLayoutModule from "../utils/connectorLabelLayout";
 
 /**
  * The label box is measured while the label renders, so nothing in the state
@@ -22,7 +22,7 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const boxCalls = vi.hoisted(() => ({ count: 0 }));
 
-vi.mock("../utils/connectorLabelLayout", async (importOriginal) => {
+vi.mock("../../geometry/label/connectorLabelLayout", async (importOriginal) => {
 	const actual = await importOriginal<typeof ConnectorLabelLayoutModule>();
 	return {
 		...actual,

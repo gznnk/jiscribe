@@ -28,7 +28,6 @@ packages/canvas/src/
 │   ├── theme/              # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
 │   ├── i18n/               # CanvasMessages・ロケール別の文言・ロケールと文言の Context
 │   └── hooks/              # canvas を知らない hook（useConstant / useLatestRef / useDevicePixelRatio）
-├── connectors/             # コネクタの幾何（端点解決・直交ルーティング・ラベル配置）。描画も状態更新もせず、rendering / controllers から値を取らない
 ├── controllers/            # 状態管理 + ビジネスロジック
 │   ├── Canvas.tsx
 │   ├── gestures/           # ジェスチャー認識 + ハンドラ + そのレジストリ（GestureHandlerRegistry / ObjectBehaviorRegistry）
@@ -43,6 +42,7 @@ packages/canvas/src/
 │   └── utils/
 ├── rendering/              # 純粋な描画コンポーネント + Viewport 型 + 描いたものの PNG / SVG 出力
 │   ├── objects/registry/   # 描画層のレジストリ（ObjectComponentRegistry など）
+│   ├── objects/connector/geometry/  # コネクタの幾何（端点解決・直交ルーティング・ラベル配置）。描画も状態更新もせず、描画部品 / controllers から値を取らない
 │   └── export/             # 描いたものの PNG / SVG 出力（フォント埋め込みと、`.jis.png` / `.jis.svg` へのソース埋め込み）
 ├── bootstrap/              # パッケージの読み込み時に、どの Canvas よりも前に一度だけ走るもの: ブラウザのテキスト計測を @jiscribe/doc の計測スロットへ差し出す（差し出した計測器は文字のレイアウトのたびに走る）
 └── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
@@ -104,7 +104,7 @@ State を Props として受け取り SVG を描画するコンポーネント�
 
 依存: `controllers → rendering → states / @jiscribe/doc`。制御層は描画層の**上**に乗るので、UI コントローラが描画層のコンポーネント（例: `PendingConnectorOverlay` → `ConnectorRenderer`、`ArrowHeadIconPreview` → `Arrow`）や registry Context（`RenderingRegistriesProvider` など）を import するのは、上位が下位の部品を組み立てる通常の合成であって例外ではない。
 
-描画と無関係な純幾何は描画層の外、`connectors/` にある。コネクタ端点解決・直交ルーティング・ラベル配置（`connectors/endpoints` / `routing` / `label`）は `rendering` だけでなく `ui`・`gestures`（Free 端点のスナップ・再アンカー）・`utils`（削除時の端点 Free 化・バウンディングボックス・可視判定）からも参照される。削除時に永続化される Free 端点座標もこの解決を通す（削除時点の見た目の位置を捕捉する意図）。`connectors` が canvas 内で値として取るのは自分自身だけで、`states/` の State 型と `rendering/objects/registry/` のレジストリ型は型としてだけ参照する。レジストリ型への参照はレイヤー順では逆向きだが、逆向きの辺は型だけという既存の不変条件どおりで、循環にはならない。
+描画と無関係な純幾何は、コネクタの描画部品の隣の `rendering/objects/connector/geometry/` にある。コネクタ端点解決・直交ルーティング・ラベル配置（`geometry/endpoints` / `routing` / `label`）は描画部品だけでなく `ui`・`gestures`（Free 端点のスナップ・再アンカー）・`utils`（削除時の端点 Free 化・バウンディングボックス・可視判定）からも参照される。削除時に永続化される Free 端点座標もこの解決を通す（削除時点の見た目の位置を捕捉する意図）。この幾何が canvas 内で値として取るのは自分自身だけで、`states/` の State 型と `rendering/objects/registry/` のレジストリ型は型としてだけ参照する。
 
 ### レジストリ群（分散型 — 単一の「registry 層」は存在しない）
 

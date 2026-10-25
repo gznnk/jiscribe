@@ -1,4 +1,4 @@
-import type { ConnectorLabelPlacement } from "../../../../connectors/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 
 /**
  * Pulls a label placed just beside the line back onto it, so the common
