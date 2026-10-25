@@ -13,9 +13,12 @@ const FORBIDDEN_TAGS = ["style", "a"];
 const LOADING_FUNCTION_PATTERN =
 	/(-webkit-image-set|image-set|cross-fade|image|src|url)\(/gi;
 
-// A CSS escape: `\` then up to six hex digits and an optional space, or any one
-// other character (CSS Syntax §4.3.7)
-const CSS_ESCAPE_PATTERN = /\\(?:([0-9a-fA-F]{1,6})\s?|(.))/gs;
+// A CSS escape: `\` then up to six hex digits and one optional whitespace, or
+// any one other character (CSS Syntax §4.3.7). Line breaks are normalized first
+const CSS_ESCAPE_PATTERN = /\\(?:([0-9a-fA-F]{1,6})[ \t\n]?|(.))/gs;
+
+// CSS Syntax §3.3 preprocessing: CRLF, CR and FF are all one LF to the tokenizer
+const CSS_LINE_BREAK_PATTERN = /\r\n?|\f/g;
 
 const isCssWhitespace = (character: string): boolean =>
 	character === " " ||
@@ -30,15 +33,17 @@ const isCssWhitespace = (character: string): boolean =>
  * there.
  */
 const decodeCssEscapes = (value: string): string =>
-	value.replace(CSS_ESCAPE_PATTERN, (_, hex: string | undefined, other) => {
-		if (hex === undefined) {
-			return other;
-		}
-		const codePoint = Number.parseInt(hex, 16);
-		return codePoint === 0 || codePoint > 0x10ffff
-			? "�"
-			: String.fromCodePoint(codePoint);
-	});
+	value
+		.replace(CSS_LINE_BREAK_PATTERN, "\n")
+		.replace(CSS_ESCAPE_PATTERN, (_, hex: string | undefined, other) => {
+			if (hex === undefined) {
+				return other;
+			}
+			const codePoint = Number.parseInt(hex, 16);
+			return codePoint === 0 || codePoint > 0x10ffff
+				? "�"
+				: String.fromCodePoint(codePoint);
+		});
 
 /**
  * Whether the value holds a CSS function that would load another document: an

@@ -124,12 +124,20 @@ describe("parseSanitizedSvg", () => {
 			wrap(
 				'<rect id="a" width="1" height="1" style="fill:u\\72l(https://example.test/x)"/>' +
 					'<rect id="b" width="1" height="1" fill="u\\72 l(https://example.test/x)"/>' +
-					'<rect id="c" width="1" height="1" style="--u:\\75rl(https://example.test/x);fill:var(--u)"/>',
+					'<rect id="c" width="1" height="1" style="--u:\\75rl(https://example.test/x);fill:var(--u)"/>' +
+					// CSS reads the CRLF after the escape as one whitespace, which the escape takes
+					'<rect id="d" width="1" height="1" mask="u\\72&#13;&#10;l(https://example.test/x)"/>' +
+					'<rect id="e" width="1" height="1" mask="u\\72&#13;l(https://example.test/x)"/>' +
+					// NBSP is not CSS whitespace, so the escape leaves it and this is no url(
+					'<rect id="f" width="1" height="1" mask="u\\72&#160;l(https://example.test/x)"/>',
 			),
 		);
 		expect(root.querySelector("#a")?.hasAttribute("style")).toBe(false);
 		expect(root.querySelector("#b")?.hasAttribute("fill")).toBe(false);
 		expect(root.querySelector("#c")?.hasAttribute("style")).toBe(false);
+		expect(root.querySelector("#d")?.hasAttribute("mask")).toBe(false);
+		expect(root.querySelector("#e")?.hasAttribute("mask")).toBe(false);
+		expect(root.querySelector("#f")?.hasAttribute("mask")).toBe(true);
 	});
 
 	it("removes the image functions that take a bare string", () => {
