@@ -31,9 +31,9 @@ import type {
  * 3. `calcRouteCost` / `compareRouteChoices`: evaluate each candidate under a **total order** and
  *    pick the best: shape crossings → reversals → margin intrusions → aesthetics (turns×weight + length) →
  *    symmetric (centered crossover) → topology signature → concrete path. The trailing intrinsic keys make the
- *    result independent of candidate enumeration order, so cost-tied shapes (e.g. wrapping over
- *    vs. under equal-sized boxes) do not flip while an owner shape is dragged (route stability
- *    without memory).
+ *    result independent of candidate enumeration order (up to the aesthetic tolerance, see
+ *    compareRouteChoices), so cost-tied shapes (e.g. wrapping over vs. under equal-sized boxes)
+ *    do not flip while an owner shape is dragged (route stability without memory).
  *
  * The return value is the full path including endpoints `[source.point, …, target.point]`
  * (collinear/duplicate points already collapsed).
@@ -107,9 +107,9 @@ export const routeOrthogonalConnector = (
 	);
 
 	// ── Step 3: evaluate and pick the best ──
-	// Compare candidates under the total order compareRouteChoices (crossings → aesthetics →
-	// intrinsic tie-breaking keys). Ties are decided by the route's own shape, never by
-	// enumeration order, so the result is stable while the shapes move (see routeCost).
+	// Compare candidates under compareRouteChoices (crossings → aesthetics → intrinsic
+	// tie-breaking keys). Ties are decided by the route's own shape rather than by enumeration
+	// order, so the result is stable while the shapes move (see routeCost).
 	//
 	// The obstacle geometry (raw edges + margin-band edges) depends only on the shapes, not on the
 	// candidate, so it is built once here and reused for every candidate's cost.

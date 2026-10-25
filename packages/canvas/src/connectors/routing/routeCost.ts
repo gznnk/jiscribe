@@ -218,7 +218,20 @@ export const calcRouteCost = (
 };
 
 /**
+ * Below this, two aesthetics are the same route length. Candidates of the same
+ * turns and the same Manhattan length sum that length in a different order, so
+ * their sums can differ by a few ulps (about 2e-9 at a length of ten million
+ * pixels); a millionth of a pixel is far above that and far below anything drawn.
+ */
+const AESTHETIC_TOLERANCE = 1e-6;
+
+/** Compares two aesthetics, reading a difference under the tolerance as equal. */
+const compareAesthetic = (a: number, b: number): number =>
+	Math.abs(a - b) < AESTHETIC_TOLERANCE ? 0 : a - b;
+
+/**
  * Compares two costs lexicographically (crossings → reversals → intrusions → aesthetic).
+ * Aesthetics within {@link AESTHETIC_TOLERANCE} of each other are equal.
  *
  * @returns negative when `a` is better, positive when `b` is, 0 when equal
  */
@@ -226,7 +239,7 @@ export const compareCost = (a: RouteCost, b: RouteCost): number =>
 	a.crossings - b.crossings ||
 	a.reversals - b.reversals ||
 	a.intrusions - b.intrusions ||
-	a.aesthetic - b.aesthetic;
+	compareAesthetic(a.aesthetic, b.aesthetic);
 
 /**
  * A route candidate as seen by the total-order comparison: the cost plus the intrinsic
@@ -272,11 +285,14 @@ const compareSignatures = (a: string, b: string): number => {
 /**
  * **Total order** over route candidates: crossings → reversals → intrusions → aesthetic →
  * symmetric (centered crossover first) → topology signature (alphabetical) → concrete path
- * (lexicographical).
+ * (lexicographical). Aesthetics tie within {@link AESTHETIC_TOLERANCE}, which is not transitive:
+ * the pick can depend on enumeration order, but only when two bend channels lie within the
+ * tolerance of each other and a third candidate ties with both.
  *
- * Exact cost ties are common and can persist across a whole drag, so the trailing keys give route
- * stability without memory: all of them are intrinsic to the route's shape and move continuously
- * with the geometry, so the same candidate wins every frame inside a tie region.
+ * Cost ties (exact, or within the tolerance) are common and can persist across a whole drag, so
+ * the trailing keys give route stability without memory: all of them are intrinsic to the route's
+ * shape and move continuously with the geometry, so the same candidate wins every frame inside a
+ * tie region.
  *
  * @returns negative when `a` is better, positive when `b` is, 0 for identical candidates
  */

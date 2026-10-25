@@ -162,6 +162,35 @@ describe("compareCost", () => {
 			),
 		).toBeLessThan(0);
 	});
+
+	it("aesthetics that differ only by float noise are a tie, left to the keys after the cost", () => {
+		// Two routes of the same turns and the same Manhattan length, summed in a
+		// different order: the pair a real document produced (one ulp apart).
+		const centred = {
+			crossings: 0,
+			reversals: 0,
+			intrusions: 0,
+			aesthetic: 4285.822980145857,
+		};
+		const hugging = {
+			crossings: 0,
+			reversals: 0,
+			intrusions: 0,
+			aesthetic: 4285.8229801458565,
+		};
+		expect(centred.aesthetic).not.toBe(hugging.aesthetic);
+		expect(compareCost(centred, hugging)).toBe(0);
+		expect(compareCost(hugging, centred)).toBe(0);
+	});
+
+	it("an aesthetic difference a person could see still decides", () => {
+		expect(
+			compareCost(
+				{ crossings: 0, reversals: 0, intrusions: 0, aesthetic: 100 },
+				{ crossings: 0, reversals: 0, intrusions: 0, aesthetic: 100.001 },
+			),
+		).toBeLessThan(0);
+	});
 });
 
 describe("calcRouteCost", () => {

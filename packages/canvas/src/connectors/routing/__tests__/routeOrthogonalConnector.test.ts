@@ -584,3 +584,96 @@ describe("routeOrthogonalConnector", () => {
 		});
 	});
 });
+
+describe("routeOrthogonalConnector — cost ties are not decided by float noise", () => {
+	// A table 1895.0326 wide and a UML record above its top-right corner, as a
+	// real document had them: the record's topCenter exits up and the table's
+	// rightCenter exits right. The gap-centred S and the L hugging the table's
+	// right margin have the same turns and the same Manhattan length, summed in
+	// a different order, so their aesthetics differ by ulps at some coordinates.
+	const tableColumnWidths = [
+		151.8641, 151.8641, 234.6993, 110.4467, 367.9154, 96.6409, 138.0583,
+		165.6699, 164.7846, 313.0893,
+	];
+	const tableWidth = tableColumnWidths.reduce((sum, width) => sum + width, 0);
+	const tableHeight = 1365;
+	const recordWidth = 180;
+	const recordHeight = 99;
+
+	const routeRecordToTable = (
+		recordX: number,
+		recordY: number,
+		tableX: number,
+		tableY: number,
+	) => {
+		const recordBox = boxAt(
+			recordX + recordWidth / 2,
+			recordY + recordHeight / 2,
+			recordWidth,
+			recordHeight,
+		);
+		const tableBox = boxAt(
+			tableX + tableWidth / 2,
+			tableY + tableHeight / 2,
+			tableWidth,
+			tableHeight,
+		);
+		const path = routeOrthogonalConnector(
+			{
+				point: { x: recordBox.center.x, y: recordBox.top },
+				direction: "up",
+				box: recordBox,
+			},
+			{
+				point: { x: tableBox.right, y: tableBox.center.y },
+				direction: "right",
+				box: tableBox,
+			},
+		);
+		return {
+			path,
+			gapCenterX: Math.round((tableBox.right + recordBox.left) / 2),
+		};
+	};
+
+	it.each([
+		// The saved (4-decimal) positions, then positions within 0.01px of them
+		// that a drag can leave behind; each of those used to route along the
+		// table's right margin.
+		[2191.124, -803.0384, -131.4351, -777.2235],
+		[
+			2191.1283109489104, -803.0384362711409, -131.42886458637915,
+			-777.2195999131044,
+		],
+		[
+			2191.130934912756, -803.0481234965248, -131.44435357145477,
+			-777.2204200332702,
+		],
+		[
+			2191.117527822375, -803.032456274822, -131.43627111071766,
+			-777.2311622232703,
+		],
+		[
+			2191.133676739689, -803.0446794575647, -131.42689624500446,
+			-777.2150093155744,
+		],
+		[
+			2191.126655645325, -803.0332696263471, -131.42671799539698,
+			-777.2261104797008,
+		],
+	])(
+		"bends at the centre of the gap for a record at (%f, %f) and a table at (%f, %f)",
+		(recordX, recordY, tableX, tableY) => {
+			const { path, gapCenterX } = routeRecordToTable(
+				recordX,
+				recordY,
+				tableX,
+				tableY,
+			);
+			// source, stub, corner, corner, target
+			expect(path).toHaveLength(5);
+			expect(path[2].x).toBe(gapCenterX);
+			expect(path[3].x).toBe(gapCenterX);
+		},
+	);
+});

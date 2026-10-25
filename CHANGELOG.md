@@ -253,6 +253,15 @@ as? }` in order, where a later entry refers to the ids an earlier one created
 
 ### Fixed
 
+- **An orthogonal connector no longer hugs one shape's margin when a route
+  centred between the shapes is just as good.** Two candidates of the same
+  turns and the same Manhattan length sum that length in a different order, so
+  their costs could differ by one floating-point ulp, and that noise decided
+  the route before the preference for the centred crossover was consulted.
+  Which one won depended on the trailing bits of the coordinates, which a drag
+  leaves unrounded and a save rounds away — so a connector drawn along a
+  table's right edge in the editor came back centred after the file was
+  reopened. Costs that differ by less than a millionth of a pixel now tie.
 - **Opening a text edit while a drawing tool is armed disarms the tool.**
   Enter after Select All, or a double click on a shape, used to leave the tool
   armed under the editor, so the next drag on the canvas drew a shape.

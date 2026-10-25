@@ -44,7 +44,9 @@ ordering _is_ the spec — every past conflict was a disagreement about it.
    below). Ranked above the aesthetic so the route keeps full clearance from shapes it passes
    _whenever a clearance route exists_, even at the cost of a couple of turns — so clearance never
    dips inside the margin and pops back out as a shape is dragged.
-4. **aesthetic** (S3 + S4) — `turns × weight + length`. Fewer corners first, then shorter.
+4. **aesthetic** (S3 + S4) — `turns × weight + length`. Fewer corners first, then shorter. Lengths
+   within `AESTHETIC_TOLERANCE` (routeCost.ts) are equal, so float noise from summing the
+   same length in a different order never decides.
 5. **symmetric** (S5) — tie-break preferring the crossover centred between the two shapes (so an S/Z
    jogs at the midline, not against one shape's margin). Applied only among cost-equal candidates, so
    it never turns a cheaper route (e.g. a clean L) into an S.
