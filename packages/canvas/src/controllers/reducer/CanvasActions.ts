@@ -383,9 +383,10 @@ export type CloseModalAction = {
 
 /**
  * Close one of the stencil rail's popovers, if it is the one in the flyout's
- * slot. Dispatched by Canvas once the rail can no longer show it (the rail grew
- * out of overflowing, or was hidden), so a popover nothing draws never lingers
- * to come back by itself or to keep Escape available.
+ * slot. Dispatched by Canvas once nothing can draw it — the rail's layout no
+ * longer offers it, or the rail is hidden — because a popover nothing draws is
+ * closed rather than kept: kept, it would come back by itself and keep Escape
+ * available.
  */
 export type CloseRailPopoverAction = {
 	type: "CLOSE_RAIL_POPOVER";

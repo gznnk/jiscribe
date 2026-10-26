@@ -685,6 +685,15 @@ describe("Canvas chrome", () => {
 			).toBe("false");
 		});
 
+		it("keeps an open popover through a rail not laid out (0 tall)", async () => {
+			const { container } = mountShortRail();
+			await press(container.querySelector(MORE_BUTTON));
+
+			resizeRail(0);
+			resizeRail(1);
+			expect(container.querySelector(POPOVER)).not.toBeNull();
+		});
+
 		it("closes the presets' popover once the presets unfold", async () => {
 			const { container } = mountShortRail();
 			await press(container.querySelector(PRESETS_BUTTON));
@@ -700,6 +709,17 @@ describe("Canvas chrome", () => {
 			await press(container.querySelector(MORE_BUTTON));
 
 			rerender({ ...shortRailProps, rail: { show: false } });
+			// Gone from the state while the rail is hidden: with nothing selected,
+			// Escape has nothing left to clear and is left to the browser.
+			const escape = new KeyboardEvent("keydown", {
+				key: "Escape",
+				bubbles: true,
+				cancelable: true,
+			});
+			act(() => {
+				container.querySelector('[tabindex="0"]')?.dispatchEvent(escape);
+			});
+			expect(escape.defaultPrevented).toBe(false);
 			rerender(shortRailProps);
 			expect(container.querySelector(MORE_BUTTON)).not.toBeNull();
 			expect(container.querySelector(POPOVER)).toBeNull();

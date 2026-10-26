@@ -39,8 +39,16 @@ export type StencilRailOverflow = {
 	hasPinnedDivider: boolean;
 	/** Whether the dashed divider stands above the shown document categories. */
 	hasDocumentDivider: boolean;
+	/** Whether the "…" button is drawn: something is in it. */
+	hasMoreButton: boolean;
 	/** Whether the spacer pushes "…" and the catalog button to the bottom (either is drawn). */
 	hasSpacer: boolean;
+	/**
+	 * Whether the layout was decided against a measured height. false for a
+	 * rail not laid out (a height of 0), which moves nothing and so says
+	 * nothing about what the rail would offer once it is.
+	 */
+	isLaidOut: boolean;
 };
 
 /** The height the rail's column needs for this layout, padding and gaps included (StencilRailStyled). */
@@ -49,14 +57,11 @@ const calcStencilRailContentHeight = (
 	presetButtonCount: number,
 	hasCatalogButton: boolean,
 ): number => {
-	const hasMoreButton =
-		overflow.overflowedPinnedCategoryIds.length > 0 ||
-		overflow.overflowedDocumentCategoryIds.length > 0;
 	const buttonCount =
 		presetButtonCount +
 		overflow.shownPinnedCategoryIds.length +
 		overflow.shownDocumentCategoryIds.length +
-		(hasMoreButton ? 1 : 0) +
+		(overflow.hasMoreButton ? 1 : 0) +
 		(hasCatalogButton ? 1 : 0);
 	const dividerCount =
 		(overflow.hasPinnedDivider ? 1 : 0) + (overflow.hasDocumentDivider ? 1 : 0);
@@ -116,6 +121,7 @@ export const resolveStencilRailOverflow = (
 		const shownPinnedCategoryIds = pinnedCategoryIds.filter(isShown);
 		const shownDocumentCategoryIds = documentCategoryIds.filter(isShown);
 		const hasPresets = presetCount > 0;
+		const hasMoreButton = overflowedIds.size > 0;
 		return {
 			arePresetsCollapsed,
 			shownPinnedCategoryIds,
@@ -126,7 +132,9 @@ export const resolveStencilRailOverflow = (
 			hasDocumentDivider:
 				shownDocumentCategoryIds.length > 0 &&
 				(hasPresets || shownPinnedCategoryIds.length > 0),
-			hasSpacer: overflowedIds.size > 0 || hasCatalogButton,
+			hasMoreButton,
+			hasSpacer: hasMoreButton || hasCatalogButton,
+			isLaidOut: railHeight > 0,
 		};
 	};
 	const fits = (overflow: StencilRailOverflow): boolean =>
@@ -158,9 +166,7 @@ export const resolveStencilRailOverflow = (
 
 /**
  * Whether the rail can show a popover of `kind` in this layout: "…" only while
- * something is in it, the presets' only while they are folded. A popover the
- * layout no longer offers is closed rather than kept hidden (StencilRail asks
- * Canvas to drop it from the flyout's slot), so it never comes back by itself.
+ * something is in it, the presets' only while they are folded.
  *
  * @param kind - The popover open in the flyout's slot
  * @param overflow - The rail's current layout (resolveStencilRailOverflow)
@@ -170,6 +176,5 @@ export const isStencilRailPopoverShowable = (
 	overflow: StencilRailOverflow,
 ): boolean =>
 	kind === "railOverflow"
-		? overflow.overflowedPinnedCategoryIds.length > 0 ||
-			overflow.overflowedDocumentCategoryIds.length > 0
+		? overflow.hasMoreButton
 		: overflow.arePresetsCollapsed;

@@ -11,14 +11,14 @@ export const STENCIL_RAIL_PADDING = 8;
 export const STENCIL_RAIL_GAP = 4;
 
 /** The thickness of a divider's line, solid or dashed, in px. */
-const STENCIL_RAIL_DIVIDER_LINE = 1;
+const STENCIL_RAIL_DIVIDER_THICKNESS = 1;
 
 /** A divider's margin above and below its line, in px. */
 const STENCIL_RAIL_DIVIDER_MARGIN = 4;
 
 /** The height a divider takes in the rail's column, margins included, in px. */
 export const STENCIL_RAIL_DIVIDER_EXTENT =
-	STENCIL_RAIL_DIVIDER_LINE + 2 * STENCIL_RAIL_DIVIDER_MARGIN;
+	STENCIL_RAIL_DIVIDER_THICKNESS + 2 * STENCIL_RAIL_DIVIDER_MARGIN;
 
 /**
  * Width of the rail in px: a stencil button with the padding either side. The
@@ -71,7 +71,7 @@ export const StencilRailContainer = styled.nav`
 export const StencilRailDivider = styled.div`
 	flex: none;
 	width: 20px;
-	height: ${STENCIL_RAIL_DIVIDER_LINE}px;
+	height: ${STENCIL_RAIL_DIVIDER_THICKNESS}px;
 	margin: ${STENCIL_RAIL_DIVIDER_MARGIN}px 0;
 	background-color: ${theme.borderSubtle};
 `;
@@ -85,7 +85,7 @@ export const StencilRailDocumentDivider = styled.div`
 	width: 20px;
 	height: 0;
 	margin: ${STENCIL_RAIL_DIVIDER_MARGIN}px 0;
-	border-top: ${STENCIL_RAIL_DIVIDER_LINE}px dashed ${theme.borderSubtle};
+	border-top: ${STENCIL_RAIL_DIVIDER_THICKNESS}px dashed ${theme.borderSubtle};
 `;
 
 /** Pushes what follows it (the "…" button, the catalog button) to the bottom of the rail. */

@@ -604,8 +604,7 @@ const CanvasComponent = ({
 		dispatch({ type: "CLOSE_MODAL" });
 	}, [dispatch]);
 
-	// A rail popover nothing can draw is closed, not kept: the rail reports one
-	// its layout no longer offers, and a hidden rail offers none.
+	// A hidden rail draws no popover (CloseRailPopoverAction).
 	const closeRailPopover = useCallback(
 		(kind: StencilRailPopoverKind) => {
 			dispatch({ type: "CLOSE_RAIL_POPOVER", kind });

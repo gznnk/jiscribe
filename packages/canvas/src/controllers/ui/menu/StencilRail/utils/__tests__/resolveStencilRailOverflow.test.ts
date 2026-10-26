@@ -42,7 +42,10 @@ const overflowedIdsOf = (overflow: StencilRailOverflow): string[] => [
 
 describe("resolveStencilRailOverflow", () => {
 	it("moves nothing into '…' when everything fits, or when the rail is not laid out", () => {
-		for (const railHeight of [800, 0]) {
+		for (const [railHeight, isLaidOut] of [
+			[800, true],
+			[0, false],
+		] as const) {
 			expect(resolveStencilRailOverflow(railHeight, fullRail)).toEqual({
 				arePresetsCollapsed: false,
 				shownPinnedCategoryIds: ["pin-a", "pin-b"],
@@ -51,7 +54,9 @@ describe("resolveStencilRailOverflow", () => {
 				overflowedDocumentCategoryIds: [],
 				hasPinnedDivider: true,
 				hasDocumentDivider: true,
+				hasMoreButton: false,
 				hasSpacer: true,
+				isLaidOut,
 			});
 		}
 	});
@@ -175,6 +180,7 @@ describe("resolveStencilRailOverflow", () => {
 			.map(({ overflow }) => overflow)
 			.filter((overflow) => !overflow.arePresetsCollapsed)
 			.at(-1)!;
+		expect(lastUncollapsed.hasMoreButton).toBe(true);
 		expect(lastUncollapsed.hasSpacer).toBe(true);
 		expect(lastUncollapsed.hasPinnedDivider).toBe(false);
 		expect(lastUncollapsed.hasDocumentDivider).toBe(false);

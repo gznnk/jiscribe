@@ -73,9 +73,9 @@ type StencilRailProps = {
 	 */
 	pinInsertionIndex: number | null;
 	/**
-	 * Called when `openRailPopover` names a popover the rail's layout no longer
-	 * offers (the rail grew), so Canvas drops it from the flyout's slot. Keep it
-	 * stable: the rail is memoized.
+	 * Called when `openRailPopover` names a popover in a layout that no longer
+	 * offers it, so Canvas drops it from the flyout's slot. Keep it stable: the
+	 * rail is memoized.
 	 */
 	onRailPopoverUnshowable: (kind: StencilRailPopoverKind) => void;
 };
@@ -252,11 +252,14 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 		isStencilRailPopoverShowable(openRailPopover, overflow)
 			? openRailPopover
 			: null;
+	// A rail not laid out yet (unmeasured, or 0 tall) offers nothing to compare against.
+	const isOpenRailPopoverUnshowable =
+		overflow.isLaidOut && openRailPopover !== null && shownRailPopover === null;
 	useLayoutEffect(() => {
-		if (openRailPopover !== null && shownRailPopover === null) {
+		if (isOpenRailPopoverUnshowable && openRailPopover !== null) {
 			onRailPopoverUnshowable(openRailPopover);
 		}
-	}, [openRailPopover, shownRailPopover, onRailPopoverUnshowable]);
+	}, [isOpenRailPopoverUnshowable, openRailPopover, onRailPopoverUnshowable]);
 	// Only what is on screen can carry the line: the "…" popover's pins only while it is shown.
 	const pinInsertionMark = resolvePinInsertionMark(
 		pinnedCategoryIds,
@@ -331,7 +334,7 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 					/>
 				))}
 				{overflow.hasSpacer && <StencilRailSpacer />}
-				{overflowedCount > 0 && (
+				{overflow.hasMoreButton && (
 					<StencilRailPanelButton
 						type="button"
 						data-action={toggleAction("railOverflow")}
