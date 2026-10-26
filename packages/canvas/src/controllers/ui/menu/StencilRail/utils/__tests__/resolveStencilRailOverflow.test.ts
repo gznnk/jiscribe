@@ -8,6 +8,7 @@ import {
 import {
 	type StencilRailContents,
 	type StencilRailOverflow,
+	isStencilRailPopoverShowable,
 	resolveStencilRailOverflow,
 } from "../resolveStencilRailOverflow";
 
@@ -48,6 +49,9 @@ describe("resolveStencilRailOverflow", () => {
 				overflowedPinnedCategoryIds: [],
 				shownDocumentCategoryIds: ["doc-most", "doc-least"],
 				overflowedDocumentCategoryIds: [],
+				hasPinnedDivider: true,
+				hasDocumentDivider: true,
+				hasSpacer: true,
 			});
 		}
 	});
@@ -145,5 +149,45 @@ describe("resolveStencilRailOverflow", () => {
 		for (const { overflow } of scanHeights({ ...fullRail, presetCount: 1 })) {
 			expect(overflow.arePresetsCollapsed).toBe(false);
 		}
+	});
+
+	it("draws each divider only with something on both sides, and the spacer only above a bottom button", () => {
+		const noPresets = resolveStencilRailOverflow(800, {
+			...fullRail,
+			presetCount: 0,
+			hasCatalogButton: false,
+		});
+		expect(noPresets.hasPinnedDivider).toBe(false);
+		expect(noPresets.hasDocumentDivider).toBe(true);
+		expect(noPresets.hasSpacer).toBe(false);
+		const noCategories = resolveStencilRailOverflow(800, {
+			...fullRail,
+			pinnedCategoryIds: [],
+			documentCategoryIds: [],
+		});
+		expect(noCategories.hasPinnedDivider).toBe(false);
+		expect(noCategories.hasDocumentDivider).toBe(false);
+		// Everything in "…": the spacer stays for the "…" button, the dividers go.
+		const lastUncollapsed = scanHeights({
+			...fullRail,
+			hasCatalogButton: false,
+		})
+			.map(({ overflow }) => overflow)
+			.filter((overflow) => !overflow.arePresetsCollapsed)
+			.at(-1)!;
+		expect(lastUncollapsed.hasSpacer).toBe(true);
+		expect(lastUncollapsed.hasPinnedDivider).toBe(false);
+		expect(lastUncollapsed.hasDocumentDivider).toBe(false);
+	});
+});
+
+describe("isStencilRailPopoverShowable", () => {
+	it("offers '…' only while something is in it, and the presets' popover only while they are folded", () => {
+		const roomy = resolveStencilRailOverflow(800, fullRail);
+		expect(isStencilRailPopoverShowable("railOverflow", roomy)).toBe(false);
+		expect(isStencilRailPopoverShowable("railPresets", roomy)).toBe(false);
+		const folded = resolveStencilRailOverflow(1, fullRail);
+		expect(isStencilRailPopoverShowable("railOverflow", folded)).toBe(true);
+		expect(isStencilRailPopoverShowable("railPresets", folded)).toBe(true);
 	});
 });

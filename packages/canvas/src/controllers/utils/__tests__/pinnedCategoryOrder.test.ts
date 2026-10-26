@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	calcPinInsertionIndex,
 	movePinnedCategory,
+	pinInsertionEdgeOf,
 	resolvePinInsertionMark,
 } from "../pinnedCategoryOrder";
 
@@ -66,8 +67,37 @@ describe("resolvePinInsertionMark", () => {
 		});
 	});
 
+	it("marks after the rail's last pin for a drop onto a pin inside a closed '…' popover", () => {
+		// `c` and `d` are in the popover, closed: only `a` and `b` are drawn.
+		expect(resolvePinInsertionMark(PINS, ["a", "b"], 2)).toEqual({
+			categoryId: "b",
+			edge: "after",
+		});
+	});
+
+	it("goes by the pin order whatever order the drawn pins come in", () => {
+		// The drawn tail pin `d`, kept on the rail at the end of its group.
+		expect(resolvePinInsertionMark(PINS, ["d", "a"], 1)).toEqual({
+			categoryId: "d",
+			edge: "before",
+		});
+		expect(resolvePinInsertionMark(PINS, ["d", "a"], 4)).toEqual({
+			categoryId: "d",
+			edge: "after",
+		});
+	});
+
 	it("marks nothing without an index or a drawn pin", () => {
 		expect(resolvePinInsertionMark(PINS, PINS, null)).toBeNull();
 		expect(resolvePinInsertionMark(PINS, [], 0)).toBeNull();
+	});
+});
+
+describe("pinInsertionEdgeOf", () => {
+	it("answers the mark's edge for the pin it names only", () => {
+		const mark = { categoryId: "b", edge: "after" } as const;
+		expect(pinInsertionEdgeOf(mark, "b")).toBe("after");
+		expect(pinInsertionEdgeOf(mark, "a")).toBeNull();
+		expect(pinInsertionEdgeOf(null, "b")).toBeNull();
 	});
 });

@@ -272,10 +272,9 @@ test.describe("Stencil rail overflow", () => {
 			selectors.categoryButton(BASIC_CATEGORY),
 			selectors.categoryButton(SPEC_CATEGORY),
 			async () => {
-				const markContent = await page
-					.locator(selectors.categoryButton(SPEC_CATEGORY))
-					.evaluate((element) => getComputedStyle(element, "::after").content);
-				expect(markContent).not.toBe("none");
+				await expect(
+					page.locator(selectors.categoryButton(SPEC_CATEGORY)),
+				).toHaveAttribute("data-pin-insertion", "before");
 			},
 		);
 

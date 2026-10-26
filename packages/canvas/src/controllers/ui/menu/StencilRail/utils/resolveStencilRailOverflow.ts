@@ -1,3 +1,4 @@
+import type { StencilRailPopoverKind } from "../../../../utils/stencilRailPopover";
 import { STENCIL_BUTTON_SIZE } from "../../StencilLibrary/StencilLibraryStyled";
 import {
 	STENCIL_RAIL_DIVIDER_EXTENT,
@@ -18,7 +19,7 @@ export type StencilRailContents = {
 	 * none is. It stays on the rail whatever else has to go.
 	 */
 	drawnCategoryId: string | null;
-	/** Whether the catalog button closes the rail (a library, and its command registered). */
+	/** Whether the rail ends with the catalog button (a library, and its command registered). */
 	hasCatalogButton: boolean;
 };
 
@@ -34,38 +35,33 @@ export type StencilRailOverflow = {
 	shownDocumentCategoryIds: string[];
 	/** The document's categories in "…", most-used first: the least-used ones. */
 	overflowedDocumentCategoryIds: string[];
+	/** Whether the solid divider stands between the presets and the shown pins. */
+	hasPinnedDivider: boolean;
+	/** Whether the dashed divider stands above the shown document categories. */
+	hasDocumentDivider: boolean;
+	/** Whether the spacer pushes "…" and the catalog button to the bottom (either is drawn). */
+	hasSpacer: boolean;
 };
 
-type StencilRailItemCounts = {
-	presetButtonCount: number;
-	pinnedCount: number;
-	documentCount: number;
-	hasMoreButton: boolean;
-	hasCatalogButton: boolean;
-};
-
-/** The height the rail's column needs for these items, padding and gaps included (StencilRailStyled). */
-const calcStencilRailContentHeight = ({
-	presetButtonCount,
-	pinnedCount,
-	documentCount,
-	hasMoreButton,
-	hasCatalogButton,
-}: StencilRailItemCounts): number => {
-	const hasPinnedDivider = pinnedCount > 0 && presetButtonCount > 0;
-	const hasDocumentDivider =
-		documentCount > 0 && (presetButtonCount > 0 || pinnedCount > 0);
-	const hasBottomGroup = hasMoreButton || hasCatalogButton;
+/** The height the rail's column needs for this layout, padding and gaps included (StencilRailStyled). */
+const calcStencilRailContentHeight = (
+	overflow: StencilRailOverflow,
+	presetButtonCount: number,
+	hasCatalogButton: boolean,
+): number => {
+	const hasMoreButton =
+		overflow.overflowedPinnedCategoryIds.length > 0 ||
+		overflow.overflowedDocumentCategoryIds.length > 0;
 	const buttonCount =
 		presetButtonCount +
-		pinnedCount +
-		documentCount +
+		overflow.shownPinnedCategoryIds.length +
+		overflow.shownDocumentCategoryIds.length +
 		(hasMoreButton ? 1 : 0) +
 		(hasCatalogButton ? 1 : 0);
 	const dividerCount =
-		(hasPinnedDivider ? 1 : 0) + (hasDocumentDivider ? 1 : 0);
-	// The spacer pushing the bottom group down is an item of its own: no height, one gap.
-	const itemCount = buttonCount + dividerCount + (hasBottomGroup ? 1 : 0);
+		(overflow.hasPinnedDivider ? 1 : 0) + (overflow.hasDocumentDivider ? 1 : 0);
+	// The spacer is an item of its own: no height, one gap.
+	const itemCount = buttonCount + dividerCount + (overflow.hasSpacer ? 1 : 0);
 	return (
 		2 * STENCIL_RAIL_PADDING +
 		buttonCount * STENCIL_BUTTON_SIZE +
@@ -117,26 +113,28 @@ export const resolveStencilRailOverflow = (
 		const overflowedIds = new Set(leavingIds.slice(0, leavingCount));
 		const isShown = (categoryId: string) => !overflowedIds.has(categoryId);
 		const isOverflowed = (categoryId: string) => overflowedIds.has(categoryId);
+		const shownPinnedCategoryIds = pinnedCategoryIds.filter(isShown);
+		const shownDocumentCategoryIds = documentCategoryIds.filter(isShown);
+		const hasPresets = presetCount > 0;
 		return {
 			arePresetsCollapsed,
-			shownPinnedCategoryIds: pinnedCategoryIds.filter(isShown),
+			shownPinnedCategoryIds,
 			overflowedPinnedCategoryIds: pinnedCategoryIds.filter(isOverflowed),
-			shownDocumentCategoryIds: documentCategoryIds.filter(isShown),
+			shownDocumentCategoryIds,
 			overflowedDocumentCategoryIds: documentCategoryIds.filter(isOverflowed),
+			hasPinnedDivider: hasPresets && shownPinnedCategoryIds.length > 0,
+			hasDocumentDivider:
+				shownDocumentCategoryIds.length > 0 &&
+				(hasPresets || shownPinnedCategoryIds.length > 0),
+			hasSpacer: overflowedIds.size > 0 || hasCatalogButton,
 		};
 	};
 	const fits = (overflow: StencilRailOverflow): boolean =>
-		calcStencilRailContentHeight({
-			presetButtonCount: overflow.arePresetsCollapsed
-				? Math.min(presetCount, 1)
-				: presetCount,
-			pinnedCount: overflow.shownPinnedCategoryIds.length,
-			documentCount: overflow.shownDocumentCategoryIds.length,
-			hasMoreButton:
-				overflow.overflowedPinnedCategoryIds.length > 0 ||
-				overflow.overflowedDocumentCategoryIds.length > 0,
+		calcStencilRailContentHeight(
+			overflow,
+			overflow.arePresetsCollapsed ? Math.min(presetCount, 1) : presetCount,
 			hasCatalogButton,
-		}) <= railHeight;
+		) <= railHeight;
 
 	if (railHeight === 0) {
 		return layOut(false, 0);
@@ -157,3 +155,21 @@ export const resolveStencilRailOverflow = (
 	}
 	return layOut(collapseSteps[collapseSteps.length - 1], leavingIds.length);
 };
+
+/**
+ * Whether the rail can show a popover of `kind` in this layout: "…" only while
+ * something is in it, the presets' only while they are folded. A popover the
+ * layout no longer offers is closed rather than kept hidden (StencilRail asks
+ * Canvas to drop it from the flyout's slot), so it never comes back by itself.
+ *
+ * @param kind - The popover open in the flyout's slot
+ * @param overflow - The rail's current layout (resolveStencilRailOverflow)
+ */
+export const isStencilRailPopoverShowable = (
+	kind: StencilRailPopoverKind,
+	overflow: StencilRailOverflow,
+): boolean =>
+	kind === "railOverflow"
+		? overflow.overflowedPinnedCategoryIds.length > 0 ||
+			overflow.overflowedDocumentCategoryIds.length > 0
+		: overflow.arePresetsCollapsed;

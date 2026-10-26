@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 
 /**
- * Notifies the host when a library category is pinned to the rail or unpinned.
+ * Notifies the host when a library category is pinned to the rail or unpinned,
+ * or a pin is dragged to another place in the pin order.
  *
  * Comparison is by value (the ids in order), not by reference: pins that end up
  * as they already were must not be reported. The callback goes through a ref so

@@ -183,7 +183,8 @@ export type CanvasConfig = CanvasCapabilities & {
 	 * but not drawn. Naming one id twice throws at mount.
 	 *
 	 * Read once at mount, like `sidebars`: the pins are the user's from then on,
-	 * changed from the catalog and reported through `onPinnedCategoriesChange`.
+	 * changed from the catalog and by dragging a pin to another place, and
+	 * reported through `onPinnedCategoriesChange`.
 	 */
 	pinnedCategoryIds?: readonly string[];
 };

@@ -14,7 +14,12 @@ export type CanvasMessageStrings = {
 	// Stencil rail
 	/** aria-label of the rail itself, the column of shape tools at the left */
 	stencilRailLabel: string;
-	/** title / aria-label of the button holding the rail's presets once the rail is too short for them */
+	/**
+	 * title / aria-label of the button holding the rail's presets once the rail
+	 * is too short for them. It labels whatever `rail.presetIds` holds, core's
+	 * primitives by default; a host putting presets of its own there overrides
+	 * it through `messages`.
+	 */
 	stencilRailPresets: string;
 	/** Heading of the pinned categories in the rail's "…" popover */
 	stencilRailPinnedHeading: string;

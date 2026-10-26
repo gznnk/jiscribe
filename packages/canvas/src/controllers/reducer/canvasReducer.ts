@@ -621,6 +621,11 @@ export const createCanvasReducer =
 				return { ...state, activeModal: null };
 			}
 
+			case "CLOSE_RAIL_POPOVER":
+				return state.stencilFlyout?.kind === action.kind
+					? { ...state, stencilFlyout: null }
+					: state;
+
 			case "SET_STENCIL_LIBRARY": {
 				const heldIds = state.stencilLibraryCategoryIds;
 				const isSame =

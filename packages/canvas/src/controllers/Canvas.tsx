@@ -102,6 +102,7 @@ import {
 	isStencilPanelContent,
 	readDrawnStencilPanelContent,
 } from "./utils/stencilPanelContent";
+import type { StencilRailPopoverKind } from "./utils/stencilRailPopover";
 
 type CanvasProps = {
 	// ── Document ──
@@ -603,6 +604,24 @@ const CanvasComponent = ({
 		dispatch({ type: "CLOSE_MODAL" });
 	}, [dispatch]);
 
+	// A rail popover nothing can draw is closed, not kept: the rail reports one
+	// its layout no longer offers, and a hidden rail offers none.
+	const closeRailPopover = useCallback(
+		(kind: StencilRailPopoverKind) => {
+			dispatch({ type: "CLOSE_RAIL_POPOVER", kind });
+		},
+		[dispatch],
+	);
+	const openRailPopover =
+		state.stencilFlyout !== null && !isStencilPanelContent(state.stencilFlyout)
+			? state.stencilFlyout.kind
+			: null;
+	useLayoutEffect(() => {
+		if (!isRailShown && openRailPopover !== null) {
+			closeRailPopover(openRailPopover);
+		}
+	}, [isRailShown, openRailPopover, closeRailPopover]);
+
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			// data-gesture="none" elements (e.g. the text-editing surface) keep the
@@ -723,17 +742,13 @@ const CanvasComponent = ({
 							documentCategoryIds={documentCategoryIds}
 							activePresetId={drawingPresetId}
 							drawnPanelContent={shownStencilPanelContent}
-							openRailPopover={
-								state.stencilFlyout !== null &&
-								!isStencilPanelContent(state.stencilFlyout)
-									? state.stencilFlyout.kind
-									: null
-							}
+							openRailPopover={openRailPopover}
 							pinInsertionIndex={
 								state.drag?.kind === "pinReorder"
 									? state.drag.insertionIndex
 									: null
 							}
+							onRailPopoverUnshowable={closeRailPopover}
 						/>
 					)}
 					{isStencilPanelDocked && (

@@ -118,7 +118,8 @@ beside the rail, `data-kind="menu" data-id="stencil-rail-popover"` with
 `data-popover="railOverflow"` / `"railPresets"`: the first holds category rows that
 are the same `stencil-category` toggles as the rail's buttons (`data-rail-group`
 included, `selectors.railOverflowRows`), the second the presets as library items
-(`selectors.railPresetsPopoverItem`).
+(`selectors.railPresetsPopoverItem`). While a pin is dragged, the button or row its
+insertion line is drawn beside carries `data-pin-insertion="before"` / `"after"`.
 The stencil panel (`stencil-library-panel`, in the DOM only while open) carries
 `data-presentation="flyout"` over the canvas or `"docked"` beside it, and
 `data-stencil-category-panel="<categoryId>"` while it shows a category. Its header

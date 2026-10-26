@@ -14,6 +14,7 @@ import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 import type { StyleIntent } from "../style/StyleIntent";
+import type { StencilRailPopoverKind } from "../utils/stencilRailPopover";
 
 /**
  * Gesture action - handles user gestures
@@ -381,6 +382,17 @@ export type CloseModalAction = {
 };
 
 /**
+ * Close one of the stencil rail's popovers, if it is the one in the flyout's
+ * slot. Dispatched by Canvas once the rail can no longer show it (the rail grew
+ * out of overflowing, or was hidden), so a popover nothing draws never lingers
+ * to come back by itself or to keep Escape available.
+ */
+export type CloseRailPopoverAction = {
+	type: "CLOSE_RAIL_POPOVER";
+	kind: StencilRailPopoverKind;
+};
+
+/**
  * The ids of the sections the host's stencil library resolves to, in order.
  * Canvas dispatches it whenever the resolved sections change — each new array,
  * once at mount included — without comparing; the reducer drops ids equal to
@@ -416,4 +428,5 @@ export type CanvasAction =
 	| RemeasureTextAction
 	| CloseContextMenuAction
 	| CloseModalAction
+	| CloseRailPopoverAction
 	| SetStencilLibraryAction;

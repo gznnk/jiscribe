@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef } from "react";
+import { memo, useLayoutEffect, useMemo, useRef } from "react";
 
 import {
 	StencilRailOverflowPopover,
@@ -13,7 +13,10 @@ import {
 	StencilRailSpacer,
 } from "./StencilRailStyled";
 import { resolveStencilRail } from "./utils/resolveStencilRail";
-import { resolveStencilRailOverflow } from "./utils/resolveStencilRailOverflow";
+import {
+	isStencilRailPopoverShowable,
+	resolveStencilRailOverflow,
+} from "./utils/resolveStencilRailOverflow";
 import { useElementSize } from "../../../../foundation/hooks/useElementSize";
 import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
@@ -27,6 +30,7 @@ import {
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import {
 	type PinInsertionMark,
+	pinInsertionEdgeOf,
 	resolvePinInsertionMark,
 } from "../../../utils/pinnedCategoryOrder";
 import type { StencilRailPopoverKind } from "../../../utils/stencilRailPopover";
@@ -68,6 +72,12 @@ type StencilRailProps = {
 	 * one that would change nothing.
 	 */
 	pinInsertionIndex: number | null;
+	/**
+	 * Called when `openRailPopover` names a popover the rail's layout no longer
+	 * offers (the rail grew), so Canvas drops it from the flyout's slot. Keep it
+	 * stable: the rail is memoized.
+	 */
+	onRailPopoverUnshowable: (kind: StencilRailPopoverKind) => void;
 };
 
 const ICON_SIZE = 24;
@@ -117,18 +127,12 @@ const StencilRailCategoryButton: React.FC<StencilRailCategoryButtonProps> = ({
 			title={label}
 			isOpen={isOpen}
 			pinInsertionEdge={pinInsertionEdge}
+			data-pin-insertion={pinInsertionEdge ?? undefined}
 		>
 			<Icon width={ICON_SIZE} height={ICON_SIZE} />
 		</StencilRailPanelButton>
 	);
 };
-
-/** The edge a pin drag's line is drawn on beside `categoryId`, or null. */
-const insertionEdgeOf = (
-	mark: PinInsertionMark | null,
-	categoryId: string,
-): PinInsertionMark["edge"] | null =>
-	mark !== null && mark.categoryId === categoryId ? mark.edge : null;
 
 /**
  * The stencil rail at the left of the canvas, top to bottom: the host's presets,
@@ -157,6 +161,7 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 	drawnPanelContent,
 	openRailPopover,
 	pinInsertionIndex,
+	onRailPopoverUnshowable,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
@@ -242,9 +247,25 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 	);
 	const overflowedCount =
 		overflowedPinnedCategories.length + overflowedDocumentCategories.length;
+	const shownRailPopover =
+		openRailPopover !== null &&
+		isStencilRailPopoverShowable(openRailPopover, overflow)
+			? openRailPopover
+			: null;
+	useLayoutEffect(() => {
+		if (openRailPopover !== null && shownRailPopover === null) {
+			onRailPopoverUnshowable(openRailPopover);
+		}
+	}, [openRailPopover, shownRailPopover, onRailPopoverUnshowable]);
+	// Only what is on screen can carry the line: the "…" popover's pins only while it is shown.
 	const pinInsertionMark = resolvePinInsertionMark(
 		pinnedCategoryIds,
-		pinnedCategories.map(({ category }) => category.id),
+		shownRailPopover === "railOverflow"
+			? [
+					...overflow.shownPinnedCategoryIds,
+					...overflow.overflowedPinnedCategoryIds,
+				]
+			: overflow.shownPinnedCategoryIds,
 		pinInsertionIndex,
 	);
 	const moreLabel = messages.stencilRailMore(overflowedCount);
@@ -268,10 +289,10 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 						type="button"
 						data-action={toggleAction("railPresets")}
 						aria-haspopup="true"
-						aria-expanded={openRailPopover === "railPresets"}
+						aria-expanded={shownRailPopover === "railPresets"}
 						aria-label={messages.stencilRailPresets}
 						title={messages.stencilRailPresets}
-						isOpen={openRailPopover === "railPresets"}
+						isOpen={shownRailPopover === "railPresets"}
 					>
 						<CollapsedPresetsIcon width={ICON_SIZE} height={ICON_SIZE} />
 					</StencilRailPanelButton>
@@ -284,25 +305,22 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 						/>
 					))
 				)}
-				{shownPinnedCategories.length > 0 && presets.length > 0 && (
-					<StencilRailDivider />
-				)}
+				{overflow.hasPinnedDivider && <StencilRailDivider />}
 				{shownPinnedCategories.map((section) => (
 					<StencilRailCategoryButton
 						key={section.category.id}
 						section={section}
 						railGroup="pinned"
 						isOpen={drawnCategoryId === section.category.id}
-						pinInsertionEdge={insertionEdgeOf(
+						pinInsertionEdge={pinInsertionEdgeOf(
 							pinInsertionMark,
 							section.category.id,
 						)}
 					/>
 				))}
-				{shownDocumentCategories.length > 0 &&
-					(presets.length > 0 || shownPinnedCategories.length > 0) && (
-						<StencilRailDocumentDivider data-testid="stencil-rail-document-divider" />
-					)}
+				{overflow.hasDocumentDivider && (
+					<StencilRailDocumentDivider data-testid="stencil-rail-document-divider" />
+				)}
 				{shownDocumentCategories.map((section) => (
 					<StencilRailCategoryButton
 						key={section.category.id}
@@ -312,16 +330,16 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 						pinInsertionEdge={null}
 					/>
 				))}
-				{(overflowedCount > 0 || hasCatalogButton) && <StencilRailSpacer />}
+				{overflow.hasSpacer && <StencilRailSpacer />}
 				{overflowedCount > 0 && (
 					<StencilRailPanelButton
 						type="button"
 						data-action={toggleAction("railOverflow")}
 						aria-haspopup="true"
-						aria-expanded={openRailPopover === "railOverflow"}
+						aria-expanded={shownRailPopover === "railOverflow"}
 						aria-label={moreLabel}
 						title={moreLabel}
-						isOpen={openRailPopover === "railOverflow"}
+						isOpen={shownRailPopover === "railOverflow"}
 					>
 						<EllipsisIcon width={ICON_SIZE} height={ICON_SIZE} />
 					</StencilRailPanelButton>
@@ -340,14 +358,14 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 					</StencilRailPanelButton>
 				)}
 			</StencilRailContainer>
-			{openRailPopover === "railOverflow" && overflowedCount > 0 && (
+			{shownRailPopover === "railOverflow" && (
 				<StencilRailOverflowPopover
 					pinnedCategories={overflowedPinnedCategories}
 					documentCategories={overflowedDocumentCategories}
 					pinInsertionMark={pinInsertionMark}
 				/>
 			)}
-			{openRailPopover === "railPresets" && overflow.arePresetsCollapsed && (
+			{shownRailPopover === "railPresets" && (
 				<StencilRailPresetsPopover
 					presets={presets}
 					activePresetId={activePresetId}

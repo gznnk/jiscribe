@@ -3,7 +3,7 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { Canvas } from "../Canvas";
 import { ShapesIcon } from "../ui/icons/ShapesIcon";
@@ -523,9 +523,46 @@ describe("Canvas chrome", () => {
 		});
 		const originalGetBoundingClientRect =
 			Element.prototype.getBoundingClientRect;
+		const originalResizeObserver = globalThis.ResizeObserver;
+		/** The height the rail is measured at; a test changes it and calls resizeRail. */
+		let railHeight = 1;
+		let resizeCallbacks: ((entries: ResizeObserverEntry[]) => void)[] = [];
+		beforeEach(() => {
+			railHeight = 1;
+			resizeCallbacks = [];
+			Element.prototype.getBoundingClientRect = function (this: Element) {
+				return (
+					this.matches(RAIL)
+						? { width: 48, height: railHeight }
+						: originalGetBoundingClientRect.call(this)
+				) as DOMRect;
+			};
+			globalThis.ResizeObserver = class {
+				constructor(callback: (entries: ResizeObserverEntry[]) => void) {
+					resizeCallbacks.push(callback);
+				}
+				observe() {}
+				unobserve() {}
+				disconnect() {}
+			} as unknown as typeof ResizeObserver;
+		});
 		afterEach(() => {
 			Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+			globalThis.ResizeObserver = originalResizeObserver;
 		});
+		/**
+		 * Measures the rail at `height` and fires every observer, as a resize
+		 * would. They get no entries: the rail re-measures itself, and the other
+		 * observers then have nothing to act on.
+		 */
+		const resizeRail = (height: number) => {
+			railHeight = height;
+			act(() => {
+				for (const callback of resizeCallbacks) {
+					callback([]);
+				}
+			});
+		};
 
 		/** A polyline, which the rail's presets here (rect, ellipse) do not create. */
 		const polylineDoc = {
@@ -536,42 +573,35 @@ describe("Canvas chrome", () => {
 				{ x: 10, y: 10 },
 			],
 		} as unknown as ObjectDoc;
+		const shortRailProps: CanvasProps = {
+			doc: {
+				version: 1 as const,
+				root: [polylineDoc],
+			},
+			stencilLibrary: {
+				sections: [
+					categoryOf("boxes", ["rect"]),
+					categoryOf("rounds", ["ellipse"]),
+					categoryOf("lines", ["polyline"]),
+				],
+			},
+			rail: { presetIds: ["rect", "ellipse"] },
+			initialConfig: { pinnedCategoryIds: ["rounds", "boxes"] },
+		};
 
 		/**
 		 * Mounts with the rail measured 1px tall, short of even the presets: every
 		 * category goes into "…" and the presets fold. Left alone, jsdom measures
 		 * 0, which the rail reads as not laid out.
 		 */
-		const mountShortRail = () => {
-			Element.prototype.getBoundingClientRect = function (this: Element) {
-				return (
-					this.matches(RAIL)
-						? { width: 48, height: 1 }
-						: originalGetBoundingClientRect.call(this)
-				) as DOMRect;
-			};
-			return mount({
-				doc: {
-					version: 1 as const,
-					root: [polylineDoc],
-				},
-				stencilLibrary: {
-					sections: [
-						categoryOf("boxes", ["rect"]),
-						categoryOf("rounds", ["ellipse"]),
-						categoryOf("lines", ["polyline"]),
-					],
-				},
-				rail: { presetIds: ["rect", "ellipse"] },
-				initialConfig: { pinnedCategoryIds: ["rounds", "boxes"] },
-			});
-		};
+		const mountShortRail = (props: CanvasProps = {}) =>
+			mountWithRerender({ ...shortRailProps, ...props });
 		const MORE_BUTTON = `${RAIL} [data-action="toggle:railOverflow"]`;
 		const PRESETS_BUTTON = `${RAIL} [data-action="toggle:railPresets"]`;
 		const POPOVER = '[data-id="stencil-rail-popover"]';
 
 		it("moves every category into '…', titled with the count, and folds the presets", () => {
-			const container = mountShortRail();
+			const { container } = mountShortRail();
 			expect(
 				container.querySelector(`${RAIL} [data-id="stencil-category"]`),
 			).toBeNull();
@@ -588,7 +618,7 @@ describe("Canvas chrome", () => {
 		});
 
 		it("lists them in the '…' popover, the pins in pin order under their heading, then the document's", async () => {
-			const container = mountShortRail();
+			const { container } = mountShortRail();
 			await press(container.querySelector(MORE_BUTTON));
 
 			const popover = container.querySelector(POPOVER);
@@ -611,13 +641,68 @@ describe("Canvas chrome", () => {
 		});
 
 		it("holds the folded presets as library items in its popover", async () => {
-			const container = mountShortRail();
+			const { container } = mountShortRail();
 			await press(container.querySelector(PRESETS_BUTTON));
 
 			const items = [
 				...container.querySelectorAll(`${POPOVER} [data-id="stencil-library"]`),
 			].map((item) => item.getAttribute("data-action"));
 			expect(items).toEqual(["item:rect", "item:ellipse"]);
+		});
+
+		/** Guards Canvas drawing the flyout only for panel content (isStencilPanelContent). */
+		it("opens '…' over a docked panel without drawing the panel a second time as a flyout", async () => {
+			const { container } = mountShortRail({
+				initialConfig: {
+					pinnedCategoryIds: ["rounds", "boxes"],
+					sidebars: { left: { isOpen: true } },
+				},
+			});
+			await press(container.querySelector(MORE_BUTTON));
+
+			expect(container.querySelector(POPOVER)).not.toBeNull();
+			expect(container.querySelector(FLYOUT)).toBeNull();
+			expect(
+				container.querySelector(
+					'[data-id="stencil-library-panel"][data-presentation="docked"]',
+				),
+			).not.toBeNull();
+		});
+
+		it("closes '…' for good once the rail grows out of overflowing", async () => {
+			const { container } = mountShortRail();
+			await press(container.querySelector(MORE_BUTTON));
+			expect(container.querySelector(POPOVER)).not.toBeNull();
+
+			resizeRail(2000);
+			expect(container.querySelector(MORE_BUTTON)).toBeNull();
+			// Short again: "…" is back, its popover is not.
+			resizeRail(1);
+			expect(container.querySelector(MORE_BUTTON)).not.toBeNull();
+			expect(container.querySelector(POPOVER)).toBeNull();
+			expect(
+				container.querySelector(MORE_BUTTON)?.getAttribute("aria-expanded"),
+			).toBe("false");
+		});
+
+		it("closes the presets' popover once the presets unfold", async () => {
+			const { container } = mountShortRail();
+			await press(container.querySelector(PRESETS_BUTTON));
+			expect(container.querySelector(POPOVER)).not.toBeNull();
+
+			resizeRail(2000);
+			resizeRail(1);
+			expect(container.querySelector(POPOVER)).toBeNull();
+		});
+
+		it("closes a rail popover when the host hides the rail", async () => {
+			const { container, rerender } = mountShortRail();
+			await press(container.querySelector(MORE_BUTTON));
+
+			rerender({ ...shortRailProps, rail: { show: false } });
+			rerender(shortRailProps);
+			expect(container.querySelector(MORE_BUTTON)).not.toBeNull();
+			expect(container.querySelector(POPOVER)).toBeNull();
 		});
 	});
 });

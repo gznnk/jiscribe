@@ -8,7 +8,10 @@ import {
 import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { toggleAction } from "../../../gestures/handlers/menu/utils/menuActions";
-import type { PinInsertionMark } from "../../../utils/pinnedCategoryOrder";
+import {
+	type PinInsertionMark,
+	pinInsertionEdgeOf,
+} from "../../../utils/pinnedCategoryOrder";
 import { GripIcon } from "../../icons/GripIcon";
 import type { Stencil } from "../../objects/Stencil";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
@@ -46,6 +49,7 @@ const StencilRailPopoverCategoryRow: React.FC<StencilRailPopoverRowProps> = ({
 			data-action={toggleAction(category.id)}
 			data-rail-group={railGroup}
 			pinInsertionEdge={pinInsertionEdge}
+			data-pin-insertion={pinInsertionEdge ?? undefined}
 		>
 			<StencilRailPopoverRowGrip>
 				{railGroup === "pinned" && <GripIcon />}
@@ -96,11 +100,10 @@ export const StencilRailOverflowPopover: React.FC<
 							key={section.category.id}
 							section={section}
 							railGroup="pinned"
-							pinInsertionEdge={
-								pinInsertionMark?.categoryId === section.category.id
-									? pinInsertionMark.edge
-									: null
-							}
+							pinInsertionEdge={pinInsertionEdgeOf(
+								pinInsertionMark,
+								section.category.id,
+							)}
 						/>
 					))}
 				</>
