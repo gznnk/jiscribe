@@ -19,3 +19,4 @@ export * from "./isNumberInRange";
 export * from "./isCssSafeValue";
 export * from "./isUrl";
 export * from "./isEnum";
+export * from "./isDistinctStringArray";

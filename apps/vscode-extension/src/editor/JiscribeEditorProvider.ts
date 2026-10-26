@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { createCommitGate, type CommitGate } from "./commitGate";
 import { describeErrorDetail } from "./describeErrorDetail";
 import { createLatestWriteSerializer } from "./latestWriteSerializer";
+import type { PinnedCategoryStore } from "./pinnedCategoryStore";
 import {
 	resolveCanvasWebview,
 	type CanvasWebviewChannel,
@@ -48,10 +49,13 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 * @param context - the extension context, for the Webview bundle's root URI
 	 * @param bridgeRegistry - registry every resolved panel is announced to, so
 	 *   the e2e suite can act as the Webview (see webviewBridgeRegistry)
+	 * @param pinnedCategoryStore - the rail's pins every panel starts from and
+	 *   reports changes to; one store shared by both editors
 	 */
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly bridgeRegistry: WebviewBridgeRegistry,
+		private readonly pinnedCategoryStore: PinnedCategoryStore,
 	) {}
 
 	/**
@@ -91,6 +95,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			extensionUri: this.context.extensionUri,
 			documentUri: document.uri,
 			bridgeRegistry: this.bridgeRegistry,
+			pinnedCategoryStore: this.pinnedCategoryStore,
 
 			// Webview is initialized; send the initial file contents.
 			onReady: () => this.updateWebview(channel, document, commitGate),

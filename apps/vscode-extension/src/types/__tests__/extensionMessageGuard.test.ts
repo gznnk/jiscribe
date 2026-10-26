@@ -12,6 +12,9 @@ const validMessages: ExtensionToWebviewMessage[] = [
 	{ type: "update", data: '{"objects":[]}', version: 7 },
 	{ type: "requestImageExport", requestId: 1, format: "png" },
 	{ type: "requestImageExport", requestId: 2, format: "svg" },
+	{ type: "pinnedCategories", pinnedCategoryIds: ["flowchart"] },
+	{ type: "pinnedCategories", pinnedCategoryIds: [] },
+	{ type: "pinnedCategories", pinnedCategoryIds: null },
 	{
 		type: "imageResolved",
 		requestId: "req-1",
@@ -159,5 +162,17 @@ describe("isExtensionToWebviewMessage", () => {
 				mimeType: "image/png",
 			}),
 		).toBe(false);
+	});
+
+	it("rejects a pinnedCategories whose ids are neither null nor distinct strings", () => {
+		const malformedIds = [undefined, "flowchart", [1], ["uml", "uml"]];
+		for (const pinnedCategoryIds of malformedIds) {
+			expect(
+				isExtensionToWebviewMessage({
+					type: "pinnedCategories",
+					pinnedCategoryIds,
+				}),
+			).toBe(false);
+		}
 	});
 });

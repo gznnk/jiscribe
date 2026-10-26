@@ -17,8 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fit goes into a "…" button, and the pins can be reordered by dragging them.
   A category opens over the canvas
   and can be kept open beside it, which replaces the shape library sidebar.
-  The pins are not
-  remembered between sessions yet.
+  The pins are remembered per user, across workspaces, and carried to other
+  machines by Settings Sync; the next editor opened starts from the pins last
+  changed in any of them.
 
 ## [0.12.2] - 2026-10-25
 

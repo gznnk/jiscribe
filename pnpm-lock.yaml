@@ -324,6 +324,9 @@ importers:
       '@jiscribe/ai-tools-sdk':
         specifier: workspace:*
         version: link:../../packages/ai-tools-sdk
+      '@jiscribe/basic-validators':
+        specifier: workspace:*
+        version: link:../../packages/basic-validators
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
@@ -396,6 +399,9 @@ importers:
 
   apps/vscode-extension:
     devDependencies:
+      '@jiscribe/basic-validators':
+        specifier: workspace:*
+        version: link:../../packages/basic-validators
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas

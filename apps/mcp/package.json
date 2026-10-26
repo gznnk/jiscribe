@@ -66,6 +66,7 @@
 		"@fontsource/source-serif-4": "5.3.0",
 		"@jiscribe/ai-tools": "workspace:*",
 		"@jiscribe/ai-tools-sdk": "workspace:*",
+		"@jiscribe/basic-validators": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/doc-schema": "workspace:*",

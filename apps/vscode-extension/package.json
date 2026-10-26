@@ -135,6 +135,7 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@jiscribe/doc-schema": "workspace:*",
+		"@jiscribe/basic-validators": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",

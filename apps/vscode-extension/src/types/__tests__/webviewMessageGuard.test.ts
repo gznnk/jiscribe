@@ -28,6 +28,8 @@ const validMessages: WebviewToExtensionMessage[] = [
 		includesSource: false,
 	},
 	{ type: "resolveImage", requestId: "req-1", src: "images/logo.png" },
+	{ type: "pinnedCategoriesChange", pinnedCategoryIds: ["flowchart", "uml"] },
+	{ type: "pinnedCategoriesChange", pinnedCategoryIds: [] },
 ];
 
 describe("isWebviewToExtensionMessage", () => {
@@ -148,5 +150,17 @@ describe("isWebviewToExtensionMessage", () => {
 		expect(
 			isWebviewToExtensionMessage({ type: "resolveImage", requestId: "req-1" }),
 		).toBe(false);
+	});
+
+	it("rejects a pinnedCategoriesChange whose ids are not distinct strings", () => {
+		const malformedIds = [undefined, null, "flowchart", [1], ["uml", "uml"]];
+		for (const pinnedCategoryIds of malformedIds) {
+			expect(
+				isWebviewToExtensionMessage({
+					type: "pinnedCategoriesChange",
+					pinnedCategoryIds,
+				}),
+			).toBe(false);
+		}
 	});
 });

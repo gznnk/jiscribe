@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import type { PinnedCategoryStore } from "./pinnedCategoryStore";
 import { resolveDocImage } from "./resolveDocImage";
 import { saveExportedImage } from "./saveExportedImage";
 import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
@@ -27,6 +28,11 @@ export interface CanvasWebviewOptions {
 	 * ExtensionMode.Test, see webviewBridgeRegistry).
 	 */
 	bridgeRegistry: WebviewBridgeRegistry;
+	/**
+	 * Where the rail's pins live between mounts: read on every "ready" and
+	 * written on every `pinnedCategoriesChange`, the same for both editors.
+	 */
+	pinnedCategoryStore: PinnedCategoryStore;
 	/** The Webview initialized and wants the document's current contents. */
 	onReady: () => void;
 	/**
@@ -79,13 +85,13 @@ export interface CanvasWebviewChannel {
  * Boot the Canvas Webview in a panel and wire its message channel, shared by the
  * `.jis` and `.jis.png` / `.jis.svg` editors.
  *
- * Undo / redo / image export behave the same in both editors, so they are
+ * Undo / redo / image export / the rail's pins behave the same in both editors, so they are
  * handled here; only the messages that touch the document model are delegated to
  * the caller.
  *
  * @param panel - the Webview panel to take over; its options and html are replaced
- * @param options - document URIs, the bridge registry and the per-editor message
- *   handlers
+ * @param options - document URIs, the bridge registry, the pin store and the
+ *   per-editor message handlers
  * @returns the channel to the panel's Webview; every message to this Webview has
  *   to go through it, or the bridge registry (and with it the e2e suite) never
  *   sees the message
@@ -128,7 +134,20 @@ export function resolveCanvasWebview(
 	function handleWebviewMessage(message: WebviewToExtensionMessage): void {
 		switch (message.type) {
 			case "ready":
+				// Ahead of onReady's update: the canvas mounts on the first update and
+				// reads its pins only then.
+				post({
+					type: "pinnedCategories",
+					pinnedCategoryIds:
+						options.pinnedCategoryStore.readPinnedCategoryIds(),
+				});
 				options.onReady();
+				break;
+
+			case "pinnedCategoriesChange":
+				options.pinnedCategoryStore.writePinnedCategoryIds(
+					message.pinnedCategoryIds,
+				);
 				break;
 
 			case "undo":

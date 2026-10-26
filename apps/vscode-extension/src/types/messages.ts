@@ -70,7 +70,14 @@ export type WebviewToExtensionMessage =
 	 * checks the rule and reads the file. Answered by imageResolved carrying the
 	 * same `requestId`.
 	 */
-	| { type: "resolveImage"; requestId: ImageRequestId; src: string };
+	| { type: "resolveImage"; requestId: ImageRequestId; src: string }
+	/**
+	 * The user changed the rail's pinned categories (`onPinnedCategoriesChange`).
+	 * `pinnedCategoryIds` is in rail order, ids the shape set does not hold
+	 * included, each at most once (the canvas throws at mount on a repeat); the
+	 * Extension stores it as the pins the next mount starts from.
+	 */
+	| { type: "pinnedCategoriesChange"; pinnedCategoryIds: string[] };
 
 /** Messages sent Extension → Webview via webviewPanel.webview.postMessage(). */
 export type ExtensionToWebviewMessage =
@@ -95,6 +102,14 @@ export type ExtensionToWebviewMessage =
 	 * (source embedded). The Webview responds with imageExportResult.
 	 */
 	| { type: "requestImageExport"; requestId: number; format: "png" | "svg" }
+	/**
+	 * The pins the canvas mounts with, sent on ready ahead of the first
+	 * `update`, because the canvas reads them only at mount; distinct ids, as in
+	 * `pinnedCategoriesChange`. null when the user
+	 * has none stored (or what is stored is malformed); the Webview then starts
+	 * from the shape set's default pins.
+	 */
+	| { type: "pinnedCategories"; pinnedCategoryIds: string[] | null }
 	/** Answer to resolveImage; see {@link ImageResolvedMessage}. */
 	| ImageResolvedMessage;
 

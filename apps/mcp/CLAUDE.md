@@ -122,6 +122,11 @@ they hold.
   windows and wait for every `flushed` or 3 s (`FLUSH_EDITS_TIMEOUT_MS`).
   Since PUT only accepts the file on display, a debounced save would otherwise
   die with 409.
+- **The viewer's `localStorage` holds only non-sensitive UI preferences** (the
+  rail's pins, `viewer/pinnedCategoryStorage.ts`); never file paths, file names
+  or document content. Its origin is `127.0.0.1:<port>`, so any process that
+  takes the port can read it, and the port can shift (5190 and up), which only
+  loses the preference.
 - **Windows are closed with `window.close()` over the WS.** It is the only thing
   that reaches a Windows-side browser launched from WSL — `child.kill()` only
   kills the WSL interop proxy. Kill is a last resort for a Linux Chromium.

@@ -9,6 +9,8 @@
  * the other direction.
  */
 
+import { isDistinctStringArray } from "@jiscribe/basic-validators";
+
 import type { ExtensionToWebviewMessage } from "./messages";
 
 /**
@@ -37,6 +39,11 @@ export function isExtensionToWebviewMessage(
 			return (
 				typeof message.requestId === "number" &&
 				(message.format === "png" || message.format === "svg")
+			);
+		case "pinnedCategories":
+			return (
+				message.pinnedCategoryIds === null ||
+				isDistinctStringArray(message.pinnedCategoryIds)
 			);
 		case "imageResolved":
 			if (typeof message.requestId !== "string") {

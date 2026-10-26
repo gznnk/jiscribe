@@ -24,7 +24,9 @@ covers that.
   set, those in use marked "In this diagram". On a short window what does not
   fit goes into a "…" button, and the pins can be reordered by dragging them.
   A category opens over the canvas
-  and can be kept open beside it. The pins are not remembered between sessions yet.
+  and can be kept open beside it. The pins are remembered in the viewer's
+  browser storage, so the next page load, in the browser or the desktop app's
+  window, starts from them.
 
 ## [0.12.2] - 2026-10-25
 

@@ -13,6 +13,7 @@ import {
 	type ImageDocState,
 	type JiscribeImageKind,
 } from "./imageDocumentOps";
+import type { PinnedCategoryStore } from "./pinnedCategoryStore";
 import {
 	resolveCanvasWebview,
 	type CanvasWebviewChannel,
@@ -164,10 +165,13 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	 *   and providing the Webview bundle's root URI
 	 * @param bridgeRegistry - registry every resolved panel is announced to, so
 	 *   the e2e suite can act as the Webview (see webviewBridgeRegistry)
+	 * @param pinnedCategoryStore - the rail's pins every panel starts from and
+	 *   reports changes to; one store shared by both editors
 	 */
 	constructor(
 		private readonly context: vscode.ExtensionContext,
 		private readonly bridgeRegistry: WebviewBridgeRegistry,
+		private readonly pinnedCategoryStore: PinnedCategoryStore,
 	) {
 		// The provider lives for the whole session, and changeEmitter holds the
 		// undo/redo closures of every edit (each capturing a full source string),
@@ -368,6 +372,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			extensionUri: this.context.extensionUri,
 			documentUri: document.uri,
 			bridgeRegistry: this.bridgeRegistry,
+			pinnedCategoryStore: this.pinnedCategoryStore,
 
 			onReady: () => this.updateWebview(channel, document),
 

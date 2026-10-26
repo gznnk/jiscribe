@@ -43,12 +43,8 @@ import { isExtensionToWebviewMessage } from "../types/extensionMessageGuard";
 import type { WebviewToExtensionMessage } from "../types/messages";
 
 // The shipped shapes are supplied by @jiscribe/standard-shapes
-// (packages/canvas/docs/13-authoring-plugins.md). The pins are not persisted
-// yet, so every mount starts from the set's default ones.
-const initialConfig: CanvasConfig = {
-	plugins,
-	pinnedCategoryIds: standardDefaultPinnedCategoryIds,
-};
+// (packages/canvas/docs/13-authoring-plugins.md).
+const initialConfig: CanvasConfig = { plugins };
 
 // The shape set owns how its stencils are arranged, over the rail and the
 // library both; core's default rail knows none of them, so the host passes both
@@ -106,18 +102,16 @@ function App() {
 	// saving .jis.svg / .jis.png).
 	const canvasRef = useRef<CanvasHandle>(null);
 
-	// Mount-time canvas configuration, built once: `viewport` and `sidebars` seed
-	// the camera and the sidebar open/collapsed state from persisted state
-	// (undefined on first open → Canvas uses its own defaults). The canvas owns
-	// both after mount; we only persist what it reports, never drive it back — so
-	// a tab-hide reload restores the last view with no feedback into the canvas.
-	// Held in state rather than rebuilt per render so the mounted canvas sees a
-	// stable prop.
-	const [mountConfig] = useState<CanvasConfig>(() => ({
-		...initialConfig,
-		viewport: readPersistedCamera(),
-		sidebars: readPersistedSidebars(),
-	}));
+	// Mount-time canvas configuration, built once, when the Extension's
+	// `pinnedCategories` answers "ready"; the canvas does not mount before it.
+	// `viewport` and `sidebars` seed the camera and the sidebar open/collapsed
+	// state from persisted state (undefined on first open → Canvas uses its own
+	// defaults), `pinnedCategoryIds` the rail's pins from the user's stored ones.
+	// The canvas owns all three after mount; we only persist what it reports,
+	// never drive it back — so a tab-hide reload restores the last view with no
+	// feedback into the canvas. Held in state rather than rebuilt per render so
+	// the mounted canvas sees a stable prop.
+	const [mountConfig, setMountConfig] = useState<CanvasConfig | null>(null);
 
 	// Persist pan/zoom so the view survives a tab-hide reload (#138,
 	// retainContextWhenHidden: false). A read-only mirror — no setState, no
@@ -131,6 +125,15 @@ function App() {
 	const handleSidebarsChange = useCallback((next: CanvasSidebarsState) => {
 		persistSidebars(next);
 	}, []);
+
+	// The pins are the user's across every editor, so they go to the Extension
+	// (globalState) rather than into this tab's persisted state.
+	const handlePinnedCategoriesChange = useCallback(
+		(pinnedCategoryIds: string[]) => {
+			vscode.postMessage({ type: "pinnedCategoriesChange", pinnedCategoryIds });
+		},
+		[],
+	);
 
 	// While the editor's text does not parse, the canvas is showing an older
 	// document than the file holds, and a commit replaces the file's whole range
@@ -222,6 +225,21 @@ function App() {
 			const message = event.data;
 
 			switch (message.type) {
+				case "pinnedCategories": {
+					const pinnedCategoryIds =
+						message.pinnedCategoryIds ?? standardDefaultPinnedCategoryIds;
+					setMountConfig(
+						(prev) =>
+							prev ?? {
+								...initialConfig,
+								viewport: readPersistedCamera(),
+								sidebars: readPersistedSidebars(),
+								pinnedCategoryIds,
+							},
+					);
+					break;
+				}
+
 				case "update": {
 					const docType = message.docType ?? "json";
 
@@ -304,13 +322,14 @@ function App() {
 	}, [docView.doc]);
 
 	// Display priority:
-	// missing source > Canvas (with the error as an overlay) > error notice > loading
+	// missing source > Canvas (with the error as an overlay; only once the pins
+	// have arrived) > error notice > loading
 
 	if (missingEmbeddedSource) {
 		return <MissingEmbeddedSourceNotice />;
 	}
 
-	if (docView.doc) {
+	if (docView.doc && mountConfig) {
 		return (
 			<div
 				style={{ width: "100%", height: "100vh", position: "relative" }}
@@ -324,6 +343,7 @@ function App() {
 					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
 					onSidebarsChange={handleSidebarsChange}
+					onPinnedCategoriesChange={handlePinnedCategoriesChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}

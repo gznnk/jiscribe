@@ -10,27 +10,27 @@ import type {
 	ToolbarSection,
 } from "@jiscribe/canvas";
 import {
-	standardDefaultPinnedCategoryIds,
 	standardRailPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { plugins } from "./canvasPlugins";
 import { FileLabel } from "./FileLabel";
 import { HostMenu } from "./HostMenu";
+import {
+	readStoredPinnedCategoryIds,
+	storePinnedCategoryIds,
+} from "./pinnedCategoryStorage";
 import { viewerTheme } from "./viewerTheme";
 import type {
 	HostActionName,
 	SessionApiResponse,
 } from "../shared/hostActionsRoute";
 
-// A module-scope constant, so that Canvas is not rebuilt on every re-render. The
-// pins are not persisted, so every mount starts from the set's default ones.
-const initialConfig: CanvasConfig = {
-	plugins,
-	pinnedCategoryIds: standardDefaultPinnedCategoryIds,
+const handlePinnedCategoriesChange = (pinnedCategoryIds: string[]): void => {
+	storePinnedCategoryIds(pinnedCategoryIds);
 };
 
 // The shape set owns how its stencils are arranged, over the rail and the
@@ -102,6 +102,13 @@ export function CanvasSurface({
 }: CanvasSurfaceProps) {
 	const canvasRef = useRef<CanvasHandle>(null);
 
+	// Built once per mount, so that Canvas is not rebuilt on every re-render and
+	// a remount starts from the pins stored since.
+	const [initialConfig] = useState<CanvasConfig>(() => ({
+		plugins,
+		pinnedCategoryIds: readStoredPinnedCategoryIds(),
+	}));
+
 	useEffect(() => {
 		onRegisterCanvas(canvasRef.current);
 		return () => {
@@ -167,6 +174,7 @@ export function CanvasSurface({
 				resolveImage={resolveImage}
 				theme={viewerTheme}
 				initialConfig={initialConfig}
+				onPinnedCategoriesChange={handlePinnedCategoriesChange}
 				rail={rail}
 				stencilLibrary={{ sections: stencilLibrarySections }}
 				toolbar={{ sections: toolbarSections }}

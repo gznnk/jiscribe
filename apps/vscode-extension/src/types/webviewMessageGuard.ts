@@ -8,6 +8,8 @@
  * side (src/webview/index.tsx).
  */
 
+import { isDistinctStringArray } from "@jiscribe/basic-validators";
+
 import type { WebviewToExtensionMessage } from "./messages";
 
 /**
@@ -53,6 +55,8 @@ export function isWebviewToExtensionMessage(
 			return (
 				typeof message.requestId === "string" && typeof message.src === "string"
 			);
+		case "pinnedCategoriesChange":
+			return isDistinctStringArray(message.pinnedCategoryIds);
 		default:
 			return false;
 	}
