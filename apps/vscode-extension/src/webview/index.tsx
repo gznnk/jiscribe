@@ -247,11 +247,11 @@ function App() {
 				}
 
 				case "update": {
-					// The Extension answers "ready" with the pins ahead of the first
-					// update; without them the canvas would never mount and the tab
-					// would sit on its loading notice.
+					// The Extension answers "ready" with the pins ahead of its reply's
+					// update, but a document change can post an update before that; the
+					// canvas does not mount until the pins arrive.
 					if (!hasMountConfigRef.current) {
-						console.error(
+						console.warn(
 							"[Jiscribe] Received an update before the pinnedCategories message; the canvas cannot mount until it arrives",
 						);
 					}
