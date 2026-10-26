@@ -25,8 +25,8 @@ export const useResolvedStencilLibrary = (
 	registries: CanvasRegistries,
 ): ResolvedStencilLibrary => {
 	// Sections whose ids resolve to registered presets. Resolved here (not in a
-	// panel) so the rail and both panels draw from one resolution, and an empty
-	// one decides that no panel can open at all.
+	// panel) so the rail and both panels draw from one resolution; their ids are
+	// also what Canvas hands the reducer (stencilLibraryCategoryIds).
 	const librarySections = useMemo(
 		() => resolveStencilCategories(sections ?? [], registries.stencil),
 		[sections, registries],
