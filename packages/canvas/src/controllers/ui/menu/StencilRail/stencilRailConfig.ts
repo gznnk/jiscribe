@@ -1,10 +1,10 @@
 /**
  * The stencil rail, the column of shape tools at the left of the canvas, as a
  * host configures it through the `rail` Canvas prop. What else the rail shows is
- * not configured here: the pinned categories are the user's pins (seeded by
- * `CanvasConfig.pinnedCategoryIds`, changed from the catalog), the categories
- * after them follow the open document (useDocumentCategoryIds), and the catalog
- * button follows `stencilLibrary.sections`.
+ * not configured here: the catalog button under the presets follows
+ * `stencilLibrary.sections`, and the pinned categories after it are the user's
+ * pins (seeded by `CanvasConfig.pinnedCategoryIds`, changed from the catalog
+ * and by dragging them).
  */
 export type CanvasRailConfig = {
 	/**
@@ -16,9 +16,7 @@ export type CanvasRailConfig = {
 	show?: boolean;
 	/**
 	 * The presets placed at the top of the rail, in order, each placed by click or
-	 * drag the way a library item is. A type one of them creates adds no
-	 * category to the rail when the document uses it, even a category listing a
-	 * variant of it (flowchart's rect-typed `process`). Omit for {@link DEFAULT_RAIL_PRESET_IDS},
+	 * drag the way a library item is. Omit for {@link DEFAULT_RAIL_PRESET_IDS},
 	 * which holds core's primitives only; a plugin preset shows only when named
 	 * here. An id naming no registered preset (a plugin the host did not apply) is
 	 * skipped; naming one id twice throws, since the id keys the button.

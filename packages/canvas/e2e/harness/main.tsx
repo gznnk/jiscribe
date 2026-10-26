@@ -2,7 +2,7 @@
 import type { StencilCategory } from "../../src";
 import { basicStencilCategory } from "../../src";
 import {
-	specMixedStencilCategory,
+	specSpareStencilCategory,
 	specShapesPlugin,
 	specShapesStencilCategory,
 } from "../plugins/specShapesPlugin";
@@ -17,12 +17,12 @@ import { mountPluginHarness } from "../testing-harness";
 // The rail's pinned categories and its catalog draw from host-declared
 // `stencilLibrarySections`, and the catalog button shows only once a section resolves.
 // Core's primitives and the test-only categories are enough, so the specs have a section of
-// shapes, a category pinned on the rail, one left for the document to add, and a catalog
+// shapes, a category pinned on the rail, a spare one for specs to pin, and a catalog
 // listing all three.
 const librarySections: StencilCategory[] = [
 	basicStencilCategory,
 	specShapesStencilCategory,
-	specMixedStencilCategory,
+	specSpareStencilCategory,
 ];
 
 // A 1x1 transparent PNG, the smallest file an <image> can actually draw. The

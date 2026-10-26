@@ -90,8 +90,6 @@ How to pick between the attributes:
 | `context-menu-callback:{id}`    | callback items of the context menu                                                                   | items such as paste that do not go through gestures                                                                                                                                       |
 | `snap-guide:x` / `snap-guide:y` | snap guide lines (vertical / horizontal)                                                             | decoration with `pointerEvents: none`. Present only during a drag. The aligned coordinate is held in the line's `x1` (x axis) / `y1` (y axis)                                             |
 | `part-outline`                  | tinted box around a picked part (a text slot, a cell, a row); outline only while a text edit is open | decoration with `pointerEvents: none`, drawn in place of the owner's selection outline and the same way, so this is what tells the two apart (`selectors.partOutline`)                    |
-| `stencil-rail-document-divider` | the dashed divider above the rail's document categories                                              | decoration; present only while the rail shows one (`selectors.railDocumentDivider`)                                                                                                       |
-| `stencil-catalog-in-diagram`    | the "In this diagram" badge of a catalog row                                                         | a status with no action; present only on a category the open document uses (`selectors.catalogInDiagramBadge`)                                                                            |
 
 | data-kind     | Meaning                                | data-id / data-part / data-action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -107,17 +105,17 @@ click picks); `data-action` names what pressing the element starts. For the
 grammar of kind / id / part / action, see
 `packages/canvas/docs/04-gesture-system.md`.
 Shape library buttons carry action: `item:<presetId>` (for example `item:rect`).
-A rail category button is `stencil-category` with action `toggle:<categoryId>`,
-and `data-rail-group="pinned"` for a pin or `"document"` for a category the rail
-adds because the open document uses it (`selectors.railCategoryButtons`);
-the rail's catalog button carries only action `command:toggleStencilLibrary`.
-What the rail has no room for goes into its "…" button (action `toggle:railOverflow`,
+The rail runs presets, the catalog button, then the pins. A rail category button
+(a pin) is `stencil-category` with action `toggle:<categoryId>`
+(`selectors.railCategoryButtons`); the rail's catalog button carries only action
+`command:toggleStencilLibrary`. Pins the rail has no room for go into its "…"
+button after the shown ones (action `toggle:railOverflow`,
 `selectors.railMoreButton`), and in the last resort its presets fold into one button
 (action `toggle:railPresets`, `selectors.railPresetsButton`). Each opens a popover
 beside the rail, `data-kind="menu" data-id="stencil-rail-popover"` with
-`data-popover="railOverflow"` / `"railPresets"`: the first holds category rows that
-are the same `stencil-category` toggles as the rail's buttons (`data-rail-group`
-included, `selectors.railOverflowRows`), the second the presets as library items
+`data-popover="railOverflow"` / `"railPresets"`: the first holds pin rows that
+are the same `stencil-category` toggles as the rail's buttons
+(`selectors.railOverflowRows`), the second the presets as library items
 (`selectors.railPresetsPopoverItem`). While a pin is dragged, the button or row its
 insertion line is drawn beside carries `data-pin-insertion="before"` / `"after"`.
 The stencil panel (`stencil-library-panel`, in the DOM only while open) carries
@@ -131,8 +129,7 @@ Rail buttons can also be identified by the `title` attribute, as in
 Polyline / Polygon / Text from core, plus Pin / Card / Memo from
 `e2e/plugins/specShapesPlugin` —
 the harness puts all of them on the rail, and pins the `spec` category; the
-`mixed` category, listing `panel` beside core's `rect`, is left for a document
-to add). No
+`spare` category, listing `memo`, is left for specs to pin). No
 shipped plugin is mounted here; a spec that needs one belongs in that plugin's
 own suite.
 

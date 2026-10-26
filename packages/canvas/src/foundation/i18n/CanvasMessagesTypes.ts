@@ -27,8 +27,6 @@ export type CanvasMessageStrings = {
 	// Stencil panels (the flyout over the canvas and the docked panel)
 	/** Heading of the catalog, the panel listing every library category */
 	stencilCatalogTitle: string;
-	/** Badge on a catalog row whose category the open document uses, pinned or not */
-	stencilCatalogInDiagram: string;
 	/** title / aria-label of a panel's close (×) button */
 	stencilPanelClose: string;
 	/** title / aria-label of the header toggle docking the panel beside the canvas (pressed while docked) */

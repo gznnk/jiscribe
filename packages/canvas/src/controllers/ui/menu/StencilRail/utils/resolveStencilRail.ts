@@ -6,18 +6,13 @@ import type { ResolvedStencilCategory } from "../../StencilLibrary/utils/resolve
 export type ResolvedStencilRail = {
 	/** The presets at the top, in declared order, unknown ids dropped. */
 	presets: Stencil[];
+	/** Whether the catalog button under the presets is drawn: the library resolved to a section at least. */
+	hasCatalog: boolean;
 	/**
-	 * The pinned categories below them, in pin order: only the pins naming a
-	 * section the library resolved, each as that section.
+	 * The pinned categories below the catalog button, in pin order: only the
+	 * pins naming a section the library resolved, each as that section.
 	 */
 	pinnedCategories: ResolvedStencilCategory[];
-	/**
-	 * The categories the open document uses below the pins, most-used first:
-	 * every one of `documentCategoryIds` that is not pinned, each as its section.
-	 */
-	unpinnedDocumentCategories: ResolvedStencilCategory[];
-	/** Whether the catalog button at the bottom is drawn: the library resolved to a section at least. */
-	hasCatalog: boolean;
 };
 
 /**
@@ -31,9 +26,6 @@ export type ResolvedStencilRail = {
  * @param librarySections - `stencilLibrary.sections` already resolved against
  *   the registry, sections left empty dropped (resolveStencilCategories); empty
  *   means no library, and with it no pinned category and no catalog button
- * @param documentCategoryIds - The categories the open document uses, ranked
- *   (useDocumentCategoryIds over the same `librarySections`); a pinned one is
- *   left to its pin rather than drawn twice
  * @param stencil - Registry answering "what presets exist" for this canvas
  * @throws When `presetIds` names the same id twice: the id keys the button, so
  *   the twin would be indistinguishable from the first
@@ -42,7 +34,6 @@ export const resolveStencilRail = (
 	presetIds: readonly string[],
 	pinnedCategoryIds: readonly string[],
 	librarySections: readonly ResolvedStencilCategory[],
-	documentCategoryIds: readonly string[],
 	stencil: StencilRegistry,
 ): ResolvedStencilRail => {
 	const seenPresetIds = new Set<string>();
@@ -58,21 +49,15 @@ export const resolveStencilRail = (
 	const presets = presetIds
 		.map((presetId) => stencil.get(presetId))
 		.filter((preset) => preset !== undefined);
-	const findSections = (categoryIds: readonly string[]) =>
-		categoryIds.flatMap((categoryId) => {
-			const section = librarySections.find(
-				(librarySection) => librarySection.category.id === categoryId,
-			);
-			return section ? [section] : [];
-		});
+	const pinnedCategories = pinnedCategoryIds.flatMap((categoryId) => {
+		const section = librarySections.find(
+			(librarySection) => librarySection.category.id === categoryId,
+		);
+		return section ? [section] : [];
+	});
 	return {
 		presets,
-		pinnedCategories: findSections(pinnedCategoryIds),
-		unpinnedDocumentCategories: findSections(
-			documentCategoryIds.filter(
-				(categoryId) => !pinnedCategoryIds.includes(categoryId),
-			),
-		),
 		hasCatalog: librarySections.length > 0,
+		pinnedCategories,
 	};
 };

@@ -5,49 +5,28 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * The rail when it is too short for everything it holds:
+ * The rail when it is too short for its pins:
  *
- * - What does not fit goes into a "…" button above the catalog button, whose
- *   title counts it: the document's categories first, then the pins from the
- *   end of the pin order.
+ * - The pins that do not fit go into a "…" button after the shown ones, from
+ *   the end of the pin order; its title counts them. The catalog button stays
+ *   under the presets.
  * - A category opened from "…" is on the rail while it is shown.
  * - Shorter still, the presets fold into one button whose popover draws as the
- *   rail does.
+ *   rail does, the catalog button right after it.
  * - Pins are reordered by dragging them, on the rail and in the "…" popover,
  *   and the host hears the new order.
  *
  * The harness (e2e/harness/main.tsx) puts eight presets on the rail and pins
- * `spec`; each test pins `basic` after it from the catalog and loads a document
- * using `mixed` (a panel), so the rail holds two pins and one document category.
+ * `spec`; each test pins `basic` and `spare` after it from the catalog, so the
+ * rail holds three pins.
  */
 
 const SPEC_CATEGORY = "spec";
 const BASIC_CATEGORY = "basic";
-const MIXED_CATEGORY = "mixed";
+const SPARE_CATEGORY = "spare";
 
 /** The harness page's height (createCanvasPlaywrightConfig). */
 const FULL_VIEWPORT = { width: 1440, height: 900 };
-
-const panelDocText = JSON.stringify({
-	version: 1,
-	root: [
-		{ id: "panel-1", type: "panel", x: 600, y: 60, width: 60, height: 40 },
-	],
-});
-
-async function loadDoc(canvas: CanvasDriver, docText: string) {
-	await canvas.page.evaluate((text) => {
-		const hook = (
-			window as unknown as { __setHarnessDoc?: (docText: string) => void }
-		).__setHarnessDoc;
-		if (!hook) {
-			throw new Error(
-				"__setHarnessDoc is undefined (harness hook not installed)",
-			);
-		}
-		hook(text);
-	}, docText);
-}
 
 /** The ids behind the `toggle:<id>` actions under `selector`, in DOM order. */
 async function categoryIdsOf(page: Page, selector: string): Promise<string[]> {
@@ -87,21 +66,29 @@ async function shrinkUntil(page: Page, isReached: () => Promise<boolean>) {
 	throw new Error("the rail never reached the state asked for");
 }
 
-/** Pins `basic` after the harness's `spec` and loads a document using `mixed`. */
+/** Pins `basic` and `spare` after the harness's `spec`. */
 async function fillRail(canvas: CanvasDriver) {
 	await canvas.openCatalog();
-	await canvas.page.hover(selectors.catalogRow(BASIC_CATEGORY));
-	await canvas.page.click(selectors.catalogPin(BASIC_CATEGORY));
+	for (const categoryId of [BASIC_CATEGORY, SPARE_CATEGORY]) {
+		await canvas.page.hover(selectors.catalogRow(categoryId));
+		await canvas.page.click(selectors.catalogPin(categoryId));
+	}
 	await canvas.closeStencilPanel();
-	await loadDoc(canvas, panelDocText);
-	await expect(canvas.objectById("panel-1")).toHaveCount(1);
 	expect(
-		await categoryIdsOf(canvas.page, selectors.railCategoryButtons("pinned")),
-	).toEqual([SPEC_CATEGORY, BASIC_CATEGORY]);
-	expect(
-		await categoryIdsOf(canvas.page, selectors.railCategoryButtons("document")),
-	).toEqual([MIXED_CATEGORY]);
+		await categoryIdsOf(canvas.page, selectors.railCategoryButtons),
+	).toEqual([SPEC_CATEGORY, BASIC_CATEGORY, SPARE_CATEGORY]);
 	await expect(canvas.page.locator(selectors.railMoreButton)).toHaveCount(0);
+}
+
+/** The data-action of every button the rail holds, top to bottom, "divider" for a divider. */
+async function railOrder(page: Page): Promise<string[]> {
+	return page
+		.locator(`${selectors.rail} > *`)
+		.evaluateAll((elements) =>
+			elements.map(
+				(element) => element.getAttribute("data-action") ?? "divider",
+			),
+		);
 }
 
 /** Presses `from`, drags it onto `to` in steps the recognizer reads as a drag, and releases. */
@@ -151,38 +138,41 @@ test.describe("Stencil rail overflow", () => {
 		await canvas.page.setViewportSize(FULL_VIEWPORT);
 	});
 
-	test("moves the document's categories into the '…' button first, then the pins from the end", async ({
+	test("moves the pins into a '…' button after the shown ones, from the end of the pin order", async ({
 		canvas,
 	}) => {
 		await fillRail(canvas);
 		const page = canvas.page;
-		const moreButton = page.locator(selectors.railMoreButton);
+		// The catalog button heads the pins, under the presets.
+		expect((await railOrder(page)).slice(-6)).toEqual([
+			"divider",
+			"command:toggleStencilLibrary",
+			"divider",
+			`toggle:${SPEC_CATEGORY}`,
+			`toggle:${BASIC_CATEGORY}`,
+			`toggle:${SPARE_CATEGORY}`,
+		]);
 
-		await shrinkUntil(page, async () => (await moreButton.count()) > 0);
-		await expect(moreButton).toHaveAttribute("title", "1 more category");
-		expect(
-			await categoryIdsOf(page, selectors.railCategoryButtons("document")),
-		).toEqual([]);
-		expect(
-			await categoryIdsOf(page, selectors.railCategoryButtons("pinned")),
-		).toEqual([SPEC_CATEGORY, BASIC_CATEGORY]);
+		// The first pin out only pays for "…", so two go at once.
+		await shrinkUntil(page, async () => (await moreButtonTitle(page)) !== null);
+		expect(await moreButtonTitle(page)).toBe("2 more categories");
+		expect(await categoryIdsOf(page, selectors.railCategoryButtons)).toEqual([
+			SPEC_CATEGORY,
+		]);
+		expect((await railOrder(page)).slice(-2)).toEqual([
+			`toggle:${SPEC_CATEGORY}`,
+			"toggle:railOverflow",
+		]);
 
-		await shrinkUntil(
-			page,
-			async () => (await moreButtonTitle(page)) === "2 more categories",
-		);
-		expect(
-			await categoryIdsOf(page, selectors.railCategoryButtons("pinned")),
-		).toEqual([SPEC_CATEGORY]);
-
-		await moreButton.click();
+		await page.click(selectors.railMoreButton);
 		await expect(page.locator(selectors.railOverflowPopover)).toBeVisible();
-		expect(
-			await categoryIdsOf(page, selectors.railOverflowRows("pinned")),
-		).toEqual([BASIC_CATEGORY]);
-		expect(
-			await categoryIdsOf(page, selectors.railOverflowRows("document")),
-		).toEqual([MIXED_CATEGORY]);
+		expect(await categoryIdsOf(page, selectors.railOverflowRows)).toEqual([
+			BASIC_CATEGORY,
+			SPARE_CATEGORY,
+		]);
+		await expect(page.locator(selectors.railOverflowPopover)).toContainText(
+			"Pinned",
+		);
 		// The popover closes the way the flyout does: a press on the canvas.
 		await canvas.clickAt({ x: 400, y: 40 });
 		await expect(page.locator(selectors.railOverflowPopover)).toHaveCount(0);
@@ -193,37 +183,36 @@ test.describe("Stencil rail overflow", () => {
 	}) => {
 		await fillRail(canvas);
 		const page = canvas.page;
-		const moreButton = page.locator(selectors.railMoreButton);
 		await shrinkUntil(
 			page,
 			async () => (await moreButtonTitle(page)) === "2 more categories",
 		);
 
-		await moreButton.click();
+		await page.click(selectors.railMoreButton);
 		await page
-			.locator(selectors.railOverflowRows("pinned"))
+			.locator(selectors.railOverflowRows)
 			.filter({ hasText: "Basic" })
 			.click();
 		await expect(
 			page.locator(selectors.categoryPanel(BASIC_CATEGORY)),
 		).toBeVisible();
 		await expect(page.locator(selectors.railOverflowPopover)).toHaveCount(0);
-		// In the last pin's place, which goes into "…" instead.
-		expect(
-			await categoryIdsOf(page, selectors.railCategoryButtons("pinned")),
-		).toEqual([BASIC_CATEGORY]);
+		// In the last shown pin's place, which goes into "…" instead.
+		expect(await categoryIdsOf(page, selectors.railCategoryButtons)).toEqual([
+			BASIC_CATEGORY,
+		]);
 		await expect(
 			page.locator(selectors.categoryButton(BASIC_CATEGORY)),
 		).toHaveAttribute("aria-expanded", "true");
 
 		await canvas.closeStencilPanel();
 		await settleLayout(page);
-		expect(
-			await categoryIdsOf(page, selectors.railCategoryButtons("pinned")),
-		).toEqual([SPEC_CATEGORY]);
+		expect(await categoryIdsOf(page, selectors.railCategoryButtons)).toEqual([
+			SPEC_CATEGORY,
+		]);
 	});
 
-	test("folds the presets into one button only once every category is in '…', and draws from its popover", async ({
+	test("folds the presets into one button only once every pin is in '…', and draws from its popover", async ({
 		canvas,
 	}) => {
 		await fillRail(canvas);
@@ -241,11 +230,18 @@ test.describe("Stencil rail overflow", () => {
 			0,
 		);
 		await expect(presetsButton).toHaveAttribute("title", "Basic shapes");
-		await expect(page.locator(selectors.catalogButton)).toBeVisible();
-		// The room the fold frees brings the categories back.
-		expect(
-			await categoryIdsOf(page, selectors.railCategoryButtons("pinned")),
-		).toEqual([SPEC_CATEGORY, BASIC_CATEGORY]);
+		// The catalog button right after the folded presets; the room the fold
+		// frees brings the pins back.
+		expect((await railOrder(page)).slice(0, 3)).toEqual([
+			"toggle:railPresets",
+			"divider",
+			"command:toggleStencilLibrary",
+		]);
+		expect(await categoryIdsOf(page, selectors.railCategoryButtons)).toEqual([
+			SPEC_CATEGORY,
+			BASIC_CATEGORY,
+			SPARE_CATEGORY,
+		]);
 
 		await presetsButton.click();
 		await page.click(selectors.railPresetsPopoverItem("rect"));
@@ -289,11 +285,12 @@ test.describe("Stencil rail overflow", () => {
 		);
 
 		await expect
-			.poll(() => categoryIdsOf(page, selectors.railCategoryButtons("pinned")))
-			.toEqual([BASIC_CATEGORY, SPEC_CATEGORY]);
+			.poll(() => categoryIdsOf(page, selectors.railCategoryButtons))
+			.toEqual([BASIC_CATEGORY, SPEC_CATEGORY, SPARE_CATEGORY]);
 		expect(await lastReportedPins(page)).toEqual([
 			BASIC_CATEGORY,
 			SPEC_CATEGORY,
+			SPARE_CATEGORY,
 		]);
 		// A drag is not a click: no panel opened.
 		await expect(page.locator(selectors.stencilPanel)).toHaveCount(0);
@@ -302,32 +299,27 @@ test.describe("Stencil rail overflow", () => {
 	test("reorders the pins inside the '…' popover", async ({ canvas }) => {
 		await fillRail(canvas);
 		const page = canvas.page;
-		// Pinning `mixed` too leaves three pins and no document category.
-		await canvas.openCatalog();
-		await page.hover(selectors.catalogRow(MIXED_CATEGORY));
-		await page.click(selectors.catalogPin(MIXED_CATEGORY));
-		await canvas.closeStencilPanel();
-		const moreButton = page.locator(selectors.railMoreButton);
 		await shrinkUntil(
 			page,
 			async () => (await moreButtonTitle(page)) === "2 more categories",
 		);
 
-		await moreButton.click();
+		await page.click(selectors.railMoreButton);
 		await expect(page.locator(selectors.railOverflowPopover)).toBeVisible();
-		expect(
-			await categoryIdsOf(page, selectors.railOverflowRows("pinned")),
-		).toEqual([BASIC_CATEGORY, MIXED_CATEGORY]);
+		expect(await categoryIdsOf(page, selectors.railOverflowRows)).toEqual([
+			BASIC_CATEGORY,
+			SPARE_CATEGORY,
+		]);
 		const rowOf = (categoryId: string) =>
 			`${selectors.railOverflowPopover} [data-action="toggle:${categoryId}"]`;
-		await dragOnto(page, rowOf(MIXED_CATEGORY), rowOf(BASIC_CATEGORY));
+		await dragOnto(page, rowOf(SPARE_CATEGORY), rowOf(BASIC_CATEGORY));
 
 		await expect
-			.poll(() => categoryIdsOf(page, selectors.railOverflowRows("pinned")))
-			.toEqual([MIXED_CATEGORY, BASIC_CATEGORY]);
+			.poll(() => categoryIdsOf(page, selectors.railOverflowRows))
+			.toEqual([SPARE_CATEGORY, BASIC_CATEGORY]);
 		expect(await lastReportedPins(page)).toEqual([
 			SPEC_CATEGORY,
-			MIXED_CATEGORY,
+			SPARE_CATEGORY,
 			BASIC_CATEGORY,
 		]);
 	});

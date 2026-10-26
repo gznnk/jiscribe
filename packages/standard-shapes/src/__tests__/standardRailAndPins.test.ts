@@ -14,6 +14,14 @@ import {
  * a rail preset naming nothing would only show up as a missing button.
  */
 describe("the standard set's rail and pins", () => {
+	it("pins flowchart, general and container, in that order", () => {
+		expect(standardDefaultPinnedCategoryIds).toEqual([
+			"flowchart",
+			"general",
+			"container",
+		]);
+	});
+
 	it("pins only ids that name a section of the standard library", () => {
 		const sectionIds = standardStencilLibrarySections.map(
 			(section) => section.id,

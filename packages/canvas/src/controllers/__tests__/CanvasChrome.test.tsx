@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -16,8 +15,8 @@ import {
 
 /**
  * Which pieces of chrome a mounted canvas draws for its props: the rail, the
- * toolbar, the rail's catalog button, its pinned categories and the ones the
- * document adds, and the catalog's badges. What each piece
+ * toolbar, the rail's catalog button and its pinned categories, in the rail's
+ * order. What each piece
  * does is the business of its own tests and the e2e suite; this pins only the
  * show / hide rules, which no single component owns.
  */
@@ -389,128 +388,66 @@ describe("Canvas chrome", () => {
 		expect(dock()?.querySelector('[data-action="show:lines"]')).not.toBeNull();
 	});
 
-	describe("categories the document uses", () => {
+	describe("the rail's order", () => {
 		const categoryOf = (id: string, presetIds: string[]): StencilCategory => ({
 			id,
 			label: id,
 			icon: RectIcon,
 			presetIds,
 		});
-		/** With only the text tool on the rail, every one of these types counts. */
-		const documentRail = { presetIds: ["text"] };
-		const documentLibrary = {
+		const orderLibrary = {
 			sections: [
 				categoryOf("boxes", ["rect"]),
 				categoryOf("rounds", ["ellipse"]),
-				categoryOf("lines", ["polyline"]),
 			],
 		};
-		const frameDoc = (id: string, type: string) => ({
-			id,
-			type,
-			x: 0,
-			y: 0,
-			width: 10,
-			height: 10,
-		});
-		const docOf = (...root: ReturnType<typeof frameDoc>[]) => ({
-			version: 1 as const,
-			root,
-		});
-		const railCategories = (container: HTMLElement, railGroup: string) =>
-			[
-				...container.querySelectorAll(
-					`${RAIL} [data-id="stencil-category"][data-rail-group="${railGroup}"]`,
-				),
-			].map((button) => button.getAttribute("data-action"));
-		const DOCUMENT_DIVIDER = `${RAIL} [data-testid="stencil-rail-document-divider"]`;
-
-		it("draws them after the pins behind a dashed divider, a pinned one only once", () => {
-			const container = mount({
-				doc: docOf(
-					frameDoc("rect-1", "rect"),
-					frameDoc("ellipse-1", "ellipse"),
-				),
-				rail: documentRail,
-				stencilLibrary: documentLibrary,
-				initialConfig: { pinnedCategoryIds: ["rounds"] },
+		/** The rail's children top to bottom: a divider, the catalog button, or a button's action. */
+		const railOrder = (container: HTMLElement) =>
+			[...(container.querySelector(RAIL)?.children ?? [])].map((child) => {
+				const action = child.getAttribute("data-action");
+				return action === null ? "divider" : action;
 			});
-			expect(railCategories(container, "pinned")).toEqual(["toggle:rounds"]);
-			expect(railCategories(container, "document")).toEqual(["toggle:boxes"]);
-			// The divider sits between the two groups.
-			const divider = container.querySelector(DOCUMENT_DIVIDER);
-			expect(divider?.previousElementSibling?.getAttribute("data-action")).toBe(
+
+		it("draws the presets, the catalog button, then the pins, a divider between each group", () => {
+			const container = mount({
+				stencilLibrary: orderLibrary,
+				rail: { presetIds: ["rect", "text"] },
+				initialConfig: { pinnedCategoryIds: ["rounds", "boxes"] },
+			});
+			expect(railOrder(container)).toEqual([
+				"item:rect",
+				"item:text",
+				"divider",
+				"command:toggleStencilLibrary",
+				"divider",
 				"toggle:rounds",
-			);
-			expect(divider?.nextElementSibling?.getAttribute("data-action")).toBe(
 				"toggle:boxes",
-			);
+			]);
 		});
 
-		it("draws neither them nor the divider for a document using no category", () => {
+		it("draws no divider after the catalog button with nothing pinned", () => {
 			const container = mount({
-				rail: documentRail,
-				stencilLibrary: documentLibrary,
-			});
-			expect(railCategories(container, "document")).toEqual([]);
-			expect(container.querySelector(DOCUMENT_DIVIDER)).toBeNull();
-		});
-
-		it("draws no divider with nothing above them, the button all the same", () => {
-			const container = mount({
-				doc: docOf(frameDoc("rect-1", "rect")),
-				rail: { presetIds: [] },
-				stencilLibrary: documentLibrary,
-			});
-			expect(railCategories(container, "document")).toEqual(["toggle:boxes"]);
-			expect(container.querySelector(DOCUMENT_DIVIDER)).toBeNull();
-		});
-
-		it("adds no category for a type a rail preset creates", () => {
-			const container = mount({
-				doc: docOf(frameDoc("rect-1", "rect")),
+				stencilLibrary: orderLibrary,
 				rail: { presetIds: ["rect"] },
-				stencilLibrary: documentLibrary,
 			});
-			expect(railCategories(container, "document")).toEqual([]);
+			expect(railOrder(container)).toEqual([
+				"item:rect",
+				"divider",
+				"command:toggleStencilLibrary",
+			]);
 		});
 
-		it("swaps them with the document", () => {
-			const { container, rerender } = mountWithRerender({
-				doc: docOf(frameDoc("rect-1", "rect")),
-				rail: documentRail,
-				stencilLibrary: documentLibrary,
-			});
-			expect(railCategories(container, "document")).toEqual(["toggle:boxes"]);
-
-			rerender({
-				doc: docOf(frameDoc("ellipse-1", "ellipse")),
-				rail: documentRail,
-				stencilLibrary: documentLibrary,
-			});
-			expect(railCategories(container, "document")).toEqual(["toggle:rounds"]);
-		});
-
-		it("badges every catalog row the document uses, pinned or not, in the locale's wording", async () => {
+		it("draws no divider above the catalog button with no presets", () => {
 			const container = mount({
-				doc: docOf(
-					frameDoc("rect-1", "rect"),
-					frameDoc("ellipse-1", "ellipse"),
-				),
-				rail: documentRail,
-				stencilLibrary: documentLibrary,
-				initialConfig: { pinnedCategoryIds: ["rounds"] },
-				locale: "ja",
+				stencilLibrary: orderLibrary,
+				rail: { presetIds: [] },
+				initialConfig: { pinnedCategoryIds: ["boxes"] },
 			});
-			await press(container.querySelector(CATALOG_BUTTON));
-
-			const badgeOf = (categoryId: string) =>
-				container.querySelector(
-					`${FLYOUT} [data-action="show:${categoryId}"] [data-testid="stencil-catalog-in-diagram"]`,
-				);
-			expect(badgeOf("boxes")?.textContent).toBe("図で使用中");
-			expect(badgeOf("rounds")?.textContent).toBe("図で使用中");
-			expect(badgeOf("lines")).toBeNull();
+			expect(railOrder(container)).toEqual([
+				"command:toggleStencilLibrary",
+				"divider",
+				"toggle:boxes",
+			]);
 		});
 	});
 
@@ -564,20 +501,7 @@ describe("Canvas chrome", () => {
 			});
 		};
 
-		/** A polyline, which the rail's presets here (rect, ellipse) do not create. */
-		const polylineDoc = {
-			id: "poly-1",
-			type: "polyline",
-			points: [
-				{ x: 0, y: 0 },
-				{ x: 10, y: 10 },
-			],
-		} as unknown as ObjectDoc;
 		const shortRailProps: CanvasProps = {
-			doc: {
-				version: 1 as const,
-				root: [polylineDoc],
-			},
 			stencilLibrary: {
 				sections: [
 					categoryOf("boxes", ["rect"]),
@@ -586,12 +510,12 @@ describe("Canvas chrome", () => {
 				],
 			},
 			rail: { presetIds: ["rect", "ellipse"] },
-			initialConfig: { pinnedCategoryIds: ["rounds", "boxes"] },
+			initialConfig: { pinnedCategoryIds: ["rounds", "boxes", "lines"] },
 		};
 
 		/**
 		 * Mounts with the rail measured 1px tall, short of even the presets: every
-		 * category goes into "…" and the presets fold. Left alone, jsdom measures
+		 * pin goes into "…" and the presets fold. Left alone, jsdom measures
 		 * 0, which the rail reads as not laid out.
 		 */
 		const mountShortRail = (props: CanvasProps = {}) =>
@@ -600,7 +524,7 @@ describe("Canvas chrome", () => {
 		const PRESETS_BUTTON = `${RAIL} [data-action="toggle:railPresets"]`;
 		const POPOVER = '[data-id="stencil-rail-popover"]';
 
-		it("moves every category into '…', titled with the count, and folds the presets", () => {
+		it("moves every pin into '…', titled with the count, and folds the presets", () => {
 			const { container } = mountShortRail();
 			expect(
 				container.querySelector(`${RAIL} [data-id="stencil-category"]`),
@@ -617,24 +541,16 @@ describe("Canvas chrome", () => {
 			expect(container.querySelector(CATALOG_BUTTON)).not.toBeNull();
 		});
 
-		it("lists them in the '…' popover, the pins in pin order under their heading, then the document's", async () => {
+		it("lists them in the '…' popover, in pin order under their heading", async () => {
 			const { container } = mountShortRail();
 			await press(container.querySelector(MORE_BUTTON));
 
 			const popover = container.querySelector(POPOVER);
 			const rows = [
 				...(popover?.querySelectorAll('[data-id="stencil-category"]') ?? []),
-			].map(
-				(row) =>
-					`${row.getAttribute("data-rail-group")}:${row.getAttribute("data-action")}`,
-			);
-			expect(rows).toEqual([
-				"pinned:toggle:rounds",
-				"pinned:toggle:boxes",
-				"document:toggle:lines",
-			]);
+			].map((row) => row.getAttribute("data-action"));
+			expect(rows).toEqual(["toggle:rounds", "toggle:boxes", "toggle:lines"]);
 			expect(popover?.textContent).toContain("Pinned");
-			expect(popover?.textContent).toContain("In this diagram");
 			expect(
 				container.querySelector(MORE_BUTTON)?.getAttribute("aria-expanded"),
 			).toBe("true");
@@ -654,7 +570,7 @@ describe("Canvas chrome", () => {
 		it("opens '…' over a docked panel without drawing the panel a second time as a flyout", async () => {
 			const { container } = mountShortRail({
 				initialConfig: {
-					pinnedCategoryIds: ["rounds", "boxes"],
+					pinnedCategoryIds: ["rounds", "boxes", "lines"],
 					sidebars: { left: { isOpen: true } },
 				},
 			});

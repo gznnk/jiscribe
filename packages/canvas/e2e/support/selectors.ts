@@ -101,25 +101,22 @@ export const selectors = {
 		`${TOOLBAR} [data-action="command:${commandId}"]`,
 
 	/**
-	 * Category button on the rail, present for a pinned category or one the open
-	 * document uses; the toggle that opens its panel, carrying the shown state on
-	 * aria-expanded.
+	 * Category button on the rail, present for a pinned category, or its row in
+	 * the rail's "…" popover; the toggle that opens its panel, carrying the shown
+	 * state on aria-expanded.
 	 */
 	categoryButton: (categoryId: string) =>
 		`[data-id="stencil-category"][data-action="toggle:${categoryId}"]`,
 
 	/**
-	 * Every category button of one group of the rail, in rail order: `pinned` for
-	 * the user's pins, `document` for the categories the rail adds below them
-	 * because the open document uses them. Read `data-action` (`toggle:<id>`) off
-	 * each for the ids.
+	 * Every pinned category's button on the rail, in pin order; the pins in "…"
+	 * are not among them. Read `data-action` (`toggle:<id>`) off each for the ids.
 	 */
-	railCategoryButtons: (railGroup: "pinned" | "document") =>
-		`${RAIL} [data-id="stencil-category"][data-rail-group="${railGroup}"]`,
+	railCategoryButtons: `${RAIL} [data-id="stencil-category"]`,
 
 	/**
-	 * The rail's "…" button, present only while the rail had no room for a
-	 * category; its title says how many it holds ("2 more categories").
+	 * The rail's "…" button after the pins, present only while the rail had no
+	 * room for a pin; its title says how many it holds ("2 more categories").
 	 */
 	railMoreButton: `${RAIL} [data-action="toggle:railOverflow"]`,
 
@@ -127,12 +124,11 @@ export const selectors = {
 	railOverflowPopover: RAIL_OVERFLOW_POPOVER,
 
 	/**
-	 * Every row of one section of the "…" popover, in order: `pinned` (the tail
-	 * of the pin order) or `document`. A row is the same toggle as its rail
-	 * button (`toggle:<id>`), so `categoryButton` matches it too.
+	 * Every row of the "…" popover, in pin order: the tail of the pins. A row is
+	 * the same toggle as its rail button (`toggle:<id>`), so `categoryButton`
+	 * matches it too.
 	 */
-	railOverflowRows: (railGroup: "pinned" | "document") =>
-		`${RAIL_OVERFLOW_POPOVER} [data-id="stencil-category"][data-rail-group="${railGroup}"]`,
+	railOverflowRows: `${RAIL_OVERFLOW_POPOVER} [data-id="stencil-category"]`,
 
 	/** The button the rail's presets fold into once the rail is too short for them; absent otherwise. */
 	railPresetsButton: `${RAIL} [data-action="toggle:railPresets"]`,
@@ -140,9 +136,6 @@ export const selectors = {
 	/** A preset in the collapsed presets' popover; same DOM contract as shapeItem. */
 	railPresetsPopoverItem: (presetId: string) =>
 		`${RAIL_PRESETS_POPOVER} [data-action="item:${presetId}"]`,
-
-	/** The dashed divider above the rail's document categories; absent while there are none. */
-	railDocumentDivider: `${RAIL} [data-testid="stencil-rail-document-divider"]`,
 
 	/** The stencil panel while it shows that category, flyout or docked; absent otherwise. */
 	categoryPanel: (categoryId: string) =>
@@ -198,16 +191,9 @@ export const selectors = {
 	/** Every catalog row, in display order. */
 	catalogRows: `${STENCIL_PANEL} [data-action^="show:"]`,
 
-	/**
-	 * The catalog row switching the panel to a category; its text is the row's
-	 * label, followed by the "In this diagram" badge while it shows.
-	 */
+	/** The catalog row switching the panel to a category; the row's label is its text. */
 	catalogRow: (categoryId: string) =>
 		`${STENCIL_PANEL} [data-action="show:${categoryId}"]`,
-
-	/** The "In this diagram" badge of a catalog row; present while the open document uses that category. */
-	catalogInDiagramBadge: (categoryId: string) =>
-		`${STENCIL_PANEL} [data-action="show:${categoryId}"] [data-testid="stencil-catalog-in-diagram"]`,
 
 	/** The catalog row's pin toggle, carrying the pinned state on aria-pressed. */
 	catalogPin: (categoryId: string) =>

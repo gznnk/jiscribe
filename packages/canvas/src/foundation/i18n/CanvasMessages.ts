@@ -21,7 +21,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 			: `${categoryCount} more categories`,
 
 	stencilCatalogTitle: "All shapes",
-	stencilCatalogInDiagram: "In this diagram",
 	stencilPanelClose: "Close",
 	stencilPanelKeepOpen: "Keep open",
 	stencilCatalogPin: (categoryLabel) => `Pin ${categoryLabel}`,

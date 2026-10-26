@@ -44,10 +44,9 @@ const twoShownHeight = (() => {
 	for (let railHeight = 600; railHeight > 0; railHeight--) {
 		const overflow = resolveStencilRailOverflow(railHeight, {
 			presetCount: PRESET_IDS.length,
-			pinnedCategoryIds: PINNED_CATEGORY_IDS,
-			documentCategoryIds: [],
-			drawnCategoryId: null,
 			hasCatalogButton: true,
+			pinnedCategoryIds: PINNED_CATEGORY_IDS,
+			drawnCategoryId: null,
 		});
 		if (overflow.shownPinnedCategoryIds.length === 2) {
 			return railHeight;
@@ -91,7 +90,6 @@ const renderRail = (
 				presetIds={PRESET_IDS}
 				librarySections={librarySections}
 				pinnedCategoryIds={PINNED_CATEGORY_IDS}
-				documentCategoryIds={[]}
 				activePresetId={null}
 				drawnPanelContent={null}
 				openRailPopover={openRailPopover}

@@ -79,7 +79,6 @@ import type {
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
 import { useResolvedStencilLibrary } from "./ui/menu/StencilLibrary/hooks/useResolvedStencilLibrary";
 import { StencilPanel } from "./ui/menu/StencilLibrary/StencilPanel";
-import { useDocumentCategoryIds } from "./ui/menu/StencilRail/hooks/useDocumentCategoryIds";
 import { StencilRail } from "./ui/menu/StencilRail/StencilRail";
 import {
 	DEFAULT_RAIL_PRESET_IDS,
@@ -274,20 +273,18 @@ type CanvasProps = {
 	/**
 	 * The stencil rail, the column of shape tools at the left
 	 * ({@link CanvasRailConfig}): `presetIds` at the top (default
-	 * `DEFAULT_RAIL_PRESET_IDS`, core's primitives), then the categories the user
-	 * pinned, then the other library categories the open document uses, most
-	 * objects first (a type some rail preset creates adds no category), then
-	 * the catalog button. What does not fit the rail's height goes into a "…"
-	 * button above the catalog button — the document's categories first, then
-	 * the pins from the end — and the presets fold into one button only when
-	 * that is not enough. The user reorders the pins by dragging them. Shown by
-	 * default; `toolbar.show` does not hide it. An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
+	 * `DEFAULT_RAIL_PRESET_IDS`, core's primitives), then the catalog button,
+	 * then the categories the user pinned. Pins that do not fit the rail's
+	 * height go into a "…" button after the shown ones, from the end of the pin
+	 * order, and the presets fold into one button only when that is not enough.
+	 * The user reorders the pins by dragging them. Shown by default;
+	 * `toolbar.show` does not hide it. An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
 	 */
 	rail?: CanvasRailConfig;
 	/**
-	 * The stencil library: the categories the rail's pinned buttons, the ones it
-	 * adds for the open document and its catalog draw from. Omit and the rail
-	 * shows its presets alone — no category, no catalog button.
+	 * The stencil library: the categories the rail's pinned buttons and its
+	 * catalog draw from. Omit and the rail shows its presets alone — no pinned
+	 * category, no catalog button.
 	 *
 	 * A category opens as a panel over the canvas (the flyout) that the user can
 	 * dock beside it; the catalog lists every section, searches across them and
@@ -516,12 +513,6 @@ const CanvasComponent = ({
 
 	const isRailShown = rail?.show !== false;
 	const railPresetIds = rail?.presetIds ?? DEFAULT_RAIL_PRESET_IDS;
-	const documentCategoryIds = useDocumentCategoryIds(
-		state.objects,
-		librarySections,
-		railPresetIds,
-		registries.stencil,
-	);
 	// With no library in the reducer nothing is drawn, so a panel restored open
 	// takes no space (readDrawnStencilPanelContent for the rest).
 	const shownStencilPanelContent =
@@ -738,7 +729,6 @@ const CanvasComponent = ({
 							presetIds={railPresetIds}
 							librarySections={librarySections}
 							pinnedCategoryIds={state.pinnedCategoryIds}
-							documentCategoryIds={documentCategoryIds}
 							activePresetId={drawingPresetId}
 							drawnPanelContent={shownStencilPanelContent}
 							openRailPopover={openRailPopover}
@@ -756,7 +746,6 @@ const CanvasComponent = ({
 							drawnContent={shownStencilPanelContent}
 							sections={librarySections}
 							pinnedCategoryIds={state.pinnedCategoryIds}
-							documentCategoryIds={documentCategoryIds}
 							activePresetId={drawingPresetId}
 							resolvePreset={resolveLibraryPreset}
 						/>
@@ -835,7 +824,6 @@ const CanvasComponent = ({
 									drawnContent={shownStencilPanelContent}
 									sections={librarySections}
 									pinnedCategoryIds={state.pinnedCategoryIds}
-									documentCategoryIds={documentCategoryIds}
 									activePresetId={drawingPresetId}
 									resolvePreset={resolveLibraryPreset}
 								/>

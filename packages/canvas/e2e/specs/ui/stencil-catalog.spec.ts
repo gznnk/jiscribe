@@ -17,13 +17,13 @@ import { selectors } from "../../support/selectors";
  *   last.
  *
  * The categories are core's `basic` section and the harness's test-only `spec`
- * and `mixed` ones (e2e/plugins/specShapesPlugin): `spec` lists `tile` and holds
- * `brick` beyond it, and the harness pins it.
+ * and `spare` ones (e2e/plugins/specShapesPlugin): `spec` lists `tile` and holds
+ * `brick` beyond it, and the harness pins it; `spare` lists `memo`.
  */
 
 const SPEC_CATEGORY = "spec";
 const BASIC_CATEGORY = "basic";
-const MIXED_CATEGORY = "mixed";
+const SPARE_CATEGORY = "spare";
 
 test.describe("Stencil catalog", () => {
 	test("opens and closes from the rail's catalog button, its search box unfocused", async ({
@@ -51,7 +51,7 @@ test.describe("Stencil catalog", () => {
 		expect(rowActions).toEqual([
 			`show:${BASIC_CATEGORY}`,
 			`show:${SPEC_CATEGORY}`,
-			`show:${MIXED_CATEGORY}`,
+			`show:${SPARE_CATEGORY}`,
 		]);
 
 		await button.click();

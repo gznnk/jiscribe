@@ -350,9 +350,7 @@ Two things that file has to get right:
     and the catalog button is drawn only while it holds a section.
   - `pinnedCategoryIds` — the sections pinned on the rail at mount, for a spec opening a
     category from its rail button (`CanvasDriver.drawShapeFromFlyout` /
-    `placeShapeFromFlyout`). Unpinned, a category is on the rail only while the
-    document uses it (see [Moving a shape out of the engine](#moving-a-shape-out-of-the-engine)),
-    and is otherwise reached through the catalog.
+    `placeShapeFromFlyout`). Unpinned, a category is reached through the catalog only.
 
   The toolbar is always core's default bar (undo / redo, zoom, the properties toggle and
   so on). A plugin's presets and categories are absent from the canvas defaults, so without
@@ -424,9 +422,7 @@ Placement is a separate decision from packaging: a category
 (`containerStencilCategory`, `annotationStencilCategory`), typed `StencilCategory`,
 is owned by the plugin and composed by the host into `stencilLibrary.sections`,
 where it becomes a section of the library — a row of the rail's catalog, and, once
-pinned or while the open document uses it, a button on the rail opening its presets
-in a panel (the types the rail's presets create do not count; see
-`CanvasRailConfig.presetIds`, the `rail.presetIds` prop). Which categories start
+pinned, a button on the rail opening its presets in a panel. Which categories start
 pinned is the host's `initialConfig.pinnedCategoryIds`; after that the pins are the
 user's. A plugin preset can also sit on the rail itself, named in `rail.presetIds`.
 The standard set files every plugin category in `standardStencilLibrarySections`

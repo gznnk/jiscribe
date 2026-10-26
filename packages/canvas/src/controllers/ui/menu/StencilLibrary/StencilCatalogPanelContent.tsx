@@ -7,7 +7,6 @@ import {
 import {
 	StencilCatalogPinButton,
 	StencilCatalogRow,
-	StencilCatalogRowBadge,
 	StencilCatalogRowIcon,
 	StencilCatalogRowLabel,
 	StencilCatalogRowOpenButton,
@@ -33,8 +32,6 @@ type StencilCatalogPanelContentProps = {
 	sections: readonly ResolvedStencilCategory[];
 	/** The user's pins (reducer state); a row whose id is listed shows as pinned. */
 	pinnedCategoryIds: readonly string[];
-	/** The categories the open document uses (useDocumentCategoryIds); a row whose id is listed carries the badge. */
-	documentCategoryIds: readonly string[];
 	/** Preset id currently in drawing mode, to highlight the matching item. */
 	activePresetId: string | null;
 	/** Looks up the ids a category's `search` answers beyond its listed presets. */
@@ -42,27 +39,21 @@ type StencilCatalogPanelContentProps = {
 };
 
 const ROW_ICON_SIZE = 16;
-const PIN_ICON_SIZE = 14;
+/** The size PinIcon is drawn for (see its JSDoc); another size blurs its 1px lines. */
+const PIN_ICON_SIZE = 16;
 
 /**
  * The catalog in a stencil panel: a search box over every library category,
  * and otherwise one flat row per category in declaration order. A row switches
  * the panel to its category (`show:`) and carries the toggle pinning it to the
- * rail (`pin:`); both land in StencilLibraryPanelHandler. A row whose category
- * the open document uses says so with a badge.
+ * rail (`pin:`); both land in StencilLibraryPanelHandler.
  *
  * The query belongs to this content alone and starts empty each time the
  * catalog is shown; the box is not focused on its own.
  */
 export const StencilCatalogPanelContent: React.FC<
 	StencilCatalogPanelContentProps
-> = ({
-	sections,
-	pinnedCategoryIds,
-	documentCategoryIds,
-	activePresetId,
-	resolvePreset,
-}) => {
+> = ({ sections, pinnedCategoryIds, activePresetId, resolvePreset }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 	const [query, setQuery] = useState("");
@@ -109,11 +100,6 @@ export const StencilCatalogPanelContent: React.FC<
 										<Icon width={ROW_ICON_SIZE} height={ROW_ICON_SIZE} />
 									</StencilCatalogRowIcon>
 									<StencilCatalogRowLabel>{label}</StencilCatalogRowLabel>
-									{documentCategoryIds.includes(category.id) && (
-										<StencilCatalogRowBadge data-testid="stencil-catalog-in-diagram">
-											{messages.stencilCatalogInDiagram}
-										</StencilCatalogRowBadge>
-									)}
 								</StencilCatalogRowOpenButton>
 								<StencilCatalogPinButton
 									type="button"

@@ -338,9 +338,7 @@ mountPluginHarness({
     一覧し、カタログボタンはここに 1 セクション以上あるときだけ出る
   - `pinnedCategoryIds` — マウント時にレールへピン留めするセクション。spec がカテゴリを
     レールのボタンから開く場合に使う（`CanvasDriver.drawShapeFromFlyout` /
-    `placeShapeFromFlyout`）。ピン留めしなければ、レールに出るのは文書がそのカテゴリを
-    使っている間だけで（[図形をエンジンから出す](#図形をエンジンから出す)参照）、それ以外は
-    カタログから届く
+    `placeShapeFromFlyout`）。ピン留めしなければカタログからしか届かない
 
   ツールバーは常に core の既定バー（undo / redo・ズーム・プロパティのトグルなど）に
   なる。プラグインのプリセットとカテゴリは canvas の既定に含まれないので、これらの
@@ -407,9 +405,8 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 どこに出すかはパッケージングとは別の判断である。カテゴリ
 （`containerStencilCategory` / `annotationStencilCategory`。型は `StencilCategory`）は
 プラグインが所有し、ホストが `stencilLibrary.sections` へ合成する。そこでライブラリの
-セクションになり、レールのカタログに行として並び、ピン留めされるか、開いている文書が
-そのカテゴリを使っている間はレールにボタンが立って、押すとそのプリセットがパネルに開く
-（レールのプリセットが作る型は数えない。`rail.presetIds` の `CanvasRailConfig.presetIds` 参照）。最初にどのカテゴリをピン留めしておくかは
+セクションになり、レールのカタログに行として並び、ピン留めされればレールにボタンが
+立って、押すとそのプリセットがパネルに開く。最初にどのカテゴリをピン留めしておくかは
 ホストの `initialConfig.pinnedCategoryIds` で、その後のピン留めはユーザーのものになる。
 プラグインのプリセットを `rail.presetIds` に挙げてレールそのものに置くこともできる。
 出荷図形セットは全プラグインのカテゴリを `standardStencilLibrarySections`

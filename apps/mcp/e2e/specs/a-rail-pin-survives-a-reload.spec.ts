@@ -7,7 +7,7 @@ import { expect, expectFileOnDisplay, test } from "../support/fixtures";
 /** The ids of the rail's pinned category buttons, in rail order */
 const pinnedRailCategoryIds = (page: Page): Promise<string[]> =>
 	page
-		.locator(selectors.railCategoryButtons("pinned"))
+		.locator(selectors.railCategoryButtons)
 		.evaluateAll((buttons) =>
 			buttons.map((button) =>
 				(button.getAttribute("data-action") ?? "").replace(/^toggle:/, ""),

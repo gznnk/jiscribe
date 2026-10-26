@@ -10,11 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **The editor's shape tools moved to a rail at the left of the canvas.** The
-  six presets the toolbar used to carry sit on the rail, with the Flowchart
-  category pinned below them, the other categories the open file uses after
-  the pins, and a "Find Shapes" button opening every category of the standard
-  set, those in use marked "In this diagram". On a short window what does not
-  fit goes into a "…" button, and the pins can be reordered by dragging them.
+  six presets the toolbar used to carry sit on the rail, then a "Find Shapes"
+  button opening every category of the standard set, then the pinned
+  categories — Flowchart, General and Container to start with. On a short
+  window the pins that do not fit go into a "…" button, and the pins can be
+  reordered by dragging them.
   A category opens over the canvas
   and can be kept open beside it, which replaces the shape library sidebar.
   The pins are remembered per user, across workspaces, and carried to other

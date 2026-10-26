@@ -22,20 +22,17 @@ const ROW_ICON_SIZE = 16;
 
 type StencilRailPopoverRowProps = {
 	section: ResolvedStencilCategory;
-	/** Carried on `data-rail-group`, as on the rail's own buttons. */
-	railGroup: "pinned" | "document";
 	/** The line of a pin drag landing beside this row; null draws none. */
 	pinInsertionEdge: PinInsertionMark["edge"] | null;
 };
 
 /**
- * One category of the "…" popover. The same gesture target as its rail button
- * (`stencil-category`, `toggle:{id}`), so a press opens it and, for a pin, a
- * drag moves it in the pin order; the grip only shows which rows drag.
+ * One pin of the "…" popover. The same gesture target as its rail button
+ * (`stencil-category`, `toggle:{id}`), so a press opens it and a drag moves it
+ * in the pin order; the grip only shows that the row drags.
  */
 const StencilRailPopoverCategoryRow: React.FC<StencilRailPopoverRowProps> = ({
 	section: { category },
-	railGroup,
 	pinInsertionEdge,
 }) => {
 	const messages = useCanvasMessages();
@@ -47,12 +44,11 @@ const StencilRailPopoverCategoryRow: React.FC<StencilRailPopoverRowProps> = ({
 			data-kind="menu"
 			data-id="stencil-category"
 			data-action={toggleAction(category.id)}
-			data-rail-group={railGroup}
 			pinInsertionEdge={pinInsertionEdge}
 			data-pin-insertion={pinInsertionEdge ?? undefined}
 		>
 			<StencilRailPopoverRowGrip>
-				{railGroup === "pinned" && <GripIcon />}
+				<GripIcon />
 			</StencilRailPopoverRowGrip>
 			<Icon width={ROW_ICON_SIZE} height={ROW_ICON_SIZE} />
 			{resolveStencilCategoryLabel(
@@ -68,20 +64,17 @@ const StencilRailPopoverCategoryRow: React.FC<StencilRailPopoverRowProps> = ({
 type StencilRailOverflowPopoverProps = {
 	/** The pins the rail had no room for, in pin order. */
 	pinnedCategories: readonly ResolvedStencilCategory[];
-	/** The document's categories the rail had no room for, most-used first. */
-	documentCategories: readonly ResolvedStencilCategory[];
 	/** Where a pin drag's line is drawn; only a row named by it draws one. */
 	pinInsertionMark: PinInsertionMark | null;
 };
 
 /**
- * The popover of the rail's "…" button: the categories the rail had no room
- * for, the pins under one heading and the document's under another, each
- * heading drawn only over a section with rows.
+ * The popover of the rail's "…" button: the pins the rail had no room for,
+ * under their heading, in pin order.
  */
 export const StencilRailOverflowPopover: React.FC<
 	StencilRailOverflowPopoverProps
-> = ({ pinnedCategories, documentCategories, pinInsertionMark }) => {
+> = ({ pinnedCategories, pinInsertionMark }) => {
 	const messages = useCanvasMessages();
 	return (
 		<StencilRailPopoverContainer
@@ -90,39 +83,19 @@ export const StencilRailOverflowPopover: React.FC<
 			data-id="stencil-rail-popover"
 			data-popover="railOverflow"
 		>
-			{pinnedCategories.length > 0 && (
-				<>
-					<StencilRailPopoverHeading>
-						{messages.stencilRailPinnedHeading}
-					</StencilRailPopoverHeading>
-					{pinnedCategories.map((section) => (
-						<StencilRailPopoverCategoryRow
-							key={section.category.id}
-							section={section}
-							railGroup="pinned"
-							pinInsertionEdge={pinInsertionEdgeOf(
-								pinInsertionMark,
-								section.category.id,
-							)}
-						/>
-					))}
-				</>
-			)}
-			{documentCategories.length > 0 && (
-				<>
-					<StencilRailPopoverHeading>
-						{messages.stencilCatalogInDiagram}
-					</StencilRailPopoverHeading>
-					{documentCategories.map((section) => (
-						<StencilRailPopoverCategoryRow
-							key={section.category.id}
-							section={section}
-							railGroup="document"
-							pinInsertionEdge={null}
-						/>
-					))}
-				</>
-			)}
+			<StencilRailPopoverHeading>
+				{messages.stencilRailPinnedHeading}
+			</StencilRailPopoverHeading>
+			{pinnedCategories.map((section) => (
+				<StencilRailPopoverCategoryRow
+					key={section.category.id}
+					section={section}
+					pinInsertionEdge={pinInsertionEdgeOf(
+						pinInsertionMark,
+						section.category.id,
+					)}
+				/>
+			))}
 		</StencilRailPopoverContainer>
 	);
 };

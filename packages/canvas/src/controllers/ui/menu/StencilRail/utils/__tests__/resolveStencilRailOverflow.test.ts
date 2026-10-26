@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { STENCIL_BUTTON_SIZE } from "../../../StencilLibrary/StencilLibraryStyled";
 import {
+	STENCIL_RAIL_DIVIDER_EXTENT,
 	STENCIL_RAIL_GAP,
 	STENCIL_RAIL_PADDING,
 } from "../../StencilRailStyled";
@@ -12,13 +13,12 @@ import {
 	resolveStencilRailOverflow,
 } from "../resolveStencilRailOverflow";
 
-/** Eight presets, two pins and two document categories, with the catalog button. */
+/** Eight presets, the catalog button and four pins. */
 const fullRail: StencilRailContents = {
 	presetCount: 8,
-	pinnedCategoryIds: ["pin-a", "pin-b"],
-	documentCategoryIds: ["doc-most", "doc-least"],
-	drawnCategoryId: null,
 	hasCatalogButton: true,
+	pinnedCategoryIds: ["pin-a", "pin-b", "pin-c", "pin-d"],
+	drawnCategoryId: null,
 };
 
 /** Every height from tall to short, with what the rail does at it. */
@@ -35,11 +35,6 @@ const scanHeights = (
 	return results;
 };
 
-const overflowedIdsOf = (overflow: StencilRailOverflow): string[] => [
-	...overflow.overflowedDocumentCategoryIds,
-	...overflow.overflowedPinnedCategoryIds,
-];
-
 describe("resolveStencilRailOverflow", () => {
 	it("moves nothing into '…' when everything fits, or when the rail is not laid out", () => {
 		for (const [railHeight, isLaidOut] of [
@@ -48,44 +43,49 @@ describe("resolveStencilRailOverflow", () => {
 		] as const) {
 			expect(resolveStencilRailOverflow(railHeight, fullRail)).toEqual({
 				arePresetsCollapsed: false,
-				shownPinnedCategoryIds: ["pin-a", "pin-b"],
+				shownPinnedCategoryIds: ["pin-a", "pin-b", "pin-c", "pin-d"],
 				overflowedPinnedCategoryIds: [],
-				shownDocumentCategoryIds: ["doc-most", "doc-least"],
-				overflowedDocumentCategoryIds: [],
+				hasCatalogDivider: true,
 				hasPinnedDivider: true,
-				hasDocumentDivider: true,
 				hasMoreButton: false,
-				hasSpacer: true,
 				isLaidOut,
 			});
 		}
 	});
 
-	it("counts the rail's padding, buttons and gaps exactly", () => {
-		// Two presets, the spacer and the catalog button: four items, three gaps.
+	it("counts the rail's padding, buttons, dividers and gaps exactly, the catalog button at the top and '…' after the pins", () => {
+		// Two presets, a divider, the catalog button, a divider and one pin.
 		const contents: StencilRailContents = {
 			presetCount: 2,
-			pinnedCategoryIds: ["pin-a"],
-			documentCategoryIds: [],
-			drawnCategoryId: null,
 			hasCatalogButton: true,
+			pinnedCategoryIds: ["pin-a", "pin-b"],
+			drawnCategoryId: null,
 		};
-		const withoutPin =
-			2 * STENCIL_RAIL_PADDING + 3 * STENCIL_BUTTON_SIZE + 3 * STENCIL_RAIL_GAP;
-		// The pin out means "…" in: one button and one gap more than the bare rail.
-		const withMoreButton = withoutPin + STENCIL_BUTTON_SIZE + STENCIL_RAIL_GAP;
+		const withOnePin =
+			2 * STENCIL_RAIL_PADDING +
+			4 * STENCIL_BUTTON_SIZE +
+			2 * STENCIL_RAIL_DIVIDER_EXTENT +
+			5 * STENCIL_RAIL_GAP;
+		// Both pins out: "…" takes the place of the two, one button for two.
+		const withMoreButton = withOnePin;
 		expect(
 			resolveStencilRailOverflow(withMoreButton, contents)
 				.overflowedPinnedCategoryIds,
-		).toEqual(["pin-a"]);
+		).toEqual(["pin-a", "pin-b"]);
+		expect(
+			resolveStencilRailOverflow(
+				withOnePin + STENCIL_BUTTON_SIZE + STENCIL_RAIL_GAP,
+				contents,
+			).overflowedPinnedCategoryIds,
+		).toEqual([]);
 		expect(
 			resolveStencilRailOverflow(withMoreButton - 1, contents)
 				.arePresetsCollapsed,
 		).toBe(true);
 	});
 
-	it("moves the document's categories out least-used first, then the pins from the end", () => {
-		const leavingOrder = ["doc-least", "doc-most", "pin-b", "pin-a"];
+	it("moves the pins out from the end of the pin order", () => {
+		const leavingOrder = ["pin-d", "pin-c", "pin-b", "pin-a"];
 		const seenOverflowedCounts = new Set<number>();
 		for (const { overflow } of scanHeights(fullRail)) {
 			if (overflow.arePresetsCollapsed) {
@@ -93,60 +93,54 @@ describe("resolveStencilRailOverflow", () => {
 			}
 			// Whatever is in "…" is a head of the leaving order. Two can leave at
 			// once: the first one out only pays for the "…" button that takes its place.
-			const overflowedIds = overflowedIdsOf(overflow);
-			expect(new Set(overflowedIds)).toEqual(
-				new Set(leavingOrder.slice(0, overflowedIds.length)),
+			expect(new Set(overflow.overflowedPinnedCategoryIds)).toEqual(
+				new Set(
+					leavingOrder.slice(0, overflow.overflowedPinnedCategoryIds.length),
+				),
 			);
-			seenOverflowedCounts.add(overflowedIds.length);
+			seenOverflowedCounts.add(overflow.overflowedPinnedCategoryIds.length);
 		}
 		expect(seenOverflowedCounts).toContain(leavingOrder.length);
 	});
 
-	it("keeps the drawn category on the rail at every height, at the end of its group", () => {
-		for (const drawnCategoryId of ["doc-most", "pin-a"]) {
-			for (const { overflow } of scanHeights({
-				...fullRail,
-				drawnCategoryId,
-			})) {
-				expect(overflowedIdsOf(overflow)).not.toContain(drawnCategoryId);
-			}
-		}
-		// Where one of two pins fits, the drawn first pin stays and the other goes.
-		const pinsOnly: StencilRailContents = {
+	it("keeps the drawn category on the rail at every height, at the end of the pins", () => {
+		for (const { overflow } of scanHeights({
 			...fullRail,
-			documentCategoryIds: [],
 			drawnCategoryId: "pin-a",
-		};
-		const onePinShown = scanHeights(pinsOnly).find(
-			({ overflow }) => overflow.overflowedPinnedCategoryIds.length === 1,
+		})) {
+			expect(overflow.overflowedPinnedCategoryIds).not.toContain("pin-a");
+		}
+		// Where two of four pins fit, the drawn last pin takes the second place.
+		const twoShown = scanHeights(fullRail).find(
+			({ overflow }) => overflow.shownPinnedCategoryIds.length === 2,
 		);
-		expect(onePinShown?.overflow.shownPinnedCategoryIds).toEqual(["pin-a"]);
-		const drawnLastPin = resolveStencilRailOverflow(onePinShown!.railHeight, {
-			...pinsOnly,
-			drawnCategoryId: "pin-b",
+		const drawnLastPin = resolveStencilRailOverflow(twoShown!.railHeight, {
+			...fullRail,
+			drawnCategoryId: "pin-d",
 		});
-		expect(drawnLastPin.shownPinnedCategoryIds).toEqual(["pin-b"]);
-		expect(drawnLastPin.overflowedPinnedCategoryIds).toEqual(["pin-a"]);
+		expect(drawnLastPin.shownPinnedCategoryIds).toEqual(["pin-a", "pin-d"]);
+		expect(drawnLastPin.overflowedPinnedCategoryIds).toEqual([
+			"pin-b",
+			"pin-c",
+		]);
 	});
 
-	it("folds the presets only once every category in '…' still does not fit, and lets the categories back", () => {
+	it("folds the presets only once every pin in '…' still does not fit, and lets the pins back", () => {
 		const scan = scanHeights(fullRail);
 		const firstCollapsedIndex = scan.findIndex(
 			({ overflow }) => overflow.arePresetsCollapsed,
 		);
 		expect(firstCollapsedIndex).toBeGreaterThan(0);
 		const lastUncollapsed = scan[firstCollapsedIndex - 1].overflow;
-		expect(overflowedIdsOf(lastUncollapsed)).toEqual([
-			"doc-most",
-			"doc-least",
-			"pin-a",
-			"pin-b",
-		]);
+		expect(lastUncollapsed.overflowedPinnedCategoryIds).toEqual(
+			fullRail.pinnedCategoryIds,
+		);
 		const firstCollapsed = scan[firstCollapsedIndex].overflow;
-		expect(overflowedIdsOf(firstCollapsed)).toEqual([]);
-		// Folded for good below that height.
+		expect(firstCollapsed.overflowedPinnedCategoryIds).toEqual([]);
+		// Folded for good below that height; the catalog button stays after it.
 		for (const { overflow } of scan.slice(firstCollapsedIndex)) {
 			expect(overflow.arePresetsCollapsed).toBe(true);
+			expect(overflow.hasCatalogDivider).toBe(true);
 		}
 	});
 
@@ -156,34 +150,40 @@ describe("resolveStencilRailOverflow", () => {
 		}
 	});
 
-	it("draws each divider only with something on both sides, and the spacer only above a bottom button", () => {
+	it("draws each divider only with something on both sides", () => {
+		const noPins = resolveStencilRailOverflow(800, {
+			...fullRail,
+			pinnedCategoryIds: [],
+		});
+		expect(noPins.hasCatalogDivider).toBe(true);
+		// Nothing follows the catalog button.
+		expect(noPins.hasPinnedDivider).toBe(false);
 		const noPresets = resolveStencilRailOverflow(800, {
+			...fullRail,
+			presetCount: 0,
+		});
+		expect(noPresets.hasCatalogDivider).toBe(false);
+		expect(noPresets.hasPinnedDivider).toBe(true);
+		const noCatalog = resolveStencilRailOverflow(800, {
+			...fullRail,
+			hasCatalogButton: false,
+		});
+		expect(noCatalog.hasCatalogDivider).toBe(false);
+		expect(noCatalog.hasPinnedDivider).toBe(true);
+		const pinsAlone = resolveStencilRailOverflow(800, {
 			...fullRail,
 			presetCount: 0,
 			hasCatalogButton: false,
 		});
-		expect(noPresets.hasPinnedDivider).toBe(false);
-		expect(noPresets.hasDocumentDivider).toBe(true);
-		expect(noPresets.hasSpacer).toBe(false);
-		const noCategories = resolveStencilRailOverflow(800, {
-			...fullRail,
-			pinnedCategoryIds: [],
-			documentCategoryIds: [],
-		});
-		expect(noCategories.hasPinnedDivider).toBe(false);
-		expect(noCategories.hasDocumentDivider).toBe(false);
-		// Everything in "…": the spacer stays for the "…" button, the dividers go.
-		const lastUncollapsed = scanHeights({
-			...fullRail,
-			hasCatalogButton: false,
-		})
+		expect(pinsAlone.hasPinnedDivider).toBe(false);
+		// Every pin in "…": the divider stays above "…".
+		const lastUncollapsed = scanHeights(fullRail)
 			.map(({ overflow }) => overflow)
 			.filter((overflow) => !overflow.arePresetsCollapsed)
 			.at(-1)!;
+		expect(lastUncollapsed.shownPinnedCategoryIds).toEqual([]);
 		expect(lastUncollapsed.hasMoreButton).toBe(true);
-		expect(lastUncollapsed.hasSpacer).toBe(true);
-		expect(lastUncollapsed.hasPinnedDivider).toBe(false);
-		expect(lastUncollapsed.hasDocumentDivider).toBe(false);
+		expect(lastUncollapsed.hasPinnedDivider).toBe(true);
 	});
 });
 

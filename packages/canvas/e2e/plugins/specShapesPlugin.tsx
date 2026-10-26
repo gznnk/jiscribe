@@ -270,8 +270,7 @@ const PANEL_DOC_DEFAULTS: Omit<PanelDoc, "id"> = {
  * (`defaults`), and the only one whose fill is AUTO_COLOR rather than
  * transparent: the type a document has to omit `fill` / `strokeWidth` on for the
  * three-step resolution to be visible (default-fill.spec.ts). Off the rail and
- * listed only by the `mixed` category (`specMixedStencilCategory`), so no other
- * category claims a document using it.
+ * out of every category, so it exists only for documents to name.
  */
 const panelDefinition: ObjectTypeDefinition<PanelDoc, PanelState> = {
 	features: PanelFeatures,
@@ -282,9 +281,6 @@ const panelDefinition: ObjectTypeDefinition<PanelDoc, PanelState> = {
 	stateValidator: createFrameStateValidator(PanelFeatures),
 	behavior: createFrameBehavior<PanelState>(),
 	component: createFrameObject<PanelState>(drawPanelBox),
-	stencils: [
-		{ id: "panel", objectType: "panel", label: "Panel", icon: SpecShapeIcon },
-	],
 };
 
 const PinFeatures = {
@@ -554,15 +550,15 @@ export const specShapesStencilCategory: StencilCategory = {
 };
 
 /**
- * Category listing `panel` beside core's `rect`, the way flowchart lists its
- * rect-typed `process` beside types of its own: a plain rectangle drawn from the
- * rail must not count toward it, and a panel must. Neither pinned nor using a
- * rail preset's type otherwise, so it is the one the rail adds for a document
- * (stencil-rail-auto.spec.ts).
+ * A third category, unpinned, for the specs that need more pins than the
+ * harness seeds: the rail's overflow needs three before one can stay on the
+ * rail while two are in "…" (stencil-rail-overflow.spec.ts). It lists `memo`,
+ * which no other category holds; with it the catalog's search for "e" fills
+ * the grid's six columns (stencil-catalog.spec.ts).
  */
-export const specMixedStencilCategory: StencilCategory = {
-	id: "mixed",
-	label: "Mixed",
+export const specSpareStencilCategory: StencilCategory = {
+	id: "spare",
+	label: "Spare",
 	icon: SpecShapeIcon,
-	presetIds: ["panel", "rect"],
+	presetIds: ["memo"],
 };

@@ -67,30 +67,13 @@ export const StencilRailContainer = styled.nav`
 	user-select: none;
 `;
 
-/** Horizontal hairline between two groups of the rail (presets / pinned categories). */
+/** Horizontal hairline between two groups of the rail (presets / catalog button / pins). */
 export const StencilRailDivider = styled.div`
 	flex: none;
 	width: 20px;
 	height: ${STENCIL_RAIL_DIVIDER_THICKNESS}px;
 	margin: ${STENCIL_RAIL_DIVIDER_MARGIN}px 0;
 	background-color: ${theme.borderSubtle};
-`;
-
-/**
- * Dashed hairline above the categories the rail adds because the document uses
- * them, telling them from the pins above it (whose divider is solid).
- */
-export const StencilRailDocumentDivider = styled.div`
-	flex: none;
-	width: 20px;
-	height: 0;
-	margin: ${STENCIL_RAIL_DIVIDER_MARGIN}px 0;
-	border-top: ${STENCIL_RAIL_DIVIDER_THICKNESS}px dashed ${theme.borderSubtle};
-`;
-
-/** Pushes what follows it (the "…" button, the catalog button) to the bottom of the rail. */
-export const StencilRailSpacer = styled.div`
-	flex: 1 1 auto;
 `;
 
 /** Which gap beside an item a pin drag's line is drawn in: above it (`before`) or below it (`after`). */
@@ -151,7 +134,8 @@ export const StencilRailPanelButton = styled.button<{
 /**
  * A popover the rail opens beside itself (the "…" list, the collapsed presets),
  * against the rail's right edge: at the top for the presets, at the bottom for
- * "…", next to the button that opened it. Above the drawing and the docked
+ * "…" (shown only on a rail too full for every pin, so it ends the rail), next
+ * to the button that opened it. Above the drawing and the docked
  * panel, on the flyout's terms (StencilFlyoutLayer).
  */
 export const StencilRailPopoverContainer = styled.div<{
@@ -176,14 +160,14 @@ export const StencilRailPopoverContainer = styled.div<{
 	user-select: none;
 `;
 
-/** Heading over one section of the "…" popover (pinned / in this diagram). */
+/** Heading over the pins of the "…" popover. */
 export const StencilRailPopoverHeading = styled.div`
 	padding: 6px 12px 2px;
 	color: ${theme.foregroundMuted};
 	font-size: 11px;
 `;
 
-/** One category of the "…" popover: the press opens it, as its rail button would. */
+/** One pin of the "…" popover: the press opens it, as its rail button would. */
 export const StencilRailPopoverRow = styled.button<{
 	pinInsertionEdge?: PinInsertionEdge | null;
 }>`
@@ -212,10 +196,7 @@ export const StencilRailPopoverRow = styled.button<{
 	${(props) => pinInsertionMarkStyles(props.pinInsertionEdge ?? null)}
 `;
 
-/**
- * Space a row of the "…" popover keeps at its start: the drag handle on a
- * pinned row, empty on the others so the icons line up.
- */
+/** The drag handle at the start of a row of the "…" popover. */
 export const StencilRailPopoverRowGrip = styled.span`
 	display: flex;
 	flex: none;

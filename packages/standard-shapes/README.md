@@ -18,16 +18,16 @@ import {
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 ```
 
-| Export                             | Entry    | What it is                                                                                                                  |
-| ---------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `standardPlugins`                  | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                  |
-| `standardRailPresetIds`            | `.`      | The six presets on the rail — core's primitives, then `sticky` — for `rail.presetIds`                                       |
-| `standardStencilLibrarySections`   | `.`      | The whole set as library sections, for `stencilLibrary.sections`                                                            |
-| `standardDefaultPinnedCategoryIds` | `.`      | The categories to pin when the host has no pins stored, for `initialConfig.pinnedCategoryIds`                               |
-| `standardToolbarSections`          | `.`      | The bar — core's history, view and properties sections — for `toolbar.sections`                                             |
-| `standardDocPlugins`               | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                           |
-| `standardObjectDocDefinitions`     | `/doc`   | Every type of the set by name, canvas built-ins included                                                                    |
-| `standardAiToolPlugins`            | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's and the record's, so far) |
+| Export                             | Entry    | What it is                                                                                                                    |
+| ---------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `standardPlugins`                  | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                    |
+| `standardRailPresetIds`            | `.`      | The six presets on the rail — core's primitives, then `sticky` — for `rail.presetIds`                                         |
+| `standardStencilLibrarySections`   | `.`      | The whole set as library sections, for `stencilLibrary.sections`                                                              |
+| `standardDefaultPinnedCategoryIds` | `.`      | The categories to pin when the host has no pins stored (flowchart, general, container), for `initialConfig.pinnedCategoryIds` |
+| `standardToolbarSections`          | `.`      | The bar — core's history, view and properties sections — for `toolbar.sections`                                               |
+| `standardDocPlugins`               | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                             |
+| `standardObjectDocDefinitions`     | `/doc`   | Every type of the set by name, canvas built-ins included                                                                      |
+| `standardAiToolPlugins`            | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's and the record's, so far)   |
 
 ## The entries
 
