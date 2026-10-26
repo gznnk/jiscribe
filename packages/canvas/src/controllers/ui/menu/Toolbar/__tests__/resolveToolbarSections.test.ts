@@ -4,7 +4,12 @@ import { createCanvasRegistries } from "../../../../registries/createCanvasRegis
 import { RectIcon } from "../../../objects/primitives/RectIcon";
 import { basicStencilCategory } from "../../../objects/StencilCategory";
 import {
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
+	DEFAULT_TOOLBAR_TOOLS_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
 	type ToolbarSection,
 } from "../toolbarSections";
 import {
@@ -31,17 +36,40 @@ const itemTypes = (
 ): string[][] => sections.map((section) => section.items.map((i) => i.type));
 
 describe("resolveToolbarSections", () => {
-	it("keeps the default bar intact when everything resolves", () => {
+	/**
+	 * The history section opens the default bar, so its leading divider would
+	 * separate the bar from nothing; it goes, and nothing else does.
+	 */
+	it("resolves the default bar with only its opening divider dropped", () => {
 		const resolved = resolveToolbarSections(
 			DEFAULT_TOOLBAR_SECTIONS,
 			createContext(true),
 		);
 		expect(resolved.map((section) => [section.id, section.align])).toEqual([
-			["tools", "start"],
 			["history", "start"],
 			["view", "end"],
-			["properties", "end"],
+			["sidebars", "end"],
 		]);
+		expect(itemTypes(resolved)).toEqual([
+			["command", "command"],
+			["zoom", "command", "divider", "command"],
+			["divider", "sidebarsToggle"],
+		]);
+	});
+
+	/** The bar the default used to be, which a host can still compose. */
+	const FORMER_DEFAULT_SECTIONS: ToolbarSection[] = [
+		DEFAULT_TOOLBAR_TOOLS_SECTION,
+		DEFAULT_TOOLBAR_HISTORY_SECTION,
+		DEFAULT_TOOLBAR_VIEW_SECTION,
+		DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	];
+
+	it("keeps the tools-first bar intact when everything resolves", () => {
+		const resolved = resolveToolbarSections(
+			FORMER_DEFAULT_SECTIONS,
+			createContext(true),
+		);
 		expect(itemTypes(resolved)).toEqual([
 			[
 				"stencilLibraryToggle",
@@ -60,7 +88,7 @@ describe("resolveToolbarSections", () => {
 
 	it("drops the library toggle and its now-leading divider without a library", () => {
 		const resolved = resolveToolbarSections(
-			DEFAULT_TOOLBAR_SECTIONS,
+			FORMER_DEFAULT_SECTIONS,
 			createContext(false),
 		);
 		expect(itemTypes(resolved)[0]).toEqual([
@@ -79,7 +107,7 @@ describe("resolveToolbarSections", () => {
 	 */
 	it("drops the whole history section when undo and redo are switched off", () => {
 		const resolved = resolveToolbarSections(
-			DEFAULT_TOOLBAR_SECTIONS,
+			FORMER_DEFAULT_SECTIONS,
 			// `commands` restricts the registry, which is how a host switches one off.
 			createContext(true, [
 				"shortcutHelp",
@@ -94,6 +122,36 @@ describe("resolveToolbarSections", () => {
 			"view",
 			"properties",
 		]);
+	});
+
+	it("drops the sidebars switch, and its section, when toggleSidebars is switched off", () => {
+		const resolved = resolveToolbarSections(
+			DEFAULT_TOOLBAR_SECTIONS,
+			createContext(true, ["undo", "redo", "zoomIn"]),
+		);
+		expect(resolved.map((section) => section.id)).toEqual(["history", "view"]);
+	});
+
+	it("keeps the sidebars switch whether or not a library is declared", () => {
+		const sections: ToolbarSection[] = [DEFAULT_TOOLBAR_SIDEBARS_SECTION];
+		expect(
+			itemTypes(resolveToolbarSections(sections, createContext(false))),
+		).toEqual([["sidebarsToggle"]]);
+	});
+
+	it("drops a divider closing the whole bar", () => {
+		const sections: ToolbarSection[] = [
+			{
+				id: "tools",
+				items: [
+					{ type: "stencilPreset", presetId: "rect" },
+					{ type: "divider" },
+				],
+			},
+		];
+		expect(
+			itemTypes(resolveToolbarSections(sections, createContext(true))),
+		).toEqual([["stencilPreset"]]);
 	});
 
 	it("drops a preset the registry does not know", () => {

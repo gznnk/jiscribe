@@ -12,6 +12,9 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarZoomIn: "Zoom in",
 	toolbarStencilLibrary: "Shape library",
 	toolbarPropertyPanel: "Properties",
+	toolbarSidebars: "Sidebars",
+
+	bottomToolbarOtherShapes: "Other shapes",
 
 	stencilLibraryTitle: "Shape library",
 	stencilLibraryClose: "Close",

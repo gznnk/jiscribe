@@ -1,4 +1,5 @@
 import type {
+	CanvasControllerState,
 	CanvasInitialSidebars,
 	CanvasSidebarsState,
 	PropertyPanelState,
@@ -62,3 +63,26 @@ export const seedSidebarPanels = (
 			initialSidebars?.panels?.properties?.collapsedSectionIds ?? [],
 	},
 });
+
+/**
+ * Whether the sidebars count as expanded, which is what the toolbar's one
+ * switch for both (`sidebarsToggle`) shows as pressed and what the
+ * `toggleSidebars` command reads to choose between opening and closing.
+ *
+ * Expanded means at least one of the two is open, so a mixed state (one open,
+ * the other closed) is expanded: the switch then closes both. That is the rule
+ * that never leaves a mixed state after a press, and the one under which a host
+ * declaring no shape library (whose left panel is never drawn) still sees the
+ * switch pressed exactly while the properties sidebar is on screen.
+ *
+ * @param sidebarPanels - The reducer's two panel states; only their `isOpen`
+ *   is read
+ */
+export const isAnySidebarOpen = (
+	sidebarPanels: Pick<
+		CanvasControllerState,
+		"stencilLibraryPanel" | "propertyPanel"
+	>,
+): boolean =>
+	sidebarPanels.stencilLibraryPanel.isOpen ||
+	sidebarPanels.propertyPanel.isOpen;

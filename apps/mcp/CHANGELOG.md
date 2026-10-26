@@ -13,6 +13,15 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
+## [Unreleased]
+
+### Changed
+
+- **The viewer's shape presets moved to a bar at the bottom of the canvas.**
+  The top bar keeps undo / redo, the view controls and, at the far right, one
+  switch that opens the shape library and the properties sidebar together and
+  closes both again. The bottom bar's "Other shapes" button does nothing yet.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

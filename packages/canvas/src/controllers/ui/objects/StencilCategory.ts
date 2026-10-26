@@ -53,8 +53,8 @@ export type StencilCategory = {
 };
 
 /**
- * The `basic` primitives as a category. Not in `DEFAULT_TOOLBAR_TOOLS_SECTION`
- * (its members are pinned directly there); exported for a host that folds them into
+ * The `basic` primitives as a category. Not on either default bar (its members
+ * are pinned directly on the bottom one); exported for a host that folds them into
  * a flyout, or into the shape library sidebar. The icon reuses a representative
  * shape icon (a dedicated glyph set can replace these later without touching
  * callers); plugins export their own categories (e.g. `flowchartStencilCategory`,

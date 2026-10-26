@@ -14,9 +14,12 @@ import { mountPluginHarness } from "../testing-harness";
 // mounted together are covered by apps/canvas-examples.
 
 // The shape library sidebar needs host-declared `stencilLibrarySections` to exist at all,
-// and the toolbar toggle the kit puts at the end of the tools shows only once a section
+// and the toolbar toggle the kit puts at the start of the tools shows only once a section
 // resolves. Core's primitives and the same test-only category are enough, so the specs have
 // both a section of shapes and a category living on the bar and in the sidebar at once.
+//
+// The presets sit on the bottom tool bar, as the shipped hosts put them, and the category
+// flyout stays on the top bar, so both bars are under test.
 const librarySections: StencilCategory[] = [
 	basicStencilCategory,
 	specShapesStencilCategory,
@@ -42,15 +45,17 @@ mountPluginHarness({
 	plugins: [specShapesPlugin],
 	resolveImage: resolveHarnessImage,
 	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilPreset", presetId: "ellipse" },
-		{ type: "stencilPreset", presetId: "polyline" },
-		{ type: "stencilPreset", presetId: "polygon" },
-		{ type: "stencilPreset", presetId: "text" },
-		{ type: "stencilPreset", presetId: "pin" },
-		{ type: "stencilPreset", presetId: "card" },
-		{ type: "stencilPreset", presetId: "memo" },
 		{ type: "stencilCategory", category: specShapesStencilCategory },
+	],
+	bottomToolbarPresetIds: [
+		"rect",
+		"ellipse",
+		"polyline",
+		"polygon",
+		"text",
+		"pin",
+		"card",
+		"memo",
 	],
 	stencilLibrarySections: librarySections,
 });

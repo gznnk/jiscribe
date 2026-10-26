@@ -1,5 +1,6 @@
 import {
 	Canvas,
+	type BottomToolbarOptions,
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
@@ -10,6 +11,7 @@ import {
 	type ToolbarSection,
 } from "@jiscribe/canvas";
 import {
+	standardBottomToolbarPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -43,9 +45,12 @@ import type { WebviewToExtensionMessage } from "../types/messages";
 // (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// The shape set owns how its stencils are arranged, over the bar and the sidebar
-// both; core's default bar knows none of them, so the host passes both halves.
+// The shape set owns how its stencils are arranged, over the bars and the sidebar
+// alike; core's defaults know none of them, so the host passes every piece.
 const toolbarSections: ToolbarSection[] = standardToolbarSections;
+const bottomToolbar: BottomToolbarOptions = {
+	presetIds: standardBottomToolbarPresetIds,
+};
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
 
@@ -311,6 +316,7 @@ function App() {
 					doc={docView.doc}
 					initialConfig={mountConfig}
 					toolbar={{ sections: toolbarSections }}
+					bottomToolbar={bottomToolbar}
 					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
 					onSidebarsChange={handleSidebarsChange}

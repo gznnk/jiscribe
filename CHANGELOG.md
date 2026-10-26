@@ -13,6 +13,45 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Added
+
+- **A bottom tool bar floats over the canvas.** `<Canvas bottomToolbar>` draws
+  a bar centred at the bottom of the viewport, over the canvas rather than
+  shrinking it and centred over whatever the sidebars leave visible. It pins
+  presets (`presetIds`, default `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`, core's
+  basic primitives) that click to draw and drag to place as the top bar's do,
+  then an "Other shapes" button that is a placeholder and does nothing yet.
+  `show: false` removes it. `@jiscribe/standard-shapes` exports
+  `standardBottomToolbarPresetIds` for it.
+- **One switch opens or closes both sidebars.** The `sidebarsToggle` toolbar
+  item runs the new `toggleSidebars` command: pressed while either sidebar is
+  open, it closes both; otherwise it opens both, so a press never leaves one
+  open and the other closed. `DEFAULT_TOOLBAR_SIDEBARS_SECTION` places it at
+  the far right. `toggleStencilLibrary` / `togglePropertyPanel` and their
+  toolbar items are unchanged.
+
+### Changed
+
+- **The default top bar no longer carries the shape presets.**
+  `DEFAULT_TOOLBAR_SECTIONS` is now history, view and the sidebars switch; the
+  presets moved to the bottom tool bar. `standardToolbarSections` changed the
+  same way. `DEFAULT_TOOLBAR_TOOLS_SECTION`, `DEFAULT_TOOLBAR_PROPERTIES_SECTION`
+  and `standardToolbarToolsSection` are still exported; a host that keeps
+  presets on the top bar passes `bottomToolbar={{ show: false }}`, or each
+  preset shows twice.
+- **A divider no longer opens or closes the whole top bar.** One left at the
+  very start or end of the resolved bar is dropped, since it separates the bar
+  from nothing.
+- **Both sidebars are 280px wide with one content inset.** The shape library
+  was 248px. Its preset grid now spreads six button-wide columns across the
+  inset, so the last column lines up with the search box instead of leaving a
+  wider margin on the right.
+- **The e2e kit finds presets on either bar.** `selectors.toolButton` and
+  `shapeItem` match the top bar or the bottom one; `selectors.bottomToolbar`,
+  `bottomToolbarOtherShapes`, `sidebarsToggle` and `CanvasDriver.toggleSidebars()`
+  are new. `mountPluginHarness` takes `bottomToolbarPresetIds` and shows no
+  bottom bar without it.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

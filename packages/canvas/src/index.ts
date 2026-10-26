@@ -69,20 +69,27 @@ export type {
 // and category metadata: each item names, in display order, a pinned preset, a
 // category flyout, a command button, the zoom group, a sidebar toggle, a divider
 // or a host UI slot. Pass a custom `toolbar.sections` to `<Canvas>`; the default
-// bar is itself such an array, and each of its four sections is exported on its
-// own so a host replacing only the tools can reuse the rest. A `StencilCategory` is the
+// bar is itself such an array, and each section is exported on its own (with the
+// former shape tools and the lone properties toggle, which the default no longer
+// holds) so a host can reuse what it keeps. A `StencilCategory` is the
 // same object whether it becomes a flyout there or a section of the shape library
 // sidebar (`stencilLibrary.sections`); core exports `basicStencilCategory` and
-// plugins export their own (e.g. `containerStencilCategory`).
+// plugins export their own (e.g. `containerStencilCategory`). The presets the
+// default places on the bottom tool bar (`bottomToolbar`) are exported too.
 export {
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_TOOLS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	type ToolbarItem,
 	type ToolbarSection,
 } from "./controllers/ui/menu/Toolbar";
+export {
+	DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS,
+	type BottomToolbarOptions,
+} from "./controllers/ui/menu/BottomToolbar";
 export {
 	basicStencilCategory,
 	type StencilCategory,

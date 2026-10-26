@@ -1,5 +1,6 @@
 import { Canvas } from "@jiscribe/canvas";
 import type {
+	BottomToolbarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
@@ -9,6 +10,7 @@ import type {
 	ToolbarSection,
 } from "@jiscribe/canvas";
 import {
+	standardBottomToolbarPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -26,8 +28,11 @@ import type {
 // A module-scope constant, so that Canvas is not rebuilt on every re-render
 const initialConfig: CanvasConfig = { plugins };
 
-// The shape set owns how its stencils are arranged, over the bar and the sidebar
-// both; core's default bar knows none of them, so the host passes both halves.
+// The shape set owns how its stencils are arranged, over the bars and the sidebar
+// alike; core's defaults know none of them, so the host passes every piece.
+const bottomToolbar: BottomToolbarOptions = {
+	presetIds: standardBottomToolbarPresetIds,
+};
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
 
@@ -101,8 +106,8 @@ export function CanvasSurface({
 	}, [onRegisterCanvas]);
 
 	// The host menu and the file name ride in a section of their own, ahead of the
-	// shape set's bar; the divider closing it separates them from the tools. The
-	// menu's slot is added only when an action is offered: the toolbar wraps every
+	// shape set's bar, whose history section opens with the divider separating
+	// them from it. The menu's slot is added only when an action is offered: the toolbar wraps every
 	// slot in a flex item with a gap, so an empty one would still push the name
 	// over, and a browser viewer's bar is to start at the name. Memoized so the
 	// toolbar keeps its memo: `node` is a fresh element on every render.
@@ -139,7 +144,6 @@ export function CanvasSurface({
 							/>
 						),
 					},
-					{ type: "divider" },
 				],
 			},
 			...standardToolbarSections,
@@ -160,6 +164,7 @@ export function CanvasSurface({
 				initialConfig={initialConfig}
 				stencilLibrary={{ sections: stencilLibrarySections }}
 				toolbar={{ sections: toolbarSections }}
+				bottomToolbar={bottomToolbar}
 			/>
 		</div>
 	);

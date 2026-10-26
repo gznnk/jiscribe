@@ -1,4 +1,5 @@
 import type {
+	BottomToolbarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	StencilCategory,
@@ -80,15 +81,16 @@ const plugins = [
 const initialConfig: CanvasConfig = { plugins };
 const pluginParser = createCanvasParser({ plugins });
 
-// Core's default bar knows nothing of plugin shapes, so the host arranges them, over
-// two surfaces: the bar pins the handful of presets a diagram is mostly built out of, and
-// the shape library sidebar (`stencilLibrary.sections`, behind the toggle at the bar's far
-// left) holds the whole set grouped into sections. Both are declared the same way — the
-// categories come from the plugins (flowchartStencilCategory and friends) and single shapes
-// are referenced by preset id.
+// Core's defaults know nothing of plugin shapes, so the host arranges them, over
+// three surfaces: the bottom tool bar pins the handful of presets a diagram is mostly
+// built out of, the top bar keeps one category as a flyout, and the shape library sidebar
+// (`stencilLibrary.sections`, behind the toggle at the top bar's far left) holds the whole
+// set grouped into sections. All are declared the same way — the categories come from
+// the plugins (flowchartStencilCategory and friends) and single shapes are referenced by
+// preset id.
 //
 // `toolbar.sections` is the whole bar, so the host names the library toggle itself and
-// reuses core's remaining three sections rather than restating undo / redo / zoom / help /
+// reuses core's remaining sections rather than restating undo / redo / zoom / help /
 // properties.
 const toolbarSections: ToolbarSection[] = [
 	{
@@ -96,12 +98,6 @@ const toolbarSections: ToolbarSection[] = [
 		items: [
 			{ type: "stencilLibraryToggle" },
 			{ type: "divider" },
-			{ type: "stencilPreset", presetId: "rect" },
-			{ type: "stencilPreset", presetId: "ellipse" },
-			{ type: "stencilPreset", presetId: "polygon" },
-			{ type: "stencilPreset", presetId: "polyline" },
-			{ type: "stencilPreset", presetId: "text" },
-			{ type: "stencilPreset", presetId: "sticky" },
 			// One category left on the bar as a flyout: the same object also feeds the sidebar below.
 			{ type: "stencilCategory", category: lucideIconStencilCategory },
 		],
@@ -110,6 +106,10 @@ const toolbarSections: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 ];
+
+const bottomToolbar: BottomToolbarOptions = {
+	presetIds: ["rect", "ellipse", "polygon", "polyline", "text", "sticky"],
+};
 
 // The sidebar carries every shape on the canvas: core's primitives (with the two
 // single-shape plugin presets folded in beside them) and one section per plugin category.
@@ -361,6 +361,7 @@ export function PluginsExample() {
 			doc={pluginsDoc}
 			initialConfig={initialConfig}
 			toolbar={{ sections: toolbarSections }}
+			bottomToolbar={bottomToolbar}
 			stencilLibrary={{ sections: stencilLibrarySections }}
 		/>
 	);

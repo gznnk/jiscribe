@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveSidebarsState, seedSidebarPanels } from "../sidebarsState";
+import {
+	isAnySidebarOpen,
+	resolveSidebarsState,
+	seedSidebarPanels,
+} from "../sidebarsState";
 
 /**
  * The pair carries the edge/panel split in one direction and fills the host's
@@ -55,4 +59,25 @@ describe("sidebarsState", () => {
 			propertyPanel: { isOpen: true, collapsedSectionIds: [] },
 		});
 	});
+});
+
+describe("isAnySidebarOpen", () => {
+	const panels = (isLibraryOpen: boolean, isPropertyPanelOpen: boolean) => ({
+		stencilLibraryPanel: { isOpen: isLibraryOpen, collapsedSectionIds: [] },
+		propertyPanel: { isOpen: isPropertyPanelOpen, collapsedSectionIds: [] },
+	});
+
+	it.each([
+		[false, false, false],
+		[true, false, true],
+		[false, true, true],
+		[true, true, true],
+	])(
+		"library open %s, properties open %s → expanded %s",
+		(isLibraryOpen, isPropertyPanelOpen, expected) => {
+			expect(isAnySidebarOpen(panels(isLibraryOpen, isPropertyPanelOpen))).toBe(
+				expected,
+			);
+		},
+	);
 });

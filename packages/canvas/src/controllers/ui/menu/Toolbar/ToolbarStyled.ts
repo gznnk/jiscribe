@@ -119,7 +119,8 @@ export const ToolbarIconButton = styled.button`
 `;
 
 /**
- * Toolbar toggle button for a panel that stays open (the shape library sidebar).
+ * Toolbar toggle button for a panel that stays open (either sidebar, or both
+ * through the one switch).
  *
  * Sized like ToolbarIconButton, but takes the pressed look of a category button
  * while its panel is open so the bar shows what is currently on screen.

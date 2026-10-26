@@ -24,7 +24,8 @@ import { resolveSidebarsState } from "../utils/sidebarsState";
  *
  * Read-only by contract: the host must not feed the reported state back in to
  * drive the panels (there is no controlled prop). The panels are moved by the
- * user, by the `toggleStencilLibrary` / `togglePropertyPanel` commands, and by
+ * user, by the `toggleStencilLibrary` / `togglePropertyPanel` / `toggleSidebars`
+ * commands, and by
  * nothing else.
  *
  * The mount render establishes the baseline (the seeded or default panel state)

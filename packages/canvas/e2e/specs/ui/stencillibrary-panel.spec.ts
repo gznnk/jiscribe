@@ -359,6 +359,39 @@ test.describe("Shape library sidebar", () => {
 		await expect(moreButton).toHaveCount(0);
 	});
 
+	/**
+	 * The grid's six columns span exactly the search box's width: its first
+	 * column starts at the box's left edge and its last ends at the box's right
+	 * one, though the list reserves the scrollbar's gutter on the right.
+	 */
+	test("lines its grid up with the search box on both sides", async ({
+		canvas,
+	}) => {
+		await canvas.openStencilLibrary();
+		const searchBox = await canvas.page
+			.locator(selectors.stencilLibrarySearch)
+			.boundingBox();
+		const itemBoxes = await canvas.page
+			.locator(`${selectors.stencilLibraryPanel} [data-action^="item:"]`)
+			.evaluateAll((elements) =>
+				elements.slice(0, 2).map((element) => {
+					const rect = element.getBoundingClientRect();
+					return { x: rect.left, width: rect.width };
+				}),
+			);
+		if (!searchBox || itemBoxes.length < 2) {
+			throw new Error("cannot measure the search box and the first two items");
+		}
+		const [first, second] = itemBoxes;
+		const columnPitch = second.x - first.x;
+		const lastColumnRight = first.x + 5 * columnPitch + first.width;
+
+		expect(Math.abs(first.x - searchBox.x)).toBeLessThanOrEqual(1);
+		expect(
+			Math.abs(lastColumnRight - (searchBox.x + searchBox.width)),
+		).toBeLessThanOrEqual(1);
+	});
+
 	test("closes from the panel's close button", async ({ canvas }) => {
 		await canvas.openStencilLibrary();
 

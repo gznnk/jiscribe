@@ -7,13 +7,16 @@ import { theme } from "../../../../foundation/theme/themeTokens";
  * Placed in the unified toolbar (pinned or in a category flyout) and in the
  * shape library sidebar (StencilLibraryPanel).
  */
+/** Side in px of a stencil button, square, on the bars and in the library alike. */
+export const STENCIL_BUTTON_SIZE = 32;
+
 export const StencilLibraryButton = styled.button<{ isActive?: boolean }>`
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
+	width: ${STENCIL_BUTTON_SIZE}px;
+	height: ${STENCIL_BUTTON_SIZE}px;
 	padding: 0;
 	border-radius: ${theme.radius};
 	border: 1px solid

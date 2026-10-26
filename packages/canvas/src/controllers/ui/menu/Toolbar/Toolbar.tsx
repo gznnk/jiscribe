@@ -18,6 +18,7 @@ import {
 	type ResolvedToolbarItem,
 } from "./utils/resolveToolbarSections";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
+import { ToggleSidebarsCommand } from "../../../commands/view/ToggleSidebarsCommand";
 import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { SidebarIcon } from "../../icons/SidebarIcon";
@@ -43,6 +44,11 @@ type ToolbarProps = {
 	isLibraryOpen: boolean;
 	/** Whether the properties sidebar is currently open (reducer state) */
 	isPropertyPanelOpen: boolean;
+	/**
+	 * Whether the sidebars count as expanded (`isAnySidebarOpen` over reducer
+	 * state), the pressed look of the `sidebarsToggle` item.
+	 */
+	isAnySidebarOpen: boolean;
 };
 
 /** Stable within a resolved bar; the index only serves the anonymous items. */
@@ -63,17 +69,18 @@ const toolbarItemKey = (item: ResolvedToolbarItem, index: number): string => {
 
 /**
  * Unified toolbar centered at the top.
- * Draws the sections it is given: the shape tools (StencilLibrary), the two
+ * Draws the sections it is given: the shape tools (StencilLibrary), the
  * sidebar toggles, the zoom readout and any command buttons and host slots the
  * host declared.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/-, the readout and every `command` item go through the command
  *   system (ToolbarHandler → handleCommand), the same path as the keyboard
- *   shortcuts and the context menu. So do the two sidebar toggles: the shape
+ *   shortcuts and the context menu. So do the sidebar toggles: the shape
  *   library one shows only when the host declared a library with something in
- *   it, the properties one only when the host asked for that item. The help
- *   modal and the panels themselves are rendered by Canvas from reducer state.
+ *   it, the properties one and the switch for both only when the host asked
+ *   for that item. The help modal and the panels themselves are rendered by
+ *   Canvas from reducer state.
  *
  * Everything the bar draws from arrives as a prop except whether each command
  * can currently run, which comes through ToolbarCommandStateContext: the props
@@ -90,6 +97,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	hasLibrary,
 	isLibraryOpen,
 	isPropertyPanelOpen,
+	isAnySidebarOpen,
 }) => {
 	const messages = useCanvasMessages();
 	const { stencil, command } = useCanvasRegistries();
@@ -162,6 +170,19 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						isOpen={isPropertyPanelOpen}
 					>
 						<SidebarIcon edge="right" />
+					</ToolbarToggleButton>
+				);
+			case "sidebarsToggle":
+				return (
+					<ToolbarToggleButton
+						type="button"
+						aria-label={messages.toolbarSidebars}
+						title={messages.toolbarSidebars}
+						aria-expanded={isAnySidebarOpen}
+						data-action={commandAction(ToggleSidebarsCommand.id)}
+						isOpen={isAnySidebarOpen}
+					>
+						<SidebarIcon edge="both" />
 					</ToolbarToggleButton>
 				);
 			case "divider":

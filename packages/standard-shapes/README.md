@@ -6,8 +6,9 @@ harness, the schema generator — and each one used to spell out the same ten
 plugin imports. This is that list, once.
 
 ```ts
-// A canvas: the plugins, plus the two declarations that reach their stencils
+// A canvas: the plugins, plus the declarations that reach their stencils
 import {
+	standardBottomToolbarPresetIds,
 	standardPlugins,
 	standardStencilLibrarySections,
 	standardToolbarSections,
@@ -20,8 +21,9 @@ import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 | Export                           | Entry    | What it is                                                                                                                  |
 | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                  |
-| `standardToolbarSections`        | `.`      | The whole bar — the shape tools below, then core's history, view and properties sections — for `toolbar.sections`           |
-| `standardToolbarToolsSection`    | `.`      | Just the shape tools of that bar: the library toggle, then six pinned presets                                               |
+| `standardToolbarSections`        | `.`      | The whole top bar — core's history and view sections, then the switch for both sidebars — for `toolbar.sections`            |
+| `standardBottomToolbarPresetIds` | `.`      | The six presets the bottom tool bar pins, for `bottomToolbar.presetIds`                                                     |
+| `standardToolbarToolsSection`    | `.`      | The shape tools the top bar used to carry (the library toggle, then the six presets), for a host keeping presets on top     |
 | `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                            |
 | `standardDocPlugins`             | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                           |
 | `standardObjectDocDefinitions`   | `/doc`   | Every type of the set by name, canvas built-ins included                                                                    |
@@ -47,31 +49,38 @@ go missing from the screen.
 `standardPlugins` and `standardDocPlugins` are the same ten in the same order,
 which is what makes the pair safe to use without checking.
 
-## The bar and the library are one pair
+## The bars and the library are one set
 
-`standardToolbarSections` pins six presets and nothing else; every other shape of
-the set — the `markdown` and `table` presets and the eight plugin categories — is reachable
-only through `standardStencilLibrarySections`, the sidebar the toolbar's shape
-library toggle opens at its far left. A host passing the bar without the library ships a canvas
-whose plugin shapes cannot be drawn by hand — and the toggle itself is dropped,
-since it would open an empty sidebar. Pass both:
+`standardBottomToolbarPresetIds` pins six presets on the bottom tool bar and
+nothing else; every other shape of the set — the `markdown` and `table` presets
+and the eight plugin categories — is reachable only through
+`standardStencilLibrarySections`, the sidebar the switch at the far right of
+`standardToolbarSections` opens (together with the properties sidebar). A host
+passing the bars without the library ships a canvas whose plugin shapes cannot
+be drawn by hand, and the switch then opens the properties sidebar alone. Pass
+all three:
 
 ```tsx
 <Canvas
 	toolbar={{ sections: standardToolbarSections }}
+	bottomToolbar={{ presetIds: standardBottomToolbarPresetIds }}
 	stencilLibrary={{ sections: standardStencilLibrarySections }}
 />
 ```
 
+Inline object literals defeat `<Canvas>`'s memo; a real host hoists them to
+module scope or `useMemo`s them.
+
 ## Not the toolbar for everyone
 
-Both arrays are the arrangement the editors settled on, not a rule. A host that
-only wants its own UI on the bar takes `standardToolbarToolsSection` and orders
-the sections itself — core's `DEFAULT_TOOLBAR_HISTORY_SECTION`,
-`DEFAULT_TOOLBAR_VIEW_SECTION` and `DEFAULT_TOOLBAR_PROPERTIES_SECTION` are
-exported one by one for exactly that, and the properties toggle is meant to stay
-at the far right. A host wanting a different set of shapes copies them and
-rebuilds from the plugins' own
-`*StencilCategory` exports, which serve as a bar flyout and a sidebar section
-alike — `apps/canvas-examples`'s plugins example does exactly that, on purpose,
-to show what composing them by hand looks like.
+These are the arrangement the editors settled on, not a rule. A host that
+wants its own UI on the top bar orders the sections itself — core's
+`DEFAULT_TOOLBAR_HISTORY_SECTION`, `DEFAULT_TOOLBAR_VIEW_SECTION` and
+`DEFAULT_TOOLBAR_SIDEBARS_SECTION` are exported one by one for exactly that,
+and the sidebars switch is meant to stay at the far right. A host that wants
+the presets back on the top bar takes `standardToolbarToolsSection` and hides
+the bottom bar (`bottomToolbar={{ show: false }}`), or every preset shows
+twice. A host wanting a different set of shapes copies them and rebuilds from
+the plugins' own `*StencilCategory` exports, which serve as a bar flyout and a
+sidebar section alike — `apps/canvas-examples`'s plugins example does exactly
+that, on purpose, to show what composing them by hand looks like.

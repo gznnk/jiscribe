@@ -13,6 +13,7 @@ import ReactDOM from "react-dom/client";
 import { MultiCanvasApp } from "./MultiCanvasApp";
 import { PageScrollApp } from "./PageScrollApp";
 import type {
+	BottomToolbarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
@@ -29,6 +30,7 @@ import {
 	darkCanvasTheme,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	extractCanvasSourceFromPng,
 } from "../../src";
@@ -44,17 +46,25 @@ export type PluginHarnessParams = {
 	 */
 	plugins: readonly CanvasPlugin[];
 	/**
-	 * The shape tools of the bar only — not the whole bar. The kit opens the tool
-	 * section with the shape library toggle and appends core's history, view and
-	 * properties sections, so a page declaring its plugin's presets keeps the
-	 * sidebar toggle, undo / redo, zoom, help and the properties toggle without
-	 * naming them. Omit to take the canvas default bar, whose tools pin the
-	 * core presets only and show nothing a plugin contributes; pass items whenever
-	 * a spec drives a plugin's preset or category flyout. `CanvasDriver.goto()`
-	 * waits for the "Rectangle" tool, so keep the `rect` preset in any items passed
-	 * here.
+	 * The shape tools of the top bar only — not the whole bar. The kit opens the
+	 * tool section with the shape library toggle and appends core's history, view
+	 * and properties sections and the switch for both sidebars, so a page
+	 * declaring its plugin's presets keeps the sidebar toggles, undo / redo, zoom
+	 * and help without naming them. Omit to take the canvas default bar, which
+	 * pins no preset at all; pass items whenever a spec drives a plugin's preset
+	 * or category flyout from the top bar. `CanvasDriver.goto()` waits for the
+	 * "Rectangle" tool, so keep the `rect` preset in these items or in
+	 * `bottomToolbarPresetIds`.
 	 */
 	toolbarItems?: ToolbarItem[];
+	/**
+	 * Presets of the bottom tool bar, in display order. Omit and the page shows
+	 * no bottom bar at all — not the canvas's default one — so a page pinning its
+	 * presets on the top bar does not show each of them twice (the specs'
+	 * `toolButton` would then match two buttons). A preset belongs in this list or
+	 * in `toolbarItems`, not both.
+	 */
+	bottomToolbarPresetIds?: string[];
 	/**
 	 * Sections of the shape library sidebar, mirroring how a host app declares one.
 	 * Omit and neither the sidebar nor the toolbar toggle that opens it is
@@ -75,6 +85,7 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
 	toolbarItems: ToolbarItem[] | undefined;
+	bottomToolbar: BottomToolbarOptions;
 	stencilLibrarySections: StencilCategory[] | undefined;
 	resolveImage: ResolveImage | undefined;
 	parser: CanvasParser;
@@ -89,6 +100,7 @@ type HarnessAppProps = {
 function HarnessApp({
 	initialConfig,
 	toolbarItems,
+	bottomToolbar,
 	stencilLibrarySections,
 	resolveImage,
 	parser,
@@ -161,9 +173,9 @@ function HarnessApp({
 		];
 	}, []);
 
-	// The tool section is the two the core default opens with plus the page's items, so a
-	// page that declares only its plugin's presets still gets the shape library toggle when
-	// it declared a library. Without a library both are dropped by resolution — the toggle
+	// The tool section is the shape library toggle and a divider, then the page's items, so
+	// a page that declares only its plugin's presets still gets the toggle when it declared
+	// a library. Without a library both are dropped by resolution — the toggle
 	// as unusable, the divider as stranded — leaving the bar as the page declared it.
 	const toolbarSections = useMemo<ToolbarSection[] | undefined>(
 		() =>
@@ -180,6 +192,7 @@ function HarnessApp({
 						DEFAULT_TOOLBAR_HISTORY_SECTION,
 						DEFAULT_TOOLBAR_VIEW_SECTION,
 						DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+						DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 					]
 				: undefined,
 		[toolbarItems],
@@ -202,6 +215,7 @@ function HarnessApp({
 				resolveImage={resolveImage}
 				onOpenReference={handleOpenReference}
 				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
+				bottomToolbar={bottomToolbar}
 				stencilLibrary={
 					stencilLibrarySections
 						? { sections: stencilLibrarySections }
@@ -221,6 +235,9 @@ function HarnessApp({
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
 	const initialConfig: CanvasConfig = { plugins: params.plugins };
+	const bottomToolbar: BottomToolbarOptions = params.bottomToolbarPresetIds
+		? { presetIds: params.bottomToolbarPresetIds }
+		: { show: false };
 	const parser = createCanvasParser({ plugins: params.plugins });
 
 	// The specs were written against the demo app's dark default, so the harness pins dark too,
@@ -233,6 +250,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 			<HarnessApp
 				initialConfig={initialConfig}
 				toolbarItems={params.toolbarItems}
+				bottomToolbar={bottomToolbar}
 				stencilLibrarySections={params.stencilLibrarySections}
 				resolveImage={params.resolveImage}
 				parser={parser}

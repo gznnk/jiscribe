@@ -1,9 +1,6 @@
 import {
 	Canvas,
-	DEFAULT_TOOLBAR_HISTORY_SECTION,
-	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
-	DEFAULT_TOOLBAR_TOOLS_SECTION,
-	DEFAULT_TOOLBAR_VIEW_SECTION,
+	DEFAULT_TOOLBAR_SECTIONS,
 	extractCanvasSourceFromPng,
 } from "@jiscribe/canvas";
 import type {
@@ -181,7 +178,8 @@ export function FileIoExample() {
 	// The bar is declared whole, so putting host UI on it means restating the default
 	// sections beside it. Memoized because `node` holds a fresh element every render and a
 	// fresh `sections` array would defeat the toolbar's memo; the deps are what the buttons
-	// close over. The trailing divider marks the boundary with the tools that follow.
+	// close over. The default's history section opens with the divider that marks the
+	// boundary with the buttons.
 	const toolbarSections = useMemo<ToolbarSection[]>(
 		() => [
 			{
@@ -197,13 +195,9 @@ export function FileIoExample() {
 							/>
 						),
 					},
-					{ type: "divider" },
 				],
 			},
-			DEFAULT_TOOLBAR_TOOLS_SECTION,
-			DEFAULT_TOOLBAR_HISTORY_SECTION,
-			DEFAULT_TOOLBAR_VIEW_SECTION,
-			DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+			...DEFAULT_TOOLBAR_SECTIONS,
 		],
 		[handleOpenClick, handleSave],
 	);

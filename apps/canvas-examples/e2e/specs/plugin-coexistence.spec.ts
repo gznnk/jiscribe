@@ -7,7 +7,8 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
  *   throws while the registries are built, leaving nothing rendered)
- * - the toolbar carrying every pinned preset and the one category left on the bar
+ * - the bottom tool bar carrying every pinned preset, and the top bar the one
+ *   category left on it
  * - the shape library sidebar holding one section per plugin category, each onto
  *   its own plugin's presets, with no preset id showing up in two sections
  * - shapes from every plugin coexisting in one document
@@ -18,7 +19,7 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * owning plugin's suite covers it, and repeating it here would only double the cost.
  */
 
-/** Presets pinned straight on the harness toolbar, in layout order. */
+/** Presets pinned on the harness's bottom tool bar, in layout order. */
 const PINNED_PRESET_IDS = [
 	"rect",
 	"ellipse",
@@ -301,9 +302,11 @@ test.describe("plugin coexistence", () => {
 
 		// Exact equality, not containment: it pins the order and rules out both a
 		// missing entry and a second copy of one.
-		expect(await readPresetIds(canvas, selectors.toolbar)).toEqual(
+		expect(await readPresetIds(canvas, selectors.bottomToolbar)).toEqual(
 			PINNED_PRESET_IDS,
 		);
+		// With the flyout closed the top bar holds no preset, so none shows twice.
+		expect(await readPresetIds(canvas, selectors.toolbar)).toEqual([]);
 
 		const categoryIds = await canvas.page
 			.locator(CATEGORY_TOGGLES)

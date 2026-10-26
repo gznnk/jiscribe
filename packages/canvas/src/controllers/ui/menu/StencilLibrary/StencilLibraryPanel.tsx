@@ -58,7 +58,7 @@ const SEARCH_ICON_SIZE = 14;
  * handled by StencilLibraryPanelHandler: its section headers and close button carry
  * only a data-action. The stencil items keep their own `data-kind` / `data-id`
  * ("stencil-library"), so click-to-draw and drag-to-place stay with
- * StencilLibraryItemHandler exactly as in the toolbar.
+ * StencilLibraryItemHandler exactly as on the toolbars.
  *
  * Open/collapse state is reducer state, so this component is render-only. The
  * search query is not: it belongs to this instance of the panel alone and no

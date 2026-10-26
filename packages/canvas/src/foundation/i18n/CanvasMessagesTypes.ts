@@ -12,6 +12,12 @@ export type CanvasMessageStrings = {
 	toolbarStencilLibrary: string;
 	/** title / aria-label of the toggle opening the properties sidebar */
 	toolbarPropertyPanel: string;
+	/** title / aria-label of the switch opening or closing both sidebars at once */
+	toolbarSidebars: string;
+
+	// Bottom tool bar
+	/** title / aria-label of the bar's button for the shapes it does not pin */
+	bottomToolbarOtherShapes: string;
 
 	// Shape library sidebar
 	/** Heading of the sidebar */

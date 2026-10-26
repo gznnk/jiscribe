@@ -7,6 +7,9 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomIn: "ズームイン",
 	toolbarStencilLibrary: "図形ライブラリ",
 	toolbarPropertyPanel: "プロパティ",
+	toolbarSidebars: "サイドバー",
+
+	bottomToolbarOtherShapes: "その他の図形",
 
 	stencilLibraryTitle: "図形ライブラリ",
 	stencilLibraryClose: "閉じる",

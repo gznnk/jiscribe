@@ -58,14 +58,15 @@ export class CanvasDriver {
 	 * Every test is written in content coordinates, which are screen coordinates minus this
 	 * origin. Chrome takes its layout space out of the canvas area — the toolbar above it,
 	 * the shape library sidebar beside it — so the origin moves whenever a piece of chrome
-	 * opens or closes. Pan and zoom never move it: they only change the viewBox.
+	 * opens or closes; the bottom tool bar floats over the canvas and takes none. Pan and
+	 * zoom never move it: they only change the viewBox.
 	 *
 	 * Every driver operation that converts content coordinates re-measures this first, so its
 	 * input lands where the caller meant even while the sidebar is open. toScreen() and
 	 * toContent() stay synchronous and answer from the last measurement — fresh as of the
 	 * driver call before them, so a spec that moves chrome by clicking the DOM itself and then
-	 * converts reads the old origin. Open and close the sidebar through openStencilLibrary()
-	 * and closeStencilLibrary(), which re-measure.
+	 * converts reads the old origin. Open and close the sidebar through openStencilLibrary(),
+	 * closeStencilLibrary() or toggleSidebars(), which re-measure.
 	 *
 	 * Coordinates from boundingBox() are screen coordinates — pass them through toContent()
 	 * before handing them to the driver.
@@ -646,6 +647,25 @@ export class CanvasDriver {
 		await this.page.click(selectors.stencilLibraryPanelClose);
 		await expect(this.page.locator(selectors.stencilLibraryPanel)).toHaveCount(
 			0,
+		);
+		await this.measureOrigin();
+	}
+
+	/**
+	 * Press the toolbar's switch for both sidebars and wait for its expanded state
+	 * (`aria-expanded`) to flip: both panels open from a collapsed state, both
+	 * close from any other. The shape library takes its width out of the canvas
+	 * area, so the origin is re-measured before returning, as openStencilLibrary
+	 * does.
+	 */
+	async toggleSidebars() {
+		const sidebarsToggle = this.page.locator(selectors.sidebarsToggle);
+		const wasExpanded =
+			(await sidebarsToggle.getAttribute("aria-expanded")) === "true";
+		await sidebarsToggle.click();
+		await expect(sidebarsToggle).toHaveAttribute(
+			"aria-expanded",
+			String(!wasExpanded),
 		);
 		await this.measureOrigin();
 	}

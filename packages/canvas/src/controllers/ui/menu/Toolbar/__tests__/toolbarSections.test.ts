@@ -5,19 +5,26 @@ import {
 	basicStencilCategory,
 	type StencilCategory,
 } from "../../../objects/StencilCategory";
+import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../../BottomToolbar/bottomToolbarPresets";
 import {
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_TOOLS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	type ToolbarItem,
 	type ToolbarSection,
 } from "../toolbarSections";
 
-/** The default bar plus the one category core ships but does not pin. */
+/**
+ * Every section core exports — the default bar plus the two it no longer holds —
+ * and the one category core ships but does not pin.
+ */
 const ALL_SECTIONS: ToolbarSection[] = [
 	...DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_TOOLS_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	{
 		id: "basic-category",
 		items: [{ type: "stencilCategory", category: basicStencilCategory }],
@@ -36,12 +43,11 @@ const collectPresetIds = (items: readonly ToolbarItem[]): string[] =>
 	});
 
 describe("DEFAULT_TOOLBAR_SECTIONS", () => {
-	it("is the four exported sections, in display order", () => {
+	it("is history, view and the sidebars switch, in display order", () => {
 		expect(DEFAULT_TOOLBAR_SECTIONS).toEqual([
-			DEFAULT_TOOLBAR_TOOLS_SECTION,
 			DEFAULT_TOOLBAR_HISTORY_SECTION,
 			DEFAULT_TOOLBAR_VIEW_SECTION,
-			DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 		]);
 	});
 
@@ -93,8 +99,8 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 		}
 	});
 
-	it("reaches every preset exactly once", () => {
-		const presetIds = collectPresetIds(allItems(DEFAULT_TOOLBAR_SECTIONS));
+	it("reaches every preset of the former shape tools exactly once", () => {
+		const presetIds = collectPresetIds(DEFAULT_TOOLBAR_TOOLS_SECTION.items);
 		expect(presetIds).toHaveLength(new Set(presetIds).size);
 	});
 
@@ -120,23 +126,22 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 		);
 	});
 
-	it("pins every core preset directly on the bar", () => {
-		const pinned = allItems(DEFAULT_TOOLBAR_SECTIONS).flatMap((item) =>
-			item.type === "stencilPreset" ? [item.presetId] : [],
-		);
-		expect(pinned).toEqual(["rect", "ellipse", "polygon", "polyline", "text"]);
-	});
-
-	/**
-	 * Core owns nothing but the basic primitives, and every one is pinned, so no
-	 * flyout is left to open (the basic category is for hosts that want one).
-	 */
-	it("opens no category flyout at all", () => {
+	/** The presets are the bottom tool bar's, so none shows twice. */
+	it("pins no preset and opens no category flyout", () => {
 		expect(
 			allItems(DEFAULT_TOOLBAR_SECTIONS).filter(
-				(item) => item.type === "stencilCategory",
+				(item) =>
+					item.type === "stencilPreset" || item.type === "stencilCategory",
 			),
 		).toEqual([]);
+	});
+
+	it("keeps the former shape tools' presets those of the bottom bar's default", () => {
+		const pinned = DEFAULT_TOOLBAR_TOOLS_SECTION.items.flatMap((item) =>
+			item.type === "stencilPreset" ? [item.presetId] : [],
+		);
+		expect(pinned).toEqual([...DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS]);
+		expect(pinned).toEqual(["rect", "ellipse", "polygon", "polyline", "text"]);
 	});
 });
 
@@ -146,13 +151,21 @@ const itemNames = (section: ToolbarSection): string[] =>
 	);
 
 describe("the sections of the default bar", () => {
-	/** Rule 1: each sidebar toggle sits at the edge its panel opens on. */
-	it("opens the tools with the library toggle and ends the bar with the properties one", () => {
+	/** Rule 1: each sidebar control sits at the edge its panel opens on. */
+	it("ends the bar with the switch for both sidebars", () => {
+		expect(DEFAULT_TOOLBAR_SECTIONS[DEFAULT_TOOLBAR_SECTIONS.length - 1]).toBe(
+			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
+		);
+		expect(DEFAULT_TOOLBAR_SIDEBARS_SECTION.align).toBe("end");
+		expect(itemNames(DEFAULT_TOOLBAR_SIDEBARS_SECTION)).toEqual([
+			"divider",
+			"sidebarsToggle",
+		]);
+	});
+
+	it("keeps the per-edge toggles at their edges in the sections the default dropped", () => {
 		expect(itemNames(DEFAULT_TOOLBAR_TOOLS_SECTION)[0]).toBe(
 			"stencilLibraryToggle",
-		);
-		expect(DEFAULT_TOOLBAR_SECTIONS[DEFAULT_TOOLBAR_SECTIONS.length - 1]).toBe(
-			DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 		);
 		expect(itemNames(DEFAULT_TOOLBAR_PROPERTIES_SECTION)).toEqual([
 			"divider",
@@ -178,7 +191,7 @@ describe("the sections of the default bar", () => {
 	});
 
 	it("gives every command button an icon", () => {
-		for (const item of allItems(DEFAULT_TOOLBAR_SECTIONS)) {
+		for (const item of allItems(ALL_SECTIONS)) {
 			if (item.type === "command") {
 				// Icons are memo()-wrapped, so they are objects rather than functions.
 				expect(item.icon).toBeTruthy();

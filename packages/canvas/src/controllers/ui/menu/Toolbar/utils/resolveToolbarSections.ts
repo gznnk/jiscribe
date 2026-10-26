@@ -1,4 +1,5 @@
 import type { CommandRegistry } from "../../../../commands/CommandRegistry";
+import { ToggleSidebarsCommand } from "../../../../commands/view/ToggleSidebarsCommand";
 import type { Stencil } from "../../../objects/Stencil";
 import type { StencilRegistry } from "../../../objects/StencilRegistry";
 import {
@@ -18,6 +19,7 @@ export type ResolvedToolbarItem =
 	| { type: "zoom" }
 	| { type: "stencilLibraryToggle" }
 	| { type: "propertyPanelToggle" }
+	| { type: "sidebarsToggle" }
 	| { type: "divider" }
 	| { type: "slot"; id: string; node: React.ReactNode };
 
@@ -33,9 +35,10 @@ export type ToolbarResolutionContext = {
 	/** Registry answering "what presets exist" for this canvas. */
 	stencil: StencilRegistry;
 	/**
-	 * Registry the `command` items are looked up in; an unknown id is dropped.
-	 * Only the existence of the command is read here — the button resolves the
-	 * command itself, so the two never disagree.
+	 * Registry the `command` items are looked up in; an unknown id is dropped,
+	 * and so is a `sidebarsToggle` while `toggleSidebars` is missing. Only the
+	 * existence of the command is read here — the button resolves the command
+	 * itself, so the two never disagree.
 	 */
 	command: CommandRegistry;
 	/**
@@ -85,6 +88,32 @@ const dropDanglingDividers = (
 	return kept;
 };
 
+/**
+ * Drops a divider standing at the very start or the very end of the whole bar,
+ * where it would separate the bar from nothing; a section left empty by that is
+ * dropped too. A divider at the inner end of a section stays: it is the
+ * boundary with the neighbouring section, or with the free space before the
+ * end-aligned ones.
+ */
+const dropBarEdgeDividers = (
+	sections: ResolvedToolbarSection[],
+): ResolvedToolbarSection[] => {
+	const trimmed = sections.map((section, index) => {
+		let items = section.items;
+		if (index === 0 && items[0]?.type === "divider") {
+			items = items.slice(1);
+		}
+		if (
+			index === sections.length - 1 &&
+			items[items.length - 1]?.type === "divider"
+		) {
+			items = items.slice(0, -1);
+		}
+		return items === section.items ? section : { ...section, items };
+	});
+	return trimmed.filter((section) => section.items.length > 0);
+};
+
 const resolveToolbarItem = (
 	item: ToolbarItem,
 	context: ToolbarResolutionContext,
@@ -111,6 +140,8 @@ const resolveToolbarItem = (
 				: [];
 		case "stencilLibraryToggle":
 			return context.hasLibrary ? [item] : [];
+		case "sidebarsToggle":
+			return context.command.get(ToggleSidebarsCommand.id) ? [item] : [];
 		default:
 			return [item];
 	}
@@ -133,7 +164,8 @@ const resolveToolbarItem = (
  * in (omitted = `"start"`); a section left with no item at all is gone, so the
  * result can be shorter than `sections`. A divider the host declared at an end
  * of a section survives as the intended boundary with the next one
- * (see {@link dropDanglingDividers}).
+ * (see {@link dropDanglingDividers}), unless it would open or close the whole
+ * bar (see {@link dropBarEdgeDividers}).
  * @throws When two sections share an `id`, or a `stencilCategory` item repeats a preset
  *   id (see {@link resolveStencilCategory}). The id keys the rendered section,
  *   so a repeat would be indistinguishable from the first rather than visibly
@@ -153,13 +185,15 @@ export const resolveToolbarSections = (
 		seenSectionIds.add(section.id);
 	}
 
-	return sections.flatMap((section) => {
-		const items = dropDanglingDividers(
-			section.items.flatMap((item) => resolveToolbarItem(item, context)),
-			section.items,
-		);
-		return items.length > 0
-			? [{ id: section.id, align: section.align ?? "start", items }]
-			: [];
-	});
+	return dropBarEdgeDividers(
+		sections.flatMap((section) => {
+			const items = dropDanglingDividers(
+				section.items.flatMap((item) => resolveToolbarItem(item, context)),
+				section.items,
+			);
+			return items.length > 0
+				? [{ id: section.id, align: section.align ?? "start", items }]
+				: [];
+		}),
+	);
 };

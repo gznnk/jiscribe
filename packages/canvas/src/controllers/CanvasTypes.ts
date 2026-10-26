@@ -718,7 +718,8 @@ export type CanvasControllerState = CanvasState & {
 	 * The shape library sidebar (StencilLibraryPanel). Editor chrome rather than
 	 * part of the document: canvas presses, Escape, selection changes and a doc
 	 * swap (resetUiState / restoreHistorySnapshot) all leave it as it is. Written
-	 * only by the `toggleStencilLibrary` command and StencilLibraryPanelHandler.
+	 * only by the `toggleStencilLibrary` / `toggleSidebars` commands and
+	 * StencilLibraryPanelHandler.
 	 */
 	stencilLibraryPanel: StencilLibraryPanelState;
 
@@ -726,7 +727,8 @@ export type CanvasControllerState = CanvasState & {
 	 * The properties sidebar (PropertyPanel), on the opposite edge from the shape
 	 * library. Editor chrome on the same terms: canvas presses, Escape, selection
 	 * changes and a doc swap (resetUiState / restoreHistorySnapshot) all leave it
-	 * as it is. Written only by the `togglePropertyPanel` command.
+	 * as it is. Written only by the `togglePropertyPanel` / `toggleSidebars`
+	 * commands.
 	 */
 	propertyPanel: PropertyPanelState;
 

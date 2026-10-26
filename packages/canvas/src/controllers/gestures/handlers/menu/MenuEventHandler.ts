@@ -31,8 +31,8 @@ export const MENU_HANDLERS: readonly GestureHandler[] = [
  * Main handler for all menu-level events.
  * Routes each event to the first sub-handler whose supports() accepts it. The
  * sub-handlers split on targetId (stencil-library / stencil-library-panel /
- * property-panel / stencil-category / toolbar / context-menu / object-menu) and
- * are mutually
+ * property-panel / stencil-category / toolbar and bottom-toolbar / context-menu /
+ * object-menu) and are mutually
  * exclusive, so the array order never decides routing.
  *
  * A drag on a menu is a `"menu"` one unless the sub-handler names it otherwise

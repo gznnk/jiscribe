@@ -7,6 +7,7 @@ import { UndoIcon } from "../../icons/UndoIcon";
 import { ZoomToFitIcon } from "../../icons/ZoomToFitIcon";
 import type { StencilIconProps } from "../../objects/Stencil";
 import type { StencilCategory } from "../../objects/StencilCategory";
+import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../BottomToolbar/bottomToolbarPresets";
 
 /**
  * One control on the toolbar. The discriminant is `type`, matching
@@ -29,6 +30,9 @@ import type { StencilCategory } from "../../objects/StencilCategory";
  * - `stencilLibraryToggle` / `propertyPanelToggle`: the two sidebar toggles.
  *   Engine-owned for the same reason: their pressed look comes from reducer
  *   state. The library toggle is dropped when the host declared no library.
+ * - `sidebarsToggle`: one switch for both sidebars (the `toggleSidebars`
+ *   command), pressed while either is open. Dropped when the host switched the
+ *   command off via `CanvasConfig.commands`.
  * - `divider`: a hairline. One left at either end of a section, or next to
  *   another divider after the drops above, is cleaned away.
  * - `slot`: finished host UI. The engine only lends the place — it passes no
@@ -52,6 +56,7 @@ export type ToolbarItem =
 	| { type: "zoom" }
 	| { type: "stencilLibraryToggle" }
 	| { type: "propertyPanelToggle" }
+	| { type: "sidebarsToggle" }
 	| { type: "divider" }
 	| { type: "slot"; id: string; node: React.ReactNode };
 
@@ -79,32 +84,34 @@ export type ToolbarSection = {
 
 // The bar is laid out by three rules, which the sections below follow and a host
 // replacing them is meant to keep:
-//   1. A sidebar toggle sits at the edge its panel opens on — the shape library
-//      at the far left, the properties panel at the far right.
+//   1. A sidebar control sits at the edge its panel opens on — the shape library
+//      toggle at the far left, the properties toggle or the switch for both
+//      sidebars at the far right.
 //   2. The start side holds what changes the document (placing shapes, undo /
 //      redo); the end side what does not (zoom, help, and whatever view-side UI
 //      the host adds for itself).
-//   3. Only the basic presets are pinned on the bar, as shortcuts; the shape
-//      library sidebar is the full catalogue. They run area → line → text.
+//   3. The shape presets live on the bottom tool bar (`bottomToolbar`), not
+//      here. A host that still pins presets on this bar (DEFAULT_TOOLBAR_TOOLS_SECTION)
+//      pins only the basic ones, as shortcuts, and hides the bottom bar so no
+//      preset shows twice.
 
 /**
- * The shape tools: the shape library toggle at the far left, then core's
- * presets pinned directly (the classic direct-placement UX). Core owns the basic
- * primitives and nothing else, so those are the whole section; anything a plugin
- * supplies (the annotation / flowchart / container / general categories, the
- * `markdown` / `sticky` presets) is shown only when the host names it in its own
- * `toolbar.sections`.
+ * The shape tools as the top bar used to carry them: the shape library toggle at
+ * the far left, then core's presets ({@link DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS})
+ * pinned directly. No longer part of {@link DEFAULT_TOOLBAR_SECTIONS}, which
+ * leaves the presets to the bottom tool bar; kept for a host that wants them on
+ * top, which then passes `bottomToolbar: { show: false }` so they do not show
+ * twice.
  */
 export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
 	id: "tools",
 	items: [
 		{ type: "stencilLibraryToggle" },
 		{ type: "divider" },
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilPreset", presetId: "ellipse" },
-		{ type: "stencilPreset", presetId: "polygon" },
-		{ type: "stencilPreset", presetId: "polyline" },
-		{ type: "stencilPreset", presetId: "text" },
+		...DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS.map((presetId): ToolbarItem => ({
+			type: "stencilPreset",
+			presetId,
+		})),
 	],
 };
 
@@ -112,8 +119,8 @@ export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
  * Undo / redo, kept on the start side as document-changing operations but in a
  * section of their own so a host replacing the shape tools does not have to
  * restate them. The leading divider marks the boundary with whatever tools
- * precede it; the whole section disappears when the host switched both commands
- * off.
+ * precede it, and goes when nothing does (a divider never opens the bar); the
+ * whole section disappears when the host switched both commands off.
  */
 export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
 	id: "history",
@@ -130,7 +137,7 @@ export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
  * group as the one view command the bar shows; zoom to selection stays a
  * shortcut, since a button that needs a selection would sit disabled most of the
  * time. A host adding its own view-side UI (a settings menu, say)
- * belongs after this section and before the properties toggle, so the toggle
+ * belongs after this section and before the sidebar control, so that control
  * keeps the far edge.
  */
 export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
@@ -147,7 +154,10 @@ export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
 /**
  * The properties toggle alone at the far right, mirroring the shape library
  * toggle at the far left. Its leading divider separates it from whatever the
- * host packed against the end before it.
+ * host packed against the end before it. No longer part of
+ * {@link DEFAULT_TOOLBAR_SECTIONS}, whose far right is the switch for both
+ * sidebars ({@link DEFAULT_TOOLBAR_SIDEBARS_SECTION}); kept for a host that
+ * moves the two edges apart.
  */
 export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
 	id: "properties",
@@ -155,10 +165,25 @@ export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
 	items: [{ type: "divider" }, { type: "propertyPanelToggle" }],
 };
 
-/** The default bar: shape tools and history on the left, view and properties right. */
+/**
+ * The switch for both sidebars alone at the far right: it opens the shape
+ * library and the properties sidebar together and closes both again (see the
+ * `toggleSidebars` command). Its leading divider separates it from whatever the
+ * host packed against the end before it.
+ */
+export const DEFAULT_TOOLBAR_SIDEBARS_SECTION: ToolbarSection = {
+	id: "sidebars",
+	align: "end",
+	items: [{ type: "divider" }, { type: "sidebarsToggle" }],
+};
+
+/**
+ * The default bar: history on the left, view and the switch for both sidebars
+ * on the right. The shape presets are not on it: they are the bottom tool
+ * bar's (`bottomToolbar`).
+ */
 export const DEFAULT_TOOLBAR_SECTIONS: ToolbarSection[] = [
-	DEFAULT_TOOLBAR_TOOLS_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
-	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 ];

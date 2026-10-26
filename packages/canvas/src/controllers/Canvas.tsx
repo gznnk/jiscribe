@@ -67,6 +67,11 @@ import { CanvasView } from "../rendering/CanvasView";
 import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
+import {
+	BottomToolbar,
+	resolveBottomToolbarPresets,
+	type BottomToolbarOptions,
+} from "./ui/menu/BottomToolbar";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type {
@@ -88,6 +93,7 @@ import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
+import { isAnySidebarOpen } from "./utils/sidebarsState";
 
 type CanvasProps = {
 	// ── Document ──
@@ -226,27 +232,39 @@ type CanvasProps = {
 	toolbar?: {
 		/**
 		 * Whether to render the toolbar (default `true`). `false` removes the whole
-		 * bar — shape tools, zoom controls, the help button and any host `slot`
-		 * items — and the canvas area takes the full height. Keyboard shortcuts
-		 * still work (`?` opens the shortcut help, rendered outside the bar), but
-		 * nothing is left to start drawing a new shape from, so this suits
+		 * bar — zoom controls, the help button, the sidebar controls and any host
+		 * `slot` items — and the canvas area takes the full height. Keyboard
+		 * shortcuts still work (`?` opens the shortcut help, rendered outside the
+		 * bar). The bottom tool bar is separate (`bottomToolbar.show`); with both
+		 * hidden nothing is left to start drawing a new shape from, which suits
 		 * read-mostly hosts (previews, embedded viewers).
 		 */
 		show?: boolean;
 		/**
 		 * Replaces the whole bar: sections of pinned presets, category flyouts,
-		 * command buttons, the zoom group, the two sidebar toggles, dividers and
+		 * command buttons, the zoom group, the sidebar toggles, dividers and
 		 * host UI slots (see {@link ToolbarSection}). Omit for
-		 * {@link DEFAULT_TOOLBAR_SECTIONS}, which pins every core preset directly
-		 * and opens no flyout — anything a plugin supplies must be named here by
-		 * the host, which can reuse the default's other three sections
-		 * (`DEFAULT_TOOLBAR_HISTORY_SECTION` / `DEFAULT_TOOLBAR_VIEW_SECTION` /
-		 * `DEFAULT_TOOLBAR_PROPERTIES_SECTION`) rather than restating them. Host UI
-		 * packed against the end belongs before the properties section, which is
-		 * meant to keep the far right.
+		 * {@link DEFAULT_TOOLBAR_SECTIONS}: undo / redo, the view controls and
+		 * the switch for both sidebars, and no preset — the presets are the
+		 * bottom bar's (`bottomToolbar`). A host can reuse those sections one by
+		 * one (`DEFAULT_TOOLBAR_HISTORY_SECTION` / `DEFAULT_TOOLBAR_VIEW_SECTION`
+		 * / `DEFAULT_TOOLBAR_SIDEBARS_SECTION`) rather than restating them; host
+		 * UI packed against the end belongs before the sidebars section, which is
+		 * meant to keep the far right. A host pinning presets here as well hides
+		 * the bottom bar, or each preset shows twice.
 		 */
 		sections?: ToolbarSection[];
 	};
+	/**
+	 * The bottom tool bar: a floating bar centred over the canvas at its bottom
+	 * edge, holding pinned presets (click to arm or place, drag to place, as on
+	 * the top bar) and an "Other shapes" button that is a placeholder for now and
+	 * does nothing. It covers the canvas rather than shrinking it. Omit for the
+	 * default, shown with `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`; see
+	 * {@link BottomToolbarOptions}. An inline object literal defeats `<Canvas>`'s
+	 * memo; `useMemo` it.
+	 */
+	bottomToolbar?: BottomToolbarOptions;
 	/**
 	 * The shape library sidebar. Omit and neither the sidebar nor its toolbar
 	 * toggle is rendered.
@@ -327,6 +345,7 @@ const CanvasComponent = ({
 	locale = "en",
 	messages,
 	toolbar,
+	bottomToolbar,
 	stencilLibrary,
 	autoFocus = true,
 	gestureHandling = "greedy",
@@ -606,6 +625,13 @@ const CanvasComponent = ({
 		registries,
 	);
 
+	// null while the host hid the bar. Memoized so BottomToolbar keeps its memo:
+	// the canvas re-renders on nearly every dispatch.
+	const bottomToolbarPresets = useMemo(
+		() => resolveBottomToolbarPresets(bottomToolbar, registries.stencil),
+		[bottomToolbar, registries],
+	);
+
 	return (
 		<CanvasProviders
 			theme={theme}
@@ -635,6 +661,7 @@ const CanvasComponent = ({
 							hasLibrary={librarySections.length > 0}
 							isLibraryOpen={state.stencilLibraryPanel.isOpen}
 							isPropertyPanelOpen={state.propertyPanel.isOpen}
+							isAnySidebarOpen={isAnySidebarOpen(state)}
 						/>
 					</ToolbarCommandStateContext>
 				)}
@@ -703,6 +730,15 @@ const CanvasComponent = ({
 								/>
 							</ScrollSyncedOverlay>
 						</Container>
+						{/* Inside the viewport, so it is centred over the visible canvas
+						    whatever the sidebars take; before the overlay, so the context
+						    menu and the toast draw over it */}
+						{bottomToolbarPresets !== null && (
+							<BottomToolbar
+								presets={bottomToolbarPresets}
+								activePresetId={drawingPresetId}
+							/>
+						)}
 						<ViewportOverlay>
 							<ErrorToast notification={errorNotification} />
 							<ContextMenu
@@ -724,7 +760,7 @@ const CanvasComponent = ({
 					)}
 				</CanvasBody>
 				{/* Every modal is rendered here, as a sibling of the toolbar/body row, so
-				    its backdrop covers the whole canvas including the toolbar */}
+				    its backdrop covers the whole canvas including both bars */}
 				{state.activeModal === "export" && (
 					<ExportDialog
 						defaultMargin={EXPORT_FIT_PADDING}

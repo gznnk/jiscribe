@@ -7,8 +7,9 @@
 // of the way.
 
 import { Canvas, darkCanvasTheme } from "@jiscribe/canvas";
-import type { CanvasConfig } from "@jiscribe/canvas";
+import type { BottomToolbarOptions, CanvasConfig } from "@jiscribe/canvas";
 import {
+	standardBottomToolbarPresetIds,
 	standardPlugins,
 	standardStencilLibrarySections,
 	standardToolbarSections,
@@ -24,6 +25,10 @@ import { PREVIEW_FONT_FAMILIES, PREVIEW_GLOBAL } from "./previewBridge";
 // `viewport`: setting one would suppress the document's own `view.open` framing,
 // and the document knows better than this page does where it wants to be looked at.
 const initialConfig: CanvasConfig = { plugins: standardPlugins };
+
+const bottomToolbar: BottomToolbarOptions = {
+	presetIds: standardBottomToolbarPresetIds,
+};
 
 const payload = (
 	window as unknown as Record<string, PreviewPayload | undefined>
@@ -95,6 +100,7 @@ const mount = async (): Promise<void> => {
 			initialConfig={initialConfig}
 			resolveImage={(src: string) => resolvePreviewImage(payload.images, src)}
 			toolbar={{ sections: standardToolbarSections }}
+			bottomToolbar={bottomToolbar}
 			stencilLibrary={{ sections: standardStencilLibrarySections }}
 		/>,
 	);

@@ -4,7 +4,7 @@
  */
 
 /**
- * Tool name in the left toolbar, matching the button's title attribute. The
+ * Tool name on the top toolbar or the bottom tool bar, matching the button's title attribute. The
  * listed ones are core's own presets, spelled out as known values for
  * completion; a plugin's tool name (its stencil label, "Sticky" say) is equally
  * accepted.
@@ -58,12 +58,33 @@ const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
  */
 const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
 
+/** Shared by the bottom-bar-scoped selectors below, scoped for the same reason. */
+const BOTTOM_TOOLBAR = '[data-kind="menu"][data-id="bottom-toolbar"]';
+
 export const selectors = {
-	/** Toolbar tool button, scoped to the bar so the sidebar's copy cannot match. */
-	toolButton: (tool: ToolTitle) => `${TOOLBAR} button[title="${tool}"]`,
+	/**
+	 * Tool button pinned on either bar, the top toolbar or the bottom tool bar,
+	 * wherever the harness put it; scoped to the two bars so the sidebar's copy
+	 * cannot match. A harness pins each preset on one bar only, or this matches
+	 * twice.
+	 */
+	toolButton: (tool: ToolTitle) =>
+		`${TOOLBAR} button[title="${tool}"], ${BOTTOM_TOOLBAR} button[title="${tool}"]`,
 
 	/** The toolbar bar itself; the only element of the bar carrying data-kind / data-id. */
 	toolbar: TOOLBAR,
+
+	/**
+	 * The bottom tool bar itself. Its own element carries data-kind / data-id, as
+	 * do its presets (the `stencil-library` target); absent while the host hid it.
+	 */
+	bottomToolbar: BOTTOM_TOOLBAR,
+
+	/**
+	 * The bottom bar's "Other shapes" button, a placeholder wired to nothing. It
+	 * carries no data-action, so a test-only hook finds it.
+	 */
+	bottomToolbarOtherShapes: `${BOTTOM_TOOLBAR} [data-testid="bottom-toolbar-other-shapes"]`,
 
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector
@@ -83,11 +104,12 @@ export const selectors = {
 		`[data-category-flyout="${categoryId}"]`,
 
 	/**
-	 * StencilLibrary shape item; pinned and in-flyout share this DOM contract, and
-	 * both live inside the toolbar, which is what scopes the sidebar's copy out.
+	 * StencilLibrary shape item; pinned on either bar and in-flyout share this DOM
+	 * contract, and all live inside one of the two bars (the flyout hangs from the
+	 * top one), which is what scopes the sidebar's copy out.
 	 */
 	shapeItem: (presetId: string) =>
-		`${TOOLBAR} [data-action="item:${presetId}"]`,
+		`${TOOLBAR} [data-action="item:${presetId}"], ${BOTTOM_TOOLBAR} [data-action="item:${presetId}"]`,
 
 	/**
 	 * Toolbar toggle that opens and closes the shape library sidebar. Present only
@@ -123,6 +145,13 @@ export const selectors = {
 
 	/** Search box of the sidebar; filtering collapses the sections into one grid. */
 	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
+
+	/**
+	 * Toolbar switch that opens both sidebars together and closes both again,
+	 * carrying the expanded state (either sidebar open) on aria-expanded. Written
+	 * as a descendant selector for the same reason as toolbarCommand.
+	 */
+	sidebarsToggle: `${TOOLBAR} [data-action="command:toggleSidebars"]`,
 
 	/**
 	 * Toolbar toggle that opens and closes the properties sidebar, carrying the

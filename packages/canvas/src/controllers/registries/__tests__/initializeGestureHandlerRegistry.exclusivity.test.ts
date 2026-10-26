@@ -84,6 +84,7 @@ const TARGETS: Target[] = [
 		targetId: "property-panel",
 		targetAction: "command:togglePropertyPanel",
 	},
+	{ targetKind: "menu", targetId: "bottom-toolbar" },
 ];
 
 const LABEL_BOX = TARGETS[9];
