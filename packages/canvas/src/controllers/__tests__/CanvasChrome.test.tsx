@@ -713,11 +713,14 @@ describe("Canvas chrome", () => {
 			// Escape has nothing left to clear and is left to the browser.
 			const escape = new KeyboardEvent("keydown", {
 				key: "Escape",
+				code: "Escape",
 				bubbles: true,
 				cancelable: true,
 			});
+			const canvasRoot = container.querySelector('[tabindex="0"]');
+			expect(canvasRoot).not.toBeNull();
 			act(() => {
-				container.querySelector('[tabindex="0"]')?.dispatchEvent(escape);
+				canvasRoot?.dispatchEvent(escape);
 			});
 			expect(escape.defaultPrevented).toBe(false);
 			rerender(shortRailProps);

@@ -386,7 +386,8 @@ export type CloseModalAction = {
  * slot. Dispatched by Canvas once nothing can draw it — the rail's layout no
  * longer offers it, or the rail is hidden — because a popover nothing draws is
  * closed rather than kept: kept, it would come back by itself and keep Escape
- * available.
+ * available. A rail not laid out yet reports nothing
+ * (StencilRailOverflow.isLaidOut): its layout says nothing about what it offers.
  */
 export type CloseRailPopoverAction = {
 	type: "CLOSE_RAIL_POPOVER";

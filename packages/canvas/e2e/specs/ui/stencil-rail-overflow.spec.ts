@@ -275,11 +275,16 @@ test.describe("Stencil rail overflow", () => {
 				await expect(
 					page.locator(selectors.categoryButton(SPEC_CATEGORY)),
 				).toHaveAttribute("data-pin-insertion", "before");
-				// …and the line is actually drawn there.
-				const markContent = await page
+				// …and the line is actually drawn there, in the gap above the button
+				// (a computed `top` resolves to the used offset, negative above the box).
+				const mark = await page
 					.locator(selectors.categoryButton(SPEC_CATEGORY))
-					.evaluate((element) => getComputedStyle(element, "::after").content);
-				expect(markContent).not.toBe("none");
+					.evaluate((element) => {
+						const style = getComputedStyle(element, "::after");
+						return { content: style.content, top: parseFloat(style.top) };
+					});
+				expect(mark.content).not.toBe("none");
+				expect(mark.top).toBeLessThan(0);
 			},
 		);
 
