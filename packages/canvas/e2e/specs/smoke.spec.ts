@@ -4,7 +4,7 @@ import { selectors } from "../support/selectors";
 test.describe("smoke", () => {
 	// Core presets only: what a plugin contributes is its own suite's business, and
 	// whether the harness pins it is the harness's.
-	test("shows the toolbar", async ({ canvas }) => {
+	test("shows the core presets on the rail", async ({ canvas }) => {
 		for (const tool of [
 			"Rectangle",
 			"Ellipse",

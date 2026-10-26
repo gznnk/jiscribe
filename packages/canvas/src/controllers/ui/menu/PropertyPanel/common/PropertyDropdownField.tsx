@@ -51,7 +51,7 @@ type PropertyDropdownFieldProps = {
 	 * sidebar, never wider than the sidebar. `"beside"`: outside the sidebar to
 	 * its left, over the canvas, its top level with the trigger's and as wide as
 	 * its content; for a panel too wide for the sidebar. When the canvas row left
-	 * of the sidebar (shape library included) is narrower than the panel, it
+	 * of the sidebar (rail and docked stencil panel included) is narrower than the panel, it
 	 * opens `"under"` instead, decided afresh on every opening.
 	 */
 	placement?: PropertyDropdownPlacement;

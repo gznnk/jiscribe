@@ -5,11 +5,14 @@ import {
 	type CanvasDoc,
 	type CanvasExportImagePayload,
 	type CanvasHandle,
+	type CanvasRailConfig,
 	type CanvasSidebarsState,
 	type StencilCategory,
 	type ToolbarSection,
 } from "@jiscribe/canvas";
 import {
+	standardDefaultPinnedCategoryIds,
+	standardRailPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -40,12 +43,18 @@ import { isExtensionToWebviewMessage } from "../types/extensionMessageGuard";
 import type { WebviewToExtensionMessage } from "../types/messages";
 
 // The shipped shapes are supplied by @jiscribe/standard-shapes
-// (packages/canvas/docs/13-authoring-plugins.md).
-const initialConfig: CanvasConfig = { plugins };
+// (packages/canvas/docs/13-authoring-plugins.md). The pins are not persisted
+// yet, so every mount starts from the set's default ones.
+const initialConfig: CanvasConfig = {
+	plugins,
+	pinnedCategoryIds: standardDefaultPinnedCategoryIds,
+};
 
-// The shape set owns how its stencils are arranged, over the bar and the sidebar
-// both; core's default bar knows none of them, so the host passes both halves.
+// The shape set owns how its stencils are arranged, over the rail and the
+// library both; core's default rail knows none of them, so the host passes both
+// halves.
 const toolbarSections: ToolbarSection[] = standardToolbarSections;
+const rail: CanvasRailConfig = { presetIds: standardRailPresetIds };
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
 
@@ -311,6 +320,7 @@ function App() {
 					doc={docView.doc}
 					initialConfig={mountConfig}
 					toolbar={{ sections: toolbarSections }}
+					rail={rail}
 					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
 					onSidebarsChange={handleSidebarsChange}

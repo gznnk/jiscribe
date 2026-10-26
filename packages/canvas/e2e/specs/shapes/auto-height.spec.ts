@@ -8,7 +8,7 @@ import { selectors } from "../../support/selectors";
  * that off and on, and a resize handle that can move the bottom edge settles the
  * height while the side handles leave it to the text.
  *
- * The doc is injected through the harness hook rather than drawn: a toolbar
+ * The doc is injected through the harness hook rather than drawn: a rail
  * gesture always produces a height, so the omission is a state no drag can reach.
  */
 

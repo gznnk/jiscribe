@@ -108,7 +108,7 @@ export class VertexControlHandler extends ControlStrategy {
 				...state,
 				selection: { ...state.selection, part: null },
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				stencilFlyout: null,
 			},
 			{ kind: "vertex" },
 			{

@@ -126,9 +126,9 @@ export const CanvasEventHandler: GestureHandler = {
 					clientX: event.clientLast.x,
 					clientY: event.clientLast.y,
 				},
-				// A new context menu supersedes any open ObjectMenu / category flyout.
+				// A new context menu supersedes any open ObjectMenu / stencil flyout.
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				stencilFlyout: null,
 			};
 		}
 
@@ -146,9 +146,9 @@ export const CanvasEventHandler: GestureHandler = {
 						clientX: event.clientLast.x,
 						clientY: event.clientLast.y,
 					},
-					// A new context menu supersedes any open ObjectMenu / category flyout.
+					// A new context menu supersedes any open ObjectMenu / stencil flyout.
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					stencilFlyout: null,
 				};
 			}
 
@@ -185,15 +185,15 @@ export const CanvasEventHandler: GestureHandler = {
 			drawingPreset !== null &&
 			drawingObjectType !== null
 		) {
-			// Starting to draw dismisses an open ObjectMenu / category flyout.
+			// Starting to draw dismisses an open ObjectMenu / stencil flyout.
 			if (
 				nextState.objectMenuOpenId !== null ||
-				nextState.stencilLibraryOpenCategory !== null
+				nextState.stencilFlyout !== null
 			) {
 				nextState = {
 					...nextState,
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					stencilFlyout: null,
 				};
 			}
 
@@ -370,7 +370,7 @@ export const CanvasEventHandler: GestureHandler = {
 						// first hit rebuilds it.
 						multiSelectGroup: isAdditive ? nextState.multiSelectGroup : null,
 						objectMenuOpenId: null,
-						stencilLibraryOpenCategory: null,
+						stencilFlyout: null,
 					},
 					{
 						kind: "marquee",
@@ -471,7 +471,7 @@ export const CanvasEventHandler: GestureHandler = {
 				contextMenuPosition: null,
 				// Reset the ObjectMenu expansion
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				stencilFlyout: null,
 			};
 			// An additive modifier means this press opens an additive marquee, so the
 			// selection it builds on has to survive the press. Touch carries no

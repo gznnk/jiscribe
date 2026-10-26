@@ -319,10 +319,8 @@ import {
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [annotationPlugin],
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilCategory", category: annotationStencilCategory },
-	],
+	stencilLibrarySections: [annotationStencilCategory],
+	pinnedCategoryIds: [annotationStencilCategory.id],
 });
 ```
 
@@ -330,17 +328,21 @@ mountPluginHarness({
 
 - **プラグインは自分のパッケージ名で読む。**`../../src` ではない。外部の作者が通る経路が
   こちらであり、それに乗ることがパッケージの `exports` だけで足りていることの証明になる
-- **`toolbarItems` は spec が描く分だけに絞る。**自分のピン留めプリセットかカテゴリ
-  （`{ type: "stencilCategory", category }` の項目にする）と、それに必ず `{ type: "stencilPreset", presetId: "rect" }` を足す。後者は必須で、
-  `CanvasDriver.goto()` が "Rectangle" ツールボタンの出現を待ってからページを引き渡すため。
-  渡すのはバーの図形ツールだけである。キット
-  （`packages/canvas/e2e/kit/mountPluginHarness.tsx`）はその前に図形ライブラリの
-  トグルと区切りを置き、後ろに core の既定バーの残りのセクション（undo / redo・
-  ズーム・プロパティのトグルなど）を足すので、それらは名指ししなくても残る。ただし
-  トグルと区切りが残るのは `stencilLibrarySections` を渡したときだけで、渡さなければ
-  解決時に落ちる（上の例は渡していないので、トグルは出ない）。プラグインのプリセットと
-  カテゴリは canvas の既定バーに含まれないので、項目を渡さなければ spec からそもそも
-  触れない
+- **キャンバスに載せるのは spec が描く分だけにする。**キット
+  （`packages/canvas/e2e/kit/mountPluginHarness.tsx`）のステンシル用の 3 つの引数で決める
+  - `railPresetIds` — レール上部に並べるプリセット。spec がレールのボタンから置く
+    プラグインのプリセット用（`CanvasDriver.drawShape` / `placeShape`）。省略すると
+    core のプリミティブになる。渡す場合も `rect` は必ず残す。`CanvasDriver.goto()` が
+    "Rectangle" ツールの出現を待ってからページを引き渡すため
+  - `stencilLibrarySections` — ライブラリ。プラグインのカテゴリ用で、カタログがこれを
+    一覧し、カタログボタンはここに 1 セクション以上あるときだけ出る
+  - `pinnedCategoryIds` — マウント時にレールへピン留めするセクション。spec がカテゴリを
+    レールのボタンから開く場合に使う（`CanvasDriver.drawShapeFromFlyout` /
+    `placeShapeFromFlyout`）。ピン留めしなければカタログからしか届かない
+
+  ツールバーは常に core の既定バー（undo / redo・ズーム・プロパティのトグルなど）に
+  なる。プラグインのプリセットとカテゴリは canvas の既定に含まれないので、これらの
+  引数を渡さなければ spec からそもそも触れない
 
 spec 側は spec 用エントリからすべて取る。
 
@@ -389,7 +391,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
    - 型の union `ObjectTypes`（`packages/doc/src/model/objects/types/ObjectType.ts`）
    - headless 定義の `builtinObjectDocDefinitions`（`packages/doc/src/plugin/builtinObjectDocDefinitions.ts`）
    - UI 定義の `BUILTIN_OBJECT_DEFINITIONS`（`packages/canvas/src/controllers/registries/applyObjectDefinition.ts`）
-   - プリセットを名指ししている `DEFAULT_TOOLBAR_TOOLS_SECTION`（`packages/canvas/src/controllers/ui/menu/Toolbar/toolbarSections.ts`）と `basicStencilCategory` の `presetIds`（`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`）
+   - プリセットを名指ししている `DEFAULT_RAIL_PRESET_IDS`（`packages/canvas/src/controllers/ui/menu/StencilRail/stencilRailConfig.ts`）と `basicStencilCategory` の `presetIds`（`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`）
 4. **エンジン側テストの副作用を処理する。**「輪郭を持つ図形」「クリック配置の図形」の
    代表としてその図形を使っていたテストが主語を失う。別の組み込みに乗り換えるのではなく、
    テスト側に最小の型を宣言する。前例は
@@ -400,26 +402,28 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 6. **全ホストを配線する**（後述）
 7. **検証する**（後述）
 
-ツールバーへの露出はパッケージングとは別の判断である。カテゴリ
+どこに出すかはパッケージングとは別の判断である。カテゴリ
 （`containerStencilCategory` / `annotationStencilCategory`。型は `StencilCategory`）は
-プラグインが所有し、ホストが合成する。宣言 1 つが 2 箇所に効く。
-`stencilLibrary.sections` へ入れれば図形ライブラリのサイドバーのセクションになり、
-`toolbar.sections` へ `{ type: "stencilCategory", category }` として入れればツールバーの
-カテゴリフライアウトになる（任意）。出荷図形
-セットは全プラグインのカテゴリを `standardStencilLibrarySections`
-（`packages/standard-shapes`）でサイドバーのセクションとして並べ、バーにはプリセット
-だけをピン留めしている。プラグインの
-カテゴリは `DEFAULT_TOOLBAR_SECTIONS` に含まれないので、既定のバーをそのまま使い
-library も宣言しないホストでは、カテゴリを足すまでその図形は出てこない。
+プラグインが所有し、ホストが `stencilLibrary.sections` へ合成する。そこでライブラリの
+セクションになり、レールのカタログに行として並び、ピン留めされればレールにボタンが
+立って、押すとそのプリセットがパネルに開く。最初にどのカテゴリをピン留めしておくかは
+ホストの `initialConfig.pinnedCategoryIds` で、その後のピン留めはユーザーのものになる。
+プラグインのプリセットを `rail.presetIds` に挙げてレールそのものに置くこともできる。
+出荷図形セットは全プラグインのカテゴリを `standardStencilLibrarySections`
+（`packages/standard-shapes`）に並べ、レールには 6 つのプリセット
+（`standardRailPresetIds`）を置き、最初のピン留めとして
+`standardDefaultPinnedCategoryIds` を渡す。プラグインのカテゴリは canvas のどの既定にも
+含まれないので、ライブラリを宣言しないホストでは、カテゴリを足すまでその図形は出てこない。
 
 並べきれない数のプリセットを持つカテゴリ（数百のグリフを抱えるアイコンセット）は、
 `presetIds` には選んだ数個だけを並べ、プリセットは全てステンシルとして登録したうえで
-`search`（`StencilCategorySearch`）を宣言する。サイドバーの検索語を受け、登録済み
+`search`（`StencilCategorySearch`）を宣言する。ライブラリの検索語を受け、登録済み
 プリセットの id を順位順で、カテゴリ自身の上限で切って返し、切る前の件数を
-`matchCount` で添える関数である。サイドバーはそれを並べたプリセットのラベル一致の
+`matchCount` で添える関数である。ステンシルパネル（全カテゴリを検索するカタログか、
+そのカテゴリだけを検索するカテゴリ自身のパネル）はそれを並べたプリセットのラベル一致の
 後ろに並べ、表示済みの id と未登録の id を落とし、切られた分があれば 1 行添える。
-検索していない間は、セクションの下に「ほかの図形を探す」と検索への導線を出す。
-ツールバーのフライアウトは `search` を見ず、`presetIds` だけを出す。
+カテゴリのパネルでは、検索していない間は並べたプリセットの下に「ほかの図形を探す」と
+検索への導線を出す。
 
 ## 配線チェックリスト
 
@@ -434,7 +438,7 @@ library も宣言しないホストでは、カテゴリを足すまでその図
 
 UI プラグイン（`somePlugin`）:
 
-- [ ] `packages/standard-shapes/src/index.ts`（`standardPlugins` と、図形をサイドバーに出す `standardStencilLibrarySections`。VSCode 拡張・MCP ビューア・CLI preview はここから図形セットを受け取る）
+- [ ] `packages/standard-shapes/src/index.ts`（`standardPlugins` と、図形をライブラリに出す `standardStencilLibrarySections`。VSCode 拡張・MCP ビューア・CLI preview はここから図形セットを受け取る）
 - [ ] `apps/canvas-examples/src/examples/plugins.tsx`（`plugins` と `stencilLibrarySections`）
 - [ ] `apps/canvas-examples/e2e/harness/main.tsx`（`plugins` と `stencilLibrarySections`）
 

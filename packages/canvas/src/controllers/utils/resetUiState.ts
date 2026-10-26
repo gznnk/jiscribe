@@ -10,8 +10,10 @@ import { EMPTY_SELECTION } from "../selection/CanvasSelection";
  * the restored objects still hold — and external sync) or the canvas is
  * initialized. They are not part of CanvasDoc and carry no history.
  *
- * The two sidebars (`stencilLibraryPanel` / `propertyPanel`) are deliberately absent:
- * they are persistent chrome that outlives the document shown between them.
+ * The two sidebars (`stencilLibraryPanel` / `propertyPanel`) and the categories
+ * pinned to the rail (`pinnedCategoryIds`) are deliberately absent: they are
+ * persistent chrome that outlives the document shown between them. The stencil
+ * flyout is not: it closes like the other menus.
  *
  * Kept as a `Pick` so the field list stays type-locked to CanvasControllerState:
  * renaming a field there fails to compile here.
@@ -25,7 +27,7 @@ export type UiStateReset = Pick<
 	| "dragStartCaches"
 	| "contextMenuPosition"
 	| "objectMenuOpenId"
-	| "stencilLibraryOpenCategory"
+	| "stencilFlyout"
 	| "multiSelectGroup"
 	| "lastDuplicate"
 >;
@@ -53,7 +55,7 @@ export const resetUiState = (): UiStateReset => ({
 	dragStartCaches: { keyPoints: {}, snapCandidates: null },
 	contextMenuPosition: null,
 	objectMenuOpenId: null,
-	stencilLibraryOpenCategory: null,
+	stencilFlyout: null,
 	multiSelectGroup: null,
 	lastDuplicate: null,
 });

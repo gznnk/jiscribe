@@ -108,7 +108,7 @@ Every suite is laid out the same way and runs on the shared kit described below.
   evidence that the package carries no implicit dependency on another plugin
 - **canvas-examples' harness mounts every shipped plugin** (`plugins` in `e2e/harness/main.tsx`).
   It looks at what only breaks when they share a canvas (e.g. ObjectType registration
-  collisions, duplicated toolbar entries, `<defs>` id collisions: `specs/plugin-coexistence.spec.ts`),
+  collisions, duplicated rail presets, `<defs>` id collisions: `specs/plugin-coexistence.spec.ts`),
   and at the PNG export's font embedding, which can be checked only here because this is the
   one harness that loads the shipped fonts (`specs/png-font-embedding.spec.ts`). How a single
   shape draws or edits is the owning plugin's suite's business. It can hold that without a
@@ -157,6 +157,13 @@ the spec side (see each file under `e2e/kit/` for the parameters). canvas itself
 kit relatively (`./e2e/testing-playwright-config`), never through the SDK: the
 `canvas → canvas-sdk → canvas` cycle is what this split removed. Standing up a suite for a
 plugin is walked through in [Authoring Plugins](./13-authoring-plugins.md).
+
+`mountPluginHarness` takes the plugin set and what puts its stencils on the page:
+`railPresetIds` (the presets on the rail; omitted, core's primitives — keep `rect`,
+which `CanvasDriver.goto()` waits for), `stencilLibrarySections` (the library the
+catalog lists; omitted, no catalog button) and `pinnedCategoryIds` (the sections
+pinned on the rail at mount, so a spec can open one from its rail button). The
+toolbar is always the canvas default.
 
 ## Circular dependency check (madge)
 

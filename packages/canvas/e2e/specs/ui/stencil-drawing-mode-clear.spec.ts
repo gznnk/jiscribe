@@ -3,7 +3,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors, type ToolTitle } from "../../support/selectors";
 
 /**
- * The StencilLibrary drawing mode is cleared by the following two operations.
+ * The drawing mode armed from a stencil is cleared by the following two operations.
  *
  * 1. Pressing a shape that does not support drawing (Pin and other shapes without
  *    bounds drawing). Those are placed immediately on press and never enter drawing
@@ -54,7 +54,7 @@ async function enterDrawingMode(canvas: CanvasDriver, tool: ToolTitle) {
 		.toBe("crosshair");
 }
 
-test.describe("StencilLibrary drawing mode clearing", () => {
+test.describe("Stencil drawing mode clearing", () => {
 	test("clears drawing mode when a shape without drawing support (Pin) is pressed while drawing", async ({
 		canvas,
 	}) => {

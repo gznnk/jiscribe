@@ -16,6 +16,7 @@ import {
 	CanvasRoot,
 	Container,
 	ScrollSyncedOverlay,
+	StencilFlyoutLayer,
 	Viewport,
 	ViewportOverlay,
 	ZoomScaledOverlay,
@@ -44,6 +45,7 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useNotifyPinnedCategoriesChange } from "./hooks/useNotifyPinnedCategoriesChange";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
@@ -76,6 +78,10 @@ import type {
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
 import { useResolvedStencilLibrary } from "./ui/menu/StencilLibrary/hooks/useResolvedStencilLibrary";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
+import { resolveDrawnStencilPanelContent } from "./ui/menu/StencilLibrary/utils/resolveDrawnStencilPanelContent";
+import { StencilRail } from "./ui/menu/StencilRail/StencilRail";
+import type { CanvasRailConfig } from "./ui/menu/StencilRail/stencilRailConfig";
+import { STENCIL_RAIL_WIDTH } from "./ui/menu/StencilRail/StencilRailStyled";
 import {
 	DEFAULT_TOOLBAR_SECTIONS,
 	Toolbar,
@@ -88,6 +94,7 @@ import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
+import { readShownStencilPanelContent } from "./utils/stencilPanelContent";
 
 type CanvasProps = {
 	// ── Document ──
@@ -136,13 +143,24 @@ type CanvasProps = {
 	 */
 	onViewportChange?: (viewport: Camera) => void;
 	/**
-	 * Called when either sidebar opens, closes, or has a section collapsed, with
-	 * both edges and every panel's state each time. Read-only on the same terms
-	 * as `onViewportChange`: persist it and hand it back through
+	 * Called when either sidebar opens or closes, the docked stencil panel
+	 * switches what it shows, or the properties panel has a section collapsed,
+	 * with both edges and every panel's state each time. The stencil flyout over
+	 * the canvas is not reported. Read-only on the same terms as
+	 * `onViewportChange`: persist it and hand it back through
 	 * `initialConfig.sidebars` at the next mount, but do not drive the panels
 	 * from it — they are the user's, and there is no controlled prop.
 	 */
 	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void;
+	/**
+	 * Called when the user pins a library category to the rail or unpins it
+	 * (from the catalog), with every pin in rail order — ids the library does not
+	 * hold included, so persisting what arrives never drops a pin a host without
+	 * that plugin could not show. Not called for the pins seeded at mount.
+	 * Read-only on the same terms as `onSidebarsChange`: hand it back through
+	 * `initialConfig.pinnedCategoryIds` at the next mount.
+	 */
+	onPinnedCategoriesChange?: (pinnedCategoryIds: string[]) => void;
 
 	// ── Delegated to the host ──
 	/**
@@ -220,36 +238,46 @@ type CanvasProps = {
 
 	// ── Chrome ──
 	/**
-	 * Toolbar visibility and composition. An inline object literal defeats
-	 * `<Canvas>`'s memo; `useMemo` it.
+	 * Toolbar visibility and composition: the document and view actions across
+	 * the top. The shape tools are on the rail (`rail`). An inline object literal
+	 * defeats `<Canvas>`'s memo; `useMemo` it.
 	 */
 	toolbar?: {
 		/**
 		 * Whether to render the toolbar (default `true`). `false` removes the whole
-		 * bar — shape tools, zoom controls, the help button and any host `slot`
-		 * items — and the canvas area takes the full height. Keyboard shortcuts
-		 * still work (`?` opens the shortcut help, rendered outside the bar), but
-		 * nothing is left to start drawing a new shape from, so this suits
-		 * read-mostly hosts (previews, embedded viewers).
+		 * bar — undo / redo, zoom controls, the help button, the properties toggle
+		 * and any host `slot` items — and the canvas area takes the full height.
+		 * The rail stays (hide it through `rail.show`). Keyboard shortcuts still
+		 * work (`?` opens the shortcut help, rendered outside the bar).
 		 */
 		show?: boolean;
 		/**
-		 * Replaces the whole bar: sections of pinned presets, category flyouts,
-		 * command buttons, the zoom group, the two sidebar toggles, dividers and
-		 * host UI slots (see {@link ToolbarSection}). Omit for
-		 * {@link DEFAULT_TOOLBAR_SECTIONS}, which pins every core preset directly
-		 * and opens no flyout — anything a plugin supplies must be named here by
-		 * the host, which can reuse the default's other three sections
-		 * (`DEFAULT_TOOLBAR_HISTORY_SECTION` / `DEFAULT_TOOLBAR_VIEW_SECTION` /
-		 * `DEFAULT_TOOLBAR_PROPERTIES_SECTION`) rather than restating them. Host UI
-		 * packed against the end belongs before the properties section, which is
-		 * meant to keep the far right.
+		 * Replaces the whole bar: command buttons, the zoom group, the properties
+		 * toggle, dividers and host UI slots (see {@link ToolbarSection}). Omit for
+		 * {@link DEFAULT_TOOLBAR_SECTIONS}; a host adding its own UI can reuse the
+		 * default's sections (`DEFAULT_TOOLBAR_HISTORY_SECTION` /
+		 * `DEFAULT_TOOLBAR_VIEW_SECTION` / `DEFAULT_TOOLBAR_PROPERTIES_SECTION`)
+		 * rather than restating them. Host UI packed against the end belongs
+		 * before the properties section, which is meant to keep the far right.
 		 */
 		sections?: ToolbarSection[];
 	};
 	/**
-	 * The shape library sidebar. Omit and neither the sidebar nor its toolbar
-	 * toggle is rendered.
+	 * The stencil rail, the column of shape tools at the left
+	 * ({@link CanvasRailConfig}): `presetIds` at the top (default
+	 * `DEFAULT_RAIL_PRESET_IDS`, core's primitives), then the categories the user
+	 * pinned, then the catalog button. Shown by default; `toolbar.show` does not
+	 * hide it. An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
+	 */
+	rail?: CanvasRailConfig;
+	/**
+	 * The stencil library: the categories the rail's pinned buttons and its
+	 * catalog draw from. Omit and the rail shows its presets alone — no pinned
+	 * category, no catalog button.
+	 *
+	 * A category opens as a panel over the canvas (the flyout) that the user can
+	 * dock beside it; the catalog lists every section, searches across them and
+	 * pins them to the rail.
 	 */
 	stencilLibrary?: {
 		/**
@@ -285,15 +313,18 @@ type CanvasProps = {
 	/**
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
 	 * capability set (object types, commands, plugins) plus the initial camera
-	 * (`viewport`), how far it may be scrolled (`scrollBounds`), and how the two
-	 * sidebars start out (`sidebars`, the counterpart of `onSidebarsChange`).
+	 * (`viewport`), how far it may be scrolled (`scrollBounds`), how the two
+	 * sidebars start out (`sidebars`, the counterpart of `onSidebarsChange`) and
+	 * which library categories start pinned to the rail (`pinnedCategoryIds`, the
+	 * counterpart of `onPinnedCategoriesChange`; omitted, none is).
 	 * Omit for the full default set. Later changes are ignored; to reconfigure,
 	 * remount with a new React `key`.
 	 *
 	 * `viewport` and `scrollBounds` outrank the document's own `view.open` /
 	 * `view.scroll`, so pass them only when the host genuinely knows better (a
-	 * restored session, a deep link) and leave them out otherwise. `sidebars`
-	 * competes with nothing: no document declares the editor chrome.
+	 * restored session, a deep link) and leave them out otherwise. `sidebars` and
+	 * `pinnedCategoryIds` compete with nothing: no document declares the editor
+	 * chrome.
 	 *
 	 * When `objectTypes` is restricted, an object of a type left out is held as
 	 * an opaque object: kept in place and written back on save, but not drawn
@@ -317,6 +348,7 @@ const CanvasComponent = ({
 	onSelectionChange,
 	onViewportChange,
 	onSidebarsChange,
+	onPinnedCategoriesChange,
 	onUndo,
 	onRedo,
 	onExportImage,
@@ -327,6 +359,7 @@ const CanvasComponent = ({
 	locale = "en",
 	messages,
 	toolbar,
+	rail,
 	stencilLibrary,
 	autoFocus = true,
 	gestureHandling = "greedy",
@@ -343,8 +376,8 @@ const CanvasComponent = ({
 		[theme.tokens],
 	);
 
-	// rootRef spans toolbar + canvas area and carries pointer capture; canvasRef is the
-	// canvas area alone, which keeps edge scrolling aligned to the region below the toolbar.
+	// rootRef spans the chrome + canvas area and carries pointer capture; canvasRef is
+	// the canvas area alone, which keeps edge scrolling aligned to the drawing region.
 	const rootRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -365,6 +398,7 @@ const CanvasComponent = ({
 		initialConfig?.viewport,
 		initialConfig?.scrollBounds,
 		initialConfig?.sidebars,
+		initialConfig?.pinnedCategoryIds,
 	);
 
 	// Boxes derived from their content are re-measured through the reducer, the
@@ -421,6 +455,11 @@ const CanvasComponent = ({
 		onSidebarsChange,
 	);
 
+	useNotifyPinnedCategoriesChange(
+		state.pinnedCategoryIds,
+		onPinnedCategoriesChange,
+	);
+
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
 
 	useSyncExternalDoc({
@@ -445,12 +484,33 @@ const CanvasComponent = ({
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
-	// Both sidebars take their width out of the viewport, so either one opening or
-	// closing has to be re-measured before the next paint.
+	const { librarySections, resolveLibraryPreset } = useResolvedStencilLibrary(
+		stencilLibrary?.sections,
+		registries,
+	);
+	const isRailShown = rail?.show !== false;
+	// Docked state alone is not enough: a panel restored open on a host with no
+	// library is not drawn, and takes no space.
+	const isStencilPanelDocked =
+		state.stencilLibraryPanel.isOpen && librarySections.length > 0;
+
+	// What the open panel draws, which is what the rail shows pressed: a docked
+	// category the library lacks is drawn as the catalog.
+	const shownStencilPanelContent = readShownStencilPanelContent(state);
+	const drawnStencilPanelContent =
+		shownStencilPanelContent === null
+			? null
+			: resolveDrawnStencilPanelContent(
+					shownStencilPanelContent,
+					librarySections,
+				);
+
+	// The rail and both sidebars take their width out of the viewport, so any of
+	// them appearing or going has to be re-measured before the next paint.
 	useContainerResize(
 		canvasRef,
 		dispatch,
-		`${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}`,
+		`${isRailShown}:${isStencilPanelDocked}:${state.propertyPanel.isOpen}`,
 	);
 
 	// The document's own framing intent, applied only where the host expressed
@@ -601,11 +661,6 @@ const CanvasComponent = ({
 	const resolveToolbarCommandState = (commandId: string) =>
 		resolveCommandState(state, registries, commandId);
 
-	const { librarySections, resolveLibraryPreset } = useResolvedStencilLibrary(
-		stencilLibrary?.sections,
-		registries,
-	);
-
 	return (
 		<CanvasProviders
 			theme={theme}
@@ -628,23 +683,28 @@ const CanvasComponent = ({
 				{toolbar?.show !== false && (
 					<ToolbarCommandStateContext value={resolveToolbarCommandState}>
 						<Toolbar
-							activePresetId={drawingPresetId}
-							openCategoryId={state.stencilLibraryOpenCategory}
 							zoom={state.viewport.zoom}
 							sections={toolbarSections}
-							hasLibrary={librarySections.length > 0}
-							isLibraryOpen={state.stencilLibraryPanel.isOpen}
 							isPropertyPanelOpen={state.propertyPanel.isOpen}
 						/>
 					</ToolbarCommandStateContext>
 				)}
 				<CanvasBody>
-					{state.stencilLibraryPanel.isOpen && librarySections.length > 0 && (
+					{isRailShown && (
+						<StencilRail
+							presetIds={rail?.presetIds}
+							librarySections={librarySections}
+							pinnedCategoryIds={state.pinnedCategoryIds}
+							activePresetId={drawingPresetId}
+							shownPanelContent={drawnStencilPanelContent}
+						/>
+					)}
+					{isStencilPanelDocked && (
 						<StencilLibraryPanel
+							presentation="docked"
+							content={state.stencilLibraryPanel.content}
 							sections={librarySections}
-							collapsedSectionIds={
-								state.stencilLibraryPanel.collapsedSectionIds
-							}
+							pinnedCategoryIds={state.pinnedCategoryIds}
 							activePresetId={drawingPresetId}
 							resolvePreset={resolveLibraryPreset}
 						/>
@@ -712,6 +772,20 @@ const CanvasComponent = ({
 							/>
 						</ViewportOverlay>
 					</Viewport>
+					{state.stencilFlyout !== null && librarySections.length > 0 && (
+						<StencilFlyoutLayer
+							style={{ left: isRailShown ? STENCIL_RAIL_WIDTH : 0 }}
+						>
+							<StencilLibraryPanel
+								presentation="flyout"
+								content={state.stencilFlyout}
+								sections={librarySections}
+								pinnedCategoryIds={state.pinnedCategoryIds}
+								activePresetId={drawingPresetId}
+								resolvePreset={resolveLibraryPreset}
+							/>
+						</StencilFlyoutLayer>
+					)}
 					{state.propertyPanel.isOpen && (
 						<PropertyPanel
 							canvasState={propertyPanelState}

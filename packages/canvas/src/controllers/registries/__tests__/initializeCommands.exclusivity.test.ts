@@ -133,7 +133,9 @@ const STATE_MATRIX: { name: string; state: CanvasControllerState }[] = [
 	},
 	{
 		name: "stencil flyout open",
-		state: buildState(rectsDoc, { stencilLibraryOpenCategory: "flowchart" }),
+		state: buildState(rectsDoc, {
+			stencilFlyout: { kind: "category", categoryId: "flowchart" },
+		}),
 	},
 	{
 		name: "history full in both directions",

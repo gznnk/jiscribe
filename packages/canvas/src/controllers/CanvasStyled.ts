@@ -13,8 +13,8 @@ type ViewportProps = {
 
 /**
  * Outermost container that takes up full available space and stacks the
- * toolbar above the body row (shape library sidebar + canvas viewport +
- * properties sidebar, see CanvasBody) as a flex column.
+ * toolbar above the body row (stencil rail + docked stencil panel + canvas
+ * viewport + properties sidebar, see CanvasBody) as a flex column.
  *
  * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
  * By containing both the toolbar (data-kind="menu") and the canvas region,
@@ -95,11 +95,17 @@ export const CanvasRoot = styled.div<CanvasRootProps>`
 `;
 
 /**
- * Row below the toolbar, holding the shape library sidebar, the viewport and the
- * properties sidebar side by side (each sidebar only while open). `min-height: 0`
- * lets a sidebar's own list scroll instead of stretching the row past the canvas.
+ * Row below the toolbar, holding the stencil rail, the docked stencil panel, the
+ * viewport and the properties sidebar side by side (each panel only while open,
+ * the rail unless the host hid it). `min-height: 0` lets a sidebar's own list
+ * scroll instead of stretching the row past the canvas.
+ *
+ * Positioned, so the stencil flyout (StencilFlyoutLayer) is laid out against the
+ * row; it is also the viewport's offset parent, which is what useContainerResize
+ * measures the viewport's left edge in.
  */
 export const CanvasBody = styled.div`
+	position: relative;
 	display: flex;
 	flex-direction: row;
 	flex: 1 1 auto;
@@ -107,8 +113,25 @@ export const CanvasBody = styled.div`
 `;
 
 /**
- * Canvas drawing region, the middle flex child of CanvasBody that takes the width
- * the two sidebars leave.
+ * Holds the stencil flyout over the canvas: the row's full height, its left edge
+ * against the rail (passed through `style`, 0 with the rail hidden). Out of the
+ * flex flow, so opening it never resizes the viewport.
+ *
+ * Above the drawing and the ObjectMenu, below the context menu
+ * (ContextMenuStyled) and the ObjectMenu's dropdown panels
+ * (ObjectMenuDropdownPanelStyled), which open on top of it.
+ */
+export const StencilFlyoutLayer = styled.div`
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 20;
+	display: flex;
+`;
+
+/**
+ * Canvas drawing region, the flex child of CanvasBody that takes the width the
+ * rail and the two sidebars leave.
  *
  * Edge-scroll detection is based on this element's rectangle (measured via
  * useContainerResize) and the screen position of the contained SVG (getScreenCTM).

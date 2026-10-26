@@ -8,23 +8,27 @@ export type CanvasMessageStrings = {
 	toolbarZoomOut: string;
 	toolbarResetZoom: string;
 	toolbarZoomIn: string;
-	/** title / aria-label of the toggle opening the shape library sidebar */
-	toolbarStencilLibrary: string;
 	/** title / aria-label of the toggle opening the properties sidebar */
 	toolbarPropertyPanel: string;
 
-	// Shape library sidebar
-	/** Heading of the sidebar */
-	stencilLibraryTitle: string;
-	/** aria-label of the sidebar's close (×) button */
-	stencilLibraryClose: string;
-	/** placeholder of the sidebar's search box */
+	// Stencil rail
+	/** aria-label of the rail itself, the column of shape tools at the left */
+	stencilRailLabel: string;
+
+	// Stencil panels (the flyout over the canvas and the docked panel)
+	/** Heading of the catalog, the panel listing every library category */
+	stencilCatalogTitle: string;
+	/** title / aria-label of a panel's close (×) button */
+	stencilPanelClose: string;
+	/** title / aria-label of the header toggle docking the panel beside the canvas (pressed while docked) */
+	stencilPanelKeepOpen: string;
+	/** placeholder of a panel's search box */
 	stencilLibrarySearchPlaceholder: string;
-	/** Shown in place of the sections when a search matches no stencil */
+	/** Shown in place of the presets or the category list when a search matches no stencil */
 	stencilLibraryNoMatch: string;
 	/** Line under the search results when a category cut its matches short. */
 	stencilLibraryMoreMatches: string;
-	/** Button under a section that declares `search`; it focuses the search box. */
+	/** Button under a category that declares `search`; it focuses the search box. */
 	stencilLibraryMoreViaSearch: string;
 
 	// Properties sidebar
@@ -233,12 +237,22 @@ export type CanvasMessageStrings = {
 /**
  * All UI strings of the canvas.
  *
- * The flat keys cover strings hardcoded in components. The record keys
+ * The flat keys cover strings hardcoded in components; a function key builds
+ * a string around a value only known at render time. The record keys
  * override labels whose English defaults live next to their definitions
  * (commands, stencils, color presets, arrow types); an entry missing
  * from a record falls back to that definition's label.
  */
 export type CanvasMessages = CanvasMessageStrings & {
+	/**
+	 * title / aria-label of a catalog row's toggle pinning its category to the
+	 * rail (pressed while pinned). A function because the name has to say which
+	 * category: every row carries one.
+	 *
+	 * @param categoryLabel - The category's display label, as the row shows it
+	 *   (host override and locale already applied)
+	 */
+	stencilCatalogPin: (categoryLabel: string) => string;
 	/** Overrides keyed by command id (e.g. `undo`, `bringToFront`, `move-up-large`) */
 	commandLabels: Record<string, string>;
 	/** Overrides keyed by stencil id (e.g. `rect`, `ellipse`, `polygon`) */

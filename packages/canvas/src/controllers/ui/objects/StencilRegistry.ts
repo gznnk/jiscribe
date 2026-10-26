@@ -1,12 +1,13 @@
 import type { Stencil } from "./Stencil";
 
 /**
- * Registry that manages the stencils shown in the StencilLibrary (the toolbar and
- * the shape library sidebar).
+ * Registry that manages the stencils shown on the rail and in the stencil
+ * panels.
  * Registration happens via `applyObjectDefinition()` when `createCanvasRegistries()` builds a bundle.
  *
- * It answers only "what exists"; display order (top level and within category
- * flyouts) is owned by the toolbar sections, which resolve presets by id via `get`.
+ * It answers only "what exists"; display order is owned by the host's
+ * `rail.presetIds` and each library category's `presetIds`, which resolve presets
+ * by id via `get`.
  * Presets have a 1:N relationship with object types (e.g. rect has "rect" and "process").
  */
 export class StencilRegistry {

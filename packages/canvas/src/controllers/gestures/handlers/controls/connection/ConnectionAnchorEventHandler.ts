@@ -194,7 +194,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				selection: EMPTY_SELECTION,
 				multiSelectGroup: null,
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				stencilFlyout: null,
 			},
 			{ kind: "connector", draft: { kind: "create", connector } },
 			{ edgeScroll: true },
@@ -227,7 +227,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		}
 
 		return claimDrag(
-			{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+			{ ...state, objectMenuOpenId: null, stencilFlyout: null },
 			{ kind: "connector", draft: { kind: "edit", connectorId, endpoint } },
 			{ edgeScroll: true },
 		);

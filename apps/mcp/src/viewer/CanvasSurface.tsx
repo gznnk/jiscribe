@@ -3,12 +3,15 @@ import type {
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
+	CanvasRailConfig,
 	OpenReferencePayload,
 	ResolveImage,
 	StencilCategory,
 	ToolbarSection,
 } from "@jiscribe/canvas";
 import {
+	standardDefaultPinnedCategoryIds,
+	standardRailPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -23,11 +26,17 @@ import type {
 	SessionApiResponse,
 } from "../shared/hostActionsRoute";
 
-// A module-scope constant, so that Canvas is not rebuilt on every re-render
-const initialConfig: CanvasConfig = { plugins };
+// A module-scope constant, so that Canvas is not rebuilt on every re-render. The
+// pins are not persisted, so every mount starts from the set's default ones.
+const initialConfig: CanvasConfig = {
+	plugins,
+	pinnedCategoryIds: standardDefaultPinnedCategoryIds,
+};
 
-// The shape set owns how its stencils are arranged, over the bar and the sidebar
-// both; core's default bar knows none of them, so the host passes both halves.
+// The shape set owns how its stencils are arranged, over the rail and the
+// library both; core's default rail knows none of them, so the host passes both
+// halves.
+const rail: CanvasRailConfig = { presetIds: standardRailPresetIds };
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
 
@@ -101,7 +110,7 @@ export function CanvasSurface({
 	}, [onRegisterCanvas]);
 
 	// The host menu and the file name ride in a section of their own, ahead of the
-	// shape set's bar; the divider closing it separates them from the tools. The
+	// shape set's bar; the divider closing it separates them from undo / redo. The
 	// menu's slot is added only when an action is offered: the toolbar wraps every
 	// slot in a flex item with a gap, so an empty one would still push the name
 	// over, and a browser viewer's bar is to start at the name. Memoized so the
@@ -158,6 +167,7 @@ export function CanvasSurface({
 				resolveImage={resolveImage}
 				theme={viewerTheme}
 				initialConfig={initialConfig}
+				rail={rail}
 				stencilLibrary={{ sections: stencilLibrarySections }}
 				toolbar={{ sections: toolbarSections }}
 			/>

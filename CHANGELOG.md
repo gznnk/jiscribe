@@ -13,6 +13,57 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Changed
+
+- **The shape tools moved from the toolbar to a rail at the left of the
+  canvas.** The rail holds the host's presets (`rail.presetIds`, default
+  `DEFAULT_RAIL_PRESET_IDS`: rect, ellipse, polygon, polyline, text), then the
+  library categories the user pinned, then a "Find Shapes" button opening the
+  catalog of every section of `stencilLibrary.sections`, searchable, with a pin
+  toggle per category. A category opens as a panel over the canvas that leaves
+  the viewport's size alone and closes like the other menus; its "Keep open"
+  toggle docks it beside the canvas, pushing the canvas aside without moving
+  the drawing, the way the shape library sidebar did. `rail.show: false` hides
+  the rail; `toolbar.show: false` no longer takes the shape tools with it. The
+  side panels on both edges are now 280px wide. The MCP viewer and the VSCode
+  editor are drawn with the rail too.
+- **Breaking: `ToolbarItem` lost its `stencilPreset`, `stencilCategory` and
+  `stencilLibraryToggle` variants, and `DEFAULT_TOOLBAR_TOOLS_SECTION` is
+  gone.** `DEFAULT_TOOLBAR_SECTIONS` is history, view and properties, and the
+  history section no longer opens with a divider. Presets go to
+  `rail.presetIds`, categories to `stencilLibrary.sections` and the pins.
+- **Breaking: pinned categories are host state.** `initialConfig.pinnedCategoryIds`
+  seeds them (omitted, nothing is pinned) and `onPinnedCategoriesChange`
+  reports every change, ids the library does not hold included, so a host
+  persists them like the sidebars.
+- **Breaking: the left sidebar is the docked stencil panel.** In
+  `CanvasSidebarsState` / `CanvasInitialSidebars`, `left.isOpen` means the
+  panel is docked and `panels.stencilLibrary` holds `content` — the catalog or
+  one category — instead of `collapsedSectionIds`. A stored value without
+  `content` opens the catalog. The `toggleStencilLibrary` command now toggles
+  the catalog.
+- **Breaking: the messages `toolbarStencilLibrary` and `stencilLibraryTitle`
+  are gone, and `stencilLibraryClose` is now `stencilPanelClose`.** The rail
+  and the panels also read `stencilRailLabel`, `stencilCatalogTitle`,
+  `stencilPanelKeepOpen` and `stencilCatalogPin`, the last a function of the
+  category label (`(categoryLabel) => string`). The catalog button wears the
+  `toggleStencilLibrary` command's label ("Find Shapes"), overridden through
+  `commandLabels`, and is not drawn when the host switched that command off.
+- **Breaking: `@jiscribe/standard-shapes` dropped `standardToolbarToolsSection`.**
+  `standardToolbarSections` is core's history, view and properties sections;
+  the six presets are `standardRailPresetIds`, and
+  `standardDefaultPinnedCategoryIds` (`flowchart`) is what a host pins when it
+  has no pins stored.
+- **Breaking, for plugin e2e suites: `mountPluginHarness` takes `railPresetIds`
+  and `pinnedCategoryIds` in place of `toolbarItems`.** `CanvasDriver`'s
+  `openStencilLibrary` / `closeStencilLibrary` became `openCatalog({ docked })`
+  / `closeStencilPanel`, and the shape library selectors became the stencil
+  panel ones (`stencilPanel`, `stencilFlyout`, `stencilDock`,
+  `stencilPanelItem`, `stencilPanelSearch`, `catalogButton`, `catalogRow`,
+  `catalogPin`). `categoryFlyout` is now `categoryPanel`: the panel showing a
+  category carries `data-stencil-category-panel`, flyout or docked, and
+  `data-presentation="flyout"` / `"docked"`.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

@@ -47,7 +47,8 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * What survives the swap is the point of sharing it: the objects come from the
  * snapshot, everything transient is dropped (resetUiState), and a short list of
  * fields is deliberately carried over — the zoom, what is on the clipboard, an
- * open modal, the two sidebars, and the selection as far as the restored objects
+ * open modal, the two sidebars, the categories pinned to the rail, and the
+ * selection as far as the restored objects
  * still hold it. The selection is not part of any entry:
  * the ids selected before the swap are simply re-selected if they exist after
  * it, so undoing a property change leaves the shape selected for the next try,
@@ -108,10 +109,11 @@ export const restoreHistorySnapshot = (
 		historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 		internalClipboard: state.internalClipboard,
 		activeModal: state.activeModal, // History navigation must not close an open modal
-		// The two sidebars are chrome, not part of the document being swapped: they
-		// stay open, and as collapsed, as the user left them.
+		// The two sidebars and the rail are chrome, not part of the document being
+		// swapped: they stay as the user left them.
 		stencilLibraryPanel: state.stencilLibraryPanel,
 		propertyPanel: state.propertyPanel,
+		pinnedCategoryIds: state.pinnedCategoryIds,
 		history,
 	};
 	const restoredState =

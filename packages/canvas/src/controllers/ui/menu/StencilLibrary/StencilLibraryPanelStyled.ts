@@ -2,70 +2,37 @@ import styled from "@emotion/styled";
 
 import { scrollbarStyles } from "../../../../foundation/theme/themeScrollbarStyles";
 import { theme } from "../../../../foundation/theme/themeTokens";
+import { SIDE_PANEL_WIDTH } from "../SidePanel/SidePanelStyled";
+
+/** Where a stencil panel is: over the canvas (the flyout), or docked beside it. */
+export type StencilPanelPresentation = "flyout" | "docked";
 
 /**
- * Width of the sidebar. Sized for six 34px stencil buttons per row with 2px gaps
- * (214px) inside 12px side paddings, plus the scrollbar gutter the list reserves
- * (SCROLLBAR_WIDTH) and the border.
- */
-const PANEL_WIDTH = "248px";
-
-/**
- * The shape library sidebar: a fixed-width column between the toolbar and the
- * viewport, listing every stencil the host declared in `stencilLibrary.sections`.
+ * A stencil panel, docked or open over the canvas (the flyout). Both are the
+ * same column, SIDE_PANEL_WIDTH wide, beside the rail.
  *
- * `flex: none` keeps it at its width while the viewport takes the rest; it takes
- * space rather than floating over the canvas, so nothing it covers is lost. The
- * drawing keeps its place on screen all the same: the viewport's moving left edge
- * is compensated on the camera (see the CONTAINER_RESIZE case of canvasReducer).
+ * Docked, it is a flex child between the rail and the viewport: `flex: none`
+ * keeps its width while the viewport takes the rest, and the drawing keeps its
+ * place on screen all the same, since the viewport's moving left edge is
+ * compensated on the camera (see the CONTAINER_RESIZE case of canvasReducer).
+ * Over the canvas it is laid out by the layer holding it (StencilFlyoutLayer)
+ * and takes no space, so opening it never resizes the viewport.
  */
-export const StencilLibraryPanelContainer = styled.aside`
+export const StencilLibraryPanelContainer = styled.aside<{
+	presentation: StencilPanelPresentation;
+}>`
 	flex: none;
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
-	width: ${PANEL_WIDTH};
+	width: ${SIDE_PANEL_WIDTH}px;
 	background: ${theme.surface};
 	border-right: 1px solid ${theme.border};
 	user-select: none;
-`;
-
-/** Title row of the panel: the heading and the close button. */
-export const StencilLibraryPanelHeader = styled.div`
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-	height: 36px;
-	padding: 0 8px 0 12px;
-`;
-
-/** Panel heading. Sized as a section label rather than a document title. */
-export const StencilLibraryPanelTitle = styled.div`
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	color: ${theme.foregroundMuted};
-`;
-
-/** Close (×) button of the panel header. */
-export const StencilLibraryPanelCloseButton = styled.button`
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 24px;
-	height: 24px;
-	padding: 0;
-	border: none;
-	border-radius: ${theme.radius};
-	background: transparent;
-	color: ${theme.iconForeground};
-	cursor: pointer;
-	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-
-	&:hover {
-		background-color: ${theme.surfaceHover};
-	}
+	${(props) =>
+		props.presentation === "flyout"
+			? `height: 100%; box-shadow: ${theme.shadow};`
+			: ""}
 `;
 
 /**
@@ -75,6 +42,7 @@ export const StencilLibraryPanelCloseButton = styled.button`
 export const StencilLibrarySearchBox = styled.div`
 	position: relative;
 	display: flex;
+	flex: none;
 	align-items: center;
 	margin: 0 12px 8px;
 
@@ -107,7 +75,7 @@ export const StencilLibrarySearchInput = styled.input`
 	}
 `;
 
-/** Scrolling body holding the sections (or the flat search results). */
+/** Scrolling body under the search box: the presets, the category list or the search results. */
 export const StencilLibraryPanelList = styled.div`
 	flex: 1;
 	min-height: 0;
@@ -119,50 +87,64 @@ export const StencilLibraryPanelList = styled.div`
 	${scrollbarStyles}
 `;
 
-/** Section header. A full-width button so the whole row toggles the section. */
-export const StencilLibrarySectionHeader = styled.button`
+/**
+ * One category of the catalog: the button switching the panel to it, and its
+ * pin toggle. The pin shows only while the row is hovered or holds the focus,
+ * or for good once the category is pinned.
+ */
+export const StencilCatalogRow = styled.div<{ isPinned: boolean }>`
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	gap: 6px;
-	width: 100%;
 	height: 28px;
-	padding: 0 12px 0 8px;
+	padding-right: 8px;
+
+	&:hover {
+		background-color: ${theme.surfaceHover};
+	}
+
+	& > button:last-of-type {
+		opacity: ${(props) => (props.isPinned ? 1 : 0)};
+	}
+
+	&:hover > button:last-of-type,
+	&:focus-within > button:last-of-type {
+		opacity: 1;
+	}
+`;
+
+/**
+ * The part of a catalog row that switches the panel to its category: the icon
+ * and the label. It takes the free width, leaving room for whatever the row
+ * shows between the label and the pin.
+ */
+export const StencilCatalogRowOpenButton = styled.button`
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	height: 100%;
+	padding: 0 8px 0 12px;
 	border: none;
 	background: transparent;
 	color: ${theme.foreground};
 	font-size: 12px;
 	text-align: left;
 	cursor: pointer;
-
-	&:hover {
-		background-color: ${theme.surfaceHover};
-	}
 `;
 
-/**
- * Disclosure chevron of a section header. Drawn pointing right and rotated a
- * quarter turn while the section is expanded, so the turn animates.
- */
-export const StencilLibrarySectionChevron = styled.span<{
-	isExpanded: boolean;
-}>`
+/** Category icon of a catalog row, matching the icon color of the stencil buttons. */
+export const StencilCatalogRowIcon = styled.span`
 	display: flex;
-	align-items: center;
-	color: ${theme.foregroundMuted};
-	transform: rotate(${(props) => (props.isExpanded ? "90deg" : "0deg")});
-	transition: transform 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-`;
-
-/** Section icon slot, matching the icon color of the toolbar's stencil buttons. */
-export const StencilLibrarySectionIcon = styled.span`
-	display: flex;
+	flex: none;
 	align-items: center;
 	color: ${theme.iconForeground};
 `;
 
-/** Section label; takes the free space left over by the chevron and icon. */
-export const StencilLibrarySectionLabel = styled.span`
+/** Category label of a catalog row; cut short rather than pushing the pin out. */
+export const StencilCatalogRowLabel = styled.span`
 	flex: 1;
 	min-width: 0;
 	overflow: hidden;
@@ -171,9 +153,31 @@ export const StencilLibrarySectionLabel = styled.span`
 `;
 
 /**
- * Grid of stencil buttons under a section header (and of the flat search
- * results). Six fixed columns rather than wrapping, so the items of every
- * section line up down the panel.
+ * Pin toggle of a catalog row. One neutral color pinned or not: being visible
+ * without a hover is what says it is pinned.
+ */
+export const StencilCatalogPinButton = styled.button`
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: ${theme.radius};
+	background: transparent;
+	color: ${theme.iconForeground};
+	cursor: pointer;
+
+	&:hover {
+		background-color: ${theme.surfaceActive};
+	}
+`;
+
+/**
+ * Grid of stencil buttons: a category's presets, or the search results. Fixed
+ * columns rather than wrapping, so the items line up down the panel.
  */
 export const StencilLibraryPanelGrid = styled.div`
 	display: grid;
@@ -197,7 +201,7 @@ export const StencilLibraryMoreMatchesMessage = styled.div`
 `;
 
 /**
- * Text button under a section holding more presets than it lists; it moves the
+ * Text button under a category holding more presets than it lists; it moves the
  * focus to the search box. Opts out of the gesture system (`data-gesture="none"`
  * on the element) so the press reaches React's onClick instead of the panel's
  * handler, and the focus it moves is not taken back.

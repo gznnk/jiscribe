@@ -91,35 +91,41 @@ How to pick between the attributes:
 | `snap-guide:x` / `snap-guide:y` | snap guide lines (vertical / horizontal)                                                             | decoration with `pointerEvents: none`. Present only during a drag. The aligned coordinate is held in the line's `x1` (x axis) / `y1` (y axis)                                             |
 | `part-outline`                  | tinted box around a picked part (a text slot, a cell, a row); outline only while a text edit is open | decoration with `pointerEvents: none`, drawn in place of the owner's selection outline and the same way, so this is what tells the two apart (`selectors.partOutline`)                    |
 
-| data-kind     | Meaning                                | data-id / data-part / data-action                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas`      | the canvas itself (DIV)                | id: `canvas`                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `object`      | a shape (rect / ellipse / polyline …)  | id: UUID. **1 object = 1 element** (what `captureObjects` counts). Shapes with sections (record) carry part: `textSlot:name` / `textSlot:rows` on their section elements                                                                                                                                                                                                                                                                                                                 |
-| `connector`   | a connector (polyline + arrow + label) | id: UUID. The label box carries action: `label` (dragging it moves position / offset)                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `control`     | handles shown while selected           | see the table below                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `menu`        | UI menus in general                    | id: `toolbar` / `object-menu` / `property-panel` / `context-menu` / `stencil-library` / `stencil-library-panel` / `stencil-category`. Buttons carry an action (see the table below). The toolbar's and the properties sidebar's own controls, and every ObjectMenu item (core's and a plugin's alike), carry **only** an action and take kind / id from the container, so select them as a descendant: `[data-id="toolbar"] [data-action="command:zoomIn"]` (`selectors.toolbarCommand`) |
-| `text-editor` | the surface while editing text         | id: `textarea`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| data-kind     | Meaning                                | data-id / data-part / data-action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `canvas`      | the canvas itself (DIV)                | id: `canvas`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `object`      | a shape (rect / ellipse / polyline …)  | id: UUID. **1 object = 1 element** (what `captureObjects` counts). Shapes with sections (record) carry part: `textSlot:name` / `textSlot:rows` on their section elements                                                                                                                                                                                                                                                                                                                                                             |
+| `connector`   | a connector (polyline + arrow + label) | id: UUID. The label box carries action: `label` (dragging it moves position / offset)                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `control`     | handles shown while selected           | see the table below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `menu`        | UI menus in general                    | id: `toolbar` / `stencil-rail` / `object-menu` / `property-panel` / `context-menu` / `stencil-library` / `stencil-library-panel` / `stencil-category`. Buttons carry an action (see the table below). The toolbar's and the properties sidebar's own controls, the rail's catalog button, and every ObjectMenu item (core's and a plugin's alike), carry **only** an action and take kind / id from the container, so select them as a descendant: `[data-id="toolbar"] [data-action="command:zoomIn"]` (`selectors.toolbarCommand`) |
+| `text-editor` | the surface while editing text         | id: `textarea`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 `data-part` addresses a model part (`textSlot:<slotId>` / `vertex:<i>`, what a
 click picks); `data-action` names what pressing the element starts. For the
 grammar of kind / id / part / action, see
 `packages/canvas/docs/04-gesture-system.md`.
 Shape library buttons carry action: `item:<presetId>` (for example `item:rect`).
-The shape library sidebar (`stencil-library-panel`, in the DOM only while open)
-uses action: `section:<categoryId>` for a section's disclosure header and
-action: `close` for the button that shuts it.
+A rail category button is `stencil-category` with action `toggle:<categoryId>`;
+the rail's catalog button carries only action `command:toggleStencilLibrary`.
+The stencil panel (`stencil-library-panel`, in the DOM only while open) carries
+`data-presentation="flyout"` over the canvas or `"docked"` beside it, and
+`data-stencil-category-panel="<categoryId>"` while it shows a category. Its header
+buttons carry action `dock` / `undock` / `close`, and the catalog's rows
+`show:<categoryId>` and their pin toggles `pin:<categoryId>`.
 
-Toolbar buttons can also be identified by the `title` attribute, as in
-`[data-id="toolbar"] button[title="Rectangle"]` (Rectangle / Ellipse / Polyline /
-Polygon / Text from core, plus Pin / Card / Memo from
+Rail buttons can also be identified by the `title` attribute, as in
+`[data-id="stencil-rail"] button[title="Rectangle"]` (Rectangle / Ellipse /
+Polyline / Polygon / Text from core, plus Pin / Card / Memo from
 `e2e/plugins/specShapesPlugin` —
-the harness pins all of them). No shipped plugin is mounted here; a spec that
-needs one belongs in that plugin's own suite.
+the harness puts all of them on the rail, and pins the `spec` category). No
+shipped plugin is mounted here; a spec that needs one belongs in that plugin's
+own suite.
 
-`selectors.toolButton` and `selectors.shapeItem` are scoped to the bar for that
-reason: an open sidebar holds a twin of every pinned preset, carrying the same
-`title` and the same `item:<presetId>`, so an unscoped selector matches two
-elements. The sidebar's copy is `selectors.stencilLibraryPanelItem`.
+`selectors.toolButton` and `selectors.shapeItem` are scoped to the rail (and,
+for `shapeItem`, the flyout) for that reason: an open panel holds a twin of
+every rail preset it lists, carrying the same `title` and the same
+`item:<presetId>`, so an unscoped selector matches two elements. The panel's
+copy is `selectors.stencilPanelItem`.
 
 ### data-id / data-part / data-action of control
 
@@ -188,7 +194,7 @@ Countermeasures:
 
 ```js
 const before = await captureObjects(); // id and transform of [data-kind=object]
-await page.click('[data-id="toolbar"] button[title="Rectangle"]');
+await page.click('[data-id="stencil-rail"] button[title="Rectangle"]');
 await drag(...);
 const after = await captureObjects();
 if (after.length === before.length) {

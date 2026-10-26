@@ -45,7 +45,7 @@ function distance(a: Vec, b: Vec): number {
  * Reads the coordinates of one connector's hit-area line (full length) and visual line (inset).
  * Both lines are siblings of the same fragment under one parent element, so the visual line is
  * identified as the polyline under the hit-area line's parent that carries neither data-kind nor
- * data-id (which excludes unrelated polylines such as toolbar icons).
+ * data-id (which excludes unrelated polylines such as rail icons).
  */
 async function readLines(
 	canvas: CanvasDriver,

@@ -1,47 +1,77 @@
 import { describe, expect, it } from "vitest";
 
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	StencilPanelContent,
+} from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { ToggleStencilLibraryCommand } from "../ToggleStencilLibraryCommand";
 
 const registries = createTestRegistries();
 
+const CATALOG: StencilPanelContent = { kind: "catalog" };
+const FLOWCHART: StencilPanelContent = {
+	kind: "category",
+	categoryId: "flowchart",
+};
+
+/** Nothing open: no flyout, the docked panel closed on the catalog. */
 const makeState = (
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
 		mode: { kind: "normal" },
-		stencilLibraryPanel: { isOpen: false, collapsedSectionIds: ["basic"] },
-		stencilLibraryOpenCategory: "flowchart",
+		stencilFlyout: null,
+		stencilLibraryPanel: { isOpen: false, content: CATALOG },
+		pinnedCategoryIds: ["flowchart"],
 		selection: selectionOf(["a"]),
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
-describe("ToggleStencilLibraryCommand", () => {
-	it("opens the sidebar when it is closed", () => {
-		const next = ToggleStencilLibraryCommand.execute(makeState(), registries);
-		expect(next.stencilLibraryPanel.isOpen).toBe(true);
-	});
+const execute = (state: CanvasControllerState) =>
+	ToggleStencilLibraryCommand.execute(state, registries);
 
-	it("closes the sidebar when it is open", () => {
-		const next = ToggleStencilLibraryCommand.execute(
-			makeState({
-				stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
-			}),
-			registries,
-		);
+describe("ToggleStencilLibraryCommand", () => {
+	it("opens the catalog over the canvas when nothing is open", () => {
+		const next = execute(makeState());
+		expect(next.stencilFlyout).toEqual(CATALOG);
 		expect(next.stencilLibraryPanel.isOpen).toBe(false);
 	});
 
-	it("closes the open category flyout, like every other toolbar press", () => {
-		const next = ToggleStencilLibraryCommand.execute(makeState(), registries);
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+	it("switches the flyout from a category to the catalog", () => {
+		const next = execute(makeState({ stencilFlyout: FLOWCHART }));
+		expect(next.stencilFlyout).toEqual(CATALOG);
 	});
 
-	it("leaves the collapsed sections and the selection alone", () => {
-		const next = ToggleStencilLibraryCommand.execute(makeState(), registries);
-		expect(next.stencilLibraryPanel.collapsedSectionIds).toEqual(["basic"]);
+	it("closes the catalog open over the canvas", () => {
+		const next = execute(makeState({ stencilFlyout: CATALOG }));
+		expect(next.stencilFlyout).toBeNull();
+	});
+
+	it("closes the catalog while it is docked", () => {
+		const next = execute(
+			makeState({ stencilLibraryPanel: { isOpen: true, content: CATALOG } }),
+		);
+		expect(next.stencilLibraryPanel.isOpen).toBe(false);
+		expect(next.stencilFlyout).toBeNull();
+	});
+
+	it("shows the catalog in the docked panel while that shows a category", () => {
+		const next = execute(
+			makeState({ stencilLibraryPanel: { isOpen: true, content: FLOWCHART } }),
+		);
+		expect(next.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			content: CATALOG,
+		});
+		// Never beside the docked panel.
+		expect(next.stencilFlyout).toBeNull();
+	});
+
+	it("leaves the pins and the selection alone", () => {
+		const next = execute(makeState());
+		expect(next.pinnedCategoryIds).toEqual(["flowchart"]);
 		expect(next.selection.objectIds).toEqual(["a"]);
 	});
 

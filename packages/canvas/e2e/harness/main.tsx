@@ -13,10 +13,10 @@ import { mountPluginHarness } from "../testing-harness";
 // No shipped plugin is registered here: each one owns its e2e suite, and the seven
 // mounted together are covered by apps/canvas-examples.
 
-// The shape library sidebar needs host-declared `stencilLibrarySections` to exist at all,
-// and the toolbar toggle the kit puts at the end of the tools shows only once a section
-// resolves. Core's primitives and the same test-only category are enough, so the specs have
-// both a section of shapes and a category living on the bar and in the sidebar at once.
+// The rail's pinned categories and its catalog draw from host-declared
+// `stencilLibrarySections`, and the catalog button shows only once a section resolves.
+// Core's primitives and the test-only category are enough, so the specs have a section of
+// shapes, a category pinned on the rail and a catalog listing both.
 const librarySections: StencilCategory[] = [
 	basicStencilCategory,
 	specShapesStencilCategory,
@@ -41,16 +41,16 @@ const resolveHarnessImage = async (src: string): Promise<Blob> => {
 mountPluginHarness({
 	plugins: [specShapesPlugin],
 	resolveImage: resolveHarnessImage,
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilPreset", presetId: "ellipse" },
-		{ type: "stencilPreset", presetId: "polyline" },
-		{ type: "stencilPreset", presetId: "polygon" },
-		{ type: "stencilPreset", presetId: "text" },
-		{ type: "stencilPreset", presetId: "pin" },
-		{ type: "stencilPreset", presetId: "card" },
-		{ type: "stencilPreset", presetId: "memo" },
-		{ type: "stencilCategory", category: specShapesStencilCategory },
+	railPresetIds: [
+		"rect",
+		"ellipse",
+		"polyline",
+		"polygon",
+		"text",
+		"pin",
+		"card",
+		"memo",
 	],
 	stencilLibrarySections: librarySections,
+	pinnedCategoryIds: [specShapesStencilCategory.id],
 });

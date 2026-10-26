@@ -30,6 +30,9 @@ import type { CanvasRegistries } from "../registries/CanvasRegistries";
  *   taking its default (closed, every section expanded). Only read at mount
  *   time — the panels belong to the user from then on, and their changes come
  *   back out through `onSidebarsChange`.
+ * @param initialPinnedCategoryIds - The categories pinned to the rail at mount,
+ *   in rail order; omitted, none. Only read at mount time, on the same terms as
+ *   `initialSidebars` (changes come back through `onPinnedCategoriesChange`).
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,
@@ -37,6 +40,7 @@ export const useCanvasReducer = (
 	initialCamera?: Camera,
 	scrollBoundsConfig?: ScrollBoundsConfig,
 	initialSidebars?: CanvasInitialSidebars,
+	initialPinnedCategoryIds?: readonly string[],
 ): [CanvasControllerState, Dispatch<CanvasAction>] => {
 	const reducer = useMemo(() => createCanvasReducer(registries), [registries]);
 	return useReducer(reducer, undefined, () =>
@@ -46,6 +50,7 @@ export const useCanvasReducer = (
 			initialCamera,
 			scrollBoundsConfig,
 			initialSidebars,
+			initialPinnedCategoryIds,
 		),
 	);
 };

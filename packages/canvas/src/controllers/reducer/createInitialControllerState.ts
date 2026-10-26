@@ -47,7 +47,13 @@ export const INITIAL_VIEWPORT: Viewport = {
  * is where it starts.
  *
  * `initialSidebars` seeds the two sidebars the same way (see
- * `seedSidebarPanels`); omitted, both start closed with every section expanded.
+ * `seedSidebarPanels`); omitted, both start closed, the stencil panel on the
+ * catalog and the properties panel with every section expanded.
+ * `initialPinnedCategoryIds` seeds the categories pinned to the rail; omitted,
+ * none is pinned.
+ *
+ * @throws When `initialPinnedCategoryIds` names the same id twice: the rail keys
+ *   its buttons by id, and a pin toggle would take both off at once.
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
@@ -55,8 +61,18 @@ export const createInitialControllerState = (
 	initialCamera?: Camera,
 	scrollBoundsConfig?: ScrollBoundsConfig,
 	initialSidebars?: CanvasInitialSidebars,
+	initialPinnedCategoryIds?: readonly string[],
 ): CanvasControllerState => {
 	const seededSidebarPanels = seedSidebarPanels(initialSidebars);
+	const pinnedCategoryIds = [...(initialPinnedCategoryIds ?? [])];
+	const repeatedPinnedId = pinnedCategoryIds.find(
+		(categoryId, index) => pinnedCategoryIds.indexOf(categoryId) !== index,
+	);
+	if (repeatedPinnedId !== undefined) {
+		throw new Error(
+			`createInitialControllerState: pinnedCategoryIds lists "${repeatedPinnedId}" twice; each category may be pinned once`,
+		);
+	}
 	const baseState = canvasToState(
 		initialDoc,
 		registries.objectMapper,
@@ -83,10 +99,11 @@ export const createInitialControllerState = (
 			measuredView: undefined,
 		},
 		...resetUiState(),
-		// Outside resetUiState: the two sidebars are persistent, so a doc swap must
-		// not close them (see CanvasControllerState).
+		// Outside resetUiState: the two sidebars and the rail's pins are
+		// persistent, so a doc swap must not reset them (see CanvasControllerState).
 		stencilLibraryPanel: seededSidebarPanels.stencilLibraryPanel,
 		propertyPanel: seededSidebarPanels.propertyPanel,
+		pinnedCategoryIds,
 		activeModal: null,
 		commitVersion: 0,
 		saveRequest: { version: 0, nonce: "" },

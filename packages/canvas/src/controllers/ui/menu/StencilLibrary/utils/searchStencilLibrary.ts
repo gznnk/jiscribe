@@ -1,7 +1,7 @@
 import type { ResolvedStencilCategory } from "./resolveStencilCategory";
 import type { Stencil } from "../../../objects/Stencil";
 
-/** What the sidebar shows for one query. */
+/** What a stencil panel shows for one query. */
 export type StencilLibrarySearchResult = {
 	/** One flat list in section order, each preset at most once. */
 	presets: Stencil[];
@@ -13,12 +13,13 @@ export type StencilLibrarySearchResult = {
 };
 
 /**
- * Searches the sidebar's sections for one query.
+ * Searches library sections for one query: every section from the catalog, one
+ * from a category's own panel.
  *
  * Section by section, the listed presets whose label contains the query
  * (case-insensitively) come first, then whatever the category's `search` answers.
  *
- * @param sections Sections in display order, as the sidebar resolved them.
+ * @param sections Sections in display order, already resolved against the registry.
  * @param trimmedQuery The query already trimmed; an empty one matches nothing.
  * @param resolveLabel Display label of a listed preset, the one the user reads.
  * @param resolvePreset Looks up a `search` answer's id; undefined drops the id.

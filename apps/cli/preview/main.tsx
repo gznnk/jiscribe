@@ -7,9 +7,11 @@
 // of the way.
 
 import { Canvas, darkCanvasTheme } from "@jiscribe/canvas";
-import type { CanvasConfig } from "@jiscribe/canvas";
+import type { CanvasConfig, CanvasRailConfig } from "@jiscribe/canvas";
 import {
+	standardDefaultPinnedCategoryIds,
 	standardPlugins,
+	standardRailPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -23,7 +25,13 @@ import { PREVIEW_FONT_FAMILIES, PREVIEW_GLOBAL } from "./previewBridge";
 // Module scope, so a re-render never hands Canvas a new config object. No
 // `viewport`: setting one would suppress the document's own `view.open` framing,
 // and the document knows better than this page does where it wants to be looked at.
-const initialConfig: CanvasConfig = { plugins: standardPlugins };
+// The page keeps nothing between loads, so the pins are the set's default ones.
+const initialConfig: CanvasConfig = {
+	plugins: standardPlugins,
+	pinnedCategoryIds: standardDefaultPinnedCategoryIds,
+};
+
+const rail: CanvasRailConfig = { presetIds: standardRailPresetIds };
 
 const payload = (
 	window as unknown as Record<string, PreviewPayload | undefined>
@@ -95,6 +103,7 @@ const mount = async (): Promise<void> => {
 			initialConfig={initialConfig}
 			resolveImage={(src: string) => resolvePreviewImage(payload.images, src)}
 			toolbar={{ sections: standardToolbarSections }}
+			rail={rail}
 			stencilLibrary={{ sections: standardStencilLibrarySections }}
 		/>,
 	);

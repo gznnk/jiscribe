@@ -76,38 +76,50 @@ test.describe("Ctrl+wheel over the canvas chrome", () => {
 		expect(await canvas.getViewBox()).toBe(viewBoxBefore);
 	});
 
-	test("is cancelled over the shape library sidebar", async ({ canvas }) => {
-		await canvas.page.locator(selectors.stencilLibraryToggle).click();
-		await expect(
-			canvas.page.locator(selectors.stencilLibraryPanel),
-		).toBeVisible();
+	test("is cancelled over the rail", async ({ canvas }) => {
 		await recordWheelCancellation(canvas.page);
 
-		await wheelOver(canvas.page, selectors.stencilLibraryPanel, { ctrl: true });
+		await wheelOver(canvas.page, selectors.rail, { ctrl: true });
 
 		await expect
 			.poll(() => readWheelCancellation(canvas.page), {
-				message: "the Ctrl+wheel over the sidebar is cancelled",
+				message: "the Ctrl+wheel over the rail is cancelled",
 			})
 			.toEqual([true]);
 	});
 
-	test("leaves a plain wheel over the sidebar to native scrolling", async ({
+	// The flyout floats over the drawing region but is not part of it, so the
+	// wheel over it must not reach the canvas either.
+	test("is cancelled over the stencil flyout and leaves the view where it was", async ({
 		canvas,
 	}) => {
-		await canvas.page.locator(selectors.stencilLibraryToggle).click();
-		await expect(
-			canvas.page.locator(selectors.stencilLibraryPanel),
-		).toBeVisible();
+		await canvas.openCatalog();
+		const viewBoxBefore = await canvas.getViewBox();
 		await recordWheelCancellation(canvas.page);
 
-		await wheelOver(canvas.page, selectors.stencilLibraryPanel, {
+		await wheelOver(canvas.page, selectors.stencilFlyout, { ctrl: true });
+
+		await expect
+			.poll(() => readWheelCancellation(canvas.page), {
+				message: "the Ctrl+wheel over the flyout is cancelled",
+			})
+			.toEqual([true]);
+		expect(await canvas.getViewBox()).toBe(viewBoxBefore);
+	});
+
+	test("leaves a plain wheel over the docked stencil panel to native scrolling", async ({
+		canvas,
+	}) => {
+		await canvas.openCatalog({ docked: true });
+		await recordWheelCancellation(canvas.page);
+
+		await wheelOver(canvas.page, selectors.stencilDock, {
 			ctrl: false,
 		});
 
 		await expect
 			.poll(() => readWheelCancellation(canvas.page), {
-				message: "the plain wheel over the sidebar reaches the browser",
+				message: "the plain wheel over the docked panel reaches the browser",
 			})
 			.toEqual([false]);
 	});

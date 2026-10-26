@@ -102,9 +102,9 @@ export const startConnectorLabelEdit = (
 		...state,
 		selection: { objectIds: [connectorId], part: null },
 		multiSelectGroup: null,
-		// Close the submenu / category flyout on selection change
+		// Close the submenu / stencil flyout on selection change
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 	};
 	if (labelText !== "" && !isLabelBoxHit) {
 		return selectedState;

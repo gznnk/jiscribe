@@ -1,7 +1,7 @@
 import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-/** The icon category put on the toolbar (awsStencilCategory.id). */
+/** The icon category pinned to the rail (awsStencilCategory.id). */
 const CATEGORY = "aws";
 
 /** S3's preset id: `awsIcon` with the icon name in PascalCase after it. */

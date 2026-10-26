@@ -6,26 +6,28 @@ harness, the schema generator — and each one used to spell out the same ten
 plugin imports. This is that list, once.
 
 ```ts
-// A canvas: the plugins, plus the two declarations that reach their stencils
+// A canvas: the plugins, plus the declarations that reach their stencils
 import {
+	standardDefaultPinnedCategoryIds,
 	standardPlugins,
+	standardRailPresetIds,
 	standardStencilLibrarySections,
-	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
 
 // A parser, doc-ops or generator: no react, so it runs in Node
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 ```
 
-| Export                           | Entry    | What it is                                                                                                                  |
-| -------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                  |
-| `standardToolbarSections`        | `.`      | The whole bar — the shape tools below, then core's history, view and properties sections — for `toolbar.sections`           |
-| `standardToolbarToolsSection`    | `.`      | Just the shape tools of that bar: the library toggle, then six pinned presets                                               |
-| `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                            |
-| `standardDocPlugins`             | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                           |
-| `standardObjectDocDefinitions`   | `/doc`   | Every type of the set by name, canvas built-ins included                                                                    |
-| `standardAiToolPlugins`          | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's and the record's, so far) |
+| Export                             | Entry    | What it is                                                                                                                  |
+| ---------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `standardPlugins`                  | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                  |
+| `standardRailPresetIds`            | `.`      | The six presets on the rail — core's primitives, then `sticky` — for `rail.presetIds`                                       |
+| `standardStencilLibrarySections`   | `.`      | The whole set as library sections, for `stencilLibrary.sections`                                                            |
+| `standardDefaultPinnedCategoryIds` | `.`      | The categories to pin when the host has no pins stored, for `initialConfig.pinnedCategoryIds`                               |
+| `standardToolbarSections`          | `.`      | The bar — core's history, view and properties sections — for `toolbar.sections`                                             |
+| `standardDocPlugins`               | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                           |
+| `standardObjectDocDefinitions`     | `/doc`   | Every type of the set by name, canvas built-ins included                                                                    |
+| `standardAiToolPlugins`            | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's and the record's, so far) |
 
 ## The entries
 
@@ -47,31 +49,41 @@ go missing from the screen.
 `standardPlugins` and `standardDocPlugins` are the same ten in the same order,
 which is what makes the pair safe to use without checking.
 
-## The bar and the library are one pair
+## The rail and the library are one pair
 
-`standardToolbarSections` pins six presets and nothing else; every other shape of
-the set — the `markdown` and `table` presets and the eight plugin categories — is reachable
-only through `standardStencilLibrarySections`, the sidebar the toolbar's shape
-library toggle opens at its far left. A host passing the bar without the library ships a canvas
-whose plugin shapes cannot be drawn by hand — and the toggle itself is dropped,
-since it would open an empty sidebar. Pass both:
+`standardRailPresetIds` puts six presets on the rail and nothing else; every
+other shape of the set — the `markdown` and `table` presets and the plugin
+categories — is reachable only through `standardStencilLibrarySections`: the
+categories pinned on the rail and the catalog its bottom button opens. A host
+passing the presets without the library ships a canvas whose plugin shapes
+cannot be drawn by hand — and the catalog button itself is not drawn, since it
+would open an empty list. Pass both:
 
 ```tsx
 <Canvas
-	toolbar={{ sections: standardToolbarSections }}
+	rail={{ presetIds: standardRailPresetIds }}
 	stencilLibrary={{ sections: standardStencilLibrarySections }}
+	initialConfig={{
+		plugins: standardPlugins,
+		pinnedCategoryIds: storedPins ?? standardDefaultPinnedCategoryIds,
+	}}
+	onPinnedCategoriesChange={storePins}
 />
 ```
 
-## Not the toolbar for everyone
+The pins are the user's: the canvas pins nothing on its own, and reports every
+change through `onPinnedCategoriesChange`. `standardDefaultPinnedCategoryIds` is
+what to start from when nothing is stored yet; once the user has pinned or
+unpinned, hand back what was reported instead.
 
-Both arrays are the arrangement the editors settled on, not a rule. A host that
-only wants its own UI on the bar takes `standardToolbarToolsSection` and orders
-the sections itself — core's `DEFAULT_TOOLBAR_HISTORY_SECTION`,
-`DEFAULT_TOOLBAR_VIEW_SECTION` and `DEFAULT_TOOLBAR_PROPERTIES_SECTION` are
-exported one by one for exactly that, and the properties toggle is meant to stay
-at the far right. A host wanting a different set of shapes copies them and
-rebuilds from the plugins' own
-`*StencilCategory` exports, which serve as a bar flyout and a sidebar section
-alike — `apps/canvas-examples`'s plugins example does exactly that, on purpose,
-to show what composing them by hand looks like.
+## Not the arrangement for everyone
+
+The arrays are the arrangement the editors settled on, not a rule. A host
+wanting its own UI on the bar orders the sections itself — core's
+`DEFAULT_TOOLBAR_HISTORY_SECTION`, `DEFAULT_TOOLBAR_VIEW_SECTION` and
+`DEFAULT_TOOLBAR_PROPERTIES_SECTION` are exported one by one for exactly that,
+and the properties toggle is meant to stay at the far right. A host wanting a
+different set of shapes copies them and rebuilds from the plugins' own
+`*StencilCategory` exports, each one a section of the library —
+`apps/canvas-examples`'s plugins example does exactly that, on purpose, to show
+what composing them by hand looks like.

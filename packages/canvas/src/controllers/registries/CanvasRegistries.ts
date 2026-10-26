@@ -174,4 +174,16 @@ export type CanvasConfig = CanvasCapabilities & {
 	 * leaves the panels as the user left them.
 	 */
 	sidebars?: CanvasInitialSidebars;
+	/**
+	 * The library categories pinned to the rail at mount, in rail order: ids of
+	 * sections of `stencilLibrary.sections`. Omitted, nothing is pinned — the
+	 * canvas pins nothing on its own, so a host wanting starting pins passes them
+	 * here when it has nothing stored (`standardDefaultPinnedCategoryIds` for the
+	 * standard set). An id the library does not hold is kept, and reported back,
+	 * but not drawn. Naming one id twice throws at mount.
+	 *
+	 * Read once at mount, like `sidebars`: the pins are the user's from then on,
+	 * changed from the catalog and reported through `onPinnedCategoriesChange`.
+	 */
+	pinnedCategoryIds?: readonly string[];
 };

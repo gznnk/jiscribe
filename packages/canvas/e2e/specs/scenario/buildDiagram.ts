@@ -38,7 +38,7 @@ const corners = (rect: Rect) => ({
  * Draw a shape, optionally set its fill, then type a label and commit it.
  *
  * @param canvas driver for the canvas under test
- * @param options.tool title of the toolbar tool to draw with
+ * @param options.tool title of the rail tool to draw with
  * @param options.rect region to draw into, in content coordinates
  * @param options.label text typed into the shape and committed
  * @param options.fill background color applied right after drawing; left at the default when omitted

@@ -21,13 +21,13 @@ describe("built-in command labels", () => {
 		}
 	});
 
-	it("reads the shape-library toggle in Japanese", () => {
+	it("reads the catalog toggle in Japanese", () => {
 		expect(
 			resolveCommandLabel(
 				ToggleStencilLibraryCommand,
 				defaultCanvasMessages,
 				"ja",
 			),
-		).toBe("図形ライブラリ");
+		).toBe("図形を探す");
 	});
 });

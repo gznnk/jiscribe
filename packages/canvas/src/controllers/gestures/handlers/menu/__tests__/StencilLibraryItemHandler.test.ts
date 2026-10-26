@@ -194,7 +194,7 @@ describe("StencilLibraryItemHandler", () => {
 		const openState = (): CanvasControllerState =>
 			({
 				...makeState(),
-				stencilLibraryOpenCategory: "flowchart",
+				stencilFlyout: { kind: "category", categoryId: "flowchart" },
 			}) as CanvasControllerState;
 
 		it("on a click that enters drawing mode (rect)", () => {
@@ -203,7 +203,7 @@ describe("StencilLibraryItemHandler", () => {
 				makeEvent("click", "item:rect"),
 				registries,
 			);
-			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.stencilFlyout).toBeNull();
 		});
 
 		it("on a click that places a non-drawable shape", () => {
@@ -212,7 +212,7 @@ describe("StencilLibraryItemHandler", () => {
 				makeEvent("click", "item:pin"),
 				registries,
 			);
-			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.stencilFlyout).toBeNull();
 		});
 
 		it("on drag start", () => {
@@ -230,7 +230,7 @@ describe("StencilLibraryItemHandler", () => {
 				dragStart,
 				registries,
 			);
-			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.stencilFlyout).toBeNull();
 		});
 	});
 });

@@ -6,9 +6,9 @@ import { toIconStencilId } from "./toIconStencilId";
 import { searchIconNames } from "../schema/icon/searchIconNames";
 
 /**
- * Stencil category for the icon shape. Not in core's default bar, so a host
- * composes it into its `stencilLibrary.sections` (a sidebar section) or, as a
- * `{ type: "stencilCategory", category }` item, into its `toolbar.sections` (a flyout).
+ * Stencil category for the icon shape. Plugin-supplied, so a host composes it
+ * into its `stencilLibrary.sections`, where the rail's catalog lists it and the
+ * user can pin it to the rail.
  *
  * A category rather than a single pinned preset: the shape is only useful once an icon is
  * chosen, and placing one that always says "star" would make choosing a second step every

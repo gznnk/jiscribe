@@ -108,7 +108,7 @@ const extendPartRange = (
 			},
 		},
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 	};
 };
 
@@ -351,7 +351,7 @@ function handleObjectDragStart(
 			multiSelectGroup: newMultiSelectGroup,
 			// Close the object menu dropdown at drag start
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			stencilFlyout: null,
 		},
 		{ kind: "move" },
 		{

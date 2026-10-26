@@ -17,7 +17,7 @@ const makeState = (selectedIds: string[]): CanvasControllerState =>
 		selection: selectionOf(selectedIds),
 		multiSelectGroup: { id: "ms" },
 		objectMenuOpenId: "stroke-color",
-		stencilLibraryOpenCategory: "basic",
+		stencilFlyout: { kind: "category", categoryId: "basic" },
 	}) as unknown as CanvasControllerState;
 
 describe("selectConnectorAlone", () => {
@@ -30,7 +30,7 @@ describe("selectConnectorAlone", () => {
 		expect(next.selection.objectIds).toEqual(["conn-1"]);
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 	});
 
 	it("returns the state itself when the connector is already the selection", () => {

@@ -58,8 +58,7 @@ const toDocumentPropertyUpdate = (
  *   `command:togglePropertyPanel`, the same route as the toolbar's toggle; the
  *   Arrange buttons run the stacking-order commands).
  * - `toggle:{sectionId}` → collapse that section, or expand it when already
- *   collapsed (click acts as a toggle), the way the shape library's own section
- *   headers do.
+ *   collapsed (click acts as a toggle).
  * - `set:{property}:{value}` / `slider:{property}` → write a style property of
  *   the selection (applyStyleAction, shared with ObjectMenuHandler).
  * - `doc:{property}:{value}` → state one of the document's own settings (the
@@ -69,7 +68,7 @@ const toDocumentPropertyUpdate = (
  *
  * Every press in the panel — on a control, or on the background, the header, the
  * padding around a section — does the light dismiss the toolbar does: it closes
- * the context menu and any open category flyout, and leaves the selection alone.
+ * the context menu and the stencil flyout, and leaves the selection alone.
  * The panel is persistent chrome, so a press on it never closes the panel.
  */
 export const PropertyPanelHandler: GestureHandler = {
@@ -88,7 +87,7 @@ export const PropertyPanelHandler: GestureHandler = {
 			nextState = {
 				...nextState,
 				contextMenuPosition: null,
-				stencilLibraryOpenCategory: null,
+				stencilFlyout: null,
 			};
 		}
 

@@ -48,7 +48,7 @@ export const selectPartByClick = (
 			...state,
 			selection: { ...state.selection, part: null },
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			stencilFlyout: null,
 		};
 	}
 
@@ -75,6 +75,6 @@ export const selectPartByClick = (
 			},
 		},
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 	};
 };

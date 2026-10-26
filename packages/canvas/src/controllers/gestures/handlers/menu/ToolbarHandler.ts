@@ -37,13 +37,13 @@ export const ToolbarHandler: GestureHandler = {
 	handle(state, event, registries) {
 		let nextState = state;
 
-		// Close the context menu and any open category flyout on a press over the
+		// Close the context menu and the stencil flyout on a press over the
 		// toolbar — its buttons and its empty area alike.
 		if (event.type === "pressed") {
 			nextState = {
 				...nextState,
 				contextMenuPosition: null,
-				stencilLibraryOpenCategory: null,
+				stencilFlyout: null,
 			};
 		}
 

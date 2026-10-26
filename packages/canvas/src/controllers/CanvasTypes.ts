@@ -533,15 +533,35 @@ export type ScrollBoundsConfig = {
 	padding?: number;
 };
 
-/** State of the shape library sidebar; see CanvasControllerState.stencilLibraryPanel. */
+/**
+ * What a stencil panel shows, the flyout over the canvas and the docked panel
+ * alike: the presets of one library category, or the catalog of every category
+ * (the search across all of them, and the list to pin from).
+ */
+export type StencilPanelContent =
+	| {
+			kind: "category";
+			/**
+			 * Id of a section of `stencilLibrary.sections`. One the library does not
+			 * hold (a plugin the host no longer applies) is drawn as the catalog.
+			 */
+			categoryId: string;
+	  }
+	| { kind: "catalog" };
+
+/** State of the docked stencil panel; see CanvasControllerState.stencilLibraryPanel. */
 export type StencilLibraryPanelState = {
-	/** Whether the panel is open. Toggled by the toolbar `…` button and the panel's own close button. */
+	/**
+	 * Whether the panel is docked beside the viewport. Set by the dock button of
+	 * the flyout, cleared by the panel's own undock and close buttons and by the
+	 * `toggleStencilLibrary` command while it shows the catalog.
+	 */
 	isOpen: boolean;
 	/**
-	 * Ids of the collapsed sections; every section not listed is expanded, so the
-	 * empty array is "all open". Survives closing and reopening the panel.
+	 * What the panel shows. Kept while the panel is closed, so the next dock
+	 * restores it until the flyout replaces it.
 	 */
-	collapsedSectionIds: string[];
+	content: StencilPanelContent;
 };
 
 /** State of the properties sidebar; see CanvasControllerState.propertyPanel. */
@@ -556,18 +576,22 @@ export type PropertyPanelState = {
 };
 
 /** Ids of the panels a sidebar can show. */
-export type SidebarPanelId = "stencilLibrary" | "properties";
+export type SidebarPanelId = keyof CanvasSidebarsState["panels"];
 
 /**
  * One edge of the canvas. Today each shows a single panel: `"stencilLibrary"`
- * on the left, `"properties"` on the right.
+ * (the docked stencil panel) on the left, `"properties"` on the right.
  */
 export type SidebarSideState = {
-	/** Whether that edge is showing its panel. Defaults to false. */
+	/**
+	 * Whether that edge is showing its panel. Defaults to false. On the left it
+	 * means the stencil panel is docked; the flyout over the canvas is never
+	 * reported.
+	 */
 	isOpen: boolean;
 };
 
-/** State a panel keeps across being shown and hidden. */
+/** State the properties panel keeps across being shown and hidden. */
 export type SidebarPanelState = {
 	/**
 	 * Ids of the collapsed sections; every section not listed is expanded, so the
@@ -576,17 +600,28 @@ export type SidebarPanelState = {
 	collapsedSectionIds: string[];
 };
 
+/** State the docked stencil panel keeps across being shown and hidden. */
+export type StencilLibrarySidebarState = {
+	/** What the panel shows when it is docked (see {@link StencilPanelContent}). */
+	content: StencilPanelContent;
+};
+
 /**
  * Both sidebars, as the canvas reports them and a host persists them (see
  * `CanvasConfig.sidebars`).
  */
 export type CanvasSidebarsState = {
-	/** The left edge, which shows the `"stencilLibrary"` panel. */
+	/** The left edge, which shows the `"stencilLibrary"` panel when it is docked. */
 	left: SidebarSideState;
 	/** The right edge, which shows the `"properties"` panel. */
 	right: SidebarSideState;
 	/** Every panel's own state, held whether or not its edge is open. */
-	panels: Record<SidebarPanelId, SidebarPanelState>;
+	panels: {
+		/** The docked stencil panel: what it shows. */
+		stencilLibrary: StencilLibrarySidebarState;
+		/** The properties panel: which of its sections are collapsed. */
+		properties: SidebarPanelState;
+	};
 };
 
 /**
@@ -598,8 +633,16 @@ export type CanvasInitialSidebars = {
 	left?: SidebarSideState;
 	/** The right edge; omitted, it starts closed. */
 	right?: SidebarSideState;
-	/** Panel state by id; a panel left out starts with every section expanded. */
-	panels?: Partial<Record<SidebarPanelId, SidebarPanelState>>;
+	/** Panel state by id; a panel left out starts in its default state. */
+	panels?: {
+		/**
+		 * The docked stencil panel. Omitted, or stored without `content` (a value
+		 * saved before the panel had one), it shows the catalog.
+		 */
+		stencilLibrary?: Partial<StencilLibrarySidebarState>;
+		/** The properties panel; omitted, every section starts expanded. */
+		properties?: SidebarPanelState;
+	};
 };
 
 /**
@@ -708,19 +751,32 @@ export type CanvasControllerState = CanvasState & {
 	objectMenuOpenId: string | null;
 
 	/**
-	 * StencilLibrary category whose toolbar flyout is open; only one at a time, null when
-	 * none. Cleared alongside objectMenuOpenId by the selection/press handlers, commands and
-	 * resetUiState, and by Escape — there is no central clear in handleGesture.
+	 * The stencil panel open over the canvas (the flyout), null when none is. One
+	 * at a time, and never beside the docked panel: while that is open, what the
+	 * flyout would show goes there instead. Cleared alongside objectMenuOpenId by
+	 * the selection/press handlers, commands and resetUiState, and by Escape —
+	 * there is no central clear in handleGesture.
 	 */
-	stencilLibraryOpenCategory: string | null;
+	stencilFlyout: StencilPanelContent | null;
 
 	/**
-	 * The shape library sidebar (StencilLibraryPanel). Editor chrome rather than
-	 * part of the document: canvas presses, Escape, selection changes and a doc
-	 * swap (resetUiState / restoreHistorySnapshot) all leave it as it is. Written
-	 * only by the `toggleStencilLibrary` command and StencilLibraryPanelHandler.
+	 * The docked stencil panel (StencilLibraryPanel beside the viewport). Editor
+	 * chrome rather than part of the document: canvas presses, Escape, selection
+	 * changes and a doc swap (resetUiState / restoreHistorySnapshot) all leave it
+	 * as it is. Written only by the `toggleStencilLibrary` command,
+	 * StencilCategoryToggleHandler and StencilLibraryPanelHandler (see
+	 * toggleStencilPanelContent).
 	 */
 	stencilLibraryPanel: StencilLibraryPanelState;
+
+	/**
+	 * Ids of the library categories pinned to the rail, in rail order. Chrome on
+	 * the same terms as the panels. Ids naming no section of the library stay
+	 * here — a host without that plugin must not erase the user's pin — and are
+	 * only left off the rail. Written only by StencilLibraryPanelHandler (the
+	 * catalog's pin buttons).
+	 */
+	pinnedCategoryIds: string[];
 
 	/**
 	 * The properties sidebar (PropertyPanel), on the opposite edge from the shape

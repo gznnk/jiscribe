@@ -122,7 +122,7 @@ export class TransformControlHandler extends ControlStrategy {
 		}
 
 		return claimDrag(
-			{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+			{ ...state, objectMenuOpenId: null, stencilFlyout: null },
 			{ kind: "transform", ...(resize && { resize }) },
 			{ edgeScroll: true, startSnapshot },
 		);

@@ -8,6 +8,7 @@ import type {
 	CanvasSidebarsState,
 	PropertyPanelState,
 	StencilLibraryPanelState,
+	StencilPanelContent,
 } from "../../CanvasTypes";
 import { useNotifySidebarsChange } from "../useNotifySidebarsChange";
 
@@ -21,6 +22,12 @@ import { useNotifySidebarsChange } from "../useNotifySidebarsChange";
 // flushes being correct all the same.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
+const CATALOG: StencilPanelContent = { kind: "catalog" };
+const FLOWCHART: StencilPanelContent = {
+	kind: "category",
+	categoryId: "flowchart",
+};
+
 /** The two reducer panel states a render of the probe is driven by. */
 type ProbePanels = {
 	stencilLibraryPanel: StencilLibraryPanelState;
@@ -28,7 +35,7 @@ type ProbePanels = {
 };
 
 const bothClosed = (): ProbePanels => ({
-	stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
+	stencilLibraryPanel: { isOpen: false, content: CATALOG },
 	propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 });
 
@@ -61,7 +68,7 @@ const renderHook = (initialPanels: ProbePanels) => {
 describe("useNotifySidebarsChange", () => {
 	it("stays silent on mount, so the state the host seeded is not read back to it", () => {
 		const probe = renderHook({
-			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
+			stencilLibraryPanel: { isOpen: true, content: FLOWCHART },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});
 
@@ -73,7 +80,7 @@ describe("useNotifySidebarsChange", () => {
 		const probe = renderHook(bothClosed());
 
 		probe.rerender({
-			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: [] },
+			stencilLibraryPanel: { isOpen: true, content: CATALOG },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});
 
@@ -82,7 +89,7 @@ describe("useNotifySidebarsChange", () => {
 			left: { isOpen: true },
 			right: { isOpen: false },
 			panels: {
-				stencilLibrary: { collapsedSectionIds: [] },
+				stencilLibrary: { content: CATALOG },
 				properties: { collapsedSectionIds: [] },
 			},
 		});
@@ -93,7 +100,7 @@ describe("useNotifySidebarsChange", () => {
 		const probe = renderHook(bothClosed());
 
 		probe.rerender({
-			stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
+			stencilLibraryPanel: { isOpen: false, content: CATALOG },
 			propertyPanel: { isOpen: false, collapsedSectionIds: ["text"] },
 		});
 
@@ -102,23 +109,49 @@ describe("useNotifySidebarsChange", () => {
 			left: { isOpen: false },
 			right: { isOpen: false },
 			panels: {
-				stencilLibrary: { collapsedSectionIds: [] },
+				stencilLibrary: { content: CATALOG },
 				properties: { collapsedSectionIds: ["text"] },
 			},
 		});
 		probe.unmount();
 	});
 
-	it("says nothing for a re-render whose panels hold the same values in new objects", () => {
-		const probe = renderHook(bothClosed());
-		probe.rerender({
-			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
+	it("delivers the docked panel switching to another category", () => {
+		const probe = renderHook({
+			stencilLibraryPanel: { isOpen: true, content: CATALOG },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});
 
 		probe.rerender({
-			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
+			stencilLibraryPanel: { isOpen: true, content: FLOWCHART },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
+		});
+		probe.rerender({
+			stencilLibraryPanel: {
+				isOpen: true,
+				content: { kind: "category", categoryId: "uml" },
+			},
+			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
+		});
+
+		expect(
+			probe.onSidebarsChange.mock.calls.map(
+				([sidebars]) => sidebars.panels.stencilLibrary.content,
+			),
+		).toEqual([FLOWCHART, { kind: "category", categoryId: "uml" }]);
+		probe.unmount();
+	});
+
+	it("says nothing for a re-render whose panels hold the same values in new objects", () => {
+		const probe = renderHook(bothClosed());
+		probe.rerender({
+			stencilLibraryPanel: { isOpen: true, content: { ...FLOWCHART } },
+			propertyPanel: { isOpen: false, collapsedSectionIds: ["text"] },
+		});
+
+		probe.rerender({
+			stencilLibraryPanel: { isOpen: true, content: { ...FLOWCHART } },
+			propertyPanel: { isOpen: false, collapsedSectionIds: ["text"] },
 		});
 
 		expect(probe.onSidebarsChange).toHaveBeenCalledTimes(1);

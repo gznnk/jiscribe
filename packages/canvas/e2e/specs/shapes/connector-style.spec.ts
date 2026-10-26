@@ -30,7 +30,7 @@ async function buildConnector(canvas: CanvasDriver): Promise<string> {
  * Reads the computed style of the visual polyline (the one without data-kind). Its points differ
  * from the hit target because the visual element insets its ends by the arrow size. The only
  * polylines on the canvas are the hit target (with data-kind) and the visual one, but the shape
- * icons in the toolbar (the Polyline tool and so on) are also drawn as <polyline> without
+ * icons on the rail (the Polyline tool and so on) are also drawn as <polyline> without
  * data-kind and come before the canvas content in the DOM, so icons inside buttons are excluded to
  * pick the visual element.
  */
@@ -46,7 +46,7 @@ async function visualStyle(
 	}, prop);
 }
 
-/** Computed styles of every visual polyline (without data-kind, toolbar icons excluded). */
+/** Computed styles of every visual polyline (without data-kind, rail icons excluded). */
 async function allVisualStyles(
 	canvas: CanvasDriver,
 	prop: "stroke" | "stroke-dasharray",

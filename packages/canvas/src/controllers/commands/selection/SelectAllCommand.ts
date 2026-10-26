@@ -34,7 +34,7 @@ export const SelectAllCommand: ExecutableCommand = {
 				state.multiSelectGroup,
 			),
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			stencilFlyout: null,
 		};
 	},
 };

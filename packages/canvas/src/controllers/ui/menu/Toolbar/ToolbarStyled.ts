@@ -11,10 +11,10 @@ import { theme } from "../../../../foundation/theme/themeTokens";
  * canvas area (occupying space rather than overlaying it). The bottom border is
  * its only separation from what sits below.
  *
- * Overflow stays `visible`, so a bar too wide for the canvas runs off its edge.
- * Scrolling it is not an option while the category flyout hangs below the bar:
- * a non-visible overflow on either axis makes the other one `auto` as well, and
- * the flyout would be clipped away. Narrow layouts wait for the overflow menu.
+ * Overflow stays `visible`, so a bar too wide for the canvas runs off its edge:
+ * a host slot may hang its own dropdown below the bar, and a non-visible
+ * overflow on either axis makes the other one `auto` as well, clipping it away.
+ * Narrow layouts wait for the overflow menu.
  */
 export const ToolbarContainer = styled.div`
 	position: relative;
@@ -119,10 +119,10 @@ export const ToolbarIconButton = styled.button`
 `;
 
 /**
- * Toolbar toggle button for a panel that stays open (the shape library sidebar).
+ * Toolbar toggle button for a panel that stays open (the properties sidebar).
  *
- * Sized like ToolbarIconButton, but takes the pressed look of a category button
- * while its panel is open so the bar shows what is currently on screen.
+ * Sized like ToolbarIconButton, but takes a pressed look while its panel is
+ * open so the bar shows what is currently on screen.
  */
 export const ToolbarToggleButton = styled.button<{ isOpen: boolean }>`
 	display: flex;

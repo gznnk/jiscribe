@@ -137,11 +137,11 @@ export const StencilLibraryItemHandler: GestureHandler = {
 						registries,
 					);
 					// If a non-drawable shape is pressed while in drawing mode, clear drawing mode.
-					// Using a shape item also dismisses any open category flyout (see objectMenu).
+					// Using a shape item also dismisses the stencil flyout (see objectMenu).
 					return {
 						...placed,
 						mode: NORMAL_MODE,
-						stencilLibraryOpenCategory: null,
+						stencilFlyout: null,
 					};
 				}
 
@@ -152,7 +152,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					return {
 						...state,
 						mode: NORMAL_MODE,
-						stencilLibraryOpenCategory: null,
+						stencilFlyout: null,
 					};
 				}
 
@@ -164,7 +164,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					selection: EMPTY_SELECTION,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					stencilFlyout: null,
 				};
 			}
 
@@ -179,7 +179,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 						selection: EMPTY_SELECTION,
 						multiSelectGroup: null,
 						objectMenuOpenId: null,
-						stencilLibraryOpenCategory: null,
+						stencilFlyout: null,
 					},
 					{
 						kind: "stencil",

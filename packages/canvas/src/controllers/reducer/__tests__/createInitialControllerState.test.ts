@@ -81,13 +81,14 @@ describe("createInitialControllerState", () => {
 		expect(state.viewport.height).toBe(base.viewport.height);
 	});
 
-	it("starts both sidebars closed and fully expanded when no initialSidebars is given", () => {
+	it("starts both sidebars closed, the stencil panel on the catalog, when no initialSidebars is given", () => {
 		const state = createInitialControllerState(docWithRect, registries);
 
 		expect(state.stencilLibraryPanel).toEqual({
 			isOpen: false,
-			collapsedSectionIds: [],
+			content: { kind: "catalog" },
 		});
+		expect(state.stencilFlyout).toBeNull();
 		expect(state.propertyPanel).toEqual({
 			isOpen: false,
 			collapsedSectionIds: [],
@@ -104,7 +105,9 @@ describe("createInitialControllerState", () => {
 				left: { isOpen: true },
 				right: { isOpen: false },
 				panels: {
-					stencilLibrary: { collapsedSectionIds: ["basic"] },
+					stencilLibrary: {
+						content: { kind: "category", categoryId: "flowchart" },
+					},
 					properties: { collapsedSectionIds: ["text"] },
 				},
 			},
@@ -112,7 +115,7 @@ describe("createInitialControllerState", () => {
 
 		expect(state.stencilLibraryPanel).toEqual({
 			isOpen: true,
-			collapsedSectionIds: ["basic"],
+			content: { kind: "category", categoryId: "flowchart" },
 		});
 		expect(state.propertyPanel).toEqual({
 			isOpen: false,
@@ -120,22 +123,22 @@ describe("createInitialControllerState", () => {
 		});
 	});
 
-	it("leaves the properties panel at its default when only stencilLibrary is given", () => {
+	it("leaves the stencil panel at its default when only properties is given", () => {
 		const state = createInitialControllerState(
 			docWithRect,
 			registries,
 			undefined,
 			undefined,
-			{ panels: { stencilLibrary: { collapsedSectionIds: ["basic"] } } },
+			{ panels: { properties: { collapsedSectionIds: ["text"] } } },
 		);
 
 		expect(state.stencilLibraryPanel).toEqual({
 			isOpen: false,
-			collapsedSectionIds: ["basic"],
+			content: { kind: "catalog" },
 		});
 		expect(state.propertyPanel).toEqual({
 			isOpen: false,
-			collapsedSectionIds: [],
+			collapsedSectionIds: ["text"],
 		});
 	});
 
@@ -150,11 +153,47 @@ describe("createInitialControllerState", () => {
 
 		expect(state.stencilLibraryPanel).toEqual({
 			isOpen: true,
-			collapsedSectionIds: [],
+			content: { kind: "catalog" },
 		});
 		expect(state.propertyPanel).toEqual({
 			isOpen: false,
 			collapsedSectionIds: [],
 		});
+	});
+
+	it("pins nothing when no initialPinnedCategoryIds is given", () => {
+		const state = createInitialControllerState(docWithRect, registries);
+
+		expect(state.pinnedCategoryIds).toEqual([]);
+	});
+
+	it("seeds the pins in the order given, ids the library may not hold included", () => {
+		const initialPinnedCategoryIds = ["flowchart", "no-such-category"];
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			undefined,
+			initialPinnedCategoryIds,
+		);
+
+		expect(state.pinnedCategoryIds).toEqual(["flowchart", "no-such-category"]);
+		// A copy: the reducer's later writes never reach the host's array.
+		expect(state.pinnedCategoryIds).not.toBe(initialPinnedCategoryIds);
+	});
+
+	/** A pin toggle would take both off at once, and the rail keys its buttons by id. */
+	it("throws when a category is pinned twice", () => {
+		expect(() =>
+			createInitialControllerState(
+				docWithRect,
+				registries,
+				undefined,
+				undefined,
+				undefined,
+				["flowchart", "uml", "flowchart"],
+			),
+		).toThrow(/"flowchart" twice/);
 	});
 });

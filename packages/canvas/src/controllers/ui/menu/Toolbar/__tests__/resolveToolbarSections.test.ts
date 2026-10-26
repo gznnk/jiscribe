@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import { RectIcon } from "../../../objects/primitives/RectIcon";
-import { basicStencilCategory } from "../../../objects/StencilCategory";
 import {
 	DEFAULT_TOOLBAR_SECTIONS,
 	type ToolbarSection,
@@ -12,76 +11,47 @@ import {
 	type ToolbarResolutionContext,
 } from "../utils/resolveToolbarSections";
 
-const createContext = (
-	hasLibrary: boolean,
-	commandsConfig?: string[],
-): ToolbarResolutionContext => {
+const createContext = (commandsConfig?: string[]): ToolbarResolutionContext => {
 	const registries = createCanvasRegistries(
 		commandsConfig ? { commands: commandsConfig } : undefined,
 	);
-	return {
-		stencil: registries.stencil,
-		command: registries.command,
-		hasLibrary,
-	};
+	return { command: registries.command };
 };
 
 const itemTypes = (
 	sections: ReturnType<typeof resolveToolbarSections>,
 ): string[][] => sections.map((section) => section.items.map((i) => i.type));
 
+/** A command item; the icon is irrelevant to resolution. */
+const commandItem = (commandId: string): ToolbarSection["items"][number] => ({
+	type: "command",
+	commandId,
+	icon: RectIcon,
+});
+
 describe("resolveToolbarSections", () => {
 	it("keeps the default bar intact when everything resolves", () => {
 		const resolved = resolveToolbarSections(
 			DEFAULT_TOOLBAR_SECTIONS,
-			createContext(true),
+			createContext(),
 		);
 		expect(resolved.map((section) => [section.id, section.align])).toEqual([
-			["tools", "start"],
 			["history", "start"],
 			["view", "end"],
 			["properties", "end"],
 		]);
 		expect(itemTypes(resolved)).toEqual([
-			[
-				"stencilLibraryToggle",
-				"divider",
-				"stencilPreset",
-				"stencilPreset",
-				"stencilPreset",
-				"stencilPreset",
-				"stencilPreset",
-			],
-			["divider", "command", "command"],
+			["command", "command"],
 			["zoom", "command", "divider", "command"],
 			["divider", "propertyPanelToggle"],
 		]);
 	});
 
-	it("drops the library toggle and its now-leading divider without a library", () => {
-		const resolved = resolveToolbarSections(
-			DEFAULT_TOOLBAR_SECTIONS,
-			createContext(false),
-		);
-		expect(itemTypes(resolved)[0]).toEqual([
-			"stencilPreset",
-			"stencilPreset",
-			"stencilPreset",
-			"stencilPreset",
-			"stencilPreset",
-		]);
-	});
-
-	/**
-	 * The section is nothing but the two commands and the divider that joins them
-	 * to the tools, so switching both off has to take the divider with them rather
-	 * than leave a hairline floating between the tools and the free space.
-	 */
 	it("drops the whole history section when undo and redo are switched off", () => {
 		const resolved = resolveToolbarSections(
 			DEFAULT_TOOLBAR_SECTIONS,
 			// `commands` restricts the registry, which is how a host switches one off.
-			createContext(true, [
+			createContext([
 				"shortcutHelp",
 				"zoomToFit",
 				"zoomIn",
@@ -90,84 +60,37 @@ describe("resolveToolbarSections", () => {
 			]),
 		);
 		expect(resolved.map((section) => section.id)).toEqual([
-			"tools",
 			"view",
 			"properties",
 		]);
 	});
 
-	it("drops a preset the registry does not know", () => {
-		const sections: ToolbarSection[] = [
-			{
-				id: "tools",
-				items: [
-					{ type: "stencilPreset", presetId: "rect" },
-					{ type: "stencilPreset", presetId: "no-such-preset" },
-				],
-			},
-		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
-		expect(itemTypes(resolved)).toEqual([["stencilPreset"]]);
-	});
-
 	it("drops a command the registry does not know", () => {
 		const sections: ToolbarSection[] = [
-			{
-				id: "view",
-				items: [
-					{ type: "command", commandId: "undo", icon: RectIcon },
-					{ type: "command", commandId: "redo", icon: RectIcon },
-				],
-			},
+			{ id: "view", items: [commandItem("undo"), commandItem("redo")] },
 		];
 		// `commands` restricts the registry, which is how a host switches one off.
-		const resolved = resolveToolbarSections(
-			sections,
-			createContext(true, ["undo"]),
-		);
+		const resolved = resolveToolbarSections(sections, createContext(["undo"]));
 		expect(resolved[0].items).toHaveLength(1);
-	});
-
-	it("keeps a category nested and resolves its presets in declared order", () => {
-		const sections: ToolbarSection[] = [
-			{
-				id: "tools",
-				items: [{ type: "stencilCategory", category: basicStencilCategory }],
-			},
-		];
-		const [section] = resolveToolbarSections(sections, createContext(true));
-		const item = section.items[0];
-		expect(item.type).toBe("stencilCategory");
-		if (item.type === "stencilCategory") {
-			expect(item.category).toBe(basicStencilCategory);
-			expect(item.presets.map((preset) => preset.id)).toEqual(
-				basicStencilCategory.presetIds,
-			);
-		}
 	});
 
 	it("collapses a doubled divider into one", () => {
 		const sections: ToolbarSection[] = [
 			{
-				id: "tools",
+				id: "history",
 				items: [
-					{ type: "stencilPreset", presetId: "rect" },
+					commandItem("undo"),
 					{ type: "divider" },
 					{ type: "divider" },
-					{ type: "stencilPreset", presetId: "ellipse" },
+					commandItem("redo"),
 				],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
-		expect(itemTypes(resolved)).toEqual([
-			["stencilPreset", "divider", "stencilPreset"],
-		]);
+		const resolved = resolveToolbarSections(sections, createContext());
+		expect(itemTypes(resolved)).toEqual([["command", "divider", "command"]]);
 	});
 
-	/**
-	 * The pattern `toolbar.leading` used to draw for free: a host slot followed
-	 * by the boundary with the shape tools.
-	 */
+	/** The pattern of a host file menu: a slot followed by the boundary with history. */
 	it("keeps a divider the host declared at an end of the section", () => {
 		const sections: ToolbarSection[] = [
 			{
@@ -185,7 +108,7 @@ describe("resolveToolbarSections", () => {
 				],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(itemTypes(resolved)).toEqual([
 			["slot", "divider"],
 			["divider", "slot"],
@@ -195,37 +118,37 @@ describe("resolveToolbarSections", () => {
 	it("drops a divider only stranded at an end by a dropped neighbour", () => {
 		const sections: ToolbarSection[] = [
 			{
-				id: "tools",
+				id: "history",
 				items: [
-					{ type: "stencilPreset", presetId: "no-such-preset" },
+					commandItem("no-such-command"),
 					{ type: "divider" },
-					{ type: "stencilPreset", presetId: "rect" },
+					commandItem("undo"),
 					{ type: "divider" },
-					{ type: "stencilLibraryToggle" },
+					commandItem("no-such-command-either"),
 				],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(false));
-		expect(itemTypes(resolved)).toEqual([["stencilPreset"]]);
+		const resolved = resolveToolbarSections(sections, createContext());
+		expect(itemTypes(resolved)).toEqual([["command"]]);
 	});
 
 	it("drops a section left with nothing but dividers", () => {
 		const sections: ToolbarSection[] = [
 			{
 				id: "empty",
-				items: [{ type: "divider" }, { type: "stencilLibraryToggle" }],
+				items: [{ type: "divider" }, commandItem("no-such-command")],
 			},
-			{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
+			{ id: "history", items: [commandItem("undo")] },
 		];
-		const resolved = resolveToolbarSections(sections, createContext(false));
-		expect(resolved.map((section) => section.id)).toEqual(["tools"]);
+		const resolved = resolveToolbarSections(sections, createContext());
+		expect(resolved.map((section) => section.id)).toEqual(["history"]);
 	});
 
 	it("defaults a section with no align to the start edge", () => {
 		const sections: ToolbarSection[] = [
-			{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
+			{ id: "history", items: [commandItem("undo")] },
 		];
-		expect(resolveToolbarSections(sections, createContext(true))[0].align).toBe(
+		expect(resolveToolbarSections(sections, createContext())[0].align).toBe(
 			"start",
 		);
 	});
@@ -233,11 +156,11 @@ describe("resolveToolbarSections", () => {
 	/** The id keys the rendered section, so a twin would be invisible, not wrong. */
 	it("throws when two sections share an id", () => {
 		const sections: ToolbarSection[] = [
-			{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
-			{ id: "tools", items: [{ type: "stencilPreset", presetId: "ellipse" }] },
+			{ id: "history", items: [commandItem("undo")] },
+			{ id: "history", items: [commandItem("redo")] },
 		];
-		expect(() => resolveToolbarSections(sections, createContext(true))).toThrow(
-			/"tools"/,
+		expect(() => resolveToolbarSections(sections, createContext())).toThrow(
+			/"history"/,
 		);
 	});
 });

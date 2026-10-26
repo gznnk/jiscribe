@@ -5,10 +5,9 @@ import { CloudIcon } from "./CloudIcon";
 /**
  * Stencil category for the general shapes. Entries reference presets by
  * string id, so every id resolves against whatever a host has applied — here all
- * of them come from this package's own stencils. The general category is not in
- * core's default bar, so a host composes this into its
- * `stencilLibrary.sections` (a sidebar section) or, as a `{ type: "stencilCategory",
- * category }` item, into its `toolbar.sections` (a flyout).
+ * of them come from this package's own stencils. Plugin-supplied, so a host
+ * composes this into its `stencilLibrary.sections`, where the rail's catalog
+ * lists it and the user can pin it to the rail.
  *
  * The order groups the flyout the way the shapes are reached for: who and where
  * first, then what runs, then what moves between them, then what guards it.

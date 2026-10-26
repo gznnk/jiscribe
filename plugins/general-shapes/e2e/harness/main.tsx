@@ -8,9 +8,8 @@ mountPluginHarness({
 	plugins: [generalPlugin],
 	// The rect preset is core's; CanvasDriver.goto() waits for the "Rectangle" tool, and
 	// connector-lock-shackle-drop draws a rectangle as the connector's source. The general
-	// category is what the specs actually drive.
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilCategory", category: generalStencilCategory },
-	],
+	// category is what the specs actually drive, so it is pinned.
+	railPresetIds: ["rect"],
+	stencilLibrarySections: [generalStencilCategory],
+	pinnedCategoryIds: [generalStencilCategory.id],
 });

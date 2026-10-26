@@ -48,14 +48,11 @@ import {
 import { PropertyPanelOverlayHostContext } from "./PropertyPanelOverlayHostContext";
 import {
 	PropertyPanelBody,
-	PropertyPanelCloseButton,
 	PropertyPanelContainer,
-	PropertyPanelHeader,
 	PropertyPanelSectionBody,
 	PropertyPanelSectionChevron,
 	PropertyPanelSectionHeader,
 	PropertyPanelSectionLabel,
-	PropertyPanelTitle,
 } from "./PropertyPanelStyled";
 import type {
 	PropertyPanelBuiltinItemKey,
@@ -63,6 +60,12 @@ import type {
 	PropertyPanelMetaUpdater,
 	PropertyPanelTransformUpdater,
 } from "./PropertyPanelTypes";
+import {
+	SidePanelHeader,
+	SidePanelHeaderButton,
+	SidePanelHeaderButtons,
+	SidePanelTitle,
+} from "../SidePanel/SidePanelStyled";
 import { isArrangeSectionShown } from "./utils/isArrangeSectionShown";
 import { isCanvasSectionShown } from "./utils/isCanvasSectionShown";
 import { isGroupingItemShown } from "./utils/isGroupingItemShown";
@@ -196,7 +199,7 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
 
 /**
  * The properties sidebar: the settings of the current selection, on the opposite
- * edge from the shape library. With nothing selected it holds the Canvas section
+ * edge from the stencil rail. With nothing selected it holds the Canvas section
  * instead — the document's own settings, which is the panel's empty state. The
  * per-type sections are followed by the Arrange section whenever the selection
  * can be reordered or grouped, and by the Meta section whenever it names a single
@@ -245,17 +248,19 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 			data-id="property-panel"
 			{...TEXT_EDITOR_FOCUS_SCOPE_PROPS}
 		>
-			<PropertyPanelHeader>
-				<PropertyPanelTitle>{messages.propertyPanelTitle}</PropertyPanelTitle>
-				<PropertyPanelCloseButton
-					type="button"
-					aria-label={messages.propertyPanelClose}
-					title={messages.propertyPanelClose}
-					data-action={commandAction("togglePropertyPanel")}
-				>
-					<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
-				</PropertyPanelCloseButton>
-			</PropertyPanelHeader>
+			<SidePanelHeader>
+				<SidePanelTitle>{messages.propertyPanelTitle}</SidePanelTitle>
+				<SidePanelHeaderButtons>
+					<SidePanelHeaderButton
+						type="button"
+						aria-label={messages.propertyPanelClose}
+						title={messages.propertyPanelClose}
+						data-action={commandAction("togglePropertyPanel")}
+					>
+						<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
+					</SidePanelHeaderButton>
+				</SidePanelHeaderButtons>
+			</SidePanelHeader>
 
 			<PropertyPanelBody>
 				<SelectionStyleReaderContext.Provider value={readStyle}>

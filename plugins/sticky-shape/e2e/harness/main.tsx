@@ -7,9 +7,6 @@ mountPluginHarness({
 	// The rect preset is core's; it is here because CanvasDriver.goto() waits for the
 	// "Rectangle" tool. The sticky preset comes from this package's own stencils and is the
 	// "Sticky" tool button every spec places with; sticky contributes no category, so a
-	// preset entry is all it needs.
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilPreset", presetId: "sticky" },
-	],
+	// rail preset is all it needs.
+	railPresetIds: ["rect", "sticky"],
 });

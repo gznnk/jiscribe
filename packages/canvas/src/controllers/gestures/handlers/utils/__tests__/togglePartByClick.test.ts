@@ -95,7 +95,7 @@ const makeState = (
 		},
 		selection: selectionOf(selectedIds, part),
 		objectMenuOpenId: "alignment",
-		stencilLibraryOpenCategory: "basic",
+		stencilFlyout: { kind: "category", categoryId: "basic" },
 	}) as unknown as CanvasControllerState;
 
 const range = (anchorId: string, focusId: string): ObjectPartRange => ({
@@ -189,7 +189,7 @@ describe("togglePartByClick", () => {
 		const next = toggleCell(cellSelection(range("00", "00")), "11");
 
 		expect(next?.objectMenuOpenId).toBeNull();
-		expect(next?.stencilLibraryOpenCategory).toBeNull();
+		expect(next?.stencilFlyout).toBeNull();
 	});
 
 	it("is no toggle while nothing is picked", () => {

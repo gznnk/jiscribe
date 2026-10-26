@@ -16,7 +16,7 @@ export const resolveStencilLabel = (
 	resolveLocalizedLabel(preset.label, locale);
 
 /**
- * Display label of a stencil category (toolbar flyout or sidebar section): the
+ * Display label of a stencil category (its rail button, catalog row and panel heading): the
  * host override (`messages.stencilCategoryLabels[id]`) first, then the label
  * the category declaration carries, resolved for `locale`.
  */

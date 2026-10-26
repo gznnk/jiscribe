@@ -49,6 +49,32 @@ describe("canvasReducer (integration)", () => {
 			expect(state.history.past).toHaveLength(1);
 		});
 
+		/**
+		 * The pins and the docked panel are chrome, not part of any entry: a pin
+		 * changed after the edit stays changed when the edit is undone.
+		 */
+		it("keeps the rail's pins and the docked panel as they are now through undo and redo", () => {
+			let state = createState();
+			state = runCommands(state, "move-right");
+			const docked = {
+				isOpen: true,
+				content: { kind: "category", categoryId: "uml" },
+			} as const;
+			state = {
+				...state,
+				pinnedCategoryIds: ["flowchart", "uml"],
+				stencilLibraryPanel: docked,
+			};
+
+			state = runCommands(state, "undo");
+			expect(state.pinnedCategoryIds).toEqual(["flowchart", "uml"]);
+			expect(state.stencilLibraryPanel).toEqual(docked);
+
+			state = runCommands(state, "redo");
+			expect(state.pinnedCategoryIds).toEqual(["flowchart", "uml"]);
+			expect(state.stencilLibraryPanel).toEqual(docked);
+		});
+
 		it("undo is a no-op when past is empty (state does not change)", () => {
 			const state = createState();
 			const after = runCommands(state, "undo");

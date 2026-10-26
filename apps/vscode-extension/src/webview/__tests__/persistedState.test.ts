@@ -19,7 +19,7 @@ const sidebars: CanvasSidebarsState = {
 	left: { isOpen: true },
 	right: { isOpen: false },
 	panels: {
-		stencilLibrary: { collapsedSectionIds: ["flowchart"] },
+		stencilLibrary: { content: { kind: "category", categoryId: "flowchart" } },
 		properties: { collapsedSectionIds: [] },
 	},
 };

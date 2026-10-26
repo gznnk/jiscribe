@@ -7,9 +7,10 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
  *   throws while the registries are built, leaving nothing rendered)
- * - the toolbar carrying every pinned preset and the one category left on the bar
- * - the shape library sidebar holding one section per plugin category, each onto
- *   its own plugin's presets, with no preset id showing up in two sections
+ * - the toolbar carrying no shape tool, and the rail carrying every preset once
+ * - the catalog holding one section per plugin category, each onto its own
+ *   plugin's presets, with no preset id showing up in two sections
+ * - a pinned category opening its flyout from the rail
  * - shapes from every plugin coexisting in one document
  * - SVG ids staying unique across the canvas once `svgDefs` contributors and
  *   per-object defs are all in play
@@ -18,8 +19,8 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * owning plugin's suite covers it, and repeating it here would only double the cost.
  */
 
-/** Presets pinned straight on the harness toolbar, in layout order. */
-const PINNED_PRESET_IDS = [
+/** Presets on the harness rail, in layout order. */
+const RAIL_PRESET_IDS = [
 	"rect",
 	"ellipse",
 	"polyline",
@@ -29,11 +30,10 @@ const PINNED_PRESET_IDS = [
 ];
 
 /**
- * The one category the harness leaves on the bar as a flyout. The others moved into
- * the shape library sidebar, which is the arrangement the apps ship; this one stays
- * so both surfaces are covered. `ownPresetId` is a preset only its plugin registers.
+ * The one category the harness pins to the rail. The catalog holds the rest; this one
+ * is pinned as well so both surfaces are covered. `ownPresetId` is a preset only its plugin registers.
  */
-const FLYOUT_CATEGORY = { id: "icon", ownPresetId: "lucideIconUser" };
+const PINNED_CATEGORY = { id: "icon", ownPresetId: "lucideIconUser" };
 
 /**
  * The awsIcon preset the aws section is found by and both AWS icons are placed from.
@@ -42,7 +42,7 @@ const FLYOUT_CATEGORY = { id: "icon", ownPresetId: "lucideIconUser" };
 const AWS_S3_PRESET_ID = "awsIconServiceAmazonSimpleStorageService";
 
 /**
- * Sections of the shape library sidebar, in declaration order. `ownPresetId` is a
+ * Sections of the catalog, in declaration order. `ownPresetId` is a
  * preset only that section holds, so finding it there proves the section resolved
  * against the right plugin's stencils.
  */
@@ -59,11 +59,8 @@ const LIBRARY_SECTIONS = [
 	{ id: "aws-group", ownPresetId: "awsGroupVpc" },
 ];
 
-/** Every toolbar category button, pinned presets excluded. */
-const CATEGORY_TOGGLES = '[data-id="stencil-category"][data-action^="toggle:"]';
-
-/** Every sidebar section header, in display order. */
-const LIBRARY_SECTION_HEADERS = `[data-kind="menu"][data-id="stencil-library-panel"] [data-action^="section:"]`;
+/** Every pinned category button on the rail, presets excluded. */
+const CATEGORY_TOGGLES = `${selectors.rail} [data-id="stencil-category"][data-action^="toggle:"]`;
 
 /** Preset ids of the stencil buttons under `scopeSelector`, in DOM order. */
 async function readPresetIds(
@@ -84,35 +81,19 @@ function findDuplicates(values: string[]): string[] {
 	return [...new Set(values.filter((value, i) => values.indexOf(value) !== i))];
 }
 
-/** Collapses or expands one sidebar section, clicking only when it has to. */
-async function setSectionExpanded(
-	canvas: CanvasDriver,
-	sectionId: string,
-	isExpanded: boolean,
-): Promise<void> {
-	const header = canvas.page.locator(
-		selectors.stencilLibrarySection(sectionId),
-	);
-	const expected = String(isExpanded);
-	if ((await header.getAttribute("aria-expanded")) !== expected) {
-		await header.click();
-		await expect(header).toHaveAttribute("aria-expanded", expected);
-	}
-}
-
 /**
- * Preset ids of one sidebar section, in DOM order. The sections share one list with
- * no per-section element to scope to, so the one being read is left expanded and
- * every other collapsed.
+ * Opens the catalog and switches it to one category, whose panel then lists that
+ * category's presets alone. The canvas origin is left where it was.
  */
-async function readSectionPresetIds(
+async function openCategoryFromCatalog(
 	canvas: CanvasDriver,
-	sectionId: string,
-): Promise<string[]> {
-	for (const section of LIBRARY_SECTIONS) {
-		await setSectionExpanded(canvas, section.id, section.id === sectionId);
-	}
-	return readPresetIds(canvas, selectors.stencilLibraryPanel);
+	categoryId: string,
+): Promise<void> {
+	await canvas.openCatalog();
+	await canvas.page.click(selectors.catalogRow(categoryId));
+	await expect(
+		canvas.page.locator(selectors.categoryPanel(categoryId)),
+	).toBeVisible();
 }
 
 /** Runs an operation expected to add exactly one shape and returns its data-id. */
@@ -144,18 +125,20 @@ async function captureCreated(
 }
 
 /**
- * Picks a shape in the open sidebar and drags it out on the canvas, in the driver's
- * content coordinates.
+ * Picks a shape out of its category in the catalog and drags it out on the canvas,
+ * in the driver's content coordinates. Picking closes the panel.
  */
-async function drawFromLibrary(
+async function drawFromCatalog(
 	canvas: CanvasDriver,
+	categoryId: string,
 	presetId: string,
 	from: { x: number; y: number },
 	to: { x: number; y: number },
 ): Promise<string> {
 	return captureCreated(canvas, presetId, async () => {
-		await canvas.page.click(selectors.stencilLibraryPanelItem(presetId));
-		// A sidebar item has no armed cursor of its own, so the canvas's crosshair is
+		await openCategoryFromCatalog(canvas, categoryId);
+		await canvas.page.click(selectors.stencilPanelItem(presetId));
+		// A panel item has no armed cursor of its own, so the canvas's crosshair is
 		// the signal that drawing mode was entered.
 		await expect
 			.poll(() => canvas.isDrawingMode(), {
@@ -168,17 +151,19 @@ async function drawFromLibrary(
 }
 
 /**
- * Picks a click-placed shape (`supportsBounds: false`) in the open sidebar. It is
- * placed at the center of the canvas by the click that picks it, so there is no
- * crosshair to wait for and nothing to drag.
+ * Picks a click-placed shape (`supportsBounds: false`) out of its category in the
+ * catalog. It is placed at the center of the canvas by the click that picks it, so
+ * there is no crosshair to wait for and nothing to drag.
  */
-async function placeFromLibrary(
+async function placeFromCatalog(
 	canvas: CanvasDriver,
+	categoryId: string,
 	presetId: string,
 ): Promise<string> {
-	return captureCreated(canvas, presetId, () =>
-		canvas.page.click(selectors.stencilLibraryPanelItem(presetId)),
-	);
+	return captureCreated(canvas, presetId, async () => {
+		await openCategoryFromCatalog(canvas, categoryId);
+		await canvas.page.click(selectors.stencilPanelItem(presetId));
+	});
 }
 
 /**
@@ -187,9 +172,8 @@ async function placeFromLibrary(
  * ObjectMenu of a selected shape covers the area below it). Returns the new shapes'
  * data-ids in creation order.
  *
- * Every shape comes out of the shape library sidebar, which is where the harness
- * (like the apps) files everything the plugins contribute. The sidebar is left
- * closed again at the end, the way a user would leave it.
+ * Every shape comes out of the catalog, and picking one closes the panel, so no
+ * panel is left open between shapes.
  *
  * The flowchart representative is multiDocument rather than a plain box because it
  * is the one shipped shape minting per-object SVG ids.
@@ -197,11 +181,10 @@ async function placeFromLibrary(
 async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	const ids: string[] = [];
 
-	await canvas.openStencilLibrary();
-
 	ids.push(
-		await drawFromLibrary(
+		await drawFromCatalog(
 			canvas,
+			"flowchart",
 			"multiDocument",
 			{ x: 120, y: 200 },
 			{ x: 260, y: 320 },
@@ -210,8 +193,9 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await drawFromLibrary(
+		await drawFromCatalog(
 			canvas,
+			"uml",
 			"class",
 			{ x: 300, y: 200 },
 			{ x: 440, y: 320 },
@@ -220,8 +204,9 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await drawFromLibrary(
+		await drawFromCatalog(
 			canvas,
+			"general",
 			"actor",
 			{ x: 500, y: 200 },
 			{ x: 600, y: 320 },
@@ -230,8 +215,9 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await drawFromLibrary(
+		await drawFromCatalog(
 			canvas,
+			"annotation",
 			"callout",
 			{ x: 120, y: 400 },
 			{ x: 280, y: 520 },
@@ -240,8 +226,9 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await drawFromLibrary(
+		await drawFromCatalog(
 			canvas,
+			"container",
 			"frame",
 			{ x: 900, y: 560 },
 			{ x: 1100, y: 700 },
@@ -250,8 +237,9 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await drawFromLibrary(
+		await drawFromCatalog(
 			canvas,
+			"basic",
 			"markdown",
 			{ x: 320, y: 400 },
 			{ x: 480, y: 520 },
@@ -261,18 +249,19 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 
 	// Stickies are center-placed on click (no bounds drawing), which lands this one
 	// clear of everything above.
-	ids.push(await placeFromLibrary(canvas, "sticky"));
+	ids.push(await placeFromCatalog(canvas, "basic", "sticky"));
 	await canvas.deselect();
 
 	// The icon is center-placed too, so it lands under the sticky. Overlap is fine
 	// here: this suite asks whether every plugin's shape coexists in one document,
 	// and a covered element is still a rendered, visible one.
-	ids.push(await placeFromLibrary(canvas, "lucideIconUser"));
+	ids.push(await placeFromCatalog(canvas, "icon", "lucideIconUser"));
 	await canvas.deselect();
 
 	ids.push(
-		await drawFromLibrary(
+		await drawFromCatalog(
 			canvas,
+			"aws-group",
 			"awsGroupVpc",
 			{ x: 120, y: 560 },
 			{ x: 400, y: 700 },
@@ -283,26 +272,34 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	// Two of the same AWS icon, both center-placed: the icon drawing rewrites the
 	// SVG ids it carries per object, so a second copy of one icon is what tells a
 	// working rewrite from one document-wide set of ids shared by every instance.
-	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
+	ids.push(await placeFromCatalog(canvas, "aws", AWS_S3_PRESET_ID));
 	await canvas.deselect();
-	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
+	ids.push(await placeFromCatalog(canvas, "aws", AWS_S3_PRESET_ID));
 	await canvas.deselect();
-
-	await canvas.closeStencilLibrary();
 
 	return ids;
 }
 
 test.describe("plugin coexistence", () => {
-	test("mounts every plugin and lays the toolbar out with no duplicates", async ({
+	test("mounts every plugin and lays the rail out with no duplicates", async ({
 		canvas,
 	}) => {
 		await expect(canvas.page.locator('[data-kind="canvas"]')).toBeVisible();
 
+		// No shape tool lives on the toolbar: neither a preset nor a category button.
+		// Visible first, so the empty counts below are not just an absent toolbar.
+		await expect(canvas.page.locator(selectors.toolbar)).toBeVisible();
+		await expect(
+			canvas.page.locator(`${selectors.toolbar} [data-action^="item:"]`),
+		).toHaveCount(0);
+		await expect(
+			canvas.page.locator(`${selectors.toolbar} [data-action^="toggle:"]`),
+		).toHaveCount(0);
+
 		// Exact equality, not containment: it pins the order and rules out both a
 		// missing entry and a second copy of one.
-		expect(await readPresetIds(canvas, selectors.toolbar)).toEqual(
-			PINNED_PRESET_IDS,
+		expect(await readPresetIds(canvas, selectors.rail)).toEqual(
+			RAIL_PRESET_IDS,
 		);
 
 		const categoryIds = await canvas.page
@@ -312,28 +309,31 @@ test.describe("plugin coexistence", () => {
 					(element.getAttribute("data-action") ?? "").slice("toggle:".length),
 				),
 			);
-		expect(categoryIds).toEqual([FLYOUT_CATEGORY.id]);
+		expect(categoryIds).toEqual([PINNED_CATEGORY.id]);
 	});
 
-	test("fills the shape library with every plugin's own presets", async ({
+	test("fills the catalog with every plugin's own presets", async ({
 		canvas,
 	}) => {
-		await canvas.openStencilLibrary();
+		await canvas.openCatalog();
 
 		const sectionIds = await canvas.page
-			.locator(LIBRARY_SECTION_HEADERS)
+			.locator(selectors.catalogRows)
 			.evaluateAll((elements) =>
 				elements.map((element) =>
-					(element.getAttribute("data-action") ?? "").slice("section:".length),
+					(element.getAttribute("data-action") ?? "").slice("show:".length),
 				),
 			);
 		expect(sectionIds).toEqual(LIBRARY_SECTIONS.map((section) => section.id));
+		await canvas.closeStencilPanel();
 
 		const allPresetIds: string[] = [];
 		for (const section of LIBRARY_SECTIONS) {
-			const presetIds = await readSectionPresetIds(canvas, section.id);
+			await openCategoryFromCatalog(canvas, section.id);
+			const presetIds = await readPresetIds(canvas, selectors.stencilPanel);
 			expect(presetIds).toContain(section.ownPresetId);
 			allPresetIds.push(...presetIds);
+			await canvas.closeStencilPanel();
 		}
 
 		// Every plugin owns a disjoint set of presets, so an id filed under two
@@ -341,13 +341,13 @@ test.describe("plugin coexistence", () => {
 		expect(findDuplicates(allPresetIds)).toEqual([]);
 	});
 
-	test("opens the one category left on the toolbar", async ({ canvas }) => {
-		await canvas.page.click(selectors.categoryButton(FLYOUT_CATEGORY.id));
-		const flyoutSelector = selectors.categoryFlyout(FLYOUT_CATEGORY.id);
+	test("opens the pinned category from the rail", async ({ canvas }) => {
+		await canvas.page.click(selectors.categoryButton(PINNED_CATEGORY.id));
+		const flyoutSelector = selectors.categoryPanel(PINNED_CATEGORY.id);
 		await expect(canvas.page.locator(flyoutSelector)).toBeVisible();
 
 		const presetIds = await readPresetIds(canvas, flyoutSelector);
-		expect(presetIds).toContain(FLYOUT_CATEGORY.ownPresetId);
+		expect(presetIds).toContain(PINNED_CATEGORY.ownPresetId);
 
 		await canvas.page.keyboard.press("Escape");
 		await expect(canvas.page.locator(flyoutSelector)).toHaveCount(0);

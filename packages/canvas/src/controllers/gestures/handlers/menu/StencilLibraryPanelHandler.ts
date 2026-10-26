@@ -1,29 +1,41 @@
+import { parseMenuAction } from "./utils/menuActions";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
+/** Pins a library category to the end of the rail, or takes it off when pinned. */
+const togglePinnedCategory = (
+	state: CanvasControllerState,
+	categoryId: string,
+): CanvasControllerState => ({
+	...state,
+	pinnedCategoryIds: state.pinnedCategoryIds.includes(categoryId)
+		? state.pinnedCategoryIds.filter((pinnedId) => pinnedId !== categoryId)
+		: [...state.pinnedCategoryIds, categoryId],
+});
+
 /**
- * GestureHandler for the shape library sidebar's own chrome.
+ * GestureHandler for the chrome of the two stencil panels: the flyout over the
+ * canvas and the docked panel beside it.
  * Handles events with targetKind "menu" and targetId "stencil-library-panel".
  *
- * targetAction format:
- * - `section:{sectionId}` → collapse that section, or expand it when already
- *   collapsed (click acts as a toggle).
- * - `close` → close the panel.
+ * targetAction format (built with menuActions):
+ * - `dock` → the flyout becomes the docked panel, showing what it showed.
+ * - `undock` → the docked panel becomes the flyout, showing what it showed.
+ * - `close` → close whichever of the two is open (they never coexist).
+ * - `show:{categoryId}` → the open panel switches to that category (a catalog row).
+ * - `pin:{categoryId}` → pin that category to the rail, or unpin it.
  *
- * The stencil items inside the panel carry their own targetId
+ * The stencil items inside the panels carry their own targetId
  * ("stencil-library"), so click-to-draw and drag-to-place still route to
- * StencilLibraryItemHandler untouched. Everything else in the panel — the
- * background, the header, the padding around a section — lands here and does
- * only the light dismiss the toolbar does: a press closes the context menu and
- * any open category flyout, and leaves the selection alone. The panel itself is
- * persistent chrome, so a press on it never closes the panel.
+ * StencilLibraryItemHandler untouched, which is also what closes the flyout once
+ * a preset is picked. Everything else in a panel — the background, the header,
+ * the padding — lands here and only closes the context menu: a press inside the
+ * flyout must not close it, and the docked panel is persistent chrome.
  */
-const SECTION_PREFIX = "section:";
-const CLOSE_ACTION = "close";
-
 export const StencilLibraryPanelHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		return (
@@ -37,42 +49,66 @@ export const StencilLibraryPanelHandler: GestureHandler = {
 		let nextState = state;
 
 		if (event.type === "pressed") {
-			nextState = {
-				...nextState,
-				contextMenuPosition: null,
-				stencilLibraryOpenCategory: null,
-			};
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		if (!isActivation || event.targetAction === undefined) {
+		const action = parseMenuAction(event.targetAction);
+		if (!isActivation || action === null) {
 			return nextState;
 		}
 
-		if (event.targetAction === CLOSE_ACTION) {
-			return {
-				...nextState,
-				stencilLibraryPanel: {
-					...nextState.stencilLibraryPanel,
-					isOpen: false,
-				},
-			};
+		switch (action.kind) {
+			case "dock":
+				return nextState.stencilFlyout === null
+					? nextState
+					: {
+							...nextState,
+							stencilFlyout: null,
+							stencilLibraryPanel: {
+								isOpen: true,
+								content: nextState.stencilFlyout,
+							},
+						};
+			case "undock":
+				return nextState.stencilLibraryPanel.isOpen
+					? {
+							...nextState,
+							stencilFlyout: nextState.stencilLibraryPanel.content,
+							stencilLibraryPanel: {
+								...nextState.stencilLibraryPanel,
+								isOpen: false,
+							},
+						}
+					: nextState;
+			case "close":
+				return {
+					...nextState,
+					stencilFlyout: null,
+					stencilLibraryPanel: {
+						...nextState.stencilLibraryPanel,
+						isOpen: false,
+					},
+				};
+			case "show": {
+				const content = {
+					kind: "category",
+					categoryId: action.categoryId,
+				} as const;
+				if (nextState.stencilLibraryPanel.isOpen) {
+					return {
+						...nextState,
+						stencilLibraryPanel: { isOpen: true, content },
+					};
+				}
+				return nextState.stencilFlyout === null
+					? nextState
+					: { ...nextState, stencilFlyout: content };
+			}
+			case "pin":
+				return togglePinnedCategory(nextState, action.categoryId);
+			default:
+				return nextState;
 		}
-
-		if (event.targetAction.startsWith(SECTION_PREFIX)) {
-			const sectionId = event.targetAction.slice(SECTION_PREFIX.length);
-			const collapsedIds = nextState.stencilLibraryPanel.collapsedSectionIds;
-			return {
-				...nextState,
-				stencilLibraryPanel: {
-					...nextState.stencilLibraryPanel,
-					collapsedSectionIds: collapsedIds.includes(sectionId)
-						? collapsedIds.filter((id) => id !== sectionId)
-						: [...collapsedIds, sectionId],
-				},
-			};
-		}
-
-		return nextState;
 	},
 };

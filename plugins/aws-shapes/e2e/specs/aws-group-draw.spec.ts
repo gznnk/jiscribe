@@ -1,7 +1,7 @@
 import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
-/** The frame category put on the toolbar (awsGroupStencilCategory.id). */
+/** The frame category pinned to the rail (awsGroupStencilCategory.id). */
 const CATEGORY = "aws-group";
 
 const VPC_PRESET = "awsGroupVpc";

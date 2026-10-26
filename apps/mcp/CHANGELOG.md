@@ -13,6 +13,16 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
+## [Unreleased]
+
+### Changed
+
+- **The viewer's shape tools moved to a rail at the left of the canvas.** The
+  six presets the toolbar used to carry sit on the rail, with the Flowchart
+  category pinned below them and a "Find Shapes" button opening every category
+  of the standard set; a category opens over the canvas and can be kept open
+  beside it. The pins are not remembered between sessions yet.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

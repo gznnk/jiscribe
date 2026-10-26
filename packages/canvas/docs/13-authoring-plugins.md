@@ -330,10 +330,8 @@ import {
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [annotationPlugin],
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilCategory", category: annotationStencilCategory },
-	],
+	stencilLibrarySections: [annotationStencilCategory],
+	pinnedCategoryIds: [annotationStencilCategory.id],
 });
 ```
 
@@ -342,17 +340,21 @@ Two things that file has to get right:
 - **Load the plugin by its own package name**, not through `../../src`. That is the route an
   external author has, and taking it is what proves the package's `exports` suffice on their
   own.
-- **Keep `toolbarItems` down to what the specs draw** — this plugin's pinned presets or its
-  category (as a `{ type: "stencilCategory", category }` item), plus `{ type: "stencilPreset", presetId: "rect" }`, which is always required
-  because `CanvasDriver.goto()` waits for the "Rectangle" tool button before handing the page
-  over. The items are the bar's shape tools only: the kit
-  (`packages/canvas/e2e/kit/mountPluginHarness.tsx`) puts the shape library toggle and a
-  divider before them and appends the rest of core's default bar after them (undo / redo,
-  zoom, the properties toggle and so on), so the page keeps those without naming them. The
-  toggle and its divider survive only when `stencilLibrarySections` is passed; without it
-  they are dropped at resolution, so the example above shows no toggle. A plugin's presets
-  and categories are absent from the canvas default bar, so without items the specs cannot
-  reach them at all.
+- **Put on the canvas only what the specs draw**, through the three stencil parameters of
+  the kit (`packages/canvas/e2e/kit/mountPluginHarness.tsx`):
+  - `railPresetIds` — the presets at the top of the rail, for a plugin preset a spec places
+    from its rail button (`CanvasDriver.drawShape` / `placeShape`). Omitted, the rail holds
+    core's primitives. A list passed here must keep `rect`, because `CanvasDriver.goto()`
+    waits for the "Rectangle" tool before handing the page over.
+  - `stencilLibrarySections` — the library, for a plugin category: the catalog lists it,
+    and the catalog button is drawn only while it holds a section.
+  - `pinnedCategoryIds` — the sections pinned on the rail at mount, for a spec opening a
+    category from its rail button (`CanvasDriver.drawShapeFromFlyout` /
+    `placeShapeFromFlyout`). Unpinned, a category is reached through the catalog only.
+
+  The toolbar is always core's default bar (undo / redo, zoom, the properties toggle and
+  so on). A plugin's presets and categories are absent from the canvas defaults, so without
+  these parameters the specs cannot reach them at all.
 
 Specs take everything from the spec entry:
 
@@ -405,7 +407,7 @@ The playbook for moving a built-in shape into a plugin.
    - the `ObjectTypes` union (`packages/doc/src/model/objects/types/ObjectType.ts`)
    - the headless `builtinObjectDocDefinitions` (`packages/doc/src/plugin/builtinObjectDocDefinitions.ts`)
    - the UI `BUILTIN_OBJECT_DEFINITIONS` (`packages/canvas/src/controllers/registries/applyObjectDefinition.ts`)
-   - the places naming its preset: `DEFAULT_TOOLBAR_TOOLS_SECTION` (`packages/canvas/src/controllers/ui/menu/Toolbar/toolbarSections.ts`) and `basicStencilCategory`'s `presetIds` (`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`)
+   - the places naming its preset: `DEFAULT_RAIL_PRESET_IDS` (`packages/canvas/src/controllers/ui/menu/StencilRail/stencilRailConfig.ts`) and `basicStencilCategory`'s `presetIds` (`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`)
 4. **Handle the fallout in the engine's own tests.** Engine tests that used the shape
    as a representative — "a shape with an outline", "a click-placed shape" — lose
    their subject. Declare a minimal type in the test instead of reaching for another
@@ -416,25 +418,28 @@ The playbook for moving a built-in shape into a plugin.
 6. **Wire every host** (below).
 7. **Verify** (below).
 
-Toolbar placement is a separate decision from packaging: a category
+Placement is a separate decision from packaging: a category
 (`containerStencilCategory`, `annotationStencilCategory`), typed `StencilCategory`,
-is owned by the plugin and composed by the host. One declaration serves two
-places — `stencilLibrary.sections`, where it becomes a section of the shape
-library sidebar, and optionally `toolbar.sections`, where wrapped as
-`{ type: "stencilCategory", category }` it becomes a category flyout on the bar. The standard set files every plugin category as a sidebar
-section in `standardStencilLibrarySections` (`packages/standard-shapes`) and pins
-only presets on the bar. Plugin categories are not part of
-`DEFAULT_TOOLBAR_SECTIONS`, so a host that uses the default bar unchanged and
+is owned by the plugin and composed by the host into `stencilLibrary.sections`,
+where it becomes a section of the library — a row of the rail's catalog, and, once
+pinned, a button on the rail opening its presets in a panel. Which categories start
+pinned is the host's `initialConfig.pinnedCategoryIds`; after that the pins are the
+user's. A plugin preset can also sit on the rail itself, named in `rail.presetIds`.
+The standard set files every plugin category in `standardStencilLibrarySections`
+(`packages/standard-shapes`), puts six presets on the rail
+(`standardRailPresetIds`) and pins `standardDefaultPinnedCategoryIds` to start
+with. Plugin categories are not part of any canvas default, so a host that
 declares no library will not show the shape until it adds the category.
 
 A category with more presets than it can list (an icon set with hundreds of
 glyphs) lists a curated few in `presetIds`, registers every preset as a stencil all
 the same, and declares `search` (`StencilCategorySearch`): a function answering a
-sidebar query with registered preset ids in rank order, cut to the category's own
-cap, plus `matchCount` before the cut. The sidebar shows those after the label
-matches of the listed presets, drops ids already shown or not registered, adds a
-line when anything was cut, and while not searching points to the search from under
-the section. The toolbar flyout ignores `search` and shows `presetIds` only.
+library query with registered preset ids in rank order, cut to the category's own
+cap, plus `matchCount` before the cut. A stencil panel — the catalog searching every
+category, or the category's own panel searching it alone — shows those after the
+label matches of the listed presets, drops ids already shown or not registered, adds
+a line when anything was cut, and in the category's panel, while not searching,
+points to the search from under the listed presets.
 
 ## Wiring checklist
 
@@ -449,7 +454,7 @@ When a new plugin package joins the shipped set, wire both halves as well.
 
 UI plugin (`somePlugin`):
 
-- [ ] `packages/standard-shapes/src/index.ts` (`standardPlugins`, and `standardStencilLibrarySections`, which puts the shapes in the sidebar; the VSCode extension, the MCP viewer and the CLI preview all take the set from there)
+- [ ] `packages/standard-shapes/src/index.ts` (`standardPlugins`, and `standardStencilLibrarySections`, which puts the shapes in the library; the VSCode extension, the MCP viewer and the CLI preview all take the set from there)
 - [ ] `apps/canvas-examples/src/examples/plugins.tsx` (`plugins` and `stencilLibrarySections`)
 - [ ] `apps/canvas-examples/e2e/harness/main.tsx` (`plugins` and `stencilLibrarySections`)
 

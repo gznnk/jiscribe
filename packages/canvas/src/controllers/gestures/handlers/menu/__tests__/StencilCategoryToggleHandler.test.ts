@@ -1,14 +1,30 @@
 import { describe, expect, it } from "vitest";
 
-import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	StencilLibraryPanelState,
+	StencilPanelContent,
+} from "../../../../CanvasTypes";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { StencilCategoryToggleHandler } from "../StencilCategoryToggleHandler";
 
+const category = (categoryId: string): StencilPanelContent => ({
+	kind: "category",
+	categoryId,
+});
+
+const CLOSED_DOCK: StencilLibraryPanelState = {
+	isOpen: false,
+	content: { kind: "catalog" },
+};
+
 const makeState = (
-	stencilLibraryOpenCategory: string | null = null,
+	stencilFlyout: StencilPanelContent | null = null,
+	stencilLibraryPanel: StencilLibraryPanelState = CLOSED_DOCK,
 ): CanvasControllerState =>
 	({
-		stencilLibraryOpenCategory,
+		stencilFlyout,
+		stencilLibraryPanel,
 		contextMenuPosition: { x: 1, y: 1 },
 	}) as unknown as CanvasControllerState;
 
@@ -26,6 +42,14 @@ const makeEvent = (
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
+
+const toggle = (state: CanvasControllerState, categoryId: string) =>
+	StencilCategoryToggleHandler.handle(
+		state,
+		makeEvent("click", "stencil-category", `toggle:${categoryId}`),
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		{} as any,
+	);
 
 describe("StencilCategoryToggleHandler", () => {
 	describe("supports", () => {
@@ -48,44 +72,67 @@ describe("StencilCategoryToggleHandler", () => {
 		});
 	});
 
-	it("a click opens the category when none is open", () => {
-		const next = StencilCategoryToggleHandler.handle(
-			makeState(null),
-			makeEvent("click", "stencil-category", "toggle:flowchart"),
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			{} as any,
-		);
-		expect(next.stencilLibraryOpenCategory).toBe("flowchart");
+	it("a click opens the category in the flyout when nothing is open", () => {
+		const next = toggle(makeState(null), "flowchart");
+		expect(next.stencilFlyout).toEqual(category("flowchart"));
+		expect(next.stencilLibraryPanel.isOpen).toBe(false);
 	});
 
-	it("a click on the already-open category closes it (toggle)", () => {
-		const next = StencilCategoryToggleHandler.handle(
-			makeState("flowchart"),
-			makeEvent("click", "stencil-category", "toggle:flowchart"),
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			{} as any,
-		);
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+	it("a click on the category the flyout shows closes it (toggle)", () => {
+		const next = toggle(makeState(category("flowchart")), "flowchart");
+		expect(next.stencilFlyout).toBeNull();
 	});
 
-	it("a click on a different category switches to it", () => {
-		const next = StencilCategoryToggleHandler.handle(
-			makeState("flowchart"),
-			makeEvent("click", "stencil-category", "toggle:general"),
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			{} as any,
+	it("a click on a different category switches the flyout to it", () => {
+		const next = toggle(makeState(category("flowchart")), "general");
+		expect(next.stencilFlyout).toEqual(category("general"));
+	});
+
+	it("a click switches the flyout from the catalog to the category", () => {
+		const next = toggle(makeState({ kind: "catalog" }), "general");
+		expect(next.stencilFlyout).toEqual(category("general"));
+	});
+
+	it("while docked, a click shows the category in the docked panel, not in a flyout", () => {
+		const next = toggle(
+			makeState(null, { isOpen: true, content: { kind: "catalog" } }),
+			"flowchart",
 		);
-		expect(next.stencilLibraryOpenCategory).toBe("general");
+		expect(next.stencilFlyout).toBeNull();
+		expect(next.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			content: category("flowchart"),
+		});
+	});
+
+	it("while docked, a click on the category it shows closes the docked panel", () => {
+		const next = toggle(
+			makeState(null, { isOpen: true, content: category("flowchart") }),
+			"flowchart",
+		);
+		expect(next.stencilFlyout).toBeNull();
+		expect(next.stencilLibraryPanel.isOpen).toBe(false);
+		// Kept for the next dock.
+		expect(next.stencilLibraryPanel.content).toEqual(category("flowchart"));
+	});
+
+	it("a closed docked panel's leftover content does not count as shown", () => {
+		const next = toggle(
+			makeState(null, { isOpen: false, content: category("flowchart") }),
+			"flowchart",
+		);
+		expect(next.stencilFlyout).toEqual(category("flowchart"));
+		expect(next.stencilLibraryPanel.isOpen).toBe(false);
 	});
 
 	it("a pressed closes the context menu without changing the open category", () => {
 		const next = StencilCategoryToggleHandler.handle(
-			makeState("flowchart"),
+			makeState(category("flowchart")),
 			makeEvent("pressed", "stencil-category", "toggle:flowchart"),
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			{} as any,
 		);
 		expect(next.contextMenuPosition).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBe("flowchart");
+		expect(next.stencilFlyout).toEqual(category("flowchart"));
 	});
 });

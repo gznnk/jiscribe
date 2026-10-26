@@ -156,7 +156,7 @@ async function rewriteText(
 }
 
 test.describe("text", () => {
-	test("places a text object from the toolbar, carrying the default word", async ({
+	test("places a text object from the rail, carrying the default word", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Text");

@@ -239,7 +239,7 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 			...stateWith(connectorWithVertices()),
 			selection: selectionOf(["other"], vertexPartSelection(0)),
 			objectMenuOpenId: "style",
-			stencilLibraryOpenCategory: "flowchart",
+			stencilFlyout: { kind: "category", categoryId: "flowchart" },
 			contextMenuPosition: { x: 1, y: 1 },
 		} as unknown as CanvasControllerState;
 
@@ -253,7 +253,7 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 		expect(next.selection.part).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 		expect(next.contextMenuPosition).toBeNull();
 		expect(next.drag?.edgeScrollEnabled).toBe(true);
 		expect(next.drag?.kind).toBe("segment");

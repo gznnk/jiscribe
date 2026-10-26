@@ -6,18 +6,12 @@ import { RedoIcon } from "../../icons/RedoIcon";
 import { UndoIcon } from "../../icons/UndoIcon";
 import { ZoomToFitIcon } from "../../icons/ZoomToFitIcon";
 import type { StencilIconProps } from "../../objects/Stencil";
-import type { StencilCategory } from "../../objects/StencilCategory";
 
 /**
  * One control on the toolbar. The discriminant is `type`, matching
- * `ObjectMenuItem`.
+ * `ObjectMenuItem`. The shape tools are not among them: presets and library
+ * categories live on the stencil rail at the left (the `rail` Canvas prop).
  *
- * - `stencilPreset`: a shape button pinned directly on the bar. An id naming no
- *   registered preset (a plugin the host did not apply) is silently dropped.
- * - `stencilCategory`: a category button opening a flyout that lists the category's
- *   `presetIds` in order. The category stays nested rather than flattened so the
- *   same {@link StencilCategory} object can also be passed to
- *   `stencilLibrary.sections`.
  * - `command`: a button running a registered command through the command system
  *   (`data-action="command:{id}"` → ToolbarHandler → handleCommand), disabled from
  *   the command's own `canExecute`. The icon rides on the item because `Command`
@@ -26,9 +20,8 @@ import type { StencilCategory } from "../../objects/StencilCategory";
  * - `zoom`: the composite `−` / readout / `+` group. Engine-owned rather than
  *   three commands, because the readout shows the current zoom and no command
  *   can express a value.
- * - `stencilLibraryToggle` / `propertyPanelToggle`: the two sidebar toggles.
- *   Engine-owned for the same reason: their pressed look comes from reducer
- *   state. The library toggle is dropped when the host declared no library.
+ * - `propertyPanelToggle`: the properties sidebar toggle. Engine-owned for the
+ *   same reason: its pressed look comes from reducer state.
  * - `divider`: a hairline. One left at either end of a section, or next to
  *   another divider after the drops above, is cleaned away.
  * - `slot`: finished host UI. The engine only lends the place — it passes no
@@ -36,8 +29,6 @@ import type { StencilCategory } from "../../objects/StencilCategory";
  *   `onClick` works.
  */
 export type ToolbarItem =
-	| { type: "stencilPreset"; presetId: string }
-	| { type: "stencilCategory"; category: StencilCategory }
 	| {
 			type: "command";
 			commandId: string;
@@ -50,7 +41,6 @@ export type ToolbarItem =
 			label?: string | LocaleMessages<string>;
 	  }
 	| { type: "zoom" }
-	| { type: "stencilLibraryToggle" }
 	| { type: "propertyPanelToggle" }
 	| { type: "divider" }
 	| { type: "slot"; id: string; node: React.ReactNode };
@@ -58,9 +48,8 @@ export type ToolbarItem =
 /**
  * A run of toolbar items sharing one end of the bar.
  *
- * Sections are the single source of order and of category metadata: they name,
- * in display order, everything on the bar. The preset registry only answers
- * "what presets exist" — never "in what order" or "under which category".
+ * Sections are the single source of order: they name, in display order,
+ * everything on the bar.
  *
  * Hosts replace the whole array via the `toolbar.sections` Canvas prop; the
  * default bar is itself such an array ({@link DEFAULT_TOOLBAR_SECTIONS}).
@@ -77,48 +66,22 @@ export type ToolbarSection = {
 	items: ToolbarItem[];
 };
 
-// The bar is laid out by three rules, which the sections below follow and a host
+// The bar is laid out by two rules, which the sections below follow and a host
 // replacing them is meant to keep:
-//   1. A sidebar toggle sits at the edge its panel opens on — the shape library
-//      at the far left, the properties panel at the far right.
-//   2. The start side holds what changes the document (placing shapes, undo /
-//      redo); the end side what does not (zoom, help, and whatever view-side UI
-//      the host adds for itself).
-//   3. Only the basic presets are pinned on the bar, as shortcuts; the shape
-//      library sidebar is the full catalogue. They run area → line → text.
+//   1. The start side holds what changes the document (undo / redo, and the
+//      host's document UI such as a file menu); the end side what does not
+//      (zoom, help, and whatever view-side UI the host adds for itself).
+//   2. The properties toggle keeps the far right, the edge its panel opens on.
 
 /**
- * The shape tools: the shape library toggle at the far left, then core's
- * presets pinned directly (the classic direct-placement UX). Core owns the basic
- * primitives and nothing else, so those are the whole section; anything a plugin
- * supplies (the annotation / flowchart / container / general categories, the
- * `markdown` / `sticky` presets) is shown only when the host names it in its own
- * `toolbar.sections`.
- */
-export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
-	id: "tools",
-	items: [
-		{ type: "stencilLibraryToggle" },
-		{ type: "divider" },
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilPreset", presetId: "ellipse" },
-		{ type: "stencilPreset", presetId: "polygon" },
-		{ type: "stencilPreset", presetId: "polyline" },
-		{ type: "stencilPreset", presetId: "text" },
-	],
-};
-
-/**
- * Undo / redo, kept on the start side as document-changing operations but in a
- * section of their own so a host replacing the shape tools does not have to
- * restate them. The leading divider marks the boundary with whatever tools
- * precede it; the whole section disappears when the host switched both commands
- * off.
+ * Undo / redo, kept on the start side as document-changing operations. The
+ * whole section disappears when the host switched both commands off. A host
+ * putting its own document UI before it ends that section with a divider, which
+ * is kept as the boundary between the two.
  */
 export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
 	id: "history",
 	items: [
-		{ type: "divider" },
 		{ type: "command", commandId: "undo", icon: UndoIcon },
 		{ type: "command", commandId: "redo", icon: RedoIcon },
 	],
@@ -145,9 +108,8 @@ export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
 };
 
 /**
- * The properties toggle alone at the far right, mirroring the shape library
- * toggle at the far left. Its leading divider separates it from whatever the
- * host packed against the end before it.
+ * The properties toggle alone at the far right. Its leading divider separates it
+ * from whatever the host packed against the end before it.
  */
 export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
 	id: "properties",
@@ -155,9 +117,8 @@ export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
 	items: [{ type: "divider" }, { type: "propertyPanelToggle" }],
 };
 
-/** The default bar: shape tools and history on the left, view and properties right. */
+/** The default bar: history on the left, view and properties right. */
 export const DEFAULT_TOOLBAR_SECTIONS: ToolbarSection[] = [
-	DEFAULT_TOOLBAR_TOOLS_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,

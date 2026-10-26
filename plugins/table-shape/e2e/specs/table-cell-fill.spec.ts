@@ -24,7 +24,7 @@ const BLUE = "#3b82f6";
 /** What a cell painting nothing of its own reports, as the browser computes a transparent fill. */
 const UNPAINTED = "rgba(0, 0, 0, 0)";
 
-/** Every cell of the 2x2 table the toolbar places. */
+/** Every cell of the 2x2 table the rail places. */
 const CELL_IDS = ["r0c0", "r0c1", "r1c0", "r1c1"];
 
 /** The menu section of the background color (BackgroundColorMenu). */

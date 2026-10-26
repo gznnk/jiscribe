@@ -10,8 +10,5 @@ mountPluginHarness({
 	// The rect preset is core's; it is here because CanvasDriver.goto() waits for the
 	// "Rectangle" tool. The markdown preset comes from this package's own stencils and is
 	// the "Markdown" tool button the specs draw with.
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilPreset", presetId: "markdown" },
-	],
+	railPresetIds: ["rect", "markdown"],
 });

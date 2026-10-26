@@ -2,9 +2,9 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 /**
- * Dragging a table out of the shape library. A table is the first shipped shape
- * whose box is measured rather than stored, which is what made the ghost and the
- * drop disagree: the ghost drew the grid around the cursor while the drop put the
+ * Dragging a table out of the shape library (the flyout of the basic category,
+ * pinned to the rail). A table is the first shipped shape whose box is measured
+ * rather than stored, which is what made the ghost and the drop disagree: the ghost drew the grid around the cursor while the drop put the
  * grid's top-left there, so the shape jumped by half its size on release.
  *
  * Both halves are pinned here because either one alone would pass while the pair
@@ -26,6 +26,17 @@ async function drawnBox(
 	}, objectId);
 }
 
+/**
+ * Opens the pinned basic category's flyout and returns its table item. The table is
+ * on the rail as well; the panel-scoped selector keeps the two apart.
+ */
+async function openTableItemInBasicFlyout(canvas: CanvasDriver) {
+	await canvas.page.click(selectors.categoryButton("basic"));
+	const item = canvas.page.locator(selectors.stencilPanelItem("table"));
+	await expect(item).toBeVisible();
+	return item;
+}
+
 const GHOST_ID = "drag-ghost";
 /** Well inside the canvas and clear of the top edge zone, which auto-scrolls. */
 const DROP_POINT = { x: 500, y: 320 };
@@ -34,10 +45,7 @@ test.describe("dragging a table out of the shape library", () => {
 	test("drops it where the ghost was, centered on the cursor", async ({
 		canvas,
 	}) => {
-		await canvas.openStencilLibrary();
-		const item = canvas.page.locator(
-			selectors.stencilLibraryPanelItem("table"),
-		);
+		const item = await openTableItemInBasicFlyout(canvas);
 		const to = canvas.toScreen(DROP_POINT);
 
 		// hover() presses from the item's own center, so the drag needs no measuring.
@@ -82,16 +90,13 @@ test.describe("dragging a table out of the shape library", () => {
 	});
 
 	test("paints the ghost on an empty canvas", async ({ canvas }) => {
-		await canvas.openStencilLibrary();
-		const item = canvas.page.locator(
-			selectors.stencilLibraryPanelItem("table"),
-		);
+		const item = await openTableItemInBasicFlyout(canvas);
 		const to = canvas.toScreen(DROP_POINT);
 		const around = { x: to.x - 40, y: to.y - 20, width: 80, height: 40 };
 		const before = await canvas.page.screenshot({ clip: around });
 
 		const panel = await canvas.page
-			.locator(selectors.stencilLibraryPanel)
+			.locator(selectors.stencilPanel)
 			.boundingBox();
 		const itemBox = await item.boundingBox();
 

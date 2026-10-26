@@ -214,7 +214,7 @@ const deleteSelectedObjects = (
 		rootIds: stateAfterConnectors.rootIds.filter((id) => !idsToDelete.has(id)),
 		selection: EMPTY_SELECTION,
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 		lastDuplicate: null,
 		commitVersion: state.commitVersion + 1,
 	};

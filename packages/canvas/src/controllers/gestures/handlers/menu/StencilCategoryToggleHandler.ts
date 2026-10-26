@@ -1,4 +1,5 @@
 import { parseMenuAction } from "./utils/menuActions";
+import { toggleStencilPanelContent } from "../../../utils/stencilPanelContent";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -6,22 +7,20 @@ import type {
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
- * GestureHandler for the StencilLibrary category toggle buttons in the toolbar.
+ * GestureHandler for the category buttons on the stencil rail.
  * Handles events with targetKind "menu" and targetId "stencil-category".
  *
- * targetAction format: `toggle:{categoryId}` → open that category's flyout, or
- * close it if it is already the open one (click acts as a toggle).
+ * targetAction format: `toggle:{categoryId}` → show that category's presets
+ * (toggleStencilPanelContent): in the flyout over the canvas, or in the docked
+ * panel while that is open; pressed again while it is shown, the panel showing
+ * it closes.
  *
- * This handler only owns the toggle itself. Dismissal on outside interactions
- * is handled by the selection/press handlers and commands that clear
- * stencilLibraryOpenCategory (and resetUiState for bulk resets) — there is no
- * central clear in handleGesture. Most of them clear objectMenuOpenId in the
- * same breath; ToolbarHandler is the exception, closing only the flyout since a
- * toolbar press is not meant to dismiss the ObjectMenu.
- *
- * The flyout element carries this same targetId with no toggle: prefix, so a
- * press on its padding lands here and is deliberately inert (without it the
- * press would resolve to the toolbar background and close the flyout).
+ * This handler only owns the toggle itself. Dismissal of the flyout on outside
+ * interactions is handled by the selection/press handlers and commands that
+ * clear stencilFlyout (and resetUiState for bulk resets) — there is no central
+ * clear in handleGesture. Most of them clear objectMenuOpenId in the same
+ * breath; ToolbarHandler and StencilRailHandler are the exceptions, closing only
+ * the flyout since a press on the chrome is not meant to dismiss the ObjectMenu.
  */
 export const StencilCategoryToggleHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -43,14 +42,10 @@ export const StencilCategoryToggleHandler: GestureHandler = {
 		const isActivation = event.type === "click" || event.type === "doubleClick";
 		const action = parseMenuAction(event.targetAction);
 		if (isActivation && action?.kind === "toggle") {
-			const categoryId = action.id;
-			return {
-				...nextState,
-				stencilLibraryOpenCategory:
-					nextState.stencilLibraryOpenCategory === categoryId
-						? null
-						: categoryId,
-			};
+			return toggleStencilPanelContent(nextState, {
+				kind: "category",
+				categoryId: action.id,
+			});
 		}
 
 		return nextState;

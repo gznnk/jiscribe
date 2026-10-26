@@ -105,7 +105,7 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		expect(next.drag?.kind).toBe("selectionControl");
 		expect(next.drag?.edgeScrollEnabled).toBe(true);
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 	});
 
 	it("drag writes the definition's result back via COW", () => {

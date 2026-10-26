@@ -19,7 +19,7 @@ const baseState = (
 		mode: { kind: "normal" },
 		drag: null,
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -104,10 +104,11 @@ describe("EscapeSelectionCommand", () => {
 	});
 
 	it("closes an open StencilLibrary category flyout", () => {
-		const state = baseState({ stencilLibraryOpenCategory: "flowchart" });
+		const state = baseState({
+			stencilFlyout: { kind: "category", categoryId: "flowchart" },
+		});
 		expect(
-			EscapeSelectionCommand.execute(state, registries)
-				.stencilLibraryOpenCategory,
+			EscapeSelectionCommand.execute(state, registries).stencilFlyout,
 		).toBeNull();
 	});
 

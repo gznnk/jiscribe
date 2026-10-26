@@ -4,6 +4,7 @@ import { PropertyPanelHandler } from "./PropertyPanelHandler";
 import { StencilCategoryToggleHandler } from "./StencilCategoryToggleHandler";
 import { StencilLibraryItemHandler } from "./StencilLibraryItemHandler";
 import { StencilLibraryPanelHandler } from "./StencilLibraryPanelHandler";
+import { StencilRailHandler } from "./StencilRailHandler";
 import { ToolbarHandler } from "./ToolbarHandler";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
@@ -22,6 +23,7 @@ export const MENU_HANDLERS: readonly GestureHandler[] = [
 	StencilLibraryPanelHandler,
 	PropertyPanelHandler,
 	StencilCategoryToggleHandler,
+	StencilRailHandler,
 	ToolbarHandler,
 	ContextMenuHandler,
 	ObjectMenuHandler,
@@ -31,8 +33,8 @@ export const MENU_HANDLERS: readonly GestureHandler[] = [
  * Main handler for all menu-level events.
  * Routes each event to the first sub-handler whose supports() accepts it. The
  * sub-handlers split on targetId (stencil-library / stencil-library-panel /
- * property-panel / stencil-category / toolbar / context-menu / object-menu) and
- * are mutually
+ * property-panel / stencil-category / stencil-rail / toolbar / context-menu /
+ * object-menu) and are mutually
  * exclusive, so the array order never decides routing.
  *
  * A drag on a menu is a `"menu"` one unless the sub-handler names it otherwise

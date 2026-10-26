@@ -94,6 +94,6 @@ export const togglePartByClick = (
 					: { kind: part.kind, ranges: nextRanges },
 		},
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 	};
 };

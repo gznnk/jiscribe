@@ -566,7 +566,7 @@ describe("CanvasEventHandler", () => {
 			multiSelectGroup: { id: "kept" },
 			contextMenuPosition: { clientX: 10, clientY: 10 },
 			objectMenuOpenId: "a",
-			stencilLibraryOpenCategory: "flowchart",
+			stencilFlyout: { kind: "category", categoryId: "flowchart" },
 		} as Partial<CanvasControllerState>);
 		const nextState = CanvasEventHandler.handle(
 			state,
@@ -581,7 +581,7 @@ describe("CanvasEventHandler", () => {
 		expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
 		expect(nextState.contextMenuPosition).toBeNull();
 		expect(nextState.objectMenuOpenId).toBeNull();
-		expect(nextState.stencilLibraryOpenCategory).toBeNull();
+		expect(nextState.stencilFlyout).toBeNull();
 	});
 
 	// A context-menu gesture selects what it landed on, so the menu acts on the
@@ -789,13 +789,13 @@ describe("CanvasEventHandler", () => {
 	it("a background press closes an open StencilLibrary category flyout", () => {
 		const state = makeState({
 			mode: { kind: "normal" },
-			stencilLibraryOpenCategory: "flowchart",
+			stencilFlyout: { kind: "category", categoryId: "flowchart" },
 		} as Partial<CanvasControllerState>);
 		const nextState = CanvasEventHandler.handle(
 			state,
 			makeEvent({ type: "pressed", button: 0 }),
 			registries,
 		);
-		expect(nextState.stencilLibraryOpenCategory).toBeNull();
+		expect(nextState.stencilFlyout).toBeNull();
 	});
 });

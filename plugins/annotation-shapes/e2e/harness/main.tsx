@@ -7,11 +7,11 @@ import {
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [annotationPlugin],
-	// The annotation category is plugin-supplied and absent from core's default bar, and
-	// every spec draws out of its flyout. The rect preset is there for CanvasDriver.goto(),
-	// which waits on the "Rectangle" tool button before handing the page over.
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilCategory", category: annotationStencilCategory },
-	],
+	// The annotation category is plugin-supplied and absent from core's default rail, and
+	// every spec draws out of its flyout, so it is pinned. The rect preset is there for
+	// CanvasDriver.goto(), which waits on the "Rectangle" tool button before handing the
+	// page over.
+	railPresetIds: ["rect"],
+	stencilLibrarySections: [annotationStencilCategory],
+	pinnedCategoryIds: [annotationStencilCategory.id],
 });

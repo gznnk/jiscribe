@@ -249,7 +249,7 @@ export const createCanvasReducer =
 						committedResult.multiSelectGroup,
 					),
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					stencilFlyout: null,
 				};
 				if (state.mode.kind !== "textEdit") {
 					return selectedResult;

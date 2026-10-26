@@ -6,9 +6,9 @@ import { toAwsIconStencilId } from "./toAwsIconStencilId";
 import { searchAwsIcons } from "../schema/icon/searchAwsIcons";
 
 /**
- * The awsIcon category. Core's default bar does not carry it, so a host puts
- * it into `stencilLibrary.sections` (a sidebar section) or into
- * `toolbar.sections` as `{ type: "stencilCategory", category }` (a flyout).
+ * The awsIcon category. Plugin-supplied, so a host puts it into
+ * `stencilLibrary.sections`, where the rail's catalog lists it and the user can
+ * pin it to the rail.
  *
  * A category rather than a single preset because the shape means nothing until
  * an icon is chosen: always placing an EC2 would add a step to every use.

@@ -115,7 +115,7 @@ class SelectionControlStrategy extends ControlStrategy {
 	): CanvasControllerState {
 		if (event.type === "dragStart") {
 			return claimDrag(
-				{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+				{ ...state, objectMenuOpenId: null, stencilFlyout: null },
 				{ kind: "selectionControl" },
 				{ edgeScroll: true },
 			);

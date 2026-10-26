@@ -13,7 +13,7 @@ import { selectors } from "../../support/selectors";
  *   end of the floating menu opens it as well.
  * - It takes its width out of the viewport, so the canvas area narrows by exactly
  *   the panel's width.
- * - Opening it must not move the drawing: unlike the shape library it sits on the
+ * - Opening it must not move the drawing: unlike the docked stencil panel it sits on the
  *   right, so the viewport's left edge stays put and no camera compensation is
  *   involved — a shape that moves means the wrong edge was measured.
  *
@@ -101,7 +101,7 @@ const CARD_CENTER = { x: 300, y: 260 };
 /**
  * A card whose body states no alignment of its own. The spec harness's card
  * registers no creation defaults either, so its alignment is left to the drawing's
- * last resort (TEXT_STYLE_FALLBACK); placing one from the toolbar would write the
+ * last resort (TEXT_STYLE_FALLBACK); placing one from the rail would write the
  * factory's alignment into the slot instead, hence the injection.
  */
 const unalignedCardDocText = JSON.stringify({

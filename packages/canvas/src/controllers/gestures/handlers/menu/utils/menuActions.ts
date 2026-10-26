@@ -3,18 +3,24 @@ import type { DocumentProperty } from "../../../../reducer/CanvasActions";
 /**
  * The `data-action` grammar of the menu targets (`targetKind: "menu"`): what the
  * toolbar, the context menu, the ObjectMenu, the properties sidebar and the
- * stencil category flyouts write into the DOM, and what their gesture handlers
+ * stencil rail and panels write into the DOM, and what their gesture handlers
  * read back out of `event.targetAction`.
  *
  * - `command:{commandId}` — run a command (handleCommand)
- * - `toggle:{id}` — open / close the UI the id names (a menu section, a flyout,
- *   a sidebar accordion); UI state only, never the document
+ * - `toggle:{id}` — open / close the UI the id names (a menu section, a stencil
+ *   category's panel, a sidebar accordion); UI state only, never the document
  * - `set:{property}:{value}` — write a style property outright
  *   (applyStyleAction); the value may itself contain `:`
  * - `slider:{property}` — a slider bound to a style property, whose value rides
  *   on the event (`inputValue`) rather than in the action
  * - `doc:{property}:{value}` — write one of the document's own settings
  *   (`DocumentProperty`); an empty value means null, i.e. drop the setting
+ * - `show:{categoryId}` — switch the open stencil panel to that library
+ *   category (a row of the catalog)
+ * - `pin:{categoryId}` — pin that library category to the rail, or unpin it
+ * - `dock` / `undock` / `close` — the header buttons of a stencil panel: dock
+ *   the flyout beside the viewport, turn the docked panel back into a flyout,
+ *   close whichever is open
  *
  * Writers build the strings with the functions below rather than spelling the
  * prefixes, and readers take them apart with {@link parseMenuAction}, so the
@@ -27,6 +33,15 @@ const TOGGLE_PREFIX = "toggle:";
 const SET_PREFIX = "set:";
 const SLIDER_PREFIX = "slider:";
 const DOCUMENT_PREFIX = "doc:";
+const SHOW_PREFIX = "show:";
+const PIN_PREFIX = "pin:";
+
+/** The action of a stencil panel's dock button (the flyout's header). */
+export const DOCK_PANEL_ACTION = "dock";
+/** The action of a stencil panel's undock button (the docked panel's header). */
+export const UNDOCK_PANEL_ACTION = "undock";
+/** The action of a stencil panel's close button, flyout and docked alike. */
+export const CLOSE_PANEL_ACTION = "close";
 
 /**
  * The action of a button that runs a command.
@@ -74,13 +89,36 @@ export const documentAction = (
 	value: string | null,
 ): string => `${DOCUMENT_PREFIX}${property}:${value ?? ""}`;
 
+/**
+ * The action of a catalog row that switches the open stencil panel to a category.
+ *
+ * @param categoryId - Id of a section of `stencilLibrary.sections`; must not contain `:`
+ */
+export const showAction = (categoryId: string): string =>
+	`${SHOW_PREFIX}${categoryId}`;
+
+/**
+ * The action of a button that pins a library category to the rail or unpins it.
+ *
+ * @param categoryId - Id of a section of `stencilLibrary.sections`; must not
+ *   contain `:`. Whether it is pinned now is read off the state at press time,
+ *   so the same action pins and unpins
+ */
+export const pinAction = (categoryId: string): string =>
+	`${PIN_PREFIX}${categoryId}`;
+
 /** A menu action taken apart; `kind` says which grammar it followed. */
 export type MenuAction =
 	| { kind: "command"; commandId: string }
 	| { kind: "toggle"; id: string }
 	| { kind: "set"; property: string; value: string }
 	| { kind: "slider"; property: string }
-	| { kind: "doc"; property: string; value: string | null };
+	| { kind: "doc"; property: string; value: string | null }
+	| { kind: "show"; categoryId: string }
+	| { kind: "pin"; categoryId: string }
+	| { kind: "dock" }
+	| { kind: "undock" }
+	| { kind: "close" };
 
 /**
  * Reads a menu target's action back into its pieces.
@@ -127,6 +165,21 @@ export const parseMenuAction = (
 	}
 	if (action.startsWith(SLIDER_PREFIX)) {
 		return { kind: "slider", property: action.slice(SLIDER_PREFIX.length) };
+	}
+	if (action.startsWith(SHOW_PREFIX)) {
+		return { kind: "show", categoryId: action.slice(SHOW_PREFIX.length) };
+	}
+	if (action.startsWith(PIN_PREFIX)) {
+		return { kind: "pin", categoryId: action.slice(PIN_PREFIX.length) };
+	}
+	if (action === DOCK_PANEL_ACTION) {
+		return { kind: "dock" };
+	}
+	if (action === UNDOCK_PANEL_ACTION) {
+		return { kind: "undock" };
+	}
+	if (action === CLOSE_PANEL_ACTION) {
+		return { kind: "close" };
 	}
 	return null;
 };

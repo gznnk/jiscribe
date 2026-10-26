@@ -13,7 +13,7 @@ describe("resetUiState", () => {
 			dragStartCaches: { keyPoints: {}, snapCandidates: null },
 			contextMenuPosition: null,
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			stencilFlyout: null,
 			multiSelectGroup: null,
 			mode: { kind: "normal" },
 			lastDuplicate: null,

@@ -56,7 +56,7 @@ const makeState = (
 		},
 		selection: selectionOf(["rec-1"], part),
 		objectMenuOpenId,
-		stencilLibraryOpenCategory: "basic",
+		stencilFlyout: { kind: "category", categoryId: "basic" },
 	}) as unknown as CanvasControllerState;
 
 const textSlotSelection = (slotId: string): ObjectPartSelection => ({
@@ -115,7 +115,7 @@ describe("selectPartByClick", () => {
 		);
 
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 	});
 
 	it("clears the pick when the id names no part the object still has", () => {

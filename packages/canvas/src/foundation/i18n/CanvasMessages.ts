@@ -10,11 +10,14 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "Zoom out",
 	toolbarResetZoom: "Reset zoom to 100%",
 	toolbarZoomIn: "Zoom in",
-	toolbarStencilLibrary: "Shape library",
 	toolbarPropertyPanel: "Properties",
 
-	stencilLibraryTitle: "Shape library",
-	stencilLibraryClose: "Close",
+	stencilRailLabel: "Shapes",
+
+	stencilCatalogTitle: "All shapes",
+	stencilPanelClose: "Close",
+	stencilPanelKeepOpen: "Keep open",
+	stencilCatalogPin: (categoryLabel) => `Pin ${categoryLabel}`,
 	stencilLibrarySearchPlaceholder: "Search shapes",
 	stencilLibraryNoMatch: "No matching shapes",
 	stencilLibraryMoreMatches: "More matches than shown; refine the search",

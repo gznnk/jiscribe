@@ -2,15 +2,8 @@ import type {
 	CanvasConfig,
 	CanvasDoc,
 	StencilCategory,
-	ToolbarSection,
 } from "@jiscribe/canvas";
-import {
-	basicStencilCategory,
-	Canvas,
-	DEFAULT_TOOLBAR_HISTORY_SECTION,
-	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
-	DEFAULT_TOOLBAR_VIEW_SECTION,
-} from "@jiscribe/canvas";
+import { basicStencilCategory, Canvas } from "@jiscribe/canvas";
 import { createCanvasParser } from "@jiscribe/doc";
 import {
 	annotationPlugin,
@@ -44,7 +37,7 @@ import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 // One plugin ships one shape family, complete with its doc schema, its rendering and
-// editing behaviour, and its toolbar stencils. The shapes on this canvas come from:
+// editing behaviour, and its stencils. The shapes on this canvas come from:
 //   flowchart  db
 //   general    actor / server / queue / gear
 //   uml        record
@@ -54,8 +47,8 @@ import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 //   markdown   markdown
 //   lucide     lucideIcon
 // Only rect / ellipse / polyline / polygon / text / connector are core. The aws and er
-// plugins are registered alongside them; their shapes are reached through the shape
-// library below.
+// plugins are registered alongside them; their shapes are reached through the
+// catalog below.
 const plugins = [
 	flowchartPlugin,
 	containerPlugin,
@@ -70,48 +63,32 @@ const plugins = [
 	awsShapesPlugin,
 ];
 
+// Core's default rail knows nothing of plugin shapes, so the host arranges them, over
+// three surfaces. The rail's presets (`rail.presetIds`) are the handful a diagram is mostly
+// built out of; its pinned categories (`initialConfig.pinnedCategoryIds`) open a flyout of
+// one plugin's shapes; and the catalog button at its foot opens every section of
+// `stencilLibrary.sections` for browsing, searching and pinning. The categories come from
+// the plugins (flowchartStencilCategory and friends) and single shapes are referenced by
+// preset id. A pin only shows for a category that is also a library section. The toolbar
+// stays core's default, with no shape tool on it.
+const rail = {
+	presetIds: ["rect", "ellipse", "polygon", "polyline", "text", "sticky"],
+};
+
 // The same array has to reach BOTH sides, and neither side complains when it does not:
-// initialConfig registers the shapes for rendering and editing, createCanvasParser
-// teaches doc validation the same types. Register only with Canvas and the parser keeps
-// every plugin object as an unknown type it never validates (it lands in result.warnings,
-// not in an error); register only with the parser and the doc validates but Canvas has no
+// initialConfig registers the shapes for rendering and editing, createCanvasParser teaches
+// doc validation the same types. Register only with Canvas and the parser keeps every
+// plugin object as an unknown type it never validates (it lands in result.warnings, not in
+// an error); register only with the parser and the doc validates but Canvas has no
 // definition to draw the shapes with, so it holds them unread and they go missing from
-// the screen.
-const initialConfig: CanvasConfig = { plugins };
+// the screen. One category is pinned to start with, so the flyout mechanism is on show.
+const initialConfig: CanvasConfig = {
+	plugins,
+	pinnedCategoryIds: [lucideIconStencilCategory.id],
+};
 const pluginParser = createCanvasParser({ plugins });
 
-// Core's default bar knows nothing of plugin shapes, so the host arranges them, over
-// two surfaces: the bar pins the handful of presets a diagram is mostly built out of, and
-// the shape library sidebar (`stencilLibrary.sections`, behind the toggle at the bar's far
-// left) holds the whole set grouped into sections. Both are declared the same way — the
-// categories come from the plugins (flowchartStencilCategory and friends) and single shapes
-// are referenced by preset id.
-//
-// `toolbar.sections` is the whole bar, so the host names the library toggle itself and
-// reuses core's remaining three sections rather than restating undo / redo / zoom / help /
-// properties.
-const toolbarSections: ToolbarSection[] = [
-	{
-		id: "tools",
-		items: [
-			{ type: "stencilLibraryToggle" },
-			{ type: "divider" },
-			{ type: "stencilPreset", presetId: "rect" },
-			{ type: "stencilPreset", presetId: "ellipse" },
-			{ type: "stencilPreset", presetId: "polygon" },
-			{ type: "stencilPreset", presetId: "polyline" },
-			{ type: "stencilPreset", presetId: "text" },
-			{ type: "stencilPreset", presetId: "sticky" },
-			// One category left on the bar as a flyout: the same object also feeds the sidebar below.
-			{ type: "stencilCategory", category: lucideIconStencilCategory },
-		],
-	},
-	DEFAULT_TOOLBAR_HISTORY_SECTION,
-	DEFAULT_TOOLBAR_VIEW_SECTION,
-	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
-];
-
-// The sidebar carries every shape on the canvas: core's primitives (with the two
+// The catalog carries every shape on the canvas: core's primitives (with the three
 // single-shape plugin presets folded in beside them) and one section per plugin category.
 const stencilLibrarySections: StencilCategory[] = [
 	{
@@ -353,14 +330,14 @@ const pluginsDoc = buildPluginsDoc();
 /**
  * Assembling a canvas out of shape plugins: the ten shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
- * the shape library (the toggle at the toolbar's far left) to draw more of them.
+ * the catalog (the button at the foot of the rail) to find more of them.
  */
 export function PluginsExample() {
 	return (
 		<Canvas
 			doc={pluginsDoc}
 			initialConfig={initialConfig}
-			toolbar={{ sections: toolbarSections }}
+			rail={rail}
 			stencilLibrary={{ sections: stencilLibrarySections }}
 		/>
 	);

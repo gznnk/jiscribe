@@ -35,9 +35,9 @@ export type ContainerResizeAction = {
 	type: "CONTAINER_RESIZE";
 	dimensions: Dimensions;
 	/**
-	 * Screen pixels the container's left edge moved inside CanvasRoot since the
-	 * last measurement; positive means it moved right (the shape library sidebar
-	 * opening beside the viewport, say). The reducer divides it by the current
+	 * Screen pixels the container's left edge moved inside CanvasBody since the
+	 * last measurement; positive means it moved right (the stencil panel docking
+	 * beside the viewport, say). The reducer divides it by the current
 	 * zoom and adds it to `minX`, so the drawing stays pinned to the screen
 	 * instead of being dragged along with the edge. Absent or 0 when the edge
 	 * held still, which is the case for every resize from the right.

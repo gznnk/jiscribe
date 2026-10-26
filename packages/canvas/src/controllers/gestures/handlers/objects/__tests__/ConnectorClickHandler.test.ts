@@ -308,7 +308,7 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			...makeState("Yes"),
 			selection: selectionOf(["c2"], vertexPartSelection(0)),
 			objectMenuOpenId: "style",
-			stencilLibraryOpenCategory: "flowchart",
+			stencilFlyout: { kind: "category", categoryId: "flowchart" },
 		}) as unknown as CanvasControllerState;
 
 	it("a click selecting a connector closes the menus and drops the vertex selection", () => {
@@ -324,7 +324,7 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			reconcileSelection(next, registries.objectPartKind).selection.part,
 		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 	});
 
 	it("a double click selecting a connector also clears them", () => {
@@ -338,7 +338,7 @@ describe("ConnectorClickHandler - clears stale UI state on selection change", ()
 			reconcileSelection(next, registries.objectPartKind).selection.part,
 		).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 	});
 });
 

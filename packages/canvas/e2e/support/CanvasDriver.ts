@@ -57,15 +57,16 @@ export class CanvasDriver {
 	 *
 	 * Every test is written in content coordinates, which are screen coordinates minus this
 	 * origin. Chrome takes its layout space out of the canvas area — the toolbar above it,
-	 * the shape library sidebar beside it — so the origin moves whenever a piece of chrome
-	 * opens or closes. Pan and zoom never move it: they only change the viewBox.
+	 * the rail and the docked stencil panel beside it — so the origin moves whenever a piece
+	 * of chrome docks or goes. Pan and zoom never move it: they only change the viewBox, and
+	 * neither does the stencil flyout, which floats over the canvas.
 	 *
 	 * Every driver operation that converts content coordinates re-measures this first, so its
-	 * input lands where the caller meant even while the sidebar is open. toScreen() and
+	 * input lands where the caller meant even while a panel is docked. toScreen() and
 	 * toContent() stay synchronous and answer from the last measurement — fresh as of the
 	 * driver call before them, so a spec that moves chrome by clicking the DOM itself and then
-	 * converts reads the old origin. Open and close the sidebar through openStencilLibrary()
-	 * and closeStencilLibrary(), which re-measure.
+	 * converts reads the old origin. Open and close the catalog through openCatalog() and
+	 * closeStencilPanel(), which re-measure.
 	 *
 	 * Coordinates from boundingBox() are screen coordinates — pass them through toContent()
 	 * before handing them to the driver.
@@ -85,7 +86,8 @@ export class CanvasDriver {
 
 	/**
 	 * Re-read the screen offset of the canvas area. As a flex child it has real size from
-	 * mount, and its top-left sits one toolbar height down and one open sidebar to the right.
+	 * mount, and its top-left sits one toolbar height down and the rail plus any docked panel
+	 * to the right.
 	 * querySelector rather than a locator: the multi-canvas page mounts two of them, and the
 	 * first is the one the driver drives.
 	 */
@@ -626,27 +628,29 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Open the shape library sidebar from the toolbar toggle and wait for its panel. The
-	 * panel takes its width out of the canvas area, so the canvas origin is re-measured
-	 * before returning and content coordinates keep meaning the same place.
+	 * Open the catalog from the rail's catalog button and wait for its panel. Over the
+	 * canvas by default, which leaves the canvas where it was; `docked` presses the
+	 * panel's keep-open toggle as well, which takes the panel's width out of the canvas
+	 * area, so the origin is re-measured before returning and content coordinates keep
+	 * meaning the same place.
 	 */
-	async openStencilLibrary() {
-		await this.page.click(selectors.stencilLibraryToggle);
-		await expect(
-			this.page.locator(selectors.stencilLibraryPanel),
-		).toBeVisible();
+	async openCatalog({ docked = false }: { docked?: boolean } = {}) {
+		await this.page.click(selectors.catalogButton);
+		await expect(this.page.locator(selectors.stencilFlyout)).toBeVisible();
+		if (docked) {
+			await this.page.click(selectors.stencilPanelDock);
+			await expect(this.page.locator(selectors.stencilDock)).toBeVisible();
+		}
 		await this.measureOrigin();
 	}
 
 	/**
-	 * Close the sidebar from its own close button, which unmounts it; the counterpart of
-	 * openStencilLibrary, re-measuring the origin the same way.
+	 * Close the open stencil panel, flyout or docked, from its own close button, which
+	 * unmounts it; the counterpart of openCatalog, re-measuring the origin the same way.
 	 */
-	async closeStencilLibrary() {
-		await this.page.click(selectors.stencilLibraryPanelClose);
-		await expect(this.page.locator(selectors.stencilLibraryPanel)).toHaveCount(
-			0,
-		);
+	async closeStencilPanel() {
+		await this.page.click(selectors.stencilPanelClose);
+		await expect(this.page.locator(selectors.stencilPanel)).toHaveCount(0);
 		await this.measureOrigin();
 	}
 

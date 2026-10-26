@@ -50,6 +50,9 @@ export const IconStencils: Stencil[] = Object.keys(ICON_NODES).map((name) => ({
 	defaultOverrides: { icon: name },
 }));
 
-/** Preset ids of the flyout, in palette order; a host laying out its own toolbar reads these. */
+/**
+ * Preset ids the icon category lists, in palette order: its `presetIds`, read by
+ * a host composing its own library section or rail out of this set.
+ */
 export const ICON_STENCIL_IDS: readonly string[] =
 	FLYOUT_ICON_NAMES.map(toIconStencilId);

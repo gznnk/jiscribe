@@ -19,7 +19,7 @@ const baseState = (
 		mode: { kind: "normal" },
 		drag: null,
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -71,9 +71,11 @@ describe("DeselectAllCommand", () => {
 	});
 
 	it("closes an open StencilLibrary category flyout", () => {
-		const state = baseState({ stencilLibraryOpenCategory: "flowchart" });
+		const state = baseState({
+			stencilFlyout: { kind: "category", categoryId: "flowchart" },
+		});
 		expect(
-			DeselectAllCommand.execute(state, registries).stencilLibraryOpenCategory,
+			DeselectAllCommand.execute(state, registries).stencilFlyout,
 		).toBeNull();
 	});
 
@@ -116,7 +118,9 @@ describe("DeselectAllCommand", () => {
 		it("is executable when a StencilLibrary category flyout is open (Escape closes it)", () => {
 			expect(
 				DeselectAllCommand.canExecute(
-					baseState({ stencilLibraryOpenCategory: "flowchart" }),
+					baseState({
+						stencilFlyout: { kind: "category", categoryId: "flowchart" },
+					}),
 					registries,
 				),
 			).toBe(true);

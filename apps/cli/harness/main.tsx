@@ -1,5 +1,10 @@
 import { Canvas, lightCanvasTheme } from "@jiscribe/canvas";
-import type { CanvasConfig, CanvasDoc, CanvasHandle } from "@jiscribe/canvas";
+import type {
+	CanvasConfig,
+	CanvasDoc,
+	CanvasHandle,
+	CanvasRailConfig,
+} from "@jiscribe/canvas";
 import { standardPlugins } from "@jiscribe/standard-shapes";
 import { createRoot } from "react-dom/client";
 
@@ -19,6 +24,10 @@ import { waitForDocImages } from "./waitForDocImages";
 // the one @jiscribe/doc-tools validates with, so a document the CLI accepts is a
 // document this page can draw in full.
 const initialConfig: CanvasConfig = { plugins: standardPlugins };
+
+// No one draws on this page, and the rail would take its width out of the view
+// `--region viewbox` photographs.
+const rail: CanvasRailConfig = { show: false };
 
 const EMPTY_DOC: CanvasDoc = { version: 1, root: [] };
 
@@ -45,6 +54,7 @@ const mountDoc = (doc: CanvasDoc): Promise<CanvasHandle> => {
 				key={generation}
 				doc={doc}
 				initialConfig={initialConfig}
+				rail={rail}
 				theme={lightCanvasTheme}
 				resolveImage={resolveHarnessImage}
 				autoFocus={false}

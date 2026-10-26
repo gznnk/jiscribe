@@ -4,7 +4,7 @@
  */
 
 /**
- * Tool name in the left toolbar, matching the button's title attribute. The
+ * Tool name on the stencil rail, matching the button's title attribute. The
  * listed ones are core's own presets, spelled out as known values for
  * completion; a plugin's tool name (its stencil label, "Sticky" say) is equally
  * accepted.
@@ -34,9 +34,24 @@ export type ColorSectionId =
 /** Shared by the unscoped and the section-scoped color input selectors below. */
 const CSS_COLOR_INPUT = 'input[placeholder="CSS color"]';
 
-/** Shared by the shape library sidebar selectors below, which all scope into it. */
-const STENCIL_LIBRARY_PANEL =
-	'[data-kind="menu"][data-id="stencil-library-panel"]';
+/**
+ * Shared by the stencil panel selectors below, which all scope into it: the
+ * flyout over the canvas and the docked panel alike (they never coexist).
+ */
+const STENCIL_PANEL = '[data-kind="menu"][data-id="stencil-library-panel"]';
+
+/** The stencil panel open over the canvas. */
+const STENCIL_FLYOUT = `${STENCIL_PANEL}[data-presentation="flyout"]`;
+
+/** The stencil panel docked beside the canvas. */
+const STENCIL_DOCK = `${STENCIL_PANEL}[data-presentation="docked"]`;
+
+/**
+ * Shared by the rail-scoped selectors below. Scoping them matters because while
+ * a panel is open every preset it lists is a second button with the same title
+ * and data-action as the one on the rail.
+ */
+const RAIL = '[data-kind="menu"][data-id="stencil-rail"]';
 
 /**
  * Shared by the properties sidebar selectors below, which all scope into it. The
@@ -51,19 +66,22 @@ const PROPERTY_PANEL = '[data-kind="menu"][data-id="property-panel"]';
  */
 const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
 
-/**
- * Shared by the toolbar-scoped selectors below. Scoping them matters because while
- * the sidebar is open every preset it lists is a second button with the same title
- * and data-action as the pinned one.
- */
+/** Shared by the toolbar-scoped selectors below. */
 const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
 
 export const selectors = {
-	/** Toolbar tool button, scoped to the bar so the sidebar's copy cannot match. */
-	toolButton: (tool: ToolTitle) => `${TOOLBAR} button[title="${tool}"]`,
+	/** Preset button on the rail, scoped to it so a panel's copy cannot match. */
+	toolButton: (tool: ToolTitle) => `${RAIL} button[title="${tool}"]`,
 
 	/** The toolbar bar itself; the only element of the bar carrying data-kind / data-id. */
 	toolbar: TOOLBAR,
+
+	/**
+	 * The stencil rail itself. Its own element carries data-kind / data-id, as do
+	 * its presets and category buttons; the catalog button carries data-action
+	 * alone.
+	 */
+	rail: RAIL,
 
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector
@@ -74,55 +92,74 @@ export const selectors = {
 	toolbarCommand: (commandId: string) =>
 		`${TOOLBAR} [data-action="command:${commandId}"]`,
 
-	/** StencilLibrary category button; the toggle that opens a flyout. */
+	/**
+	 * Category button on the rail, present for a pinned category; the toggle that
+	 * opens its panel, carrying the shown state on aria-expanded.
+	 */
 	categoryButton: (categoryId: string) =>
 		`[data-id="stencil-category"][data-action="toggle:${categoryId}"]`,
 
-	/** Category flyout, present only while open. */
-	categoryFlyout: (categoryId: string) =>
-		`[data-category-flyout="${categoryId}"]`,
+	/** The stencil panel while it shows that category, flyout or docked; absent otherwise. */
+	categoryPanel: (categoryId: string) =>
+		`[data-stencil-category-panel="${categoryId}"]`,
 
 	/**
-	 * StencilLibrary shape item; pinned and in-flyout share this DOM contract, and
-	 * both live inside the toolbar, which is what scopes the sidebar's copy out.
+	 * Library shape item on the rail or in the flyout over the canvas; both share
+	 * this DOM contract. The docked panel's copy is scoped out, so a docked panel
+	 * listing a rail preset does not make this match twice.
 	 */
 	shapeItem: (presetId: string) =>
-		`${TOOLBAR} [data-action="item:${presetId}"]`,
+		`${RAIL} [data-action="item:${presetId}"], ${STENCIL_FLYOUT} [data-action="item:${presetId}"]`,
 
 	/**
-	 * Toolbar toggle that opens and closes the shape library sidebar. Present only
-	 * when the host declared `stencilLibrary.sections` with something in it, and
-	 * carrying the open state on aria-expanded. Written as a descendant selector for
-	 * the same reason as toolbarCommand.
+	 * The rail's catalog button, running `toggleStencilLibrary`. Present only when
+	 * the host declared `stencilLibrary.sections` with something in it, and
+	 * carrying the shown state on aria-expanded.
 	 */
-	stencilLibraryToggle: `${TOOLBAR} [data-action="command:toggleStencilLibrary"]`,
+	catalogButton: `${RAIL} [data-action="command:toggleStencilLibrary"]`,
 
 	/**
-	 * The shape library sidebar itself. Mounted only while open, so closed it is
-	 * absent from the DOM: assert `toHaveCount(0)` for closed rather than waiting
-	 * for it to become invisible.
+	 * Either stencil panel, flyout or docked; they never coexist. Mounted only
+	 * while open, so closed it is absent from the DOM: assert `toHaveCount(0)` for
+	 * closed rather than waiting for it to become invisible.
 	 */
-	stencilLibraryPanel: STENCIL_LIBRARY_PANEL,
+	stencilPanel: STENCIL_PANEL,
 
-	/** Close (x) button in the sidebar header. */
-	stencilLibraryPanelClose: `${STENCIL_LIBRARY_PANEL} [data-action="close"]`,
+	/** The stencil panel open over the canvas; absent while closed or docked. */
+	stencilFlyout: STENCIL_FLYOUT,
+
+	/** The stencil panel docked beside the canvas; absent while closed or a flyout. */
+	stencilDock: STENCIL_DOCK,
+
+	/** The open panel's "keep open" toggle, which docks the flyout. */
+	stencilPanelDock: `${STENCIL_PANEL} [data-action="dock"]`,
+
+	/** The docked panel's "keep open" toggle, pressed, which turns it back into the flyout. */
+	stencilPanelUndock: `${STENCIL_PANEL} [data-action="undock"]`,
+
+	/** Close (x) button in the open panel's header. */
+	stencilPanelClose: `${STENCIL_PANEL} [data-action="close"]`,
 
 	/**
-	 * Sidebar section header; the disclosure button carrying aria-expanded, whose
-	 * id is the category id the host declared.
+	 * Shape item inside the open panel. Same DOM contract as shapeItem, scoped to
+	 * the panel so it does not also match the copy on the rail.
 	 */
-	stencilLibrarySection: (sectionId: string) =>
-		`${STENCIL_LIBRARY_PANEL} [data-action="section:${sectionId}"]`,
+	stencilPanelItem: (presetId: string) =>
+		`${STENCIL_PANEL} [data-action="item:${presetId}"]`,
 
-	/**
-	 * Shape item inside the sidebar. Same DOM contract as shapeItem, scoped to the
-	 * panel so it does not also match the pinned copy on the toolbar.
-	 */
-	stencilLibraryPanelItem: (presetId: string) =>
-		`${STENCIL_LIBRARY_PANEL} [data-action="item:${presetId}"]`,
+	/** Search box of the open panel: across the library in the catalog, one category's otherwise. */
+	stencilPanelSearch: `${STENCIL_PANEL} input[type="text"]`,
 
-	/** Search box of the sidebar; filtering collapses the sections into one grid. */
-	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
+	/** Every catalog row, in display order. */
+	catalogRows: `${STENCIL_PANEL} [data-action^="show:"]`,
+
+	/** The catalog row switching the panel to a category; the row's label is its text. */
+	catalogRow: (categoryId: string) =>
+		`${STENCIL_PANEL} [data-action="show:${categoryId}"]`,
+
+	/** The catalog row's pin toggle, carrying the pinned state on aria-pressed. */
+	catalogPin: (categoryId: string) =>
+		`${STENCIL_PANEL} [data-action="pin:${categoryId}"]`,
 
 	/**
 	 * Toolbar toggle that opens and closes the properties sidebar, carrying the

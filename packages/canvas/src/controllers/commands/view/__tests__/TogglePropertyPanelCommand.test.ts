@@ -13,7 +13,7 @@ const makeState = (
 	({
 		mode: { kind: "normal" },
 		propertyPanel: { isOpen: false, collapsedSectionIds: ["style"] },
-		stencilLibraryOpenCategory: "flowchart",
+		stencilFlyout: { kind: "category", categoryId: "flowchart" },
 		selection: selectionOf(["a"]),
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -36,7 +36,7 @@ describe("TogglePropertyPanelCommand", () => {
 
 	it("closes the open category flyout, like every other toolbar press", () => {
 		const next = TogglePropertyPanelCommand.execute(makeState(), registries);
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 	});
 
 	it("leaves the collapsed sections and the selection alone", () => {

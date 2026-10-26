@@ -152,5 +152,23 @@ describe("canvasReducer (integration)", () => {
 			expect(after.historyCoalesce.pending).toBeNull();
 			expect(after.viewport).toBe(state.viewport);
 		});
+
+		/** Editor chrome outlives the document shown in it; the flyout is a menu and goes. */
+		it("keeps the rail's pins and the docked panel, and closes the stencil flyout", () => {
+			const state: CanvasControllerState = {
+				...createState(),
+				pinnedCategoryIds: ["flowchart", "uml"],
+				stencilLibraryPanel: {
+					isOpen: true,
+					content: { kind: "category", categoryId: "uml" },
+				},
+				stencilFlyout: { kind: "catalog" },
+			};
+			const after = canvasReducer(state, loadDocument(otherDoc));
+
+			expect(after.pinnedCategoryIds).toEqual(["flowchart", "uml"]);
+			expect(after.stencilLibraryPanel).toBe(state.stencilLibraryPanel);
+			expect(after.stencilFlyout).toBeNull();
+		});
 	});
 });

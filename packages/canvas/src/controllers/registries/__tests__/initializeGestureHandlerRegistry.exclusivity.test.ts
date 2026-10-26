@@ -7,6 +7,7 @@ import { PropertyPanelHandler } from "../../gestures/handlers/menu/PropertyPanel
 import { StencilCategoryToggleHandler } from "../../gestures/handlers/menu/StencilCategoryToggleHandler";
 import { StencilLibraryItemHandler } from "../../gestures/handlers/menu/StencilLibraryItemHandler";
 import { StencilLibraryPanelHandler } from "../../gestures/handlers/menu/StencilLibraryPanelHandler";
+import { StencilRailHandler } from "../../gestures/handlers/menu/StencilRailHandler";
 import { ToolbarHandler } from "../../gestures/handlers/menu/ToolbarHandler";
 import { ConnectorClickHandler } from "../../gestures/handlers/objects/ConnectorClickHandler";
 import { CONNECTOR_HANDLERS } from "../../gestures/handlers/objects/ConnectorEventHandler";
@@ -77,12 +78,17 @@ const TARGETS: Target[] = [
 	{
 		targetKind: "menu",
 		targetId: "stencil-library-panel",
-		targetAction: "section:flowchart",
+		targetAction: "pin:flowchart",
 	},
 	{
 		targetKind: "menu",
 		targetId: "property-panel",
 		targetAction: "command:togglePropertyPanel",
+	},
+	{
+		targetKind: "menu",
+		targetId: "stencil-rail",
+		targetAction: "command:toggleStencilLibrary",
 	},
 ];
 
@@ -318,6 +324,9 @@ describe("menu sub-handler routing", () => {
 		expect(
 			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[14])),
 		).toBe(PropertyPanelHandler);
+		expect(
+			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[15])),
+		).toBe(StencilRailHandler);
 	});
 
 	it("leaves an unknown menu targetId to no sub-handler", () => {

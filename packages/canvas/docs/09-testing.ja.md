@@ -109,7 +109,7 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
 - **プラグインのハーネスはそのプラグインだけを載せる。**単独ロードで通ること自体が、
   他プラグインへの暗黙依存が無いことの検証になる
 - **canvas-examples のハーネスは出荷プラグインを全部載せる**（`e2e/harness/main.tsx` の `plugins`）。
-  見るのは「全部載せたときに初めて壊れるもの」（例: ObjectType の登録衝突・ツールバーの重複・
+  見るのは「全部載せたときに初めて壊れるもの」（例: ObjectType の登録衝突・レールのプリセット重複・
   `<defs>` の id 衝突。`specs/plugin-coexistence.spec.ts`）と、出荷フォントを読み込むのが
   このハーネスだけであるために、ここでしか確かめられない PNG 書き出しのフォント埋め込み
   （`specs/png-font-embedding.spec.ts`）。個々の図形の描画・編集は各プラグインのスイートの持ち分。
@@ -160,6 +160,13 @@ API は `createCanvasPlaywrightConfig` / `createPluginHarnessViteConfig` /
 取る（`./e2e/testing-playwright-config`）。SDK 経由にはしない — `canvas → canvas-sdk → canvas`
 の循環こそ、この分離で解消したものだからである。プラグインのスイートを立ち上げる手順は
 [プラグインの作り方](./13-authoring-plugins.ja.md) にある。
+
+`mountPluginHarness` が取るのはプラグインの組と、そのステンシルをページに載せるもの。
+`railPresetIds`（レールに並べるプリセット。省略すると core のプリミティブ。
+`CanvasDriver.goto()` が待つ `rect` は残す）、`stencilLibrarySections`（カタログが一覧する
+ライブラリ。省略するとカタログボタンは出ない）、`pinnedCategoryIds`（マウント時に
+レールへピン留めするセクション。spec がレールのボタンからカテゴリを開けるようにする）。
+ツールバーは常に canvas の既定になる。
 
 ## 循環依存チェック（madge）
 

@@ -21,17 +21,8 @@ import type {
 	OpenReferencePayload,
 	ResolveImage,
 	StencilCategory,
-	ToolbarItem,
-	ToolbarSection,
 } from "../../src";
-import {
-	Canvas,
-	darkCanvasTheme,
-	DEFAULT_TOOLBAR_HISTORY_SECTION,
-	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
-	DEFAULT_TOOLBAR_VIEW_SECTION,
-	extractCanvasSourceFromPng,
-} from "../../src";
+import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
 import "./harness.css";
 
 /** What a harness page has to say about itself; everything else is fixed by the kit. */
@@ -44,24 +35,29 @@ export type PluginHarnessParams = {
 	 */
 	plugins: readonly CanvasPlugin[];
 	/**
-	 * The shape tools of the bar only — not the whole bar. The kit opens the tool
-	 * section with the shape library toggle and appends core's history, view and
-	 * properties sections, so a page declaring its plugin's presets keeps the
-	 * sidebar toggle, undo / redo, zoom, help and the properties toggle without
-	 * naming them. Omit to take the canvas default bar, whose tools pin the
-	 * core presets only and show nothing a plugin contributes; pass items whenever
-	 * a spec drives a plugin's preset or category flyout. `CanvasDriver.goto()`
-	 * waits for the "Rectangle" tool, so keep the `rect` preset in any items passed
-	 * here.
+	 * The presets at the top of the stencil rail, in order (the canvas's
+	 * `rail.presetIds`). Omit for the canvas default, core's primitives only;
+	 * pass ids whenever a spec drives a plugin's preset from the rail.
+	 * `CanvasDriver.goto()` waits for the "Rectangle" tool, so keep `rect` in any
+	 * list passed here. The toolbar is always the canvas default (undo / redo,
+	 * zoom, help, the properties toggle).
 	 */
-	toolbarItems?: ToolbarItem[];
+	railPresetIds?: string[];
 	/**
-	 * Sections of the shape library sidebar, mirroring how a host app declares one.
-	 * Omit and neither the sidebar nor the toolbar toggle that opens it is
-	 * rendered; pass sections whenever a spec drives the sidebar. Independent of
-	 * `toolbarItems` — the same category can appear in both.
+	 * Sections of the stencil library, mirroring how a host app declares one:
+	 * what the rail's pinned categories and its catalog draw from. Omit and the
+	 * rail shows its presets alone, with no catalog button; pass sections
+	 * whenever a spec drives a category or the catalog.
 	 */
 	stencilLibrarySections?: StencilCategory[];
+	/**
+	 * Ids of the sections pinned to the rail at mount, in rail order
+	 * (`CanvasConfig.pinnedCategoryIds`). Omit and nothing is pinned, so a
+	 * category is reached through the catalog only; pin it whenever a spec opens
+	 * it from its rail button (`CanvasDriver.drawShapeFromFlyout` and the like).
+	 * An id naming no section of `stencilLibrarySections` is kept but not drawn.
+	 */
+	pinnedCategoryIds?: string[];
 	/**
 	 * Stands in for the host that reads an image object's file. Omit it and every
 	 * image on the page draws its placeholder, which is what a page with no
@@ -74,7 +70,7 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
-	toolbarItems: ToolbarItem[] | undefined;
+	railPresetIds: string[] | undefined;
 	stencilLibrarySections: StencilCategory[] | undefined;
 	resolveImage: ResolveImage | undefined;
 	parser: CanvasParser;
@@ -88,7 +84,7 @@ type HarnessAppProps = {
  */
 function HarnessApp({
 	initialConfig,
-	toolbarItems,
+	railPresetIds,
 	stencilLibrarySections,
 	resolveImage,
 	parser,
@@ -161,28 +157,10 @@ function HarnessApp({
 		];
 	}, []);
 
-	// The tool section is the two the core default opens with plus the page's items, so a
-	// page that declares only its plugin's presets still gets the shape library toggle when
-	// it declared a library. Without a library both are dropped by resolution — the toggle
-	// as unusable, the divider as stranded — leaving the bar as the page declared it.
-	const toolbarSections = useMemo<ToolbarSection[] | undefined>(
-		() =>
-			toolbarItems
-				? [
-						{
-							id: "tools",
-							items: [
-								{ type: "stencilLibraryToggle" },
-								{ type: "divider" },
-								...toolbarItems,
-							],
-						},
-						DEFAULT_TOOLBAR_HISTORY_SECTION,
-						DEFAULT_TOOLBAR_VIEW_SECTION,
-						DEFAULT_TOOLBAR_PROPERTIES_SECTION,
-					]
-				: undefined,
-		[toolbarItems],
+	// Memoized: an object built per render would defeat the canvas's memo.
+	const rail = useMemo(
+		() => (railPresetIds ? { presetIds: railPresetIds } : undefined),
+		[railPresetIds],
 	);
 
 	const query = new URLSearchParams(window.location.search);
@@ -201,7 +179,7 @@ function HarnessApp({
 				initialConfig={initialConfig}
 				resolveImage={resolveImage}
 				onOpenReference={handleOpenReference}
-				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
+				rail={rail}
 				stencilLibrary={
 					stencilLibrarySections
 						? { sections: stencilLibrarySections }
@@ -217,10 +195,13 @@ function HarnessApp({
  * `index.html` provides. Call it once from the harness entry module; the layout
  * stylesheet comes with it.
  *
- * @param params - The plugin set, toolbar and sidebars the page is built around. See {@link PluginHarnessParams}.
+ * @param params - The plugin set, rail and library the page is built around. See {@link PluginHarnessParams}.
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
-	const initialConfig: CanvasConfig = { plugins: params.plugins };
+	const initialConfig: CanvasConfig = {
+		plugins: params.plugins,
+		pinnedCategoryIds: params.pinnedCategoryIds,
+	};
 	const parser = createCanvasParser({ plugins: params.plugins });
 
 	// The specs were written against the demo app's dark default, so the harness pins dark too,
@@ -232,7 +213,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 		<React.StrictMode>
 			<HarnessApp
 				initialConfig={initialConfig}
-				toolbarItems={params.toolbarItems}
+				railPresetIds={params.railPresetIds}
 				stencilLibrarySections={params.stencilLibrarySections}
 				resolveImage={params.resolveImage}
 				parser={parser}

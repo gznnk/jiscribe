@@ -1,7 +1,7 @@
 /**
  * Shapes that exist only so the core e2e specs have something to drive: a
- * drag-drawn `tile` listed in a category flyout, a click-placed `pin` pinned on
- * the bar, a `card` that roots its render in a `<g>` and carries a text slot, a
+ * drag-drawn `tile` listed in a category flyout, a click-placed `pin` on the
+ * rail, a `card` that roots its render in a `<g>` and carries a text slot, a
  * `panel` that declares creation defaults of its own, and a `memo` whose body is
  * written in a source language (`features.text: "source"`).
  * `tile` also leads its sidebar with a dropdown that opens beside the sidebar
@@ -197,7 +197,7 @@ const TILE_PROPERTY_PANEL: PropertyPanelSection[] = [
 /**
  * Drag-drawn shape; `tile` is the only member of the `spec` category flyout, and
  * `brick` (a second preset of the same type) is registered but listed nowhere, so
- * the sidebar reaches it only through the category's `search`.
+ * the stencil panels reach it only through the category's `search`.
  */
 const tileDefinition: ObjectTypeDefinition<TileDoc, TileState> = {
 	features: TileFeatures,
@@ -269,7 +269,7 @@ const PANEL_DOC_DEFAULTS: Omit<PanelDoc, "id"> = {
  * The only spec shape declaring its creation defaults to the registries
  * (`defaults`), and the only one whose fill is AUTO_COLOR rather than
  * transparent: the type a document has to omit `fill` / `strokeWidth` on for the
- * three-step resolution to be visible (default-fill.spec.ts). Off the toolbar and
+ * three-step resolution to be visible (default-fill.spec.ts). Off the rail and
  * out of every category, so it exists only for documents to name.
  */
 const panelDefinition: ObjectTypeDefinition<PanelDoc, PanelState> = {
@@ -509,8 +509,8 @@ const memoDefinition: ObjectTypeDefinition<MemoDoc, MemoState> = {
 
 /**
  * The test-only plugin the core e2e harness registers. Registration only makes
- * the stencils exist; `specShapesStencilCategory` and pinned `pin` / `card` entries
- * are what put them on the bar.
+ * the stencils exist; `specShapesStencilCategory` and the `pin` / `card` / `memo`
+ * rail presets are what put them on the rail.
  */
 export const specShapesPlugin: CanvasPlugin = {
 	id: "spec-shapes",
@@ -531,9 +531,9 @@ const SPEC_CATEGORY_PRESETS = [
 
 /**
  * Category listing the `tile` preset, so the flyout spec has a category to
- * open, and holding `brick` beyond it for the sidebar search to reach. Composed
- * into the harness `toolbarItems` and `stencilLibrarySections` the same way a
- * host composes a plugin's own category.
+ * open, and holding `brick` beyond it for the panel search to reach. Composed
+ * into the harness `stencilLibrarySections` and pinned through
+ * `pinnedCategoryIds` the same way a host composes a plugin's own category.
  */
 export const specShapesStencilCategory: StencilCategory = {
 	id: "spec",

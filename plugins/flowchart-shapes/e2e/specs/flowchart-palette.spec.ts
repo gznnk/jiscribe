@@ -71,7 +71,7 @@ test.describe("flowchart palette", () => {
 
 	test("offers exactly the presets this spec draws", async ({ canvas }) => {
 		await canvas.page.click(selectors.categoryButton(FLOWCHART));
-		const flyout = canvas.page.locator(selectors.categoryFlyout(FLOWCHART));
+		const flyout = canvas.page.locator(selectors.categoryPanel(FLOWCHART));
 		await expect(flyout).toBeVisible();
 
 		const offered = await flyout

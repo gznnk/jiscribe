@@ -14,7 +14,7 @@ import { selectors } from "../../support/selectors";
  * that nothing else moved.
  *
  * The two shapes are injected through the harness's doc hook rather than drawn,
- * since a toolbar-created shape gets its fields materialized by the factory,
+ * since a rail-placed shape gets its fields materialized by the factory,
  * which is exactly the path this is not about.
  */
 

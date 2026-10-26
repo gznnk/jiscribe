@@ -65,24 +65,29 @@ export type {
 	BuildExportSvgOptions,
 	ResolveImageBlob,
 } from "./rendering/export";
-// Toolbar composition (issue #184). The sections are the single source of order
-// and category metadata: each item names, in display order, a pinned preset, a
-// category flyout, a command button, the zoom group, a sidebar toggle, a divider
-// or a host UI slot. Pass a custom `toolbar.sections` to `<Canvas>`; the default
-// bar is itself such an array, and each of its four sections is exported on its
-// own so a host replacing only the tools can reuse the rest. A `StencilCategory` is the
-// same object whether it becomes a flyout there or a section of the shape library
-// sidebar (`stencilLibrary.sections`); core exports `basicStencilCategory` and
-// plugins export their own (e.g. `containerStencilCategory`).
+// Toolbar composition (issue #184). The sections are the single source of order:
+// each item names, in display order, a command button, the zoom group, the
+// properties toggle, a divider or a host UI slot. Pass a custom `toolbar.sections`
+// to `<Canvas>`; the default bar is itself such an array, and each of its sections
+// is exported on its own so a host adding its own UI can reuse the rest.
 export {
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
-	DEFAULT_TOOLBAR_TOOLS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	type ToolbarItem,
 	type ToolbarSection,
 } from "./controllers/ui/menu/Toolbar";
+// The stencil rail at the left: the host's presets (`rail.presetIds`), then the
+// library categories the user pinned (seeded by `CanvasConfig.pinnedCategoryIds`,
+// changed from the catalog), then the catalog button. A `StencilCategory` is one section of
+// `stencilLibrary.sections`, which both the pinned buttons and the catalog draw
+// from; core exports `basicStencilCategory` and plugins export their own (e.g.
+// `containerStencilCategory`).
+export {
+	DEFAULT_RAIL_PRESET_IDS,
+	type CanvasRailConfig,
+} from "./controllers/ui/menu/StencilRail/stencilRailConfig";
 export {
 	basicStencilCategory,
 	type StencilCategory,
@@ -113,6 +118,8 @@ export type {
 	SidebarPanelId,
 	SidebarPanelState,
 	SidebarSideState,
+	StencilLibrarySidebarState,
+	StencilPanelContent,
 } from "./controllers/CanvasTypes";
 export type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 // A UI consumer reads `view` to decide whether to pass settings of its own

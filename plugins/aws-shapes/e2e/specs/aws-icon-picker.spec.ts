@@ -5,7 +5,7 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 const GRID = '[data-testid="aws-icon-picker-grid"]';
 const SEARCH = '[data-testid="aws-icon-picker-search"]';
 
-/** The ObjectMenu section id, kept apart from the toolbar category ("aws"). */
+/** The ObjectMenu section id, kept apart from the rail category ("aws"). */
 const SECTION = "aws-icon";
 
 const CATEGORY = "aws";

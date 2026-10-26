@@ -47,14 +47,13 @@ export const resolveStencilCategory = (
 /**
  * Resolves every category in display order, dropping the ones left empty.
  *
- * @param categories Groups in display order (the sidebar's sections, or the
- * `stencilCategory` items of a toolbar section).
+ * @param categories Groups in display order (`stencilLibrary.sections`).
  * @param stencil Registry answering "what presets exist" for this canvas.
  * @returns The resolvable groups in the given order; empty when none resolves.
  * @throws When two groups share an `id`, or one of them repeats a preset id
- *   (see {@link resolveStencilCategory}). The id keys the rendered section, its
- *   collapse state and its DOM ids, so a repeat would be indistinguishable from
- *   the first section rather than visibly wrong.
+ *   (see {@link resolveStencilCategory}). The id keys the catalog row, the pins
+ *   and the open panel, so a repeat would be indistinguishable from the first
+ *   section rather than visibly wrong.
  */
 export const resolveStencilCategories = (
 	categories: readonly StencilCategory[],

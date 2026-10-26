@@ -1,22 +1,13 @@
 import type { CommandRegistry } from "../../../../commands/CommandRegistry";
-import type { Stencil } from "../../../objects/Stencil";
-import type { StencilRegistry } from "../../../objects/StencilRegistry";
-import {
-	resolveStencilCategory,
-	type ResolvedStencilCategory,
-} from "../../StencilLibrary/utils/resolveStencilCategory";
 import type { ToolbarItem, ToolbarSection } from "../toolbarSections";
 
 /** A toolbar item with its registry lookups done, ready to draw. */
 export type ResolvedToolbarItem =
-	| { type: "stencilPreset"; preset: Stencil }
-	| ({ type: "stencilCategory" } & ResolvedStencilCategory)
 	| ({ type: "command" } & Pick<
 			Extract<ToolbarItem, { type: "command" }>,
 			"commandId" | "icon" | "label"
 	  >)
 	| { type: "zoom" }
-	| { type: "stencilLibraryToggle" }
 	| { type: "propertyPanelToggle" }
 	| { type: "divider" }
 	| { type: "slot"; id: string; node: React.ReactNode };
@@ -30,20 +21,12 @@ export type ResolvedToolbarSection = {
 
 /** What the declared items are looked up against. */
 export type ToolbarResolutionContext = {
-	/** Registry answering "what presets exist" for this canvas. */
-	stencil: StencilRegistry;
 	/**
 	 * Registry the `command` items are looked up in; an unknown id is dropped.
 	 * Only the existence of the command is read here — the button resolves the
 	 * command itself, so the two never disagree.
 	 */
 	command: CommandRegistry;
-	/**
-	 * Whether the host's `stencilLibrary.sections` resolved to at least one
-	 * section. False drops every `stencilLibraryToggle` item: the toggle would
-	 * open an empty sidebar.
-	 */
-	hasLibrary: boolean;
 };
 
 /**
@@ -54,8 +37,8 @@ export type ToolbarResolutionContext = {
  * A divider the host itself put at an end is kept: there it means the boundary
  * with the neighbouring section, not a separation inside this one. So the
  * declaration decides, not the resolved run — a section declared
- * `[slot, divider]` keeps its divider, while `[…, divider, stencilLibraryToggle]`
- * loses it along with the toggle.
+ * `[slot, divider]` keeps its divider, while `[…, divider, command]` loses it
+ * along with a command the registry does not know.
  *
  * @param items The section's items after resolution, in display order.
  * @param declaredItems The same section's items before resolution; only their
@@ -90,14 +73,6 @@ const resolveToolbarItem = (
 	context: ToolbarResolutionContext,
 ): ResolvedToolbarItem[] => {
 	switch (item.type) {
-		case "stencilPreset": {
-			const preset = context.stencil.get(item.presetId);
-			return preset ? [{ type: "stencilPreset", preset }] : [];
-		}
-		case "stencilCategory": {
-			const resolved = resolveStencilCategory(item.category, context.stencil);
-			return resolved ? [{ type: "stencilCategory", ...resolved }] : [];
-		}
 		case "command":
 			return context.command.get(item.commandId)
 				? [
@@ -109,8 +84,6 @@ const resolveToolbarItem = (
 						},
 					]
 				: [];
-		case "stencilLibraryToggle":
-			return context.hasLibrary ? [item] : [];
 		default:
 			return [item];
 	}
@@ -121,22 +94,21 @@ const resolveToolbarItem = (
  * looked up, everything unresolvable dropped, and the leftover dividers and
  * emptied sections cleaned away.
  *
- * Dropping is silent by design — a host may name presets and commands it did
- * not install, and the bar shows whatever is there. What is left of a section
+ * Dropping is silent by design — a host may name commands it switched off, and
+ * the bar shows whatever is there. What is left of a section
  * therefore depends on the registries, which is why the cleanup runs here
  * rather than being baked into the declaration.
  *
  * @param sections Declared bar in display order (`toolbar.sections`, defaulting
  * to `DEFAULT_TOOLBAR_SECTIONS`); an empty array resolves to an empty bar.
- * @param context Registries and host facts the ids are resolved against.
+ * @param context Registries the ids are resolved against.
  * @returns The drawable sections in the given order, each with `align` filled
  * in (omitted = `"start"`); a section left with no item at all is gone, so the
  * result can be shorter than `sections`. A divider the host declared at an end
  * of a section survives as the intended boundary with the next one
  * (see {@link dropDanglingDividers}).
- * @throws When two sections share an `id`, or a `stencilCategory` item repeats a preset
- *   id (see {@link resolveStencilCategory}). The id keys the rendered section,
- *   so a repeat would be indistinguishable from the first rather than visibly
+ * @throws When two sections share an `id`. The id keys the rendered section, so
+ *   a repeat would be indistinguishable from the first rather than visibly
  *   wrong.
  */
 export const resolveToolbarSections = (

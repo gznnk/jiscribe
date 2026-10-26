@@ -27,8 +27,8 @@ export function selectConnectorAlone(
 		// A picked part goes with the object it hung off: the connector replaces it.
 		selection: { objectIds: [connectorId], part: null },
 		multiSelectGroup: null,
-		// Close the submenu / category flyout on selection change
+		// Close the submenu / stencil flyout on selection change
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 	};
 }

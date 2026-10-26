@@ -29,9 +29,9 @@ export const beginConnectorReshape = (
 			// rather than left addressing whoever took the number over.
 			selection: { objectIds: [connectorId], part: null },
 			multiSelectGroup: null,
-			// Close the submenu / category flyout on selection change
+			// Close the submenu / stencil flyout on selection change
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			stencilFlyout: null,
 			contextMenuPosition: null,
 		},
 		{ kind: "segment" },

@@ -14,8 +14,8 @@ type ResolvedStencilLibrary = {
 };
 
 /**
- * The shape library's sections resolved against the stencil registry, and the
- * preset lookup the library panel reads.
+ * The stencil library's sections resolved against the stencil registry, and the
+ * preset lookup the stencil panels read.
  *
  * @param sections - The host's `stencilLibrary.sections`, or undefined when no library is declared (resolves to no sections)
  * @param registries - The canvas's own registries, passed in rather than read from context because the canvas is their provider
@@ -24,9 +24,9 @@ export const useResolvedStencilLibrary = (
 	sections: readonly StencilCategory[] | undefined,
 	registries: CanvasRegistries,
 ): ResolvedStencilLibrary => {
-	// Sections whose ids resolve to registered presets. Resolved here (not in the
-	// panel) so an unmounted-but-declared library still decides whether the
-	// sidebar can open at all.
+	// Sections whose ids resolve to registered presets. Resolved here (not in a
+	// panel) so the rail and both panels draw from one resolution, and an empty
+	// one decides that no panel can open at all.
 	const librarySections = useMemo(
 		() => resolveStencilCategories(sections ?? [], registries.stencil),
 		[sections, registries],

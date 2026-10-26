@@ -1,41 +1,41 @@
-import { memo, useMemo, useRef, useState } from "react";
+import { memo } from "react";
 
-import { StencilLibraryItem } from "./StencilLibraryItem";
+import { StencilCatalogPanelContent } from "./StencilCatalogPanelContent";
+import { StencilCategoryPanelContent } from "./StencilCategoryPanelContent";
 import {
-	StencilLibraryEmptyMessage,
-	StencilLibraryMoreMatchesMessage,
-	StencilLibraryMoreViaSearchButton,
-	StencilLibraryPanelCloseButton,
 	StencilLibraryPanelContainer,
-	StencilLibraryPanelGrid,
-	StencilLibraryPanelHeader,
-	StencilLibraryPanelList,
-	StencilLibraryPanelTitle,
-	StencilLibrarySearchBox,
-	StencilLibrarySearchInput,
-	StencilLibrarySectionChevron,
-	StencilLibrarySectionHeader,
-	StencilLibrarySectionIcon,
-	StencilLibrarySectionLabel,
+	type StencilPanelPresentation,
 } from "./StencilLibraryPanelStyled";
+import { resolveDrawnStencilPanelContent } from "./utils/resolveDrawnStencilPanelContent";
 import type { ResolvedStencilCategory } from "./utils/resolveStencilCategory";
-import {
-	resolveStencilCategoryLabel,
-	resolveStencilLabel,
-} from "./utils/resolveStencilLabel";
-import { searchStencilLibrary } from "./utils/searchStencilLibrary";
+import { resolveStencilCategoryLabel } from "./utils/resolveStencilLabel";
 import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
-import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
+import type { StencilPanelContent } from "../../../CanvasTypes";
+import {
+	CLOSE_PANEL_ACTION,
+	DOCK_PANEL_ACTION,
+	UNDOCK_PANEL_ACTION,
+} from "../../../gestures/handlers/menu/utils/menuActions";
 import { CloseIcon } from "../../icons/CloseIcon";
-import { SearchIcon } from "../../icons/SearchIcon";
+import { SidebarIcon } from "../../icons/SidebarIcon";
 import type { Stencil } from "../../objects/Stencil";
+import {
+	SidePanelHeader,
+	SidePanelHeaderButton,
+	SidePanelHeaderButtons,
+	SidePanelTitle,
+} from "../SidePanel/SidePanelStyled";
 
 type StencilLibraryPanelProps = {
-	/** Sections in display order, each already resolved against the registry. */
+	/** Over the canvas (the flyout) or docked beside it; decides the keep-open toggle's state. */
+	presentation: StencilPanelPresentation;
+	/** What the panel shows (reducer state). */
+	content: StencilPanelContent;
+	/** Every library section in declaration order, already resolved against the registry. */
 	sections: readonly ResolvedStencilCategory[];
-	/** Ids of the collapsed sections; anything not listed is expanded. */
-	collapsedSectionIds: readonly string[];
+	/** The user's pins (reducer state), for the catalog's pin toggles. */
+	pinnedCategoryIds: readonly string[];
 	/** Preset id currently in drawing mode, to highlight the matching item. */
 	activePresetId: string | null;
 	/**
@@ -45,168 +45,106 @@ type StencilLibraryPanelProps = {
 	resolvePreset: (presetId: string) => Stencil | undefined;
 };
 
-const CHEVRON_SIZE = 12;
-const SECTION_ICON_SIZE = 16;
-const CLOSE_ICON_SIZE = 14;
-const SEARCH_ICON_SIZE = 14;
+const HEADER_ICON_SIZE = 14;
 
 /**
- * The shape library sidebar: every stencil the host declared in
- * `stencilLibrary.sections`, grouped into collapsible sections.
+ * A stencil panel: one library category's presets, or the catalog of every
+ * category (StencilCategoryPanelContent / StencilCatalogPanelContent). The same
+ * panel is drawn over the canvas as the flyout and docked beside it; only the
+ * keep-open toggle in its header tells the two apart.
  *
  * The panel is one gesture target (`data-kind="menu" data-id="stencil-library-panel"`)
- * handled by StencilLibraryPanelHandler: its section headers and close button carry
- * only a data-action. The stencil items keep their own `data-kind` / `data-id`
- * ("stencil-library"), so click-to-draw and drag-to-place stay with
- * StencilLibraryItemHandler exactly as in the toolbar.
+ * handled by StencilLibraryPanelHandler: its header buttons and the catalog's
+ * rows carry only a data-action. The stencil items keep their own `data-kind` /
+ * `data-id` ("stencil-library"), so click-to-draw and drag-to-place stay with
+ * StencilLibraryItemHandler exactly as on the rail. While it shows a category it
+ * also carries `data-stencil-category-panel`, the hook the e2e suites find it by.
  *
- * Open/collapse state is reducer state, so this component is render-only. The
- * search query is not: it belongs to this instance of the panel alone and no
- * handler or command reads it, and it goes with the panel when that closes
- * (Canvas unmounts it).
+ * A content naming a category the library does not hold (a docked panel
+ * restored on a host without that plugin) draws the catalog
+ * (resolveDrawnStencilPanelContent); the state keeps the id. What the panel shows is reducer state, so this component is render-only
+ * apart from the search query, which belongs to the content shown and goes with
+ * it.
  */
 const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
+	presentation,
+	content,
 	sections,
-	collapsedSectionIds,
+	pinnedCategoryIds,
 	activePresetId,
 	resolvePreset,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
-	const [query, setQuery] = useState("");
-	const searchInputRef = useRef<HTMLInputElement>(null);
 
-	const trimmedQuery = query.trim();
-
-	// While searching, the sections collapse into one list: a shape is looked up
-	// by name, not by where it was filed.
-	const searchResult = useMemo(
-		() =>
-			searchStencilLibrary(
-				sections,
-				trimmedQuery,
-				(preset) => resolveStencilLabel(preset, messages, locale),
-				resolvePreset,
-			),
-		[sections, trimmedQuery, messages, locale, resolvePreset],
-	);
-	const matchedPresets = searchResult.presets;
-	const searchResultList =
-		matchedPresets.length > 0 ? (
-			<>
-				<StencilLibraryPanelGrid>
-					{matchedPresets.map((preset) => (
-						<StencilLibraryItem
-							key={preset.id}
-							preset={preset}
-							isActive={activePresetId === preset.id}
-						/>
-					))}
-				</StencilLibraryPanelGrid>
-				{searchResult.hiddenMatchCount > 0 && (
-					<StencilLibraryMoreMatchesMessage>
-						{messages.stencilLibraryMoreMatches}
-					</StencilLibraryMoreMatchesMessage>
-				)}
-			</>
-		) : (
-			<StencilLibraryEmptyMessage>
-				{messages.stencilLibraryNoMatch}
-			</StencilLibraryEmptyMessage>
-		);
+	const drawnContent = resolveDrawnStencilPanelContent(content, sections);
+	const shownSection =
+		drawnContent.kind === "category"
+			? sections.find(
+					(section) => section.category.id === drawnContent.categoryId,
+				)
+			: undefined;
+	const title = shownSection
+		? resolveStencilCategoryLabel(
+				shownSection.category.id,
+				shownSection.category.label,
+				messages,
+				locale,
+			)
+		: messages.stencilCatalogTitle;
+	const isDocked = presentation === "docked";
 
 	return (
 		<StencilLibraryPanelContainer
-			aria-label={messages.stencilLibraryTitle}
+			presentation={presentation}
+			aria-label={title}
 			data-kind="menu"
 			data-id="stencil-library-panel"
+			data-presentation={presentation}
+			data-stencil-category-panel={shownSection?.category.id}
 		>
-			<StencilLibraryPanelHeader>
-				<StencilLibraryPanelTitle>
-					{messages.stencilLibraryTitle}
-				</StencilLibraryPanelTitle>
-				<StencilLibraryPanelCloseButton
-					type="button"
-					aria-label={messages.stencilLibraryClose}
-					title={messages.stencilLibraryClose}
-					data-action="close"
-				>
-					<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
-				</StencilLibraryPanelCloseButton>
-			</StencilLibraryPanelHeader>
-
-			<StencilLibrarySearchBox data-gesture="none">
-				<SearchIcon width={SEARCH_ICON_SIZE} height={SEARCH_ICON_SIZE} />
-				<StencilLibrarySearchInput
-					type="text"
-					ref={searchInputRef}
-					value={query}
-					placeholder={messages.stencilLibrarySearchPlaceholder}
-					aria-label={messages.stencilLibrarySearchPlaceholder}
-					onChange={(event) => setQuery(event.target.value)}
+			<SidePanelHeader>
+				<SidePanelTitle>{title}</SidePanelTitle>
+				<SidePanelHeaderButtons>
+					<SidePanelHeaderButton
+						type="button"
+						aria-label={messages.stencilPanelKeepOpen}
+						title={messages.stencilPanelKeepOpen}
+						aria-pressed={isDocked}
+						data-action={isDocked ? UNDOCK_PANEL_ACTION : DOCK_PANEL_ACTION}
+					>
+						<SidebarIcon
+							edge="left"
+							width={HEADER_ICON_SIZE}
+							height={HEADER_ICON_SIZE}
+						/>
+					</SidePanelHeaderButton>
+					<SidePanelHeaderButton
+						type="button"
+						aria-label={messages.stencilPanelClose}
+						title={messages.stencilPanelClose}
+						data-action={CLOSE_PANEL_ACTION}
+					>
+						<CloseIcon width={HEADER_ICON_SIZE} height={HEADER_ICON_SIZE} />
+					</SidePanelHeaderButton>
+				</SidePanelHeaderButtons>
+			</SidePanelHeader>
+			{shownSection ? (
+				<StencilCategoryPanelContent
+					key={`category:${shownSection.category.id}`}
+					section={shownSection}
+					activePresetId={activePresetId}
+					resolvePreset={resolvePreset}
 				/>
-			</StencilLibrarySearchBox>
-
-			<StencilLibraryPanelList>
-				{trimmedQuery !== ""
-					? searchResultList
-					: sections.map((section) => {
-							const Icon = section.category.icon;
-							const isExpanded = !collapsedSectionIds.includes(
-								section.category.id,
-							);
-							return (
-								<div key={section.category.id}>
-									<StencilLibrarySectionHeader
-										type="button"
-										aria-expanded={isExpanded}
-										data-action={`section:${section.category.id}`}
-									>
-										<StencilLibrarySectionChevron isExpanded={isExpanded}>
-											<ChevronRightIcon
-												width={CHEVRON_SIZE}
-												height={CHEVRON_SIZE}
-											/>
-										</StencilLibrarySectionChevron>
-										<StencilLibrarySectionIcon>
-											<Icon
-												width={SECTION_ICON_SIZE}
-												height={SECTION_ICON_SIZE}
-											/>
-										</StencilLibrarySectionIcon>
-										<StencilLibrarySectionLabel>
-											{resolveStencilCategoryLabel(
-												section.category.id,
-												section.category.label,
-												messages,
-												locale,
-											)}
-										</StencilLibrarySectionLabel>
-									</StencilLibrarySectionHeader>
-									{isExpanded && (
-										<StencilLibraryPanelGrid>
-											{section.presets.map((preset) => (
-												<StencilLibraryItem
-													key={preset.id}
-													preset={preset}
-													isActive={activePresetId === preset.id}
-												/>
-											))}
-										</StencilLibraryPanelGrid>
-									)}
-									{isExpanded && section.category.search !== undefined && (
-										<StencilLibraryMoreViaSearchButton
-											type="button"
-											data-gesture="none"
-											onClick={() => searchInputRef.current?.focus()}
-										>
-											{messages.stencilLibraryMoreViaSearch}
-										</StencilLibraryMoreViaSearchButton>
-									)}
-								</div>
-							);
-						})}
-			</StencilLibraryPanelList>
+			) : (
+				<StencilCatalogPanelContent
+					key="catalog"
+					sections={sections}
+					pinnedCategoryIds={pinnedCategoryIds}
+					activePresetId={activePresetId}
+					resolvePreset={resolvePreset}
+				/>
+			)}
 		</StencilLibraryPanelContainer>
 	);
 };

@@ -17,7 +17,7 @@ import { EMPTY_SELECTION } from "../CanvasSelection";
 export const isSelectionClearable = (state: CanvasControllerState): boolean =>
 	state.selection.objectIds.length > 0 ||
 	state.mode.kind === "draw" ||
-	state.stencilLibraryOpenCategory !== null;
+	state.stencilFlyout !== null;
 
 /**
  * Drops the selection, along with the transient UI that hangs off one, an armed
@@ -35,6 +35,6 @@ export const clearAllSelection = (
 	selection: EMPTY_SELECTION,
 	multiSelectGroup: null,
 	objectMenuOpenId: null,
-	stencilLibraryOpenCategory: null,
+	stencilFlyout: null,
 	mode: state.mode.kind === "draw" ? NORMAL_MODE : state.mode,
 });

@@ -10,9 +10,8 @@ mountPluginHarness({
 	// The rect preset is core's; it is here because CanvasDriver.goto() waits for the
 	// "Rectangle" tool. The icons come from this package's own stencils, as the category
 	// every spec opens: the shape is only useful once an icon is picked, so the plugin
-	// contributes a flyout to pick from rather than a single pinned preset.
-	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilCategory", category: lucideIconStencilCategory },
-	],
+	// contributes a flyout to pick from rather than a single preset on the rail.
+	railPresetIds: ["rect"],
+	stencilLibrarySections: [lucideIconStencilCategory],
+	pinnedCategoryIds: [lucideIconStencilCategory.id],
 });

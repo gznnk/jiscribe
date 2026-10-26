@@ -17,7 +17,7 @@ const makeState = (
 	({
 		mode: { kind: "normal" },
 		propertyPanel: { isOpen: true, collapsedSectionIds: [] },
-		stencilLibraryOpenCategory: "flowchart",
+		stencilFlyout: { kind: "category", categoryId: "flowchart" },
 		selection: selectionOf(["a"]),
 		contextMenuPosition: { x: 1, y: 1 },
 		...overrides,
@@ -82,7 +82,7 @@ describe("PropertyPanelHandler", () => {
 			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 		// The panel is persistent chrome, so a press on it leaves it open
 		expect(next.propertyPanel.isOpen).toBe(true);
 		expect(next.selection.objectIds).toEqual(["a"]);
@@ -256,7 +256,7 @@ describe("PropertyPanelHandler", () => {
 			);
 			expect(rectOf(next).strokeWidth).toBe(7);
 			expect(next.contextMenuPosition).toBeNull();
-			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.stencilFlyout).toBeNull();
 		});
 	});
 });

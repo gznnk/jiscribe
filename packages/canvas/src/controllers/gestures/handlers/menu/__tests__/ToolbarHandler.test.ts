@@ -17,7 +17,7 @@ const makeState = (): CanvasControllerState =>
 		multiSelectGroup: null,
 		mode: { kind: "normal" },
 		contextMenuPosition: { x: 1, y: 1 },
-		stencilLibraryOpenCategory: "flowchart",
+		stencilFlyout: { kind: "category", categoryId: "flowchart" },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 	}) as unknown as CanvasControllerState;
 
@@ -94,7 +94,7 @@ describe("ToolbarHandler", () => {
 			makeEvent("pressed", "toolbar"),
 			registries,
 		);
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		expect(next.stencilFlyout).toBeNull();
 		expect(next.viewport.zoom).toBe(1);
 	});
 });

@@ -5,11 +5,14 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "ズームアウト",
 	toolbarResetZoom: "ズームを100%に戻す",
 	toolbarZoomIn: "ズームイン",
-	toolbarStencilLibrary: "図形ライブラリ",
 	toolbarPropertyPanel: "プロパティ",
 
-	stencilLibraryTitle: "図形ライブラリ",
-	stencilLibraryClose: "閉じる",
+	stencilRailLabel: "図形",
+
+	stencilCatalogTitle: "すべての図形",
+	stencilPanelClose: "閉じる",
+	stencilPanelKeepOpen: "固定表示",
+	stencilCatalogPin: (categoryLabel) => `${categoryLabel} をピン留め`,
 	stencilLibrarySearchPlaceholder: "図形を検索",
 	stencilLibraryNoMatch: "一致する図形はありません",
 	stencilLibraryMoreMatches:
@@ -160,7 +163,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	// プリセットの ja ラベルは各プリセット定義側にある。record はホスト上書き用に残す
 	stencilLabels: {},
 
-	// カテゴリの ja ラベルは toolbar.sections のカテゴリ項目側にある。record はホスト上書き用に残す
+	// カテゴリの ja ラベルは各カテゴリ定義（StencilCategory）側にある。record はホスト上書き用に残す
 	stencilCategoryLabels: {},
 
 	// PRESET_COLORS の英語名を網羅する。プラグインが独自パレットを持つ場合も

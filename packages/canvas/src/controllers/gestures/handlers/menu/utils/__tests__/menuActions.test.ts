@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	CLOSE_PANEL_ACTION,
 	commandAction,
+	DOCK_PANEL_ACTION,
 	documentAction,
 	parseMenuAction,
+	pinAction,
 	setAction,
+	showAction,
 	sliderAction,
 	toggleAction,
+	UNDOCK_PANEL_ACTION,
 } from "../menuActions";
 
 describe("menuActions", () => {
@@ -67,6 +72,30 @@ describe("menuActions", () => {
 		);
 		// A document action with nothing after the property has no value to write.
 		expect(parseMenuAction("doc:view.open")).toBeNull();
+	});
+
+	it("reads back the stencil panel actions", () => {
+		expect(parseMenuAction(showAction("flowchart"))).toEqual({
+			kind: "show",
+			categoryId: "flowchart",
+		});
+		expect(parseMenuAction(pinAction("aws-group"))).toEqual({
+			kind: "pin",
+			categoryId: "aws-group",
+		});
+		expect(parseMenuAction(DOCK_PANEL_ACTION)).toEqual({ kind: "dock" });
+		expect(parseMenuAction(UNDOCK_PANEL_ACTION)).toEqual({ kind: "undock" });
+		expect(parseMenuAction(CLOSE_PANEL_ACTION)).toEqual({ kind: "close" });
+	});
+
+	it("writes the stencil panel DOM strings the e2e selectors look for", () => {
+		expect(showAction("uml")).toBe("show:uml");
+		expect(pinAction("uml")).toBe("pin:uml");
+		expect([
+			DOCK_PANEL_ACTION,
+			UNDOCK_PANEL_ACTION,
+			CLOSE_PANEL_ACTION,
+		]).toEqual(["dock", "undock", "close"]);
 	});
 
 	it("gives null for a press on the body and for anything outside the grammar", () => {

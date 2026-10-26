@@ -76,7 +76,7 @@ const EXAMPLE_ENTRIES: ReadonlyArray<ShellEntry> = [
 		id: "plugins",
 		title: "Plugins",
 		description:
-			"Registering the shipped shape plugins: the plugin array goes to both Canvas and createCanvasParser, and the host lays out their toolbar entries",
+			"Registering the shipped shape plugins: the plugin array goes to both Canvas and createCanvasParser, and the host lays out their rail presets, pinned categories and catalog",
 		source: "src/examples/plugins.tsx",
 		Component: PluginsExample,
 	},

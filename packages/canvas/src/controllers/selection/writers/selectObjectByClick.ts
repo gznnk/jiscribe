@@ -55,6 +55,6 @@ export function selectObjectByClick(
 		multiSelectGroup,
 		// Close the submenu on selection change
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		stencilFlyout: null,
 	};
 }

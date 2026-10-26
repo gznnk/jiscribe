@@ -21,13 +21,14 @@ type MeasuredLayout = {
 };
 
 /**
- * Left edge of the container inside its offset parent (CanvasRoot, the nearest
+ * Left edge of the container inside its offset parent (CanvasBody, the nearest
  * positioned ancestor). Deliberately not a viewport-relative rectangle: only a
- * move within the canvas layout, such as the shape library sidebar taking space
- * beside the viewport, should count as a shift — scrolling the host page or
- * resizing the window from the left moves the whole canvas with its contents.
- * The properties sidebar sits on the other side, so it narrows the container
- * without moving this value: it needs the new dimensions and no compensation.
+ * move within the canvas layout, such as the docked stencil panel or the rail
+ * taking space beside the viewport, should count as a shift — scrolling the host
+ * page or resizing the window from the left moves the whole canvas with its
+ * contents. The properties sidebar sits on the other side, so it narrows the
+ * container without moving this value: it needs the new dimensions and no
+ * compensation.
  */
 function measureLeft(container: HTMLElement): number | null {
 	return container.offsetParent === null ? null : container.offsetLeft;
@@ -41,7 +42,7 @@ function measureLeft(container: HTMLElement): number | null {
  * Two observers feed it. A ResizeObserver catches every change, but reports it
  * only after the frame that caused it has painted — fine for a window resize,
  * a visible one-frame jump when the change is the canvas's own chrome moving
- * the viewport (either sidebar taking its space). So the container
+ * the viewport (the rail or either sidebar taking its space). So the container
  * is also measured in a layout effect keyed on `layoutKey`: that runs after the
  * commit that changed the chrome and before the browser paints, and React
  * flushes the dispatch synchronously, so the compensated camera is what gets
@@ -50,7 +51,8 @@ function measureLeft(container: HTMLElement): number | null {
  * @param containerRef - Reference to the container element to observe
  * @param dispatch - The Canvas reducer's dispatch
  * @param layoutKey - A value whose change means React itself re-laid out the
- *   container (the open flags of the two sidebars). Compared by identity, so a
+ *   container (whether the rail, the docked stencil panel and the properties
+ *   sidebar are on screen). Compared by identity, so a
  *   key covering several flags has to be a primitive rather than an object; the
  *   container is re-measured synchronously after every commit in which it differs.
  *
@@ -62,7 +64,7 @@ function measureLeft(container: HTMLElement): number | null {
  * useContainerResize(
  *   containerRef,
  *   dispatch,
- *   `${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}`,
+ *   `${isRailShown}:${isStencilPanelDocked}:${state.propertyPanel.isOpen}`,
  * );
  * ```
  */
