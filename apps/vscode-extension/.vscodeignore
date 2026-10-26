@@ -12,6 +12,7 @@ vitest.config.ts
 **/*.map
 tsconfig.json
 tsconfig.tsbuildinfo
+CLAUDE.md
 .gitignore
 **/*.jis.json
 *.vsix
