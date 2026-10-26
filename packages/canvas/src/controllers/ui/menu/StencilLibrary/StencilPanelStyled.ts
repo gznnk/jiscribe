@@ -94,10 +94,14 @@ export const StencilPanelList = styled.div`
 	${scrollbarStyles}
 `;
 
+/** How strongly an unpinned row hints its pin toggle, against a pinned row's full pin. */
+const UNPINNED_PIN_HINT_OPACITY = 0.4;
+
 /**
  * One category of the catalog: the button switching the panel to it, and its
- * pin toggle. The pin shows only while the row is hovered or holds the focus,
- * or for good once the category is pinned.
+ * pin toggle. A pinned category's pin always shows in full; an unpinned one's
+ * shows faint, and only while the row is hovered or a key moved the focus into
+ * it (`:focus-visible`, so a click leaves nothing behind once the pointer goes).
  */
 export const StencilCatalogRow = styled.div<{ isPinned: boolean }>`
 	display: flex;
@@ -115,8 +119,8 @@ export const StencilCatalogRow = styled.div<{ isPinned: boolean }>`
 	}
 
 	&:hover > button:last-of-type,
-	&:focus-within > button:last-of-type {
-		opacity: 1;
+	&:has(:focus-visible) > button:last-of-type {
+		opacity: ${(props) => (props.isPinned ? 1 : UNPINNED_PIN_HINT_OPACITY)};
 	}
 `;
 

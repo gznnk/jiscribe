@@ -176,9 +176,12 @@ test.describe("Stencil catalog", () => {
 		await expect(specPin).toHaveCSS("opacity", "1");
 		await expect(basicPin).toHaveCSS("opacity", "0");
 
+		// Hovered, an unpinned row hints its pin faintly, so pinning it shows.
 		await canvas.page.hover(selectors.catalogRow(BASIC_CATEGORY));
+		await expect(basicPin).toHaveCSS("opacity", "0.4");
 		await basicPin.click();
 		await expect(basicPin).toHaveAttribute("aria-pressed", "true");
+		await expect(basicPin).toHaveCSS("opacity", "1");
 		await expect(basicButton).toBeVisible();
 		// Appended after the existing pin.
 		const railCategories = await canvas.page
@@ -196,6 +199,10 @@ test.describe("Stencil catalog", () => {
 		await basicPin.click();
 		await expect(basicPin).toHaveAttribute("aria-pressed", "false");
 		await expect(basicButton).toHaveCount(0);
+		await expect(basicPin).toHaveCSS("opacity", "0.4");
+		// The click left the focus on the toggle; once the pointer goes, no pin stays.
+		await canvas.page.mouse.move(0, 0);
+		await expect(basicPin).toHaveCSS("opacity", "0");
 	});
 
 	/**
