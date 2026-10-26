@@ -107,10 +107,11 @@ export function CanvasSurface({
 
 	// The host menu and the file name ride in a section of their own, ahead of the
 	// shape set's bar, whose history section opens with the divider separating
-	// them from it. The menu's slot is added only when an action is offered: the toolbar wraps every
-	// slot in a flex item with a gap, so an empty one would still push the name
-	// over, and a browser viewer's bar is to start at the name. Memoized so the
-	// toolbar keeps its memo: `node` is a fresh element on every render.
+	// them from it. The menu's slot is added only when an action is offered: the
+	// toolbar wraps every slot in a flex item with a gap, so an empty one would
+	// still push the name over, and a browser viewer's bar is to start at the
+	// name. Memoized so the toolbar keeps its memo: `node` is a fresh element on
+	// every render.
 	const toolbarSections = useMemo<ToolbarSection[]>(
 		() => [
 			{

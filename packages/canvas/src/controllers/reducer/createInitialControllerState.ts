@@ -87,6 +87,8 @@ export const createInitialControllerState = (
 		// not close them (see CanvasControllerState).
 		stencilLibraryPanel: seededSidebarPanels.stencilLibraryPanel,
 		propertyPanel: seededSidebarPanels.propertyPanel,
+		// Canvas reports the real answer before the first paint.
+		hasStencilLibrary: false,
 		activeModal: null,
 		commitVersion: 0,
 		saveRequest: { version: 0, nonce: "" },

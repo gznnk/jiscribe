@@ -2,14 +2,14 @@ import styled from "@emotion/styled";
 
 import { theme } from "../../../../foundation/theme/themeTokens";
 
-/**
- * Individual item button in the stencil library.
- * Placed in the unified toolbar (pinned or in a category flyout) and in the
- * shape library sidebar (StencilLibraryPanel).
- */
 /** Side in px of a stencil button, square, on the bars and in the library alike. */
 export const STENCIL_BUTTON_SIZE = 32;
 
+/**
+ * Individual item button in the stencil library.
+ * Placed on the top toolbar (pinned or in a category flyout), on the bottom
+ * tool bar and in the shape library sidebar (StencilLibraryPanel).
+ */
 export const StencilLibraryButton = styled.button<{ isActive?: boolean }>`
 	display: flex;
 	flex-direction: row;

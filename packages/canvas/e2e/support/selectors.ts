@@ -4,10 +4,10 @@
  */
 
 /**
- * Tool name on the top toolbar or the bottom tool bar, matching the button's title attribute. The
- * listed ones are core's own presets, spelled out as known values for
- * completion; a plugin's tool name (its stencil label, "Sticky" say) is equally
- * accepted.
+ * Tool name on the top toolbar or the bottom tool bar, matching the button's
+ * title attribute. The listed ones are core's own presets, spelled out as known
+ * values for completion; a plugin's tool name (its stencil label, "Sticky" say)
+ * is equally accepted.
  */
 export type ToolTitle =
 	"Rectangle" | "Ellipse" | "Polyline" | "Polygon" | "Text" | (string & {});

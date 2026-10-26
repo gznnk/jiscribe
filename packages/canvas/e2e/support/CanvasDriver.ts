@@ -76,8 +76,14 @@ export class CanvasDriver {
 
 	constructor(readonly page: Page) {}
 
-	async goto() {
-		await this.page.goto("/", { waitUntil: "networkidle" });
+	/**
+	 * Open the harness page and wait until it can be driven.
+	 *
+	 * @param search - Query string selecting a variant of the default page
+	 *   (`"?noStencilLibrary"`, see mountPluginHarness); empty for the page itself
+	 */
+	async goto(search = "") {
+		await this.page.goto(`/${search}`, { waitUntil: "networkidle" });
 		await expect(
 			this.page.locator(selectors.toolButton("Rectangle")),
 		).toBeVisible();

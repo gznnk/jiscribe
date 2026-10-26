@@ -724,6 +724,16 @@ export type CanvasControllerState = CanvasState & {
 	stencilLibraryPanel: StencilLibraryPanelState;
 
 	/**
+	 * Whether the host's `stencilLibrary.sections` resolved to at least one
+	 * section, so the shape library panel can be drawn at all. Canvas resolves
+	 * the sections and hands the answer in through
+	 * SET_STENCIL_LIBRARY_AVAILABILITY before the first paint; it starts false.
+	 * Read by the `toggleSidebars` command, which leaves the library's `isOpen`
+	 * alone without one, and by `isAnySidebarOpen`, which then ignores it.
+	 */
+	hasStencilLibrary: boolean;
+
+	/**
 	 * The properties sidebar (PropertyPanel), on the opposite edge from the shape
 	 * library. Editor chrome on the same terms: canvas presses, Escape, selection
 	 * changes and a doc swap (resetUiState / restoreHistorySnapshot) all leave it

@@ -6,10 +6,7 @@ import {
 	scrollbarStyles,
 } from "../../../../foundation/theme/themeScrollbarStyles";
 import { theme } from "../../../../foundation/theme/themeTokens";
-import {
-	SIDE_PANEL_INSET,
-	SIDE_PANEL_WIDTH,
-} from "../SidePanel/sidePanelLayout";
+import { SIDE_PANEL_INSET, SIDE_PANEL_WIDTH } from "../sidePanelLayout";
 
 /**
  * The shape library sidebar: a fixed-width column between the toolbar and the

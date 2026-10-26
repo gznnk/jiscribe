@@ -112,6 +112,8 @@ export const restoreHistorySnapshot = (
 		// stay open, and as collapsed, as the user left them.
 		stencilLibraryPanel: state.stencilLibraryPanel,
 		propertyPanel: state.propertyPanel,
+		// A host fact, not the document's.
+		hasStencilLibrary: state.hasStencilLibrary,
 		history,
 	};
 	const restoredState =

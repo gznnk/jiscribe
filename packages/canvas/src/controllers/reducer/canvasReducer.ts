@@ -614,6 +614,13 @@ export const createCanvasReducer =
 				return { ...state, contextMenuPosition: null };
 			}
 
+			case "SET_STENCIL_LIBRARY_AVAILABILITY": {
+				if (state.hasStencilLibrary === action.hasStencilLibrary) {
+					return state;
+				}
+				return { ...state, hasStencilLibrary: action.hasStencilLibrary };
+			}
+
 			case "CLOSE_MODAL": {
 				if (state.activeModal === null) {
 					return state;

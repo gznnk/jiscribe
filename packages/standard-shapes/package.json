@@ -12,7 +12,8 @@
 	},
 	"scripts": {
 		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run"
 	},
 	"comments": {
 		"exports": "./doc is the headless half (parsing, doc-ops, schema generation) and pulls in no react; the root entry is the half a canvas is rendered with. A Node host importing the root entry would drag react into a process that has no DOM, which is what the split prevents. ./tools is headless too: the plugins' AI tools, applied wherever the document is."
@@ -40,7 +41,9 @@
 		"@jiscribe/ai-tools-sdk": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
+		"@types/node": "catalog:",
 		"typescript": "catalog:",
+		"vitest": "catalog:",
 		"zod": "catalog:"
 	}
 }

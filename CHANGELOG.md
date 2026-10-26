@@ -26,7 +26,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **One switch opens or closes both sidebars.** The `sidebarsToggle` toolbar
   item runs the new `toggleSidebars` command: pressed while either sidebar is
   open, it closes both; otherwise it opens both, so a press never leaves one
-  open and the other closed. `DEFAULT_TOOLBAR_SIDEBARS_SECTION` places it at
+  open and the other closed; with no shape library declared it moves the
+  properties sidebar alone. `DEFAULT_TOOLBAR_SIDEBARS_SECTION` places it at
   the far right. `toggleStencilLibrary` / `togglePropertyPanel` and their
   toolbar items are unchanged.
 
@@ -39,6 +40,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and `standardToolbarToolsSection` are still exported; a host that keeps
   presets on the top bar passes `bottomToolbar={{ show: false }}`, or each
   preset shows twice.
+- **Migration: the bottom tool bar is shown unless you hide it.**
+  `bottomToolbar.show` is independent of `toolbar.show`. A host passing
+  `toolbar={{ show: false }}`, or composing `DEFAULT_TOOLBAR_TOOLS_SECTION` /
+  `standardToolbarToolsSection` into its top bar, must also pass
+  `bottomToolbar={{ show: false }}`.
 - **A divider no longer opens or closes the whole top bar.** One left at the
   very start or end of the resolved bar is dropped, since it separates the bar
   from nothing.

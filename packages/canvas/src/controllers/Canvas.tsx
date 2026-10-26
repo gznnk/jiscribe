@@ -53,6 +53,7 @@ import { usePropertyUpdaters } from "./hooks/usePropertyUpdaters";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSnapshotRenderScope } from "./hooks/useSnapshotRenderScope";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
+import { useSyncStencilLibraryAvailability } from "./hooks/useSyncStencilLibraryAvailability";
 import { useTextEditSession } from "./hooks/useTextEditSession";
 import { useVisibleObjectIds } from "./hooks/useVisibleObjectIds";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
@@ -624,6 +625,10 @@ const CanvasComponent = ({
 		stencilLibrary?.sections,
 		registries,
 	);
+	// One answer for the bar's library toggle, the panel's mount and, through the
+	// reducer, the sidebars switch.
+	const hasStencilLibrary = librarySections.length > 0;
+	useSyncStencilLibraryAvailability(hasStencilLibrary, dispatch);
 
 	// null while the host hid the bar. Memoized so BottomToolbar keeps its memo:
 	// the canvas re-renders on nearly every dispatch.
@@ -658,7 +663,7 @@ const CanvasComponent = ({
 							openCategoryId={state.stencilLibraryOpenCategory}
 							zoom={state.viewport.zoom}
 							sections={toolbarSections}
-							hasLibrary={librarySections.length > 0}
+							hasLibrary={hasStencilLibrary}
 							isLibraryOpen={state.stencilLibraryPanel.isOpen}
 							isPropertyPanelOpen={state.propertyPanel.isOpen}
 							isAnySidebarOpen={isAnySidebarOpen(state)}
@@ -666,7 +671,7 @@ const CanvasComponent = ({
 					</ToolbarCommandStateContext>
 				)}
 				<CanvasBody>
-					{state.stencilLibraryPanel.isOpen && librarySections.length > 0 && (
+					{state.stencilLibraryPanel.isOpen && hasStencilLibrary && (
 						<StencilLibraryPanel
 							sections={librarySections}
 							collapsedSectionIds={

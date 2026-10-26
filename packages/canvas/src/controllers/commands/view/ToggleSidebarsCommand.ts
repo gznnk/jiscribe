@@ -4,7 +4,9 @@ import type { ExecutableCommand } from "../CommandTypes";
 /**
  * Opens both sidebars together, or closes both while they are expanded (any
  * one of them open, see {@link isAnySidebarOpen}), so a press never leaves one
- * open and the other closed.
+ * open and the other closed. Without a shape library declared
+ * (`hasStencilLibrary` false) the library's `isOpen` is left as it is: there is
+ * no panel to open, and `onSidebarsChange` would report one.
  *
  * The toolbar's `sidebarsToggle` runs it (`data-action="command:toggleSidebars"`).
  * The per-edge `toggleStencilLibrary` / `togglePropertyPanel` stay as they are,
@@ -22,7 +24,9 @@ export const ToggleSidebarsCommand: ExecutableCommand = {
 		const isOpen = !isAnySidebarOpen(state);
 		return {
 			...state,
-			stencilLibraryPanel: { ...state.stencilLibraryPanel, isOpen },
+			stencilLibraryPanel: state.hasStencilLibrary
+				? { ...state.stencilLibraryPanel, isOpen }
+				: state.stencilLibraryPanel,
 			propertyPanel: { ...state.propertyPanel, isOpen },
 			// A toolbar press dismisses the category flyout, like every other one.
 			stencilLibraryOpenCategory: null,

@@ -69,20 +69,23 @@ export const seedSidebarPanels = (
  * switch for both (`sidebarsToggle`) shows as pressed and what the
  * `toggleSidebars` command reads to choose between opening and closing.
  *
- * Expanded means at least one of the two is open, so a mixed state (one open,
- * the other closed) is expanded: the switch then closes both. That is the rule
- * that never leaves a mixed state after a press, and the one under which a host
- * declaring no shape library (whose left panel is never drawn) still sees the
- * switch pressed exactly while the properties sidebar is on screen.
+ * Expanded means at least one sidebar that can be drawn is open, so a mixed
+ * state (one open, the other closed) is expanded and the switch then closes
+ * both: no press leaves a mixed state behind. The shape library counts only
+ * while one is declared (`hasStencilLibrary`); without one its `isOpen` stands
+ * for nothing on screen, so the switch is pressed exactly while the properties
+ * sidebar is open.
  *
- * @param sidebarPanels - The reducer's two panel states; only their `isOpen`
- *   is read
+ * @param sidebarPanels - The reducer's two panel states and whether the
+ *   library can be drawn; only the `isOpen` flags and `hasStencilLibrary` are
+ *   read
  */
 export const isAnySidebarOpen = (
 	sidebarPanels: Pick<
 		CanvasControllerState,
-		"stencilLibraryPanel" | "propertyPanel"
+		"stencilLibraryPanel" | "propertyPanel" | "hasStencilLibrary"
 	>,
 ): boolean =>
-	sidebarPanels.stencilLibraryPanel.isOpen ||
+	(sidebarPanels.hasStencilLibrary &&
+		sidebarPanels.stencilLibraryPanel.isOpen) ||
 	sidebarPanels.propertyPanel.isOpen;

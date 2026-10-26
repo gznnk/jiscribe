@@ -62,9 +62,14 @@ describe("sidebarsState", () => {
 });
 
 describe("isAnySidebarOpen", () => {
-	const panels = (isLibraryOpen: boolean, isPropertyPanelOpen: boolean) => ({
+	const panels = (
+		isLibraryOpen: boolean,
+		isPropertyPanelOpen: boolean,
+		hasStencilLibrary = true,
+	) => ({
 		stencilLibraryPanel: { isOpen: isLibraryOpen, collapsedSectionIds: [] },
 		propertyPanel: { isOpen: isPropertyPanelOpen, collapsedSectionIds: [] },
+		hasStencilLibrary,
 	});
 
 	it.each([
@@ -80,4 +85,10 @@ describe("isAnySidebarOpen", () => {
 			);
 		},
 	);
+
+	/** Without a library its flag stands for nothing on screen. */
+	it("ignores an open library flag while no library is declared", () => {
+		expect(isAnySidebarOpen(panels(true, false, false))).toBe(false);
+		expect(isAnySidebarOpen(panels(true, true, false))).toBe(true);
+	});
 });

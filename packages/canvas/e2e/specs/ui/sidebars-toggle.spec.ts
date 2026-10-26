@@ -1,3 +1,4 @@
+import { SIDE_PANEL_WIDTH } from "../../../src/controllers/ui/menu/sidePanelLayout";
 import { test, expect } from "../../fixtures";
 import { selectors } from "../../support/selectors";
 
@@ -13,6 +14,8 @@ import { selectors } from "../../support/selectors";
  * - The floating ObjectMenu shows while the sidebars are collapsed and hides
  *   while they are expanded, the properties sidebar then stating what it would.
  * - The two sidebars it opens share one width.
+ * - With no shape library declared it moves the properties sidebar alone, and
+ *   shows pressed exactly while that one is open.
  */
 
 test.describe("sidebars switch", () => {
@@ -82,7 +85,30 @@ test.describe("sidebars switch", () => {
 		const propertyBox = await canvas.page
 			.locator(selectors.propertyPanel)
 			.boundingBox();
-		expect(libraryBox?.width).toBe(280);
-		expect(propertyBox?.width).toBe(280);
+		expect(libraryBox?.width).toBe(SIDE_PANEL_WIDTH);
+		expect(propertyBox?.width).toBe(SIDE_PANEL_WIDTH);
+	});
+
+	test("with no shape library, follows the properties sidebar alone", async ({
+		canvas,
+	}) => {
+		await canvas.goto("?noStencilLibrary");
+		const sidebarsToggle = canvas.page.locator(selectors.sidebarsToggle);
+		const propertyPanel = canvas.page.locator(selectors.propertyPanel);
+
+		await canvas.toggleSidebars();
+		await expect(propertyPanel).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.stencilLibraryPanel),
+		).toHaveCount(0);
+
+		// Closed from its own button, the switch has nothing left open to show.
+		await canvas.closePropertyPanel();
+		await expect(sidebarsToggle).toHaveAttribute("aria-expanded", "false");
+
+		// So the next press opens it again rather than closing an undrawn library.
+		await canvas.toggleSidebars();
+		await expect(propertyPanel).toBeVisible();
+		await expect(sidebarsToggle).toHaveAttribute("aria-expanded", "true");
 	});
 });

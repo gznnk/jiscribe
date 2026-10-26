@@ -4,19 +4,19 @@ import {
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 } from "@jiscribe/canvas";
+import { describe, expect, it } from "vitest";
+
 import {
 	standardBottomToolbarPresetIds,
 	standardPlugins,
 	standardToolbarSections,
 	standardToolbarToolsSection,
-} from "@jiscribe/standard-shapes";
-import { describe, expect, it } from "vitest";
+} from "../index";
 
 /**
- * The webview mounts the standard set's bars as they are. The canvas drops a
- * preset id that names nothing without a word, so a typo would only show up as
- * a missing button. Here rather than in @jiscribe/standard-shapes, which runs no
- * unit tests.
+ * Hosts mount the standard set's bars as they are. The canvas drops a preset id
+ * that names nothing without a word, so a typo would only show up as a missing
+ * button.
  */
 describe("the standard set's bars", () => {
 	it("pins the six presets on the bottom bar, all registered", () => {

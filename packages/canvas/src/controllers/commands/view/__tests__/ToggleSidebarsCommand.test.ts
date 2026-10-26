@@ -10,8 +10,10 @@ const registries = createTestRegistries();
 const makeState = (
 	isLibraryOpen: boolean,
 	isPropertyPanelOpen: boolean,
+	hasStencilLibrary = true,
 ): CanvasControllerState =>
 	({
+		hasStencilLibrary,
 		mode: { kind: "normal" },
 		stencilLibraryPanel: {
 			isOpen: isLibraryOpen,
@@ -28,9 +30,10 @@ const makeState = (
 const openFlagsAfterPress = (
 	isLibraryOpen: boolean,
 	isPropertyPanelOpen: boolean,
+	hasStencilLibrary = true,
 ): [boolean, boolean] => {
 	const next = ToggleSidebarsCommand.execute(
-		makeState(isLibraryOpen, isPropertyPanelOpen),
+		makeState(isLibraryOpen, isPropertyPanelOpen, hasStencilLibrary),
 		registries,
 	);
 	return [next.stencilLibraryPanel.isOpen, next.propertyPanel.isOpen];
@@ -52,6 +55,18 @@ describe("ToggleSidebarsCommand", () => {
 
 	it("closes both sidebars when only the properties sidebar is open", () => {
 		expect(openFlagsAfterPress(false, true)).toEqual([false, false]);
+	});
+
+	describe("with no shape library declared", () => {
+		it("opens only the properties sidebar, leaving the library flag closed", () => {
+			expect(openFlagsAfterPress(false, false, false)).toEqual([false, true]);
+		});
+
+		it("closes the properties sidebar and leaves the library flag as it was", () => {
+			expect(openFlagsAfterPress(false, true, false)).toEqual([false, false]);
+			// A flag seeded open with no panel to draw counts for nothing.
+			expect(openFlagsAfterPress(true, false, false)).toEqual([true, true]);
+		});
 	});
 
 	it("closes the open category flyout, like every other toolbar press", () => {

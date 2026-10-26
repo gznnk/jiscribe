@@ -93,7 +93,8 @@ type HarnessAppProps = {
 
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
- * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document.
+ * two-canvas setup, ?pageScroll to the canvas embedded in a scrolling document, and
+ * ?noStencilLibrary keeps the default page but declares no shape library.
  * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
@@ -205,6 +206,11 @@ function HarnessApp({
 	if (query.has("pageScroll")) {
 		return <PageScrollApp />;
 	}
+	// ?noStencilLibrary drops the page's library, for specs on how the chrome
+	// behaves when a host declares none.
+	const pageStencilLibrarySections = query.has("noStencilLibrary")
+		? undefined
+		: stencilLibrarySections;
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
@@ -217,8 +223,8 @@ function HarnessApp({
 				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
 				bottomToolbar={bottomToolbar}
 				stencilLibrary={
-					stencilLibrarySections
-						? { sections: stencilLibrarySections }
+					pageStencilLibrarySections
+						? { sections: pageStencilLibrarySections }
 						: undefined
 				}
 			/>

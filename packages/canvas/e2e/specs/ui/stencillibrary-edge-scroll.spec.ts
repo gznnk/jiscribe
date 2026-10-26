@@ -31,6 +31,29 @@ async function viewBoxMinX(canvas: CanvasDriver): Promise<number> {
 	return Number(raw.trim().split(/\s+/)[0]);
 }
 
+/**
+ * Opens the sidebar and waits until the canvas has measured the narrower
+ * viewport (the viewBox width matches the canvas area at zoom 1). Until then the
+ * edge zone is computed from the old width, and a drag started early arms at
+ * once.
+ */
+async function openStencilLibraryMeasured(canvas: CanvasDriver): Promise<void> {
+	await canvas.openStencilLibrary();
+	const canvasArea = canvas.page.locator('[data-kind="canvas"]');
+	await expect
+		.poll(
+			async () => {
+				const raw = await canvas.getViewBox();
+				const box = await canvasArea.boundingBox();
+				return raw && box
+					? Math.abs(Number(raw.trim().split(/\s+/)[2]) - box.width) <= 1
+					: false;
+			},
+			{ message: "the viewport is measured with the sidebar open" },
+		)
+		.toBe(true);
+}
+
 /** Screen center of the sidebar's Rectangle item (boundingBox returns screen coordinates). */
 async function rectItemCenter(
 	canvas: CanvasDriver,
@@ -47,7 +70,7 @@ test.describe("StencilLibrary D&D edge scrolling (arm-on-leave)", () => {
 	test("does not pan the canvas when grabbing from the edge and staying in the left zone", async ({
 		canvas,
 	}) => {
-		await canvas.openStencilLibrary();
+		await openStencilLibraryMeasured(canvas);
 		const minXBefore = await viewBoxMinX(canvas);
 
 		const from = await rectItemCenter(canvas);
@@ -74,7 +97,7 @@ test.describe("StencilLibrary D&D edge scrolling (arm-on-leave)", () => {
 	test("edge-scrolls leftward when returning to the left after leaving the zone once (armed)", async ({
 		canvas,
 	}) => {
-		await canvas.openStencilLibrary();
+		await openStencilLibraryMeasured(canvas);
 		const minXBefore = await viewBoxMinX(canvas);
 
 		const from = await rectItemCenter(canvas);
