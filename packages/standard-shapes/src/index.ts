@@ -87,8 +87,8 @@ export const standardRailPresetIds: readonly string[] = [
 
 /**
  * The categories a host pins to the rail when it has no pins of the user's to
- * restore — flowchart, general, container, in that rail order: pass as
- * `initialConfig.pinnedCategoryIds` on a first mount, and the pins
+ * restore, in rail order: pass as `initialConfig.pinnedCategoryIds` on a first
+ * mount, and the pins
  * `onPinnedCategoriesChange` reported on every mount after that. The canvas
  * pins nothing on its own, so a host passing nothing starts with no category on
  * the rail.

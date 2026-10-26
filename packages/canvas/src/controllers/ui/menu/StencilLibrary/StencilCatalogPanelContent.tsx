@@ -39,8 +39,6 @@ type StencilCatalogPanelContentProps = {
 };
 
 const ROW_ICON_SIZE = 16;
-/** The size PinIcon is drawn for (see its JSDoc); another size blurs its 1px lines. */
-const PIN_ICON_SIZE = 16;
 
 /**
  * The catalog in a stencil panel: a search box over every library category,
@@ -108,7 +106,7 @@ export const StencilCatalogPanelContent: React.FC<
 									aria-label={pinLabel}
 									title={pinLabel}
 								>
-									<PinIcon width={PIN_ICON_SIZE} height={PIN_ICON_SIZE} />
+									<PinIcon />
 								</StencilCatalogPinButton>
 							</StencilCatalogRow>
 						);

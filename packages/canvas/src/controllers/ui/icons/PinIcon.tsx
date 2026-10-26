@@ -13,7 +13,7 @@ type PinIconProps = {
  * steps one pixel per row. The straight lines are separate square-capped
  * strokes rather than one joined outline, because Chromium leaves the outer
  * quarter of a 1px mitered corner unpainted. Drawn at another size the lines
- * blur; the catalog rows draw it at 16px.
+ * blur.
  */
 const PinIconComponent: React.FC<PinIconProps> = ({
 	width = 16,

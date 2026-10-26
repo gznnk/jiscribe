@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -435,6 +436,42 @@ describe("Canvas chrome", () => {
 				"divider",
 				"command:toggleStencilLibrary",
 			]);
+		});
+
+		/** A polyline, a type only the unpinned `lines` category lists. */
+		const polylineDoc = {
+			id: "poly-1",
+			type: "polyline",
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			],
+		} as unknown as ObjectDoc;
+
+		it("adds no category for the document's shapes, and badges no catalog row", async () => {
+			const container = mount({
+				doc: { version: 1 as const, root: [polylineDoc] },
+				stencilLibrary: {
+					sections: [
+						...orderLibrary.sections,
+						categoryOf("lines", ["polyline"]),
+					],
+				},
+				rail: { presetIds: ["rect"] },
+				initialConfig: { pinnedCategoryIds: ["boxes"] },
+			});
+			expect(
+				[
+					...container.querySelectorAll(`${RAIL} [data-id="stencil-category"]`),
+				].map((button) => button.getAttribute("data-action")),
+			).toEqual(["toggle:boxes"]);
+
+			await press(container.querySelector(CATALOG_BUTTON));
+			const linesRow = container.querySelector(
+				`${FLYOUT} [data-action="show:lines"]`,
+			);
+			expect(linesRow?.textContent).toBe("lines");
+			expect(container.querySelector(`${FLYOUT} [data-testid]`)).toBeNull();
 		});
 
 		it("draws no divider above the catalog button with no presets", () => {

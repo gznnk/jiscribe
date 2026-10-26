@@ -54,32 +54,31 @@ describe("resolveStencilRailOverflow", () => {
 	});
 
 	it("counts the rail's padding, buttons, dividers and gaps exactly, the catalog button at the top and '…' after the pins", () => {
-		// Two presets, a divider, the catalog button, a divider and one pin.
 		const contents: StencilRailContents = {
 			presetCount: 2,
 			hasCatalogButton: true,
 			pinnedCategoryIds: ["pin-a", "pin-b"],
 			drawnCategoryId: null,
 		};
-		const withOnePin =
+		// Two presets, two dividers, the catalog button and "…": every pin out.
+		const withMoreButtonAlone =
 			2 * STENCIL_RAIL_PADDING +
 			4 * STENCIL_BUTTON_SIZE +
 			2 * STENCIL_RAIL_DIVIDER_EXTENT +
 			5 * STENCIL_RAIL_GAP;
-		// Both pins out: "…" takes the place of the two, one button for two.
-		const withMoreButton = withOnePin;
 		expect(
-			resolveStencilRailOverflow(withMoreButton, contents)
+			resolveStencilRailOverflow(withMoreButtonAlone, contents)
 				.overflowedPinnedCategoryIds,
 		).toEqual(["pin-a", "pin-b"]);
+		// One button and one gap more: both pins on the rail, no "…".
 		expect(
 			resolveStencilRailOverflow(
-				withOnePin + STENCIL_BUTTON_SIZE + STENCIL_RAIL_GAP,
+				withMoreButtonAlone + STENCIL_BUTTON_SIZE + STENCIL_RAIL_GAP,
 				contents,
 			).overflowedPinnedCategoryIds,
 		).toEqual([]);
 		expect(
-			resolveStencilRailOverflow(withMoreButton - 1, contents)
+			resolveStencilRailOverflow(withMoreButtonAlone - 1, contents)
 				.arePresetsCollapsed,
 		).toBe(true);
 	});
