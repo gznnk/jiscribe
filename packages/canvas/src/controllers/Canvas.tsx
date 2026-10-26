@@ -4,6 +4,7 @@ import {
 	memo,
 	useCallback,
 	useImperativeHandle,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -77,8 +78,7 @@ import type {
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
 import { useResolvedStencilLibrary } from "./ui/menu/StencilLibrary/hooks/useResolvedStencilLibrary";
-import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
-import { resolveDrawnStencilPanelContent } from "./ui/menu/StencilLibrary/utils/resolveDrawnStencilPanelContent";
+import { StencilPanel } from "./ui/menu/StencilLibrary/StencilPanel";
 import { StencilRail } from "./ui/menu/StencilRail/StencilRail";
 import type { CanvasRailConfig } from "./ui/menu/StencilRail/stencilRailConfig";
 import { STENCIL_RAIL_WIDTH } from "./ui/menu/StencilRail/StencilRailStyled";
@@ -94,7 +94,7 @@ import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
-import { readShownStencilPanelContent } from "./utils/stencilPanelContent";
+import { readDrawnStencilPanelContent } from "./utils/stencilPanelContent";
 
 type CanvasProps = {
 	// ── Document ──
@@ -390,6 +390,15 @@ const CanvasComponent = ({
 			: defaultCanvasRegistries,
 	);
 
+	const { librarySections, resolveLibraryPreset } = useResolvedStencilLibrary(
+		stencilLibrary?.sections,
+		registries,
+	);
+	const libraryCategoryIds = useMemo(
+		() => librarySections.map((section) => section.category.id),
+		[librarySections],
+	);
+
 	// initialConfig.viewport seeds the initial viewport so the first paint is already at
 	// the host's pan/zoom (see useCanvasReducer for the mount handoff).
 	const [state, dispatch] = useCanvasReducer(
@@ -399,7 +408,14 @@ const CanvasComponent = ({
 		initialConfig?.scrollBounds,
 		initialConfig?.sidebars,
 		initialConfig?.pinnedCategoryIds,
+		libraryCategoryIds,
 	);
+
+	// The library is a live prop the reducer reads too (which content a rail press
+	// closes); kept in step before paint, and a no-op while the ids are unchanged.
+	useLayoutEffect(() => {
+		dispatch({ type: "SET_STENCIL_LIBRARY", categoryIds: libraryCategoryIds });
+	}, [libraryCategoryIds, dispatch]);
 
 	// Boxes derived from their content are re-measured through the reducer, the
 	// one pass the slots cannot ask for; the counter covers the sites that measure
@@ -484,26 +500,15 @@ const CanvasComponent = ({
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
-	const { librarySections, resolveLibraryPreset } = useResolvedStencilLibrary(
-		stencilLibrary?.sections,
-		registries,
-	);
 	const isRailShown = rail?.show !== false;
 	// Docked state alone is not enough: a panel restored open on a host with no
 	// library is not drawn, and takes no space.
 	const isStencilPanelDocked =
 		state.stencilLibraryPanel.isOpen && librarySections.length > 0;
 
-	// What the open panel draws, which is what the rail shows pressed: a docked
-	// category the library lacks is drawn as the catalog.
-	const shownStencilPanelContent = readShownStencilPanelContent(state);
-	const drawnStencilPanelContent =
-		shownStencilPanelContent === null
-			? null
-			: resolveDrawnStencilPanelContent(
-					shownStencilPanelContent,
-					librarySections,
-				);
+	// What the open panel draws, which is what the rail shows pressed and what a
+	// rail press closes: a docked category the library lacks is drawn as the catalog.
+	const drawnStencilPanelContent = readDrawnStencilPanelContent(state);
 
 	// The rail and both sidebars take their width out of the viewport, so any of
 	// them appearing or going has to be re-measured before the next paint.
@@ -700,7 +705,7 @@ const CanvasComponent = ({
 						/>
 					)}
 					{isStencilPanelDocked && (
-						<StencilLibraryPanel
+						<StencilPanel
 							presentation="docked"
 							content={state.stencilLibraryPanel.content}
 							sections={librarySections}
@@ -776,7 +781,7 @@ const CanvasComponent = ({
 						<StencilFlyoutLayer
 							style={{ left: isRailShown ? STENCIL_RAIL_WIDTH : 0 }}
 						>
-							<StencilLibraryPanel
+							<StencilPanel
 								presentation="flyout"
 								content={state.stencilFlyout}
 								sections={librarySections}

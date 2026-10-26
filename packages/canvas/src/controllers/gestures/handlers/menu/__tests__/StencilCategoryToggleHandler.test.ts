@@ -25,6 +25,7 @@ const makeState = (
 	({
 		stencilFlyout,
 		stencilLibraryPanel,
+		stencilLibraryCategoryIds: ["flowchart", "general"],
 		contextMenuPosition: { x: 1, y: 1 },
 	}) as unknown as CanvasControllerState;
 
@@ -114,6 +115,21 @@ describe("StencilCategoryToggleHandler", () => {
 		expect(next.stencilLibraryPanel.isOpen).toBe(false);
 		// Kept for the next dock.
 		expect(next.stencilLibraryPanel.content).toEqual(category("flowchart"));
+	});
+
+	/**
+	 * Drawn as the catalog, the unknown category is not what this button stands
+	 * for, so the press shows the button's own category in place.
+	 */
+	it("while docked on a category the library lacks, a click shows its own category", () => {
+		const next = toggle(
+			makeState(null, { isOpen: true, content: category("no-such-category") }),
+			"flowchart",
+		);
+		expect(next.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			content: category("flowchart"),
+		});
 	});
 
 	it("a closed docked panel's leftover content does not count as shown", () => {

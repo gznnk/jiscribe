@@ -114,6 +114,7 @@ export const restoreHistorySnapshot = (
 		stencilLibraryPanel: state.stencilLibraryPanel,
 		propertyPanel: state.propertyPanel,
 		pinnedCategoryIds: state.pinnedCategoryIds,
+		stencilLibraryCategoryIds: state.stencilLibraryCategoryIds,
 		history,
 	};
 	const restoredState =

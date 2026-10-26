@@ -23,13 +23,13 @@ export type CanvasMessageStrings = {
 	/** title / aria-label of the header toggle docking the panel beside the canvas (pressed while docked) */
 	stencilPanelKeepOpen: string;
 	/** placeholder of a panel's search box */
-	stencilLibrarySearchPlaceholder: string;
+	stencilPanelSearchPlaceholder: string;
 	/** Shown in place of the presets or the category list when a search matches no stencil */
-	stencilLibraryNoMatch: string;
+	stencilPanelNoMatch: string;
 	/** Line under the search results when a category cut its matches short. */
-	stencilLibraryMoreMatches: string;
+	stencilPanelMoreMatches: string;
 	/** Button under a category that declares `search`; it focuses the search box. */
-	stencilLibraryMoreViaSearch: string;
+	stencilPanelMoreViaSearch: string;
 
 	// Properties sidebar
 	/** Heading of the sidebar */

@@ -1,14 +1,14 @@
 import { useMemo, useRef, useState } from "react";
 
 import {
-	StencilLibraryMoreViaSearchButton,
-	StencilLibraryPanelList,
-} from "./StencilLibraryPanelStyled";
-import {
 	StencilPanelSearchBox,
 	StencilPresetGrid,
 	StencilSearchResults,
 } from "./StencilPanelSearch";
+import {
+	StencilLibraryMoreViaSearchButton,
+	StencilPanelList,
+} from "./StencilPanelStyled";
 import type { ResolvedStencilCategory } from "./utils/resolveStencilCategory";
 import { resolveStencilLabel } from "./utils/resolveStencilLabel";
 import { searchStencilLibrary } from "./utils/searchStencilLibrary";
@@ -32,7 +32,7 @@ type StencilCategoryPanelContentProps = {
  * it lists, so a button under the grid points to the box.
  *
  * The query belongs to this content alone: switching the panel to another
- * category remounts it (StencilLibraryPanel keys it by content) and starts it
+ * category remounts it (StencilPanel keys it by content) and starts it
  * empty.
  */
 export const StencilCategoryPanelContent: React.FC<
@@ -62,7 +62,7 @@ export const StencilCategoryPanelContent: React.FC<
 				onQueryChange={setQuery}
 				inputRef={searchInputRef}
 			/>
-			<StencilLibraryPanelList>
+			<StencilPanelList>
 				{trimmedQuery !== "" ? (
 					<StencilSearchResults
 						result={searchResult}
@@ -80,12 +80,12 @@ export const StencilCategoryPanelContent: React.FC<
 								data-gesture="none"
 								onClick={() => searchInputRef.current?.focus()}
 							>
-								{messages.stencilLibraryMoreViaSearch}
+								{messages.stencilPanelMoreViaSearch}
 							</StencilLibraryMoreViaSearchButton>
 						)}
 					</>
 				)}
-			</StencilLibraryPanelList>
+			</StencilPanelList>
 		</>
 	);
 };

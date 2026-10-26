@@ -381,6 +381,17 @@ export type CloseModalAction = {
 };
 
 /**
+ * The host's stencil library changed: the ids of the sections it resolves to,
+ * in order. Canvas dispatches it whenever they differ from
+ * `stencilLibraryCategoryIds`; the reducer ignores ids equal to the ones it
+ * holds, order included.
+ */
+export type SetStencilLibraryAction = {
+	type: "SET_STENCIL_LIBRARY";
+	categoryIds: string[];
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -404,4 +415,5 @@ export type CanvasAction =
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction
-	| CloseModalAction;
+	| CloseModalAction
+	| SetStencilLibraryAction;

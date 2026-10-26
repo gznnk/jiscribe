@@ -1,17 +1,17 @@
 import { createCanvasRegistries } from "@jiscribe/canvas";
+import { describe, expect, it } from "vitest";
+
 import {
 	standardDefaultPinnedCategoryIds,
 	standardPlugins,
 	standardRailPresetIds,
 	standardStencilLibrarySections,
-} from "@jiscribe/standard-shapes";
-import { describe, expect, it } from "vitest";
+} from "..";
 
 /**
- * The webview mounts the standard set's rail, library and default pins as they
- * are. The canvas drops what they name and cannot find without a word, so a pin
- * or a rail preset naming nothing would only show up as a missing button.
- * Here rather than in @jiscribe/standard-shapes, which runs no unit tests.
+ * Hosts mount the standard set's rail, library and default pins as they are.
+ * The canvas drops what they name and cannot find without a word, so a pin or
+ * a rail preset naming nothing would only show up as a missing button.
  */
 describe("the standard set's rail and pins", () => {
 	it("pins only ids that name a section of the standard library", () => {

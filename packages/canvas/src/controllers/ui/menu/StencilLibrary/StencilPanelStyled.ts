@@ -18,7 +18,7 @@ export type StencilPanelPresentation = "flyout" | "docked";
  * Over the canvas it is laid out by the layer holding it (StencilFlyoutLayer)
  * and takes no space, so opening it never resizes the viewport.
  */
-export const StencilLibraryPanelContainer = styled.aside<{
+export const StencilPanelContainer = styled.aside<{
 	presentation: StencilPanelPresentation;
 }>`
 	flex: none;
@@ -76,7 +76,7 @@ export const StencilLibrarySearchInput = styled.input`
 `;
 
 /** Scrolling body under the search box: the presets, the category list or the search results. */
-export const StencilLibraryPanelList = styled.div`
+export const StencilPanelList = styled.div`
 	flex: 1;
 	min-height: 0;
 	overflow-y: auto;
@@ -179,7 +179,7 @@ export const StencilCatalogPinButton = styled.button`
  * Grid of stencil buttons: a category's presets, or the search results. Fixed
  * columns rather than wrapping, so the items line up down the panel.
  */
-export const StencilLibraryPanelGrid = styled.div`
+export const StencilPanelGrid = styled.div`
 	display: grid;
 	grid-template-columns: repeat(6, minmax(0, 1fr));
 	gap: 2px;

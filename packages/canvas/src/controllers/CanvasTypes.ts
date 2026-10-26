@@ -760,7 +760,7 @@ export type CanvasControllerState = CanvasState & {
 	stencilFlyout: StencilPanelContent | null;
 
 	/**
-	 * The docked stencil panel (StencilLibraryPanel beside the viewport). Editor
+	 * The docked stencil panel (StencilPanel beside the viewport). Editor
 	 * chrome rather than part of the document: canvas presses, Escape, selection
 	 * changes and a doc swap (resetUiState / restoreHistorySnapshot) all leave it
 	 * as it is. Written only by the `toggleStencilLibrary` command,
@@ -777,6 +777,16 @@ export type CanvasControllerState = CanvasState & {
 	 * catalog's pin buttons).
 	 */
 	pinnedCategoryIds: string[];
+
+	/**
+	 * Ids of the sections the host's `stencilLibrary.sections` resolved to, in
+	 * order (sections left empty dropped). Not the user's: Canvas seeds it at
+	 * mount and keeps it in step with the prop (SET_STENCIL_LIBRARY), so the
+	 * reducer can tell what a panel draws (readDrawnStencilPanelContent) the way
+	 * the render does. Chrome like the panels: kept across a doc swap and history
+	 * navigation.
+	 */
+	stencilLibraryCategoryIds: string[];
 
 	/**
 	 * The properties sidebar (PropertyPanel), on the opposite edge from the shape

@@ -161,10 +161,25 @@ describe("createInitialControllerState", () => {
 		});
 	});
 
-	it("pins nothing when no initialPinnedCategoryIds is given", () => {
+	it("pins nothing and holds no library when neither is given", () => {
 		const state = createInitialControllerState(docWithRect, registries);
 
 		expect(state.pinnedCategoryIds).toEqual([]);
+		expect(state.stencilLibraryCategoryIds).toEqual([]);
+	});
+
+	it("seeds the library ids the panels draw from", () => {
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			["basic", "flowchart"],
+		);
+
+		expect(state.stencilLibraryCategoryIds).toEqual(["basic", "flowchart"]);
 	});
 
 	it("seeds the pins in the order given, ids the library may not hold included", () => {

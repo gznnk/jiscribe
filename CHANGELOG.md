@@ -43,7 +43,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `content` opens the catalog. The `toggleStencilLibrary` command now toggles
   the catalog.
 - **Breaking: the messages `toolbarStencilLibrary` and `stencilLibraryTitle`
-  are gone, and `stencilLibraryClose` is now `stencilPanelClose`.** The rail
+  are gone, and the panel's own keys are named for it: `stencilLibraryClose`,
+  `stencilLibrarySearchPlaceholder`, `stencilLibraryNoMatch`,
+  `stencilLibraryMoreMatches` and `stencilLibraryMoreViaSearch` are now
+  `stencilPanelClose`, `stencilPanelSearchPlaceholder`, `stencilPanelNoMatch`,
+  `stencilPanelMoreMatches` and `stencilPanelMoreViaSearch`.** The rail
   and the panels also read `stencilRailLabel`, `stencilCatalogTitle`,
   `stencilPanelKeepOpen` and `stencilCatalogPin`, the last a function of the
   category label (`(categoryLabel) => string`). The catalog button wears the

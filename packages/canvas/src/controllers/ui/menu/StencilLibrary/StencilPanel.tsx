@@ -3,10 +3,9 @@ import { memo } from "react";
 import { StencilCatalogPanelContent } from "./StencilCatalogPanelContent";
 import { StencilCategoryPanelContent } from "./StencilCategoryPanelContent";
 import {
-	StencilLibraryPanelContainer,
+	StencilPanelContainer,
 	type StencilPanelPresentation,
-} from "./StencilLibraryPanelStyled";
-import { resolveDrawnStencilPanelContent } from "./utils/resolveDrawnStencilPanelContent";
+} from "./StencilPanelStyled";
 import type { ResolvedStencilCategory } from "./utils/resolveStencilCategory";
 import { resolveStencilCategoryLabel } from "./utils/resolveStencilLabel";
 import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
@@ -17,6 +16,7 @@ import {
 	DOCK_PANEL_ACTION,
 	UNDOCK_PANEL_ACTION,
 } from "../../../gestures/handlers/menu/utils/menuActions";
+import { resolveDrawnStencilPanelContent } from "../../../utils/stencilPanelContent";
 import { CloseIcon } from "../../icons/CloseIcon";
 import { SidebarIcon } from "../../icons/SidebarIcon";
 import type { Stencil } from "../../objects/Stencil";
@@ -27,7 +27,7 @@ import {
 	SidePanelTitle,
 } from "../SidePanel/SidePanelStyled";
 
-type StencilLibraryPanelProps = {
+type StencilPanelProps = {
 	/** Over the canvas (the flyout) or docked beside it; decides the keep-open toggle's state. */
 	presentation: StencilPanelPresentation;
 	/** What the panel shows (reducer state). */
@@ -53,20 +53,21 @@ const HEADER_ICON_SIZE = 14;
  * panel is drawn over the canvas as the flyout and docked beside it; only the
  * keep-open toggle in its header tells the two apart.
  *
- * The panel is one gesture target (`data-kind="menu" data-id="stencil-library-panel"`)
- * handled by StencilLibraryPanelHandler: its header buttons and the catalog's
- * rows carry only a data-action. The stencil items keep their own `data-kind` /
+ * The panel is one gesture target
+ * (`data-kind="menu" data-id="stencil-library-panel"`) handled by
+ * StencilLibraryPanelHandler: its header buttons and the catalog's rows carry
+ * only a data-action. The stencil items keep their own `data-kind` /
  * `data-id` ("stencil-library"), so click-to-draw and drag-to-place stay with
  * StencilLibraryItemHandler exactly as on the rail. While it shows a category it
  * also carries `data-stencil-category-panel`, the hook the e2e suites find it by.
  *
  * A content naming a category the library does not hold (a docked panel
  * restored on a host without that plugin) draws the catalog
- * (resolveDrawnStencilPanelContent); the state keeps the id. What the panel shows is reducer state, so this component is render-only
- * apart from the search query, which belongs to the content shown and goes with
- * it.
+ * (resolveDrawnStencilPanelContent); the state keeps the id. What the panel
+ * shows is reducer state, so this component is render-only apart from the
+ * search query, which belongs to the content shown and goes with it.
  */
-const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
+const StencilPanelComponent: React.FC<StencilPanelProps> = ({
 	presentation,
 	content,
 	sections,
@@ -77,7 +78,10 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 
-	const drawnContent = resolveDrawnStencilPanelContent(content, sections);
+	const drawnContent = resolveDrawnStencilPanelContent(
+		content,
+		sections.map((section) => section.category.id),
+	);
 	const shownSection =
 		drawnContent.kind === "category"
 			? sections.find(
@@ -95,7 +99,7 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 	const isDocked = presentation === "docked";
 
 	return (
-		<StencilLibraryPanelContainer
+		<StencilPanelContainer
 			presentation={presentation}
 			aria-label={title}
 			data-kind="menu"
@@ -145,8 +149,8 @@ const StencilLibraryPanelComponent: React.FC<StencilLibraryPanelProps> = ({
 					resolvePreset={resolvePreset}
 				/>
 			)}
-		</StencilLibraryPanelContainer>
+		</StencilPanelContainer>
 	);
 };
 
-export const StencilLibraryPanel = memo(StencilLibraryPanelComponent);
+export const StencilPanel = memo(StencilPanelComponent);

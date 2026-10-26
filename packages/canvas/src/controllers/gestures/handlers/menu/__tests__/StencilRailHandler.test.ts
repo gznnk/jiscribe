@@ -21,6 +21,7 @@ const makeState = (
 		objectMenuOpenId: "bg-color",
 		stencilFlyout: { kind: "category", categoryId: "flowchart" },
 		stencilLibraryPanel: { isOpen: false, content: { kind: "catalog" } },
+		stencilLibraryCategoryIds: ["flowchart"],
 		...overrides,
 	}) as unknown as CanvasControllerState;
 

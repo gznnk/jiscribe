@@ -4,10 +4,10 @@ import { StencilLibraryItem } from "./StencilLibraryItem";
 import {
 	StencilLibraryEmptyMessage,
 	StencilLibraryMoreMatchesMessage,
-	StencilLibraryPanelGrid,
+	StencilPanelGrid,
 	StencilLibrarySearchBox,
 	StencilLibrarySearchInput,
-} from "./StencilLibraryPanelStyled";
+} from "./StencilPanelStyled";
 import type { StencilLibrarySearchResult } from "./utils/searchStencilLibrary";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { SearchIcon } from "../../icons/SearchIcon";
@@ -39,8 +39,8 @@ export const StencilPanelSearchBox: React.FC<StencilPanelSearchBoxProps> = ({
 				type="text"
 				ref={inputRef}
 				value={query}
-				placeholder={messages.stencilLibrarySearchPlaceholder}
-				aria-label={messages.stencilLibrarySearchPlaceholder}
+				placeholder={messages.stencilPanelSearchPlaceholder}
+				aria-label={messages.stencilPanelSearchPlaceholder}
 				onChange={(event) => onQueryChange(event.target.value)}
 			/>
 		</StencilLibrarySearchBox>
@@ -58,7 +58,7 @@ const StencilPresetGridComponent: React.FC<StencilPresetGridProps> = ({
 	presets,
 	activePresetId,
 }) => (
-	<StencilLibraryPanelGrid>
+	<StencilPanelGrid>
 		{presets.map((preset) => (
 			<StencilLibraryItem
 				key={preset.id}
@@ -66,7 +66,7 @@ const StencilPresetGridComponent: React.FC<StencilPresetGridProps> = ({
 				isActive={activePresetId === preset.id}
 			/>
 		))}
-	</StencilLibraryPanelGrid>
+	</StencilPanelGrid>
 );
 
 export const StencilPresetGrid = memo(StencilPresetGridComponent);
@@ -89,7 +89,7 @@ export const StencilSearchResults: React.FC<StencilSearchResultsProps> = ({
 	if (result.presets.length === 0) {
 		return (
 			<StencilLibraryEmptyMessage>
-				{messages.stencilLibraryNoMatch}
+				{messages.stencilPanelNoMatch}
 			</StencilLibraryEmptyMessage>
 		);
 	}
@@ -101,7 +101,7 @@ export const StencilSearchResults: React.FC<StencilSearchResultsProps> = ({
 			/>
 			{result.hiddenMatchCount > 0 && (
 				<StencilLibraryMoreMatchesMessage>
-					{messages.stencilLibraryMoreMatches}
+					{messages.stencilPanelMoreMatches}
 				</StencilLibraryMoreMatchesMessage>
 			)}
 		</>

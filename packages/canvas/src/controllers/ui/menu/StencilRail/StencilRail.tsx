@@ -12,6 +12,7 @@ import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import type { StencilPanelContent } from "../../../CanvasTypes";
 import { resolveCommandLabel } from "../../../commands/CommandUtils";
+import { ToggleStencilLibraryCommand } from "../../../commands/view/ToggleStencilLibraryCommand";
 import {
 	commandAction,
 	toggleAction,
@@ -32,16 +33,14 @@ type StencilRailProps = {
 	/** Id of the preset currently armed for drawing, to highlight its button. */
 	activePresetId: string | null;
 	/**
-	 * What the open stencil panel draws, flyout or docked (resolveDrawnStencilPanelContent:
-	 * a category the library lacks is drawn as the catalog); null when none is open.
+	 * What the open stencil panel draws, flyout or docked
+	 * (readDrawnStencilPanelContent: a category the library lacks is drawn as the
+	 * catalog); null when none is open.
 	 */
 	shownPanelContent: StencilPanelContent | null;
 };
 
 const ICON_SIZE = 24;
-
-/** The command the catalog button runs (ToggleStencilLibraryCommand). */
-const CATALOG_COMMAND_ID = "toggleStencilLibrary";
 
 /**
  * The stencil rail at the left of the canvas, top to bottom: the host's presets,
@@ -66,7 +65,7 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 	// The catalog button runs this command and wears its label, so the command
 	// palette, the shortcut help and the rail name it alike. A host that switched
 	// the command off gets no button, as a toolbar `command` item would not be.
-	const catalogCommand = command.get(CATALOG_COMMAND_ID);
+	const catalogCommand = command.get(ToggleStencilLibraryCommand.id);
 	const catalogLabel = catalogCommand
 		? resolveCommandLabel(catalogCommand, messages, locale)
 		: null;
@@ -139,7 +138,7 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 					<StencilRailSpacer />
 					<StencilRailPanelButton
 						type="button"
-						data-action={commandAction(CATALOG_COMMAND_ID)}
+						data-action={commandAction(ToggleStencilLibraryCommand.id)}
 						aria-haspopup="true"
 						aria-expanded={isCatalogShown}
 						aria-label={catalogLabel}

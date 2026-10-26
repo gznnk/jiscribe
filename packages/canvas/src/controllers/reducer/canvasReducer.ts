@@ -621,6 +621,16 @@ export const createCanvasReducer =
 				return { ...state, activeModal: null };
 			}
 
+			case "SET_STENCIL_LIBRARY": {
+				const heldIds = state.stencilLibraryCategoryIds;
+				const isSame =
+					heldIds.length === action.categoryIds.length &&
+					heldIds.every((id, index) => id === action.categoryIds[index]);
+				return isSame
+					? state
+					: { ...state, stencilLibraryCategoryIds: action.categoryIds };
+			}
+
 			default:
 				return state;
 		}

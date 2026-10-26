@@ -21,8 +21,9 @@ import { isSameStencilPanelContent } from "../utils/stencilPanelContent";
  * Comparison is by value (each edge's `isOpen`, the stencil panel's content and
  * the ids of the properties panel's collapsed sections in order), not by
  * reference: a panel that ends up where it already was must not be reported.
- * The stencil flyout over the canvas is not a sidebar and is never reported. The callback goes through a ref so a host
- * passing a new function each render cannot re-fire the effect.
+ * The stencil flyout over the canvas is not a sidebar and is never reported.
+ * The callback goes through a ref so a host passing a new function each render
+ * cannot re-fire the effect.
  *
  * Read-only by contract: the host must not feed the reported state back in to
  * drive the panels (there is no controlled prop). The panels are moved by the

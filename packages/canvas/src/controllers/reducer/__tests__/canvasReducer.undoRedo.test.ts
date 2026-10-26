@@ -64,11 +64,13 @@ describe("canvasReducer (integration)", () => {
 				...state,
 				pinnedCategoryIds: ["flowchart", "uml"],
 				stencilLibraryPanel: docked,
+				stencilLibraryCategoryIds: ["flowchart", "uml"],
 			};
 
 			state = runCommands(state, "undo");
 			expect(state.pinnedCategoryIds).toEqual(["flowchart", "uml"]);
 			expect(state.stencilLibraryPanel).toEqual(docked);
+			expect(state.stencilLibraryCategoryIds).toEqual(["flowchart", "uml"]);
 
 			state = runCommands(state, "redo");
 			expect(state.pinnedCategoryIds).toEqual(["flowchart", "uml"]);

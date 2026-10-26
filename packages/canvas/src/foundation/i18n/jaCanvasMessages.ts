@@ -13,11 +13,10 @@ export const jaCanvasMessages: CanvasMessages = {
 	stencilPanelClose: "閉じる",
 	stencilPanelKeepOpen: "固定表示",
 	stencilCatalogPin: (categoryLabel) => `${categoryLabel} をピン留め`,
-	stencilLibrarySearchPlaceholder: "図形を検索",
-	stencilLibraryNoMatch: "一致する図形はありません",
-	stencilLibraryMoreMatches:
-		"ほかにも一致する図形があります。語を絞ってください",
-	stencilLibraryMoreViaSearch: "ほかの図形を探す",
+	stencilPanelSearchPlaceholder: "図形を検索",
+	stencilPanelNoMatch: "一致する図形はありません",
+	stencilPanelMoreMatches: "ほかにも一致する図形があります。語を絞ってください",
+	stencilPanelMoreViaSearch: "ほかの図形を探す",
 
 	propertyPanelTitle: "プロパティ",
 	propertyPanelClose: "閉じる",

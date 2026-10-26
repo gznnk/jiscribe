@@ -25,6 +25,7 @@ const makeState = (
 		stencilFlyout: null,
 		stencilLibraryPanel: { isOpen: false, content: CATALOG },
 		pinnedCategoryIds: ["flowchart"],
+		stencilLibraryCategoryIds: ["basic", "flowchart"],
 		selection: selectionOf(["a"]),
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -66,6 +67,24 @@ describe("ToggleStencilLibraryCommand", () => {
 			content: CATALOG,
 		});
 		// Never beside the docked panel.
+		expect(next.stencilFlyout).toBeNull();
+	});
+
+	/**
+	 * The docked panel draws a category the library lacks as the catalog, and
+	 * the catalog button shows pressed: that press has to close it, not swap in
+	 * the catalog it already draws.
+	 */
+	it("closes a docked panel that draws the catalog for a category the library lacks", () => {
+		const next = execute(
+			makeState({
+				stencilLibraryPanel: {
+					isOpen: true,
+					content: { kind: "category", categoryId: "no-such-category" },
+				},
+			}),
+		);
+		expect(next.stencilLibraryPanel.isOpen).toBe(false);
 		expect(next.stencilFlyout).toBeNull();
 	});
 

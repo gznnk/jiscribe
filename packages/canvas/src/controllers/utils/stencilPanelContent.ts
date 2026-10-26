@@ -21,25 +21,66 @@ export const isSameStencilPanelContent = (
 		: b.kind === "category" && a.categoryId === b.categoryId;
 
 /**
- * What the stencil panels show right now: the flyout's content, else the docked
- * panel's while it is docked, else nothing. The two never coexist (see
- * CanvasControllerState.stencilFlyout), so at most one of them answers.
+ * What a stencil panel draws for the content the state names: the content
+ * itself, or the catalog when it names a category the library does not hold
+ * (a docked panel restored on a host without that plugin). The state keeps the
+ * id; the drawing, the rail's pressed buttons and the rail's toggles all go by
+ * this, so a button shown pressed is the one that closes the panel.
  *
- * @param state - Read for `stencilFlyout` and `stencilLibraryPanel` only
+ * @param content - The flyout's or the docked panel's content (reducer state)
+ * @param libraryCategoryIds - Ids of the sections `stencilLibrary.sections`
+ *   resolved to, empty sections dropped; a category is held when listed here
+ * @returns `content` itself when it is drawn as is (so a memoized reader sees
+ *   the same reference), else {@link CATALOG_PANEL_CONTENT}
+ */
+export const resolveDrawnStencilPanelContent = (
+	content: StencilPanelContent,
+	libraryCategoryIds: readonly string[],
+): StencilPanelContent =>
+	content.kind === "category" &&
+	!libraryCategoryIds.includes(content.categoryId)
+		? CATALOG_PANEL_CONTENT
+		: content;
+
+/**
+ * What the stencil panels draw right now: the flyout's content, else the docked
+ * panel's while it is docked, else nothing, each as
+ * {@link resolveDrawnStencilPanelContent} draws it. The flyout and the docked
+ * panel never coexist (see CanvasControllerState.stencilFlyout), so at most one
+ * of them answers.
+ *
+ * @param state - Read for `stencilFlyout`, `stencilLibraryPanel` and
+ *   `stencilLibraryCategoryIds` only
  * @returns null when neither panel is open; a closed docked panel's retained
  *   content is not reported
  */
-export const readShownStencilPanelContent = (
-	state: Pick<CanvasControllerState, "stencilFlyout" | "stencilLibraryPanel">,
-): StencilPanelContent | null =>
-	state.stencilFlyout ??
-	(state.stencilLibraryPanel.isOpen ? state.stencilLibraryPanel.content : null);
+export const readDrawnStencilPanelContent = (
+	state: Pick<
+		CanvasControllerState,
+		"stencilFlyout" | "stencilLibraryPanel" | "stencilLibraryCategoryIds"
+	>,
+): StencilPanelContent | null => {
+	const shownContent =
+		state.stencilFlyout ??
+		(state.stencilLibraryPanel.isOpen
+			? state.stencilLibraryPanel.content
+			: null);
+	return shownContent === null
+		? null
+		: resolveDrawnStencilPanelContent(
+				shownContent,
+				state.stencilLibraryCategoryIds,
+			);
+};
 
 /**
  * The press of a rail button (a category, or the catalog button): shows
- * `content`, or closes the panel already showing it.
+ * `content`, or closes the panel already drawing it.
  *
- * - Shown already, in the flyout or the docked panel: that panel closes.
+ * - Drawn already, in the flyout or the docked panel: that panel closes. What is
+ *   compared is what the panel draws ({@link readDrawnStencilPanelContent}), so
+ *   a docked panel holding a category the library lacks, drawn as the catalog,
+ *   closes from the catalog button.
  * - The docked panel is open with something else: it switches to `content` and
  *   stays docked.
  * - Nothing docked: the flyout opens on `content`, replacing whatever it showed.
@@ -52,23 +93,23 @@ export const readShownStencilPanelContent = (
 export const toggleStencilPanelContent = <
 	TState extends Pick<
 		CanvasControllerState,
-		"stencilFlyout" | "stencilLibraryPanel"
+		"stencilFlyout" | "stencilLibraryPanel" | "stencilLibraryCategoryIds"
 	>,
 >(
 	state: TState,
 	content: StencilPanelContent,
 ): TState => {
-	const shownContent = readShownStencilPanelContent(state);
-	const isShown =
-		shownContent !== null && isSameStencilPanelContent(shownContent, content);
+	const drawnContent = readDrawnStencilPanelContent(state);
+	const isDrawn =
+		drawnContent !== null && isSameStencilPanelContent(drawnContent, content);
 	if (state.stencilLibraryPanel.isOpen) {
 		return {
 			...state,
 			stencilFlyout: null,
-			stencilLibraryPanel: isShown
+			stencilLibraryPanel: isDrawn
 				? { ...state.stencilLibraryPanel, isOpen: false }
 				: { isOpen: true, content },
 		};
 	}
-	return { ...state, stencilFlyout: isShown ? null : content };
+	return { ...state, stencilFlyout: isDrawn ? null : content };
 };

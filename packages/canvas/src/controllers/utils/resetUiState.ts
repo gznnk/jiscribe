@@ -10,8 +10,9 @@ import { EMPTY_SELECTION } from "../selection/CanvasSelection";
  * the restored objects still hold — and external sync) or the canvas is
  * initialized. They are not part of CanvasDoc and carry no history.
  *
- * The two sidebars (`stencilLibraryPanel` / `propertyPanel`) and the categories
- * pinned to the rail (`pinnedCategoryIds`) are deliberately absent: they are
+ * The two sidebars (`stencilLibraryPanel` / `propertyPanel`), the categories
+ * pinned to the rail (`pinnedCategoryIds`) and the library they draw from
+ * (`stencilLibraryCategoryIds`) are deliberately absent: they are
  * persistent chrome that outlives the document shown between them. The stencil
  * flyout is not: it closes like the other menus.
  *

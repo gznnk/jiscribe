@@ -1,17 +1,17 @@
 import { useMemo, useState } from "react";
 
 import {
+	StencilPanelSearchBox,
+	StencilSearchResults,
+} from "./StencilPanelSearch";
+import {
 	StencilCatalogPinButton,
 	StencilCatalogRow,
 	StencilCatalogRowIcon,
 	StencilCatalogRowLabel,
 	StencilCatalogRowOpenButton,
-	StencilLibraryPanelList,
-} from "./StencilLibraryPanelStyled";
-import {
-	StencilPanelSearchBox,
-	StencilSearchResults,
-} from "./StencilPanelSearch";
+	StencilPanelList,
+} from "./StencilPanelStyled";
 import type { ResolvedStencilCategory } from "./utils/resolveStencilCategory";
 import {
 	resolveStencilCategoryLabel,
@@ -72,7 +72,7 @@ export const StencilCatalogPanelContent: React.FC<
 	return (
 		<>
 			<StencilPanelSearchBox query={query} onQueryChange={setQuery} />
-			<StencilLibraryPanelList>
+			<StencilPanelList>
 				{trimmedQuery !== "" ? (
 					<StencilSearchResults
 						result={searchResult}
@@ -113,7 +113,7 @@ export const StencilCatalogPanelContent: React.FC<
 						);
 					})
 				)}
-			</StencilLibraryPanelList>
+			</StencilPanelList>
 		</>
 	);
 };

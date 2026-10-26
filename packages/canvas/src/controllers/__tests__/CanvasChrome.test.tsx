@@ -301,4 +301,29 @@ describe("Canvas chrome", () => {
 				?.getAttribute("aria-label"),
 		).toBe("基本 をピン留め");
 	});
+
+	/** The button shown pressed is the one that closes the panel, in one press. */
+	it("closes a docked category the library lacks from the pressed catalog button in one press", async () => {
+		const container = mount({
+			stencilLibrary: library,
+			initialConfig: {
+				sidebars: {
+					left: { isOpen: true },
+					panels: {
+						stencilLibrary: {
+							content: { kind: "category", categoryId: "no-such-category" },
+						},
+					},
+				},
+			},
+		});
+		await press(container.querySelector(CATALOG_BUTTON));
+
+		expect(
+			container.querySelector('[data-id="stencil-library-panel"]'),
+		).toBeNull();
+		expect(
+			container.querySelector(CATALOG_BUTTON)?.getAttribute("aria-expanded"),
+		).toBe("false");
+	});
 });

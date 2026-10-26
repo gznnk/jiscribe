@@ -12,6 +12,7 @@
 	},
 	"scripts": {
 		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
+		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
@@ -41,6 +42,7 @@
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"typescript": "catalog:",
+		"vitest": "catalog:",
 		"zod": "catalog:"
 	}
 }

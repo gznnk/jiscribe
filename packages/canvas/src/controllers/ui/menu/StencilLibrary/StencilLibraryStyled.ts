@@ -4,7 +4,7 @@ import { theme } from "../../../../foundation/theme/themeTokens";
 
 /**
  * Individual item button in the stencil library.
- * Placed on the stencil rail and in the stencil panels (StencilLibraryPanel),
+ * Placed on the stencil rail and in the stencil panels (StencilPanel),
  * the flyout and the docked one alike.
  */
 export const StencilLibraryButton = styled.button<{ isActive?: boolean }>`
