@@ -8,6 +8,13 @@ import {
 import { theme } from "../../../../foundation/theme/themeTokens";
 import { SIDE_PANEL_WIDTH } from "../SidePanel/SidePanelStyled";
 
+/**
+ * Distance in px from a stencil panel's side to its content: the search box,
+ * the grid's first and last columns, and the text and rows under them start
+ * and end this far in.
+ */
+const STENCIL_PANEL_INSET = 12;
+
 /** Where a stencil panel is: over the canvas (the flyout), or docked beside it. */
 export type StencilPanelPresentation = "flyout" | "docked";
 
@@ -48,7 +55,7 @@ export const StencilPanelSearchField = styled.div`
 	display: flex;
 	flex: none;
 	align-items: center;
-	margin: 0 12px 8px;
+	margin: 0 ${STENCIL_PANEL_INSET}px 8px;
 
 	svg {
 		position: absolute;
@@ -130,7 +137,7 @@ export const StencilCatalogRowOpenButton = styled.button`
 	gap: 8px;
 	min-width: 0;
 	height: 100%;
-	padding: 0 8px 0 12px;
+	padding: 0 8px 0 ${STENCIL_PANEL_INSET}px;
 	border: none;
 	background: transparent;
 	color: ${theme.foreground};
@@ -204,20 +211,25 @@ export const StencilPanelGrid = styled.div`
 	justify-content: space-between;
 	gap: 2px;
 	/* The list reserves the scrollbar's gutter on the right, so the end padding
-	   gives it back to line the last column up with the search box's edge. */
-	padding: 4px ${12 - SCROLLBAR_WIDTH}px 8px 12px;
+	   gives it back to line the last column up with the search box's edge. That
+	   holds where the webkit scrollbar styles apply (scrollbarStyles, Chromium
+	   hosts), whose gutter is SCROLLBAR_WIDTH wide; elsewhere the native gutter
+	   has another width and the last column sits off the box's edge by the
+	   difference. */
+	padding: 4px ${STENCIL_PANEL_INSET - SCROLLBAR_WIDTH}px 8px
+		${STENCIL_PANEL_INSET}px;
 `;
 
 /** Shown in place of the results when a search matches no stencil. */
 export const StencilPanelEmptyMessage = styled.div`
-	padding: 8px 12px;
+	padding: 8px ${STENCIL_PANEL_INSET}px;
 	font-size: 12px;
 	color: ${theme.foregroundMuted};
 `;
 
 /** Line under the search results telling that categories cut their matches short. */
 export const StencilPanelMoreMatchesMessage = styled.div`
-	padding: 0 12px 8px;
+	padding: 0 ${STENCIL_PANEL_INSET}px 8px;
 	font-size: 11px;
 	color: ${theme.foregroundMuted};
 `;
@@ -230,7 +242,7 @@ export const StencilPanelMoreMatchesMessage = styled.div`
  */
 export const StencilPanelMoreViaSearchButton = styled.button`
 	display: block;
-	margin: -4px 12px 8px;
+	margin: -4px ${STENCIL_PANEL_INSET}px 8px;
 	padding: 0;
 	border: none;
 	background: transparent;
