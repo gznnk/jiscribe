@@ -28,7 +28,6 @@ const DIVIDER_XS_BY_EDGE: Record<SidebarIconProps["edge"], number[]> = {
  * read a size smaller than the rest of the bar. Every coordinate is a whole
  * number, so a stroke-width 2 line covers whole pixels at 24px.
  */
-
 const SidebarIconComponent: React.FC<SidebarIconProps> = ({
 	edge,
 	width = 24,

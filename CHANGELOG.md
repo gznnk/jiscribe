@@ -37,14 +37,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `DEFAULT_TOOLBAR_SECTIONS` is now history, view and the sidebars switch; the
   presets moved to the bottom tool bar. `standardToolbarSections` changed the
   same way. `DEFAULT_TOOLBAR_TOOLS_SECTION`, `DEFAULT_TOOLBAR_PROPERTIES_SECTION`
-  and `standardToolbarToolsSection` are still exported; a host that keeps
-  presets on the top bar passes `bottomToolbar={{ show: false }}`, or each
-  preset shows twice.
+  and `standardToolbarToolsSection` are still exported.
 - **Migration: the bottom tool bar is shown unless you hide it.**
-  `bottomToolbar.show` is independent of `toolbar.show`. A host passing
-  `toolbar={{ show: false }}`, or composing `DEFAULT_TOOLBAR_TOOLS_SECTION` /
-  `standardToolbarToolsSection` into its top bar, must also pass
-  `bottomToolbar={{ show: false }}`.
+  `bottomToolbar.show` is independent of `toolbar.show`. A host that keeps
+  presets on the top bar (composing `DEFAULT_TOOLBAR_TOOLS_SECTION` /
+  `standardToolbarToolsSection`), or passes `toolbar={{ show: false }}`, must
+  also pass `bottomToolbar={{ show: false }}`; otherwise each preset shows
+  twice, or a canvas meant to have no bar keeps one.
 - **A divider no longer opens or closes the whole top bar.** One left at the
   very start or end of the resolved bar is dropped, since it separates the bar
   from nothing.

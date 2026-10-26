@@ -62,9 +62,12 @@ describe("ToggleSidebarsCommand", () => {
 			expect(openFlagsAfterPress(false, false, false)).toEqual([false, true]);
 		});
 
-		it("closes the properties sidebar and leaves the library flag as it was", () => {
+		it("closes the properties sidebar and leaves the library flag closed", () => {
 			expect(openFlagsAfterPress(false, true, false)).toEqual([false, false]);
-			// A flag seeded open with no panel to draw counts for nothing.
+		});
+
+		/** A library flag seeded open with no panel to draw counts for nothing. */
+		it("treats an open library flag as collapsed and opens properties, leaving the flag open", () => {
 			expect(openFlagsAfterPress(true, false, false)).toEqual([true, true]);
 		});
 	});

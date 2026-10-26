@@ -22,13 +22,21 @@ import { selectors } from "../../support/selectors";
  * inside the zone and 200px to the right is clearly outside.
  */
 
-/** minX of the viewBox (world coordinates; moves on horizontal scrolling). */
-async function viewBoxMinX(canvas: CanvasDriver): Promise<number> {
+/** The viewBox of the canvas SVG, parsed (world coordinates). */
+async function readViewBox(
+	canvas: CanvasDriver,
+): Promise<{ minX: number; minY: number; width: number; height: number }> {
 	const raw = await canvas.getViewBox();
 	if (!raw) {
 		throw new Error("cannot get the viewBox");
 	}
-	return Number(raw.trim().split(/\s+/)[0]);
+	const [minX, minY, width, height] = raw.trim().split(/\s+/).map(Number);
+	return { minX, minY, width, height };
+}
+
+/** minX of the viewBox (moves on horizontal scrolling). */
+async function viewBoxMinX(canvas: CanvasDriver): Promise<number> {
+	return (await readViewBox(canvas)).minX;
 }
 
 /**
@@ -43,11 +51,9 @@ async function openStencilLibraryMeasured(canvas: CanvasDriver): Promise<void> {
 	await expect
 		.poll(
 			async () => {
-				const raw = await canvas.getViewBox();
+				const { width } = await readViewBox(canvas);
 				const box = await canvasArea.boundingBox();
-				return raw && box
-					? Math.abs(Number(raw.trim().split(/\s+/)[2]) - box.width) <= 1
-					: false;
+				return box ? Math.abs(width - box.width) <= 1 : false;
 			},
 			{ message: "the viewport is measured with the sidebar open" },
 		)
