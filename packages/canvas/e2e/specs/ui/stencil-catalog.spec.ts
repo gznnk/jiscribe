@@ -13,6 +13,8 @@ import { selectors } from "../../support/selectors";
  * - A row switches the panel to its category, whose own search box and "find
  *   more" button reach the rest of that category.
  * - A row's pin toggle puts the category on the rail and takes it off again.
+ * - Its grid of shapes lines up with the search box above it, first column to
+ *   last.
  *
  * The categories are core's `basic` section and the harness's test-only `spec`
  * and `mixed` ones (e2e/plugins/specShapesPlugin): `spec` lists `tile` and holds
@@ -194,5 +196,35 @@ test.describe("Stencil catalog", () => {
 		await basicPin.click();
 		await expect(basicPin).toHaveAttribute("aria-pressed", "false");
 		await expect(basicButton).toHaveCount(0);
+	});
+
+	/**
+	 * No category of this harness lists six presets, so the six-column grid is
+	 * filled by the search: the results are laid out in the same grid
+	 * (StencilPanelGrid) as a category's presets.
+	 */
+	test("lines its grid up with the search box, first column to last", async ({
+		canvas,
+	}) => {
+		await canvas.openCatalog();
+		const page = canvas.page;
+		await page.locator(selectors.stencilPanelSearch).fill("e");
+		const items = page.locator(
+			`${selectors.stencilFlyout} [data-id="stencil-library"]`,
+		);
+		await expect.poll(() => items.count()).toBeGreaterThanOrEqual(6);
+
+		const searchBox = await page
+			.locator(selectors.stencilPanelSearch)
+			.boundingBox();
+		const firstItem = await items.nth(0).boundingBox();
+		const sixthItem = await items.nth(5).boundingBox();
+		if (searchBox === null || firstItem === null || sixthItem === null) {
+			throw new Error("the search box or the grid is not laid out");
+		}
+		expect(Math.abs(firstItem.x - searchBox.x)).toBeLessThanOrEqual(1);
+		expect(
+			Math.abs(sixthItem.x + sixthItem.width - (searchBox.x + searchBox.width)),
+		).toBeLessThanOrEqual(1);
 	});
 });

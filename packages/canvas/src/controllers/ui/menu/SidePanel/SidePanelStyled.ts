@@ -9,6 +9,13 @@ import { theme } from "../../../../foundation/theme/themeTokens";
  */
 export const SIDE_PANEL_WIDTH = 280;
 
+/**
+ * Distance in px from a side panel's side to its content, the heading
+ * included: a stencil panel's search box, grid and rows, a properties section's
+ * rows.
+ */
+export const SIDE_PANEL_INSET = 12;
+
 /** Title row of a side panel: the heading, then its buttons at the right. */
 export const SidePanelHeader = styled.div`
 	display: flex;
@@ -18,7 +25,7 @@ export const SidePanelHeader = styled.div`
 	gap: 8px;
 	flex: none;
 	height: 36px;
-	padding: 0 8px 0 12px;
+	padding: 0 8px 0 ${SIDE_PANEL_INSET}px;
 `;
 
 /**

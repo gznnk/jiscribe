@@ -2,7 +2,10 @@ import styled from "@emotion/styled";
 
 import { scrollbarStyles } from "../../../../foundation/theme/themeScrollbarStyles";
 import { theme } from "../../../../foundation/theme/themeTokens";
-import { SIDE_PANEL_WIDTH } from "../SidePanel/SidePanelStyled";
+import {
+	SIDE_PANEL_INSET,
+	SIDE_PANEL_WIDTH,
+} from "../SidePanel/SidePanelStyled";
 
 /**
  * The properties sidebar: a fixed-width column on the right of the viewport,
@@ -48,7 +51,7 @@ export const PropertyPanelSectionHeader = styled.button`
 	gap: 6px;
 	width: 100%;
 	height: 28px;
-	padding: 0 12px 0 8px;
+	padding: 0 ${SIDE_PANEL_INSET}px 0 8px;
 	border: none;
 	background: transparent;
 	color: ${theme.foreground};
@@ -84,9 +87,6 @@ export const PropertyPanelSectionLabel = styled.span`
 	white-space: nowrap;
 `;
 
-/** Side padding of a section body, aligned with the stencil panel's grid. */
-const SECTION_PADDING_X = 12;
-
 /** Width of a row's label column. */
 const ROW_LABEL_WIDTH = 56;
 
@@ -98,7 +98,7 @@ export const PropertyPanelSectionBody = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
-	padding: 4px ${SECTION_PADDING_X}px 8px;
+	padding: 4px ${SIDE_PANEL_INSET}px 8px;
 `;
 
 /** One property row: its label, and the control that states the value. */
