@@ -1,6 +1,10 @@
 import styled from "@emotion/styled";
 
-import { scrollbarStyles } from "../../../../foundation/theme/themeScrollbarStyles";
+import { STENCIL_BUTTON_SIZE } from "./StencilLibraryStyled";
+import {
+	SCROLLBAR_WIDTH,
+	scrollbarStyles,
+} from "../../../../foundation/theme/themeScrollbarStyles";
 import { theme } from "../../../../foundation/theme/themeTokens";
 import { SIDE_PANEL_WIDTH } from "../SidePanel/SidePanelStyled";
 
@@ -196,9 +200,12 @@ export const StencilCatalogPinButton = styled.button`
  */
 export const StencilPanelGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(6, minmax(0, 1fr));
+	grid-template-columns: repeat(6, ${STENCIL_BUTTON_SIZE}px);
+	justify-content: space-between;
 	gap: 2px;
-	padding: 4px 12px 8px;
+	/* The list reserves the scrollbar's gutter on the right, so the end padding
+	   gives it back to line the last column up with the search box's edge. */
+	padding: 4px ${12 - SCROLLBAR_WIDTH}px 8px 12px;
 `;
 
 /** Shown in place of the results when a search matches no stencil. */
