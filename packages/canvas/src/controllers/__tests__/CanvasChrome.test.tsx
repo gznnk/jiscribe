@@ -461,6 +461,9 @@ describe("Canvas chrome", () => {
 				initialConfig: { pinnedCategoryIds: ["boxes"] },
 			});
 			expect(
+				container.querySelector('[data-kind="object"][data-id="poly-1"]'),
+			).not.toBeNull();
+			expect(
 				[
 					...container.querySelectorAll(`${RAIL} [data-id="stencil-category"]`),
 				].map((button) => button.getAttribute("data-action")),
@@ -471,7 +474,11 @@ describe("Canvas chrome", () => {
 				`${FLYOUT} [data-action="show:lines"]`,
 			);
 			expect(linesRow?.textContent).toBe("lines");
-			expect(container.querySelector(`${FLYOUT} [data-testid]`)).toBeNull();
+			expect(
+				container.querySelector(
+					`${FLYOUT} [data-testid="stencil-catalog-in-diagram"]`,
+				),
+			).toBeNull();
 		});
 
 		it("draws no divider above the catalog button with no presets", () => {
