@@ -10,9 +10,11 @@ import { theme } from "../../../../foundation/theme/themeTokens";
 export const SIDE_PANEL_WIDTH = 280;
 
 /**
- * Distance in px from a side panel's side to its content, the heading
- * included: a stencil panel's search box, grid and rows, a properties section's
- * rows.
+ * Inset in px of a side panel's content, the heading included: a stencil
+ * panel's search box, grid and rows, a properties section's body, and the right
+ * end of a properties section's header. Measured from the panel's edge; inside
+ * a scrolling list the right side counts from the scrollbar gutter instead,
+ * unless the content gives the gutter back as StencilPanelGrid does.
  */
 export const SIDE_PANEL_INSET = 12;
 
