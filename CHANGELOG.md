@@ -235,6 +235,11 @@ guide`.** They drive the same `@jiscribe/ai-tools` declarations jiscribe-mcp
   `docOps.setText` (and with it `set_text`) wrote an empty text into a slot
   that holds rows, such as a UML record's attributes, as `[""]`: one empty row,
   where the canvas writes no rows at all.
+- **The Claude Code plugin starts the newest jiscribe-mcp.** It ran
+  `npx -y jiscribe-mcp@0.12`, and npx keeps using whichever version first
+  satisfied that range, so a machine that had once run 0.12.1 went on running
+  it after 0.12.2 was out. It now runs `npx -y jiscribe-mcp`, which npx checks
+  against the registry on every start.
 
 ## [0.12.1] - 2026-10-20
 
