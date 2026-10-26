@@ -704,7 +704,7 @@ const CanvasComponent = ({
 							drawnPanelContent={shownStencilPanelContent}
 						/>
 					)}
-					{isStencilPanelDocked && shownStencilPanelContent !== null && (
+					{isStencilPanelDocked && (
 						<StencilPanel
 							presentation="docked"
 							drawnContent={shownStencilPanelContent}
