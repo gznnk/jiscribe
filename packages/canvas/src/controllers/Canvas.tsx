@@ -270,9 +270,8 @@ type CanvasProps = {
 	 * The stencil rail, the column of shape tools at the left
 	 * ({@link CanvasRailConfig}): `presetIds` at the top (default
 	 * `DEFAULT_RAIL_PRESET_IDS`, core's primitives), then the categories the user
-	 * pinned, then the other library categories the open document uses (most
-	 * objects first; a type some rail preset creates counts toward none), then
-	 * the catalog button. Shown by default; `toolbar.show` does not
+	 * pinned, then the other library categories the open document uses
+	 * (useDocumentCategoryIds), then the catalog button. Shown by default; `toolbar.show` does not
 	 * hide it. An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
 	 */
 	rail?: CanvasRailConfig;

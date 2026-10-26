@@ -32,7 +32,7 @@ export type ResolvedStencilRail = {
  *   the registry, sections left empty dropped (resolveStencilCategories); empty
  *   means no library, and with it no pinned category and no catalog button
  * @param documentCategoryIds - The categories the open document uses, ranked
- *   (rankDocumentCategoryIds over the same `librarySections`); a pinned one is
+ *   (useDocumentCategoryIds over the same `librarySections`); a pinned one is
  *   left to its pin rather than drawn twice
  * @param stencil - Registry answering "what presets exist" for this canvas
  * @throws When `presetIds` names the same id twice: the id keys the button, so

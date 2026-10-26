@@ -5,21 +5,22 @@ import type { StencilRegistry } from "../../../objects/StencilRegistry";
 import type { ResolvedStencilCategory } from "../../StencilLibrary/utils/resolveStencilCategory";
 import {
 	buildCategoryIdsByObjectType,
-	rankDocumentCategoryIds,
-} from "../utils/rankDocumentCategoryIds";
+	tallyDocumentCategories,
+	type DocumentCategoryTally,
+} from "../utils/tallyDocumentCategories";
 
 /**
  * The library categories the open document uses, most objects first
- * (rankDocumentCategoryIds): what the rail adds below its pins and what the
+ * (tallyDocumentCategories): what the rail adds below its pins and what the
  * catalog marks as in the diagram.
  *
- * Derived on every change of `objects`, which is every step of a drag, so the
- * walk is one pass over the map; the result keeps its reference while the ids
- * and their order stay the same, so the memoized rail and panels hold.
+ * The last tally is kept, so a drag step is counted from the ids it wrote, and
+ * the result keeps its reference while the ids and their order stay the same,
+ * so the memoized rail and panels hold.
  *
- * @param objects - The canvas state's committed objects (`state.objects`)
+ * @param objects - The canvas state's object map (`state.objects`), a copy-on-write view during a drag
  * @param librarySections - `stencilLibrary.sections` resolved against the registry (useResolvedStencilLibrary)
- * @param railPresetIds - The rail's presets as the host declared them, the default already applied; the types they create count toward no category
+ * @param railPresetIds - The rail's presets as the host declared them, the default already applied (what their types do: buildCategoryIdsByObjectType)
  * @param stencil - Registry resolving `railPresetIds` to the types they create
  */
 export const useDocumentCategoryIds = (
@@ -39,14 +40,14 @@ export const useDocumentCategoryIds = (
 		[librarySections, railPresetIds, stencil],
 	);
 
-	const rankedIdsRef = useRef<readonly string[]>([]);
+	const tallyRef = useRef<DocumentCategoryTally | null>(null);
 	return useMemo(() => {
-		rankedIdsRef.current = rankDocumentCategoryIds(
+		tallyRef.current = tallyDocumentCategories(
 			objects,
 			categoryIdsByObjectType,
 			librarySections,
-			rankedIdsRef.current,
+			tallyRef.current,
 		);
-		return rankedIdsRef.current;
+		return tallyRef.current.rankedCategoryIds;
 	}, [objects, categoryIdsByObjectType, librarySections]);
 };

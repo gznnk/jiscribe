@@ -80,9 +80,10 @@ export {
 } from "./controllers/ui/menu/Toolbar";
 // The stencil rail at the left: the host's presets (`rail.presetIds`), then the
 // library categories the user pinned (seeded by `CanvasConfig.pinnedCategoryIds`,
-// changed from the catalog), then the catalog button. A `StencilCategory` is one section of
-// `stencilLibrary.sections`, which both the pinned buttons and the catalog draw
-// from; core exports `basicStencilCategory` and plugins export their own (e.g.
+// changed from the catalog), then the other categories the open document uses, then
+// the catalog button. A `StencilCategory` is one section of
+// `stencilLibrary.sections`, which the pinned buttons, the document's categories and
+// the catalog all draw from; core exports `basicStencilCategory` and plugins export their own (e.g.
 // `containerStencilCategory`).
 export {
 	DEFAULT_RAIL_PRESET_IDS,

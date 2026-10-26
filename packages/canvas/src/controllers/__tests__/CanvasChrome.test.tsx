@@ -455,6 +455,16 @@ describe("Canvas chrome", () => {
 			expect(container.querySelector(DOCUMENT_DIVIDER)).toBeNull();
 		});
 
+		it("draws no divider with nothing above them, the button all the same", () => {
+			const container = mount({
+				doc: docOf(frameDoc("rect-1", "rect")),
+				rail: { presetIds: [] },
+				stencilLibrary: documentLibrary,
+			});
+			expect(railCategories(container, "document")).toEqual(["toggle:boxes"]);
+			expect(container.querySelector(DOCUMENT_DIVIDER)).toBeNull();
+		});
+
 		it("adds no category for a type a rail preset creates", () => {
 			const container = mount({
 				doc: docOf(frameDoc("rect-1", "rect")),
