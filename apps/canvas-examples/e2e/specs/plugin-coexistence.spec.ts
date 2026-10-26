@@ -23,8 +23,8 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
 const RAIL_PRESET_IDS = [
 	"rect",
 	"ellipse",
-	"polyline",
 	"polygon",
+	"polyline",
 	"text",
 	"sticky",
 ];
