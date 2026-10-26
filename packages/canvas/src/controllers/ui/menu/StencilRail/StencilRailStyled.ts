@@ -41,6 +41,18 @@ export const StencilRailDivider = styled.div`
 	background-color: ${theme.borderSubtle};
 `;
 
+/**
+ * Dashed hairline above the categories the rail adds because the document uses
+ * them, telling them from the pins above it (whose divider is solid).
+ */
+export const StencilRailDocumentDivider = styled.div`
+	flex: none;
+	width: 20px;
+	height: 0;
+	margin: 4px 0;
+	border-top: 1px dashed ${theme.borderSubtle};
+`;
+
 /** Pushes what follows it (the catalog button) to the bottom of the rail. */
 export const StencilRailSpacer = styled.div`
 	flex: 1 1 auto;

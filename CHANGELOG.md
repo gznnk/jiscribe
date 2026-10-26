@@ -18,9 +18,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **The shape tools moved from the toolbar to a rail at the left of the
   canvas.** The rail holds the host's presets (`rail.presetIds`, default
   `DEFAULT_RAIL_PRESET_IDS`: rect, ellipse, polygon, polyline, text), then the
-  library categories the user pinned, then a "Find Shapes" button opening the
-  catalog of every section of `stencilLibrary.sections`, searchable, with a pin
-  toggle per category. A category opens as a panel over the canvas that leaves
+  library categories the user pinned, then — behind a dashed divider — the
+  other categories the open document uses, most shapes first (a type one of
+  the rail's presets creates counts toward none, so a plain rectangle does not
+  bring in a category listing a rect-typed preset), then a "Find Shapes"
+  button opening the catalog of every section of `stencilLibrary.sections`,
+  searchable, with a pin toggle per category and an "In this diagram" badge on
+  each category the document uses. The document's categories follow the
+  document as it changes, undo and redo included, and are not stored. A category opens as a panel over the canvas that leaves
   the viewport's size alone and closes like the other menus; its "Keep open"
   toggle docks it beside the canvas, pushing the canvas aside without moving
   the drawing, the way the shape library sidebar did. `rail.show: false` hides
@@ -49,7 +54,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `stencilPanelClose`, `stencilPanelSearchPlaceholder`, `stencilPanelNoMatch`,
   `stencilPanelMoreMatches` and `stencilPanelMoreViaSearch`.** The rail
   and the panels also read `stencilRailLabel`, `stencilCatalogTitle`,
-  `stencilPanelKeepOpen` and `stencilCatalogPin`, the last a function of the
+  `stencilCatalogInDiagram` (the catalog's badge), `stencilPanelKeepOpen` and
+  `stencilCatalogPin`, the last a function of the
   category label (`(categoryLabel) => string`). The catalog button wears the
   `toggleStencilLibrary` command's label ("Find Shapes"), overridden through
   `commandLabels`, and is not drawn when the host switched that command off.

@@ -1,9 +1,9 @@
 import { memo, useMemo } from "react";
 
-import { DEFAULT_RAIL_PRESET_IDS } from "./stencilRailConfig";
 import {
 	StencilRailContainer,
 	StencilRailDivider,
+	StencilRailDocumentDivider,
 	StencilRailPanelButton,
 	StencilRailSpacer,
 } from "./StencilRailStyled";
@@ -24,12 +24,21 @@ import type { ResolvedStencilCategory } from "../StencilLibrary/utils/resolveSte
 import { resolveStencilCategoryLabel } from "../StencilLibrary/utils/resolveStencilLabel";
 
 type StencilRailProps = {
-	/** The presets at the top (CanvasProps.rail.presetIds); omitted, the default set. Keep it stable: the rail is memoized. */
-	presetIds?: readonly string[];
+	/**
+	 * The presets at the top: `rail.presetIds`, or DEFAULT_RAIL_PRESET_IDS when
+	 * the host names none. Keep it stable: the rail is memoized.
+	 */
+	presetIds: readonly string[];
 	/** `stencilLibrary.sections` resolved against the registry; empty = no library. */
 	librarySections: readonly ResolvedStencilCategory[];
 	/** The user's pins in rail order (reducer state), unknown ids included. */
 	pinnedCategoryIds: readonly string[];
+	/**
+	 * The categories the open document uses, most-used first
+	 * (useDocumentCategoryIds); the ones not pinned follow the pins. Keep it
+	 * stable: the rail is memoized.
+	 */
+	documentCategoryIds: readonly string[];
 	/** Id of the preset currently armed for drawing, to highlight its button. */
 	activePresetId: string | null;
 	/**
@@ -42,9 +51,54 @@ type StencilRailProps = {
 
 const ICON_SIZE = 24;
 
+/** Which group of the rail a category button is in: the user's pins, or the ones the document adds. */
+type StencilRailCategoryGroup = "pinned" | "document";
+
+type StencilRailCategoryButtonProps = {
+	section: ResolvedStencilCategory;
+	/** Carried on `data-rail-group`; the button behaves the same in either. */
+	railGroup: StencilRailCategoryGroup;
+	/** Whether the open stencil panel draws this category, flyout or docked. */
+	isOpen: boolean;
+};
+
+/** A rail button toggling one category's panel (StencilCategoryToggleHandler). */
+const StencilRailCategoryButton: React.FC<StencilRailCategoryButtonProps> = ({
+	section: { category },
+	railGroup,
+	isOpen,
+}) => {
+	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
+	const Icon = category.icon;
+	const label = resolveStencilCategoryLabel(
+		category.id,
+		category.label,
+		messages,
+		locale,
+	);
+	return (
+		<StencilRailPanelButton
+			type="button"
+			data-kind="menu"
+			data-id="stencil-category"
+			data-action={toggleAction(category.id)}
+			data-rail-group={railGroup}
+			aria-haspopup="true"
+			aria-expanded={isOpen}
+			aria-label={label}
+			title={label}
+			isOpen={isOpen}
+		>
+			<Icon width={ICON_SIZE} height={ICON_SIZE} />
+		</StencilRailPanelButton>
+	);
+};
+
 /**
  * The stencil rail at the left of the canvas, top to bottom: the host's presets,
- * then the categories the user pinned, then (with a library) the catalog button.
+ * then the categories the user pinned, then the other categories the open
+ * document uses, then (with a library) the catalog button.
  *
  * Every button goes through the gesture system: the presets are library items
  * (StencilLibraryItemHandler, click to draw, drag to place), the category
@@ -53,9 +107,10 @@ const ICON_SIZE = 24;
  * are rendered by Canvas from reducer state, so the rail is render-only.
  */
 const StencilRailComponent: React.FC<StencilRailProps> = ({
-	presetIds = DEFAULT_RAIL_PRESET_IDS,
+	presetIds,
 	librarySections,
 	pinnedCategoryIds,
+	documentCategoryIds,
 	activePresetId,
 	drawnPanelContent,
 }) => {
@@ -70,16 +125,24 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 		? resolveCommandLabel(catalogCommand, messages, locale)
 		: null;
 
-	const { presets, pinnedCategories, hasCatalog } = useMemo(
-		() =>
-			resolveStencilRail(
+	const { presets, pinnedCategories, unpinnedDocumentCategories, hasCatalog } =
+		useMemo(
+			() =>
+				resolveStencilRail(
+					presetIds,
+					pinnedCategoryIds,
+					librarySections,
+					documentCategoryIds,
+					stencil,
+				),
+			[
 				presetIds,
 				pinnedCategoryIds,
 				librarySections,
+				documentCategoryIds,
 				stencil,
-			),
-		[presetIds, pinnedCategoryIds, librarySections, stencil],
-	);
+			],
+		);
 
 	const drawnCategoryId =
 		drawnPanelContent?.kind === "category"
@@ -107,32 +170,26 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 			{pinnedCategories.length > 0 && presets.length > 0 && (
 				<StencilRailDivider />
 			)}
-			{pinnedCategories.map(({ category }) => {
-				const Icon = category.icon;
-				const label = resolveStencilCategoryLabel(
-					category.id,
-					category.label,
-					messages,
-					locale,
-				);
-				const isOpen = drawnCategoryId === category.id;
-				return (
-					<StencilRailPanelButton
-						key={category.id}
-						type="button"
-						data-kind="menu"
-						data-id="stencil-category"
-						data-action={toggleAction(category.id)}
-						aria-haspopup="true"
-						aria-expanded={isOpen}
-						aria-label={label}
-						title={label}
-						isOpen={isOpen}
-					>
-						<Icon width={ICON_SIZE} height={ICON_SIZE} />
-					</StencilRailPanelButton>
-				);
-			})}
+			{pinnedCategories.map((section) => (
+				<StencilRailCategoryButton
+					key={section.category.id}
+					section={section}
+					railGroup="pinned"
+					isOpen={drawnCategoryId === section.category.id}
+				/>
+			))}
+			{unpinnedDocumentCategories.length > 0 &&
+				(presets.length > 0 || pinnedCategories.length > 0) && (
+					<StencilRailDocumentDivider data-testid="stencil-rail-document-divider" />
+				)}
+			{unpinnedDocumentCategories.map((section) => (
+				<StencilRailCategoryButton
+					key={section.category.id}
+					section={section}
+					railGroup="document"
+					isOpen={drawnCategoryId === section.category.id}
+				/>
+			))}
 			{hasCatalog && catalogLabel !== null && (
 				<>
 					<StencilRailSpacer />

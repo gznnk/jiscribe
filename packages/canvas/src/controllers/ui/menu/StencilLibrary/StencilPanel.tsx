@@ -39,6 +39,8 @@ type StencilPanelProps = {
 	sections: readonly ResolvedStencilCategory[];
 	/** The user's pins (reducer state), for the catalog's pin toggles. */
 	pinnedCategoryIds: readonly string[];
+	/** The categories the open document uses (useDocumentCategoryIds), for the catalog's badges. Keep it stable: the panel is memoized. */
+	documentCategoryIds: readonly string[];
 	/** Preset id currently in drawing mode, to highlight the matching item. */
 	activePresetId: string | null;
 	/**
@@ -74,6 +76,7 @@ const StencilPanelComponent: React.FC<StencilPanelProps> = ({
 	drawnContent,
 	sections,
 	pinnedCategoryIds,
+	documentCategoryIds,
 	activePresetId,
 	resolvePreset,
 }) => {
@@ -146,6 +149,7 @@ const StencilPanelComponent: React.FC<StencilPanelProps> = ({
 					key="catalog"
 					sections={sections}
 					pinnedCategoryIds={pinnedCategoryIds}
+					documentCategoryIds={documentCategoryIds}
 					activePresetId={activePresetId}
 					resolvePreset={resolvePreset}
 				/>

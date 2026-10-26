@@ -93,11 +93,24 @@ export const selectors = {
 		`${TOOLBAR} [data-action="command:${commandId}"]`,
 
 	/**
-	 * Category button on the rail, present for a pinned category; the toggle that
-	 * opens its panel, carrying the shown state on aria-expanded.
+	 * Category button on the rail, present for a pinned category or one the open
+	 * document uses; the toggle that opens its panel, carrying the shown state on
+	 * aria-expanded.
 	 */
 	categoryButton: (categoryId: string) =>
 		`[data-id="stencil-category"][data-action="toggle:${categoryId}"]`,
+
+	/**
+	 * Every category button of one group of the rail, in rail order: `pinned` for
+	 * the user's pins, `document` for the categories the rail adds below them
+	 * because the open document uses them. Read `data-action` (`toggle:<id>`) off
+	 * each for the ids.
+	 */
+	railCategoryButtons: (railGroup: "pinned" | "document") =>
+		`${RAIL} [data-id="stencil-category"][data-rail-group="${railGroup}"]`,
+
+	/** The dashed divider above the rail's document categories; absent while there are none. */
+	railDocumentDivider: `${RAIL} [data-testid="stencil-rail-document-divider"]`,
 
 	/** The stencil panel while it shows that category, flyout or docked; absent otherwise. */
 	categoryPanel: (categoryId: string) =>
@@ -153,9 +166,16 @@ export const selectors = {
 	/** Every catalog row, in display order. */
 	catalogRows: `${STENCIL_PANEL} [data-action^="show:"]`,
 
-	/** The catalog row switching the panel to a category; the row's label is its text. */
+	/**
+	 * The catalog row switching the panel to a category; its text is the row's
+	 * label, followed by the "In this diagram" badge while it shows.
+	 */
 	catalogRow: (categoryId: string) =>
 		`${STENCIL_PANEL} [data-action="show:${categoryId}"]`,
+
+	/** The "In this diagram" badge of a catalog row; present while the open document uses that category. */
+	catalogInDiagramBadge: (categoryId: string) =>
+		`${STENCIL_PANEL} [data-action="show:${categoryId}"] [data-testid="stencil-catalog-in-diagram"]`,
 
 	/** The catalog row's pin toggle, carrying the pinned state on aria-pressed. */
 	catalogPin: (categoryId: string) =>

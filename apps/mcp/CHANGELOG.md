@@ -19,9 +19,10 @@ covers that.
 
 - **The viewer's shape tools moved to a rail at the left of the canvas.** The
   six presets the toolbar used to carry sit on the rail, with the Flowchart
-  category pinned below them and a "Find Shapes" button opening every category
-  of the standard set; a category opens over the canvas and can be kept open
-  beside it. The pins are not remembered between sessions yet.
+  category pinned below them, the other categories the open file uses after
+  the pins, and a "Find Shapes" button opening every category of the standard
+  set, those in use marked "In this diagram"; a category opens over the canvas
+  and can be kept open beside it. The pins are not remembered between sessions yet.
 
 ## [0.12.2] - 2026-10-25
 

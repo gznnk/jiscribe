@@ -15,12 +15,13 @@ import { selectors } from "../../support/selectors";
  * - A row's pin toggle puts the category on the rail and takes it off again.
  *
  * The categories are core's `basic` section and the harness's test-only `spec`
- * one (e2e/plugins/specShapesPlugin): `spec` lists `tile` and holds `brick`
- * beyond it, and the harness pins it.
+ * and `mixed` ones (e2e/plugins/specShapesPlugin): `spec` lists `tile` and holds
+ * `brick` beyond it, and the harness pins it.
  */
 
 const SPEC_CATEGORY = "spec";
 const BASIC_CATEGORY = "basic";
+const MIXED_CATEGORY = "mixed";
 
 test.describe("Stencil catalog", () => {
 	test("opens and closes from the rail's catalog button, its search box unfocused", async ({
@@ -48,6 +49,7 @@ test.describe("Stencil catalog", () => {
 		expect(rowActions).toEqual([
 			`show:${BASIC_CATEGORY}`,
 			`show:${SPEC_CATEGORY}`,
+			`show:${MIXED_CATEGORY}`,
 		]);
 
 		await button.click();

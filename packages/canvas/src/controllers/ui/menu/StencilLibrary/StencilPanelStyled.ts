@@ -153,6 +153,21 @@ export const StencilCatalogRowLabel = styled.span`
 `;
 
 /**
+ * Status badge after a catalog row's label, on a category the open document
+ * uses: text in a neutral outline, since it reports rather than invites a press.
+ */
+export const StencilCatalogRowBadge = styled.span`
+	flex: none;
+	padding: 0 6px;
+	border: 1px solid ${theme.border};
+	border-radius: 8px;
+	color: ${theme.foregroundMuted};
+	font-size: 10px;
+	line-height: 14px;
+	white-space: nowrap;
+`;
+
+/**
  * Pin toggle of a catalog row. One neutral color pinned or not: being visible
  * without a hover is what says it is pinned.
  */

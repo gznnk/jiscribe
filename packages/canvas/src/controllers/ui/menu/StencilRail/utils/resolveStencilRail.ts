@@ -11,6 +11,11 @@ export type ResolvedStencilRail = {
 	 * section the library resolved, each as that section.
 	 */
 	pinnedCategories: ResolvedStencilCategory[];
+	/**
+	 * The categories the open document uses below the pins, most-used first:
+	 * every one of `documentCategoryIds` that is not pinned, each as its section.
+	 */
+	unpinnedDocumentCategories: ResolvedStencilCategory[];
 	/** Whether the catalog button at the bottom is drawn: the library resolved to a section at least. */
 	hasCatalog: boolean;
 };
@@ -26,6 +31,9 @@ export type ResolvedStencilRail = {
  * @param librarySections - `stencilLibrary.sections` already resolved against
  *   the registry, sections left empty dropped (resolveStencilCategories); empty
  *   means no library, and with it no pinned category and no catalog button
+ * @param documentCategoryIds - The categories the open document uses, ranked
+ *   (rankDocumentCategoryIds over the same `librarySections`); a pinned one is
+ *   left to its pin rather than drawn twice
  * @param stencil - Registry answering "what presets exist" for this canvas
  * @throws When `presetIds` names the same id twice: the id keys the button, so
  *   the twin would be indistinguishable from the first
@@ -34,6 +42,7 @@ export const resolveStencilRail = (
 	presetIds: readonly string[],
 	pinnedCategoryIds: readonly string[],
 	librarySections: readonly ResolvedStencilCategory[],
+	documentCategoryIds: readonly string[],
 	stencil: StencilRegistry,
 ): ResolvedStencilRail => {
 	const seenPresetIds = new Set<string>();
@@ -49,15 +58,21 @@ export const resolveStencilRail = (
 	const presets = presetIds
 		.map((presetId) => stencil.get(presetId))
 		.filter((preset) => preset !== undefined);
-	const pinnedCategories = pinnedCategoryIds.flatMap((categoryId) => {
-		const section = librarySections.find(
-			(librarySection) => librarySection.category.id === categoryId,
-		);
-		return section ? [section] : [];
-	});
+	const findSections = (categoryIds: readonly string[]) =>
+		categoryIds.flatMap((categoryId) => {
+			const section = librarySections.find(
+				(librarySection) => librarySection.category.id === categoryId,
+			);
+			return section ? [section] : [];
+		});
 	return {
 		presets,
-		pinnedCategories,
+		pinnedCategories: findSections(pinnedCategoryIds),
+		unpinnedDocumentCategories: findSections(
+			documentCategoryIds.filter(
+				(categoryId) => !pinnedCategoryIds.includes(categoryId),
+			),
+		),
 		hasCatalog: librarySections.length > 0,
 	};
 };

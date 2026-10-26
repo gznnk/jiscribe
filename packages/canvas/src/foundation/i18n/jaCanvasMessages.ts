@@ -10,6 +10,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	stencilRailLabel: "図形",
 
 	stencilCatalogTitle: "すべての図形",
+	stencilCatalogInDiagram: "図で使用中",
 	stencilPanelClose: "閉じる",
 	stencilPanelKeepOpen: "固定表示",
 	stencilCatalogPin: (categoryLabel) => `${categoryLabel} をピン留め`,

@@ -15,7 +15,8 @@ import {
 
 /**
  * Which pieces of chrome a mounted canvas draws for its props: the rail, the
- * toolbar, the rail's catalog button and its pinned categories. What each piece
+ * toolbar, the rail's catalog button, its pinned categories and the ones the
+ * document adds, and the catalog's badges. What each piece
  * does is the business of its own tests and the e2e suite; this pins only the
  * show / hide rules, which no single component owns.
  */
@@ -385,5 +386,120 @@ describe("Canvas chrome", () => {
 		expect(dock()).not.toBeNull();
 		expect(dock()?.hasAttribute("data-stencil-category-panel")).toBe(false);
 		expect(dock()?.querySelector('[data-action="show:lines"]')).not.toBeNull();
+	});
+
+	describe("categories the document uses", () => {
+		const categoryOf = (id: string, presetIds: string[]): StencilCategory => ({
+			id,
+			label: id,
+			icon: RectIcon,
+			presetIds,
+		});
+		/** With only the text tool on the rail, every one of these types counts. */
+		const documentRail = { presetIds: ["text"] };
+		const documentLibrary = {
+			sections: [
+				categoryOf("boxes", ["rect"]),
+				categoryOf("rounds", ["ellipse"]),
+				categoryOf("lines", ["polyline"]),
+			],
+		};
+		const frameDoc = (id: string, type: string) => ({
+			id,
+			type,
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+		});
+		const docOf = (...root: ReturnType<typeof frameDoc>[]) => ({
+			version: 1 as const,
+			root,
+		});
+		const railCategories = (container: HTMLElement, railGroup: string) =>
+			[
+				...container.querySelectorAll(
+					`${RAIL} [data-id="stencil-category"][data-rail-group="${railGroup}"]`,
+				),
+			].map((button) => button.getAttribute("data-action"));
+		const DOCUMENT_DIVIDER = `${RAIL} [data-testid="stencil-rail-document-divider"]`;
+
+		it("draws them after the pins behind a dashed divider, a pinned one only once", () => {
+			const container = mount({
+				doc: docOf(
+					frameDoc("rect-1", "rect"),
+					frameDoc("ellipse-1", "ellipse"),
+				),
+				rail: documentRail,
+				stencilLibrary: documentLibrary,
+				initialConfig: { pinnedCategoryIds: ["rounds"] },
+			});
+			expect(railCategories(container, "pinned")).toEqual(["toggle:rounds"]);
+			expect(railCategories(container, "document")).toEqual(["toggle:boxes"]);
+			// The divider sits between the two groups.
+			const divider = container.querySelector(DOCUMENT_DIVIDER);
+			expect(divider?.previousElementSibling?.getAttribute("data-action")).toBe(
+				"toggle:rounds",
+			);
+			expect(divider?.nextElementSibling?.getAttribute("data-action")).toBe(
+				"toggle:boxes",
+			);
+		});
+
+		it("draws neither them nor the divider for a document using no category", () => {
+			const container = mount({
+				rail: documentRail,
+				stencilLibrary: documentLibrary,
+			});
+			expect(railCategories(container, "document")).toEqual([]);
+			expect(container.querySelector(DOCUMENT_DIVIDER)).toBeNull();
+		});
+
+		it("adds no category for a type a rail preset creates", () => {
+			const container = mount({
+				doc: docOf(frameDoc("rect-1", "rect")),
+				rail: { presetIds: ["rect"] },
+				stencilLibrary: documentLibrary,
+			});
+			expect(railCategories(container, "document")).toEqual([]);
+		});
+
+		it("swaps them with the document", () => {
+			const { container, rerender } = mountWithRerender({
+				doc: docOf(frameDoc("rect-1", "rect")),
+				rail: documentRail,
+				stencilLibrary: documentLibrary,
+			});
+			expect(railCategories(container, "document")).toEqual(["toggle:boxes"]);
+
+			rerender({
+				doc: docOf(frameDoc("ellipse-1", "ellipse")),
+				rail: documentRail,
+				stencilLibrary: documentLibrary,
+			});
+			expect(railCategories(container, "document")).toEqual(["toggle:rounds"]);
+		});
+
+		it("badges every catalog row the document uses, pinned or not, in the locale's wording", async () => {
+			const container = mount({
+				doc: docOf(
+					frameDoc("rect-1", "rect"),
+					frameDoc("ellipse-1", "ellipse"),
+				),
+				rail: documentRail,
+				stencilLibrary: documentLibrary,
+				initialConfig: { pinnedCategoryIds: ["rounds"] },
+				locale: "ja",
+			});
+			await press(container.querySelector(CATALOG_BUTTON));
+
+			const badgeOf = (categoryId: string) =>
+				container.querySelector(
+					`${FLYOUT} [data-action="show:${categoryId}"] [data-testid="stencil-catalog-in-diagram"]`,
+				);
+			expect(badgeOf("boxes")?.textContent).toBe("図で使用中");
+			expect(badgeOf("rounds")?.textContent).toBe("図で使用中");
+			expect(badgeOf("lines")).toBeNull();
+		});
 	});
 });

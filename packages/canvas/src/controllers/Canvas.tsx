@@ -79,8 +79,12 @@ import type {
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
 import { useResolvedStencilLibrary } from "./ui/menu/StencilLibrary/hooks/useResolvedStencilLibrary";
 import { StencilPanel } from "./ui/menu/StencilLibrary/StencilPanel";
+import { useDocumentCategoryIds } from "./ui/menu/StencilRail/hooks/useDocumentCategoryIds";
 import { StencilRail } from "./ui/menu/StencilRail/StencilRail";
-import type { CanvasRailConfig } from "./ui/menu/StencilRail/stencilRailConfig";
+import {
+	DEFAULT_RAIL_PRESET_IDS,
+	type CanvasRailConfig,
+} from "./ui/menu/StencilRail/stencilRailConfig";
 import { STENCIL_RAIL_WIDTH } from "./ui/menu/StencilRail/StencilRailStyled";
 import {
 	DEFAULT_TOOLBAR_SECTIONS,
@@ -266,14 +270,16 @@ type CanvasProps = {
 	 * The stencil rail, the column of shape tools at the left
 	 * ({@link CanvasRailConfig}): `presetIds` at the top (default
 	 * `DEFAULT_RAIL_PRESET_IDS`, core's primitives), then the categories the user
-	 * pinned, then the catalog button. Shown by default; `toolbar.show` does not
+	 * pinned, then the other library categories the open document uses (most
+	 * objects first; a type some rail preset creates counts toward none), then
+	 * the catalog button. Shown by default; `toolbar.show` does not
 	 * hide it. An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
 	 */
 	rail?: CanvasRailConfig;
 	/**
-	 * The stencil library: the categories the rail's pinned buttons and its
-	 * catalog draw from. Omit and the rail shows its presets alone — no pinned
-	 * category, no catalog button.
+	 * The stencil library: the categories the rail's pinned buttons, the ones it
+	 * adds for the open document and its catalog draw from. Omit and the rail
+	 * shows its presets alone — no category, no catalog button.
 	 *
 	 * A category opens as a panel over the canvas (the flyout) that the user can
 	 * dock beside it; the catalog lists every section, searches across them and
@@ -501,6 +507,13 @@ const CanvasComponent = ({
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
 	const isRailShown = rail?.show !== false;
+	const railPresetIds = rail?.presetIds ?? DEFAULT_RAIL_PRESET_IDS;
+	const documentCategoryIds = useDocumentCategoryIds(
+		state.objects,
+		librarySections,
+		railPresetIds,
+		registries.stencil,
+	);
 	// With no library in the reducer nothing is drawn, so a panel restored open
 	// takes no space (readDrawnStencilPanelContent for the rest).
 	const shownStencilPanelContent =
@@ -697,9 +710,10 @@ const CanvasComponent = ({
 				<CanvasBody>
 					{isRailShown && (
 						<StencilRail
-							presetIds={rail?.presetIds}
+							presetIds={railPresetIds}
 							librarySections={librarySections}
 							pinnedCategoryIds={state.pinnedCategoryIds}
+							documentCategoryIds={documentCategoryIds}
 							activePresetId={drawingPresetId}
 							drawnPanelContent={shownStencilPanelContent}
 						/>
@@ -710,6 +724,7 @@ const CanvasComponent = ({
 							drawnContent={shownStencilPanelContent}
 							sections={librarySections}
 							pinnedCategoryIds={state.pinnedCategoryIds}
+							documentCategoryIds={documentCategoryIds}
 							activePresetId={drawingPresetId}
 							resolvePreset={resolveLibraryPreset}
 						/>
@@ -787,6 +802,7 @@ const CanvasComponent = ({
 									drawnContent={shownStencilPanelContent}
 									sections={librarySections}
 									pinnedCategoryIds={state.pinnedCategoryIds}
+									documentCategoryIds={documentCategoryIds}
 									activePresetId={drawingPresetId}
 									resolvePreset={resolveLibraryPreset}
 								/>

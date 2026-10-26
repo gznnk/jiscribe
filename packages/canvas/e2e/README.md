@@ -90,6 +90,8 @@ How to pick between the attributes:
 | `context-menu-callback:{id}`    | callback items of the context menu                                                                   | items such as paste that do not go through gestures                                                                                                                                       |
 | `snap-guide:x` / `snap-guide:y` | snap guide lines (vertical / horizontal)                                                             | decoration with `pointerEvents: none`. Present only during a drag. The aligned coordinate is held in the line's `x1` (x axis) / `y1` (y axis)                                             |
 | `part-outline`                  | tinted box around a picked part (a text slot, a cell, a row); outline only while a text edit is open | decoration with `pointerEvents: none`, drawn in place of the owner's selection outline and the same way, so this is what tells the two apart (`selectors.partOutline`)                    |
+| `stencil-rail-document-divider` | the dashed divider above the rail's document categories                                              | decoration; present only while the rail shows one (`selectors.railDocumentDivider`)                                                                                                       |
+| `stencil-catalog-in-diagram`    | the "In this diagram" badge of a catalog row                                                         | a status with no action; present only on a category the open document uses (`selectors.catalogInDiagramBadge`)                                                                            |
 
 | data-kind     | Meaning                                | data-id / data-part / data-action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -105,7 +107,9 @@ click picks); `data-action` names what pressing the element starts. For the
 grammar of kind / id / part / action, see
 `packages/canvas/docs/04-gesture-system.md`.
 Shape library buttons carry action: `item:<presetId>` (for example `item:rect`).
-A rail category button is `stencil-category` with action `toggle:<categoryId>`;
+A rail category button is `stencil-category` with action `toggle:<categoryId>`,
+and `data-rail-group="pinned"` for a pin or `"document"` for a category the rail
+adds because the open document uses it (`selectors.railCategoryButtons`);
 the rail's catalog button carries only action `command:toggleStencilLibrary`.
 The stencil panel (`stencil-library-panel`, in the DOM only while open) carries
 `data-presentation="flyout"` over the canvas or `"docked"` beside it, and
@@ -117,7 +121,9 @@ Rail buttons can also be identified by the `title` attribute, as in
 `[data-id="stencil-rail"] button[title="Rectangle"]` (Rectangle / Ellipse /
 Polyline / Polygon / Text from core, plus Pin / Card / Memo from
 `e2e/plugins/specShapesPlugin` —
-the harness puts all of them on the rail, and pins the `spec` category). No
+the harness puts all of them on the rail, and pins the `spec` category; the
+`mixed` category, listing `panel` beside core's `rect`, is left for a document
+to add). No
 shipped plugin is mounted here; a spec that needs one belongs in that plugin's
 own suite.
 

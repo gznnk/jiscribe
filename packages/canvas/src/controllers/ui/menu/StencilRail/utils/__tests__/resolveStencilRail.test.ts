@@ -39,6 +39,7 @@ describe("resolveStencilRail", () => {
 			["text", "no-such-preset", "rect"],
 			[],
 			librarySections,
+			[],
 			stencil,
 		);
 		expect(rail.presets.map((preset) => preset.id)).toEqual(["text", "rect"]);
@@ -49,6 +50,7 @@ describe("resolveStencilRail", () => {
 			[],
 			["lines", "basic"],
 			librarySections,
+			[],
 			stencil,
 		);
 		expect(rail.pinnedCategories.map(({ category }) => category.id)).toEqual([
@@ -69,6 +71,7 @@ describe("resolveStencilRail", () => {
 			[],
 			["no-such-category", "basic", "empty"],
 			librarySections,
+			[],
 			stencil,
 		);
 		expect(rail.pinnedCategories.map(({ category }) => category.id)).toEqual([
@@ -78,15 +81,45 @@ describe("resolveStencilRail", () => {
 
 	it("offers the catalog only with a library", () => {
 		expect(
-			resolveStencilRail([], [], librarySections, stencil).hasCatalog,
+			resolveStencilRail([], [], librarySections, [], stencil).hasCatalog,
 		).toBe(true);
-		expect(resolveStencilRail(["rect"], [], [], stencil).hasCatalog).toBe(
+		expect(resolveStencilRail(["rect"], [], [], [], stencil).hasCatalog).toBe(
 			false,
 		);
 	});
 
+	it("draws the categories the document uses in rank order, not library order", () => {
+		const rail = resolveStencilRail(
+			[],
+			[],
+			librarySections,
+			["lines", "basic"],
+			stencil,
+		);
+		expect(
+			rail.unpinnedDocumentCategories.map(({ category }) => category.id),
+		).toEqual(["lines", "basic"]);
+	});
+
+	it("leaves a category the document uses to its pin rather than drawing it twice", () => {
+		const rail = resolveStencilRail(
+			[],
+			["basic"],
+			librarySections,
+			["lines", "basic"],
+			stencil,
+		);
+		expect(rail.pinnedCategories.map(({ category }) => category.id)).toEqual([
+			"basic",
+		]);
+		expect(
+			rail.unpinnedDocumentCategories.map(({ category }) => category.id),
+		).toEqual(["lines"]);
+		expect(rail.unpinnedDocumentCategories[0]).toBe(librarySections[1]);
+	});
+
 	it("draws no pinned category without a library, whatever is pinned", () => {
-		const rail = resolveStencilRail(["rect"], ["basic"], [], stencil);
+		const rail = resolveStencilRail(["rect"], ["basic"], [], [], stencil);
 		expect(rail.presets.map((preset) => preset.id)).toEqual(["rect"]);
 		expect(rail.pinnedCategories).toEqual([]);
 	});
@@ -94,7 +127,7 @@ describe("resolveStencilRail", () => {
 	/** The id keys the button, so a twin would be indistinguishable, not wrong. */
 	it("throws when a preset id is listed twice", () => {
 		expect(() =>
-			resolveStencilRail(["rect", "ellipse", "rect"], [], [], stencil),
+			resolveStencilRail(["rect", "ellipse", "rect"], [], [], [], stencil),
 		).toThrow(/"rect" twice/);
 	});
 });
