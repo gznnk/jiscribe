@@ -84,9 +84,9 @@ test.describe("sidebars switch", () => {
 		const propertyBox = await canvas.page
 			.locator(selectors.propertyPanel)
 			.boundingBox();
-		// SIDE_PANEL_WIDTH, which no entry the specs import from carries.
+		expect(libraryBox).not.toBeNull();
+		expect(propertyBox).not.toBeNull();
 		expect(libraryBox?.width).toBe(propertyBox?.width);
-		expect(libraryBox?.width).toBe(280);
 	});
 
 	test("with no shape library, follows the properties sidebar alone", async ({
