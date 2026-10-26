@@ -7,7 +7,11 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { Canvas } from "../Canvas";
 import { ShapesIcon } from "../ui/icons/ShapesIcon";
 import { STENCIL_RAIL_WIDTH } from "../ui/menu/StencilRail/StencilRailStyled";
-import { basicStencilCategory } from "../ui/objects/StencilCategory";
+import { RectIcon } from "../ui/objects/primitives/RectIcon";
+import {
+	basicStencilCategory,
+	type StencilCategory,
+} from "../ui/objects/StencilCategory";
 
 /**
  * Which pieces of chrome a mounted canvas draws for its props: the rail, the
@@ -57,21 +61,32 @@ afterEach(() => {
 	unmount = null;
 });
 
-const mount = (props: Partial<React.ComponentProps<typeof Canvas>>) => {
+type CanvasProps = Partial<React.ComponentProps<typeof Canvas>>;
+
+/** One empty document for every render, so a re-render changes only the props a test names. */
+const EMPTY_DOC = { version: 1 as const, root: [] };
+
+/**
+ * Mounts a canvas and returns its container, plus a re-render that keeps the
+ * same mounted canvas (mount-time config is not read again).
+ */
+const mountWithRerender = (props: CanvasProps) => {
 	const container = document.createElement("div");
 	document.body.appendChild(container);
 	const root = createRoot(container);
-	act(() =>
-		root.render(
-			<Canvas doc={{ version: 1, root: [] }} autoFocus={false} {...props} />,
-		),
-	);
+	const render = (nextProps: CanvasProps) =>
+		act(() =>
+			root.render(<Canvas doc={EMPTY_DOC} autoFocus={false} {...nextProps} />),
+		);
+	render(props);
 	unmount = () => {
 		act(() => root.unmount());
 		container.remove();
 	};
-	return container;
+	return { container, rerender: render };
 };
+
+const mount = (props: CanvasProps) => mountWithRerender(props).container;
 
 const RAIL = '[data-kind="menu"][data-id="stencil-rail"]';
 const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
@@ -325,5 +340,50 @@ describe("Canvas chrome", () => {
 		expect(
 			container.querySelector(CATALOG_BUTTON)?.getAttribute("aria-expanded"),
 		).toBe("false");
+	});
+
+	/**
+	 * The library is a live prop the reducer reads too. A category the first
+	 * library lacked is drawn once the new one holds it, and a rail press goes
+	 * by the new library: the catalog button switches the docked panel to the
+	 * catalog instead of closing it, since the panel no longer draws the catalog.
+	 */
+	it("follows a stencilLibrary changed after mount, in what it draws and what a press does", async () => {
+		const lineCategory: StencilCategory = {
+			id: "lines",
+			label: "Lines",
+			icon: RectIcon,
+			presetIds: ["polyline", "polygon"],
+		};
+		const restoredDock = {
+			sidebars: {
+				left: { isOpen: true },
+				panels: {
+					stencilLibrary: {
+						content: { kind: "category" as const, categoryId: "lines" },
+					},
+				},
+			},
+		};
+		const { container, rerender } = mountWithRerender({
+			stencilLibrary: library,
+			initialConfig: restoredDock,
+		});
+		const dock = () =>
+			container.querySelector(
+				'[data-id="stencil-library-panel"][data-presentation="docked"]',
+			);
+		expect(dock()?.hasAttribute("data-stencil-category-panel")).toBe(false);
+
+		rerender({
+			stencilLibrary: { sections: [basicStencilCategory, lineCategory] },
+			initialConfig: restoredDock,
+		});
+		expect(dock()?.getAttribute("data-stencil-category-panel")).toBe("lines");
+
+		await press(container.querySelector(CATALOG_BUTTON));
+		expect(dock()).not.toBeNull();
+		expect(dock()?.hasAttribute("data-stencil-category-panel")).toBe(false);
+		expect(dock()?.querySelector('[data-action="show:lines"]')).not.toBeNull();
 	});
 });

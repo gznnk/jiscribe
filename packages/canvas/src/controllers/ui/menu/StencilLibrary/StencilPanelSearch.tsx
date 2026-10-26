@@ -2,11 +2,11 @@ import { memo, type Ref } from "react";
 
 import { StencilLibraryItem } from "./StencilLibraryItem";
 import {
-	StencilLibraryEmptyMessage,
-	StencilLibraryMoreMatchesMessage,
+	StencilPanelEmptyMessage,
+	StencilPanelMoreMatchesMessage,
 	StencilPanelGrid,
-	StencilLibrarySearchBox,
-	StencilLibrarySearchInput,
+	StencilPanelSearchField,
+	StencilPanelSearchInput,
 } from "./StencilPanelStyled";
 import type { StencilLibrarySearchResult } from "./utils/searchStencilLibrary";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
@@ -33,9 +33,9 @@ export const StencilPanelSearchBox: React.FC<StencilPanelSearchBoxProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	return (
-		<StencilLibrarySearchBox data-gesture="none">
+		<StencilPanelSearchField data-gesture="none">
 			<SearchIcon width={SEARCH_ICON_SIZE} height={SEARCH_ICON_SIZE} />
-			<StencilLibrarySearchInput
+			<StencilPanelSearchInput
 				type="text"
 				ref={inputRef}
 				value={query}
@@ -43,7 +43,7 @@ export const StencilPanelSearchBox: React.FC<StencilPanelSearchBoxProps> = ({
 				aria-label={messages.stencilPanelSearchPlaceholder}
 				onChange={(event) => onQueryChange(event.target.value)}
 			/>
-		</StencilLibrarySearchBox>
+		</StencilPanelSearchField>
 	);
 };
 
@@ -88,9 +88,9 @@ export const StencilSearchResults: React.FC<StencilSearchResultsProps> = ({
 	const messages = useCanvasMessages();
 	if (result.presets.length === 0) {
 		return (
-			<StencilLibraryEmptyMessage>
+			<StencilPanelEmptyMessage>
 				{messages.stencilPanelNoMatch}
-			</StencilLibraryEmptyMessage>
+			</StencilPanelEmptyMessage>
 		);
 	}
 	return (
@@ -100,9 +100,9 @@ export const StencilSearchResults: React.FC<StencilSearchResultsProps> = ({
 				activePresetId={activePresetId}
 			/>
 			{result.hiddenMatchCount > 0 && (
-				<StencilLibraryMoreMatchesMessage>
+				<StencilPanelMoreMatchesMessage>
 					{messages.stencilPanelMoreMatches}
-				</StencilLibraryMoreMatchesMessage>
+				</StencilPanelMoreMatchesMessage>
 			)}
 		</>
 	);

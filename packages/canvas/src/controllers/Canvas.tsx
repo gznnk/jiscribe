@@ -501,13 +501,18 @@ const CanvasComponent = ({
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
 	const isRailShown = rail?.show !== false;
+	// What the library holds is the reducer's to say (stencilLibraryCategoryIds):
+	// the drawing, the rail's pressed buttons and a rail press all read it there.
+	const hasStencilLibrary = state.stencilLibraryCategoryIds.length > 0;
 	// Docked state alone is not enough: a panel restored open on a host with no
 	// library is not drawn, and takes no space.
 	const isStencilPanelDocked =
-		state.stencilLibraryPanel.isOpen && librarySections.length > 0;
+		state.stencilLibraryPanel.isOpen && hasStencilLibrary;
 
 	// What the open panel draws, which is what the rail shows pressed and what a
-	// rail press closes: a docked category the library lacks is drawn as the catalog.
+	// rail press closes: a docked category the library lacks is drawn as the
+	// catalog. The flyout and the docked panel never coexist, so it is the drawn
+	// content of whichever is open.
 	const drawnStencilPanelContent = readDrawnStencilPanelContent(state);
 
 	// The rail and both sidebars take their width out of the viewport, so any of
@@ -701,13 +706,13 @@ const CanvasComponent = ({
 							librarySections={librarySections}
 							pinnedCategoryIds={state.pinnedCategoryIds}
 							activePresetId={drawingPresetId}
-							shownPanelContent={drawnStencilPanelContent}
+							drawnPanelContent={drawnStencilPanelContent}
 						/>
 					)}
-					{isStencilPanelDocked && (
+					{isStencilPanelDocked && drawnStencilPanelContent !== null && (
 						<StencilPanel
 							presentation="docked"
-							content={state.stencilLibraryPanel.content}
+							drawnContent={drawnStencilPanelContent}
 							sections={librarySections}
 							pinnedCategoryIds={state.pinnedCategoryIds}
 							activePresetId={drawingPresetId}
@@ -777,20 +782,22 @@ const CanvasComponent = ({
 							/>
 						</ViewportOverlay>
 					</Viewport>
-					{state.stencilFlyout !== null && librarySections.length > 0 && (
-						<StencilFlyoutLayer
-							style={{ left: isRailShown ? STENCIL_RAIL_WIDTH : 0 }}
-						>
-							<StencilPanel
-								presentation="flyout"
-								content={state.stencilFlyout}
-								sections={librarySections}
-								pinnedCategoryIds={state.pinnedCategoryIds}
-								activePresetId={drawingPresetId}
-								resolvePreset={resolveLibraryPreset}
-							/>
-						</StencilFlyoutLayer>
-					)}
+					{state.stencilFlyout !== null &&
+						hasStencilLibrary &&
+						drawnStencilPanelContent !== null && (
+							<StencilFlyoutLayer
+								style={{ left: isRailShown ? STENCIL_RAIL_WIDTH : 0 }}
+							>
+								<StencilPanel
+									presentation="flyout"
+									drawnContent={drawnStencilPanelContent}
+									sections={librarySections}
+									pinnedCategoryIds={state.pinnedCategoryIds}
+									activePresetId={drawingPresetId}
+									resolvePreset={resolveLibraryPreset}
+								/>
+							</StencilFlyoutLayer>
+						)}
 					{state.propertyPanel.isOpen && (
 						<PropertyPanel
 							canvasState={propertyPanelState}

@@ -16,7 +16,6 @@ import {
 	DOCK_PANEL_ACTION,
 	UNDOCK_PANEL_ACTION,
 } from "../../../gestures/handlers/menu/utils/menuActions";
-import { resolveDrawnStencilPanelContent } from "../../../utils/stencilPanelContent";
 import { CloseIcon } from "../../icons/CloseIcon";
 import { SidebarIcon } from "../../icons/SidebarIcon";
 import type { Stencil } from "../../objects/Stencil";
@@ -30,8 +29,12 @@ import {
 type StencilPanelProps = {
 	/** Over the canvas (the flyout) or docked beside it; decides the keep-open toggle's state. */
 	presentation: StencilPanelPresentation;
-	/** What the panel shows (reducer state). */
-	content: StencilPanelContent;
+	/**
+	 * What the panel draws: its reducer state as readDrawnStencilPanelContent
+	 * resolves it against the library the reducer holds, so a category named here
+	 * is one the library has.
+	 */
+	drawnContent: StencilPanelContent;
 	/** Every library section in declaration order, already resolved against the registry. */
 	sections: readonly ResolvedStencilCategory[];
 	/** The user's pins (reducer state), for the catalog's pin toggles. */
@@ -61,15 +64,14 @@ const HEADER_ICON_SIZE = 14;
  * StencilLibraryItemHandler exactly as on the rail. While it shows a category it
  * also carries `data-stencil-category-panel`, the hook the e2e suites find it by.
  *
- * A content naming a category the library does not hold (a docked panel
- * restored on a host without that plugin) draws the catalog
- * (resolveDrawnStencilPanelContent); the state keeps the id. What the panel
- * shows is reducer state, so this component is render-only apart from the
- * search query, which belongs to the content shown and goes with it.
+ * What it draws arrives already resolved (Canvas reads it with
+ * readDrawnStencilPanelContent, which draws a category the library lacks as the
+ * catalog), so this component is render-only apart from the search query, which
+ * belongs to the content shown and goes with it.
  */
 const StencilPanelComponent: React.FC<StencilPanelProps> = ({
 	presentation,
-	content,
+	drawnContent,
 	sections,
 	pinnedCategoryIds,
 	activePresetId,
@@ -78,10 +80,9 @@ const StencilPanelComponent: React.FC<StencilPanelProps> = ({
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 
-	const drawnContent = resolveDrawnStencilPanelContent(
-		content,
-		sections.map((section) => section.category.id),
-	);
+	// Can miss only in the commit that renders a new library before
+	// SET_STENCIL_LIBRARY reaches the reducer (in a layout effect, before paint);
+	// that frame is drawn as the catalog and never shown.
 	const shownSection =
 		drawnContent.kind === "category"
 			? sections.find(

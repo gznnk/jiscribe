@@ -33,9 +33,9 @@ import type { CanvasRegistries } from "../registries/CanvasRegistries";
  * @param initialPinnedCategoryIds - The categories pinned to the rail at mount,
  *   in rail order; omitted, none. Only read at mount time, on the same terms as
  *   `initialSidebars` (changes come back through `onPinnedCategoriesChange`).
- * @param stencilLibraryCategoryIds - Ids of the sections the host's library
- *   resolves to at mount; only read at mount time, later changes arrive as
- *   SET_STENCIL_LIBRARY.
+ * @param initialStencilLibraryCategoryIds - Ids of the sections the host's
+ *   library resolves to at mount; only read at mount time, later changes
+ *   arrive as SET_STENCIL_LIBRARY.
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,
@@ -44,7 +44,7 @@ export const useCanvasReducer = (
 	scrollBoundsConfig?: ScrollBoundsConfig,
 	initialSidebars?: CanvasInitialSidebars,
 	initialPinnedCategoryIds?: readonly string[],
-	stencilLibraryCategoryIds?: readonly string[],
+	initialStencilLibraryCategoryIds?: readonly string[],
 ): [CanvasControllerState, Dispatch<CanvasAction>] => {
 	const reducer = useMemo(() => createCanvasReducer(registries), [registries]);
 	return useReducer(reducer, undefined, () =>
@@ -55,7 +55,7 @@ export const useCanvasReducer = (
 			scrollBoundsConfig,
 			initialSidebars,
 			initialPinnedCategoryIds,
-			stencilLibraryCategoryIds,
+			initialStencilLibraryCategoryIds,
 		),
 	);
 };

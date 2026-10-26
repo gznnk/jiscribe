@@ -6,7 +6,7 @@ import {
 	StencilSearchResults,
 } from "./StencilPanelSearch";
 import {
-	StencilLibraryMoreViaSearchButton,
+	StencilPanelMoreViaSearchButton,
 	StencilPanelList,
 } from "./StencilPanelStyled";
 import type { ResolvedStencilCategory } from "./utils/resolveStencilCategory";
@@ -75,13 +75,13 @@ export const StencilCategoryPanelContent: React.FC<
 							activePresetId={activePresetId}
 						/>
 						{section.category.search !== undefined && (
-							<StencilLibraryMoreViaSearchButton
+							<StencilPanelMoreViaSearchButton
 								type="button"
 								data-gesture="none"
 								onClick={() => searchInputRef.current?.focus()}
 							>
 								{messages.stencilPanelMoreViaSearch}
-							</StencilLibraryMoreViaSearchButton>
+							</StencilPanelMoreViaSearchButton>
 						)}
 					</>
 				)}

@@ -381,10 +381,10 @@ export type CloseModalAction = {
 };
 
 /**
- * The host's stencil library changed: the ids of the sections it resolves to,
- * in order. Canvas dispatches it whenever they differ from
- * `stencilLibraryCategoryIds`; the reducer ignores ids equal to the ones it
- * holds, order included.
+ * The ids of the sections the host's stencil library resolves to, in order.
+ * Canvas dispatches it whenever the resolved sections change — each new array,
+ * once at mount included — without comparing; the reducer drops ids equal to
+ * the ones it holds (`stencilLibraryCategoryIds`, order included).
  */
 export type SetStencilLibraryAction = {
 	type: "SET_STENCIL_LIBRARY";

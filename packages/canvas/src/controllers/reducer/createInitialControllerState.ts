@@ -50,9 +50,9 @@ export const INITIAL_VIEWPORT: Viewport = {
  * `seedSidebarPanels`); omitted, both start closed, the stencil panel on the
  * catalog and the properties panel with every section expanded.
  * `initialPinnedCategoryIds` seeds the categories pinned to the rail; omitted,
- * none is pinned. `stencilLibraryCategoryIds` seeds the library the panels draw
- * from (see CanvasControllerState.stencilLibraryCategoryIds); omitted, there is
- * none.
+ * none is pinned. `initialStencilLibraryCategoryIds` seeds the library the
+ * panels draw from (see CanvasControllerState.stencilLibraryCategoryIds);
+ * omitted, there is none.
  *
  * @throws When `initialPinnedCategoryIds` names the same id twice: the rail keys
  *   its buttons by id, and a pin toggle would take both off at once.
@@ -64,7 +64,7 @@ export const createInitialControllerState = (
 	scrollBoundsConfig?: ScrollBoundsConfig,
 	initialSidebars?: CanvasInitialSidebars,
 	initialPinnedCategoryIds?: readonly string[],
-	stencilLibraryCategoryIds?: readonly string[],
+	initialStencilLibraryCategoryIds?: readonly string[],
 ): CanvasControllerState => {
 	const seededSidebarPanels = seedSidebarPanels(initialSidebars);
 	const pinnedCategoryIds = [...(initialPinnedCategoryIds ?? [])];
@@ -107,7 +107,7 @@ export const createInitialControllerState = (
 		stencilLibraryPanel: seededSidebarPanels.stencilLibraryPanel,
 		propertyPanel: seededSidebarPanels.propertyPanel,
 		pinnedCategoryIds,
-		stencilLibraryCategoryIds: [...(stencilLibraryCategoryIds ?? [])],
+		stencilLibraryCategoryIds: [...(initialStencilLibraryCategoryIds ?? [])],
 		activeModal: null,
 		commitVersion: 0,
 		saveRequest: { version: 0, nonce: "" },

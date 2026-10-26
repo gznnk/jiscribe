@@ -39,7 +39,7 @@ export const StencilPanelContainer = styled.aside<{
  * Wrapper of the search box. Opts out of the gesture system so the input keeps
  * focus and receives its own keystrokes (the same opt-out ToolbarHostSlot uses).
  */
-export const StencilLibrarySearchBox = styled.div`
+export const StencilPanelSearchField = styled.div`
 	position: relative;
 	display: flex;
 	flex: none;
@@ -58,7 +58,7 @@ export const StencilLibrarySearchBox = styled.div`
  * Search field: matches the listed stencils by label, and reaches the rest of a
  * category through its own `search`.
  */
-export const StencilLibrarySearchInput = styled.input`
+export const StencilPanelSearchInput = styled.input`
 	box-sizing: border-box;
 	width: 100%;
 	height: 28px;
@@ -187,14 +187,14 @@ export const StencilPanelGrid = styled.div`
 `;
 
 /** Shown in place of the results when a search matches no stencil. */
-export const StencilLibraryEmptyMessage = styled.div`
+export const StencilPanelEmptyMessage = styled.div`
 	padding: 8px 12px;
 	font-size: 12px;
 	color: ${theme.foregroundMuted};
 `;
 
 /** Line under the search results telling that categories cut their matches short. */
-export const StencilLibraryMoreMatchesMessage = styled.div`
+export const StencilPanelMoreMatchesMessage = styled.div`
 	padding: 0 12px 8px;
 	font-size: 11px;
 	color: ${theme.foregroundMuted};
@@ -206,7 +206,7 @@ export const StencilLibraryMoreMatchesMessage = styled.div`
  * on the element) so the press reaches React's onClick instead of the panel's
  * handler, and the focus it moves is not taken back.
  */
-export const StencilLibraryMoreViaSearchButton = styled.button`
+export const StencilPanelMoreViaSearchButton = styled.button`
 	display: block;
 	margin: -4px 12px 8px;
 	padding: 0;

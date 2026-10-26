@@ -37,7 +37,7 @@ type StencilRailProps = {
 	 * (readDrawnStencilPanelContent: a category the library lacks is drawn as the
 	 * catalog); null when none is open.
 	 */
-	shownPanelContent: StencilPanelContent | null;
+	drawnPanelContent: StencilPanelContent | null;
 };
 
 const ICON_SIZE = 24;
@@ -57,7 +57,7 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 	librarySections,
 	pinnedCategoryIds,
 	activePresetId,
-	shownPanelContent,
+	drawnPanelContent,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
@@ -81,11 +81,11 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 		[presetIds, pinnedCategoryIds, librarySections, stencil],
 	);
 
-	const shownCategoryId =
-		shownPanelContent?.kind === "category"
-			? shownPanelContent.categoryId
+	const drawnCategoryId =
+		drawnPanelContent?.kind === "category"
+			? drawnPanelContent.categoryId
 			: null;
-	const isCatalogShown = shownPanelContent?.kind === "catalog";
+	const isCatalogDrawn = drawnPanelContent?.kind === "catalog";
 
 	// The one [data-kind] element of the rail besides its buttons: the catalog
 	// button carries only data-action and resolves its kind/id here through
@@ -115,7 +115,7 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 					messages,
 					locale,
 				);
-				const isOpen = shownCategoryId === category.id;
+				const isOpen = drawnCategoryId === category.id;
 				return (
 					<StencilRailPanelButton
 						key={category.id}
@@ -140,10 +140,10 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 						type="button"
 						data-action={commandAction(ToggleStencilLibraryCommand.id)}
 						aria-haspopup="true"
-						aria-expanded={isCatalogShown}
+						aria-expanded={isCatalogDrawn}
 						aria-label={catalogLabel}
 						title={catalogLabel}
-						isOpen={isCatalogShown}
+						isOpen={isCatalogDrawn}
 					>
 						<ShapesIcon width={ICON_SIZE} height={ICON_SIZE} />
 					</StencilRailPanelButton>
