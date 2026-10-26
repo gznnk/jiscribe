@@ -81,9 +81,10 @@ const rail = {
 // plugin object as an unknown type it never validates (it lands in result.warnings, not in
 // an error); register only with the parser and the doc validates but Canvas has no
 // definition to draw the shapes with, so it holds them unread and they go missing from
-// the screen. One category is pinned to start with, so the flyout mechanism is on show.
+// the screen.
 const initialConfig: CanvasConfig = {
 	plugins,
+	// One category is pinned to start with, so the flyout mechanism is on show.
 	pinnedCategoryIds: [lucideIconStencilCategory.id],
 };
 const pluginParser = createCanvasParser({ plugins });

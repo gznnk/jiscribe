@@ -4,8 +4,9 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 /**
  * Dragging a table out of the shape library (the flyout of the basic category,
  * pinned to the rail). A table is the first shipped shape whose box is measured
- * rather than stored, which is what made the ghost and the drop disagree: the ghost drew the grid around the cursor while the drop put the
- * grid's top-left there, so the shape jumped by half its size on release.
+ * rather than stored, which is what made the ghost and the drop disagree: the
+ * ghost drew the grid around the cursor while the drop put the grid's top-left
+ * there, so the shape jumped by half its size on release.
  *
  * Both halves are pinned here because either one alone would pass while the pair
  * was still wrong.
@@ -90,7 +91,13 @@ test.describe("dragging a table out of the shape library", () => {
 	});
 
 	test("paints the ghost on an empty canvas", async ({ canvas }) => {
-		const item = await openTableItemInBasicFlyout(canvas);
+		// Docked, so the panel sits beside the canvas, outside the SVG's clip: the
+		// ghost is first drawn there and only then moved onto the canvas. A flyout
+		// overlays the canvas and would not set that up.
+		await canvas.openCatalog({ docked: true });
+		await canvas.page.click(selectors.catalogRow("basic"));
+		const item = canvas.page.locator(selectors.stencilPanelItem("table"));
+		await expect(item).toBeVisible();
 		const to = canvas.toScreen(DROP_POINT);
 		const around = { x: to.x - 40, y: to.y - 20, width: 80, height: 40 };
 		const before = await canvas.page.screenshot({ clip: around });
@@ -103,9 +110,9 @@ test.describe("dragging a table out of the shape library", () => {
 		await item.hover();
 		await canvas.page.mouse.down();
 		try {
-			// The drag starts at the panel's far edge, so the ghost is first drawn
-			// wholly under the panel, where Chromium culls it, and is only then moved
-			// out onto the canvas.
+			// The drag starts at the panel's outer edge, so the ghost is first drawn
+			// wholly beside the canvas, where Chromium culls it, and is only then
+			// moved onto the canvas.
 			await canvas.page.mouse.move(panel!.x + 1, itemBox!.y);
 			await canvas.page
 				.locator(`[data-id="${GHOST_ID}"]`)

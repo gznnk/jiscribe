@@ -30,8 +30,9 @@ const RAIL_PRESET_IDS = [
 ];
 
 /**
- * The one category the harness pins to the rail. The catalog holds the rest; this one
- * is pinned as well so both surfaces are covered. `ownPresetId` is a preset only its plugin registers.
+ * The one category the harness pins to the rail. The catalog holds every section,
+ * this one included, so both surfaces are covered. `ownPresetId` is a preset only
+ * its plugin registers.
  */
 const PINNED_CATEGORY = { id: "icon", ownPresetId: "lucideIconUser" };
 
