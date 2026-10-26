@@ -13,9 +13,8 @@ import type { ResolvedStencilCategory } from "../../StencilLibrary/utils/resolve
  *   registry; only the presets a section lists count, not the ones its `search`
  *   reaches beyond them
  * @param railPresets - The rail's presets as resolved (`rail.presetIds` or the
- *   default). Every type one of them creates is left out of the lookup: a
- *   section listing a variant of it (flowchart's `process` is a `rect`) would
- *   otherwise be claimed by every plain shape drawn from the rail
+ *   default); every type one of them creates is left out of the lookup (the
+ *   rule: `CanvasRailConfig.presetIds`)
  * @returns Empty when every listed type is a rail preset's, or there is no library
  */
 export const buildCategoryIdsByObjectType = (
@@ -87,8 +86,9 @@ const countObjectsByCategoryId = (
 
 /**
  * The previous counts adjusted for the ids a copy-on-write step wrote, or null
- * when the two maps share no backing Record (a load, a command) and only a full
- * walk can tell. Hands `previousCounts` back when no written id changed type,
+ * when the two maps share no backing Record (a load, a command, and the end of
+ * each gesture, which materializes the drag's view: handleGesture) and only a
+ * full walk can tell. Hands `previousCounts` back when no written id changed type,
  * which is every step of a drag.
  */
 const adjustObjectCountsByCategoryId = (
@@ -167,15 +167,15 @@ export const tallyDocumentCategories = (
 	librarySections: readonly ResolvedStencilCategory[],
 	previousTally: DocumentCategoryTally | null,
 ): DocumentCategoryTally => {
-	const isSameDerivation =
+	const isSameLookupAndSections =
 		previousTally !== null &&
 		previousTally.categoryIdsByObjectType === categoryIdsByObjectType &&
 		previousTally.librarySections === librarySections;
-	if (isSameDerivation && previousTally.objects === objects) {
+	if (isSameLookupAndSections && previousTally.objects === objects) {
 		return previousTally;
 	}
 
-	const adjustedCounts = isSameDerivation
+	const adjustedCounts = isSameLookupAndSections
 		? adjustObjectCountsByCategoryId(
 				objects,
 				previousTally.objects,
@@ -184,7 +184,7 @@ export const tallyDocumentCategories = (
 			)
 		: null;
 	if (
-		isSameDerivation &&
+		isSameLookupAndSections &&
 		adjustedCounts === previousTally.objectCountByCategoryId
 	) {
 		return { ...previousTally, objects };

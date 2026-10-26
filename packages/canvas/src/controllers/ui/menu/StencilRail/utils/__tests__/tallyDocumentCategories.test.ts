@@ -287,6 +287,28 @@ describe("tallyDocumentCategories", () => {
 			expect(reloadedTally.rankedCategoryIds).toEqual(["mixed"]);
 		});
 
+		it("walks the whole map again, and re-ranks, under other sections", () => {
+			const { counted, walks } = countingKeyWalks(baseObjects);
+			const baseTally = tallyOf(counted);
+			expect(baseTally.rankedCategoryIds).toEqual(["boxes", "rounds", "mixed"]);
+			const step = createCowObjects(counted);
+			step["rect-1"] = { ...baseObjects["rect-1"] };
+			// The same lookup, the sections in another order: ties follow the new one.
+			const reorderedSections = [...librarySections].reverse();
+			const resectionedTally = tallyDocumentCategories(
+				step,
+				textOnlyRailLookup,
+				reorderedSections,
+				baseTally,
+			);
+			expect(walks.count).toBe(2);
+			expect(resectionedTally.rankedCategoryIds).toEqual([
+				"mixed",
+				"rounds",
+				"boxes",
+			]);
+		});
+
 		it("walks the whole map again under another lookup", () => {
 			const { counted, walks } = countingKeyWalks(baseObjects);
 			const baseTally = tallyOf(counted);

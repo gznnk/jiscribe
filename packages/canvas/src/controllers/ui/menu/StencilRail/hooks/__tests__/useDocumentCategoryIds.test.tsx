@@ -80,13 +80,31 @@ describe("useDocumentCategoryIds", () => {
 		expect(answers[2]).toBe(answers[0]);
 	});
 
-	it("answers a new array once a type changes the categories", () => {
+	it("answers a new array once an object is retyped out of the categories", () => {
 		const objects = createTestState({
 			version: 1,
 			root: [rectDoc("rect-1", 0, 0)],
 		} as CanvasDoc).objects;
+		const textDoc: unknown = {
+			id: "text-1",
+			type: "text",
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+		};
+		const textObjects = createTestState({
+			version: 1,
+			root: [textDoc],
+		} as CanvasDoc).objects;
 		const { answers, rerender } = renderHook(objects);
-		rerender({});
+
+		// A step of the same map in which rect-1 became a text, a rail preset's type
+		const retyped = createCowObjects(objects);
+		retyped["rect-1"] = { ...textObjects["text-1"], id: "rect-1" };
+		rerender(retyped);
+
+		expect(answers[0]).toEqual(["boxes"]);
 		expect(answers[1]).toEqual([]);
 	});
 });

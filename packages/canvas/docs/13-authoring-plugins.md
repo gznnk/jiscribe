@@ -351,9 +351,8 @@ Two things that file has to get right:
   - `pinnedCategoryIds` — the sections pinned on the rail at mount, for a spec opening a
     category from its rail button (`CanvasDriver.drawShapeFromFlyout` /
     `placeShapeFromFlyout`). Unpinned, a category is on the rail only while the
-    document uses one of its types that no rail preset creates (a category whose
-    presets all share a rail preset's type never appears that way), and is otherwise
-    reached through the catalog.
+    document uses it (see [Moving a shape out of the engine](#moving-a-shape-out-of-the-engine)),
+    and is otherwise reached through the catalog.
 
   The toolbar is always core's default bar (undo / redo, zoom, the properties toggle and
   so on). A plugin's presets and categories are absent from the canvas defaults, so without
