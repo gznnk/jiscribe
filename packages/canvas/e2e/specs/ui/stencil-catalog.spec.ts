@@ -171,7 +171,7 @@ test.describe("Stencil catalog", () => {
 		// Every row has one, so each names its own category.
 		await expect(basicPin).toHaveAttribute("aria-label", "Pin Basic");
 		await expect(specPin).toHaveAttribute("aria-label", "Pin Spec");
-		// An unpinned row shows its pin only on hover; a pinned one always.
+		// A pinned row always shows its pin; an unpinned one shows none at rest.
 		await canvas.page.mouse.move(0, 0);
 		await expect(specPin).toHaveCSS("opacity", "1");
 		await expect(basicPin).toHaveCSS("opacity", "0");
@@ -203,6 +203,13 @@ test.describe("Stencil catalog", () => {
 		// The click left the focus on the toggle; once the pointer goes, no pin stays.
 		await canvas.page.mouse.move(0, 0);
 		await expect(basicPin).toHaveCSS("opacity", "0");
+		// Keyboard focus moved into the row hints the pin as hover does.
+		await canvas.page.keyboard.press("Shift+Tab");
+		await expect(
+			canvas.page.locator(selectors.catalogRow(BASIC_CATEGORY)),
+		).toBeFocused();
+		await expect(basicPin).toHaveCSS("opacity", "0.4");
+		await expect(specPin).toHaveCSS("opacity", "1");
 	});
 
 	/**
