@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   six presets the toolbar used to carry sit on the rail, with the Flowchart
   category pinned below them, the other categories the open file uses after
   the pins, and a "Find Shapes" button opening every category of the standard
-  set, those in use marked "In this diagram"; a category opens over the canvas
+  set, those in use marked "In this diagram". On a short window what does not
+  fit goes into a "…" button, and the pins can be reordered by dragging them.
+  A category opens over the canvas
   and can be kept open beside it, which replaces the shape library sidebar.
   The pins are not
   remembered between sessions yet.

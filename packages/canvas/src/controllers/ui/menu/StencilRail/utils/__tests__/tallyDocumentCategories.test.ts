@@ -288,16 +288,27 @@ describe("tallyDocumentCategories", () => {
 		});
 
 		it("walks the whole map again, and re-ranks, under other sections", () => {
+			// One lookup for both calls, built over the new sections; only the
+			// sections' identity (and order) differs between them.
+			const reorderedSections = [...librarySections].reverse();
+			const reorderedLookup = buildCategoryIdsByObjectType(
+				reorderedSections,
+				resolvePresets(["text"]),
+			);
 			const { counted, walks } = countingKeyWalks(baseObjects);
-			const baseTally = tallyOf(counted);
+			const baseTally = tallyDocumentCategories(
+				counted,
+				reorderedLookup,
+				librarySections,
+				null,
+			);
 			expect(baseTally.rankedCategoryIds).toEqual(["boxes", "rounds", "mixed"]);
 			const step = createCowObjects(counted);
 			step["rect-1"] = { ...baseObjects["rect-1"] };
-			// The same lookup, the sections in another order: ties follow the new one.
-			const reorderedSections = [...librarySections].reverse();
+			// Ties follow the new sections' order.
 			const resectionedTally = tallyDocumentCategories(
 				step,
-				textOnlyRailLookup,
+				reorderedLookup,
 				reorderedSections,
 				baseTally,
 			);

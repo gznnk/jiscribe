@@ -96,6 +96,11 @@ describe("StencilLibraryPanelHandler", () => {
 			});
 		});
 
+		it("docking with a rail popover in the flyout's slot changes nothing", () => {
+			const state = makeState({ stencilFlyout: { kind: "railOverflow" } });
+			expect(click(state, "dock")).toEqual(state);
+		});
+
 		it("docking with no flyout open changes nothing", () => {
 			const state = makeDockedState(FLOWCHART);
 			expect(click(state, "dock")).toEqual(state);

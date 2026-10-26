@@ -1,5 +1,6 @@
 import { parseMenuAction } from "./utils/menuActions";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { isStencilPanelContent } from "../../../utils/stencilPanelContent";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -60,7 +61,9 @@ export const StencilLibraryPanelHandler: GestureHandler = {
 
 		switch (action.kind) {
 			case "dock":
-				return nextState.stencilFlyout === null
+				// A rail popover in the slot has no dock button to arrive from.
+				return nextState.stencilFlyout === null ||
+					!isStencilPanelContent(nextState.stencilFlyout)
 					? nextState
 					: {
 							...nextState,

@@ -1,7 +1,19 @@
 import type {
 	CanvasControllerState,
+	StencilFlyoutContent,
 	StencilPanelContent,
 } from "../CanvasTypes";
+
+/**
+ * Whether what the flyout slot holds is a stencil panel's content, rather than
+ * one of the rail's popovers.
+ *
+ * @param value - The slot's content (`stencilFlyout`), never null
+ */
+export const isStencilPanelContent = (
+	value: StencilFlyoutContent,
+): value is StencilPanelContent =>
+	value.kind === "category" || value.kind === "catalog";
 
 /** The catalog as panel content; the one value both panels start from. */
 export const CATALOG_PANEL_CONTENT: StencilPanelContent = { kind: "catalog" };
@@ -47,7 +59,8 @@ export const resolveDrawnStencilPanelContent = (
  * panel's while it is docked, else nothing, each as
  * {@link resolveDrawnStencilPanelContent} draws it. The flyout and the docked
  * panel never coexist (see CanvasControllerState.stencilFlyout), so at most one
- * of them answers.
+ * of them answers; a rail popover in the flyout's slot is no panel, and leaves
+ * the docked panel's content to answer.
  *
  * @param state - Read for `stencilFlyout`, `stencilLibraryPanel` and
  *   `stencilLibraryCategoryIds` only
@@ -60,11 +73,13 @@ export const readDrawnStencilPanelContent = (
 		"stencilFlyout" | "stencilLibraryPanel" | "stencilLibraryCategoryIds"
 	>,
 ): StencilPanelContent | null => {
+	const dockedContent = state.stencilLibraryPanel.isOpen
+		? state.stencilLibraryPanel.content
+		: null;
 	const shownContent =
-		state.stencilFlyout ??
-		(state.stencilLibraryPanel.isOpen
-			? state.stencilLibraryPanel.content
-			: null);
+		state.stencilFlyout !== null && isStencilPanelContent(state.stencilFlyout)
+			? state.stencilFlyout
+			: dockedContent;
 	return shownContent === null
 		? null
 		: resolveDrawnStencilPanelContent(

@@ -53,6 +53,14 @@ const STENCIL_DOCK = `${STENCIL_PANEL}[data-presentation="docked"]`;
  */
 const RAIL = '[data-kind="menu"][data-id="stencil-rail"]';
 
+/** The rail's "…" popover, listing the categories the rail had no room for. */
+const RAIL_OVERFLOW_POPOVER =
+	'[data-kind="menu"][data-id="stencil-rail-popover"][data-popover="railOverflow"]';
+
+/** The popover of the rail's collapsed presets button. */
+const RAIL_PRESETS_POPOVER =
+	'[data-kind="menu"][data-id="stencil-rail-popover"][data-popover="railPresets"]';
+
 /**
  * Shared by the properties sidebar selectors below, which all scope into it. The
  * panel root is the only element of the sidebar carrying data-kind / data-id.
@@ -108,6 +116,30 @@ export const selectors = {
 	 */
 	railCategoryButtons: (railGroup: "pinned" | "document") =>
 		`${RAIL} [data-id="stencil-category"][data-rail-group="${railGroup}"]`,
+
+	/**
+	 * The rail's "…" button, present only while the rail had no room for a
+	 * category; its title says how many it holds ("2 more categories").
+	 */
+	railMoreButton: `${RAIL} [data-action="toggle:railOverflow"]`,
+
+	/** The "…" popover; in the DOM only while open. */
+	railOverflowPopover: RAIL_OVERFLOW_POPOVER,
+
+	/**
+	 * Every row of one section of the "…" popover, in order: `pinned` (the tail
+	 * of the pin order) or `document`. A row is the same toggle as its rail
+	 * button (`toggle:<id>`), so `categoryButton` matches it too.
+	 */
+	railOverflowRows: (railGroup: "pinned" | "document") =>
+		`${RAIL_OVERFLOW_POPOVER} [data-id="stencil-category"][data-rail-group="${railGroup}"]`,
+
+	/** The button the rail's presets fold into once the rail is too short for them; absent otherwise. */
+	railPresetsButton: `${RAIL} [data-action="toggle:railPresets"]`,
+
+	/** A preset in the collapsed presets' popover; same DOM contract as shapeItem. */
+	railPresetsPopoverItem: (presetId: string) =>
+		`${RAIL_PRESETS_POPOVER} [data-action="item:${presetId}"]`,
 
 	/** The dashed divider above the rail's document categories; absent while there are none. */
 	railDocumentDivider: `${RAIL} [data-testid="stencil-rail-document-divider"]`,

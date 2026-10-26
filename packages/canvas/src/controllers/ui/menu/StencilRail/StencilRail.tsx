@@ -1,13 +1,20 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef } from "react";
 
+import {
+	StencilRailOverflowPopover,
+	StencilRailPresetsPopover,
+} from "./StencilRailPopovers";
 import {
 	StencilRailContainer,
 	StencilRailDivider,
 	StencilRailDocumentDivider,
 	StencilRailPanelButton,
+	StencilRailRoot,
 	StencilRailSpacer,
 } from "./StencilRailStyled";
 import { resolveStencilRail } from "./utils/resolveStencilRail";
+import { resolveStencilRailOverflow } from "./utils/resolveStencilRailOverflow";
+import { useElementSize } from "../../../../foundation/hooks/useElementSize";
 import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import type { StencilPanelContent } from "../../../CanvasTypes";
@@ -18,6 +25,12 @@ import {
 	toggleAction,
 } from "../../../gestures/handlers/menu/utils/menuActions";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import {
+	type PinInsertionMark,
+	resolvePinInsertionMark,
+} from "../../../utils/pinnedCategoryOrder";
+import type { StencilRailPopoverKind } from "../../../utils/stencilRailPopover";
+import { EllipsisIcon } from "../../icons/EllipsisIcon";
 import { ShapesIcon } from "../../icons/ShapesIcon";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
 import type { ResolvedStencilCategory } from "../StencilLibrary/utils/resolveStencilCategory";
@@ -47,6 +60,14 @@ type StencilRailProps = {
 	 * catalog); null when none is open.
 	 */
 	drawnPanelContent: StencilPanelContent | null;
+	/** The rail popover open in the flyout's slot (reducer state); null when none is. */
+	openRailPopover: StencilRailPopoverKind | null;
+	/**
+	 * Where a pin being dragged lands, as an index into `pinnedCategoryIds`
+	 * (the `"pinReorder"` drag's `insertionIndex`); null with no such drag, or
+	 * one that would change nothing.
+	 */
+	pinInsertionIndex: number | null;
 };
 
 const ICON_SIZE = 24;
@@ -60,13 +81,19 @@ type StencilRailCategoryButtonProps = {
 	railGroup: StencilRailCategoryGroup;
 	/** Whether the open stencil panel draws this category, flyout or docked. */
 	isOpen: boolean;
+	/** The line of a pin drag landing beside this button; null draws none. */
+	pinInsertionEdge: PinInsertionMark["edge"] | null;
 };
 
-/** A rail button toggling one category's panel (StencilCategoryToggleHandler). */
+/**
+ * A rail button toggling one category's panel (StencilCategoryToggleHandler),
+ * which a pinned one also drags to another place in the pin order.
+ */
 const StencilRailCategoryButton: React.FC<StencilRailCategoryButtonProps> = ({
 	section: { category },
 	railGroup,
 	isOpen,
+	pinInsertionEdge,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
@@ -89,11 +116,19 @@ const StencilRailCategoryButton: React.FC<StencilRailCategoryButtonProps> = ({
 			aria-label={label}
 			title={label}
 			isOpen={isOpen}
+			pinInsertionEdge={pinInsertionEdge}
 		>
 			<Icon width={ICON_SIZE} height={ICON_SIZE} />
 		</StencilRailPanelButton>
 	);
 };
+
+/** The edge a pin drag's line is drawn on beside `categoryId`, or null. */
+const insertionEdgeOf = (
+	mark: PinInsertionMark | null,
+	categoryId: string,
+): PinInsertionMark["edge"] | null =>
+	mark !== null && mark.categoryId === categoryId ? mark.edge : null;
 
 /**
  * The stencil rail at the left of the canvas, top to bottom: the host's presets,
@@ -105,6 +140,13 @@ const StencilRailCategoryButton: React.FC<StencilRailCategoryButtonProps> = ({
  * buttons toggle their panel (StencilCategoryToggleHandler), and the catalog
  * button runs `toggleStencilLibrary` (StencilRailHandler). The panels themselves
  * are rendered by Canvas from reducer state, so the rail is render-only.
+ *
+ * What does not fit the rail's measured height goes into a "…" button above the
+ * catalog button, and in the last resort the presets fold into one button
+ * (resolveStencilRailOverflow, which holds the order). Both open a popover
+ * beside the rail, in the flyout's slot (`toggle:railOverflow` /
+ * `toggle:railPresets`, StencilRailHandler), drawn here since only the rail
+ * knows what it left out.
  */
 const StencilRailComponent: React.FC<StencilRailProps> = ({
 	presetIds,
@@ -113,10 +155,14 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 	documentCategoryIds,
 	activePresetId,
 	drawnPanelContent,
+	openRailPopover,
+	pinInsertionIndex,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 	const { stencil, command } = useCanvasRegistries();
+	const railRef = useRef<HTMLElement>(null);
+	const railSize = useElementSize(railRef);
 	// The catalog button runs this command and wears its label, so the command
 	// palette, the shortcut help and the rail name it alike. A host that switched
 	// the command off gets no button, as a toolbar `command` item would not be.
@@ -149,50 +195,138 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 			? drawnPanelContent.categoryId
 			: null;
 	const isCatalogDrawn = drawnPanelContent?.kind === "catalog";
+	const hasCatalogButton = hasCatalog && catalogLabel !== null;
 
-	// The one [data-kind] element of the rail besides its buttons: the catalog
-	// button carries only data-action and resolves its kind/id here through
-	// closest(), and a press on the empty area arrives with no action (dismissing
-	// the flyout). The presets and category buttons keep their own [data-kind].
+	const overflow = useMemo(
+		() =>
+			resolveStencilRailOverflow(railSize?.height ?? 0, {
+				presetCount: presets.length,
+				pinnedCategoryIds: pinnedCategories.map(({ category }) => category.id),
+				documentCategoryIds: unpinnedDocumentCategories.map(
+					({ category }) => category.id,
+				),
+				drawnCategoryId,
+				hasCatalogButton,
+			}),
+		[
+			railSize,
+			presets,
+			pinnedCategories,
+			unpinnedDocumentCategories,
+			drawnCategoryId,
+			hasCatalogButton,
+		],
+	);
+	const sectionsById = useMemo(
+		() =>
+			new Map(
+				[...pinnedCategories, ...unpinnedDocumentCategories].map((section) => [
+					section.category.id,
+					section,
+				]),
+			),
+		[pinnedCategories, unpinnedDocumentCategories],
+	);
+	const toSections = (categoryIds: readonly string[]) =>
+		categoryIds.flatMap((categoryId) => {
+			const section = sectionsById.get(categoryId);
+			return section ? [section] : [];
+		});
+	const shownPinnedCategories = toSections(overflow.shownPinnedCategoryIds);
+	const shownDocumentCategories = toSections(overflow.shownDocumentCategoryIds);
+	const overflowedPinnedCategories = toSections(
+		overflow.overflowedPinnedCategoryIds,
+	);
+	const overflowedDocumentCategories = toSections(
+		overflow.overflowedDocumentCategoryIds,
+	);
+	const overflowedCount =
+		overflowedPinnedCategories.length + overflowedDocumentCategories.length;
+	const pinInsertionMark = resolvePinInsertionMark(
+		pinnedCategoryIds,
+		pinnedCategories.map(({ category }) => category.id),
+		pinInsertionIndex,
+	);
+	const moreLabel = messages.stencilRailMore(overflowedCount);
+	const CollapsedPresetsIcon = presets[0]?.icon;
+
+	// The one [data-kind] element of the rail besides its buttons: the catalog,
+	// "…" and collapsed presets buttons carry only data-action and resolve their
+	// kind/id here through closest(), and a press on the empty area arrives with
+	// no action (dismissing the flyout). The presets and category buttons keep
+	// their own [data-kind].
 	return (
-		<StencilRailContainer
-			aria-label={messages.stencilRailLabel}
-			data-kind="menu"
-			data-id="stencil-rail"
-		>
-			{presets.map((preset) => (
-				<StencilLibraryItem
-					key={preset.id}
-					preset={preset}
-					isActive={activePresetId === preset.id}
-				/>
-			))}
-			{pinnedCategories.length > 0 && presets.length > 0 && (
-				<StencilRailDivider />
-			)}
-			{pinnedCategories.map((section) => (
-				<StencilRailCategoryButton
-					key={section.category.id}
-					section={section}
-					railGroup="pinned"
-					isOpen={drawnCategoryId === section.category.id}
-				/>
-			))}
-			{unpinnedDocumentCategories.length > 0 &&
-				(presets.length > 0 || pinnedCategories.length > 0) && (
-					<StencilRailDocumentDivider data-testid="stencil-rail-document-divider" />
+		<StencilRailRoot>
+			<StencilRailContainer
+				ref={railRef}
+				aria-label={messages.stencilRailLabel}
+				data-kind="menu"
+				data-id="stencil-rail"
+			>
+				{overflow.arePresetsCollapsed && CollapsedPresetsIcon ? (
+					<StencilRailPanelButton
+						type="button"
+						data-action={toggleAction("railPresets")}
+						aria-haspopup="true"
+						aria-expanded={openRailPopover === "railPresets"}
+						aria-label={messages.stencilRailPresets}
+						title={messages.stencilRailPresets}
+						isOpen={openRailPopover === "railPresets"}
+					>
+						<CollapsedPresetsIcon width={ICON_SIZE} height={ICON_SIZE} />
+					</StencilRailPanelButton>
+				) : (
+					presets.map((preset) => (
+						<StencilLibraryItem
+							key={preset.id}
+							preset={preset}
+							isActive={activePresetId === preset.id}
+						/>
+					))
 				)}
-			{unpinnedDocumentCategories.map((section) => (
-				<StencilRailCategoryButton
-					key={section.category.id}
-					section={section}
-					railGroup="document"
-					isOpen={drawnCategoryId === section.category.id}
-				/>
-			))}
-			{hasCatalog && catalogLabel !== null && (
-				<>
-					<StencilRailSpacer />
+				{shownPinnedCategories.length > 0 && presets.length > 0 && (
+					<StencilRailDivider />
+				)}
+				{shownPinnedCategories.map((section) => (
+					<StencilRailCategoryButton
+						key={section.category.id}
+						section={section}
+						railGroup="pinned"
+						isOpen={drawnCategoryId === section.category.id}
+						pinInsertionEdge={insertionEdgeOf(
+							pinInsertionMark,
+							section.category.id,
+						)}
+					/>
+				))}
+				{shownDocumentCategories.length > 0 &&
+					(presets.length > 0 || shownPinnedCategories.length > 0) && (
+						<StencilRailDocumentDivider data-testid="stencil-rail-document-divider" />
+					)}
+				{shownDocumentCategories.map((section) => (
+					<StencilRailCategoryButton
+						key={section.category.id}
+						section={section}
+						railGroup="document"
+						isOpen={drawnCategoryId === section.category.id}
+						pinInsertionEdge={null}
+					/>
+				))}
+				{(overflowedCount > 0 || hasCatalogButton) && <StencilRailSpacer />}
+				{overflowedCount > 0 && (
+					<StencilRailPanelButton
+						type="button"
+						data-action={toggleAction("railOverflow")}
+						aria-haspopup="true"
+						aria-expanded={openRailPopover === "railOverflow"}
+						aria-label={moreLabel}
+						title={moreLabel}
+						isOpen={openRailPopover === "railOverflow"}
+					>
+						<EllipsisIcon width={ICON_SIZE} height={ICON_SIZE} />
+					</StencilRailPanelButton>
+				)}
+				{hasCatalogButton && (
 					<StencilRailPanelButton
 						type="button"
 						data-action={commandAction(ToggleStencilLibraryCommand.id)}
@@ -204,9 +338,22 @@ const StencilRailComponent: React.FC<StencilRailProps> = ({
 					>
 						<ShapesIcon width={ICON_SIZE} height={ICON_SIZE} />
 					</StencilRailPanelButton>
-				</>
+				)}
+			</StencilRailContainer>
+			{openRailPopover === "railOverflow" && overflowedCount > 0 && (
+				<StencilRailOverflowPopover
+					pinnedCategories={overflowedPinnedCategories}
+					documentCategories={overflowedDocumentCategories}
+					pinInsertionMark={pinInsertionMark}
+				/>
 			)}
-		</StencilRailContainer>
+			{openRailPopover === "railPresets" && overflow.arePresetsCollapsed && (
+				<StencilRailPresetsPopover
+					presets={presets}
+					activePresetId={activePresetId}
+				/>
+			)}
+		</StencilRailRoot>
 	);
 };
 

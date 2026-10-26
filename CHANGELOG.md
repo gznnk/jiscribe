@@ -25,7 +25,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   button opening the catalog of every section of `stencilLibrary.sections`,
   searchable, with a pin toggle per category and an "In this diagram" badge on
   each category the document uses. The document's categories follow the
-  document as it changes, undo and redo included, and are not stored. A category opens as a panel over the canvas that leaves
+  document as it changes, undo and redo included, and are not stored. What
+  does not fit the rail's height goes into a "…" button above "Find Shapes",
+  the document's categories first and then the pins from the end, and only
+  when that is not enough do the presets fold into one "Basic shapes" button;
+  the category a panel shows stays on the rail. Pins are reordered by dragging
+  them, on the rail or in the "…" popover, and the new order goes out through
+  `onPinnedCategoriesChange` (`interaction.getStatus().drag` reports the drag
+  as `"pinReorder"`). A category opens as a panel over the canvas that leaves
   the viewport's size alone and closes like the other menus; its "Keep open"
   toggle docks it beside the canvas, pushing the canvas aside without moving
   the drawing, the way the shape library sidebar did. `rail.show: false` hides
@@ -53,7 +60,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `stencilLibraryMoreMatches` and `stencilLibraryMoreViaSearch` are now
   `stencilPanelClose`, `stencilPanelSearchPlaceholder`, `stencilPanelNoMatch`,
   `stencilPanelMoreMatches` and `stencilPanelMoreViaSearch`.** The rail
-  and the panels also read `stencilRailLabel`, `stencilCatalogTitle`,
+  and the panels also read `stencilRailLabel`, `stencilRailPresets`,
+  `stencilRailPinnedHeading`, `stencilRailMore` (a function of the count),
+  `stencilCatalogTitle`,
   `stencilCatalogInDiagram` (the catalog's badge), `stencilPanelKeepOpen` and
   `stencilCatalogPin`, the last a function of the
   category label (`(categoryLabel) => string`). The catalog button wears the

@@ -175,8 +175,9 @@ test.describe("Properties sidebar dropdowns", () => {
 	});
 
 	test("opens above a row with no room under it", async ({ canvas }) => {
-		await canvas.page.setViewportSize(SHORT_VIEWPORT);
+		// Drawn first: on the short page the rail folds its presets into one button.
 		await canvas.drawShape("Polyline", SHAPE_FROM, SHAPE_TO);
+		await canvas.page.setViewportSize(SHORT_VIEWPORT);
 		await canvas.openPropertyPanel();
 		await collapseSelectionSections(canvas);
 		await scrollPanelToBottom(canvas);
@@ -196,8 +197,9 @@ test.describe("Properties sidebar dropdowns", () => {
 	});
 
 	test("closes when the rows it covers scroll away", async ({ canvas }) => {
-		await canvas.page.setViewportSize(SHORT_VIEWPORT);
+		// Drawn first: on the short page the rail folds its presets into one button.
 		await canvas.drawShape("Rectangle", SHAPE_FROM, SHAPE_TO);
+		await canvas.page.setViewportSize(SHORT_VIEWPORT);
 		await canvas.openPropertyPanel();
 		await canvas.page.locator(FILL_TRIGGER).click();
 		await expect(

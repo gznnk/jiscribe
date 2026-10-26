@@ -151,4 +151,98 @@ describe("StencilCategoryToggleHandler", () => {
 		expect(next.contextMenuPosition).toBeNull();
 		expect(next.stencilFlyout).toEqual(category("flowchart"));
 	});
+
+	describe("dragging a pin to another place", () => {
+		type DragEventType = "dragStart" | "drag" | "dragEnd";
+		/** A drag event whose pointer is over the category `hoveredCategoryId`, or over nothing. */
+		const dragEvent = (
+			type: DragEventType,
+			categoryId: string,
+			hoveredCategoryId: string | null = null,
+		): CanvasEvent =>
+			({
+				...makeEvent("click", "stencil-category", `toggle:${categoryId}`),
+				type,
+				getHovered: () =>
+					hoveredCategoryId === null
+						? []
+						: [
+								{
+									kind: "menu",
+									id: "stencil-category",
+									action: `toggle:${hoveredCategoryId}`,
+								},
+							],
+			}) as unknown as CanvasEvent;
+		const handle = (state: CanvasControllerState, event: CanvasEvent) =>
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			StencilCategoryToggleHandler.handle(state, event, {} as any);
+		/** A state mid-drag, as handleGesture opens one ("inert") before routing. */
+		const draggingState = (pinnedCategoryIds: string[]) =>
+			({
+				...makeState(),
+				pinnedCategoryIds,
+				drag: {
+					kind: "menu",
+					startSnapshot: {},
+					snapFeedback: null,
+					axisLockFeedback: null,
+					edgeScrollEnabled: false,
+				},
+			}) as unknown as CanvasControllerState;
+
+		it("claims a pinReorder drag for a pinned category, and nothing for another", () => {
+			const started = handle(
+				draggingState(["flowchart", "general"]),
+				dragEvent("dragStart", "general"),
+			);
+			expect(started.drag).toMatchObject({
+				kind: "pinReorder",
+				categoryId: "general",
+				insertionIndex: null,
+			});
+			const unpinned = handle(
+				draggingState(["flowchart"]),
+				dragEvent("dragStart", "general"),
+			);
+			expect(unpinned.drag?.kind).toBe("menu");
+		});
+
+		it("follows the pinned category under the pointer, keeping the index over anything else", () => {
+			let state = handle(
+				draggingState(["flowchart", "general", "uml"]),
+				dragEvent("dragStart", "uml"),
+			);
+			state = handle(state, dragEvent("drag", "uml", "flowchart"));
+			expect(state.drag).toMatchObject({ insertionIndex: 0 });
+			const overGap = handle(state, dragEvent("drag", "uml", null));
+			expect(overGap).toBe(state);
+			const overUnpinned = handle(state, dragEvent("drag", "uml", "er"));
+			expect(overUnpinned).toBe(state);
+			state = handle(state, dragEvent("drag", "uml", "uml"));
+			expect(state.drag).toMatchObject({ insertionIndex: null });
+		});
+
+		it("moves the pin on dragEnd, and leaves the order alone with no index", () => {
+			let state = handle(
+				draggingState(["flowchart", "general", "uml"]),
+				dragEvent("dragStart", "uml"),
+			);
+			const unmoved = handle(state, dragEvent("dragEnd", "uml"));
+			expect(unmoved.pinnedCategoryIds).toEqual([
+				"flowchart",
+				"general",
+				"uml",
+			]);
+			state = handle(state, dragEvent("drag", "uml", "general"));
+			const dropped = handle(state, dragEvent("dragEnd", "uml"));
+			expect(dropped.pinnedCategoryIds).toEqual([
+				"flowchart",
+				"uml",
+				"general",
+			]);
+			// A drag opens no panel.
+			expect(dropped.stencilFlyout).toBeNull();
+		});
+	});
 });

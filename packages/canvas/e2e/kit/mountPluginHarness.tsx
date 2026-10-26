@@ -157,6 +157,21 @@ function HarnessApp({
 		];
 	}, []);
 
+	// Every pin order the canvas reports, so a spec can see what a host would
+	// persist. ui/stencil-rail-overflow.spec reads the log.
+	const handlePinnedCategoriesChange = useCallback(
+		(pinnedCategoryIds: string[]) => {
+			const harnessWindow = window as unknown as {
+				__pinnedCategoryChanges?: string[][];
+			};
+			harnessWindow.__pinnedCategoryChanges = [
+				...(harnessWindow.__pinnedCategoryChanges ?? []),
+				pinnedCategoryIds,
+			];
+		},
+		[],
+	);
+
 	// Memoized: an object built per render would defeat the canvas's memo.
 	const rail = useMemo(
 		() => (railPresetIds ? { presetIds: railPresetIds } : undefined),
@@ -179,6 +194,7 @@ function HarnessApp({
 				initialConfig={initialConfig}
 				resolveImage={resolveImage}
 				onOpenReference={handleOpenReference}
+				onPinnedCategoriesChange={handlePinnedCategoriesChange}
 				rail={rail}
 				stencilLibrary={
 					stencilLibrarySections

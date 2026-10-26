@@ -19,6 +19,7 @@ const NON_SELECTION_DRAG_KINDS = {
 	label: true,
 	segment: true,
 	selectionControl: true,
+	pinReorder: true,
 } satisfies Record<Exclude<DragKind, SelectionDragKind>, true>;
 
 describe("readSelectionDragKind", () => {

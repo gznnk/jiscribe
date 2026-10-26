@@ -408,9 +408,8 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 （`containerStencilCategory` / `annotationStencilCategory`。型は `StencilCategory`）は
 プラグインが所有し、ホストが `stencilLibrary.sections` へ合成する。そこでライブラリの
 セクションになり、レールのカタログに行として並び、ピン留めされるか、開いている文書が
-そのカテゴリの型（レールのプリセットが作らないもの）を使っている間はレールにボタンが
-立って、押すとそのプリセットがパネルに開く（プリセットの型がすべてレールのプリセットと
-同じカテゴリは、ピン留めでしかボタンが立たない）。最初にどのカテゴリをピン留めしておくかは
+そのカテゴリを使っている間はレールにボタンが立って、押すとそのプリセットがパネルに開く
+（レールのプリセットが作る型は数えない。`rail.presetIds` の `CanvasRailConfig.presetIds` 参照）。最初にどのカテゴリをピン留めしておくかは
 ホストの `initialConfig.pinnedCategoryIds` で、その後のピン留めはユーザーのものになる。
 プラグインのプリセットを `rail.presetIds` に挙げてレールそのものに置くこともできる。
 出荷図形セットは全プラグインのカテゴリを `standardStencilLibrarySections`

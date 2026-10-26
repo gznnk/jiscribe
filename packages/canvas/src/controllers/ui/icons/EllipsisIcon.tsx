@@ -7,7 +7,7 @@ type EllipsisIconProps = {
 
 /**
  * Horizontal ellipsis (…) icon, used for the ObjectMenu's button opening the
- * properties sidebar.
+ * properties sidebar and the stencil rail's "…" button.
  *
  * The dots are filled circles rather than the usual hairline glyph: the button
  * sits next to stroke-width 2 stencil icons and a lighter mark reads as disabled

@@ -113,4 +113,66 @@ describe("StencilRailHandler", () => {
 		);
 		expect(next.stencilFlyout).toBeNull();
 	});
+
+	describe("the rail's popovers", () => {
+		it("a click on '…' opens its popover in the flyout's slot, replacing a category", () => {
+			const next = StencilRailHandler.handle(
+				makeState(),
+				makeEvent("click", "stencil-rail", "toggle:railOverflow"),
+				registries,
+			);
+			expect(next.stencilFlyout).toEqual({ kind: "railOverflow" });
+		});
+
+		it("a click on the open popover's button closes it; on the other one, switches", () => {
+			const closed = StencilRailHandler.handle(
+				makeState({ stencilFlyout: { kind: "railOverflow" } }),
+				makeEvent("doubleClick", "stencil-rail", "toggle:railOverflow"),
+				registries,
+			);
+			expect(closed.stencilFlyout).toBeNull();
+			const switched = StencilRailHandler.handle(
+				makeState({ stencilFlyout: { kind: "railOverflow" } }),
+				makeEvent("click", "stencil-rail", "toggle:railPresets"),
+				registries,
+			);
+			expect(switched.stencilFlyout).toEqual({ kind: "railPresets" });
+		});
+
+		it("opens over a docked panel, leaving it docked", () => {
+			const dockedPanel = {
+				isOpen: true,
+				content: { kind: "category", categoryId: "flowchart" },
+			} as const;
+			const next = StencilRailHandler.handle(
+				makeState({ stencilFlyout: null, stencilLibraryPanel: dockedPanel }),
+				makeEvent("click", "stencil-rail", "toggle:railOverflow"),
+				registries,
+			);
+			expect(next.stencilFlyout).toEqual({ kind: "railOverflow" });
+			expect(next.stencilLibraryPanel).toBe(dockedPanel);
+		});
+
+		it("a press on a popover's background keeps it open and closes the context menu", () => {
+			const popoverPress = makeEvent("pressed", "stencil-rail-popover");
+			expect(StencilRailHandler.supports(popoverPress)).toBe(true);
+			const next = StencilRailHandler.handle(
+				makeState({ stencilFlyout: { kind: "railOverflow" } }),
+				popoverPress,
+				registries,
+			);
+			expect(next.stencilFlyout).toEqual({ kind: "railOverflow" });
+			expect(next.contextMenuPosition).toBeNull();
+		});
+
+		it("a toggle naming no popover changes nothing", () => {
+			const state = makeState();
+			const next = StencilRailHandler.handle(
+				state,
+				makeEvent("click", "stencil-rail", "toggle:flowchart"),
+				registries,
+			);
+			expect(next.stencilFlyout).toBe(state.stencilFlyout);
+		});
+	});
 });

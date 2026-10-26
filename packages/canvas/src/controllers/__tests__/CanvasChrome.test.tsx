@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -510,6 +511,113 @@ describe("Canvas chrome", () => {
 			expect(badgeOf("boxes")?.textContent).toBe("図で使用中");
 			expect(badgeOf("rounds")?.textContent).toBe("図で使用中");
 			expect(badgeOf("lines")).toBeNull();
+		});
+	});
+
+	describe("a rail too short for what it holds", () => {
+		const categoryOf = (id: string, presetIds: string[]): StencilCategory => ({
+			id,
+			label: id,
+			icon: RectIcon,
+			presetIds,
+		});
+		const originalGetBoundingClientRect =
+			Element.prototype.getBoundingClientRect;
+		afterEach(() => {
+			Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+		});
+
+		/** A polyline, which the rail's presets here (rect, ellipse) do not create. */
+		const polylineDoc = {
+			id: "poly-1",
+			type: "polyline",
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			],
+		} as unknown as ObjectDoc;
+
+		/**
+		 * Mounts with the rail measured 1px tall, short of even the presets: every
+		 * category goes into "…" and the presets fold. Left alone, jsdom measures
+		 * 0, which the rail reads as not laid out.
+		 */
+		const mountShortRail = () => {
+			Element.prototype.getBoundingClientRect = function (this: Element) {
+				return (
+					this.matches(RAIL)
+						? { width: 48, height: 1 }
+						: originalGetBoundingClientRect.call(this)
+				) as DOMRect;
+			};
+			return mount({
+				doc: {
+					version: 1 as const,
+					root: [polylineDoc],
+				},
+				stencilLibrary: {
+					sections: [
+						categoryOf("boxes", ["rect"]),
+						categoryOf("rounds", ["ellipse"]),
+						categoryOf("lines", ["polyline"]),
+					],
+				},
+				rail: { presetIds: ["rect", "ellipse"] },
+				initialConfig: { pinnedCategoryIds: ["rounds", "boxes"] },
+			});
+		};
+		const MORE_BUTTON = `${RAIL} [data-action="toggle:railOverflow"]`;
+		const PRESETS_BUTTON = `${RAIL} [data-action="toggle:railPresets"]`;
+		const POPOVER = '[data-id="stencil-rail-popover"]';
+
+		it("moves every category into '…', titled with the count, and folds the presets", () => {
+			const container = mountShortRail();
+			expect(
+				container.querySelector(`${RAIL} [data-id="stencil-category"]`),
+			).toBeNull();
+			expect(container.querySelector(MORE_BUTTON)?.getAttribute("title")).toBe(
+				"3 more categories",
+			);
+			expect(
+				container.querySelector(`${RAIL} [data-id="stencil-library"]`),
+			).toBeNull();
+			expect(
+				container.querySelector(PRESETS_BUTTON)?.getAttribute("title"),
+			).toBe("Basic shapes");
+			expect(container.querySelector(CATALOG_BUTTON)).not.toBeNull();
+		});
+
+		it("lists them in the '…' popover, the pins in pin order under their heading, then the document's", async () => {
+			const container = mountShortRail();
+			await press(container.querySelector(MORE_BUTTON));
+
+			const popover = container.querySelector(POPOVER);
+			const rows = [
+				...(popover?.querySelectorAll('[data-id="stencil-category"]') ?? []),
+			].map(
+				(row) =>
+					`${row.getAttribute("data-rail-group")}:${row.getAttribute("data-action")}`,
+			);
+			expect(rows).toEqual([
+				"pinned:toggle:rounds",
+				"pinned:toggle:boxes",
+				"document:toggle:lines",
+			]);
+			expect(popover?.textContent).toContain("Pinned");
+			expect(popover?.textContent).toContain("In this diagram");
+			expect(
+				container.querySelector(MORE_BUTTON)?.getAttribute("aria-expanded"),
+			).toBe("true");
+		});
+
+		it("holds the folded presets as library items in its popover", async () => {
+			const container = mountShortRail();
+			await press(container.querySelector(PRESETS_BUTTON));
+
+			const items = [
+				...container.querySelectorAll(`${POPOVER} [data-id="stencil-library"]`),
+			].map((item) => item.getAttribute("data-action"));
+			expect(items).toEqual(["item:rect", "item:ellipse"]);
 		});
 	});
 });

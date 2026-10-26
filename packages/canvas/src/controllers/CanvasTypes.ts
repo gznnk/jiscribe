@@ -15,6 +15,7 @@ import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { CanvasSelection } from "./selection/CanvasSelection";
 import type { Stencil } from "./ui/objects/Stencil";
+import type { StencilRailPopoverKind } from "./utils/stencilRailPopover";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
@@ -372,7 +373,20 @@ export type CanvasDragDetail =
 	| { kind: "vertex" }
 	| { kind: "label" }
 	| { kind: "segment" }
-	| { kind: "selectionControl" };
+	| { kind: "selectionControl" }
+	| {
+			kind: "pinReorder";
+			/** The pinned category being dragged. */
+			categoryId: string;
+			/**
+			 * Where in `pinnedCategoryIds` it lands on drop: the index it is inserted
+			 * before (`pinnedCategoryIds.length` for the end), from the last pinned
+			 * category the pointer was over. null until the pointer reaches another
+			 * pinned category, and again once it is back over the dragged one; a
+			 * drop then changes nothing.
+			 */
+			insertionIndex: number | null;
+	  };
 
 /**
  * What a drag is doing, as `interaction.getStatus().drag` reports it and as
@@ -390,6 +404,7 @@ export type CanvasDragDetail =
  * - `"label"`: moving a connector's label along its line
  * - `"segment"`: moving or sliding a connector segment
  * - `"selectionControl"`: working a control a type contributes for its own selection (selectionControls)
+ * - `"pinReorder"`: moving a pinned category to another place in the pin order (the rail, or the rail's "…" popover); the order changes on dragEnd
  */
 export type DragKind = CanvasDragDetail["kind"];
 
@@ -548,6 +563,17 @@ export type StencilPanelContent =
 			categoryId: string;
 	  }
 	| { kind: "catalog" };
+
+/**
+ * A small popover the stencil rail opens beside itself, in the flyout's slot
+ * (CanvasControllerState.stencilFlyout): `"railOverflow"` lists the categories
+ * the rail had no room for (its "…" button), `"railPresets"` holds the presets
+ * once the rail is too short for them (its collapsed presets button).
+ */
+export type StencilRailPopover = { kind: StencilRailPopoverKind };
+
+/** What the flyout slot over the canvas holds: a stencil panel's content, or one of the rail's popovers. */
+export type StencilFlyoutContent = StencilPanelContent | StencilRailPopover;
 
 /** State of the docked stencil panel; see CanvasControllerState.stencilLibraryPanel. */
 export type StencilLibraryPanelState = {
@@ -751,13 +777,15 @@ export type CanvasControllerState = CanvasState & {
 	objectMenuOpenId: string | null;
 
 	/**
-	 * The stencil panel open over the canvas (the flyout), null when none is. One
-	 * at a time, and never beside the docked panel: while that is open, what the
-	 * flyout would show goes there instead. Cleared alongside objectMenuOpenId by
-	 * the selection/press handlers, commands and resetUiState, and by Escape —
-	 * there is no central clear in handleGesture.
+	 * What is open over the canvas beside the rail, null when nothing is: a
+	 * stencil panel (the flyout), or one of the rail's popovers. One at a time.
+	 * A panel never sits beside the docked panel: while that is open, what the
+	 * flyout would show goes there instead; a rail popover may float over it.
+	 * Cleared alongside objectMenuOpenId by the selection/press handlers, commands
+	 * and resetUiState, and by Escape — there is no central clear in
+	 * handleGesture — so a rail popover closes wherever the flyout does.
 	 */
-	stencilFlyout: StencilPanelContent | null;
+	stencilFlyout: StencilFlyoutContent | null;
 
 	/**
 	 * The docked stencil panel (StencilPanel beside the viewport). Editor
@@ -774,7 +802,8 @@ export type CanvasControllerState = CanvasState & {
 	 * the same terms as the panels. Ids naming no section of the library stay
 	 * here — a host without that plugin must not erase the user's pin — and are
 	 * only left off the rail. Written only by StencilLibraryPanelHandler (the
-	 * catalog's pin buttons).
+	 * catalog's pin buttons) and StencilCategoryToggleHandler (dragging a pin to
+	 * another place).
 	 */
 	pinnedCategoryIds: string[];
 

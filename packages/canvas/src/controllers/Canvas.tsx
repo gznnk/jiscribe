@@ -98,7 +98,10 @@ import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
-import { readDrawnStencilPanelContent } from "./utils/stencilPanelContent";
+import {
+	isStencilPanelContent,
+	readDrawnStencilPanelContent,
+} from "./utils/stencilPanelContent";
 
 type CanvasProps = {
 	// ── Document ──
@@ -158,7 +161,8 @@ type CanvasProps = {
 	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void;
 	/**
 	 * Called when the user pins a library category to the rail or unpins it
-	 * (from the catalog), with every pin in rail order — ids the library does not
+	 * (from the catalog), or drags a pin to another place, with every pin in
+	 * rail order — ids the library does not
 	 * hold included, so persisting what arrives never drops a pin a host without
 	 * that plugin could not show. Not called for the pins seeded at mount.
 	 * Read-only on the same terms as `onSidebarsChange`: hand it back through
@@ -272,8 +276,11 @@ type CanvasProps = {
 	 * `DEFAULT_RAIL_PRESET_IDS`, core's primitives), then the categories the user
 	 * pinned, then the other library categories the open document uses, most
 	 * objects first (a type some rail preset creates adds no category), then
-	 * the catalog button. Shown by default; `toolbar.show` does not
-	 * hide it. An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
+	 * the catalog button. What does not fit the rail's height goes into a "…"
+	 * button above the catalog button — the document's categories first, then
+	 * the pins from the end — and the presets fold into one button only when
+	 * that is not enough. The user reorders the pins by dragging them. Shown by
+	 * default; `toolbar.show` does not hide it. An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
 	 */
 	rail?: CanvasRailConfig;
 	/**
@@ -716,6 +723,17 @@ const CanvasComponent = ({
 							documentCategoryIds={documentCategoryIds}
 							activePresetId={drawingPresetId}
 							drawnPanelContent={shownStencilPanelContent}
+							openRailPopover={
+								state.stencilFlyout !== null &&
+								!isStencilPanelContent(state.stencilFlyout)
+									? state.stencilFlyout.kind
+									: null
+							}
+							pinInsertionIndex={
+								state.drag?.kind === "pinReorder"
+									? state.drag.insertionIndex
+									: null
+							}
 						/>
 					)}
 					{isStencilPanelDocked && (
@@ -793,6 +811,7 @@ const CanvasComponent = ({
 						</ViewportOverlay>
 					</Viewport>
 					{state.stencilFlyout !== null &&
+						isStencilPanelContent(state.stencilFlyout) &&
 						shownStencilPanelContent !== null && (
 							<StencilFlyoutLayer
 								style={{ left: isRailShown ? STENCIL_RAIL_WIDTH : 0 }}

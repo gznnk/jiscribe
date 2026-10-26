@@ -97,3 +97,11 @@ describe("resolveLocalizedLabel", () => {
 		);
 	});
 });
+
+describe("stencilRailMore", () => {
+	it("counts the categories in the rail's '…' button, in each locale's wording", () => {
+		expect(defaultCanvasMessages.stencilRailMore(1)).toBe("1 more category");
+		expect(defaultCanvasMessages.stencilRailMore(3)).toBe("3 more categories");
+		expect(jaCanvasMessages.stencilRailMore(3)).toBe("ほか 3 カテゴリ");
+	});
+});

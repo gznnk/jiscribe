@@ -8,6 +8,9 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarPropertyPanel: "プロパティ",
 
 	stencilRailLabel: "図形",
+	stencilRailPresets: "基本図形",
+	stencilRailPinnedHeading: "ピン留め",
+	stencilRailMore: (categoryCount) => `ほか ${categoryCount} カテゴリ`,
 
 	stencilCatalogTitle: "すべての図形",
 	stencilCatalogInDiagram: "図で使用中",

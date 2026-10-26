@@ -424,9 +424,9 @@ Placement is a separate decision from packaging: a category
 (`containerStencilCategory`, `annotationStencilCategory`), typed `StencilCategory`,
 is owned by the plugin and composed by the host into `stencilLibrary.sections`,
 where it becomes a section of the library — a row of the rail's catalog, and, once
-pinned or while the open document uses one of its types that no rail preset creates,
-a button on the rail opening its presets in a panel (a category whose presets all
-share a rail preset's type gets that button from a pin alone). Which categories start
+pinned or while the open document uses it, a button on the rail opening its presets
+in a panel (the types the rail's presets create do not count; see
+`CanvasRailConfig.presetIds`, the `rail.presetIds` prop). Which categories start
 pinned is the host's `initialConfig.pinnedCategoryIds`; after that the pins are the
 user's. A plugin preset can also sit on the rail itself, named in `rail.presetIds`.
 The standard set files every plugin category in `standardStencilLibrarySections`

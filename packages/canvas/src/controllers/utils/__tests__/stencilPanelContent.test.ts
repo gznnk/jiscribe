@@ -5,8 +5,10 @@ import type {
 	StencilPanelContent,
 } from "../../CanvasTypes";
 import {
+	isStencilPanelContent,
 	readDrawnStencilPanelContent,
 	resolveDrawnStencilPanelContent,
+	toggleStencilPanelContent,
 } from "../stencilPanelContent";
 
 const LIBRARY = ["basic", "flowchart"];
@@ -69,5 +71,68 @@ describe("readDrawnStencilPanelContent", () => {
 				stencilLibraryCategoryIds: LIBRARY,
 			}),
 		).toBeNull();
+	});
+});
+
+describe("the rail's popovers in the flyout's slot", () => {
+	const dockedContent: StencilPanelContent = {
+		kind: "category",
+		categoryId: "flowchart",
+	};
+
+	it("are no panel content", () => {
+		expect(isStencilPanelContent({ kind: "railOverflow" })).toBe(false);
+		expect(isStencilPanelContent({ kind: "railPresets" })).toBe(false);
+		expect(isStencilPanelContent({ kind: "catalog" })).toBe(true);
+		expect(
+			isStencilPanelContent({ kind: "category", categoryId: "basic" }),
+		).toBe(true);
+	});
+
+	it("leave the docked panel's content to be read as drawn, and nothing without one", () => {
+		expect(
+			readDrawnStencilPanelContent({
+				stencilFlyout: { kind: "railOverflow" },
+				stencilLibraryPanel: { isOpen: true, content: dockedContent },
+				stencilLibraryCategoryIds: LIBRARY,
+			}),
+		).toBe(dockedContent);
+		expect(
+			readDrawnStencilPanelContent({
+				stencilFlyout: { kind: "railOverflow" },
+				stencilLibraryPanel: CLOSED_DOCK,
+				stencilLibraryCategoryIds: LIBRARY,
+			}),
+		).toBeNull();
+	});
+
+	it("give way to a category opened from '…': in the flyout, or in the docked panel", () => {
+		const basic: StencilPanelContent = {
+			kind: "category",
+			categoryId: "basic",
+		};
+		expect(
+			toggleStencilPanelContent(
+				{
+					stencilFlyout: { kind: "railOverflow" },
+					stencilLibraryPanel: CLOSED_DOCK,
+					stencilLibraryCategoryIds: LIBRARY,
+				},
+				basic,
+			).stencilFlyout,
+		).toEqual(basic);
+		const docked = toggleStencilPanelContent(
+			{
+				stencilFlyout: { kind: "railOverflow" },
+				stencilLibraryPanel: { isOpen: true, content: dockedContent },
+				stencilLibraryCategoryIds: LIBRARY,
+			},
+			basic,
+		);
+		expect(docked.stencilFlyout).toBeNull();
+		expect(docked.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			content: basic,
+		});
 	});
 });

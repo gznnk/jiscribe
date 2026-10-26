@@ -14,6 +14,10 @@ export type CanvasMessageStrings = {
 	// Stencil rail
 	/** aria-label of the rail itself, the column of shape tools at the left */
 	stencilRailLabel: string;
+	/** title / aria-label of the button holding the rail's presets once the rail is too short for them */
+	stencilRailPresets: string;
+	/** Heading of the pinned categories in the rail's "…" popover */
+	stencilRailPinnedHeading: string;
 
 	// Stencil panels (the flyout over the canvas and the docked panel)
 	/** Heading of the catalog, the panel listing every library category */
@@ -255,6 +259,14 @@ export type CanvasMessages = CanvasMessageStrings & {
 	 *   (host override and locale already applied)
 	 */
 	stencilCatalogPin: (categoryLabel: string) => string;
+	/**
+	 * title / aria-label of the rail's "…" button, which holds the categories
+	 * the rail has no room for. A function because it says how many.
+	 *
+	 * @param categoryCount - How many categories it holds, pinned and the
+	 *   document's together; at least 1, since the button shows only then
+	 */
+	stencilRailMore: (categoryCount: number) => string;
 	/** Overrides keyed by command id (e.g. `undo`, `bringToFront`, `move-up-large`) */
 	commandLabels: Record<string, string>;
 	/** Overrides keyed by stencil id (e.g. `rect`, `ellipse`, `polygon`) */

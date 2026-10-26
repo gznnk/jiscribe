@@ -13,6 +13,12 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarPropertyPanel: "Properties",
 
 	stencilRailLabel: "Shapes",
+	stencilRailPresets: "Basic shapes",
+	stencilRailPinnedHeading: "Pinned",
+	stencilRailMore: (categoryCount) =>
+		categoryCount === 1
+			? "1 more category"
+			: `${categoryCount} more categories`,
 
 	stencilCatalogTitle: "All shapes",
 	stencilCatalogInDiagram: "In this diagram",
