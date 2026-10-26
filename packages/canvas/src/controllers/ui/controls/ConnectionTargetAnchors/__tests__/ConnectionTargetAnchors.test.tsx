@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
 
-import type { AnchorFrame } from "../../../../../connectors/calcConnectPoint";
+import type { AnchorFrame } from "../../../../../rendering/objects/connector/geometry/calcConnectPoint";
 import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";

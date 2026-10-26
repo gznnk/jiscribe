@@ -2,9 +2,9 @@ import { isTransformedFrame } from "@jiscribe/geometry";
 import type { Rect } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { theme } from "../../../../foundation/theme/themeTokens";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { theme } from "../../../../theme/themeTokens";
 import { SELECTION_OUTLINE_WIDTH } from "../utils/selectionOutline";
 
 type ObjectPartOutlineProps = {

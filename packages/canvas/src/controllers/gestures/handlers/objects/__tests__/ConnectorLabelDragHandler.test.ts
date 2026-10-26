@@ -16,6 +16,7 @@ import type {
 	EventType,
 } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
+import { ConnectorEventHandler } from "../ConnectorEventHandler";
 import { ConnectorLabelDragHandler } from "../ConnectorLabelDragHandler";
 
 const registries = createTestRegistries();
@@ -52,7 +53,11 @@ const stateWith = (connector: ConnectorState): CanvasControllerState => {
 		...base,
 		objects,
 		rootIds: [...base.rootIds, connector.id],
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects,
 				keyPoints: {},
@@ -63,7 +68,6 @@ const stateWith = (connector: ConnectorState): CanvasControllerState => {
 				multiSelectGroup: null,
 				viewport: base.viewport,
 			},
-			kind: "other",
 		},
 	});
 };
@@ -182,7 +186,8 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		expect(next.contextMenuPosition).toBeNull();
-		expect(next.edgeScrollEnabled).toBe(true);
+		expect(next.drag?.edgeScrollEnabled).toBe(true);
+		expect(next.drag?.kind).toBe("label");
 	});
 
 	it("does not select a connector that has no label box to grab", () => {
@@ -192,7 +197,37 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 			registries,
 		);
 		expect(next.selection.objectIds).toEqual([]);
-		expect(next.edgeScrollEnabled).toBe(false);
+		expect(next.drag?.kind).toBe("inert");
+	});
+	it("has the router commit an open label edit into the snapshot, so the next frame keeps its text (touch)", () => {
+		// A touch press waits to see whether it becomes a pinch, so the edit is
+		// still open when the drag starts.
+		const state = {
+			...stateWith(labeledConnector({ text: "Yes" })),
+			selection: selectionOf(["c1"]),
+			mode: {
+				kind: "textEdit",
+				draft: { kind: "connectorLabel", text: "No" },
+			},
+		} as unknown as CanvasControllerState;
+		const touch = (event: CanvasEvent): CanvasEvent =>
+			({ ...event, pointerType: "touch" }) as CanvasEvent;
+
+		const started = ConnectorEventHandler.handle(
+			state,
+			touch(dragEvent("dragStart", { x: 100, y: 0 }, { x: 100, y: 0 })),
+			registries,
+		);
+		expect(started.mode.kind).toBe("normal");
+		expect(labelOf(started)?.text).toBe("No");
+		expect(started.drag?.kind).toBe("label");
+
+		const dragged = ConnectorEventHandler.handle(
+			started,
+			touch(dragEvent("drag", { x: 100, y: 0 }, { x: 150, y: 0 })),
+			registries,
+		);
+		expect(labelOf(dragged)).toMatchObject({ text: "No", position: 0.75 });
 	});
 });
 
@@ -314,7 +349,7 @@ describe("ConnectorLabelDragHandler - drag", () => {
 
 		const withoutSnapshot = {
 			...withLabel,
-			activeDrag: null,
+			drag: null,
 		} as CanvasControllerState;
 		expect(
 			ConnectorLabelDragHandler.handle(
@@ -407,7 +442,7 @@ describe("ConnectorLabelDragHandler - offset snap", () => {
 });
 
 describe("ConnectorLabelDragHandler - dragEnd", () => {
-	it("applies the final frame and disables edge scrolling", () => {
+	it("applies the final frame", () => {
 		const state = stateWith(labeledConnector({ text: "Yes" }));
 		const afterStart = ConnectorLabelDragHandler.handle(
 			state,
@@ -426,7 +461,6 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 			offset: -10,
 		});
 		expect(afterEnd.objects).not.toBe(afterStart.objects);
-		expect(afterEnd.edgeScrollEnabled).toBe(false);
 		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion + 1);
 	});
 
@@ -449,7 +483,6 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		);
 
 		expect(afterEnd.objects).toBe(afterDrag.objects);
-		expect(afterEnd.edgeScrollEnabled).toBe(false);
 		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion);
 	});
 

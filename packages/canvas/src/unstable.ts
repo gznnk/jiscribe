@@ -12,7 +12,7 @@
 
 // Side-effect first, as in `.`: a host reaching the canvas through this entry
 // alone still gets the renderer's text measurement offered.
-import "./text/offerRendererTextMeasurement";
+import "./bootstrap/offerRendererTextMeasurement";
 
 export { createFrameObject } from "./rendering/objects/base/createFrameObject";
 export type {
@@ -50,7 +50,7 @@ export { useObjectShapeStyleDefaultsRegistry } from "./rendering/objects/registr
 
 // The active theme, for a component that has to read the host's handle
 // dimensions (zoom-adjusted geometry).
-export { useCanvasTheme } from "./theme/CanvasThemeContext";
+export { useCanvasTheme } from "./foundation/theme/CanvasThemeContext";
 
 export { createFrameBehavior } from "./controllers/behaviors/base/FrameController";
 
@@ -302,18 +302,18 @@ export {
 	toggleAction,
 } from "./controllers/gestures/handlers/menu/utils/menuActions";
 
-export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
-export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";
+export { useCanvasMessages } from "./foundation/i18n/CanvasMessagesContext";
+export { useCanvasLocale } from "./foundation/i18n/CanvasLocaleContext";
 export {
 	resolveLocaleMessages,
 	resolveLocalizedLabel,
-} from "./controllers/messages/resolveLocaleMessages";
-export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessages";
+} from "./foundation/i18n/resolveLocaleMessages";
+export type { LocaleMessages } from "./foundation/i18n/resolveLocaleMessages";
 
 // Re-exported as `canvasThemeCssVars` because `theme` alone is too generic a name.
 // The value is the `--jiscribe-*` CSS variables plus a dark-theme fallback
-// (see theme/CanvasTheme.ts).
-export { theme as canvasThemeCssVars } from "./theme/themeTokens";
+// (see foundation/theme/CanvasTheme.ts).
+export { theme as canvasThemeCssVars } from "./foundation/theme/themeTokens";
 
 // The selection outline's stroke width, for a plugin control drawn against that
 // outline and meant to read as the same weight of line.
@@ -327,7 +327,10 @@ export { SELECTED_HANDLE_STROKE_SCALE } from "./controllers/ui/utils/selectedHan
 // help). A plugin panel that scrolls has no other way to match them, and a default
 // browser scrollbar next to a custom one is exactly the kind of seam a plugin should not
 // be introducing.
-export { SCROLLBAR_WIDTH, scrollbarStyles } from "./theme/themeScrollbarStyles";
+export {
+	SCROLLBAR_WIDTH,
+	scrollbarStyles,
+} from "./foundation/theme/themeScrollbarStyles";
 
 // What a plugin's own commands are written against (`CanvasPlugin.commands`).
 // A command is a pure state transition, so its two parameter types come along:
@@ -341,7 +344,14 @@ export type {
 	KeyBinding,
 	PlatformKeyBindings,
 } from "./controllers/commands/CommandTypes";
-export type { CanvasControllerState } from "./controllers/CanvasTypes";
+export type {
+	CanvasControllerState,
+	CanvasDrag,
+	CanvasDragDetail,
+	CanvasMode,
+	DragRect,
+	TextEditDraft,
+} from "./controllers/CanvasTypes";
 // A command that edits the document says so itself: the reducer records history
 // and raises a save off `commitVersion`, and the COMMAND path does not advance it.
 export { commitEdit } from "./controllers/utils/commitEdit";

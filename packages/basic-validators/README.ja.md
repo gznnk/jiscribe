@@ -56,7 +56,7 @@ const isLabel = (value: unknown): value is Label =>
   使える文字列（`;` `{` `}` `<` `>` `\`、`url(`、`expression(`、コメント区切り）を弾く
   だけで、安全な文字列が意味のある CSS であるとは限らない。厳密な色の妥当性判定は
   ブラウザの CSS パーサーを必要とするため、ここではなく `@jiscribe/canvas` の
-  `states/objects/utils/isCssColor` に置いている。
+  `foundation/color/isCssColor` に置いている。
 - **`isUrl` はパースできるかの判定であって安全性の判定ではない。** `javascript:` を
   含めどのスキームも通り、相対パスや `example.com` のようなホスト名だけの文字列は
   通らない。

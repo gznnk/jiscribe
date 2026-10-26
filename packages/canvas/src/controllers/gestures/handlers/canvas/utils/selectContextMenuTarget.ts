@@ -1,6 +1,7 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { selectConnectorAlone } from "../../../../selection/writers/selectConnectorAlone";
 import { selectObjectByClick } from "../../../../selection/writers/selectObjectByClick";
+import type { ConnectorRouteRegistries } from "../../../../utils/VisualExtentRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { getAncestors } from "../../objects/utils/getAncestors";
 
@@ -29,6 +30,8 @@ const NON_ADDITIVE_MODS = {
  * @param state - Current canvas controller state
  * @param event - The right-button or longPress event; its targetKind /
  *   targetId choose the target and its own mods are ignored
+ * @param registries - Per-canvas registries the multi-select frame resolves a
+ *   selected connector's drawn route through (see createMultiSelectGroup)
  * @returns The state with the target selected, or state itself when the gesture
  *   landed on nothing selectable or on something already selected (itself or
  *   through an ancestor group)
@@ -36,6 +39,7 @@ const NON_ADDITIVE_MODS = {
 export function selectContextMenuTarget(
 	state: CanvasControllerState,
 	event: CanvasEvent,
+	registries: ConnectorRouteRegistries,
 ): CanvasControllerState {
 	const { targetId } = event;
 	if (!targetId || !state.objects[targetId]) {
@@ -58,6 +62,7 @@ export function selectContextMenuTarget(
 			state,
 			state.objects[targetId],
 			NON_ADDITIVE_MODS,
+			registries,
 		);
 	}
 	if (event.targetKind === "connector") {

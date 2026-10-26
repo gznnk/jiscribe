@@ -31,7 +31,7 @@ const makeState = (): CanvasControllerState =>
 		rootIds: ["rect-1"],
 		selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 		multiSelectGroup: null,
-		textEditState: null,
+		mode: { kind: "normal" },
 		objectMenuOpenId: null,
 		contextMenuPosition: { x: 1, y: 1 },
 		commitVersion: 5,

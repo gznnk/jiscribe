@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../../../theme/themeTokens";
+import { theme } from "../../../../../../foundation/theme/themeTokens";
+import { swatchBackground } from "../../../utils/swatchBackground";
 
 export const ColorPickerContainer = styled.div`
 	display: flex;
@@ -101,10 +102,7 @@ export const ColorSwatch = styled.div<ColorSwatchProps>`
 	border-radius: 50%;
 	border: ${({ selected }) =>
 		selected ? `2px solid ${theme.accent}` : `1px solid ${theme.borderSubtle}`};
-	background: ${({ swatchColor }) =>
-		swatchColor === "transparent"
-			? `repeating-conic-gradient(${theme.transparentChecker} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
-			: swatchColor};
+	background: ${({ swatchColor }) => swatchBackground(swatchColor)};
 	cursor: pointer;
 	transition: all 0.15s ease;
 

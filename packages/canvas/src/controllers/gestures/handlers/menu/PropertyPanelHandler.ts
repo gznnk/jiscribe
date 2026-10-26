@@ -10,6 +10,7 @@ import type { DocumentPropertyUpdate } from "../../../reducer/CanvasActions";
 import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
+	isDocumentMetaProperty,
 	isViewPaddingProperty,
 } from "../../../utils/applyDocumentProperty";
 import type {
@@ -27,7 +28,7 @@ const toDocumentPropertyUpdate = (
 	property: string,
 	value: string | null,
 ): DocumentPropertyUpdate | null => {
-	if (property === "background") {
+	if (property === "background" || isDocumentMetaProperty(property)) {
 		return { property, value };
 	}
 	if (property === "view.open") {

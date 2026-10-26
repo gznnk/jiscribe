@@ -44,7 +44,11 @@ export type AiCanvasOp = AiDocOp | AiHandleOp;
  * touches the document, and a host that merely holds one cannot run any of them.
  */
 export type AiHandleOp =
-	| { kind: "captureCanvas" }
+	| ({
+			kind: "captureCanvas";
+			/** Draw only the objects the region names (ids or the selection); omitted or false crops */
+			isolate?: boolean;
+	  } & AiRegionArgs)
 	// An empty ids clears the selection
 	| { kind: "selectObjects"; ids: string[] }
 	// Puts world (x, y) at the centre of the screen; omitting zoom keeps the current one
@@ -53,13 +57,7 @@ export type AiHandleOp =
 	| { kind: "setView"; minX: number; minY: number; zoom: number }
 	// Reads the camera together with the world rect currently on screen
 	| { kind: "getView" }
-	| {
-			kind: "fitView";
-			/** What the canvas holds; exclusive with rect, and one of the two is required */
-			target?: AiFitTarget;
-			/** A region worked out by the caller; exclusive with target */
-			rect?: AiRect;
-	  }
+	| ({ kind: "fitView" } & AiRegionArgs)
 	| {
 			kind: "measureText";
 			id: string;
@@ -104,6 +102,20 @@ export type AiViewScroll = "content" | "infinite";
 
 /** What fitView frames when it is not given a rect: the whole drawing, or the current selection */
 export type AiFitTarget = "all" | "selection";
+
+/**
+ * The region a screen tool works on: the whole drawing, the current selection,
+ * named objects, or a world rect. At most one of the three fields is given;
+ * what giving none means is up to the tool.
+ */
+export type AiRegionArgs = {
+	/** What the canvas holds right now; exclusive with ids and rect */
+	target?: AiFitTarget;
+	/** Objects named by id, taken as the union of what they draw; exclusive with target and rect */
+	ids?: string[];
+	/** A world rect worked out by the caller, taken as it is; exclusive with target and ids */
+	rect?: AiRect;
+};
 
 /**
  * Every {@link AiHandleOp} kind, written as a map so that a variant added to the
@@ -248,6 +260,17 @@ export type AiDocOp =
 			open?: AiViewOpen | null;
 			scroll?: AiViewScroll | null;
 	  }
+	/**
+	 * A name and description (the `meta`) on the object `id` names, or on the document
+	 * itself when `id` is left out. Only the fields given are written, and a field
+	 * given as null is dropped
+	 */
+	| {
+			kind: "setMeta";
+			id?: string;
+			name?: string | null;
+			description?: string | null;
+	  }
 	/** Writes the properties a type holds of its own (lucideIcon's icon, callout's tail) */
 	| {
 			kind: "setExtraProps";
@@ -359,6 +382,13 @@ export type AiCanvasOpOutcome = {
 	 * host adds an image block to the tool result
 	 */
 	imagePngBase64?: string;
+	/**
+	 * The ids of the objects this op newly created, in the order it created them
+	 * (`addObjects` lists its objects in the order given, then the group
+	 * `groupNewObjects` wrapped them in). Absent when the op created nothing,
+	 * including a failure and an undo that brings deleted objects back
+	 */
+	createdIds?: string[];
 };
 
 /**

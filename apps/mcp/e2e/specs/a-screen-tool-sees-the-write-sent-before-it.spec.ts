@@ -1,54 +1,11 @@
-import type { Page } from "@playwright/test";
-
 import { SECOND_RECT, SINGLE_RECT, twoRectDoc } from "../support/canvasDocs";
+import { countMarkerPixels, MARKER_FILL } from "../support/capturedPng";
 import { expect, objectCenter, test } from "../support/fixtures";
-import type { ToolCallResult } from "../support/mcpStdioClient";
 
 // A regression for a screen tool answering against the drawing from before a write
 // sent ahead of it. The page used to learn of a tool's write only when the host's
 // file watch next polled (every 300 ms), and a screen tool sent right after the
 // write — or in the same batch, as a client is free to — was answered before that.
-
-/** The fill the specs paint with, picked so no other pixel of the drawing is near it */
-const MARKER_FILL = "#ff0000";
-
-/**
- * Counts the pixels of a captured PNG that are the marker's red.
- *
- * @param page Any page, used only to decode the image
- * @param captured What capture_canvas answered
- */
-async function countMarkerPixels(
-	page: Page,
-	captured: ToolCallResult,
-): Promise<number> {
-	const imagePart = captured.parts.find((part) => part.type === "image");
-	if (imagePart === undefined) {
-		throw new Error(`capture_canvas answered with ${captured.text}`);
-	}
-	return await page.evaluate(async (pngBase64) => {
-		const bytes = Uint8Array.from(atob(pngBase64), (char) =>
-			char.charCodeAt(0),
-		);
-		const bitmap = await createImageBitmap(
-			new Blob([bytes], { type: "image/png" }),
-		);
-		const surface = new OffscreenCanvas(bitmap.width, bitmap.height);
-		const context = surface.getContext("2d");
-		if (context === null) {
-			throw new Error("no 2d context to decode the capture with");
-		}
-		context.drawImage(bitmap, 0, 0);
-		const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height);
-		let count = 0;
-		for (let index = 0; index < data.length; index += 4) {
-			if (data[index] > 200 && data[index + 1] < 60 && data[index + 2] < 60) {
-				count += 1;
-			}
-		}
-		return count;
-	}, String(imagePart.data));
-}
 
 test("captures a fill set just before the capture", async ({
 	page,

@@ -17,8 +17,8 @@ import {
 	resolveToolbarSections,
 	type ResolvedToolbarItem,
 } from "./utils/resolveToolbarSections";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { SidebarIcon } from "../../icons/SidebarIcon";
 import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";

@@ -4,23 +4,22 @@ import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import { META_DOC_STRING_KEYS } from "../base/MetaDoc";
 
 /**
- * Validate the optional `meta` every object may carry: an object whose named
- * members (`META_DOC_STRING_KEYS`), when present, are strings. The record is open
- * past those, so no other member is looked at.
+ * Validate an optional `meta` — the one every object may carry, and the
+ * document's own: an object whose named members (`META_DOC_STRING_KEYS`), when
+ * present, are strings. The record is open past those, so no other member is
+ * looked at.
  *
- * @param o - The object doc; a missing `meta` is valid
- * @param path - Diagnostic path of `o`, which `.meta` and the member name are appended to
+ * @param meta - The `meta` value as read; undefined (absent) is valid
+ * @param metaPath - Diagnostic path of `meta` itself (`root[0].meta`, or `meta` for the document's), which the member name is appended to
  * @returns One diagnostic per malformed value; empty when `meta` is absent or well-formed
  */
 export function validateMetaFields(
-	o: Record<string, unknown>,
-	path: string,
+	meta: unknown,
+	metaPath: string,
 ): SemanticDiagnostic[] {
-	const meta = o.meta;
 	if (meta === undefined) {
 		return [];
 	}
-	const metaPath = `${path}.meta`;
 	if (!isObject(meta)) {
 		return [
 			{ path: metaPath, message: "must be an object", severity: "error" },

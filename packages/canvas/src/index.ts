@@ -1,7 +1,7 @@
 // Side-effect first: importing this package is what tells the document layer to
 // measure text the way this package draws it (see the module for why it is not
 // deferred to mount time).
-import "./text/offerRendererTextMeasurement";
+import "./bootstrap/offerRendererTextMeasurement";
 
 export { Canvas } from "./controllers/Canvas";
 export type { CanvasGestureHandling } from "./controllers/CanvasGestureHandling";
@@ -30,6 +30,7 @@ export type {
 	CanvasInteractionStatus,
 } from "./controllers/handles/useInteractionHandle";
 export type {
+	CanvasExportIdsRegion,
 	CanvasExportOptions,
 	CanvasExportRegion,
 	CanvasPngExportOptions,
@@ -55,7 +56,7 @@ export {
 	embedCanvasSourceInPng,
 	extractCanvasSourceFromPng,
 	downloadBlob,
-} from "./export";
+} from "./rendering/export";
 export type {
 	ExportCanvasToPngOptions,
 	ExportCanvasToSvgOptions,
@@ -63,7 +64,7 @@ export type {
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 	ResolveImageBlob,
-} from "./export";
+} from "./rendering/export";
 // Toolbar composition (issue #184). The sections are the single source of order
 // and category metadata: each item names, in display order, a pinned preset, a
 // category flyout, a command button, the zoom group, a sidebar toggle, a divider
@@ -88,18 +89,21 @@ export {
 	type StencilCategorySearch,
 	type StencilCategorySearchResult,
 } from "./controllers/ui/objects/StencilCategory";
-export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
+export { defaultCanvasMessages } from "./foundation/i18n/CanvasMessages";
 export type {
 	CanvasMessages,
 	CanvasMessageStrings,
-} from "./controllers/messages/CanvasMessagesTypes";
+} from "./foundation/i18n/CanvasMessagesTypes";
 export type {
 	CanvasTheme,
 	CanvasThemeTokens,
 	CanvasHandleDimensions,
 	CanvasColorScheme,
-} from "./theme/CanvasTheme";
-export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
+} from "./foundation/theme/CanvasTheme";
+export {
+	darkCanvasTheme,
+	lightCanvasTheme,
+} from "./foundation/theme/themePresets";
 export type { Viewport } from "./rendering/Viewport";
 export type {
 	Camera,

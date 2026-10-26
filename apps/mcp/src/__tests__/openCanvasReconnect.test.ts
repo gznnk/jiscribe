@@ -21,8 +21,9 @@ import {
 } from "vitest";
 import WebSocket from "ws";
 
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
 import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
+import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import type * as canvasHostModule from "../host/canvasHost";
 
 /**
@@ -166,7 +167,7 @@ const openCanvasAt = async (
 
 beforeAll(async () => {
 	viewerRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-viewer-"));
-	await writeFile(join(viewerRoot, "index.html"), "<!doctype html>", "utf8");
+	await writeFile(join(viewerRoot, "index.html"), VIEWER_STUB_HTML, "utf8");
 	for (const name of ["JISCRIBE_MCP_VIEWER_ROOT", "JISCRIBE_MCP_NO_OPEN"]) {
 		previousEnv[name] = process.env[name];
 	}

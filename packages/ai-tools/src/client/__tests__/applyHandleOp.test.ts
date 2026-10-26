@@ -2,45 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { MAX_SVG_CHARS } from "../../canvasOps";
 import { applyHandleOp } from "../applyHandleOp";
-import type { AiHandleControl } from "../types";
-
-/** A way in that notes down what it was called with; only the return values are swapped per test */
-const createFakeHandleControl = (
-	overrides: Partial<AiHandleControl> = {},
-): AiHandleControl => ({
-	isAvailable: () => true,
-	selectObjects: (ids) => ({ selectedIds: ids, ignoredIds: [] }),
-	getSelectedIds: () => [],
-	centerView: (point, zoom) => ({
-		minX: point.x,
-		minY: point.y,
-		zoom: zoom ?? 1,
-	}),
-	setView: (camera) => camera,
-	getView: () => ({
-		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		visibleWorldRect: { x: 0, y: 0, width: 800, height: 600 },
-	}),
-	fitView: () => ({ minX: 0, minY: 0, zoom: 1 }),
-	fitViewToRect: () => ({ minX: 0, minY: 0, zoom: 1 }),
-	measureText: () => null,
-	findOverlaps: () => [],
-	measureConnectorPath: () => null,
-	measureVisualBounds: () => null,
-	hitTest: () => [],
-	toSvgString: async () => "<svg></svg>",
-	getInteractionStatus: () => ({
-		drag: null,
-		isInertialScrolling: false,
-		editingTextId: null,
-		drawingShapeType: null,
-		modal: null,
-		isBusy: false,
-	}),
-	toWorld: () => null,
-	toClient: () => null,
-	...overrides,
-});
+import { createFakeHandleControl } from "./fakeHandleControl";
 
 describe("applyHandleOp", () => {
 	it("fails when no canvas is on screen", async () => {
@@ -393,6 +355,59 @@ describe("applyHandleOp (reading and writing the view)", () => {
 		expect(result.text).toContain("no extent");
 	});
 
+	it("fits the view around what the ids draw", async () => {
+		const measuredIds: unknown[] = [];
+		const receivedRects: unknown[] = [];
+		const result = await applyHandleOp(
+			{ kind: "fitView", ids: ["a", "b"] },
+			createFakeHandleControl({
+				measureVisualBounds: (ids) => {
+					measuredIds.push(ids);
+					return { x: 10, y: 20, width: 300, height: 100 };
+				},
+				fitViewToRect: (rect) => {
+					receivedRects.push(rect);
+					return { minX: 0, minY: -50, zoom: 2 };
+				},
+			}),
+		);
+
+		expect(measuredIds).toEqual([["a", "b"]]);
+		expect(receivedRects).toEqual([{ x: 10, y: 20, width: 300, height: 100 }]);
+		expect(result.ok).toBe(true);
+		expect(result.text).toContain('"a", "b"');
+		expect(result.text).toContain("(10, 20) 300 x 100 px");
+		expect(result.text).toContain("200% zoom");
+	});
+
+	it("fails on ids that draw nothing, and leaves the view alone", async () => {
+		let fitCount = 0;
+		const result = await applyHandleOp(
+			{ kind: "fitView", ids: ["missing"] },
+			createFakeHandleControl({
+				measureVisualBounds: () => null,
+				fitViewToRect: () => {
+					fitCount += 1;
+					return { minX: 0, minY: 0, zoom: 1 };
+				},
+			}),
+		);
+
+		expect(result.ok).toBe(false);
+		expect(result.text).toContain('nothing to frame at "missing"');
+		expect(fitCount).toBe(0);
+	});
+
+	it("refuses fitView given ids together with another region field", async () => {
+		const result = await applyHandleOp(
+			{ kind: "fitView", target: "selection", ids: ["a"] },
+			createFakeHandleControl(),
+		);
+
+		expect(result.ok).toBe(false);
+		expect(result.text).toContain("at most one of target, ids and rect");
+	});
+
 	it("refuses fitView given both a target and a rect, and given neither", async () => {
 		const handleControl = createFakeHandleControl();
 
@@ -407,7 +422,7 @@ describe("applyHandleOp (reading and writing the view)", () => {
 		const neither = await applyHandleOp({ kind: "fitView" }, handleControl);
 
 		expect(both.ok).toBe(false);
-		expect(both.text).toContain("not both");
+		expect(both.text).toContain("at most one of target, ids and rect");
 		expect(neither.ok).toBe(false);
 		expect(neither.text).toContain("nothing was given");
 	});

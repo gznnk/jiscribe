@@ -1,9 +1,9 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useRef } from "react";
 
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";

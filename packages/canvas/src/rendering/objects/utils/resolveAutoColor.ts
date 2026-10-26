@@ -1,7 +1,7 @@
 import { DEFAULT_FILL } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 
-import { theme } from "../../../theme/themeTokens";
+import { theme } from "../../../foundation/theme/themeTokens";
 
 /**
  * Render-time resolution of auto (theme-following) colors.

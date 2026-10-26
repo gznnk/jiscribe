@@ -1,15 +1,12 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
+import { createTestSnapshot } from "../../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
-import {
-	createDocSnapshotFromDoc,
-	resolveDocSnapshot,
-} from "../../../utils/resolveDocSnapshot";
 import { RedoCommand } from "../RedoCommand";
 
 const registries = createTestRegistries();
@@ -22,15 +19,16 @@ const docNext = {
 	version: 1,
 	root: [rect("r1"), rect("r2")],
 } as unknown as CanvasDoc;
-const snapshotPrev = createDocSnapshotFromDoc(docPrev);
-const snapshotNext = createDocSnapshotFromDoc(docNext);
+// The present entry, holding its Doc cache as one does after a save.
+const snapshotPrev = createTestSnapshot(docPrev, docPrev);
+const snapshotNext = createTestSnapshot(docNext);
 
 const makeState = (params: {
 	past: DocSnapshot[];
 	present: DocSnapshot;
 	future: DocSnapshot[];
-	activeDrag?: unknown;
-	textEditState?: unknown;
+	drag?: unknown;
+	mode?: unknown;
 	selection?: CanvasSelection;
 }): CanvasControllerState =>
 	({
@@ -39,6 +37,7 @@ const makeState = (params: {
 			present: params.present,
 			future: params.future,
 		},
+		objects: params.present.source.objects,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		scrollLimit: {
 			hostConfig: null,
@@ -46,8 +45,8 @@ const makeState = (params: {
 			measuredFrom: null,
 			measuredView: undefined,
 		},
-		activeDrag: params.activeDrag ?? null,
-		textEditState: params.textEditState ?? null,
+		drag: params.drag ?? null,
+		mode: params.mode ?? { kind: "normal" },
 		selection: params.selection ?? EMPTY_SELECTION,
 		multiSelectGroup: null,
 		internalClipboard: null,
@@ -65,14 +64,16 @@ describe("RedoCommand", () => {
 		});
 		const next = RedoCommand.execute(state, registries);
 
-		// docNext (r1, r2) is restored
+		// docNext (r1, r2) is restored, as the very state the entry holds
 		expect(Object.keys(next.objects).sort()).toEqual(["r1", "r2"]);
+		expect(next.objects).toBe(snapshotNext.source.objects);
 		expect(next.history.present).toBe(snapshotNext);
-		expect(
-			resolveDocSnapshot(next.history.present, registries.objectMapper),
-		).toBe(docNext);
-		// the advanced-from present is pushed onto past as-is (still a snapshot)
-		expect(next.history.past).toEqual([snapshotPrev]);
+		// the advanced-from present is pushed onto past without its Doc cache, as
+		// a new entry around the same state: the one being left is not written
+		expect(next.history.past).toHaveLength(1);
+		expect(next.history.past[0].source).toBe(snapshotPrev.source);
+		expect(next.history.past[0].doc).toBeNull();
+		expect(snapshotPrev.doc).toBe(docPrev);
 		expect(next.history.future).toEqual([]);
 	});
 
@@ -109,7 +110,13 @@ describe("RedoCommand", () => {
 			past: [],
 			present: snapshotPrev,
 			future: [snapshotNext],
-			activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+			drag: {
+				kind: "inert",
+				startSnapshot: { foo: 1 },
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
+			},
 		});
 		expect(RedoCommand.execute(state, registries)).toBe(state);
 	});
@@ -144,7 +151,13 @@ describe("RedoCommand", () => {
 						past: [],
 						present: snapshotPrev,
 						future: [snapshotNext],
-						activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+						drag: {
+							kind: "inert",
+							startSnapshot: { foo: 1 },
+							snapFeedback: null,
+							axisLockFeedback: null,
+							edgeScrollEnabled: false,
+						},
 					}),
 					registries,
 				),
@@ -158,7 +171,7 @@ describe("RedoCommand", () => {
 						past: [],
 						present: snapshotPrev,
 						future: [snapshotNext],
-						textEditState: { kind: "shape", text: "" },
+						mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 					}),
 					registries,
 				),

@@ -46,7 +46,7 @@ const canvasWith = (
 	({
 		objects: { [entity.id]: entity },
 		selection: { objectIds: [entity.id], part },
-		textEditState: null,
+		mode: { kind: "normal" },
 		objectMenuOpenId: null,
 		lastDuplicate: null,
 		commitVersion: 7,
@@ -96,7 +96,10 @@ describe("erEntity lane commands", () => {
 		expect(opened.selection.part).toEqual(
 			pickOf(TEXT_SLOT_PART_KIND, "col:0:type"),
 		);
-		expect(opened.textEditState).toEqual({ kind: "shape", text: "bigint" });
+		expect(opened.mode).toEqual({
+			kind: "textEdit",
+			draft: { kind: "shape", text: "bigint" },
+		});
 	});
 
 	it("leaves Delete over a lane pick to the built-in one, which empties the lane", () => {

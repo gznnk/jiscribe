@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { NORMAL_MODE } from "../../utils/normalMode";
 import { EMPTY_SELECTION } from "../CanvasSelection";
 
 /**
@@ -10,27 +11,22 @@ import { EMPTY_SELECTION } from "../CanvasSelection";
  * object is the sole selection, which `selection.objectIds` already covers.
  *
  * @param state - The current canvas controller state
- * @returns True when something is selected or open; false during an object drag
- *   (any drag other than area selection), where clearing would strand the drag
+ * @returns True when something is selected or open. A drag under way is not
+ *   asked about: handleCommand refuses both commands for its length
  */
-export const isSelectionClearable = (state: CanvasControllerState): boolean => {
-	if (state.activeDrag !== null && state.areaSelection === null) {
-		return false;
-	}
-	return (
-		state.selection.objectIds.length > 0 ||
-		state.areaSelection !== null ||
-		state.shapeDrawing !== null ||
-		state.stencilLibraryOpenCategory !== null
-	);
-};
+export const isSelectionClearable = (state: CanvasControllerState): boolean =>
+	state.selection.objectIds.length > 0 ||
+	state.mode.kind === "draw" ||
+	state.stencilLibraryOpenCategory !== null;
 
 /**
- * Drops the selection, along with the transient UI that hangs off one.
+ * Drops the selection, along with the transient UI that hangs off one, an armed
+ * drawing tool included.
  *
  * @param state - The current canvas controller state
  * @returns A new state with the selection fields cleared; every other field is
- *   carried over untouched
+ *   carried over untouched. An open text edit's `mode` is left for
+ *   reconcileSelection, which closes it once the selection it hangs off is gone
  */
 export const clearAllSelection = (
 	state: CanvasControllerState,
@@ -38,9 +34,7 @@ export const clearAllSelection = (
 	...state,
 	selection: EMPTY_SELECTION,
 	multiSelectGroup: null,
-	areaSelection: null,
 	objectMenuOpenId: null,
 	stencilLibraryOpenCategory: null,
-	edgeScrollEnabled: false,
-	shapeDrawing: null,
+	mode: state.mode.kind === "draw" ? NORMAL_MODE : state.mode,
 });

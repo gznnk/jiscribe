@@ -9,6 +9,7 @@ const makeState = (
 	objects: Record<string, { parentId?: string; type?: string }>,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: selectionOf(selectedIds),
 		objects,
 	}) as unknown as CanvasControllerState;

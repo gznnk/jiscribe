@@ -1,8 +1,8 @@
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { theme } from "../../../../foundation/theme/themeTokens";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
-import { theme } from "../../../../theme/themeTokens";
 import { SELECTION_OUTLINE_WIDTH } from "../utils/selectionOutline";
 
 type OutlineProps = {

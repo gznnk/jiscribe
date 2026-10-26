@@ -8,7 +8,7 @@
 import type { AiCanvasOpOutcome, AiHandleOp } from "@jiscribe/ai-tools";
 import { useEffect, useRef, useState } from "react";
 
-import { fetchSessionToken } from "./files";
+import { fetchSession } from "./files";
 import type { DocIdentity } from "./ownEcho";
 import type { CanvasHostClientMessage } from "../shared/canvasHostProtocol";
 import {
@@ -16,6 +16,7 @@ import {
 	isCanvasHostServerMessage,
 } from "../shared/canvasHostProtocol";
 import { SESSION_TOKEN_QUERY_PARAM } from "../shared/fileApiRoute";
+import type { SessionApiResponse } from "../shared/hostActionsRoute";
 
 /**
  * The reconnect interval. Coming back across a host restart is all it has to do, so
@@ -76,6 +77,18 @@ export type CanvasHostSocketOptions = {
 	) => Promise<AiCanvasOpOutcome>;
 };
 
+export type CanvasHostSocketState = {
+	/** Whether the socket is up, which is what the file label's badge shows */
+	isConnected: boolean;
+	/**
+	 * The session read on the last connect, null before the first: the token an
+	 * action request carries, and the actions the host's owner offers (what
+	 * ./HostMenu draws). Kept across a drop, so the menu stays while the page
+	 * reconnects; a request made meanwhile fails and says so
+	 */
+	hostSession: SessionApiResponse | null;
+};
+
 /**
  * Keeps this page attached to the canvas host for as long as it is mounted.
  *
@@ -83,10 +96,16 @@ export type CanvasHostSocketOptions = {
  *   (headless or a person's). The handlers are
  *   read at frame time, so they may be fresh objects on every render — the socket
  *   is not reconnected over them
- * @returns Whether the socket is up, which is what the file label's badge shows
+ * @returns Whether the socket is up, and the session the host announced on the
+ *   last connect (see CanvasHostSocketState)
  */
-export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
+export function useCanvasHostSocket(
+	options: CanvasHostSocketOptions,
+): CanvasHostSocketState {
 	const [isConnected, setIsConnected] = useState(false);
+	const [hostSession, setHostSession] = useState<SessionApiResponse | null>(
+		null,
+	);
 	// Read rather than closed over, so that the connection outlives the identity of
 	// the handlers
 	const optionsRef = useRef(options);
@@ -140,11 +159,11 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 		};
 
 		const connect = async (): Promise<void> => {
-			// The token is read again on every attempt rather than held on to: the
+			// The session is read again on every attempt rather than held on to: the
 			// host this page reconnects to is not necessarily the one it first met
-			let sessionToken: string;
+			let session: SessionApiResponse;
 			try {
-				sessionToken = await fetchSessionToken();
+				session = await fetchSession();
 			} catch {
 				if (!isDisposed) {
 					scheduleReconnect();
@@ -154,6 +173,8 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 			if (isDisposed) {
 				return;
 			}
+			setHostSession(session);
+			const sessionToken = session.token;
 			// The headless query goes on the socket as well as the page: it is how the
 			// host tells a window nobody can see from one a person is looking at
 			const openedSocket = new WebSocket(
@@ -252,5 +273,5 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 		};
 	}, []);
 
-	return isConnected;
+	return { isConnected, hostSession };
 }

@@ -6,11 +6,14 @@ import type { PolylineState } from "../../../../../../../states/objects/primitiv
 import { MIN_GROUP_DIMENSION } from "../../../../../../../states/utils/groupDimensions";
 import { transformFrameByGroup } from "../../../../../../behaviors/base/FrameTransform";
 import { transformPolyByGroup } from "../../../../../../behaviors/base/PolyTransform";
+import { createTestRegistries } from "../../../../../../registries/createCanvasRegistries";
 import { calcMultiSelectGroupBounds } from "../calcMultiSelectGroupBounds";
 import {
 	calcMultiSelectGroupBoundsFromCache,
 	createMultiSelectResizeBoundsCache,
 } from "../multiSelectResizeBoundsCache";
+
+const registries = createTestRegistries();
 
 const rect = (
 	id: string,
@@ -130,6 +133,7 @@ const expectBoundsMatchFullRecollection = (
 	const expected = calcMultiSelectGroupBounds(
 		selectedIds,
 		updatedObjects,
+		registries,
 		updatedGroup,
 	);
 	const cache = createMultiSelectResizeBoundsCache(
@@ -142,6 +146,7 @@ const expectBoundsMatchFullRecollection = (
 		updatedObjects,
 		startGroup,
 		updatedGroup,
+		registries,
 	);
 
 	expect(expected).not.toBeNull();
@@ -226,7 +231,13 @@ describe("createMultiSelectResizeBoundsCache", () => {
 		expect(cache.affineLocalExtents).toBeNull();
 		expect(cache.nonAffineLeafIds).toEqual([]);
 		expect(
-			calcMultiSelectGroupBoundsFromCache(cache, {}, startGroup, startGroup),
+			calcMultiSelectGroupBoundsFromCache(
+				cache,
+				{},
+				startGroup,
+				startGroup,
+				registries,
+			),
 		).toBeNull();
 	});
 });
@@ -400,6 +411,7 @@ describe("calcMultiSelectGroupBoundsFromCache", () => {
 			objects,
 			startGroup,
 			startGroup,
+			registries,
 		);
 
 		expect(bounds).not.toBeNull();

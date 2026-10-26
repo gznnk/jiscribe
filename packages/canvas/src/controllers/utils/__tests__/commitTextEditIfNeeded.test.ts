@@ -2,20 +2,21 @@ import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/Conne
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { describe, it, expect } from "vitest";
 
-import type { ConnectorLabelPlacement } from "../../../connectors/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { commitTextEditIfNeeded } from "../commitTextEditIfNeeded";
+import { readTextEditDraft } from "../readTextEditDraft";
 
 type MinState = Pick<
 	CanvasControllerState,
-	"textEditState" | "selection" | "objects" | "commitVersion"
+	"mode" | "selection" | "objects" | "commitVersion"
 >;
 
 const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 	({
-		textEditState: null,
+		mode: { kind: "normal" },
 		selection: { objectIds: [], part: null },
 		objects: {},
 		commitVersion: 0,
@@ -27,8 +28,8 @@ const shapeEdit = (
 	objectId: string,
 	slotId: string,
 	text: RichText,
-): Pick<MinState, "textEditState" | "selection"> => ({
-	textEditState: { kind: "shape", text },
+): Pick<MinState, "mode" | "selection"> => ({
+	mode: { kind: "textEdit", draft: { kind: "shape", text } },
 	selection: { objectIds: [objectId], part: textSlotPartSelection(slotId) },
 });
 
@@ -37,11 +38,14 @@ const labelEdit = (
 	connectorId: string,
 	text: string,
 	placement?: ConnectorLabelPlacement,
-): Pick<MinState, "textEditState" | "selection"> => ({
-	textEditState: {
-		kind: "connectorLabel",
-		text,
-		...(placement && { placement }),
+): Pick<MinState, "mode" | "selection"> => ({
+	mode: {
+		kind: "textEdit",
+		draft: {
+			kind: "connectorLabel",
+			text,
+			...(placement && { placement }),
+		},
 	},
 	selection: { objectIds: [connectorId], part: null },
 });
@@ -54,8 +58,8 @@ const readTextSlots = (state: CanvasControllerState, id: string): TextSlots =>
 	(state.objects[id] as unknown as { text: TextSlots }).text;
 
 describe("commitTextEditIfNeeded", () => {
-	it("textEditState is null -> returns the same reference", () => {
-		const state = makeState({ textEditState: null });
+	it("no session open -> returns the same reference", () => {
+		const state = makeState({ mode: { kind: "normal" } });
 		expect(commitTextEditIfNeeded(state)).toBe(state);
 	});
 
@@ -78,7 +82,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(() => commitTextEditIfNeeded(state)).toThrow(/no text slots/);
 	});
 
-	it("text unchanged -> clears textEditState but does not bump commitVersion", () => {
+	it("text unchanged -> closes the session but does not bump commitVersion", () => {
 		const obj = textObj("r1", { body: { text: "same text" } });
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
@@ -86,7 +90,7 @@ describe("commitTextEditIfNeeded", () => {
 			commitVersion: 5,
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
+		expect(readTextEditDraft(result)).toBeNull();
 		expect(result.commitVersion).toBe(5);
 	});
 
@@ -98,7 +102,7 @@ describe("commitTextEditIfNeeded", () => {
 			commitVersion: 3,
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
+		expect(readTextEditDraft(result)).toBeNull();
 		expect(result.commitVersion).toBe(4);
 		expect(readTextSlots(result, "r1")).toEqual({ body: { text: "new text" } });
 	});
@@ -171,7 +175,7 @@ describe("commitTextEditIfNeeded", () => {
 			commitVersion: 7,
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
+		expect(readTextEditDraft(result)).toBeNull();
 		expect(result.commitVersion).toBe(7);
 	});
 
@@ -187,7 +191,7 @@ describe("commitTextEditIfNeeded", () => {
 			commitVersion: 1,
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
+		expect(readTextEditDraft(result)).toBeNull();
 		expect(result.commitVersion).toBe(2);
 		const updated = result.objects["c1"] as unknown as {
 			label?: { text: string };
@@ -301,7 +305,7 @@ describe("commitTextEditIfNeeded", () => {
 	});
 
 	// ─── connector label placement (the pending placement of a label being created) ───
-	it("connector: a new label takes the pending placement from textEditState", () => {
+	it("connector: a new label takes the pending placement from the draft", () => {
 		const c = connectorObj("c1");
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
@@ -390,7 +394,7 @@ describe("commitTextEditIfNeeded", () => {
 			commitVersion: 7,
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
+		expect(readTextEditDraft(result)).toBeNull();
 		expect(result.commitVersion).toBe(7);
 	});
 
@@ -424,7 +428,7 @@ describe("commitTextEditIfNeeded", () => {
 			commitVersion: 2,
 		});
 		const result = commitTextEditIfNeeded(state);
-		expect(result.textEditState).toBeNull();
+		expect(readTextEditDraft(result)).toBeNull();
 		expect(result.commitVersion).toBe(3);
 		expect(readTextSlots(result, "r1")).toEqual({
 			label: { text: "edited", fontSize: 12 },

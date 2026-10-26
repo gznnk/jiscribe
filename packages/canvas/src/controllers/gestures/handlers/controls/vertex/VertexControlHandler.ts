@@ -7,9 +7,11 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { VERTEX_PART_KIND } from "../../../../selection/partKinds/vertexPartKind";
+import { claimDrag } from "../../../../utils/claimDrag";
 import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import { writeDragFeedback } from "../../../../utils/writeDragFeedback";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { applyAxisLock } from "../../utils/axisLock";
@@ -100,29 +102,26 @@ export class VertexControlHandler extends ControlStrategy {
 		state: CanvasControllerState,
 		objectId: string,
 	): CanvasControllerState {
-		const nextState: CanvasControllerState = {
-			...state,
-			selection: { ...state.selection, part: null },
-			edgeScrollEnabled: true,
-			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
-		};
-
-		const startSnapshot = state.activeDrag?.startSnapshot;
-		if (state.activeDrag && startSnapshot?.snapCandidates) {
-			nextState.activeDrag = {
-				...state.activeDrag,
-				startSnapshot: {
+		const startSnapshot = state.drag?.startSnapshot;
+		return claimDrag(
+			{
+				...state,
+				selection: { ...state.selection, part: null },
+				objectMenuOpenId: null,
+				stencilLibraryOpenCategory: null,
+			},
+			{ kind: "vertex" },
+			{
+				edgeScroll: true,
+				startSnapshot: startSnapshot?.snapCandidates && {
 					...startSnapshot,
 					snapCandidates: excludeCenterCandidates(
 						startSnapshot.snapCandidates,
 						objectId,
 					),
 				},
-			};
-		}
-
-		return nextState;
+			},
+		);
 	}
 
 	/**
@@ -134,7 +133,7 @@ export class VertexControlHandler extends ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		const dragStartSnapshot = state.drag?.startSnapshot;
 		if (!dragStartSnapshot) {
 			return state;
 		}
@@ -206,12 +205,10 @@ export class VertexControlHandler extends ControlStrategy {
 		const updatedObjects = createCowObjects(state.objects);
 		updatedObjects[objectId] = updatedObject;
 
-		return {
-			...state,
-			objects: updatedObjects,
-			snapFeedback,
-			axisLockFeedback: axisLock.feedback,
-		};
+		return writeDragFeedback(
+			{ ...state, objects: updatedObjects },
+			{ snapFeedback, axisLockFeedback: axisLock.feedback },
+		);
 	}
 
 	/**
@@ -223,14 +220,8 @@ export class VertexControlHandler extends ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		const closingState = { ...state, edgeScrollEnabled: false };
-		const draggedState = this.handleDrag(
-			closingState,
-			event,
-			objectId,
-			vertexIndex,
-		);
-		const committedState = commitEditIfChanged(closingState, draggedState);
+		const draggedState = this.handleDrag(state, event, objectId, vertexIndex);
+		const committedState = commitEditIfChanged(state, draggedState);
 		const parentId = committedState.objects[objectId]?.parentId;
 		return parentId
 			? updateGroupBoundsFromRoot(committedState, parentId)

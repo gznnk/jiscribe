@@ -1,3 +1,4 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import {
 	normalizeRichText,
 	richTextToPlain,
@@ -15,6 +16,7 @@ import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
 import { isSameCamera } from "../utils/isSameCamera";
+import { pruneMovePreview } from "../utils/pruneMovePreview";
 import { handlePaste } from "./handlers/handlePaste";
 import {
 	canApplyTransformProperty,
@@ -36,13 +38,18 @@ import {
 } from "../utils/applyDocumentProperty";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
+import { NORMAL_MODE } from "../utils/normalMode";
+import { readTextEditDraft } from "../utils/readTextEditDraft";
 import {
 	reconcileConnectorVertices,
 	reconcileConnectorVerticesIfCommitted,
 } from "../utils/reconcileConnectorVertices";
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
-import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
+import {
+	createDocSnapshotFromState,
+	dropDocCache,
+} from "../utils/resolveDocSnapshot";
 import {
 	canNavigateHistory,
 	restoreHistorySnapshot,
@@ -70,7 +77,10 @@ export const createCanvasReducer =
 					action.gestureHandling,
 				);
 				return recordHistoryIfNeeded(
-					settleTransition(gestureResult, state, registries),
+					pruneMovePreview(
+						settleTransition(gestureResult, state, registries),
+						gestureResult.objects,
+					),
 					state,
 				);
 			}
@@ -101,7 +111,11 @@ export const createCanvasReducer =
 
 			case "REVERT_HISTORY": {
 				const { past, present, future } = state.history;
-				const markIndex = past.findIndex((entry) => entry === action.entry);
+				// By source: an entry leaving present is replaced by a copy without its
+				// Doc cache, so the source is what stays the same (see DocSnapshot).
+				const markIndex = past.findIndex(
+					(entry) => entry.source === action.entry,
+				);
 				// Off the stack, or already the present one: either way there is
 				// nothing to undo back to (see RevertHistoryAction).
 				if (markIndex < 0 || !canNavigateHistory(state)) {
@@ -115,7 +129,11 @@ export const createCanvasReducer =
 					{
 						past: past.slice(0, markIndex),
 						present: past[markIndex],
-						future: [...past.slice(markIndex + 1), present, ...future],
+						future: [
+							...past.slice(markIndex + 1),
+							dropDocCache(present),
+							...future,
+						],
 					},
 					registries,
 				);
@@ -146,7 +164,12 @@ export const createCanvasReducer =
 					registries.objectContentResizer,
 					true,
 				);
-				return reconcileSelection(resizedResult, registries.objectPartKind);
+				// Mid-drag, a re-measured box is no longer the move's translation of
+				// its start state, so it has to be drawn from the state from now on.
+				return reconcileSelection(
+					pruneMovePreview(resizedResult, state.objects),
+					registries.objectPartKind,
+				);
 			}
 
 			case "CONTAINER_RESIZE": {
@@ -200,7 +223,7 @@ export const createCanvasReducer =
 				// (reconcileSelection). Otherwise a host restating the selection it just
 				// read would end typing it never asked about.
 				if (
-					state.textEditState &&
+					state.mode.kind === "textEdit" &&
 					selectedIds.length === state.selection.objectIds.length &&
 					selectedIds.every(
 						(id, index) => id === state.selection.objectIds[index],
@@ -209,7 +232,7 @@ export const createCanvasReducer =
 					return state;
 				}
 				// An open editing session belongs to the selection it sits on (see
-				// textEditState), so moving the selection ends the session rather than
+				// CanvasMode), so moving the selection ends the session rather than
 				// leaving it pointing at whatever was just selected. Committed, not
 				// discarded: the host asked for another selection, not for the typing
 				// to be thrown away.
@@ -222,12 +245,13 @@ export const createCanvasReducer =
 					multiSelectGroup: createMultiSelectGroup(
 						selectedIds,
 						committedResult.objects,
+						registries,
 						committedResult.multiSelectGroup,
 					),
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
 				};
-				if (!state.textEditState) {
+				if (state.mode.kind !== "textEdit") {
 					return selectedResult;
 				}
 				// The same tail the commit gets when Escape or a press ends it
@@ -248,7 +272,7 @@ export const createCanvasReducer =
 
 			case "STYLE_INTENT": {
 				// Style writes take two paths.
-				// (1) This case: dispatched from Canvas.tsx's onStyleIntent callback via React
+				// (1) This case: dispatched from usePropertyUpdaters' handleStyleIntent via React
 				//     onChange events — the ObjectMenu's number input and keyboard-driven slider and
 				//     the properties sidebar's callback-writing controls — none of which fires a
 				//     gesture.
@@ -424,9 +448,9 @@ export const createCanvasReducer =
 				// usable: the current present moves onto past and the edit becomes
 				// undoable like any local commit.
 				return reconcileSelection(
-					adoptDocumentState(state, action.payload, [
+					adoptDocumentState(state, action.payload, action.doc, [
 						...state.history.past,
-						state.history.present,
+						dropDocCache(state.history.present),
 					]),
 					registries.objectPartKind,
 				);
@@ -437,74 +461,82 @@ export const createCanvasReducer =
 				// them would restore the old contents under the new document's name
 				// (see LoadDocumentAction).
 				return reconcileSelection(
-					adoptDocumentState(state, action.payload, []),
+					adoptDocumentState(state, action.payload, action.doc, []),
 					registries.objectPartKind,
 				);
 			}
 
 			case "UPDATE_TEXT_EDIT": {
-				if (!state.textEditState) {
+				const draft = readTextEditDraft(state);
+				if (draft === null) {
 					return state;
 				}
 				// The editor reports the body as it reads back off its surface, styling
 				// included, so the draft holds exactly what is on screen; a connector
 				// label holds only a plain string.
-				if (state.textEditState.kind === "shape") {
-					return {
-						...state,
-						textEditState: {
-							...state.textEditState,
-							text: normalizeRichText(action.text),
-						},
-					};
-				}
 				return {
 					...state,
-					textEditState: {
-						...state.textEditState,
-						text: richTextToPlain(action.text),
+					mode: {
+						kind: "textEdit",
+						draft:
+							draft.kind === "shape"
+								? { ...draft, text: normalizeRichText(action.text) }
+								: { ...draft, text: richTextToPlain(action.text) },
 					},
 				};
 			}
 
 			case "UPDATE_TEXT_EDIT_SELECTION": {
-				if (state.textEditState?.kind !== "shape") {
+				const draft = readTextEditDraft(state);
+				if (draft?.kind !== "shape") {
 					return state;
 				}
 				return {
 					...state,
-					textEditState: {
-						...state.textEditState,
-						selection: action.selection,
+					mode: {
+						kind: "textEdit",
+						draft: { ...draft, selection: action.selection },
 					},
 				};
 			}
 
 			case "END_TEXT_EDIT": {
-				if (!state.textEditState) {
+				if (state.mode.kind !== "textEdit") {
 					return state;
 				}
 
 				if (action.commit) {
+					// Defensive: no current path reaches this mid-drag (the editor
+					// cancels through here, and commits through CommitTextEditCommand,
+					// which the drag gate refuses). Only a drag not on canvas content
+					// runs beside a session (see CanvasDrag), and a menu slider holds its
+					// uncommitted preview in the objects meanwhile, which a commit
+					// recorded then would put into the history as if it had been chosen.
+					if (state.drag !== null) {
+						return state;
+					}
 					return recordHistoryIfNeeded(
 						commitOpenTextEdit(state, registries),
 						state,
 					);
 				}
 
-				// On cancel, clear only textEditState
+				// On cancel, close only the session: nothing reaches the document
 				return {
 					...state,
-					textEditState: null,
+					mode: NORMAL_MODE,
 				};
 			}
 
 			case "STEP_TEXT_EDIT": {
-				if (state.textEditState?.kind !== "shape") {
+				// Refused mid-drag for the reason END_TEXT_EDIT's commit is. Defensive
+				// too: the steps it takes already find no slot order mid-drag
+				// (readSelectedTextSlotOrder).
+				if (readTextEditDraft(state)?.kind !== "shape" || state.drag !== null) {
 					return state;
 				}
 				// Committed before the selection moves: the draft is bound to the slot
-				// the selection names (see textEditState).
+				// the selection names (see CanvasMode).
 				const committedResult = commitOpenTextEdit(state, registries);
 				// Only the editor's Tab grows the object: Shift+Tab and the canvas Tab
 				// wrap at the last slot.
@@ -565,7 +597,7 @@ export const createCanvasReducer =
 			case "PASTE": {
 				// Paste is a command executed by callback, so it misses the mid-drag
 				// refusal in handleCommand and takes the same one here.
-				if (state.activeDrag !== null) {
+				if (state.drag !== null) {
 					return state;
 				}
 				const pasteResult = handlePaste(state, action.data, registries);
@@ -601,6 +633,10 @@ export const createCanvasReducer =
  * old objects is reset with them; the viewport alone survives, since it belongs
  * to the person looking rather than to the document.
  *
+ * @param payload - The state of `doc`
+ * @param doc - The document as the host passed it, held as the new entry's
+ *   `openedDoc`: saving or comparing the entry answers the host's own doc, not
+ *   a rebuild of it
  * @param past - The undo stack to keep, capped here at the newest 50 entries.
  *   The one thing the two actions disagree on: an external edit to the same
  *   document keeps the stack, another document drops it (pass `[]`)
@@ -608,6 +644,7 @@ export const createCanvasReducer =
 const adoptDocumentState = (
 	state: CanvasControllerState,
 	payload: CanvasState,
+	doc: CanvasDoc,
 	past: readonly DocSnapshot[],
 ): CanvasControllerState => ({
 	...state,
@@ -621,7 +658,7 @@ const adoptDocumentState = (
 	historyCoalesce: { recorded: null, pending: null },
 	history: {
 		past: past.slice(-50),
-		present: createDocSnapshotFromState(payload),
+		present: createDocSnapshotFromState(payload, doc),
 		// Cleared either way: a redo would reapply an edit that the incoming
 		// document knows nothing about.
 		future: [],
@@ -797,7 +834,7 @@ const recordHistoryIfNeeded = (
 
 	const past = canMerge
 		? state.history.past
-		: [...state.history.past, state.history.present].slice(-50);
+		: [...state.history.past, dropDocCache(state.history.present)].slice(-50);
 
 	return {
 		...state,

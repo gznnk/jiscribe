@@ -7,9 +7,9 @@ import {
 	listConnectorPathPoints,
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../../../connectors/endpoints";
-import { calcConnectorLabelAnchor } from "../../../../connectors/label/calcConnectorLabelAnchor";
-import type { ConnectorLabelPlacement } from "../../../../connectors/label/calcConnectorLabelPlacement";
+} from "../../../../rendering/objects/connector/geometry/endpoints";
+import { calcConnectorLabelAnchor } from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
@@ -205,7 +205,8 @@ function renderTextEditor(
 }
 
 type TextEditorLayerProps = {
-	textEditState: CanvasControllerState["textEditState"];
+	/** The canvas's `mode`; anything but a text edit draws no editor. */
+	mode: CanvasControllerState["mode"];
 	/** Who the session belongs to; the object and the slot are read off it (readOpenTextEdit). */
 	selection: CanvasControllerState["selection"];
 	objects: CanvasControllerState["objects"];
@@ -229,7 +230,7 @@ type TextEditorLayerProps = {
  * The render-side dispatcher that pairs with commitTextEditIfNeeded on the commit side.
  */
 const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
-	textEditState,
+	mode,
 	selection,
 	objects,
 	onTextChange,
@@ -242,10 +243,10 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 }) => {
 	const registries = useCanvasRegistries();
 
-	if (!textEditState) {
+	if (mode.kind !== "textEdit") {
 		return null;
 	}
-	const openEdit = readOpenTextEdit({ textEditState, selection, objects });
+	const openEdit = readOpenTextEdit({ mode, selection, objects });
 	if (openEdit === null) {
 		return null;
 	}

@@ -28,6 +28,7 @@ const line = (id: string, startArrow: string, endArrow: string): ObjectState =>
 
 const stateOf = (...shapes: ObjectState[]): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: selectionOf(shapes.map((shape) => shape.id)),
 		objectMenuOpenId: null,
 		objects: Object.fromEntries(shapes.map((shape) => [shape.id, shape])),

@@ -4,7 +4,10 @@
 		// Node built-ins (node:fs / node:module) are this package's own; the DOM lib
 		// comes from the base config and is here only because the canvas sources this
 		// package imports are compiled into the same program.
-		"types": ["node"]
+		"types": ["node"],
+		// Nothing here is JSX. @jiscribe/ai-tools (./canvas-tools) types its canvas
+		// tools against @jiscribe/canvas, whose .tsx sources then join the program.
+		"jsx": "react-jsx"
 	},
 	"include": ["src"]
 }

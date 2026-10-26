@@ -10,6 +10,7 @@ import {
 import { memo } from "react";
 
 import { GRIP_REACH } from "./tableGripMetrics";
+import { TableGripCell, TableGripHitArea } from "./TableGripStyled";
 import { readCachedTableLayout } from "../../layout/readCachedTableLayout";
 import type { TableState } from "../../state/TableState";
 import { calcSegmentPlacement } from "../shared/calcSegmentPlacement";
@@ -57,19 +58,15 @@ const TableCornerGripControlComponent: React.FC<
 
 	return (
 		<g transform={transform}>
-			<rect
+			<TableGripCell
 				x={-length / 2}
 				y={-thickness / 2}
 				width={length}
 				height={thickness}
 				strokeWidth={SELECTION_OUTLINE_WIDTH}
-				style={{
-					fill: theme.surface,
-					stroke: theme.borderSubtle,
-					pointerEvents: "none",
-				}}
+				style={{ fill: theme.surface, stroke: theme.borderSubtle }}
 			/>
-			<rect
+			<TableGripHitArea
 				x={-length / 2}
 				y={-thickness / 2}
 				width={length}
@@ -77,7 +74,6 @@ const TableCornerGripControlComponent: React.FC<
 				data-kind="control"
 				data-id={id}
 				data-action={action}
-				style={{ fill: "none", pointerEvents: "all", cursor: "pointer" }}
 			/>
 		</g>
 	);

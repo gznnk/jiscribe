@@ -13,7 +13,7 @@ import type React from "react";
 import { memo } from "react";
 
 import { StickyShadow } from "./StickyShadow";
-import { StickyBody } from "./StickyStyled";
+import { StickyBody, StickyRootGroup } from "./StickyStyled";
 import type { StickyState } from "../state/StickyState";
 
 type StickyProps = StickyState & TextEditable;
@@ -80,7 +80,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		.join(" ");
 
 	return (
-		<g data-kind="object" data-id={id} style={{ cursor: "grab" }}>
+		<StickyRootGroup data-kind="object" data-id={id}>
 			<StickyShadow
 				width={width}
 				height={height}
@@ -113,7 +113,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 				textDecoration={style.textDecoration}
 				isEditing={isEditing}
 			/>
-		</g>
+		</StickyRootGroup>
 	);
 };
 

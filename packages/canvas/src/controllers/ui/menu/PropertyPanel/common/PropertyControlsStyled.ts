@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../../theme/themeTokens";
+import { theme } from "../../../../../foundation/theme/themeTokens";
+import { swatchBackground } from "../../utils/swatchBackground";
 
 /** Height every control in the panel is drawn at, so rows line up. */
 const CONTROL_HEIGHT = "28px";
@@ -126,9 +127,9 @@ export const PropertyDropdownTrigger = styled.button`
 `;
 
 /**
- * Positioning context of a dropdown field, and the column its open panel is
- * stacked into: the panel drops into the flow rather than floating, so the
- * sidebar's scrolling body cannot clip it.
+ * A dropdown field's box in its row, stretching the trigger to the row's width.
+ * The open panel is not inside it but portalled to the sidebar's root (see
+ * PropertyDropdownField).
  */
 export const PropertyDropdownFieldRoot = styled.div`
 	flex: 1;
@@ -166,15 +167,6 @@ const SWATCH_BOX = `
 	border: 1px solid ${theme.borderSubtle};
 	border-radius: ${theme.radius};
 `;
-
-/**
- * What a swatch is painted with. `transparent` draws the checker instead, so an
- * unfilled shape is not mistaken for a white one.
- */
-const swatchBackground = (swatchColor: string): string =>
-	swatchColor === "transparent"
-		? `repeating-conic-gradient(${theme.transparentChecker} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
-		: swatchColor;
 
 /** The color a swatch shows. */
 export const PropertyColorSwatch = styled.span<{ swatchColor: string }>`

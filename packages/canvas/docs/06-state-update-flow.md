@@ -13,18 +13,18 @@ This "assemble the entire transition in one place" policy follows principle 3 of
 `CanvasAction` (`controllers/reducer/CanvasActions.ts`) is the union of every action the reducer accepts;
 what each action means is documented on its type in that file. The main actions and where they are delegated:
 
-| Action                      | Role                                                                            | Delegates to                                                                                                                                                        |
-| --------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GESTURE`                   | Gestures originating from pointer/wheel input                                   | `handleGesture` → [Gesture System](./04-gesture-system.md)                                                                                                          |
-| `COMMAND`                   | Commands from shortcuts/menus/toolbar (incl. undo/redo)                         | `handleCommand` → [Command System](./05-command-system.md)                                                                                                          |
-| `PASTE`                     | Applying clipboard data                                                         | `handlePaste`                                                                                                                                                       |
-| `STYLE_INTENT`              | One style edit stated by the ObjectMenu / properties sidebar (preview / commit) | `applyStyleIntent` → [Style System](./10-style-properties.md)                                                                                                       |
-| `TRANSFORM_PROPERTY_UPDATE` | Properties sidebar frame-number input (preview / commit)                        | `handleTransformPropertyUpdate` → the same resize / rotate utilities the transform drag uses                                                                        |
-| `DOCUMENT_PROPERTY_UPDATE`  | Properties sidebar Canvas section (preview / commit)                            | `applyDocumentProperty` — writes `state.background` or one part of `state.view` (normalized by `mergeViewDoc`); `null` drops the setting and the host decides again |
-| `META_PROPERTY_UPDATE`      | Properties sidebar input for an object's `meta` (preview / commit)              | `handleMetaPropertyUpdate`                                                                                                                                          |
-| `SYNC_EXTERNAL`             | Importing a doc from the external host                                          | → [External Sync](./07-external-sync.md)                                                                                                                            |
-| `LOAD_DOCUMENT`             | Loading another document (an import that drops history)                         | → [External Sync](./07-external-sync.md)                                                                                                                            |
-| `END_TEXT_EDIT`             | Committing / cancelling a text edit                                             | A commit goes to `commitTextEditIfNeeded`; a cancel just discards the edit state                                                                                    |
+| Action                      | Role                                                                            | Delegates to                                                                                                                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GESTURE`                   | Gestures originating from pointer/wheel input                                   | `handleGesture` → [Gesture System](./04-gesture-system.md)                                                                                                                                     |
+| `COMMAND`                   | Commands from shortcuts/menus/toolbar (incl. undo/redo)                         | `handleCommand` → [Command System](./05-command-system.md)                                                                                                                                     |
+| `PASTE`                     | Applying clipboard data                                                         | `handlePaste`                                                                                                                                                                                  |
+| `STYLE_INTENT`              | One style edit stated by the ObjectMenu / properties sidebar (preview / commit) | `applyStyleIntent` → [Style System](./10-style-properties.md)                                                                                                                                  |
+| `TRANSFORM_PROPERTY_UPDATE` | Properties sidebar frame-number input (preview / commit)                        | `handleTransformPropertyUpdate` → the same resize / rotate utilities the transform drag uses                                                                                                   |
+| `DOCUMENT_PROPERTY_UPDATE`  | Properties sidebar Canvas section (preview / commit)                            | `applyDocumentProperty` — writes one field of `state.meta`, `state.background` or one part of `state.view` (normalized by `mergeViewDoc`); `null` drops the setting and the host decides again |
+| `META_PROPERTY_UPDATE`      | Properties sidebar input for an object's `meta` (preview / commit)              | `handleMetaPropertyUpdate`                                                                                                                                                                     |
+| `SYNC_EXTERNAL`             | Importing a doc from the external host                                          | → [External Sync](./07-external-sync.md)                                                                                                                                                       |
+| `LOAD_DOCUMENT`             | Loading another document (an import that drops history)                         | → [External Sync](./07-external-sync.md)                                                                                                                                                       |
+| `END_TEXT_EDIT`             | Committing / cancelling a text edit                                             | A commit goes to `commitTextEditIfNeeded`; a cancel just discards the edit state                                                                                                               |
 
 Other actions only swap a piece of state inside the reducer, such as setting the camera or the selection, or
 updating the draft during a text edit. `UPDATE_TEXT_EDIT`, for instance, only replaces the draft; the commit into
@@ -62,6 +62,33 @@ fresh `nonce`; see [External Sync / VSCode Integration](./07-external-sync.md)).
 History lives in `state.history` (`past` / `present` / `future`). `past` is trimmed to
 the most recent 50 entries.
 
+### What an entry holds
+
+Each entry (`DocSnapshot`) holds the committed state itself (`source`: `objects`,
+`rootIds`, `background`, `view`, `opaqueObjects`), shared with the state that committed
+it rather than copied. Undo, redo and revert hand that `source` back as is
+(`restoreHistorySnapshot`), so an object the swap leaves alone keeps its identity: the
+per-object caches downstream (memoized renders, connector routes, text layout) still hit,
+and the settling passes after the swap compare by reference and only touch what changed.
+The camera's reveal (`calcViewportToRevealHistoryChange`) diffs the two entries' committed
+object maps by reference too, so boxes a re-measure renewed since do not read as changed.
+
+- **The Doc is a cache of the present entry only.** `resolveDocSnapshot` builds it on first
+  read (the save, the external-sync comparison) and memoizes it on the entry. An entry leaving
+  `present` is replaced by a copy without it (`dropDocCache`), never written to, so past and
+  future hold state only.
+- **An entry the host's doc created keeps that doc.** The initial entry and those
+  `SYNC_EXTERNAL` / `LOAD_DOCUMENT` create hold the host's doc verbatim (`openedDoc`) for
+  their whole life, so undoing back to one saves the host's own bytes, and an echo of them
+  is recognized as the same content.
+- **An entry's identity is its `source`.** Dropping the cache yields a new entry object, so
+  a history mark (`ref.current.history.mark()`) and `REVERT_HISTORY` pin the `source`.
+- **Font generation.** Each entry records the text measurement generation it was created
+  under. An entry restored after the generation moved on (a web font face finished loading)
+  has its content-sized boxes re-measured, as `REMEASURE_TEXT` does for the live state. A
+  resizer hands back the very object whose box did not move, so only the boxes the new faces
+  change become new objects.
+
 ## Coalescing Consecutive Operations
 
 To merge consecutive operations, such as repeated nudges with the arrow keys, into a
@@ -81,6 +108,8 @@ External changes are treated as history boundaries. Rather than going through
 setting the new doc as `present`), and `future` is cleared.
 UI state such as selection and in-progress operations is also explicitly reset (only the
 viewport is preserved).
+Objects the change leaves alone enter the new `present` as the same references (see
+[External Sync / VSCode Integration](./07-external-sync.md)).
 Fold-backs of the canvas's own save are filtered out before reaching the reducer, so every
 `SYNC_EXTERNAL` seen here is a genuine external change. For how fold-backs are identified, see
 [External Sync / VSCode Integration](./07-external-sync.md).

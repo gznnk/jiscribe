@@ -99,6 +99,26 @@ export const richTextLength = (rich: RichText): number =>
 		: rich.reduce((total, run) => total + run.text.length, 0);
 
 /**
+ * The largest type size anything in a body of text is drawn at.
+ *
+ * @param rich - The body to read; a plain string carries no size of its own
+ * @param baseFontSize - The size the slot draws with, in CSS px at zoom 1; a run
+ *   that sets no `fontSize` is drawn at it, and it is also the floor, so runs all
+ *   set smaller than the slot still answer `baseFontSize`
+ * @returns The larger of `baseFontSize` and every run's own `fontSize`
+ */
+export const richTextMaxFontSize = (
+	rich: RichText,
+	baseFontSize: number,
+): number =>
+	isString(rich)
+		? baseFontSize
+		: rich.reduce(
+				(maxFontSize, run) => Math.max(maxFontSize, run.fontSize ?? 0),
+				baseFontSize,
+			);
+
+/**
  * The run list form, for the interval arithmetic below. An empty text yields no
  * run at all, which is what keeps `[]` and `""` from being two different empties.
  */

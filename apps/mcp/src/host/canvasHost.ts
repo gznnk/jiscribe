@@ -59,7 +59,7 @@ export type {
 	ViewerCloseOutcome,
 } from "./canvasHostTypes";
 
-/** The port tried first. Kept apart from studio's 5180 */
+/** The port tried first; a taken port hands over to the next one up */
 const DEFAULT_PORT = 5190;
 
 /**
@@ -119,7 +119,8 @@ export async function startCanvasHost(
 	options: CanvasHostOptions,
 ): Promise<CanvasHost> {
 	const workspaceRoot = path.resolve(options.workspaceRoot);
-	const { viewerHtml, assetRootPath } = resolveViewerAssets();
+	const { viewerHtml, viewerScriptHashes, assetRootPath } =
+		resolveViewerAssets();
 
 	// One token per host, handed out at /api/session and demanded of every write and
 	// every WebSocket. A window left over from the host that served another
@@ -129,10 +130,12 @@ export async function startCanvasHost(
 	const server = createViewerHttpServer({
 		workspaceRoot,
 		viewerHtml,
+		viewerScriptHashes,
 		assetRootPath,
 		sessionToken,
 		writeOpenFile: (relPath, body, ifMatch) =>
 			fileMirror.writeOpenFile(relPath, body, ifMatch),
+		hostActions: options.hostActions,
 	});
 	const port = await listenOnAvailablePort(
 		server,

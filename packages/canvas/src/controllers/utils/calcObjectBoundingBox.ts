@@ -3,6 +3,7 @@ import {
 	calcBoundingBox,
 	calcPolyBoundingBox,
 	isTransformedFrame,
+	unionBoundingBoxes,
 } from "@jiscribe/geometry";
 import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 
@@ -56,9 +57,13 @@ const unionVisualBounds = (
  * @param visualExtentRegistries - Per-canvas registries measuring what is drawn:
  *   a frame shape's box widened by what it draws outside its geometry (an actor's
  *   label, say), a connector's path resolved as the renderer routes it. Pass them
- *   only from the visual-extent consumers (zoom-to-fit, export viewBox, culling,
- *   menu placement); omitting them yields the geometry box, which is what
- *   selection, snapping and group bounds must keep using
+ *   from the visual-extent consumers (zoom-to-fit, export viewBox, culling, menu
+ *   placement). Omitted, a frame keeps its geometry box but a connector's path is
+ *   not the drawn route (see calcConnectorBoundingBox). Of the bundle, only
+ *   `objectVisualBounds` must stay out of a geometry-box consumer; as this takes
+ *   the bundle whole, such a consumer resolves connectors through
+ *   ConnectorRouteRegistries instead — the multi-select frame takes its extent
+ *   from collectObjectPoints that way
  * @returns The bounding box, or null when the object has no valid extent
  *   (unresolvable connector, group without valid children, empty poly, unknown kind)
  */
@@ -113,33 +118,12 @@ export function calcObjectsBoundingBox(
 	objects: Record<string, ObjectState>,
 	visualExtentRegistries?: VisualExtentRegistries | null,
 ): BoundingBox | null {
-	let left = Infinity;
-	let top = Infinity;
-	let right = -Infinity;
-	let bottom = -Infinity;
-	let hasValidObject = false;
-
+	const bboxes: (BoundingBox | null)[] = [];
 	for (const id of ids) {
 		const obj = objects[id];
-		if (!obj) {
-			continue;
+		if (obj) {
+			bboxes.push(calcObjectBoundingBox(obj, objects, visualExtentRegistries));
 		}
-
-		const bbox = calcObjectBoundingBox(obj, objects, visualExtentRegistries);
-		if (!bbox) {
-			continue;
-		}
-
-		left = Math.min(left, bbox.left);
-		top = Math.min(top, bbox.top);
-		right = Math.max(right, bbox.right);
-		bottom = Math.max(bottom, bbox.bottom);
-		hasValidObject = true;
 	}
-
-	if (!hasValidObject) {
-		return null;
-	}
-
-	return { left, top, right, bottom };
+	return unionBoundingBoxes(bboxes);
 }

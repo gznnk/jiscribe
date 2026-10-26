@@ -2,6 +2,7 @@ import { determineClickSelection } from "./determineClickSelection";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Mods } from "../../gestures/registry/ObjectBehaviorTypes";
+import type { ConnectorRouteRegistries } from "../../utils/VisualExtentRegistries";
 import { createMultiSelectGroup } from "../readers/createMultiSelectGroup";
 
 /**
@@ -15,6 +16,8 @@ import { createMultiSelectGroup } from "../readers/createMultiSelectGroup";
  *   from canvasState.objects, not a detached copy
  * @param mods - Keyboard modifiers handed to determineClickSelection; ctrl / meta /
  *   shift make the selection additive
+ * @param registries - Per-canvas registries the multi-select frame resolves a
+ *   selected connector's drawn route through (see createMultiSelectGroup)
  * @returns The state with the new selection, or canvasState itself when
  *   determineClickSelection reports no change (an already-selected target)
  */
@@ -22,6 +25,7 @@ export function selectObjectByClick(
 	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	mods: Mods,
+	registries: ConnectorRouteRegistries,
 ): CanvasControllerState {
 	// Determine the new selection via hierarchical selection logic
 	const selectedIds = determineClickSelection(targetObject, canvasState, mods);
@@ -37,6 +41,7 @@ export function selectObjectByClick(
 		multiSelectGroup = createMultiSelectGroup(
 			selectedIds,
 			canvasState.objects,
+			registries,
 			canvasState.multiSelectGroup,
 		);
 	}

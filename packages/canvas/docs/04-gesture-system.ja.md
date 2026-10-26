@@ -35,6 +35,11 @@
   オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
 - **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
   毎フレーム以上の状態更新が走らないようにする（[設計思想](./01-design-philosophy.ja.md) の性能優先）。
+  1 フレーム分のジェスチャー（イベントのバッチ、または慣性スクロールの 1 フレーム）は `flushSync` の中で
+  dispatch する（recognizer の `wrapFrameDispatch`）。これでそのフレームの描画前にコミットされ、1 フレーム遅れない。
+  ただし予算を超えるフレームが続いたら（重い文書）コミットを React のスケジューラへ戻し、1 フレームの遅れと
+  引き換えにフレームレートを保つ。その間も一定フレームごとに同期コミットを試して収まれば戻り、フレームが閾値より
+  長く途切れたときも同期コミットへ戻る（閾値は `createAdaptiveFrameCommit` の定数）。
 - **2本指ピンチ（タッチ）**: 1本目のタッチがドラッグ確定する前に2本目の pointerdown が来ると、
   保留中の press を破棄してピンチモードに入る。`pinch` は `zoomScale`（指間距離比）と
   `scrollDelta`（中点移動）を載せ、1フレーム1発火に集約される（`settleBatch`）。
@@ -85,29 +90,47 @@
 | `menu/`     | メニュー系 UI（ツールバー・コンテキストメニュー・ObjectMenu・プロパティパネル・図形ライブラリなど） | `MenuEventHandler.ts`（ルーター。サブハンドラの正本は同ファイルの `MENU_HANDLERS`）, `ToolbarHandler.ts`, `ObjectMenuHandler.ts`, `PropertyPanelHandler.ts` ほか |
 | `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動・ラベル移動・線分移動）                          | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`（ルーター。サブハンドラの正本は同ファイルの `CONNECTOR_HANDLERS`）, `ConnectorClickHandler.ts` ほか          |
 
-`handleGesture` は `dragStart` で state の `activeDrag`（型は `controllers/CanvasTypes.ts` の `ActiveDrag`）を開き、
-`dragEnd` で `null` に戻す。`activeDrag.startSnapshot` は操作開始時の objects / keyPoints /
-snapCandidates 等で、ドラッグ中の計算はこれを基準にする。
+キャンバスが何の最中かは `CanvasControllerState`（`controllers/CanvasTypes.ts`）の 2 軸で持つ。
+`mode`（`CanvasMode`）はドラッグをまたいで続くもので、`"normal"`・`"textEdit"`（開いている編集の下書き）・
+`"draw"`（StencilLibrary から構えた描画ツール）のいずれか 1 つ。テキスト編集と描画待機は同時に立たない。
+`drag`（`CanvasDrag`）はドラッグ 1 回分で、`handleGesture` が `dragStart` で開き `dragEnd` で `null` に戻す。
+`drag.startSnapshot` は操作開始時の objects / keyPoints / snapCandidates 等で、ドラッグ中の計算はこれを基準にする。
+ドラッグ単位のもの（スナップと軸ロックのガイド、端スクロールの可否、範囲選択の矩形、引き出し中のコネクター、
+StencilLibrary から運ぶプリセット、描画中の範囲）もすべて `drag` に載るので、締めで `drag` を落とせば全部終わる。
+
+2 軸をまたぐ規則が 1 つあり、型ではなく各ハンドラが守る: 図形に触れるドラッグは、開いているテキスト編集と
+並走しない。キャンバスの内容を変えうるジェスチャーを扱うハンドラが、先に `commitTextEditIntoDragSnapshot` で編集を確定する。
+どのハンドラがどのイベントで確定するかの一覧は、この関数の JSDoc が唯一の正本。`dragStart` での確定は
+ドラッグの最初のフレームより前に入り、スナップショットは `handleGesture` がルーティング前に凍結していて
+各フレームはそこから組み直されるので、確定したテキストはスナップショットにも書き込む。編集を残すドラッグ
+（背景の 1 本指タッチによるパンと、StencilLibrary の項目以外のメニュー上のドラッグ）は、経路上のどのハンドラも
+確定を呼ばないもの。編集を残したドラッグの間、reducer は doc に書き込むテキスト編集アクション
+（確定する `END_TEXT_EDIT` と `STEP_TEXT_EDIT`）も拒む。今の経路では届かない防御的なガードで、
+メニューのスライダーがドラッグ中に objects へ書いている未確定のプレビュー値を、そこで記録した履歴が
+確定値として残してしまうのを防ぐ。描画ドラッグの間 `mode` は `"draw"` のままで、その `dragEnd` で解除される。
 
 ジェスチャーの締めは `dragEnd` / `click` / `doubleClick`（`EVENT_CLOSE_OUT_TYPES`）で、いずれも COW の
-objects ビューを平坦化し、ドラッグ用の記録を落とす。締めは `commitVersion` を進めない。進めるのは
+objects ビューを平坦化し、`drag` を落とす。締めは `commitVersion` を進めない。進めるのは
 doc を編集したハンドラ自身で、編集が完結するイベントで進める（`commitEdit`。[状態更新フロー](./06-state-update-flow.ja.md) 参照）。
 ドラッグの書き手は自分の `dragEnd` で、click で完結する編集（スタイルのスウォッチ、click で置くステンシル）は
 その click で進める。click が締めに含まれるのはそれ自体が 1 つのジェスチャーだからで、スウォッチが書き込む
 COW ビューは履歴と永続化に届く前に平坦化される。
 
-`activeDrag.kind`（`DragKind`）はそのドラッグが何をしているかを表す。`handleGesture` が全ドラッグを
-`"other"` で開くので、`activeDrag !== null` は常に「ドラッグ中」を意味する。区別が必要なハンドラは
-自分の `dragStart` で kind を上書きする（例: `ObjectEventHandler` が `"move"`、`TransformControlHandler` が
-`"transform"`）。UI はこれを見て、移動中は変形フレームを、移動中と変形中は接続アンカー・頂点ハンドル・
-型固有のセレクションコントロールを隠す（`controllers/ui/utils/isObjectBeingMovedOrTransformed.ts`）。
-それらのコントロール自身のドラッグは `"other"` のままなので隠れない。
+`drag.kind`（`DragKind`）はそのドラッグが何をしているかを表す。`handleGesture` が全ドラッグを
+`"inert"` で開くので、`drag !== null` は常に「ドラッグ中」を意味する。ドラッグを受けたハンドラが自分の
+`dragStart` で `claimDrag` を通して名付ける（例: `ObjectEventHandler` の `"move"`、`CanvasEventHandler` の
+`"marquee"`。全種類は `DragKind`、種類ごとに持つものは `CanvasDragDetail`）。どのハンドラも
+受けないドラッグは `"inert"` のまま。コントロール層は軸ごとに 1 つの prop を、読むものだけ受け取る。
+`mode` からの `isTextEditing` と、`drag` を `"move"` / `"transform"` に絞った `selectionDragKind`
+（`controllers/ui/utils/readSelectionDragKind.ts`）である。テキスト編集中は変形フレーム・接続アンカー・型固有のセレクションコントロールが隠れ、移動中は変形フレームを、
+移動中と変形中は接続アンカー・頂点ハンドル・型固有のセレクションコントロールを隠す。
+それらのコントロール自身のドラッグは別の kind なので隠れない。
 ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のドロップダウンが開いている間
 （`objectMenuOpenId !== null`）はスライダーを使えるようにドラッグ中でも隠さない
 （`controllers/ui/menu/ObjectMenu/hooks/useObjectMenuPosition.ts`）。
 
 滑走側の対になるのが `inertialScrolling` で、あえて別フィールドにしている。滑走中はポインタが下りて
-おらずドラッグも開いていないため、`activeDrag` に混ぜると `dragStart` / `dragEnd` で対になって開閉する
+おらずドラッグも開いていないため、`drag` に混ぜると `dragStart` / `dragEnd` で対になって開閉する
 という性質が崩れる。読む側の例: ObjectMenu は直前のパンと同じように滑走中も隠れ、
 `resolveInteractionStatus`（`controllers/handles/useInteractionHandle.ts`）は `isInertialScrolling` と
 `isBusy` に反映する。別々の状態である以上、パン→滑走・滑走→次のパンの受け渡しにはどちらも false になる隙間が1フレーム
@@ -181,7 +204,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 ラベルボックスのドラッグは経路上の移動（`label.position` / `label.offset`）になり、
 線から `SNAP_THRESHOLD_PX` 以内に落とすと `offset` は 0 に吸着する（Ctrl 押下で解除）。
 ラベルが無いときは線のダブルクリックがクリック点（経路へ射影し同じ吸着をかけた位置）に
-ラベルを作る。確定するまでは `textEditState` が保持し、コネクターには書き込まない。
+ラベルを作る。確定するまでは `"textEdit"` モードの下書きが保持し、コネクターには書き込まない。
 複数スロットを持つ図形は入れ子の形を使う: 例えば UML の `record`
 （`plugins/uml-shapes/src/presentation/RecordBox.tsx`）の `<g data-kind="object">` は、その箱が持つ
 区画ごとの矩形を包み、各区画にそのスロットの部品住所を `data-part` として付ける

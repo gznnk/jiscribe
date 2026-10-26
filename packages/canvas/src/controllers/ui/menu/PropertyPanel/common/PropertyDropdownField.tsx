@@ -14,15 +14,21 @@ import {
 	PropertyDropdownTrigger,
 	PropertyMixedLabel,
 } from "./PropertyControlsStyled";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { ChevronDownIcon } from "../../../icons/ChevronDownIcon";
 import { ObjectMenuDropdownPanel } from "../../ObjectMenu/common/ObjectMenuDropdownPanel";
 import { PropertyPanelOverlayHostContext } from "../PropertyPanelOverlayHostContext";
 
 const CHEVRON_SIZE = 12;
 
-/** Space (px) kept between the trigger and the panel, and between the panel and the host's bottom edge. */
+/**
+ * Space (px) the panel keeps from the trigger and from the sidebar's edges: its
+ * bottom and sides when under the trigger, its bottom and left when beside it.
+ */
 const PANEL_GAP = 4;
+
+/** Where a field's panel opens (see PropertyDropdownFieldProps.placement). */
+type PropertyDropdownPlacement = "under" | "beside";
 
 type PropertyDropdownFieldProps = {
 	/** Drawn on the closed trigger: a swatch, a preview, the current value's name. */
@@ -40,18 +46,90 @@ type PropertyDropdownFieldProps = {
 	mixedPreview?: React.ReactNode;
 	/** title / aria-label of the trigger. */
 	title: string;
+	/**
+	 * Where the panel opens. `"under"` (default): under the trigger inside the
+	 * sidebar, never wider than the sidebar. `"beside"`: outside the sidebar to
+	 * its left, over the canvas, its top level with the trigger's and as wide as
+	 * its content; for a panel too wide for the sidebar. When the canvas row left
+	 * of the sidebar (shape library included) is narrower than the panel, it
+	 * opens `"under"` instead, decided afresh on every opening.
+	 */
+	placement?: PropertyDropdownPlacement;
 	/** The panel's content. Mounted only while open, so its own effects do not run closed. */
 	children: React.ReactNode;
 };
 
+/** Vertical extent (sidebar px) of the trigger and the open panel, and the sidebar's height. */
+type PanelVerticalMetrics = {
+	triggerTop: number;
+	triggerBottom: number;
+	panelHeight: number;
+	hostHeight: number;
+};
+
+/**
+ * Top of a panel opened under the trigger: under it, above it when it would run
+ * past the sidebar's bottom, and pinned to that bottom when it fits neither way.
+ */
+function calcPanelTopUnderTrigger({
+	triggerTop,
+	triggerBottom,
+	panelHeight,
+	hostHeight,
+}: PanelVerticalMetrics): number {
+	const topUnderTrigger = triggerBottom + PANEL_GAP;
+	const topAboveTrigger = triggerTop - PANEL_GAP - panelHeight;
+	const topAtHostBottom = hostHeight - panelHeight - PANEL_GAP;
+	if (topUnderTrigger <= topAtHostBottom) {
+		return topUnderTrigger;
+	}
+	if (topAboveTrigger >= 0) {
+		return topAboveTrigger;
+	}
+	return Math.max(0, topAtHostBottom);
+}
+
+/**
+ * Top of a panel opened beside the sidebar: level with the trigger, raised as far
+ * as it must be to end above the sidebar's bottom, but never above its top.
+ */
+function calcPanelTopBesideTrigger({
+	triggerTop,
+	panelHeight,
+	hostHeight,
+}: PanelVerticalMetrics): number {
+	return Math.max(
+		0,
+		Math.min(triggerTop, hostHeight - panelHeight - PANEL_GAP),
+	);
+}
+
+/** Inline style placing the panel for a placement; `top` is measured, the rest is fixed. */
+function buildPanelStyle(
+	placement: PropertyDropdownPlacement,
+	top: number,
+): React.CSSProperties {
+	if (placement === "beside") {
+		// Overrides the centring the dropdown panel draws itself with.
+		return {
+			top,
+			left: "auto",
+			right: `calc(100% + ${PANEL_GAP}px)`,
+			transform: "none",
+			width: "max-content",
+		};
+	}
+	return { top, maxWidth: `calc(100% - ${PANEL_GAP * 2}px)` };
+}
+
 /**
  * A control whose choices are too many for a row: a trigger showing what is set,
- * and a panel of choices floating over the rows under it.
+ * and a panel of choices floating over the rows under it, or beside the sidebar
+ * (see `placement`).
  *
  * The panel is portalled to the sidebar's root (see
- * PropertyPanelOverlayHostContext) and placed under the trigger by measurement,
- * above it when it would run past the sidebar's bottom, and pinned to that
- * bottom when it fits neither way. Open state is this
+ * PropertyPanelOverlayHostContext) and placed by measurement before it is
+ * painted. Open state is this
  * field's own — no handler or command reads it, and it goes with the panel when
  * the sidebar closes. A press inside the panel writes through the gesture system
  * and leaves it open, so several choices can be tried in a row; a press anywhere
@@ -62,6 +140,7 @@ const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 	isMixed = false,
 	mixedPreview,
 	title,
+	placement = "under",
 	children,
 }) => {
 	const messages = useCanvasMessages();
@@ -69,6 +148,10 @@ const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 	const triggerRef = useRef<HTMLButtonElement>(null);
 	const panelRef = useRef<HTMLDivElement>(null);
 	const [isOpen, setIsOpen] = useState(false);
+	// What the panel is drawn with: `placement`, until a measurement finds no room
+	// beside the sidebar. Reset on every open, so a wider canvas gets it back.
+	const [openedPlacement, setOpenedPlacement] =
+		useState<PropertyDropdownPlacement>(placement);
 	const [panelTop, setPanelTop] = useState(0);
 
 	useLayoutEffect(() => {
@@ -83,20 +166,29 @@ const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 		// the two differ by whatever scale a host has transformed the canvas with,
 		// which the sidebar's on-screen height over its layout height gives back.
 		const scale = hostRect.height / overlayHost.offsetHeight || 1;
-		const panelHeight = panel.offsetHeight;
-		const triggerTop = (triggerRect.top - hostRect.top) / scale;
-		const triggerBottom = (triggerRect.bottom - hostRect.top) / scale;
-		const topUnderTrigger = triggerBottom + PANEL_GAP;
-		const topAboveTrigger = triggerTop - PANEL_GAP - panelHeight;
-		const topAtHostBottom = overlayHost.offsetHeight - panelHeight - PANEL_GAP;
-		if (topUnderTrigger <= topAtHostBottom) {
-			setPanelTop(topUnderTrigger);
-		} else if (topAboveTrigger >= 0) {
-			setPanelTop(topAboveTrigger);
-		} else {
-			setPanelTop(Math.max(0, topAtHostBottom));
+		if (openedPlacement === "beside") {
+			// The row the sidebar sits in is what the canvas clips the panel to.
+			const rowLeft =
+				overlayHost.parentElement?.getBoundingClientRect().left ??
+				hostRect.left;
+			const roomBeside = (hostRect.left - rowLeft) / scale;
+			if (panel.offsetWidth + PANEL_GAP > roomBeside) {
+				setOpenedPlacement("under");
+				return;
+			}
 		}
-	}, [isOpen, overlayHost]);
+		const metrics: PanelVerticalMetrics = {
+			triggerTop: (triggerRect.top - hostRect.top) / scale,
+			triggerBottom: (triggerRect.bottom - hostRect.top) / scale,
+			panelHeight: panel.offsetHeight,
+			hostHeight: overlayHost.offsetHeight,
+		};
+		setPanelTop(
+			openedPlacement === "beside"
+				? calcPanelTopBesideTrigger(metrics)
+				: calcPanelTopUnderTrigger(metrics),
+		);
+	}, [isOpen, overlayHost, openedPlacement]);
 
 	useEffect(() => {
 		if (!isOpen) {
@@ -157,7 +249,12 @@ const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 				title={title}
 				aria-label={title}
 				data-gesture="none"
-				onClick={() => setIsOpen((open) => !open)}
+				onClick={() => {
+					if (!isOpen) {
+						setOpenedPlacement(placement);
+					}
+					setIsOpen(!isOpen);
+				}}
 			>
 				{isMixed
 					? (mixedPreview ?? (
@@ -173,7 +270,10 @@ const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 			{isOpen &&
 				overlayHost &&
 				createPortal(
-					<ObjectMenuDropdownPanel ref={panelRef} style={{ top: panelTop }}>
+					<ObjectMenuDropdownPanel
+						ref={panelRef}
+						style={buildPanelStyle(openedPlacement, panelTop)}
+					>
 						{children}
 					</ObjectMenuDropdownPanel>,
 					overlayHost,

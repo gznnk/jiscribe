@@ -1,4 +1,5 @@
 import type { ViewDoc } from "./ViewDoc";
+import type { MetaDoc } from "../objects/base/MetaDoc";
 import type { ObjectDoc } from "../objects/base/ObjectDoc";
 import { exhaustiveKeysOf } from "../objects/utils/exhaustiveKeys";
 
@@ -25,10 +26,17 @@ export type CanvasDocV1 = {
 	 * path (`canvasToDoc`) drops it, because CanvasState has no place to hold it and
 	 * reintroducing a persisted schema pointer only re-creates the confusion the removal
 	 * was meant to end. So "edit a `$schema` file and the line disappears on save" is
-	 * intended behavior, not a bug. `isSameCanvasDocContent` likewise ignores it.
+	 * intended behavior, not a bug. The canvas's external-sync comparison likewise ignores it.
 	 */
 	$schema?: string;
 	version: 1;
+	/**
+	 * The document's own note — its name and what it is about — in the same
+	 * record an object carries (see {@link MetaDoc}). Nothing is drawn from it;
+	 * an image export writes the name and description as the SVG's `<title>` /
+	 * `<desc>`. Omitted when the document states none.
+	 */
+	meta?: MetaDoc;
 	/**
 	 * Canvas surface color as a literal CSS color string (like shape `fill`, a
 	 * concrete color — not a `var(...)` — so the file stays portable). Omit to
@@ -56,6 +64,7 @@ export type CanvasDocV1 = {
 export const CANVAS_DOC_KEYS = exhaustiveKeysOf<CanvasDocV1>()([
 	"$schema",
 	"version",
+	"meta",
 	"background",
 	"view",
 	"root",

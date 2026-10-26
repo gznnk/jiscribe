@@ -8,7 +8,7 @@ import type {
 	ObjectContentResizeContext,
 	ResizedAxes,
 } from "../../../states/registry/ObjectContentResizerRegistry";
-import type { ActiveDrag, CanvasControllerState } from "../../CanvasTypes";
+import type { CanvasControllerState, CanvasDrag } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import {
 	collectCowChangedKeys,
@@ -439,19 +439,19 @@ describe("reconcileObjectContentSizes", () => {
 
 	describe("the axes a transform-handle drag writes", () => {
 		const bottomEdge: ResizedAxes = { height: "start" };
-		const dragOf = (kind: ActiveDrag["kind"], axes?: ResizedAxes): ActiveDrag =>
+		const dragOf = (kind: CanvasDrag["kind"], axes?: ResizedAxes): CanvasDrag =>
 			({
 				startSnapshot: {},
 				kind,
 				...(axes && {
 					resize: { axes, frame: { rotation: 0, scaleX: 1, scaleY: 1 } },
 				}),
-			}) as unknown as ActiveDrag;
+			}) as unknown as CanvasDrag;
 
 		/** Reconciles a text whose content changed, returning the context the resizer saw. */
 		const contextSeen = (
-			activeDrag: ActiveDrag | null,
-			previousActiveDrag: ActiveDrag | null,
+			drag: CanvasDrag | null,
+			previousDrag: CanvasDrag | null,
 		): ObjectContentResizeContext | undefined => {
 			const registry = createObjectContentResizerRegistry();
 			let seen: ObjectContentResizeContext | undefined;
@@ -460,9 +460,9 @@ describe("reconcileObjectContentSizes", () => {
 				return state;
 			});
 			reconcileObjectContentSizes(
-				stateOf([textObject("t1", "hello world")], { activeDrag }),
+				stateOf([textObject("t1", "hello world")], { drag }),
 				stateOf([textObject("t1", "hello")], {
-					activeDrag: previousActiveDrag,
+					drag: previousDrag,
 				}),
 				registry,
 			);
@@ -495,10 +495,10 @@ describe("reconcileObjectContentSizes", () => {
 
 			reconcileObjectContentSizes(
 				stateOf([untouched, textObject("t2", "hello world")], {
-					activeDrag: drag,
+					drag,
 				}),
 				stateOf([untouched, textObject("t2", "hello")], {
-					activeDrag: drag,
+					drag,
 				}),
 				registry,
 			);
@@ -538,10 +538,10 @@ describe("reconcileObjectContentSizes", () => {
 				axes: { height: "start" },
 				frame: { rotation: 0, scaleX: 1, scaleY: 1 },
 			},
-		} as unknown as ActiveDrag;
+		} as unknown as CanvasDrag;
 
 		/** Whether the resizer ran when only the height moved, under the given drag. */
-		const remeasures = (activeDrag: ActiveDrag | null): boolean => {
+		const remeasures = (drag: CanvasDrag | null): boolean => {
 			const registry = createObjectContentResizerRegistry();
 			let calls = 0;
 			registry.register("box", (state) => {
@@ -549,8 +549,8 @@ describe("reconcileObjectContentSizes", () => {
 				return state;
 			});
 			reconcileObjectContentSizes(
-				stateOf([boxOf("box", 140)], { activeDrag }),
-				stateOf([boxOf("box", 100)], { activeDrag }),
+				stateOf([boxOf("box", 140)], { drag }),
+				stateOf([boxOf("box", 100)], { drag }),
 				registry,
 			);
 			return calls > 0;
@@ -572,7 +572,7 @@ describe("reconcileObjectContentSizes", () => {
 					axes: { height: "start" },
 					frame: { rotation: 90, scaleX: 1, scaleY: 1 },
 				},
-			} as unknown as ActiveDrag;
+			} as unknown as CanvasDrag;
 
 			expect(remeasures(turnedFrameDrag)).toBe(false);
 		});

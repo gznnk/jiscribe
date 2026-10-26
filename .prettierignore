@@ -39,6 +39,9 @@ playwright-report/
 apps/vscode-extension/out/
 apps/vscode-extension/.vscode-test/
 
+# electron-vite の出力と、そこへ staging した mcp のビューア（apps/desktop）
+apps/desktop/out/
+
 # Claude Code local settings
 .claude/settings.local.json
 

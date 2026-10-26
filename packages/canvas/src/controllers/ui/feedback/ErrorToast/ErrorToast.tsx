@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Toast } from "./ErrorToastStyled";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import type { ErrorNotification } from "../../../hooks/useErrorNotification";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 const DISPLAY_DURATION_MS = 4000;
 

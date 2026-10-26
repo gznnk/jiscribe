@@ -1,0 +1,217 @@
+import type { CanvasMessages } from "./CanvasMessagesTypes";
+import { jaCanvasMessages } from "./jaCanvasMessages";
+import {
+	resolveLocaleMessages,
+	type LocaleMessages,
+} from "./resolveLocaleMessages";
+
+/** English defaults. Hosts override parts of this via the `messages` prop of Canvas. */
+export const defaultCanvasMessages: CanvasMessages = {
+	toolbarZoomOut: "Zoom out",
+	toolbarResetZoom: "Reset zoom to 100%",
+	toolbarZoomIn: "Zoom in",
+	toolbarStencilLibrary: "Shape library",
+	toolbarPropertyPanel: "Properties",
+
+	stencilLibraryTitle: "Shape library",
+	stencilLibraryClose: "Close",
+	stencilLibrarySearchPlaceholder: "Search shapes",
+	stencilLibraryNoMatch: "No matching shapes",
+	stencilLibraryMoreMatches: "More matches than shown; refine the search",
+	stencilLibraryMoreViaSearch: "Find more shapes",
+
+	propertyPanelTitle: "Properties",
+	propertyPanelClose: "Close",
+	propertyPanelMixed: "Mixed",
+	propertyPanelMixedPlaceholder: "—",
+	propertyPanelStepUp: "Increase",
+	propertyPanelStepDown: "Decrease",
+	propertyPanelSectionCanvas: "Canvas",
+	propertyPanelSectionLayout: "Layout",
+	propertyPanelSectionFill: "Fill",
+	propertyPanelSectionLine: "Line",
+	propertyPanelSectionStroke: "Border",
+	propertyPanelSectionArrow: "Arrows",
+	propertyPanelSectionText: "Text",
+	propertyPanelSectionLabel: "Label",
+	propertyPanelSectionLabelBorder: "Label border",
+	propertyPanelSectionArrange: "Arrange",
+	propertyPanelSectionMeta: "Meta",
+	propertyPanelRowBackground: "Background",
+	propertyPanelRowPadding: "Padding",
+	propertyPanelFieldPaddingTop: "Top padding",
+	propertyPanelFieldPaddingRight: "Right padding",
+	propertyPanelFieldPaddingBottom: "Bottom padding",
+	propertyPanelFieldPaddingLeft: "Left padding",
+	propertyPanelRowViewOpen: "Initial view",
+	propertyPanelViewOpenNone: "None",
+	propertyPanelViewOpenNoneTitle: "Leave it to the host",
+	propertyPanelViewOpenFitWidth: "Width",
+	propertyPanelViewOpenFitWidthTitle: "Fit width",
+	propertyPanelViewOpenFitAll: "All",
+	propertyPanelViewOpenFitAllTitle: "Fit all",
+	propertyPanelViewScrollContent: "Limit scrolling to the content",
+	propertyPanelRowColor: "Color",
+	propertyPanelRowWidth: "Width",
+	propertyPanelRowType: "Type",
+	propertyPanelRowOpacity: "Opacity",
+	propertyPanelRowRadius: "Radius",
+	propertyPanelRowSize: "Size",
+	propertyPanelRowPosition: "Position",
+	propertyPanelRowRotation: "Rotation",
+	propertyPanelRowStyle: "Style",
+	propertyPanelRowHorizontal: "Horizontal",
+	propertyPanelRowVertical: "Vertical",
+	propertyPanelRowTextBasis: "Text box",
+	propertyPanelRowRouting: "Routing",
+	propertyPanelRowName: "Name",
+	propertyPanelRowDescription: "Description",
+	propertyPanelTextBasisRegion: "Shape area",
+	propertyPanelTextBasisFrame: "Full height",
+	propertyPanelFieldX: "X position",
+	propertyPanelFieldY: "Y position",
+	propertyPanelFieldWidth: "Width",
+	propertyPanelFieldHeight: "Height",
+	propertyPanelFieldRotation: "Rotation",
+
+	exportDialogTitle: "Export Image",
+	exportDialogScope: "Scope",
+	exportDialogScopeAll: "Whole drawing",
+	exportDialogScopeSelection: "Selection",
+	exportDialogFormat: "Format",
+	exportDialogFormatPng: "PNG",
+	exportDialogFormatSvg: "SVG",
+	exportDialogMargin: "Margin",
+	exportDialogIncludeSource: "Include source data (re-editable)",
+	exportDialogTransparentBackground: "Transparent background",
+	exportDialogSubmit: "Export",
+	exportDialogCancel: "Cancel",
+	exportDialogClose: "Close",
+
+	shortcutHelpTitle: "Keyboard Shortcuts",
+	shortcutHelpClose: "Close",
+	shortcutHelpCategoryEdit: "Edit",
+	shortcutHelpCategorySelection: "Selection",
+	shortcutHelpCategoryArrange: "Arrange",
+	shortcutHelpCategoryView: "View",
+
+	clipboardWriteError:
+		"Failed to write to the clipboard. Paste inside the app is still available.",
+	exportImageError: "Failed to export the image.",
+
+	colorPickerAuto: "Auto",
+	colorPickerAutoTitle: "Auto (follows theme)",
+	colorPickerCssColorPlaceholder: "CSS color",
+
+	menuTextAlignment: "Text Alignment",
+	menuAlignLeft: "Left",
+	menuAlignCenter: "Center",
+	menuAlignRight: "Right",
+	menuAlignTop: "Top",
+	menuAlignMiddle: "Middle",
+	menuAlignBottom: "Bottom",
+	menuBold: "Bold",
+	menuItalic: "Italic",
+	menuUnderline: "Underline",
+	menuStrikethrough: "Strikethrough",
+	menuFontSize: "Font Size",
+	menuFontFamily: "Font",
+	fontFamilySans: "Sans",
+	fontFamilySerif: "Serif",
+	fontFamilyMono: "Mono",
+	fontFamilyHand: "Hand",
+	menuFontColor: "Font Color",
+	menuBackgroundColor: "Background Color",
+	menuStrokeColor: "Stroke Color",
+	menuLineColor: "Line Color",
+	menuLineStyle: "Line Style",
+	menuLineWidth: "Line Width",
+	menuBorderStyle: "Border Style",
+	menuBorderWidth: "Border Width",
+	menuFillOpacity: "Fill Opacity",
+	menuBorderOpacity: "Border Opacity",
+	menuCornerRadius: "Corner Radius",
+	menuSolidLine: "Solid line",
+	menuDashedLine: "Dashed line",
+	menuDottedLine: "Dotted line",
+	menuLockAspectRatio: "Lock Aspect Ratio",
+	menuUnlockAspectRatio: "Unlock Aspect Ratio",
+	menuAutoHeight: "Fit Height to Text",
+	menuFixedHeight: "Stop Fitting Height to Text",
+	menuTextBasisFrame: "Align Text to Full Height",
+	menuTextBasisRegion: "Align Text to Shape Area",
+	menuWrapTextInWidth: "Wrap Text in Fixed Width",
+	menuFitWidthToText: "Fit Width to Text",
+	menuConnectorRouting: "Connector Routing",
+	menuRoutingOrthogonal: "Orthogonal",
+	menuRoutingStraight: "Straight",
+	menuStartArrow: "Start Arrow",
+	menuEndArrow: "End Arrow",
+	menuSwapArrows: "Swap arrows",
+	menuLabelBold: "Label Bold",
+	menuLabelFontSize: "Label Font Size",
+	menuLabelFontFamily: "Label Font",
+	menuLabelFontColor: "Label Font Color",
+	menuLabelBackgroundColor: "Label Background Color",
+	menuLabelBorderColor: "Label Border Color",
+	menuLabelBorderStyle: "Label Border Style",
+	menuOpenReference: "Open Reference",
+	menuPropertyPanel: "Properties",
+
+	commandLabels: {},
+	stencilLabels: {},
+	stencilCategoryLabels: {},
+	colorNames: {},
+	arrowTypeNames: {},
+};
+
+/** Built-in dictionaries the canvas resolves from `locale` on its own. */
+const builtinCanvasMessagesByLocale: LocaleMessages<CanvasMessages> = {
+	en: defaultCanvasMessages,
+	ja: jaCanvasMessages,
+};
+
+/**
+ * Resolves the effective messages for a locale, then layers the host's
+ * overrides on top.
+ *
+ * Flat keys: English defaults ← built-in locale dictionary ← overrides. Record
+ * fields are merged key by key, built-in locale record ← overrides record, so an
+ * entry the host leaves out keeps the built-in wording.
+ *
+ * @param locale - BCP-47-ish tag picking the built-in dictionary (`"ja-JP"`
+ * falls back to `"ja"`, then to `"en"`).
+ * @param overrides - The host's own strings, any subset; a record field passed
+ * here is merged into the resolved one, not substituted for it.
+ */
+export const resolveCanvasMessages = (
+	locale: string,
+	overrides?: Partial<CanvasMessages>,
+): CanvasMessages => {
+	const localized = resolveLocaleMessages(
+		builtinCanvasMessagesByLocale,
+		locale,
+	);
+	return {
+		...defaultCanvasMessages,
+		...localized,
+		...overrides,
+		commandLabels: {
+			...localized.commandLabels,
+			...overrides?.commandLabels,
+		},
+		stencilLabels: {
+			...localized.stencilLabels,
+			...overrides?.stencilLabels,
+		},
+		stencilCategoryLabels: {
+			...localized.stencilCategoryLabels,
+			...overrides?.stencilCategoryLabels,
+		},
+		colorNames: { ...localized.colorNames, ...overrides?.colorNames },
+		arrowTypeNames: {
+			...localized.arrowTypeNames,
+			...overrides?.arrowTypeNames,
+		},
+	};
+};

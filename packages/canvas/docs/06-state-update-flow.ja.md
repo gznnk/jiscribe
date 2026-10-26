@@ -54,6 +54,33 @@
 
 履歴は `state.history`（`past` / `present` / `future`）。`past` は直近 50 件に丸める。
 
+### エントリが持つもの
+
+各エントリ（`DocSnapshot`）はコミットされた状態そのもの（`source`: `objects` / `rootIds` /
+`background` / `view` / `opaqueObjects`）を、コピーせずコミットした状態と共有して持つ。
+undo / redo / revert はその `source` をそのまま戻す（`restoreHistorySnapshot`）ので、
+入れ替えで変わらないオブジェクトは同一性を保つ。下流のオブジェクト単位のキャッシュ
+（メモ化した描画・コネクターの経路・テキストのレイアウト）はヒットし続け、入れ替え後の
+整合パスも参照で比較して変わったものだけに手を入れる。カメラの追従
+（`calcViewportToRevealHistoryChange`）も 2 つのエントリがコミットしたオブジェクトマップを参照で
+比べるので、その後の再計測で新しくなった箱は変更と読まれない。
+
+- **Doc は present のエントリだけが持つキャッシュ。**`resolveDocSnapshot` が最初の読み出し
+  （保存・外部同期の比較）で組み立ててエントリにメモ化する。`present` を離れるエントリは
+  書き換えず、キャッシュを外した複製（`dropDocCache`）に置き換えるので、past と future は
+  状態だけを持つ。
+- **ホストの文書から作ったエントリはその文書を持ち続ける。**初期エントリと、
+  `SYNC_EXTERNAL` / `LOAD_DOCUMENT` が作るエントリは、ホストの文書をそのまま（`openedDoc`）
+  生涯持つので、そこまで undo すればホストのバイト列そのものが保存され、そのエコーも同じ
+  内容と認識される。
+- **エントリの同一性は `source` で決まる。**キャッシュを外すとエントリのオブジェクトは
+  新しくなるので、履歴のマーク（`ref.current.history.mark()`）と `REVERT_HISTORY` は
+  `source` を指す。
+- **フォントの世代。**各エントリは作られたときのテキスト計測の世代を記録する。世代が
+  進んだ後（Web フォントのフェイスの読み込み完了後）に戻すエントリは、内容から決まる箱を
+  `REMEASURE_TEXT` が live の状態にするのと同じく測り直す。箱が動かなかったオブジェクトは
+  リサイザーが同じオブジェクトを返すので、新しいフェイスで変わる箱だけが新しいオブジェクトになる。
+
 ## 連続操作の集約（coalescing）
 
 矢印キーによる連続ナッジのような操作を 1 つの undo エントリにまとめるため、
@@ -70,6 +97,7 @@
 外部からの変更は履歴の境界として扱う。`recordHistoryIfNeeded` を通さずに
 `past` を直接積み（`present` を `past` に移して新 doc を `present` に）、`future` をクリアする。
 あわせて選択・進行中の操作など UI state も明示的にリセットする（viewport のみ維持）。
+変更が触れないオブジェクトは同じ参照のまま新しい `present` に入る（[外部同期・VSCode 連携](./07-external-sync.ja.md) 参照）。
 自分の保存の折り返し（fold-back）は reducer に届く前に除外されるため、ここに来る `SYNC_EXTERNAL` は
 常に本物の外部変更である。折り返しの識別方法は [外部同期・VSCode 連携](./07-external-sync.ja.md) を参照。
 

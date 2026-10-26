@@ -5,7 +5,6 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
@@ -18,14 +17,14 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
  * depending on whether a label exists:
  * - No committed label: a double click anywhere on the line starts editing
  *   (there is no label box to aim at yet), and the label being created takes the
- *   clicked point as its placement (carried in textEditState until committed).
+ *   clicked point as its placement (carried in the textEdit mode until committed).
  * - Committed label: only a double click on the label box (targetAction "label")
  *   starts editing; a double click on the bare line just selects.
  *
  * While editing, the static label box is not rendered and the editor overlay
  * (data-gesture="none") sits in its place, so any click that reaches this handler
- * is outside the editor and commits the pending edit like any other outside click
- * (deferred for a touch press — see commitTextEditUnlessTouchPress).
+ * is outside the editor, and ConnectorEventHandler has committed the pending
+ * edit before routing it here, like any other outside click.
  */
 export const ConnectorClickHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -48,7 +47,7 @@ export const ConnectorClickHandler: GestureHandler = {
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		const connectorId = event.targetId;
-		let nextState = commitTextEditUnlessTouchPress(state, event);
+		let nextState = state;
 
 		// A double click selects the connector, and starts label editing when it
 		// hits the edit target (see the doc comment above).

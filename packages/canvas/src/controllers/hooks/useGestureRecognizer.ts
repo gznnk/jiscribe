@@ -1,5 +1,6 @@
 import type React from "react";
 import { type Dispatch, useEffect, useMemo, useRef } from "react";
+import { flushSync } from "react-dom";
 
 import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -10,6 +11,11 @@ import type {
 	PointerEventHandlers,
 } from "../gestures/recognizer/GestureRecognizerTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
+import { createAdaptiveFrameCommit } from "./utils/createAdaptiveFrameCommit";
+
+// Module scope: react-hooks/purity rejects reading the clock inside a component body,
+// even in a closure that only runs later from the recognizer's frame callback.
+const readFrameClock = (): number => performance.now();
 
 export type UseGestureRecognizerParams = {
 	dispatch: Dispatch<CanvasAction>;
@@ -32,6 +38,8 @@ export type UseGestureRecognizerReturn = {
 	 * Dispatches the gestures of the pointer events still queued for the next frame,
 	 * synchronously (see GestureRecognizer.processPendingBatch); a no-op when none are
 	 * queued. For input that dispatches outside the recognizer and must land after them.
+	 * Not wrapped in `flushSync`: call it inside your own `flushSync` when the following
+	 * code reads state those gestures change.
 	 */
 	processPendingGestures: () => void;
 };
@@ -96,6 +104,13 @@ export const useGestureRecognizer = ({
 			// stopping dead: those are exactly the drags CanvasEventHandler pans with, wherever
 			// they land. The same test excludes touch pans, which arrive as button 0.
 			shouldFlingFromDrag: (button) => button === 1 || button === 2,
+			// Commit each frame's gestures before that frame paints; on React 19's
+			// default lane the commit would land after the paint, one frame late.
+			// Heavy documents fall back to the default lane to keep the frame rate.
+			wrapFrameDispatch: createAdaptiveFrameCommit({
+				commitSynchronously: flushSync,
+				now: readFrameClock,
+			}),
 		});
 	}
 

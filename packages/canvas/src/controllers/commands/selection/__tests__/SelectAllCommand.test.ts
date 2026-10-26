@@ -28,6 +28,7 @@ const makeState = (params: {
 	objects: Record<string, ObjectState>;
 }): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		rootIds: params.rootIds,
 		objects: params.objects,
 		selection: selectionOf(["stale"], vertexPartSelection(0)),

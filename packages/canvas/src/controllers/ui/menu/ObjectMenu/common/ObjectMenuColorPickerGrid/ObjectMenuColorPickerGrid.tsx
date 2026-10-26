@@ -12,8 +12,8 @@ import {
 	ColorSwatch,
 	ColorTextInput,
 } from "./ObjectMenuColorPickerGridStyled";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import { setAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { toStyleIntent } from "../../../../../style/intent/toStyleIntent";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 import type { StyleIntentUpdater } from "../../ObjectMenuTypes";

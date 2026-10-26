@@ -1,17 +1,19 @@
 import type { ReactNode, RefObject } from "react";
 
 import { CanvasViewportElementRefContext } from "./CanvasViewportElementRefContext";
-import { CanvasLocaleContext } from "./messages/CanvasLocaleContext";
-import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
-import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { CanvasRegistries } from "./registries";
 import { CanvasRegistriesContext } from "./registries/CanvasRegistriesContext";
+import { CanvasLocaleContext } from "../foundation/i18n/CanvasLocaleContext";
+import { CanvasMessagesContext } from "../foundation/i18n/CanvasMessagesContext";
+import type { CanvasMessages } from "../foundation/i18n/CanvasMessagesTypes";
+import type { CanvasTheme } from "../foundation/theme/CanvasTheme";
+import { CanvasThemeContext } from "../foundation/theme/CanvasThemeContext";
+import type { CanvasZoomStore } from "../rendering/objects/CanvasZoomStoreContext";
+import { CanvasZoomStoreContext } from "../rendering/objects/CanvasZoomStoreContext";
 import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import type { ResolvedImageLookup } from "../rendering/objects/ResolvedImagesContext";
 import { ResolvedImagesContext } from "../rendering/objects/ResolvedImagesContext";
-import type { CanvasTheme } from "../theme/CanvasTheme";
-import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 
 type CanvasProvidersProps = {
 	theme: CanvasTheme;
@@ -20,6 +22,8 @@ type CanvasProvidersProps = {
 	registries: CanvasRegistries;
 	/** The counter from `useDocFonts`, handed to the render-time measurement sites. */
 	fontsNonce: number;
+	/** The store from `useCanvasZoomStore`, handed to the text overlays. */
+	zoomStore: CanvasZoomStore;
 	/** The lookup from `useDocImages`, handed to the image shapes. */
 	lookupResolvedImage: ResolvedImageLookup;
 	viewportElementRef: RefObject<HTMLDivElement | null>;
@@ -29,7 +33,7 @@ type CanvasProvidersProps = {
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, locale,
  * messages, the registry bundle, its rendering registries, the
- * fonts-loaded counter, the resolved images, and the viewport element ref) into one node, so
+ * fonts-loaded counter, the zoom store, the resolved images, and the viewport element ref) into one node, so
  * Canvas.tsx renders its tree without the deep provider nesting.
  */
 export function CanvasProviders({
@@ -38,6 +42,7 @@ export function CanvasProviders({
 	messages,
 	registries,
 	fontsNonce,
+	zoomStore,
 	lookupResolvedImage,
 	viewportElementRef,
 	children,
@@ -60,11 +65,13 @@ export function CanvasProviders({
 							objectSvgDefs={registries.objectSvgDefs}
 						>
 							<FontsLoadedNonceContext value={fontsNonce}>
-								<ResolvedImagesContext value={lookupResolvedImage}>
-									<CanvasViewportElementRefContext value={viewportElementRef}>
-										{children}
-									</CanvasViewportElementRefContext>
-								</ResolvedImagesContext>
+								<CanvasZoomStoreContext value={zoomStore}>
+									<ResolvedImagesContext value={lookupResolvedImage}>
+										<CanvasViewportElementRefContext value={viewportElementRef}>
+											{children}
+										</CanvasViewportElementRefContext>
+									</ResolvedImagesContext>
+								</CanvasZoomStoreContext>
 							</FontsLoadedNonceContext>
 						</RenderingRegistriesProvider>
 					</CanvasRegistriesContext>

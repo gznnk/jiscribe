@@ -14,6 +14,12 @@ import {
 export type ObjectSnapshot = {
 	id: string | null;
 	tag: string;
+	/**
+	 * Where the element is drawn: its own transform with the shift of the wrapper
+	 * `<g>` around it folded in, which a move drag puts there while the element
+	 * stays drawn from where the drag started (MovePreview). Null when neither
+	 * carries one.
+	 */
 	transform: string | null;
 	fill: string | null;
 	stroke: string | null;
@@ -148,10 +154,41 @@ export class CanvasDriver {
 						// must be read from computed style (#38 / theme following). Values
 						// are browser-normalized rgb(...).
 						const style = getComputedStyle(el);
+						// Same walk as connectorPoints: only the per-object wrapper carries a
+						// bare translate; a shape's own groups carry matrix(...).
+						let shiftX = 0;
+						let shiftY = 0;
+						for (
+							let ancestor = el.parentElement;
+							ancestor !== null;
+							ancestor = ancestor.parentElement
+						) {
+							const shift =
+								ancestor.getAttribute("data-canvas-export") === "flatten"
+									? /^translate\(([^ ,)]+)[ ,]+([^ ,)]+)\)$/.exec(
+											ancestor.getAttribute("transform") ?? "",
+										)
+									: null;
+							if (shift) {
+								shiftX += Number(shift[1]);
+								shiftY += Number(shift[2]);
+							}
+						}
+						const ownTransform = el.getAttribute("transform");
+						const ownMatrix =
+							/^matrix\(([^,]+), ([^,]+), ([^,]+), ([^,]+), ([^,]+), ([^)]+)\)$/.exec(
+								ownTransform ?? "",
+							);
+						let transform = ownTransform;
+						if (shiftX !== 0 || shiftY !== 0) {
+							transform = ownMatrix
+								? `matrix(${ownMatrix.slice(1, 5).join(", ")}, ${Number(ownMatrix[5]) + shiftX}, ${Number(ownMatrix[6]) + shiftY})`
+								: `translate(${shiftX} ${shiftY})${ownTransform === null ? "" : ` ${ownTransform}`}`;
+						}
 						return {
 							id: el.getAttribute("data-id"),
 							tag: el.tagName.toLowerCase(),
-							transform: el.getAttribute("transform"),
+							transform,
 							fill: style.fill,
 							stroke: style.stroke,
 						};
@@ -398,15 +435,14 @@ export class CanvasDriver {
 				[...document.querySelectorAll(controlSelector)]
 					.map((el) => {
 						const id = el.getAttribute("data-id");
+						if (id === null) {
+							return null;
+						}
 						// Vertex handles address a model part; every other control
 						// carries an action.
 						const marker =
 							el.getAttribute("data-action") ?? el.getAttribute("data-part");
-						return id === null
-							? null
-							: marker === null
-								? id
-								: `${id}/${marker}`;
+						return marker === null ? id : `${id}/${marker}`;
 					})
 					.filter((descriptor): descriptor is string => descriptor !== null),
 			selectors.control,
@@ -444,9 +480,9 @@ export class CanvasDriver {
 
 		await this.page.click(selectors.toolButton(tool));
 
-		// Clicking the tool sets drawing mode (state.shapeDrawing), but that is an async React
+		// Clicking the tool sets drawing mode (state.mode "draw"), but that is an async React
 		// update: dragging the canvas before it arms leaves CanvasEventHandler seeing
-		// shapeDrawing=null, giving area selection instead of drawing. An armed tool button
+		// no armed tool, giving area selection instead of drawing. An armed tool button
 		// takes cursor: crosshair (grab when not armed), so wait on that before dragging.
 		await expect
 			.poll(
@@ -651,8 +687,10 @@ export class CanvasDriver {
 	 * GestureRecognizer batches pointer input into one requestAnimationFrame run, while
 	 * keyboard shortcuts are handled synchronously on keydown. A keystroke sent right after
 	 * a click therefore reaches the canvas first: Enter opens the text editor, and the
-	 * click's batch a frame later reselects the shape and closes it again. Two frames,
-	 * because the batch runs in the first and React commits its update before the second.
+	 * click's batch a frame later reselects the shape and closes it again. Two frames:
+	 * the batch commits inside the first (useGestureRecognizer wraps it in flushSync),
+	 * and the second covers the fallback where a heavy document hands the commit back to
+	 * React's scheduler.
 	 *
 	 * Not a timed wait — it rests on the frame boundary the recognizer schedules against.
 	 * A click that changes the DOM is followed by an assertion on that change; this covers
@@ -1458,7 +1496,8 @@ export class CanvasDriver {
 
 	/**
 	 * A connector's drawn vertices, parsed from the `points` attribute of the
-	 * element carrying its data-id. Content coordinates, which equal world
+	 * element carrying its data-id and shifted by the wrapper `<g>` a move drag
+	 * puts around it (MovePreview). Content coordinates, which equal world
 	 * coordinates at zoom 1.
 	 *
 	 * @param id - The connector's data-id
@@ -1468,16 +1507,37 @@ export class CanvasDriver {
 	 *   is not a connector (or a polyline)
 	 */
 	async connectorPoints(id: string): Promise<Array<{ x: number; y: number }>> {
-		const attr = await this.objectById(id).getAttribute("points");
-		if (!attr) {
+		const drawn = await this.objectById(id).evaluate((el) => {
+			// Same walk as captureObjects.
+			let shiftX = 0;
+			let shiftY = 0;
+			for (
+				let ancestor = el.parentElement;
+				ancestor !== null;
+				ancestor = ancestor.parentElement
+			) {
+				const shift =
+					ancestor.getAttribute("data-canvas-export") === "flatten"
+						? /^translate\(([^ ,)]+)[ ,]+([^ ,)]+)\)$/.exec(
+								ancestor.getAttribute("transform") ?? "",
+							)
+						: null;
+				if (shift) {
+					shiftX += Number(shift[1]);
+					shiftY += Number(shift[2]);
+				}
+			}
+			return { points: el.getAttribute("points"), shiftX, shiftY };
+		});
+		if (!drawn.points) {
 			throw new Error(`${id} has no points attribute`);
 		}
-		return attr
+		return drawn.points
 			.trim()
 			.split(/\s+/)
 			.map((pair) => {
 				const [x, y] = pair.split(",").map(Number);
-				return { x, y };
+				return { x: x + drawn.shiftX, y: y + drawn.shiftY };
 			});
 	}
 

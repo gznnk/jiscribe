@@ -37,8 +37,9 @@ export const StartTextEditCommand: ExecutableCommand = {
 	},
 
 	canExecute(state) {
-		// Cannot execute while text editing is already in progress
-		if (state.textEditState) {
+		// Cannot execute while text editing is already in progress. An armed
+		// drawing tool does not block it: the session replaces it (CanvasMode).
+		if (state.mode.kind === "textEdit") {
 			return false;
 		}
 
@@ -70,19 +71,22 @@ export const StartTextEditCommand: ExecutableCommand = {
 				// The selection is already that one connector
 				// (getSelectedConnectorId), so only a part picked below it has to go:
 				// the label is no part, and the session's owner must be the object
-				// itself (see textEditState).
+				// itself (see CanvasMode).
 				selection:
 					state.selection.part === null
 						? state.selection
 						: { ...state.selection, part: null },
-				textEditState: {
-					kind: "connectorLabel",
-					text: labelText,
-					// Enter carries no pointer position, so a label being created takes
-					// the default placement. Without it the commit would spread the
-					// connector's own keys and revive the placement of a deleted label
-					// (the pointer path overrides those with the clicked point).
-					...(labelText === "" ? { placement: DEFAULT_LABEL_PLACEMENT } : {}),
+				mode: {
+					kind: "textEdit",
+					draft: {
+						kind: "connectorLabel",
+						text: labelText,
+						// Enter carries no pointer position, so a label being created takes
+						// the default placement. Without it the commit would spread the
+						// connector's own keys and revive the placement of a deleted label
+						// (the pointer path overrides those with the clicked point).
+						...(labelText === "" ? { placement: DEFAULT_LABEL_PLACEMENT } : {}),
+					},
 				},
 			};
 		}
@@ -109,13 +113,16 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return {
 			...state,
 			objectMenuOpenId: null,
-			// The slot being edited is the selection (see textEditState), so the one
+			// The slot being edited is the selection (see CanvasMode), so the one
 			// the fallback picked is written there too; a slot already selected keeps
 			// the reference.
 			selection: selectTextSlot(state.selection, targetObject, slotId),
-			textEditState: {
-				kind: "shape",
-				text: readRichTextSlot(targetObject.text, slotId),
+			mode: {
+				kind: "textEdit",
+				draft: {
+					kind: "shape",
+					text: readRichTextSlot(targetObject.text, slotId),
+				},
 			},
 		};
 	},

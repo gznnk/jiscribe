@@ -181,10 +181,11 @@ const setup = (options: { container?: HTMLElement } = {}) => {
 		svgRef: { current: null },
 		canvasStateRef: {
 			current: {
-				edgeScrollEnabled: false,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+				drag: null,
 			},
 		},
+		wrapFrameDispatch: (dispatchFrame) => dispatchFrame(),
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

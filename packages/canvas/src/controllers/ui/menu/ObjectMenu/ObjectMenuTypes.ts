@@ -38,7 +38,7 @@ export type StyleIntentUpdater = (
 	coalesceHistory?: boolean,
 ) => void;
 
-/** What the host receives when the "open reference" menu item is pressed. */
+/** What the host receives when an "open reference" button is pressed (the ObjectMenu's or the property sidebar's). */
 export type OpenReferencePayload = {
 	/** ID of the object whose `meta.reference` is being opened. */
 	objectId: string;
@@ -50,8 +50,9 @@ export type OpenReferencePayload = {
 };
 
 /**
- * Opens the reference of the selected object. Supplied by the host — the menu
- * item is offered only while one is registered.
+ * Opens the reference of the selected object. Supplied by the host — the
+ * ObjectMenu item and the property sidebar's button are offered only while one
+ * is registered.
  *
  * @param payload - The selected object's ID and its raw `meta.reference`
  */

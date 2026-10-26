@@ -17,12 +17,14 @@ import type {
 } from "../model/objects/types/text/RichText";
 import {
 	isRichText,
-	joinRichTextLines,
 	remapRichText,
-	splitRichTextLines,
 	styleRichTextMatches,
 } from "../model/objects/types/text/RichText";
-import { isTextRows } from "../model/objects/types/text/TextSlot";
+import {
+	isTextRows,
+	readTextSlotContent,
+	writeTextSlotContent,
+} from "../model/objects/types/text/TextSlot";
 import type { TextType } from "../model/objects/types/text/TextType";
 import { isSingleBodyText } from "../model/objects/types/text/TextType";
 import { pickDefined } from "../model/objects/utils/pickDefined";
@@ -159,13 +161,15 @@ const applyTextWrite = (write: TextWrite): void => {
 		return;
 	}
 	const { slot } = write;
-	// The slot's own content decides the shape: a rows slot rejects a plain string,
-	// while an array of runs is one styled body and must not be split into rows.
-	slot.text = isTextRows(slot.text)
-		? splitRichTextLines(
-				remapRichText(joinRichTextLines(slot.text), write.text),
-			)
-		: rewriteBody(slot.text, write.text);
+	// Only the type's own validator holds a slot's content to a TextSlotContent,
+	// so a slot holding anything else reads as an empty body and takes the new
+	// text as one body.
+	const previous =
+		isRichText(slot.text) || isTextRows(slot.text) ? slot.text : "";
+	slot.text = writeTextSlotContent(
+		previous,
+		remapRichText(readTextSlotContent(previous), write.text),
+	);
 };
 
 /**
@@ -178,9 +182,10 @@ const applyTextWrite = (write: TextWrite): void => {
  * @param doc - Mutated in place
  * @param id - Id of the object to retext; must exist in the root tree
  * @param text - The new text. Newlines are kept for a single body and split into one row
- *   each for a slot that holds rows. Styling applied to parts of the old text survives on
- *   the characters the rewrite kept (see {@link rewriteBody}); a `text: "source"` body
- *   carries none, so it takes the characters as they are
+ *   each for a slot that holds rows, which "" empties to `[]`. Styling applied to parts
+ *   of the old text survives on the characters the rewrite kept (see
+ *   {@link rewriteBody}); a `text: "source"` body carries none, so it takes the
+ *   characters as they are
  * @param slot - Which slot to write, for a slotted type only. `undefined` is allowed when
  *   the object has exactly one slot; the slot must already exist, since its content shape
  *   (one string or a list of rows) is not inferable for a slot that is absent

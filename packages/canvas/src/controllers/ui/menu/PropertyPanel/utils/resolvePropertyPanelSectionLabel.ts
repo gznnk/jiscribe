@@ -1,6 +1,6 @@
-import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
-import type { LocaleMessages } from "../../../../messages/resolveLocaleMessages";
-import { resolveLocalizedLabel } from "../../../../messages/resolveLocaleMessages";
+import type { CanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesTypes";
+import type { LocaleMessages } from "../../../../../foundation/i18n/resolveLocaleMessages";
+import { resolveLocalizedLabel } from "../../../../../foundation/i18n/resolveLocaleMessages";
 
 /**
  * Readers rather than key names: not every CanvasMessages entry is a string.

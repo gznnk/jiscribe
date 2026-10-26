@@ -26,6 +26,10 @@ import { selectors } from "../../support/selectors";
  *   foreignObject (B1), and rasterized in PNG too
  * - Derived geometry: a block text and a height-less shape survive the trip with
  *   the fields they left out still left out
+ * - Selection scope: the viewBox covers the selected shape plus the margin and
+ *   not the shape left unselected, a shape reaching into that extent is not
+ *   drawn, and the embedded source holds the selection alone; the scope is
+ *   disabled with nothing selected
  *
  * The multi-slot case (record, #167) belongs to the shape that has the slots, so it
  * lives in the uml plugin's own suite (plugins/uml-shapes/e2e/specs/record-image-export).
@@ -33,8 +37,8 @@ import { selectors } from "../../support/selectors";
 
 /**
  * Export through the context menu and dialog, picking the format (and
- * optionally the margin and whether to embed the data), and return the
- * downloaded file's contents as base64.
+ * optionally the scope, the margin and whether to embed the data), and return
+ * the downloaded file's contents as base64.
  */
 const downloadViaExportDialog = async (
 	page: Page,
@@ -42,6 +46,7 @@ const downloadViaExportDialog = async (
 	menuPoint: { x: number; y: number },
 	format: "png" | "svg",
 	options: {
+		scope?: "all" | "selection";
 		margin?: number;
 		includeSource?: boolean;
 		transparentBackground?: boolean;
@@ -51,6 +56,9 @@ const downloadViaExportDialog = async (
 	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
+	if (options.scope !== undefined) {
+		await page.getByTestId(`export-dialog:scope-${options.scope}`).check();
+	}
 	await page.getByTestId(`export-dialog:format-${format}`).check();
 	if (options.margin !== undefined) {
 		await page.getByTestId("export-dialog:margin").fill(String(options.margin));
@@ -634,6 +642,127 @@ const parseViewBox = (svgText: string): Box => {
 	const [x, y, width, height] = viewBoxMatch![1].split(/\s+/).map(Number);
 	return { x, y, width, height };
 };
+
+/** The shape the selection-scope spec selects. */
+const PICKED_SHAPE_ID = "picked";
+
+/** The picked shape's text, which is how the exported SVG shows it was drawn. */
+const PICKED_SHAPE_TEXT = "picked label";
+
+/** A shape reaching into the picked one's extent, left unselected. */
+const INTRUDER_SHAPE_ID = "intruder";
+
+/** The intruder's text, which the exported SVG must not hold. */
+const INTRUDER_SHAPE_TEXT = "intruder label";
+
+/** A shape well away from the picked one, left unselected. */
+const DISTANT_SHAPE_ID = "distant";
+
+/**
+ * The picked rect (150,120-400,260), the intruder overlapping its bottom-right
+ * corner on top of it, and a distant ellipse (600,420-760,540).
+ */
+const selectionScopeDocText = JSON.stringify({
+	version: 1,
+	root: [
+		{
+			id: PICKED_SHAPE_ID,
+			type: "rect",
+			x: 150,
+			y: 120,
+			width: 250,
+			height: 140,
+			text: PICKED_SHAPE_TEXT,
+		},
+		{
+			id: INTRUDER_SHAPE_ID,
+			type: "rect",
+			x: 330,
+			y: 210,
+			width: 150,
+			height: 120,
+			text: INTRUDER_SHAPE_TEXT,
+		},
+		{
+			id: DISTANT_SHAPE_ID,
+			type: "ellipse",
+			cx: 680,
+			cy: 480,
+			rx: 80,
+			ry: 60,
+		},
+	],
+});
+
+/** The ids at the root of the `.jis` source an exported SVG embeds, null when it embeds none. */
+const readEmbeddedSvgRootIds = async (
+	page: Page,
+	svgText: string,
+): Promise<string[] | null> =>
+	await page.evaluate(async (text) => {
+		// The Vite dev server resolves bare ids through /@id/.
+		const mod = (await import(
+			"/@id/@jiscribe/canvas" as string
+		)) as typeof CanvasModule;
+		const svgDoc = new DOMParser().parseFromString(text, "image/svg+xml");
+		const source = mod.extractCanvasSource(
+			svgDoc.documentElement as unknown as SVGSVGElement,
+		);
+		return source ? source.root.map((obj) => obj.id) : null;
+	}, svgText);
+
+test("exports the selected shape alone when the scope is the selection", async ({
+	canvas,
+	page,
+}) => {
+	await loadHarnessDoc(page, selectionScopeDocText);
+	await expect(canvas.objectById(DISTANT_SHAPE_ID)).toHaveCount(1);
+
+	// With nothing selected the scope cannot be the selection.
+	await canvas.openContextMenu({ x: 900, y: 650 });
+	await canvas.clickContextMenuCommand("export");
+	await expect(page.getByTestId("export-dialog")).toBeVisible();
+	await expect(
+		page.getByTestId("export-dialog:scope-selection"),
+	).toBeDisabled();
+	await expect(page.getByTestId("export-dialog:scope-all")).toBeChecked();
+	await page.keyboard.press("Escape");
+	await expect(page.getByTestId("export-dialog")).toHaveCount(0);
+
+	// Right-clicking empty space keeps the selection made beforehand.
+	await canvas.selectAt({ x: 200, y: 150 });
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 900, y: 650 },
+		"svg",
+		{ scope: "selection" },
+	);
+	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
+
+	// The rect (150,120-400,260) plus the default margin of 16, with the
+	// ellipse starting at x 600 left outside.
+	const viewBox = parseViewBox(svgText);
+	expect(Math.abs(viewBox.x - (150 - 16))).toBeLessThanOrEqual(2);
+	expect(Math.abs(viewBox.y - (120 - 16))).toBeLessThanOrEqual(2);
+	expect(Math.abs(viewBox.width - (250 + 32))).toBeLessThanOrEqual(4);
+	expect(Math.abs(viewBox.height - (140 + 32))).toBeLessThanOrEqual(4);
+	expect(viewBox.x + viewBox.width).toBeLessThan(600);
+	expect(viewBox.y + viewBox.height).toBeLessThan(420);
+
+	// The intruder reaches into that extent, yet only the selection is drawn.
+	expect(svgText).toContain(PICKED_SHAPE_TEXT);
+	expect(svgText).not.toContain(INTRUDER_SHAPE_TEXT);
+
+	// The embedded source is the selection alone, as a paste of it would be.
+	expect(await readEmbeddedSvgRootIds(page, svgText)).toEqual([
+		PICKED_SHAPE_ID,
+	]);
+
+	// The canvas draws every shape again once the export is done.
+	await expect(canvas.objectById(INTRUDER_SHAPE_ID)).toHaveCount(1);
+	await expect(canvas.objectById(DISTANT_SHAPE_ID)).toHaveCount(1);
+});
 
 test("writes connector labels as <text> plus a box <rect> rather than a foreignObject", async ({
 	canvas,

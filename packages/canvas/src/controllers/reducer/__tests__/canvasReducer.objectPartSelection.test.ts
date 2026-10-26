@@ -69,6 +69,7 @@ const adoptDoc = (
 		registries.objectMapper,
 		registries.objectContentResizer,
 	),
+	doc,
 });
 
 describe("canvasReducer / selection.part reconciliation", () => {
@@ -119,7 +120,7 @@ describe("canvasReducer / selection.part reconciliation", () => {
 
 		const reverted = canvasReducer(nudged, {
 			type: "REVERT_HISTORY",
-			entry: nudged.history.past[0],
+			entry: nudged.history.past[0].source,
 		});
 
 		expect(reverted.selection.part).toBeNull();

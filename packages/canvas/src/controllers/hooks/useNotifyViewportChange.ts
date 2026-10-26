@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { Viewport } from "../../rendering/Viewport";
 import type { Camera } from "../CanvasTypes";
 import { isSameCamera } from "../utils/isSameCamera";
@@ -35,10 +36,7 @@ export const useNotifyViewportChange = (
 	viewport: Viewport,
 	onViewportChange?: (viewport: Camera) => void,
 ): void => {
-	const onViewportChangeRef = useRef(onViewportChange);
-	useEffect(() => {
-		onViewportChangeRef.current = onViewportChange;
-	});
+	const onViewportChangeRef = useLatestRef(onViewportChange);
 
 	// null marks "before the first render"; the mount render only records the
 	// baseline so the initial camera is not delivered as a change.
@@ -59,5 +57,5 @@ export const useNotifyViewportChange = (
 			return;
 		}
 		onViewportChangeRef.current?.(camera);
-	}, [viewport.minX, viewport.minY, viewport.zoom]);
+	}, [viewport.minX, viewport.minY, viewport.zoom, onViewportChangeRef]);
 };

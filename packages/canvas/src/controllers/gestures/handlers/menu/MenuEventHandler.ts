@@ -7,6 +7,7 @@ import { StencilLibraryPanelHandler } from "./StencilLibraryPanelHandler";
 import { ToolbarHandler } from "./ToolbarHandler";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { claimDrag } from "../../../utils/claimDrag";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -33,6 +34,9 @@ export const MENU_HANDLERS: readonly GestureHandler[] = [
  * property-panel / stencil-category / toolbar / context-menu / object-menu) and
  * are mutually
  * exclusive, so the array order never decides routing.
+ *
+ * A drag on a menu is a `"menu"` one unless the sub-handler names it otherwise
+ * (a preset dragged off the StencilLibrary is a `"stencil"` drag).
  */
 export const MenuEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -44,13 +48,17 @@ export const MenuEventHandler: GestureHandler = {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
+		const menuState =
+			event.type === "dragStart"
+				? claimDrag(state, { kind: "menu" }, { edgeScroll: false })
+				: state;
 		for (const handler of MENU_HANDLERS) {
 			if (handler.supports(event)) {
-				return handler.handle(state, event, registries);
+				return handler.handle(menuState, event, registries);
 			}
 		}
 
 		// Events no sub-handler claims (an unknown targetId) pass through
-		return state;
+		return menuState;
 	},
 };

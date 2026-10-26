@@ -299,6 +299,37 @@ describe("checkStructure: meta", () => {
 	});
 });
 
+// ─── The document's own meta ─────────────────────────────
+describe("checkStructure: document meta", () => {
+	it("accepts the document's meta, open past the named members", () => {
+		expect(
+			checkStructure(
+				doc([], {
+					meta: { name: "n", description: "d", author: { id: 7 } },
+				}),
+			),
+		).toEqual([]);
+	});
+
+	it.each([
+		["number", 1],
+		["string", "x"],
+		["array", []],
+		["null", null],
+	])("a non-object document meta (%s) is an error", (_label, meta) => {
+		const errors = checkStructure(doc([], { meta }));
+		expect(has(errors, "meta", "must be an object")).toBe(true);
+	});
+
+	it.each(["name", "description", "reference"])(
+		"a non-string document meta.%s is an error",
+		(member) => {
+			const errors = checkStructure(doc([], { meta: { [member]: 1 } }));
+			expect(has(errors, `meta.${member}`, "must be a string")).toBe(true);
+		},
+	);
+});
+
 // ─── Canvas surface background ───────────────────────────
 describe("checkStructure: background", () => {
 	it.each([
@@ -352,6 +383,14 @@ describe("checkStructure: common node fields", () => {
 		const errors = checkStructure(doc([{ type: "rect", ...idPart }]));
 		expect(has(errors, "root[0].id", "non-empty string")).toBe(true);
 	});
+
+	it.each(["__proto__", "constructor", "hasOwnProperty"])(
+		"an id that is a property name of Object.prototype (%s) is an error",
+		(id) => {
+			const errors = checkStructure(doc([{ type: "rect", id }]));
+			expect(has(errors, "root[0].id", "Object.prototype")).toBe(true);
+		},
+	);
 
 	it("a missing type yields only a type error and skips per-type validation (early return)", () => {
 		// Even with a broken width, without a type it does not proceed to rect validation

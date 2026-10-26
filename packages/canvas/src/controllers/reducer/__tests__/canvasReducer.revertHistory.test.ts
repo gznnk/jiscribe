@@ -3,11 +3,16 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasAction } from "../CanvasActions";
 import { createTestState } from "./support/createTestState";
-import { applyActions, command } from "./support/dispatch";
+import {
+	applyActions,
+	command,
+	testReducerRegistries,
+} from "./support/dispatch";
 import { rectDoc } from "./support/fixtures";
+import { createTestSnapshot } from "../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState, DocSnapshot } from "../../CanvasTypes";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
-import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
+import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 
 /**
  * REVERT_HISTORY stands in for however many undos it takes to reach an entry, so
@@ -23,11 +28,11 @@ const docAt = (x: number): CanvasDoc =>
 
 /** past = [oldest, middle, newest], present = current, future = [ahead]. */
 const entries = {
-	oldest: createDocSnapshotFromDoc(docAt(0)),
-	middle: createDocSnapshotFromDoc(docAt(10)),
-	newest: createDocSnapshotFromDoc(docAt(20)),
-	current: createDocSnapshotFromDoc(docAt(30)),
-	ahead: createDocSnapshotFromDoc(docAt(40)),
+	oldest: createTestSnapshot(docAt(0)),
+	middle: createTestSnapshot(docAt(10)),
+	newest: createTestSnapshot(docAt(20)),
+	current: createTestSnapshot(docAt(30)),
+	ahead: createTestSnapshot(docAt(40)),
 };
 
 const createState = (
@@ -44,7 +49,7 @@ const createState = (
 
 const revertTo = (entry: DocSnapshot): CanvasAction => ({
 	type: "REVERT_HISTORY",
-	entry,
+	entry: entry.source,
 });
 
 /** Center x of the fixture rect, which is 10 wide, so `docAt(x)` reads back x + 5. */
@@ -90,19 +95,43 @@ describe("canvasReducer (integration)", () => {
 			expect(reverted.history.past).toEqual([entries.oldest]);
 		});
 
+		it("finds an entry pinned while it was present after a commit moved it onto past", () => {
+			// A saved present holds its Doc cache, so moving it onto past replaces
+			// the entry object; the pin is its source.
+			const committed = applyActions(
+				createTestState(docAt(30), { selection: selectionOf(["rect-1"]) }),
+				[command("move-right")],
+			);
+			resolveDocSnapshot(
+				committed.history.present,
+				testReducerRegistries.objectMapper,
+			);
+			const pinned = committed.history.present.source;
+			const state = applyActions(committed, [command("toggleLockAspectRatio")]);
+			expect(state.history.past[1]).not.toBe(committed.history.present);
+			expect(state.history.past[1].doc).toBeNull();
+
+			const reverted = applyActions(state, [
+				{ type: "REVERT_HISTORY", entry: pinned },
+			]);
+
+			expect(cxOf(reverted)).toBe(36);
+			expect(reverted.history.present.source).toBe(pinned);
+		});
+
 		it("is a no-op for an entry that is not on the undo stack", () => {
 			const state = createState();
 			// Already the present one, and one that was never in this history at all.
 			expect(applyActions(state, [revertTo(entries.current)])).toBe(state);
 			expect(applyActions(state, [revertTo(entries.ahead)])).toBe(state);
 			expect(
-				applyActions(state, [revertTo(createDocSnapshotFromDoc(docAt(99)))]),
+				applyActions(state, [revertTo(createTestSnapshot(docAt(99)))]),
 			).toBe(state);
 		});
 
 		it("is a no-op while a text edit is open, like undo itself", () => {
 			const state = createState({
-				textEditState: { kind: "shape", text: "" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);
@@ -110,7 +139,13 @@ describe("canvasReducer (integration)", () => {
 
 		it("is a no-op while a drag is in progress, like undo itself", () => {
 			const state = createState({
-				activeDrag: { startSnapshot: {}, kind: "other" },
+				drag: {
+					kind: "inert",
+					startSnapshot: {},
+					snapFeedback: null,
+					axisLockFeedback: null,
+					edgeScrollEnabled: false,
+				},
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);

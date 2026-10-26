@@ -7,6 +7,7 @@ export * from "./calcFrameCenterFromTopLeft";
 export * from "./calcOrientedFrameFromPoints";
 export * from "./calcFrameBoxFeatures";
 export * from "./calcPolyBoundingBox";
+export * from "./unionBoundingBoxes";
 export * from "./calcPolyKeyPoints";
 export * from "./calcProjectedPointOnLine";
 export * from "./calcDistanceToSegment";

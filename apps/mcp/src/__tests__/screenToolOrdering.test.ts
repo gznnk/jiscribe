@@ -22,10 +22,11 @@ import {
 import WebSocket from "ws";
 
 import type * as canvasStoreModule from "../canvasStore";
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
 import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
 import type { TempCanvasWorkspace } from "./tempCanvasWorkspace";
 import { createTempCanvasWorkspace } from "./tempCanvasWorkspace";
+import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import type { CanvasHostServerMessage } from "../shared/canvasHostProtocol";
 
 const mocked = vi.hoisted(() => ({
@@ -61,7 +62,7 @@ const previousEnv: Record<string, string | undefined> = {};
 
 beforeAll(async () => {
 	viewerRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-viewer-"));
-	await writeFile(join(viewerRoot, "index.html"), "<!doctype html>", "utf8");
+	await writeFile(join(viewerRoot, "index.html"), VIEWER_STUB_HTML, "utf8");
 	for (const name of ["JISCRIBE_MCP_VIEWER_ROOT", "JISCRIBE_MCP_NO_OPEN"]) {
 		previousEnv[name] = process.env[name];
 	}

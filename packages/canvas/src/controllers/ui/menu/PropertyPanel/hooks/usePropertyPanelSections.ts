@@ -113,7 +113,7 @@ const filterShownSections = (
  * naming the picked kind goes (filterPropertyPanelSectionsForPickedPart), so the
  * panel never offers a control the part cannot receive — the same narrowing the
  * ObjectMenu does, and for the same reason an open text editor narrows them too (through the
- * slot it keeps picked, see `textEditState`): what is
+ * slot it keeps picked, see `CanvasMode`): what is
  * offered there has to be something a stretch of the text being edited can take,
  * and reshaping the shape mid-edit is not it.
  *

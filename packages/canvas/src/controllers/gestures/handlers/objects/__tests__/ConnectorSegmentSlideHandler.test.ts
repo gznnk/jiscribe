@@ -84,7 +84,11 @@ const stateWith = (
 		...base,
 		objects,
 		rootIds: [...base.rootIds, connector.id],
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects,
 				keyPoints: {},
@@ -95,7 +99,6 @@ const stateWith = (
 				multiSelectGroup: null,
 				viewport: base.viewport,
 			},
-			kind: "other",
 		},
 	});
 };
@@ -220,7 +223,8 @@ describe("ConnectorSegmentSlideHandler - dragStart", () => {
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		expect(next.contextMenuPosition).toBeNull();
-		expect(next.edgeScrollEnabled).toBe(true);
+		expect(next.drag?.edgeScrollEnabled).toBe(true);
+		expect(next.drag?.kind).toBe("segment");
 	});
 });
 
@@ -365,7 +369,7 @@ describe("ConnectorSegmentSlideHandler - segments it refuses", () => {
 
 		const withoutSnapshot = {
 			...stateWith(orthogonalConnector()),
-			activeDrag: null,
+			drag: null,
 		} as CanvasControllerState;
 		refuses(withoutSnapshot, "segment-slide:1");
 	});
@@ -384,10 +388,10 @@ describe("ConnectorSegmentSlideHandler - axis-limited snap", () => {
 			{ x: 143, y: 0 },
 			{ x: 143, y: 80 },
 		]);
-		expect(next.snapFeedback?.y).toEqual([]);
-		expect(next.snapFeedback?.x).toHaveLength(1);
-		expect(next.snapFeedback?.x[0].coordinate).toBe(143);
-		expect(next.snapFeedback?.x[0].sourceObjectIds).toEqual(["b"]);
+		expect(next.drag?.snapFeedback?.y).toEqual([]);
+		expect(next.drag?.snapFeedback?.x).toHaveLength(1);
+		expect(next.drag?.snapFeedback?.x[0].coordinate).toBe(143);
+		expect(next.drag?.snapFeedback?.x[0].sourceObjectIds).toEqual(["b"]);
 	});
 
 	it("clears the feedback when nothing is within reach", () => {
@@ -400,7 +404,7 @@ describe("ConnectorSegmentSlideHandler - axis-limited snap", () => {
 			{ x: 140, y: 0 },
 			{ x: 140, y: 80 },
 		]);
-		expect(next.snapFeedback).toEqual({ x: [], y: [] });
+		expect(next.drag?.snapFeedback).toEqual({ x: [], y: [] });
 	});
 
 	it("bypasses the snap while Ctrl is held", () => {
@@ -413,18 +417,18 @@ describe("ConnectorSegmentSlideHandler - axis-limited snap", () => {
 			{ x: 140, y: 0 },
 			{ x: 140, y: 80 },
 		]);
-		expect(next.snapFeedback).toEqual({ x: [], y: [] });
+		expect(next.drag?.snapFeedback).toEqual({ x: [], y: [] });
 	});
 });
 
 describe("ConnectorSegmentSlideHandler - dragEnd", () => {
-	it("applies the final frame and disables edge scrolling", () => {
+	it("applies the final frame", () => {
 		const afterStart = ConnectorSegmentSlideHandler.handle(
 			stateWith(orthogonalConnector()),
 			dragEvent("dragStart", { x: 100, y: 40 }, { x: 100, y: 40 }),
 			registries,
 		);
-		expect(afterStart.edgeScrollEnabled).toBe(true);
+		expect(afterStart.drag?.edgeScrollEnabled).toBe(true);
 
 		const afterEnd = ConnectorSegmentSlideHandler.handle(
 			afterStart,
@@ -437,11 +441,10 @@ describe("ConnectorSegmentSlideHandler - dragEnd", () => {
 			{ x: 140, y: 80 },
 		]);
 		expect(afterEnd.objects).not.toBe(afterStart.objects);
-		expect(afterEnd.edgeScrollEnabled).toBe(false);
 		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion + 1);
 	});
 
-	it("disables edge scrolling even on a segment it refuses to move", () => {
+	it("moves and commits nothing on a segment it refuses to move", () => {
 		const afterStart = ConnectorSegmentSlideHandler.handle(
 			stateWith(orthogonalConnector()),
 			dragEvent(
@@ -452,7 +455,7 @@ describe("ConnectorSegmentSlideHandler - dragEnd", () => {
 			),
 			registries,
 		);
-		expect(afterStart.edgeScrollEnabled).toBe(true);
+		expect(afterStart.drag?.edgeScrollEnabled).toBe(true);
 
 		const afterEnd = ConnectorSegmentSlideHandler.handle(
 			afterStart,
@@ -468,7 +471,6 @@ describe("ConnectorSegmentSlideHandler - dragEnd", () => {
 			{ x: 100, y: 0 },
 			{ x: 100, y: 80 },
 		]);
-		expect(afterEnd.edgeScrollEnabled).toBe(false);
 		expect(afterEnd.commitVersion).toBe(afterStart.commitVersion);
 	});
 });

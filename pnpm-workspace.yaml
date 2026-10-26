@@ -44,8 +44,11 @@ overrides:
 
 # pnpm 11 の allowBuilds（旧 ignoredBuiltDependencies）。列挙外のビルドスクリプトが
 # 現れると strictDepBuilds 既定 ON で install が落ちる。
-# private ルートの allowBuilds と同じ内容を保つ（electron は private 側のみ）。
+# private ルートの allowBuilds と同じ内容を保つ。
 allowBuilds:
+  # electron 43 は postinstall を廃し初回 require 時にバイナリを取得するため
+  # 現状この行は空振りだが、将来復活したときのために許可のままにしておく
+  electron: true
   "@swc/core": false
   "@vscode/vsce-sign": false
   esbuild: false

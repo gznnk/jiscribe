@@ -7,9 +7,9 @@ import {
 	FontFamilyList,
 	FontFamilyListOption,
 } from "./ObjectMenuFontFamilyListStyled";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
+import type { CanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesTypes";
 import { setAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import type { CanvasMessages } from "../../../../../messages/CanvasMessagesTypes";
 
 /** Readers rather than key names: not every CanvasMessages entry is a string. */
 const LABEL_READERS: Record<

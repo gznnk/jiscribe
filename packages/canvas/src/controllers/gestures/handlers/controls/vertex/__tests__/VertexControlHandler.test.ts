@@ -35,7 +35,11 @@ const makeDragState = (points: Point[]): CanvasControllerState => {
 		rootIds: ["poly-1"],
 		selection: selectionOf(["poly-1"]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects: { "poly-1": poly },
 				keyPoints: {},
@@ -45,7 +49,6 @@ const makeDragState = (points: Point[]): CanvasControllerState => {
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -93,7 +96,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 			registries,
 		);
 		expect(vertexAt(next, 0)).toEqual({ x: 30, y: 12 });
-		expect(next.axisLockFeedback).toBeNull();
+		expect(next.drag?.axisLockFeedback).toBeNull();
 	});
 
 	it("with Shift and horizontal dominance, locks Y to the start position and moves only X", () => {
@@ -106,7 +109,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 			registries,
 		);
 		expect(vertexAt(next, 0)).toEqual({ x: 70, y: 30 });
-		expect(next.axisLockFeedback).toEqual({ y: 30 });
+		expect(next.drag?.axisLockFeedback).toEqual({ y: 30 });
 	});
 
 	it("with Shift and vertical dominance, locks X to the start position and moves only Y", () => {
@@ -119,7 +122,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 			registries,
 		);
 		expect(vertexAt(next, 0)).toEqual({ x: 20, y: 80 });
-		expect(next.axisLockFeedback).toEqual({ x: 20 });
+		expect(next.drag?.axisLockFeedback).toEqual({ x: 20 });
 	});
 
 	describe("origin snap (near the start vertex)", () => {
@@ -134,7 +137,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 				registries,
 			);
 			expect(vertexAt(next, 0)).toEqual({ x: 20, y: 30 });
-			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
+			expect(next.drag?.axisLockFeedback).toEqual({ x: 20, y: 30 });
 		});
 
 		it("beyond the threshold, snapping releases and it returns to single-axis lock", () => {
@@ -148,7 +151,7 @@ describe("VertexControlHandler - Shift axis lock", () => {
 				registries,
 			);
 			expect(vertexAt(next, 0)).toEqual({ x: 28, y: 30 });
-			expect(next.axisLockFeedback).toEqual({ y: 30 });
+			expect(next.drag?.axisLockFeedback).toEqual({ y: 30 });
 		});
 	});
 });
@@ -169,7 +172,6 @@ describe("VertexControlHandler - handleDragEnd", () => {
 		const next = handler.handle(state, event, registries);
 
 		expect(vertexAt(next, 0)).toEqual({ x: 30, y: 12 });
-		expect(next.edgeScrollEnabled).toBe(false);
 		// The frozen input state must be left untouched
 		expect(vertexAt(state, 0)).toEqual({ x: 0, y: 0 });
 	});
@@ -228,9 +230,7 @@ describe("VertexControlHandler - snapping against the edited poly", () => {
 	/** Runs dragStart then drag on vertex 0 with candidates built the way handleGesture builds them. */
 	const dragVertex0To = (last: Point): CanvasControllerState => {
 		const base = makeDragState(polyPoints);
-		const baseDrag = base.activeDrag as NonNullable<
-			CanvasControllerState["activeDrag"]
-		>;
+		const baseDrag = base.drag as NonNullable<CanvasControllerState["drag"]>;
 		const objects = {
 			...base.objects,
 			"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
@@ -242,7 +242,7 @@ describe("VertexControlHandler - snapping against the edited poly", () => {
 		const state = {
 			...base,
 			objects,
-			activeDrag: {
+			drag: {
 				...baseDrag,
 				startSnapshot: {
 					...baseDrag.startSnapshot,
@@ -273,7 +273,7 @@ describe("VertexControlHandler - snapping against the edited poly", () => {
 		const next = dragVertex0To({ x: 33, y: 23 });
 
 		expect(vertexAt(next, 0)).toEqual({ x: 30, y: 20 });
-		expect(next.snapFeedback?.x).toEqual([
+		expect(next.drag?.snapFeedback?.x).toEqual([
 			expect.objectContaining({ coordinate: 30, sourceObjectIds: ["poly-1"] }),
 		]);
 	});
@@ -357,5 +357,6 @@ describe("VertexControlHandler - picking a vertex", () => {
 			registries,
 		);
 		expect(next.selection.part).toBeNull();
+		expect(next.drag?.kind).toBe("vertex");
 	});
 });

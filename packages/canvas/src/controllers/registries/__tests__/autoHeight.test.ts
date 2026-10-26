@@ -44,6 +44,7 @@ const frameOf = (state: ObjectState): { cy: number; height: number } =>
 /** A controller state holding one object, enough for the command and the reconcile pass. */
 const controllerStateOf = (object: ObjectState): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { [object.id]: object },
 		rootIds: [object.id],
 		selection: selectionOf([object.id]),

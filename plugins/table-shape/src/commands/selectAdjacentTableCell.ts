@@ -45,8 +45,8 @@ const readTableCellStepOrigin = (
 	state: CanvasControllerState,
 ): TableCellStepOrigin | null => {
 	if (
-		state.textEditState !== null ||
-		state.activeDrag !== null ||
+		state.mode.kind === "textEdit" ||
+		state.drag !== null ||
 		state.selection.objectIds.length !== 1
 	) {
 		return null;
@@ -72,7 +72,7 @@ const readTableCellStepOrigin = (
  * table, no text edit is open and no drag is running. True at the grid's edge
  * too, where the step leaves the pick where it is.
  *
- * @param state - The canvas to read; only the selection, `textEditState` and `activeDrag` are consulted
+ * @param state - The canvas to read; only the selection, `mode` and `drag` are consulted
  * @returns false for every other selection — a whole table, a row or column pick, any other type — so the keys stay with the built-in commands there
  */
 export const canSelectAdjacentTableCell = (

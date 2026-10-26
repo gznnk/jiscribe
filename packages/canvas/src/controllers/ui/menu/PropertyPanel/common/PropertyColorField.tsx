@@ -10,9 +10,9 @@ import {
 	PropertyMixedLabel,
 } from "./PropertyControlsStyled";
 import { PropertyDropdownField } from "./PropertyDropdownField";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import type { AutoColorRole } from "../../../../../rendering/objects/utils/resolveAutoColor";
 import { resolveAutoColor } from "../../../../../rendering/objects/utils/resolveAutoColor";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { calcMixedColorSegments } from "../../../utils/calcMixedColorSegments";
 import { ObjectMenuColorPickerGrid } from "../../ObjectMenu/common/ObjectMenuColorPickerGrid";
 import type { StyleIntentUpdater } from "../../ObjectMenu/ObjectMenuTypes";
@@ -76,8 +76,11 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	const messages = useCanvasMessages();
 	const isAuto = isAutoColor(value);
 	const isMixed = mixedValues !== undefined;
-	const resolveSwatchColor = (color: string): string =>
-		color === "transparent" ? color : resolveAutoColor(color, role);
+	const singleColorLabel = isAuto ? (
+		<PropertyColorAutoLabel>{messages.colorPickerAuto}</PropertyColorAutoLabel>
+	) : (
+		value
+	);
 
 	return (
 		<PropertyDropdownField
@@ -89,25 +92,21 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 							{calcMixedColorSegments(mixedValues).map((segment) => (
 								<PropertyColorMixedSwatchSegment
 									key={segment.start}
-									swatchColor={resolveSwatchColor(segment.color)}
+									swatchColor={resolveAutoColor(segment.color, role)}
 									widthFraction={segment.end - segment.start}
 								/>
 							))}
 						</PropertyColorMixedSwatch>
 					) : (
-						<PropertyColorSwatch swatchColor={resolveSwatchColor(value)} />
+						<PropertyColorSwatch swatchColor={resolveAutoColor(value, role)} />
 					)}
 					<PropertyDropdownTriggerLabel>
 						{isMixed ? (
 							<PropertyMixedLabel>
 								{messages.propertyPanelMixed}
 							</PropertyMixedLabel>
-						) : isAuto ? (
-							<PropertyColorAutoLabel>
-								{messages.colorPickerAuto}
-							</PropertyColorAutoLabel>
 						) : (
-							value
+							singleColorLabel
 						)}
 					</PropertyDropdownTriggerLabel>
 				</>

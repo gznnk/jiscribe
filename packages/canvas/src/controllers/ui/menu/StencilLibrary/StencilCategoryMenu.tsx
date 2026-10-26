@@ -7,10 +7,10 @@ import {
 	StencilCategoryFlyout,
 } from "./StencilLibraryStyled";
 import { resolveStencilCategoryLabel } from "./utils/resolveStencilLabel";
+import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
+import type { LocaleMessages } from "../../../../foundation/i18n/resolveLocaleMessages";
 import { toggleAction } from "../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
 import type { StencilIconProps, Stencil } from "../../objects/Stencil";
 

@@ -55,7 +55,7 @@ Three contracts are worth knowing before writing against this package:
 - **`isCssSafeValue` checks safety, not validity.** It rejects the sequences that break out
   of a CSS declaration (`;` `{` `}` `<` `>` `\`, `url(`, `expression(`, comment delimiters),
   but a safe string need not be meaningful CSS. Strict color validity needs the browser's
-  CSS parser and therefore lives in `@jiscribe/canvas` (`states/objects/utils/isCssColor`),
+  CSS parser and therefore lives in `@jiscribe/canvas` (`foundation/color/isCssColor`),
   not here.
 - **`isUrl` is a parse check, not a safety check.** Any scheme parses, including
   `javascript:`; relative paths and bare hosts like `example.com` do not.

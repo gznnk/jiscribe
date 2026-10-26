@@ -8,6 +8,7 @@ import { createCanvasReducer } from "../../../reducer/canvasReducer";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
+import { readTextEditDraft } from "../../../utils/readTextEditDraft";
 import {
 	CommitTextEditCommand,
 	isCommitTextEditShortcut,
@@ -47,13 +48,13 @@ const doc = {
 const shapeEditState = (draft: string): CanvasControllerState =>
 	createTestState(doc, {
 		selection: selectionOf(["text-1"], textSlotPartSelection("body")),
-		textEditState: { kind: "shape", text: draft },
+		mode: { kind: "textEdit", draft: { kind: "shape", text: draft } },
 	});
 
 const labelEditState = (draft: string): CanvasControllerState =>
 	createTestState(doc, {
 		selection: selectionOf(["conn-2"]),
-		textEditState: { kind: "connectorLabel", text: draft },
+		mode: { kind: "textEdit", draft: { kind: "connectorLabel", text: draft } },
 	});
 
 const commitByCommand: CanvasAction = {
@@ -72,7 +73,7 @@ const widthOf = (state: CanvasControllerState): number =>
 const outcomeOf = (state: CanvasControllerState) => ({
 	objects: state.objects,
 	selection: state.selection,
-	textEditState: state.textEditState,
+	mode: state.mode,
 	commitVersion: state.commitVersion,
 	viewport: state.viewport,
 	past: state.history.past,
@@ -105,14 +106,16 @@ describe("CommitTextEditCommand", () => {
 			const byCommand = canvasReducer(start, commitByCommand);
 			const byPressOutside = canvasReducer(start, commitByPressOutside);
 
-			expect(byCommand.textEditState).toBeNull();
+			expect(readTextEditDraft(byCommand)).toBeNull();
 			expect(
 				(byCommand.objects["text-1"] as unknown as { text: unknown }).text,
 			).toMatchObject({ body: { text: "hello world" } });
 			// Re-measured to the longer text, so the box and the vertex settling
 			// behind it are part of what the two routes are compared on.
 			expect(widthOf(byCommand)).toBeGreaterThan(widthOf(start));
-			expect(byCommand.history.past).toEqual([start.history.present]);
+			expect(byCommand.history.past.map((entry) => entry.source)).toEqual([
+				start.history.present.source,
+			]);
 			expect(outcomeOf(byCommand)).toEqual(outcomeOf(byPressOutside));
 		});
 
@@ -121,7 +124,7 @@ describe("CommitTextEditCommand", () => {
 			const byCommand = canvasReducer(start, commitByCommand);
 			const byPressOutside = canvasReducer(start, commitByPressOutside);
 
-			expect(byCommand.textEditState).toBeNull();
+			expect(readTextEditDraft(byCommand)).toBeNull();
 			expect(
 				(byCommand.objects["conn-2"] as unknown as { label: unknown }).label,
 			).toEqual({ text: "new" });
@@ -133,7 +136,7 @@ describe("CommitTextEditCommand", () => {
 			const start = shapeEditState("hi");
 			const after = canvasReducer(start, commitByCommand);
 
-			expect(after.textEditState).toBeNull();
+			expect(readTextEditDraft(after)).toBeNull();
 			expect(after.history.past).toEqual([]);
 			expect(after.commitVersion).toBe(start.commitVersion);
 		});

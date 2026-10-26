@@ -1,12 +1,12 @@
 import { memo } from "react";
 
-import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
-import { isTransparentPreviewColor } from "./utils/isTransparentPreviewColor";
 import {
 	calcClockArcPath,
 	calcSegmentClockAngles,
 } from "./utils/mixedColorArcs";
-import { theme } from "../../../theme/themeTokens";
+import { isTransparentColor } from "../../../foundation/color/isTransparentColor";
+import { theme } from "../../../foundation/theme/themeTokens";
+import { calcMixedColorSegments } from "../utils/calcMixedColorSegments";
 
 type BorderColorIconProps = {
 	color: string;
@@ -39,7 +39,31 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 	size = 24,
 	title = "Border Color",
 }) => {
-	const isTransparent = isTransparentPreviewColor(color);
+	const singleColorRing = isTransparentColor(color) ? (
+		/* Transparent indicator: a dashed ring. The dash is a faint overlay of the
+		   foreground color and the gap shows through, producing two tones whose
+		   contrast auto-inverts with the theme.
+		   color-mix is not resolved in presentation attributes, so specify it via style. */
+		<circle
+			cx={CENTER}
+			cy={CENTER}
+			r={RADIUS}
+			fill="none"
+			strokeWidth="4"
+			strokeDasharray="3 2"
+			style={{ stroke: theme.transparentChecker }}
+		/>
+	) : (
+		/* color may be var(--jiscribe-*) (the resolved result of auto), so apply it via style. */
+		<circle
+			cx={CENTER}
+			cy={CENTER}
+			r={RADIUS}
+			fill="none"
+			strokeWidth={RING_WIDTH}
+			style={{ stroke: color }}
+		/>
+	);
 
 	return (
 		<svg
@@ -49,54 +73,30 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			<title>{title}</title>
-			{mixedColors !== undefined ? (
-				calcMixedColorSegments(mixedColors).map((segment) => {
-					const { startAngle, endAngle } = calcSegmentClockAngles(segment);
-					return (
-						<path
-							key={segment.start}
-							d={calcClockArcPath(CENTER, CENTER, RADIUS, {
-								startAngle: startAngle + ARC_END_TRIM_DEGREES,
-								endAngle: endAngle - ARC_END_TRIM_DEGREES,
-							})}
-							fill="none"
-							strokeWidth={RING_WIDTH}
-							// A transparent arc takes the checker's color, the ring being
-							// too thin to hold the checker itself. The color may be
-							// var(--jiscribe-*), so apply it via style.
-							style={{
-								stroke: isTransparentPreviewColor(segment.color)
-									? theme.transparentChecker
-									: segment.color,
-							}}
-						/>
-					);
-				})
-			) : isTransparent ? (
-				/* Transparent indicator: a dashed ring. The dash is a faint overlay of the
-				   foreground color and the gap shows through, producing two tones whose
-				   contrast auto-inverts with the theme.
-				   color-mix is not resolved in presentation attributes, so specify it via style. */
-				<circle
-					cx={CENTER}
-					cy={CENTER}
-					r={RADIUS}
-					fill="none"
-					strokeWidth="4"
-					strokeDasharray="3 2"
-					style={{ stroke: theme.transparentChecker }}
-				/>
-			) : (
-				/* color may be var(--jiscribe-*) (the resolved result of auto), so apply it via style. */
-				<circle
-					cx={CENTER}
-					cy={CENTER}
-					r={RADIUS}
-					fill="none"
-					strokeWidth={RING_WIDTH}
-					style={{ stroke: color }}
-				/>
-			)}
+			{mixedColors !== undefined
+				? calcMixedColorSegments(mixedColors).map((segment) => {
+						const { startAngle, endAngle } = calcSegmentClockAngles(segment);
+						return (
+							<path
+								key={segment.start}
+								d={calcClockArcPath(CENTER, CENTER, RADIUS, {
+									startAngle: startAngle + ARC_END_TRIM_DEGREES,
+									endAngle: endAngle - ARC_END_TRIM_DEGREES,
+								})}
+								fill="none"
+								strokeWidth={RING_WIDTH}
+								// A transparent arc takes the checker's color, the ring being
+								// too thin to hold the checker itself. The color may be
+								// var(--jiscribe-*), so apply it via style.
+								style={{
+									stroke: isTransparentColor(segment.color)
+										? theme.transparentChecker
+										: segment.color,
+								}}
+							/>
+						);
+					})
+				: singleColorRing}
 		</svg>
 	);
 };

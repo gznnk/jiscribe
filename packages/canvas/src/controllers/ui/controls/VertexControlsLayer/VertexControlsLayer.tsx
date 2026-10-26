@@ -2,10 +2,9 @@ import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { DragKind } from "../../../CanvasTypes";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { readSelectedVertexIndex } from "../../../selection/readers/readSelectedVertexIndex";
-import { isObjectBeingMovedOrTransformed } from "../../utils/isObjectBeingMovedOrTransformed";
+import type { SelectionDragKind } from "../../utils/readSelectionDragKind";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 type VertexControlsLayerProps = {
@@ -18,8 +17,8 @@ type VertexControlsLayerProps = {
 	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	zoom?: number;
-	/** Kind of the drag in progress; null when none is */
-	activeDragKind: DragKind | null;
+	/** The drag changing the selection's geometry (readSelectionDragKind); null for none or any other drag */
+	selectionDragKind: SelectionDragKind | null;
 };
 
 /**
@@ -27,13 +26,13 @@ type VertexControlsLayerProps = {
  * This layer is responsible for showing vertex editing controls for poly-based shapes.
  *
  * Hidden while the shape is moved or transformed, the handles only trailing it;
- * dragging a vertex or a midpoint opens as `"other"` and keeps them.
+ * dragging a vertex or a midpoint is a `"vertex"` drag and keeps them.
  */
 const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 	selection,
 	objects,
 	zoom = 1,
-	activeDragKind,
+	selectionDragKind,
 }) => {
 	const { objectIds: selectedIds } = selection;
 	// Only render for single selection
@@ -41,7 +40,7 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 		return null;
 	}
 
-	if (isObjectBeingMovedOrTransformed(activeDragKind)) {
+	if (selectionDragKind !== null) {
 		return null;
 	}
 

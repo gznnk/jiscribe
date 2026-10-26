@@ -5,7 +5,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
  * The style intent kinds the part picked below the object receives, as its kind
  * declares them (`ObjectPartKindDefinition.styleIntentKinds`): what the ObjectMenu and
  * the properties sidebar narrow to while it is picked. An open shape text edit
- * keeps its slot picked (`textEditState`), so it narrows the same way.
+ * keeps its slot picked (`CanvasMode`), so it narrows the same way.
  *
  * @param state - The selection and the objects it names; the pick belongs to `selection.objectIds[0]` whenever there is one (CanvasSelection.part)
  * @param objectPartKind - Per-canvas registry of part kinds, asked for the picked kind under the owner's type

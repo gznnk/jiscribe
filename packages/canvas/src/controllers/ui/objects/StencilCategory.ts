@@ -2,7 +2,7 @@ import type { ComponentType } from "react";
 
 import { RectIcon } from "./primitives/RectIcon";
 import type { StencilIconProps } from "./Stencil";
-import type { LocaleMessages } from "../../messages/resolveLocaleMessages";
+import type { LocaleMessages } from "../../../foundation/i18n/resolveLocaleMessages";
 
 /** One answer to a library search, out of a category's whole set. */
 export type StencilCategorySearchResult = {

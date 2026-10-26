@@ -342,6 +342,28 @@ const rectSchema = z
 	})
 	.strict();
 
+/** The region a screen tool works on (AiRegionArgs); capture_canvas and fit_view share it, so its wording has to read right from both */
+const regionSchema = {
+	target: z
+		.enum(["all", "selection"])
+		.optional()
+		.describe(
+			'The whole drawing ("all") or what is selected right now ("selection"); omit when giving ids or rect instead.',
+		),
+	ids: z
+		.array(z.string())
+		.min(1)
+		.optional()
+		.describe(
+			"ids of the objects to take, as the union of what they actually draw (decoration included, as measure_visual_bounds reports it); omit when giving target or rect instead.",
+		),
+	rect: rectSchema
+		.optional()
+		.describe(
+			"A world rect, taken exactly as given; omit when giving target or ids instead. For a region you worked out yourself, such as the bounds measure_visual_bounds reported.",
+		),
+};
+
 /**
  * Declares the whole canvas tool set.
  *
@@ -362,7 +384,7 @@ export const createCanvasToolDescriptors = (
 	const describeCanvasTool = defineCanvasTool(
 		"describe_canvas",
 		[
-			"Read the current canvas document. Returns the CanvasDoc JSON, including every object's id, type, position, size and style. Call this before adding or editing anything so you know what already exists, what its ids are, and where the free space is.",
+			"Read the current canvas document. Returns the CanvasDoc JSON: the document's own name and description (`meta`) and settings first, then every object's id, type, position, size and style. Call this before adding or editing anything so you know what already exists, what its ids are, and where the free space is.",
 			`The result is cut off once the document runs past ${MAX_DESCRIBE_CHARS.toLocaleString("en-US")} characters, which a drawing of some 50 objects already does, and the part beyond that cannot be reached through this tool at all.`,
 			"So use it on small drawings only: on anything larger read list_objects for the whole map, find_objects to narrow it down, and get_object for the one object you need in full — those stay small however big the drawing grows.",
 		].join(" "),
@@ -1074,6 +1096,43 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setView"] },
 	);
 
+	const setMetaTool = defineCanvasTool(
+		"set_meta",
+		[
+			"Name something and say what it is about — its `meta`. Without `id` this is the document's own; with `id` it is that one object's, a group or a connector included.",
+			"The document's name is the title an exported SVG carries and what anyone reading the file is told it is; an object's says what the shape stands for to whoever reads the file, an AI included. The description is free text, several lines if need be.",
+			"Nothing is drawn from either, on the document or on a shape, so this is no substitute for a visible label or title on the canvas.",
+			"Pass only what you want to change: a field left out is kept, and null drops it. Other members of the meta (a reference, a host's own keys) are kept.",
+		].join(" "),
+		{
+			id: z
+				.string()
+				.optional()
+				.describe(
+					"id of the object to write; groups and connectors included. Leave it out to write the document's own.",
+				),
+			name: z
+				.string()
+				.nullable()
+				.optional()
+				.describe("The name. Pass null to drop it."),
+			description: z
+				.string()
+				.nullable()
+				.optional()
+				.describe(
+					"What it is about; may span several lines. Pass null to drop it.",
+				),
+		},
+		({ id, name, description }) => ({
+			kind: "setMeta",
+			...(id === undefined ? {} : { id }),
+			...(name === undefined ? {} : { name }),
+			...(description === undefined ? {} : { description }),
+		}),
+		{ drives: ["docOps.setMeta"] },
+	);
+
 	const setExtraPropsTool = defineCanvasTool(
 		"set_extra_props",
 		[
@@ -1340,12 +1399,25 @@ export const createCanvasToolDescriptors = (
 	const captureCanvasTool = defineCanvasTool(
 		"capture_canvas",
 		[
-			"See the canvas as a picture: renders the whole drawing to a PNG and hands it back to you.",
+			"See the canvas as a picture: renders it to a PNG and hands it back to you.",
 			"Use it to judge what only the eye catches — a line crossing a shape, overlapping objects, a label spilling out of its box, a lopsided layout — after finishing a drawing or a batch of edits, and fix what you see.",
-			"The image is fitted to the content and scaled down, so never read coordinates or sizes off it; describe_canvas is where the exact numbers are.",
+			'Given nothing, the picture is the whole drawing fitted to its content. A large drawing is scaled down past reading that way, so give ids or rect (or target "selection") to get one part of it at a legible resolution.',
+			"By default the picture crops rather than filters: anything else drawn inside the area captured is in it too. With isolate it draws only what ids or the selection name.",
+			"A rect is taken exactly, with no margin, and needs extent on both axes; ids and the selection get the document's margin around what they draw.",
+			"The result says which world rect the image covers and its pixel size, so a spot in the image can be turned into a world point and handed to hit_test to name what is there.",
+			"Even so, never read exact coordinates or sizes off the picture; describe_canvas is where the exact numbers are.",
 		].join(" "),
-		{},
-		() => ({ kind: "captureCanvas" }),
+		{
+			...regionSchema,
+			// capture_canvas only: regionSchema is shared with fit_view
+			isolate: z
+				.boolean()
+				.optional()
+				.describe(
+					'With ids or target "selection" only (an error with anything else). true draws just the objects named — with their descendants and the connectors whose attached ends are all on them — and nothing else inside the area, so the picture shows them on their own. The default false crops: whatever else is drawn around them is in the picture too, which is what to use to check overlaps or things spilling into them.',
+				),
+		},
+		(args) => ({ kind: "captureCanvas", ...args }),
 		{ isReadOnly: true, drives: ["handle.export.capturePng"] },
 	);
 
@@ -1621,30 +1693,22 @@ export const createCanvasToolDescriptors = (
 	const fitViewTool = defineCanvasTool(
 		"fit_view",
 		[
-			'Frame the whole drawing ("all"), just what is selected ("selection"), or a world rect you name in the view.',
-			"Use it after drawing so the user sees everything you made, and after select_objects to zoom in on one part.",
-			"A rect is for a region you worked out yourself — the bounds measure_visual_bounds reported, the area around one node — and is fitted the same way the other two are.",
-			"Give exactly one of target and rect.",
+			'Frame the whole drawing ("all"), just what is selected ("selection"), the objects you name (ids), or a world rect you name in the view.',
+			"Use it after drawing so the user sees everything you made, and after select_objects or with ids to zoom in on one part.",
+			"ids are framed around what they actually draw, the same bounds measure_visual_bounds reports.",
+			"A rect is for a region you worked out yourself — the area around one node, the gap between two clusters — and is fitted the same way the others are.",
+			"Give exactly one of target, ids and rect.",
 			"A rect is what the view is fitted around rather than what it ends up showing: the window's proportions decide how much extra comes into view on one axis, and get_view reads back what is really on screen.",
-			"Fails when there is nothing to frame: an empty canvas, an empty selection, or a rect with no extent on either axis.",
+			"Fails when there is nothing to frame: an empty canvas, an empty selection, ids none of which draws anything, or a rect with no extent on either axis (one flat on a single axis still fits along the other).",
 		].join(" "),
-		{
-			target: z
-				.enum(["all", "selection"])
-				.optional()
-				.describe("What to fit into the view; omit when giving rect instead."),
-			rect: rectSchema
-				.optional()
-				.describe(
-					"World rect to frame; omit when giving target instead. A rect flat on one axis still fits along the other.",
-				),
-		},
+		regionSchema,
 		(args) => ({ kind: "fitView", ...args }),
 		{
 			drives: [
 				"handle.viewport.fitToContent",
 				"handle.viewport.fitToSelection",
 				"handle.viewport.fitToRect",
+				"handle.measure.visualBounds",
 			],
 		},
 	);
@@ -1703,6 +1767,7 @@ export const createCanvasToolDescriptors = (
 		setStyleTool,
 		setBackgroundTool,
 		setDocumentViewTool,
+		setMetaTool,
 		setExtraPropsTool,
 		setTextTool,
 		setTextsTool,

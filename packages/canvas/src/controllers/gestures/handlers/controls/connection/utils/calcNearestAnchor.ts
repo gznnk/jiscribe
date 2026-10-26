@@ -21,7 +21,7 @@ import {
 	calcEdgeAnchorFromPoint,
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
-} from "../../../../../../connectors/calcConnectPoint";
+} from "../../../../../../rendering/objects/connector/geometry/calcConnectPoint";
 import type { ConnectionAnchors } from "../../../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";

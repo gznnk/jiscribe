@@ -30,7 +30,7 @@ const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
 
 /**
  * Event types that close out a gesture: the copy-on-write objects view is
- * flattened and the drag bookkeeping is dropped. Committing is not part of it —
+ * flattened and the drag, with everything it holds, is dropped. Committing is not part of it —
  * the handler that edited the document has already advanced `commitVersion`
  * (see commitEdit).
  *
@@ -48,8 +48,9 @@ const EVENT_CLOSE_OUT_TYPES: readonly EventType[] = [
 /**
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
- * Also manages the activeDrag lifecycle (opened on dragStart, dropped on dragEnd).
- * Never advances commitVersion itself: the handlers that edit do (see commitEdit).
+ * Also manages the drag lifecycle (opened on dragStart, dropped on dragEnd).
+ * Never advances commitVersion itself: the handlers that edit do (see
+ * commitEdit), an open text edit's commit included (see CanvasDrag).
  *
  * Routing uses the canvas's own gesture handler registry, passed in via
  * `registries` (populated when its bundle is built by `createCanvasRegistries`).
@@ -183,12 +184,15 @@ export const handleGesture = (
 		nextState = {
 			...state,
 			dragStartCaches: { keyPoints: newCache, snapCandidates },
-			activeDrag: {
+			drag: {
+				// What every drag starts as. The handler it reaches names it in its own
+				// dragStart (claimDrag); one no handler takes up stays "inert", which
+				// keeps "a drag is under way" true for all of them.
+				kind: "inert",
 				startSnapshot,
-				// The default every drag starts from. A handler that gives its drag a
-				// meaning refines it in its own dragStart; anything else stays "other",
-				// which is what keeps "a drag is under way" true for all of them.
-				kind: "other",
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
 			},
 		};
 	}
@@ -237,19 +241,10 @@ export const handleGesture = (
 		// new state reference per click. Every field below is already at its
 		// closed-out value when this is false.
 		const closesOutSomething =
-			objects !== nextState.objects ||
-			nextState.activeDrag !== null ||
-			nextState.snapFeedback !== null ||
-			nextState.axisLockFeedback !== null;
+			objects !== nextState.objects || nextState.drag !== null;
 
 		if (closesOutSomething) {
-			nextState = {
-				...nextState,
-				objects,
-				activeDrag: null,
-				snapFeedback: null,
-				axisLockFeedback: null,
-			};
+			nextState = { ...nextState, objects, drag: null };
 		}
 	}
 

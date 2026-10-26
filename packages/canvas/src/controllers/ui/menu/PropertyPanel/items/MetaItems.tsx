@@ -1,9 +1,12 @@
 import { memo } from "react";
 
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
+import type { OpenReferenceHandler } from "../../ObjectMenu/ObjectMenuTypes";
+import { resolveOpenReference } from "../../ObjectMenu/utils/resolveOpenReference";
+import { PropertyCommandButton } from "../common/PropertyControlsStyled";
 import { PropertyRow } from "../common/PropertyRow";
 import { PropertyTextField } from "../common/PropertyTextField";
 import type { PropertyPanelMetaUpdater } from "../PropertyPanelTypes";
@@ -88,3 +91,41 @@ const MetaDescriptionItemComponent: React.FC<MetaItemProps> = ({
 };
 
 export const MetaDescriptionItem = memo(MetaDescriptionItemComponent);
+
+type MetaOpenReferenceItemProps = {
+	/** The state the row reads: the sole selected object's `meta.reference`. */
+	canvasState: CanvasControllerState;
+	onOpenReference: OpenReferenceHandler;
+};
+
+/**
+ * Hands the object's `meta.reference` to the host, the sidebar twin of the
+ * ObjectMenu's OpenReferenceMenu; drawn only while there is a reference to hand
+ * (resolveOpenReference). Wired through React `onClick` with the button opted out
+ * of the gesture system, for the reason OpenReferenceMenu gives.
+ */
+const MetaOpenReferenceItemComponent: React.FC<MetaOpenReferenceItemProps> = ({
+	canvasState,
+	onOpenReference,
+}) => {
+	const messages = useCanvasMessages();
+	const payload = resolveOpenReference(canvasState);
+	if (payload === null) {
+		return null;
+	}
+
+	return (
+		<PropertyRow>
+			<PropertyCommandButton
+				type="button"
+				data-gesture="none"
+				title={messages.menuOpenReference}
+				onClick={() => onOpenReference(payload)}
+			>
+				{messages.menuOpenReference}
+			</PropertyCommandButton>
+		</PropertyRow>
+	);
+};
+
+export const MetaOpenReferenceItem = memo(MetaOpenReferenceItemComponent);

@@ -18,6 +18,7 @@ import type {
 	CanvasHandle,
 	CanvasParser,
 	CanvasPlugin,
+	OpenReferencePayload,
 	ResolveImage,
 	StencilCategory,
 	ToolbarItem,
@@ -146,6 +147,20 @@ function HarnessApp({
 		e.preventDefault();
 	}, []);
 
+	// Stands in for a host that opens a `meta.reference`, so a spec can see the
+	// "open reference" buttons and what pressing one hands over. Only an object
+	// carrying a reference offers the button, so the other specs see no change.
+	// ui/property-panel-meta.spec reads the log.
+	const handleOpenReference = useCallback((payload: OpenReferencePayload) => {
+		const harnessWindow = window as unknown as {
+			__openedReferences?: OpenReferencePayload[];
+		};
+		harnessWindow.__openedReferences = [
+			...(harnessWindow.__openedReferences ?? []),
+			payload,
+		];
+	}, []);
+
 	// The tool section is the two the core default opens with plus the page's items, so a
 	// page that declares only its plugin's presets still gets the shape library toggle when
 	// it declared a library. Without a library both are dropped by resolution — the toggle
@@ -185,6 +200,7 @@ function HarnessApp({
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
 				resolveImage={resolveImage}
+				onOpenReference={handleOpenReference}
 				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
 				stencilLibrary={
 					stencilLibrarySections

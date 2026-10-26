@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 
-import { scrollbarStyles } from "../../../../theme/themeScrollbarStyles";
-import { theme } from "../../../../theme/themeTokens";
+import { scrollbarStyles } from "../../../../foundation/theme/themeScrollbarStyles";
+import { theme } from "../../../../foundation/theme/themeTokens";
 
 /**
  * Width of the sidebar. Wider than the shape library: a row is a label column

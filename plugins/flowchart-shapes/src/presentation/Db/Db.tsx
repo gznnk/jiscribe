@@ -1,13 +1,14 @@
 import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildDbPaths } from "./buildDbPaths";
+import { DbCapEdgePath, DbRootGroup } from "./DbStyled";
 import type { DbState } from "../../state/db/DbState";
 
 /** Renders a database cylinder (Frame-family shared logic lives in createFrameObject; only the shape is swapped in). */
 export const Db = createFrameObject<DbState>((state, shape) => {
 	const { bodyPath, capEdgePath } = buildDbPaths(state.width, state.height);
 	return (
-		<g data-kind="object" data-id={state.id} style={{ cursor: "grab" }}>
+		<DbRootGroup data-kind="object" data-id={state.id}>
 			<ShapeBodyPath
 				d={bodyPath}
 				transform={shape.transform}
@@ -18,8 +19,7 @@ export const Db = createFrameObject<DbState>((state, shape) => {
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>
-			{/* Cap edge is decoration only; the body silhouette handles hit testing */}
-			<ShapeBodyPath
+			<DbCapEdgePath
 				d={capEdgePath}
 				transform={shape.transform}
 				strokeColor={shape.strokeColor}
@@ -27,8 +27,7 @@ export const Db = createFrameObject<DbState>((state, shape) => {
 				fillColor="none"
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
-				style={{ pointerEvents: "none" }}
 			/>
-		</g>
+		</DbRootGroup>
 	);
 });

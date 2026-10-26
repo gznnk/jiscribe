@@ -404,13 +404,15 @@ describe("handleGesture - scroll limit declared by the document", () => {
 		);
 		expect(walled.viewport.minX).toBe(74);
 
+		const unwalledDoc = twoRectsDocWith({ padding: pagePadding });
 		const unwalled = reducer(walled, {
 			type: "SYNC_EXTERNAL",
 			payload: canvasToState(
-				twoRectsDocWith({ padding: pagePadding }),
+				unwalledDoc,
 				registries.objectMapper,
 				registries.objectContentResizer,
 			),
+			doc: unwalledDoc,
 		});
 
 		expect(apply(unwalled, wheel(9999, 0)).viewport.minX).toBe(1073.9);

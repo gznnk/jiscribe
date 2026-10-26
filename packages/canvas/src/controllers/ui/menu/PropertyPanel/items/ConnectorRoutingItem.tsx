@@ -1,7 +1,7 @@
 import { memo } from "react";
 
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { getSelectedRouting } from "../../../../utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "../../../../utils/isSelectedConnectorSelfLoop";
 import { OrthogonalConnectorIcon } from "../../../icons/OrthogonalConnectorIcon";

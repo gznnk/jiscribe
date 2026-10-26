@@ -520,18 +520,15 @@ test.describe("canvas handle / export", () => {
 		expect(exported!.rectCount).toBeGreaterThan(0);
 	});
 
-	test("captures the visible world when the region has nothing to measure", async ({
+	test("captures the visible world when an empty canvas has no content to measure", async ({
 		canvas,
 	}) => {
 		const handle = await readCanvasHandle(canvas.page);
-		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 460, y: 300 });
 
 		// The image is not brought back: only the frame of reference it came with,
 		// which is what turns a position in the image into a world coordinate.
 		const capture = await handle.evaluate(async (h) => {
-			const result = await h.export.capturePng({
-				region: { ids: ["no-such-id"] },
-			});
+			const result = await h.export.capturePng();
 			return result === null
 				? null
 				: {
@@ -553,6 +550,23 @@ test.describe("canvas handle / export", () => {
 		expect(capture!.blobSize).toBeGreaterThan(0);
 		expect(capture!.pixelWidth).toBeGreaterThan(0);
 		expect(capture!.pixelHeight).toBeGreaterThan(0);
+	});
+
+	test("rejects an { ids } region none of whose ids draws anything", async ({
+		canvas,
+	}) => {
+		const handle = await readCanvasHandle(canvas.page);
+		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 460, y: 300 });
+
+		const message = await handle.evaluate((h) =>
+			h.export.capturePng({ region: { ids: ["no-such-id"] } }).then(
+				() => null,
+				(error: unknown) =>
+					error instanceof Error ? error.message : String(error),
+			),
+		);
+
+		expect(message).toContain('nothing to export at ids ["no-such-id"]');
 	});
 });
 

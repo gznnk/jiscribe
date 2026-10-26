@@ -24,6 +24,61 @@ Main structure:
 
 By committing to pure rendering, the presentation is determined purely as a function of state, making it easy to test and reuse.
 
+## Text too small to read is not drawn
+
+A text whose largest type size would show below **4 CSS px on screen** (`fontSize × zoom`) is not
+drawn: its foreignObject gets `display="none"`. Every text overlay is laid out by the browser on each
+frame of a zoomed-out drag, and at that size there is nothing to read. The rule and the threshold live
+in one hook, `useIsTextLegible` (`rendering/objects/useIsTextLegible.ts`), which `TextOverlayFrame` and
+`ConnectorLabel` call.
+
+- The zoom reaches it as a store (`CanvasZoomStoreContext`), not as a number, so a zoom step re-renders
+  only the texts it moves across the threshold. `<Canvas>` owns the store (`useCanvasZoomStore`); with no
+  canvas around (tests, previews) the context is null and every text is drawn.
+- The element stays mounted while hidden, so zooming back in does not remount every box at once.
+- An export clones the live DOM and reads the text back off it, so the store is put in its snapshot state
+  inside the same `flushSync` as the export's render scope (`useSnapshotRenderScope`), and every text is
+  drawn for that span whatever the zoom.
+- A box whose content draws larger than its `fontSize` passes its `maxFontSize` to `TextOverlayFrame`:
+  `TextOverlay` the largest run size, the Markdown plugin its largest heading.
+- A text object is still picked while hidden: it is hit through computed bands, not through its overlay.
+  A hidden connector label is not a target until zoomed back in; its connector's line still is.
+
+## A move drag shifts start states instead of re-rendering
+
+While objects are dragged, the reducer still writes their moved positions on every frame, so snapping,
+the controls and every other reader of the state see the truth. Only the drawing takes a shortcut, and
+viewport culling follows it for connectors (see below). The object drag handler declares what it moved as the `"move"` drag's `movePreview`
+(`rendering/layers/content/MovePreview.ts`: the delta it applied, the ids whose `moveByDelta` returned a
+new state, the drag-start objects), and `ObjectsRenderer` draws each of those ids from its start state
+inside a `<g transform="translate(dx dy)">`. The start state keeps its identity for the whole drag, so
+`ObjectRenderBoundary` bails out and a frame changes one attribute per moved object.
+
+- Every drawn object and connector has that wrapper `<g>`, unshifted outside a drag. It sits outside the
+  boundary, carries no `data-*` of its own beyond `data-canvas-export="flatten"`, and is never shared:
+  a group of the moved objects would reorder the stacking and remount whatever enters or leaves it.
+- The renderer never guesses. An id the preview does not list, one whose state is still its start
+  state, and the object under text edit are drawn from their current state. The reducer keeps the list
+  true: a drag frame drops the ids its settling rewrote, and a font landing mid-drag (`REMEASURE_TEXT`)
+  drops the ids whose box it re-measured. Other edits do not outlive a move drag frame: they are
+  refused, or the next frame rebuilds the objects from the start snapshot.
+- A connector without stored vertices is shifted when both its owners are; one with vertices (which
+  stay put while the owners move) or with one owner moved is routed live. Orthogonal routing rounds its
+  crossover to whole units, so a shifted orthogonal path may sit up to 0.5 world units off the live
+  route until the drop routes it.
+- Viewport culling (`controllers/utils/calcVisibleObjectIds.ts`) judges a shifted connector the way it is
+  drawn: the box of its start path, moved by the delta (`isConnectorShiftedWithOwners`, shared with
+  `ObjectsRenderer`). The start owners keep their identities, so that box is routed once per drag. For
+  every other connector culling first takes a bound that needs no routing (`calcConnectorExtentBound`:
+  the endpoints, stored vertices and owner boxes grown by the router's margin, plus the label's reach);
+  only a connector whose bound reaches the screen is routed for its exact box, so dragging shapes whose
+  connectors run off screen does not route those connectors.
+- Each id's element is handed back as the same object while what it is built from holds
+  (`useElementReuse`), so React skips the wrapper and the boundary of every object the frame left alone.
+- It rests on `moveByDelta` being a pure translation of the drawing (see `MoveByDeltaFunction`). The
+  drop clears the preview in the same state that holds the final positions, so the frame that commits
+  draws from the state alone.
+
 ## Choose between "presentation attribute" and "CSS" for color
 
 The deciding factor is not emotion vs. inline style, but rather **whether a presentation attribute suffices, or whether CSS-function resolution is required**.
@@ -47,11 +102,11 @@ Relevant code examples:
 
 There are two kinds of color with different natures, and their origins must always be kept separate.
 
-|               | UI chrome                                      | Shape data                                   |
-| ------------- | ---------------------------------------------- | -------------------------------------------- |
-| Examples      | menus, toolbars, selection frames, snap guides | a shape's `fill` / `stroke` / `fontColor`    |
-| Origin        | theme tokens in `theme/themeTokens.ts`         | values saved in the document (`.jis`)        |
-| Follows theme | yes (follows the host-injected theme)          | no (data specified by the user) ※except auto |
+|               | UI chrome                                         | Shape data                                   |
+| ------------- | ------------------------------------------------- | -------------------------------------------- |
+| Examples      | menus, toolbars, selection frames, snap guides    | a shape's `fill` / `stroke` / `fontColor`    |
+| Origin        | theme tokens in `foundation/theme/themeTokens.ts` | values saved in the document (`.jis`)        |
+| Follows theme | yes (follows the host-injected theme)             | no (data specified by the user) ※except auto |
 
 ### `"auto"` (theme-following color) — an exception in shape data (issue #38)
 
@@ -122,12 +177,12 @@ and "attribute vs. style").
 
 Theming is host-injectable and neutral — the canvas knows nothing about VSCode.
 
-- **Neutral tokens**: `theme` (`theme/themeTokens.ts`) references neutral `--jiscribe-*` CSS custom
+- **Neutral tokens**: `theme` (`foundation/theme/themeTokens.ts`) references neutral `--jiscribe-*` CSS custom
   properties, each with the dark preset value as its fallback (`var(--jiscribe-foreground, #cccccc)`).
   emotion styles can stay static module-level constants because the theme resolves at CSS time.
-- **Injection**: the host passes a `CanvasTheme` (`theme/CanvasTheme.ts`) via the Canvas `theme`
+- **Injection**: the host passes a `CanvasTheme` (`foundation/theme/CanvasTheme.ts`) via the Canvas `theme`
   prop. The Canvas root injects `theme.tokens` as `--jiscribe-*` custom properties
-  (`theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
+  (`foundation/theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
 - **Two delivery paths**: CSS-consumed tokens flow through the custom properties; JS-consumed values
   (e.g. handle dimensions, for zoom-adjusted geometry, and `colorScheme` below) flow through `CanvasThemeContext`
   (`useCanvasTheme()`) and must be concrete values, never `var(...)` strings.
@@ -175,7 +230,7 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     document swapped in later goes through the nonce path alone. A host that never imported
     `fonts.css` loses nothing — with no face to fetch, the load resolves at once.
 - **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
-  `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).
+  `lightCanvasTheme` are exported from the package (`foundation/theme/themePresets.ts`).
 - **`colorScheme`**: a theme field shapes read as a JS value (`CanvasColorScheme`). It names the ground
   the tokens paint (`"light"` / `"dark"`) for artwork that ships a rendition per ground and cannot be
   recoloured through tokens — the AWS icons pick their official Light or Dark drawing by it

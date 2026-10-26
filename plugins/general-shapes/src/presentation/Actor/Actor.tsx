@@ -1,6 +1,6 @@
 import { BelowLabelHitArea, createFrameObject } from "@jiscribe/canvas-sdk";
 
-import { ActorHead, ActorLimbs } from "./ActorStyled";
+import { ActorHead, ActorLimbs, ActorRootGroup } from "./ActorStyled";
 import { buildActorFigure } from "./buildActorFigure";
 import type { ActorState } from "../../state/actor/ActorState";
 import { PictogramHitArea } from "../shared/PictogramStyled";
@@ -19,11 +19,10 @@ export const Actor = createFrameObject<ActorState>((state, shape) => {
 		state.height,
 	);
 	return (
-		<g
+		<ActorRootGroup
 			data-kind="object"
 			data-id={state.id}
 			transform={shape.transform}
-			style={{ cursor: "grab" }}
 		>
 			<PictogramHitArea
 				x={-state.width / 2}
@@ -51,6 +50,6 @@ export const Actor = createFrameObject<ActorState>((state, shape) => {
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>
-		</g>
+		</ActorRootGroup>
 	);
 });

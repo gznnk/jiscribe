@@ -22,15 +22,17 @@ import type { TransformState } from "../../../../../states/objects/base/Transfor
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import { MIN_GROUP_DIMENSION } from "../../../../../states/utils/groupDimensions";
-import { transformChildren } from "../../../../behaviors/primitives/GroupController";
+import { transformChildren } from "../../../../behaviors/base/GroupChildrenTransform";
 import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
+import { claimDrag } from "../../../../utils/claimDrag";
 import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsForSelection } from "../../../../utils/updateGroupBoundsForSelection";
+import { writeDragFeedback } from "../../../../utils/writeDragFeedback";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
@@ -103,7 +105,7 @@ export class TransformControlHandler extends ControlStrategy {
 
 		// For a multi-select resize, cache what the per-frame bounds derivation
 		// needs so it never re-collects every leaf vertex (#215)
-		let startSnapshot = state.activeDrag?.startSnapshot;
+		let startSnapshot = state.drag?.startSnapshot;
 		if (
 			anchorType !== "rotation" &&
 			startSnapshot?.multiSelectGroup &&
@@ -119,19 +121,11 @@ export class TransformControlHandler extends ControlStrategy {
 			};
 		}
 
-		return {
-			...state,
-			activeDrag: startSnapshot
-				? {
-						startSnapshot,
-						kind: "transform",
-						...(resize && { resize }),
-					}
-				: null,
-			edgeScrollEnabled: true,
-			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
-		};
+		return claimDrag(
+			{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+			{ kind: "transform", ...(resize && { resize }) },
+			{ edgeScroll: true, startSnapshot },
+		);
 	}
 
 	/**
@@ -149,7 +143,7 @@ export class TransformControlHandler extends ControlStrategy {
 		}
 
 		// Common preprocessing for resize handling
-		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		const dragStartSnapshot = state.drag?.startSnapshot;
 		if (!dragStartSnapshot) {
 			return state;
 		}
@@ -330,12 +324,10 @@ export class TransformControlHandler extends ControlStrategy {
 			Object.assign(updatedObjects, groupChildrenUpdates);
 
 			// Update multiSelectGroup as well
-			nextState = {
-				...state,
-				objects: updatedObjects,
-				multiSelectGroup: updatedGroup,
-				snapFeedback,
-			};
+			nextState = writeDragFeedback(
+				{ ...state, objects: updatedObjects, multiSelectGroup: updatedGroup },
+				{ snapFeedback },
+			);
 
 			// Recompute the bounding box of multiSelectGroup (only this is updated during drag).
 			// The dragStart cache derives it without re-collecting every leaf vertex (#215);
@@ -347,10 +339,12 @@ export class TransformControlHandler extends ControlStrategy {
 						nextState.objects,
 						startGroup,
 						updatedGroup,
+						registries,
 					)
 				: calcMultiSelectGroupBounds(
 						state.selection.objectIds,
 						nextState.objects,
+						registries,
 						nextState.multiSelectGroup,
 					);
 			if (recalculatedBounds && nextState.multiSelectGroup) {
@@ -391,11 +385,10 @@ export class TransformControlHandler extends ControlStrategy {
 				Object.assign(updatedObjects, groupChildrenUpdates);
 			}
 
-			nextState = {
-				...state,
-				objects: updatedObjects,
-				snapFeedback,
-			};
+			nextState = writeDragFeedback(
+				{ ...state, objects: updatedObjects },
+				{ snapFeedback },
+			);
 
 			// Only for a single group selection, update that group's own bounds (during drag).
 			// Parent group updates happen on dragEnd.
@@ -416,14 +409,8 @@ export class TransformControlHandler extends ControlStrategy {
 		anchorType: TransformAnchorType,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		const closingState = { ...state, edgeScrollEnabled: false };
-		const draggedState = this.handleDrag(
-			closingState,
-			event,
-			anchorType,
-			registries,
-		);
-		const committedState = commitEditIfChanged(closingState, draggedState);
+		const draggedState = this.handleDrag(state, event, anchorType, registries);
+		const committedState = commitEditIfChanged(state, draggedState);
 		return updateGroupBoundsForSelection(committedState);
 	}
 }

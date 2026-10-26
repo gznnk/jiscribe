@@ -31,7 +31,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *   when there is nothing to graft (unchanged reference, so downstream memos hold)
  */
 export const graftTextEditDraft = (
-	state: Pick<CanvasControllerState, "objects" | "selection" | "textEditState">,
+	state: Pick<CanvasControllerState, "objects" | "selection" | "mode">,
 	contentResizer: ObjectContentResizerRegistry,
 ): Record<string, ObjectState> => {
 	const { objects } = state;

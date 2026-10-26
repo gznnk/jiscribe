@@ -1,6 +1,6 @@
+import type { LocaleMessages } from "../../../../foundation/i18n/resolveLocaleMessages";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import type {
 	DocumentProperty,
 	DocumentPropertyValueMap,
@@ -145,9 +145,10 @@ export type PropertyPanelTransformUpdater = (
  * no plugin rows.
  *
  * @param property - Which document setting is being stated; it decides the type of `value`
- * @param value - Typed by {@link DocumentPropertyValueMap}: a literal CSS color or
- *   a view mode, null to clear that setting so the host decides again, or a padding
- *   side in world px (0 drops the side)
+ * @param value - Typed by {@link DocumentPropertyValueMap}: the document's name or
+ *   description as text, a literal CSS color or a view mode, null to clear that
+ *   setting (for name / description, so does `""`), or a padding side in world px
+ *   (0 drops the side)
  * @param commit - true records the change in history (a swatch, blur / Enter), false only previews it live
  * @param coalesceHistory - true merges this commit into the immediately preceding
  *   commit for the same property, so a burst becomes a single undo entry. Defaults

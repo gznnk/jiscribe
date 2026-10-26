@@ -9,9 +9,44 @@ export const SVG_SOURCE_LOCAL_NAME = "source";
 // jiscribe's own exports are handled.
 const SOURCE_TAG = `jiscribe:${SVG_SOURCE_LOCAL_NAME}`;
 
-const SOURCE_ELEMENT_PATTERN = new RegExp(
-	`(<${SOURCE_TAG}\\b[^>]*>)([\\s\\S]*?)(</${SOURCE_TAG}>)`,
-);
+const OPEN_TAG_START = `<${SOURCE_TAG}`;
+const CLOSE_TAG = `</${SOURCE_TAG}>`;
+
+/** Where the embedded element's content sits in the SVG text. */
+type SourceElementSpan = {
+	contentStart: number;
+	contentEnd: number;
+};
+
+// A regex with a lazy body (`[\s\S]*?`) rescans to the end of the text for every
+// open tag that has no close tag after it, which is quadratic on a crafted file
+// and stalls the caller for minutes; indexOf keeps the scan linear.
+const findSourceElement = (svgText: string): SourceElementSpan | null => {
+	let searchFrom = 0;
+	for (;;) {
+		const openTagStart = svgText.indexOf(OPEN_TAG_START, searchFrom);
+		if (openTagStart === -1) {
+			return null;
+		}
+		const nameEnd = openTagStart + OPEN_TAG_START.length;
+		// The tag name must end here, so `<jiscribe:sourcex>` is another element
+		if (/\w/.test(svgText.charAt(nameEnd))) {
+			searchFrom = nameEnd;
+			continue;
+		}
+		const openTagEnd = svgText.indexOf(">", nameEnd);
+		if (openTagEnd === -1) {
+			return null;
+		}
+		const closeTagStart = svgText.indexOf(CLOSE_TAG, openTagEnd + 1);
+		if (closeTagStart === -1) {
+			return null;
+		}
+		return { contentStart: openTagEnd + 1, contentEnd: closeTagStart };
+	}
+};
+
+const MAX_CODE_POINT = 0x10ffff;
 
 const escapeXmlText = (text: string): string =>
 	text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -32,11 +67,14 @@ const unescapeXmlText = (text: string): string =>
 				case "amp":
 					return "&";
 			}
-			return String.fromCodePoint(
-				entity.startsWith("#x")
-					? parseInt(entity.slice(2), 16)
-					: parseInt(entity.slice(1), 10),
-			);
+			const codePoint = entity.startsWith("#x")
+				? parseInt(entity.slice(2), 16)
+				: parseInt(entity.slice(1), 10);
+			// fromCodePoint throws past U+10FFFF; a reference no character answers to
+			// is left as written
+			return codePoint <= MAX_CODE_POINT
+				? String.fromCodePoint(codePoint)
+				: `&${entity};`;
 		},
 	);
 
@@ -44,18 +82,21 @@ const unescapeXmlText = (text: string): string =>
  * Extract the embedded source JSON from `.jis.svg` text. Needs no DOM, so it runs in Node.
  *
  * @param svgText - Whole SVG document text; only a `jiscribe:source` element is recognized, so
- *   SVG written with a different prefix yields null. XML entities in the element are unescaped
+ *   SVG written with a different prefix yields null. XML entities in the element are unescaped;
+ *   a character reference past U+10FFFF is kept as written
  * @returns The raw JSON, never validated as JSON; null when the element is absent, or present
  *   but empty once trimmed
  */
 export const extractCanvasSourceFromSvgText = (
 	svgText: string,
 ): string | null => {
-	const match = SOURCE_ELEMENT_PATTERN.exec(svgText);
-	if (!match) {
+	const span = findSourceElement(svgText);
+	if (span === null) {
 		return null;
 	}
-	const sourceJson = unescapeXmlText(match[2]).trim();
+	const sourceJson = unescapeXmlText(
+		svgText.slice(span.contentStart, span.contentEnd),
+	).trim();
 	return sourceJson === "" ? null : sourceJson;
 };
 
@@ -72,12 +113,13 @@ export const replaceCanvasSourceInSvgText = (
 	svgText: string,
 	sourceJson: string,
 ): string | null => {
-	if (!SOURCE_ELEMENT_PATTERN.test(svgText)) {
+	const span = findSourceElement(svgText);
+	if (span === null) {
 		return null;
 	}
-	return svgText.replace(
-		SOURCE_ELEMENT_PATTERN,
-		(_matched, openTag: string, _content, closeTag: string) =>
-			`${openTag}${escapeXmlText(sourceJson)}${closeTag}`,
+	return (
+		svgText.slice(0, span.contentStart) +
+		escapeXmlText(sourceJson) +
+		svgText.slice(span.contentEnd)
 	);
 };

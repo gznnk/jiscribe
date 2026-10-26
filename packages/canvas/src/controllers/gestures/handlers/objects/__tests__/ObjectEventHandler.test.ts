@@ -9,6 +9,7 @@ import { registerTextSlotParts } from "../../../../selection/__tests__/support/t
 import { textSlotPartSelection } from "../../../../selection/__tests__/support/textSlotPartSelection";
 import type { ObjectPartSelection } from "../../../../selection/CanvasSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/partKinds/textSlotPartKind";
+import { readTextEditDraft } from "../../../../utils/readTextEditDraft";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { Mods } from "../../../registry/ObjectBehaviorTypes";
 import { textSlotPart } from "../../utils/partAddress";
@@ -64,9 +65,13 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 		rootIds: ["rect-1"],
 		selection: selectionOf(["rect-1"]),
 		multiSelectGroup: null,
-		textEditState: null,
+		mode: { kind: "normal" },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		activeDrag: {
+		drag: {
+			kind: "move",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects: { "rect-1": rect },
 				keyPoints: { "rect-1": makeKeyPoints(cx, cy) },
@@ -76,7 +81,6 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -128,8 +132,9 @@ const makeEditState = (
 		rootIds: [editingId, "rect-2"],
 		selection: selectionOf([editingId], textSlotPartSelection("body")),
 		multiSelectGroup: null,
-		textEditState: { kind: "shape", text: pendingText },
+		mode: { kind: "textEdit", draft: { kind: "shape", text: pendingText } },
 		commitVersion: 5,
+		drag: null,
 		contextMenuPosition: { x: 1, y: 1 },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 	}) as unknown as CanvasControllerState;
@@ -156,7 +161,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 			registries,
 		);
 		expect(bodyTextOf(next, "rect-1")).toBe("new");
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.commitVersion).toBe(6);
 	});
 
@@ -172,7 +177,10 @@ describe("ObjectEventHandler - text edit commit", () => {
 			registries,
 		);
 		// The pending text was committed by the pressed and prefilled again — not lost.
-		expect(afterDouble.textEditState).toEqual({ kind: "shape", text: "new" });
+		expect(readTextEditDraft(afterDouble)).toEqual({
+			kind: "shape",
+			text: "new",
+		});
 		// The rect's one body is the slot being edited, picked like any other.
 		expect(afterDouble.selection).toEqual({
 			objectIds: ["rect-1"],
@@ -189,7 +197,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 		);
 		// The edit is committed to rect-1 and the session is cleared.
 		expect(bodyTextOf(next, "rect-1")).toBe("new");
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.commitVersion).toBe(6);
 	});
 
@@ -200,7 +208,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 			makeTapEvent("pressed", "rect-2", "touch"),
 			registries,
 		);
-		expect(next.textEditState).toBe(state.textEditState);
+		expect(readTextEditDraft(next)).toBe(readTextEditDraft(state));
 		expect(bodyTextOf(next, "rect-1")).toBe("old");
 		expect(next.commitVersion).toBe(5);
 		// The context-menu close on pressed is deliberately not deferred.
@@ -219,8 +227,53 @@ describe("ObjectEventHandler - text edit commit", () => {
 			registries,
 		);
 		expect(bodyTextOf(next, "rect-1")).toBe("new");
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.commitVersion).toBe(6);
+	});
+
+	it("the touch drag that resolves the press commits into its snapshot, so its frames keep the text", () => {
+		const editing = makeEditState("rect-1", "old", "new");
+		// As handleGesture opens it: frozen over the uncommitted objects
+		const opened = {
+			...editing,
+			drag: {
+				kind: "inert",
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
+				startSnapshot: {
+					objects: editing.objects,
+					keyPoints: { "rect-1": makeKeyPoints(0, 0) },
+					snapCandidates: { x: [], y: [] },
+					selectedIds: ["rect-1"],
+					selectedIdsWithDescendants: new Set(["rect-1"]),
+					multiSelectGroup: null,
+					viewport: editing.viewport,
+				},
+			},
+		} as unknown as CanvasControllerState;
+		const touchDrag = (type: "dragStart" | "drag", dx: number): CanvasEvent =>
+			({
+				...makeDragEvent({ x: dx, y: 0 }, false),
+				type,
+				pointerType: "touch",
+			}) as CanvasEvent;
+
+		const started = ObjectEventHandler.handle(
+			opened,
+			touchDrag("dragStart", 10),
+			registries,
+		);
+		expect(readTextEditDraft(started)).toBeNull();
+		expect(started.drag?.kind).toBe("move");
+
+		const dragged = ObjectEventHandler.handle(
+			started,
+			touchDrag("drag", 30),
+			registries,
+		);
+		expect(bodyTextOf(dragged, "rect-1")).toBe("new");
+		expect(movedRect(dragged).cx).toBe(30);
 	});
 });
 
@@ -251,7 +304,7 @@ const makeSlotState = (
 		rootIds: ["rec-1", "rect-2"],
 		selection: selectionOf(selectedIds, part),
 		multiSelectGroup: null,
-		textEditState: null,
+		mode: { kind: "normal" },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 	}) as unknown as CanvasControllerState;
 
@@ -534,7 +587,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 				kind: TEXT_SLOT_PART_KIND,
 				ranges: [{ anchorId: "name", focusId: "name" }],
 			}),
-			textEditState: { kind: "shape", text: "User" },
+			mode: { kind: "textEdit", draft: { kind: "shape", text: "User" } },
 			commitVersion: 3,
 		} as CanvasControllerState;
 		const next = ObjectEventHandler.handle(
@@ -542,7 +595,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			makeSlotClickEvent("rec-1", textSlotPart("rows"), { shift: true }),
 			registries,
 		);
-		expect(next.textEditState).toBeNull();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.selection.part).toEqual({
 			kind: TEXT_SLOT_PART_KIND,
 			ranges: [{ anchorId: "name", focusId: "rows" }],
@@ -585,7 +638,10 @@ describe("ObjectEventHandler - text slot selection", () => {
 			} as CanvasEvent,
 			registries,
 		);
-		expect(next.textEditState).toEqual({ kind: "shape", text: "id: string" });
+		expect(readTextEditDraft(next)).toEqual({
+			kind: "shape",
+			text: "id: string",
+		});
 		expect(next.selection).toEqual({
 			objectIds: ["rec-1"],
 			part: {
@@ -615,7 +671,10 @@ describe("ObjectEventHandler - text slot selection", () => {
 			part: textSlotPartSelection("rows"),
 		});
 		expect(next.multiSelectGroup).toBeNull();
-		expect(next.textEditState).toEqual({ kind: "shape", text: "id: string" });
+		expect(readTextEditDraft(next)).toEqual({
+			kind: "shape",
+			text: "id: string",
+		});
 	});
 
 	it("keeps the selection reference when the slot it opens is already picked", () => {
@@ -650,7 +709,7 @@ describe("ObjectEventHandler - text slot selection", () => {
 			} as CanvasEvent,
 			registries,
 		);
-		expect(next.textEditState?.kind).toBe("shape");
+		expect(readTextEditDraft(next)?.kind).toBe("shape");
 		expect(next.objectMenuOpenId).toBeNull();
 	});
 
@@ -683,7 +742,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 30, cy: 12 });
-		expect(next.axisLockFeedback).toBeNull();
+		expect(next.drag?.axisLockFeedback).toBeNull();
 	});
 
 	it("Shift + horizontal dominant (|dx| >= |dy|) locks Y and moves only X", () => {
@@ -730,7 +789,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 				makeDragEvent({ x: 50, y: 8 }, true),
 				registries,
 			);
-			expect(next.axisLockFeedback).toEqual({ y: 30 });
+			expect(next.drag?.axisLockFeedback).toEqual({ y: 30 });
 		});
 
 		it("vertical move (X locked) returns a vertical line through center X (x only)", () => {
@@ -739,7 +798,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 				makeDragEvent({ x: 8, y: 50 }, true),
 				registries,
 			);
-			expect(next.axisLockFeedback).toEqual({ x: 20 });
+			expect(next.drag?.axisLockFeedback).toEqual({ x: 20 });
 		});
 
 		it("the feedback axis switches when the dominant axis swaps", () => {
@@ -748,14 +807,14 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 				makeDragEvent({ x: 40, y: 5 }, true),
 				registries,
 			);
-			expect(afterX.axisLockFeedback).toEqual({ y: 30 });
+			expect(afterX.drag?.axisLockFeedback).toEqual({ y: 30 });
 
 			const afterY = ObjectEventHandler.handle(
 				afterX,
 				makeDragEvent({ x: 5, y: 40 }, true),
 				registries,
 			);
-			expect(afterY.axisLockFeedback).toEqual({ x: 20 });
+			expect(afterY.drag?.axisLockFeedback).toEqual({ x: 20 });
 		});
 	});
 
@@ -776,7 +835,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 				makeDragEvent({ x: 4, y: 3 }, true),
 				registries,
 			);
-			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
+			expect(next.drag?.axisLockFeedback).toEqual({ x: 20, y: 30 });
 		});
 
 		it("beyond the threshold the snap releases and returns to single-axis lock", () => {
@@ -787,7 +846,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 28, cy: 30 });
-			expect(next.axisLockFeedback).toEqual({ y: 30 });
+			expect(next.drag?.axisLockFeedback).toEqual({ y: 30 });
 		});
 
 		it("without Shift there is no snap even near the origin", () => {
@@ -797,7 +856,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 24, cy: 33 });
-			expect(next.axisLockFeedback).toBeNull();
+			expect(next.drag?.axisLockFeedback).toBeNull();
 		});
 	});
 });
@@ -807,9 +866,13 @@ const makeSnapDragState = (coordinate: number): CanvasControllerState => {
 	const state = makeDragState();
 	return {
 		...state,
-		activeDrag: {
+		drag: {
+			kind: "move",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
-				...state.activeDrag?.startSnapshot,
+				...state.drag?.startSnapshot,
 				snapCandidates: {
 					x: [
 						{
@@ -823,7 +886,6 @@ const makeSnapDragState = (coordinate: number): CanvasControllerState => {
 					y: [],
 				},
 			},
-			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -852,7 +914,7 @@ describe("ObjectEventHandler - snap during edge scroll", () => {
 			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
-		expect(next.snapFeedback?.x).toHaveLength(1);
+		expect(next.drag?.snapFeedback?.x).toHaveLength(1);
 	});
 
 	it("leaves the position uncorrected on a tick that scrolled the viewport", () => {
@@ -862,7 +924,7 @@ describe("ObjectEventHandler - snap during edge scroll", () => {
 			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 20, cy: 0 });
-		expect(next.snapFeedback?.x).toHaveLength(0);
+		expect(next.drag?.snapFeedback?.x).toHaveLength(0);
 	});
 
 	it("snaps again on dragEnd, which carries no scroll of its own", () => {
@@ -893,5 +955,82 @@ describe("ObjectEventHandler - commit", () => {
 		);
 		expect(movedRect(ended)).toMatchObject({ cx: 30, cy: 12 });
 		expect(ended.commitVersion).toBe(4);
+	});
+});
+
+describe("ObjectEventHandler - move preview", () => {
+	it("declares the snapped delta, the translated ids and the start snapshot it moved from", () => {
+		const state = makeSnapDragState(22);
+		const next = ObjectEventHandler.handle(
+			state,
+			makeScrollingDragEvent("drag", { x: 20, y: 0 }),
+			registries,
+		);
+
+		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
+		const movePreview =
+			next.drag?.kind === "move" ? next.drag.movePreview : undefined;
+		expect(movePreview?.delta).toEqual({ x: 22, y: 0 });
+		expect([...(movePreview?.translatedIds ?? [])]).toEqual(["rect-1"]);
+		expect(movePreview?.startObjects).toBe(state.drag?.startSnapshot.objects);
+	});
+
+	it("lists a moved group's descendants, and neither a selected connector nor an unselected object", () => {
+		const group = {
+			id: "group-1",
+			type: "group",
+			cx: 0,
+			cy: 0,
+			width: 30,
+			height: 10,
+			childIds: ["rect-1", "rect-2"],
+		} as unknown as ObjectState;
+		const connector = {
+			id: "connector-1",
+			type: "connector",
+			source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+			target: { owner: { id: "rect-3" }, anchor: { kind: "center" } },
+			points: [],
+		} as unknown as ObjectState;
+		const objects = {
+			"group-1": group,
+			"rect-1": makeRect("rect-1", -10, 0),
+			"rect-2": makeRect("rect-2", 10, 0),
+			"rect-3": makeRect("rect-3", 100, 0),
+			"connector-1": connector,
+		};
+		const base = makeDragState();
+		const state = {
+			...base,
+			objects,
+			rootIds: ["group-1", "rect-3", "connector-1"],
+			selection: selectionOf(["group-1", "connector-1"]),
+			drag: {
+				kind: "move",
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
+				...base.drag,
+				startSnapshot: {
+					...base.drag?.startSnapshot,
+					objects,
+					keyPoints: {},
+				},
+			},
+		} as unknown as CanvasControllerState;
+
+		const next = ObjectEventHandler.handle(
+			state,
+			{ ...makeDragEvent({ x: 5, y: 5 }, false), targetId: "rect-1" },
+			registries,
+		);
+
+		expect(
+			[
+				...((next.drag?.kind === "move" &&
+					next.drag.movePreview?.translatedIds) ||
+					[]),
+			].sort(),
+		).toEqual(["group-1", "rect-1", "rect-2"]);
 	});
 });

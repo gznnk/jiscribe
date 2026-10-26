@@ -6,25 +6,15 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
-	setAction,
 	toggleAction,
 } from "@jiscribe/canvas-sdk";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useRef } from "react";
 
 import { IconGlyph } from "./IconGlyph";
-import {
-	IconGrid,
-	IconGridButton,
-	IconGridMessage,
-	IconPickerPanel,
-	IconSearchInput,
-} from "./IconPickerMenuStyled";
+import { IconPicker } from "./IconPicker";
+import { IconPickerFrame } from "./IconPickerStyled";
 import { lucideIconMessagesByLocale } from "../messages/lucideIconMessages";
-import { COMMON_ICON_NAMES } from "../schema/icon/commonIconNames";
-import { normalizeIconName } from "../schema/icon/normalizeIconName";
-import { resolveIconName } from "../schema/icon/resolveIconName";
-import { searchIconNames } from "../schema/icon/searchIconNames";
-import { DEFAULT_ICON_NAME } from "../schema/IconDoc";
+import { useSelectedIcon } from "../state/useSelectedIcon";
 
 /**
  * Distinct from the toolbar category's id, which is also about icons: both render a
@@ -33,68 +23,25 @@ import { DEFAULT_ICON_NAME } from "../schema/IconDoc";
  */
 const SECTION_ID = "lucide-icon";
 
-/** The icon the selection is currently drawn with, as a current name. */
-const readSelectedIcon = (
-	selectedIds: readonly string[],
-	objects: ObjectMenuItemProps["objects"],
-): string => {
-	const first = objects[selectedIds[0] ?? ""] as
-		Record<string, unknown> | undefined;
-	const icon = first?.icon;
-	const resolved =
-		typeof icon === "string" ? resolveIconName(icon) : DEFAULT_ICON_NAME;
-	return resolved ?? DEFAULT_ICON_NAME;
-};
-
-/** Before anything is typed the picker offers the common icons rather than nothing. */
-const searchIcons = (query: string): { names: string[]; total: number } =>
-	normalizeIconName(query) === ""
-		? { names: [...COMMON_ICON_NAMES], total: COMMON_ICON_NAMES.length }
-		: searchIconNames(query);
-
 /**
- * Icon picker (lucideIcon only). Writes the `icon` property, which the shape declares in
- * its own style table (ICON_STYLE_ENTRIES) so the update travels the same path as any other menu
- * edit.
+ * The icon picker in the ObjectMenu (lucideIcon only): a button showing the
+ * selected icon, opening the picker (IconPicker) beneath it.
  *
- * The cells set the value through `data-action`, not an `onClick`. A press held for even a
- * moment never produces a click event on the button — the canvas captures the pointer, so
- * the `pointerup` lands elsewhere — which makes a React handler fire only for a press fast
- * enough to beat the capture. The value is declared the way the shared color swatches
- * declare theirs, and the canvas dispatches it from its own pipeline — which is also why
- * the panel must not be `data-gesture="none"`: that stops the canvas from recognising the
- * press at all, and with it the very dispatch this relies on.
- *
- * The grid is `data-gesture="native-wheel"` so a wheel over the list scrolls the list
- * rather than the canvas underneath it.
- *
- * Nothing here can produce a name that does not exist, which is the point of having it:
- * the validator and its suggestions are for documents written by hand or by an AI.
+ * The dropdown panel must not carry `data-gesture="none"` either, for the reason
+ * the picker's cells give.
  */
 const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
-	objects,
-	selection,
 	openSectionId,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(lucideIconMessagesByLocale, locale);
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const [query, setQuery] = useState("");
-	const currentIcon = readSelectedIcon(selection.objectIds, objects);
-	const { names, total } = useMemo(() => searchIcons(query), [query]);
+	const { icon, isMixed } = useSelectedIcon();
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
-
-	// Each opening starts from the whole set. Clearing as it closes rather than as it
-	// opens keeps the last search from flashing up before the reset lands.
-	useEffect(() => {
-		if (!isOpen) {
-			setQuery("");
-		}
-	}, [isOpen]);
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -103,7 +50,7 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				data-action={toggleAction(SECTION_ID)}
 				title={messages.menuIcon}
 			>
-				<IconGlyph name={currentIcon} size={18} />
+				<IconGlyph name={icon} size={18} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<ObjectMenuDropdownPanel
@@ -111,44 +58,9 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 					placement={placement}
 					offsetX={offsetX}
 				>
-					<IconPickerPanel>
-						<IconSearchInput
-							type="text"
-							value={query}
-							placeholder={messages.searchPlaceholder}
-							aria-label={messages.searchPlaceholder}
-							data-testid="icon-picker-search"
-							// Leaves right-click to the browser, so the field gets the
-							// native copy / paste menu instead of the canvas's own.
-							data-gesture="none"
-							onChange={(event) => setQuery(event.target.value)}
-						/>
-						<IconGrid
-							data-testid="icon-picker-grid"
-							data-gesture="native-wheel"
-							isEmpty={names.length === 0}
-						>
-							{names.map((name) => (
-								<IconGridButton
-									key={name}
-									type="button"
-									selected={name === currentIcon}
-									data-action={setAction("icon", name)}
-									title={name}
-								>
-									<IconGlyph name={name} size={18} />
-								</IconGridButton>
-							))}
-							{names.length === 0 && (
-								<IconGridMessage>{messages.noMatches}</IconGridMessage>
-							)}
-							{names.length < total && (
-								<IconGridMessage>
-									{messages.moreMatches(names.length, total)}
-								</IconGridMessage>
-							)}
-						</IconGrid>
-					</IconPickerPanel>
+					<IconPickerFrame>
+						<IconPicker currentIcon={isMixed ? undefined : icon} />
+					</IconPickerFrame>
 				</ObjectMenuDropdownPanel>
 			)}
 		</ObjectMenuItemPositioner>

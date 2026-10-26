@@ -1,7 +1,11 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
-import { richTextToPlain } from "@jiscribe/doc/model/objects/types/text/RichText";
+import {
+	richTextMaxFontSize,
+	richTextToPlain,
+} from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import type React from "react";
 import { memo } from "react";
 
@@ -78,6 +82,10 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 			verticalAlign={verticalAlign}
 			fontColor={fontColor}
 			fontSize={fontSize}
+			maxFontSize={richTextMaxFontSize(
+				text,
+				fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
+			)}
 			fontFamily={fontFamily}
 			fontWeight={fontWeight}
 			fontStyle={fontStyle}

@@ -87,6 +87,9 @@ export type {
 // measurement is the case in hand — needs the same last resort the drawing uses,
 // or it measures at a size nothing is drawn at.
 export { TEXT_STYLE_FALLBACK } from "./text/style/textStyleFallback";
+// What a connector label is drawn with where the doc sets none, for the same
+// headless host measuring a label at the size the canvas draws it.
+export { CONNECTOR_LABEL_DEFAULTS } from "./model/objects/connector/ConnectorDoc";
 
 // The stroke / fill counterpart: the last resort ObjectShapeStyleDefaultsRegistry
 // resolves to, for a host that shows a shape style with nothing selected to

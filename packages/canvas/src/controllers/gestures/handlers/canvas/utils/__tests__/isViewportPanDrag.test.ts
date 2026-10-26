@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { isViewportPanDrag } from "../isViewportPanDrag";
 
-const stateWith = (shapeDrawing: object | null): CanvasControllerState =>
-	({ shapeDrawing }) as unknown as CanvasControllerState;
+const stateWith = (preset: object | null): CanvasControllerState =>
+	({
+		mode: preset === null ? { kind: "normal" } : { kind: "draw", preset },
+	}) as unknown as CanvasControllerState;
 
 describe("isViewportPanDrag", () => {
 	it("a canvas-target drag outside draw mode is a pan", () => {

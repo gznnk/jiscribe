@@ -10,6 +10,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import { createCanvasReducer } from "../canvasReducer";
 
 const canvasReducer = createCanvasReducer(createTestRegistries());
@@ -35,21 +36,25 @@ const editingState = (): CanvasControllerState => {
 	const base = createTestState(styledRectDoc);
 	return createTestState(styledRectDoc, {
 		selection: selectionOf(["rect-1"], textSlotPartSelection("body")),
-		textEditState: {
-			kind: "shape",
-			text: readRichTextSlot(
-				(base.objects["rect-1"] as unknown as { text: TextSlots }).text,
-				"body",
-			),
+		mode: {
+			kind: "textEdit",
+			draft: {
+				kind: "shape",
+				text: readRichTextSlot(
+					(base.objects["rect-1"] as unknown as { text: TextSlots }).text,
+					"body",
+				),
+			},
 		},
 	});
 };
 
 const draftOf = (state: CanvasControllerState): RichText => {
-	if (state.textEditState?.kind !== "shape") {
+	const draft = readTextEditDraft(state);
+	if (draft?.kind !== "shape") {
 		throw new Error("no shape edit session");
 	}
-	return state.textEditState.text;
+	return draft.text;
 };
 
 /** Dispatches the body the editor read off its surface after an edit. */
@@ -97,7 +102,7 @@ describe("canvasReducer END_TEXT_EDIT", () => {
 			]),
 			{ type: "END_TEXT_EDIT", commit: true },
 		);
-		expect(after.textEditState).toBeNull();
+		expect(readTextEditDraft(after)).toBeNull();
 		expect(bodyOf(after)).toEqual([
 			{ text: "ax", fontWeight: "bold" },
 			{ text: "b" },
@@ -120,7 +125,7 @@ describe("canvasReducer END_TEXT_EDIT", () => {
 			type: "END_TEXT_EDIT",
 			commit: true,
 		});
-		expect(after.textEditState).toBeNull();
+		expect(readTextEditDraft(after)).toBeNull();
 		expect(after.history.past).toHaveLength(0);
 	});
 });
@@ -131,7 +136,7 @@ describe("Escape out of a one-body shape's edit", () => {
 			createTestState(styledRectDoc, { selection: selectionOf(["rect-1"]) }),
 			[command("start-text-edit")],
 		);
-		expect(opened.textEditState?.kind).toBe("shape");
+		expect(readTextEditDraft(opened)?.kind).toBe("shape");
 		expect(opened.selection).toEqual(
 			selectionOf(["rect-1"], textSlotPartSelection("body")),
 		);
@@ -140,7 +145,7 @@ describe("Escape out of a one-body shape's edit", () => {
 		const cancelled = applyActions(opened, [
 			{ type: "END_TEXT_EDIT", commit: false },
 		]);
-		expect(cancelled.textEditState).toBeNull();
+		expect(readTextEditDraft(cancelled)).toBeNull();
 		expect(cancelled.selection).toBe(opened.selection);
 
 		const unpicked = applyActions(cancelled, [command("escapeSelection")]);

@@ -20,8 +20,8 @@ import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { memo } from "react";
 
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { setAction } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../icons/BoldIcon";
 import { DashedLineIcon } from "../../../icons/DashedLineIcon";

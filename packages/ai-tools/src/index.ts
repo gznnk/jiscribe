@@ -21,6 +21,7 @@ export {
 	type AiObjectFilter,
 	type AiPoint,
 	type AiRect,
+	type AiRegionArgs,
 	type AiRouting,
 	type AiSetPointsEntry,
 	type AiSetPositionEntry,
@@ -44,3 +45,9 @@ export {
 	type AiCanvasCapabilities,
 	toCanvasCapabilities,
 } from "./capabilities";
+export {
+	isCanvasHandleTool,
+	toDrivesMismatchText,
+	toOutcomeText,
+	toThrownText,
+} from "./toolHosting";

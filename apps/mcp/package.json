@@ -1,6 +1,6 @@
 {
 	"name": "jiscribe-mcp",
-	"version": "0.12.1",
+	"version": "0.12.2",
 	"description": "An MCP server that gives an AI the Jiscribe canvas tool set, with a local viewer a person can edit alongside it.",
 	"keywords": [
 		"mcp",
@@ -33,6 +33,15 @@
 	"bin": {
 		"jiscribe-mcp": "dist/index.mjs"
 	},
+	"exports": {
+		"./server": "./src/server.ts",
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"exports": {
+			"./package.json": "./package.json"
+		}
+	},
 	"scripts": {
 		"build": "tsc --noEmit && vite build && node build.mjs",
 		"prepublishOnly": "node verifyDist.mjs",
@@ -44,6 +53,7 @@
 		"dev:viewer": "vite"
 	},
 	"comments": {
+		"exports": "./server は同じ workspace の apps/desktop が src/server.ts を直接読むための入口。dist には無いので、公開する tarball では publishConfig が ./package.json だけに差し替える。",
 		"devDependencies": "実行時の依存は無い。esbuild が external 無しで dist/index.mjs へ全部バンドルするため、ここに並ぶものは全てビルド時にしか要らない。@jiscribe/doc-schema と @fontsource/* だけは事情が違い、コードから import されない。実行時に node の解決規則で読むもので（read_drawing_guide が返すガイド 2 枚と、doc-tools の fontSourcePackages が読むフォント）、build.mjs が必要なファイルだけ dist/node_modules へ写して配布物に載せる。外すとビルドは通り、read_drawing_guide が error を返し、日本語の計測だけが黙って推定へ落ちる。"
 	},
 	"devDependencies": {

@@ -13,6 +13,7 @@ import { MIN_GROUP_DIMENSION } from "../../../../../../states/utils/groupDimensi
 import type { MultiSelectResizeBoundsCache } from "../../../../../CanvasTypes";
 import { classifyChildRelativeRotation } from "../../../../../utils/classifyChildRelativeRotation";
 import { collectObjectPoints } from "../../../../../utils/collectObjectPoints";
+import type { ConnectorRouteRegistries } from "../../../../../utils/VisualExtentRegistries";
 
 /**
  * Builds the dragStart cache for multi-select resize bounds (#215).
@@ -121,12 +122,17 @@ export function createMultiSelectResizeBoundsCache(
  * the leaf points projected onto the group's rotated axes, and the affine leaves'
  * projected extents follow analytically from the startGroup → updatedGroup map
  * applied by transformFrameByGroup / transformPolyByGroup.
+ *
+ * @param registries - Per-canvas registries a non-affine connector leaf's path is
+ *   resolved through; pass the ones calcMultiSelectGroupBounds and
+ *   createMultiSelectGroup get, or the frame drifts from theirs
  */
 export function calcMultiSelectGroupBoundsFromCache(
 	cache: MultiSelectResizeBoundsCache,
 	objects: Record<string, ObjectState>,
 	startGroup: GroupState,
 	updatedGroup: GroupState,
+	registries: ConnectorRouteRegistries,
 ): { cx: number; cy: number; width: number; height: number } | null {
 	const groupRotation = updatedGroup.rotation ?? 0;
 	const groupScaleX = updatedGroup.scaleX ?? 1;
@@ -146,7 +152,7 @@ export function calcMultiSelectGroupBoundsFromCache(
 		if (!leaf) {
 			continue;
 		}
-		for (const point of collectObjectPoints(leaf, objects)) {
+		for (const point of collectObjectPoints(leaf, objects, registries)) {
 			const u = cosTheta * point.x + sinTheta * point.y;
 			const v = -sinTheta * point.x + cosTheta * point.y;
 			if (u < minU) {

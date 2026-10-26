@@ -151,7 +151,7 @@ const formatLostEditMessage = (
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 /**
- * Formats it the same way the host's write-back does (canvasStore's
+ * Formats it the same way the host's write-back does (doc-tools'
  * serializeCanvasFile)
  */
 const serializeDoc = (doc: CanvasDoc): string =>

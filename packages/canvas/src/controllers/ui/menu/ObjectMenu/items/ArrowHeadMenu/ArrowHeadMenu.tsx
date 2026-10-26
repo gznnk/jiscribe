@@ -5,13 +5,13 @@ import { memo, useRef } from "react";
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import { MixedArrowHeadIcon } from "./MixedArrowHeadIcon";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
 	commandAction,
 	setAction,
 	toggleAction,
 } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,

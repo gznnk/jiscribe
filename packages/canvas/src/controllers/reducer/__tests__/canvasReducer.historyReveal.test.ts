@@ -6,9 +6,10 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { applyActions, runCommands } from "./support/dispatch";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
+import { createTestSnapshot } from "../../__tests__/support/createTestSnapshot";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { calcObjectBoundingBox } from "../../utils/calcObjectBoundingBox";
-import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
+import { createDocSnapshotFromState } from "../../utils/resolveDocSnapshot";
 
 /**
  * Undo, redo and revert pan the camera to what they changed when it is off
@@ -40,20 +41,31 @@ const isInView = (state: CanvasControllerState, id: string): boolean => {
 const docOf = (...root: unknown[]): CanvasDoc =>
 	({ version: 1, root }) as unknown as CanvasDoc;
 
-/** rect-1 alone in the past, then rect-3 added far away from it. */
-const withoutRect3 = docOf(rectDoc("rect-1", 0, 0));
+/** rect-1, and rect-3 added far away from it. */
 const withRect3 = docOf(rectDoc("rect-1", 0, 0), rectDoc("rect-3", 3000, 2000));
 
-/** A state whose last commit added rect-3, seen from `viewport`. */
-const createdRect3State = (viewport: Viewport): CanvasControllerState =>
-	createTestState(withRect3, {
+/**
+ * A state whose last commit added rect-3, seen from `viewport`. The past entry
+ * holds the very rect-1 the present does, as a real commit leaves it.
+ */
+const createdRect3State = (viewport: Viewport): CanvasControllerState => {
+	const base = createTestState(withRect3);
+	return createTestState(withRect3, {
+		...base,
 		viewport,
 		history: {
-			past: [createDocSnapshotFromDoc(withoutRect3)],
-			present: createDocSnapshotFromDoc(withRect3),
+			past: [
+				createDocSnapshotFromState({
+					...base,
+					objects: { "rect-1": base.objects["rect-1"] },
+					rootIds: ["rect-1"],
+				}),
+			],
+			present: base.history.present,
 			future: [],
 		},
 	});
+};
 
 describe("canvasReducer (integration)", () => {
 	describe("history reveal", () => {
@@ -110,23 +122,18 @@ describe("canvasReducer (integration)", () => {
 		});
 
 		it("reveals what REVERT_HISTORY restores", () => {
-			const target = createDocSnapshotFromDoc(
-				docOf(rectDoc("rect-1", 4000, 0)),
-			);
+			const target = createTestSnapshot(docOf(rectDoc("rect-1", 4000, 0)));
 			const state = createTestState(docOf(rectDoc("rect-1", 0, 0)), {
 				viewport: viewAt(0, 0),
 				history: {
-					past: [
-						target,
-						createDocSnapshotFromDoc(docOf(rectDoc("rect-1", 10, 0))),
-					],
-					present: createDocSnapshotFromDoc(docOf(rectDoc("rect-1", 0, 0))),
+					past: [target, createTestSnapshot(docOf(rectDoc("rect-1", 10, 0)))],
+					present: createTestSnapshot(docOf(rectDoc("rect-1", 0, 0))),
 					future: [],
 				},
 			});
 
 			const reverted = applyActions(state, [
-				{ type: "REVERT_HISTORY", entry: target },
+				{ type: "REVERT_HISTORY", entry: target.source },
 			]);
 
 			expect(isInView(reverted, "rect-1")).toBe(true);

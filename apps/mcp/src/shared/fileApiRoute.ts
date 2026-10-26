@@ -16,9 +16,10 @@ export const FILE_API_PATHNAME = "/api/file";
 export const FILE_API_PATH_PARAM = "path";
 
 /**
- * Where the viewer reads this host's session token from, answered as
- * `{ "token": string }`. Nothing but the Host check guards it: no CORS header is
- * ever sent, so a page on another origin can call it and never read the answer
+ * Where the viewer reads this host's session token from, answered as a
+ * SessionApiResponse (./hostActionsRoute): the token, and the actions the host's
+ * owner offers. Nothing but the Host check guards it: no CORS header is ever
+ * sent, so a page on another origin can call it and never read the answer
  */
 export const SESSION_API_PATHNAME = "/api/session";
 

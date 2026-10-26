@@ -7,6 +7,12 @@ import {
 	KeyGroup,
 	RowLabel,
 } from "./ShortcutHelpStyled";
+import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
+import type {
+	CanvasMessages,
+	CanvasMessageStrings,
+} from "../../../../foundation/i18n/CanvasMessagesTypes";
 import type { CommandRegistry } from "../../../commands/CommandRegistry";
 import type { Command } from "../../../commands/CommandTypes";
 import {
@@ -14,12 +20,6 @@ import {
 	getPlatformShortcuts,
 	resolveCommandLabel,
 } from "../../../commands/CommandUtils";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import type {
-	CanvasMessages,
-	CanvasMessageStrings,
-} from "../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { ModalShell } from "../ModalShell";
 

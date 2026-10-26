@@ -72,8 +72,11 @@ const makeGroupResizeState = (): CanvasControllerState => {
 		selection: selectionOf(["g"]),
 		viewport,
 		multiSelectGroup: null,
-		snapFeedback: { x: [], y: [] },
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects,
 				keyPoints: {},
@@ -84,7 +87,6 @@ const makeGroupResizeState = (): CanvasControllerState => {
 				multiSelectGroup: null,
 				viewport,
 			},
-			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -101,7 +103,11 @@ const makeDragState = (): CanvasControllerState => {
 		rootIds: ["rect-1"],
 		selection: selectionOf(["rect-1"]),
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects: { "rect-1": rect },
 				keyPoints: {},
@@ -111,7 +117,6 @@ const makeDragState = (): CanvasControllerState => {
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -221,8 +226,10 @@ describe("TransformControlHandler", () => {
 				registries,
 			);
 
-			expect(next.activeDrag?.kind).toBe("transform");
-			expect(next.activeDrag?.resize?.axes).toEqual({ height: "start" });
+			expect(next.drag).toMatchObject({
+				kind: "transform",
+				resize: { axes: { height: "start" } },
+			});
 		});
 
 		it("names no axes on the rotation knob", () => {
@@ -234,8 +241,8 @@ describe("TransformControlHandler", () => {
 				registries,
 			);
 
-			expect(next.activeDrag?.kind).toBe("transform");
-			expect(next.activeDrag).not.toHaveProperty("resize");
+			expect(next.drag?.kind).toBe("transform");
+			expect(next.drag).not.toHaveProperty("resize");
 		});
 	});
 
@@ -258,7 +265,6 @@ describe("TransformControlHandler", () => {
 				width: 150,
 				height: 130,
 			});
-			expect(next.edgeScrollEnabled).toBe(false);
 			// The frozen input state must be left untouched
 			expect(rectOf(state)).toMatchObject({
 				cx: 50,
@@ -283,7 +289,7 @@ describe("TransformControlHandler", () => {
 
 		it("commits nothing when there is no drag to apply", () => {
 			const handler = new TransformControlHandler();
-			const state = { ...makeDragState(), activeDrag: null, commitVersion: 3 };
+			const state = { ...makeDragState(), drag: null, commitVersion: 3 };
 
 			const next = handler.handle(
 				state,

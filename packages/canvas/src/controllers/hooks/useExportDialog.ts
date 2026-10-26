@@ -1,19 +1,17 @@
-import {
-	type Dispatch,
-	type RefObject,
-	useCallback,
-	useEffect,
-	useRef,
-} from "react";
+import { type Dispatch, type RefObject, useCallback } from "react";
 
 import type { NotifyError } from "./useErrorNotification";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import {
 	canvasToSvgString,
 	exportCanvasToPng,
 	exportCanvasToSvg,
 	rasterizeSvgToPng,
-} from "../../export";
-import type { BuildExportSvgOptions, ResolveImageBlob } from "../../export";
+} from "../../rendering/export";
+import type {
+	BuildExportSvgOptions,
+	ResolveImageBlob,
+} from "../../rendering/export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";
@@ -22,6 +20,11 @@ import type {
 	ExportSubmitValues,
 } from "../ui/modal/ExportDialog";
 import { resolveExportOptions } from "../utils/resolveExportOptions";
+import type {
+	CanvasExportOptions,
+	ResolvedCanvasExport,
+} from "../utils/resolveExportOptions";
+import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 /**
  * Exported image handed to the `onExportImage` prop: the encoded bytes plus
@@ -33,6 +36,37 @@ export type CanvasExportImagePayload = {
 	data: Blob;
 	/** Whether the `.jis` source is embedded (re-editable image) */
 	includesSource: boolean;
+};
+
+/**
+ * Maps what the export dialog confirmed onto the options `resolveExportOptions`
+ * takes. The `"selection"` scope becomes an isolated `{ ids }` region, so the
+ * image draws the selection alone (see CanvasExportIdsRegion.isolate), framed
+ * by its extent with the margin around it.
+ *
+ * @param values - What the dialog submitted; its `format` plays no part here
+ * @param selectedIds - The selection at submit time. When empty, a
+ *   `"selection"` scope falls back to the whole drawing (`"content"`), since an
+ *   `{ ids }` region with nothing to draw is refused
+ * @returns The region, margin, source embedding and background to export with
+ */
+export const toExportOptions = (
+	values: ExportSubmitValues,
+	selectedIds: readonly string[],
+): CanvasExportOptions => ({
+	region:
+		values.scope === "selection" && selectedIds.length > 0
+			? { ids: selectedIds, isolate: true }
+			: "content",
+	margin: values.margin,
+	includeSource: values.includeSource,
+	transparentBackground: values.transparentBackground,
+});
+
+/** Logs a failed export and shows the user the export error toast. */
+const reportExportFailure = (err: unknown, notifyError: NotifyError): void => {
+	console.error("[Canvas] Image export failed:", err);
+	notifyError("exportImageError");
 };
 
 /**
@@ -49,8 +83,7 @@ export const runExportSubmit = (
 	notifyError: NotifyError,
 ): void => {
 	const reportExportError = (err: unknown) => {
-		console.error("[Canvas] Image export failed:", err);
-		notifyError("exportImageError");
+		reportExportFailure(err, notifyError);
 	};
 	try {
 		if (deliverToHost) {
@@ -95,13 +128,17 @@ type UseExportDialogParams = {
 	dispatch: Dispatch<CanvasAction>;
 	notifyError: NotifyError;
 	/**
-	 * Runs the snapshot with viewport culling suspended (full object tree in
-	 * the DOM), since every export path clones the live SVG. The synchronous
-	 * part of the snapshot must complete the clone — both paths hold because
-	 * they build the export SVG (clone, style baking, text conversion) before
-	 * their first await, which is the one reading the image bytes.
+	 * Runs the snapshot with the viewport culling gate replaced by the export's
+	 * render scope (the full object tree, or the isolated selection), since every
+	 * export path clones the live SVG. The synchronous part of the snapshot must
+	 * complete the clone — both paths hold because they build the export SVG
+	 * (clone, style baking, text conversion) before their first await, which is
+	 * the one reading the image bytes.
 	 */
-	withCullingSuspended: <T>(snapshot: () => T) => T;
+	withSnapshotRenderScope: <T>(
+		renderScope: SnapshotRenderScope,
+		snapshot: () => T,
+	) => T;
 	/** Reads the bytes an exported `<image>` carries (see buildExportSvg) */
 	resolveImageBlob: ResolveImageBlob;
 };
@@ -126,29 +163,20 @@ export const useExportDialog = ({
 	onExportImage,
 	dispatch,
 	notifyError,
-	withCullingSuspended,
+	withSnapshotRenderScope,
 	resolveImageBlob,
 }: UseExportDialogParams): ((values: ExportSubmitValues) => void) => {
 	// Always-fresh mirror of the state, read at export time rather than at render
 	// time, so the callback below never has to be rebuilt.
-	const canvasStateRef = useRef(canvasState);
-	useEffect(() => {
-		canvasStateRef.current = canvasState;
-	});
+	const canvasStateRef = useLatestRef(canvasState);
 
 	// onExportImage goes through a ref so a host passing a new function each
 	// render cannot re-create the submit handler.
-	const onExportImageRef = useRef(onExportImage);
-	useEffect(() => {
-		onExportImageRef.current = onExportImage;
-	});
+	const onExportImageRef = useLatestRef(onExportImage);
 
 	// Mirrored like the state: it changes identity as files arrive, and the submit
 	// handler is meant to survive that.
-	const resolveImageBlobRef = useRef(resolveImageBlob);
-	useEffect(() => {
-		resolveImageBlobRef.current = resolveImageBlob;
-	});
+	const resolveImageBlobRef = useLatestRef(resolveImageBlob);
 
 	// Export dialog (opened by ExportCommand): pick format + margin, OK
 	return useCallback(
@@ -158,17 +186,25 @@ export const useExportDialog = ({
 			if (!svg) {
 				return;
 			}
-			withCullingSuspended(() =>
+			let resolved: ResolvedCanvasExport;
+			try {
+				resolved = resolveExportOptions(
+					canvasStateRef.current,
+					registries.objectMapper,
+					registries,
+					toExportOptions(values, canvasStateRef.current.selection.objectIds),
+				);
+			} catch (err) {
+				reportExportFailure(err, notifyError);
+				return;
+			}
+			const { svgOptions, renderScope } = resolved;
+			withSnapshotRenderScope(renderScope, () =>
 				runExportSubmit(
 					svg,
 					values,
 					{
-						...resolveExportOptions(
-							canvasStateRef.current,
-							registries.objectMapper,
-							registries,
-							values,
-						),
+						...svgOptions,
 						resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
 					},
 					onExportImageRef.current,
@@ -176,6 +212,15 @@ export const useExportDialog = ({
 				),
 			);
 		},
-		[svgRef, registries, dispatch, notifyError, withCullingSuspended],
+		[
+			svgRef,
+			canvasStateRef,
+			onExportImageRef,
+			resolveImageBlobRef,
+			registries,
+			dispatch,
+			notifyError,
+			withSnapshotRenderScope,
+		],
 	);
 };

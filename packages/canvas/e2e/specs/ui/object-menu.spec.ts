@@ -80,6 +80,65 @@ test.describe("styling through the ObjectMenu", () => {
 		await expect.poll(() => rect.getAttribute("stroke-width")).toBe(before);
 	});
 
+	test("applies a one-step slider nudge while the pointer is still held", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Rectangle",
+			{ x: 400, y: 200 },
+			{ x: 600, y: 320 },
+		);
+		const rect = canvas.objectById(id);
+		await canvas.openObjectMenu("border-style");
+
+		const slider = canvas.page.locator(
+			selectors.objectMenuSlider("strokeWidth"),
+		);
+		await expect(slider).toBeVisible();
+		const track = await slider.evaluate((el) => {
+			const input = el as HTMLInputElement;
+			return {
+				value: Number(input.value),
+				min: Number(input.min),
+				max: Number(input.max),
+			};
+		});
+		const box = await slider.boundingBox();
+		if (!box) {
+			throw new Error("cannot read the position of slider strokeWidth");
+		}
+		// The thumb is 12px wide (ObjectMenuSliderStyled) and its center travels
+		// the track inset by half of it. Pressing 1px short of the boundary between
+		// the current value and the next leaves a 2px move enough to cross it, while
+		// staying under the 3px drag threshold the recognizer applies elsewhere.
+		const thumbWidth = 12;
+		const stepPitch = (box.width - thumbWidth) / (track.max - track.min);
+		const pressX =
+			box.x + thumbWidth / 2 + (track.value - track.min + 0.5) * stepPitch - 1;
+		const y = box.y + box.height / 2;
+
+		await canvas.page.mouse.move(pressX, y);
+		await canvas.page.mouse.down();
+		try {
+			await canvas.page.mouse.move(pressX + 2, y);
+			const nudgedValue = await slider.evaluate(
+				(el) => (el as HTMLInputElement).value,
+			);
+			expect(
+				Number(nudgedValue),
+				"a 2px move crosses one step boundary",
+			).not.toBe(track.value);
+
+			await expect
+				.poll(() => rect.getAttribute("stroke-width"), {
+					message: "the nudged value reaches the shape before the release",
+				})
+				.toBe(nudgedValue);
+		} finally {
+			await canvas.page.mouse.up();
+		}
+	});
+
 	test("keeps the submenu open when its background is clicked", async ({
 		canvas,
 	}) => {

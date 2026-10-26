@@ -70,6 +70,7 @@ describe("createCanvasToolDescriptors", () => {
 			"set_style",
 			"set_background",
 			"set_document_view",
+			"set_meta",
 			"set_extra_props",
 			"set_text",
 			"set_texts",
@@ -292,19 +293,40 @@ describe("createCanvasToolDescriptors", () => {
 		expect(z.safeParse(zoom, 20).success).toBe(false);
 	});
 
-	it("takes a target or a world rect on fit_view", () => {
-		const { target, rect } = findDescriptor(
-			createCanvasToolDescriptors(capabilities),
-			"fit_view",
-		).inputSchema;
+	it.each(["fit_view", "capture_canvas"])(
+		"takes a target, ids or a world rect on %s",
+		(toolName) => {
+			const { target, ids, rect } = findDescriptor(
+				createCanvasToolDescriptors(capabilities),
+				toolName,
+			).inputSchema;
 
-		expect(z.safeParse(target, "all").success).toBe(true);
-		// Either argument may be left out; which one is missing is checked where the
-		// operation is applied
-		expect(z.safeParse(target, undefined).success).toBe(true);
-		expect(
-			z.safeParse(rect, { x: 0, y: 0, width: 200, height: 120 }).success,
-		).toBe(true);
+			expect(z.safeParse(target, "all").success).toBe(true);
+			// Every argument may be left out; which one is missing, or that two are
+			// given, is checked where the operation is applied
+			expect(z.safeParse(target, undefined).success).toBe(true);
+			expect(z.safeParse(ids, ["a", "b"]).success).toBe(true);
+			expect(z.safeParse(ids, undefined).success).toBe(true);
+			expect(
+				z.safeParse(rect, { x: 0, y: 0, width: 200, height: 120 }).success,
+			).toBe(true);
+		},
+	);
+
+	it("shares the region fields between capture_canvas and fit_view, and gives isolate to capture_canvas alone", () => {
+		const descriptors = createCanvasToolDescriptors(capabilities);
+		const captureSchema = findDescriptor(
+			descriptors,
+			"capture_canvas",
+		).inputSchema;
+		const fitSchema = findDescriptor(descriptors, "fit_view").inputSchema;
+
+		expect(Object.keys(fitSchema).sort()).toEqual(["ids", "rect", "target"]);
+		for (const field of ["ids", "rect", "target"]) {
+			expect(captureSchema[field]).toBe(fitSchema[field]);
+		}
+		expect(z.safeParse(captureSchema.isolate, true).success).toBe(true);
+		expect(z.safeParse(captureSchema.isolate, undefined).success).toBe(true);
 	});
 
 	it("takes a point or a rect on hit_test", () => {
@@ -367,14 +389,52 @@ describe("CanvasToolDescriptor.toOp", () => {
 		});
 	});
 
+	it("passes the region arguments of capture_canvas and fit_view straight through", () => {
+		const descriptors = createCanvasToolDescriptors(capabilities);
+		const rect = { x: 0, y: 0, width: 200, height: 120 };
+
+		expect(findDescriptor(descriptors, "capture_canvas").toOp({})).toEqual({
+			kind: "captureCanvas",
+		});
+		expect(
+			findDescriptor(descriptors, "capture_canvas").toOp({ ids: ["a"] }),
+		).toEqual({ kind: "captureCanvas", ids: ["a"] });
+		expect(
+			findDescriptor(descriptors, "capture_canvas").toOp({ rect }),
+		).toEqual({ kind: "captureCanvas", rect });
+		expect(
+			findDescriptor(descriptors, "capture_canvas").toOp({
+				ids: ["a"],
+				isolate: true,
+			}),
+		).toEqual({ kind: "captureCanvas", ids: ["a"], isolate: true });
+		expect(
+			findDescriptor(descriptors, "fit_view").toOp({ target: "selection" }),
+		).toEqual({ kind: "fitView", target: "selection" });
+		expect(
+			findDescriptor(descriptors, "fit_view").toOp({ ids: ["a"] }),
+		).toEqual({ kind: "fitView", ids: ["a"] });
+	});
+
+	it("carries the id of set_meta only when one is given, so leaving it out addresses the document", () => {
+		const descriptors = createCanvasToolDescriptors(capabilities);
+
+		expect(
+			findDescriptor(descriptors, "set_meta").toOp({ name: "Overview" }),
+		).toEqual({ kind: "setMeta", name: "Overview" });
+		expect(
+			findDescriptor(descriptors, "set_meta").toOp({
+				id: "rect-1",
+				description: null,
+			}),
+		).toEqual({ kind: "setMeta", id: "rect-1", description: null });
+	});
+
 	it("builds the argument-less operations from their kind alone", () => {
 		const descriptors = createCanvasToolDescriptors(capabilities);
 
 		expect(findDescriptor(descriptors, "describe_canvas").toOp({})).toEqual({
 			kind: "describeCanvas",
-		});
-		expect(findDescriptor(descriptors, "capture_canvas").toOp({})).toEqual({
-			kind: "captureCanvas",
 		});
 		expect(findDescriptor(descriptors, "undo").toOp({})).toEqual({
 			kind: "undo",
@@ -472,6 +532,16 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 			args: { entries: [{ id: "c", curve: "arc" }] },
 			path: ["entries", 0],
 		},
+		{
+			tool: "capture_canvas",
+			args: { rect: { x: 0, y: 0, width: 10, height: 10, right: 10 } },
+			path: ["rect"],
+		},
+		{
+			tool: "fit_view",
+			args: { rect: { x: 0, y: 0, width: 10, height: 10, right: 10 } },
+			path: ["rect"],
+		},
 	];
 
 	it.each(unknownKeyCases)(
@@ -484,6 +554,23 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 				code: "unrecognized_keys",
 				path,
 			});
+		},
+	);
+
+	it.each(["capture_canvas", "fit_view"])(
+		"refuses an empty ids and, closed as a host closes it, an unknown key on %s",
+		(toolName) => {
+			const closedSchema = z
+				.object(
+					findDescriptor(createCanvasToolDescriptors(capabilities), toolName)
+						.inputSchema,
+				)
+				.strict();
+
+			expect(closedSchema.safeParse({ ids: [] }).success).toBe(false);
+			expect(closedSchema.safeParse({ zoom: 2 }).success).toBe(false);
+			expect(closedSchema.safeParse({}).success).toBe(true);
+			expect(closedSchema.safeParse({ ids: ["a"] }).success).toBe(true);
 		},
 	);
 

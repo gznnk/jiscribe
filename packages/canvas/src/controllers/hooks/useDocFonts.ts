@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import { useDocFontsPreload } from "./useDocFontsPreload";
 import { useFontsLoadedNonce } from "./useFontsLoadedNonce";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
 import type { DocFontRequest } from "../utils/collectDocFontRequests";
 
 type UseDocFontsOptions = {
@@ -59,16 +60,13 @@ export const useDocFonts = ({
 
 	// Read only from the effect below, so the callback does not have to hold its
 	// identity across renders.
-	const onFacesChangedRef = useRef(onFacesChanged);
-	useEffect(() => {
-		onFacesChangedRef.current = onFacesChanged;
-	});
+	const onFacesChangedRef = useLatestRef(onFacesChanged);
 
 	useEffect(() => {
 		if (fontsLoadedNonce > 0) {
 			onFacesChangedRef.current?.();
 		}
-	}, [fontsLoadedNonce]);
+	}, [fontsLoadedNonce, onFacesChangedRef]);
 
 	return {
 		fontsNonce: fontsLoadedNonce + (isSettled ? 1 : 0),

@@ -2,14 +2,14 @@ import type { ComponentType } from "react";
 
 import { useToolbarCommandState } from "./ToolbarCommandStateContext";
 import { ToolbarIconButton } from "./ToolbarStyled";
-import { resolveCommandLabel } from "../../../commands/CommandUtils";
-import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import {
 	resolveLocalizedLabel,
 	type LocaleMessages,
-} from "../../../messages/resolveLocaleMessages";
+} from "../../../../foundation/i18n/resolveLocaleMessages";
+import { resolveCommandLabel } from "../../../commands/CommandUtils";
+import { commandAction } from "../../../gestures/handlers/menu/utils/menuActions";
 import type { StencilIconProps } from "../../objects/Stencil";
 
 type ToolbarCommandButtonProps = {

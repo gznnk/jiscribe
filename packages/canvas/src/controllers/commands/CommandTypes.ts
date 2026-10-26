@@ -1,5 +1,5 @@
+import type { LocaleMessages } from "../../foundation/i18n/resolveLocaleMessages";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { LocaleMessages } from "../messages/resolveLocaleMessages";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**

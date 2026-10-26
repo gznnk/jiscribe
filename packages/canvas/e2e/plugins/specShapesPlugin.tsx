@@ -4,6 +4,8 @@
  * the bar, a `card` that roots its render in a `<g>` and carries a text slot, a
  * `panel` that declares creation defaults of its own, and a `memo` whose body is
  * written in a source language (`features.text: "source"`).
+ * `tile` also leads its sidebar with a dropdown that opens beside the sidebar
+ * (TileWideFillProperty).
  * Core supplies none of those traits itself any more — every categorized shape
  * moved to a plugin, and sticky, the last click-placed and last `<g>`-rooted one,
  * to `@jiscribe/plugin-sticky-shape` — so the specs covering the StencilLibrary
@@ -28,6 +30,8 @@ import { memo } from "react";
 
 import type {
 	CanvasPlugin,
+	PropertyPanelItemProps,
+	PropertyPanelSection,
 	CreateObjectState,
 	CreateObjectType,
 	ObjectFeatures,
@@ -38,15 +42,19 @@ import type {
 import { BODY_TEXT_SLOT_ID } from "../../src";
 import type { FrameShapeProps, TextEditable } from "../../src/unstable";
 import {
+	PropertyDropdownField,
+	PropertyRow,
 	TextOverlay,
 	calcFullTextRegion,
 	createFrameBehavior,
 	createFrameMapper,
 	createFrameObject,
+	createDefaultPropertyPanel,
 	createFrameStateValidator,
 	createSvgTransform,
 	readTextSlot,
 	resolveAutoColor,
+	setAction,
 } from "../../src/unstable";
 
 /** Stencil icon edge length in px, the size StencilLibraryItem asks for. */
@@ -123,6 +131,70 @@ const TILE_DOC_DEFAULTS: Omit<TileDoc, "id"> = {
 } as const as TileDoc;
 
 /**
+ * Fills a tile's panel offers. Spelled as the core palette's swatches are, so a
+ * spec can compare the computed fill with what it pressed.
+ */
+const TILE_WIDE_FILLS = ["#dc2626", "#2563eb"];
+
+/**
+ * Width (px) of the tile's wide panel: more than the sidebar's, so only a panel
+ * opened beside the sidebar has it in full.
+ */
+const TILE_WIDE_PANEL_WIDTH = 320;
+
+/**
+ * A fill row whose panel opens beside the sidebar (`placement: "beside"`), for
+ * the specs of that placement: a row of fill buttons wider than the sidebar.
+ */
+const TileWideFillProperty: React.FC<PropertyPanelItemProps> = () => (
+	<PropertyRow>
+		<PropertyDropdownField
+			title="Wide Fill"
+			placement="beside"
+			preview="Wide Fill"
+		>
+			<div
+				data-testid="tile-wide-fill-panel"
+				style={{
+					display: "flex",
+					gap: 8,
+					width: TILE_WIDE_PANEL_WIDTH,
+					maxWidth: "100%",
+					padding: 8,
+					boxSizing: "border-box",
+				}}
+			>
+				{TILE_WIDE_FILLS.map((fill) => (
+					<button
+						key={fill}
+						type="button"
+						data-action={setAction("fill", fill)}
+					>
+						{fill}
+					</button>
+				))}
+			</div>
+		</PropertyDropdownField>
+	</PropertyRow>
+);
+
+/** The wide fill section, then the sections the features derive. */
+const TILE_PROPERTY_PANEL: PropertyPanelSection[] = [
+	{
+		id: "tileWideFill",
+		label: "Wide Fill",
+		items: [
+			{
+				type: "custom",
+				id: "tileWideFill",
+				component: TileWideFillProperty,
+			},
+		],
+	},
+	...createDefaultPropertyPanel(TileFeatures),
+];
+
+/**
  * Drag-drawn shape; `tile` is the only member of the `spec` category flyout, and
  * `brick` (a second preset of the same type) is registered but listed nowhere, so
  * the sidebar reaches it only through the category's `search`.
@@ -135,6 +207,7 @@ const tileDefinition: ObjectTypeDefinition<TileDoc, TileState> = {
 	stateValidator: createFrameStateValidator(TileFeatures),
 	behavior: createFrameBehavior<TileState>(),
 	component: createFrameObject<TileState>(drawSpecShapeBox),
+	propertyPanel: TILE_PROPERTY_PANEL,
 	stencils: [
 		{ id: "tile", objectType: "tile", label: "Tile", icon: SpecShapeIcon },
 		{ id: "brick", objectType: "tile", label: "Brick", icon: SpecShapeIcon },

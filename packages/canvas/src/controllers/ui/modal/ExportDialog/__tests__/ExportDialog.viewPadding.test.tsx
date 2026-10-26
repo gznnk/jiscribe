@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { canvasToState } from "../../../../../states/canvas/CanvasMapper";
+import { toExportOptions } from "../../../../hooks/useExportDialog";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import {
 	EXPORT_FIT_PADDING,
@@ -47,6 +48,7 @@ const mountDialog = (defaultMargin: number) => {
 		root.render(
 			<ExportDialog
 				defaultMargin={defaultMargin}
+				canExportSelection={false}
 				onClose={() => {}}
 				onSubmit={onSubmit}
 			/>,
@@ -127,9 +129,9 @@ describe("the export dialog against a document that declared its own padding", (
 			},
 			registries.objectMapper,
 			registries,
-			onSubmit.mock.calls[0][0],
+			toExportOptions(onSubmit.mock.calls[0][0], []),
 		);
-		expect(options.viewBox).toEqual({
+		expect(options.svgOptions.viewBox).toEqual({
 			x: -EXPORT_FIT_PADDING,
 			y: -EXPORT_FIT_PADDING,
 			width: 10 + EXPORT_FIT_PADDING * 2,

@@ -3,10 +3,10 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import type { DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { collectOutlinedPartRegions } from "../../utils/collectOutlinedPartRegions";
+import type { SelectionDragKind } from "../../utils/readSelectionDragKind";
 import { resolveTransformHandles } from "../ObjectTransformHandlesRegistry";
 import { TransformControls } from "../TransformControls";
 
@@ -20,9 +20,10 @@ type TransformControlsLayerProps = {
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
 	zoom?: number;
+	/** Whether a text edit is open (`mode.kind === "textEdit"`) */
 	isTextEditing: boolean;
-	/** Kind of the drag in progress; null when none is */
-	activeDragKind: DragKind | null;
+	/** The drag changing the selection's geometry (readSelectionDragKind); null for none or any other drag */
+	selectionDragKind: SelectionDragKind | null;
 };
 
 /**
@@ -39,7 +40,7 @@ const TransformControlsLayerComponent: React.FC<
 	multiSelectGroup,
 	zoom = 1,
 	isTextEditing,
-	activeDragKind,
+	selectionDragKind,
 }) => {
 	const registries = useCanvasRegistries();
 
@@ -61,7 +62,7 @@ const TransformControlsLayerComponent: React.FC<
 
 	// Hidden while the selection is moved: the frame would only trail the shapes it
 	// belongs to. A transform drag keeps it — the handle being dragged is part of it.
-	if (activeDragKind === "move") {
+	if (selectionDragKind === "move") {
 		return null;
 	}
 

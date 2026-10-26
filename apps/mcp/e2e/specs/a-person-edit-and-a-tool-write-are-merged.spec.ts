@@ -6,9 +6,9 @@ import {
 	expect,
 	expectNoViewerError,
 	LOST_EDITS_NOTICE_DURATION_MS,
-	lostEditsNotice,
 	objectCenter,
 	test,
+	warningNotice,
 } from "../support/fixtures";
 
 /** How far the person drags the first rectangle, well past any snap distance */
@@ -125,7 +125,7 @@ test("lets a tool's write win over a drag of the same object, and says so", asyn
 	releaseWrites();
 
 	// Named by the text on it, which is what the person sees
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		`${MERGE_CONFLICT_PREFIX}「hello」`,
 	);
 	await expect(page.locator(".viewer-error")).toHaveCount(0);
@@ -171,10 +171,10 @@ test("the notice of a change lost to a tool's write goes on its own", async ({
 	expect(moved.text).not.toContain("error:");
 	releaseWrites();
 
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		`${MERGE_CONFLICT_PREFIX}「hello」`,
 	);
-	await expect(lostEditsNotice(page)).toHaveCount(0, {
+	await expect(warningNotice(page)).toHaveCount(0, {
 		timeout: LOST_EDITS_NOTICE_DURATION_MS + 1_000,
 	});
 	await expectNoViewerError(page);

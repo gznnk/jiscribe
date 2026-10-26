@@ -8,9 +8,9 @@ import {
 	expect,
 	expectFileOnDisplay,
 	expectNoViewerError,
-	lostEditsNotice,
 	objectCenter,
 	test,
+	warningNotice,
 } from "../support/fixtures";
 
 /** How far the rectangle is dragged, in screen pixels */
@@ -63,7 +63,6 @@ const readLostEditsNoticeLog = async (page: Page): Promise<string[]> =>
 /** Presses the rectangle and drags it, leaving the button down */
 async function dragWithoutReleasing(page: Page): Promise<void> {
 	const rect = page.locator(`[data-id="${SINGLE_RECT.id}"]`).first();
-	const placedTransform = await rect.getAttribute("transform");
 	const box = await rect.boundingBox();
 	if (box === null) {
 		throw new Error(`${SINGLE_RECT.id} is not drawn, so it cannot be dragged`);
@@ -72,9 +71,12 @@ async function dragWithoutReleasing(page: Page): Promise<void> {
 	await page.mouse.move(center.x, center.y);
 	await page.mouse.down();
 	await page.mouse.move(center.x + DRAG_DX, center.y, { steps: 6 });
+	// A move drag shifts the wrapper <g> around the shape and leaves the shape's
+	// own transform at its start value until the drop (MovePreview), so the drag
+	// is seen in where the shape is drawn, not in its attribute
 	await expect
-		.poll(async () => rect.getAttribute("transform"))
-		.not.toBe(placedTransform);
+		.poll(async () => (await rect.boundingBox())?.x ?? box.x)
+		.toBeGreaterThan(box.x);
 }
 
 // A regression for work a person had in hand when open_canvas moved the page to
@@ -124,7 +126,7 @@ test("a drag still held when the file switches is said to be lost", async ({
 	await expectFileOnDisplay(page, "c.jis.json");
 	await page.mouse.up();
 
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "ドラッグ中の操作"),
 	);
 	expect((await workspace.readDoc(firstPath)).root[0].x).toBe(SINGLE_RECT.x);
@@ -148,7 +150,7 @@ test("text still being typed when the file switches is said to be lost", async (
 	).toBe(false);
 	await expectFileOnDisplay(page, "c.jis.json");
 
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "入力中のテキスト"),
 	);
 	expect((await workspace.readDoc(firstPath)).root[0].text).toBe("hello");
@@ -200,7 +202,7 @@ test("an edit refused by the host of another directory is said to be lost once, 
 	const opening = mcp.callTool("open_canvas", { path: secondPath });
 	await isSocketHeld;
 	await canvas.commitText();
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "直前の変更"),
 	);
 
@@ -239,7 +241,7 @@ test("text still being typed when the page moves to another directory is said to
 	).toBe(false);
 	await expectFileOnDisplay(page, "b.jis.json");
 
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "入力中のテキスト"),
 	);
 	expect(await readLostEditsNoticeLog(page)).toHaveLength(1);

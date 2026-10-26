@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../theme/themeTokens";
+import { theme } from "../../../../foundation/theme/themeTokens";
 
 /** The resolved file. Its contents are excluded from hit testing (the rect below takes it). */
 export const ImageContent = styled("image")`

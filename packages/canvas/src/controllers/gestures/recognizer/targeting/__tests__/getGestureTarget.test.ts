@@ -49,12 +49,12 @@ const makeNestedEl = (
 		contains: (other: Element) => !outsideKind && other === carrierEl,
 	} as unknown as Element;
 	const carrierEl = {
-		closest: (selector: string) =>
-			selector === "[data-kind]"
-				? kindEl
-				: selector === `[${attribute}]`
-					? carrierEl
-					: null,
+		closest: (selector: string) => {
+			if (selector === "[data-kind]") {
+				return kindEl;
+			}
+			return selector === `[${attribute}]` ? carrierEl : null;
+		},
 		getAttribute: (attr: string) => (attr === attribute ? value : null),
 	} as unknown as Element;
 	return { carrierEl, kindEl };

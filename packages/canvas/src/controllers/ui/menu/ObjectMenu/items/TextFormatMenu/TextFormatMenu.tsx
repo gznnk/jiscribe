@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { useTextFormatToggles } from "../../../hooks/useTextFormatToggles";
 import { ObjectMenuButton } from "../../ObjectMenuStyled";

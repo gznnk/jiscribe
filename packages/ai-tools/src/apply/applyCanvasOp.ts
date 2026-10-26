@@ -29,7 +29,10 @@ import { describeRectEdges, formatNumber, quoteIds } from "../resultText";
 import type { AiDocBridge } from "./docBridge";
 
 const describeCanvas = (doc: CanvasDoc): string => {
-	const json = JSON.stringify(doc, null, 2);
+	// The document's own fields ahead of root whatever order the file holds them
+	// in, so a cut-off result still says what the document is called
+	const { root, ...frame } = doc;
+	const json = JSON.stringify({ ...frame, root }, null, 2);
 	if (json.length <= MAX_DESCRIBE_CHARS) {
 		return json;
 	}
@@ -131,6 +134,17 @@ const emptiedGroupsNote = (droppedGroupIds: readonly string[]): string =>
 		? ""
 		: ` (${quoteIds(droppedGroupIds)} went with them: a group with nothing left in it is dropped)`;
 
+/** The note for an object already at the top or bottom of its siblings, where one reorder_objects placement would change nothing; empty otherwise */
+const zOrderPlaceNote = (index: number, total: number): string => {
+	if (index === total - 1) {
+		return '; it is already drawn over its siblings, so reorder_objects "front" would change nothing';
+	}
+	if (index === 0) {
+		return '; it is already behind its siblings, so reorder_objects "back" would change nothing';
+	}
+	return "";
+};
+
 /**
  * Applies an operation that only reads the document, and builds the result text
  * to hand back to the AI. Zero results, no match and null are not failures, so
@@ -187,13 +201,7 @@ const applyDocRead = (
 		}
 		case "getZOrder": {
 			const { index, total } = docOps.getZOrder(doc, op.id);
-			const placeNote =
-				index === total - 1
-					? '; it is already drawn over its siblings, so reorder_objects "front" would change nothing'
-					: index === 0
-						? '; it is already behind its siblings, so reorder_objects "back" would change nothing'
-						: "";
-			return `"${op.id}" stands at index ${index} of ${total} sibling(s), counting from the back within the parent holding it (index ${total - 1} is drawn on top)${placeNote}`;
+			return `"${op.id}" stands at index ${index} of ${total} sibling(s), counting from the back within the parent holding it (index ${total - 1} is drawn on top)${zOrderPlaceNote(index, total)}`;
 		}
 		case "getParentGroup": {
 			const parentId = docOps.getParentGroup(doc, op.id);
@@ -233,22 +241,30 @@ const applyDocRead = (
 	}
 };
 
+/** The result of an operation that created objects */
+type DocCreateResult = { text: string; createdIds: string[] };
+
 /**
- * Applies an operation that changes the document, and builds the result text to
- * hand back to the AI. On failure it throws DocOperationError, which the caller
- * turns into ok:false.
+ * Applies an operation that creates objects, and builds the result text to hand
+ * back to the AI along with the new ids. On failure it throws DocOperationError,
+ * which the caller turns into ok:false.
+ *
+ * @returns null for anything that does not create (the caller then sends it on
+ *   to applyDocChange)
  */
-const applyDocChange = (
+const applyDocCreate = (
 	op: AiDocOp,
 	draftDoc: CanvasDoc,
 	docOps: DocOps,
-	toolSet: CanvasToolSet,
-): string => {
+): DocCreateResult | null => {
 	switch (op.kind) {
 		case "addObject": {
 			const { kind: _kind, type, ...params } = op;
 			const newId = docOps.addObject(draftDoc, type, params);
-			return `added ${type} "${newId}" at (${params.x}, ${params.y})`;
+			return {
+				text: `added ${type} "${newId}" at (${params.x}, ${params.y})`,
+				createdIds: [newId],
+			};
 		}
 		case "addObjects": {
 			if (op.groupNewObjects === true && op.parentGroupId !== undefined) {
@@ -262,20 +278,32 @@ const applyDocChange = (
 				.join(", ");
 			if (op.parentGroupId !== undefined) {
 				docOps.addObjectsToGroup(draftDoc, op.parentGroupId, addedIds);
-				return `added ${addedIds.length} objects inside "${op.parentGroupId}": ${added}`;
+				return {
+					text: `added ${addedIds.length} objects inside "${op.parentGroupId}": ${added}`,
+					createdIds: addedIds,
+				};
 			}
 			if (op.groupNewObjects === true) {
 				const groupId = docOps.groupObjects(draftDoc, addedIds);
-				return `added ${addedIds.length} objects as group "${groupId}": ${added}`;
+				return {
+					text: `added ${addedIds.length} objects as group "${groupId}": ${added}`,
+					createdIds: [...addedIds, groupId],
+				};
 			}
-			return `added ${addedIds.length} objects: ${added}`;
+			return {
+				text: `added ${addedIds.length} objects: ${added}`,
+				createdIds: addedIds,
+			};
 		}
 		case "connect": {
 			const { kind: _kind, ...params } = op;
 			const newId = docOps.connect(draftDoc, params);
 			const source = endpointLabel(params.sourceId, params.sourcePoint);
 			const target = endpointLabel(params.targetId, params.targetPoint);
-			return `connected ${source} → ${target} as "${newId}"`;
+			return {
+				text: `connected ${source} → ${target} as "${newId}"`,
+				createdIds: [newId],
+			};
 		}
 		case "connectMany": {
 			const newIds = docOps.connectMany(draftDoc, op.entries);
@@ -286,8 +314,35 @@ const applyDocChange = (
 					return `${source} → ${target} as "${newIds[index]}"`;
 				})
 				.join(", ");
-			return `connected ${newIds.length} connector(s): ${drawn}`;
+			return {
+				text: `connected ${newIds.length} connector(s): ${drawn}`,
+				createdIds: newIds,
+			};
 		}
+		case "groupObjects": {
+			const groupId = docOps.groupObjects(draftDoc, op.ids);
+			return {
+				text: `grouped ${quoteIds(op.ids)} as "${groupId}"`,
+				createdIds: [groupId],
+			};
+		}
+		default:
+			return null;
+	}
+};
+
+/**
+ * Applies an operation that changes the document, and builds the result text to
+ * hand back to the AI. On failure it throws DocOperationError, which the caller
+ * turns into ok:false.
+ */
+const applyDocChange = (
+	op: AiDocOp,
+	draftDoc: CanvasDoc,
+	docOps: DocOps,
+	toolSet: CanvasToolSet,
+): string => {
+	switch (op.kind) {
 		case "deleteObjects": {
 			const { deletedIds, cascadedIds } = docOps.deleteObjects(
 				draftDoc,
@@ -411,6 +466,27 @@ const applyDocChange = (
 			].filter((part) => part !== null);
 			return `the document now declares ${parts.join(", ")}`;
 		}
+		case "setMeta": {
+			const meta = docOps.setMeta(draftDoc, {
+				...(op.id === undefined ? {} : { id: op.id }),
+				...(op.name === undefined ? {} : { name: op.name }),
+				...(op.description === undefined
+					? {}
+					: { description: op.description }),
+			});
+			const owner =
+				op.id === undefined ? "the document" : JSON.stringify(op.id);
+			if (meta === null) {
+				return `${owner} now carries no name or description`;
+			}
+			const parts = [
+				meta.name === undefined ? null : `named ${JSON.stringify(meta.name)}`,
+				meta.description === undefined ? null : "described",
+			].filter((part) => part !== null);
+			return parts.length === 0
+				? `${owner} now carries no name or description`
+				: `${owner} is now ${parts.join(" and ")}`;
+		}
 		case "setStyle": {
 			const { styledIds, ignored } = docOps.setStyle(
 				draftDoc,
@@ -482,10 +558,6 @@ const applyDocChange = (
 			docOps.distributeObjects(draftDoc, op.ids, op.axis, op.spacing);
 			return `distributed ${quoteIds(op.ids)} ${op.axis}ly`;
 		}
-		case "groupObjects": {
-			const groupId = docOps.groupObjects(draftDoc, op.ids);
-			return `grouped ${quoteIds(op.ids)} as "${groupId}"`;
-		}
 		case "dissolveGroup": {
 			const releasedIds = docOps.dissolveGroup(draftDoc, op.id);
 			return `dissolved "${op.id}", releasing ${quoteIds(releasedIds)}`;
@@ -512,8 +584,8 @@ const applyDocChange = (
 			return `took ${quoteIds(releasedIds)} out of their group${emptiedGroupsNote(droppedGroupIds)}`;
 		}
 		default:
-			// describeCanvas, undo, the plugin tools and the reads are not docOps
-			// changes, so applyCanvasOp deals with them before reaching here
+			// describeCanvas, undo, the plugin tools, the reads and the ops that
+			// create objects never reach here: applyCanvasOp deals with them first
 			throw new DocOperationError(`unsupported operation: ${op.kind}`);
 	}
 };
@@ -742,15 +814,17 @@ export const applyCanvasOp = (
 
 	const draftDoc = structuredClone(currentDoc);
 	try {
-		const text = applyDocChange(
-			canonicalizeFontWeights(op),
-			draftDoc,
-			docOps,
-			toolSet,
-		);
+		const canonicalOp = canonicalizeFontWeights(op);
+		const createResult = applyDocCreate(canonicalOp, draftDoc, docOps);
+		const text =
+			createResult !== null
+				? createResult.text
+				: applyDocChange(canonicalOp, draftDoc, docOps, toolSet);
 		history.push(currentDoc, draftDoc);
 		docBridge.replaceDoc(draftDoc);
-		return { ok: true, text };
+		return createResult === null
+			? { ok: true, text }
+			: { ok: true, text, createdIds: createResult.createdIds };
 	} catch (error) {
 		return toFailureOutcome(error, toolSet);
 	}

@@ -117,8 +117,8 @@ export const tableToDoc: ObjectMapperType<TableDoc, TableState>["toDoc"] = (
 		type: "table",
 		// Rounded because the transform makes the round trip exact only to a float
 		// epsilon, and two callers read the doc as an exact value: the mapper
-		// round-trip test compares docs with toEqual, and isSameCanvasDocContent
-		// stringifies the doc to decide whether the file is dirty.
+		// round-trip test compares docs with toEqual, and the external sync
+		// (canvasToStateReusing) compares each object exactly to decide what changed.
 		x: roundDocCoordinate(drawnTopLeft.x),
 		y: roundDocCoordinate(drawnTopLeft.y),
 		columns: state.columns.map((column) => ({ ...column })),

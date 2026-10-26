@@ -28,6 +28,7 @@ import { determineClickSelection } from "../../../selection/writers/determineCli
 import { selectObjectByClick } from "../../../selection/writers/selectObjectByClick";
 import { selectTextSlot } from "../../../selection/writers/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
+import { claimDrag } from "../../../utils/claimDrag";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
@@ -35,7 +36,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { ORIGIN_SNAP_PX } from "../utils/axisLock";
+import { calcLockedAxis, ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { parsePartAddress, readTextSlotPart } from "../utils/partAddress";
@@ -121,7 +122,7 @@ function handleObjectDrag(
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	const { delta, mods } = event;
-	const dragStartSnapshot = canvasState.activeDrag?.startSnapshot;
+	const dragStartSnapshot = canvasState.drag?.startSnapshot;
 	if (!dragStartSnapshot) {
 		return canvasState;
 	}
@@ -130,15 +131,9 @@ function handleObjectDrag(
 	const selectedIds = canvasState.selection.objectIds;
 
 	// --- Axis lock via Shift ---
-	// While Shift is held, movement is locked to one axis. The locked axis (lockedAxis)
-	// is the one with the smaller absolute cumulative delta, and movement occurs only
-	// along the direction with the larger absolute value. Since it is judged by the
-	// cumulative amount, the locked axis follows if the larger direction swaps during the drag.
-	const lockedAxis: "x" | "y" | null = mods.shift
-		? Math.abs(delta.x) >= Math.abs(delta.y)
-			? "y"
-			: "x"
-		: null;
+	// The axis comes from calcLockedAxis on the cumulative delta, so the lock
+	// follows if the dominant direction swaps during the drag.
+	const lockedAxis = mods.shift ? calcLockedAxis(delta) : null;
 
 	const zoom = canvasState.viewport.zoom;
 
@@ -239,20 +234,37 @@ function handleObjectDrag(
 	// Dragging moves by the cumulative delta from the drag-start snapshot as the source.
 	// Parent group bounds updates are done together on dragEnd, not here.
 	const eventStartMultiSelectGroup = dragStartSnapshot.multiSelectGroup;
-	const { objects: updatedObjects, multiSelectGroup: movedMultiSelectGroup } =
-		moveSelection({
-			selectedIds,
-			srcObjects: eventStartObjects,
-			srcMultiSelectGroup: eventStartMultiSelectGroup,
-			delta: adjustedDelta,
-			objectBehavior: registries.objectBehavior,
-		});
+	const {
+		objects: updatedObjects,
+		multiSelectGroup: movedMultiSelectGroup,
+		translatedIds,
+	} = moveSelection({
+		selectedIds,
+		srcObjects: eventStartObjects,
+		srcMultiSelectGroup: eventStartMultiSelectGroup,
+		delta: adjustedDelta,
+		objectBehavior: registries.objectBehavior,
+	});
 
-	const nextState = {
+	const { drag } = canvasState;
+	const nextState: CanvasControllerState = {
 		...canvasState,
 		objects: updatedObjects,
-		snapFeedback,
-		axisLockFeedback,
+		// Lets the renderer draw the translated objects from their start states
+		// (see MovePreview); the state above stays the truth for everything else.
+		drag:
+			drag?.kind === "move"
+				? {
+						...drag,
+						snapFeedback,
+						axisLockFeedback,
+						movePreview: {
+							delta: adjustedDelta,
+							translatedIds,
+							startObjects: eventStartObjects,
+						},
+					}
+				: drag,
 	};
 
 	// Move multiSelectGroup in sync as well (only when multi-selection is maintained during the drag)
@@ -286,8 +298,8 @@ function handleObjectDragStart(
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
 	// The multiSelectGroup and keyPoints updates to set on the drag's start snapshot
 	let eventStartMultiSelectGroup =
-		canvasState.activeDrag?.startSnapshot.multiSelectGroup ?? null;
-	let keyPoints = canvasState.activeDrag?.startSnapshot.keyPoints ?? {};
+		canvasState.drag?.startSnapshot.multiSelectGroup ?? null;
+	let keyPoints = canvasState.drag?.startSnapshot.keyPoints ?? {};
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// Already selected: keep the current selection
@@ -303,12 +315,13 @@ function handleObjectDragStart(
 
 		// Create/update multiSelectGroup as the number of selected shapes increases
 		const eventStartObjects =
-			canvasState.activeDrag?.startSnapshot.objects ?? canvasState.objects;
+			canvasState.drag?.startSnapshot.objects ?? canvasState.objects;
 		newMultiSelectGroup =
 			selectedIds.length > 1
 				? createMultiSelectGroup(
 						selectedIds,
 						eventStartObjects,
+						registries,
 						canvasState.multiSelectGroup,
 					)
 				: null;
@@ -327,35 +340,33 @@ function handleObjectDragStart(
 
 	// Re-cache the exclusion set with the selection finalized after dragStart
 	// (refresh the snapshot if the selection changed from what it was when handleGesture was built)
-	const selectedIdsWithDescendants = canvasState.activeDrag
-		? buildSelectedIdsWithDescendants(
-				selectedIds,
-				canvasState.activeDrag.startSnapshot.objects,
-			)
-		: null;
+	const startSnapshot = canvasState.drag?.startSnapshot;
 
 	// Update the selection state and enable edge scrolling
-	const nextState = {
-		...canvasState,
-		// The picked part goes with the object selection that carried it.
-		selection: { objectIds: selectedIds, part: null },
-		multiSelectGroup: newMultiSelectGroup,
-		edgeScrollEnabled: true,
-		// Close the object menu dropdown at drag start
-		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
-		activeDrag: canvasState.activeDrag
-			? {
-					startSnapshot: {
-						...canvasState.activeDrag.startSnapshot,
-						multiSelectGroup: eventStartMultiSelectGroup,
-						keyPoints,
-						...(selectedIdsWithDescendants && { selectedIdsWithDescendants }),
-					},
-					kind: "move" as const,
-				}
-			: null,
-	};
+	const nextState = claimDrag(
+		{
+			...canvasState,
+			// The picked part goes with the object selection that carried it.
+			selection: { objectIds: selectedIds, part: null },
+			multiSelectGroup: newMultiSelectGroup,
+			// Close the object menu dropdown at drag start
+			objectMenuOpenId: null,
+			stencilLibraryOpenCategory: null,
+		},
+		{ kind: "move" },
+		{
+			edgeScroll: true,
+			startSnapshot: startSnapshot && {
+				...startSnapshot,
+				multiSelectGroup: eventStartMultiSelectGroup,
+				keyPoints,
+				selectedIdsWithDescendants: buildSelectedIdsWithDescendants(
+					selectedIds,
+					startSnapshot.objects,
+				),
+			},
+		},
+	);
 
 	// Run the drag handling
 	return handleObjectDrag(nextState, event, registries);
@@ -369,9 +380,8 @@ function handleObjectDragEnd(
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
-	const closingState = { ...canvasState, edgeScrollEnabled: false };
-	const draggedState = handleObjectDrag(closingState, event, registries);
-	const committedState = commitEditIfChanged(closingState, draggedState);
+	const draggedState = handleObjectDrag(canvasState, event, registries);
+	const committedState = commitEditIfChanged(canvasState, draggedState);
 	return updateAffectedGroupBounds(
 		committedState,
 		committedState.selection.objectIds,
@@ -384,7 +394,8 @@ function handleObjectDragEnd(
  *
  * Shape-agnostic, since each shape's handling is resolved dynamically via the registry.
  *
- * Note: the drag's start snapshot is managed by handleGesture(), not here.
+ * Note: the drag's start snapshot is frozen by handleGesture(); this handler only
+ * patches it at dragStart (the committed text edit, the finalized selection).
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -450,6 +461,7 @@ export const ObjectEventHandler: GestureHandler = {
 				nextState,
 				targetObject,
 				event.mods,
+				registries,
 			);
 			// A click that leaves the selection as it was, on the object that is already
 			// the whole selection, addresses a part inside it instead. Any modifier
@@ -496,7 +508,7 @@ export const ObjectEventHandler: GestureHandler = {
 				}
 				return {
 					...nextState,
-					// The slot being edited is the selection (see textEditState): the
+					// The slot being edited is the selection (see CanvasMode): the
 					// click that precedes the double-click only selects the object, and
 					// leaves the slot unselected unless the object already was the whole
 					// selection (selectPartByClick).
@@ -507,9 +519,12 @@ export const ObjectEventHandler: GestureHandler = {
 					// The click that precedes the double-click leaves an already-selected
 					// slot untouched, so the submenu open over it is closed here.
 					objectMenuOpenId: null,
-					textEditState: {
-						kind: "shape",
-						text: readRichTextSlot(targetObject.text, slotId),
+					mode: {
+						kind: "textEdit",
+						draft: {
+							kind: "shape",
+							text: readRichTextSlot(targetObject.text, slotId),
+						},
 					},
 				};
 			}
@@ -518,7 +533,7 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the drag events
 		const objectStartState =
-			nextState.activeDrag?.startSnapshot.objects[targetObjectId];
+			nextState.drag?.startSnapshot.objects[targetObjectId];
 		if (!objectStartState) {
 			return nextState;
 		}

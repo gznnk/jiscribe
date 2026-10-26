@@ -8,8 +8,10 @@ import { selectors } from "../../support/selectors";
  *   step commits, but consecutive steps of the same field merge into one history
  *   entry, so a burst of them comes back in a single undo.
  * - A spin button held down keeps stepping at a fixed interval until released.
- * - Typing previews live and records only on Enter or blur, so Escape has both a
- *   value to put back and nothing to take out of the history.
+ * - Typing previews live and records only on Enter, blur or a press outside the
+ *   field, so Escape has both a value to put back and nothing to take out of the
+ *   history. A press on the canvas moves no focus, so it is the press itself that
+ *   commits, ahead of the deselect that takes the row away.
  * - A selection whose objects disagree about a style leaves the field empty
  *   behind its placeholder, and typing into it ends the disagreement.
  *
@@ -160,6 +162,36 @@ test.describe("Properties sidebar number fields", () => {
 		await expect.poll(() => rect.getAttribute("width")).toBe(RECT_WIDTH);
 		await expect(rect, "the drawing itself is still there").toHaveCount(1);
 		await expect(width).toHaveValue(RECT_WIDTH);
+	});
+
+	test("commits a typed width on a press on empty canvas, and one undo takes it back", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
+		await canvas.openPropertyPanel();
+		const rect = canvas.objectById(id);
+		const width = canvas.page.locator(selectors.propertyPanelField("width"));
+
+		await width.fill("300");
+		await expect.poll(() => rect.getAttribute("width")).toBe("300");
+
+		// The press keeps the focus in the field, so no blur commits; the row goes
+		// with the selection, and only the commit taken ahead of the deselect
+		// records the preview.
+		await canvas.deselect();
+		await expect(width, "the row went with the selection").toHaveCount(0);
+		await expect.poll(() => rect.getAttribute("width")).toBe("300");
+
+		// Unrecorded, the press would take the drawing itself away instead.
+		await canvas.undo();
+		await expect(
+			rect,
+			"the typed width reached the history as an entry of its own",
+		).toHaveCount(1);
+		await expect.poll(() => rect.getAttribute("width")).toBe(RECT_WIDTH);
+
+		await canvas.redo();
+		await expect.poll(() => rect.getAttribute("width")).toBe("300");
 	});
 
 	test("previews a typed width live, and Escape puts it back without recording it", async ({

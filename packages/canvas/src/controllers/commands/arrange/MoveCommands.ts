@@ -74,7 +74,7 @@ const createMoveCommand = (
 		// connector is not nudged either: it follows its endpoints.
 		canExecute: (state: CanvasControllerState) =>
 			state.selection.objectIds.length > 0 &&
-			state.textEditState === null &&
+			state.mode.kind !== "textEdit" &&
 			getSelectedConnectorId(state) === null,
 		execute: (state: CanvasControllerState, registries: ICanvasRegistries) => {
 			const { objects, multiSelectGroup } = moveSelection({

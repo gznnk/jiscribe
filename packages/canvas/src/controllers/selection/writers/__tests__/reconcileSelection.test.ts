@@ -5,7 +5,11 @@ import {
 	type ObjectPartKindDefinition,
 } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	TextEditDraft,
+} from "../../../CanvasTypes";
+import { readTextEditDraft } from "../../../utils/readTextEditDraft";
 import { selectionOf } from "../../__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../__tests__/support/vertexPartSelection";
 import type { ObjectPartSelection } from "../../CanvasSelection";
@@ -90,6 +94,7 @@ const makeState = (
 	part: ObjectPartSelection | null,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects,
 		selection: selectionOf(selectedIds, part),
 	}) as unknown as CanvasControllerState;
@@ -97,8 +102,8 @@ const makeState = (
 /** The same state with an editing session open over whatever it has selected. */
 const editing = (
 	state: CanvasControllerState,
-	textEditState: CanvasControllerState["textEditState"],
-): CanvasControllerState => ({ ...state, textEditState });
+	draft: TextEditDraft,
+): CanvasControllerState => ({ ...state, mode: { kind: "textEdit", draft } });
 
 /** The single-slot part selection most cases here are built from. */
 const textSlot = (slotId: string): ObjectPartSelection => ({
@@ -290,7 +295,7 @@ describe("reconcileSelection", () => {
 			);
 			const after = reconcileSelection(state, objectPartKind);
 			expect(after.selection).toBe(state.selection);
-			expect(after.textEditState).toBeNull();
+			expect(readTextEditDraft(after)).toBeNull();
 		});
 
 		it("is discarded on a slot type that picks nothing, which names no slot", () => {
@@ -299,7 +304,7 @@ describe("reconcileSelection", () => {
 				{ kind: "shape", text: "edited" },
 			);
 			expect(
-				reconcileSelection(state, objectPartKind).textEditState,
+				readTextEditDraft(reconcileSelection(state, objectPartKind)),
 			).toBeNull();
 		});
 
@@ -311,7 +316,7 @@ describe("reconcileSelection", () => {
 			const after = reconcileSelection(state, objectPartKind);
 			// The pick itself is live, so it stays; only the session goes.
 			expect(after.selection.part).toBe(cellPart);
-			expect(after.textEditState).toBeNull();
+			expect(readTextEditDraft(after)).toBeNull();
 		});
 
 		it("is discarded along with the slot it was being written to", () => {
@@ -321,7 +326,7 @@ describe("reconcileSelection", () => {
 			);
 			const after = reconcileSelection(state, objectPartKind);
 			expect(after.selection.part).toBeNull();
-			expect(after.textEditState).toBeNull();
+			expect(readTextEditDraft(after)).toBeNull();
 		});
 
 		it("is discarded when a one-body shape's owner is gone", () => {
@@ -330,7 +335,7 @@ describe("reconcileSelection", () => {
 				text: "edited",
 			});
 			expect(
-				reconcileSelection(state, objectPartKind).textEditState,
+				readTextEditDraft(reconcileSelection(state, objectPartKind)),
 			).toBeNull();
 		});
 
@@ -340,7 +345,7 @@ describe("reconcileSelection", () => {
 				{ kind: "shape", text: "edited" },
 			);
 			expect(
-				reconcileSelection(state, objectPartKind).textEditState,
+				readTextEditDraft(reconcileSelection(state, objectPartKind)),
 			).toBeNull();
 		});
 
@@ -354,7 +359,7 @@ describe("reconcileSelection", () => {
 				{ kind: "shape", text: "edited" },
 			);
 			expect(
-				reconcileSelection(state, objectPartKind).textEditState,
+				readTextEditDraft(reconcileSelection(state, objectPartKind)),
 			).toBeNull();
 		});
 
@@ -372,7 +377,7 @@ describe("reconcileSelection", () => {
 				text: "Yes",
 			});
 			expect(
-				reconcileSelection(state, objectPartKind).textEditState,
+				readTextEditDraft(reconcileSelection(state, objectPartKind)),
 			).toBeNull();
 		});
 
@@ -382,7 +387,7 @@ describe("reconcileSelection", () => {
 				{ kind: "connectorLabel", text: "Yes" },
 			);
 			expect(
-				reconcileSelection(state, objectPartKind).textEditState,
+				readTextEditDraft(reconcileSelection(state, objectPartKind)),
 			).toBeNull();
 		});
 
@@ -393,7 +398,7 @@ describe("reconcileSelection", () => {
 			);
 			const after = reconcileSelection(state, objectPartKind);
 			expect(after.selection.part).toBeNull();
-			expect(after.textEditState).toBe(state.textEditState);
+			expect(readTextEditDraft(after)).toBe(readTextEditDraft(state));
 		});
 	});
 });

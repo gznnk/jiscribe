@@ -7,6 +7,7 @@ import {
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
+import { writeDragFeedback } from "../../../utils/writeDragFeedback";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -38,7 +39,7 @@ const handleDrag = (
 	connectorId: string,
 	segmentIndex: number,
 ): CanvasControllerState => {
-	const snapshot = state.activeDrag?.startSnapshot;
+	const snapshot = state.drag?.startSnapshot;
 	const connector = snapshot?.objects[connectorId];
 	if (!snapshot || !isConnectorState(connector)) {
 		return state;
@@ -90,7 +91,10 @@ const handleDrag = (
 	const updatedObjects = createCowObjects(state.objects);
 	updatedObjects[connectorId] = updatedConnector;
 
-	return { ...state, objects: updatedObjects, snapFeedback };
+	return writeDragFeedback(
+		{ ...state, objects: updatedObjects },
+		{ snapFeedback },
+	);
 };
 
 /**
@@ -140,14 +144,8 @@ export const ConnectorSegmentMoveHandler: GestureHandler = {
 			return beginConnectorReshape(state, connectorId);
 		}
 		if (event.type === "dragEnd") {
-			const closingState = { ...state, edgeScrollEnabled: false };
-			const draggedState = handleDrag(
-				closingState,
-				event,
-				connectorId,
-				segmentIndex,
-			);
-			return commitEditIfChanged(closingState, draggedState);
+			const draggedState = handleDrag(state, event, connectorId, segmentIndex);
+			return commitEditIfChanged(state, draggedState);
 		}
 		return handleDrag(state, event, connectorId, segmentIndex);
 	},

@@ -22,6 +22,62 @@
 
 「純粋描画に徹する」ことで、表示は state の関数として決まり、テストや再利用がしやすくなる。
 
+## 小さすぎて読めない文字は描かない
+
+最大の文字サイズが画面上で **4 CSS px**（`fontSize × zoom`）を下回る文字は描かず、その
+foreignObject に `display="none"` を付ける。テキストオーバーレイはズームアウトしたドラッグの
+毎フレームでブラウザがレイアウトし直すが、その大きさでは読めるものが何も無い。規則と閾値は
+`useIsTextLegible`（`rendering/objects/useIsTextLegible.ts`）1 つに置き、`TextOverlayFrame` と
+`ConnectorLabel` がこれを呼ぶ。
+
+- ズームは数値ではなくストア（`CanvasZoomStoreContext`）で届けるので、ズームの 1 段で再描画される
+  のは閾値をまたいだ文字だけになる。ストアは `<Canvas>` が持つ（`useCanvasZoomStore`）。キャンバスの
+  外（テスト・プレビュー）では context が null で、文字はすべて描く。
+- 隠している間も要素はマウントしたままにする。ズームを戻したときに全ボックスが一斉に再マウント
+  されないようにするため。
+- エクスポートは生きた DOM を複製して文字を読み戻すので、エクスポートの描画範囲と同じ `flushSync`
+  の中でストアをスナップショット状態にし（`useSnapshotRenderScope`）、その間はズームに関係なく
+  すべての文字を描く。
+- 中身が `fontSize` より大きく描かれるボックスは `TextOverlayFrame` に `maxFontSize` を渡す。
+  `TextOverlay` はラン中の最大サイズ、Markdown プラグインは最大の見出しを渡す。
+- 隠れていてもテキストオブジェクトは拾える。計算したヒット帯で拾い、オーバーレイでは拾わない
+  ため。隠れたコネクターのラベルはズームを戻すまで当たり判定に乗らないが、コネクターの線は乗る。
+
+## 移動ドラッグは再描画せず開始時の状態をずらして描く
+
+オブジェクトをドラッグしている間も reducer は毎フレーム移動後の位置を書くので、スナップ・
+コントロールなど state を読むものはすべて本当の位置を見る。近道をするのは描画だけで、コネクターの
+ビューポートカリングはそれに合わせる（後述）。
+オブジェクトのドラッグハンドラが動かしたものを `"move"` ドラッグの `movePreview` として宣言し
+（`rendering/layers/content/MovePreview.ts`。適用した差分・`moveByDelta` が新しい state を返した id・
+ドラッグ開始時のオブジェクト）、`ObjectsRenderer` はその id を開始時の state から
+`<g transform="translate(dx dy)">` の中に描く。開始時の state はドラッグの間ずっと同じ参照なので
+`ObjectRenderBoundary` が描画を打ち切り、1 フレームで変わるのは動いたオブジェクトごとに属性 1 つになる。
+
+- 描画するオブジェクトとコネクターはすべてこのラッパー `<g>` を持ち、ドラッグ外ではずらさない。
+  境界の外側に置き、`data-canvas-export="flatten"` のほかに `data-*` を持たず、共有もしない。
+  動いたオブジェクトをまとめる group にすると重なり順が変わり、出入りするたびに中身が再マウントされる。
+- 描画側は推測しない。プレビューに載っていない id、state が開始時のままの id、テキスト編集中の
+  オブジェクトは今の state から描く。一覧が正しいことは reducer が保つ。ドラッグのフレームは後段の
+  整えが書き換えた id を外し、ドラッグ中のフォント到着（`REMEASURE_TEXT`）は測り直した id を外す。
+  ほかの編集は移動ドラッグのフレームをまたいで残らない（拒否されるか、次のフレームが開始時の
+  スナップショットからオブジェクトを組み直す）。
+- 保存された頂点を持たないコネクターは、両端の持ち主がずれていればずらす。頂点を持つもの（頂点は
+  持ち主が動いても動かない）と片端だけが動いたものは毎回経路を引き直す。直交ルーティングは折れ目を
+  整数に丸めるので、ずらした直交経路はドロップで引き直すまで実際の経路から最大 0.5（ワールド単位）
+  ずれることがある。
+- ビューポートカリング（`controllers/utils/calcVisibleObjectIds.ts`）は、ずらすコネクターを描くとおりに
+  判定する。開始時の経路の箱を差分だけ動かしたもの（`isConnectorShiftedWithOwners` を `ObjectsRenderer`
+  と共有）。開始時の持ち主は参照が変わらないので、その箱の経路はドラッグ 1 回につき 1 度しか引かない。
+  それ以外のコネクターは、まず経路を引かずに求まる外接範囲（`calcConnectorExtentBound`。端点・保存
+  された頂点・持ち主の箱をルーターのマージン分広げ、ラベルの届く範囲を足したもの）で判定し、それが
+  画面にかかるものだけ経路を引いて正確な箱を求める。画面外へ伸びるコネクターは、持ち主をドラッグ
+  しても経路を引かない。
+- 各 id の要素は、組み立ての材料が変わらない間は同じオブジェクトを返す（`useElementReuse`）。React は
+  そのフレームで変わらなかったオブジェクトのラッパーと境界を丸ごと飛ばす。
+- 前提は `moveByDelta` が描画の純粋な平行移動であること（`MoveByDeltaFunction` 参照）。ドロップは
+  最終位置を持つ state と同じ state でプレビューを消すので、確定するフレームは state だけから描かれる。
+
 ## 色は「presentation 属性」か「CSS」かを使い分ける
 
 判断軸は emotion か inline style かではなく、**presentation 属性で足りるか / CSS 関数の解決が要るか**。
@@ -45,11 +101,11 @@
 
 色には性質の異なる 2 種類があり、出所を必ず分ける。
 
-|            | UI クローム                                  | 図形データ                                     |
-| ---------- | -------------------------------------------- | ---------------------------------------------- |
-| 例         | メニュー・ツールバー・選択枠・スナップガイド | 図形の `fill` / `stroke` / `fontColor`         |
-| 出所       | `theme/themeTokens.ts` のテーマトークン      | ドキュメント（`.jis`）に保存される値           |
-| テーマ追従 | する（ホストが注入したテーマに従う）         | しない（ユーザーが指定したデータ）※auto を除く |
+|            | UI クローム                                        | 図形データ                                     |
+| ---------- | -------------------------------------------------- | ---------------------------------------------- |
+| 例         | メニュー・ツールバー・選択枠・スナップガイド       | 図形の `fill` / `stroke` / `fontColor`         |
+| 出所       | `foundation/theme/themeTokens.ts` のテーマトークン | ドキュメント（`.jis`）に保存される値           |
+| テーマ追従 | する（ホストが注入したテーマに従う）               | しない（ユーザーが指定したデータ）※auto を除く |
 
 ### `"auto"`（テーマ追従色）— 図形データの例外（issue #38）
 
@@ -112,12 +168,12 @@ style」という 2 方式混在を解消）。
 
 テーマはホストが注入する中立な仕組みで、canvas 自体は VSCode を知らない。
 
-- **中立トークン**: `theme`（`theme/themeTokens.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
+- **中立トークン**: `theme`（`foundation/theme/themeTokens.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
   参照し、フォールバックにはダークプリセット値を持つ（`var(--jiscribe-foreground, #cccccc)`）。
   テーマは CSS 解決時に決まるため、emotion スタイルは静的なモジュール定数のままでよい。
 - **注入**: ホストは Canvas の `theme` prop に `CanvasTheme`
-  （`theme/CanvasTheme.ts`）を渡す。Canvas ルートが `theme.tokens` を `--jiscribe-*`
-  カスタムプロパティとして注入する（`theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
+  （`foundation/theme/CanvasTheme.ts`）を渡す。Canvas ルートが `theme.tokens` を `--jiscribe-*`
+  カスタムプロパティとして注入する（`foundation/theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
   配下のすべてのスタイルが解決できる。
 - **2 つの伝搬経路**: CSS で消費するトークンはカスタムプロパティ経由。JS で消費する値
   （例: ズーム補正計算に使うハンドル寸法、後述の `colorScheme`）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、
@@ -165,7 +221,7 @@ style」という 2 方式混在を解消）。
     `fonts.css` を import していないホストが失うものは無い — 取りに行く字面が無いので、
     load は即座に解決する。
 - **標準テーマ**: `darkCanvasTheme`（既定。その値はトークンのフォールバックを兼ねる）と
-  `lightCanvasTheme` をパッケージから export する（`theme/themePresets.ts`）。
+  `lightCanvasTheme` をパッケージから export する（`foundation/theme/themePresets.ts`）。
 - **`colorScheme`**: 図形が JS の値として読むテーマ項目（`CanvasColorScheme`）。トークンが塗る地の明暗
   （`"light"` / `"dark"`）を名指し、地ごとに図版を出荷していてトークンでは塗り替えられない絵が使う —
   AWS アイコンはこれで公式の Light / Dark の図版を選ぶ（`plugins/aws-shapes/src/presentation/AwsIconArt.tsx`。

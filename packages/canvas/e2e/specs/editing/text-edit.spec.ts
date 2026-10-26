@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * Content-box top and height of an element, in viewport px. The two text boxes
@@ -80,6 +81,30 @@ test.describe("text editing", () => {
 		// The third deselects it.
 		await canvas.pressEscape();
 		await expect.poll(() => canvas.hasAnyControl()).toBe(false);
+	});
+
+	test("keeps the text being typed on its shape when a click-placed shape is added", async ({
+		canvas,
+	}) => {
+		const rectId = await canvas.drawShape(
+			"Rectangle",
+			{ x: 400, y: 200 },
+			{ x: 600, y: 320 },
+		);
+		await canvas.deselect();
+		await canvas.typeTextAt({ x: 500, y: 260 }, "Kept on the rect");
+
+		// Placing selects the new shape, and the editor belongs to the selection,
+		// so the draft has to be written back before the placement or it follows
+		// the selection onto the shape just placed.
+		await canvas.placeShape("Pin");
+
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+		await expect
+			.poll(async () =>
+				(await canvas.drawnTextRuns(rectId)).map((run) => run.text).join(""),
+			)
+			.toBe("Kept on the rect");
 	});
 
 	test("accepts multi-line text", async ({ canvas }) => {

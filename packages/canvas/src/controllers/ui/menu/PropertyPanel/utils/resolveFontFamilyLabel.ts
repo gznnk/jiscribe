@@ -1,6 +1,6 @@
 import { CANVAS_FONT_FAMILIES } from "@jiscribe/doc/text/style/fontFamilies";
 
-import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
+import type { CanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesTypes";
 
 /** Readers rather than key names: not every CanvasMessages entry is a string. */
 const FONT_FAMILY_LABEL_READERS: Record<

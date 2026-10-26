@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 
+import type { MovePreview } from "../../rendering/layers/content/MovePreview";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { calcVisibleObjectIds } from "../utils/calcVisibleObjectIds";
@@ -9,7 +10,8 @@ import type { VisualExtentRegistries } from "../utils/VisualExtentRegistries";
 /**
  * Derives the set of object IDs to render under the current viewport
  * (see calcVisibleObjectIds), recomputing each object's bbox only when its
- * state identity changed since the previous render.
+ * state identity changed since the previous render. `movePreview` is the move
+ * drag under way, whose shifted connectors are judged by their drag-start path.
  *
  * The returned Set keeps its identity while the membership is unchanged, so
  * a pure pan/zoom that crosses no object boundary does not re-render
@@ -21,6 +23,7 @@ export const useVisibleObjectIds = (
 	viewport: Viewport,
 	textEditObjectId: string | null,
 	registries: VisualExtentRegistries,
+	movePreview?: MovePreview,
 ): ReadonlySet<string> => {
 	const bboxCacheRef = useRef<VisibilityBBoxCache>(new Map());
 	const prevVisibleIdsRef = useRef<ReadonlySet<string> | null>(null);
@@ -33,6 +36,7 @@ export const useVisibleObjectIds = (
 			textEditObjectId,
 			prevCache: bboxCacheRef.current,
 			registries,
+			movePreview,
 		});
 		bboxCacheRef.current = bboxCache;
 
@@ -51,5 +55,5 @@ export const useVisibleObjectIds = (
 		}
 		prevVisibleIdsRef.current = visibleIds;
 		return visibleIds;
-	}, [objects, rootIds, viewport, textEditObjectId, registries]);
+	}, [objects, rootIds, viewport, textEditObjectId, registries, movePreview]);
 };

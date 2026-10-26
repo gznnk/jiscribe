@@ -1,13 +1,13 @@
 import type { Point } from "@jiscribe/geometry";
 import { useMemo } from "react";
 
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import {
 	listConnectorPathPoints,
 	readOwnerGeometry,
 	resolveConnectorPointsCached,
-} from "../../../../connectors/endpoints";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
+} from "../../../objects/connector/geometry/endpoints";
 import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
 import { useObjectExtraConnectPointsRegistry } from "../../../objects/registry/ObjectExtraConnectPointsRegistryContext";
 import { useObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistryContext";

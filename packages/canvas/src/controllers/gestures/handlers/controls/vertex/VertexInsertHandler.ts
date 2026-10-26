@@ -5,9 +5,11 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { claimDrag } from "../../../../utils/claimDrag";
 import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import { writeDragFeedback } from "../../../../utils/writeDragFeedback";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { excludeCenterCandidates } from "../../utils/snap/excludeCenterCandidates";
@@ -113,32 +115,29 @@ export class VertexInsertHandler extends ControlStrategy {
 			[objectId]: updatedObject,
 		};
 
-		const nextState: CanvasControllerState = {
-			...state,
-			objects: updatedObjects,
-			// An insertion renumbers the vertices after it, so a picked one is dropped
-			// rather than left addressing whoever took the number over.
-			selection: { ...state.selection, part: null },
-			edgeScrollEnabled: true,
-		};
-
-		// Update the drag's start snapshot so the drag event can reference the state including the new vertex.
+		// The drag's start snapshot takes the new vertex, so the drag event can reference it.
 		// The object's own center moves with the new vertex, so it is dropped from this drag's candidates.
-		if (state.activeDrag) {
-			const startSnapshot = state.activeDrag.startSnapshot;
-			nextState.activeDrag = {
-				...state.activeDrag,
-				startSnapshot: {
+		const startSnapshot = state.drag?.startSnapshot;
+		return claimDrag(
+			{
+				...state,
+				objects: updatedObjects,
+				// An insertion renumbers the vertices after it, so a picked one is dropped
+				// rather than left addressing whoever took the number over.
+				selection: { ...state.selection, part: null },
+			},
+			{ kind: "vertex" },
+			{
+				edgeScroll: true,
+				startSnapshot: startSnapshot && {
 					...startSnapshot,
 					objects: updatedObjects,
 					snapCandidates:
 						startSnapshot.snapCandidates &&
 						excludeCenterCandidates(startSnapshot.snapCandidates, objectId),
 				},
-			};
-		}
-
-		return nextState;
+			},
+		);
 	}
 
 	/**
@@ -151,7 +150,7 @@ export class VertexInsertHandler extends ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		const dragStartSnapshot = state.drag?.startSnapshot;
 		if (!dragStartSnapshot) {
 			return state;
 		}
@@ -218,11 +217,10 @@ export class VertexInsertHandler extends ControlStrategy {
 		const updatedObjects = createCowObjects(state.objects);
 		updatedObjects[objectId] = updatedObject;
 
-		return {
-			...state,
-			objects: updatedObjects,
-			snapFeedback,
-		};
+		return writeDragFeedback(
+			{ ...state, objects: updatedObjects },
+			{ snapFeedback },
+		);
 	}
 
 	/**
@@ -235,14 +233,8 @@ export class VertexInsertHandler extends ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const closingState = { ...state, edgeScrollEnabled: false };
-		const draggedState = this.handleDrag(
-			closingState,
-			event,
-			objectId,
-			segmentIndex,
-		);
-		const committedState = commitEditIfChanged(closingState, draggedState);
+		const draggedState = this.handleDrag(state, event, objectId, segmentIndex);
+		const committedState = commitEditIfChanged(state, draggedState);
 		const parentId = committedState.objects[objectId]?.parentId;
 		return parentId
 			? updateGroupBoundsFromRoot(committedState, parentId)

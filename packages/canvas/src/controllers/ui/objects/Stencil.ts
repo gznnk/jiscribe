@@ -1,7 +1,7 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { ComponentType } from "react";
 
-import type { LocaleMessages } from "../../messages/resolveLocaleMessages";
+import type { LocaleMessages } from "../../../foundation/i18n/resolveLocaleMessages";
 
 /** Props received by a StencilLibrary icon component. */
 export type StencilIconProps = {

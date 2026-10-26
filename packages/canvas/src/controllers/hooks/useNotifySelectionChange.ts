@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
+
 /**
  * Notifies the host when the selection changes.
  *
@@ -20,10 +22,7 @@ export const useNotifySelectionChange = (
 	selection: readonly string[],
 	onSelectionChange?: (selectedIds: string[]) => void,
 ): void => {
-	const onSelectionChangeRef = useRef(onSelectionChange);
-	useEffect(() => {
-		onSelectionChangeRef.current = onSelectionChange;
-	});
+	const onSelectionChangeRef = useLatestRef(onSelectionChange);
 
 	// null marks "before the first render"; the mount render only records the
 	// baseline so an initial (empty) selection is not delivered as a change.
@@ -39,7 +38,7 @@ export const useNotifySelectionChange = (
 			return;
 		}
 		onSelectionChangeRef.current?.([...selection]);
-	}, [selection]);
+	}, [selection, onSelectionChangeRef]);
 };
 
 const sameSelection = (a: readonly string[], b: readonly string[]): boolean => {

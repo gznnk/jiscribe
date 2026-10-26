@@ -46,7 +46,7 @@ const canvasWith = (
 	({
 		objects: { [ENTITY.id]: ENTITY },
 		selection: { objectIds: [ENTITY.id], part },
-		textEditState: null,
+		mode: { kind: "normal" },
 		objectMenuOpenId: null,
 		lastDuplicate: null,
 		commitVersion: 7,
@@ -118,7 +118,7 @@ describe("erEntity insert commands", () => {
 	it("offers nothing for the title slot, an open editor or several objects", () => {
 		const titlePick = canvasWith(pickOf(TEXT_SLOT_PART_KIND, "name"));
 		const editing = canvasWith(pickOf(TEXT_SLOT_PART_KIND, "col:1:name"), {
-			textEditState: { kind: "shape", text: "email" },
+			mode: { kind: "textEdit", draft: { kind: "shape", text: "email" } },
 		});
 		const severalObjects = canvasWith(null, {
 			selection: { objectIds: [ENTITY.id, "other"], part: null },
@@ -144,7 +144,10 @@ describe("erEntity insert commands", () => {
 		expect(result.selection.part).toEqual(
 			pickOf(TEXT_SLOT_PART_KIND, "col:1:name"),
 		);
-		expect(result.textEditState).toEqual({ kind: "shape", text: "" });
+		expect(result.mode).toEqual({
+			kind: "textEdit",
+			draft: { kind: "shape", text: "" },
+		});
 	});
 
 	it("inserts below the column of a picked slot", () => {
@@ -214,7 +217,10 @@ describe("erEntity column pick commands", () => {
 				ranges: [{ anchorId: "col:0", focusId: "col:2" }],
 			}),
 		);
-		expect(result.textEditState).toEqual({ kind: "shape", text: "name" });
+		expect(result.mode).toEqual({
+			kind: "textEdit",
+			draft: { kind: "shape", text: "name" },
+		});
 	});
 
 	it("opens the picked column's name on Enter", () => {
@@ -225,7 +231,10 @@ describe("erEntity column pick commands", () => {
 		expect(result.selection.part).toEqual(
 			pickOf(TEXT_SLOT_PART_KIND, "col:1:name"),
 		);
-		expect(result.textEditState).toEqual({ kind: "shape", text: "email" });
+		expect(result.mode).toEqual({
+			kind: "textEdit",
+			draft: { kind: "shape", text: "email" },
+		});
 		expect(result.commitVersion).toBe(7);
 	});
 });

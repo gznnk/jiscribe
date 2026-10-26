@@ -315,6 +315,24 @@ describe("parse: the staged pipeline", () => {
 			}
 		});
 
+		it("keeps the document's own meta, host keys included, without a warning", () => {
+			const doc = {
+				...validDoc(),
+				meta: { name: "Overview", description: "a\nb", owner: "x" },
+			};
+			const result = parse(text(doc));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc).toEqual(doc);
+				expect(result.warnings).toEqual([]);
+			}
+		});
+
+		it("returns structure-error for a document meta that is not an object", () => {
+			const result = parse(text({ ...validDoc(), meta: "Overview" }));
+			expect(result.kind).toBe("structure-error");
+		});
+
 		it("returns syntax-error (with a message) for broken JSON", () => {
 			const result = parse("{ not valid json");
 			expect(result.kind).toBe("syntax-error");

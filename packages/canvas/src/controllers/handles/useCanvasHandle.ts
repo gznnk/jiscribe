@@ -7,10 +7,11 @@ import { useInteractionHandle } from "./useInteractionHandle";
 import { useMeasureHandle } from "./useMeasureHandle";
 import { useSelectionHandle } from "./useSelectionHandle";
 import { useViewportHandle } from "./useViewportHandle";
-import type { ResolveImageBlob } from "../../export";
+import type { ResolveImageBlob } from "../../rendering/export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";
+import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 /** Everything the handle namespaces are built from, gathered from the Canvas body. */
 export type UseCanvasHandleParams = {
@@ -23,11 +24,15 @@ export type UseCanvasHandleParams = {
 	/** The live canvas `<svg>` (null until CanvasView mounts) */
 	svgRef: RefObject<SVGSVGElement | null>;
 	/**
-	 * Runs a snapshot with viewport culling suspended (see useViewportCulling).
-	 * Only the export namespace needs it, and it is why the whole handle is built
-	 * after the culling hook rather than beside the other state-derived hooks.
+	 * Runs a snapshot with its own render scope in place of viewport culling (see
+	 * useSnapshotRenderScope). Only the export namespace needs it, and it is why the
+	 * whole handle is built after that hook rather than beside the other
+	 * state-derived hooks.
 	 */
-	withCullingSuspended: <T>(snapshot: () => T) => T;
+	withSnapshotRenderScope: <T>(
+		renderScope: SnapshotRenderScope,
+		snapshot: () => T,
+	) => T;
 	/** Reads the bytes an exported `<image>` carries; only the export namespace takes it */
 	resolveImageBlob: ResolveImageBlob;
 };
@@ -52,7 +57,7 @@ export const useCanvasHandle = ({
 	canvasState,
 	registries,
 	svgRef,
-	withCullingSuspended,
+	withSnapshotRenderScope,
 	resolveImageBlob,
 }: UseCanvasHandleParams): CanvasHandle => {
 	// The canvas stays authoritative for the live camera and selection: the host
@@ -64,7 +69,7 @@ export const useCanvasHandle = ({
 		canvasState,
 		registries,
 		svgRef,
-		withCullingSuspended,
+		withSnapshotRenderScope,
 		resolveImageBlob,
 	);
 	// Read-only counterparts: what the canvas made of the document, and what the

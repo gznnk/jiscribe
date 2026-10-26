@@ -34,13 +34,13 @@ const makeState = (params: {
 	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
-	textEditState?: CanvasControllerState["textEditState"];
+	mode?: CanvasControllerState["mode"];
 }): CanvasControllerState =>
 	({
 		selection: params.selection,
 		objects: params.objects,
 		multiSelectGroup: params.multiSelectGroup ?? null,
-		textEditState: params.textEditState ?? null,
+		mode: params.mode ?? { kind: "normal" },
 		commitVersion: 0,
 		historyCoalesce: { recorded: null, pending: null },
 		registries,
@@ -195,7 +195,7 @@ describe("moveCommands", () => {
 			const state = makeState({
 				selection: selectionOf(["a"], textSlotPartSelection("body")),
 				objects: { a: makeRect("a", 0, 0) },
-				textEditState: { kind: "shape", text: "" },
+				mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 			});
 			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});

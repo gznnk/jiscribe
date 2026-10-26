@@ -1,4 +1,4 @@
-import type { CanvasToolDescriptor } from "@jiscribe/ai-tools";
+import { isCanvasHandleTool } from "@jiscribe/ai-tools";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { canvasToolSet } from "../canvasDefinitions";
@@ -6,13 +6,6 @@ import type { McpTestClient } from "./mcpTestClient";
 import { connectMcpTestClient } from "./mcpTestClient";
 
 let client: McpTestClient;
-
-/**
- * Whether the tool needs a canvas on screen. The declaration's `drives` says so
- * on its own, so they can be sorted without building any arguments
- */
-const needsCanvas = (descriptor: CanvasToolDescriptor): boolean =>
-	descriptor.drives.some((ref) => ref.startsWith("handle."));
 
 beforeAll(async () => {
 	client = await connectMcpTestClient();
@@ -46,12 +39,12 @@ describe("createJiscribeMcpServer", () => {
 
 		// measure_text alone clashes with one of our own and goes in renamed
 		const expectedNames = descriptors.map((descriptor) =>
-			descriptor.name === "measure_text" && needsCanvas(descriptor)
+			descriptor.name === "measure_text" && isCanvasHandleTool(descriptor)
 				? "measure_rendered_text"
 				: descriptor.name,
 		);
 		expect(names).toEqual(expect.arrayContaining(expectedNames));
-		expect(descriptors.filter(needsCanvas)).toHaveLength(16);
+		expect(descriptors.filter(isCanvasHandleTool)).toHaveLength(16);
 	});
 
 	it("never registers the same tool name twice", async () => {
@@ -66,7 +59,7 @@ describe("createJiscribeMcpServer", () => {
 		// absence of an argument, so it is filled in here
 		const descriptors = canvasToolSet.descriptors;
 		const handleNames = descriptors
-			.filter(needsCanvas)
+			.filter(isCanvasHandleTool)
 			.map((descriptor) =>
 				descriptor.name === "measure_text"
 					? "measure_rendered_text"

@@ -16,12 +16,10 @@ const baseState = (
 		objects: {},
 		selection: selectionOf([]),
 		multiSelectGroup: null,
-		areaSelection: null,
-		shapeDrawing: null,
-		activeDrag: null,
+		mode: { kind: "normal" },
+		drag: null,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
-		edgeScrollEnabled: false,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -47,19 +45,24 @@ describe("EscapeSelectionCommand", () => {
 		const state = baseState({
 			selection: selectionOf(["a", "b"]),
 			multiSelectGroup: { id: "ms" } as never,
-			areaSelection: { x: 0, y: 0 } as never,
-			shapeDrawing: { type: "rect" } as never,
+			mode: { kind: "draw", preset: { objectType: "rect" } } as never,
 			objectMenuOpenId: "a",
-			edgeScrollEnabled: true,
 		});
 		const next = EscapeSelectionCommand.execute(state, registries);
 		expect(next.selection.objectIds).toEqual([]);
 		expect(next.selection.part).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
-		expect(next.areaSelection).toBeNull();
-		expect(next.shapeDrawing).toBeNull();
+		expect(next.mode.kind).toBe("normal");
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.edgeScrollEnabled).toBe(false);
+	});
+
+	it("leaves an open text edit's mode for reconcileSelection to settle", () => {
+		const mode = {
+			kind: "textEdit",
+			draft: { kind: "connectorLabel", text: "a" },
+		} as const;
+		const state = baseState({ selection: selectionOf(["a"]), mode });
+		expect(EscapeSelectionCommand.execute(state, registries).mode).toBe(mode);
 	});
 
 	it("drops only a picked vertex on the first press, keeping the object selected", () => {
@@ -128,23 +131,6 @@ describe("EscapeSelectionCommand", () => {
 			expect(EscapeSelectionCommand.canExecute(baseState({}), registries)).toBe(
 				false,
 			);
-		});
-
-		it("is not executable during an object drag (other than area selection)", () => {
-			const state = baseState({
-				selection: selectionOf(["a"]),
-				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
-				areaSelection: null,
-			});
-			expect(EscapeSelectionCommand.canExecute(state, registries)).toBe(false);
-		});
-
-		it("is executable during an area-selection drag", () => {
-			const state = baseState({
-				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
-				areaSelection: { x: 0, y: 0 } as never,
-			});
-			expect(EscapeSelectionCommand.canExecute(state, registries)).toBe(true);
 		});
 	});
 });

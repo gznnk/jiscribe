@@ -270,11 +270,14 @@ describe("canvasReducer (integration)", () => {
 		const afterRewriting = (
 			reducer: ReturnType<typeof createCanvasReducer>,
 		): CanvasControllerState => {
-			const state = {
+			const state: CanvasControllerState = {
 				...createTestState(docWithText("hello")),
-				// The session's owner is the selection (see textEditState).
+				// The session's owner is the selection (see CanvasMode).
 				selection: selectionOf(["text-1"], textSlotPartSelection("body")),
-				textEditState: { kind: "shape" as const, text: "hello world" },
+				mode: {
+					kind: "textEdit",
+					draft: { kind: "shape", text: "hello world" },
+				},
 			};
 			return reducer(state, { type: "END_TEXT_EDIT", commit: true });
 		};

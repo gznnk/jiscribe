@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
+import type { LocaleMessages } from "../../../../foundation/i18n/resolveLocaleMessages";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { RedoIcon } from "../../icons/RedoIcon";
 import { UndoIcon } from "../../icons/UndoIcon";

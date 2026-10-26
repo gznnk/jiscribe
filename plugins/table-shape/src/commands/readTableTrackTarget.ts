@@ -82,7 +82,10 @@ export const readTableTrackTarget = (
 	axis: TableAxis,
 	objectPartKind: ICanvasRegistries["objectPartKind"],
 ): TableTrackTarget | null => {
-	if (state.textEditState !== null || state.selection.objectIds.length !== 1) {
+	if (
+		state.mode.kind === "textEdit" ||
+		state.selection.objectIds.length !== 1
+	) {
 		return null;
 	}
 	const objectId = state.selection.objectIds[0];

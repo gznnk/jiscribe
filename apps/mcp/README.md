@@ -59,14 +59,14 @@ and a link to a file of another kind is refused. The one exception is an
 and cannot climb out of it — so a drawing and the pictures it names travel
 together.
 
-Four families of tools, 84 in all:
+Four families of tools, 85 in all:
 
 - Seven of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
   `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse`.
   `open_canvas` takes `headless`, which gives the AI a canvas to look at without
   putting a window on screen
-- 46 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
-  align, group, style, read, undo — each given a `path` so it names a file
+- 47 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
+  align, group, style, name the document or a shape, read, undo — each given a `path` so it names a file
 - 16 more from the same declarations that only a mounted canvas can answer —
   capture, camera, selection, measurement — run over the viewer's WebSocket.
   The one that measures a slot as drawn is registered as `measure_rendered_text`,
@@ -111,6 +111,9 @@ which is what DNS rebinding looks like from here. A WebSocket or a write from
 a page on another origin is refused too, and both carry a per-host session
 token the page fetches from `/api/session` (a window left over from a host
 that served another directory on the same port cannot write into this one).
+The same checks guard `POST /api/action`, through which the viewer's menu asks
+the process owning the host for what it offers (the desktop app's file dialog
+and quit; this server offers nothing, and `/api/session` says so).
 The file API writes only the file on display and reads only the images a
 diagram points at (reads check the `Host` alone, since a page elsewhere can
 embed such an image but not read it), never a path outside the diagram's

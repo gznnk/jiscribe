@@ -14,7 +14,7 @@ import { MIN_GROUP_DIMENSION } from "../../../states/utils/groupDimensions";
 import {
 	rotateChildren,
 	transformChildren,
-} from "../../behaviors/primitives/GroupController";
+} from "../../behaviors/base/GroupChildrenTransform";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { calcAnchorResize } from "../../gestures/handlers/controls/transform/utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "../../gestures/handlers/controls/transform/utils/calcMultiSelectGroupBounds";
@@ -148,6 +148,7 @@ const applyResizedFrame = (
 		const recalculatedBounds = calcMultiSelectGroupBounds(
 			state.selection.objectIds,
 			nextState.objects,
+			registries,
 			updatedGroup,
 		);
 		if (!recalculatedBounds) {

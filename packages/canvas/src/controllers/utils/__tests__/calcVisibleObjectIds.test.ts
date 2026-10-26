@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import type { Point } from "@jiscribe/geometry";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resolveConnectorPointsCached } from "../../../connectors/endpoints";
+import type { MovePreview } from "../../../rendering/layers/content/MovePreview";
+import { resolveConnectorPointsCached } from "../../../rendering/objects/connector/geometry/endpoints";
+import type * as RouteOrthogonalConnectorModule from "../../../rendering/objects/connector/geometry/routing/routeOrthogonalConnector";
 import type { Viewport } from "../../../rendering/Viewport";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
@@ -10,6 +13,24 @@ import {
 	calcVisibleObjectIds,
 	VIEWPORT_CULL_MARGIN,
 } from "../calcVisibleObjectIds";
+
+// Counts the orthogonal router's runs, passing every call through.
+const routerCalls = vi.hoisted(() => ({ count: 0 }));
+vi.mock(
+	"../../../rendering/objects/connector/geometry/routing/routeOrthogonalConnector",
+	async (importOriginal) => {
+		const original =
+			await importOriginal<typeof RouteOrthogonalConnectorModule>();
+		return {
+			routeOrthogonalConnector: (
+				...args: Parameters<typeof original.routeOrthogonalConnector>
+			) => {
+				routerCalls.count++;
+				return original.routeOrthogonalConnector(...args);
+			},
+		};
+	},
+);
 
 const rect = (
 	id: string,
@@ -397,6 +418,182 @@ describe("calcVisibleObjectIds", () => {
 			});
 
 			expect(visibleIds).toEqual(new Set(["a", "b", "c"]));
+		});
+	});
+
+	describe("bounding a connector before routing it", () => {
+		const orthogonalConnector = (
+			id: string,
+			sourceId: string,
+			targetId: string,
+		): ConnectorState =>
+			({
+				id,
+				type: "connector",
+				points: [],
+				routing: "orthogonal",
+				source: {
+					owner: { id: sourceId },
+					anchor: { kind: "connectPoint", id: "rightCenter" },
+				},
+				target: {
+					owner: { id: targetId },
+					anchor: { kind: "connectPoint", id: "leftCenter" },
+				},
+			}) as unknown as ConnectorState;
+
+		beforeEach(() => {
+			routerCalls.count = 0;
+		});
+
+		it("culls an offscreen connector without routing it", () => {
+			const objects = {
+				x: rect("x", 5000, 100, 50, 50),
+				y: rect("y", 5400, 300, 50, 50),
+				far: orthogonalConnector("far", "x", "y"),
+			};
+			const { visibleIds, bboxCache } = calcVisibleObjectIds({
+				registries: createTestRegistries(),
+				objects,
+				rootIds: ["x", "y", "far"],
+				viewport,
+			});
+
+			expect(visibleIds).toEqual(new Set());
+			expect(routerCalls.count).toBe(0);
+			expect(bboxCache.get("far")?.isBound).toBe(true);
+		});
+
+		it("still routes and shows an onscreen connector", () => {
+			const objects = {
+				a: rect("a", 100, 100, 50, 50),
+				b: rect("b", 400, 300, 50, 50),
+				c: orthogonalConnector("c", "a", "b"),
+			};
+			const { visibleIds, bboxCache } = calcVisibleObjectIds({
+				registries: createTestRegistries(),
+				objects,
+				rootIds: ["a", "b", "c"],
+				viewport,
+			});
+
+			expect(visibleIds).toEqual(new Set(["a", "b", "c"]));
+			expect(routerCalls.count).toBe(1);
+			expect(bboxCache.get("c")?.isBound).toBe(false);
+		});
+
+		it("routes a bounded connector once a pan brings its bound on screen, and judges it by the route", () => {
+			const localRegistries = createTestRegistries();
+			// Owners side by side on y = 400: the route ends on b's left edge
+			// (x = 1475), its bound 31 past b's right edge (x = 1556).
+			const objects = {
+				a: rect("a", 1300, 400, 50, 50),
+				b: rect("b", 1500, 400, 50, 50),
+				c: orthogonalConnector("c", "a", "b"),
+			};
+			const rootIds = ["a", "b", "c"];
+			const first = calcVisibleObjectIds({
+				registries: localRegistries,
+				objects,
+				rootIds,
+				viewport: { ...viewport, minX: 1560 + VIEWPORT_CULL_MARGIN },
+				prevCache: undefined,
+			});
+			expect(first.visibleIds).toEqual(new Set());
+			expect(routerCalls.count).toBe(0);
+
+			// The cull rect now starts at x = 1500: the bound reaches it, the route
+			// does not (b itself does).
+			const second = calcVisibleObjectIds({
+				registries: localRegistries,
+				objects,
+				rootIds,
+				viewport: { ...viewport, minX: 1500 + VIEWPORT_CULL_MARGIN },
+				prevCache: first.bboxCache,
+			});
+			expect(second.visibleIds).toEqual(new Set(["b"]));
+			expect(routerCalls.count).toBe(1);
+			expect(second.bboxCache.get("c")?.isBound).toBe(false);
+			expect(second.bboxCache.get("c")?.bbox?.right).toBe(1475);
+		});
+
+		describe("during a move drag", () => {
+			const startObjects = {
+				a: rect("a", 5000, 100, 50, 50),
+				b: rect("b", 5400, 300, 50, 50),
+				c: orthogonalConnector("c", "a", "b"),
+			};
+			const rootIds = ["a", "b", "c"];
+			const movedObjects = (delta: Point) => ({
+				a: rect("a", 5000 + delta.x, 100 + delta.y, 50, 50),
+				b: rect("b", 5400 + delta.x, 300 + delta.y, 50, 50),
+				c: startObjects.c,
+			});
+			const preview = (delta: Point): MovePreview => ({
+				delta,
+				translatedIds: new Set(["a", "b"]),
+				startObjects,
+			});
+
+			it("boxes a shifted connector by its start path moved by the delta, routing it once", () => {
+				const localRegistries = createTestRegistries();
+				const first = calcVisibleObjectIds({
+					registries: localRegistries,
+					objects: movedObjects({ x: -4800, y: 0 }),
+					rootIds,
+					viewport,
+					movePreview: preview({ x: -4800, y: 0 }),
+				});
+				expect(first.visibleIds).toEqual(new Set(["a", "b", "c"]));
+				expect(routerCalls.count).toBe(1);
+				const entry = first.bboxCache.get("c");
+				// The start path's box, unshifted, kept against the start owners.
+				expect(entry?.sourceOwner).toBe(startObjects.a);
+				expect(entry?.bbox?.left).toBe(5025);
+
+				const second = calcVisibleObjectIds({
+					registries: localRegistries,
+					objects: movedObjects({ x: -4790, y: 5 }),
+					rootIds,
+					viewport,
+					prevCache: first.bboxCache,
+					movePreview: preview({ x: -4790, y: 5 }),
+				});
+				expect(second.visibleIds).toEqual(new Set(["a", "b", "c"]));
+				expect(second.bboxCache.get("c")).toBe(entry);
+				expect(routerCalls.count).toBe(1);
+			});
+
+			it("takes the delta rather than where the owners now are", () => {
+				// The live owners stay off screen; only the declared delta brings
+				// the drawn (shifted) connector into view.
+				const { visibleIds } = calcVisibleObjectIds({
+					registries: createTestRegistries(),
+					objects: movedObjects({ x: 0, y: 1000 }),
+					rootIds,
+					viewport,
+					movePreview: preview({ x: -4800, y: 0 }),
+				});
+				expect(visibleIds).toEqual(new Set(["c"]));
+			});
+
+			it("judges a connector with only one owner moved by its live path", () => {
+				const { visibleIds } = calcVisibleObjectIds({
+					registries: createTestRegistries(),
+					objects: {
+						...startObjects,
+						a: rect("a", 200, 100, 50, 50),
+					},
+					rootIds,
+					viewport,
+					movePreview: {
+						delta: { x: -4800, y: 0 },
+						translatedIds: new Set(["a"]),
+						startObjects,
+					},
+				});
+				expect(visibleIds).toEqual(new Set(["a", "c"]));
+			});
 		});
 	});
 });

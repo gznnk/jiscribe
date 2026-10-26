@@ -4,12 +4,12 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
+import type { CanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesTypes";
 import {
 	commandAction,
 	setAction,
 } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import type { SelectionValue } from "../../../../style/SelectionValue";
 import {
 	isMixedSelectionValue,

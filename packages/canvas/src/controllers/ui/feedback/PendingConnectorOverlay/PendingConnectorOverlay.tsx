@@ -1,13 +1,16 @@
 import { memo } from "react";
 
-import { resolveEndpointOwner } from "../../../../connectors/endpoints";
 import { ConnectorRenderer } from "../../../../rendering/layers/content/ConnectorRenderer";
-import type { CanvasControllerState } from "../../../CanvasTypes";
-
-type PendingConnectorOverlayProps = Pick<
+import { resolveEndpointOwner } from "../../../../rendering/objects/connector/geometry/endpoints";
+import type {
 	CanvasControllerState,
-	"connectorDraft" | "objects"
->;
+	ConnectorDraft,
+} from "../../../CanvasTypes";
+
+type PendingConnectorOverlayProps = Pick<CanvasControllerState, "objects"> & {
+	/** What a connector drag is working on; null during any other drag, or none */
+	connectorDraft: ConnectorDraft | null;
+};
 
 /**
  * Draws the connector being created, which lives only in the draft until dragEnd

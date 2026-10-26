@@ -20,7 +20,7 @@ import type { CanvasHostServerMessage } from "../shared/canvasHostProtocol";
  * closed. The viewer writes out the edits it has buffered before closing, so this
  * allows for that one round trip
  */
-const VIEWER_CLOSE_TIMEOUT_MS = 5_000;
+export const VIEWER_CLOSE_TIMEOUT_MS = 5_000;
 
 /**
  * The grace period between the last viewer leaving and onViewersGone being called.

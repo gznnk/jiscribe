@@ -6,8 +6,12 @@
 //
 // The writing itself is the host's (canvasHost's writeOpenFile, covered in
 // canvasHostViewerLink): here it stands in as a fake, so that what each of its
-// outcomes comes back to the browser as can be read off one place.
+// outcomes comes back to the browser as can be read off one place. The actions
+// the host's owner offers are fakes in the same way: what is checked is that the
+// session announces them and that a request for one reaches its callback only
+// once the same guards a write passes have let it through.
 
+import { createHash } from "node:crypto";
 import {
 	chmod,
 	mkdir,
@@ -22,18 +26,30 @@ import net from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { WriteOpenFileOutcome } from "../host/canvasHostTypes";
+import type {
+	HostActions,
+	WriteOpenFileOutcome,
+} from "../host/canvasHostTypes";
 import { createViewerHttpServer } from "../host/httpServer";
 import {
 	REVISION_HEADER,
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
+import { HOST_ACTION_API_PATHNAME } from "../shared/hostActionsRoute";
+
+/** The script folded into the page, standing in for the viewer's own */
+const VIEWER_SCRIPT = "console.log('viewer')";
 
 /** What `/` returns. The real one is the whole viewer folded into a file */
-const VIEWER_HTML = "<!doctype html><title>viewer</title>";
+const VIEWER_HTML = `<!doctype html><title>viewer</title><script type="module">${VIEWER_SCRIPT}</script>`;
+
+/** The hash the policy names so that VIEWER_SCRIPT runs */
+const VIEWER_SCRIPT_HASH = createHash("sha256")
+	.update(VIEWER_SCRIPT, "utf8")
+	.digest("base64");
 
 /** What the host under test hands out at /api/session */
 const SESSION_TOKEN = "11111111-2222-3333-4444-555555555555";
@@ -113,6 +129,71 @@ const putFile = async (
 	});
 
 /**
+ * Asks for an action the way the viewer's menu does.
+ *
+ * @param body What to send; a string goes as it is, so a body that is not JSON
+ *   can be sent, and anything else is serialised
+ * @param headers Anything to send besides the session token, or one of its own to
+ *   override it
+ */
+const postAction = async (
+	body: unknown,
+	headers: Record<string, string> = {},
+): Promise<Response> =>
+	await fetch(`${baseUrl}${HOST_ACTION_API_PATHNAME}`, {
+		method: "POST",
+		headers: { [SESSION_TOKEN_HEADER]: SESSION_TOKEN, ...headers },
+		body: typeof body === "string" ? body : JSON.stringify(body),
+	});
+
+/**
+ * Brings the server under test up on a port the kernel picks.
+ *
+ * @param hostActions What the host's owner offers the viewer; omitted, as the
+ *   stdio server leaves it, nothing is offered
+ */
+const startServer = async (hostActions?: HostActions): Promise<void> => {
+	server = createViewerHttpServer({
+		workspaceRoot,
+		viewerHtml: VIEWER_HTML,
+		viewerScriptHashes: [VIEWER_SCRIPT_HASH],
+		assetRootPath,
+		sessionToken: SESSION_TOKEN,
+		writeOpenFile: (relPath, body, ifMatch) => {
+			recordedWrites.push({ relPath, body: body.toString("utf8"), ifMatch });
+			if (writeFailure !== null) {
+				return Promise.reject(writeFailure);
+			}
+			return Promise.resolve(writeOutcome);
+		},
+		hostActions,
+	});
+	port = await listenOnEphemeralPort(server);
+	baseUrl = `http://127.0.0.1:${port}`;
+};
+
+const stopServer = async (): Promise<void> => {
+	await new Promise<void>((resolve) => {
+		server.close(() => {
+			resolve();
+		});
+		// fetch keeps its connection alive, and close() alone would wait on it
+		server.closeAllConnections();
+	});
+};
+
+/**
+ * Replaces the server every test gets with one whose owner offers `hostActions`.
+ * The port changes with it, so a test reads baseUrl only after this
+ */
+const restartServerWithActions = async (
+	hostActions: HostActions,
+): Promise<void> => {
+	await stopServer();
+	await startServer(hostActions);
+};
+
+/**
  * Sends a request by hand, for the headers fetch will not compose.
  *
  * @param requestText The whole request, header block included, with CRLF endings
@@ -142,31 +223,11 @@ beforeEach(async () => {
 	writeOutcome = { kind: "written", revision: WRITTEN_REVISION };
 	writeFailure = null;
 	recordedWrites = [];
-	server = createViewerHttpServer({
-		workspaceRoot,
-		viewerHtml: VIEWER_HTML,
-		assetRootPath,
-		sessionToken: SESSION_TOKEN,
-		writeOpenFile: (relPath, body, ifMatch) => {
-			recordedWrites.push({ relPath, body: body.toString("utf8"), ifMatch });
-			if (writeFailure !== null) {
-				return Promise.reject(writeFailure);
-			}
-			return Promise.resolve(writeOutcome);
-		},
-	});
-	port = await listenOnEphemeralPort(server);
-	baseUrl = `http://127.0.0.1:${port}`;
+	await startServer();
 });
 
 afterEach(async () => {
-	await new Promise<void>((resolve) => {
-		server.close(() => {
-			resolve();
-		});
-		// fetch keeps its connection alive, and close() alone would wait on it
-		server.closeAllConnections();
-	});
+	await stopServer();
 	await rm(workspaceRoot, { recursive: true, force: true });
 	await rm(assetParentPath, { recursive: true, force: true });
 });
@@ -370,13 +431,191 @@ describe("PUT /api/file", () => {
 });
 
 describe("GET /api/session", () => {
-	it("hands out this host's token", async () => {
+	it("hands out this host's token, and no action where the owner offers none", async () => {
 		const response = await fetch(`${baseUrl}${SESSION_API_PATHNAME}`);
 
 		expect(response.status).toBe(200);
-		expect(await response.json()).toEqual({ token: SESSION_TOKEN });
+		expect(await response.json()).toEqual({
+			token: SESSION_TOKEN,
+			actions: [],
+		});
 		// A token held in a cache would outlive the host that issued it
 		expect(response.headers.get("cache-control")).toBe("no-store");
+	});
+
+	it("names the actions the owner offers, in the order a menu lists them", async () => {
+		// Handed over in the other order, so the answer's order is seen to be the
+		// contract's rather than the owner's
+		await restartServerWithActions({ quit: vi.fn(), openFile: vi.fn() });
+
+		const response = await fetch(`${baseUrl}${SESSION_API_PATHNAME}`);
+
+		expect(await response.json()).toEqual({
+			token: SESSION_TOKEN,
+			actions: ["openFile", "quit"],
+		});
+	});
+
+	it("leaves out an action the owner handed no callback for", async () => {
+		await restartServerWithActions({ quit: vi.fn() });
+
+		const response = await fetch(`${baseUrl}${SESSION_API_PATHNAME}`);
+
+		expect(await response.json()).toEqual({
+			token: SESSION_TOKEN,
+			actions: ["quit"],
+		});
+	});
+});
+
+describe("POST /api/action", () => {
+	it("runs the action named once, and answers 204 once it has settled", async () => {
+		let isSettled = false;
+		const quit = vi.fn(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 20));
+			isSettled = true;
+		});
+		await restartServerWithActions({ quit });
+
+		const response = await postAction({ action: "quit" });
+
+		expect(response.status).toBe(204);
+		expect(await response.text()).toBe("");
+		expect(quit).toHaveBeenCalledTimes(1);
+		// The answer is what the viewer acts on, so it must not come before the
+		// callback has done its work
+		expect(isSettled).toBe(true);
+	});
+
+	it("takes the request from the page it serves", async () => {
+		const openFile = vi.fn();
+		await restartServerWithActions({ openFile });
+
+		const response = await postAction(
+			{ action: "openFile" },
+			{ Origin: baseUrl },
+		);
+
+		expect(response.status).toBe(204);
+		expect(openFile).toHaveBeenCalledTimes(1);
+	});
+
+	it("refuses a request from a page on another origin, and runs nothing", async () => {
+		// The viewer's own page is the only one meant to reach into the process.
+		// Anything else is a site a person happens to have open quitting their app
+		const quit = vi.fn();
+		await restartServerWithActions({ quit });
+
+		const response = await postAction(
+			{ action: "quit" },
+			{ Origin: "http://evil.example" },
+		);
+
+		expect(response.status).toBe(403);
+		expect(quit).not.toHaveBeenCalled();
+	});
+
+	it("refuses a request carrying no session token, and runs nothing", async () => {
+		const quit = vi.fn();
+		await restartServerWithActions({ quit });
+
+		const response = await fetch(`${baseUrl}${HOST_ACTION_API_PATHNAME}`, {
+			method: "POST",
+			body: JSON.stringify({ action: "quit" }),
+		});
+
+		expect(response.status).toBe(401);
+		expect(quit).not.toHaveBeenCalled();
+	});
+
+	it("refuses a request carrying the token of another host, and runs nothing", async () => {
+		const quit = vi.fn();
+		await restartServerWithActions({ quit });
+
+		const response = await postAction(
+			{ action: "quit" },
+			{ [SESSION_TOKEN_HEADER]: "99999999-9999-9999-9999-999999999999" },
+		);
+
+		expect(response.status).toBe(401);
+		expect(quit).not.toHaveBeenCalled();
+	});
+
+	it("answers 404 for an action the owner does not offer", async () => {
+		await restartServerWithActions({ openFile: vi.fn() });
+
+		const response = await postAction({ action: "quit" });
+
+		expect(response.status).toBe(404);
+		expect(await response.json()).toEqual({ error: "action not offered" });
+	});
+
+	it("answers 404 for every action where the owner offers none", async () => {
+		const response = await postAction({ action: "openFile" });
+
+		expect(response.status).toBe(404);
+	});
+
+	it("refuses a name that is not an action", async () => {
+		const response = await postAction({ action: "formatDisk" });
+
+		expect(response.status).toBe(400);
+		expect(await response.json()).toEqual({
+			error: expect.stringContaining("openFile"),
+		});
+	});
+
+	it("refuses a body naming no action", async () => {
+		const response = await postAction({});
+
+		expect(response.status).toBe(400);
+	});
+
+	it("refuses a body that is not an object", async () => {
+		const response = await postAction('"quit"');
+
+		expect(response.status).toBe(400);
+	});
+
+	it("refuses a body that is not JSON", async () => {
+		const response = await postAction("action=quit");
+
+		expect(response.status).toBe(400);
+		expect(await response.json()).toEqual({
+			error: expect.stringContaining("JSON"),
+		});
+	});
+
+	it("refuses a body past the write's cap, and runs nothing", async () => {
+		const quit = vi.fn();
+		await restartServerWithActions({ quit });
+
+		const response = await postAction("x".repeat(16 * 1024 * 1024 + 1));
+
+		expect(response.status).toBe(413);
+		expect(quit).not.toHaveBeenCalled();
+	});
+
+	it("answers a callback that throws as the error it is", async () => {
+		await restartServerWithActions({
+			openFile: () => Promise.reject(new Error("no dialog on this display")),
+		});
+
+		const response = await postAction({ action: "openFile" });
+
+		expect(response.status).toBe(500);
+		expect(await response.json()).toEqual({
+			error: expect.stringContaining("no dialog on this display"),
+		});
+	});
+
+	it("answers 404 for any other method on the route", async () => {
+		await restartServerWithActions({ quit: vi.fn() });
+
+		const response = await fetch(`${baseUrl}${HOST_ACTION_API_PATHNAME}`);
+
+		expect(response.status).toBe(404);
+		expect(await response.json()).toEqual({ error: "unknown api" });
 	});
 });
 
@@ -573,6 +812,26 @@ describe("GET /", () => {
 		);
 		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 		expect(await response.text()).toBe(VIEWER_HTML);
+	});
+
+	it("names the page's own script in a policy that lets nothing else run or load from elsewhere", async () => {
+		// Markup from a drawing that got past the canvas's sanitizing would run on
+		// this origin, where the session token is there for the asking
+		const response = await fetch(`${baseUrl}/`);
+
+		expect(response.headers.get("content-security-policy")).toBe(
+			[
+				"default-src 'none'",
+				`script-src 'sha256-${VIEWER_SCRIPT_HASH}'`,
+				"style-src 'unsafe-inline'",
+				"img-src blob: data:",
+				"font-src 'self'",
+				`connect-src 'self' ws://localhost:${port} ws://127.0.0.1:${port}`,
+				"frame-ancestors 'none'",
+				"base-uri 'none'",
+				"form-action 'none'",
+			].join("; "),
+		);
 	});
 
 	it("answers 404 for anything else", async () => {

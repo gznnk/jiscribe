@@ -12,11 +12,19 @@ import {
 	RadioOption,
 	SubmitButton,
 } from "./ExportDialogStyled";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { ModalShell } from "../ModalShell";
 
 /** Image formats offered by the export dialog. */
 export type ExportImageFormat = "png" | "svg";
+
+/**
+ * What part of the drawing the export dialog exports: `"all"` is the whole
+ * drawing, `"selection"` the selected objects alone — with their descendants and
+ * attached connectors, as Copy takes them — framed by their extent with the
+ * margin around it. Nothing else inside that extent is drawn.
+ */
+export type ExportScope = "all" | "selection";
 
 /**
  * Upper bound of the margin input (world px). Keeps a typo (e.g. an extra
@@ -33,6 +41,8 @@ const BLOCKED_MARGIN_KEYS = ["-", "+", "e", "E", "."];
 
 /** What the user confirmed in the export dialog. */
 export type ExportSubmitValues = {
+	/** What part of the drawing to export (see {@link ExportScope}) */
+	scope: ExportScope;
 	format: ExportImageFormat;
 	/** Margin (world px) kept around the content */
 	margin: number;
@@ -45,22 +55,33 @@ export type ExportSubmitValues = {
 type ExportDialogProps = {
 	/** Initial value of the margin input (the canvas-wide default margin) */
 	defaultMargin: number;
+	/**
+	 * Whether anything is selected. When true the scope starts at "selection";
+	 * otherwise it starts at "all" and "selection" is disabled.
+	 */
+	canExportSelection: boolean;
 	onClose: () => void;
 	onSubmit: (values: ExportSubmitValues) => void;
 };
 
 /**
- * Modal dialog for image export: pick the format (PNG / editable SVG), the
- * margin kept around the content, and whether to embed the source data, then
- * confirm. Opened from the context menu; closes on backdrop click, the close
- * button, or Escape.
+ * Modal dialog for image export: pick the scope (whole drawing / selection),
+ * the format (PNG / editable SVG), the margin kept around the content, and
+ * whether to embed the source data, then confirm. Opened from the context
+ * menu; closes on backdrop click, the close button, or Escape.
  */
 export const ExportDialog: React.FC<ExportDialogProps> = ({
 	defaultMargin,
+	canExportSelection,
 	onClose,
 	onSubmit,
 }) => {
 	const messages = useCanvasMessages();
+	// A right-click on a shape selects it before the menu opens, so a menu opened
+	// on a shape starts at that shape; one on the background keeps the selection
+	const [scope, setScope] = useState<ExportScope>(
+		canExportSelection ? "selection" : "all",
+	);
 	const [format, setFormat] = useState<ExportImageFormat>("png");
 	const [includeSource, setIncludeSource] = useState(true);
 	const [transparentBackground, setTransparentBackground] = useState(false);
@@ -103,6 +124,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 					event.preventDefault();
 					if (isMarginValid) {
 						onSubmit({
+							scope,
 							format,
 							margin,
 							includeSource,
@@ -112,6 +134,32 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 				}}
 			>
 				<FieldGrid>
+					<FieldLabel>{messages.exportDialogScope}</FieldLabel>
+					<RadioGroup role="radiogroup" aria-label={messages.exportDialogScope}>
+						<RadioOption>
+							<input
+								type="radio"
+								name="export-scope"
+								value="all"
+								checked={scope === "all"}
+								data-testid="export-dialog:scope-all"
+								onChange={() => setScope("all")}
+							/>
+							{messages.exportDialogScopeAll}
+						</RadioOption>
+						<RadioOption>
+							<input
+								type="radio"
+								name="export-scope"
+								value="selection"
+								checked={scope === "selection"}
+								disabled={!canExportSelection}
+								data-testid="export-dialog:scope-selection"
+								onChange={() => setScope("selection")}
+							/>
+							{messages.exportDialogScopeSelection}
+						</RadioOption>
+					</RadioGroup>
 					<FieldLabel>{messages.exportDialogFormat}</FieldLabel>
 					<RadioGroup
 						role="radiogroup"

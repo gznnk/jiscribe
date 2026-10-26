@@ -87,6 +87,7 @@ const makeState = (
 	part: ObjectPartSelection | null,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: {
 			"grid-1": grid("grid-1"),
 			"rec-1": slotShape("rec-1"),

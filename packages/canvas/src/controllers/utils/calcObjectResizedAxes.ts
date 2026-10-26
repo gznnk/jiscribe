@@ -48,7 +48,7 @@ const calcHeldEdgeAlong = (
  * relative to it. A child turned 90° in a group resized by its side handles has
  * its height written, and one flipped against the frame holds the opposite edge.
  *
- * @param resize - The resize under way (`ActiveDrag.resize`), stated in the dragged frame
+ * @param resize - The resize under way (the `"transform"` drag's `resize`), stated in the dragged frame
  * @param object - The object the resize reaches: the selected one, or one a group or multi-select resize scales; one without a transform reads as unrotated and unflipped
  * @returns `resize.axes` itself for an object aligned with the frame, else the restated axes
  */

@@ -1,8 +1,7 @@
 import type { CanvasDoc, SemanticDiagnostic } from "@jiscribe/doc";
-import { createCanvasParser } from "@jiscribe/doc";
-import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 
 import type { Diagnostic } from "./Diagnostic";
+import { getStandardCanvasParser } from "./standardCanvasParser";
 
 /** What {@link validateDoc} found, plus the parsed document when nothing failed. */
 export type ValidateDocResult = {
@@ -17,13 +16,6 @@ export type ValidateDocResult = {
 	 * document the canvas would open.
 	 */
 	doc?: CanvasDoc;
-};
-
-let sharedParser: ReturnType<typeof createCanvasParser> | null = null;
-
-const getParser = (): ReturnType<typeof createCanvasParser> => {
-	sharedParser ??= createCanvasParser({ plugins: standardDocPlugins });
-	return sharedParser;
 };
 
 const toSemanticDiagnostics = (
@@ -58,7 +50,7 @@ const toSemanticDiagnostics = (
  * @returns `ok` false when any diagnostic is an error; `doc` is present whenever the parser accepted the text, holding the document with unknown properties and enum values removed and objects of unknown types kept as they are (each reported as a warning)
  */
 export const validateDoc = (text: string): ValidateDocResult => {
-	const result = getParser().parse(text);
+	const result = getStandardCanvasParser().parse(text);
 	switch (result.kind) {
 		case "ok":
 			return {

@@ -3,12 +3,12 @@ import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback"
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { isSelectionTextBlock } from "../../../../commands/shape/ToggleTextLayoutCommand";
 import {
 	commandAction,
 	setAction,
 } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import {
 	isMixedSelectionValue,
 	selectionMixedValues,

@@ -2,8 +2,8 @@ import { memo } from "react";
 
 import { StencilLibraryButton } from "./StencilLibraryStyled";
 import { resolveStencilLabel } from "./utils/resolveStencilLabel";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import type { Stencil } from "../../objects/Stencil";
 
 type StencilLibraryItemProps = {

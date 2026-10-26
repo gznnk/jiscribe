@@ -3,7 +3,7 @@ import { TEXT_SLOT_PART_KIND } from "../../partKinds/textSlotPartKind";
 
 /**
  * The part selection a slot click writes, and the one every open shape text edit
- * sits on (see `textEditState`): one collapsed range over the slot key.
+ * sits on (see `CanvasMode`): one collapsed range over the slot key.
  *
  * @param slotId - Key of whichever object's `text` is selected; taken verbatim,
  *   so a fixture can hold a slot the object does not have

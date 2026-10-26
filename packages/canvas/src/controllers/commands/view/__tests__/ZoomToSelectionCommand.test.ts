@@ -36,6 +36,7 @@ const makeState = (params: {
 	viewport?: Partial<Viewport>;
 }): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		selection: params.selection,
 		objects: params.objects,
 		viewport: {

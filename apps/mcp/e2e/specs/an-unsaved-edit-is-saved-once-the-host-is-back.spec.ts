@@ -3,9 +3,9 @@ import { SINGLE_RECT, singleRectDoc } from "../support/canvasDocs";
 import {
 	expect,
 	expectNoViewerError,
-	lostEditsNotice,
 	selectObject,
 	test,
+	warningNotice,
 } from "../support/fixtures";
 
 /** One large nudge, which the canvas moves the selection by */
@@ -145,7 +145,7 @@ test("says so when a tool's write to the same object wins over an edit that coul
 
 	// Named by the text the tool gave it, which is what the page now draws. The
 	// failed write is no longer owed, so the error bar goes with it
-	await expect(lostEditsNotice(page)).toHaveText(
+	await expect(warningNotice(page)).toHaveText(
 		`${MERGE_CONFLICT_PREFIX}「from the AI」`,
 	);
 	await expect(page.locator(".viewer-error")).toHaveCount(0);

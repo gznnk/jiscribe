@@ -3,6 +3,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { theme } from "../../../../foundation/theme/themeTokens";
 import { BorderColorIcon } from "../BorderColorIcon";
 import { ColorPreviewIcon } from "../ColorPreviewIcon";
 import { FontColorIcon } from "../FontColorIcon";
@@ -74,6 +75,18 @@ describe("ColorPreviewIcon split between a selection's colors", () => {
 	});
 });
 
+describe("ColorPreviewIcon on a color with zero alpha", () => {
+	it.each(["rgba(255, 255, 255, 0)", "rgb(255 0 0 / 0)", "#ff000000"])(
+		"draws %s as the checker, not as the color",
+		(color) => {
+			const icon = renderIcon(<ColorPreviewIcon color={color} />);
+			const patternId = icon.querySelector("pattern")?.id;
+			expect(patternId).toBeDefined();
+			expect(icon.querySelector("circle")?.style.fill).toContain(patternId);
+		},
+	);
+});
+
 describe("BorderColorIcon split between a selection's colors", () => {
 	it.each([
 		{ colors: [RED, GREEN], expected: [RED, GREEN] },
@@ -93,6 +106,29 @@ describe("BorderColorIcon split between a selection's colors", () => {
 	);
 });
 
+describe("BorderColorIcon on a color with zero alpha", () => {
+	const ZERO_ALPHA = "rgba(255, 0, 0, 0)";
+
+	it("draws a single color as the dashed checker ring", () => {
+		const ring = renderIcon(
+			<BorderColorIcon color={ZERO_ALPHA} />,
+		).querySelector("circle");
+		expect(ring?.getAttribute("stroke-dasharray")).toBe("3 2");
+		expect(ring?.getAttribute("style")).toContain(theme.transparentChecker);
+	});
+
+	it("draws its arc of a mixed selection in the checker color", () => {
+		const icon = renderIcon(
+			<BorderColorIcon color={RED} mixedColors={[ZERO_ALPHA, RED]} />,
+		);
+		const [zeroAlphaArc, redArc] = Array.from(icon.querySelectorAll("path"));
+		expect(zeroAlphaArc.getAttribute("style")).toContain(
+			theme.transparentChecker,
+		);
+		expect(redArc.style.stroke).toBe(rgb(RED));
+	});
+});
+
 describe("FontColorIcon split between a selection's colors", () => {
 	it.each([
 		{ colors: [RED, GREEN], expected: [RED, GREEN] },
@@ -105,6 +141,17 @@ describe("FontColorIcon split between a selection's colors", () => {
 			expect(fillsOf(icon.querySelectorAll("rect"))).toEqual(expected.map(rgb));
 		},
 	);
+
+	it("draws the piece of a color with zero alpha in the checker color", () => {
+		const icon = renderIcon(<FontColorIcon mixedColors={["#ff000000", RED]} />);
+		const [zeroAlphaPiece, redPiece] = Array.from(
+			icon.querySelectorAll("rect"),
+		);
+		expect(zeroAlphaPiece.getAttribute("style")).toContain(
+			theme.transparentChecker,
+		);
+		expect(redPiece.style.fill).toBe(rgb(RED));
+	});
 
 	it("leaves a gap of 1 between the pieces and ends them flush with the bar", () => {
 		const icon = renderIcon(<FontColorIcon mixedColors={[RED, GREEN]} />);

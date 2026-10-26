@@ -1,6 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { ConnectorSegmentSlideHitArea } from "./ConnectorStyled";
 import { LINE_HIT_STROKE_WIDTH } from "../../utils/hitStrokeWidth";
 
 // Bands of two perpendicular segments overlap where they meet, so a segment shorter than the band
@@ -115,7 +116,7 @@ const ConnectorSegmentSlideHitAreasComponent: React.FC<
 	return (
 		<>
 			{areas.map(({ segmentIndex, x, y, width, height, horizontal }) => (
-				<rect
+				<ConnectorSegmentSlideHitArea
 					key={segmentIndex}
 					x={x}
 					y={y}
@@ -124,12 +125,8 @@ const ConnectorSegmentSlideHitAreasComponent: React.FC<
 					data-kind="connector"
 					data-id={id}
 					data-action={`segment-slide:${segmentIndex}`}
-					style={{
-						fill: "transparent",
-						pointerEvents: disablePointerEvents ? "none" : "fill",
-						// The segment only moves across itself, so the cursor names that axis.
-						cursor: horizontal ? "ns-resize" : "ew-resize",
-					}}
+					horizontal={horizontal}
+					disablePointerEvents={disablePointerEvents}
 				/>
 			))}
 		</>

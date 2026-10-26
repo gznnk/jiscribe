@@ -38,6 +38,7 @@ import type { CSSProperties } from "react";
 
 import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
 import { CanvasSurface } from "./CanvasSurface";
+import { requestHostAction } from "./files";
 import { noticeDurationsMs, type NoticeKind } from "./noticeDurations";
 import { calcDocLoadId } from "./ownEcho";
 import { createDocImageResolver } from "./resolveDocImage";
@@ -46,6 +47,7 @@ import { useCanvasHostSocket } from "./useCanvasHostSocket";
 import { useDocSync, type WorkInHand } from "./useDocSync";
 import { viewerTheme } from "./viewerTheme";
 import { isHeadlessViewerSearch } from "../shared/canvasHostProtocol";
+import type { HostActionName } from "../shared/hostActionsRoute";
 
 /**
  * The chrome sits outside the Canvas root, where the theme's `--jiscribe-*` do
@@ -110,6 +112,12 @@ const DRAWN_REVISION_POLL_MS = 50;
 
 /** What Ctrl+S is answered with, in place of the browser's save dialog */
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
+
+/** What the notice says when the host did not carry an action out, per action */
+const HOST_ACTION_FAILED_NOTICES: Record<HostActionName, string> = {
+	openFile: "ファイルを開くダイアログを出せませんでした",
+	quit: "終了できませんでした",
+};
 
 /** Whether this window is the AI's eye rather than one a person is looking at */
 const isHeadlessWindow = isHeadlessViewerSearch(window.location.search);
@@ -227,7 +235,7 @@ export function App() {
 
 	const capturePng = useCallback<CapturePng>(
 		async (options?: CanvasPngExportOptions) =>
-			(await canvasHandleRef.current?.export.capturePng(options))?.blob ?? null,
+			(await canvasHandleRef.current?.export.capturePng(options)) ?? null,
 		[],
 	);
 
@@ -290,7 +298,7 @@ export function App() {
 					}
 				}
 				return op.kind === "captureCanvas"
-					? await captureCanvasImage(capturePng)
+					? await captureCanvasImage(op, capturePng, handleControl)
 					: await applyHandleOp(op, handleControl);
 			} catch (error) {
 				// Throwing without answering would leave the host with nothing to do but
@@ -356,7 +364,7 @@ export function App() {
 		[showNotice],
 	);
 
-	const isConnected = useCanvasHostSocket({
+	const { isConnected, hostSession } = useCanvasHostSocket({
 		isHeadlessWindow,
 		onDocFrame: applyIncomingDoc,
 		onDocError: applyDocError,
@@ -364,6 +372,25 @@ export function App() {
 		onFlushEdits: flushEditsForHost,
 		onHandleOp: runHandleOp,
 	});
+
+	/**
+	 * Asks the host's owner for an action chosen from the host menu, with the token
+	 * of the session the menu was drawn from. Nothing is flushed from here first,
+	 * not even before quit: that is the owner's callback's to do (HostActions in
+	 * ../host/canvasHostTypes). A refusal is said in a notice, since the menu
+	 * closing is all a person would otherwise see of it
+	 */
+	const handleHostAction = useCallback(
+		(action: HostActionName, sessionToken: string): void => {
+			requestHostAction(action, sessionToken).catch((error: unknown) => {
+				showNotice(
+					`${HOST_ACTION_FAILED_NOTICES[action]}: ${error instanceof Error ? error.message : String(error)}`,
+					"warning",
+				);
+			});
+		},
+		[showNotice],
+	);
 
 	// Ctrl+S is a person asking to save what is already saving itself. Left to the
 	// browser it opens the save dialog, which would write a copy of the page rather
@@ -434,6 +461,8 @@ export function App() {
 					relPath={openPath}
 					docLoadId={calcDocLoadId(openDoc)}
 					isConnected={isConnected}
+					hostSession={hostSession}
+					onHostAction={handleHostAction}
 					onCommit={handleCommit}
 					onOpenReference={handleOpenReference}
 					resolveImage={resolveImage}

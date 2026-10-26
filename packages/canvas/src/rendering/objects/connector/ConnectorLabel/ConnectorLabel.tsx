@@ -4,10 +4,11 @@ import type React from "react";
 import { memo, useMemo } from "react";
 
 import { LabelBox } from "./ConnectorLabelStyled";
-import { resolveConnectorLabelBox } from "./utils/connectorLabelLayout";
 import { resolveLabelFill } from "./utils/resolveLabelFill";
 import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
+import { useIsTextLegible } from "../../useIsTextLegible";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
+import { resolveConnectorLabelBox } from "../geometry/label/connectorLabelLayout";
 
 type ConnectorLabelProps = {
 	/** Parent connector id (placed in a data attribute so a hit can start editing). */
@@ -63,6 +64,9 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 		[text, fontFamily, fontSize, fontWeight, strokeWidth, fontsLoadedNonce],
 	);
 
+	// A label is one plain string, so its own size is the largest it draws.
+	const isLegible = useIsTextLegible(fontSize);
+
 	if (text === "") {
 		return null;
 	}
@@ -87,6 +91,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 			data-id={id}
 			data-action="label"
 			pointerEvents={disablePointerEvents ? "none" : "auto"}
+			display={isLegible ? undefined : "none"}
 		>
 			<LabelBox
 				style={{
@@ -109,7 +114,8 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 
 /**
  * Renders a connector's label as a horizontally centered box at the given
- * anchor on the path. Returns null for empty text.
+ * anchor on the path. Returns null for empty text, and hides the box (kept
+ * mounted) while it is too small to read at the canvas's zoom (useIsTextLegible).
  *
  * The DOM shape is load-bearing: image export reads the box style off the
  * single child of the foreignObject (see connectorLabelToSvgGroup), and the

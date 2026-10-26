@@ -5,6 +5,72 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.2] - 2026-10-25
+
+### Security
+
+- **The markup of an `svg` object can no longer restyle the page or make the
+  browser fetch a URL.** `<style>` and `<a>` are dropped from it, and so is
+  every external reference — an `href` that is not a `#fragment`, or a `url()`
+  or `image-set()` that loads something — so a shape in a file you opened can
+  neither restyle the editor around it nor have it fetch a URL of the file
+  author's choosing. A `data:` image stays. Markup styled through `class` rules
+  loses those styles; export it with presentation attributes or inline `style`
+  instead.
+- **A crafted `.jis.svg` can no longer freeze the extension host.** Locating
+  the embedded source took time quadratic in the file's size when it held open
+  tags without close tags, and the image editor does that on open, on every
+  change on disk and on save; the scan is now linear. A character reference
+  past U+10FFFF in the embedded source no longer keeps the editor from opening.
+- **An object whose `id` is `__proto__` is rejected when the file is
+  read**, instead of opening as a document whose first edit fails and that can
+  no longer be saved.
+- **markdown-it 15.0.3** replaces 15.0.2 in the bundle (GHSA-gfr2-rv44-r23c; see
+  the engine changelog).
+
+### Added
+
+- **A drawing can carry a name and a description.** The properties sidebar's
+  Canvas section edits them, they are saved as the root's `meta`, and an SVG
+  export opens with them as `<title>` and `<desc>`.
+- **The Export dialog can export only the selected shapes.** A "Scope" row
+  chooses between the whole drawing and the selection; the selection is
+  exported on its own, with the connectors whose attached ends are all on the
+  selected shapes, and the embedded source holds just those shapes. The scope
+  starts at the selection whenever something is selected.
+- **The AWS icon and the Lucide icon can be changed from the property
+  sidebar**, through the same picker the object menu opens.
+- **The property sidebar can group and ungroup**, from the end of its Arrange
+  section.
+
+### Changed
+
+- **Text too small to read is not drawn.** Text that would show below 4 px at
+  the current zoom is hidden until you zoom in. Exported images still hold
+  every text.
+- **Dragging, undo and redo are faster on large drawings.** Dragging a
+  selection of a few thousand shapes takes about half as long per frame, and
+  undo, redo and a change made to the file outside the editor redraw only what
+  changed.
+- **Swapping an AWS icon from the menu carries its label along**, while the
+  label is still the one the old icon came with.
+
+### Fixed
+
+- **An orthogonal connector no longer hugs one shape's margin when a route
+  centred between the shapes is just as good**, and no longer changes course
+  between the editor and the reopened file.
+- **Opening a text edit while a drawing tool is armed disarms the tool**, so
+  the next drag no longer draws a shape.
+- **The frame around a multi-selection follows the connectors as they are
+  drawn**, and no longer shrinks on the first frame of a resize.
+- **Drag, wheel and inertial scrolling show up one frame sooner.**
+- **An exported image no longer gets a background rect for a background that
+  paints nothing**, such as `rgba(255, 255, 255, 0)` or `#ffffff00`.
+- **A connector label whose background or border color has no blue keeps its
+  box in an exported image.** An opaque color such as `rgb(255, 255, 0)` was
+  taken for transparent.
+
 ## [0.12.1] - 2026-10-20
 
 ### Security

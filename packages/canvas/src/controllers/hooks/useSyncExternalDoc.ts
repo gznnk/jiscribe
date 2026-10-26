@@ -1,12 +1,16 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import { readTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import { type Dispatch, useEffect, useRef } from "react";
 
-import { canvasToState } from "../../states/canvas/CanvasMapper";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
+import {
+	canvasToState,
+	canvasToStateReusing,
+} from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import type { createSelfSaveNonceTracker } from "./utils/createSelfSaveNonceTracker";
-import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
 import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";
 
 export type UseSyncExternalDocParams = {
@@ -21,7 +25,7 @@ export type UseSyncExternalDocParams = {
 	 * doc an external edit to the same document.
 	 */
 	docLoadId: string | undefined;
-	/** Canvas's current state (used for content comparison) */
+	/** Canvas's current state (compared with, and reused from, on each incoming doc) */
 	canvasState: CanvasControllerState;
 	/** Canvas reducer dispatch */
 	dispatch: Dispatch<CanvasAction>;
@@ -68,10 +72,7 @@ export const useSyncExternalDoc = ({
 
 	// Always-fresh mirror of state so the sync effect below does not need to
 	// depend on (and re-run for) every state change.
-	const stateRef = useRef(canvasState);
-	useEffect(() => {
-		stateRef.current = canvasState;
-	});
+	const stateRef = useLatestRef(canvasState);
 
 	useEffect(() => {
 		if (!hasMountedRef.current) {
@@ -87,6 +88,7 @@ export const useSyncExternalDoc = ({
 			dispatch({
 				type: "LOAD_DOCUMENT",
 				payload: canvasToState(canvasDoc, objectMapper, objectContentResizer),
+				doc: canvasDoc,
 			});
 			return;
 		}
@@ -98,26 +100,33 @@ export const useSyncExternalDoc = ({
 		if (selfSaveNonceTracker.consumeIfSelfSave(syncNonce)) {
 			return;
 		}
-		// Content-identical doc (e.g. the parent re-created the object): skip
-		// entirely. Proceeding would interrupt an in-progress gesture, clear all UI
-		// state, and push a redundant history entry even though nothing changed.
-		if (
-			isSameCanvasDocContent(
-				canvasDoc,
-				resolveDocSnapshot(stateRef.current.history.present, objectMapper),
-			)
-		) {
-			return;
-		}
-		const newState = canvasToState(
+		// One pass both compares the doc with the one on screen and builds its
+		// state, keeping every object the change leaves alone (canvasToStateReusing).
+		const { history, objects } = stateRef.current;
+		const { state: newState, isSameAsReference } = canvasToStateReusing(
 			canvasDoc,
 			objectMapper,
 			objectContentResizer,
+			{
+				referenceDoc: resolveDocSnapshot(history.present, objectMapper),
+				committedObjects: history.present.source.objects,
+				liveObjects: objects,
+				remeasure:
+					history.present.textMeasurementGeneration !==
+					readTextMeasurementGeneration(),
+			},
 		);
+		// Content-identical doc (e.g. the parent re-created the object): skip
+		// entirely. Proceeding would interrupt an in-progress gesture, clear all UI
+		// state, and push a redundant history entry even though nothing changed.
+		if (isSameAsReference) {
+			return;
+		}
 		resetGestureState();
 		dispatch({
 			type: "SYNC_EXTERNAL",
 			payload: newState,
+			doc: canvasDoc,
 		});
 	}, [
 		canvasDoc,
@@ -128,5 +137,6 @@ export const useSyncExternalDoc = ({
 		selfSaveNonceTracker,
 		objectMapper,
 		objectContentResizer,
+		stateRef,
 	]);
 };

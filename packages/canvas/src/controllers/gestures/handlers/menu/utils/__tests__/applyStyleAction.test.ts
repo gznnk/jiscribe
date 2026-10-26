@@ -37,7 +37,7 @@ const makeState = (): CanvasControllerState =>
 		rootIds: ["rect-1"],
 		selection: selectionOf(["rect-1"], vertexPartSelection(0)),
 		multiSelectGroup: null,
-		textEditState: null,
+		mode: { kind: "normal" },
 		commitVersion: 5,
 	}) as unknown as CanvasControllerState;
 
@@ -136,7 +136,7 @@ describe("applyStyleAction", () => {
 	describe("what the intent an action states reaches", () => {
 		type MinState = Pick<
 			CanvasControllerState,
-			"selection" | "objects" | "multiSelectGroup" | "textEditState"
+			"selection" | "objects" | "multiSelectGroup" | "mode"
 		>;
 
 		const stateOf = (
@@ -146,7 +146,7 @@ describe("applyStyleAction", () => {
 				selection: selectionOf([]),
 				objects: {},
 				multiSelectGroup: null,
-				textEditState: null,
+				mode: { kind: "normal" },
 				commitVersion: 0,
 				...overrides,
 			}) as unknown as CanvasControllerState;

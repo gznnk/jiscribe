@@ -30,6 +30,7 @@ import {
 } from "../../../style/TextFormat";
 import { readSelectionStyle } from "../../../style/walk/readSelectionStyle";
 import { graftTextEditDraft } from "../../../utils/graftTextEditDraft";
+import { readTextEditDraft } from "../../../utils/readTextEditDraft";
 import {
 	hasTextDecorationToken,
 	setTextDecorationToken,
@@ -247,10 +248,11 @@ type FuzzModel = {
 };
 
 const readDraft = (state: CanvasControllerState): RichText => {
-	if (state.textEditState?.kind !== "shape") {
+	const draft = readTextEditDraft(state);
+	if (draft?.kind !== "shape") {
 		throw new Error("session is not open");
 	}
-	return state.textEditState.text;
+	return draft.text;
 };
 
 const readSlot = (state: CanvasControllerState) => {
@@ -282,12 +284,15 @@ const openSession = (scenario: FuzzScenario): CanvasControllerState => {
 	return createTestState(doc, {
 		selection: selectionOf([OBJECT_ID], textSlotPartSelection(SLOT_ID)),
 		objects,
-		textEditState: {
-			kind: "shape",
-			text: readRichTextSlot(
-				(seeded as unknown as { text: TextSlots }).text,
-				SLOT_ID,
-			),
+		mode: {
+			kind: "textEdit",
+			draft: {
+				kind: "shape",
+				text: readRichTextSlot(
+					(seeded as unknown as { text: TextSlots }).text,
+					SLOT_ID,
+				),
+			},
 		},
 	});
 };
@@ -469,7 +474,7 @@ export const runTextEditFuzzSession = (
 
 	const reopen = (): void => {
 		dispatch({ type: "COMMAND", commandId: "start-text-edit" });
-		if (state.textEditState?.kind !== "shape") {
+		if (readTextEditDraft(state)?.kind !== "shape") {
 			fail("session did not reopen");
 		}
 		const draft = readDraft(state);
@@ -545,7 +550,7 @@ export const runTextEditFuzzSession = (
 		} else if (op.kind === "commit") {
 			const draftBeforeCommit = readDraft(state);
 			dispatch({ type: "END_TEXT_EDIT", commit: true });
-			if (state.textEditState !== null) {
+			if (readTextEditDraft(state) !== null) {
 				fail("commit left the session open");
 			}
 			const committedBody = readRichTextSlot(
@@ -562,7 +567,7 @@ export const runTextEditFuzzSession = (
 			reopen();
 		} else {
 			dispatch({ type: "END_TEXT_EDIT", commit: false });
-			if (state.textEditState !== null) {
+			if (readTextEditDraft(state) !== null) {
 				fail("cancel left the session open");
 			}
 			reopen();

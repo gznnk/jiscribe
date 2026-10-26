@@ -4,7 +4,7 @@ import { getRootConnectorIds } from "./getRootConnectorIds";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../connectors/endpoints";
+} from "../../rendering/objects/connector/geometry/endpoints";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";

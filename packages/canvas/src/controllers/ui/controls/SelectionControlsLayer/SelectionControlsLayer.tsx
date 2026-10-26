@@ -1,10 +1,9 @@
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
-import { isObjectBeingMovedOrTransformed } from "../../utils/isObjectBeingMovedOrTransformed";
+import type { SelectionDragKind } from "../../utils/readSelectionDragKind";
 import type { SelectionControlLayer } from "../SelectionControlTypes";
 
 type SelectionControlsLayerProps = {
@@ -18,9 +17,10 @@ type SelectionControlsLayerProps = {
 	selection: CanvasSelection;
 	objects: Record<string, ObjectState>;
 	zoom?: number;
+	/** Whether a text edit is open (`mode.kind === "textEdit"`) */
 	isTextEditing: boolean;
-	/** Kind of the drag in progress; null when none is */
-	activeDragKind: DragKind | null;
+	/** The drag changing the selection's geometry (readSelectionDragKind); null for none or any other drag */
+	selectionDragKind: SelectionDragKind | null;
 };
 
 /**
@@ -37,8 +37,8 @@ type SelectionControlsLayerProps = {
  *
  * Hidden while the object is moved or resized through a transform handle, as
  * the connection anchors are: the controls would only trail the shape, and none
- * of them is what is being dragged. A control's own drag opens as `"other"`
- * (the adapter sets no kind), so it keeps its handles through it.
+ * of them is what is being dragged. A control's own drag is a
+ * `"selectionControl"` one, so it keeps its handles through it.
  */
 const SelectionControlsLayerComponent: React.FC<
 	SelectionControlsLayerProps
@@ -48,7 +48,7 @@ const SelectionControlsLayerComponent: React.FC<
 	objects,
 	zoom = 1,
 	isTextEditing,
-	activeDragKind,
+	selectionDragKind,
 }) => {
 	const registries = useCanvasRegistries();
 	const { objectIds: selectedIds } = selection;
@@ -58,7 +58,7 @@ const SelectionControlsLayerComponent: React.FC<
 		return null;
 	}
 
-	if (isObjectBeingMovedOrTransformed(activeDragKind)) {
+	if (selectionDragKind !== null) {
 		return null;
 	}
 

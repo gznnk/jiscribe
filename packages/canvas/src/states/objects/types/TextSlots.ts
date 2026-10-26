@@ -1,16 +1,16 @@
 import { isObject } from "@jiscribe/basic-validators";
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import {
-	joinRichTextLines,
 	normalizeRichText,
 	remapRichText,
 	richTextToPlain,
-	splitRichTextLines,
 } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import {
 	isTextRows,
 	isTextSlot,
+	readTextSlotContent,
+	writeTextSlotContent,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
 /**
@@ -106,10 +106,7 @@ export const readRichTextSlot = (
 	slotId: string,
 ): RichText => {
 	const content = text?.[slotId]?.text;
-	if (content === undefined) {
-		return "";
-	}
-	return isTextRows(content) ? joinRichTextLines(content) : content;
+	return content === undefined ? "" : readTextSlotContent(content);
 };
 
 /**
@@ -128,10 +125,10 @@ export const readTextSlot = (
 
 /**
  * Writes one body of text back into one slot, splitting at its newlines when
- * that slot holds rows (the inverse of {@link readRichTextSlot}; an emptied body
- * writes `[]`, not `[""]`, so the empty rows form stays canonical). The slot's
- * own styling, the other slots, and the key order are all preserved, so a write
- * never disturbs anything it did not edit.
+ * that slot holds rows (the inverse of {@link readRichTextSlot}; the stored form
+ * is writeTextSlotContent's). The slot's own styling, the other slots, and the
+ * key order are all preserved, so a write never disturbs anything it did not
+ * edit.
  *
  * @param text - The shape's current slots
  * @param slotId - Key to write; a key absent from `text` is appended as an unstyled slot
@@ -143,21 +140,13 @@ export const writeRichTextSlot = (
 	slotId: string,
 	value: RichText,
 ): TextSlots => {
-	const body = normalizeRichText(value);
 	const slot = text[slotId];
 	if (slot === undefined) {
-		return { ...text, [slotId]: { text: body } };
+		return { ...text, [slotId]: { text: normalizeRichText(value) } };
 	}
-	// The newlines a body carries between rows are the split points, not
-	// characters of any row, so their styling (invisible either way) is dropped.
-	const content = isTextRows(slot.text)
-		? richTextToPlain(body) === ""
-			? []
-			: splitRichTextLines(body)
-		: body;
 	return {
 		...text,
-		[slotId]: { ...slot, text: content },
+		[slotId]: { ...slot, text: writeTextSlotContent(slot.text, value) },
 	};
 };
 

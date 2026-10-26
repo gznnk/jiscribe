@@ -4,6 +4,11 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { outlinedPlugin } from "../../__tests__/support/outlinedPlugin";
+import {
+	createPortedExtraConnectPoints,
+	eastToEastConnector,
+	portedShape,
+} from "../../__tests__/support/portedExtraConnectPoints";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
 import { hitTestObjects } from "../hitTestObjects";
 
@@ -194,5 +199,25 @@ describe("hitTestObjects", () => {
 				registries,
 			),
 		).toEqual(["near"]);
+	});
+
+	it("matches a rect target against a connector's drawn route, stubs included", () => {
+		const objects = toMap([
+			portedShape("a", 50, 50),
+			portedShape("b", 50, 300),
+			eastToEastConnector("c1", "a", "b"),
+		]);
+		// Right of both shapes (x <= 100), inside the 30px stubs the route leaves through.
+		expect(
+			hitTestObjects(
+				{ x: 110, y: 170, width: 10, height: 10 },
+				objects,
+				["a", "b", "c1"],
+				{
+					...registries,
+					objectExtraConnectPoints: createPortedExtraConnectPoints(),
+				},
+			),
+		).toEqual(["c1"]);
 	});
 });

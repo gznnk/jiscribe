@@ -7,19 +7,51 @@ import {
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
+import {
+	HOST_ACTION_API_PATHNAME,
+	HOST_ACTION_DONE_STATUS,
+	isHostActionName,
+	type HostActionName,
+	type HostActionRequestBody,
+	type SessionApiResponse,
+} from "../shared/hostActionsRoute";
 
 /**
- * Reads this host's session token, which every write has to carry.
+ * The actions a session answer offers. A name this viewer does not know is left
+ * out, since it could not be drawn as anything, and the known ones stay in the
+ * order the host listed them. A host from before the field offers none.
+ *
+ * @throws An Error when the field is there but is not a list, which no host
+ *   speaking this protocol sends
+ */
+const readOfferedActions = (body: object): readonly HostActionName[] => {
+	if (!("actions" in body)) {
+		return [];
+	}
+	const { actions } = body;
+	if (!Array.isArray(actions)) {
+		throw new Error(
+			"the canvas host answered with actions that are not a list",
+		);
+	}
+	return actions.filter(isHostActionName);
+};
+
+/**
+ * Reads this host's session: the token every write has to carry, and the actions
+ * the host's owner offers (`./HostMenu` draws them).
  *
  * Only a page on the host's own origin can read the answer, since no CORS header
  * is ever sent, and the token is a fresh one per host — so a window left over from
  * an earlier host on this port is refused until it has been here again.
  *
- * @returns The token to send on a write and on the WebSocket URL
+ * @returns The token to send on a write and on the WebSocket URL, and the offered
+ *   actions, empty for a host whose owner offers nothing or one answering without
+ *   the field
  * @throws An Error when the host did not answer with a token, which is what a host
- *   that has gone away looks like
+ *   that has gone away looks like, or listed its actions as anything but a list
  */
-export async function fetchSessionToken(): Promise<string> {
+export async function fetchSession(): Promise<SessionApiResponse> {
 	const response = await fetch(SESSION_API_PATHNAME, { cache: "no-store" });
 	if (!response.ok) {
 		throw new Error(`${response.status} ${response.statusText}`);
@@ -33,7 +65,35 @@ export async function fetchSessionToken(): Promise<string> {
 	) {
 		throw new Error("the canvas host answered without a session token");
 	}
-	return body.token;
+	return { token: body.token, actions: readOfferedActions(body) };
+}
+
+/**
+ * Asks the process owning the host to carry out one of the actions it offers.
+ *
+ * @param action One of the names `fetchSession` listed as offered. Asking for one
+ *   it did not list is answered 404
+ * @param sessionToken The token of the host that listed it, as `fetchSession` got
+ *   it; guarded as a write is, so a host restarted since answers 401
+ * @throws An Error naming the status line on any answer but
+ *   HOST_ACTION_DONE_STATUS, and the network error when no answer came back at all
+ */
+export async function requestHostAction(
+	action: HostActionName,
+	sessionToken: string,
+): Promise<void> {
+	const requestBody: HostActionRequestBody = { action };
+	const response = await fetch(HOST_ACTION_API_PATHNAME, {
+		method: "POST",
+		headers: {
+			[SESSION_TOKEN_HEADER]: sessionToken,
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(requestBody),
+	});
+	if (response.status !== HOST_ACTION_DONE_STATUS) {
+		throw new Error(`${response.status} ${response.statusText}`);
+	}
 }
 
 /** How a write ended, short of an error */
@@ -103,7 +163,7 @@ const readStringField = (value: unknown, field: string): string | null => {
  *   one other than the file on display, is rejected by the server
  * @param text The text to write (the whole `.jis`)
  * @param sessionToken The token of the host the text was read from, as
- *   `fetchSessionToken` got it. A host restarted since refuses it, so the write
+ *   `fetchSession` got it. A host restarted since refuses it, so the write
  *   cannot reach a file of the same name that another host now serves
  * @param revision The revision of the text this page last had from the host. The
  *   server writes only on a match, which is what keeps this write from landing on

@@ -9,12 +9,16 @@ import type { SnapFeedback } from "../../../CanvasTypes";
 import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import { createMultiSelectGroup } from "../../../selection/readers/createMultiSelectGroup";
 import { getSelectedConnectorId } from "../../../selection/readers/getSelectedConnectorId";
+import { claimDrag } from "../../../utils/claimDrag";
 import { commitEdit } from "../../../utils/commitEdit";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import { NORMAL_MODE } from "../../../utils/normalMode";
+import { writeDragFeedback } from "../../../utils/writeDragFeedback";
 import { ZOOM } from "../../../utils/zoom";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { applyAxisLock } from "../utils/axisLock";
+import { commitTextEditIntoDragSnapshot } from "../utils/commitTextEditIntoDragSnapshot";
 import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
 import {
 	SNAP_THRESHOLD_PX,
@@ -46,7 +50,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 	handle(state, event, registries) {
 		// Zoom handling
-		// Handle before commitTextEditIfNeeded so zooming does not interrupt an active text edit.
+		// Handled before the text edit commit below, so zooming does not interrupt an active edit.
 		if (event.type === "zoom" && event.zoomScale != null) {
 			const newZoom = Math.max(
 				ZOOM.MIN,
@@ -96,13 +100,14 @@ export const CanvasEventHandler: GestureHandler = {
 			};
 		}
 
-		// Commit text editing if active. On touch this waits for the tap to resolve
-		// (the click branch below): a background touch may become a pan or a pinch,
-		// and viewport navigation must not destroy an active edit the way it doesn't
-		// for wheel scroll. The draw-mode branch re-runs the commit for its touch
-		// drags (starting to draw is a real edit-ending interaction).
+		// Commit text editing if active (into the drag's snapshot on a dragStart,
+		// though a mouse press has committed already, so that is a no-op in
+		// practice). On touch this waits for the tap to resolve (the click branch
+		// below): a background touch may become a pan or a pinch, and viewport
+		// navigation must not destroy an active edit the way it doesn't for wheel
+		// scroll.
 		const isTouch = event.pointerType === "touch";
-		let nextState = isTouch ? state : commitTextEditIfNeeded(state);
+		let nextState = isTouch ? state : commitTextEditIntoDragSnapshot(state);
 
 		// Touch long press: open the context menu, mirroring the right-button click.
 		// The recognizer ends the gesture (the lift fires no click), so the touch
@@ -112,7 +117,11 @@ export const CanvasEventHandler: GestureHandler = {
 			return {
 				// Selecting first: the menu has to act on what was pressed
 				// (see selectContextMenuTarget).
-				...selectContextMenuTarget(commitTextEditIfNeeded(nextState), event),
+				...selectContextMenuTarget(
+					commitTextEditIfNeeded(nextState),
+					event,
+					registries,
+				),
 				contextMenuPosition: {
 					clientX: event.clientLast.x,
 					clientY: event.clientLast.y,
@@ -132,7 +141,7 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					// Selecting first: the menu has to act on what was clicked
 					// (see selectContextMenuTarget).
-					...selectContextMenuTarget(nextState, event),
+					...selectContextMenuTarget(nextState, event, registries),
 					contextMenuPosition: {
 						clientX: event.clientLast.x,
 						clientY: event.clientLast.y,
@@ -143,11 +152,18 @@ export const CanvasEventHandler: GestureHandler = {
 				};
 			}
 
+			if (event.type === "dragStart") {
+				nextState = claimDrag(
+					nextState,
+					{ kind: "pan" },
+					{ edgeScroll: false },
+				);
+			}
 			if (event.type === "drag") {
 				nextState = {
 					...nextState,
 					viewport: calcPannedViewport(
-						state.activeDrag?.startSnapshot.viewport ?? state.viewport,
+						state.drag?.startSnapshot.viewport ?? state.viewport,
 						event.clientDelta,
 					),
 				};
@@ -155,23 +171,20 @@ export const CanvasEventHandler: GestureHandler = {
 			return nextState;
 		}
 
-		// Left-button drag in draw mode: only shapes that support bounds drawing
-		const shapeDrawing = nextState.shapeDrawing;
+		// Left-button drag in draw mode: only shapes that support bounds drawing.
+		// No text edit to commit: an armed tool and a session are one `mode`.
+		const drawingPreset =
+			nextState.mode.kind === "draw" ? nextState.mode.preset : null;
 		const drawingObjectType =
-			shapeDrawing !== null &&
-			registries.objectFactory.supportsBoundsDrawing(
-				shapeDrawing.preset.objectType,
-			)
-				? shapeDrawing.preset.objectType
+			drawingPreset !== null &&
+			registries.objectFactory.supportsBoundsDrawing(drawingPreset.objectType)
+				? drawingPreset.objectType
 				: null;
 		if (
 			event.button === 0 &&
-			shapeDrawing !== null &&
+			drawingPreset !== null &&
 			drawingObjectType !== null
 		) {
-			// No-op for mouse (already committed above); commits for touch draws.
-			nextState = commitTextEditIfNeeded(nextState);
-
 			// Starting to draw dismisses an open ObjectMenu / category flyout.
 			if (
 				nextState.objectMenuOpenId !== null ||
@@ -185,28 +198,29 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 
 			if (event.type === "dragStart") {
-				nextState = {
-					...nextState,
-					shapeDrawing: {
-						preset: shapeDrawing.preset,
-						preview: {
+				// `mode` stays armed through the draw; dragEnd disarms it.
+				return claimDrag(
+					nextState,
+					{
+						kind: "draw",
+						rect: {
 							startX: event.start.x,
 							startY: event.start.y,
 							endX: event.start.x,
 							endY: event.start.y,
 						},
 					},
-					edgeScrollEnabled: true,
-				};
-				return nextState;
+					{ edgeScroll: true },
+				);
 			}
 
+			const drawDrag = nextState.drag?.kind === "draw" ? nextState.drag : null;
+
 			if (event.type === "drag") {
-				const currentShapeDrawing = nextState.shapeDrawing;
-				const currentPreview = currentShapeDrawing?.preview;
-				if (!currentShapeDrawing || !currentPreview) {
+				if (drawDrag === null) {
 					return nextState;
 				}
+				const currentPreview = drawDrag.rect;
 
 				// Shift constrains a polyline to horizontal / vertical. No origin snap:
 				// landing back on the start point would leave a zero-length line that
@@ -225,8 +239,7 @@ export const CanvasEventHandler: GestureHandler = {
 				let endY = axisLock.point.y;
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-				const snapCandidates =
-					nextState.activeDrag?.startSnapshot.snapCandidates;
+				const snapCandidates = drawDrag.startSnapshot.snapCandidates;
 				if (snapCandidates && !isSnapSuppressed(event)) {
 					const result = findSnap(
 						snapCandidates,
@@ -251,25 +264,18 @@ export const CanvasEventHandler: GestureHandler = {
 					);
 				}
 
-				nextState = {
-					...nextState,
-					shapeDrawing: {
-						...currentShapeDrawing,
-						preview: {
-							...currentPreview,
-							endX,
-							endY,
-						},
+				return writeDragFeedback(
+					{
+						...nextState,
+						drag: { ...drawDrag, rect: { ...currentPreview, endX, endY } },
 					},
-					snapFeedback,
-					axisLockFeedback: axisLock.feedback,
-				};
-				return nextState;
+					{ snapFeedback, axisLockFeedback: axisLock.feedback },
+				);
 			}
 
-			if (event.type === "dragEnd" && nextState.shapeDrawing?.preview) {
-				// endX/endY are already snapped during the drag event, so use the preview values as-is.
-				const { startX, startY, endX, endY } = nextState.shapeDrawing.preview;
+			if (event.type === "dragEnd" && drawDrag !== null) {
+				// endX/endY are already snapped during the drag event, so use the rect as-is.
+				const { startX, startY, endX, endY } = drawDrag.rect;
 				const doc = createObjectDocFromBounds(
 					drawingObjectType,
 					startX,
@@ -277,7 +283,7 @@ export const CanvasEventHandler: GestureHandler = {
 					endX,
 					endY,
 					registries.objectFactory,
-					nextState.shapeDrawing.preset.defaultOverrides,
+					drawingPreset.defaultOverrides,
 				);
 
 				// No doc below the minimum size: nothing is placed, so nothing is committed.
@@ -291,18 +297,11 @@ export const CanvasEventHandler: GestureHandler = {
 					});
 				}
 
-				return {
-					...nextState,
-					shapeDrawing: null,
-					edgeScrollEnabled: false,
-				};
+				return { ...nextState, mode: NORMAL_MODE };
 			}
 
 			if (event.type === "click") {
-				return {
-					...nextState,
-					shapeDrawing: null,
-				};
+				return { ...nextState, mode: NORMAL_MODE };
 			}
 
 			return nextState;
@@ -328,13 +327,20 @@ export const CanvasEventHandler: GestureHandler = {
 			if (event.gestureHandling === "cooperative") {
 				return nextState;
 			}
+			if (event.type === "dragStart") {
+				nextState = claimDrag(
+					nextState,
+					{ kind: "pan" },
+					{ edgeScroll: false },
+				);
+			}
 			// dragStart pans too: it already carries a threshold-sized clientDelta,
 			// and a slow touch stream may deliver only dragStart in a frame.
 			if (event.type === "dragStart" || event.type === "drag") {
 				nextState = {
 					...nextState,
 					viewport: calcPannedViewport(
-						state.activeDrag?.startSnapshot.viewport ?? state.viewport,
+						state.drag?.startSnapshot.viewport ?? state.viewport,
 						event.clientDelta,
 					),
 				};
@@ -354,41 +360,46 @@ export const CanvasEventHandler: GestureHandler = {
 					isAdditive && getSelectedConnectorId(nextState) === null
 						? nextState.selection.objectIds
 						: [];
-				nextState = {
-					...nextState,
-					areaSelection: {
-						startX: event.start.x,
-						startY: event.start.y,
-						endX: event.last.x,
-						endY: event.last.y,
+				return claimDrag(
+					{
+						...nextState,
+						selection: { objectIds: baseIds, part: null },
+						// A plain marquee clears it here too (not only on "pressed"): the
+						// early-out below keeps the previous multiSelectGroup as-is while the
+						// hit set stays empty. An additive one keeps the base's group until the
+						// first hit rebuilds it.
+						multiSelectGroup: isAdditive ? nextState.multiSelectGroup : null,
+						objectMenuOpenId: null,
+						stencilLibraryOpenCategory: null,
+					},
+					{
+						kind: "marquee",
+						rect: {
+							startX: event.start.x,
+							startY: event.start.y,
+							endX: event.last.x,
+							endY: event.last.y,
+						},
 						hitIds: [],
 						baseIds,
 					},
-					selection: { objectIds: baseIds, part: null },
-					// A plain marquee clears it here too (not only on "pressed"): the
-					// early-out below keeps the previous multiSelectGroup as-is while the
-					// hit set stays empty. An additive one keeps the base's group until the
-					// first hit rebuilds it.
-					multiSelectGroup: isAdditive ? nextState.multiSelectGroup : null,
-					edgeScrollEnabled: true,
-					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
-				};
-				return nextState;
+					{ edgeScroll: true },
+				);
 			}
 
-			if (event.type === "drag" && nextState.areaSelection) {
-				const area = nextState.areaSelection;
+			if (event.type === "drag" && nextState.drag?.kind === "marquee") {
+				const area = nextState.drag;
+				const { startX, startY } = area.rect;
 				const endX = event.last.x;
 				const endY = event.last.y;
-				const areaMinX = Math.min(area.startX, endX);
-				const areaMinY = Math.min(area.startY, endY);
-				const areaMaxX = Math.max(area.startX, endX);
-				const areaMaxY = Math.max(area.startY, endY);
+				const areaMinX = Math.min(startX, endX);
+				const areaMinY = Math.min(startY, endY);
+				const areaMaxX = Math.max(startX, endX);
+				const areaMaxY = Math.max(startY, endY);
 
 				// bboxes were built once at dragStart; objects do not move during a marquee,
 				// so containment is a pure O(N) scan with no per-frame bbox recomputation (#124).
-				const bboxes = nextState.activeDrag?.startSnapshot.bboxes ?? {};
+				const bboxes = area.startSnapshot.bboxes;
 				const hitIds = collectIdsInArea(
 					bboxes,
 					areaMinX,
@@ -404,11 +415,10 @@ export const CanvasEventHandler: GestureHandler = {
 					hitIds.length === area.hitIds.length &&
 					hitIds.every((id, i) => id === area.hitIds[i]);
 				if (areSameIds) {
-					nextState = {
+					return {
 						...nextState,
-						areaSelection: { ...area, endX, endY },
+						drag: { ...area, rect: { ...area.rect, endX, endY } },
 					};
-					return nextState;
 				}
 
 				// Base first, then whatever the marquee newly encloses. baseIds is empty for
@@ -424,6 +434,7 @@ export const CanvasEventHandler: GestureHandler = {
 					multiSelectGroup = createMultiSelectGroup(
 						selectedIds,
 						nextState.objects,
+						registries,
 						state.multiSelectGroup,
 						bboxes,
 					);
@@ -431,19 +442,16 @@ export const CanvasEventHandler: GestureHandler = {
 
 				nextState = {
 					...nextState,
-					areaSelection: { ...area, endX, endY, hitIds },
+					drag: { ...area, rect: { ...area.rect, endX, endY }, hitIds },
 					selection: { objectIds: selectedIds, part: null },
 					multiSelectGroup,
 				};
 				return nextState;
 			}
 
-			if (event.type === "dragEnd" && nextState.areaSelection) {
-				nextState = {
-					...nextState,
-					areaSelection: null,
-					edgeScrollEnabled: false,
-				};
+			// The marquee's selection is already in place, and its rectangle goes
+			// with the drag (handleGesture's close-out).
+			if (event.type === "dragEnd" && nextState.drag?.kind === "marquee") {
 				return nextState;
 			}
 		}

@@ -2,6 +2,8 @@ import styled from "@emotion/styled";
 import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
 import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
+import { MARKDOWN_HEADING_FONT_SCALES } from "./markdownHeadingFontScales";
+
 /** The card the rendered Markdown sits on. Same interaction affordances as a Rect. */
 export const MarkdownCard = styled.rect<StrokePaintProps & FillPaintProps>`
 	${strokePaint}
@@ -56,22 +58,22 @@ export const MarkdownBody = styled.div`
 		margin-top: 0;
 	}
 	h1 {
-		font-size: 1.6em;
+		font-size: ${MARKDOWN_HEADING_FONT_SCALES.h1}em;
 	}
 	h2 {
-		font-size: 1.35em;
+		font-size: ${MARKDOWN_HEADING_FONT_SCALES.h2}em;
 	}
 	h3 {
-		font-size: 1.15em;
+		font-size: ${MARKDOWN_HEADING_FONT_SCALES.h3}em;
 	}
 	h4 {
-		font-size: 1em;
+		font-size: ${MARKDOWN_HEADING_FONT_SCALES.h4}em;
 	}
 	h5 {
-		font-size: 0.9em;
+		font-size: ${MARKDOWN_HEADING_FONT_SCALES.h5}em;
 	}
 	h6 {
-		font-size: 0.8em;
+		font-size: ${MARKDOWN_HEADING_FONT_SCALES.h6}em;
 		opacity: 0.75;
 	}
 

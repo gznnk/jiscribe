@@ -2,15 +2,15 @@ import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointR
 import type { Point, Rect } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
+import { theme } from "../../../../foundation/theme/themeTokens";
 import {
 	calcConnectPoint,
 	calcExtraConnectPoint,
 	type AnchorFrame,
-} from "../../../../connectors/calcConnectPoint";
+} from "../../../../rendering/objects/connector/geometry/calcConnectPoint";
 import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
-import { theme } from "../../../../theme/themeTokens";
 
 type ConnectionTargetAnchorsProps = {
 	/**
@@ -114,7 +114,7 @@ const ConnectionTargetAnchorsComponent: React.FC<
 	];
 
 	return (
-		<g data-layer="connection-target-anchors" style={{ pointerEvents: "none" }}>
+		<g data-layer="connection-target-anchors" pointerEvents="none">
 			{anchors.map(({ id, x, y }) => {
 				const isActive = id === activeAnchorId;
 				return (

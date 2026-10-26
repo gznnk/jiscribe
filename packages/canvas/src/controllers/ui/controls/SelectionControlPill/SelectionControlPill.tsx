@@ -1,7 +1,7 @@
 import { memo } from "react";
 
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
-import { theme } from "../../../../theme/themeTokens";
+import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
+import { theme } from "../../../../foundation/theme/themeTokens";
 import { SELECTED_HANDLE_STROKE_SCALE } from "../../utils/selectedHandleStrokeScale";
 
 /** Pill dimensions in screen pixels — distinct from the circular resize anchors. */

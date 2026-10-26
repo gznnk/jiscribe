@@ -1,7 +1,9 @@
 import type { ObjectPartKindRegistry } from "../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
-import type { CanvasControllerState } from "../../CanvasTypes";
+import type { CanvasControllerState, TextEditDraft } from "../../CanvasTypes";
+import { NORMAL_MODE } from "../../utils/normalMode";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import type { ObjectPartSelection } from "../CanvasSelection";
 import { isTextSlotPart } from "../partKinds/textSlotPartKind";
 
@@ -36,12 +38,12 @@ const isPartSelectionLive = (
  */
 const isTextEditOwnerLive = (
 	target: ObjectState | undefined,
-	textEditState: NonNullable<CanvasControllerState["textEditState"]>,
+	draft: TextEditDraft,
 ): boolean => {
 	if (target === undefined) {
 		return false;
 	}
-	return textEditState.kind === "connectorLabel"
+	return draft.kind === "connectorLabel"
 		? target.type === "connector"
 		: isTextStyleState(target) && target.text !== undefined;
 };
@@ -85,8 +87,8 @@ export const reconcileSelection = (
 	objectPartKind: ObjectPartKindRegistry,
 ): CanvasControllerState => {
 	const { objectIds, part } = state.selection;
-	const { textEditState } = state;
-	if (part === null && !textEditState) {
+	const draft = readTextEditDraft(state);
+	if (part === null && draft === null) {
 		return state;
 	}
 
@@ -97,9 +99,9 @@ export const reconcileSelection = (
 	// A shape session is written back to the slot the part names, so it goes with
 	// that part; a connector label is no part of anything and outlives one.
 	const isTextEditLive =
-		!textEditState ||
-		(isTextEditOwnerLive(target, textEditState) &&
-			(textEditState.kind !== "shape" || (isPartLive && isTextSlotPart(part))));
+		draft === null ||
+		(isTextEditOwnerLive(target, draft) &&
+			(draft.kind !== "shape" || (isPartLive && isTextSlotPart(part))));
 	if (isPartLive && isTextEditLive) {
 		return state;
 	}
@@ -109,6 +111,6 @@ export const reconcileSelection = (
 		selection: isPartLive
 			? state.selection
 			: { ...state.selection, part: null },
-		textEditState: isTextEditLive ? textEditState : null,
+		mode: isTextEditLive ? state.mode : NORMAL_MODE,
 	};
 };

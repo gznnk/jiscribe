@@ -10,7 +10,8 @@ import { join } from "node:path";
 import { afterEach, beforeAll, afterAll, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
+import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import type { BrowserOpenOptions } from "../host/openBrowser";
 import { createPathLock } from "../pathLock";
@@ -39,7 +40,7 @@ const openSockets: WebSocket[] = [];
  */
 beforeAll(async () => {
 	viewerRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-viewer-"));
-	await writeFile(join(viewerRoot, "index.html"), "<!doctype html>", "utf8");
+	await writeFile(join(viewerRoot, "index.html"), VIEWER_STUB_HTML, "utf8");
 	previousViewerRoot = process.env.JISCRIBE_MCP_VIEWER_ROOT;
 	process.env.JISCRIBE_MCP_VIEWER_ROOT = viewerRoot;
 	workspaceRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-ws-"));

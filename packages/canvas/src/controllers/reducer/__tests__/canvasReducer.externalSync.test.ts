@@ -7,6 +7,7 @@ import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -40,6 +41,7 @@ const syncExternal = (): CanvasAction => ({
 		registries.objectMapper,
 		registries.objectContentResizer,
 	),
+	doc: movedDoc,
 });
 
 // The document a host swaps in when a person opens another file: nothing of the
@@ -56,6 +58,7 @@ const loadDocument = (doc: CanvasDoc): CanvasAction => ({
 		registries.objectMapper,
 		registries.objectContentResizer,
 	),
+	doc,
 });
 
 const cxOf = (state: CanvasControllerState) =>
@@ -79,6 +82,45 @@ describe("canvasReducer (integration)", () => {
 			expect(after.selection.objectIds).toEqual([]);
 			expect(after.historyCoalesce.recorded).toBeNull();
 			expect(after.historyCoalesce.pending).toBeNull();
+		});
+	});
+
+	describe("the host's doc on the entry", () => {
+		it("SYNC_EXTERNAL and LOAD_DOCUMENT keep the doc they adopted as the entry's openedDoc", () => {
+			const synced = canvasReducer(createState(), syncExternal());
+			expect(synced.history.present.openedDoc).toBe(movedDoc);
+
+			const loaded = canvasReducer(synced, loadDocument(otherDoc));
+			expect(loaded.history.present.openedDoc).toBe(otherDoc);
+		});
+
+		it("saves the host's doc verbatim after undoing back to a synced entry", () => {
+			// More decimals than a save writes: a rebuild of the entry would round them
+			const hostDoc = {
+				version: 1,
+				root: [rectDoc("rect-1", 50.123456, 0), rectDoc("rect-2", 100, 100)],
+			} as unknown as CanvasDoc;
+			const synced = canvasReducer(createState(), {
+				type: "SYNC_EXTERNAL",
+				payload: canvasToState(
+					hostDoc,
+					registries.objectMapper,
+					registries.objectContentResizer,
+				),
+				doc: hostDoc,
+			});
+			const moved = canvasReducer(
+				canvasReducer(synced, { type: "SET_SELECTION", ids: ["rect-1"] }),
+				{ type: "COMMAND", commandId: "move-right" },
+			);
+			const undone = canvasReducer(moved, {
+				type: "COMMAND",
+				commandId: "undo",
+			});
+
+			expect(
+				resolveDocSnapshot(undone.history.present, registries.objectMapper),
+			).toBe(hostDoc);
 		});
 	});
 

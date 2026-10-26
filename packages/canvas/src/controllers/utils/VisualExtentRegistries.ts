@@ -26,3 +26,15 @@ export type VisualExtentRegistries = {
 	/** Lets a connector's path come from the cache the renderer fills (resolveConnectorPointsCached). */
 	objectGeometryKey: Pick<ObjectGeometryKeyRegistry, "get">;
 };
+
+/**
+ * The registries a connector's path is resolved through as the renderer routes
+ * it, without the frame decoration: what a consumer working on the shapes'
+ * geometry (the multi-select frame, the hit test, which also reads the outline as
+ * a frame's silhouette) passes so a connector counts where it is drawn. The
+ * canvas bundle (ICanvasRegistries) is structurally assignable to it.
+ */
+export type ConnectorRouteRegistries = Omit<
+	VisualExtentRegistries,
+	"objectVisualBounds"
+>;

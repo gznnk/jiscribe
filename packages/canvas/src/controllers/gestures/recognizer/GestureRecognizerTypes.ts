@@ -114,15 +114,19 @@ export type RecognizerCanvasState = {
 	 * handlers increment — not from the rendered DOM, which may lag a frame.
 	 */
 	viewport: Viewport;
-	/** Whether a drag near the container edge auto-scrolls the viewport; false makes the drag stop at the edge. */
-	edgeScrollEnabled: boolean;
+	/**
+	 * The drag in progress, null when none is. Its `edgeScrollEnabled` says
+	 * whether a drag near the container edge auto-scrolls the viewport; false (or
+	 * no drag) makes the drag stop at the edge.
+	 */
+	drag: { edgeScrollEnabled: boolean } | null;
 };
 
 export type GestureRecognizerConfig = {
 	gestureCallback: GestureCallback;
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
-	/** Latest canvas state, read at gesture time. The recognizer touches only viewport and edgeScrollEnabled. */
+	/** Latest canvas state, read at gesture time. The recognizer touches only viewport and drag.edgeScrollEnabled. */
 	canvasStateRef: React.RefObject<RecognizerCanvasState>;
 	/**
 	 * Policy consulted when a second touch arrives during a confirmed drag:
@@ -148,4 +152,15 @@ export type GestureRecognizerConfig = {
 	 *   2 right).
 	 */
 	shouldFlingFromDrag?: (button: number) => boolean;
+	/**
+	 * Wraps everything the recognizer dispatches from one animation frame (an event
+	 * batch, or one fling frame), so the consumer can commit it synchronously before
+	 * that frame paints (the canvas injects an adaptive `flushSync` commit, see
+	 * createAdaptiveFrameCommit). processPendingBatch does not go through it;
+	 * committing that drain is the caller's job.
+	 *
+	 * @param dispatchFrame - The frame's work; must be called exactly once,
+	 *   synchronously, before the wrapper returns.
+	 */
+	wrapFrameDispatch: (dispatchFrame: () => void) => void;
 };

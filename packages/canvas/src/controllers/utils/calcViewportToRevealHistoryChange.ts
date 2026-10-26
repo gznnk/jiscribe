@@ -1,7 +1,5 @@
-import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
-import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
-import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+import { unionBoundingBoxes } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcCameraToRevealBox } from "./calcCameraToRevealBox";
@@ -21,79 +19,58 @@ const HISTORY_REVEAL_PADDING = 48;
 
 /** Ids an entry swap touched, split by which side still holds the object. */
 type HistoryChange = {
-	/** In the restored doc and changed or new there; measured in its objects. */
+	/** In the restored objects and changed or new there; measured in them. */
 	restoredIds: string[];
-	/** Only in the doc being left; measured in the objects before the swap. */
+	/** Only in the objects being left; measured in them. */
 	removedIds: string[];
 };
 
 /**
- * Every non-group object of the tree by id, serialized for comparison. Groups
- * are skipped: their children and the connectors say where anything moved.
+ * What an entry swap changed, object by object, by reference between the two
+ * entries' committed objects: an entry holds the very ObjectStates it was
+ * committed with, and none is ever mutated in place, so an object the swap
+ * left alone is the same reference in both. The live maps would not do: a
+ * re-measure after fonts arrive renews boxes without a commit, on either side
+ * of the swap. An object rewritten with the same content reads as changed — at
+ * worst a reveal that was not needed. Groups are skipped: their children and
+ * the connectors say where anything moved.
  */
-const flattenDocObjects = (doc: CanvasDoc): Map<string, string> => {
-	const serializedObjects = new Map<string, string>();
-	const visit = (objDocs: readonly ObjectDoc[]) => {
-		for (const objDoc of objDocs) {
-			if (objDoc.type === "group") {
-				visit((objDoc as GroupDoc).children);
-				continue;
-			}
-			serializedObjects.set(objDoc.id, JSON.stringify(objDoc));
-		}
-	};
-	visit(doc.root);
-	return serializedObjects;
-};
-
-/**
- * What an entry swap changed, object by object. Compared as JSON strings, so
- * the same object with its keys in another order reads as modified (the same
- * caveat as isSameCanvasDocContent): at worst a reveal that was not needed.
- */
-const diffDocObjects = (leftDoc: CanvasDoc, restoredDoc: CanvasDoc) => {
-	const leftObjects = flattenDocObjects(leftDoc);
-	const restoredObjects = flattenDocObjects(restoredDoc);
+const diffEntryObjects = (
+	leftEntryObjects: Record<string, ObjectState>,
+	restoredEntryObjects: Record<string, ObjectState>,
+): HistoryChange => {
 	const change: HistoryChange = { restoredIds: [], removedIds: [] };
-	for (const [id, serialized] of restoredObjects) {
-		if (leftObjects.get(id) !== serialized) {
+	for (const [id, restoredObject] of Object.entries(restoredEntryObjects)) {
+		if (
+			restoredObject.type !== "group" &&
+			leftEntryObjects[id] !== restoredObject
+		) {
 			change.restoredIds.push(id);
 		}
 	}
-	for (const id of leftObjects.keys()) {
-		if (!restoredObjects.has(id)) {
+	for (const [id, leftObject] of Object.entries(leftEntryObjects)) {
+		if (leftObject.type !== "group" && !(id in restoredEntryObjects)) {
 			change.removedIds.push(id);
 		}
 	}
 	return change;
 };
 
-/** Union of the ids' boxes into `union`, or the first box found when it is null. */
+/** Union of `union` and the ids' boxes; null when neither yields a box. */
 const unionObjectBoxes = (
 	union: BoundingBox | null,
 	ids: readonly string[],
 	objects: Record<string, ObjectState>,
 	visualExtentRegistries: VisualExtentRegistries,
 ): BoundingBox | null => {
-	let merged = union;
+	const boxes: (BoundingBox | null)[] = [union];
 	for (const id of ids) {
 		const obj = objects[id];
-		const box = obj
-			? calcObjectBoundingBox(obj, objects, visualExtentRegistries)
-			: null;
-		if (!box) {
-			continue;
+		if (obj) {
+			boxes.push(calcObjectBoundingBox(obj, objects, visualExtentRegistries));
 		}
-		merged = merged
-			? {
-					left: Math.min(merged.left, box.left),
-					top: Math.min(merged.top, box.top),
-					right: Math.max(merged.right, box.right),
-					bottom: Math.max(merged.bottom, box.bottom),
-				}
-			: box;
 	}
-	return merged;
+	return unionBoundingBoxes(boxes);
 };
 
 /**
@@ -104,7 +81,7 @@ const unionObjectBoxes = (
  * while part of it is on screen, and centred on that axis otherwise. The diff
  * is per object, so one cell of a large table reads as the whole table changed:
  * centring it would jump away from the cell being worked on.
- * Changes to `background`, `view` or stacking order alone move nothing.
+ * Changes to `meta`, `background`, `view` or stacking order alone move nothing.
  *
  * The pan stops at the scroll wall the way a view scroll does
  * (clampScrolledCamera): the reveal margin gives way to the wall, while a view
@@ -113,13 +90,16 @@ const unionObjectBoxes = (
  * @param viewport - The viewport before the swap; returned as is (same
  *   reference) when nothing needs to move, including while it is unmeasured
  *   (either side 0 or less)
- * @param leftDoc - The doc of the entry being left
- * @param leftObjects - The objects before the swap, where removed objects are
- *   measured
- * @param restoredDoc - The doc of the entry being restored; the same reference
- *   as `leftDoc` short-cuts to no change
+ * @param leftEntryObjects - The objects of the entry being left as committed
+ *   (its `source`), compared against `restoredEntryObjects` by reference to
+ *   find what the swap changed
+ * @param leftObjects - The live objects before the swap, where removed objects
+ *   are measured
+ * @param restoredEntryObjects - The objects of the entry being restored as
+ *   committed; the same reference as `leftEntryObjects` short-cuts to no change
  * @param restoredObjects - The objects after the swap, where added and modified
- *   objects are measured
+ *   objects are measured; they differ from `restoredEntryObjects` only by boxes
+ *   re-measured since
  * @param visualExtentRegistries - Measures each box as drawn: what a shape draws
  *   outside its geometry, a connector's route as rendered (see
  *   calcObjectBoundingBox), the wall's content extent included
@@ -132,18 +112,21 @@ const unionObjectBoxes = (
  */
 export const calcViewportToRevealHistoryChange = (
 	viewport: Viewport,
-	leftDoc: CanvasDoc,
+	leftEntryObjects: Record<string, ObjectState>,
 	leftObjects: Record<string, ObjectState>,
-	restoredDoc: CanvasDoc,
+	restoredEntryObjects: Record<string, ObjectState>,
 	restoredObjects: Record<string, ObjectState>,
 	visualExtentRegistries: VisualExtentRegistries,
 	scrollWallPadding: ResolvedViewPadding | null,
 ): Viewport => {
-	if (leftDoc === restoredDoc) {
+	if (leftEntryObjects === restoredEntryObjects) {
 		return viewport;
 	}
 
-	const { restoredIds, removedIds } = diffDocObjects(leftDoc, restoredDoc);
+	const { restoredIds, removedIds } = diffEntryObjects(
+		leftEntryObjects,
+		restoredEntryObjects,
+	);
 	const changedBox = unionObjectBoxes(
 		unionObjectBoxes(
 			null,

@@ -38,6 +38,7 @@ const makeState = (params: {
 	multiSelectGroup?: GroupState | null;
 }): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		multiSelectGroup: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,

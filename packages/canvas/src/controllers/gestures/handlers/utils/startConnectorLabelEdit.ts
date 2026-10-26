@@ -3,7 +3,7 @@ import { snapLabelOffsetToLine } from "./snapLabelOffsetToLine";
 import {
 	calcConnectorLabelPlacement,
 	type ConnectorLabelPlacement,
-} from "../../../../connectors/label/calcConnectorLabelPlacement";
+} from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import { LINE_HIT_STROKE_WIDTH } from "../../../../rendering/objects/utils/hitStrokeWidth";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
@@ -122,11 +122,14 @@ export const startConnectorLabelEdit = (
 			: null;
 	return {
 		...selectedState,
-		// The owner is the selection written just above (see textEditState).
-		textEditState: {
-			kind: "connectorLabel",
-			text: labelText,
-			...(placement ? { placement } : {}),
+		// The owner is the selection written just above (see CanvasMode).
+		mode: {
+			kind: "textEdit",
+			draft: {
+				kind: "connectorLabel",
+				text: labelText,
+				...(placement ? { placement } : {}),
+			},
 		},
 	};
 };

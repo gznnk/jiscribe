@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { clickPlacedPlugin } from "../../../__tests__/support/clickPlacedPlugin";
+import { createTestSnapshot } from "../../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
@@ -12,8 +13,8 @@ import {
 } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { SelectionControlDefinition } from "../../../ui/controls/SelectionControlTypes";
+import { claimDrag } from "../../../utils/claimDrag";
 import { collectCowChangedKeys } from "../../../utils/cowObjects";
-import { createDocSnapshotFromDoc } from "../../../utils/resolveDocSnapshot";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
@@ -94,8 +95,8 @@ const docWithRect = {
 	version: 1,
 	root: [{ id: "r1", type: "rect", x: 0, y: 0, width: 100, height: 100 }],
 } as unknown as CanvasDoc;
-const snapshotEmpty = createDocSnapshotFromDoc(emptyDoc);
-const snapshotWithRect = createDocSnapshotFromDoc(docWithRect);
+const snapshotEmpty = createTestSnapshot(emptyDoc);
+const snapshotWithRect = createTestSnapshot(docWithRect);
 
 /** A gesture aimed at the control, with the fields every handler on the way reads. */
 const controlGesture = (type: "dragStart" | "drag" | "dragEnd"): Gesture =>
@@ -281,17 +282,43 @@ describe("handleGesture - close-out", () => {
 			controlGesture("dragStart"),
 			registries,
 		);
-		expect(started.activeDrag).not.toBeNull();
+		expect(started.drag).not.toBeNull();
 
 		const dragged = handleGesture(started, controlGesture("drag"), registries);
 		expect(dragged.commitVersion).toBe(state.commitVersion);
 
 		const ended = handleGesture(dragged, controlGesture("dragEnd"), registries);
-		expect(ended.activeDrag).toBeNull();
-		expect(ended.snapFeedback).toBeNull();
-		expect(ended.axisLockFeedback).toBeNull();
+		expect(ended.drag).toBeNull();
 		expect(isCowView(ended.objects)).toBe(false);
 		expect(ended.commitVersion).toBe(state.commitVersion + 1);
+	});
+
+	it("stops edge scrolling with the drag, whatever its handler does at dragEnd", () => {
+		// A handler that turns edge scrolling on and leaves dragEnd alone: the
+		// close-out is the one place that has to end it.
+		const registries = createTestRegistries();
+		registries.gestureHandler.register("edge-scroll-probe", {
+			supports: (event) => event.targetKind === "edge-scroll-probe",
+			handle: (state, event) =>
+				event.type === "dragStart"
+					? claimDrag(state, { kind: "selectionControl" }, { edgeScroll: true })
+					: state,
+		});
+		const probeGesture = (type: "dragStart" | "dragEnd"): Gesture =>
+			({
+				...controlGesture(type),
+				targetKind: "edge-scroll-probe",
+			}) as Gesture;
+
+		const started = handleGesture(
+			stateWithSelectedRect(registries),
+			probeGesture("dragStart"),
+			registries,
+		);
+		expect(started.drag?.edgeScrollEnabled).toBe(true);
+
+		const ended = handleGesture(started, probeGesture("dragEnd"), registries);
+		expect(ended.drag).toBeNull();
 	});
 
 	it("adds no commit of its own to the writer's, even when the document changed during the gesture", () => {
@@ -314,7 +341,7 @@ describe("handleGesture - close-out", () => {
 		expect(dragged.objects.r1).not.toBe(state.objects.r1);
 
 		const ended = handleGesture(dragged, controlGesture("dragEnd"), registries);
-		expect(ended.activeDrag).toBeNull();
+		expect(ended.drag).toBeNull();
 		expect(isCowView(ended.objects)).toBe(false);
 		expect(ended.commitVersion).toBe(state.commitVersion + 1);
 	});

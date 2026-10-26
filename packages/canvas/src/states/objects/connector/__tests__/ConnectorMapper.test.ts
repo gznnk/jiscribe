@@ -96,7 +96,7 @@ describe("ConnectorMapper", () => {
 		it("omits points entirely when there is no waypoint", () => {
 			// A doc authored without `points` (engine-routed straight connector)
 			// must round-trip without the key: `points: []` would read as a content
-			// change (isSameCanvasDocContent) and trigger a needless external sync.
+			// change (canvasToStateReusing) and trigger a needless external sync.
 			const originalDoc = {
 				id: "connector-straight",
 				type: "connector",

@@ -1,10 +1,10 @@
 import { memo } from "react";
 
+import { useCanvasLocale } from "../../../../../foundation/i18n/CanvasLocaleContext";
+import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import { resolveCommandLabel } from "../../../../commands/CommandUtils";
 import { ResetConnectorRouteCommand } from "../../../../commands/connector/ResetConnectorRouteCommand";
 import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasLocale } from "../../../../messages/CanvasLocaleContext";
-import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { hasSelectedConnectorShapedRoute } from "../../../../utils/hasSelectedConnectorShapedRoute";
 import { PropertyCommandButton } from "../common/PropertyControlsStyled";
 import { PropertyRow } from "../common/PropertyRow";

@@ -50,6 +50,7 @@ const makeState = (
 	selectedIds: string[],
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects,
 		selection: selectionOf(selectedIds),
 	}) as unknown as CanvasControllerState;

@@ -58,13 +58,18 @@ const makeState = (
 	multiSelectGroup: GroupState | null = null,
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		registries,
 		objects,
 		rootIds: Object.keys(objects),
 		selection: selectionOf(selectedIds),
 		multiSelectGroup,
 		viewport: VIEWPORT,
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects,
 				keyPoints: {},
@@ -74,7 +79,6 @@ const makeState = (
 				multiSelectGroup,
 				viewport: VIEWPORT,
 			},
-			kind: "other",
 		},
 	}) as unknown as CanvasControllerState;
 
@@ -323,7 +327,7 @@ describe("handleRotationDrag", () => {
 			const state = {
 				objects: { "rect-1": makeRect("rect-1", 50, 25) },
 				selection: selectionOf(["rect-1"]),
-				activeDrag: null,
+				drag: null,
 			} as unknown as CanvasControllerState;
 			expect(
 				handleRotationDrag(

@@ -116,11 +116,11 @@ export const tableSetTextStyleTool = defineObjectAiTool({
 			occurrence === undefined
 				? quotedMatch
 				: `occurrence ${occurrence} of ${quotedMatch}`;
-		const cellsText = isSingleCell
-			? rangeText
-			: decoratedCells.length > MAX_LISTED_CELL_COUNT
+		const decoratedCellsText =
+			decoratedCells.length > MAX_LISTED_CELL_COUNT
 				? `${decoratedCells.length} of ${rangeText}`
 				: `${decoratedCells.length} of ${rangeText}: ${decoratedCells.join(", ")}`;
+		const cellsText = isSingleCell ? rangeText : decoratedCellsText;
 		return {
 			doc: writeTableDocGrid(table, { ...grid, text }),
 			text: `set ${styledFields.join(", ")} on ${stretchText} in ${cellsText}`,

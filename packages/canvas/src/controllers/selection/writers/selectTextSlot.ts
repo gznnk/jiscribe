@@ -8,7 +8,7 @@ import {
 /**
  * Points the selection at one text slot of one object: what every writer that
  * opens a shape's text editor states, since what is being edited is the
- * selection rather than something the session names (see `textEditState`).
+ * selection rather than something the session names (see `CanvasMode`).
  *
  * @param selection - The selection to move; returned as it stands when it
  *   already names this object and this slot alone, so memoized readers hold

@@ -3,7 +3,10 @@ import { describe, it, expect } from "vitest";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../../states/objects/primitives/group/GroupState";
 import { MIN_GROUP_DIMENSION } from "../../../../../../../states/utils/groupDimensions";
+import { createTestRegistries } from "../../../../../../registries/createCanvasRegistries";
 import { calcMultiSelectGroupBounds } from "../calcMultiSelectGroupBounds";
+
+const registries = createTestRegistries();
 
 const freeConnector = (
 	id: string,
@@ -40,23 +43,27 @@ const rect = (
 
 describe("calcMultiSelectGroupBounds", () => {
 	it("0 selectedIds -> null", () => {
-		expect(calcMultiSelectGroupBounds([], {})).toBeNull();
+		expect(calcMultiSelectGroupBounds([], {}, registries)).toBeNull();
 	});
 
 	it("1 selectedId -> null", () => {
 		const objects = { r1: rect("r1", 50, 50, 40, 40) };
-		expect(calcMultiSelectGroupBounds(["r1"], objects)).toBeNull();
+		expect(calcMultiSelectGroupBounds(["r1"], objects, registries)).toBeNull();
 	});
 
 	it("no valid objects found -> null", () => {
-		expect(calcMultiSelectGroupBounds(["a", "b"], {})).toBeNull();
+		expect(calcMultiSelectGroupBounds(["a", "b"], {}, registries)).toBeNull();
 	});
 
 	describe("without existingGroup (AABB calculation)", () => {
 		it("2 rects -> returns the AABB's cx/cy/width/height", () => {
 			const r1 = rect("r1", 50, 50, 40, 40); // left=30, right=70, top=30, bottom=70
 			const r2 = rect("r2", 150, 150, 40, 40); // left=130, right=170, top=130, bottom=170
-			const result = calcMultiSelectGroupBounds(["r1", "r2"], { r1, r2 });
+			const result = calcMultiSelectGroupBounds(
+				["r1", "r2"],
+				{ r1, r2 },
+				registries,
+			);
 			expect(result).not.toBeNull();
 			expect(result?.cx).toBeCloseTo(100);
 			expect(result?.cy).toBeCloseTo(100);
@@ -68,7 +75,11 @@ describe("calcMultiSelectGroupBounds", () => {
 			// two zero-height rects on the same y → the AABB's height is 0
 			const r1 = rect("r1", 20, 50, 40, 0);
 			const r2 = rect("r2", 80, 50, 40, 0);
-			const result = calcMultiSelectGroupBounds(["r1", "r2"], { r1, r2 });
+			const result = calcMultiSelectGroupBounds(
+				["r1", "r2"],
+				{ r1, r2 },
+				registries,
+			);
 			expect(result).not.toBeNull();
 			expect(result?.width).toBeCloseTo(100);
 			expect(result?.height).toBe(MIN_GROUP_DIMENSION);
@@ -83,7 +94,11 @@ describe("calcMultiSelectGroupBounds", () => {
 			} as unknown as ObjectState;
 			const r2 = rect("r2", 100, 0, 20, 20);
 			const objects = { r1, r2, inner: innerGroup };
-			const result = calcMultiSelectGroupBounds(["inner", "r2"], objects);
+			const result = calcMultiSelectGroupBounds(
+				["inner", "r2"],
+				objects,
+				registries,
+			);
 			expect(result).not.toBeNull();
 			expect(result?.cx).toBeCloseTo(50);
 		});
@@ -91,7 +106,11 @@ describe("calcMultiSelectGroupBounds", () => {
 		it("a connector's resolved endpoints are included in the bounds", () => {
 			const r1 = rect("r1", 300, 300, 100, 100); // 250..350 both axes
 			const c1 = freeConnector("c1", { x: 10, y: 20 }, { x: 110, y: 70 });
-			const result = calcMultiSelectGroupBounds(["r1", "c1"], { r1, c1 });
+			const result = calcMultiSelectGroupBounds(
+				["r1", "c1"],
+				{ r1, c1 },
+				registries,
+			);
 			expect(result).not.toBeNull();
 			expect(result?.cx).toBeCloseTo((10 + 350) / 2);
 			expect(result?.cy).toBeCloseTo((20 + 350) / 2);
@@ -113,11 +132,15 @@ describe("calcMultiSelectGroupBounds", () => {
 				},
 				target: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
 			} as unknown as ObjectState;
-			const result = calcMultiSelectGroupBounds(["r1", "r2", "c1"], {
-				r1,
-				r2,
-				c1: broken,
-			});
+			const result = calcMultiSelectGroupBounds(
+				["r1", "r2", "c1"],
+				{
+					r1,
+					r2,
+					c1: broken,
+				},
+				registries,
+			);
 			expect(result).not.toBeNull();
 			// The unresolvable connector (and its waypoint at 9999) is skipped entirely
 			expect(result?.cx).toBeCloseTo(100);
@@ -137,6 +160,7 @@ describe("calcMultiSelectGroupBounds", () => {
 			const result = calcMultiSelectGroupBounds(
 				["r1", "r2"],
 				{ r1, r2 },
+				registries,
 				existingGroup,
 			);
 			expect(result).not.toBeNull();
@@ -147,7 +171,12 @@ describe("calcMultiSelectGroupBounds", () => {
 		it("existingGroup is null -> falls back to AABB calculation", () => {
 			const r1 = rect("r1", 50, 50, 40, 40);
 			const r2 = rect("r2", 150, 150, 40, 40);
-			const result = calcMultiSelectGroupBounds(["r1", "r2"], { r1, r2 }, null);
+			const result = calcMultiSelectGroupBounds(
+				["r1", "r2"],
+				{ r1, r2 },
+				registries,
+				null,
+			);
 			expect(result?.cx).toBeCloseTo(100);
 		});
 
@@ -162,6 +191,7 @@ describe("calcMultiSelectGroupBounds", () => {
 			const result = calcMultiSelectGroupBounds(
 				["r1", "c1"],
 				{ r1, c1 },
+				registries,
 				existingGroup,
 			);
 			expect(result).not.toBeNull();
@@ -183,6 +213,7 @@ describe("calcMultiSelectGroupBounds", () => {
 			const result = calcMultiSelectGroupBounds(
 				["c1", "c2"],
 				{ c1, c2 },
+				registries,
 				existingGroup,
 			);
 			expect(result).not.toBeNull();
@@ -201,6 +232,7 @@ describe("calcMultiSelectGroupBounds", () => {
 			const result = calcMultiSelectGroupBounds(
 				["c1", "c2"],
 				{ c1, c2 },
+				registries,
 				existingGroup,
 			);
 			expect(result).not.toBeNull();

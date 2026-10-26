@@ -29,15 +29,19 @@ const dragStartState = (
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: { [object.id]: object },
 		selection: selectionOf([object.id]),
 		multiSelectGroup: null,
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects: { [object.id]: object },
 				selectedIdsWithDescendants: new Set([object.id]),
 			},
-			kind: "other",
 		},
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -63,9 +67,7 @@ describe("dropAutoHeightOnResize", () => {
 		const dropped = dropOnDragStart(state, "bottomRight");
 
 		expect(dropped.objects.auto.autoHeight).toBeUndefined();
-		expect(
-			dropped.activeDrag?.startSnapshot.objects.auto.autoHeight,
-		).toBeUndefined();
+		expect(dropped.drag?.startSnapshot.objects.auto.autoHeight).toBeUndefined();
 	});
 
 	it("settles it on a top or bottom handle", () => {
@@ -125,12 +127,15 @@ describe("dropAutoHeightOnResize", () => {
 			objects,
 			selection: selectionOf(["g"]),
 			multiSelectGroup: null,
-			activeDrag: {
+			drag: {
+				kind: "inert",
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
 				startSnapshot: {
 					objects,
 					selectedIdsWithDescendants: new Set(["g", "child", "level"]),
 				},
-				kind: "other",
 			},
 		} as unknown as CanvasControllerState;
 

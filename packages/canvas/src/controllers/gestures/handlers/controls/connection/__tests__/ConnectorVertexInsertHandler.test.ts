@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { readTextEditDraft } from "../../../../../utils/readTextEditDraft";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { VertexControlHandler } from "../../vertex/VertexControlHandler";
 import { VertexInsertHandler } from "../../vertex/VertexInsertHandler";
@@ -42,8 +43,13 @@ const makeState = (points: Point[]): CanvasControllerState => {
 		objects: { "conn-1": connector },
 		rootIds: ["conn-1"],
 		selection: selectionOf(["conn-1"]),
+		mode: { kind: "normal" },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		activeDrag: {
+		drag: {
+			kind: "inert",
+			snapFeedback: null,
+			axisLockFeedback: null,
+			edgeScrollEnabled: false,
 			startSnapshot: {
 				objects: { "conn-1": connector },
 				keyPoints: {},
@@ -53,7 +59,6 @@ const makeState = (points: Point[]): CanvasControllerState => {
 				multiSelectGroup: null,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -86,8 +91,9 @@ describe("ConnectorVertexInsertHandler", () => {
 			registries,
 		);
 		expect(pointsOf(next)).toEqual([{ x: 50, y: 50 }]);
+		expect(next.drag?.kind).toBe("vertex");
 		// the drag's start snapshot is also updated for the subsequent drag
-		expect(pointsOf(next.activeDrag?.startSnapshot as never)).toEqual([
+		expect(pointsOf(next.drag?.startSnapshot as never)).toEqual([
 			{ x: 50, y: 50 },
 		]);
 	});
@@ -137,7 +143,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(pointsOf(dragged)).toEqual([{ x: 70, y: 90 }]);
 	});
 
-	it("disables edgeScroll and confirms on dragEnd", () => {
+	it("confirms on dragEnd", () => {
 		const started = insertHandler.handle(
 			makeState([]),
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
@@ -149,7 +155,6 @@ describe("ConnectorVertexInsertHandler", () => {
 			registries,
 		);
 		expect(pointsOf(ended)).toEqual([{ x: 60, y: 60 }]);
-		expect(ended.edgeScrollEnabled).toBe(false);
 	});
 
 	it("commits the inserted waypoint once, at dragEnd only", () => {
@@ -290,7 +295,10 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			doubleClickEvent([]),
 			registries,
 		);
-		expect(next.textEditState).toEqual({ kind: "connectorLabel", text: "" });
+		expect(readTextEditDraft(next)).toEqual({
+			kind: "connectorLabel",
+			text: "",
+		});
 		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
 		// No waypoint is inserted by the double click
 		expect(pointsOf(next)).toEqual([]);
@@ -302,7 +310,10 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			doubleClickEvent([{ id: "conn-1", kind: "connector", action: "label" }]),
 			registries,
 		);
-		expect(next.textEditState).toEqual({ kind: "connectorLabel", text: "Yes" });
+		expect(readTextEditDraft(next)).toEqual({
+			kind: "connectorLabel",
+			text: "Yes",
+		});
 		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
 	});
 
@@ -312,7 +323,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			doubleClickEvent([]),
 			registries,
 		);
-		expect(next.textEditState).toBeUndefined();
+		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.selection.objectIds).toEqual(["conn-1"]);
 	});
 
@@ -322,6 +333,6 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			doubleClickEvent([{ id: "conn-2", kind: "connector", action: "label" }]),
 			registries,
 		);
-		expect(next.textEditState).toBeUndefined();
+		expect(readTextEditDraft(next)).toBeNull();
 	});
 });

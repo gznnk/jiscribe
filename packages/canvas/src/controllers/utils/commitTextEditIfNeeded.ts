@@ -3,8 +3,9 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { applyLabelPlacement } from "./applyLabelPlacement";
+import { NORMAL_MODE } from "./normalMode";
 import { readOpenTextEdit } from "./readOpenTextEdit";
-import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
@@ -18,10 +19,10 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * Ends the editing session only (does not modify any object).
  *
  * @param state - the current canvas controller state
- * @returns a new state with textEditState cleared
+ * @returns a new state with the session closed (`mode` back to normal)
  */
 function clearTextEdit(state: CanvasControllerState): CanvasControllerState {
-	return { ...state, textEditState: null };
+	return { ...state, mode: NORMAL_MODE };
 }
 
 /**
@@ -40,7 +41,7 @@ function clearTextEdit(state: CanvasControllerState): CanvasControllerState {
  *   Enter shortcut. Applied only alongside non-empty text, so a cancelled or
  *   emptied edit creates nothing. Absent for a re-edit, which keeps the label's
  *   own placement
- * @returns a new state reflecting the label (if unchanged, only clears textEditState)
+ * @returns a new state reflecting the label (if unchanged, only closes the session)
  */
 function commitConnectorLabel(
 	state: CanvasControllerState,
@@ -86,7 +87,7 @@ function commitConnectorLabel(
 			...state.objects,
 			[connector.id]: nextConnector as ObjectState,
 		},
-		textEditState: null,
+		mode: NORMAL_MODE,
 		commitVersion: state.commitVersion + 1,
 	};
 }
@@ -101,7 +102,7 @@ function commitConnectorLabel(
  * @param target - the shape whose text is being updated
  * @param slotId - the slot being committed; a slot the shape does not have is discarded
  * @param text - the edited body to write back, styling included
- * @returns a new state reflecting the text (if unchanged, only clears textEditState)
+ * @returns a new state reflecting the text (if unchanged, only closes the session)
  */
 function commitTextSlot(
 	state: CanvasControllerState,
@@ -137,7 +138,7 @@ function commitTextSlot(
 			...state.objects,
 			[target.id]: nextTarget as ObjectState,
 		},
-		textEditState: null,
+		mode: NORMAL_MODE,
 		commitVersion: state.commitVersion + 1,
 	};
 }
@@ -152,7 +153,7 @@ function commitTextSlot(
 export function commitTextEditIfNeeded(
 	state: CanvasControllerState,
 ): CanvasControllerState {
-	if (!state.textEditState) {
+	if (state.mode.kind !== "textEdit") {
 		return state;
 	}
 	const openEdit = readOpenTextEdit(state);

@@ -1,16 +1,12 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import { canvasToState } from "../../../../states/canvas/CanvasMapper";
+import { createTestSnapshot } from "../../../__tests__/support/createTestSnapshot";
 import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
 import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
-import {
-	createDocSnapshotFromDoc,
-	resolveDocSnapshot,
-} from "../../../utils/resolveDocSnapshot";
 import { UndoCommand } from "../UndoCommand";
 
 const registries = createTestRegistries();
@@ -23,15 +19,16 @@ const docCurrent = {
 	version: 1,
 	root: [rect("r1"), rect("r2")],
 } as unknown as CanvasDoc;
-const snapshotPrev = createDocSnapshotFromDoc(docPrev);
-const snapshotCurrent = createDocSnapshotFromDoc(docCurrent);
+const snapshotPrev = createTestSnapshot(docPrev);
+// The present entry, holding its Doc cache as one does after a save.
+const snapshotCurrent = createTestSnapshot(docCurrent, docCurrent);
 
 const makeState = (params: {
 	past: DocSnapshot[];
 	present: DocSnapshot;
 	future: DocSnapshot[];
-	activeDrag?: unknown;
-	textEditState?: unknown;
+	drag?: unknown;
+	mode?: unknown;
 	selection?: CanvasSelection;
 }): CanvasControllerState =>
 	({
@@ -41,11 +38,7 @@ const makeState = (params: {
 			future: params.future,
 		},
 		// What the present entry holds, which is where a removed object is measured.
-		objects: canvasToState(
-			resolveDocSnapshot(params.present, registries.objectMapper),
-			registries.objectMapper,
-			registries.objectContentResizer,
-		).objects,
+		objects: params.present.source.objects,
 		// Shows both rects with the margin undo reveals them with.
 		viewport: { minX: -100, minY: -100, width: 800, height: 600, zoom: 1 },
 		scrollLimit: {
@@ -54,8 +47,8 @@ const makeState = (params: {
 			measuredFrom: null,
 			measuredView: undefined,
 		},
-		activeDrag: params.activeDrag ?? null,
-		textEditState: params.textEditState ?? null,
+		drag: params.drag ?? null,
+		mode: params.mode ?? { kind: "normal" },
 		selection: params.selection ?? EMPTY_SELECTION,
 		multiSelectGroup: null,
 		internalClipboard: null,
@@ -73,15 +66,17 @@ describe("UndoCommand", () => {
 		});
 		const next = UndoCommand.execute(state, registries);
 
-		// docPrev (r1 only) is restored
+		// docPrev (r1 only) is restored, as the very state the entry holds
 		expect(Object.keys(next.objects)).toEqual(["r1"]);
+		expect(next.objects).toBe(snapshotPrev.source.objects);
 		expect(next.history.present).toBe(snapshotPrev);
-		expect(
-			resolveDocSnapshot(next.history.present, registries.objectMapper),
-		).toBe(docPrev);
 		expect(next.history.past).toEqual([]);
-		// the rolled-back present is stashed into future as-is (still a snapshot)
-		expect(next.history.future).toEqual([snapshotCurrent]);
+		// the rolled-back present is stashed into future without its Doc cache,
+		// as a new entry around the same state: the one being left is not written
+		expect(next.history.future).toHaveLength(1);
+		expect(next.history.future[0].source).toBe(snapshotCurrent.source);
+		expect(next.history.future[0].doc).toBeNull();
+		expect(snapshotCurrent.doc).toBe(docCurrent);
 	});
 
 	it("keeps the selection the restored entry still holds, and drops the rest", () => {
@@ -130,7 +125,13 @@ describe("UndoCommand", () => {
 			past: [snapshotPrev],
 			present: snapshotCurrent,
 			future: [],
-			activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+			drag: {
+				kind: "inert",
+				startSnapshot: { foo: 1 },
+				snapFeedback: null,
+				axisLockFeedback: null,
+				edgeScrollEnabled: false,
+			},
 		});
 		expect(UndoCommand.execute(state, registries)).toBe(state);
 	});
@@ -165,7 +166,13 @@ describe("UndoCommand", () => {
 						past: [snapshotPrev],
 						present: snapshotCurrent,
 						future: [],
-						activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+						drag: {
+							kind: "inert",
+							startSnapshot: { foo: 1 },
+							snapFeedback: null,
+							axisLockFeedback: null,
+							edgeScrollEnabled: false,
+						},
 					}),
 					registries,
 				),
@@ -179,7 +186,7 @@ describe("UndoCommand", () => {
 						past: [snapshotPrev],
 						present: snapshotCurrent,
 						future: [],
-						textEditState: { kind: "shape", text: "" },
+						mode: { kind: "textEdit", draft: { kind: "shape", text: "" } },
 					}),
 					registries,
 				),

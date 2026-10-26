@@ -21,6 +21,7 @@ const registries = {
 	objectOutline: { get: () => undefined },
 	objectAnchorRegion: { get: () => undefined },
 	objectExtraConnectPoints: { get: () => undefined },
+	objectGeometryKey: { get: () => undefined },
 	objectMapper: { getFeatures: (type: ObjectType) => featuresByType.get(type) },
 };
 

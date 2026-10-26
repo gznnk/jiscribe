@@ -1,7 +1,7 @@
 import { memo } from "react";
 
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import { commandAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { EllipsisIcon } from "../../../../icons/EllipsisIcon";
 import {
 	ObjectMenuButton,

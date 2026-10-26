@@ -14,6 +14,7 @@ import {
 	textRectOf,
 } from "../../../style/__tests__/support/styleFixtures";
 import { materializeObjects } from "../../../utils/cowObjects";
+import { readTextEditDraft } from "../../../utils/readTextEditDraft";
 import { createCommandState } from "../../__tests__/support/createCommandState";
 import { runCommand } from "../../__tests__/support/dispatch";
 import {
@@ -40,10 +41,17 @@ const stateOf = (
 			selectedIds,
 			edit === undefined ? null : slotPickOf("body"),
 		),
-		textEditState:
+		mode:
 			edit === undefined
-				? null
-				: { kind: "shape", text: edit.draft, selection: edit.selection },
+				? { kind: "normal" }
+				: {
+						kind: "textEdit",
+						draft: {
+							kind: "shape",
+							text: edit.draft,
+							selection: edit.selection,
+						},
+					},
 	});
 
 /** Runs a command and flattens its copy-on-write objects, as the reducer does, so the result can be pressed again. */
@@ -83,7 +91,7 @@ describe("toggleTextFormatCommands", () => {
 			expect(bodyOf(next, "a")).toEqual({
 				text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }],
 			});
-			expect(next.textEditState).toMatchObject({
+			expect(readTextEditDraft(next)).toMatchObject({
 				text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }],
 			});
 			expect(next.commitVersion).toBe(1);

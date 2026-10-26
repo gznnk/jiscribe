@@ -2,6 +2,10 @@ import styled from "@emotion/styled";
 import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
 import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
+export const ActorRootGroup = styled.g`
+	cursor: grab;
+`;
+
 export const ActorHead = styled.circle<StrokePaintProps & FillPaintProps>`
 	${strokePaint}
 	${fillPaint}

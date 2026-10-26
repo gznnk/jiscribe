@@ -12,7 +12,7 @@ import {
 /**
  * Verifies the conversion rules of resolveExportOptions (the pure function that
  * builds BuildExportSvgOptions from CanvasExportOptions at export time). SVG
- * generation and rasterization themselves are the responsibility of export/ and
+ * generation and rasterization themselves are the responsibility of rendering/export/ and
  * are not covered here.
  */
 
@@ -61,7 +61,7 @@ describe("resolveExportOptions", () => {
 			registries.objectMapper,
 			registries,
 		);
-		expect(options.viewBox).toEqual({
+		expect(options.svgOptions.viewBox).toEqual({
 			x: -EXPORT_FIT_PADDING,
 			y: -EXPORT_FIT_PADDING,
 			width: 10 + EXPORT_FIT_PADDING * 2,
@@ -79,7 +79,12 @@ describe("resolveExportOptions", () => {
 				margin: 5,
 			},
 		);
-		expect(options.viewBox).toEqual({ x: -5, y: -5, width: 20, height: 20 });
+		expect(options.svgOptions.viewBox).toEqual({
+			x: -5,
+			y: -5,
+			width: 20,
+			height: 20,
+		});
 	});
 
 	it("omits the viewBox on an empty canvas (falls back to the current view)", () => {
@@ -88,7 +93,7 @@ describe("resolveExportOptions", () => {
 			registries.objectMapper,
 			registries,
 		);
-		expect(options.viewBox).toBeUndefined();
+		expect(options.svgOptions.viewBox).toBeUndefined();
 	});
 
 	it("guarantees height 1 and centers content for a degenerate range (horizontal polyline only) with margin 0", () => {
@@ -114,7 +119,7 @@ describe("resolveExportOptions", () => {
 				includeSource: false,
 			},
 		);
-		expect(options.viewBox).toEqual({
+		expect(options.svgOptions.viewBox).toEqual({
 			x: 0,
 			y: 99.5, // content (y=100) sits at the center of the height-1 band
 			width: 50,
@@ -129,7 +134,9 @@ describe("resolveExportOptions", () => {
 			registries.objectMapper,
 			registries,
 		);
-		expect(options.source?.root.map((obj) => obj.id)).toEqual(["rect-1"]);
+		expect(options.svgOptions.source?.root.map((obj) => obj.id)).toEqual([
+			"rect-1",
+		]);
 	});
 
 	it("omits the source when includeSource is false", () => {
@@ -142,7 +149,7 @@ describe("resolveExportOptions", () => {
 				includeSource: false,
 			},
 		);
-		expect(options.source).toBeUndefined();
+		expect(options.svgOptions.source).toBeUndefined();
 	});
 
 	it('takes the "viewport" region exactly, without the margin', () => {
@@ -153,7 +160,12 @@ describe("resolveExportOptions", () => {
 			registries,
 			{ region: "viewport", margin: 50 },
 		);
-		expect(options.viewBox).toEqual({ x: 20, y: 10, width: 400, height: 300 });
+		expect(options.svgOptions.viewBox).toEqual({
+			x: 20,
+			y: 10,
+			width: 400,
+			height: 300,
+		});
 	});
 
 	it("fits an { ids } region to those objects alone, margin included", () => {
@@ -167,7 +179,7 @@ describe("resolveExportOptions", () => {
 			registries,
 			{ region: { ids: ["rect-2"] }, margin: 5 },
 		);
-		expect(options.viewBox).toEqual({
+		expect(options.svgOptions.viewBox).toEqual({
 			x: 495,
 			y: 495,
 			width: 20,
@@ -175,15 +187,13 @@ describe("resolveExportOptions", () => {
 		});
 	});
 
-	it("omits the viewBox when an { ids } region matches nothing to measure", () => {
+	it("throws when an { ids } region matches nothing to measure", () => {
 		const state = createStateWithRect();
-		const options = resolveExportOptions(
-			state,
-			registries.objectMapper,
-			registries,
-			{ region: { ids: ["missing"] } },
-		);
-		expect(options.viewBox).toBeUndefined();
+		expect(() =>
+			resolveExportOptions(state, registries.objectMapper, registries, {
+				region: { ids: ["missing"] },
+			}),
+		).toThrow(/nothing to export at ids \["missing"\]/);
 	});
 
 	it("takes a rect region exactly, without the margin", () => {
@@ -194,18 +204,44 @@ describe("resolveExportOptions", () => {
 			registries,
 			{ region: { x: 1, y: 2, width: 30, height: 40 }, margin: 50 },
 		);
-		expect(options.viewBox).toEqual({ x: 1, y: 2, width: 30, height: 40 });
+		expect(options.svgOptions.viewBox).toEqual({
+			x: 1,
+			y: 2,
+			width: 30,
+			height: 40,
+		});
 	});
 
 	it('maps transparentBackground to "transparent", default to undefined (live theme background)', () => {
 		expect(
 			resolveExportOptions(emptyState, registries.objectMapper, registries, {
 				transparentBackground: true,
-			}).background,
+			}).svgOptions.background,
 		).toBe("transparent");
 		expect(
 			resolveExportOptions(emptyState, registries.objectMapper, registries)
-				.background,
+				.svgOptions.background,
+		).toBeUndefined();
+	});
+
+	it("hands the document's meta name / description to the SVG as title / desc", () => {
+		const state = {
+			...createStateWithRect(),
+			meta: { name: "Overview", description: "about it" },
+		} as Parameters<typeof resolveExportOptions>[0];
+		const { svgOptions } = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries,
+		);
+		expect(svgOptions.title).toBe("Overview");
+		expect(svgOptions.description).toBe("about it");
+		expect(
+			resolveExportOptions(
+				createStateWithRect(),
+				registries.objectMapper,
+				registries,
+			).svgOptions.title,
 		).toBeUndefined();
 	});
 
@@ -225,7 +261,7 @@ describe("resolveExportOptions", () => {
 			// The rect is 0,0..10,10.
 			expect(
 				resolveExportOptions(state, registries.objectMapper, registries)
-					.viewBox,
+					.svgOptions.viewBox,
 			).toEqual({ x: -64, y: -48, width: 138, height: 122 });
 		});
 
@@ -233,7 +269,7 @@ describe("resolveExportOptions", () => {
 			const state = createStateWithViewPadding({ left: 20 });
 			expect(
 				resolveExportOptions(state, registries.objectMapper, registries)
-					.viewBox,
+					.svgOptions.viewBox,
 			).toEqual({ x: -20, y: 0, width: 30, height: 10 });
 		});
 
@@ -242,7 +278,7 @@ describe("resolveExportOptions", () => {
 			expect(
 				resolveExportOptions(state, registries.objectMapper, registries, {
 					margin: 5,
-				}).viewBox,
+				}).svgOptions.viewBox,
 			).toEqual({ x: -5, y: -5, width: 20, height: 20 });
 		});
 
@@ -251,7 +287,7 @@ describe("resolveExportOptions", () => {
 			expect(
 				resolveExportOptions(state, registries.objectMapper, registries, {
 					region: "viewport",
-				}).viewBox,
+				}).svgOptions.viewBox,
 			).toEqual({ x: 20, y: 10, width: 400, height: 300 });
 		});
 
@@ -260,7 +296,7 @@ describe("resolveExportOptions", () => {
 			expect(state.view).toBeUndefined();
 			expect(
 				resolveExportOptions(state, registries.objectMapper, registries)
-					.viewBox,
+					.svgOptions.viewBox,
 			).toEqual({
 				x: -EXPORT_FIT_PADDING,
 				y: -EXPORT_FIT_PADDING,
@@ -275,9 +311,180 @@ describe("resolveExportOptions", () => {
 				view: { open: "fit-all" as const },
 			};
 			expect(
-				resolveExportOptions(state, registries.objectMapper, registries).viewBox
-					?.x,
+				resolveExportOptions(state, registries.objectMapper, registries)
+					.svgOptions.viewBox?.x,
 			).toBe(-EXPORT_FIT_PADDING);
+		});
+	});
+	describe("isolated { ids } region", () => {
+		/**
+		 * Root, back to front: g (holding a at 0,0 and b at 100,0), c at 50,0
+		 * between them, c-ab (a → b, bent down through y=300), c-ac (a → c),
+		 * d at 500,500. a/b/c/d are 10×10.
+		 */
+		const createIsolationState = () => {
+			const connectorDoc = (
+				id: string,
+				sourceId: string,
+				targetId: string,
+				points: { x: number; y: number }[],
+			) => ({
+				id,
+				type: "connector",
+				routing: "straight",
+				points,
+				source: { owner: { id: sourceId }, anchor: { kind: "center" } },
+				target: { owner: { id: targetId }, anchor: { kind: "center" } },
+			});
+			const doc = {
+				version: 1,
+				meta: { name: "Isolated" },
+				background: "#fafafa",
+				root: [
+					{
+						id: "g",
+						type: "group",
+						children: [createRectDoc("a"), createRectDoc("b", 100, 0)],
+					},
+					createRectDoc("c", 50, 0),
+					connectorDoc("c-ab", "a", "b", [{ x: 50, y: 300 }]),
+					connectorDoc("c-ac", "a", "c", []),
+					createRectDoc("d", 500, 500),
+				],
+			} as unknown as CanvasDoc;
+			return {
+				...canvasToState(
+					doc,
+					registries.objectMapper,
+					registries.objectContentResizer,
+				),
+				viewport: testViewport,
+			};
+		};
+
+		const renderedIdsOf = (
+			renderScope: ReturnType<typeof resolveExportOptions>["renderScope"],
+		) => {
+			if (renderScope === "all") {
+				throw new Error("expected an isolated render scope");
+			}
+			return [...renderScope].sort();
+		};
+
+		it("renders everything for a region that is not isolated", () => {
+			const state = createIsolationState();
+			expect(
+				resolveExportOptions(state, registries.objectMapper, registries, {
+					region: { ids: ["g"] },
+				}).renderScope,
+			).toBe("all");
+			expect(
+				resolveExportOptions(state, registries.objectMapper, registries, {
+					region: { ids: ["g"], isolate: false },
+				}).renderScope,
+			).toBe("all");
+		});
+
+		it("renders the named group with its children and the connectors between them, and nothing else", () => {
+			const { renderScope } = resolveExportOptions(
+				createIsolationState(),
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["g"], isolate: true } },
+			);
+			expect(renderedIdsOf(renderScope)).toEqual(["a", "b", "c-ab", "g"]);
+		});
+
+		it("renders a named child of a group through its group, without the siblings", () => {
+			const { renderScope } = resolveExportOptions(
+				createIsolationState(),
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["a"], isolate: true } },
+			);
+			// g is let through only so the gate reaches a; b stays out
+			expect(renderedIdsOf(renderScope)).toEqual(["a", "g"]);
+		});
+
+		it("takes the attached connectors' routes into the extent", () => {
+			const state = createIsolationState();
+			const isolated = resolveExportOptions(
+				state,
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["g"], isolate: true }, margin: 0 },
+			).svgOptions.viewBox;
+			const cropped = resolveExportOptions(
+				state,
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["g"] }, margin: 0 },
+			).svgOptions.viewBox;
+			const withConnector = resolveExportOptions(
+				state,
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["g", "c-ab"] }, margin: 0 },
+			).svgOptions.viewBox;
+			expect(cropped?.height).toBe(10);
+			expect(isolated).toEqual(withConnector);
+			expect(isolated?.height).toBeGreaterThan(10);
+		});
+
+		it("embeds the drawn subset alone, keeping the document-wide fields", () => {
+			const { svgOptions } = resolveExportOptions(
+				createIsolationState(),
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["c", "g"], isolate: true } },
+			);
+			expect(svgOptions.source?.background).toBe("#fafafa");
+			expect(svgOptions.source?.meta).toEqual({ name: "Isolated" });
+			expect(svgOptions.source?.root.map((obj) => obj.id)).toEqual([
+				"g",
+				"c",
+				"c-ab",
+				"c-ac",
+			]);
+		});
+
+		it("embeds a named child of a group at the root, without the group", () => {
+			const { svgOptions } = resolveExportOptions(
+				createIsolationState(),
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["a"], isolate: true } },
+			);
+			expect(svgOptions.source?.root.map((obj) => obj.id)).toEqual(["a"]);
+		});
+
+		it("counts an id inside another named group once, as part of that group", () => {
+			const { svgOptions } = resolveExportOptions(
+				createIsolationState(),
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["a", "g"], isolate: true } },
+			);
+			expect(svgOptions.source?.root.map((obj) => obj.id)).toEqual([
+				"g",
+				"c-ab",
+			]);
+		});
+
+		it("skips ids not on the canvas, and throws when none is", () => {
+			const state = createIsolationState();
+			const partlyMissing = resolveExportOptions(
+				state,
+				registries.objectMapper,
+				registries,
+				{ region: { ids: ["missing", "d"], isolate: true } },
+			);
+			expect(renderedIdsOf(partlyMissing.renderScope)).toEqual(["d"]);
+			expect(() =>
+				resolveExportOptions(state, registries.objectMapper, registries, {
+					region: { ids: ["missing"], isolate: true },
+				}),
+			).toThrow(/nothing to export at ids \["missing"\]/);
 		});
 	});
 });

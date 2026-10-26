@@ -35,6 +35,7 @@ import {
 	groupToDoc,
 	groupToState,
 } from "../../states/objects/primitives/group/GroupMapper";
+import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 import { isValidGroupState } from "../../states/objects/primitives/group/validateGroupState";
 import {
 	imageToDoc,
@@ -75,26 +76,12 @@ import type { TextState } from "../../states/objects/primitives/text/TextState";
 import { isValidTextState } from "../../states/objects/primitives/text/validateTextState";
 import { resizeAutoHeightStateToContent } from "../../states/objects/utils/resizeAutoHeightStateToContent";
 import { createFrameBehavior } from "../behaviors/base/FrameController";
+import { createPolyBehavior } from "../behaviors/base/PolyController";
 import {
 	moveByDelta as connectorMoveByDelta,
 	rotateByGroup as connectorRotateByGroup,
 	transformByGroup as connectorTransformByGroup,
 } from "../behaviors/connector/ConnectorController";
-import {
-	moveByDelta as groupMoveByDelta,
-	rotateByGroup as groupRotateByGroup,
-	transformByGroup as groupTransformByGroup,
-} from "../behaviors/primitives/GroupController";
-import {
-	moveByDelta as polygonMoveByDelta,
-	rotateByGroup as polygonRotateByGroup,
-	transformByGroup as polygonTransformByGroup,
-} from "../behaviors/primitives/PolygonController";
-import {
-	moveByDelta as polylineMoveByDelta,
-	rotateByGroup as polylineRotateByGroup,
-	transformByGroup as polylineTransformByGroup,
-} from "../behaviors/primitives/PolylineController";
 import {
 	moveByDelta as textMoveByDelta,
 	rotateByGroup as textRotateByGroup,
@@ -233,11 +220,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		mapper: { toDoc: groupToDoc, toState: groupToState },
 		stateValidator: isValidGroupState,
 		component: () => null,
-		behavior: {
-			moveByDelta: groupMoveByDelta,
-			transformByGroup: groupTransformByGroup,
-			rotateByGroup: groupRotateByGroup,
-		},
+		behavior: createFrameBehavior<GroupState>(),
 	}),
 
 	polygon: defineObject({
@@ -245,11 +228,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		mapper: { toDoc: polygonToDoc, toState: polygonToState },
 		stateValidator: isValidPolygonState,
 		component: Polygon,
-		behavior: {
-			moveByDelta: polygonMoveByDelta,
-			transformByGroup: polygonTransformByGroup,
-			rotateByGroup: polygonRotateByGroup,
-		},
+		behavior: createPolyBehavior<PolygonState>(),
 		// A closed outline needs three corners; the third-to-last vertex is where
 		// deletion stops.
 		partKinds: [createVertexPartKindDefinition<PolygonState>(3)],
@@ -261,11 +240,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		mapper: { toDoc: polylineToDoc, toState: polylineToState },
 		stateValidator: isValidPolylineState,
 		component: Polyline,
-		behavior: {
-			moveByDelta: polylineMoveByDelta,
-			transformByGroup: polylineTransformByGroup,
-			rotateByGroup: polylineRotateByGroup,
-		},
+		behavior: createPolyBehavior<PolylineState>(),
 		// An open line needs the two ends it runs between.
 		partKinds: [createVertexPartKindDefinition<PolylineState>(2)],
 		stencils: PolylineStencils,

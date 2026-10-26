@@ -5,12 +5,12 @@ import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
+import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import {
 	setAction,
 	toggleAction,
 } from "../../../../../gestures/handlers/menu/utils/menuActions";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,

@@ -49,7 +49,6 @@ const docCuratedEntriesOnly = {
  * that runs the wrong way.
  */
 const CONTROLLER_LAYERS = [
-	"messages",
 	"utils",
 	"style",
 	"behaviors",
@@ -103,6 +102,8 @@ export default tseslint.config(
 			// builds @vscode/test-electron downloads next to them.
 			"apps/vscode-extension/out",
 			"apps/vscode-extension/.vscode-test",
+			// The desktop app's electron-vite output, and what is staged into it.
+			"apps/desktop/out",
 		],
 	},
 	{
@@ -202,6 +203,7 @@ export default tseslint.config(
 			"object-shorthand": "error",
 			"prefer-template": "error",
 			curly: ["error", "all"],
+			"no-nested-ternary": "error",
 		},
 	},
 	{
@@ -283,8 +285,9 @@ export default tseslint.config(
 		// them and reach no controller, so a shape can be drawn by the export path and by
 		// isolated tests with nothing wired up. What separates it from controllers/ui is purity,
 		// not the kind of component — the menus, modals, icons and editors live under
-		// controllers/ui precisely because they are not pure. Types are allowed: a
-		// drawing component takes controller-owned types as Props.
+		// controllers/ui precisely because they are not pure. export/ sits here for the same
+		// reason: it turns what these components draw into PNG / SVG without a controller.
+		// Types are allowed: a drawing component takes controller-owned types as Props.
 		files: ["packages/canvas/src/rendering/**"],
 		ignores: ["**/__tests__/**", "**/__benchmarks__/**"],
 		rules: {
@@ -303,14 +306,22 @@ export default tseslint.config(
 			],
 		},
 	},
-	{
-		// connectors/ is the connector geometry — endpoint resolution, orthogonal routing
-		// and label placement — pulled out of the drawing layer because none of it draws.
-		// It is read by rendering and, just as much, by ui / gestures / controllers-utils,
-		// so it has to sit under all of them. Types are allowed: the resolvers take
-		// ObjectState and the per-shape registries as parameters, which is the same
-		// "every backward edge is a type contract" invariant the controller layers hold.
-		files: ["packages/canvas/src/connectors/**"],
+	// rendering/objects/connector/geometry/ is the connector geometry — endpoint
+	// resolution, orthogonal routing and label placement. None of it draws, and it is
+	// read by the drawing components and, just as much, by ui / gestures /
+	// controllers-utils. It takes no value from outside its own folder other than
+	// states/ and foundation/: a specifier that climbs out of geometry/ and does not
+	// head for those two is rejected. Types are allowed: the resolvers take ObjectState
+	// and the per-shape registries as parameters. The climb is one "../" deeper for
+	// files in a subfolder, hence the two blocks.
+	...[
+		["packages/canvas/src/rendering/objects/connector/geometry/*", "\\.\\./"],
+		[
+			"packages/canvas/src/rendering/objects/connector/geometry/*/**",
+			"\\.\\./\\.\\./",
+		],
+	].map(([files, climbOut]) => ({
+		files: [files],
 		ignores: ["**/__tests__/**"],
 		rules: {
 			"@typescript-eslint/no-restricted-imports": [
@@ -318,10 +329,52 @@ export default tseslint.config(
 				{
 					patterns: [
 						{
-							group: ["**/controllers/**", "**/rendering/**"],
+							regex: `^${climbOut}(?!(?:\\.\\./)*(?:states|foundation)/)`,
 							allowTypeImports: true,
 							message:
-								"connectors computes geometry and cannot take a value from rendering or controllers. Take what you need as a parameter (the registries already arrive that way).",
+								"Connector geometry cannot take a value from outside its folder other than states/ and foundation/. Take what you need as a parameter (the registries already arrive that way).",
+						},
+					],
+				},
+			],
+		},
+	})),
+	{
+		// foundation/ is the base that knows no canvas component and no document: color
+		// strings, the theme, the messages and hooks that know nothing of the canvas. It
+		// depends on external packages only, types included, so every other folder can
+		// build on it.
+		files: ["packages/canvas/src/foundation/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: [
+								"**/states/**",
+								"**/rendering/**",
+								"**/controllers/**",
+								"**/bootstrap/**",
+								"**/plugin/**",
+								"**/index",
+								"**/unstable",
+								"!@jiscribe/**",
+							],
+							message:
+								"foundation knows no canvas component. Move what needs this import out of foundation.",
+						},
+						{
+							// Only the engine packages that sit below the document and the canvas.
+							group: [
+								"@jiscribe/*",
+								"@jiscribe/*/**",
+								"!@jiscribe/geometry",
+								"!@jiscribe/basic-validators",
+								"!@jiscribe/utility-types",
+							],
+							message:
+								"foundation knows no document and no canvas. Move what needs this import out of foundation.",
 						},
 					],
 				},
@@ -568,7 +621,11 @@ export default tseslint.config(
 	},
 	{
 		// Node programs, not browser ones: process / console are theirs to use.
-		files: ["packages/doc-tools/src/**", "apps/cli/src/**"],
+		files: [
+			"packages/doc-tools/src/**",
+			"apps/cli/src/**",
+			"apps/desktop/src/**",
+		],
 		languageOptions: {
 			globals: globals.node,
 		},

@@ -1,9 +1,10 @@
 import type { Rect } from "@jiscribe/geometry";
-import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
+import { type RefObject, useCallback, useMemo } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
-import { canvasToSvgString, rasterizeSvgToPng } from "../../export";
-import type { ResolveImageBlob } from "../../export";
+import { useLatestRef } from "../../foundation/hooks/useLatestRef";
+import { canvasToSvgString, rasterizeSvgToPng } from "../../rendering/export";
+import type { ResolveImageBlob } from "../../rendering/export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries";
 import { calcVisibleWorldRect } from "../utils/calcVisibleWorldRect";
@@ -12,6 +13,7 @@ import {
 	type CanvasExportOptions,
 	type CanvasPngExportOptions,
 } from "../utils/resolveExportOptions";
+import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 /**
  * Imperative export API exposed on the `export` namespace of the Canvas handle
@@ -19,19 +21,20 @@ import {
  * VSCode extension re-rendering a `.jis.png` / `.jis.svg` on save) use this to
  * run the exact same export pipeline as the export dialog, which is what it does
  * with nothing passed: fit to content, source embedded. `region` is where the two
- * part ways — the dialog always exports the whole diagram, while a caller can
- * take one part of it (see {@link CanvasExportOptions.region}).
+ * part ways — the dialog exports the whole diagram or the selection alone, while
+ * a caller can take any part of it (see {@link CanvasExportOptions.region}).
  */
 export type CanvasExportHandle = {
 	/**
 	 * Builds the self-contained editable SVG string (`.jis.svg` content).
 	 *
 	 * The live tree is cloned synchronously, before the first await, so the
-	 * culling suspension is over by the time the promise is returned; only the
+	 * culling replacement is over by the time the promise is returned; only the
 	 * `<image>` bytes are read after that.
 	 *
 	 * @param options - Region / source embedding / background (see {@link CanvasExportOptions}); nothing passed is what the export dialog does — fit to content, source embedded
-	 * @returns The serialized SVG, or null when the canvas is not mounted yet
+	 * @returns The serialized SVG, or null when the canvas is not mounted yet.
+	 *   Rejects when an `{ ids }` region names nothing that draws
 	 */
 	toSvgString(options?: CanvasExportOptions): Promise<string | null>;
 	/**
@@ -50,7 +53,8 @@ export type CanvasExportHandle = {
 	 *   `region: { ids }` with a `maxPixelSize` is the pairing that gets one part
 	 *   of a large diagram legible
 	 * @returns The image with its region and pixel size, or null when the canvas
-	 *   is not mounted yet
+	 *   is not mounted yet. Rejects when an `{ ids }` region names nothing that
+	 *   draws
 	 */
 	capturePng(
 		options?: CanvasPngExportOptions,
@@ -84,9 +88,9 @@ export type CanvasPngCapture = {
  *   outside its geometry box the fitted region keeps
  * @param svgRef - Ref to the canvas's `<svg>`; every method clones it, and they
  *   all return null while it is null (before the view mounts)
- * @param withCullingSuspended - Runs the snapshot with viewport culling
- *   suspended, so the clone sees every object rather than the on-screen ones
- *   (see useViewportCulling)
+ * @param withSnapshotRenderScope - Runs the snapshot with the viewport culling
+ *   gate replaced, so the clone sees every object rather than the on-screen ones
+ *   — or, for an isolated region, exactly the ones it draws (see useSnapshotRenderScope)
  * @param resolveImageBlob - Reads the bytes an exported `<image>` carries;
  *   mirrored in a ref, so it may be a new function on every render (it changes
  *   identity as files arrive) without the handle losing its own
@@ -95,31 +99,37 @@ export const useExportHandle = (
 	canvasState: CanvasControllerState,
 	registries: CanvasRegistries,
 	svgRef: RefObject<SVGSVGElement | null>,
-	withCullingSuspended: <T>(snapshot: () => T) => T,
+	withSnapshotRenderScope: <T>(
+		renderScope: SnapshotRenderScope,
+		snapshot: () => T,
+	) => T,
 	resolveImageBlob: ResolveImageBlob,
 ): CanvasExportHandle => {
 	const canvasStateRef = useCanvasStateMirror(canvasState);
 
 	// Read at export time, so a file arriving does not rebuild the handle a host
 	// may be holding on to.
-	const resolveImageBlobRef = useRef(resolveImageBlob);
-	useEffect(() => {
-		resolveImageBlobRef.current = resolveImageBlob;
-	});
+	const resolveImageBlobRef = useLatestRef(resolveImageBlob);
 
 	// registries is fixed at mount (see the `initialConfig` prop doc), so this
 	// callback — and the handle built on it — is stable for the canvas lifetime.
 	const buildExportOptions = useCallback(
-		(options?: CanvasExportOptions) => ({
-			...resolveExportOptions(
+		(options?: CanvasExportOptions) => {
+			const { svgOptions, renderScope } = resolveExportOptions(
 				canvasStateRef.current,
 				registries.objectMapper,
 				registries,
 				options,
-			),
-			resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
-		}),
-		[canvasStateRef, registries],
+			);
+			return {
+				svgOptions: {
+					...svgOptions,
+					resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
+				},
+				renderScope,
+			};
+		},
+		[canvasStateRef, resolveImageBlobRef, registries],
 	);
 
 	return useMemo(
@@ -129,10 +139,11 @@ export const useExportHandle = (
 				if (!svg) {
 					return null;
 				}
-				// The suspension only spans a synchronous callback, which is enough:
+				const { svgOptions, renderScope } = buildExportOptions(options);
+				// The replacement only spans a synchronous callback, which is enough:
 				// canvasToSvgString clones the live tree before its first await.
-				return await withCullingSuspended(() =>
-					canvasToSvgString(svg, buildExportOptions(options)),
+				return await withSnapshotRenderScope(renderScope, () =>
+					canvasToSvgString(svg, svgOptions),
 				);
 			},
 
@@ -141,26 +152,26 @@ export const useExportHandle = (
 				if (!svg) {
 					return null;
 				}
-				const exportOptions = buildExportOptions(options);
-				const rasterized = await withCullingSuspended(() =>
+				const { svgOptions, renderScope } = buildExportOptions(options);
+				const rasterized = await withSnapshotRenderScope(renderScope, () =>
 					rasterizeSvgToPng(svg, {
-						...exportOptions,
+						...svgOptions,
 						scale: options?.scale,
 						maxPixelSize: options?.maxPixelSize,
 					}),
 				);
 				return {
 					blob: rasterized.blob,
-					// No viewBox means the region had nothing to measure and the live
+					// No viewBox means an empty canvas exported as "content": the live
 					// view was exported as-is, which is the visible world rect.
 					region:
-						exportOptions.viewBox ??
+						svgOptions.viewBox ??
 						calcVisibleWorldRect(canvasStateRef.current.viewport),
 					pixelWidth: rasterized.width,
 					pixelHeight: rasterized.height,
 				};
 			},
 		}),
-		[canvasStateRef, svgRef, buildExportOptions, withCullingSuspended],
+		[canvasStateRef, svgRef, buildExportOptions, withSnapshotRenderScope],
 	);
 };

@@ -1,8 +1,8 @@
 import type { Point } from "@jiscribe/geometry";
 import { Fragment, memo } from "react";
 
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
-import { theme } from "../../../../theme/themeTokens";
+import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
+import { theme } from "../../../../foundation/theme/themeTokens";
 import { vertexPart } from "../../../gestures/handlers/utils/partAddress";
 import { SELECTED_HANDLE_STROKE_SCALE } from "../../utils/selectedHandleStrokeScale";
 

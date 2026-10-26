@@ -10,7 +10,12 @@ import type {
 	OpaqueObjectPlacement,
 } from "./OpaqueObjectPlacement";
 import { collectOpaqueDocs } from "./utils/collectOpaqueDocs";
+import {
+	isSameJsonFieldsExcept,
+	isSameJsonValue,
+} from "./utils/isSameJsonValue";
 import { restoreOpaqueObjects } from "./utils/restoreOpaqueObjects";
+import { MetaMapper } from "../objects/base/MetaMapper";
 import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
 import type { ObjectContentResizerRegistry } from "../registry/ObjectContentResizerRegistry";
@@ -52,7 +57,119 @@ export const canvasToState = (
 	doc: CanvasDoc,
 	mapper: ObjectMapperRegistry,
 	contentResizer: ObjectContentResizerRegistry,
-): CanvasState => {
+): CanvasState => buildCanvasState(doc, mapper, contentResizer, null).state;
+
+/**
+ * What {@link canvasToStateReusing} may keep instead of rebuilding: the states
+ * the canvas holds now, and the document they correspond to.
+ */
+export type CanvasStateReuseSource = {
+	/**
+	 * The document `committedObjects` was built from, or converts to
+	 * (`canvasToDoc`). Each incoming object is compared with the node of the same
+	 * id here.
+	 */
+	referenceDoc: CanvasDoc;
+	/** The objects `referenceDoc` stands for (the present history entry's `source.objects`). */
+	committedObjects: Readonly<Record<string, ObjectState>>;
+	/**
+	 * The objects on screen. Only a state that is still the committed one is
+	 * reused; one that moved on since (a drag preview, a re-measure) is rebuilt.
+	 */
+	liveObjects: Readonly<Record<string, ObjectState>>;
+	/**
+	 * True when the committed states were measured under an older text
+	 * measurement generation than the current one: each reused state then goes
+	 * through its content resizer again, as a rebuilt one does.
+	 */
+	remeasure: boolean;
+};
+
+/** What {@link canvasToStateReusing} returns. */
+export type ReusingCanvasStateResult = {
+	/** The state of the incoming document; equal to what {@link canvasToState} builds. */
+	state: CanvasState;
+	/**
+	 * Whether the incoming document holds the same JSON as `referenceDoc`, key
+	 * order aside: nothing to adopt.
+	 */
+	isSameAsReference: boolean;
+};
+
+/**
+ * {@link canvasToState} for a new version of the document already on the
+ * canvas, keeping every object state the change leaves alone: the per-object
+ * caches downstream (memoized renders, connector routes, text layout) hit for
+ * those, as they do after an undo.
+ *
+ * An object keeps its live state when its node equals the reference node of
+ * the same id ({@link isSameJsonValue}), it sits under the same parent, and the
+ * live state is still the committed one. A group keeps its state only when its
+ * own fields match and it keeps every child, in the same order; otherwise it is
+ * rebuilt around its children, each judged on its own. Opaque objects are
+ * placed afresh, as {@link canvasToState} does. A reused state is never written
+ * to.
+ *
+ * The result equals a rebuild because an equal reference node maps to the
+ * state the canvas holds: exactly so when `referenceDoc` is the document the
+ * states were built from, and by the mapper round trip
+ * (`toState(toDoc(state))` equals `state`) when it was converted from them.
+ * One exception: an auto-height box whose height nothing derives keeps its
+ * last measured height (resizeAutoHeightStateToContent), where a rebuild
+ * starts from the one-line fallback; undo and REMEASURE_TEXT keep it the same
+ * way, so nothing jumps.
+ *
+ * @param doc - A doc that has passed `createCanvasParser` (see {@link canvasToState})
+ * @param mapper - The per-canvas object mapper registry, the one the reused states were built with
+ * @param contentResizer - The per-canvas content-resizer registry
+ * @param reuse - The states the canvas holds and the document they stand for
+ */
+export const canvasToStateReusing = (
+	doc: CanvasDoc,
+	mapper: ObjectMapperRegistry,
+	contentResizer: ObjectContentResizerRegistry,
+	reuse: CanvasStateReuseSource,
+): ReusingCanvasStateResult =>
+	buildCanvasState(doc, mapper, contentResizer, reuse);
+
+/** Ids of a container's members in order, compared with another container's. */
+const hasSameIds = (
+	leftDocs: readonly ObjectDoc[],
+	rightDocs: readonly ObjectDoc[],
+): boolean =>
+	leftDocs.length === rightDocs.length &&
+	leftDocs.every((leftDoc, index) => leftDoc.id === rightDocs[index].id);
+
+const hasSameChildIds = (
+	leftIds: readonly string[],
+	rightIds: readonly string[],
+): boolean =>
+	leftIds.length === rightIds.length &&
+	leftIds.every((leftId, index) => leftId === rightIds[index]);
+
+/** Every node of the document by id, at every depth, opaque ones included. */
+const indexDocNodes = (root: readonly ObjectDoc[]): Map<string, ObjectDoc> => {
+	const nodes = new Map<string, ObjectDoc>();
+	const visit = (objectDoc: ObjectDoc): void => {
+		nodes.set(objectDoc.id, objectDoc);
+		if (objectDoc.type === "group") {
+			(objectDoc as GroupDoc).children.forEach(visit);
+		}
+	};
+	root.forEach(visit);
+	return nodes;
+};
+
+/**
+ * The one pass behind {@link canvasToState} and {@link canvasToStateReusing}:
+ * with `reuse` null every object is mapped, and `isSameAsReference` is false.
+ */
+const buildCanvasState = (
+	doc: CanvasDoc,
+	mapper: ObjectMapperRegistry,
+	contentResizer: ObjectContentResizerRegistry,
+	reuse: CanvasStateReuseSource | null,
+): ReusingCanvasStateResult => {
 	const objects: Record<string, ObjectState> = {};
 
 	// Memo shared across this single bottom-up pass: group ID → collected child
@@ -65,6 +182,72 @@ export const canvasToState = (
 		mapper.hasType(type),
 	);
 	const opaqueObjects: OpaqueObjectPlacement[] = [];
+
+	const referenceNodes = reuse ? indexDocNodes(reuse.referenceDoc.root) : null;
+	// Cleared by the first difference the pass meets. Every node is compared with
+	// the reference node of its id, and each container's member ids in order, so
+	// a pass that clears nothing has walked two equal trees.
+	let isSameAsReference =
+		reuse !== null &&
+		reuse.referenceDoc.version === doc.version &&
+		isSameJsonValue(reuse.referenceDoc.meta, doc.meta) &&
+		isSameJsonValue(reuse.referenceDoc.background, doc.background) &&
+		isSameJsonValue(reuse.referenceDoc.view, doc.view) &&
+		hasSameIds(reuse.referenceDoc.root, doc.root);
+
+	const resizeToContent = (objState: ObjectState): ObjectState => {
+		// The registration wraps each resizer with its type's own text-style
+		// defaults, so the context this hands over carries nothing of its own.
+		const resizer = contentResizer.get(objState.type);
+		return resizer ? resizer(objState, {}) : objState;
+	};
+
+	// Freshly mapped, so this pass owns it and may write its parent.
+	const mapObject = (
+		objDoc: ObjectDoc,
+		parentId: string | undefined,
+	): ObjectState => {
+		const objState = resizeToContent(mapper.toState(objDoc));
+		objState.parentId = parentId;
+		return objState;
+	};
+
+	// The live state of `objDoc` when it may stand for the node (see
+	// canvasToStateReusing), after the re-measure a stale one needs; undefined
+	// when it has to be mapped. Also records whether the node matched.
+	const findReusableState = (
+		objDoc: ObjectDoc,
+		parentId: string | undefined,
+	): ObjectState | undefined => {
+		if (reuse === null || referenceNodes === null) {
+			return undefined;
+		}
+		const referenceNode = referenceNodes.get(objDoc.id);
+		const isGroup = objDoc.type === "group";
+		const isSameNode =
+			referenceNode !== undefined &&
+			(isGroup
+				? referenceNode.type === "group" &&
+					hasSameIds(
+						(referenceNode as GroupDoc).children,
+						(objDoc as GroupDoc).children,
+					) &&
+					isSameJsonFieldsExcept(referenceNode, objDoc, "children")
+				: isSameJsonValue(referenceNode, objDoc));
+		if (!isSameNode) {
+			isSameAsReference = false;
+			return undefined;
+		}
+		const liveState = reuse.liveObjects[objDoc.id];
+		if (
+			liveState === undefined ||
+			liveState !== reuse.committedObjects[objDoc.id] ||
+			liveState.parentId !== parentId
+		) {
+			return undefined;
+		}
+		return reuse.remeasure ? resizeToContent(liveState) : liveState;
+	};
 
 	// Maps one container's children in order, holding the opaque ones aside, and
 	// returns the ids of the mapped ones. Places are recorded only where something
@@ -90,6 +273,12 @@ export const canvasToState = (
 						]
 					: outerPlaces;
 			if (isOpaque) {
+				if (
+					isSameAsReference &&
+					!isSameJsonValue(referenceNodes?.get(siblingDoc.id), siblingDoc)
+				) {
+					isSameAsReference = false;
+				}
 				opaqueObjects.push({
 					doc: siblingDoc as OpaqueObjectDoc,
 					loadedPlaces,
@@ -109,44 +298,59 @@ export const canvasToState = (
 		parentId: string | undefined,
 		loadedPlaces: readonly OpaqueObjectLoadedPlace[],
 	): string => {
-		const mappedState = mapper.toState(objDoc);
-		// The registration wraps each resizer with its type's own text-style
-		// defaults, so the context this hands over carries nothing of its own.
-		const resizeToContent = contentResizer.get(mappedState.type);
-		const objState = resizeToContent
-			? resizeToContent(mappedState, {})
-			: mappedState;
-		objState.parentId = parentId;
-		objects[objState.id] = objState;
-
-		if (objState.type === "group") {
-			const groupDoc = objDoc as GroupDoc;
-			const groupState = objState as GroupState;
-
-			// State holds children as a flat ID list; the nested Docs are recursed.
-			groupState.childIds = processSiblings(
-				groupDoc.children,
-				groupState.id,
-				loadedPlaces,
-			);
-
-			const bounds = calculateGroupOrientedBounds(
-				objects,
-				groupState.id,
-				groupPointCache,
-			);
-			if (bounds) {
-				objects[groupState.id] = {
-					...groupState,
-					cx: bounds.cx,
-					cy: bounds.cy,
-					width: bounds.width,
-					height: bounds.height,
-				} as GroupState;
-			}
+		const reusableState = findReusableState(objDoc, parentId);
+		// For a group the slot is taken ahead of its children, so the map lists a
+		// group before its members whichever way the group is settled below.
+		objects[objDoc.id] = reusableState ?? mapObject(objDoc, parentId);
+		if (objDoc.type !== "group") {
+			return objDoc.id;
 		}
 
-		return objState.id;
+		// State holds children as a flat ID list; the nested Docs are recursed.
+		const childIds = processSiblings(
+			(objDoc as GroupDoc).children,
+			objDoc.id,
+			loadedPlaces,
+		);
+
+		// Kept whole only while every member is the live one, in the live order:
+		// its stored bounds were derived from exactly those.
+		const liveGroupState = reusableState as GroupState | undefined;
+		if (
+			liveGroupState !== undefined &&
+			liveGroupState === reuse?.liveObjects[objDoc.id] &&
+			hasSameChildIds(liveGroupState.childIds, childIds) &&
+			childIds.every(
+				(childId) => objects[childId] === reuse.liveObjects[childId],
+			)
+		) {
+			return objDoc.id;
+		}
+
+		const groupState = (
+			reusableState === undefined
+				? objects[objDoc.id]
+				: mapObject(objDoc, parentId)
+		) as GroupState;
+		groupState.childIds = childIds;
+		objects[objDoc.id] = groupState;
+
+		const bounds = calculateGroupOrientedBounds(
+			objects,
+			groupState.id,
+			groupPointCache,
+		);
+		if (bounds) {
+			objects[groupState.id] = {
+				...groupState,
+				cx: bounds.cx,
+				cy: bounds.cy,
+				width: bounds.width,
+				height: bounds.height,
+			} as GroupState;
+		}
+
+		return objDoc.id;
 	};
 
 	// root is a mixed array of objects and connectors, and its order is the
@@ -156,26 +360,32 @@ export const canvasToState = (
 	const rootIds = processSiblings(doc.root, undefined, []);
 
 	return {
-		objects,
-		rootIds,
-		background: doc.background,
-		view: doc.view,
-		...(opaqueObjects.length > 0 ? { opaqueObjects } : {}),
+		state: {
+			objects,
+			rootIds,
+			// Set even when absent, so adopting a document without one clears the
+			// previous document's (adoptDocumentState spreads this over the old state).
+			meta: doc.meta === undefined ? undefined : MetaMapper.toState(doc.meta),
+			background: doc.background,
+			view: doc.view,
+			...(opaqueObjects.length > 0 ? { opaqueObjects } : {}),
+		},
+		isSameAsReference,
 	};
 };
 
 /**
  * Converts CanvasState (flat structure) to CanvasDoc (tree structure).
  * This reconstructs the tree for serialization/storage.
- * Only the object map, root order, surface background, display declaration and
- * opaque objects are read, so any state carrying those fields (e.g. a DocSnapshot
+ * Only the object map, root order, document meta, surface background, display
+ * declaration and opaque objects are read, so any state carrying those fields (e.g. a DocSnapshot
  * source) can be converted. The opaque objects go back where they sat
  * ({@link restoreOpaqueObjects}).
  */
 export const canvasToDoc = (
 	state: Pick<
 		CanvasState,
-		"objects" | "rootIds" | "background" | "view" | "opaqueObjects"
+		"objects" | "rootIds" | "meta" | "background" | "view" | "opaqueObjects"
 	>,
 	mapper: ObjectMapperRegistry,
 ): CanvasDoc => {
@@ -206,6 +416,9 @@ export const canvasToDoc = (
 
 	return {
 		version: 1,
+		// Same rule as background below. Written ahead of `root` so a reader that
+		// cuts a long document off still sees what it is called.
+		...(state.meta !== undefined ? { meta: MetaMapper.toDoc(state.meta) } : {}),
 		// Only emitted when set, so a doc that never had a background round-trips
 		// byte-identically (absent = follow theme).
 		...(state.background !== undefined ? { background: state.background } : {}),

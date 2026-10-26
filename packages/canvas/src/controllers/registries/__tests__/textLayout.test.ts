@@ -61,6 +61,7 @@ const layoutOf = (state: ObjectState): string | undefined =>
 /** A controller state holding the given objects, all of them selected. */
 const controllerStateOf = (...objects: ObjectState[]): CanvasControllerState =>
 	({
+		mode: { kind: "normal" },
 		objects: Object.fromEntries(objects.map((object) => [object.id, object])),
 		rootIds: objects.map((object) => object.id),
 		selection: selectionOf(objects.map((object) => object.id)),

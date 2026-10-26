@@ -28,7 +28,8 @@ import {
 } from "vitest";
 import WebSocket from "ws";
 
-import { readSessionToken } from "./hostSessionToken";
+import { readSessionToken } from "./hostSession";
+import { VIEWER_STUB_HTML } from "./viewerStubHtml";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import { createPathLock } from "../pathLock";
 import type {
@@ -185,7 +186,7 @@ const openSockets: WebSocket[] = [];
  */
 beforeAll(async () => {
 	viewerRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-viewer-"));
-	await writeFile(join(viewerRoot, "index.html"), "<!doctype html>", "utf8");
+	await writeFile(join(viewerRoot, "index.html"), VIEWER_STUB_HTML, "utf8");
 	previousViewerRoot = process.env.JISCRIBE_MCP_VIEWER_ROOT;
 	process.env.JISCRIBE_MCP_VIEWER_ROOT = viewerRoot;
 });
@@ -453,6 +454,38 @@ describe("the file watch", () => {
 		await writeOpenFile(outsideText);
 		await waitFor(() => calcChangedTexts(viewer).length > 1);
 		expect(calcChangedTexts(viewer)).toEqual([savedDocText, outsideText]);
+	});
+
+	it("passes a person's save on to every other window, with the revision it was written as", async () => {
+		// A headless window left on the text before the save would answer capture
+		// with a drawing the person has already changed
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const savingViewer = await connectFakeViewer(host);
+		const otherViewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			[savingViewer, otherViewer].every((viewer) =>
+				viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+			),
+		);
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			savedDocText,
+			readLatestRevision(savingViewer),
+		);
+
+		expect(outcome.status).toBe(200);
+		await waitFor(() => calcChangedTexts(otherViewer).length > 0);
+		expect(calcChangedTexts(otherViewer)).toEqual([savedDocText]);
+		expect(readLatestRevision(otherViewer)).toBe(
+			readLatestRevision(savingViewer),
+		);
+		expect(outcome.body).toMatchObject({
+			revision: readLatestRevision(otherViewer),
+		});
 	});
 
 	it("stops watching the file it was told to stop showing", async () => {

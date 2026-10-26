@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { theme } from "../../../theme/themeTokens";
+import { theme } from "../../../foundation/theme/themeTokens";
 
 type RotateRightProps = {
 	fill?: string;

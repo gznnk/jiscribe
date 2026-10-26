@@ -5,12 +5,12 @@ import {
 	exportCanvasToPng,
 	exportCanvasToSvg,
 	rasterizeSvgToPng,
-} from "../../../export";
-import type { BuildExportSvgOptions } from "../../../export";
+} from "../../../rendering/export";
+import type { BuildExportSvgOptions } from "../../../rendering/export";
 import type { ExportSubmitValues } from "../../ui/modal/ExportDialog";
 import { runExportSubmit } from "../useExportDialog";
 
-vi.mock("../../../export", () => ({
+vi.mock("../../../rendering/export", () => ({
 	canvasToSvgString: vi.fn(),
 	exportCanvasToPng: vi.fn(),
 	exportCanvasToSvg: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock("../../../export", () => ({
  * Verifies runExportSubmit (the branch dispatcher invoked when the export
  * dialog is confirmed): the destination it picks, and that a failure in every
  * branch reaches notifyError. SVG generation and rasterization themselves are
- * the responsibility of export/ and are not covered here.
+ * the responsibility of rendering/export/ and are not covered here.
  */
 
 const svg = {} as unknown as SVGSVGElement;
@@ -30,6 +30,7 @@ const exportOptions = {} as BuildExportSvgOptions;
 const createValues = (
 	format: ExportSubmitValues["format"],
 ): ExportSubmitValues => ({
+	scope: "all",
 	format,
 	margin: 16,
 	includeSource: true,

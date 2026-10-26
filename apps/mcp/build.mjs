@@ -71,6 +71,14 @@ const inlineViewerHtml = async () => {
 	const stylePattern = /<link\b[^>]*\bhref="\/assets\/([^"]+\.css)"[^>]*>/g;
 	for (const [tag, fileName] of [...html.matchAll(stylePattern)]) {
 		const css = await readFile(join(clientDir, "assets", fileName), "utf8");
+		// ページの CSP は font-src 'self' なので、data: URL に畳まれたフォントは
+		// 読まれず、その範囲の字だけ黙って代替書体になる（vite.config.ts の
+		// assetsInlineLimit が 0 である限り出ない）
+		if (/url\(\s*["']?data:/i.test(css)) {
+			throw new Error(
+				`${fileName} holds a data: URL, which the viewer's Content-Security-Policy does not load. Keep build.assetsInlineLimit at 0 in vite.config.ts.`,
+			);
+		}
 		html = html.replace(
 			tag,
 			() => `<style>${escapeForInlineTag(css, "style")}</style>`,
@@ -96,7 +104,7 @@ const inlineViewerHtml = async () => {
 //
 // 計測用フォントと read_drawing_guide のガイド 2 枚は、バンドルされたコードから
 // ではなく node の解決規則で実行時に読む（doc-tools の fontSourcePackages の
-// resolveFontSourceDir と、server.ts の DRAWING_GUIDE_SPECIFIERS）。基準は
+// resolveFontSourceDir と、@jiscribe/doc-tools/guides の readDrawingGuide）。基準は
 // dist/index.mjs 自身なので、その隣に node_modules を作って必要なファイルだけ
 // 置けば、周りにリポジトリが無くても同じものが見つかる。
 //
