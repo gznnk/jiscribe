@@ -1,4 +1,5 @@
 import { selectors } from "@jiscribe/canvas/testing";
+import { standardDefaultPinnedCategoryIds } from "@jiscribe/standard-shapes";
 import type { Page } from "@playwright/test";
 
 import { expect, expectFileOnDisplay, test } from "../support/fixtures";
@@ -25,19 +26,29 @@ test("a category pinned in the page is still pinned after a reload", async ({
 	});
 	await openInViewer(filePath);
 
-	// A fresh browser context holds nothing, so the shape set's default pins show
-	await expect.poll(() => pinnedRailCategoryIds(page)).toEqual(["flowchart"]);
+	// A category the default pins leave out, so pinning it is a change
+	const addedCategoryId = "uml";
+	expect(standardDefaultPinnedCategoryIds).not.toContain(addedCategoryId);
+	const changedPinnedCategoryIds = [
+		...standardDefaultPinnedCategoryIds,
+		addedCategoryId,
+	];
 
-	await canvas.openCatalog();
-	await page.hover(selectors.catalogRow("uml"));
-	await page.locator(selectors.catalogPin("uml")).click();
+	// A fresh browser context holds nothing, so the shape set's default pins show
 	await expect
 		.poll(() => pinnedRailCategoryIds(page))
-		.toEqual(["flowchart", "uml"]);
+		.toEqual([...standardDefaultPinnedCategoryIds]);
+
+	await canvas.openCatalog();
+	await page.hover(selectors.catalogRow(addedCategoryId));
+	await page.locator(selectors.catalogPin(addedCategoryId)).click();
+	await expect
+		.poll(() => pinnedRailCategoryIds(page))
+		.toEqual(changedPinnedCategoryIds);
 
 	await page.reload();
 	await expectFileOnDisplay(page, "pins.jis.json");
 	await expect
 		.poll(() => pinnedRailCategoryIds(page))
-		.toEqual(["flowchart", "uml"]);
+		.toEqual(changedPinnedCategoryIds);
 });

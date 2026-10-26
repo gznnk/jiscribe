@@ -4,10 +4,7 @@ import { registerSetupAiCommand } from "./commands/setupAi";
 import { DiagnosticProvider } from "./diagnostics/DiagnosticProvider";
 import { JiscribeEditorProvider } from "./editor/JiscribeEditorProvider";
 import { JiscribeImageEditorProvider } from "./editor/JiscribeImageEditorProvider";
-import {
-	createPinnedCategoryStore,
-	PINNED_CATEGORY_IDS_STATE_KEY,
-} from "./editor/pinnedCategoryStore";
+import { createPinnedCategoryStore } from "./editor/pinnedCategoryStore";
 import { createWebviewBridgeRegistry } from "./editor/webviewBridgeRegistry";
 import type { JiscribeTestApi } from "./types/testApi";
 
@@ -33,7 +30,6 @@ export function activate(
 	// The rail's pins are the user's, not the workspace's or the document's (see
 	// editor/pinnedCategoryStore).
 	const pinnedCategoryStore = createPinnedCategoryStore(context.globalState);
-	context.globalState.setKeysForSync([PINNED_CATEGORY_IDS_STATE_KEY]);
 
 	// Custom editor that shows the Canvas UI (Webview) for canvas files.
 	const provider = new JiscribeEditorProvider(

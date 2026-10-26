@@ -10,10 +10,18 @@ import {
 function createFakeMemento(
 	initialEntries: Record<string, unknown> = {},
 	updateError?: Error,
-): PinnedCategoryMemento & { entries: Map<string, unknown> } {
+): PinnedCategoryMemento & {
+	entries: Map<string, unknown>;
+	syncedKeyLists: (readonly string[])[];
+} {
 	const entries = new Map(Object.entries(initialEntries));
+	const syncedKeyLists: (readonly string[])[] = [];
 	return {
 		entries,
+		syncedKeyLists,
+		setKeysForSync: (keys) => {
+			syncedKeyLists.push(keys);
+		},
 		get: (key) => entries.get(key),
 		update: (key, value) => {
 			if (updateError) {
@@ -28,6 +36,12 @@ function createFakeMemento(
 describe("createPinnedCategoryStore", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+	});
+
+	it("registers the pins' key for Settings Sync when created", () => {
+		const memento = createFakeMemento();
+		createPinnedCategoryStore(memento);
+		expect(memento.syncedKeyLists).toEqual([[PINNED_CATEGORY_IDS_STATE_KEY]]);
 	});
 
 	it("reads null when nothing is stored", () => {

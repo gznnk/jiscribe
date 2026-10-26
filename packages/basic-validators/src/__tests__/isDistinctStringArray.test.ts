@@ -18,6 +18,13 @@ describe("isDistinctStringArray", () => {
 		expect(isDistinctStringArray([null])).toBe(false);
 	});
 
+	it("returns false for a sparse array, whose holes are not strings", () => {
+		// eslint-disable-next-line no-sparse-arrays
+		expect(isDistinctStringArray([,])).toBe(false);
+		// eslint-disable-next-line no-sparse-arrays
+		expect(isDistinctStringArray(["a", , "b"])).toBe(false);
+	});
+
 	it("returns false for a non-array", () => {
 		expect(isDistinctStringArray(undefined)).toBe(false);
 		expect(isDistinctStringArray(null)).toBe(false);

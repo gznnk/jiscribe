@@ -30,9 +30,9 @@ const getWindowLocalStorage: GetPinnedCategoryStorage = () =>
  * @param getStorage Reaches the storage; defaults to `window.localStorage`
  * @returns `standardDefaultPinnedCategoryIds` when nothing is stored, and when
  *   the storage cannot be read or holds anything but a JSON array of distinct
- *   strings (the canvas throws at mount on a repeated id; both logged as a
- *   warning). Ids the shape set does not hold are kept; an empty stored array is returned as
- *   is, as the person unpinned everything
+ *   strings (see the canvas's createInitialControllerState); both are logged
+ *   as a warning. Ids the shape set does not hold are kept, and an empty
+ *   stored array is returned as is, as the person unpinned everything
  */
 export const readStoredPinnedCategoryIds = (
 	getStorage: GetPinnedCategoryStorage = getWindowLocalStorage,

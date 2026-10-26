@@ -11,7 +11,6 @@ import {
 	type ToolbarSection,
 } from "@jiscribe/canvas";
 import {
-	standardDefaultPinnedCategoryIds,
 	standardRailPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
@@ -22,6 +21,7 @@ import "@jiscribe/canvas/fonts.css";
 import "katex/dist/katex.min.css";
 
 import { blobToBase64 } from "./blobToBase64";
+import { buildCanvasMountConfig } from "./canvasMountConfig";
 import { canvasParser, plugins } from "./canvasParser";
 import {
 	DocEditingPausedOverlay,
@@ -112,6 +112,9 @@ function App() {
 	// feedback into the canvas. Held in state rather than rebuilt per render so
 	// the mounted canvas sees a stable prop.
 	const [mountConfig, setMountConfig] = useState<CanvasConfig | null>(null);
+	// Read by the message handler, which is registered once and so cannot see
+	// the state.
+	const hasMountConfigRef = useRef(false);
 
 	// Persist pan/zoom so the view survives a tab-hide reload (#138,
 	// retainContextWhenHidden: false). A read-only mirror — no setState, no
@@ -226,21 +229,32 @@ function App() {
 
 			switch (message.type) {
 				case "pinnedCategories": {
-					const pinnedCategoryIds =
-						message.pinnedCategoryIds ?? standardDefaultPinnedCategoryIds;
+					const { pinnedCategoryIds } = message;
+					hasMountConfigRef.current = true;
 					setMountConfig(
 						(prev) =>
-							prev ?? {
-								...initialConfig,
-								viewport: readPersistedCamera(),
-								sidebars: readPersistedSidebars(),
+							prev ??
+							buildCanvasMountConfig(
+								initialConfig,
+								{
+									viewport: readPersistedCamera(),
+									sidebars: readPersistedSidebars(),
+								},
 								pinnedCategoryIds,
-							},
+							),
 					);
 					break;
 				}
 
 				case "update": {
+					// The Extension answers "ready" with the pins ahead of the first
+					// update; without them the canvas would never mount and the tab
+					// would sit on its loading notice.
+					if (!hasMountConfigRef.current) {
+						console.error(
+							"[Jiscribe] Received an update before the pinnedCategories message; the canvas cannot mount until it arrives",
+						);
+					}
 					const docType = message.docType ?? "json";
 
 					// For image docs (svg / png), the Extension has already extracted
@@ -309,17 +323,18 @@ function App() {
 	}, []);
 
 	// Notify the Extension whenever a document has rendered and the export
-	// handle is available. This effect runs after the Canvas commits (the handle
-	// is set via useImperativeHandle during commit, before this effect), so
-	// requestImageExport can succeed. Lets the Extension reconcile a stale image
+	// handle is available, which is once the Canvas is mounted: it needs both
+	// the document and the mount config. This effect runs after the Canvas
+	// commits (the handle is set via useImperativeHandle during commit, before
+	// this effect), so requestImageExport can succeed. Lets the Extension reconcile a stale image
 	// after a hidden-tab save (#179). Sent for every document, not once per
 	// mount: a reconcile the Extension had to skip while the document was dirty
 	// gets its next chance when an undo or redo brings a new document here.
 	useEffect(() => {
-		if (docView.doc) {
+		if (docView.doc && mountConfig) {
 			vscode.postMessage({ type: "rendered" });
 		}
-	}, [docView.doc]);
+	}, [docView.doc, mountConfig]);
 
 	// Display priority:
 	// missing source > Canvas (with the error as an overlay; only once the pins

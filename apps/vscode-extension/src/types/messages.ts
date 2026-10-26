@@ -74,8 +74,9 @@ export type WebviewToExtensionMessage =
 	/**
 	 * The user changed the rail's pinned categories (`onPinnedCategoriesChange`).
 	 * `pinnedCategoryIds` is in rail order, ids the shape set does not hold
-	 * included, each at most once (the canvas throws at mount on a repeat); the
-	 * Extension stores it as the pins the next mount starts from.
+	 * included, each at most once (see the canvas's
+	 * createInitialControllerState); the Extension stores it as the pins the
+	 * next mount starts from.
 	 */
 	| { type: "pinnedCategoriesChange"; pinnedCategoryIds: string[] };
 
