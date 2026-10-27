@@ -24,6 +24,7 @@ const makeState = (
 			collapsedSectionIds: ["style"],
 		},
 		stencilLibraryOpenCategory: "flowchart",
+		isOtherShapesPopoverOpen: true,
 		selection: selectionOf(["a"]),
 	}) as unknown as CanvasControllerState;
 
@@ -78,6 +79,7 @@ describe("ToggleSidebarsCommand", () => {
 				registries,
 			);
 			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.isOtherShapesPopoverOpen).toBe(false);
 		}
 	});
 

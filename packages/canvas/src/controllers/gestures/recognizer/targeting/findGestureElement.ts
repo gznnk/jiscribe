@@ -6,10 +6,13 @@
  *   Also becomes a target for inputValue harvesting (for input elements such as sliders that
  *   need native drag behavior)
  * - "native-wheel": leaves wheel to native scrolling when the element is scrollable
+ * - "chrome-wheel": leaves every wheel to the browser, Ctrl-held or not, as over
+ *   the chrome outside the viewport (for chrome floating inside it)
  *
  * See packages/canvas/docs/04-gesture-system.md for details.
  */
-export type GestureToken = "none" | "native-pointer" | "native-wheel";
+export type GestureToken =
+	"none" | "native-pointer" | "native-wheel" | "chrome-wheel";
 
 /**
  * From the target element or its ancestors, find the element carrying the given data-gesture token.

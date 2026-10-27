@@ -8,6 +8,7 @@ import type {
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { VERTEX_PART_KIND } from "../../../../selection/partKinds/vertexPartKind";
 import { claimDrag } from "../../../../utils/claimDrag";
+import { closeStencilPopups } from "../../../../utils/closeStencilPopups";
 import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
@@ -108,7 +109,7 @@ export class VertexControlHandler extends ControlStrategy {
 				...state,
 				selection: { ...state.selection, part: null },
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				...closeStencilPopups(),
 			},
 			{ kind: "vertex" },
 			{

@@ -28,13 +28,17 @@ afterEach(() => {
 
 const renderBar = (
 	presets: Stencil[],
-	activePresetId: string | null = null,
+	isOtherShapesPopoverOpen = false,
 ): HTMLElement => {
 	const container = document.createElement("div");
 	const root = createRoot(container);
 	act(() =>
 		root.render(
-			<BottomToolbar presets={presets} activePresetId={activePresetId} />,
+			<BottomToolbar
+				presets={presets}
+				activePresetId={null}
+				isOtherShapesPopoverOpen={isOtherShapesPopoverOpen}
+			/>,
 		),
 	);
 	unmount = () => act(() => root.unmount());
@@ -76,11 +80,10 @@ describe("BottomToolbar", () => {
 	});
 
 	/**
-	 * A placeholder for now: no data-action means no command and no stencil
-	 * gesture, and no data-kind of its own means a press lands on the bar's
-	 * empty area (ToolbarHandler), which only dismisses the open menus.
+	 * A target of its own, so a press on it is not one on the bar's empty area
+	 * (which closes the popover) and OtherShapesToggleHandler takes its click.
 	 */
-	it("draws Other shapes as a button wired to nothing", () => {
+	it("draws Other shapes as the other-shapes-button target, pressed while the popover is open", () => {
 		const container = renderBar(presetsOf(["rect"]));
 		const otherShapes = container.querySelector<HTMLButtonElement>(
 			'[data-testid="bottom-toolbar-other-shapes"]',
@@ -89,9 +92,16 @@ describe("BottomToolbar", () => {
 		expect(otherShapes!.title).toBe("Other shapes");
 		expect(otherShapes!.getAttribute("aria-label")).toBe("Other shapes");
 		expect(otherShapes!.type).toBe("button");
-		expect(otherShapes!.closest("[data-action]")).toBeNull();
-		expect(otherShapes!.closest("[data-kind]")?.getAttribute("data-id")).toBe(
-			"bottom-toolbar",
-		);
+		expect(otherShapes!.dataset.kind).toBe("menu");
+		expect(otherShapes!.dataset.id).toBe("other-shapes-button");
+		expect(otherShapes!.getAttribute("aria-expanded")).toBe("false");
+		unmount?.();
+
+		const openContainer = renderBar(presetsOf(["rect"]), true);
+		expect(
+			openContainer
+				.querySelector('[data-testid="bottom-toolbar-other-shapes"]')!
+				.getAttribute("aria-expanded"),
+		).toBe("true");
 	});
 });

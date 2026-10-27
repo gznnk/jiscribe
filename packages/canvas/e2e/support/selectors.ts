@@ -61,6 +61,14 @@ const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
 /** Shared by the bottom-bar-scoped selectors below, scoped for the same reason. */
 const BOTTOM_TOOLBAR = '[data-kind="menu"][data-id="bottom-toolbar"]';
 
+/**
+ * Shared by the Other shapes popover selectors below. The popover is drawn
+ * outside the bottom bar's element, so the bar-scoped selectors never match
+ * inside it, nor the sidebar's inside it.
+ */
+const OTHER_SHAPES_POPOVER =
+	'[data-kind="menu"][data-id="other-shapes-popover"]';
+
 export const selectors = {
 	/**
 	 * The canvas area (the viewport the sidebars and the full-width toolbar take
@@ -101,10 +109,28 @@ export const selectors = {
 	bottomToolbar: BOTTOM_TOOLBAR,
 
 	/**
-	 * The bottom bar's "Other shapes" button, a placeholder wired to nothing. It
-	 * carries no data-action, so a test-only hook finds it.
+	 * The bottom bar's "Other shapes" button, which opens and closes the Other
+	 * shapes popover and carries whether it is open on aria-expanded.
 	 */
-	bottomToolbarOtherShapes: `${BOTTOM_TOOLBAR} [data-testid="bottom-toolbar-other-shapes"]`,
+	bottomToolbarOtherShapes: `${BOTTOM_TOOLBAR} [data-kind="menu"][data-id="other-shapes-button"]`,
+
+	/**
+	 * The Other shapes popover itself, the shape library's search box and
+	 * sections over the canvas. Mounted only while open: assert `toHaveCount(0)`
+	 * for closed.
+	 */
+	otherShapesPopover: OTHER_SHAPES_POPOVER,
+
+	/** Section header in the popover, as stencilLibrarySection is in the sidebar. */
+	otherShapesPopoverSection: (sectionId: string) =>
+		`${OTHER_SHAPES_POPOVER} [data-action="section:${sectionId}"]`,
+
+	/** Shape item in the popover, scoped to it like stencilLibraryPanelItem. */
+	otherShapesPopoverItem: (presetId: string) =>
+		`${OTHER_SHAPES_POPOVER} [data-action="item:${presetId}"]`,
+
+	/** Search box of the popover, its own and not the sidebar's. */
+	otherShapesPopoverSearch: `${OTHER_SHAPES_POPOVER} input[type="text"]`,
 
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector

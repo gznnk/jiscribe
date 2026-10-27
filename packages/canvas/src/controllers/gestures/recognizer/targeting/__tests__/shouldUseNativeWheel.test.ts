@@ -4,6 +4,7 @@ import { shouldUseNativeWheel } from "../shouldUseNativeWheel";
 
 const makeTarget = (params: {
 	hasNativeWheelAncestor: boolean;
+	hasChromeWheelAncestor?: boolean;
 	scrollHeight?: number;
 	clientHeight?: number;
 }): EventTarget => {
@@ -16,6 +17,12 @@ const makeTarget = (params: {
 			if (
 				selector === '[data-gesture~="native-wheel"]' &&
 				params.hasNativeWheelAncestor
+			) {
+				return scrollableEl;
+			}
+			if (
+				selector === '[data-gesture~="chrome-wheel"]' &&
+				params.hasChromeWheelAncestor === true
 			) {
 				return scrollableEl;
 			}
@@ -64,4 +71,15 @@ describe("shouldUseNativeWheel", () => {
 		});
 		expect(shouldUseNativeWheel(target, false)).toBe(true);
 	});
+
+	it.each([false, true])(
+		"returns true inside a chrome-wheel element, not scrollable, with Ctrl held %s",
+		(ctrlKey) => {
+			const target = makeTarget({
+				hasNativeWheelAncestor: false,
+				hasChromeWheelAncestor: true,
+			});
+			expect(shouldUseNativeWheel(target, ctrlKey)).toBe(true);
+		},
+	);
 });

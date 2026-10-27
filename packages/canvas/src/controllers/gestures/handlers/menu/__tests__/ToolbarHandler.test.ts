@@ -102,23 +102,19 @@ describe("ToolbarHandler", () => {
 	});
 
 	describe("on the bottom tool bar", () => {
-		it("a pressed on its empty area closes the context menu and the category flyout", () => {
+		it("a pressed on its empty area closes the context menu, the category flyout and the Other shapes popover", () => {
 			const next = ToolbarHandler.handle(
-				makeState(),
+				{ ...makeState(), isOtherShapesPopoverOpen: true },
 				makeEvent("pressed", "bottom-toolbar"),
 				registries,
 			);
 			expect(next.contextMenuPosition).toBeNull();
 			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.isOtherShapesPopoverOpen).toBe(false);
 		});
 
-		/**
-		 * The "Other shapes" button is a placeholder carrying no data-action, so
-		 * its click arrives as one on the empty bar: nothing runs, nothing is
-		 * armed or placed.
-		 */
 		it.each(["click", "doubleClick"] as const)(
-			"a %s with no action (the Other shapes placeholder) changes nothing",
+			"a %s on its empty area changes nothing",
 			(type) => {
 				const state = makeState();
 				const next = ToolbarHandler.handle(

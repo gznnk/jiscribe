@@ -1,3 +1,4 @@
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -26,7 +27,7 @@ export const ToggleSidebarsCommand: ExecutableCommand = {
 			return {
 				...state,
 				isChromeExpanded: false,
-				stencilLibraryOpenCategory: null,
+				...closeStencilPopups(),
 			};
 		}
 		const isAnyPanelOpen =
@@ -40,7 +41,7 @@ export const ToggleSidebarsCommand: ExecutableCommand = {
 			propertyPanel: isAnyPanelOpen
 				? state.propertyPanel
 				: { ...state.propertyPanel, isOpen: true },
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 		};
 	},
 };

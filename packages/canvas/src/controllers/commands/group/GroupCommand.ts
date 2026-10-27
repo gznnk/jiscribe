@@ -5,6 +5,7 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import { calculateOrientedBoundsFromChildIds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupGroups } from "../../utils/cleanupGroups";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import { findLowestCommonAncestor } from "../../utils/findLowestCommonAncestor";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
@@ -155,7 +156,7 @@ export const GroupCommand: ExecutableCommand = {
 			// the real group object (multiSelectGroup takes precedence in both).
 			multiSelectGroup: null,
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

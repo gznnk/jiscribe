@@ -31,6 +31,7 @@ import { useCanvasWheel } from "./hooks/useCanvasWheel";
 import { useCanvasZoomStore } from "./hooks/useCanvasZoomStore";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
+import { useCloseOtherShapesPopoverOnEscape } from "./hooks/useCloseOtherShapesPopoverOnEscape";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
@@ -69,6 +70,8 @@ import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
 import {
 	BottomToolbar,
+	BottomToolbarDock,
+	OtherShapesPopover,
 	resolveBottomToolbarPresets,
 	type BottomToolbarOptions,
 } from "./ui/menu/BottomToolbar";
@@ -147,10 +150,12 @@ type CanvasProps = {
 	/**
 	 * Called when the chrome expands or collapses, or either sidebar opens,
 	 * closes, or has a section collapsed, with the form, both edges and every
-	 * panel's state each time. Read-only on the same terms as
-	 * `onViewportChange`: persist it and hand it back through
-	 * `initialConfig.sidebars` at the next mount, but do not drive the chrome
-	 * from it — it is the user's, and there is no controlled prop.
+	 * panel's state each time. The shape library's sections fold in the bottom
+	 * tool bar's Other shapes popover too, sharing the sidebar's state, so a
+	 * fold there is reported (and restored) as the `stencilLibrary` panel's.
+	 * Read-only on the same terms as `onViewportChange`: persist it and hand it
+	 * back through `initialConfig.sidebars` at the next mount, but do not drive
+	 * the chrome from it — it is the user's, and there is no controlled prop.
 	 */
 	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void;
 
@@ -271,14 +276,14 @@ type CanvasProps = {
 	/**
 	 * The bottom tool bar: a floating bar centred over the canvas at its bottom
 	 * edge, holding pinned presets (click to arm or place, drag to place, as on
-	 * the top bar) and an "Other shapes" button that is a placeholder for now and
-	 * does nothing. It covers the canvas rather than shrinking it. It shows
-	 * while the chrome is collapsed and is hidden while it is expanded (see
-	 * `CanvasSidebarsState.isExpanded`), open sidebars or not, the shape library
-	 * then holding the shapes. Omit for the
-	 * default, shown with `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`; see
-	 * {@link BottomToolbarOptions}. An inline object literal defeats `<Canvas>`'s
-	 * memo; `useMemo` it.
+	 * the top bar) and an "Other shapes" button that opens a popover above the
+	 * bar listing every shape in the shape library (`stencilLibrary`), with the
+	 * sidebar's search and sections. It covers the canvas rather than shrinking
+	 * it. It shows while the chrome is collapsed and is hidden while it is
+	 * expanded (see `CanvasSidebarsState.isExpanded`), open sidebars or not, the
+	 * shape library then holding the shapes. Omit for the default, shown with
+	 * `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`; see {@link BottomToolbarOptions}. An
+	 * inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
 	 */
 	bottomToolbar?: BottomToolbarOptions;
 	/**
@@ -481,6 +486,12 @@ const CanvasComponent = ({
 	// The chrome around the drawing region (toolbar, sidebars, modals) is outside
 	// that scope, so a Ctrl+wheel there would zoom the browser instead.
 	useBlockBrowserZoom(rootRef);
+
+	useCloseOtherShapesPopoverOnEscape(
+		rootRef,
+		state.isOtherShapesPopoverOpen,
+		dispatch,
+	);
 
 	// Cooperative: a touch starting on a shape stays a shape drag instead of
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
@@ -769,12 +780,25 @@ const CanvasComponent = ({
 						{/* When it shows: see the `bottomToolbar` prop. Inside the
 						    viewport, so it covers the canvas rather than shrinking it;
 						    before the overlay, so the context menu and the toast draw over
-						    it */}
+						    it. The popover is the bar's sibling, not its child */}
 						{bottomToolbarPresets !== null && !isChromeExpanded && (
-							<BottomToolbar
-								presets={bottomToolbarPresets}
-								activePresetId={drawingPresetId}
-							/>
+							<BottomToolbarDock>
+								{state.isOtherShapesPopoverOpen && (
+									<OtherShapesPopover
+										sections={librarySections}
+										collapsedSectionIds={
+											state.stencilLibraryPanel.collapsedSectionIds
+										}
+										activePresetId={drawingPresetId}
+										resolvePreset={resolveLibraryPreset}
+									/>
+								)}
+								<BottomToolbar
+									presets={bottomToolbarPresets}
+									activePresetId={drawingPresetId}
+									isOtherShapesPopoverOpen={state.isOtherShapesPopoverOpen}
+								/>
+							</BottomToolbarDock>
 						)}
 						{/* Collapsed, the bar's two pills float over the top corners,
 						    placed here for the same reasons as the bottom bar */}

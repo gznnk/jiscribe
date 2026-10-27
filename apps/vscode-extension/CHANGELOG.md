@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sidebars that were open last time open again (both, the first time), and
   the bottom bar and the floating menu are hidden, the sidebars holding the
   shapes and the properties instead. Closing both sidebars keeps it expanded; only the switch collapses
-  it again. The bottom bar's "Other shapes" button does nothing yet.
+  it again. The bottom bar's "Other shapes" button opens every shape, with a
+  search, just above the bar.
   The editor remembers which of the two forms it was in, and which sidebars
   were open, across a tab hidden and shown again.
 

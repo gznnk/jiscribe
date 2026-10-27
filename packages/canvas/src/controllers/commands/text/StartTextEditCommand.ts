@@ -10,6 +10,7 @@ import { getSelectedConnectorId } from "../../selection/readers/getSelectedConne
 import { readActivePartFocusId } from "../../selection/readers/readActivePartFocusId";
 import { selectTextSlot } from "../../selection/writers/selectTextSlot";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -66,8 +67,11 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return {
 				...state,
 				// An open submenu does not survive the edit session (the menu is hidden or
-				// re-laid out), so it would otherwise pop back on exit.
+				// re-laid out), so it would otherwise pop back on exit. Nor does a shape
+				// picker, which would otherwise take the editor's Escape
+				// (useCloseOtherShapesPopoverOnEscape).
 				objectMenuOpenId: null,
+				...closeStencilPopups(),
 				// The selection is already that one connector
 				// (getSelectedConnectorId), so only a part picked below it has to go:
 				// the label is no part, and the session's owner must be the object
@@ -112,7 +116,10 @@ export const StartTextEditCommand: ExecutableCommand = {
 
 		return {
 			...state,
+			// The submenu would pop back on exit, and a shape picker would take the
+			// editor's Escape (useCloseOtherShapesPopoverOnEscape).
 			objectMenuOpenId: null,
+			...closeStencilPopups(),
 			// The slot being edited is the selection (see CanvasMode), so the one
 			// the fallback picked is written there too; a slot already selected keeps
 			// the reference.

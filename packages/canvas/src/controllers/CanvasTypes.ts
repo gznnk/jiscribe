@@ -544,7 +544,8 @@ export type StencilLibraryPanelState = {
 	isOpen: boolean;
 	/**
 	 * Ids of the collapsed sections; every section not listed is expanded, so the
-	 * empty array is "all open". Survives closing and reopening the panel.
+	 * empty array is "all open". Survives closing and reopening the panel, and is
+	 * shared with the Other shapes popover, whose section headers write it too.
 	 */
 	collapsedSectionIds: string[];
 };
@@ -741,6 +742,17 @@ export type CanvasControllerState = CanvasState & {
 	 * resetUiState, and by Escape — there is no central clear in handleGesture.
 	 */
 	stencilLibraryOpenCategory: string | null;
+
+	/**
+	 * Whether the bottom tool bar's "Other shapes" popover is open. Closed
+	 * together with stencilLibraryOpenCategory through closeStencilPopups,
+	 * except where a press keeps it open (one on the Other shapes button,
+	 * OtherShapesToggleHandler; one inside the popover,
+	 * StencilLibraryPanelHandler) and where it closes alone (a press on the
+	 * ObjectMenu; Escape, CLOSE_OTHER_SHAPES_POPOVER, which leaves the selection
+	 * as it is). Opening either picker closes the other.
+	 */
+	isOtherShapesPopoverOpen: boolean;
 
 	/**
 	 * Which form the chrome is in (`CanvasSidebarsState.isExpanded`, as a host

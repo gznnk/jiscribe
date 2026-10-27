@@ -1,34 +1,41 @@
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
+import { OTHER_SHAPES_POPOVER_TARGET_ID } from "./utils/otherShapesTargetIds";
 
 /**
- * GestureHandler for the shape library sidebar's own chrome.
- * Handles events with targetKind "menu" and targetId "stencil-library-panel".
+ * GestureHandler for the shape library's own chrome, in the sidebar and in the
+ * bottom tool bar's "Other shapes" popover alike. Handles events with
+ * targetKind "menu" and targetId "stencil-library-panel" (the sidebar) or
+ * "other-shapes-popover".
  *
  * targetAction format:
  * - `section:{sectionId}` → collapse that section, or expand it when already
- *   collapsed (click acts as a toggle).
- * - `close` → close the panel.
+ *   collapsed (click acts as a toggle). The two share the one fold state.
+ * - `close` → close the sidebar (only its header has the button).
  *
- * The stencil items inside the panel carry their own targetId
+ * The stencil items inside the panel or the popover carry their own targetId
  * ("stencil-library"), so click-to-draw and drag-to-place still route to
- * StencilLibraryItemHandler untouched. Everything else in the panel — the
- * background, the header, the padding around a section — lands here and does
- * only the light dismiss the toolbar does: a press closes the context menu and
- * any open category flyout, and leaves the selection alone. The panel itself is
- * persistent chrome, so a press on it never closes the panel.
+ * StencilLibraryItemHandler untouched. Everything else in either — the
+ * background, the sidebar's header, the padding around a section — lands here
+ * and does only the light dismiss the toolbar does: a press closes the context
+ * menu and any open category flyout, and leaves the selection alone. The panel itself is
+ * persistent chrome, so a press on it never closes the panel; nor does a press
+ * inside the popover close the popover.
  */
 const SECTION_PREFIX = "section:";
 const CLOSE_ACTION = "close";
+const SIDEBAR_TARGET_ID = "stencil-library-panel";
 
 export const StencilLibraryPanelHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		return (
 			event.targetKind === "menu" &&
-			event.targetId === "stencil-library-panel" &&
+			(event.targetId === SIDEBAR_TARGET_ID ||
+				event.targetId === OTHER_SHAPES_POPOVER_TARGET_ID) &&
 			isPerTargetInteraction(event)
 		);
 	},
@@ -40,7 +47,10 @@ export const StencilLibraryPanelHandler: GestureHandler = {
 			nextState = {
 				...nextState,
 				contextMenuPosition: null,
-				stencilLibraryOpenCategory: null,
+				// A press inside the popover keeps it open.
+				...(event.targetId === OTHER_SHAPES_POPOVER_TARGET_ID
+					? { stencilLibraryOpenCategory: null }
+					: closeStencilPopups()),
 			};
 		}
 

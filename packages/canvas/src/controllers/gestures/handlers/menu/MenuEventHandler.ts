@@ -1,5 +1,6 @@
 import { ContextMenuHandler } from "./ContextMenuHandler";
 import { ObjectMenuHandler } from "./ObjectMenuHandler";
+import { OtherShapesToggleHandler } from "./OtherShapesToggleHandler";
 import { PropertyPanelHandler } from "./PropertyPanelHandler";
 import { StencilCategoryToggleHandler } from "./StencilCategoryToggleHandler";
 import { StencilLibraryItemHandler } from "./StencilLibraryItemHandler";
@@ -23,6 +24,7 @@ export const MENU_HANDLERS: readonly GestureHandler[] = [
 	PropertyPanelHandler,
 	StencilCategoryToggleHandler,
 	ToolbarHandler,
+	OtherShapesToggleHandler,
 	ContextMenuHandler,
 	ObjectMenuHandler,
 ];
@@ -30,10 +32,10 @@ export const MENU_HANDLERS: readonly GestureHandler[] = [
 /**
  * Main handler for all menu-level events.
  * Routes each event to the first sub-handler whose supports() accepts it. The
- * sub-handlers split on targetId (stencil-library / stencil-library-panel /
- * property-panel / stencil-category / toolbar and bottom-toolbar / context-menu /
- * object-menu) and are mutually
- * exclusive, so the array order never decides routing.
+ * sub-handlers split on targetId (stencil-library / stencil-library-panel and
+ * other-shapes-popover / property-panel / stencil-category / toolbar and
+ * bottom-toolbar / other-shapes-button / context-menu / object-menu) and are
+ * mutually exclusive, so the array order never decides routing.
  *
  * A drag on a menu is a `"menu"` one unless the sub-handler names it otherwise
  * (a preset dragged off the StencilLibrary is a `"stencil"` drag).

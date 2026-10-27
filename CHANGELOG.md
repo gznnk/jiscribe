@@ -21,8 +21,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   expanded, the shape library then holding the shapes. It pins
   presets (`presetIds`, default `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`, core's
   basic primitives) that click to draw and drag to place as the top bar's do,
-  then an "Other shapes" button that is a placeholder and does nothing yet.
-  `show: false` removes it. `@jiscribe/standard-shapes` exports
+  then an "Other shapes" button that opens a popover above the bar listing
+  every shape in the shape library, with the sidebar's search and sections.
+  Choosing a shape, Escape, a press outside it and expanding the chrome close
+  it. Its sections fold together with the sidebar's, so a fold there reaches
+  `onSidebarsChange` too. `show: false` removes it. `@jiscribe/standard-shapes` exports
   `standardBottomToolbarPresetIds` for it.
 - **The canvas chrome has two forms, collapsed and expanded.** Collapsed, the
   full-width top bar gives its row back to the canvas and splits into two pills
@@ -107,7 +110,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   wider margin on the right.
 - **The e2e kit finds presets on either bar.** `selectors.toolButton` and
   `shapeItem` match the top bar or the bottom one; `selectors.bottomToolbar`,
-  `bottomToolbarOtherShapes`, `sidebarsToggle` and `CanvasDriver.toggleSidebars()`
+  `bottomToolbarOtherShapes`, the Other shapes popover's `otherShapesPopover`
+  / `otherShapesPopoverSection` / `otherShapesPopoverItem` /
+  `otherShapesPopoverSearch`, `sidebarsToggle` and `CanvasDriver.toggleSidebars()`
   are new. `mountPluginHarness` takes `bottomToolbarPresetIds` and shows no
   bottom bar without it. `selectors.toolbar` matches both pills while the bar
   is collapsed; `selectors.toolbarPill(edge)` scopes to one.

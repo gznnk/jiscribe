@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { ContextMenuHandler } from "../../gestures/handlers/menu/ContextMenuHandler";
 import { MENU_HANDLERS } from "../../gestures/handlers/menu/MenuEventHandler";
 import { ObjectMenuHandler } from "../../gestures/handlers/menu/ObjectMenuHandler";
+import { OtherShapesToggleHandler } from "../../gestures/handlers/menu/OtherShapesToggleHandler";
 import { PropertyPanelHandler } from "../../gestures/handlers/menu/PropertyPanelHandler";
 import { StencilCategoryToggleHandler } from "../../gestures/handlers/menu/StencilCategoryToggleHandler";
 import { StencilLibraryItemHandler } from "../../gestures/handlers/menu/StencilLibraryItemHandler";
@@ -85,6 +86,12 @@ const TARGETS: Target[] = [
 		targetAction: "command:togglePropertyPanel",
 	},
 	{ targetKind: "menu", targetId: "bottom-toolbar" },
+	{ targetKind: "menu", targetId: "other-shapes-button" },
+	{
+		targetKind: "menu",
+		targetId: "other-shapes-popover",
+		targetAction: "section:flowchart",
+	},
 ];
 
 const LABEL_BOX = TARGETS[9];
@@ -319,6 +326,12 @@ describe("menu sub-handler routing", () => {
 		expect(
 			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[14])),
 		).toBe(PropertyPanelHandler);
+		expect(
+			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[16])),
+		).toBe(OtherShapesToggleHandler);
+		expect(
+			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[17])),
+		).toBe(StencilLibraryPanelHandler);
 	});
 
 	it("leaves an unknown menu targetId to no sub-handler", () => {

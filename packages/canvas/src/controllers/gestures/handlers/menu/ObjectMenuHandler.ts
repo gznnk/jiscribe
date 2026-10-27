@@ -38,9 +38,14 @@ export const ObjectMenuHandler: GestureHandler = {
 	handle(state, event, registries) {
 		let nextState = state;
 
-		// A press on the ObjectMenu closes the context menu (the press itself performs no item action)
+		// A press on the ObjectMenu closes the context menu and the Other shapes
+		// popover, which it can sit beside (the press itself performs no item action)
 		if (event.type === "pressed") {
-			nextState = { ...nextState, contextMenuPosition: null };
+			nextState = {
+				...nextState,
+				contextMenuPosition: null,
+				isOtherShapesPopoverOpen: false,
+			};
 		}
 
 		const action = parseMenuAction(event.targetAction);

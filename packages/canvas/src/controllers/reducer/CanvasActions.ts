@@ -389,6 +389,15 @@ export type CloseModalAction = {
 };
 
 /**
+ * Closes the bottom tool bar's "Other shapes" popover and changes nothing else.
+ * Dispatched by Escape (useCloseOtherShapesPopoverOnEscape), which must not
+ * step the selection back the way EscapeSelectionCommand would.
+ */
+export type CloseOtherShapesPopoverAction = {
+	type: "CLOSE_OTHER_SHAPES_POPOVER";
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -412,4 +421,5 @@ export type CanvasAction =
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction
-	| CloseModalAction;
+	| CloseModalAction
+	| CloseOtherShapesPopoverAction;

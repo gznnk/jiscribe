@@ -2,6 +2,7 @@ import { determineClickSelection } from "./determineClickSelection";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Mods } from "../../gestures/registry/ObjectBehaviorTypes";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import type { ConnectorRouteRegistries } from "../../utils/VisualExtentRegistries";
 import { createMultiSelectGroup } from "../readers/createMultiSelectGroup";
 
@@ -55,6 +56,6 @@ export function selectObjectByClick(
 		multiSelectGroup,
 		// Close the submenu on selection change
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 	};
 }

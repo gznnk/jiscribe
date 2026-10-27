@@ -2,21 +2,28 @@ import { memo } from "react";
 
 import { BottomToolbarContainer } from "./BottomToolbarStyled";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
+import { OTHER_SHAPES_BUTTON_TARGET_ID } from "../../../gestures/handlers/menu/utils/otherShapesTargetIds";
 import { ShapesIcon } from "../../icons/ShapesIcon";
 import type { Stencil } from "../../objects/Stencil";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
-import { ToolbarDivider, ToolbarIconButton } from "../Toolbar/ToolbarStyled";
+import { ToolbarDivider, ToolbarToggleButton } from "../Toolbar/ToolbarStyled";
 
 type BottomToolbarProps = {
 	/** Presets pinned on the bar, already resolved (see resolveBottomToolbarPresets). */
 	presets: readonly Stencil[];
 	/** ID of the stencil currently being drawn (for the tool's active state) */
 	activePresetId: string | null;
+	/** Whether the Other shapes popover is open, which the button shows pressed. */
+	isOtherShapesPopoverOpen: boolean;
 };
 
 /**
  * The bottom tool bar: the pinned presets, then a divider and the "Other
  * shapes" button. When Canvas shows it: see its `bottomToolbar` prop.
+ *
+ * The button is a menu target of its own (`other-shapes-button`, taken by
+ * OtherShapesToggleHandler) that opens and closes the OtherShapesPopover,
+ * which Canvas draws above the bar and outside it.
  *
  * The presets are the same StencilLibraryItem the top bar and the shape
  * library draw, so a click arms or places and a drag places exactly as there
@@ -27,6 +34,7 @@ type BottomToolbarProps = {
 const BottomToolbarComponent: React.FC<BottomToolbarProps> = ({
 	presets,
 	activePresetId,
+	isOtherShapesPopoverOpen,
 }) => {
 	const messages = useCanvasMessages();
 	return (
@@ -39,16 +47,19 @@ const BottomToolbarComponent: React.FC<BottomToolbarProps> = ({
 				/>
 			))}
 			{presets.length > 0 && <ToolbarDivider />}
-			{/* Placeholder: drawn but not wired to anything yet. It carries no
-			    data-action, so a press on it is a press on the bar's empty area. */}
-			<ToolbarIconButton
+			<ToolbarToggleButton
 				type="button"
 				aria-label={messages.bottomToolbarOtherShapes}
 				title={messages.bottomToolbarOtherShapes}
+				aria-haspopup="dialog"
+				aria-expanded={isOtherShapesPopoverOpen}
+				isOpen={isOtherShapesPopoverOpen}
+				data-kind="menu"
+				data-id={OTHER_SHAPES_BUTTON_TARGET_ID}
 				data-testid="bottom-toolbar-other-shapes"
 			>
 				<ShapesIcon />
-			</ToolbarIconButton>
+			</ToolbarToggleButton>
 		</BottomToolbarContainer>
 	);
 };

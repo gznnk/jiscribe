@@ -20,6 +20,7 @@ const baseState = (
 		drag: null,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
+		isOtherShapesPopoverOpen: false,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -111,6 +112,15 @@ describe("DeselectAllCommand", () => {
 			expect(DeselectAllCommand.canExecute(baseState({}), registries)).toBe(
 				false,
 			);
+		});
+
+		it("is executable when the Other shapes popover is open", () => {
+			expect(
+				DeselectAllCommand.canExecute(
+					baseState({ isOtherShapesPopoverOpen: true }),
+					registries,
+				),
+			).toBe(true);
 		});
 
 		it("is executable when a StencilLibrary category flyout is open (Escape closes it)", () => {

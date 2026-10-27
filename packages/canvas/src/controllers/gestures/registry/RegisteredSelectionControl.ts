@@ -15,6 +15,7 @@ import type {
 	SelectionControlProps,
 } from "../../ui/controls/SelectionControlTypes";
 import { claimDrag } from "../../utils/claimDrag";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import { commitEdit } from "../../utils/commitEdit";
 import { createCowObjects } from "../../utils/cowObjects";
 import { reconcileGroupBounds } from "../../utils/reconcileGroupBounds";
@@ -115,7 +116,11 @@ class SelectionControlStrategy extends ControlStrategy {
 	): CanvasControllerState {
 		if (event.type === "dragStart") {
 			return claimDrag(
-				{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+				{
+					...state,
+					objectMenuOpenId: null,
+					...closeStencilPopups(),
+				},
 				{ kind: "selectionControl" },
 				{ edgeScroll: true },
 			);

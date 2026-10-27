@@ -1,5 +1,6 @@
 import { isConnectorState } from "../../../states/objects/connector/ConnectorState";
 import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import type { ExecutableCommand } from "../CommandTypes";
 
 export const SelectAllCommand: ExecutableCommand = {
@@ -34,7 +35,7 @@ export const SelectAllCommand: ExecutableCommand = {
 				state.multiSelectGroup,
 			),
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 		};
 	},
 };

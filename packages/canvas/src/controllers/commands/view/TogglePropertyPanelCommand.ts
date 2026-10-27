@@ -1,3 +1,4 @@
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -35,6 +36,6 @@ export const TogglePropertyPanelCommand: ExecutableCommand = {
 					propertyPanel: { ...state.propertyPanel, isOpen: true },
 				}),
 		// A toolbar press dismisses the category flyout, like every other one.
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 	}),
 };

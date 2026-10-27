@@ -15,6 +15,7 @@ import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { applyLabelPlacement } from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import { claimDrag } from "../../../utils/claimDrag";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
@@ -71,7 +72,7 @@ const handleDragStart = (
 			multiSelectGroup: null,
 			// Close the submenu / category flyout on selection change
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 			contextMenuPosition: null,
 		},
 		{ kind: "label" },

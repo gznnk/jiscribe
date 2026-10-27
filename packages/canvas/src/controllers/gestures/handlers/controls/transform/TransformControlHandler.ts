@@ -29,6 +29,7 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { claimDrag } from "../../../../utils/claimDrag";
+import { closeStencilPopups } from "../../../../utils/closeStencilPopups";
 import { commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsForSelection } from "../../../../utils/updateGroupBoundsForSelection";
@@ -122,7 +123,11 @@ export class TransformControlHandler extends ControlStrategy {
 		}
 
 		return claimDrag(
-			{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+			{
+				...state,
+				objectMenuOpenId: null,
+				...closeStencilPopups(),
+			},
 			{ kind: "transform", ...(resize && { resize }) },
 			{ edgeScroll: true, startSnapshot },
 		);

@@ -1,5 +1,6 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { createMultiSelectGroup } from "../../selection/readers/createMultiSelectGroup";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import { updateGroupBounds } from "../../utils/updateGroupBounds";
 import type { ExecutableCommand } from "../CommandTypes";
 
@@ -85,7 +86,7 @@ export const UngroupCommand: ExecutableCommand = {
 				null,
 			),
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

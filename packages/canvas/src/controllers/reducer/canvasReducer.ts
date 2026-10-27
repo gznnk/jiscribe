@@ -36,6 +36,7 @@ import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
 } from "../utils/applyDocumentProperty";
+import { closeStencilPopups } from "../utils/closeStencilPopups";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
 import { NORMAL_MODE } from "../utils/normalMode";
@@ -253,7 +254,7 @@ export const createCanvasReducer =
 						committedResult.multiSelectGroup,
 					),
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					...closeStencilPopups(),
 				};
 				if (state.mode.kind !== "textEdit") {
 					return selectedResult;
@@ -623,6 +624,13 @@ export const createCanvasReducer =
 					return state;
 				}
 				return { ...state, activeModal: null };
+			}
+
+			case "CLOSE_OTHER_SHAPES_POPOVER": {
+				if (!state.isOtherShapesPopoverOpen) {
+					return state;
+				}
+				return { ...state, isOtherShapesPopoverOpen: false };
 			}
 
 			default:

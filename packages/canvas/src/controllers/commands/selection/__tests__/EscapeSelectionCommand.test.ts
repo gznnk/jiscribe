@@ -20,6 +20,7 @@ const baseState = (
 		drag: null,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
+		isOtherShapesPopoverOpen: false,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -101,6 +102,14 @@ describe("EscapeSelectionCommand", () => {
 			const next = EscapeSelectionCommand.execute(state, registries);
 			expect(next.objectMenuOpenId).toBeNull();
 		});
+	});
+
+	it("closes the Other shapes popover", () => {
+		const state = baseState({ isOtherShapesPopoverOpen: true });
+		expect(
+			EscapeSelectionCommand.execute(state, registries)
+				.isOtherShapesPopoverOpen,
+		).toBe(false);
 	});
 
 	it("closes an open StencilLibrary category flyout", () => {

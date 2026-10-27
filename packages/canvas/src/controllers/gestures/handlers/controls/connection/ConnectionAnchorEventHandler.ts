@@ -27,6 +27,7 @@ import type {
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../../../selection/CanvasSelection";
 import { claimDrag } from "../../../../utils/claimDrag";
+import { closeStencilPopups } from "../../../../utils/closeStencilPopups";
 import { commitEdit, commitEditIfChanged } from "../../../../utils/commitEdit";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
@@ -194,7 +195,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				selection: EMPTY_SELECTION,
 				multiSelectGroup: null,
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				...closeStencilPopups(),
 			},
 			{ kind: "connector", draft: { kind: "create", connector } },
 			{ edgeScroll: true },
@@ -227,7 +228,11 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		}
 
 		return claimDrag(
-			{ ...state, objectMenuOpenId: null, stencilLibraryOpenCategory: null },
+			{
+				...state,
+				objectMenuOpenId: null,
+				...closeStencilPopups(),
+			},
 			{ kind: "connector", draft: { kind: "edit", connectorId, endpoint } },
 			{ edgeScroll: true },
 		);

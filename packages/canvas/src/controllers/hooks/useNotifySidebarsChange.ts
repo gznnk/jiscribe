@@ -11,7 +11,9 @@ import { resolveSidebarsState } from "../utils/sidebarsState";
 
 /**
  * Notifies the host when the chrome expands or collapses, or either sidebar
- * opens, closes, or has a section collapsed or expanded.
+ * opens, closes, or has a section collapsed or expanded. The shape library's
+ * sections are folded from the Other shapes popover as well (the two share
+ * `stencilLibraryPanel.collapsedSectionIds`), so a fold there is reported too.
  *
  * All of it is reported together: a host persisting the chrome wants a single
  * value to hand back through `initialConfig.sidebars`, so any change delivers

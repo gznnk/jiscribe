@@ -1,4 +1,8 @@
 import type { CanvasControllerState } from "../../CanvasTypes";
+import {
+	closeStencilPopups,
+	isAnyStencilPopupOpen,
+} from "../../utils/closeStencilPopups";
 import { NORMAL_MODE } from "../../utils/normalMode";
 import { EMPTY_SELECTION } from "../CanvasSelection";
 
@@ -17,7 +21,7 @@ import { EMPTY_SELECTION } from "../CanvasSelection";
 export const isSelectionClearable = (state: CanvasControllerState): boolean =>
 	state.selection.objectIds.length > 0 ||
 	state.mode.kind === "draw" ||
-	state.stencilLibraryOpenCategory !== null;
+	isAnyStencilPopupOpen(state);
 
 /**
  * Drops the selection, along with the transient UI that hangs off one, an armed
@@ -35,6 +39,6 @@ export const clearAllSelection = (
 	selection: EMPTY_SELECTION,
 	multiSelectGroup: null,
 	objectMenuOpenId: null,
-	stencilLibraryOpenCategory: null,
+	...closeStencilPopups(),
 	mode: state.mode.kind === "draw" ? NORMAL_MODE : state.mode,
 });

@@ -29,6 +29,7 @@ import { selectObjectByClick } from "../../../selection/writers/selectObjectByCl
 import { selectTextSlot } from "../../../selection/writers/selectTextSlot";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { claimDrag } from "../../../utils/claimDrag";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import { commitEditIfChanged } from "../../../utils/commitEdit";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
@@ -108,7 +109,7 @@ const extendPartRange = (
 			},
 		},
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 	};
 };
 
@@ -351,7 +352,7 @@ function handleObjectDragStart(
 			multiSelectGroup: newMultiSelectGroup,
 			// Close the object menu dropdown at drag start
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 		},
 		{ kind: "move" },
 		{
@@ -517,8 +518,10 @@ export const ObjectEventHandler: GestureHandler = {
 					// the group it leaves behind is dropped with the selection it wrapped.
 					multiSelectGroup: null,
 					// The click that precedes the double-click leaves an already-selected
-					// slot untouched, so the submenu open over it is closed here.
+					// slot untouched, so the submenu open over it is closed here, and so
+					// is a shape picker, which would take the editor's Escape.
 					objectMenuOpenId: null,
+					...closeStencilPopups(),
 					mode: {
 						kind: "textEdit",
 						draft: {

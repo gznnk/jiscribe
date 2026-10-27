@@ -10,6 +10,10 @@ import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import { createMultiSelectGroup } from "../../../selection/readers/createMultiSelectGroup";
 import { getSelectedConnectorId } from "../../../selection/readers/getSelectedConnectorId";
 import { claimDrag } from "../../../utils/claimDrag";
+import {
+	closeStencilPopups,
+	isAnyStencilPopupOpen,
+} from "../../../utils/closeStencilPopups";
 import { commitEdit } from "../../../utils/commitEdit";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { NORMAL_MODE } from "../../../utils/normalMode";
@@ -128,7 +132,7 @@ export const CanvasEventHandler: GestureHandler = {
 				},
 				// A new context menu supersedes any open ObjectMenu / category flyout.
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				...closeStencilPopups(),
 			};
 		}
 
@@ -148,7 +152,7 @@ export const CanvasEventHandler: GestureHandler = {
 					},
 					// A new context menu supersedes any open ObjectMenu / category flyout.
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					...closeStencilPopups(),
 				};
 			}
 
@@ -185,15 +189,16 @@ export const CanvasEventHandler: GestureHandler = {
 			drawingPreset !== null &&
 			drawingObjectType !== null
 		) {
-			// Starting to draw dismisses an open ObjectMenu / category flyout.
+			// Starting to draw dismisses an open ObjectMenu / category flyout /
+			// Other shapes popover.
 			if (
 				nextState.objectMenuOpenId !== null ||
-				nextState.stencilLibraryOpenCategory !== null
+				isAnyStencilPopupOpen(nextState)
 			) {
 				nextState = {
 					...nextState,
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					...closeStencilPopups(),
 				};
 			}
 
@@ -370,7 +375,7 @@ export const CanvasEventHandler: GestureHandler = {
 						// first hit rebuilds it.
 						multiSelectGroup: isAdditive ? nextState.multiSelectGroup : null,
 						objectMenuOpenId: null,
-						stencilLibraryOpenCategory: null,
+						...closeStencilPopups(),
 					},
 					{
 						kind: "marquee",
@@ -471,7 +476,7 @@ export const CanvasEventHandler: GestureHandler = {
 				contextMenuPosition: null,
 				// Reset the ObjectMenu expansion
 				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
+				...closeStencilPopups(),
 			};
 			// An additive modifier means this press opens an additive marquee, so the
 			// selection it builds on has to survive the press. Touch carries no
