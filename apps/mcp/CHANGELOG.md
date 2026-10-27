@@ -35,6 +35,14 @@ covers that.
 - The floating menu's **…** button. Open the properties sidebar from the top
   bar instead.
 
+### Fixed
+
+- **`list_types` answers before the file exists.** It lists the shape set, not
+  the drawing, yet it read the file it was given and failed with `ENOENT` when
+  `open_canvas` had not created it yet. Now it answers without reading the file
+  (and still without creating it), so a file that does not parse no longer
+  stops it either; the `path` is checked as before.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

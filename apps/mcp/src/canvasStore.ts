@@ -11,6 +11,7 @@ import {
 export {
 	CANVAS_FILE_EXTENSIONS,
 	CanvasFileError,
+	createEmptyCanvasDoc,
 	ensureCanvasFile,
 	loadCanvasFile,
 	readCanvasFileText,
