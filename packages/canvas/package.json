@@ -57,7 +57,7 @@
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react-swc": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
-		"@vitest/ui": "^4.1.11",
+		"@vitest/ui": "^4.1.12",
 		"jsdom": "catalog:",
 		"madge": "catalog:",
 		"rimraf": "catalog:",
