@@ -43,7 +43,7 @@ const OtherShapesPopoverComponent: React.FC<OtherShapesPopoverProps> = ({
 			aria-label={messages.bottomToolbarOtherShapes}
 			data-kind="menu"
 			data-id={OTHER_SHAPES_POPOVER_TARGET_ID}
-			data-gesture="chrome-wheel"
+			data-gesture="native-wheel-always"
 		>
 			<StencilLibraryBody
 				sections={sections}

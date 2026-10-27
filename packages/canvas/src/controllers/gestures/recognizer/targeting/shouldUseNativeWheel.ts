@@ -8,9 +8,9 @@ import { findGestureElement } from "./findGestureElement";
  * element is scrollable (its content overflows).
  * When Ctrl is held, it is always handled by the canvas since that is a zoom gesture.
  *
- * Inside an element with data-gesture="chrome-wheel" the wheel is never the canvas's,
- * scrollable or not and Ctrl-held or not: such chrome floats inside the viewport
- * but takes the wheel as the sidebars do (useBlockBrowserZoom cancels the Ctrl one).
+ * Inside an element with data-gesture="native-wheel-always" the wheel is never
+ * the canvas's, scrollable or not and Ctrl-held or not: such chrome floats inside
+ * the viewport but takes the wheel as the sidebars do (useBlockBrowserZoom cancels the Ctrl one).
  *
  * @param target - The wheel event target
  * @param ctrlKey - Whether the Ctrl key is held
@@ -20,7 +20,7 @@ export const shouldUseNativeWheel = (
 	target: EventTarget | null,
 	ctrlKey: boolean,
 ): boolean => {
-	if (findGestureElement(target, "chrome-wheel")) {
+	if (findGestureElement(target, "native-wheel-always")) {
 		return true;
 	}
 	if (ctrlKey) {

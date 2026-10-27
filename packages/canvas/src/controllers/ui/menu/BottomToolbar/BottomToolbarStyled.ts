@@ -45,7 +45,8 @@ export const BottomToolbarContainer = styled.div`
  * The Other shapes popover: the shape library's search box and sections over
  * the canvas, as wide as the sidebar unless the viewport is narrower, and at
  * most 60% of its height, the list scrolling inside. Its whole area keeps the
- * wheel from the canvas (`data-gesture="chrome-wheel"` on the element).
+ * wheel from the canvas (`data-gesture="native-wheel-always"` on the
+ * element).
  */
 export const OtherShapesPopoverContainer = styled.div`
 	box-sizing: border-box;

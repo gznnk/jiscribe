@@ -23,8 +23,8 @@ import { shouldUseNativeWheel } from "../gestures/recognizer/targeting/shouldUse
  * with room left over is not scrollable, so the wheel falls through to the canvas.
  * When Ctrl is held, the event is always handled by the canvas as a zoom operation,
  * except over chrome floating inside the viewport that is marked
- * data-gesture="chrome-wheel" (the Other shapes popover), which keeps every wheel the
- * way the sidebars do.
+ * data-gesture="native-wheel-always" (the Other shapes popover), which keeps
+ * every wheel the way the sidebars do.
  *
  * @param containerRef - Reference to the canvas container element
  * @param onWheel - Callback invoked when a wheel event occurs
@@ -52,8 +52,8 @@ export function useCanvasWheel(
 			}
 			// Over a scrollable data-gesture="native-wheel" element (the shortcut help
 			// modal's body, an editing surface overflowing its slot) or anywhere in a
-			// data-gesture="chrome-wheel" one, leave native scrolling in place and skip
-			// canvas scrolling
+			// data-gesture="native-wheel-always" one, leave native scrolling in place
+			// and skip canvas scrolling
 			if (shouldUseNativeWheel(e.target, e.ctrlKey)) {
 				return;
 			}

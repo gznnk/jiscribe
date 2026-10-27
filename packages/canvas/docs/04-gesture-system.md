@@ -161,12 +161,12 @@ text editing or the input fields inside menus—to be handled declaratively.
 Declares how an element relates to gestures. It takes a **space-separated token list**, and each token is
 **searched toward ancestors via `closest`** using `[data-gesture~="token"]`.
 
-| Token            | Meaning                                                                                                                                | Primary targets                                                                                                |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `none`           | Does not become the origin of a gesture. Ignores pointerdown and leaves contextmenu to the native handler                              | The wrapper of the text editing surface, numeric/color inputs inside menus, callback items in the context menu |
-| `native-pointer` | Participates in gestures but **does not perform pointer capture**. Also becomes a target for `inputValue` harvesting                   | Sliders (range input)                                                                                          |
-| `native-wheel`   | If the element is scrollable (`scrollHeight > clientHeight`), leaves wheel to native scrolling (excluded while Ctrl is held, for zoom) | The text editing surface                                                                                       |
-| `chrome-wheel`   | Leaves every wheel inside the element to the browser, scrollable or not and Ctrl-held or not, as over the chrome outside the viewport  | The bottom tool bar's "Other shapes" popover                                                                   |
+| Token                 | Meaning                                                                                                                                | Primary targets                                                                                                |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `none`                | Does not become the origin of a gesture. Ignores pointerdown and leaves contextmenu to the native handler                              | The wrapper of the text editing surface, numeric/color inputs inside menus, callback items in the context menu |
+| `native-pointer`      | Participates in gestures but **does not perform pointer capture**. Also becomes a target for `inputValue` harvesting                   | Sliders (range input)                                                                                          |
+| `native-wheel`        | If the element is scrollable (`scrollHeight > clientHeight`), leaves wheel to native scrolling (excluded while Ctrl is held, for zoom) | The text editing surface                                                                                       |
+| `native-wheel-always` | Leaves every wheel inside the element to the browser, scrollable or not and Ctrl-held or not, as over the chrome outside the viewport  | The bottom tool bar's "Other shapes" popover                                                                   |
 
 Combined example: `data-gesture="none native-wheel"` (excluded from gestures and uses native scrolling).
 
@@ -174,7 +174,7 @@ Where they are read:
 
 - `none` → `isGestureOptedOut` (onPointerDown in `GestureRecognizer.getHandlers()`, handleContextMenu in `Canvas.tsx`)
 - `native-pointer` → `isNativePointerTarget` (suppresses capture and enables `inputValue` harvesting; decided once at pointerdown and held on `Pressed`)
-- `native-wheel` / `chrome-wheel` → `shouldUseNativeWheel` (`useCanvasWheel`)
+- `native-wheel` / `native-wheel-always` → `shouldUseNativeWheel` (`useCanvasWheel`)
 
 All of these decision utilities are built on `findGestureElement(target, token)` and
 are located in `controllers/gestures/recognizer/targeting/`.
@@ -252,7 +252,7 @@ space-separated token list plus `closest` search.
 1. An element that is fully served by standard browser interaction → `data-gesture="none"`
 2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-action`, inside the widget that carries `data-kind` / `data-id`
 3. Scrollable and you want to prioritize internal scrolling → `data-gesture="native-wheel"`
-4. Chrome floating inside the viewport that should never pan or zoom the canvas under a wheel → `data-gesture="chrome-wheel"`
+4. Chrome floating inside the viewport that should never pan or zoom the canvas under a wheel → `data-gesture="native-wheel-always"`
 
 ## Sharing gestures with the host page (`gestureHandling`)
 
