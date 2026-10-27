@@ -232,8 +232,6 @@ export type CanvasMessageStrings = {
 	menuLabelBorderColor: string;
 	menuLabelBorderStyle: string;
 	menuOpenReference: string;
-	/** Title of the ellipsis at the end of the ObjectMenu that opens the properties sidebar. */
-	menuPropertyPanel: string;
 };
 
 /**

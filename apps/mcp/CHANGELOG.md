@@ -27,6 +27,11 @@ covers that.
   switch, and the bottom bar is hidden, the shape library holding the shapes.
   The bottom bar's "Other shapes" button does nothing yet.
 
+### Removed
+
+- The floating menu's **…** button. Open the properties sidebar from the top
+  bar instead.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

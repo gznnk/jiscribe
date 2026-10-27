@@ -14,7 +14,6 @@ import { GroupMenu } from "./items/GroupMenu";
 import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
 import { OpenReferenceMenu } from "./items/OpenReferenceMenu";
-import { PropertyPanelMenu } from "./items/PropertyPanelMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import { TextFormatMenu } from "./items/TextFormatMenu";
 import {
@@ -249,12 +248,6 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				<SelectionStyleReaderContext.Provider value={readStyle}>
 					{sections}
 				</SelectionStyleReaderContext.Provider>
-				{/* The way into the sidebar, after every per-type section. Not a
-				    section itself, so a custom menu cannot drop it and the "nothing
-				    to show" check above does not count it. */}
-				<ObjectMenuSectionRow>
-					<PropertyPanelMenu />
-				</ObjectMenuSectionRow>
 			</ObjectMenuContainer>
 		</ObjectMenuWrapper>
 	);

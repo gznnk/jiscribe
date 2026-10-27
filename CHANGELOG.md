@@ -95,6 +95,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   which the bottom bar no longer shows while a sidebar is open. The harness's
   `?defaultToolbar` switch gives the page the canvas default top bar.
 
+### Removed
+
+- **Breaking: the floating menu no longer opens the properties sidebar.** The
+  **…** button at its end is gone, and with it the `menuPropertyPanel` key of
+  `CanvasMessages`, so a host whose messages object names that key gets a type
+  error until it drops it. The menu shows only while both sidebars are closed,
+  and opening one from it switched the whole top bar to its full-width form. With
+  the default bar the sidebars are opened by the switch for both; a host
+  composing `DEFAULT_TOOLBAR_PROPERTIES_SECTION` keeps a properties toggle on the
+  collapsed bar, and a canvas with no top bar has no way into the sidebars.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

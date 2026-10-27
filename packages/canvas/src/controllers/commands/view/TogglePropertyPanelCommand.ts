@@ -5,10 +5,9 @@ import type { ExecutableCommand } from "../CommandTypes";
  *
  * Deliberately carries no keyboard shortcut, like its counterpart
  * ToggleStencilLibraryCommand: the panel is reached from a toolbar toggle
- * (`data-action="command:togglePropertyPanel"`, where the host places one) or
- * from the ellipsis at the end of the ObjectMenu, and closed from the toolbar or
- * from its own close button. The switch for both sidebars runs
- * ToggleSidebarsCommand instead.
+ * (`data-action="command:togglePropertyPanel"`, where the host places one), and
+ * closed from the toolbar or from its own close button. The switch for both
+ * sidebars runs ToggleSidebarsCommand instead.
  * Categorized as a view command because it changes what the chrome shows, not
  * the document.
  */

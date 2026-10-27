@@ -1,1 +1,0 @@
-export { PropertyPanelMenu } from "./PropertyPanelMenu";

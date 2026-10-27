@@ -159,7 +159,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuLabelBorderColor: "Label Border Color",
 	menuLabelBorderStyle: "Label Border Style",
 	menuOpenReference: "Open Reference",
-	menuPropertyPanel: "Properties",
 
 	commandLabels: {},
 	stencilLabels: {},

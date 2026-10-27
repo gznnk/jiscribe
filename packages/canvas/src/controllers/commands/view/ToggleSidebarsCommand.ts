@@ -10,8 +10,8 @@ import type { ExecutableCommand } from "../CommandTypes";
  *
  * The toolbar's `sidebarsToggle` runs it (`data-action="command:toggleSidebars"`).
  * The per-edge `toggleStencilLibrary` / `togglePropertyPanel` stay as they are,
- * so the panels' own close buttons and the ObjectMenu's ellipsis still move one
- * edge at a time. No keyboard shortcut and a view command, like those two.
+ * so the panels' own close buttons and the per-edge toolbar toggles still move
+ * one edge at a time. No keyboard shortcut and a view command, like those two.
  */
 export const ToggleSidebarsCommand: ExecutableCommand = {
 	id: "toggleSidebars",

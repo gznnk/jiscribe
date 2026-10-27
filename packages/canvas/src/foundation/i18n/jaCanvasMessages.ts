@@ -155,7 +155,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuLabelBorderColor: "ラベルの枠線色",
 	menuLabelBorderStyle: "ラベルの枠線スタイル",
 	menuOpenReference: "参照を開く",
-	menuPropertyPanel: "プロパティ",
 
 	// コマンドの ja ラベルは各コマンド定義側にある。record はホスト上書き用に残す
 	commandLabels: {},
