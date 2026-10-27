@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * Undo / redo history integrity.
@@ -16,7 +17,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /** Screen box of the canvas area itself. */
 async function canvasArea(canvas: CanvasDriver) {
-	const box = await canvas.page.locator('[data-kind="canvas"]').boundingBox();
+	const box = await canvas.page.locator(selectors.canvasArea).boundingBox();
 	if (!box) {
 		throw new Error("the canvas area has no box on screen");
 	}

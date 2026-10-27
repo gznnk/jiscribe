@@ -8,7 +8,7 @@ import { selectors } from "../../support/selectors";
  * The two forms of the top toolbar, switched by whether a sidebar is open.
  *
  * - Collapsed (both sidebars closed), the bar is two pills floating over the
- *   canvas's top corners, each section in the pill its `collapsedAlign` names;
+ *   canvas's top corners, each section on the same side as on the full bar;
  *   the help section is hidden, and the canvas area reaches the top of the
  *   root.
  * - Expanded (either sidebar open), the full-width bar is back above the
@@ -44,7 +44,7 @@ async function screenBox(locator: Locator) {
  * child.
  */
 async function readCanvasBoxes(canvas: CanvasDriver) {
-	const viewport = canvas.page.locator('[data-kind="canvas"]');
+	const viewport = canvas.page.locator(selectors.canvasArea);
 	return {
 		root: await screenBox(viewport.locator("xpath=../..")),
 		viewport: await screenBox(viewport),
@@ -54,17 +54,17 @@ async function readCanvasBoxes(canvas: CanvasDriver) {
 const START_PILL_ACTIONS = [
 	"command:toggleStencilLibrary",
 	"toggle:spec",
-	"command:toggleSidebars",
+	"command:undo",
+	"command:redo",
 ];
 
 const END_PILL_ACTIONS = [
-	"command:undo",
-	"command:redo",
 	"command:zoomOut",
 	"command:resetZoom",
 	"command:zoomIn",
 	"command:zoomToFit",
 	"command:togglePropertyPanel",
+	"command:toggleSidebars",
 ];
 
 test.describe("collapsed toolbar", () => {

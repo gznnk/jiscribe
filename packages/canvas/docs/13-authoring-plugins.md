@@ -343,9 +343,9 @@ Two things that file has to get right:
   external author has, and taking it is what proves the package's `exports` suffice on their
   own.
 - **Keep `toolbarItems` down to what the specs draw** — this plugin's pinned presets or its
-  category (as a `{ type: "stencilCategory", category }` item), plus `{ type: "stencilPreset", presetId: "rect" }`, which is always required
-  because `CanvasDriver.goto()` waits for the "Rectangle" tool button before handing the page
-  over. The items are the bar's shape tools only: the kit
+  category (as a `{ type: "stencilCategory", category }` item), plus
+  `{ type: "stencilPreset", presetId: "rect" }` only when a spec draws a core rectangle
+  (`drawShape("Rectangle", …)`). The items are the bar's shape tools only: the kit
   (`packages/canvas/e2e/kit/mountPluginHarness.tsx`) puts the shape library toggle and a
   divider before them and appends the rest of core's sections after them (undo / redo,
   zoom, the properties toggle, the switch for both sidebars and so on), so the page keeps

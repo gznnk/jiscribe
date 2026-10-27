@@ -63,10 +63,17 @@ const BOTTOM_TOOLBAR = '[data-kind="menu"][data-id="bottom-toolbar"]';
 
 export const selectors = {
 	/**
+	 * The canvas area (the viewport the sidebars and the full-width toolbar take
+	 * their space from), which holds the drawing, the bottom bar and the
+	 * collapsed toolbar's pills. The multi-canvas page has two.
+	 */
+	canvasArea: '[data-kind="canvas"]',
+
+	/**
 	 * Tool button pinned on either bar, the top toolbar or the bottom tool bar,
 	 * wherever the harness put it; scoped to the two bars so the sidebar's copy
 	 * cannot match. A harness pins each preset on one bar only, or this matches
-	 * twice.
+	 * twice. The bottom bar is not always shown: see `e2e/README.md`.
 	 */
 	toolButton: (tool: ToolTitle) =>
 		`${TOOLBAR} button[title="${tool}"], ${BOTTOM_TOOLBAR} button[title="${tool}"]`,

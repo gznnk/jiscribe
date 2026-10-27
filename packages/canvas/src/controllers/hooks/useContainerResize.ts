@@ -70,10 +70,11 @@ function measureOffset(container: HTMLElement): MeasuredOffset | null {
  * const containerRef = useRef<HTMLDivElement>(null);
  * const [state, dispatch] = useCanvasReducer(canvasDoc);
  *
+ * const { stencilLibraryPanel, propertyPanel } = state;
  * useContainerResize(
  *   containerRef,
  *   dispatch,
- *   `${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}:${isToolbarCollapsed}`,
+ *   `${stencilLibraryPanel.isOpen}:${propertyPanel.isOpen}:${areBothSidebarsClosed}`,
  * );
  * ```
  */

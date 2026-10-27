@@ -24,12 +24,6 @@ import { selectors } from "../../support/selectors";
  * so the lit control is the one the text is drawn with.
  */
 
-/**
- * The canvas area, the flex child the sidebars take their width from. Spelled out
- * here rather than in `selectors` because this is the only spec that measures it.
- */
-const CANVAS_AREA = '[data-kind="canvas"]';
-
 /** Screen rectangle of an element, as boundingBox() reports it. */
 type ScreenBox = { x: number; y: number; width: number; height: number };
 
@@ -319,11 +313,11 @@ test.describe("Properties sidebar", () => {
 	});
 
 	test("narrows the viewport by its own width", async ({ canvas }) => {
-		const before = await boxOf(canvas, CANVAS_AREA);
+		const before = await boxOf(canvas, selectors.canvasArea);
 
 		await canvas.openPropertyPanel();
 		const panelBox = await boxOf(canvas, selectors.propertyPanel);
-		const opened = await boxOf(canvas, CANVAS_AREA);
+		const opened = await boxOf(canvas, selectors.canvasArea);
 
 		expect(
 			Math.abs(before.width - opened.width - panelBox.width),

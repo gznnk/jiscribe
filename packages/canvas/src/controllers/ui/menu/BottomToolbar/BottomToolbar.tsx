@@ -16,7 +16,7 @@ type BottomToolbarProps = {
 
 /**
  * The bottom tool bar: the pinned presets, then a divider and the "Other
- * shapes" button.
+ * shapes" button. When Canvas shows it: see its `bottomToolbar` prop.
  *
  * The presets are the same StencilLibraryItem the top bar and the shape
  * library draw, so a click arms or places and a drag places exactly as there

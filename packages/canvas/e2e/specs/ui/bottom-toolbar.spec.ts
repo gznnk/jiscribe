@@ -8,17 +8,15 @@ import { selectors } from "../../support/selectors";
  *
  * - Its presets are the same `item:<presetId>` contract as the top bar's: a
  *   click arms drawing and a drag onto the canvas places the shape.
- * - It floats over the canvas without shrinking it, and stays centred over the
- *   visible canvas while a sidebar takes its width off one side.
+ * - It floats over the canvas without shrinking it, and shows only while both
+ *   sidebars are closed: with either open the shape library holds the shapes.
+ *   A page declaring no library keeps it, the library holding nothing.
  * - Its "Other shapes" button is a placeholder: pressing it, or dragging off
  *   it, changes nothing.
  */
 
 /** Screen rectangle of an element, as boundingBox() reports it. */
 type ScreenBox = { x: number; y: number; width: number; height: number };
-
-/** The canvas area, the flex child the sidebars take their width from. */
-const CANVAS_AREA = '[data-kind="canvas"]';
 
 async function boxOf(
 	canvas: CanvasDriver,
@@ -34,7 +32,7 @@ async function boxOf(
 /** Asserts the bar's centre line is the canvas area's, allowing 1px for rounding. */
 async function expectCentredOverCanvas(canvas: CanvasDriver, hint: string) {
 	const barBox = await boxOf(canvas, selectors.bottomToolbar);
-	const canvasBox = await boxOf(canvas, CANVAS_AREA);
+	const canvasBox = await boxOf(canvas, selectors.canvasArea);
 	const barCentreX = barBox.x + barBox.width / 2;
 	const canvasCentreX = canvasBox.x + canvasBox.width / 2;
 	expect(
@@ -105,27 +103,43 @@ test.describe("bottom tool bar", () => {
 	test("floats over the canvas without taking its height", async ({
 		canvas,
 	}) => {
-		const canvasBox = await boxOf(canvas, CANVAS_AREA);
+		const canvasBox = await boxOf(canvas, selectors.canvasArea);
 		const viewportHeight = canvas.page.viewportSize()?.height;
 		expect(canvasBox.y + canvasBox.height).toBe(viewportHeight);
 		await expectCentredOverCanvas(canvas, "no sidebar open");
 	});
 
-	test("stays centred over the visible canvas with sidebars open", async ({
+	test("hides while a sidebar is open and comes back once both close", async ({
 		canvas,
 	}) => {
-		// The library alone narrows the canvas from one side only, so the canvas's
-		// centre and the page's part ways.
-		await canvas.openStencilLibrary();
-		const canvasBox = await boxOf(canvas, CANVAS_AREA);
-		const pageWidth = canvas.page.viewportSize()?.width ?? 0;
-		expect(canvasBox.x + canvasBox.width / 2).not.toBe(pageWidth / 2);
-		await expectCentredOverCanvas(canvas, "shape library open");
+		const bottomToolbar = canvas.page.locator(selectors.bottomToolbar);
+		await expect(bottomToolbar).toBeVisible();
 
-		await canvas.closeStencilLibrary();
 		await canvas.toggleSidebars();
-		await expect(canvas.page.locator(selectors.propertyPanel)).toBeVisible();
-		await expectCentredOverCanvas(canvas, "both sidebars open");
+		await expect(bottomToolbar).toHaveCount(0);
+		await canvas.toggleSidebars();
+		await expect(bottomToolbar).toBeVisible();
+		await expectCentredOverCanvas(canvas, "back after both sidebars closed");
+
+		// Either sidebar alone counts as expanded.
+		await canvas.openPropertyPanel();
+		await expect(bottomToolbar).toHaveCount(0);
+		await canvas.closePropertyPanel();
+		await canvas.openStencilLibrary();
+		await expect(bottomToolbar).toHaveCount(0);
+	});
+
+	/** With no library to hold the shapes, the bar is the only place they are. */
+	test("stays while the properties sidebar is open on a page with no shape library", async ({
+		canvas,
+	}) => {
+		await canvas.goto("?noStencilLibrary");
+		const bottomToolbar = canvas.page.locator(selectors.bottomToolbar);
+		await expect(bottomToolbar).toBeVisible();
+
+		await canvas.openPropertyPanel();
+		await expect(bottomToolbar).toBeVisible();
+		await expectCentredOverCanvas(canvas, "properties sidebar open");
 	});
 
 	test("does nothing when Other shapes is pressed or dragged off", async ({

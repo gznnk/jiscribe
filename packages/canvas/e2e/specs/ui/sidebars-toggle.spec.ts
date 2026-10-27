@@ -112,3 +112,56 @@ test.describe("sidebars switch", () => {
 		await expect(sidebarsToggle).toHaveAttribute("aria-expanded", "true");
 	});
 });
+
+/**
+ * The toggles for one sidebar each, which the default bar puts just before the
+ * switch (`DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION`). The page's own bar
+ * keeps them elsewhere, so these run on the canvas default (?defaultToolbar).
+ */
+test.describe("per-sidebar toggles on the default bar", () => {
+	test("are left out of the collapsed pills, beside the switch", async ({
+		canvas,
+	}) => {
+		await canvas.goto("?defaultToolbar");
+		await expect(canvas.page.locator(selectors.sidebarsToggle)).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.stencilLibraryToggle),
+		).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelToggle),
+		).toHaveCount(0);
+	});
+
+	test("reopen the one sidebar closed from its own ×, in one press", async ({
+		canvas,
+	}) => {
+		await canvas.goto("?defaultToolbar");
+		await canvas.toggleSidebars();
+		const libraryToggle = canvas.page.locator(selectors.stencilLibraryToggle);
+		const propertiesToggle = canvas.page.locator(selectors.propertyPanelToggle);
+		await expect(libraryToggle).toHaveAttribute("aria-expanded", "true");
+		await expect(propertiesToggle).toHaveAttribute("aria-expanded", "true");
+
+		await canvas.closeStencilLibrary();
+		await expect(libraryToggle).toHaveAttribute("aria-expanded", "false");
+		await expect(propertiesToggle).toHaveAttribute("aria-expanded", "true");
+
+		await canvas.openStencilLibrary();
+		await expect(libraryToggle).toHaveAttribute("aria-expanded", "true");
+		await expect(canvas.page.locator(selectors.propertyPanel)).toBeVisible();
+	});
+
+	test("show no library toggle when no library is declared", async ({
+		canvas,
+	}) => {
+		await canvas.goto("?noStencilLibrary&defaultToolbar");
+		await canvas.toggleSidebars();
+		await expect(canvas.page.locator(selectors.propertyPanel)).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.propertyPanelToggle),
+		).toHaveAttribute("aria-expanded", "true");
+		await expect(
+			canvas.page.locator(selectors.stencilLibraryToggle),
+		).toHaveCount(0);
+	});
+});

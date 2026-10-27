@@ -50,12 +50,14 @@ describe("resolveToolbarSections", () => {
 			["history", "start"],
 			["view", "end"],
 			["help", "end"],
+			["per-sidebar-toggles", "end"],
 			["sidebars", "end"],
 		]);
 		expect(itemTypes(resolved)).toEqual([
 			["command", "command"],
 			["zoom", "command"],
 			["divider", "command"],
+			["divider", "stencilLibraryToggle", "propertyPanelToggle"],
 			["divider", "sidebarsToggle"],
 		]);
 	});
@@ -135,7 +137,24 @@ describe("resolveToolbarSections", () => {
 			DEFAULT_TOOLBAR_SECTIONS,
 			createContext(true, ["undo", "redo", "zoomIn"]),
 		);
-		expect(resolved.map((section) => section.id)).toEqual(["history", "view"]);
+		expect(resolved.map((section) => section.id)).toEqual([
+			"history",
+			"view",
+			"per-sidebar-toggles",
+		]);
+	});
+
+	/** The library toggle would open an empty sidebar; the divider stays for the other. */
+	it("keeps only the properties toggle of the per-sidebar toggles without a library", () => {
+		const resolved = resolveToolbarSections(
+			DEFAULT_TOOLBAR_SECTIONS,
+			createContext(false),
+		);
+		expect(
+			itemTypes(
+				resolved.filter((section) => section.id === "per-sidebar-toggles"),
+			),
+		).toEqual([["divider", "propertyPanelToggle"]]);
 	});
 
 	it("keeps the sidebars switch whether or not a library is declared", () => {
@@ -241,8 +260,10 @@ describe("resolveToolbarSections", () => {
 					{ type: "divider" },
 				],
 			},
+			// Across the free space, so the two dividers do not meet.
 			{
 				id: "settings",
+				align: "end",
 				items: [
 					{ type: "divider" },
 					{ type: "slot", id: "settings", node: null },
@@ -254,6 +275,69 @@ describe("resolveToolbarSections", () => {
 			["slot", "divider"],
 			["divider", "slot"],
 		]);
+	});
+
+	/**
+	 * A slot section closing with a divider, then the history section opening
+	 * with one, both on the start side.
+	 */
+	it("keeps one divider where two neighbouring sections each bring one", () => {
+		const sections: ToolbarSection[] = [
+			{
+				id: "file",
+				items: [
+					{ type: "slot", id: "file-menu", node: null },
+					{ type: "divider" },
+				],
+			},
+			...DEFAULT_TOOLBAR_SECTIONS,
+		];
+		const resolved = resolveToolbarSections(sections, createContext(true));
+		expect(itemTypes(resolved)).toEqual([
+			["slot", "divider"],
+			["command", "command"],
+			["zoom", "command"],
+			["divider", "command"],
+			["divider", "stencilLibraryToggle", "propertyPanelToggle"],
+			["divider", "sidebarsToggle"],
+		]);
+	});
+
+	/**
+	 * Sections are drawn in array order, and the free space falls only before
+	 * the first end-aligned one: a start section declared after an end one sits
+	 * right beside it, so its doubled divider goes like any other.
+	 */
+	it("drops the doubled divider of a start section declared after an end one", () => {
+		const sections: ToolbarSection[] = [
+			{
+				id: "view",
+				align: "end",
+				items: [{ type: "slot", id: "view", node: null }, { type: "divider" }],
+			},
+			{
+				id: "late",
+				items: [{ type: "divider" }, { type: "slot", id: "late", node: null }],
+			},
+		];
+		const resolved = resolveToolbarSections(sections, createContext(true));
+		expect(itemTypes(resolved)).toEqual([["slot", "divider"], ["slot"]]);
+	});
+
+	it("drops a section left with nothing but the doubled divider", () => {
+		const sections: ToolbarSection[] = [
+			{
+				id: "tools",
+				items: [
+					{ type: "stencilPreset", presetId: "rect" },
+					{ type: "divider" },
+				],
+			},
+			{ id: "spacer", items: [{ type: "divider" }] },
+			{ id: "more", items: [{ type: "stencilPreset", presetId: "ellipse" }] },
+		];
+		const resolved = resolveToolbarSections(sections, createContext(true));
+		expect(resolved.map((section) => section.id)).toEqual(["tools", "more"]);
 	});
 
 	it("drops a divider only stranded at an end by a dropped neighbour", () => {

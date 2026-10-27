@@ -33,8 +33,9 @@ import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../BottomToolbar/bottomToolba
  * - `sidebarsToggle`: one switch for both sidebars (the `toggleSidebars`
  *   command), pressed while either is open. Dropped when the host switched the
  *   command off via `CanvasConfig.commands`.
- * - `divider`: a hairline. One left at either end of a section, or next to
- *   another divider after the drops above, is cleaned away.
+ * - `divider`: a hairline. Dividers left stranded or doubled by the drops
+ *   above, or by neighbouring sections, are cleaned away (see
+ *   `resolveToolbarSections`).
  * - `slot`: finished host UI. The engine only lends the place — it passes no
  *   props and holds no state — and wraps it in `data-gesture="none"` so plain
  *   `onClick` works.
@@ -71,8 +72,9 @@ export type ToolbarItem =
  * default bar is itself such an array ({@link DEFAULT_TOOLBAR_SECTIONS}).
  *
  * The bar takes two forms. While either sidebar is open it is the full-width
- * bar above the canvas, laid out by `align`; while both are closed it is two
- * pills floating over the canvas's top corners, laid out by `collapsedAlign`.
+ * bar above the canvas, laid out by `align`; while both are closed it splits
+ * into two pills floating over the canvas's top corners along the same sides,
+ * unless a section's `collapsedAlign` says otherwise.
  */
 export type ToolbarSection = {
 	/** Keys the rendered section; must be unique across the array. */
@@ -95,12 +97,12 @@ export type ToolbarSection = {
 	items: ToolbarItem[];
 };
 
-// The bar is laid out by four rules, which the sections below follow and a host
-// replacing them is meant to keep:
-//   1. On the full-width bar, a sidebar control sits at the edge its panel
-//      opens on — the shape library toggle at the far left, the properties
-//      toggle or the switch for both sidebars at the far right. (The collapsed
-//      pills follow `collapsedAlign` instead.)
+// The default bar is laid out by four rules, which a host replacing it is meant
+// to keep:
+//   1. The switch for both sidebars keeps the far right, and the toggles for
+//      one sidebar each sit just before it, the shape library's first.
+//      DEFAULT_TOOLBAR_TOOLS_SECTION and DEFAULT_TOOLBAR_PROPERTIES_SECTION do
+//      not follow this one: each puts its toggle at the edge its panel opens on.
 //   2. The start side holds what changes the document (placing shapes, undo /
 //      redo); the end side what does not (zoom, help, and whatever view-side UI
 //      the host adds for itself).
@@ -135,12 +137,12 @@ export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
  * Undo / redo, kept on the start side as document-changing operations but in a
  * section of their own so a host replacing the shape tools does not have to
  * restate them. The leading divider marks the boundary with whatever tools
- * precede it, and goes when nothing does (a divider never opens the bar); the
- * whole section disappears when the host switched both commands off.
+ * precede it, and goes when nothing does or when that already ends in one (see
+ * `resolveToolbarSections`); the whole section disappears when the host
+ * switched both commands off.
  */
 export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
 	id: "history",
-	collapsedAlign: "end",
 	items: [
 		{ type: "divider" },
 		{ type: "command", commandId: "undo", icon: UndoIcon },
@@ -157,7 +159,6 @@ export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
 export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
 	id: "view",
 	align: "end",
-	collapsedAlign: "end",
 	items: [
 		{ type: "zoom" },
 		{ type: "command", commandId: "zoomToFit", icon: ZoomToFitIcon },
@@ -168,8 +169,7 @@ export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
  * Shortcut help, right after {@link DEFAULT_TOOLBAR_VIEW_SECTION} and set off
  * from it by its leading divider; `?` opens the help while the section is
  * hidden. A host adding its own view-side UI (a settings menu, say) belongs
- * after this section and before the sidebar control, so that control keeps the
- * far edge.
+ * after this section and before the sidebar controls, which keep the far right.
  */
 export const DEFAULT_TOOLBAR_HELP_SECTION: ToolbarSection = {
 	id: "help",
@@ -196,28 +196,47 @@ export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
 };
 
 /**
- * The switch for both sidebars, alone at the far right of the full-width bar
- * (collapsed, see its `collapsedAlign`): it opens the shape library and the
- * properties sidebar together and closes both again (see the `toggleSidebars`
- * command). Its leading divider separates it from whatever the host packed
- * against the end before it.
+ * The toggles for one sidebar each, the shape library's then the properties',
+ * just before the switch for both ({@link DEFAULT_TOOLBAR_SIDEBARS_SECTION}).
+ * Each shows pressed while its own panel is open; the library's is dropped
+ * when the host declared no library. Hidden while the sidebars are collapsed,
+ * where the switch alone opens them. Its leading divider separates it from
+ * whatever the host packed against the end before it.
+ */
+export const DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION: ToolbarSection = {
+	id: "per-sidebar-toggles",
+	align: "end",
+	collapsedAlign: "hidden",
+	items: [
+		{ type: "divider" },
+		{ type: "stencilLibraryToggle" },
+		{ type: "propertyPanelToggle" },
+	],
+};
+
+/**
+ * The switch for both sidebars, alone at the far right: it opens the shape
+ * library and the properties sidebar together and closes both again (see the
+ * `toggleSidebars` command). Its leading divider separates it from whatever the
+ * host packed against the end before it.
  */
 export const DEFAULT_TOOLBAR_SIDEBARS_SECTION: ToolbarSection = {
 	id: "sidebars",
 	align: "end",
-	collapsedAlign: "start",
 	items: [{ type: "divider" }, { type: "sidebarsToggle" }],
 };
 
 /**
- * The default bar: history on the left, view, help and the switch for both
- * sidebars on the right. Collapsed, the switch alone in the top-left pill and
- * history and view in the top-right one. The shape presets are not on it: they
- * are the bottom tool bar's (`bottomToolbar`).
+ * The default bar: history on the left; view, help, the toggles for each
+ * sidebar and the switch for both on the right. Collapsed, the same two sides
+ * as pills, with help and the per-sidebar toggles hidden.
+ * The shape presets are not on it: they are the bottom tool bar's
+ * (`bottomToolbar`).
  */
 export const DEFAULT_TOOLBAR_SECTIONS: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	DEFAULT_TOOLBAR_HELP_SECTION,
+	DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 ];

@@ -6,6 +6,7 @@ import {
 	enableTouch,
 	flushFrames,
 } from "../../support/cdpTouch";
+import { selectors } from "../../support/selectors";
 
 /**
  * Guards gestureHandling="cooperative", the value a canvas embedded in a
@@ -40,7 +41,7 @@ function parseViewBox(raw: string | null): ViewBox {
  * and the bottom bar and the collapsed toolbar's pills after it.
  */
 const viewportLocator = (page: Page) =>
-	page.locator('[data-testid="embedded-canvas"] [data-kind="canvas"]');
+	page.locator(`[data-testid="embedded-canvas"] ${selectors.canvasArea}`);
 
 /**
  * The embedded canvas's pan/zoom, as its main svg's viewBox: the first svg

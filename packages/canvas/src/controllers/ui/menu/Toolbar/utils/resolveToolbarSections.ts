@@ -7,6 +7,7 @@ import {
 	type ResolvedStencilCategory,
 } from "../../StencilLibrary/utils/resolveStencilCategory";
 import type { ToolbarItem, ToolbarSection } from "../toolbarSections";
+import { findFirstEndSectionId } from "./findFirstEndSectionId";
 
 /** A toolbar item with its registry lookups done, ready to draw. */
 export type ResolvedToolbarItem =
@@ -117,6 +118,33 @@ const dropBarEdgeDividers = (
 	return trimmed.filter((section) => section.items.length > 0);
 };
 
+/**
+ * Drops the leading divider of a section that follows a section ending in one:
+ * each declared its own boundary with the other, and the two would stand side
+ * by side. The first end-aligned section (see {@link findFirstEndSectionId}) is
+ * left alone, since the free space before it separates the two. A section left
+ * empty by that is dropped.
+ */
+const dropDoubledSectionDividers = (
+	sections: ResolvedToolbarSection[],
+): ResolvedToolbarSection[] => {
+	const firstEndSectionId = findFirstEndSectionId(sections);
+	const kept: ResolvedToolbarSection[] = [];
+	for (const section of sections) {
+		const previous = kept[kept.length - 1];
+		const isDoubled =
+			previous !== undefined &&
+			section.id !== firstEndSectionId &&
+			previous.items[previous.items.length - 1]?.type === "divider" &&
+			section.items[0]?.type === "divider";
+		const items = isDoubled ? section.items.slice(1) : section.items;
+		if (items.length > 0) {
+			kept.push(items === section.items ? section : { ...section, items });
+		}
+	}
+	return kept;
+};
+
 const resolveToolbarItem = (
 	item: ToolbarItem,
 	context: ToolbarResolutionContext,
@@ -168,8 +196,9 @@ const resolveToolbarItem = (
  * section left with no item at all is gone, so the result can be shorter than
  * `sections`. A divider the host declared at an end of a section survives as
  * the intended boundary with the next one (see {@link dropDanglingDividers}),
- * unless it would open or close the whole bar
- * (see {@link dropBarEdgeDividers}).
+ * unless the next one opens with a divider of its own
+ * (see {@link dropDoubledSectionDividers}) or it would open or close the whole
+ * bar (see {@link dropBarEdgeDividers}).
  * @throws When two sections share an `id`, or a `stencilCategory` item repeats a preset
  *   id (see {@link resolveStencilCategory}). The id keys the rendered section,
  *   so a repeat would be indistinguishable from the first rather than visibly
@@ -190,22 +219,24 @@ export const resolveToolbarSections = (
 	}
 
 	return dropBarEdgeDividers(
-		sections.flatMap((section) => {
-			const items = dropDanglingDividers(
-				section.items.flatMap((item) => resolveToolbarItem(item, context)),
-				section.items,
-			);
-			const align = section.align ?? "start";
-			return items.length > 0
-				? [
-						{
-							id: section.id,
-							align,
-							collapsedAlign: section.collapsedAlign ?? align,
-							items,
-						},
-					]
-				: [];
-		}),
+		dropDoubledSectionDividers(
+			sections.flatMap((section) => {
+				const items = dropDanglingDividers(
+					section.items.flatMap((item) => resolveToolbarItem(item, context)),
+					section.items,
+				);
+				const align = section.align ?? "start";
+				return items.length > 0
+					? [
+							{
+								id: section.id,
+								align,
+								collapsedAlign: section.collapsedAlign ?? align,
+								items,
+							},
+						]
+					: [];
+			}),
+		),
 	);
 };

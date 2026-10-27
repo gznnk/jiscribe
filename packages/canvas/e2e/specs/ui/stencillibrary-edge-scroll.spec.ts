@@ -47,7 +47,7 @@ async function viewBoxMinX(canvas: CanvasDriver): Promise<number> {
  */
 async function openStencilLibraryMeasured(canvas: CanvasDriver): Promise<void> {
 	await canvas.openStencilLibrary();
-	const canvasArea = canvas.page.locator('[data-kind="canvas"]');
+	const canvasArea = canvas.page.locator(selectors.canvasArea);
 	await expect
 		.poll(
 			async () => {

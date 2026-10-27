@@ -15,9 +15,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- **A bottom tool bar floats over the canvas.** `<Canvas bottomToolbar>` draws
-  a bar centred at the bottom of the viewport, over the canvas rather than
-  shrinking it and centred over whatever the sidebars leave visible. It pins
+- **A bottom tool bar floats over the canvas.** `<Canvas bottomToolbar>` draws a
+  bar centred at the bottom of the viewport, over the canvas rather than
+  shrinking it. While either sidebar is open it is hidden and the shape library
+  holds the shapes; with no `stencilLibrary` declared it always shows. It pins
   presets (`presetIds`, default `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`, core's
   basic primitives) that click to draw and drag to place as the top bar's do,
   then an "Other shapes" button that is a placeholder and does nothing yet.
@@ -25,16 +26,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `standardBottomToolbarPresetIds` for it.
 - **The top bar collapses into two corner pills while the sidebars are
   closed.** With neither sidebar open, the full-width bar gives its row back to
-  the canvas and is drawn as two pills floating over the canvas's top corners,
-  in the bottom tool bar's look; opening a sidebar brings the full-width bar
-  back, unchanged. The drawing stays put on screen as the canvas area's top edge
+  the canvas and splits into two pills floating over the canvas's top corners
+  along the same sides, in the bottom tool bar's look; shortcut help is hidden
+  (`?` still opens it). Opening a sidebar brings the full-width bar back,
+  unchanged. The drawing stays put on screen as the canvas area's top edge
   moves. The new `ToolbarSection.collapsedAlign` (`"start"` / `"end"` /
-  `"hidden"`, omitted = the section's `align`) picks the pill a section goes
-  into; within a pill sections keep their array order, exactly one divider
-  separates neighbours, and an empty pill is not drawn. The default sections
-  carry their own (see `DEFAULT_TOOLBAR_SECTIONS`). A host listing its own
-  sections should set `collapsedAlign` on them — a settings menu, say, to
-  `"hidden"` — or each shows on its `align` side.
+  `"hidden"`, omitted = the section's `align`) overrides a section's pill;
+  within a pill sections keep their array order, exactly one divider separates
+  neighbours, and an empty pill is not drawn. A host listing its own sections
+  sets `collapsedAlign: "hidden"` on those that only matter while editing (a
+  settings menu, say).
 - **One switch opens or closes both sidebars.** The `sidebarsToggle` toolbar
   item runs the new `toggleSidebars` command: pressed while either sidebar is
   open, it closes both; otherwise it opens both, so a press never leaves one
@@ -42,14 +43,23 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   properties sidebar alone. `DEFAULT_TOOLBAR_SIDEBARS_SECTION` places it at
   the far right. `toggleStencilLibrary` / `togglePropertyPanel` and their
   toolbar items are unchanged.
+- **Each sidebar has its own toggle beside the switch.** The new
+  `DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION` holds the shape library and
+  properties toggles (each pressed while its own panel is open; the library's
+  dropped with no library declared), and `DEFAULT_TOOLBAR_SECTIONS` and
+  `standardToolbarSections` place it just before the switch. It is hidden
+  while the sidebars are collapsed, where the switch alone opens them. A host
+  composing the default sections itself adds it before
+  `DEFAULT_TOOLBAR_SIDEBARS_SECTION` to match.
 
 ### Changed
 
 - **The default top bar no longer carries the shape presets.**
-  `DEFAULT_TOOLBAR_SECTIONS` is now history, view and the sidebars switch; the
-  presets moved to the bottom tool bar. `standardToolbarSections` changed the
-  same way. `DEFAULT_TOOLBAR_TOOLS_SECTION`, `DEFAULT_TOOLBAR_PROPERTIES_SECTION`
-  and `standardToolbarToolsSection` are still exported.
+  `DEFAULT_TOOLBAR_SECTIONS` is now history, view, help, the per-sidebar toggles
+  and the sidebars switch; the presets moved to the bottom tool bar.
+  `standardToolbarSections` changed the same way.
+  `DEFAULT_TOOLBAR_TOOLS_SECTION`, `DEFAULT_TOOLBAR_PROPERTIES_SECTION` and
+  `standardToolbarToolsSection` are still exported.
 - **Migration: the bottom tool bar is shown unless you hide it.**
   `bottomToolbar.show` is independent of `toolbar.show`. A host that keeps
   presets on the top bar (composing `DEFAULT_TOOLBAR_TOOLS_SECTION` /
@@ -62,9 +72,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `standardToolbarSections` place right after it, so the full-width bar looks
   as before. A host composing `DEFAULT_TOOLBAR_VIEW_SECTION` itself adds
   `DEFAULT_TOOLBAR_HELP_SECTION` after it, or loses the help button.
-- **A divider no longer opens or closes the whole top bar.** One left at the
-  very start or end of the resolved bar is dropped, since it separates the bar
-  from nothing.
+- **A divider no longer opens or closes the whole top bar, nor stands doubled
+  between sections.** One left at the very start or end of the resolved bar is
+  dropped, since it separates the bar from nothing; so is the leading divider
+  of a section that follows one ending in a divider, unless the free space
+  before the first end-aligned section lies between them.
 - **Both sidebars are 280px wide with one content inset.** The shape library
   was 248px. Its preset grid now spreads six button-wide columns across the
   inset, so the last column lines up with the search box instead of leaving a
@@ -76,7 +88,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   bottom bar without it. `selectors.toolbar` matches both pills while the bar
   is collapsed; `selectors.toolbarPill(edge)` scopes to one.
   `CanvasDriver.openPropertyPanel()` / `closePropertyPanel()` re-measure the
-  canvas origin, which the full-width bar now moves.
+  canvas origin, which the full-width bar now moves; the new
+  `CanvasDriver.openPropertyPanelWithContentShift()` also returns how content
+  coordinates moved across the opening. `CanvasDriver.goto()` waits for the
+  canvas area (the new `selectors.canvasArea`) rather than the Rectangle preset,
+  which the bottom bar no longer shows while a sidebar is open. The harness's
+  `?defaultToolbar` switch gives the page the canvas default top bar.
 
 ## [0.12.2] - 2026-10-25
 

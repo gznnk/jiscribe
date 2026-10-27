@@ -53,17 +53,20 @@ const slotSection = (
 });
 
 describe("arrangeToolbarPills", () => {
-	it("splits the default bar into the switch and history + view, without help", () => {
+	it("splits the default bar into history and view + the switch, without help", () => {
 		const pills = arrange(DEFAULT_TOOLBAR_SECTIONS);
-		expect(pills.start.map((section) => section.id)).toEqual(["sidebars"]);
-		expect(pills.end.map((section) => section.id)).toEqual(["history", "view"]);
+		expect(pills.start.map((section) => section.id)).toEqual(["history"]);
+		expect(pills.end.map((section) => section.id)).toEqual([
+			"view",
+			"sidebars",
+		]);
 		expect(pillItemNames(pills)).toEqual({
-			start: ["sidebarsToggle"],
-			end: ["undo", "redo", "divider", "zoom", "zoomToFit"],
+			start: ["undo", "redo"],
+			end: ["zoom", "zoomToFit", "divider", "sidebarsToggle"],
 		});
 	});
 
-	/** The web editor's shape: a file slot, then a trailing divider. */
+	/** A slot section closing with a divider, among others bringing their own. */
 	it("puts exactly one divider between neighbours, whatever their own edge dividers", () => {
 		const pills = arrange([
 			{

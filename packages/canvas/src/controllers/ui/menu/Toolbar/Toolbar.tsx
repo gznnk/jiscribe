@@ -15,6 +15,7 @@ import {
 } from "./ToolbarStyled";
 import { ToolbarZoomGroup } from "./ToolbarZoomGroup";
 import { arrangeToolbarPills } from "./utils/arrangeToolbarPills";
+import { findFirstEndSectionId } from "./utils/findFirstEndSectionId";
 import {
 	resolveToolbarSections,
 	type ResolvedToolbarItem,
@@ -50,11 +51,11 @@ type ToolbarProps = {
 	/**
 	 * Whether the sidebars count as expanded (`isAnySidebarOpen`, which Canvas
 	 * reads with its own stencil-library availability rather than the reducer's;
-	 * see `isToolbarCollapsed` in Canvas.tsx): the pressed look of the
+	 * see `areBothSidebarsClosed` in Canvas.tsx): the pressed look of the
 	 * `sidebarsToggle` item, and the form of the bar — the full-width bar while
-	 * true, the two corner pills (by each section's `collapsedAlign`) while
-	 * false. Canvas places the bar from the same value: above the viewport for
-	 * the one, inside it for the other.
+	 * true, the two corner pills (each section on its `collapsedAlign` side)
+	 * while false. Canvas places the bar from the same value: above the viewport
+	 * for the one, inside it for the other.
 	 */
 	isAnySidebarOpen: boolean;
 };
@@ -125,11 +126,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 		[resolvedSections],
 	);
 
-	// The first end-aligned section carries the auto margin that pushes it and
-	// everything after it against the right edge.
-	const firstEndSectionId = resolvedSections.find(
-		(section) => section.align === "end",
-	)?.id;
+	const firstEndSectionId = findFirstEndSectionId(resolvedSections);
 
 	const renderItem = (item: ResolvedToolbarItem): React.ReactNode => {
 		switch (item.type) {

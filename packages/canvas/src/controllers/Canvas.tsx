@@ -243,22 +243,24 @@ type CanvasProps = {
 		show?: boolean;
 		/**
 		 * Replaces the whole bar: sections of pinned presets, category flyouts,
-		 * command buttons, the zoom group, the sidebar toggles, dividers and
-		 * host UI slots (see {@link ToolbarSection}). Omit for
-		 * {@link DEFAULT_TOOLBAR_SECTIONS}: undo / redo, the view controls,
-		 * shortcut help and the switch for both sidebars, and no preset — the
+		 * command buttons, the zoom group, the sidebar toggles, dividers and host
+		 * UI slots (see {@link ToolbarSection}). Omit for
+		 * {@link DEFAULT_TOOLBAR_SECTIONS}: undo / redo, the view controls, shortcut help,
+		 * the toggles for each sidebar and the switch for both, and no preset — the
 		 * presets are the bottom bar's (`bottomToolbar`). A host can reuse those
 		 * sections one by one (`DEFAULT_TOOLBAR_HISTORY_SECTION` /
 		 * `DEFAULT_TOOLBAR_VIEW_SECTION` / `DEFAULT_TOOLBAR_HELP_SECTION` /
-		 * `DEFAULT_TOOLBAR_SIDEBARS_SECTION`) rather than restating them; host
-		 * UI packed against the end belongs before the sidebars section, which is
+		 * `DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION` /
+		 * `DEFAULT_TOOLBAR_SIDEBARS_SECTION`) rather than restating them; host UI
+		 * packed against the end belongs before the sidebar controls, which are
 		 * meant to keep the far right. A host pinning presets here as well hides
 		 * the bottom bar, or each preset shows twice.
 		 *
 		 * While either sidebar is open the sections make one full-width bar above
 		 * the canvas; while both are closed, two pills floating over its top
-		 * corners, which the canvas then fills to the top. Each section's
-		 * `collapsedAlign` picks its pill, or hides it until a sidebar opens.
+		 * corners, which the canvas then fills to the top. Each section goes on
+		 * the same side as on the full bar unless its `collapsedAlign` says
+		 * otherwise, `"hidden"` hiding it.
 		 */
 		sections?: ToolbarSection[];
 	};
@@ -266,7 +268,9 @@ type CanvasProps = {
 	 * The bottom tool bar: a floating bar centred over the canvas at its bottom
 	 * edge, holding pinned presets (click to arm or place, drag to place, as on
 	 * the top bar) and an "Other shapes" button that is a placeholder for now and
-	 * does nothing. It covers the canvas rather than shrinking it. Omit for the
+	 * does nothing. It covers the canvas rather than shrinking it. While either
+	 * sidebar is open it is hidden, the shape library holding the shapes; with
+	 * no `stencilLibrary` declared it always shows. Omit for the
 	 * default, shown with `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`; see
 	 * {@link BottomToolbarOptions}. An inline object literal defeats `<Canvas>`'s
 	 * memo; `useMemo` it.
@@ -478,21 +482,25 @@ const CanvasComponent = ({
 		registries,
 	);
 	// One answer for the bar's library toggle, the panel's mount, the toolbar's
-	// form and, through the reducer, the sidebars switch.
+	// form, the bottom bar's mount and, through the reducer, the sidebars switch.
 	const hasStencilLibrary = librarySections.length > 0;
 	useSyncStencilLibraryAvailability(hasStencilLibrary, dispatch);
 
 	// Both sidebars take their width out of the viewport, and the full-width
 	// toolbar its height while either is open, so any of them coming or going has
-	// to be re-measured before the next paint. The form is read with the local
-	// `hasStencilLibrary`, as the library panel mounts from: the reducer's copy
-	// arrives a commit later, and a first measurement taken without the bar would
-	// turn its arrival into a camera shift.
-	const isToolbarCollapsed = !isAnySidebarOpen({ ...state, hasStencilLibrary });
+	// to be re-measured before the next paint. Whether both sidebars count as
+	// closed (the toolbar's form, and whether the bottom bar shows) is read
+	// with the local `hasStencilLibrary`, as the library panel mounts from: the
+	// reducer's copy arrives a commit later, and a first measurement taken
+	// without the bar would turn its arrival into a camera shift.
+	const areBothSidebarsClosed = !isAnySidebarOpen({
+		...state,
+		hasStencilLibrary,
+	});
 	useContainerResize(
 		canvasRef,
 		dispatch,
-		`${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}:${isToolbarCollapsed}`,
+		`${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}:${areBothSidebarsClosed}`,
 	);
 
 	// The document's own framing intent, applied only where the host expressed
@@ -656,7 +664,7 @@ const CanvasComponent = ({
 					hasLibrary={hasStencilLibrary}
 					isLibraryOpen={state.stencilLibraryPanel.isOpen}
 					isPropertyPanelOpen={state.propertyPanel.isOpen}
-					isAnySidebarOpen={!isToolbarCollapsed}
+					isAnySidebarOpen={!areBothSidebarsClosed}
 				/>
 			</ToolbarCommandStateContext>
 		) : null;
@@ -688,7 +696,7 @@ const CanvasComponent = ({
 				{...pointerHandlers}
 			>
 				{/* Expanded, the full-width bar takes its row above the body */}
-				{!isToolbarCollapsed && toolbarElement}
+				{!areBothSidebarsClosed && toolbarElement}
 				<CanvasBody>
 					{state.stencilLibraryPanel.isOpen && hasStencilLibrary && (
 						<StencilLibraryPanel
@@ -754,18 +762,20 @@ const CanvasComponent = ({
 								/>
 							</ScrollSyncedOverlay>
 						</Container>
-						{/* Inside the viewport, so it is centred over the visible canvas
-						    whatever the sidebars take; before the overlay, so the context
-						    menu and the toast draw over it */}
-						{bottomToolbarPresets !== null && (
-							<BottomToolbar
-								presets={bottomToolbarPresets}
-								activePresetId={drawingPresetId}
-							/>
-						)}
+						{/* When it shows: see the `bottomToolbar` prop. Inside the
+						    viewport, so it covers the canvas rather than shrinking it;
+						    before the overlay, so the context menu and the toast draw over
+						    it */}
+						{bottomToolbarPresets !== null &&
+							(areBothSidebarsClosed || !hasStencilLibrary) && (
+								<BottomToolbar
+									presets={bottomToolbarPresets}
+									activePresetId={drawingPresetId}
+								/>
+							)}
 						{/* Collapsed, the bar's two pills float over the top corners,
 						    placed here for the same reasons as the bottom bar */}
-						{isToolbarCollapsed && toolbarElement}
+						{areBothSidebarsClosed && toolbarElement}
 						<ViewportOverlay>
 							<ErrorToast notification={errorNotification} />
 							<ContextMenu

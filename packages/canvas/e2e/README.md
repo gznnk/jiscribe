@@ -18,7 +18,7 @@ packages/canvas/
 │   ├── kit/               # the shared implementation behind the testing entries
 │   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
 │   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
-│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi and ?pageScroll switch pages; ?noStencilLibrary drops the library and ?libraryOpen mounts with it open. The default page publishes its CanvasHandle as window.__canvasHandle and logs every onOpenReference payload to window.__openedReferences
+│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi and ?pageScroll switch pages; ?noStencilLibrary drops the library, ?libraryOpen mounts with it open and ?defaultToolbar swaps the page's top bar for the canvas default. The default page publishes its CanvasHandle as window.__canvasHandle and logs every onOpenReference payload to window.__openedReferences
 │   │   ├── MultiCanvasApp.tsx      # a 2-canvas page for verifying keyboard scope
 │   │   ├── PageScrollApp.tsx       # a canvas embedded in a scrolling document, for verifying gestureHandling="cooperative"
 │   │   └── harness.css
@@ -118,7 +118,10 @@ dismisses the open menus. A preset button can be identified by its `title`
 attribute, as in `[data-id="bottom-toolbar"] button[title="Rectangle"]`
 (Rectangle / Ellipse / Polyline / Polygon / Text from core, plus Pin / Card /
 Memo from `e2e/plugins/specShapesPlugin` — this harness pins all of them on the
-bottom bar and keeps the category flyout on the top one). No shipped plugin is
+bottom bar and keeps the category flyout on the top one). The bottom bar is not
+always shown (see Canvas's `bottomToolbar` prop): draw from it before opening a
+sidebar, or from the library (`selectors.stencilLibraryPanelItem`) while one is
+open. No shipped plugin is
 mounted here; a spec that needs one belongs in that plugin's own suite.
 
 `selectors.toolButton` and `selectors.shapeItem` match a preset on either bar,

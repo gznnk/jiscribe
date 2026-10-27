@@ -53,9 +53,8 @@ export type PluginHarnessParams = {
 	 * declaring its plugin's presets keeps the sidebar toggles, undo / redo, zoom
 	 * and help without naming them. Omit to take the canvas default bar, which
 	 * pins no preset at all; pass items whenever a spec drives a plugin's preset
-	 * or category flyout from the top bar. `CanvasDriver.goto()` waits for the
-	 * "Rectangle" tool, so keep the `rect` preset in these items or in
-	 * `bottomToolbarPresetIds`.
+	 * or category flyout from the top bar. Add the `rect` preset (here or in
+	 * `bottomToolbarPresetIds`) only when a spec draws a core rectangle.
 	 */
 	toolbarItems?: ToolbarItem[];
 	/**
@@ -95,8 +94,10 @@ type HarnessAppProps = {
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
  * two-canvas setup, ?pageScroll to the canvas embedded in a scrolling document,
- * ?noStencilLibrary keeps the default page but declares no shape library, and
- * ?libraryOpen keeps it but mounts with the shape library alone open.
+ * ?noStencilLibrary keeps the default page but declares no shape library,
+ * ?libraryOpen keeps it but mounts with the shape library alone open, and
+ * ?defaultToolbar keeps it but gives the canvas its default top bar instead of
+ * the page's. The query switches combine.
  * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
@@ -180,6 +181,9 @@ function HarnessApp({
 	// a page that declares only its plugin's presets still gets the toggle when it declared
 	// a library. Without a library both are dropped by resolution — the toggle
 	// as unusable, the divider as stranded — leaving the bar as the page declared it.
+	// The kit keeps a toggle at each edge rather than the default bar's per-sidebar
+	// toggles, which hide while collapsed: specs open one sidebar from the collapsed
+	// state. ?defaultToolbar gives the default bar instead.
 	const toolbarSections = useMemo<ToolbarSection[] | undefined>(
 		() =>
 			toolbarItems
@@ -214,6 +218,11 @@ function HarnessApp({
 	const pageStencilLibrarySections = query.has("noStencilLibrary")
 		? undefined
 		: stencilLibrarySections;
+	// ?defaultToolbar shows the bar a host gets by passing no sections, for specs
+	// on the default sections themselves rather than the page's composition.
+	const pageToolbarSections = query.has("defaultToolbar")
+		? undefined
+		: toolbarSections;
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
@@ -223,7 +232,9 @@ function HarnessApp({
 				initialConfig={initialConfig}
 				resolveImage={resolveImage}
 				onOpenReference={handleOpenReference}
-				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
+				toolbar={
+					pageToolbarSections ? { sections: pageToolbarSections } : undefined
+				}
 				bottomToolbar={bottomToolbar}
 				stencilLibrary={
 					pageStencilLibrarySections

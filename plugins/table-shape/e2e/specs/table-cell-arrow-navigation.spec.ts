@@ -1,4 +1,4 @@
-import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
+import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 import {
@@ -10,7 +10,7 @@ import {
 
 /** Screen box of the canvas area itself. */
 async function canvasArea(canvas: CanvasDriver) {
-	const box = await canvas.page.locator('[data-kind="canvas"]').boundingBox();
+	const box = await canvas.page.locator(selectors.canvasArea).boundingBox();
 	if (!box) {
 		throw new Error("the canvas area has no box on screen");
 	}

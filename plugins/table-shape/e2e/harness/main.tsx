@@ -5,10 +5,10 @@ import { tablePlugin } from "@jiscribe/plugin-table-shape";
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [tablePlugin],
-	// The rect preset is core's; it is here because CanvasDriver.goto() waits for the
-	// "Rectangle" tool. The table preset comes from this package's own stencils and is the
-	// "Table" tool button every spec places with; the table contributes no category, so a
-	// preset entry is all it needs.
+	// The rect preset is core's; table-grouped-bounds draws a rectangle beside the table.
+	// The table preset comes from this package's own stencils and is the "Table" tool
+	// button every spec places with; the table contributes no category, so a preset entry
+	// is all it needs.
 	toolbarItems: [
 		{ type: "stencilPreset", presetId: "rect" },
 		{ type: "stencilPreset", presetId: "table" },

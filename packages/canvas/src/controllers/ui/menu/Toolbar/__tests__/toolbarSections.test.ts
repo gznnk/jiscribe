@@ -11,12 +11,14 @@ import {
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_TOOLS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	type ToolbarItem,
 	type ToolbarSection,
 } from "../toolbarSections";
+import { resolveToolbarSections } from "../utils/resolveToolbarSections";
 
 /**
  * Every section core exports — the default bar plus the two it no longer holds —
@@ -44,11 +46,12 @@ const collectPresetIds = (items: readonly ToolbarItem[]): string[] =>
 	});
 
 describe("DEFAULT_TOOLBAR_SECTIONS", () => {
-	it("is history, view, help and the sidebars switch, in display order", () => {
+	it("is history, view, help, the per-sidebar toggles and the switch, in display order", () => {
 		expect(DEFAULT_TOOLBAR_SECTIONS).toEqual([
 			DEFAULT_TOOLBAR_HISTORY_SECTION,
 			DEFAULT_TOOLBAR_VIEW_SECTION,
 			DEFAULT_TOOLBAR_HELP_SECTION,
+			DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
 			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 		]);
 	});
@@ -153,7 +156,7 @@ const itemNames = (section: ToolbarSection): string[] =>
 	);
 
 describe("the sections of the default bar", () => {
-	/** Rule 1: each sidebar control sits at the edge its panel opens on. */
+	/** Rule 1: the switch for both sidebars keeps the far right. */
 	it("ends the bar with the switch for both sidebars", () => {
 		expect(DEFAULT_TOOLBAR_SECTIONS[DEFAULT_TOOLBAR_SECTIONS.length - 1]).toBe(
 			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
@@ -162,6 +165,22 @@ describe("the sections of the default bar", () => {
 		expect(itemNames(DEFAULT_TOOLBAR_SIDEBARS_SECTION)).toEqual([
 			"divider",
 			"sidebarsToggle",
+		]);
+	});
+
+	/** Rule 1: the per-sidebar toggles sit just before the switch, library first. */
+	it("puts the per-sidebar toggles right before the switch", () => {
+		const togglesIndex = DEFAULT_TOOLBAR_SECTIONS.indexOf(
+			DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
+		);
+		expect(DEFAULT_TOOLBAR_SECTIONS[togglesIndex + 1]).toBe(
+			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
+		);
+		expect(DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION.align).toBe("end");
+		expect(itemNames(DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION)).toEqual([
+			"divider",
+			"stencilLibraryToggle",
+			"propertyPanelToggle",
 		]);
 	});
 
@@ -196,20 +215,25 @@ describe("the sections of the default bar", () => {
 	});
 
 	/**
-	 * Collapsed, the switch alone opens the top-left pill, history and view the
-	 * top-right one, and help waits for a sidebar to open.
+	 * Collapsed, every section keeps its side, so no button changes sides
+	 * between the two forms; help and the per-sidebar toggles wait for a
+	 * sidebar to open.
 	 */
-	it("sends each section to its pill while the sidebars are collapsed", () => {
+	it("keeps each section on its side while collapsed, hiding help and the per-sidebar toggles", () => {
+		const { stencil, command } = createCanvasRegistries();
+		const resolved = resolveToolbarSections(DEFAULT_TOOLBAR_SECTIONS, {
+			stencil,
+			command,
+			hasLibrary: true,
+		});
 		expect(
-			DEFAULT_TOOLBAR_SECTIONS.map((section) => [
-				section.id,
-				section.collapsedAlign,
-			]),
+			resolved.map((section) => [section.id, section.collapsedAlign]),
 		).toEqual([
-			["history", "end"],
+			["history", "start"],
 			["view", "end"],
 			["help", "hidden"],
-			["sidebars", "start"],
+			["per-sidebar-toggles", "hidden"],
+			["sidebars", "end"],
 		]);
 	});
 

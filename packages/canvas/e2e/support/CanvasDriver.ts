@@ -88,9 +88,9 @@ export class CanvasDriver {
 	 */
 	async goto(search = "") {
 		await this.page.goto(`/${search}`, { waitUntil: "networkidle" });
-		await expect(
-			this.page.locator(selectors.toolButton("Rectangle")),
-		).toBeVisible();
+		// The canvas area rather than a preset: the bottom bar holding them is
+		// absent on a variant that mounts with a sidebar open.
+		await expect(this.page.locator(selectors.canvasArea).first()).toBeVisible();
 		await this.measureOrigin();
 	}
 
@@ -102,11 +102,11 @@ export class CanvasDriver {
 	 * page mounts two of them, and the first is the one the driver drives.
 	 */
 	private async measureOrigin() {
-		const origin = await this.page.evaluate(() => {
-			const el = document.querySelector('[data-kind="canvas"]');
+		const origin = await this.page.evaluate((canvasArea) => {
+			const el = document.querySelector(canvasArea);
 			const rect = el?.getBoundingClientRect();
 			return { x: rect?.left ?? 0, y: rect?.top ?? 0 };
-		});
+		}, selectors.canvasArea);
 		this.originX = origin.x;
 		this.originY = origin.y;
 	}
@@ -694,6 +694,26 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * Open the properties sidebar as openPropertyPanel() does, and return a map
+	 * from a content point taken before the opening to the content point of the
+	 * same spot on the drawing after it. The drawing stays put on screen while
+	 * the full-width toolbar the sidebar brings back moves the canvas origin, so
+	 * a point on a shape drawn before has other content coordinates after.
+	 */
+	async openPropertyPanelWithContentShift(): Promise<
+		(point: { x: number; y: number }) => { x: number; y: number }
+	> {
+		await this.measureOrigin();
+		const originBefore = { x: this.originX, y: this.originY };
+		await this.openPropertyPanel();
+		const shift = {
+			x: originBefore.x - this.originX,
+			y: originBefore.y - this.originY,
+		};
+		return (point) => ({ x: point.x + shift.x, y: point.y + shift.y });
+	}
+
+	/**
 	 * Close the properties sidebar from its own close button, which unmounts it; the
 	 * counterpart of openPropertyPanel, re-measuring the origin the same way.
 	 */
@@ -710,7 +730,7 @@ export class CanvasDriver {
 	 */
 	async isDrawingMode(): Promise<boolean> {
 		const cursor = await this.page
-			.locator('[data-kind="canvas"]')
+			.locator(selectors.canvasArea)
 			.evaluate((el) => getComputedStyle(el).cursor);
 		return cursor === "crosshair";
 	}
@@ -1689,7 +1709,7 @@ export class CanvasDriver {
 	 */
 	async canvasSurfaceColor(): Promise<string> {
 		return this.page
-			.locator('[data-kind="canvas"] svg')
+			.locator(`${selectors.canvasArea} svg`)
 			.first()
 			.evaluate((el) => getComputedStyle(el).backgroundColor);
 	}

@@ -10,7 +10,8 @@ import {
 	Canvas,
 	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
-	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 } from "@jiscribe/canvas";
 import { createCanvasParser } from "@jiscribe/doc";
@@ -85,20 +86,18 @@ const pluginParser = createCanvasParser({ plugins });
 // Core's defaults know nothing of plugin shapes, so the host arranges them, over
 // three surfaces: the bottom tool bar pins the handful of presets a diagram is mostly
 // built out of, the top bar keeps one category as a flyout, and the shape library sidebar
-// (`stencilLibrary.sections`, behind the toggle at the top bar's far left) holds the whole
-// set grouped into sections. All are declared the same way — the categories come from
+// (`stencilLibrary.sections`, opened by the switch at the top bar's far right) holds the
+// whole set grouped into sections. All are declared the same way — the categories come from
 // the plugins (flowchartStencilCategory and friends) and single shapes are referenced by
 // preset id.
 //
-// `toolbar.sections` is the whole bar, so the host names the library toggle itself and
-// reuses core's remaining sections rather than restating undo / redo / zoom / help /
-// properties.
+// `toolbar.sections` is the whole bar, so the host names its own flyout and reuses
+// core's remaining sections rather than restating undo / redo / zoom / help and the
+// sidebar controls.
 const toolbarSections: ToolbarSection[] = [
 	{
 		id: "tools",
 		items: [
-			{ type: "stencilLibraryToggle" },
-			{ type: "divider" },
 			// One category left on the bar as a flyout: the same object also feeds the sidebar below.
 			{ type: "stencilCategory", category: lucideIconStencilCategory },
 		],
@@ -106,7 +105,8 @@ const toolbarSections: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	DEFAULT_TOOLBAR_HELP_SECTION,
-	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 ];
 
 const bottomToolbar: BottomToolbarOptions = {
@@ -355,7 +355,7 @@ const pluginsDoc = buildPluginsDoc();
 /**
  * Assembling a canvas out of shape plugins: the ten shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
- * the shape library (the toggle at the toolbar's far left) to draw more of them.
+ * the shape library (the switch at the toolbar's far right) to draw more of them.
  */
 export function PluginsExample() {
 	return (

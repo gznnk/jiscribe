@@ -298,7 +298,7 @@ test.describe("plugin coexistence", () => {
 	test("mounts every plugin and lays the toolbar out with no duplicates", async ({
 		canvas,
 	}) => {
-		await expect(canvas.page.locator('[data-kind="canvas"]')).toBeVisible();
+		await expect(canvas.page.locator(selectors.canvasArea)).toBeVisible();
 
 		// Exact equality, not containment: it pins the order and rules out both a
 		// missing entry and a second copy of one.
@@ -384,7 +384,7 @@ test.describe("plugin coexistence", () => {
 		// SVG ids are document-global, so core, the plugins and the per-object defs
 		// all draw from one namespace and a clash silently rebinds a url(#…).
 		const svgIds = await canvas.page
-			.locator('[data-kind="canvas"] [id]')
+			.locator(`${selectors.canvasArea} [id]`)
 			.evaluateAll((elements) => elements.map((element) => element.id));
 		// A query that reached nothing would pass the duplicate check for free, so
 		// pin one id known to be down there.

@@ -331,8 +331,8 @@ mountPluginHarness({
 - **プラグインは自分のパッケージ名で読む。**`../../src` ではない。外部の作者が通る経路が
   こちらであり、それに乗ることがパッケージの `exports` だけで足りていることの証明になる
 - **`toolbarItems` は spec が描く分だけに絞る。**自分のピン留めプリセットかカテゴリ
-  （`{ type: "stencilCategory", category }` の項目にする）と、それに必ず `{ type: "stencilPreset", presetId: "rect" }` を足す。後者は必須で、
-  `CanvasDriver.goto()` が "Rectangle" ツールボタンの出現を待ってからページを引き渡すため。
+  （`{ type: "stencilCategory", category }` の項目にする）。spec が core の矩形を描く
+  （`drawShape("Rectangle", …)`）ときだけ `{ type: "stencilPreset", presetId: "rect" }` も足す。
   渡すのはバーの図形ツールだけである。キット
   （`packages/canvas/e2e/kit/mountPluginHarness.tsx`）はその前に図形ライブラリの
   トグルと区切りを置き、後ろに core のセクション（undo / redo・ズーム・プロパティの
