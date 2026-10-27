@@ -42,6 +42,10 @@ covers that.
   `open_canvas` had not created it yet. Now it answers without reading the file
   (and still without creating it), so a file that does not parse no longer
   stops it either; the `path` is checked as before.
+- **A document tool on a file that does not exist yet points at `open_canvas`.**
+  `get_object`, `add_rect`, `diagnose_canvas` and the rest of the tools that
+  take a `path` passed the raw `ENOENT` through; now the error says the file
+  does not exist yet and that `open_canvas` creates it as an empty canvas.
 
 ## [0.12.2] - 2026-10-25
 
