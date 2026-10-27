@@ -677,6 +677,24 @@ describe("ObjectEventHandler - text slot selection", () => {
 		});
 	});
 
+	/** Otherwise the popover would take the editor's Escape. */
+	it("closes the Other shapes popover when a double click on the picked slot opens the editor", () => {
+		const state = {
+			...makeSlotState(["rec-1"], textSlotPartSelection("rows")),
+			isOtherShapesPopoverOpen: true,
+		} as unknown as CanvasControllerState;
+		const next = ObjectEventHandler.handle(
+			state,
+			{
+				...makeSlotClickEvent("rec-1", textSlotPart("rows")),
+				type: "doubleClick",
+			} as CanvasEvent,
+			registries,
+		);
+		expect(readTextEditDraft(next)).not.toBeNull();
+		expect(next.isOtherShapesPopoverOpen).toBe(false);
+	});
+
 	it("keeps the selection reference when the slot it opens is already picked", () => {
 		const state = makeSlotState(["rec-1"], {
 			kind: TEXT_SLOT_PART_KIND,

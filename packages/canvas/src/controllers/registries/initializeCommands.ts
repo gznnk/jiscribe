@@ -37,6 +37,7 @@ import { toggleTextFormatCommands } from "../commands/text/ToggleTextFormatComma
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
 import { TogglePropertyPanelCommand } from "../commands/view/TogglePropertyPanelCommand";
+import { ToggleSidebarsCommand } from "../commands/view/ToggleSidebarsCommand";
 import { ToggleStencilLibraryCommand } from "../commands/view/ToggleStencilLibraryCommand";
 import { ZoomInCommand } from "../commands/view/ZoomInCommand";
 import { ZoomOutCommand } from "../commands/view/ZoomOutCommand";
@@ -99,6 +100,7 @@ export const ALL_COMMANDS: Command[] = [
 	ShortcutHelpCommand,
 	ToggleStencilLibraryCommand,
 	TogglePropertyPanelCommand,
+	ToggleSidebarsCommand,
 	// Export command (opens the dialog; the export itself runs via callback)
 	ExportCommand,
 ];

@@ -13,6 +13,7 @@ import {
 	isDocumentMetaProperty,
 	isViewPaddingProperty,
 } from "../../../utils/applyDocumentProperty";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -88,7 +89,7 @@ export const PropertyPanelHandler: GestureHandler = {
 			nextState = {
 				...nextState,
 				contextMenuPosition: null,
-				stencilLibraryOpenCategory: null,
+				...closeStencilPopups(),
 			};
 		}
 

@@ -190,11 +190,12 @@ describe("StencilLibraryItemHandler", () => {
 		expect(next.mode.kind).toBe("normal");
 	});
 
-	describe("closes an open StencilLibrary category flyout when the item is used", () => {
+	describe("closes an open category flyout and the Other shapes popover when the item is used", () => {
 		const openState = (): CanvasControllerState =>
 			({
 				...makeState(),
 				stencilLibraryOpenCategory: "flowchart",
+				isOtherShapesPopoverOpen: true,
 			}) as CanvasControllerState;
 
 		it("on a click that enters drawing mode (rect)", () => {
@@ -204,6 +205,7 @@ describe("StencilLibraryItemHandler", () => {
 				registries,
 			);
 			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.isOtherShapesPopoverOpen).toBe(false);
 		});
 
 		it("on a click that places a non-drawable shape", () => {
@@ -213,6 +215,22 @@ describe("StencilLibraryItemHandler", () => {
 				registries,
 			);
 			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.isOtherShapesPopoverOpen).toBe(false);
+		});
+
+		it("on a click that disarms the preset already armed", () => {
+			const armed = StencilLibraryItemHandler.handle(
+				makeState(),
+				makeEvent("click", "item:rect"),
+				registries,
+			);
+			const next = StencilLibraryItemHandler.handle(
+				{ ...armed, isOtherShapesPopoverOpen: true },
+				makeEvent("click", "item:rect"),
+				registries,
+			);
+			expect(next.mode.kind).toBe("normal");
+			expect(next.isOtherShapesPopoverOpen).toBe(false);
 		});
 
 		it("on drag start", () => {
@@ -231,6 +249,7 @@ describe("StencilLibraryItemHandler", () => {
 				registries,
 			);
 			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.isOtherShapesPopoverOpen).toBe(false);
 		});
 	});
 });

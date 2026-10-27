@@ -2,6 +2,7 @@ import { parsePartAddress } from "./partAddress";
 import type { ObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 
 /**
  * Moves the part selection to where a click landed inside one object: the single
@@ -48,7 +49,7 @@ export const selectPartByClick = (
 			...state,
 			selection: { ...state.selection, part: null },
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 		};
 	}
 
@@ -75,6 +76,6 @@ export const selectPartByClick = (
 			},
 		},
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 	};
 };

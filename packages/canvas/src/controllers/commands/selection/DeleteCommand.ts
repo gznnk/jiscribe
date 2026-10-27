@@ -10,6 +10,7 @@ import type {
 import { readDeletableParts } from "../../selection/readers/readDeletableParts";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 import { remapConnectorEnds } from "../../utils/remapConnectorEnds";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -214,7 +215,7 @@ const deleteSelectedObjects = (
 		rootIds: stateAfterConnectors.rootIds.filter((id) => !idsToDelete.has(id)),
 		selection: EMPTY_SELECTION,
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 		lastDuplicate: null,
 		commitVersion: state.commitVersion + 1,
 	};

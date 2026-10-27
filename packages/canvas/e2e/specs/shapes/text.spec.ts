@@ -384,9 +384,7 @@ test.describe("text", () => {
 		await canvas.ctrlClickAt({ x: 190, y: 145 });
 		await canvas.group();
 
-		const area = await canvas.page
-			.locator('[data-kind="canvas"]')
-			.boundingBox();
+		const area = await canvas.page.locator(selectors.canvasArea).boundingBox();
 		if (!area) {
 			throw new Error("the canvas area has no box on screen");
 		}

@@ -43,6 +43,14 @@ export type ContainerResizeAction = {
 	 * held still, which is the case for every resize from the right.
 	 */
 	leftEdgeShift?: number;
+	/**
+	 * Screen pixels the container's top edge moved inside CanvasRoot since the
+	 * last measurement; positive means it moved down (the full-width toolbar
+	 * taking its row above the viewport as a sidebar opens). Added to `minY`
+	 * after dividing by the zoom, as `leftEdgeShift` is to `minX`. Absent or 0
+	 * when the edge held still.
+	 */
+	topEdgeShift?: number;
 };
 
 /**
@@ -381,6 +389,15 @@ export type CloseModalAction = {
 };
 
 /**
+ * Closes the bottom tool bar's "Other shapes" popover and changes nothing else.
+ * Dispatched by Escape (useCloseOtherShapesPopoverOnEscape), which must not
+ * step the selection back the way EscapeSelectionCommand would.
+ */
+export type CloseOtherShapesPopoverAction = {
+	type: "CLOSE_OTHER_SHAPES_POPOVER";
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -404,4 +421,5 @@ export type CanvasAction =
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction
-	| CloseModalAction;
+	| CloseModalAction
+	| CloseOtherShapesPopoverAction;

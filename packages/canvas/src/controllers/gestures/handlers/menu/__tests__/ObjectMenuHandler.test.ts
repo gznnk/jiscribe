@@ -205,13 +205,15 @@ describe("ObjectMenuHandler", () => {
 	});
 
 	describe("menu chrome (no action)", () => {
-		it("a pressed closes the context menu; a click does nothing", () => {
+		it("a pressed closes the context menu and the Other shapes popover; a click does nothing", () => {
 			const pressed = ObjectMenuHandler.handle(
-				makeState(),
+				{ ...makeState(), isOtherShapesPopoverOpen: true },
 				makeEvent("pressed", undefined),
 				registries,
 			);
 			expect(pressed.contextMenuPosition).toBeNull();
+			expect(pressed.isOtherShapesPopoverOpen).toBe(false);
+			expect(pressed.selection.objectIds).toEqual(["rect-1"]);
 
 			const state = makeState();
 			const clicked = ObjectMenuHandler.handle(

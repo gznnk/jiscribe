@@ -2,18 +2,21 @@ import styled from "@emotion/styled";
 
 import { theme } from "../../../../foundation/theme/themeTokens";
 
+/** Side in px of a stencil button, square, on the bars and in the library alike. */
+export const STENCIL_BUTTON_SIZE = 32;
+
 /**
  * Individual item button in the stencil library.
- * Placed in the unified toolbar (pinned or in a category flyout) and in the
- * shape library sidebar (StencilLibraryPanel).
+ * Placed on the top toolbar (pinned or in a category flyout), on the bottom
+ * tool bar and in the shape library sidebar (StencilLibraryPanel).
  */
 export const StencilLibraryButton = styled.button<{ isActive?: boolean }>`
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
+	width: ${STENCIL_BUTTON_SIZE}px;
+	height: ${STENCIL_BUTTON_SIZE}px;
 	padding: 0;
 	border-radius: ${theme.radius};
 	border: 1px solid

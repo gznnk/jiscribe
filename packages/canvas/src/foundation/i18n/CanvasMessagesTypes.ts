@@ -12,6 +12,12 @@ export type CanvasMessageStrings = {
 	toolbarStencilLibrary: string;
 	/** title / aria-label of the toggle opening the properties sidebar */
 	toolbarPropertyPanel: string;
+	/** title / aria-label of the switch collapsing and expanding the chrome (both sidebars) */
+	toolbarSidebars: string;
+
+	// Bottom tool bar
+	/** title / aria-label of the bar's button for the shapes it does not pin */
+	bottomToolbarOtherShapes: string;
 
 	// Shape library sidebar
 	/** Heading of the sidebar */
@@ -26,6 +32,11 @@ export type CanvasMessageStrings = {
 	stencilLibraryMoreMatches: string;
 	/** Button under a section that declares `search`; it focuses the search box. */
 	stencilLibraryMoreViaSearch: string;
+	/**
+	 * Heading of the one section the sidebar shows when the host declares no
+	 * `stencilLibrary.sections`, which searches every registered preset.
+	 */
+	stencilLibraryAllShapes: string;
 
 	// Properties sidebar
 	/** Heading of the sidebar */
@@ -226,8 +237,6 @@ export type CanvasMessageStrings = {
 	menuLabelBorderColor: string;
 	menuLabelBorderStyle: string;
 	menuOpenReference: string;
-	/** Title of the ellipsis at the end of the ObjectMenu that opens the properties sidebar. */
-	menuPropertyPanel: string;
 };
 
 /**

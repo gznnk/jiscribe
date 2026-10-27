@@ -4,10 +4,10 @@
  */
 
 /**
- * Tool name in the left toolbar, matching the button's title attribute. The
- * listed ones are core's own presets, spelled out as known values for
- * completion; a plugin's tool name (its stencil label, "Sticky" say) is equally
- * accepted.
+ * Tool name on the top toolbar or the bottom tool bar, matching the button's
+ * title attribute. The listed ones are core's own presets, spelled out as known
+ * values for completion; a plugin's tool name (its stencil label, "Sticky" say)
+ * is equally accepted.
  */
 export type ToolTitle =
 	"Rectangle" | "Ellipse" | "Polyline" | "Polygon" | "Text" | (string & {});
@@ -58,12 +58,79 @@ const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
  */
 const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
 
-export const selectors = {
-	/** Toolbar tool button, scoped to the bar so the sidebar's copy cannot match. */
-	toolButton: (tool: ToolTitle) => `${TOOLBAR} button[title="${tool}"]`,
+/** Shared by the bottom-bar-scoped selectors below, scoped for the same reason. */
+const BOTTOM_TOOLBAR = '[data-kind="menu"][data-id="bottom-toolbar"]';
 
-	/** The toolbar bar itself; the only element of the bar carrying data-kind / data-id. */
+/**
+ * Shared by the Other shapes popover selectors below. The popover is drawn
+ * outside the bottom bar's element, so the bar-scoped selectors never match
+ * inside it, nor the sidebar's inside it.
+ */
+const OTHER_SHAPES_POPOVER =
+	'[data-kind="menu"][data-id="other-shapes-popover"]';
+
+export const selectors = {
+	/**
+	 * The canvas area (the viewport the sidebars and the full-width toolbar take
+	 * their space from), which holds the drawing, the bottom bar and the
+	 * collapsed toolbar's pills. The multi-canvas page has two.
+	 */
+	canvasArea: '[data-kind="canvas"]',
+
+	/**
+	 * Tool button pinned on either bar, the top toolbar or the bottom tool bar,
+	 * wherever the harness put it; scoped to the two bars so the sidebar's copy
+	 * cannot match. A harness pins each preset on one bar only, or this matches
+	 * twice. The bottom bar is not always shown: see `e2e/README.md`.
+	 */
+	toolButton: (tool: ToolTitle) =>
+		`${TOOLBAR} button[title="${tool}"], ${BOTTOM_TOOLBAR} button[title="${tool}"]`,
+
+	/**
+	 * The toolbar itself: the full-width bar while the chrome is expanded, the
+	 * only element of it carrying data-kind / data-id. While collapsed it is two
+	 * pills instead, each carrying the same pair, so this matches both of them;
+	 * scope to one with `toolbarPill`.
+	 */
 	toolbar: TOOLBAR,
+
+	/**
+	 * One of the two pills the toolbar collapses into while the chrome is
+	 * collapsed, the top-left (`"start"`) or top-right (`"end"`) one. Absent
+	 * while expanded, and for a pill no section goes into.
+	 */
+	toolbarPill: (edge: "start" | "end") =>
+		`${TOOLBAR}[data-testid="toolbar-pill:${edge}"]`,
+
+	/**
+	 * The bottom tool bar itself. Its own element carries data-kind / data-id, as
+	 * do its presets (the `stencil-library` target); absent while the host hid it.
+	 */
+	bottomToolbar: BOTTOM_TOOLBAR,
+
+	/**
+	 * The bottom bar's "Other shapes" button, which opens and closes the Other
+	 * shapes popover and carries whether it is open on aria-expanded.
+	 */
+	bottomToolbarOtherShapes: `${BOTTOM_TOOLBAR} [data-kind="menu"][data-id="other-shapes-button"]`,
+
+	/**
+	 * The Other shapes popover itself, the shape library's search box and
+	 * sections over the canvas. Mounted only while open: assert `toHaveCount(0)`
+	 * for closed.
+	 */
+	otherShapesPopover: OTHER_SHAPES_POPOVER,
+
+	/** Section header in the popover, as stencilLibrarySection is in the sidebar. */
+	otherShapesPopoverSection: (sectionId: string) =>
+		`${OTHER_SHAPES_POPOVER} [data-action="section:${sectionId}"]`,
+
+	/** Shape item in the popover, scoped to it like stencilLibraryPanelItem. */
+	otherShapesPopoverItem: (presetId: string) =>
+		`${OTHER_SHAPES_POPOVER} [data-action="item:${presetId}"]`,
+
+	/** Search box of the popover, its own and not the sidebar's. */
+	otherShapesPopoverSearch: `${OTHER_SHAPES_POPOVER} input[type="text"]`,
 
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector
@@ -83,17 +150,17 @@ export const selectors = {
 		`[data-category-flyout="${categoryId}"]`,
 
 	/**
-	 * StencilLibrary shape item; pinned and in-flyout share this DOM contract, and
-	 * both live inside the toolbar, which is what scopes the sidebar's copy out.
+	 * StencilLibrary shape item; pinned on either bar and in-flyout share this DOM
+	 * contract, and all live inside one of the two bars (the flyout hangs from the
+	 * top one), which is what scopes the sidebar's copy out.
 	 */
 	shapeItem: (presetId: string) =>
-		`${TOOLBAR} [data-action="item:${presetId}"]`,
+		`${TOOLBAR} [data-action="item:${presetId}"], ${BOTTOM_TOOLBAR} [data-action="item:${presetId}"]`,
 
 	/**
-	 * Toolbar toggle that opens and closes the shape library sidebar. Present only
-	 * when the host declared `stencilLibrary.sections` with something in it, and
-	 * carrying the open state on aria-expanded. Written as a descendant selector for
-	 * the same reason as toolbarCommand.
+	 * Toolbar toggle that opens and closes the shape library sidebar, carrying
+	 * whether the panel is drawn on aria-expanded. Written as a descendant
+	 * selector for the same reason as toolbarCommand.
 	 */
 	stencilLibraryToggle: `${TOOLBAR} [data-action="command:toggleStencilLibrary"]`,
 
@@ -123,6 +190,13 @@ export const selectors = {
 
 	/** Search box of the sidebar; filtering collapses the sections into one grid. */
 	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
+
+	/**
+	 * Toolbar switch between the chrome's two forms, carrying the form (expanded
+	 * or collapsed) on aria-expanded. Written as a descendant selector for the
+	 * same reason as toolbarCommand.
+	 */
+	sidebarsToggle: `${TOOLBAR} [data-action="command:toggleSidebars"]`,
 
 	/**
 	 * Toolbar toggle that opens and closes the properties sidebar, carrying the

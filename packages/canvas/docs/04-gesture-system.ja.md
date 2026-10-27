@@ -148,11 +148,12 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 ジェスチャーとの関わり方を宣言する。**空白区切りのトークンリスト**を取り、各トークンは
 `[data-gesture~="token"]` で**祖先方向に `closest` 探索**される。
 
-| トークン         | 意味                                                                                                                              | 主な付与先                                                                                         |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `none`           | ジェスチャーの起点にしない。pointerdown を無視し、contextmenu もネイティブに任せる                                                | テキスト編集の入力面のラッパー、メニュー内の数値・カラー入力、コンテキストメニューの callback 項目 |
-| `native-pointer` | ジェスチャーには参加するが**ポインタキャプチャを行わない**。`inputValue` 収穫の対象にもなる                                       | スライダー（range input）                                                                          |
-| `native-wheel`   | 要素がスクロール可能（`scrollHeight > clientHeight`）なら wheel をネイティブスクロールに任せる（Ctrl 押下時はズームのため対象外） | テキスト編集の入力面                                                                               |
+| トークン              | 意味                                                                                                                              | 主な付与先                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `none`                | ジェスチャーの起点にしない。pointerdown を無視し、contextmenu もネイティブに任せる                                                | テキスト編集の入力面のラッパー、メニュー内の数値・カラー入力、コンテキストメニューの callback 項目 |
+| `native-pointer`      | ジェスチャーには参加するが**ポインタキャプチャを行わない**。`inputValue` 収穫の対象にもなる                                       | スライダー（range input）                                                                          |
+| `native-wheel`        | 要素がスクロール可能（`scrollHeight > clientHeight`）なら wheel をネイティブスクロールに任せる（Ctrl 押下時はズームのため対象外） | テキスト編集の入力面                                                                               |
+| `native-wheel-always` | 要素の中の wheel は、スクロール可能かどうか・Ctrl 押下かどうかを問わずすべてブラウザに任せる（ビューポートの外のクロームと同じ）  | 下のツールバーの「その他の図形」ポップオーバー                                                     |
 
 併用例: `data-gesture="none native-wheel"`（ジェスチャー対象外かつネイティブスクロール）。
 
@@ -160,7 +161,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 
 - `none` → `isGestureOptedOut`（`GestureRecognizer.getHandlers()` の onPointerDown、`Canvas.tsx` の handleContextMenu）
 - `native-pointer` → `isNativePointerTarget`（キャプチャ抑止と `inputValue` 収穫の対象判定。pointerdown 時に一度だけ判定し `Pressed` に保持）
-- `native-wheel` → `shouldUseNativeWheel`（`useCanvasWheel`）
+- `native-wheel` / `native-wheel-always` → `shouldUseNativeWheel`（`useCanvasWheel`）
 
 判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、
 `controllers/gestures/recognizer/targeting/` に配置している。
@@ -238,6 +239,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 1. ブラウザ標準の操作で完結する要素 → `data-gesture="none"`
 2. ジェスチャー経由で値を伝えつつネイティブのポインタ挙動も必要 → `data-gesture="native-pointer"` + `data-action`（`data-kind` / `data-id` は、それを収める部品の容器が持つ）
 3. スクロール可能で内部スクロールを優先したい → `data-gesture="native-wheel"`
+4. ビューポートの中に浮かぶが、wheel でキャンバスをスクロール・ズームさせたくないクローム → `data-gesture="native-wheel-always"`
 
 ## ホストページとジェスチャーを分け合う（`gestureHandling`）
 

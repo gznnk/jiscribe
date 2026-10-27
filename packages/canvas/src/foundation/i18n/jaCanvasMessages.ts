@@ -7,6 +7,9 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomIn: "ズームイン",
 	toolbarStencilLibrary: "図形ライブラリ",
 	toolbarPropertyPanel: "プロパティ",
+	toolbarSidebars: "サイドバー",
+
+	bottomToolbarOtherShapes: "その他の図形",
 
 	stencilLibraryTitle: "図形ライブラリ",
 	stencilLibraryClose: "閉じる",
@@ -15,6 +18,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	stencilLibraryMoreMatches:
 		"ほかにも一致する図形があります。語を絞ってください",
 	stencilLibraryMoreViaSearch: "ほかの図形を探す",
+	stencilLibraryAllShapes: "すべての図形",
 
 	propertyPanelTitle: "プロパティ",
 	propertyPanelClose: "閉じる",
@@ -152,7 +156,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuLabelBorderColor: "ラベルの枠線色",
 	menuLabelBorderStyle: "ラベルの枠線スタイル",
 	menuOpenReference: "参照を開く",
-	menuPropertyPanel: "プロパティ",
 
 	// コマンドの ja ラベルは各コマンド定義側にある。record はホスト上書き用に残す
 	commandLabels: {},

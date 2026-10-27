@@ -124,6 +124,39 @@ describe("StencilLibraryPanelHandler", () => {
 		expect(next).toBe(state);
 	});
 
+	describe("in the Other shapes popover", () => {
+		it("is supported on the popover's own target", () => {
+			expect(
+				StencilLibraryPanelHandler.supports(
+					makeEvent("click", "other-shapes-popover", "section:flowchart"),
+				),
+			).toBe(true);
+		});
+
+		it("folds a section through the sidebar's own fold state", () => {
+			const next = StencilLibraryPanelHandler.handle(
+				makeState({ isOtherShapesPopoverOpen: true }),
+				makeEvent("click", "other-shapes-popover", "section:flowchart"),
+				registries,
+			);
+			expect(next.stencilLibraryPanel.collapsedSectionIds).toEqual([
+				"flowchart",
+			]);
+			expect(next.isOtherShapesPopoverOpen).toBe(true);
+		});
+
+		it("a press inside it keeps it open and only dismisses the context menu", () => {
+			const next = StencilLibraryPanelHandler.handle(
+				makeState({ isOtherShapesPopoverOpen: true }),
+				makeEvent("pressed", "other-shapes-popover"),
+				registries,
+			);
+			expect(next.isOtherShapesPopoverOpen).toBe(true);
+			expect(next.contextMenuPosition).toBeNull();
+			expect(next.selection.objectIds).toEqual(["a"]);
+		});
+	});
+
 	it("a click with an action it does not know is inert", () => {
 		const state = makeState();
 		const next = StencilLibraryPanelHandler.handle(

@@ -1,6 +1,7 @@
 import { isConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { claimDrag } from "../../../utils/claimDrag";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 
 /**
  * Opens a drag that reshapes a connector's route, shared by ConnectorSegmentSlideHandler and
@@ -31,7 +32,7 @@ export const beginConnectorReshape = (
 			multiSelectGroup: null,
 			// Close the submenu / category flyout on selection change
 			objectMenuOpenId: null,
-			stencilLibraryOpenCategory: null,
+			...closeStencilPopups(),
 			contextMenuPosition: null,
 		},
 		{ kind: "segment" },

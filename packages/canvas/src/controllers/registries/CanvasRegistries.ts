@@ -162,16 +162,17 @@ export type CanvasConfig = CanvasCapabilities & {
 	 */
 	scrollBounds?: ScrollBoundsConfig;
 	/**
-	 * How the two sidebars start out ({@link CanvasInitialSidebars}), so a host
-	 * can restore what the user left open. Every key is optional and a missing one
-	 * takes its default: an edge starts closed, a panel starts with every section
-	 * expanded.
+	 * How the chrome and the two sidebars start out ({@link CanvasInitialSidebars}),
+	 * so a host can restore the form and the panels the user left. Every key is
+	 * optional and a missing one takes its default: the chrome starts collapsed,
+	 * an edge closed, a panel with every section expanded.
 	 *
-	 * Read once at mount and never again: the panels are the user's from then on,
-	 * and passing a new value does not move them. Their live state is reported
+	 * Read once at mount and never again: the chrome is the user's from then on,
+	 * and passing a new value does not move it. Its live state is reported
 	 * through `onSidebarsChange` — read-only, so there is no controlled mode to
 	 * feed it back into. Loading another document (a new `docLoadId` included)
-	 * leaves the panels as the user left them.
+	 * leaves the chrome as the user left it. The first paint already has the
+	 * restored form, so restoring it does not move the camera.
 	 */
 	sidebars?: CanvasInitialSidebars;
 };

@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
+import { closeStencilPopups } from "./closeStencilPopups";
 import { NORMAL_MODE } from "./normalMode";
 import { EMPTY_SELECTION } from "../selection/CanvasSelection";
 
@@ -26,6 +27,7 @@ export type UiStateReset = Pick<
 	| "contextMenuPosition"
 	| "objectMenuOpenId"
 	| "stencilLibraryOpenCategory"
+	| "isOtherShapesPopoverOpen"
 	| "multiSelectGroup"
 	| "lastDuplicate"
 >;
@@ -53,7 +55,7 @@ export const resetUiState = (): UiStateReset => ({
 	dragStartCaches: { keyPoints: {}, snapCandidates: null },
 	contextMenuPosition: null,
 	objectMenuOpenId: null,
-	stencilLibraryOpenCategory: null,
+	...closeStencilPopups(),
 	multiSelectGroup: null,
 	lastDuplicate: null,
 });

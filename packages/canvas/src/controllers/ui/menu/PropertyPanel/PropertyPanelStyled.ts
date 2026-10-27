@@ -2,12 +2,7 @@ import styled from "@emotion/styled";
 
 import { scrollbarStyles } from "../../../../foundation/theme/themeScrollbarStyles";
 import { theme } from "../../../../foundation/theme/themeTokens";
-
-/**
- * Width of the sidebar. Wider than the shape library: a row is a label column
- * plus a pair of number fields, and the fields are what the width goes to.
- */
-const PANEL_WIDTH = "280px";
+import { SIDE_PANEL_INSET, SIDE_PANEL_WIDTH } from "../sidePanelLayout";
 
 /**
  * The properties sidebar: a fixed-width column on the right of the viewport,
@@ -26,7 +21,7 @@ export const PropertyPanelContainer = styled.aside`
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
-	width: ${PANEL_WIDTH};
+	width: ${SIDE_PANEL_WIDTH}px;
 	background: ${theme.surface};
 	border-left: 1px solid ${theme.border};
 	user-select: none;
@@ -39,7 +34,7 @@ export const PropertyPanelHeader = styled.div`
 	align-items: center;
 	justify-content: space-between;
 	height: 36px;
-	padding: 0 8px 0 12px;
+	padding: 0 8px 0 ${SIDE_PANEL_INSET}px;
 `;
 
 /** Panel heading. Sized as a section label rather than a document title. */
@@ -93,7 +88,7 @@ export const PropertyPanelSectionHeader = styled.button`
 	gap: 6px;
 	width: 100%;
 	height: 28px;
-	padding: 0 12px 0 8px;
+	padding: 0 ${SIDE_PANEL_INSET}px 0 8px;
 	border: none;
 	background: transparent;
 	color: ${theme.foreground};
@@ -129,9 +124,6 @@ export const PropertyPanelSectionLabel = styled.span`
 	white-space: nowrap;
 `;
 
-/** Side padding of a section body, aligned with the shape library's stencil grid. */
-const SECTION_PADDING_X = 12;
-
 /** Width of a row's label column. */
 const ROW_LABEL_WIDTH = 56;
 
@@ -143,7 +135,7 @@ export const PropertyPanelSectionBody = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
-	padding: 4px ${SECTION_PADDING_X}px 8px;
+	padding: 4px ${SIDE_PANEL_INSET}px 8px;
 `;
 
 /** One property row: its label, and the control that states the value. */

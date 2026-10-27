@@ -13,6 +13,133 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+### Added
+
+- **A bottom tool bar floats over the canvas.** `<Canvas bottomToolbar>` draws a
+  bar centred at the bottom of the viewport, over the canvas rather than
+  shrinking it. It shows while the chrome is collapsed and hides while it is
+  expanded, the shape library then holding the shapes. It pins
+  presets (`presetIds`, default `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`, core's
+  basic primitives) that click to draw and drag to place as the top bar's do,
+  then an "Other shapes" button that opens a popover above the bar listing
+  every shape in the shape library, with the sidebar's search and sections.
+  Choosing a shape, Escape, a press outside it and expanding the chrome close
+  it. Its sections fold together with the sidebar's, so a fold there reaches
+  `onSidebarsChange` too. `show: false` removes it. `@jiscribe/standard-shapes` exports
+  `standardBottomToolbarPresetIds` for it.
+- **The canvas chrome has two forms, collapsed and expanded.** Collapsed, the
+  full-width top bar gives its row back to the canvas and splits into two pills
+  floating over the canvas's top corners along the same sides, in the bottom
+  tool bar's look; shortcut help is hidden (`?` still opens it); the bottom
+  tool bar and the floating ObjectMenu show, and no sidebar does. Expanded, the
+  full-width bar is back with whichever sidebars are open, and neither the
+  bottom bar nor the ObjectMenu shows — with both sidebars closed too. The form
+  is state of its own, not read off the sidebars, so closing both sidebars
+  does not collapse it. The drawing stays put on screen as the canvas area's
+  top edge moves. The new `ToolbarSection.collapsedAlign` (`"start"` / `"end"` /
+  `"hidden"`, omitted = the section's `align`) overrides a section's pill;
+  within a pill sections keep their array order, exactly one divider separates
+  neighbours, and an empty pill is not drawn. A host listing its own sections
+  sets `collapsedAlign: "hidden"` on those that only matter while editing (a
+  settings menu, say).
+- **One switch collapses and expands the chrome.** The `sidebarsToggle`
+  toolbar item runs the new `toggleSidebars` command, the only way to
+  collapse, and shows pressed while expanded. Expanding brings back the
+  sidebars the user left open, or opens both when that was neither.
+  `DEFAULT_TOOLBAR_SIDEBARS_SECTION` places it at the far right.
+  `toggleStencilLibrary` / `togglePropertyPanel` and a sidebar's own close
+  button move that sidebar alone within the expanded form; pressed while
+  collapsed (a host keeping one in the pills), a sidebar toggle expands with
+  its own sidebar alone open.
+- **Each sidebar has its own toggle beside the switch.** The new
+  `DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION` holds the shape library and
+  properties toggles (each pressed while its own panel is shown), and
+  `DEFAULT_TOOLBAR_SECTIONS` and `standardToolbarSections` place it just before
+  the switch. It is hidden while the chrome is collapsed, where the switch
+  alone expands it. A host
+  composing the default sections itself adds it before
+  `DEFAULT_TOOLBAR_SIDEBARS_SECTION` to match.
+
+- **The chrome's form is saved and restored with the sidebars.**
+  `CanvasSidebarsState` (the `onSidebarsChange` payload) carries `isExpanded`,
+  and `CanvasInitialSidebars` (`initialConfig.sidebars`) takes it; omitted, the
+  canvas mounts collapsed. A sidebar's `left` / `right` `isOpen` now means open
+  within the expanded form, and is kept while collapsed. Restoring the
+  expanded form does not move the camera.
+- **A canvas declaring no shape library gets a default one.** With
+  `stencilLibrary` omitted, the library sidebar shows one section, headed by
+  the new `messages.stencilLibraryAllShapes` ("All shapes" / "すべての図形"),
+  listing the first few dozen registered presets in registration order; the
+  section's search reaches every registered preset, icon sets included. A host
+  applying an icon set still declares its own sections to get them grouped. The library toggle and
+  the switch work the same with or without a declared library.
+
+### Changed
+
+- **Migration: restored sidebars mount collapsed unless they say otherwise.**
+  A host that passes `initialConfig.sidebars` saved before `isExpanded`
+  existed, or builds one by hand, gets the collapsed chrome with those
+  sidebars kept for the next expand; add `isExpanded: true` to mount expanded.
+  Code building a `CanvasSidebarsState` itself has to add `isExpanded`.
+- **The default top bar no longer carries the shape presets.**
+  `DEFAULT_TOOLBAR_SECTIONS` is now history, view, help, the per-sidebar toggles
+  and the sidebars switch; the presets moved to the bottom tool bar.
+  `standardToolbarSections` changed the same way.
+  `DEFAULT_TOOLBAR_TOOLS_SECTION`, `DEFAULT_TOOLBAR_PROPERTIES_SECTION` and
+  `standardToolbarToolsSection` are still exported.
+- **Migration: the bottom tool bar is shown unless you hide it.**
+  `bottomToolbar.show` is independent of `toolbar.show`. A host that keeps
+  presets on the top bar (composing `DEFAULT_TOOLBAR_TOOLS_SECTION` /
+  `standardToolbarToolsSection`), or passes `toolbar={{ show: false }}`, must
+  also pass `bottomToolbar={{ show: false }}`; otherwise each preset shows
+  twice, or a canvas meant to have no bar keeps one.
+- **Shortcut help has a section of its own.** `DEFAULT_TOOLBAR_VIEW_SECTION`
+  is now zoom and zoom to fit; the help button moved to the new
+  `DEFAULT_TOOLBAR_HELP_SECTION`, which `DEFAULT_TOOLBAR_SECTIONS` and
+  `standardToolbarSections` place right after it, so the full-width bar looks
+  as before. A host composing `DEFAULT_TOOLBAR_VIEW_SECTION` itself adds
+  `DEFAULT_TOOLBAR_HELP_SECTION` after it, or loses the help button.
+- **A divider no longer opens or closes the whole top bar, nor stands doubled
+  between sections.** One left at the very start or end of the resolved bar is
+  dropped, since it separates the bar from nothing; so is the leading divider
+  of a section that follows one ending in a divider, unless the free space
+  before the first end-aligned section lies between them.
+- **Both sidebars are 280px wide with one content inset.** The shape library
+  was 248px. Its preset grid now spreads six button-wide columns across the
+  inset, so the last column lines up with the search box instead of leaving a
+  wider margin on the right.
+- **The e2e kit finds presets on either bar.** `selectors.toolButton` and
+  `shapeItem` match the top bar or the bottom one; `selectors.bottomToolbar`,
+  `bottomToolbarOtherShapes`, the Other shapes popover's `otherShapesPopover`
+  / `otherShapesPopoverSection` / `otherShapesPopoverItem` /
+  `otherShapesPopoverSearch`, `sidebarsToggle` and `CanvasDriver.toggleSidebars()`
+  are new. `mountPluginHarness` takes `bottomToolbarPresetIds` and shows no
+  bottom bar without it. `selectors.toolbar` matches both pills while the bar
+  is collapsed; `selectors.toolbarPill(edge)` scopes to one.
+  `CanvasDriver.openPropertyPanel()` / `closePropertyPanel()` re-measure the
+  canvas origin, which the full-width bar now moves; closing leaves the chrome
+  expanded, and the new `CanvasDriver.collapseSidebars()` collapses it (which
+  `CanvasDriver.arrange()` now does after its click); the new
+  `CanvasDriver.openPropertyPanelWithContentShift()` also returns how content
+  coordinates moved across the opening. `CanvasDriver.goto()` waits for the
+  canvas area (the new `selectors.canvasArea`) rather than the Rectangle preset,
+  which the bottom bar no longer shows while the chrome is expanded. The harness's
+  `?defaultToolbar` switch gives the page the canvas default top bar;
+  `?libraryOpen` mounts expanded; a page passing no `stencilLibrarySections`
+  (or `?noStencilLibrary`) shows the canvas's default library, and the kit's
+  library toggle with it; `?emptyStencilLibrary` declares an empty one.
+
+### Removed
+
+- **Breaking: the floating menu no longer opens the properties sidebar.** The
+  **…** button at its end is gone, and with it the `menuPropertyPanel` key of
+  `CanvasMessages`, so a host whose messages object names that key gets a type
+  error until it drops it. The menu shows only while the chrome is collapsed,
+  and opening a sidebar from it switched the whole chrome to its expanded form. With
+  the default bar the sidebars are opened by the switch for both; a host
+  composing `DEFAULT_TOOLBAR_PROPERTIES_SECTION` keeps a properties toggle on the
+  collapsed bar, and a canvas with no top bar has no way into the sidebars.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

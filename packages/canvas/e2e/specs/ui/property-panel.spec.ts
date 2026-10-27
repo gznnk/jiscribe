@@ -9,8 +9,8 @@ import { selectors } from "../../support/selectors";
  * Core behavior of the properties sidebar (`propertyPanel`).
  *
  * - The toolbar toggle opens and closes it, and carries the open state on
- *   aria-expanded; its own close button closes it too, and the ellipsis at the
- *   end of the floating menu opens it as well.
+ *   aria-expanded; its own close button closes it too. The floating menu offers
+ *   no way into it.
  * - It takes its width out of the viewport, so the canvas area narrows by exactly
  *   the panel's width.
  * - Opening it must not move the drawing: unlike the shape library it sits on the
@@ -23,12 +23,6 @@ import { selectors } from "../../support/selectors";
  * neither the text nor its type states reads as what the drawing falls back to,
  * so the lit control is the one the text is drawn with.
  */
-
-/**
- * The canvas area, the flex child the sidebars take their width from. Spelled out
- * here rather than in `selectors` because this is the only spec that measures it.
- */
-const CANVAS_AREA = '[data-kind="canvas"]';
 
 /** Screen rectangle of an element, as boundingBox() reports it. */
 type ScreenBox = { x: number; y: number; width: number; height: number };
@@ -284,7 +278,9 @@ test.describe("Properties sidebar", () => {
 		await expect(paddingTop).toHaveValue("0");
 	});
 
-	test("stands in for the floating menu while open", async ({ canvas }) => {
+	test("stands in for the floating menu while the chrome is expanded", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 120, y: 150 }, { x: 240, y: 240 });
 		const objectMenu = canvas.page.locator(selectors.objectMenu);
 		await expect(objectMenu).toBeVisible();
@@ -297,33 +293,29 @@ test.describe("Properties sidebar", () => {
 			canvas.page.locator(selectors.propertyPanelSection("fill")),
 		).toBeVisible();
 
+		// Closing the sidebar leaves the chrome expanded; collapsing brings the
+		// menu back.
 		await canvas.closePropertyPanel();
+		await expect(objectMenu).toHaveCount(0);
+		await canvas.collapseSidebars();
 		await expect(objectMenu).toBeVisible();
 	});
 
-	test("opens from the ellipsis at the end of the floating menu", async ({
-		canvas,
-	}) => {
+	test("is not opened from the floating menu", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 120, y: 150 }, { x: 240, y: 240 });
-		const objectMenu = canvas.page.locator(selectors.objectMenu);
-		await expect(objectMenu).toBeVisible();
+		await expect(canvas.page.locator(selectors.objectMenu)).toBeVisible();
 
-		// The same command the toolbar toggle fires, reached from the menu; the
-		// menu withdraws once the sidebar stands in for it
-		await canvas.page.click(selectors.objectMenuCommand("togglePropertyPanel"));
-		await expect(canvas.page.locator(selectors.propertyPanel)).toBeVisible();
-		await expect(objectMenu).toHaveCount(0);
 		await expect(
-			canvas.page.locator(selectors.propertyPanelSection("fill")),
-		).toBeVisible();
+			canvas.page.locator(selectors.objectMenuCommand("togglePropertyPanel")),
+		).toHaveCount(0);
 	});
 
 	test("narrows the viewport by its own width", async ({ canvas }) => {
-		const before = await boxOf(canvas, CANVAS_AREA);
+		const before = await boxOf(canvas, selectors.canvasArea);
 
 		await canvas.openPropertyPanel();
 		const panelBox = await boxOf(canvas, selectors.propertyPanel);
-		const opened = await boxOf(canvas, CANVAS_AREA);
+		const opened = await boxOf(canvas, selectors.canvasArea);
 
 		expect(
 			Math.abs(before.width - opened.width - panelBox.width),

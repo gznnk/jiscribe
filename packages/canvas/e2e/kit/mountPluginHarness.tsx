@@ -13,6 +13,7 @@ import ReactDOM from "react-dom/client";
 import { MultiCanvasApp } from "./MultiCanvasApp";
 import { PageScrollApp } from "./PageScrollApp";
 import type {
+	BottomToolbarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
@@ -27,8 +28,10 @@ import type {
 import {
 	Canvas,
 	darkCanvasTheme,
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	extractCanvasSourceFromPng,
 } from "../../src";
@@ -44,22 +47,29 @@ export type PluginHarnessParams = {
 	 */
 	plugins: readonly CanvasPlugin[];
 	/**
-	 * The shape tools of the bar only — not the whole bar. The kit opens the tool
-	 * section with the shape library toggle and appends core's history, view and
-	 * properties sections, so a page declaring its plugin's presets keeps the
-	 * sidebar toggle, undo / redo, zoom, help and the properties toggle without
-	 * naming them. Omit to take the canvas default bar, whose tools pin the
-	 * core presets only and show nothing a plugin contributes; pass items whenever
-	 * a spec drives a plugin's preset or category flyout. `CanvasDriver.goto()`
-	 * waits for the "Rectangle" tool, so keep the `rect` preset in any items passed
-	 * here.
+	 * The shape tools of the top bar only — not the whole bar. The kit opens the
+	 * tool section with the shape library toggle and appends core's history, view
+	 * and properties sections and the switch for both sidebars, so a page
+	 * declaring its plugin's presets keeps the sidebar toggles, undo / redo, zoom
+	 * and help without naming them. Omit to take the canvas default bar, which
+	 * pins no preset at all; pass items whenever a spec drives a plugin's preset
+	 * or category flyout from the top bar. Add the `rect` preset (here or in
+	 * `bottomToolbarPresetIds`) only when a spec draws a core rectangle.
 	 */
 	toolbarItems?: ToolbarItem[];
 	/**
+	 * Presets of the bottom tool bar, in display order. Omit and the page shows
+	 * no bottom bar at all — not the canvas's default one — so a page pinning its
+	 * presets on the top bar does not show each of them twice (the specs'
+	 * `toolButton` would then match two buttons). A preset belongs in this list or
+	 * in `toolbarItems`, not both.
+	 */
+	bottomToolbarPresetIds?: string[];
+	/**
 	 * Sections of the shape library sidebar, mirroring how a host app declares one.
-	 * Omit and neither the sidebar nor the toolbar toggle that opens it is
-	 * rendered; pass sections whenever a spec drives the sidebar. Independent of
-	 * `toolbarItems` — the same category can appear in both.
+	 * Omit and the sidebar shows the canvas's default library, one section
+	 * searching every registered preset; pass sections whenever a spec drives particular
+	 * ones. Independent of `toolbarItems` — the same category can appear in both.
 	 */
 	stencilLibrarySections?: StencilCategory[];
 	/**
@@ -75,6 +85,7 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
 	toolbarItems: ToolbarItem[] | undefined;
+	bottomToolbar: BottomToolbarOptions;
 	stencilLibrarySections: StencilCategory[] | undefined;
 	resolveImage: ResolveImage | undefined;
 	parser: CanvasParser;
@@ -82,13 +93,20 @@ type HarnessAppProps = {
 
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
- * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document.
+ * two-canvas setup, ?pageScroll to the canvas embedded in a scrolling document,
+ * ?noStencilLibrary keeps the default page but declares no shape library (so the
+ * canvas shows its default one), ?emptyStencilLibrary keeps it but declares an
+ * empty one, ?libraryOpen keeps it but mounts expanded with
+ * the shape library alone open, and
+ * ?defaultToolbar keeps it but gives the canvas its default top bar instead of
+ * the page's. The query switches combine.
  * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
 function HarnessApp({
 	initialConfig,
 	toolbarItems,
+	bottomToolbar,
 	stencilLibrarySections,
 	resolveImage,
 	parser,
@@ -161,10 +179,11 @@ function HarnessApp({
 		];
 	}, []);
 
-	// The tool section is the two the core default opens with plus the page's items, so a
-	// page that declares only its plugin's presets still gets the shape library toggle when
-	// it declared a library. Without a library both are dropped by resolution — the toggle
-	// as unusable, the divider as stranded — leaving the bar as the page declared it.
+	// The tool section is the shape library toggle and a divider, then the page's items, so
+	// a page that declares only its plugin's presets still gets the toggle.
+	// The kit keeps a toggle at each edge rather than the default bar's per-sidebar
+	// toggles, which hide while collapsed: specs open one sidebar from the collapsed
+	// state. ?defaultToolbar gives the default bar instead.
 	const toolbarSections = useMemo<ToolbarSection[] | undefined>(
 		() =>
 			toolbarItems
@@ -179,7 +198,9 @@ function HarnessApp({
 						},
 						DEFAULT_TOOLBAR_HISTORY_SECTION,
 						DEFAULT_TOOLBAR_VIEW_SECTION,
+						DEFAULT_TOOLBAR_HELP_SECTION,
 						DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+						DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 					]
 				: undefined,
 		[toolbarItems],
@@ -192,6 +213,20 @@ function HarnessApp({
 	if (query.has("pageScroll")) {
 		return <PageScrollApp />;
 	}
+	// ?noStencilLibrary drops the page's library, for specs on the default one a
+	// host that declares none gets; ?emptyStencilLibrary declares one with no
+	// section, which is not the same as declaring none.
+	let pageStencilLibrarySections = stencilLibrarySections;
+	if (query.has("noStencilLibrary")) {
+		pageStencilLibrarySections = undefined;
+	} else if (query.has("emptyStencilLibrary")) {
+		pageStencilLibrarySections = [];
+	}
+	// ?defaultToolbar shows the bar a host gets by passing no sections, for specs
+	// on the default sections themselves rather than the page's composition.
+	const pageToolbarSections = query.has("defaultToolbar")
+		? undefined
+		: toolbarSections;
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
@@ -201,10 +236,13 @@ function HarnessApp({
 				initialConfig={initialConfig}
 				resolveImage={resolveImage}
 				onOpenReference={handleOpenReference}
-				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
+				toolbar={
+					pageToolbarSections ? { sections: pageToolbarSections } : undefined
+				}
+				bottomToolbar={bottomToolbar}
 				stencilLibrary={
-					stencilLibrarySections
-						? { sections: stencilLibrarySections }
+					pageStencilLibrarySections
+						? { sections: pageStencilLibrarySections }
 						: undefined
 				}
 			/>
@@ -220,7 +258,19 @@ function HarnessApp({
  * @param params - The plugin set, toolbar and sidebars the page is built around. See {@link PluginHarnessParams}.
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
-	const initialConfig: CanvasConfig = { plugins: params.plugins };
+	// ?libraryOpen mounts expanded with the shape library alone open, as a host
+	// restoring that layout does, for specs on what the first paint shows.
+	const initialConfig: CanvasConfig = new URLSearchParams(
+		window.location.search,
+	).has("libraryOpen")
+		? {
+				plugins: params.plugins,
+				sidebars: { isExpanded: true, left: { isOpen: true } },
+			}
+		: { plugins: params.plugins };
+	const bottomToolbar: BottomToolbarOptions = params.bottomToolbarPresetIds
+		? { presetIds: params.bottomToolbarPresetIds }
+		: { show: false };
 	const parser = createCanvasParser({ plugins: params.plugins });
 
 	// The specs were written against the demo app's dark default, so the harness pins dark too,
@@ -233,6 +283,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 			<HarnessApp
 				initialConfig={initialConfig}
 				toolbarItems={params.toolbarItems}
+				bottomToolbar={bottomToolbar}
 				stencilLibrarySections={params.stencilLibrarySections}
 				resolveImage={params.resolveImage}
 				parser={parser}

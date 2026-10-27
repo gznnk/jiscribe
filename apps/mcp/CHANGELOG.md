@@ -13,6 +13,28 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
+## [Unreleased]
+
+### Changed
+
+- **The viewer's shape presets moved to a bar at the bottom of the canvas.**
+  The canvas starts collapsed: the top bar splits into two pills at the
+  canvas's top corners along the same sides — top-left, undo / redo;
+  top-right, the zoom controls and, at the far right, one switch for both
+  sidebars — and the bottom bar and the floating menu show. There is no help
+  button then (`?` still opens the shortcut help). The switch expands it: the
+  full bar is back with a toggle for each sidebar just before the switch, the
+  sidebars that were open last time open again (both, the first time), and
+  the bottom bar and the floating menu are hidden, the sidebars holding the
+  shapes and the properties instead. Closing both sidebars keeps it expanded; only the switch collapses
+  it again. The bottom bar's "Other shapes" button opens every shape, with a
+  search, just above the bar.
+
+### Removed
+
+- The floating menu's **…** button. Open the properties sidebar from the top
+  bar instead.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

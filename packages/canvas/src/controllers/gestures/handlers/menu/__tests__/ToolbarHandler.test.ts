@@ -38,7 +38,10 @@ const makeEvent = (
 
 describe("ToolbarHandler", () => {
 	describe("supports", () => {
-		it("accepts only (kind=menu, id=toolbar)", () => {
+		it("accepts only (kind=menu, id=toolbar or bottom-toolbar)", () => {
+			expect(
+				ToolbarHandler.supports(makeEvent("click", "bottom-toolbar")),
+			).toBe(true);
 			expect(
 				ToolbarHandler.supports(
 					makeEvent("click", "toolbar", "command:zoomIn"),
@@ -96,5 +99,31 @@ describe("ToolbarHandler", () => {
 		);
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		expect(next.viewport.zoom).toBe(1);
+	});
+
+	describe("on the bottom tool bar", () => {
+		it("a pressed on its empty area closes the context menu, the category flyout and the Other shapes popover", () => {
+			const next = ToolbarHandler.handle(
+				{ ...makeState(), isOtherShapesPopoverOpen: true },
+				makeEvent("pressed", "bottom-toolbar"),
+				registries,
+			);
+			expect(next.contextMenuPosition).toBeNull();
+			expect(next.stencilLibraryOpenCategory).toBeNull();
+			expect(next.isOtherShapesPopoverOpen).toBe(false);
+		});
+
+		it.each(["click", "doubleClick"] as const)(
+			"a %s on its empty area changes nothing",
+			(type) => {
+				const state = makeState();
+				const next = ToolbarHandler.handle(
+					state,
+					makeEvent(type, "bottom-toolbar"),
+					registries,
+				);
+				expect(next).toBe(state);
+			},
+		);
 	});
 });

@@ -173,8 +173,11 @@ describe("useObjectMenuPosition visibility", () => {
 			},
 		],
 		[
-			"the properties sidebar is open",
-			{ propertyPanel: { isOpen: true, collapsedSectionIds: [] } },
+			"the chrome is expanded, with no sidebar open",
+			{
+				isChromeExpanded: true,
+				propertyPanel: { isOpen: false, collapsedSectionIds: [] },
+			},
 		],
 		[
 			"a connector label is being edited",
@@ -185,6 +188,17 @@ describe("useObjectMenuPosition visibility", () => {
 	])("hides while %s", (_condition, overrides) => {
 		const { first } = mountPosition(selectedRectState(box, overrides));
 		expect(first.shouldRender).toBe(false);
+	});
+
+	/** Collapsing keeps the panel's `isOpen` for the next expand; it hides nothing. */
+	it("shows while collapsed even though the properties sidebar is kept open for the next expand", () => {
+		const { first } = mountPosition(
+			selectedRectState(box, {
+				isChromeExpanded: false,
+				propertyPanel: { isOpen: true, collapsedSectionIds: [] },
+			}),
+		);
+		expect(first.shouldRender).toBe(true);
 	});
 
 	it("stays away for a moment after the view stops coasting, then comes back", () => {

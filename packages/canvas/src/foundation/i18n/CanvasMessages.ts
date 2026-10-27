@@ -12,6 +12,9 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarZoomIn: "Zoom in",
 	toolbarStencilLibrary: "Shape library",
 	toolbarPropertyPanel: "Properties",
+	toolbarSidebars: "Sidebars",
+
+	bottomToolbarOtherShapes: "Other shapes",
 
 	stencilLibraryTitle: "Shape library",
 	stencilLibraryClose: "Close",
@@ -19,6 +22,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	stencilLibraryNoMatch: "No matching shapes",
 	stencilLibraryMoreMatches: "More matches than shown; refine the search",
 	stencilLibraryMoreViaSearch: "Find more shapes",
+	stencilLibraryAllShapes: "All shapes",
 
 	propertyPanelTitle: "Properties",
 	propertyPanelClose: "Close",
@@ -156,7 +160,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuLabelBorderColor: "Label Border Color",
 	menuLabelBorderStyle: "Label Border Style",
 	menuOpenReference: "Open Reference",
-	menuPropertyPanel: "Properties",
 
 	commandLabels: {},
 	stencilLabels: {},

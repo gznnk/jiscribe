@@ -78,7 +78,7 @@ async function firstSegmentMidpoint(
 
 /** Screen box of the canvas area itself. */
 async function canvasArea(canvas: CanvasDriver) {
-	const box = await canvas.page.locator('[data-kind="canvas"]').boundingBox();
+	const box = await canvas.page.locator(selectors.canvasArea).boundingBox();
 	if (!box) {
 		throw new Error("the canvas area has no box on screen");
 	}
@@ -153,7 +153,7 @@ async function rightEdges(canvas: CanvasDriver, id: string) {
 async function bottomEdges(canvas: CanvasDriver, id: string) {
 	const objectBox = await canvas.objectById(id).boundingBox();
 	const canvasBox = await canvas.page
-		.locator('[data-kind="canvas"]')
+		.locator(selectors.canvasArea)
 		.boundingBox();
 	if (!objectBox || !canvasBox) {
 		throw new Error("cannot measure the object against the canvas area");

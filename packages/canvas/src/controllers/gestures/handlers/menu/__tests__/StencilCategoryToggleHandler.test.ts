@@ -58,6 +58,16 @@ describe("StencilCategoryToggleHandler", () => {
 		expect(next.stencilLibraryOpenCategory).toBe("flowchart");
 	});
 
+	it("opening a category closes the Other shapes popover", () => {
+		const next = StencilCategoryToggleHandler.handle(
+			{ ...makeState(null), isOtherShapesPopoverOpen: true },
+			makeEvent("click", "stencil-category", "toggle:flowchart"),
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			{} as any,
+		);
+		expect(next.isOtherShapesPopoverOpen).toBe(false);
+	});
+
 	it("a click on the already-open category closes it (toggle)", () => {
 		const next = StencilCategoryToggleHandler.handle(
 			makeState("flowchart"),

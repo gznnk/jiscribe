@@ -83,6 +83,22 @@ describe("StartTextEditCommand", () => {
 		});
 	});
 
+	/** Otherwise the popover's Escape would be taken from the editor. */
+	it.each(["rect-1", "connector-1"])(
+		"closes the Other shapes popover and the category flyout when %s starts editing",
+		(selectedId) => {
+			const state = deepFreezeState({
+				...stateWithSelection(selectedId),
+				isOtherShapesPopoverOpen: true,
+				stencilLibraryOpenCategory: "flowchart",
+			});
+			const after = StartTextEditCommand.execute(state, registries);
+			expect(readTextEditDraft(after)).not.toBeNull();
+			expect(after.isOtherShapesPopoverOpen).toBe(false);
+			expect(after.stencilLibraryOpenCategory).toBeNull();
+		},
+	);
+
 	it("keeps the selection reference when the rect's body is already picked", () => {
 		const state = deepFreezeState({
 			...createInitialControllerState(doc, registries),

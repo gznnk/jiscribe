@@ -1,14 +1,12 @@
 import styled from "@emotion/styled";
 
-import { scrollbarStyles } from "../../../../foundation/theme/themeScrollbarStyles";
+import { STENCIL_BUTTON_SIZE } from "./StencilLibraryStyled";
+import {
+	SCROLLBAR_WIDTH,
+	scrollbarStyles,
+} from "../../../../foundation/theme/themeScrollbarStyles";
 import { theme } from "../../../../foundation/theme/themeTokens";
-
-/**
- * Width of the sidebar. Sized for six 34px stencil buttons per row with 2px gaps
- * (214px) inside 12px side paddings, plus the scrollbar gutter the list reserves
- * (SCROLLBAR_WIDTH) and the border.
- */
-const PANEL_WIDTH = "248px";
+import { SIDE_PANEL_INSET, SIDE_PANEL_WIDTH } from "../sidePanelLayout";
 
 /**
  * The shape library sidebar: a fixed-width column between the toolbar and the
@@ -24,7 +22,7 @@ export const StencilLibraryPanelContainer = styled.aside`
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
-	width: ${PANEL_WIDTH};
+	width: ${SIDE_PANEL_WIDTH}px;
 	background: ${theme.surface};
 	border-right: 1px solid ${theme.border};
 	user-select: none;
@@ -37,7 +35,7 @@ export const StencilLibraryPanelHeader = styled.div`
 	align-items: center;
 	justify-content: space-between;
 	height: 36px;
-	padding: 0 8px 0 12px;
+	padding: 0 8px 0 ${SIDE_PANEL_INSET}px;
 `;
 
 /** Panel heading. Sized as a section label rather than a document title. */
@@ -76,7 +74,7 @@ export const StencilLibrarySearchBox = styled.div`
 	position: relative;
 	display: flex;
 	align-items: center;
-	margin: 0 12px 8px;
+	margin: 0 ${SIDE_PANEL_INSET}px 8px;
 
 	svg {
 		position: absolute;
@@ -127,7 +125,7 @@ export const StencilLibrarySectionHeader = styled.button`
 	gap: 6px;
 	width: 100%;
 	height: 28px;
-	padding: 0 12px 0 8px;
+	padding: 0 ${SIDE_PANEL_INSET}px 0 8px;
 	border: none;
 	background: transparent;
 	color: ${theme.foreground};
@@ -170,28 +168,40 @@ export const StencilLibrarySectionLabel = styled.span`
 	white-space: nowrap;
 `;
 
+/** Number of button-wide columns in {@link StencilLibraryPanelGrid}. */
+export const STENCIL_LIBRARY_PANEL_GRID_COLUMNS = 6;
+
 /**
  * Grid of stencil buttons under a section header (and of the flat search
- * results). Six fixed columns rather than wrapping, so the items of every
- * section line up down the panel.
+ * results). A fixed number of button-wide columns rather than wrapping, so the
+ * items of every section line up down the panel, spread across the inset with
+ * the free space between them.
  */
 export const StencilLibraryPanelGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(6, minmax(0, 1fr));
+	grid-template-columns: repeat(
+		${STENCIL_LIBRARY_PANEL_GRID_COLUMNS},
+		${STENCIL_BUTTON_SIZE}px
+	);
+	justify-content: space-between;
 	gap: 2px;
-	padding: 4px 12px 8px;
+	/* The list reserves the scrollbar's gutter on the right, so the end padding
+	   gives it back to line the last column up with the search box's edge. That
+	   holds where the webkit scrollbar styles apply (the gutter is
+	   SCROLLBAR_WIDTH wide there). */
+	padding: 4px ${SIDE_PANEL_INSET - SCROLLBAR_WIDTH}px 8px ${SIDE_PANEL_INSET}px;
 `;
 
 /** Shown in place of the results when a search matches no stencil. */
 export const StencilLibraryEmptyMessage = styled.div`
-	padding: 8px 12px;
+	padding: 8px ${SIDE_PANEL_INSET}px;
 	font-size: 12px;
 	color: ${theme.foregroundMuted};
 `;
 
 /** Line under the search results telling that categories cut their matches short. */
 export const StencilLibraryMoreMatchesMessage = styled.div`
-	padding: 0 12px 8px;
+	padding: 0 ${SIDE_PANEL_INSET}px 8px;
 	font-size: 11px;
 	color: ${theme.foregroundMuted};
 `;
@@ -204,7 +214,7 @@ export const StencilLibraryMoreMatchesMessage = styled.div`
  */
 export const StencilLibraryMoreViaSearchButton = styled.button`
 	display: block;
-	margin: -4px 12px 8px;
+	margin: -4px ${SIDE_PANEL_INSET}px 8px;
 	padding: 0;
 	border: none;
 	background: transparent;

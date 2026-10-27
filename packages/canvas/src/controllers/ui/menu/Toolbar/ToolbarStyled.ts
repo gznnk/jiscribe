@@ -1,9 +1,14 @@
 import styled from "@emotion/styled";
 
 import { theme } from "../../../../foundation/theme/themeTokens";
+import { floatingBarStyles } from "../floatingBarStyles";
+
+/** Inset in px of each collapsed-bar pill from the viewport's top and side. */
+const TOOLBAR_PILL_INSET = 12;
 
 /**
- * Container for the full-width integrated toolbar pinned to the top.
+ * Container for the full-width integrated toolbar pinned to the top, the form
+ * the bar takes while the chrome is expanded (see ToolbarPill for the other).
  * Holds the sections in order, the `align: "start"` ones packed left and the
  * `align: "end"` ones right.
  *
@@ -30,6 +35,22 @@ export const ToolbarContainer = styled.div`
 	border-bottom: 1px solid ${theme.border};
 	pointer-events: auto;
 	user-select: none;
+`;
+
+/**
+ * One of the two pills the toolbar collapses into while the chrome is
+ * collapsed, floating over a top corner of the viewport with the bottom tool
+ * bar's look. Positioned inside the viewport like the bottom bar, so it covers
+ * the canvas instead of shrinking it and a wheel over it reaches the canvas.
+ */
+export const ToolbarPill = styled.div<{ edge: "start" | "end" }>`
+	position: absolute;
+	top: ${TOOLBAR_PILL_INSET}px;
+	${(props) =>
+		props.edge === "start"
+			? `left: ${TOOLBAR_PILL_INSET}px;`
+			: `right: ${TOOLBAR_PILL_INSET}px;`}
+	${floatingBarStyles}
 `;
 
 /**
@@ -119,10 +140,11 @@ export const ToolbarIconButton = styled.button`
 `;
 
 /**
- * Toolbar toggle button for a panel that stays open (the shape library sidebar).
+ * Toolbar toggle button for chrome that stays on screen (either sidebar, or the
+ * expanded form through the one switch).
  *
  * Sized like ToolbarIconButton, but takes the pressed look of a category button
- * while its panel is open so the bar shows what is currently on screen.
+ * while what it toggles is shown, so the bar shows what is currently on screen.
  */
 export const ToolbarToggleButton = styled.button<{ isOpen: boolean }>`
 	display: flex;

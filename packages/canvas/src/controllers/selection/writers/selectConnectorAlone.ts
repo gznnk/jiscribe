@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { closeStencilPopups } from "../../utils/closeStencilPopups";
 
 /**
  * Selects a connector, dropping whatever else was selected: a connector is the
@@ -29,6 +30,6 @@ export function selectConnectorAlone(
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 	};
 }

@@ -21,10 +21,12 @@ const createState = (zoom = 1): CanvasControllerState => {
 const resize = (
 	dimensions: { width: number; height: number },
 	leftEdgeShift?: number,
+	topEdgeShift?: number,
 ): CanvasAction => ({
 	type: "CONTAINER_RESIZE",
 	dimensions,
 	...(leftEdgeShift === undefined ? {} : { leftEdgeShift }),
+	...(topEdgeShift === undefined ? {} : { topEdgeShift }),
 });
 
 describe("canvasReducer / CONTAINER_RESIZE", () => {
@@ -85,5 +87,31 @@ describe("canvasReducer / CONTAINER_RESIZE", () => {
 		);
 
 		expect(closed.viewport.minX).toBe(100);
+	});
+
+	it("moves minY by the top edge's shift in world units", () => {
+		// The full-width toolbar takes its 40px row above the viewport at zoom 2:
+		// 20 world units come off the top, and minX is left alone.
+		const next = canvasReducer(
+			createState(2),
+			resize({ width: 1000, height: 760 }, 0, 40),
+		);
+
+		expect(next.viewport.minY).toBe(70);
+		expect(next.viewport.minX).toBe(100);
+	});
+
+	it("moves minY back when the top edge returns", () => {
+		const expanded = canvasReducer(
+			createState(),
+			resize({ width: 760, height: 760 }, 240, 40),
+		);
+		const collapsed = canvasReducer(
+			expanded,
+			resize({ width: 1000, height: 800 }, -240, -40),
+		);
+
+		expect(expanded.viewport).toMatchObject({ minX: 340, minY: 90 });
+		expect(collapsed.viewport).toMatchObject({ minX: 100, minY: 50 });
 	});
 });

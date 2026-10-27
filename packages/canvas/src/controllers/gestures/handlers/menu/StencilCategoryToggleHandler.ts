@@ -10,7 +10,8 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * Handles events with targetKind "menu" and targetId "stencil-category".
  *
  * targetAction format: `toggle:{categoryId}` → open that category's flyout, or
- * close it if it is already the open one (click acts as a toggle).
+ * close it if it is already the open one (click acts as a toggle). Either
+ * way the Other shapes popover closes: the two never show together.
  *
  * This handler only owns the toggle itself. Dismissal on outside interactions
  * is handled by the selection/press handlers and commands that clear
@@ -50,6 +51,7 @@ export const StencilCategoryToggleHandler: GestureHandler = {
 					nextState.stencilLibraryOpenCategory === categoryId
 						? null
 						: categoryId,
+				isOtherShapesPopoverOpen: false,
 			};
 		}
 

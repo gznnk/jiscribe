@@ -55,17 +55,22 @@ export class CanvasDriver {
 	/**
 	 * Screen origin (top-left) of the canvas area (the SVG), as of the last measurement.
 	 *
-	 * Every test is written in content coordinates, which are screen coordinates minus this
-	 * origin. Chrome takes its layout space out of the canvas area — the toolbar above it,
-	 * the shape library sidebar beside it — so the origin moves whenever a piece of chrome
-	 * opens or closes. Pan and zoom never move it: they only change the viewBox.
+	 * Every test is written in content coordinates, which are screen coordinates
+	 * minus this origin. Chrome takes its layout space out of the canvas area —
+	 * the full-width toolbar above it while the chrome is expanded, the shape
+	 * library sidebar beside it — so the origin moves whenever the chrome changes
+	 * form or the library opens or closes; the bottom tool bar, and the two pills
+	 * the toolbar collapses into, float over the canvas and take none. Pan and
+	 * zoom never move it: they only change the viewBox.
 	 *
-	 * Every driver operation that converts content coordinates re-measures this first, so its
-	 * input lands where the caller meant even while the sidebar is open. toScreen() and
-	 * toContent() stay synchronous and answer from the last measurement — fresh as of the
-	 * driver call before them, so a spec that moves chrome by clicking the DOM itself and then
-	 * converts reads the old origin. Open and close the sidebar through openStencilLibrary()
-	 * and closeStencilLibrary(), which re-measure.
+	 * Every driver operation that converts content coordinates re-measures this
+	 * first, so its input lands where the caller meant even while the sidebar is
+	 * open. toScreen() and toContent() stay synchronous and answer from the last
+	 * measurement — fresh as of the driver call before them, so a spec that moves
+	 * chrome by clicking the DOM itself and then converts reads the old origin.
+	 * Open and close the sidebars through openStencilLibrary(),
+	 * closeStencilLibrary(), openPropertyPanel(), closePropertyPanel(),
+	 * toggleSidebars() or collapseSidebars(), which re-measure.
 	 *
 	 * Coordinates from boundingBox() are screen coordinates — pass them through toContent()
 	 * before handing them to the driver.
@@ -75,26 +80,33 @@ export class CanvasDriver {
 
 	constructor(readonly page: Page) {}
 
-	async goto() {
-		await this.page.goto("/", { waitUntil: "networkidle" });
-		await expect(
-			this.page.locator(selectors.toolButton("Rectangle")),
-		).toBeVisible();
+	/**
+	 * Open the harness page and wait until it can be driven.
+	 *
+	 * @param search - Query string selecting a variant of the default page
+	 *   (`"?noStencilLibrary"`, see mountPluginHarness); empty for the page itself
+	 */
+	async goto(search = "") {
+		await this.page.goto(`/${search}`, { waitUntil: "networkidle" });
+		// The canvas area rather than a preset: the bottom bar holding them is
+		// absent on a variant that mounts expanded.
+		await expect(this.page.locator(selectors.canvasArea).first()).toBeVisible();
 		await this.measureOrigin();
 	}
 
 	/**
-	 * Re-read the screen offset of the canvas area. As a flex child it has real size from
-	 * mount, and its top-left sits one toolbar height down and one open sidebar to the right.
-	 * querySelector rather than a locator: the multi-canvas page mounts two of them, and the
-	 * first is the one the driver drives.
+	 * Re-read the screen offset of the canvas area. As a flex child it has real
+	 * size from mount, and its top-left sits one toolbar height down while the
+	 * chrome is expanded (at the top while collapsed) and one open shape library
+	 * to the right. querySelector rather than a locator: the multi-canvas
+	 * page mounts two of them, and the first is the one the driver drives.
 	 */
 	private async measureOrigin() {
-		const origin = await this.page.evaluate(() => {
-			const el = document.querySelector('[data-kind="canvas"]');
+		const origin = await this.page.evaluate((canvasArea) => {
+			const el = document.querySelector(canvasArea);
 			const rect = el?.getBoundingClientRect();
 			return { x: rect?.left ?? 0, y: rect?.top ?? 0 };
-		});
+		}, selectors.canvasArea);
 		this.originX = origin.x;
 		this.originY = origin.y;
 	}
@@ -640,7 +652,8 @@ export class CanvasDriver {
 
 	/**
 	 * Close the sidebar from its own close button, which unmounts it; the counterpart of
-	 * openStencilLibrary, re-measuring the origin the same way.
+	 * openStencilLibrary, re-measuring the origin the same way. The chrome stays
+	 * expanded (see collapseSidebars).
 	 */
 	async closeStencilLibrary() {
 		await this.page.click(selectors.stencilLibraryPanelClose);
@@ -651,22 +664,78 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Open the properties sidebar from the toolbar toggle and wait for its panel. It takes
-	 * its width off the right of the canvas area, so the origin does not move; the wait is
-	 * what the caller needs.
+	 * Press the toolbar's switch for both sidebars and wait for the chrome's form
+	 * (`aria-expanded`) to flip (see the `toggleSidebars` command for which panels
+	 * expanding brings). The shape library takes its width out of the canvas area
+	 * and the full-width toolbar its height, so the origin is re-measured before
+	 * returning, as openStencilLibrary does.
+	 */
+	async toggleSidebars() {
+		const sidebarsToggle = this.page.locator(selectors.sidebarsToggle);
+		const wasExpanded =
+			(await sidebarsToggle.getAttribute("aria-expanded")) === "true";
+		await sidebarsToggle.click();
+		await expect(sidebarsToggle).toHaveAttribute(
+			"aria-expanded",
+			String(!wasExpanded),
+		);
+		await this.measureOrigin();
+	}
+
+	/**
+	 * Collapse the chrome through the switch for both sidebars when it is
+	 * expanded, and do nothing when it is not: the way back to the corner pills,
+	 * the bottom bar and the ObjectMenu, which a panel's own close button does not
+	 * take. Each panel's open flag is kept for the next expand.
+	 */
+	async collapseSidebars() {
+		const sidebarsToggle = this.page.locator(selectors.sidebarsToggle);
+		if ((await sidebarsToggle.getAttribute("aria-expanded")) === "true") {
+			await this.toggleSidebars();
+		}
+	}
+
+	/**
+	 * Open the properties sidebar from the toolbar toggle and wait for its panel.
+	 * It takes its width off the right of the canvas area, but opening it from
+	 * collapsed expands the chrome (with this panel alone open), bringing the
+	 * full-width toolbar back above the canvas, so the origin is re-measured.
 	 */
 	async openPropertyPanel() {
 		await this.page.click(selectors.propertyPanelToggle);
 		await expect(this.page.locator(selectors.propertyPanel)).toBeVisible();
+		await this.measureOrigin();
+	}
+
+	/**
+	 * Open the properties sidebar as openPropertyPanel() does, and return a map
+	 * from a content point taken before the opening to the content point of the
+	 * same spot on the drawing after it. The drawing stays put on screen while
+	 * the full-width toolbar the sidebar brings back moves the canvas origin, so
+	 * a point on a shape drawn before has other content coordinates after.
+	 */
+	async openPropertyPanelWithContentShift(): Promise<
+		(point: { x: number; y: number }) => { x: number; y: number }
+	> {
+		await this.measureOrigin();
+		const originBefore = { x: this.originX, y: this.originY };
+		await this.openPropertyPanel();
+		const shift = {
+			x: originBefore.x - this.originX,
+			y: originBefore.y - this.originY,
+		};
+		return (point) => ({ x: point.x + shift.x, y: point.y + shift.y });
 	}
 
 	/**
 	 * Close the properties sidebar from its own close button, which unmounts it; the
-	 * counterpart of openPropertyPanel.
+	 * counterpart of openPropertyPanel, re-measuring the origin the same way. The
+	 * chrome stays expanded (see collapseSidebars).
 	 */
 	async closePropertyPanel() {
 		await this.page.click(selectors.propertyPanelClose);
 		await expect(this.page.locator(selectors.propertyPanel)).toHaveCount(0);
+		await this.measureOrigin();
 	}
 
 	/**
@@ -676,7 +745,7 @@ export class CanvasDriver {
 	 */
 	async isDrawingMode(): Promise<boolean> {
 		const cursor = await this.page
-			.locator('[data-kind="canvas"]')
+			.locator(selectors.canvasArea)
 			.evaluate((el) => getComputedStyle(el).cursor);
 		return cursor === "crosshair";
 	}
@@ -1433,15 +1502,16 @@ export class CanvasDriver {
 
 	/**
 	 * Run a stacking-order command from the properties sidebar's Arrange section.
-	 * The sidebar is opened and closed around the click, so the canvas is back at
-	 * its full width when this returns and measured screen points still hold.
+	 * The sidebar is opened for the click and the chrome collapsed after it, so
+	 * the canvas fills the root again when this returns and measured screen
+	 * points still hold.
 	 */
 	async arrange(
 		commandId: "bringToFront" | "bringForward" | "sendBackward" | "sendToBack",
 	) {
 		await this.openPropertyPanel();
 		await this.page.click(selectors.propertyPanelCommand(commandId));
-		await this.closePropertyPanel();
+		await this.collapseSidebars();
 	}
 
 	/** DOM-order index among shapes, excluding connectors; later elements are in front in SVG. */
@@ -1655,7 +1725,7 @@ export class CanvasDriver {
 	 */
 	async canvasSurfaceColor(): Promise<string> {
 		return this.page
-			.locator('[data-kind="canvas"] svg')
+			.locator(`${selectors.canvasArea} svg`)
 			.first()
 			.evaluate((el) => getComputedStyle(el).backgroundColor);
 	}

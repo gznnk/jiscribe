@@ -11,6 +11,8 @@ import { selectors } from "../../support/selectors";
  * sidebars beside it used to hand a Ctrl+wheel — and a trackpad pinch, which arrives
  * as the same event — straight to the browser: the page zoomed while the drawing
  * stayed where it was. useBlockBrowserZoom cancels it at the canvas root instead.
+ * The pills the toolbar collapses into float inside the drawing region, as the
+ * bottom tool bar does, so a Ctrl+wheel over one zooms the drawing instead.
  *
  * Whether the browser actually zoomed is not observable from the page, so the
  * assertion is on the event: a listener on `window` runs after the root's capture
@@ -62,6 +64,9 @@ test.describe("Ctrl+wheel over the canvas chrome", () => {
 	test("is cancelled over the toolbar and leaves the view where it was", async ({
 		canvas,
 	}) => {
+		// The full-width bar, which sits above the drawing region rather than in
+		// it.
+		await canvas.toggleSidebars();
 		const viewBoxBefore = await canvas.getViewBox();
 		await recordWheelCancellation(canvas.page);
 
@@ -74,6 +79,26 @@ test.describe("Ctrl+wheel over the canvas chrome", () => {
 			.toEqual([true]);
 		// The chrome only swallows the gesture: zooming stays with the drawing region.
 		expect(await canvas.getViewBox()).toBe(viewBoxBefore);
+	});
+
+	test("zooms the drawing over a collapsed toolbar pill", async ({
+		canvas,
+	}) => {
+		const viewBoxBefore = await canvas.getViewBox();
+		await recordWheelCancellation(canvas.page);
+
+		await wheelOver(canvas.page, selectors.toolbarPill("end"), { ctrl: true });
+
+		await expect
+			.poll(() => readWheelCancellation(canvas.page), {
+				message: "the Ctrl+wheel over the pill is cancelled",
+			})
+			.toEqual([true]);
+		await expect
+			.poll(() => canvas.getViewBox(), {
+				message: "the drawing region under the pill takes the zoom",
+			})
+			.not.toBe(viewBoxBefore);
 	});
 
 	test("is cancelled over the shape library sidebar", async ({ canvas }) => {

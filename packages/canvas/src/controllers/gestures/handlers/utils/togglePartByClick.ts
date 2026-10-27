@@ -4,6 +4,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ObjectPartRange } from "../../../selection/CanvasSelection";
 import { collectObjectPartIds } from "../../../selection/readers/collectObjectPartIds";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 
 /** A range naming the one part. */
 const singlePartRange = (partId: string): ObjectPartRange => ({
@@ -94,6 +95,6 @@ export const togglePartByClick = (
 					: { kind: part.kind, ranges: nextRanges },
 		},
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 	};
 };

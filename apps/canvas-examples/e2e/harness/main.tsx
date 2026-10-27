@@ -38,12 +38,13 @@ import "katex/dist/katex.min.css";
 
 // Every shipped plugin at once, which is the whole point of this suite: each plugin's own
 // harness loads itself alone, so nothing else exercises the shipped set sharing one canvas.
-// The arrangement mirrors examples/plugins.tsx — six presets pinned on the bar, one
-// category left on it as a flyout so that mechanism stays covered, and the shape library
-// sidebar holding the whole set as sections. The shipped hosts leave no flyout on the bar
-// (standardToolbarToolsSection pins the six presets and nothing else). The markdown / sticky
-// presets and the nine categories are all plugin-supplied and absent from core's default
-// bar.
+// The shapes are arranged as in examples/plugins.tsx — six presets pinned on the bottom tool
+// bar, one category left on the top bar as a flyout so that mechanism stays covered, and the
+// shape library sidebar holding the whole set as sections; the sidebar controls are the
+// kit's (see mountPluginHarness). The shipped hosts leave no
+// flyout on the top bar (standardToolbarSections carries no shape tool at all). The
+// markdown / sticky presets and the nine categories are all plugin-supplied and absent from
+// core's defaults.
 mountPluginHarness({
 	plugins: [
 		flowchartPlugin,
@@ -59,13 +60,15 @@ mountPluginHarness({
 		awsShapesPlugin,
 	],
 	toolbarItems: [
-		{ type: "stencilPreset", presetId: "rect" },
-		{ type: "stencilPreset", presetId: "ellipse" },
-		{ type: "stencilPreset", presetId: "polyline" },
-		{ type: "stencilPreset", presetId: "polygon" },
-		{ type: "stencilPreset", presetId: "text" },
-		{ type: "stencilPreset", presetId: "sticky" },
 		{ type: "stencilCategory", category: lucideIconStencilCategory },
+	],
+	bottomToolbarPresetIds: [
+		"rect",
+		"ellipse",
+		"polyline",
+		"polygon",
+		"text",
+		"sticky",
 	],
 	stencilLibrarySections: [
 		{

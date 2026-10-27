@@ -9,6 +9,7 @@ import type { ConnectorState } from "../../../../states/objects/connector/Connec
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import type { CanvasEvent } from "../../registry/GestureHandlerTypes";
 
 /**
@@ -104,7 +105,7 @@ export const startConnectorLabelEdit = (
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,
-		stencilLibraryOpenCategory: null,
+		...closeStencilPopups(),
 	};
 	if (labelText !== "" && !isLabelBoxHit) {
 		return selectedState;

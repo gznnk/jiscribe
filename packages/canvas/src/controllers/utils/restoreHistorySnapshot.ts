@@ -108,8 +108,9 @@ export const restoreHistorySnapshot = (
 		historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 		internalClipboard: state.internalClipboard,
 		activeModal: state.activeModal, // History navigation must not close an open modal
-		// The two sidebars are chrome, not part of the document being swapped: they
-		// stay open, and as collapsed, as the user left them.
+		// The chrome is not part of the document being swapped: its form and both
+		// sidebars stay as the user left them.
+		isChromeExpanded: state.isChromeExpanded,
 		stencilLibraryPanel: state.stencilLibraryPanel,
 		propertyPanel: state.propertyPanel,
 		history,

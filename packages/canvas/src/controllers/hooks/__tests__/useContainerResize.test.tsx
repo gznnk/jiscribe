@@ -8,10 +8,11 @@ import type { CanvasAction } from "../../reducer/CanvasActions";
 import { useContainerResize } from "../useContainerResize";
 
 /**
- * What the hook decides is *whether* a layout change is worth an action and what
- * `leftEdgeShift` it carries — the compensation arithmetic belongs to the
- * reducer. So these drive the container's box and its offset position by hand,
- * fire the two observers separately, and watch what reaches dispatch.
+ * What the hook decides is *whether* a layout change is worth an action and
+ * what `leftEdgeShift` / `topEdgeShift` it carries — the compensation
+ * arithmetic belongs to the reducer. So these drive the container's box and its
+ * offset position by hand, fire the two observers separately, and watch what
+ * reaches dispatch.
  */
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -21,12 +22,13 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 /**
  * The container as the DOM would report it. `left` is null for an element with
  * no offset parent (display:none, a detached tree), which is what makes a shift
- * incomparable.
+ * incomparable. `top` is the offset top while laid out, 0 when omitted.
  */
 type ContainerLayout = {
 	width: number;
 	height: number;
 	left: number | null;
+	top?: number;
 };
 
 /** Callbacks of the ResizeObservers built while a test runs, newest last. */
@@ -59,6 +61,9 @@ const mountWithLayout = (initialLayout: ContainerLayout) => {
 		({ width: layout.width, height: layout.height }) as DOMRect;
 	Object.defineProperty(container, "offsetLeft", {
 		get: () => layout.left ?? 0,
+	});
+	Object.defineProperty(container, "offsetTop", {
+		get: () => layout.top ?? 0,
 	});
 	Object.defineProperty(container, "offsetParent", {
 		get: () => (layout.left === null ? null : document.body),
@@ -131,6 +136,7 @@ describe("useContainerResize", () => {
 			type: "CONTAINER_RESIZE",
 			dimensions: { width: 1000, height: 600 },
 			leftEdgeShift: 0,
+			topEdgeShift: 0,
 		});
 	});
 
@@ -175,12 +181,55 @@ describe("useContainerResize", () => {
 			type: "CONTAINER_RESIZE",
 			dimensions: { width: 752, height: 600 },
 			leftEdgeShift: 248,
+			topEdgeShift: 0,
 		});
 		expect(dispatch.mock.calls[2][0]).toEqual({
 			type: "CONTAINER_RESIZE",
 			dimensions: { width: 1000, height: 600 },
 			leftEdgeShift: -248,
+			topEdgeShift: 0,
 		});
+	});
+
+	/** The full-width toolbar taking its row above the viewport, and back. */
+	it("reports the top edge's shift in both directions", () => {
+		const { dispatch, relayout } = mountWithLayout({
+			width: 1000,
+			height: 600,
+			left: 0,
+			top: 0,
+		});
+
+		relayout({ width: 1000, height: 560, left: 0, top: 40 }, true);
+		relayout({ width: 1000, height: 600, left: 0, top: 0 }, false);
+
+		expect(dispatch).toHaveBeenCalledTimes(3);
+		expect(dispatch.mock.calls[1][0]).toEqual({
+			type: "CONTAINER_RESIZE",
+			dimensions: { width: 1000, height: 560 },
+			leftEdgeShift: 0,
+			topEdgeShift: 40,
+		});
+		expect(dispatch.mock.calls[2][0]).toEqual({
+			type: "CONTAINER_RESIZE",
+			dimensions: { width: 1000, height: 600 },
+			leftEdgeShift: 0,
+			topEdgeShift: -40,
+		});
+	});
+
+	it("dispatches for a top edge that moved with the size unchanged", () => {
+		const { dispatch, relayout } = mountWithLayout({
+			width: 1000,
+			height: 600,
+			left: 0,
+			top: 0,
+		});
+
+		relayout({ width: 1000, height: 600, left: 0, top: 40 }, true);
+
+		expect(dispatch).toHaveBeenCalledTimes(2);
+		expect(dispatch.mock.calls[1][0]).toMatchObject({ topEdgeShift: 40 });
 	});
 
 	describe("when the container has no offset parent", () => {
@@ -201,6 +250,7 @@ describe("useContainerResize", () => {
 				type: "CONTAINER_RESIZE",
 				dimensions: { width: 752, height: 600 },
 				leftEdgeShift: 0,
+				topEdgeShift: 0,
 			});
 		});
 
@@ -218,6 +268,7 @@ describe("useContainerResize", () => {
 				type: "CONTAINER_RESIZE",
 				dimensions: { width: 752, height: 600 },
 				leftEdgeShift: 0,
+				topEdgeShift: 0,
 			});
 		});
 	});

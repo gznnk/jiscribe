@@ -798,4 +798,17 @@ describe("CanvasEventHandler", () => {
 		);
 		expect(nextState.stencilLibraryOpenCategory).toBeNull();
 	});
+
+	it("a background press closes the Other shapes popover", () => {
+		const state = makeState({
+			mode: { kind: "normal" },
+			isOtherShapesPopoverOpen: true,
+		} as Partial<CanvasControllerState>);
+		const nextState = CanvasEventHandler.handle(
+			state,
+			makeEvent({ type: "pressed", button: 0 }),
+			registries,
+		);
+		expect(nextState.isOtherShapesPopoverOpen).toBe(false);
+	});
 });

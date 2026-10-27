@@ -16,19 +16,23 @@ const PANEL = selectors.propertyPanel;
 const SHAPE_CENTER = { x: 520, y: 270 };
 const SELECTED = { start: 0, end: 7 };
 
-/** Draws a rect, opens the sidebar, puts `text` in the rect and selects its first `length` characters. */
+/**
+ * Draws a rect, opens the sidebar, puts `text` in the rect and selects its
+ * first `length` characters. Drawn first: the presets are on the bottom bar,
+ * which the open sidebar hides.
+ */
 async function editAndSelect(
 	canvas: CanvasDriver,
 	text: string,
 	length: number,
 ): Promise<string> {
-	await canvas.openPropertyPanel();
 	const id = await canvas.drawShape(
 		"Rectangle",
 		{ x: 400, y: 180 },
 		{ x: 640, y: 360 },
 	);
-	await canvas.typeTextAt(SHAPE_CENTER, text);
+	const toContentAfterOpen = await canvas.openPropertyPanelWithContentShift();
+	await canvas.typeTextAt(toContentAfterOpen(SHAPE_CENTER), text);
 	await canvas.page.keyboard.press("Home");
 	for (let i = 0; i < length; i++) {
 		await canvas.page.keyboard.press("Shift+ArrowRight");

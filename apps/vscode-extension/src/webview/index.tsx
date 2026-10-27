@@ -1,5 +1,6 @@
 import {
 	Canvas,
+	type BottomToolbarOptions,
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
@@ -10,6 +11,7 @@ import {
 	type ToolbarSection,
 } from "@jiscribe/canvas";
 import {
+	standardBottomToolbarPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -43,9 +45,12 @@ import type { WebviewToExtensionMessage } from "../types/messages";
 // (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// The shape set owns how its stencils are arranged, over the bar and the sidebar
-// both; core's default bar knows none of them, so the host passes both halves.
+// The shape set owns how its stencils are arranged, over the bars and the sidebar
+// alike; core's defaults know none of them, so the host passes every piece.
 const toolbarSections: ToolbarSection[] = standardToolbarSections;
+const bottomToolbar: BottomToolbarOptions = {
+	presetIds: standardBottomToolbarPresetIds,
+};
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
 
@@ -98,7 +103,7 @@ function App() {
 	const canvasRef = useRef<CanvasHandle>(null);
 
 	// Mount-time canvas configuration, built once: `viewport` and `sidebars` seed
-	// the camera and the sidebar open/collapsed state from persisted state
+	// the camera and the chrome (its form, the sidebars) from persisted state
 	// (undefined on first open → Canvas uses its own defaults). The canvas owns
 	// both after mount; we only persist what it reports, never drive it back — so
 	// a tab-hide reload restores the last view with no feedback into the canvas.
@@ -311,6 +316,7 @@ function App() {
 					doc={docView.doc}
 					initialConfig={mountConfig}
 					toolbar={{ sections: toolbarSections }}
+					bottomToolbar={bottomToolbar}
 					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
 					onSidebarsChange={handleSidebarsChange}

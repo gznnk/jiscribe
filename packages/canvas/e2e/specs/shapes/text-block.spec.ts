@@ -214,8 +214,8 @@ test.describe("the switch between the two layouts", () => {
 		canvas,
 	}) => {
 		await loadDoc(canvas, labelDocText, "label-text");
-		await canvas.openPropertyPanel();
-		await canvas.selectAt(LABEL_POINT);
+		const toContentAfterOpen = await canvas.openPropertyPanelWithContentShift();
+		await canvas.selectAt(toContentAfterOpen(LABEL_POINT));
 		const measured = await overlayBoxOf(canvas, "label-text");
 
 		const toggle = layoutSwitch(canvas);
@@ -245,7 +245,10 @@ test.describe("the switch between the two layouts", () => {
 		// Dragging the right edge inward re-wraps, and the height follows the lines.
 		await canvas.dragTransformHandle(
 			"rightCenter",
-			{ x: LABEL_X + wrapped.width / 2, y: LABEL_Y + wrapped.height / 2 },
+			toContentAfterOpen({
+				x: LABEL_X + wrapped.width / 2,
+				y: LABEL_Y + wrapped.height / 2,
+			}),
 			{ ctrl: true },
 		);
 		const narrowed = await overlayBoxOf(canvas, "label-text");
@@ -264,12 +267,12 @@ test.describe("the switch between the two layouts", () => {
 
 	test("edits at the width it was just given", async ({ canvas }) => {
 		await loadDoc(canvas, labelDocText, "label-text");
-		await canvas.openPropertyPanel();
-		await canvas.selectAt(LABEL_POINT);
+		const toContentAfterOpen = await canvas.openPropertyPanelWithContentShift();
+		await canvas.selectAt(toContentAfterOpen(LABEL_POINT));
 		await layoutSwitch(canvas).click();
 		const wrapped = await overlayBoxOf(canvas, "label-text");
 
-		await canvas.typeTextAt(LABEL_POINT, " ");
+		await canvas.typeTextAt(toContentAfterOpen(LABEL_POINT), " ");
 
 		// The editor replaces the overlay while it is open, so the width it wraps in
 		// is what says the edited text breaks where the committed one will.

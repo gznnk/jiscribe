@@ -36,6 +36,7 @@ import {
 	applyDocumentProperty,
 	canApplyDocumentProperty,
 } from "../utils/applyDocumentProperty";
+import { closeStencilPopups } from "../utils/closeStencilPopups";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
 import { NORMAL_MODE } from "../utils/normalMode";
@@ -173,20 +174,24 @@ export const createCanvasReducer =
 			}
 
 			case "CONTAINER_RESIZE": {
-				// A left edge that moved would carry the drawing with it, since the
-				// screen position of a world point is measured from that edge. Undoing
-				// the move on minX in the same commit keeps the drawing pinned: the
-				// sidebar covers and uncovers the left strip rather than pushing it.
-				const { leftEdgeShift } = action;
-				const shouldCompensate =
-					leftEdgeShift !== undefined && leftEdgeShift !== 0;
+				// A left or top edge that moved would carry the drawing with it, since
+				// the screen position of a world point is measured from that corner.
+				// Undoing the move on minX / minY in the same commit keeps the drawing
+				// pinned: the sidebar covers and uncovers the left strip, and the
+				// toolbar the top one, rather than pushing it.
+				const { leftEdgeShift = 0, topEdgeShift = 0 } = action;
 				return {
 					...state,
 					viewport: {
 						...state.viewport,
-						minX: shouldCompensate
-							? state.viewport.minX + leftEdgeShift / state.viewport.zoom
-							: state.viewport.minX,
+						minX:
+							leftEdgeShift !== 0
+								? state.viewport.minX + leftEdgeShift / state.viewport.zoom
+								: state.viewport.minX,
+						minY:
+							topEdgeShift !== 0
+								? state.viewport.minY + topEdgeShift / state.viewport.zoom
+								: state.viewport.minY,
 						width: action.dimensions.width,
 						height: action.dimensions.height,
 					},
@@ -249,7 +254,7 @@ export const createCanvasReducer =
 						committedResult.multiSelectGroup,
 					),
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					...closeStencilPopups(),
 				};
 				if (state.mode.kind !== "textEdit") {
 					return selectedResult;
@@ -619,6 +624,13 @@ export const createCanvasReducer =
 					return state;
 				}
 				return { ...state, activeModal: null };
+			}
+
+			case "CLOSE_OTHER_SHAPES_POPOVER": {
+				if (!state.isOtherShapesPopoverOpen) {
+					return state;
+				}
+				return { ...state, isOtherShapesPopoverOpen: false };
 			}
 
 			default:

@@ -1,4 +1,5 @@
 import type { CommandRegistry } from "../../../../commands/CommandRegistry";
+import { ToggleSidebarsCommand } from "../../../../commands/view/ToggleSidebarsCommand";
 import type { Stencil } from "../../../objects/Stencil";
 import type { StencilRegistry } from "../../../objects/StencilRegistry";
 import {
@@ -6,6 +7,7 @@ import {
 	type ResolvedStencilCategory,
 } from "../../StencilLibrary/utils/resolveStencilCategory";
 import type { ToolbarItem, ToolbarSection } from "../toolbarSections";
+import { findFirstEndSectionId } from "./findFirstEndSectionId";
 
 /** A toolbar item with its registry lookups done, ready to draw. */
 export type ResolvedToolbarItem =
@@ -18,13 +20,17 @@ export type ResolvedToolbarItem =
 	| { type: "zoom" }
 	| { type: "stencilLibraryToggle" }
 	| { type: "propertyPanelToggle" }
+	| { type: "sidebarsToggle" }
 	| { type: "divider" }
 	| { type: "slot"; id: string; node: React.ReactNode };
 
-/** A section with every item resolved and `align` filled in. */
+/** A section with every item resolved and both alignments filled in. */
 export type ResolvedToolbarSection = {
 	id: string;
+	/** End of the full-width bar the section is packed against. */
 	align: "start" | "end";
+	/** Pill the section goes into while the chrome is collapsed. */
+	collapsedAlign: "start" | "end" | "hidden";
 	items: ResolvedToolbarItem[];
 };
 
@@ -33,17 +39,12 @@ export type ToolbarResolutionContext = {
 	/** Registry answering "what presets exist" for this canvas. */
 	stencil: StencilRegistry;
 	/**
-	 * Registry the `command` items are looked up in; an unknown id is dropped.
-	 * Only the existence of the command is read here — the button resolves the
-	 * command itself, so the two never disagree.
+	 * Registry the `command` items are looked up in; an unknown id is dropped,
+	 * and so is a `sidebarsToggle` while `toggleSidebars` is missing. Only the
+	 * existence of the command is read here — the button resolves the command
+	 * itself, so the two never disagree.
 	 */
 	command: CommandRegistry;
-	/**
-	 * Whether the host's `stencilLibrary.sections` resolved to at least one
-	 * section. False drops every `stencilLibraryToggle` item: the toggle would
-	 * open an empty sidebar.
-	 */
-	hasLibrary: boolean;
 };
 
 /**
@@ -85,6 +86,59 @@ const dropDanglingDividers = (
 	return kept;
 };
 
+/**
+ * Drops a divider standing at the very start or the very end of the whole bar,
+ * where it would separate the bar from nothing; a section left empty by that is
+ * dropped too. A divider at the inner end of a section stays: it is the
+ * boundary with the neighbouring section, or with the free space before the
+ * end-aligned ones.
+ */
+const dropBarEdgeDividers = (
+	sections: ResolvedToolbarSection[],
+): ResolvedToolbarSection[] => {
+	const trimmed = sections.map((section, index) => {
+		let items = section.items;
+		if (index === 0 && items[0]?.type === "divider") {
+			items = items.slice(1);
+		}
+		if (
+			index === sections.length - 1 &&
+			items[items.length - 1]?.type === "divider"
+		) {
+			items = items.slice(0, -1);
+		}
+		return items === section.items ? section : { ...section, items };
+	});
+	return trimmed.filter((section) => section.items.length > 0);
+};
+
+/**
+ * Drops the leading divider of a section that follows a section ending in one:
+ * each declared its own boundary with the other, and the two would stand side
+ * by side. The first end-aligned section (see {@link findFirstEndSectionId}) is
+ * left alone, since the free space before it separates the two. A section left
+ * empty by that is dropped.
+ */
+const dropDoubledSectionDividers = (
+	sections: ResolvedToolbarSection[],
+): ResolvedToolbarSection[] => {
+	const firstEndSectionId = findFirstEndSectionId(sections);
+	const kept: ResolvedToolbarSection[] = [];
+	for (const section of sections) {
+		const previous = kept[kept.length - 1];
+		const isDoubled =
+			previous !== undefined &&
+			section.id !== firstEndSectionId &&
+			previous.items[previous.items.length - 1]?.type === "divider" &&
+			section.items[0]?.type === "divider";
+		const items = isDoubled ? section.items.slice(1) : section.items;
+		if (items.length > 0) {
+			kept.push(items === section.items ? section : { ...section, items });
+		}
+	}
+	return kept;
+};
+
 const resolveToolbarItem = (
 	item: ToolbarItem,
 	context: ToolbarResolutionContext,
@@ -109,8 +163,8 @@ const resolveToolbarItem = (
 						},
 					]
 				: [];
-		case "stencilLibraryToggle":
-			return context.hasLibrary ? [item] : [];
+		case "sidebarsToggle":
+			return context.command.get(ToggleSidebarsCommand.id) ? [item] : [];
 		default:
 			return [item];
 	}
@@ -130,10 +184,13 @@ const resolveToolbarItem = (
  * to `DEFAULT_TOOLBAR_SECTIONS`); an empty array resolves to an empty bar.
  * @param context Registries and host facts the ids are resolved against.
  * @returns The drawable sections in the given order, each with `align` filled
- * in (omitted = `"start"`); a section left with no item at all is gone, so the
- * result can be shorter than `sections`. A divider the host declared at an end
- * of a section survives as the intended boundary with the next one
- * (see {@link dropDanglingDividers}).
+ * in (omitted = `"start"`) and `collapsedAlign` too (omitted = its `align`); a
+ * section left with no item at all is gone, so the result can be shorter than
+ * `sections`. A divider the host declared at an end of a section survives as
+ * the intended boundary with the next one (see {@link dropDanglingDividers}),
+ * unless the next one opens with a divider of its own
+ * (see {@link dropDoubledSectionDividers}) or it would open or close the whole
+ * bar (see {@link dropBarEdgeDividers}).
  * @throws When two sections share an `id`, or a `stencilCategory` item repeats a preset
  *   id (see {@link resolveStencilCategory}). The id keys the rendered section,
  *   so a repeat would be indistinguishable from the first rather than visibly
@@ -153,13 +210,25 @@ export const resolveToolbarSections = (
 		seenSectionIds.add(section.id);
 	}
 
-	return sections.flatMap((section) => {
-		const items = dropDanglingDividers(
-			section.items.flatMap((item) => resolveToolbarItem(item, context)),
-			section.items,
-		);
-		return items.length > 0
-			? [{ id: section.id, align: section.align ?? "start", items }]
-			: [];
-	});
+	return dropBarEdgeDividers(
+		dropDoubledSectionDividers(
+			sections.flatMap((section) => {
+				const items = dropDanglingDividers(
+					section.items.flatMap((item) => resolveToolbarItem(item, context)),
+					section.items,
+				);
+				const align = section.align ?? "start";
+				return items.length > 0
+					? [
+							{
+								id: section.id,
+								align,
+								collapsedAlign: section.collapsedAlign ?? align,
+								items,
+							},
+						]
+					: [];
+			}),
+		),
+	);
 };

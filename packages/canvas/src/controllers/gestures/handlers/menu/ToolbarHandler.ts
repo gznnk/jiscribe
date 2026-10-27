@@ -1,5 +1,6 @@
 import { parseMenuAction } from "./utils/menuActions";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -7,11 +8,15 @@ import type {
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
- * GestureHandler that processes interactions on the top toolbar.
- * Handles events with targetKind "menu" and targetId "toolbar". Only the bar
- * element carries those attributes; its buttons carry just data-action and resolve
- * their kind/id through closest(), so a press on the bar's empty area arrives
- * here with no targetAction and only dismisses the open menus.
+ * GestureHandler that processes interactions on the top toolbar and the bottom
+ * tool bar. Handles events with targetKind "menu" and targetId "toolbar" or
+ * "bottom-toolbar". Only the bar element carries those attributes (each of the
+ * two pills, while the top bar is collapsed); its buttons carry just
+ * data-action and resolve their kind/id through closest(), so a press on the
+ * bar's empty area arrives here with no targetAction and only dismisses the
+ * open menus, the Other shapes popover among them. The bottom bar's presets
+ * carry their own `stencil-library` target and its "Other shapes" button its
+ * own `other-shapes-button` (OtherShapesToggleHandler), so neither reaches here.
  *
  * targetAction format:
  * - `command:{commandId}` → execute the command (canExecute is judged inside handleCommand)
@@ -29,7 +34,7 @@ export const ToolbarHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		return (
 			event.targetKind === "menu" &&
-			event.targetId === "toolbar" &&
+			(event.targetId === "toolbar" || event.targetId === "bottom-toolbar") &&
 			isPerTargetInteraction(event)
 		);
 	},
@@ -37,13 +42,13 @@ export const ToolbarHandler: GestureHandler = {
 	handle(state, event, registries) {
 		let nextState = state;
 
-		// Close the context menu and any open category flyout on a press over the
-		// toolbar — its buttons and its empty area alike.
+		// Close the context menu and any open category flyout on a press over
+		// either bar — its buttons and its empty area alike.
 		if (event.type === "pressed") {
 			nextState = {
 				...nextState,
 				contextMenuPosition: null,
-				stencilLibraryOpenCategory: null,
+				...closeStencilPopups(),
 			};
 		}
 

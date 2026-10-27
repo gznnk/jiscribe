@@ -15,6 +15,7 @@ const makeState = (
 	overrides: Partial<CanvasControllerState> = {},
 ): CanvasControllerState =>
 	({
+		isChromeExpanded: true,
 		mode: { kind: "normal" },
 		propertyPanel: { isOpen: true, collapsedSectionIds: [] },
 		stencilLibraryOpenCategory: "flowchart",

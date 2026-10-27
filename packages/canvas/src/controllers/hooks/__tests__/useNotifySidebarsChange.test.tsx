@@ -4,11 +4,8 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 
-import type {
-	CanvasSidebarsState,
-	PropertyPanelState,
-	StencilLibraryPanelState,
-} from "../../CanvasTypes";
+import type { CanvasSidebarsState } from "../../CanvasTypes";
+import type { ChromeSidebarsState } from "../../utils/sidebarsState";
 import { useNotifySidebarsChange } from "../useNotifySidebarsChange";
 
 /**
@@ -21,13 +18,11 @@ import { useNotifySidebarsChange } from "../useNotifySidebarsChange";
 // flushes being correct all the same.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-/** The two reducer panel states a render of the probe is driven by. */
-type ProbePanels = {
-	stencilLibraryPanel: StencilLibraryPanelState;
-	propertyPanel: PropertyPanelState;
-};
+/** The reducer's chrome state a render of the probe is driven by. */
+type ProbePanels = ChromeSidebarsState;
 
 const bothClosed = (): ProbePanels => ({
+	isChromeExpanded: false,
 	stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
 	propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 });
@@ -41,6 +36,7 @@ const renderHook = (initialPanels: ProbePanels) => {
 	const onSidebarsChange = vi.fn<(sidebars: CanvasSidebarsState) => void>();
 	const Probe = ({ panels }: { panels: ProbePanels }) => {
 		useNotifySidebarsChange(
+			panels.isChromeExpanded,
 			panels.stencilLibraryPanel,
 			panels.propertyPanel,
 			(reported) => onSidebarsChange(reported),
@@ -61,6 +57,7 @@ const renderHook = (initialPanels: ProbePanels) => {
 describe("useNotifySidebarsChange", () => {
 	it("stays silent on mount, so the state the host seeded is not read back to it", () => {
 		const probe = renderHook({
+			isChromeExpanded: true,
 			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});
@@ -73,12 +70,14 @@ describe("useNotifySidebarsChange", () => {
 		const probe = renderHook(bothClosed());
 
 		probe.rerender({
+			isChromeExpanded: false,
 			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: [] },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});
 
 		expect(probe.onSidebarsChange).toHaveBeenCalledTimes(1);
 		expect(probe.onSidebarsChange).toHaveBeenCalledWith({
+			isExpanded: false,
 			left: { isOpen: true },
 			right: { isOpen: false },
 			panels: {
@@ -93,12 +92,14 @@ describe("useNotifySidebarsChange", () => {
 		const probe = renderHook(bothClosed());
 
 		probe.rerender({
+			isChromeExpanded: false,
 			stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
 			propertyPanel: { isOpen: false, collapsedSectionIds: ["text"] },
 		});
 
 		expect(probe.onSidebarsChange).toHaveBeenCalledTimes(1);
 		expect(probe.onSidebarsChange).toHaveBeenCalledWith({
+			isExpanded: false,
 			left: { isOpen: false },
 			right: { isOpen: false },
 			panels: {
@@ -109,14 +110,34 @@ describe("useNotifySidebarsChange", () => {
 		probe.unmount();
 	});
 
+	it("delivers the chrome expanding with the edges left as they were", () => {
+		const probe = renderHook(bothClosed());
+
+		probe.rerender({ ...bothClosed(), isChromeExpanded: true });
+
+		expect(probe.onSidebarsChange).toHaveBeenCalledTimes(1);
+		expect(probe.onSidebarsChange).toHaveBeenCalledWith({
+			isExpanded: true,
+			left: { isOpen: false },
+			right: { isOpen: false },
+			panels: {
+				stencilLibrary: { collapsedSectionIds: [] },
+				properties: { collapsedSectionIds: [] },
+			},
+		});
+		probe.unmount();
+	});
+
 	it("says nothing for a re-render whose panels hold the same values in new objects", () => {
 		const probe = renderHook(bothClosed());
 		probe.rerender({
+			isChromeExpanded: false,
 			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});
 
 		probe.rerender({
+			isChromeExpanded: false,
 			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});

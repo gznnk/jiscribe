@@ -158,4 +158,21 @@ describe("canvasReducer (integration)", () => {
 			expect(undone.objects["text-1"]).toBe(staleText);
 		});
 	});
+
+	/** The chrome is not part of the document an entry holds. */
+	it("leaves the chrome's form and both sidebars as they are across undo and redo", () => {
+		const start = createTestState(twoRectsDoc, {
+			selection: selectionOf(["rect-1"]),
+		});
+		const moved = runCommands(start, "move-right", "toggleSidebars");
+		expect(moved.isChromeExpanded).toBe(true);
+
+		const undone = runCommands(moved, "undo");
+		expect(undone.isChromeExpanded).toBe(true);
+		expect(undone.stencilLibraryPanel).toBe(moved.stencilLibraryPanel);
+		expect(undone.propertyPanel).toBe(moved.propertyPanel);
+
+		const collapsed = runCommands(undone, "toggleSidebars", "redo");
+		expect(collapsed.isChromeExpanded).toBe(false);
+	});
 });

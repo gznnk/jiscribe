@@ -1,5 +1,10 @@
 import { Canvas, lightCanvasTheme } from "@jiscribe/canvas";
-import type { CanvasConfig, CanvasDoc, CanvasHandle } from "@jiscribe/canvas";
+import type {
+	BottomToolbarOptions,
+	CanvasConfig,
+	CanvasDoc,
+	CanvasHandle,
+} from "@jiscribe/canvas";
 import { standardPlugins } from "@jiscribe/standard-shapes";
 import { createRoot } from "react-dom/client";
 
@@ -19,6 +24,9 @@ import { waitForDocImages } from "./waitForDocImages";
 // the one @jiscribe/doc-tools validates with, so a document the CLI accepts is a
 // document this page can draw in full.
 const initialConfig: CanvasConfig = { plugins: standardPlugins };
+
+// The page is photographed, not used: nothing is drawn from it.
+const bottomToolbar: BottomToolbarOptions = { show: false };
 
 const EMPTY_DOC: CanvasDoc = { version: 1, root: [] };
 
@@ -46,6 +54,7 @@ const mountDoc = (doc: CanvasDoc): Promise<CanvasHandle> => {
 				doc={doc}
 				initialConfig={initialConfig}
 				theme={lightCanvasTheme}
+				bottomToolbar={bottomToolbar}
 				resolveImage={resolveHarnessImage}
 				autoFocus={false}
 				ref={(handle: CanvasHandle | null) => {

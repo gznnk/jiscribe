@@ -7,6 +7,7 @@ import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { EMPTY_SELECTION } from "../../../selection/CanvasSelection";
 import type { Stencil } from "../../../ui/objects/Stencil";
 import { claimDrag } from "../../../utils/claimDrag";
+import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { NORMAL_MODE } from "../../../utils/normalMode";
 import { writeDragFeedback } from "../../../utils/writeDragFeedback";
@@ -141,7 +142,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					return {
 						...placed,
 						mode: NORMAL_MODE,
-						stencilLibraryOpenCategory: null,
+						...closeStencilPopups(),
 					};
 				}
 
@@ -152,7 +153,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					return {
 						...state,
 						mode: NORMAL_MODE,
-						stencilLibraryOpenCategory: null,
+						...closeStencilPopups(),
 					};
 				}
 
@@ -164,7 +165,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 					selection: EMPTY_SELECTION,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
-					stencilLibraryOpenCategory: null,
+					...closeStencilPopups(),
 				};
 			}
 
@@ -179,7 +180,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 						selection: EMPTY_SELECTION,
 						multiSelectGroup: null,
 						objectMenuOpenId: null,
-						stencilLibraryOpenCategory: null,
+						...closeStencilPopups(),
 					},
 					{
 						kind: "stencil",

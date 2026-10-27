@@ -7,7 +7,8 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
  *   throws while the registries are built, leaving nothing rendered)
- * - the toolbar carrying every pinned preset and the one category left on the bar
+ * - the bottom tool bar carrying every pinned preset, and the top bar the one
+ *   category left on it
  * - the shape library sidebar holding one section per plugin category, each onto
  *   its own plugin's presets, with no preset id showing up in two sections
  * - shapes from every plugin coexisting in one document
@@ -18,7 +19,7 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * owning plugin's suite covers it, and repeating it here would only double the cost.
  */
 
-/** Presets pinned straight on the harness toolbar, in layout order. */
+/** Presets pinned on the harness's bottom tool bar, in layout order. */
 const PINNED_PRESET_IDS = [
 	"rect",
 	"ellipse",
@@ -188,8 +189,9 @@ async function placeFromLibrary(
  * data-ids in creation order.
  *
  * Every shape comes out of the shape library sidebar, which is where the harness
- * (like the apps) files everything the plugins contribute. The sidebar is left
- * closed again at the end, the way a user would leave it.
+ * (like the apps) files everything the plugins contribute. The chrome is left
+ * collapsed again at the end, the way a user would leave it, so the bottom bar
+ * is back.
  *
  * The flowchart representative is multiDocument rather than a plain box because it
  * is the one shipped shape minting per-object SVG ids.
@@ -288,7 +290,7 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
 	await canvas.deselect();
 
-	await canvas.closeStencilLibrary();
+	await canvas.collapseSidebars();
 
 	return ids;
 }
@@ -297,13 +299,15 @@ test.describe("plugin coexistence", () => {
 	test("mounts every plugin and lays the toolbar out with no duplicates", async ({
 		canvas,
 	}) => {
-		await expect(canvas.page.locator('[data-kind="canvas"]')).toBeVisible();
+		await expect(canvas.page.locator(selectors.canvasArea)).toBeVisible();
 
 		// Exact equality, not containment: it pins the order and rules out both a
 		// missing entry and a second copy of one.
-		expect(await readPresetIds(canvas, selectors.toolbar)).toEqual(
+		expect(await readPresetIds(canvas, selectors.bottomToolbar)).toEqual(
 			PINNED_PRESET_IDS,
 		);
+		// With the flyout closed the top bar holds no preset, so none shows twice.
+		expect(await readPresetIds(canvas, selectors.toolbar)).toEqual([]);
 
 		const categoryIds = await canvas.page
 			.locator(CATEGORY_TOGGLES)
@@ -381,7 +385,7 @@ test.describe("plugin coexistence", () => {
 		// SVG ids are document-global, so core, the plugins and the per-object defs
 		// all draw from one namespace and a clash silently rebinds a url(#…).
 		const svgIds = await canvas.page
-			.locator('[data-kind="canvas"] [id]')
+			.locator(`${selectors.canvasArea} [id]`)
 			.evaluateAll((elements) => elements.map((element) => element.id));
 		// A query that reached nothing would pass the duplicate check for free, so
 		// pin one id known to be down there.
