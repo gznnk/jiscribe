@@ -13,8 +13,9 @@ type ViewportProps = {
 
 /**
  * Outermost container that takes up full available space and stacks the
- * toolbar above the body row (shape library sidebar + canvas viewport +
- * properties sidebar, see CanvasBody) as a flex column.
+ * full-width toolbar (while either sidebar is open) above the body row (shape
+ * library sidebar + canvas viewport + properties sidebar, see CanvasBody) as a
+ * flex column.
  *
  * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
  * By containing both the toolbar (data-kind="menu") and the canvas region,
@@ -95,9 +96,11 @@ export const CanvasRoot = styled.div<CanvasRootProps>`
 `;
 
 /**
- * Row below the toolbar, holding the shape library sidebar, the viewport and the
- * properties sidebar side by side (each sidebar only while open). `min-height: 0`
- * lets a sidebar's own list scroll instead of stretching the row past the canvas.
+ * Row below the full-width toolbar (the whole root while the toolbar is
+ * collapsed into pills), holding the shape library sidebar, the viewport and
+ * the properties sidebar side by side (each sidebar only while open).
+ * `min-height: 0` lets a sidebar's own list scroll instead of stretching the
+ * row past the canvas.
  */
 export const CanvasBody = styled.div`
 	display: flex;
@@ -111,9 +114,11 @@ export const CanvasBody = styled.div`
  * the two sidebars leave.
  *
  * Edge-scroll detection is based on this element's rectangle (measured via
- * useContainerResize) and the screen position of the contained SVG (getScreenCTM).
- * Constraining it below the toolbar makes the top edge band align with the
- * "visible top of the canvas".
+ * useContainerResize) and the screen position of the contained SVG
+ * (getScreenCTM). Constraining it below the full-width toolbar makes the top
+ * edge band align with the "visible top of the canvas"; the collapsed toolbar's
+ * pills and the bottom tool bar are positioned inside it instead, over the
+ * canvas.
  */
 export const Viewport = styled.div<ViewportProps>`
 	position: relative;

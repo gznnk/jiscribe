@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../foundation/theme/themeTokens";
+import { floatingBarStyles } from "../floatingBarStyles";
 
 /**
  * The floating bar centred at the bottom of the viewport.
@@ -15,16 +15,5 @@ export const BottomToolbarContainer = styled.div`
 	left: 50%;
 	bottom: 16px;
 	transform: translateX(-50%);
-	box-sizing: border-box;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 4px;
-	padding: 4px;
-	border: 1px solid ${theme.border};
-	border-radius: ${theme.radius};
-	background: ${theme.surface};
-	box-shadow: ${theme.shadow};
-	pointer-events: auto;
-	user-select: none;
+	${floatingBarStyles}
 `;

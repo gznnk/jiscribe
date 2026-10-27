@@ -55,18 +55,22 @@ export class CanvasDriver {
 	/**
 	 * Screen origin (top-left) of the canvas area (the SVG), as of the last measurement.
 	 *
-	 * Every test is written in content coordinates, which are screen coordinates minus this
-	 * origin. Chrome takes its layout space out of the canvas area — the toolbar above it,
-	 * the shape library sidebar beside it — so the origin moves whenever a piece of chrome
-	 * opens or closes; the bottom tool bar floats over the canvas and takes none. Pan and
-	 * zoom never move it: they only change the viewBox.
+	 * Every test is written in content coordinates, which are screen coordinates
+	 * minus this origin. Chrome takes its layout space out of the canvas area —
+	 * the full-width toolbar above it while either sidebar is open, the shape
+	 * library sidebar beside it — so the origin moves whenever a sidebar opens or
+	 * closes; the bottom tool bar, and the two pills the toolbar collapses into
+	 * while both sidebars are closed, float over the canvas and take none. Pan
+	 * and zoom never move it: they only change the viewBox.
 	 *
-	 * Every driver operation that converts content coordinates re-measures this first, so its
-	 * input lands where the caller meant even while the sidebar is open. toScreen() and
-	 * toContent() stay synchronous and answer from the last measurement — fresh as of the
-	 * driver call before them, so a spec that moves chrome by clicking the DOM itself and then
-	 * converts reads the old origin. Open and close the sidebar through openStencilLibrary(),
-	 * closeStencilLibrary() or toggleSidebars(), which re-measure.
+	 * Every driver operation that converts content coordinates re-measures this
+	 * first, so its input lands where the caller meant even while the sidebar is
+	 * open. toScreen() and toContent() stay synchronous and answer from the last
+	 * measurement — fresh as of the driver call before them, so a spec that moves
+	 * chrome by clicking the DOM itself and then converts reads the old origin.
+	 * Open and close the sidebars through openStencilLibrary(),
+	 * closeStencilLibrary(), openPropertyPanel(), closePropertyPanel() or
+	 * toggleSidebars(), which re-measure.
 	 *
 	 * Coordinates from boundingBox() are screen coordinates — pass them through toContent()
 	 * before handing them to the driver.
@@ -91,10 +95,11 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Re-read the screen offset of the canvas area. As a flex child it has real size from
-	 * mount, and its top-left sits one toolbar height down and one open sidebar to the right.
-	 * querySelector rather than a locator: the multi-canvas page mounts two of them, and the
-	 * first is the one the driver drives.
+	 * Re-read the screen offset of the canvas area. As a flex child it has real
+	 * size from mount, and its top-left sits one toolbar height down while a
+	 * sidebar is open (at the top while both are closed) and one open shape
+	 * library to the right. querySelector rather than a locator: the multi-canvas
+	 * page mounts two of them, and the first is the one the driver drives.
 	 */
 	private async measureOrigin() {
 		const origin = await this.page.evaluate(() => {
@@ -661,8 +666,8 @@ export class CanvasDriver {
 	 * Press the toolbar's switch for both sidebars and wait for its expanded state
 	 * (`aria-expanded`) to flip: both panels open from a collapsed state, both
 	 * close from any other. The shape library takes its width out of the canvas
-	 * area, so the origin is re-measured before returning, as openStencilLibrary
-	 * does.
+	 * area and the full-width toolbar its height, so the origin is re-measured
+	 * before returning, as openStencilLibrary does.
 	 */
 	async toggleSidebars() {
 		const sidebarsToggle = this.page.locator(selectors.sidebarsToggle);
@@ -677,22 +682,25 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Open the properties sidebar from the toolbar toggle and wait for its panel. It takes
-	 * its width off the right of the canvas area, so the origin does not move; the wait is
-	 * what the caller needs.
+	 * Open the properties sidebar from the toolbar toggle and wait for its panel.
+	 * It takes its width off the right of the canvas area, but opening it from
+	 * collapsed brings the full-width toolbar back above the canvas, so the
+	 * origin is re-measured.
 	 */
 	async openPropertyPanel() {
 		await this.page.click(selectors.propertyPanelToggle);
 		await expect(this.page.locator(selectors.propertyPanel)).toBeVisible();
+		await this.measureOrigin();
 	}
 
 	/**
 	 * Close the properties sidebar from its own close button, which unmounts it; the
-	 * counterpart of openPropertyPanel.
+	 * counterpart of openPropertyPanel, re-measuring the origin the same way.
 	 */
 	async closePropertyPanel() {
 		await this.page.click(selectors.propertyPanelClose);
 		await expect(this.page.locator(selectors.propertyPanel)).toHaveCount(0);
+		await this.measureOrigin();
 	}
 
 	/**

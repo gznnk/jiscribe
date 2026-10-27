@@ -13,6 +13,7 @@ import type {
 } from "@jiscribe/canvas";
 import {
 	basicStencilCategory,
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
@@ -112,8 +113,8 @@ export const standardToolbarToolsSection: ToolbarSection = {
 };
 
 /**
- * The whole top bar the standard set is drawn with: core's history and view
- * sections, then the switch opening and closing both sidebars at the far
+ * The whole top bar the standard set is drawn with: core's history, view and
+ * help sections, then the switch opening and closing both sidebars at the far
  * right. No shape tools: the presets are on the bottom tool bar
  * ({@link standardBottomToolbarPresetIds}) and the rest of the set in the
  * shape library sidebar the switch opens.
@@ -123,6 +124,7 @@ export const standardToolbarToolsSection: ToolbarSection = {
 export const standardToolbarSections: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 ];
 

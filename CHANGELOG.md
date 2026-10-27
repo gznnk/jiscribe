@@ -23,6 +23,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   then an "Other shapes" button that is a placeholder and does nothing yet.
   `show: false` removes it. `@jiscribe/standard-shapes` exports
   `standardBottomToolbarPresetIds` for it.
+- **The top bar collapses into two corner pills while the sidebars are
+  closed.** With neither sidebar open, the full-width bar gives its row back to
+  the canvas and is drawn as two pills floating over the canvas's top corners,
+  in the bottom tool bar's look; opening a sidebar brings the full-width bar
+  back, unchanged. The drawing stays put on screen as the canvas area's top edge
+  moves. The new `ToolbarSection.collapsedAlign` (`"start"` / `"end"` /
+  `"hidden"`, omitted = the section's `align`) picks the pill a section goes
+  into; within a pill sections keep their array order, exactly one divider
+  separates neighbours, and an empty pill is not drawn. The default sections
+  carry their own (see `DEFAULT_TOOLBAR_SECTIONS`). A host listing its own
+  sections should set `collapsedAlign` on them — a settings menu, say, to
+  `"hidden"` — or each shows on its `align` side.
 - **One switch opens or closes both sidebars.** The `sidebarsToggle` toolbar
   item runs the new `toggleSidebars` command: pressed while either sidebar is
   open, it closes both; otherwise it opens both, so a press never leaves one
@@ -44,6 +56,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `standardToolbarToolsSection`), or passes `toolbar={{ show: false }}`, must
   also pass `bottomToolbar={{ show: false }}`; otherwise each preset shows
   twice, or a canvas meant to have no bar keeps one.
+- **Shortcut help has a section of its own.** `DEFAULT_TOOLBAR_VIEW_SECTION`
+  is now zoom and zoom to fit; the help button moved to the new
+  `DEFAULT_TOOLBAR_HELP_SECTION`, which `DEFAULT_TOOLBAR_SECTIONS` and
+  `standardToolbarSections` place right after it, so the full-width bar looks
+  as before. A host composing `DEFAULT_TOOLBAR_VIEW_SECTION` itself adds
+  `DEFAULT_TOOLBAR_HELP_SECTION` after it, or loses the help button.
 - **A divider no longer opens or closes the whole top bar.** One left at the
   very start or end of the resolved bar is dropped, since it separates the bar
   from nothing.
@@ -55,7 +73,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `shapeItem` match the top bar or the bottom one; `selectors.bottomToolbar`,
   `bottomToolbarOtherShapes`, `sidebarsToggle` and `CanvasDriver.toggleSidebars()`
   are new. `mountPluginHarness` takes `bottomToolbarPresetIds` and shows no
-  bottom bar without it.
+  bottom bar without it. `selectors.toolbar` matches both pills while the bar
+  is collapsed; `selectors.toolbarPill(edge)` scopes to one.
+  `CanvasDriver.openPropertyPanel()` / `closePropertyPanel()` re-measure the
+  canvas origin, which the full-width bar now moves.
 
 ## [0.12.2] - 2026-10-25
 

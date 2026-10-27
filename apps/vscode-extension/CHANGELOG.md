@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **The editor's shape presets moved to a bar at the bottom of the canvas.**
-  The top bar keeps undo / redo, the view controls and, at the far right, one
-  switch that opens the shape library and the properties sidebar together and
-  closes both again. The bottom bar's "Other shapes" button does nothing yet.
+  With the sidebars closed (the default), the top bar becomes two pills at the
+  canvas's top corners: top-left, one switch that opens the shape library and
+  the properties sidebar together and closes both again; top-right, undo /
+  redo and the zoom controls. There is no help button then (`?` still opens
+  the shortcut help). With a sidebar open, the full bar is back as before. The
+  bottom bar's "Other shapes" button does nothing yet.
 
 ## [0.12.2] - 2026-10-25
 

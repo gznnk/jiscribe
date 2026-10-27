@@ -1,5 +1,6 @@
 import {
 	createCanvasRegistries,
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
@@ -36,10 +37,11 @@ describe("the standard set's bars", () => {
 		).toEqual([]);
 	});
 
-	it("tops the canvas with history, view and the sidebars switch, and no shape tool", () => {
+	it("tops the canvas with history, view, help and the sidebars switch, and no shape tool", () => {
 		expect(standardToolbarSections).toEqual([
 			DEFAULT_TOOLBAR_HISTORY_SECTION,
 			DEFAULT_TOOLBAR_VIEW_SECTION,
+			DEFAULT_TOOLBAR_HELP_SECTION,
 			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 		]);
 		const lastItems = standardToolbarSections.at(-1)?.items ?? [];

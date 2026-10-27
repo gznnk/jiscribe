@@ -4,6 +4,7 @@ import { createCanvasRegistries } from "../../../../registries/createCanvasRegis
 import { RectIcon } from "../../../objects/primitives/RectIcon";
 import { basicStencilCategory } from "../../../objects/StencilCategory";
 import {
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
@@ -48,11 +49,13 @@ describe("resolveToolbarSections", () => {
 		expect(resolved.map((section) => [section.id, section.align])).toEqual([
 			["history", "start"],
 			["view", "end"],
+			["help", "end"],
 			["sidebars", "end"],
 		]);
 		expect(itemTypes(resolved)).toEqual([
 			["command", "command"],
-			["zoom", "command", "divider", "command"],
+			["zoom", "command"],
+			["divider", "command"],
 			["divider", "sidebarsToggle"],
 		]);
 	});
@@ -62,6 +65,7 @@ describe("resolveToolbarSections", () => {
 		DEFAULT_TOOLBAR_TOOLS_SECTION,
 		DEFAULT_TOOLBAR_HISTORY_SECTION,
 		DEFAULT_TOOLBAR_VIEW_SECTION,
+		DEFAULT_TOOLBAR_HELP_SECTION,
 		DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	];
 
@@ -81,7 +85,8 @@ describe("resolveToolbarSections", () => {
 				"stencilPreset",
 			],
 			["divider", "command", "command"],
-			["zoom", "command", "divider", "command"],
+			["zoom", "command"],
+			["divider", "command"],
 			["divider", "propertyPanelToggle"],
 		]);
 	});
@@ -120,6 +125,7 @@ describe("resolveToolbarSections", () => {
 		expect(resolved.map((section) => section.id)).toEqual([
 			"tools",
 			"view",
+			"help",
 			"properties",
 		]);
 	});
@@ -286,6 +292,29 @@ describe("resolveToolbarSections", () => {
 		expect(resolveToolbarSections(sections, createContext(true))[0].align).toBe(
 			"start",
 		);
+	});
+
+	/** A host's own section keeps showing on its side when the bar collapses. */
+	it("defaults a section with no collapsedAlign to its align", () => {
+		const sections: ToolbarSection[] = [
+			{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
+			{
+				id: "settings",
+				align: "end",
+				items: [{ type: "slot", id: "settings", node: null }],
+			},
+			{
+				id: "hidden",
+				align: "end",
+				collapsedAlign: "hidden",
+				items: [{ type: "slot", id: "hidden", node: null }],
+			},
+		];
+		expect(
+			resolveToolbarSections(sections, createContext(true)).map(
+				(section) => section.collapsedAlign,
+			),
+		).toEqual(["start", "end", "hidden"]);
 	});
 
 	/** The id keys the rendered section, so a twin would be invisible, not wrong. */

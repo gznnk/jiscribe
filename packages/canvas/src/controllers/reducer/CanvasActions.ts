@@ -43,6 +43,14 @@ export type ContainerResizeAction = {
 	 * held still, which is the case for every resize from the right.
 	 */
 	leftEdgeShift?: number;
+	/**
+	 * Screen pixels the container's top edge moved inside CanvasRoot since the
+	 * last measurement; positive means it moved down (the full-width toolbar
+	 * taking its row above the viewport as a sidebar opens). Added to `minY`
+	 * after dividing by the zoom, as `leftEdgeShift` is to `minX`. Absent or 0
+	 * when the edge held still.
+	 */
+	topEdgeShift?: number;
 };
 
 /**

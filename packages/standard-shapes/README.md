@@ -21,7 +21,7 @@ import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 | Export                           | Entry    | What it is                                                                                                                  |
 | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                  |
-| `standardToolbarSections`        | `.`      | The whole top bar — core's history and view sections, then the switch for both sidebars — for `toolbar.sections`            |
+| `standardToolbarSections`        | `.`      | The whole top bar — core's history, view and help sections, then the switch for both sidebars — for `toolbar.sections`      |
 | `standardBottomToolbarPresetIds` | `.`      | The six presets the bottom tool bar pins, for `bottomToolbar.presetIds`                                                     |
 | `standardToolbarToolsSection`    | `.`      | The shape tools the top bar used to carry (the library toggle, then the six presets), for a host keeping presets on top     |
 | `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                            |
@@ -75,9 +75,12 @@ module scope or `useMemo`s them.
 
 These are the arrangement the editors settled on, not a rule. A host that
 wants its own UI on the top bar orders the sections itself — core's
-`DEFAULT_TOOLBAR_HISTORY_SECTION`, `DEFAULT_TOOLBAR_VIEW_SECTION` and
-`DEFAULT_TOOLBAR_SIDEBARS_SECTION` are exported one by one for exactly that,
-and the sidebars switch is meant to stay at the far right. A host that wants
+`DEFAULT_TOOLBAR_HISTORY_SECTION`, `DEFAULT_TOOLBAR_VIEW_SECTION`,
+`DEFAULT_TOOLBAR_HELP_SECTION` and `DEFAULT_TOOLBAR_SIDEBARS_SECTION` are
+exported one by one for exactly that, and the sidebars switch is meant to stay
+at the far right. While the sidebars are closed the bar collapses into two
+corner pills; a host section that should not show there sets
+`collapsedAlign: "hidden"`. A host that wants
 the presets back on the top bar takes `standardToolbarToolsSection` and hides
 the bottom bar (`bottomToolbar={{ show: false }}`), or every preset shows
 twice. A host wanting a different set of shapes copies them and rebuilds from

@@ -23,10 +23,13 @@ export type ResolvedToolbarItem =
 	| { type: "divider" }
 	| { type: "slot"; id: string; node: React.ReactNode };
 
-/** A section with every item resolved and `align` filled in. */
+/** A section with every item resolved and both alignments filled in. */
 export type ResolvedToolbarSection = {
 	id: string;
+	/** End of the full-width bar the section is packed against. */
 	align: "start" | "end";
+	/** Pill the section goes into while the sidebars are collapsed. */
+	collapsedAlign: "start" | "end" | "hidden";
 	items: ResolvedToolbarItem[];
 };
 
@@ -161,11 +164,12 @@ const resolveToolbarItem = (
  * to `DEFAULT_TOOLBAR_SECTIONS`); an empty array resolves to an empty bar.
  * @param context Registries and host facts the ids are resolved against.
  * @returns The drawable sections in the given order, each with `align` filled
- * in (omitted = `"start"`); a section left with no item at all is gone, so the
- * result can be shorter than `sections`. A divider the host declared at an end
- * of a section survives as the intended boundary with the next one
- * (see {@link dropDanglingDividers}), unless it would open or close the whole
- * bar (see {@link dropBarEdgeDividers}).
+ * in (omitted = `"start"`) and `collapsedAlign` too (omitted = its `align`); a
+ * section left with no item at all is gone, so the result can be shorter than
+ * `sections`. A divider the host declared at an end of a section survives as
+ * the intended boundary with the next one (see {@link dropDanglingDividers}),
+ * unless it would open or close the whole bar
+ * (see {@link dropBarEdgeDividers}).
  * @throws When two sections share an `id`, or a `stencilCategory` item repeats a preset
  *   id (see {@link resolveStencilCategory}). The id keys the rendered section,
  *   so a repeat would be indistinguishable from the first rather than visibly
@@ -191,8 +195,16 @@ export const resolveToolbarSections = (
 				section.items.flatMap((item) => resolveToolbarItem(item, context)),
 				section.items,
 			);
+			const align = section.align ?? "start";
 			return items.length > 0
-				? [{ id: section.id, align: section.align ?? "start", items }]
+				? [
+						{
+							id: section.id,
+							align,
+							collapsedAlign: section.collapsedAlign ?? align,
+							items,
+						},
+					]
 				: [];
 		}),
 	);

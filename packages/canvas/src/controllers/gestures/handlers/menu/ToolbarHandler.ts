@@ -8,14 +8,14 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler that processes interactions on the top toolbar and the bottom
- * tool bar.
- * Handles events with targetKind "menu" and targetId "toolbar" or
- * "bottom-toolbar". Only the bar element carries those attributes; its buttons
- * carry just data-action and resolve their kind/id through closest(), so a press
- * on the bar's empty area (or on the bottom bar's placeholder "Other shapes"
- * button, which carries no action) arrives here with no targetAction and only
- * dismisses the open menus. The bottom bar's presets carry their own
- * `stencil-library` target and never reach here.
+ * tool bar. Handles events with targetKind "menu" and targetId "toolbar" or
+ * "bottom-toolbar". Only the bar element carries those attributes (each of the
+ * two pills, while the top bar is collapsed); its buttons carry just
+ * data-action and resolve their kind/id through closest(), so a press on the
+ * bar's empty area (or on the bottom bar's placeholder "Other shapes" button,
+ * which carries no action) arrives here with no targetAction and only dismisses
+ * the open menus. The bottom bar's presets carry their own `stencil-library`
+ * target and never reach here.
  *
  * targetAction format:
  * - `command:{commandId}` → execute the command (canExecute is judged inside handleCommand)

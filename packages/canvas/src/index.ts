@@ -77,6 +77,7 @@ export type {
 // plugins export their own (e.g. `containerStencilCategory`). The presets the
 // default places on the bottom tool bar (`bottomToolbar`) are exported too.
 export {
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,

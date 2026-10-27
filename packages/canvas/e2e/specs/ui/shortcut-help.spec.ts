@@ -7,8 +7,9 @@ import { selectors } from "../../support/selectors";
  * ShortcutHelpModal).
  *
  * Two entrances reach the same command — the `?` binding and the toolbar's help
- * button — and the modal lists the shortcut-bearing commands of the registry,
- * its own binding among them.
+ * button, which only the full-width bar carries, so the specs pressing it open
+ * the sidebars first — and the modal lists the shortcut-bearing commands of the
+ * registry, its own binding among them.
  *
  * Escape is the part only a real DOM decides: ModalShell takes the key in the
  * capture phase precisely so useKeyboardShortcuts, which listens on the canvas
@@ -24,6 +25,15 @@ const MODAL_CLOSE = '[data-testid="shortcut-help:close"]';
 
 /** The toolbar's help button, the entrance that is not a keystroke. */
 const TOOLBAR_OPEN = selectors.toolbarCommand("shortcutHelp");
+
+/**
+ * Presses the toolbar's help button, first expanding the sidebars: collapsed,
+ * the bar's pills leave the button out.
+ */
+async function pressToolbarHelp(canvas: CanvasDriver) {
+	await canvas.toggleSidebars();
+	await canvas.page.click(TOOLBAR_OPEN);
+}
 
 /** The box the Escape tests select, clear of the centred panel. */
 const SHAPE_FROM = { x: 120, y: 150 };
@@ -52,7 +62,7 @@ async function settleEffects(canvas: CanvasDriver) {
  * canvas's own and clears the selection instead.
  */
 async function openShortcutHelp(canvas: CanvasDriver) {
-	await canvas.page.click(TOOLBAR_OPEN);
+	await pressToolbarHelp(canvas);
 	await expect(canvas.page.locator(MODAL)).toBeVisible();
 	await settleEffects(canvas);
 }
@@ -64,7 +74,7 @@ test.describe("Keyboard shortcut help", () => {
 		const modal = canvas.page.locator(MODAL);
 		await expect(modal).toHaveCount(0);
 
-		await canvas.page.click(TOOLBAR_OPEN);
+		await pressToolbarHelp(canvas);
 		await expect(modal).toBeVisible();
 
 		await canvas.page.click(MODAL_CLOSE);
@@ -84,7 +94,7 @@ test.describe("Keyboard shortcut help", () => {
 	test("lists its own binding, so ? is discoverable from the list it opens", async ({
 		canvas,
 	}) => {
-		await canvas.page.click(TOOLBAR_OPEN);
+		await pressToolbarHelp(canvas);
 
 		// The row is keyed by command id; the key caps sit in the sibling group.
 		const ownRow = canvas.page.locator(
@@ -137,7 +147,7 @@ test.describe("Keyboard shortcut help", () => {
 	test("closes on a press on the backdrop but not on the panel", async ({
 		canvas,
 	}) => {
-		await canvas.page.click(TOOLBAR_OPEN);
+		await pressToolbarHelp(canvas);
 		const modal = canvas.page.locator(MODAL);
 		await expect(modal).toBeVisible();
 

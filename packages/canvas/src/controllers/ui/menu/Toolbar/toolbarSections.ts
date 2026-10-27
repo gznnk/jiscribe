@@ -69,6 +69,10 @@ export type ToolbarItem =
  *
  * Hosts replace the whole array via the `toolbar.sections` Canvas prop; the
  * default bar is itself such an array ({@link DEFAULT_TOOLBAR_SECTIONS}).
+ *
+ * The bar takes two forms. While either sidebar is open it is the full-width
+ * bar above the canvas, laid out by `align`; while both are closed it is two
+ * pills floating over the canvas's top corners, laid out by `collapsedAlign`.
  */
 export type ToolbarSection = {
 	/** Keys the rendered section; must be unique across the array. */
@@ -79,14 +83,24 @@ export type ToolbarSection = {
 	 * first `"end"` section, so declare the `"end"` ones last.
 	 */
 	align?: "start" | "end";
+	/**
+	 * Which pill the section goes into while the sidebars are collapsed:
+	 * `"start"` the top-left one, `"end"` the top-right one, `"hidden"` neither
+	 * (the section is not drawn until a sidebar opens). Omitted = the same as
+	 * `align`. Within a pill sections are drawn in array order with exactly one
+	 * divider between neighbours, whatever dividers they declare at their own
+	 * ends; a pill left with no section is not drawn.
+	 */
+	collapsedAlign?: "start" | "end" | "hidden";
 	items: ToolbarItem[];
 };
 
-// The bar is laid out by three rules, which the sections below follow and a host
+// The bar is laid out by four rules, which the sections below follow and a host
 // replacing them is meant to keep:
-//   1. A sidebar control sits at the edge its panel opens on — the shape library
-//      toggle at the far left, the properties toggle or the switch for both
-//      sidebars at the far right.
+//   1. On the full-width bar, a sidebar control sits at the edge its panel
+//      opens on — the shape library toggle at the far left, the properties
+//      toggle or the switch for both sidebars at the far right. (The collapsed
+//      pills follow `collapsedAlign` instead.)
 //   2. The start side holds what changes the document (placing shapes, undo /
 //      redo); the end side what does not (zoom, help, and whatever view-side UI
 //      the host adds for itself).
@@ -94,6 +108,8 @@ export type ToolbarSection = {
 //      here. A host that still pins presets on this bar (DEFAULT_TOOLBAR_TOOLS_SECTION)
 //      pins only the basic ones, as shortcuts, and hides the bottom bar so no
 //      preset shows twice.
+//   4. A host section that only matters while editing (a settings menu, say)
+//      sets `collapsedAlign: "hidden"`.
 
 /**
  * The shape tools as the top bar used to carry them: the shape library toggle at
@@ -124,6 +140,7 @@ export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
  */
 export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
 	id: "history",
+	collapsedAlign: "end",
 	items: [
 		{ type: "divider" },
 		{ type: "command", commandId: "undo", icon: UndoIcon },
@@ -132,20 +149,33 @@ export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
 };
 
 /**
- * Zoom, zoom to fit and shortcut help, packed against the right edge: the
- * controls that leave the document alone. Zoom to fit rides beside the zoom
- * group as the one view command the bar shows; zoom to selection stays a
- * shortcut, since a button that needs a selection would sit disabled most of the
- * time. A host adding its own view-side UI (a settings menu, say)
- * belongs after this section and before the sidebar control, so that control
- * keeps the far edge.
+ * Zoom and zoom to fit, packed against the right edge: the controls that leave
+ * the document alone. Zoom to fit rides beside the zoom group as the one view
+ * command the bar shows; zoom to selection stays a shortcut, since a button
+ * that needs a selection would sit disabled most of the time.
  */
 export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
 	id: "view",
 	align: "end",
+	collapsedAlign: "end",
 	items: [
 		{ type: "zoom" },
 		{ type: "command", commandId: "zoomToFit", icon: ZoomToFitIcon },
+	],
+};
+
+/**
+ * Shortcut help, right after {@link DEFAULT_TOOLBAR_VIEW_SECTION} and set off
+ * from it by its leading divider; `?` opens the help while the section is
+ * hidden. A host adding its own view-side UI (a settings menu, say) belongs
+ * after this section and before the sidebar control, so that control keeps the
+ * far edge.
+ */
+export const DEFAULT_TOOLBAR_HELP_SECTION: ToolbarSection = {
+	id: "help",
+	align: "end",
+	collapsedAlign: "hidden",
+	items: [
 		{ type: "divider" },
 		{ type: "command", commandId: "shortcutHelp", icon: HelpIcon },
 	],
@@ -166,24 +196,28 @@ export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
 };
 
 /**
- * The switch for both sidebars alone at the far right: it opens the shape
- * library and the properties sidebar together and closes both again (see the
- * `toggleSidebars` command). Its leading divider separates it from whatever the
- * host packed against the end before it.
+ * The switch for both sidebars, alone at the far right of the full-width bar
+ * (collapsed, see its `collapsedAlign`): it opens the shape library and the
+ * properties sidebar together and closes both again (see the `toggleSidebars`
+ * command). Its leading divider separates it from whatever the host packed
+ * against the end before it.
  */
 export const DEFAULT_TOOLBAR_SIDEBARS_SECTION: ToolbarSection = {
 	id: "sidebars",
 	align: "end",
+	collapsedAlign: "start",
 	items: [{ type: "divider" }, { type: "sidebarsToggle" }],
 };
 
 /**
- * The default bar: history on the left, view and the switch for both sidebars
- * on the right. The shape presets are not on it: they are the bottom tool
- * bar's (`bottomToolbar`).
+ * The default bar: history on the left, view, help and the switch for both
+ * sidebars on the right. Collapsed, the switch alone in the top-left pill and
+ * history and view in the top-right one. The shape presets are not on it: they
+ * are the bottom tool bar's (`bottomToolbar`).
  */
 export const DEFAULT_TOOLBAR_SECTIONS: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 ];

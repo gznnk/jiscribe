@@ -28,6 +28,7 @@ import type {
 import {
 	Canvas,
 	darkCanvasTheme,
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
@@ -93,8 +94,9 @@ type HarnessAppProps = {
 
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
- * two-canvas setup, ?pageScroll to the canvas embedded in a scrolling document, and
- * ?noStencilLibrary keeps the default page but declares no shape library.
+ * two-canvas setup, ?pageScroll to the canvas embedded in a scrolling document,
+ * ?noStencilLibrary keeps the default page but declares no shape library, and
+ * ?libraryOpen keeps it but mounts with the shape library alone open.
  * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
@@ -192,6 +194,7 @@ function HarnessApp({
 						},
 						DEFAULT_TOOLBAR_HISTORY_SECTION,
 						DEFAULT_TOOLBAR_VIEW_SECTION,
+						DEFAULT_TOOLBAR_HELP_SECTION,
 						DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 						DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 					]
@@ -240,7 +243,13 @@ function HarnessApp({
  * @param params - The plugin set, toolbar and sidebars the page is built around. See {@link PluginHarnessParams}.
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
-	const initialConfig: CanvasConfig = { plugins: params.plugins };
+	// ?libraryOpen mounts with the shape library alone open, as a host restoring
+	// that sidebar does, for specs on what the first paint shows.
+	const initialConfig: CanvasConfig = new URLSearchParams(
+		window.location.search,
+	).has("libraryOpen")
+		? { plugins: params.plugins, sidebars: { left: { isOpen: true } } }
+		: { plugins: params.plugins };
 	const bottomToolbar: BottomToolbarOptions = params.bottomToolbarPresetIds
 		? { presetIds: params.bottomToolbarPresetIds }
 		: { show: false };

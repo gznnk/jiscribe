@@ -71,8 +71,21 @@ export const selectors = {
 	toolButton: (tool: ToolTitle) =>
 		`${TOOLBAR} button[title="${tool}"], ${BOTTOM_TOOLBAR} button[title="${tool}"]`,
 
-	/** The toolbar bar itself; the only element of the bar carrying data-kind / data-id. */
+	/**
+	 * The toolbar itself: the full-width bar while either sidebar is open, the
+	 * only element of it carrying data-kind / data-id. While both are closed it
+	 * is two pills instead, each carrying the same pair, so this matches both of
+	 * them; scope to one with `toolbarPill`.
+	 */
 	toolbar: TOOLBAR,
+
+	/**
+	 * One of the two pills the toolbar collapses into while both sidebars are
+	 * closed, the top-left (`"start"`) or top-right (`"end"`) one. Absent while a
+	 * sidebar is open, and for a pill no section goes into.
+	 */
+	toolbarPill: (edge: "start" | "end") =>
+		`${TOOLBAR}[data-testid="toolbar-pill:${edge}"]`,
 
 	/**
 	 * The bottom tool bar itself. Its own element carries data-kind / data-id, as

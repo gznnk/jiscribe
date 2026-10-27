@@ -22,14 +22,18 @@ import { selectors } from "../../support/selectors";
 const SPEC_CATEGORY = "spec";
 
 /**
- * A viewport point on the toolbar that hits the bar itself, not a button. Scans
- * the bar's midline and takes the middle of the gaps, so it holds whatever
+ * A viewport point on the toolbar that hits the bar itself, not a button: on
+ * the bar, or on the pill holding the category while the bar is collapsed.
+ * Scans its midline and takes the middle of the gaps, so it holds whatever
  * layout the harness mounts.
  */
 async function toolbarEmptyPoint(
 	canvas: CanvasDriver,
 ): Promise<{ x: number; y: number }> {
-	return canvas.page.locator(selectors.toolbar).evaluate((el) => {
+	const toolbar = canvas.page.locator(selectors.toolbar, {
+		has: canvas.page.locator(selectors.categoryButton(SPEC_CATEGORY)),
+	});
+	return toolbar.evaluate((el) => {
 		const box = el.getBoundingClientRect();
 		const y = box.top + box.height / 2;
 		const hits: number[] = [];

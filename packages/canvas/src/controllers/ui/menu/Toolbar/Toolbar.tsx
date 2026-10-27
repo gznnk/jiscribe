@@ -10,12 +10,15 @@ import {
 	ToolbarDivider,
 	ToolbarGroup,
 	ToolbarHostSlot,
+	ToolbarPill,
 	ToolbarToggleButton,
 } from "./ToolbarStyled";
 import { ToolbarZoomGroup } from "./ToolbarZoomGroup";
+import { arrangeToolbarPills } from "./utils/arrangeToolbarPills";
 import {
 	resolveToolbarSections,
 	type ResolvedToolbarItem,
+	type ResolvedToolbarSection,
 } from "./utils/resolveToolbarSections";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { ToggleSidebarsCommand } from "../../../commands/view/ToggleSidebarsCommand";
@@ -45,8 +48,13 @@ type ToolbarProps = {
 	/** Whether the properties sidebar is currently open (reducer state) */
 	isPropertyPanelOpen: boolean;
 	/**
-	 * Whether the sidebars count as expanded (`isAnySidebarOpen` over reducer
-	 * state), the pressed look of the `sidebarsToggle` item.
+	 * Whether the sidebars count as expanded (`isAnySidebarOpen`, which Canvas
+	 * reads with its own stencil-library availability rather than the reducer's;
+	 * see `isToolbarCollapsed` in Canvas.tsx): the pressed look of the
+	 * `sidebarsToggle` item, and the form of the bar — the full-width bar while
+	 * true, the two corner pills (by each section's `collapsedAlign`) while
+	 * false. Canvas places the bar from the same value: above the viewport for
+	 * the one, inside it for the other.
 	 */
 	isAnySidebarOpen: boolean;
 };
@@ -68,10 +76,12 @@ const toolbarItemKey = (item: ResolvedToolbarItem, index: number): string => {
 };
 
 /**
- * Unified toolbar centered at the top.
+ * Unified toolbar at the top.
  * Draws the sections it is given: the shape tools (StencilLibrary), the
  * sidebar toggles, the zoom readout and any command buttons and host slots the
- * host declared.
+ * host declared. While either sidebar is open it is one full-width bar; while
+ * both are closed, two pills floating over the top corners (see
+ * arrangeToolbarPills).
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/-, the readout and every `command` item go through the command
@@ -108,6 +118,11 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	const resolvedSections = useMemo(
 		() => resolveToolbarSections(sections, { stencil, command, hasLibrary }),
 		[sections, stencil, command, hasLibrary],
+	);
+
+	const pills = useMemo(
+		() => arrangeToolbarPills(resolvedSections),
+		[resolvedSections],
 	);
 
 	// The first end-aligned section carries the auto margin that pushes it and
@@ -199,25 +214,56 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	// handlers/commands that clear it, so the Toolbar is stateless here and
 	// multiple <Canvas> instances stay independent.
 
-	// The one [data-kind] element of the bar: its own buttons carry only data-action
-	// and resolve their kind/id here through closest(), and a press on the empty
-	// area arrives with no action (dismissing the open menus). Nested targets with a
-	// different id (stencil-category / stencil-library) keep their own [data-kind]
-	// and still win.
+	const renderSection = (
+		section: ResolvedToolbarSection,
+		startsEndGroup: boolean,
+	): React.ReactNode => (
+		<ToolbarGroup key={section.id} startsEndGroup={startsEndGroup}>
+			{section.items.map((item, index) => (
+				<Fragment key={toolbarItemKey(item, index)}>
+					{renderItem(item)}
+				</Fragment>
+			))}
+		</ToolbarGroup>
+	);
+
+	// The one [data-kind] element of the bar (of each pill, collapsed): its own
+	// buttons carry only data-action and resolve their kind/id here through
+	// closest(), and a press on the empty area arrives with no action (dismissing
+	// the open menus). Nested targets with a different id (stencil-category /
+	// stencil-library) keep their own [data-kind] and still win.
+	if (!isAnySidebarOpen) {
+		return (
+			<>
+				{pills.start.length > 0 && (
+					<ToolbarPill
+						edge="start"
+						data-kind="menu"
+						data-id="toolbar"
+						data-testid="toolbar-pill:start"
+					>
+						{pills.start.map((section) => renderSection(section, false))}
+					</ToolbarPill>
+				)}
+				{pills.end.length > 0 && (
+					<ToolbarPill
+						edge="end"
+						data-kind="menu"
+						data-id="toolbar"
+						data-testid="toolbar-pill:end"
+					>
+						{pills.end.map((section) => renderSection(section, false))}
+					</ToolbarPill>
+				)}
+			</>
+		);
+	}
+
 	return (
 		<ToolbarContainer data-kind="menu" data-id="toolbar">
-			{resolvedSections.map((section) => (
-				<ToolbarGroup
-					key={section.id}
-					startsEndGroup={section.id === firstEndSectionId}
-				>
-					{section.items.map((item, index) => (
-						<Fragment key={toolbarItemKey(item, index)}>
-							{renderItem(item)}
-						</Fragment>
-					))}
-				</ToolbarGroup>
-			))}
+			{resolvedSections.map((section) =>
+				renderSection(section, section.id === firstEndSectionId),
+			)}
 		</ToolbarContainer>
 	);
 };

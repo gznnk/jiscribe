@@ -7,6 +7,7 @@ import {
 } from "../../../objects/StencilCategory";
 import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../../BottomToolbar/bottomToolbarPresets";
 import {
+	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
@@ -43,10 +44,11 @@ const collectPresetIds = (items: readonly ToolbarItem[]): string[] =>
 	});
 
 describe("DEFAULT_TOOLBAR_SECTIONS", () => {
-	it("is history, view and the sidebars switch, in display order", () => {
+	it("is history, view, help and the sidebars switch, in display order", () => {
 		expect(DEFAULT_TOOLBAR_SECTIONS).toEqual([
 			DEFAULT_TOOLBAR_HISTORY_SECTION,
 			DEFAULT_TOOLBAR_VIEW_SECTION,
+			DEFAULT_TOOLBAR_HELP_SECTION,
 			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 		]);
 	});
@@ -185,8 +187,29 @@ describe("the sections of the default bar", () => {
 		expect(itemNames(DEFAULT_TOOLBAR_VIEW_SECTION)).toEqual([
 			"zoom",
 			"zoomToFit",
+		]);
+		expect(DEFAULT_TOOLBAR_HELP_SECTION.align).toBe("end");
+		expect(itemNames(DEFAULT_TOOLBAR_HELP_SECTION)).toEqual([
 			"divider",
 			"shortcutHelp",
+		]);
+	});
+
+	/**
+	 * Collapsed, the switch alone opens the top-left pill, history and view the
+	 * top-right one, and help waits for a sidebar to open.
+	 */
+	it("sends each section to its pill while the sidebars are collapsed", () => {
+		expect(
+			DEFAULT_TOOLBAR_SECTIONS.map((section) => [
+				section.id,
+				section.collapsedAlign,
+			]),
+		).toEqual([
+			["history", "end"],
+			["view", "end"],
+			["help", "hidden"],
+			["sidebars", "start"],
 		]);
 	});
 

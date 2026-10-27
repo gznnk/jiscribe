@@ -35,13 +35,17 @@ function parseViewBox(raw: string | null): ViewBox {
 	return { minX, minY, width, height };
 }
 
-/** The drawing region of the embedded canvas, excluding the toolbar above it. */
+/**
+ * The drawing region of the embedded canvas: the main svg comes first under it,
+ * and the bottom bar and the collapsed toolbar's pills after it.
+ */
 const viewportLocator = (page: Page) =>
 	page.locator('[data-testid="embedded-canvas"] [data-kind="canvas"]');
 
 /**
- * The embedded canvas's pan/zoom, as its main svg's viewBox. Scoped below
- * [data-kind="canvas"] so the toolbar's 24×24 icons cannot be picked up instead.
+ * The embedded canvas's pan/zoom, as its main svg's viewBox: the first svg
+ * under [data-kind="canvas"], ahead of the 24×24 icons of the bars that float
+ * there.
  */
 async function readViewBox(page: Page) {
 	const raw = await viewportLocator(page)
