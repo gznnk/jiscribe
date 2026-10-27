@@ -11,9 +11,10 @@ import { selectors } from "../../support/selectors";
  * proportionally too. Once unlocked, such a handle changes only its own edge.
  *
  * Resizes hold ctrl to disable snapping, because snapped dimensions would blur
- * the ratio checks. The sidebar is closed again before every drag: it is not
- * rendered over the canvas, but the menu it replaces is, and the drags below are
- * the ones the reader compares against the unlocked case.
+ * the ratio checks. The chrome is collapsed again before every drag: the
+ * sidebar is not rendered over the canvas, but the menu the collapsed chrome
+ * shows is, and the drags below are the ones the reader compares against the
+ * unlocked case.
  */
 
 /**
@@ -36,7 +37,7 @@ async function sizeOf(
 	}, id);
 }
 
-/** Brings the sidebar's lock row to the state asked for and leaves the sidebar closed again. */
+/** Brings the sidebar's lock row to the state asked for and leaves the chrome collapsed again. */
 async function setLockFromSidebar(
 	canvas: CanvasDriver,
 	locked: boolean,
@@ -47,7 +48,7 @@ async function setLockFromSidebar(
 		await row.click();
 	}
 	await expect(row).toHaveAttribute("aria-checked", String(locked));
-	await canvas.closePropertyPanel();
+	await canvas.collapseSidebars();
 }
 
 test.describe("aspect ratio lock", () => {

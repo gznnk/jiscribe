@@ -189,8 +189,9 @@ async function placeFromLibrary(
  * data-ids in creation order.
  *
  * Every shape comes out of the shape library sidebar, which is where the harness
- * (like the apps) files everything the plugins contribute. The sidebar is left
- * closed again at the end, the way a user would leave it.
+ * (like the apps) files everything the plugins contribute. The chrome is left
+ * collapsed again at the end, the way a user would leave it, so the bottom bar
+ * is back.
  *
  * The flowchart representative is multiDocument rather than a plain box because it
  * is the one shipped shape minting per-object SVG ids.
@@ -289,7 +290,7 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
 	await canvas.deselect();
 
-	await canvas.closeStencilLibrary();
+	await canvas.collapseSidebars();
 
 	return ids;
 }

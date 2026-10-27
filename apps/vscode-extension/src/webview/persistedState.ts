@@ -6,7 +6,11 @@
  * acquireVsCodeApi(), which exists only inside a Webview.
  */
 
-import type { Camera, CanvasSidebarsState } from "@jiscribe/canvas";
+import type {
+	Camera,
+	CanvasInitialSidebars,
+	CanvasSidebarsState,
+} from "@jiscribe/canvas";
 
 /** The getState/setState half of what acquireVsCodeApi() returns. */
 export type VscodeStateApi = {
@@ -18,12 +22,18 @@ export type VscodeStateApi = {
  * Webview-local state saved via getState/setState. With
  * retainContextWhenHidden: false (#138), the Webview is discarded when the tab
  * hides, but this survives the reload — so we save the viewport (camera) and the
- * sidebar open/collapsed state, and restore both on remount. The document isn't
+ * chrome (its form, the sidebars' open/collapsed state), and restore both on
+ * remount. The document isn't
  * included, as the Extension re-sends it via "ready".
  */
 type PersistedState = {
 	camera?: Camera;
-	sidebars?: CanvasSidebarsState;
+	/**
+	 * What the last persistSidebars stored. Typed as what Canvas reads back
+	 * rather than what it reports: a state stored by an older build lacks
+	 * `isExpanded`, which Canvas then defaults.
+	 */
+	sidebars?: CanvasInitialSidebars;
 };
 
 /** The four accessors over one VSCode API handle's persisted state. */
@@ -33,7 +43,7 @@ export type PersistedStateAccess = {
 	/** Stores `camera`, leaving the stored sidebar state as it is. */
 	persistCamera: (camera: Camera) => void;
 	/** Sidebar state stored by the last persistSidebars, undefined before the first one. */
-	readPersistedSidebars: () => CanvasSidebarsState | undefined;
+	readPersistedSidebars: () => CanvasInitialSidebars | undefined;
 	/** Stores `sidebars`, leaving the stored camera as it is. */
 	persistSidebars: (sidebars: CanvasSidebarsState) => void;
 };

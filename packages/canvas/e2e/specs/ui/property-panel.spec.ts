@@ -278,7 +278,9 @@ test.describe("Properties sidebar", () => {
 		await expect(paddingTop).toHaveValue("0");
 	});
 
-	test("stands in for the floating menu while open", async ({ canvas }) => {
+	test("stands in for the floating menu while the chrome is expanded", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 120, y: 150 }, { x: 240, y: 240 });
 		const objectMenu = canvas.page.locator(selectors.objectMenu);
 		await expect(objectMenu).toBeVisible();
@@ -291,7 +293,11 @@ test.describe("Properties sidebar", () => {
 			canvas.page.locator(selectors.propertyPanelSection("fill")),
 		).toBeVisible();
 
+		// Closing the sidebar leaves the chrome expanded; collapsing brings the
+		// menu back.
 		await canvas.closePropertyPanel();
+		await expect(objectMenu).toHaveCount(0);
+		await canvas.collapseSidebars();
 		await expect(objectMenu).toBeVisible();
 	});
 

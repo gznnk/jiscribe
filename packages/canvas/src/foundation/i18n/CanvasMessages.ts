@@ -22,6 +22,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	stencilLibraryNoMatch: "No matching shapes",
 	stencilLibraryMoreMatches: "More matches than shown; refine the search",
 	stencilLibraryMoreViaSearch: "Find more shapes",
+	stencilLibraryAllShapes: "All shapes",
 
 	propertyPanelTitle: "Properties",
 	propertyPanelClose: "Close",

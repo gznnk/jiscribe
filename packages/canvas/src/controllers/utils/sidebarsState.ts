@@ -2,56 +2,56 @@ import type {
 	CanvasControllerState,
 	CanvasInitialSidebars,
 	CanvasSidebarsState,
-	PropertyPanelState,
-	StencilLibraryPanelState,
 } from "../CanvasTypes";
 
-/** The reducer's two panel states, as the seed hands them over. */
-export type SeededSidebarPanels = {
-	/** Seed for `CanvasControllerState.stencilLibraryPanel` (the left edge). */
-	stencilLibraryPanel: StencilLibraryPanelState;
-	/** Seed for `CanvasControllerState.propertyPanel` (the right edge). */
-	propertyPanel: PropertyPanelState;
-};
+/** The reducer's share of the chrome: its form and the two panels. */
+export type ChromeSidebarsState = Pick<
+	CanvasControllerState,
+	"isChromeExpanded" | "stencilLibraryPanel" | "propertyPanel"
+>;
 
 /**
- * The one place the two reducer panels are matched to the edges a host sees:
- * the stencil library is the left sidebar, the property panel the right one.
+ * The one place the reducer's chrome state is matched to what a host sees:
+ * `isChromeExpanded` is `isExpanded`, the stencil library is the left sidebar
+ * and the property panel the right one.
  *
- * @param stencilLibraryPanel - Reducer state of the shape library panel; its
- *   `isOpen` becomes `left`, its collapsed sections the `"stencilLibrary"` panel
- * @param propertyPanel - Reducer state of the properties panel; its `isOpen`
- *   becomes `right`, its collapsed sections the `"properties"` panel
- * @returns The public pair, split into per-edge and per-panel state. The section
- *   id arrays are passed through rather than copied, so callers must treat them
- *   as read-only (the reducer already does).
+ * @param chromeSidebars - The reducer's form and panel states; the library's
+ *   `isOpen` becomes `left`, the properties panel's `right`, each panel's
+ *   collapsed sections its entry under `panels`
+ * @returns The public state, split into the form, per-edge and per-panel
+ *   state. The section id arrays are passed through rather than copied, so
+ *   callers must treat them as read-only (the reducer already does).
  */
 export const resolveSidebarsState = (
-	stencilLibraryPanel: StencilLibraryPanelState,
-	propertyPanel: PropertyPanelState,
+	chromeSidebars: ChromeSidebarsState,
 ): CanvasSidebarsState => ({
-	left: { isOpen: stencilLibraryPanel.isOpen },
-	right: { isOpen: propertyPanel.isOpen },
+	isExpanded: chromeSidebars.isChromeExpanded,
+	left: { isOpen: chromeSidebars.stencilLibraryPanel.isOpen },
+	right: { isOpen: chromeSidebars.propertyPanel.isOpen },
 	panels: {
 		stencilLibrary: {
-			collapsedSectionIds: stencilLibraryPanel.collapsedSectionIds,
+			collapsedSectionIds:
+				chromeSidebars.stencilLibraryPanel.collapsedSectionIds,
 		},
-		properties: { collapsedSectionIds: propertyPanel.collapsedSectionIds },
+		properties: {
+			collapsedSectionIds: chromeSidebars.propertyPanel.collapsedSectionIds,
+		},
 	},
 });
 
 /**
  * The inverse of {@link resolveSidebarsState}: fills in what a host left out so
- * the reducer starts from complete panel states.
+ * the reducer starts from a complete chrome state.
  *
  * @param initialSidebars - `initialConfig.sidebars` as read at mount; undefined,
- *   or any key of it left out, means closed with every section expanded
- * @returns Both reducer panel states, each with `isOpen` and
- *   `collapsedSectionIds` set
+ *   or any key of it left out, means collapsed, each edge closed and every
+ *   section expanded
+ * @returns The form and both panel states, every field set
  */
-export const seedSidebarPanels = (
+export const seedChromeSidebars = (
 	initialSidebars: CanvasInitialSidebars | undefined,
-): SeededSidebarPanels => ({
+): ChromeSidebarsState => ({
+	isChromeExpanded: initialSidebars?.isExpanded ?? false,
 	stencilLibraryPanel: {
 		isOpen: initialSidebars?.left?.isOpen ?? false,
 		collapsedSectionIds:
@@ -65,27 +65,31 @@ export const seedSidebarPanels = (
 });
 
 /**
- * Whether the sidebars count as expanded, which is what the toolbar's one
- * switch for both (`sidebarsToggle`) shows as pressed and what the
- * `toggleSidebars` command reads to choose between opening and closing.
+ * Whether the shape library sidebar is drawn: open, in the expanded chrome.
+ * What its toolbar toggle shows as pressed.
  *
- * Expanded means at least one sidebar that can be drawn is open, so a mixed
- * state (one open, the other closed) is expanded and the switch then closes
- * both: no press leaves a mixed state behind. The shape library counts only
- * while one is declared (`hasStencilLibrary`); without one its `isOpen` stands
- * for nothing on screen, so the switch is pressed exactly while the properties
- * sidebar is open.
- *
- * @param sidebarPanels - The reducer's two panel states and whether the
- *   library can be drawn; only the `isOpen` flags and `hasStencilLibrary` are
- *   read
+ * @param chromeSidebars - Only `isChromeExpanded` and the library's `isOpen`
+ *   are read
  */
-export const isAnySidebarOpen = (
-	sidebarPanels: Pick<
+export const isStencilLibraryPanelShown = (
+	chromeSidebars: Pick<
 		CanvasControllerState,
-		"stencilLibraryPanel" | "propertyPanel" | "hasStencilLibrary"
+		"isChromeExpanded" | "stencilLibraryPanel"
 	>,
 ): boolean =>
-	(sidebarPanels.hasStencilLibrary &&
-		sidebarPanels.stencilLibraryPanel.isOpen) ||
-	sidebarPanels.propertyPanel.isOpen;
+	chromeSidebars.isChromeExpanded && chromeSidebars.stencilLibraryPanel.isOpen;
+
+/**
+ * Whether the properties sidebar is drawn: open, in the expanded chrome.
+ * What its toolbar toggle shows as pressed.
+ *
+ * @param chromeSidebars - Only `isChromeExpanded` and the panel's `isOpen` are
+ *   read
+ */
+export const isPropertyPanelShown = (
+	chromeSidebars: Pick<
+		CanvasControllerState,
+		"isChromeExpanded" | "propertyPanel"
+	>,
+): boolean =>
+	chromeSidebars.isChromeExpanded && chromeSidebars.propertyPanel.isOpen;

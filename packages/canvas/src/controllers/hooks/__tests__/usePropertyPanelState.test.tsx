@@ -62,6 +62,7 @@ const baseState = (): CanvasControllerState => {
 		},
 		rootIds: ["selected", "other", "group"],
 		selection: selectionOf(["selected"]),
+		isChromeExpanded: true,
 		propertyPanel: { ...initial.propertyPanel, isOpen: true },
 	};
 };
@@ -193,6 +194,16 @@ describe("usePropertyPanelState", () => {
 		};
 		const { render } = mount(closed);
 		const panned = { ...closed, viewport: { ...closed.viewport, minX: 99 } };
+		expect(render(panned)).toBe(panned);
+	});
+
+	it("hands out every state while the chrome is collapsed, the sidebar's flag kept open", () => {
+		const collapsed = { ...baseState(), isChromeExpanded: false };
+		const { render } = mount(collapsed);
+		const panned = {
+			...collapsed,
+			viewport: { ...collapsed.viewport, minX: 99 },
+		};
 		expect(render(panned)).toBe(panned);
 	});
 

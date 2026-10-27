@@ -115,8 +115,8 @@ export const standardToolbarToolsSection: ToolbarSection = {
 
 /**
  * The whole top bar the standard set is drawn with: core's history, view and
- * help sections and the toggles for each sidebar, then the switch opening and
- * closing both sidebars at the far right. No shape tools: the presets are on
+ * help sections and the toggles for each sidebar, then the switch for both
+ * sidebars at the far right. No shape tools: the presets are on
  * the bottom tool bar ({@link standardBottomToolbarPresetIds}) and the rest of
  * the set in the shape library sidebar the switch opens.
  *

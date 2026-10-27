@@ -103,7 +103,7 @@ function App() {
 	const canvasRef = useRef<CanvasHandle>(null);
 
 	// Mount-time canvas configuration, built once: `viewport` and `sidebars` seed
-	// the camera and the sidebar open/collapsed state from persisted state
+	// the camera and the chrome (its form, the sidebars) from persisted state
 	// (undefined on first open → Canvas uses its own defaults). The canvas owns
 	// both after mount; we only persist what it reports, never drive it back — so
 	// a tab-hide reload restores the last view with no feedback into the canvas.

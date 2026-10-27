@@ -11,7 +11,7 @@ import type {
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
 import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
-import { seedSidebarPanels } from "../utils/sidebarsState";
+import { seedChromeSidebars } from "../utils/sidebarsState";
 
 /**
  * Viewport a canvas starts at, before anything has been measured or the host's
@@ -46,8 +46,9 @@ export const INITIAL_VIEWPORT: Viewport = {
  * view scroll of the user's own is limited, so wherever the host starts the view
  * is where it starts.
  *
- * `initialSidebars` seeds the two sidebars the same way (see
- * `seedSidebarPanels`); omitted, both start closed with every section expanded.
+ * `initialSidebars` seeds the chrome's form and the two sidebars the same way
+ * (see `seedChromeSidebars`); omitted, the chrome starts collapsed and both
+ * sidebars closed with every section expanded.
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
@@ -56,7 +57,7 @@ export const createInitialControllerState = (
 	scrollBoundsConfig?: ScrollBoundsConfig,
 	initialSidebars?: CanvasInitialSidebars,
 ): CanvasControllerState => {
-	const seededSidebarPanels = seedSidebarPanels(initialSidebars);
+	const seededChromeSidebars = seedChromeSidebars(initialSidebars);
 	const baseState = canvasToState(
 		initialDoc,
 		registries.objectMapper,
@@ -83,12 +84,9 @@ export const createInitialControllerState = (
 			measuredView: undefined,
 		},
 		...resetUiState(),
-		// Outside resetUiState: the two sidebars are persistent, so a doc swap must
-		// not close them (see CanvasControllerState).
-		stencilLibraryPanel: seededSidebarPanels.stencilLibraryPanel,
-		propertyPanel: seededSidebarPanels.propertyPanel,
-		// Canvas reports the real answer before the first paint.
-		hasStencilLibrary: false,
+		// Outside resetUiState: the chrome is persistent, so a doc swap must not
+		// collapse it or close a sidebar (see CanvasControllerState).
+		...seededChromeSidebars,
 		activeModal: null,
 		commitVersion: 0,
 		saveRequest: { version: 0, nonce: "" },

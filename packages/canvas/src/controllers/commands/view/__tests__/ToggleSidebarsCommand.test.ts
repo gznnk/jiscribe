@@ -8,12 +8,12 @@ import { ToggleSidebarsCommand } from "../ToggleSidebarsCommand";
 const registries = createTestRegistries();
 
 const makeState = (
+	isChromeExpanded: boolean,
 	isLibraryOpen: boolean,
 	isPropertyPanelOpen: boolean,
-	hasStencilLibrary = true,
 ): CanvasControllerState =>
 	({
-		hasStencilLibrary,
+		isChromeExpanded,
 		mode: { kind: "normal" },
 		stencilLibraryPanel: {
 			isOpen: isLibraryOpen,
@@ -27,62 +27,63 @@ const makeState = (
 		selection: selectionOf(["a"]),
 	}) as unknown as CanvasControllerState;
 
-const openFlagsAfterPress = (
-	isLibraryOpen: boolean,
-	isPropertyPanelOpen: boolean,
-	hasStencilLibrary = true,
-): [boolean, boolean] => {
-	const next = ToggleSidebarsCommand.execute(
-		makeState(isLibraryOpen, isPropertyPanelOpen, hasStencilLibrary),
-		registries,
-	);
-	return [next.stencilLibraryPanel.isOpen, next.propertyPanel.isOpen];
-};
+/** [isChromeExpanded, library isOpen, properties isOpen] after one press. */
+type ChromeFlags = [boolean, boolean, boolean];
+
+const flagsOf = (state: CanvasControllerState): ChromeFlags => [
+	state.isChromeExpanded,
+	state.stencilLibraryPanel.isOpen,
+	state.propertyPanel.isOpen,
+];
+
+const flagsAfterSwitch = (...before: ChromeFlags): ChromeFlags =>
+	flagsOf(ToggleSidebarsCommand.execute(makeState(...before), registries));
 
 describe("ToggleSidebarsCommand", () => {
-	it("opens both sidebars when both are closed", () => {
-		expect(openFlagsAfterPress(false, false)).toEqual([true, true]);
+	it("opens both sidebars when expanding with both closed", () => {
+		expect(flagsAfterSwitch(false, false, false)).toEqual([true, true, true]);
 	});
 
-	it("closes both sidebars when both are open", () => {
-		expect(openFlagsAfterPress(true, true)).toEqual([false, false]);
-	});
+	/** Collapsing kept the flags, so expanding brings the last layout back. */
+	it.each<[string, boolean, boolean]>([
+		["the shape library alone", true, false],
+		["the properties sidebar alone", false, true],
+		["both sidebars", true, true],
+	])(
+		"restores %s when expanding",
+		(_layout, isLibraryOpen, isPropertyPanelOpen) => {
+			expect(
+				flagsAfterSwitch(false, isLibraryOpen, isPropertyPanelOpen),
+			).toEqual([true, isLibraryOpen, isPropertyPanelOpen]);
+		},
+	);
 
-	/** A mixed state counts as expanded, so the press never leaves one open. */
-	it("closes both sidebars when only the shape library is open", () => {
-		expect(openFlagsAfterPress(true, false)).toEqual([false, false]);
-	});
-
-	it("closes both sidebars when only the properties sidebar is open", () => {
-		expect(openFlagsAfterPress(false, true)).toEqual([false, false]);
-	});
-
-	describe("with no shape library declared", () => {
-		it("opens only the properties sidebar, leaving the library flag closed", () => {
-			expect(openFlagsAfterPress(false, false, false)).toEqual([false, true]);
-		});
-
-		it("closes the properties sidebar and leaves the library flag closed", () => {
-			expect(openFlagsAfterPress(false, true, false)).toEqual([false, false]);
-		});
-
-		/** A library flag seeded open with no panel to draw counts for nothing. */
-		it("treats an open library flag as collapsed and opens properties, leaving the flag open", () => {
-			expect(openFlagsAfterPress(true, false, false)).toEqual([true, true]);
-		});
-	});
+	it.each<[string, boolean, boolean]>([
+		["both open", true, true],
+		["one open", true, false],
+		["both closed", false, false],
+	])(
+		"collapses with %s, leaving each panel's flag as it was",
+		(_layout, isLibraryOpen, isPropertyPanelOpen) => {
+			expect(
+				flagsAfterSwitch(true, isLibraryOpen, isPropertyPanelOpen),
+			).toEqual([false, isLibraryOpen, isPropertyPanelOpen]);
+		},
+	);
 
 	it("closes the open category flyout, like every other toolbar press", () => {
-		const next = ToggleSidebarsCommand.execute(
-			makeState(false, false),
-			registries,
-		);
-		expect(next.stencilLibraryOpenCategory).toBeNull();
+		for (const isChromeExpanded of [false, true]) {
+			const next = ToggleSidebarsCommand.execute(
+				makeState(isChromeExpanded, false, false),
+				registries,
+			);
+			expect(next.stencilLibraryOpenCategory).toBeNull();
+		}
 	});
 
 	it("leaves both panels' collapsed sections and the selection alone", () => {
 		const next = ToggleSidebarsCommand.execute(
-			makeState(false, false),
+			makeState(false, false, false),
 			registries,
 		);
 		expect(next.stencilLibraryPanel.collapsedSectionIds).toEqual(["basic"]);

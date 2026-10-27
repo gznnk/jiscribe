@@ -8,9 +8,10 @@ import { selectors } from "../../support/selectors";
  *
  * - Its presets are the same `item:<presetId>` contract as the top bar's: a
  *   click arms drawing and a drag onto the canvas places the shape.
- * - It floats over the canvas without shrinking it, and shows only while both
- *   sidebars are closed: with either open the shape library holds the shapes.
- *   A page declaring no library keeps it, the library holding nothing.
+ * - It floats over the canvas without shrinking it, and shows only while the
+ *   chrome is collapsed: expanded, the shape library holds the shapes, whether
+ *   or not a sidebar is open and whether the library is the page's or the
+ *   default one.
  * - Its "Other shapes" button is a placeholder: pressing it, or dragging off
  *   it, changes nothing.
  */
@@ -109,7 +110,7 @@ test.describe("bottom tool bar", () => {
 		await expectCentredOverCanvas(canvas, "no sidebar open");
 	});
 
-	test("hides while a sidebar is open and comes back once both close", async ({
+	test("hides while expanded, both panels closed included, and comes back once collapsed", async ({
 		canvas,
 	}) => {
 		const bottomToolbar = canvas.page.locator(selectors.bottomToolbar);
@@ -117,20 +118,21 @@ test.describe("bottom tool bar", () => {
 
 		await canvas.toggleSidebars();
 		await expect(bottomToolbar).toHaveCount(0);
+		await canvas.closeStencilLibrary();
+		await canvas.closePropertyPanel();
+		await expect(bottomToolbar).toHaveCount(0);
+
 		await canvas.toggleSidebars();
 		await expect(bottomToolbar).toBeVisible();
-		await expectCentredOverCanvas(canvas, "back after both sidebars closed");
+		await expectCentredOverCanvas(canvas, "back once collapsed");
 
-		// Either sidebar alone counts as expanded.
+		// One sidebar expanding the chrome alone hides it as well.
 		await canvas.openPropertyPanel();
-		await expect(bottomToolbar).toHaveCount(0);
-		await canvas.closePropertyPanel();
-		await canvas.openStencilLibrary();
 		await expect(bottomToolbar).toHaveCount(0);
 	});
 
-	/** With no library to hold the shapes, the bar is the only place they are. */
-	test("stays while the properties sidebar is open on a page with no shape library", async ({
+	/** The default library holds the shapes there, so no exception is made. */
+	test("hides while expanded on a page declaring no shape library too", async ({
 		canvas,
 	}) => {
 		await canvas.goto("?noStencilLibrary");
@@ -138,8 +140,7 @@ test.describe("bottom tool bar", () => {
 		await expect(bottomToolbar).toBeVisible();
 
 		await canvas.openPropertyPanel();
-		await expect(bottomToolbar).toBeVisible();
-		await expectCentredOverCanvas(canvas, "properties sidebar open");
+		await expect(bottomToolbar).toHaveCount(0);
 	});
 
 	test("does nothing when Other shapes is pressed or dragged off", async ({

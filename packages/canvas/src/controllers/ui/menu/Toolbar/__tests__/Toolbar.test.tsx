@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 /**
- * Mounts the collapsed bar (no sidebar open) over `sections` and returns its
+ * Mounts the collapsed bar over `sections` and returns its
  * container. Slots only, so nothing reaches for a command's state.
  */
 const renderCollapsed = (sections: ToolbarSection[]): HTMLElement => {
@@ -37,10 +37,9 @@ const renderCollapsed = (sections: ToolbarSection[]): HTMLElement => {
 					openCategoryId={null}
 					zoom={1}
 					sections={sections}
-					hasLibrary={false}
-					isLibraryOpen={false}
-					isPropertyPanelOpen={false}
-					isAnySidebarOpen={false}
+					isStencilLibraryPanelShown={false}
+					isPropertyPanelShown={false}
+					isChromeExpanded={false}
 				/>
 			</ToolbarCommandStateContext>,
 		);
@@ -51,7 +50,7 @@ const renderCollapsed = (sections: ToolbarSection[]): HTMLElement => {
 const countPills = (container: HTMLElement, edge: "start" | "end") =>
 	container.querySelectorAll(`[data-testid="toolbar-pill:${edge}"]`).length;
 
-describe("Toolbar while the sidebars are collapsed", () => {
+describe("Toolbar while the chrome is collapsed", () => {
 	it("draws no top-right pill when every section goes to the top-left one", () => {
 		const container = renderCollapsed([
 			{ id: "file", items: [{ type: "slot", id: "file", node: null }] },

@@ -18,7 +18,7 @@ packages/canvas/
 │   ├── kit/               # the shared implementation behind the testing entries
 │   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
 │   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
-│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi and ?pageScroll switch pages; ?noStencilLibrary drops the library, ?libraryOpen mounts with it open and ?defaultToolbar swaps the page's top bar for the canvas default. The default page publishes its CanvasHandle as window.__canvasHandle and logs every onOpenReference payload to window.__openedReferences
+│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi and ?pageScroll switch pages; ?noStencilLibrary drops the page's library for the canvas default, ?emptyStencilLibrary declares an empty one, ?libraryOpen mounts expanded with it open and ?defaultToolbar swaps the page's top bar for the canvas default. The default page publishes its CanvasHandle as window.__canvasHandle and logs every onOpenReference payload to window.__openedReferences
 │   │   ├── MultiCanvasApp.tsx      # a 2-canvas page for verifying keyboard scope
 │   │   ├── PageScrollApp.tsx       # a canvas embedded in a scrolling document, for verifying gestureHandling="cooperative"
 │   │   └── harness.css
@@ -119,9 +119,9 @@ attribute, as in `[data-id="bottom-toolbar"] button[title="Rectangle"]`
 (Rectangle / Ellipse / Polyline / Polygon / Text from core, plus Pin / Card /
 Memo from `e2e/plugins/specShapesPlugin` — this harness pins all of them on the
 bottom bar and keeps the category flyout on the top one). The bottom bar is not
-always shown (see Canvas's `bottomToolbar` prop): draw from it before opening a
-sidebar, or from the library (`selectors.stencilLibraryPanelItem`) while one is
-open. No shipped plugin is
+always shown (see Canvas's `bottomToolbar` prop): draw from it while the chrome is
+collapsed, or from the library (`selectors.stencilLibraryPanelItem`) while it is
+expanded. No shipped plugin is
 mounted here; a spec that needs one belongs in that plugin's own suite.
 
 `selectors.toolButton` and `selectors.shapeItem` match a preset on either bar,
@@ -134,10 +134,11 @@ bar only, which is why the kit shows the bottom bar only for a page passing
 `toolbarItems` gets none). `selectors.bottomToolbar` is the bar itself.
 
 The toolbar's switch for both sidebars is `selectors.sidebarsToggle`
-(`command:toggleSidebars`, the open state on `aria-expanded`: expanded while
-either sidebar is open; a press then closes both, otherwise it opens both).
-`CanvasDriver.toggleSidebars()` presses it and re-measures the canvas origin,
-which moves with the shape library sidebar.
+(`command:toggleSidebars`, the chrome's form on `aria-expanded`; see the
+command for what a press opens). `CanvasDriver.toggleSidebars()` presses it and
+re-measures the canvas origin, which moves with the shape library sidebar and
+the full-width bar; `CanvasDriver.collapseSidebars()` presses it only while
+expanded. A panel's own close button leaves the chrome expanded.
 
 ### data-id / data-part / data-action of control
 

@@ -1,7 +1,9 @@
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
- * Opens or closes the shape library sidebar.
+ * Opens or closes the shape library sidebar within the expanded chrome. Pressed
+ * while collapsed it expands the chrome with the library alone open, the
+ * properties sidebar closed, since that is the one panel asked for.
  *
  * Deliberately carries no keyboard shortcut: the panel is reached from a
  * toolbar toggle (`data-action="command:toggleStencilLibrary"`, where the host
@@ -18,10 +20,18 @@ export const ToggleStencilLibraryCommand: ExecutableCommand = {
 
 	execute: (state) => ({
 		...state,
-		stencilLibraryPanel: {
-			...state.stencilLibraryPanel,
-			isOpen: !state.stencilLibraryPanel.isOpen,
-		},
+		...(state.isChromeExpanded
+			? {
+					stencilLibraryPanel: {
+						...state.stencilLibraryPanel,
+						isOpen: !state.stencilLibraryPanel.isOpen,
+					},
+				}
+			: {
+					isChromeExpanded: true,
+					stencilLibraryPanel: { ...state.stencilLibraryPanel, isOpen: true },
+					propertyPanel: { ...state.propertyPanel, isOpen: false },
+				}),
 		// A toolbar press dismisses the category flyout, like every other one.
 		stencilLibraryOpenCategory: null,
 	}),

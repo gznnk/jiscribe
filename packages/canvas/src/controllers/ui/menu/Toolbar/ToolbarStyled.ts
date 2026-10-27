@@ -8,7 +8,7 @@ const TOOLBAR_PILL_INSET = 12;
 
 /**
  * Container for the full-width integrated toolbar pinned to the top, the form
- * the bar takes while either sidebar is open (see ToolbarPill for the other).
+ * the bar takes while the chrome is expanded (see ToolbarPill for the other).
  * Holds the sections in order, the `align: "start"` ones packed left and the
  * `align: "end"` ones right.
  *
@@ -38,8 +38,8 @@ export const ToolbarContainer = styled.div`
 `;
 
 /**
- * One of the two pills the toolbar collapses into while both sidebars are
- * closed, floating over a top corner of the viewport with the bottom tool
+ * One of the two pills the toolbar collapses into while the chrome is
+ * collapsed, floating over a top corner of the viewport with the bottom tool
  * bar's look. Positioned inside the viewport like the bottom bar, so it covers
  * the canvas instead of shrinking it and a wheel over it reaches the canvas.
  */
@@ -140,11 +140,11 @@ export const ToolbarIconButton = styled.button`
 `;
 
 /**
- * Toolbar toggle button for a panel that stays open (either sidebar, or both
- * through the one switch).
+ * Toolbar toggle button for chrome that stays on screen (either sidebar, or the
+ * expanded form through the one switch).
  *
  * Sized like ToolbarIconButton, but takes the pressed look of a category button
- * while its panel is open so the bar shows what is currently on screen.
+ * while what it toggles is shown, so the bar shows what is currently on screen.
  */
 export const ToolbarToggleButton = styled.button<{ isOpen: boolean }>`
 	display: flex;

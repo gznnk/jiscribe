@@ -91,7 +91,7 @@ export function useObjectMenuPosition(
 		drag,
 		inertialScrolling,
 		objectMenuOpenId,
-		propertyPanel,
+		isChromeExpanded,
 	} = state;
 	const isMarqueeDragging = drag?.kind === "marquee";
 	// The kind alone, which the menu measurement below keys on: what the session
@@ -162,10 +162,9 @@ export function useObjectMenuPosition(
 		if (isMarqueeDragging) {
 			return false;
 		}
-		// The properties sidebar states everything the menu does, so while it is
-		// open the menu would only duplicate it and cover the drawing beside the
-		// selection.
-		if (propertyPanel.isOpen) {
+		// The menu belongs to the collapsed chrome: expanded, the properties
+		// sidebar is one press away and states everything the menu does.
+		if (isChromeExpanded) {
 			return false;
 		}
 		return true;
@@ -175,7 +174,7 @@ export function useObjectMenuPosition(
 		isViewUnsettled,
 		isMarqueeDragging,
 		textEditKind,
-		propertyPanel.isOpen,
+		isChromeExpanded,
 	]);
 
 	useLayoutEffect(() => {

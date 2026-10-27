@@ -53,12 +53,13 @@ which is what makes the pair safe to use without checking.
 
 `standardBottomToolbarPresetIds` pins six presets on the bottom tool bar and
 nothing else; every other shape of the set — the `markdown` and `table` presets
-and the eight plugin categories — is reachable only through
+and the eight plugin categories — is filed in
 `standardStencilLibrarySections`, the sidebar the switch at the far right of
-`standardToolbarSections` opens (together with the properties sidebar), or the
-library's own toggle beside it opens alone. A host
-passing the bars without the library ships a canvas whose plugin shapes cannot
-be drawn by hand, and the switch then opens the properties sidebar alone. Pass
+`standardToolbarSections` expands the chrome with (with whichever sidebars were
+open last, both the first time), or the library's own toggle beside it opens
+alone. A host passing the bars without the library gets the canvas's default
+library instead: one ungrouped section listing the first few dozen registered
+presets, the rest — icon sets included — reached only through its search. Pass
 all three:
 
 ```tsx
@@ -79,9 +80,9 @@ its own UI on the top bar orders the sections itself — core's
 `DEFAULT_TOOLBAR_HISTORY_SECTION`, `DEFAULT_TOOLBAR_VIEW_SECTION`,
 `DEFAULT_TOOLBAR_HELP_SECTION`, `DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION`
 and `DEFAULT_TOOLBAR_SIDEBARS_SECTION` are exported one by one for exactly that,
-and the sidebars switch is meant to stay at the far right. While the sidebars
-are closed the bar collapses into two corner pills; a host section that should
-not show there sets `collapsedAlign: "hidden"`. A host that wants the presets
+and the sidebars switch is meant to stay at the far right. While the chrome is
+collapsed the bar is two corner pills; a host section that should not show
+there sets `collapsedAlign: "hidden"`. A host that wants the presets
 back on the top bar takes `standardToolbarToolsSection` and hides the bottom bar
 (`bottomToolbar={{ show: false }}`), or every preset shows twice. A host wanting
 a different set of shapes copies them and rebuilds from the plugins' own

@@ -1,23 +1,26 @@
 import { describe, expect, it } from "vitest";
 
 import {
-	isAnySidebarOpen,
+	isPropertyPanelShown,
+	isStencilLibraryPanelShown,
 	resolveSidebarsState,
-	seedSidebarPanels,
+	seedChromeSidebars,
 } from "../sidebarsState";
 
 /**
- * The pair carries the edge/panel split in one direction and fills the host's
- * gaps in the other, so what a canvas reports is exactly what restores it.
+ * The pair carries the form/edge/panel split in one direction and fills the
+ * host's gaps in the other, so what a canvas reports is exactly what restores it.
  */
 describe("sidebarsState", () => {
-	it("maps the stencil library to the left edge and the property panel to the right", () => {
-		const sidebars = resolveSidebarsState(
-			{ isOpen: true, collapsedSectionIds: ["basic"] },
-			{ isOpen: false, collapsedSectionIds: ["text", "border"] },
-		);
+	it("maps the form to isExpanded, the stencil library to the left edge and the property panel to the right", () => {
+		const sidebars = resolveSidebarsState({
+			isChromeExpanded: true,
+			stencilLibraryPanel: { isOpen: true, collapsedSectionIds: ["basic"] },
+			propertyPanel: { isOpen: false, collapsedSectionIds: ["text", "border"] },
+		});
 
 		expect(sidebars).toEqual({
+			isExpanded: true,
 			left: { isOpen: true },
 			right: { isOpen: false },
 			panels: {
@@ -27,68 +30,62 @@ describe("sidebarsState", () => {
 		});
 	});
 
-	it("seeds the panels back from what it reported", () => {
-		const stencilLibraryPanel = {
-			isOpen: false,
-			collapsedSectionIds: ["basic"],
+	it("seeds the chrome back from what it reported", () => {
+		const chromeSidebars = {
+			isChromeExpanded: true,
+			stencilLibraryPanel: { isOpen: false, collapsedSectionIds: ["basic"] },
+			propertyPanel: { isOpen: true, collapsedSectionIds: ["text"] },
 		};
-		const propertyPanel = { isOpen: true, collapsedSectionIds: ["text"] };
 
-		expect(
-			seedSidebarPanels(
-				resolveSidebarsState(stencilLibraryPanel, propertyPanel),
-			),
-		).toEqual({ stencilLibraryPanel, propertyPanel });
+		expect(seedChromeSidebars(resolveSidebarsState(chromeSidebars))).toEqual(
+			chromeSidebars,
+		);
 	});
 
-	it("fills in both panels when nothing is restored", () => {
-		expect(seedSidebarPanels(undefined)).toEqual({
+	it("starts collapsed with both panels closed when nothing is restored", () => {
+		expect(seedChromeSidebars(undefined)).toEqual({
+			isChromeExpanded: false,
 			stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
 			propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		});
 	});
 
-	it("defaults the keys a partial restore leaves out", () => {
+	/** A state saved before the form was reported restores collapsed, its panels kept for the next expand. */
+	it("defaults the keys a partial restore leaves out, the form to collapsed", () => {
 		expect(
-			seedSidebarPanels({
+			seedChromeSidebars({
 				right: { isOpen: true },
 				panels: { stencilLibrary: { collapsedSectionIds: ["basic"] } },
 			}),
 		).toEqual({
+			isChromeExpanded: false,
 			stencilLibraryPanel: { isOpen: false, collapsedSectionIds: ["basic"] },
 			propertyPanel: { isOpen: true, collapsedSectionIds: [] },
 		});
 	});
 });
 
-describe("isAnySidebarOpen", () => {
-	const panels = (
-		isLibraryOpen: boolean,
-		isPropertyPanelOpen: boolean,
-		hasStencilLibrary = true,
-	) => ({
-		stencilLibraryPanel: { isOpen: isLibraryOpen, collapsedSectionIds: [] },
-		propertyPanel: { isOpen: isPropertyPanelOpen, collapsedSectionIds: [] },
-		hasStencilLibrary,
+describe("isStencilLibraryPanelShown / isPropertyPanelShown", () => {
+	const chrome = (isChromeExpanded: boolean, isOpen: boolean) => ({
+		isChromeExpanded,
+		stencilLibraryPanel: { isOpen, collapsedSectionIds: [] },
+		propertyPanel: { isOpen, collapsedSectionIds: [] },
 	});
 
 	it.each([
 		[false, false, false],
-		[true, false, true],
-		[false, true, true],
+		[false, true, false],
+		[true, false, false],
 		[true, true, true],
 	])(
-		"library open %s, properties open %s → expanded %s",
-		(isLibraryOpen, isPropertyPanelOpen, expected) => {
-			expect(isAnySidebarOpen(panels(isLibraryOpen, isPropertyPanelOpen))).toBe(
+		"expanded %s, open %s → shown %s",
+		(isChromeExpanded, isOpen, expected) => {
+			expect(isStencilLibraryPanelShown(chrome(isChromeExpanded, isOpen))).toBe(
+				expected,
+			);
+			expect(isPropertyPanelShown(chrome(isChromeExpanded, isOpen))).toBe(
 				expected,
 			);
 		},
 	);
-
-	/** Without a library its flag stands for nothing on screen. */
-	it("ignores an open library flag while no library is declared", () => {
-		expect(isAnySidebarOpen(panels(true, false, false))).toBe(false);
-		expect(isAnySidebarOpen(panels(true, true, false))).toBe(true);
-	});
 });

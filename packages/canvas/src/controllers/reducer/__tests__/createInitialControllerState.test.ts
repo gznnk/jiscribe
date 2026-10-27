@@ -81,9 +81,10 @@ describe("createInitialControllerState", () => {
 		expect(state.viewport.height).toBe(base.viewport.height);
 	});
 
-	it("starts both sidebars closed and fully expanded when no initialSidebars is given", () => {
+	it("starts collapsed, both sidebars closed and fully expanded, when no initialSidebars is given", () => {
 		const state = createInitialControllerState(docWithRect, registries);
 
+		expect(state.isChromeExpanded).toBe(false);
 		expect(state.stencilLibraryPanel).toEqual({
 			isOpen: false,
 			collapsedSectionIds: [],
@@ -94,13 +95,14 @@ describe("createInitialControllerState", () => {
 		});
 	});
 
-	it("seeds both sidebars from initialSidebars", () => {
+	it("seeds the chrome's form and both sidebars from initialSidebars", () => {
 		const state = createInitialControllerState(
 			docWithRect,
 			registries,
 			undefined,
 			undefined,
 			{
+				isExpanded: true,
 				left: { isOpen: true },
 				right: { isOpen: false },
 				panels: {
@@ -110,6 +112,7 @@ describe("createInitialControllerState", () => {
 			},
 		);
 
+		expect(state.isChromeExpanded).toBe(true);
 		expect(state.stencilLibraryPanel).toEqual({
 			isOpen: true,
 			collapsedSectionIds: ["basic"],

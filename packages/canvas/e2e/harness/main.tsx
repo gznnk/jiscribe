@@ -13,10 +13,10 @@ import { mountPluginHarness } from "../testing-harness";
 // No shipped plugin is registered here: each one owns its e2e suite, and the seven
 // mounted together are covered by apps/canvas-examples.
 
-// The shape library sidebar needs host-declared `stencilLibrarySections` to exist at all,
-// and the toolbar toggle the kit puts at the start of the tools shows only once a section
-// resolves. Core's primitives and the same test-only category are enough, so the specs have
-// both a section of shapes and a category living on the bar and in the sidebar at once.
+// The shape library sidebar is declared as a host would, rather than left to the default
+// one (which ?noStencilLibrary shows). Core's primitives and the same test-only category
+// are enough, so the specs have both a section of shapes and a category living on the bar
+// and in the sidebar at once.
 //
 // The presets sit on the bottom tool bar, as the shipped hosts put them, and the category
 // flyout stays on the top bar, so both bars are under test.

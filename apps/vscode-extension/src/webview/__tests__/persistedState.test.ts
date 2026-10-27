@@ -16,6 +16,7 @@ const makeStateApi = (): VscodeStateApi & { stored: unknown } => ({
 
 const camera: Camera = { minX: -120, minY: 40, zoom: 1.5 };
 const sidebars: CanvasSidebarsState = {
+	isExpanded: true,
 	left: { isOpen: true },
 	right: { isOpen: false },
 	panels: {

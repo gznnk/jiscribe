@@ -6,6 +6,7 @@ import { basicStencilCategory } from "../../../objects/StencilCategory";
 import {
 	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
 	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
@@ -18,17 +19,13 @@ import {
 	type ToolbarResolutionContext,
 } from "../utils/resolveToolbarSections";
 
-const createContext = (
-	hasLibrary: boolean,
-	commandsConfig?: string[],
-): ToolbarResolutionContext => {
+const createContext = (commandsConfig?: string[]): ToolbarResolutionContext => {
 	const registries = createCanvasRegistries(
 		commandsConfig ? { commands: commandsConfig } : undefined,
 	);
 	return {
 		stencil: registries.stencil,
 		command: registries.command,
-		hasLibrary,
 	};
 };
 
@@ -44,7 +41,7 @@ describe("resolveToolbarSections", () => {
 	it("resolves the default bar with only its opening divider dropped", () => {
 		const resolved = resolveToolbarSections(
 			DEFAULT_TOOLBAR_SECTIONS,
-			createContext(true),
+			createContext(),
 		);
 		expect(resolved.map((section) => [section.id, section.align])).toEqual([
 			["history", "start"],
@@ -74,7 +71,7 @@ describe("resolveToolbarSections", () => {
 	it("keeps the tools-first bar intact when everything resolves", () => {
 		const resolved = resolveToolbarSections(
 			FORMER_DEFAULT_SECTIONS,
-			createContext(true),
+			createContext(),
 		);
 		expect(itemTypes(resolved)).toEqual([
 			[
@@ -93,20 +90,6 @@ describe("resolveToolbarSections", () => {
 		]);
 	});
 
-	it("drops the library toggle and its now-leading divider without a library", () => {
-		const resolved = resolveToolbarSections(
-			FORMER_DEFAULT_SECTIONS,
-			createContext(false),
-		);
-		expect(itemTypes(resolved)[0]).toEqual([
-			"stencilPreset",
-			"stencilPreset",
-			"stencilPreset",
-			"stencilPreset",
-			"stencilPreset",
-		]);
-	});
-
 	/**
 	 * The section is nothing but the two commands and the divider that joins them
 	 * to the tools, so switching both off has to take the divider with them rather
@@ -116,7 +99,7 @@ describe("resolveToolbarSections", () => {
 		const resolved = resolveToolbarSections(
 			FORMER_DEFAULT_SECTIONS,
 			// `commands` restricts the registry, which is how a host switches one off.
-			createContext(true, [
+			createContext([
 				"shortcutHelp",
 				"zoomToFit",
 				"zoomIn",
@@ -135,7 +118,7 @@ describe("resolveToolbarSections", () => {
 	it("drops the sidebars switch, and its section, when toggleSidebars is switched off", () => {
 		const resolved = resolveToolbarSections(
 			DEFAULT_TOOLBAR_SECTIONS,
-			createContext(true, ["undo", "redo", "zoomIn"]),
+			createContext(["undo", "redo", "zoomIn"]),
 		);
 		expect(resolved.map((section) => section.id)).toEqual([
 			"history",
@@ -144,24 +127,18 @@ describe("resolveToolbarSections", () => {
 		]);
 	});
 
-	/** The library toggle would open an empty sidebar; the divider stays for the other. */
-	it("keeps only the properties toggle of the per-sidebar toggles without a library", () => {
-		const resolved = resolveToolbarSections(
-			DEFAULT_TOOLBAR_SECTIONS,
-			createContext(false),
-		);
+	/** The library always has something to show (see the `stencilLibrary` prop). */
+	it("keeps the library toggle and the switch, with no library state to consult", () => {
+		const sections: ToolbarSection[] = [
+			DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION,
+			DEFAULT_TOOLBAR_SIDEBARS_SECTION,
+		];
 		expect(
-			itemTypes(
-				resolved.filter((section) => section.id === "per-sidebar-toggles"),
-			),
-		).toEqual([["divider", "propertyPanelToggle"]]);
-	});
-
-	it("keeps the sidebars switch whether or not a library is declared", () => {
-		const sections: ToolbarSection[] = [DEFAULT_TOOLBAR_SIDEBARS_SECTION];
-		expect(
-			itemTypes(resolveToolbarSections(sections, createContext(false))),
-		).toEqual([["sidebarsToggle"]]);
+			itemTypes(resolveToolbarSections(sections, createContext())),
+		).toEqual([
+			["stencilLibraryToggle", "propertyPanelToggle"],
+			["divider", "sidebarsToggle"],
+		]);
 	});
 
 	it("drops a divider closing the whole bar", () => {
@@ -175,7 +152,7 @@ describe("resolveToolbarSections", () => {
 			},
 		];
 		expect(
-			itemTypes(resolveToolbarSections(sections, createContext(true))),
+			itemTypes(resolveToolbarSections(sections, createContext())),
 		).toEqual([["stencilPreset"]]);
 	});
 
@@ -189,7 +166,7 @@ describe("resolveToolbarSections", () => {
 				],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(itemTypes(resolved)).toEqual([["stencilPreset"]]);
 	});
 
@@ -204,10 +181,7 @@ describe("resolveToolbarSections", () => {
 			},
 		];
 		// `commands` restricts the registry, which is how a host switches one off.
-		const resolved = resolveToolbarSections(
-			sections,
-			createContext(true, ["undo"]),
-		);
+		const resolved = resolveToolbarSections(sections, createContext(["undo"]));
 		expect(resolved[0].items).toHaveLength(1);
 	});
 
@@ -218,7 +192,7 @@ describe("resolveToolbarSections", () => {
 				items: [{ type: "stencilCategory", category: basicStencilCategory }],
 			},
 		];
-		const [section] = resolveToolbarSections(sections, createContext(true));
+		const [section] = resolveToolbarSections(sections, createContext());
 		const item = section.items[0];
 		expect(item.type).toBe("stencilCategory");
 		if (item.type === "stencilCategory") {
@@ -241,7 +215,7 @@ describe("resolveToolbarSections", () => {
 				],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(itemTypes(resolved)).toEqual([
 			["stencilPreset", "divider", "stencilPreset"],
 		]);
@@ -270,7 +244,7 @@ describe("resolveToolbarSections", () => {
 				],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(itemTypes(resolved)).toEqual([
 			["slot", "divider"],
 			["divider", "slot"],
@@ -292,7 +266,7 @@ describe("resolveToolbarSections", () => {
 			},
 			...DEFAULT_TOOLBAR_SECTIONS,
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(itemTypes(resolved)).toEqual([
 			["slot", "divider"],
 			["command", "command"],
@@ -320,7 +294,7 @@ describe("resolveToolbarSections", () => {
 				items: [{ type: "divider" }, { type: "slot", id: "late", node: null }],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(itemTypes(resolved)).toEqual([["slot", "divider"], ["slot"]]);
 	});
 
@@ -336,7 +310,7 @@ describe("resolveToolbarSections", () => {
 			{ id: "spacer", items: [{ type: "divider" }] },
 			{ id: "more", items: [{ type: "stencilPreset", presetId: "ellipse" }] },
 		];
-		const resolved = resolveToolbarSections(sections, createContext(true));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(resolved.map((section) => section.id)).toEqual(["tools", "more"]);
 	});
 
@@ -349,11 +323,11 @@ describe("resolveToolbarSections", () => {
 					{ type: "divider" },
 					{ type: "stencilPreset", presetId: "rect" },
 					{ type: "divider" },
-					{ type: "stencilLibraryToggle" },
+					{ type: "command", commandId: "no-such-command", icon: RectIcon },
 				],
 			},
 		];
-		const resolved = resolveToolbarSections(sections, createContext(false));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(itemTypes(resolved)).toEqual([["stencilPreset"]]);
 	});
 
@@ -361,11 +335,14 @@ describe("resolveToolbarSections", () => {
 		const sections: ToolbarSection[] = [
 			{
 				id: "empty",
-				items: [{ type: "divider" }, { type: "stencilLibraryToggle" }],
+				items: [
+					{ type: "divider" },
+					{ type: "command", commandId: "no-such-command", icon: RectIcon },
+				],
 			},
 			{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
 		];
-		const resolved = resolveToolbarSections(sections, createContext(false));
+		const resolved = resolveToolbarSections(sections, createContext());
 		expect(resolved.map((section) => section.id)).toEqual(["tools"]);
 	});
 
@@ -373,7 +350,7 @@ describe("resolveToolbarSections", () => {
 		const sections: ToolbarSection[] = [
 			{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
 		];
-		expect(resolveToolbarSections(sections, createContext(true))[0].align).toBe(
+		expect(resolveToolbarSections(sections, createContext())[0].align).toBe(
 			"start",
 		);
 	});
@@ -395,7 +372,7 @@ describe("resolveToolbarSections", () => {
 			},
 		];
 		expect(
-			resolveToolbarSections(sections, createContext(true)).map(
+			resolveToolbarSections(sections, createContext()).map(
 				(section) => section.collapsedAlign,
 			),
 		).toEqual(["start", "end", "hidden"]);
@@ -407,7 +384,7 @@ describe("resolveToolbarSections", () => {
 			{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
 			{ id: "tools", items: [{ type: "stencilPreset", presetId: "ellipse" }] },
 		];
-		expect(() => resolveToolbarSections(sections, createContext(true))).toThrow(
+		expect(() => resolveToolbarSections(sections, createContext())).toThrow(
 			/"tools"/,
 		);
 	});

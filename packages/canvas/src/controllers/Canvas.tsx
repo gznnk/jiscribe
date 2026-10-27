@@ -53,7 +53,6 @@ import { usePropertyUpdaters } from "./hooks/usePropertyUpdaters";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSnapshotRenderScope } from "./hooks/useSnapshotRenderScope";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
-import { useSyncStencilLibraryAvailability } from "./hooks/useSyncStencilLibraryAvailability";
 import { useTextEditSession } from "./hooks/useTextEditSession";
 import { useVisibleObjectIds } from "./hooks/useVisibleObjectIds";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
@@ -94,7 +93,10 @@ import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
-import { isAnySidebarOpen } from "./utils/sidebarsState";
+import {
+	isPropertyPanelShown,
+	isStencilLibraryPanelShown,
+} from "./utils/sidebarsState";
 
 type CanvasProps = {
 	// ── Document ──
@@ -143,11 +145,12 @@ type CanvasProps = {
 	 */
 	onViewportChange?: (viewport: Camera) => void;
 	/**
-	 * Called when either sidebar opens, closes, or has a section collapsed, with
-	 * both edges and every panel's state each time. Read-only on the same terms
-	 * as `onViewportChange`: persist it and hand it back through
-	 * `initialConfig.sidebars` at the next mount, but do not drive the panels
-	 * from it — they are the user's, and there is no controlled prop.
+	 * Called when the chrome expands or collapses, or either sidebar opens,
+	 * closes, or has a section collapsed, with the form, both edges and every
+	 * panel's state each time. Read-only on the same terms as
+	 * `onViewportChange`: persist it and hand it back through
+	 * `initialConfig.sidebars` at the next mount, but do not drive the chrome
+	 * from it — it is the user's, and there is no controlled prop.
 	 */
 	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void;
 
@@ -256,8 +259,9 @@ type CanvasProps = {
 		 * meant to keep the far right. A host pinning presets here as well hides
 		 * the bottom bar, or each preset shows twice.
 		 *
-		 * While either sidebar is open the sections make one full-width bar above
-		 * the canvas; while both are closed, two pills floating over its top
+		 * While the chrome is expanded (see `CanvasSidebarsState.isExpanded`) the
+		 * sections make one full-width bar above the canvas, whether or not a
+		 * sidebar is open; while it is collapsed, two pills floating over its top
 		 * corners, which the canvas then fills to the top. Each section goes on
 		 * the same side as on the full bar unless its `collapsedAlign` says
 		 * otherwise, `"hidden"` hiding it.
@@ -268,25 +272,29 @@ type CanvasProps = {
 	 * The bottom tool bar: a floating bar centred over the canvas at its bottom
 	 * edge, holding pinned presets (click to arm or place, drag to place, as on
 	 * the top bar) and an "Other shapes" button that is a placeholder for now and
-	 * does nothing. It covers the canvas rather than shrinking it. While either
-	 * sidebar is open it is hidden, the shape library holding the shapes; with
-	 * no `stencilLibrary` declared it always shows. Omit for the
+	 * does nothing. It covers the canvas rather than shrinking it. It shows
+	 * while the chrome is collapsed and is hidden while it is expanded (see
+	 * `CanvasSidebarsState.isExpanded`), open sidebars or not, the shape library
+	 * then holding the shapes. Omit for the
 	 * default, shown with `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`; see
 	 * {@link BottomToolbarOptions}. An inline object literal defeats `<Canvas>`'s
 	 * memo; `useMemo` it.
 	 */
 	bottomToolbar?: BottomToolbarOptions;
 	/**
-	 * The shape library sidebar. Omit and neither the sidebar nor its toolbar
-	 * toggle is rendered.
+	 * The shape library sidebar. Omit for the default library: one section,
+	 * headed by `messages.stencilLibraryAllShapes`, listing the first few
+	 * dozen registered presets in registration order and reaching every other
+	 * one through the sidebar's search.
 	 */
 	stencilLibrary?: {
 		/**
 		 * Sections in display order. Each section lists its presets by id; an id
 		 * naming no registered preset is skipped and a section left empty is
-		 * dropped. Two sections sharing an `id`, or one section naming the same
-		 * preset id twice, throws rather than rendering a section or an item that
-		 * cannot be told from its twin.
+		 * dropped; an empty or wholly unresolved list draws an empty sidebar.
+		 * Two sections sharing an `id`, or one section naming the same preset id
+		 * twice, throws rather than rendering a section or an item that cannot be
+		 * told from its twin.
 		 */
 		sections: StencilCategory[];
 	};
@@ -448,6 +456,7 @@ const CanvasComponent = ({
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	useNotifySidebarsChange(
+		state.isChromeExpanded,
 		state.stencilLibraryPanel,
 		state.propertyPanel,
 		onSidebarsChange,
@@ -480,27 +489,23 @@ const CanvasComponent = ({
 	const { librarySections, resolveLibraryPreset } = useResolvedStencilLibrary(
 		stencilLibrary?.sections,
 		registries,
+		mergedMessages,
+		locale,
 	);
-	// One answer for the bar's library toggle, the panel's mount, the toolbar's
-	// form, the bottom bar's mount and, through the reducer, the sidebars switch.
-	const hasStencilLibrary = librarySections.length > 0;
-	useSyncStencilLibraryAvailability(hasStencilLibrary, dispatch);
 
+	// The chrome's form decides the toolbar's form, the bottom bar and the
+	// ObjectMenu; a sidebar is drawn only within the expanded form. The form and
+	// both panels are reducer state from the first render on (seeded from
+	// `initialConfig.sidebars`), so the first measurement already sees the bar
+	// and the panels a restored state mounts with.
+	const { isChromeExpanded } = state;
 	// Both sidebars take their width out of the viewport, and the full-width
-	// toolbar its height while either is open, so any of them coming or going has
-	// to be re-measured before the next paint. Whether both sidebars count as
-	// closed (the toolbar's form, and whether the bottom bar shows) is read
-	// with the local `hasStencilLibrary`, as the library panel mounts from: the
-	// reducer's copy arrives a commit later, and a first measurement taken
-	// without the bar would turn its arrival into a camera shift.
-	const areBothSidebarsClosed = !isAnySidebarOpen({
-		...state,
-		hasStencilLibrary,
-	});
+	// toolbar its height while expanded, so any of them coming or going has to
+	// be re-measured before the next paint.
 	useContainerResize(
 		canvasRef,
 		dispatch,
-		`${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}:${areBothSidebarsClosed}`,
+		`${isStencilLibraryPanelShown(state)}:${isPropertyPanelShown(state)}:${isChromeExpanded}`,
 	);
 
 	// The document's own framing intent, applied only where the host expressed
@@ -661,10 +666,9 @@ const CanvasComponent = ({
 					openCategoryId={state.stencilLibraryOpenCategory}
 					zoom={state.viewport.zoom}
 					sections={toolbarSections}
-					hasLibrary={hasStencilLibrary}
-					isLibraryOpen={state.stencilLibraryPanel.isOpen}
-					isPropertyPanelOpen={state.propertyPanel.isOpen}
-					isAnySidebarOpen={!areBothSidebarsClosed}
+					isStencilLibraryPanelShown={isStencilLibraryPanelShown(state)}
+					isPropertyPanelShown={isPropertyPanelShown(state)}
+					isChromeExpanded={isChromeExpanded}
 				/>
 			</ToolbarCommandStateContext>
 		) : null;
@@ -696,9 +700,9 @@ const CanvasComponent = ({
 				{...pointerHandlers}
 			>
 				{/* Expanded, the full-width bar takes its row above the body */}
-				{!areBothSidebarsClosed && toolbarElement}
+				{isChromeExpanded && toolbarElement}
 				<CanvasBody>
-					{state.stencilLibraryPanel.isOpen && hasStencilLibrary && (
+					{isStencilLibraryPanelShown(state) && (
 						<StencilLibraryPanel
 							sections={librarySections}
 							collapsedSectionIds={
@@ -766,16 +770,15 @@ const CanvasComponent = ({
 						    viewport, so it covers the canvas rather than shrinking it;
 						    before the overlay, so the context menu and the toast draw over
 						    it */}
-						{bottomToolbarPresets !== null &&
-							(areBothSidebarsClosed || !hasStencilLibrary) && (
-								<BottomToolbar
-									presets={bottomToolbarPresets}
-									activePresetId={drawingPresetId}
-								/>
-							)}
+						{bottomToolbarPresets !== null && !isChromeExpanded && (
+							<BottomToolbar
+								presets={bottomToolbarPresets}
+								activePresetId={drawingPresetId}
+							/>
+						)}
 						{/* Collapsed, the bar's two pills float over the top corners,
 						    placed here for the same reasons as the bottom bar */}
-						{areBothSidebarsClosed && toolbarElement}
+						{!isChromeExpanded && toolbarElement}
 						<ViewportOverlay>
 							<ErrorToast notification={errorNotification} />
 							<ContextMenu
@@ -785,7 +788,7 @@ const CanvasComponent = ({
 							/>
 						</ViewportOverlay>
 					</Viewport>
-					{state.propertyPanel.isOpen && (
+					{isPropertyPanelShown(state) && (
 						<PropertyPanel
 							canvasState={propertyPanelState}
 							onStyleIntent={handleStyleIntent}

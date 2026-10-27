@@ -1,17 +1,17 @@
-import { isAnySidebarOpen } from "../../utils/sidebarsState";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
- * Opens both sidebars together, or closes both while they are expanded (any
- * one of them open, see {@link isAnySidebarOpen}), so a press never leaves one
- * open and the other closed. Without a shape library declared
- * (`hasStencilLibrary` false) the library's `isOpen` is left as it is: there is
- * no panel to open, and `onSidebarsChange` would report one.
+ * Switches the chrome between its two forms (`isChromeExpanded`), the only
+ * command that collapses it.
+ *
+ * Collapsing leaves each panel's `isOpen` as it is, so expanding again brings
+ * back the panels the user left open. Expanding with both closed (nothing to
+ * bring back) opens both.
  *
  * The toolbar's `sidebarsToggle` runs it (`data-action="command:toggleSidebars"`).
- * The per-edge `toggleStencilLibrary` / `togglePropertyPanel` stay as they are,
- * so the panels' own close buttons and the per-edge toolbar toggles still move
- * one edge at a time. No keyboard shortcut and a view command, like those two.
+ * The per-edge `toggleStencilLibrary` / `togglePropertyPanel` and the panels'
+ * own close buttons move one panel within the expanded form. No keyboard
+ * shortcut and a view command, like those two.
  */
 export const ToggleSidebarsCommand: ExecutableCommand = {
 	id: "toggleSidebars",
@@ -21,14 +21,25 @@ export const ToggleSidebarsCommand: ExecutableCommand = {
 	canExecute: () => true,
 
 	execute: (state) => {
-		const isOpen = !isAnySidebarOpen(state);
+		// A toolbar press dismisses the category flyout, like every other one.
+		if (state.isChromeExpanded) {
+			return {
+				...state,
+				isChromeExpanded: false,
+				stencilLibraryOpenCategory: null,
+			};
+		}
+		const isAnyPanelOpen =
+			state.stencilLibraryPanel.isOpen || state.propertyPanel.isOpen;
 		return {
 			...state,
-			stencilLibraryPanel: state.hasStencilLibrary
-				? { ...state.stencilLibraryPanel, isOpen }
-				: state.stencilLibraryPanel,
-			propertyPanel: { ...state.propertyPanel, isOpen },
-			// A toolbar press dismisses the category flyout, like every other one.
+			isChromeExpanded: true,
+			stencilLibraryPanel: isAnyPanelOpen
+				? state.stencilLibraryPanel
+				: { ...state.stencilLibraryPanel, isOpen: true },
+			propertyPanel: isAnyPanelOpen
+				? state.propertyPanel
+				: { ...state.propertyPanel, isOpen: true },
 			stencilLibraryOpenCategory: null,
 		};
 	},

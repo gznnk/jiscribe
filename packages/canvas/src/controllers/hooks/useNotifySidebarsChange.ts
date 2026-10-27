@@ -10,35 +10,36 @@ import type {
 import { resolveSidebarsState } from "../utils/sidebarsState";
 
 /**
- * Notifies the host when either sidebar opens, closes, or has a section
- * collapsed or expanded.
+ * Notifies the host when the chrome expands or collapses, or either sidebar
+ * opens, closes, or has a section collapsed or expanded.
  *
- * Both sidebars are reported together: a host persisting the chrome wants a
- * single value to hand back through `initialConfig.sidebars`, so a change to
- * either one delivers the pair.
+ * All of it is reported together: a host persisting the chrome wants a single
+ * value to hand back through `initialConfig.sidebars`, so any change delivers
+ * the whole state.
  *
- * Comparison is by value (each edge's `isOpen` plus the ids of each panel's
- * collapsed sections in order), not by reference: a panel that ends up where it
- * already was must not be reported. The callback goes through a ref so a host
+ * Comparison is by value (the form, each edge's `isOpen` plus the ids of each
+ * panel's collapsed sections in order), not by reference: a panel that ends up
+ * where it already was must not be reported. The callback goes through a ref so a host
  * passing a new function each render cannot re-fire the effect.
  *
  * Read-only by contract: the host must not feed the reported state back in to
- * drive the panels (there is no controlled prop). The panels are moved by the
- * user, by the `toggleStencilLibrary` / `togglePropertyPanel` / `toggleSidebars`
- * commands, and by
- * nothing else.
+ * drive the chrome (there is no controlled prop). It is moved by the user, by
+ * the `toggleStencilLibrary` / `togglePropertyPanel` / `toggleSidebars`
+ * commands, and by nothing else.
  *
  * The mount render establishes the baseline (the seeded or default panel state)
  * and does not notify; the host assumes what it passed in until the first
  * change.
  *
+ * @param isChromeExpanded - Live form of the chrome, reported as `isExpanded`
  * @param stencilLibraryPanel - Live state of the shape library panel, reported
  *   as the left edge
  * @param propertyPanel - Live state of the properties panel, reported as the
  *   right edge
- * @param onSidebarsChange - Callback invoked with both sidebars on any change
+ * @param onSidebarsChange - Callback invoked with the form and both sidebars on any change
  */
 export const useNotifySidebarsChange = (
+	isChromeExpanded: boolean,
 	stencilLibraryPanel: StencilLibraryPanelState,
 	propertyPanel: PropertyPanelState,
 	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void,
@@ -49,7 +50,11 @@ export const useNotifySidebarsChange = (
 	// baseline so the starting panel state is not delivered as a change.
 	const prevSidebarsRef = useRef<CanvasSidebarsState | null>(null);
 	useEffect(() => {
-		const sidebars = resolveSidebarsState(stencilLibraryPanel, propertyPanel);
+		const sidebars = resolveSidebarsState({
+			isChromeExpanded,
+			stencilLibraryPanel,
+			propertyPanel,
+		});
 		const prevSidebars = prevSidebarsRef.current;
 		if (prevSidebars !== null && isSameSidebarsState(prevSidebars, sidebars)) {
 			return;
@@ -60,14 +65,20 @@ export const useNotifySidebarsChange = (
 			return;
 		}
 		onSidebarsChangeRef.current?.(sidebars);
-	}, [stencilLibraryPanel, propertyPanel, onSidebarsChangeRef]);
+	}, [
+		isChromeExpanded,
+		stencilLibraryPanel,
+		propertyPanel,
+		onSidebarsChangeRef,
+	]);
 };
 
-/** True when both edges and every panel of `a` are in the same state as those of `b`. */
+/** True when the form, both edges and every panel of `a` are in the same state as those of `b`. */
 const isSameSidebarsState = (
 	a: CanvasSidebarsState,
 	b: CanvasSidebarsState,
 ): boolean =>
+	a.isExpanded === b.isExpanded &&
 	a.left.isOpen === b.left.isOpen &&
 	a.right.isOpen === b.right.isOpen &&
 	(Object.keys(a.panels) as SidebarPanelId[]).every((panelId) =>

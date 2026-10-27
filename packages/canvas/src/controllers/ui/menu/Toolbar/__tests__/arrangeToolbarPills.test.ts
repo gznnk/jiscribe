@@ -17,7 +17,6 @@ const arrange = (sections: ToolbarSection[]): ToolbarPills => {
 		resolveToolbarSections(sections, {
 			stencil: registries.stencil,
 			command: registries.command,
-			hasLibrary: true,
 		}),
 	);
 };

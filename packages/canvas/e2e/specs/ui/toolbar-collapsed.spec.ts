@@ -5,14 +5,13 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * The two forms of the top toolbar, switched by whether a sidebar is open.
+ * The two forms of the top toolbar, which follow the chrome's form alone.
  *
- * - Collapsed (both sidebars closed), the bar is two pills floating over the
- *   canvas's top corners, each section on the same side as on the full bar;
- *   the help section is hidden, and the canvas area reaches the top of the
- *   root.
- * - Expanded (either sidebar open), the full-width bar is back above the
- *   canvas, help included, and the pills are gone.
+ * - Collapsed, the bar is two pills floating over the canvas's top corners,
+ *   each section on the same side as on the full bar; the help section is
+ *   hidden, and the canvas area reaches the top of the root.
+ * - Expanded, the full-width bar is back above the canvas, help included, and
+ *   the pills are gone — with a sidebar open or not.
  * - Switching forms moves the canvas area's top edge, and the drawing stays put
  *   on screen across it, as it does across the shape library's left edge.
  *
@@ -104,7 +103,7 @@ test.describe("collapsed toolbar", () => {
 		expect(endBox.y - viewport.y).toBe(inset);
 	});
 
-	test("turns back into the full-width bar with help while a sidebar is open, and into pills again", async ({
+	test("turns back into the full-width bar with help while expanded, and into pills again", async ({
 		canvas,
 	}) => {
 		const toolbar = canvas.page.locator(selectors.toolbar);
@@ -143,12 +142,13 @@ test.describe("collapsed toolbar", () => {
 	});
 
 	/**
-	 * A host restoring the shape library alone open (as the web editor does)
-	 * mounts straight into the full-width bar. Its first measurement has to see
-	 * that bar already, or the camera is compensated for a toolbar row that was
-	 * never on screen without it and the restored view slides down.
+	 * A host restoring the expanded chrome with the shape library alone open (as
+	 * the web editor does) mounts straight into the full-width bar. Its first
+	 * measurement has to see that bar already, or the camera is compensated for a
+	 * toolbar row that was never on screen without it and the restored view
+	 * slides down.
 	 */
-	test("mounts with the shape library alone open without moving the camera", async ({
+	test("mounts expanded with the shape library alone open without moving the camera", async ({
 		canvas,
 	}) => {
 		const collapsedViewBox = await canvas.getViewBox();
@@ -170,9 +170,10 @@ test.describe("collapsed toolbar", () => {
 	});
 
 	/**
-	 * The properties sidebar takes no space on the left, so opening it alone
-	 * moves the canvas area's top edge only: the case the top-edge compensation
-	 * carries by itself.
+	 * The properties sidebar takes no space on the left, so expanding with it
+	 * alone open moves the canvas area's top edge only: the case the top-edge
+	 * compensation carries by itself. Closing it from its × keeps the bar, and
+	 * the switch then takes the bar away.
 	 */
 	test("keeps the drawing in place as the full-width bar comes and goes", async ({
 		canvas,
@@ -189,6 +190,11 @@ test.describe("collapsed toolbar", () => {
 		expect(await screenBox(shape)).toEqual(drawnBox);
 
 		await canvas.closePropertyPanel();
+		await expect(canvas.page.locator(selectors.toolbar)).toHaveCount(1);
+		expect(await screenBox(shape)).toEqual(drawnBox);
+
+		await canvas.toggleSidebars();
+		await expect(canvas.page.locator(selectors.toolbar)).toHaveCount(2);
 		expect(await screenBox(shape)).toEqual(drawnBox);
 	});
 });

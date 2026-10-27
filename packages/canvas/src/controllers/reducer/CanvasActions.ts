@@ -389,18 +389,6 @@ export type CloseModalAction = {
 };
 
 /**
- * Hands the reducer whether a shape library can be drawn
- * (`CanvasControllerState.hasStencilLibrary`). Dispatched by Canvas whenever
- * the resolved `stencilLibrary.sections` go from empty to not or back, since
- * the prop is live and the pure command tree cannot see it.
- */
-export type SetStencilLibraryAvailabilityAction = {
-	type: "SET_STENCIL_LIBRARY_AVAILABILITY";
-	/** Whether at least one library section resolved. */
-	hasStencilLibrary: boolean;
-};
-
-/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -424,5 +412,4 @@ export type CanvasAction =
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction
-	| CloseModalAction
-	| SetStencilLibraryAvailabilityAction;
+	| CloseModalAction;

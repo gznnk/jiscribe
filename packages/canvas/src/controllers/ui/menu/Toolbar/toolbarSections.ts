@@ -29,10 +29,11 @@ import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../BottomToolbar/bottomToolba
  *   can express a value.
  * - `stencilLibraryToggle` / `propertyPanelToggle`: the two sidebar toggles.
  *   Engine-owned for the same reason: their pressed look comes from reducer
- *   state. The library toggle is dropped when the host declared no library.
- * - `sidebarsToggle`: one switch for both sidebars (the `toggleSidebars`
- *   command), pressed while either is open. Dropped when the host switched the
- *   command off via `CanvasConfig.commands`.
+ *   state (pressed while their panel is drawn). Pressed while the chrome is
+ *   collapsed, each expands it with its own panel alone open.
+ * - `sidebarsToggle`: the switch between the chrome's two forms (the
+ *   `toggleSidebars` command), pressed while expanded. Dropped when the host
+ *   switched the command off via `CanvasConfig.commands`.
  * - `divider`: a hairline. Dividers left stranded or doubled by the drops
  *   above, or by neighbouring sections, are cleaned away (see
  *   `resolveToolbarSections`).
@@ -71,10 +72,10 @@ export type ToolbarItem =
  * Hosts replace the whole array via the `toolbar.sections` Canvas prop; the
  * default bar is itself such an array ({@link DEFAULT_TOOLBAR_SECTIONS}).
  *
- * The bar takes two forms. While either sidebar is open it is the full-width
- * bar above the canvas, laid out by `align`; while both are closed it splits
- * into two pills floating over the canvas's top corners along the same sides,
- * unless a section's `collapsedAlign` says otherwise.
+ * The bar takes the chrome's two forms. Expanded, it is the full-width bar
+ * above the canvas, laid out by `align`; collapsed, it splits into two pills
+ * floating over the canvas's top corners along the same sides, unless a
+ * section's `collapsedAlign` says otherwise.
  */
 export type ToolbarSection = {
 	/** Keys the rendered section; must be unique across the array. */
@@ -86,9 +87,9 @@ export type ToolbarSection = {
 	 */
 	align?: "start" | "end";
 	/**
-	 * Which pill the section goes into while the sidebars are collapsed:
+	 * Which pill the section goes into while the chrome is collapsed:
 	 * `"start"` the top-left one, `"end"` the top-right one, `"hidden"` neither
-	 * (the section is not drawn until a sidebar opens). Omitted = the same as
+	 * (the section is not drawn until the chrome expands). Omitted = the same as
 	 * `align`. Within a pill sections are drawn in array order with exactly one
 	 * divider between neighbours, whatever dividers they declare at their own
 	 * ends; a pill left with no section is not drawn.
@@ -198,10 +199,9 @@ export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
 /**
  * The toggles for one sidebar each, the shape library's then the properties',
  * just before the switch for both ({@link DEFAULT_TOOLBAR_SIDEBARS_SECTION}).
- * Each shows pressed while its own panel is open; the library's is dropped
- * when the host declared no library. Hidden while the sidebars are collapsed,
- * where the switch alone opens them. Its leading divider separates it from
- * whatever the host packed against the end before it.
+ * Each shows pressed while its own panel is open. Hidden while the chrome is
+ * collapsed, where the switch alone expands it. Its leading divider separates
+ * it from whatever the host packed against the end before it.
  */
 export const DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION: ToolbarSection = {
 	id: "per-sidebar-toggles",
@@ -215,10 +215,10 @@ export const DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION: ToolbarSection = {
 };
 
 /**
- * The switch for both sidebars, alone at the far right: it opens the shape
- * library and the properties sidebar together and closes both again (see the
- * `toggleSidebars` command). Its leading divider separates it from whatever the
- * host packed against the end before it.
+ * The switch for both sidebars, alone at the far right: it expands the chrome
+ * with the sidebars the user last had open (both, when that was neither) and
+ * collapses it again (see the `toggleSidebars` command). Its leading divider
+ * separates it from whatever the host packed against the end before it.
  */
 export const DEFAULT_TOOLBAR_SIDEBARS_SECTION: ToolbarSection = {
 	id: "sidebars",

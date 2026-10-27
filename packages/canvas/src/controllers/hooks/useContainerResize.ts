@@ -60,7 +60,7 @@ function measureOffset(container: HTMLElement): MeasuredOffset | null {
  * @param containerRef - Reference to the container element to observe
  * @param dispatch - The Canvas reducer's dispatch
  * @param layoutKey - A value whose change means React itself re-laid out the
- *   container (the open flags of the two sidebars and the toolbar's form).
+ *   container (whether each sidebar is shown, and the chrome's form).
  *   Compared by identity, so a key covering several flags has to be a primitive
  *   rather than an object; the container is re-measured synchronously after
  *   every commit in which it differs.
@@ -70,11 +70,10 @@ function measureOffset(container: HTMLElement): MeasuredOffset | null {
  * const containerRef = useRef<HTMLDivElement>(null);
  * const [state, dispatch] = useCanvasReducer(canvasDoc);
  *
- * const { stencilLibraryPanel, propertyPanel } = state;
  * useContainerResize(
  *   containerRef,
  *   dispatch,
- *   `${stencilLibraryPanel.isOpen}:${propertyPanel.isOpen}:${areBothSidebarsClosed}`,
+ *   `${isStencilLibraryPanelShown(state)}:${isPropertyPanelShown(state)}:${state.isChromeExpanded}`,
  * );
  * ```
  */

@@ -29,7 +29,7 @@ export type ResolvedToolbarSection = {
 	id: string;
 	/** End of the full-width bar the section is packed against. */
 	align: "start" | "end";
-	/** Pill the section goes into while the sidebars are collapsed. */
+	/** Pill the section goes into while the chrome is collapsed. */
 	collapsedAlign: "start" | "end" | "hidden";
 	items: ResolvedToolbarItem[];
 };
@@ -45,12 +45,6 @@ export type ToolbarResolutionContext = {
 	 * itself, so the two never disagree.
 	 */
 	command: CommandRegistry;
-	/**
-	 * Whether the host's `stencilLibrary.sections` resolved to at least one
-	 * section. False drops every `stencilLibraryToggle` item: the toggle would
-	 * open an empty sidebar.
-	 */
-	hasLibrary: boolean;
 };
 
 /**
@@ -169,8 +163,6 @@ const resolveToolbarItem = (
 						},
 					]
 				: [];
-		case "stencilLibraryToggle":
-			return context.hasLibrary ? [item] : [];
 		case "sidebarsToggle":
 			return context.command.get(ToggleSidebarsCommand.id) ? [item] : [];
 		default:

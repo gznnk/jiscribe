@@ -428,8 +428,9 @@ library sidebar, and optionally `toolbar.sections`, where wrapped as
 section in `standardStencilLibrarySections` (`packages/standard-shapes`) and pins
 only presets, on the bottom tool bar (`standardBottomToolbarPresetIds`). Plugin
 categories are not part of `DEFAULT_TOOLBAR_SECTIONS`, so a host that uses the
-default bar unchanged and declares no library will not show the shape until it
-adds the category.
+default bar unchanged and declares no library finds the shape only in the
+default library, among every other registered preset, until it adds the
+category.
 
 A category with more presets than it can list (an icon set with hundreds of
 glyphs) lists a curated few in `presetIds`, registers every preset as a stencil all

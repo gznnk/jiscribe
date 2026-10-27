@@ -224,7 +224,6 @@ describe("the sections of the default bar", () => {
 		const resolved = resolveToolbarSections(DEFAULT_TOOLBAR_SECTIONS, {
 			stencil,
 			command,
-			hasLibrary: true,
 		});
 		expect(
 			resolved.map((section) => [section.id, section.collapsedAlign]),

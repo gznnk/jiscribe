@@ -13,7 +13,7 @@ type ViewportProps = {
 
 /**
  * Outermost container that takes up full available space and stacks the
- * full-width toolbar (while either sidebar is open) above the body row (shape
+ * full-width toolbar (while the chrome is expanded) above the body row (shape
  * library sidebar + canvas viewport + properties sidebar, see CanvasBody) as a
  * flex column.
  *

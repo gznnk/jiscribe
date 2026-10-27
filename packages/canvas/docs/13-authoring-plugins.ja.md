@@ -412,7 +412,8 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 （`packages/standard-shapes`）でサイドバーのセクションとして並べ、プリセットだけを
 下のツールバーにピン留めしている（`standardBottomToolbarPresetIds`）。プラグインの
 カテゴリは `DEFAULT_TOOLBAR_SECTIONS` に含まれないので、既定のバーをそのまま使い
-library も宣言しないホストでは、カテゴリを足すまでその図形は出てこない。
+library も宣言しないホストでは、カテゴリを足すまでその図形は既定のライブラリに
+登録済みの全プリセットと並んで出るだけになる。
 
 並べきれない数のプリセットを持つカテゴリ（数百のグリフを抱えるアイコンセット）は、
 `presetIds` には選んだ数個だけを並べ、プリセットは全てステンシルとして登録したうえで

@@ -2,6 +2,7 @@ import { useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
+import { isPropertyPanelShown } from "../utils/sidebarsState";
 
 /**
  * Everything the properties sidebar reads, as one flat list to compare entry by
@@ -50,7 +51,7 @@ const isSameKey = (previous: unknown[], next: unknown[]): boolean =>
  * see `readPropertyPanelKey` for the reads it does make.
  *
  * @param state - The state the sidebar would otherwise be given: the draft-grafted one, so a keystroke mid-edit moves the selected object's reference and reaches the rows
- * @returns `state` itself on a change the sidebar shows, and whenever the sidebar is closed; the previously returned state otherwise
+ * @returns `state` itself on a change the sidebar shows, and whenever the sidebar is not shown; the previously returned state otherwise
  */
 export const usePropertyPanelState = (
 	state: CanvasControllerState,
@@ -59,10 +60,11 @@ export const usePropertyPanelState = (
 		key: unknown[];
 		state: CanvasControllerState;
 	} | null>(null);
-	// The sidebar is mounted only while it is open (Canvas), so a closed one reads
-	// nothing: no key is built, which a drag of a large selection would otherwise
-	// pay on every frame, and opening it latches the state of that moment.
-	if (!state.propertyPanel.isOpen) {
+	// The sidebar is mounted only while it is shown (Canvas), so a hidden one
+	// reads nothing: no key is built, which a drag of a large selection would
+	// otherwise pay on every frame, and showing it latches the state of that
+	// moment.
+	if (!isPropertyPanelShown(state)) {
 		latchedRef.current = null;
 		return state;
 	}

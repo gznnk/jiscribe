@@ -168,15 +168,21 @@ export const StencilLibrarySectionLabel = styled.span`
 	white-space: nowrap;
 `;
 
+/** Number of button-wide columns in {@link StencilLibraryPanelGrid}. */
+export const STENCIL_LIBRARY_PANEL_GRID_COLUMNS = 6;
+
 /**
  * Grid of stencil buttons under a section header (and of the flat search
- * results). Six button-wide columns rather than wrapping, so the items of every
- * section line up down the panel, spread across the inset with the free space
- * between them.
+ * results). A fixed number of button-wide columns rather than wrapping, so the
+ * items of every section line up down the panel, spread across the inset with
+ * the free space between them.
  */
 export const StencilLibraryPanelGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(6, ${STENCIL_BUTTON_SIZE}px);
+	grid-template-columns: repeat(
+		${STENCIL_LIBRARY_PANEL_GRID_COLUMNS},
+		${STENCIL_BUTTON_SIZE}px
+	);
 	justify-content: space-between;
 	gap: 2px;
 	/* The list reserves the scrollbar's gutter on the right, so the end padding

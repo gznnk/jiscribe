@@ -18,6 +18,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	stencilLibraryMoreMatches:
 		"ほかにも一致する図形があります。語を絞ってください",
 	stencilLibraryMoreViaSearch: "ほかの図形を探す",
+	stencilLibraryAllShapes: "すべての図形",
 
 	propertyPanelTitle: "プロパティ",
 	propertyPanelClose: "閉じる",

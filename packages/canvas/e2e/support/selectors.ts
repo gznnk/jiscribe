@@ -79,17 +79,17 @@ export const selectors = {
 		`${TOOLBAR} button[title="${tool}"], ${BOTTOM_TOOLBAR} button[title="${tool}"]`,
 
 	/**
-	 * The toolbar itself: the full-width bar while either sidebar is open, the
-	 * only element of it carrying data-kind / data-id. While both are closed it
-	 * is two pills instead, each carrying the same pair, so this matches both of
-	 * them; scope to one with `toolbarPill`.
+	 * The toolbar itself: the full-width bar while the chrome is expanded, the
+	 * only element of it carrying data-kind / data-id. While collapsed it is two
+	 * pills instead, each carrying the same pair, so this matches both of them;
+	 * scope to one with `toolbarPill`.
 	 */
 	toolbar: TOOLBAR,
 
 	/**
-	 * One of the two pills the toolbar collapses into while both sidebars are
-	 * closed, the top-left (`"start"`) or top-right (`"end"`) one. Absent while a
-	 * sidebar is open, and for a pill no section goes into.
+	 * One of the two pills the toolbar collapses into while the chrome is
+	 * collapsed, the top-left (`"start"`) or top-right (`"end"`) one. Absent
+	 * while expanded, and for a pill no section goes into.
 	 */
 	toolbarPill: (edge: "start" | "end") =>
 		`${TOOLBAR}[data-testid="toolbar-pill:${edge}"]`,
@@ -132,10 +132,9 @@ export const selectors = {
 		`${TOOLBAR} [data-action="item:${presetId}"], ${BOTTOM_TOOLBAR} [data-action="item:${presetId}"]`,
 
 	/**
-	 * Toolbar toggle that opens and closes the shape library sidebar. Present only
-	 * when the host declared `stencilLibrary.sections` with something in it, and
-	 * carrying the open state on aria-expanded. Written as a descendant selector for
-	 * the same reason as toolbarCommand.
+	 * Toolbar toggle that opens and closes the shape library sidebar, carrying
+	 * whether the panel is drawn on aria-expanded. Written as a descendant
+	 * selector for the same reason as toolbarCommand.
 	 */
 	stencilLibraryToggle: `${TOOLBAR} [data-action="command:toggleStencilLibrary"]`,
 
@@ -167,9 +166,9 @@ export const selectors = {
 	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
 
 	/**
-	 * Toolbar switch that opens both sidebars together and closes both again,
-	 * carrying the expanded state (either sidebar open) on aria-expanded. Written
-	 * as a descendant selector for the same reason as toolbarCommand.
+	 * Toolbar switch between the chrome's two forms, carrying the form (expanded
+	 * or collapsed) on aria-expanded. Written as a descendant selector for the
+	 * same reason as toolbarCommand.
 	 */
 	sidebarsToggle: `${TOOLBAR} [data-action="command:toggleSidebars"]`,
 

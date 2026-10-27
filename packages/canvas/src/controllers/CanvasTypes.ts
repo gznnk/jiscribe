@@ -535,7 +535,12 @@ export type ScrollBoundsConfig = {
 
 /** State of the shape library sidebar; see CanvasControllerState.stencilLibraryPanel. */
 export type StencilLibraryPanelState = {
-	/** Whether the panel is open. Toggled by the toolbar `…` button and the panel's own close button. */
+	/**
+	 * Whether the panel is open within the expanded chrome: it is drawn only
+	 * while `CanvasControllerState.isChromeExpanded` is also true, and kept as it
+	 * is while collapsed. Written by the `toggleStencilLibrary` /
+	 * `toggleSidebars` commands and the panel's own close button.
+	 */
 	isOpen: boolean;
 	/**
 	 * Ids of the collapsed sections; every section not listed is expanded, so the
@@ -546,7 +551,12 @@ export type StencilLibraryPanelState = {
 
 /** State of the properties sidebar; see CanvasControllerState.propertyPanel. */
 export type PropertyPanelState = {
-	/** Whether the panel is open. Toggled by the toolbar button and the panel's own close button. */
+	/**
+	 * Whether the panel is open within the expanded chrome: it is drawn only
+	 * while `CanvasControllerState.isChromeExpanded` is also true, and kept as it
+	 * is while collapsed. Written by the `togglePropertyPanel` (the toolbar
+	 * toggle and the panel's own close button) / `toggleSidebars` commands.
+	 */
 	isOpen: boolean;
 	/**
 	 * Ids of the collapsed sections; every section not listed is expanded, so the
@@ -563,7 +573,11 @@ export type SidebarPanelId = "stencilLibrary" | "properties";
  * on the left, `"properties"` on the right.
  */
 export type SidebarSideState = {
-	/** Whether that edge is showing its panel. Defaults to false. */
+	/**
+	 * Whether that edge shows its panel while the chrome is expanded (see
+	 * `CanvasSidebarsState.isExpanded`). Kept while collapsed, so expanding
+	 * again brings back the panels the user left open. Defaults to false.
+	 */
 	isOpen: boolean;
 };
 
@@ -577,10 +591,18 @@ export type SidebarPanelState = {
 };
 
 /**
- * Both sidebars, as the canvas reports them and a host persists them (see
- * `CanvasConfig.sidebars`).
+ * The chrome's form and both sidebars, as the canvas reports them and a host
+ * persists them (see `CanvasConfig.sidebars`).
  */
 export type CanvasSidebarsState = {
+	/**
+	 * Which form the chrome is in. Expanded: the full-width top bar and the
+	 * edges whose `isOpen` is true. Collapsed: the top bar's two corner pills,
+	 * the bottom tool bar and the floating ObjectMenu, and no sidebar whatever
+	 * the edges say. Moved only by the switch for both sidebars
+	 * (`sidebarsToggle`), and by a per-edge toggle pressed while collapsed.
+	 */
+	isExpanded: boolean;
 	/** The left edge, which shows the `"stencilLibrary"` panel. */
 	left: SidebarSideState;
 	/** The right edge, which shows the `"properties"` panel. */
@@ -594,6 +616,12 @@ export type CanvasSidebarsState = {
  * missing one takes the default.
  */
 export type CanvasInitialSidebars = {
+	/**
+	 * The chrome's form (see `CanvasSidebarsState.isExpanded`); omitted, it
+	 * starts collapsed, so an edge restored open shows only once the user
+	 * expands.
+	 */
+	isExpanded?: boolean;
 	/** The left edge; omitted, it starts closed. */
 	left?: SidebarSideState;
 	/** The right edge; omitted, it starts closed. */
@@ -715,6 +743,19 @@ export type CanvasControllerState = CanvasState & {
 	stencilLibraryOpenCategory: string | null;
 
 	/**
+	 * Which form the chrome is in (`CanvasSidebarsState.isExpanded`, as a host
+	 * sees it): true for the full-width top bar with the open sidebars beside
+	 * the viewport, false for the top bar's corner pills, the bottom tool bar
+	 * and the floating ObjectMenu. Everything that differs between the two
+	 * forms reads this alone; a sidebar is drawn while this and its own `isOpen`
+	 * are both true (see `isStencilLibraryPanelShown` /
+	 * `isPropertyPanelShown`). Editor chrome on the same terms as the panels.
+	 * Written only by the `toggleSidebars` command, and by
+	 * `toggleStencilLibrary` / `togglePropertyPanel` pressed while collapsed.
+	 */
+	isChromeExpanded: boolean;
+
+	/**
 	 * The shape library sidebar (StencilLibraryPanel). Editor chrome rather than
 	 * part of the document: canvas presses, Escape, selection changes and a doc
 	 * swap (resetUiState / restoreHistorySnapshot) all leave it as it is. Written
@@ -722,16 +763,6 @@ export type CanvasControllerState = CanvasState & {
 	 * StencilLibraryPanelHandler.
 	 */
 	stencilLibraryPanel: StencilLibraryPanelState;
-
-	/**
-	 * Whether the host's `stencilLibrary.sections` resolved to at least one
-	 * section, so the shape library panel can be drawn at all. Canvas resolves
-	 * the sections and hands the answer in through
-	 * SET_STENCIL_LIBRARY_AVAILABILITY before the first paint; it starts false.
-	 * Read by the `toggleSidebars` command, which leaves the library's `isOpen`
-	 * alone without one, and by `isAnySidebarOpen`, which then ignores it.
-	 */
-	hasStencilLibrary: boolean;
 
 	/**
 	 * The properties sidebar (PropertyPanel), on the opposite edge from the shape

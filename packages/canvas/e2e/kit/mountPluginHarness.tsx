@@ -67,9 +67,9 @@ export type PluginHarnessParams = {
 	bottomToolbarPresetIds?: string[];
 	/**
 	 * Sections of the shape library sidebar, mirroring how a host app declares one.
-	 * Omit and neither the sidebar nor the toolbar toggle that opens it is
-	 * rendered; pass sections whenever a spec drives the sidebar. Independent of
-	 * `toolbarItems` — the same category can appear in both.
+	 * Omit and the sidebar shows the canvas's default library, one section
+	 * searching every registered preset; pass sections whenever a spec drives particular
+	 * ones. Independent of `toolbarItems` — the same category can appear in both.
 	 */
 	stencilLibrarySections?: StencilCategory[];
 	/**
@@ -94,8 +94,10 @@ type HarnessAppProps = {
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
  * two-canvas setup, ?pageScroll to the canvas embedded in a scrolling document,
- * ?noStencilLibrary keeps the default page but declares no shape library,
- * ?libraryOpen keeps it but mounts with the shape library alone open, and
+ * ?noStencilLibrary keeps the default page but declares no shape library (so the
+ * canvas shows its default one), ?emptyStencilLibrary keeps it but declares an
+ * empty one, ?libraryOpen keeps it but mounts expanded with
+ * the shape library alone open, and
  * ?defaultToolbar keeps it but gives the canvas its default top bar instead of
  * the page's. The query switches combine.
  * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
@@ -178,9 +180,7 @@ function HarnessApp({
 	}, []);
 
 	// The tool section is the shape library toggle and a divider, then the page's items, so
-	// a page that declares only its plugin's presets still gets the toggle when it declared
-	// a library. Without a library both are dropped by resolution — the toggle
-	// as unusable, the divider as stranded — leaving the bar as the page declared it.
+	// a page that declares only its plugin's presets still gets the toggle.
 	// The kit keeps a toggle at each edge rather than the default bar's per-sidebar
 	// toggles, which hide while collapsed: specs open one sidebar from the collapsed
 	// state. ?defaultToolbar gives the default bar instead.
@@ -213,11 +213,15 @@ function HarnessApp({
 	if (query.has("pageScroll")) {
 		return <PageScrollApp />;
 	}
-	// ?noStencilLibrary drops the page's library, for specs on how the chrome
-	// behaves when a host declares none.
-	const pageStencilLibrarySections = query.has("noStencilLibrary")
-		? undefined
-		: stencilLibrarySections;
+	// ?noStencilLibrary drops the page's library, for specs on the default one a
+	// host that declares none gets; ?emptyStencilLibrary declares one with no
+	// section, which is not the same as declaring none.
+	let pageStencilLibrarySections = stencilLibrarySections;
+	if (query.has("noStencilLibrary")) {
+		pageStencilLibrarySections = undefined;
+	} else if (query.has("emptyStencilLibrary")) {
+		pageStencilLibrarySections = [];
+	}
 	// ?defaultToolbar shows the bar a host gets by passing no sections, for specs
 	// on the default sections themselves rather than the page's composition.
 	const pageToolbarSections = query.has("defaultToolbar")
@@ -254,12 +258,15 @@ function HarnessApp({
  * @param params - The plugin set, toolbar and sidebars the page is built around. See {@link PluginHarnessParams}.
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
-	// ?libraryOpen mounts with the shape library alone open, as a host restoring
-	// that sidebar does, for specs on what the first paint shows.
+	// ?libraryOpen mounts expanded with the shape library alone open, as a host
+	// restoring that layout does, for specs on what the first paint shows.
 	const initialConfig: CanvasConfig = new URLSearchParams(
 		window.location.search,
 	).has("libraryOpen")
-		? { plugins: params.plugins, sidebars: { left: { isOpen: true } } }
+		? {
+				plugins: params.plugins,
+				sidebars: { isExpanded: true, left: { isOpen: true } },
+			}
 		: { plugins: params.plugins };
 	const bottomToolbar: BottomToolbarOptions = params.bottomToolbarPresetIds
 		? { presetIds: params.bottomToolbarPresetIds }

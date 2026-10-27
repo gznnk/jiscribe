@@ -39,25 +39,23 @@ type ToolbarProps = {
 	/** The whole bar in display order (see CanvasProps.toolbar.sections) */
 	sections?: ToolbarSection[];
 	/**
-	 * Whether the host's `stencilLibrary.sections` resolved to at least one
-	 * section. The sidebar toggle is drawn only then; Canvas resolves the sections
-	 * and answers this, so the bar never looks them up itself.
+	 * Whether the shape library sidebar is drawn (`isStencilLibraryPanelShown`:
+	 * open and expanded), the pressed look of its toggle
 	 */
-	hasLibrary: boolean;
-	/** Whether the shape library sidebar is currently open (reducer state) */
-	isLibraryOpen: boolean;
-	/** Whether the properties sidebar is currently open (reducer state) */
-	isPropertyPanelOpen: boolean;
+	isStencilLibraryPanelShown: boolean;
 	/**
-	 * Whether the sidebars count as expanded (`isAnySidebarOpen`, which Canvas
-	 * reads with its own stencil-library availability rather than the reducer's;
-	 * see `areBothSidebarsClosed` in Canvas.tsx): the pressed look of the
-	 * `sidebarsToggle` item, and the form of the bar — the full-width bar while
-	 * true, the two corner pills (each section on its `collapsedAlign` side)
-	 * while false. Canvas places the bar from the same value: above the viewport
-	 * for the one, inside it for the other.
+	 * Whether the properties sidebar is drawn (`isPropertyPanelShown`: open and
+	 * expanded), the pressed look of its toggle
 	 */
-	isAnySidebarOpen: boolean;
+	isPropertyPanelShown: boolean;
+	/**
+	 * The chrome's form (`CanvasControllerState.isChromeExpanded`): the pressed
+	 * look of the `sidebarsToggle` item, and the form of the bar — the
+	 * full-width bar while true, the two corner pills (each section on its
+	 * `collapsedAlign` side) while false. Canvas places the bar from the same
+	 * value: above the viewport for the one, inside it for the other.
+	 */
+	isChromeExpanded: boolean;
 };
 
 /** Stable within a resolved bar; the index only serves the anonymous items. */
@@ -80,18 +78,16 @@ const toolbarItemKey = (item: ResolvedToolbarItem, index: number): string => {
  * Unified toolbar at the top.
  * Draws the sections it is given: the shape tools (StencilLibrary), the
  * sidebar toggles, the zoom readout and any command buttons and host slots the
- * host declared. While either sidebar is open it is one full-width bar; while
- * both are closed, two pills floating over the top corners (see
+ * host declared. While the chrome is expanded it is one full-width bar; while
+ * collapsed, two pills floating over the top corners (see
  * arrangeToolbarPills).
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/-, the readout and every `command` item go through the command
  *   system (ToolbarHandler → handleCommand), the same path as the keyboard
- *   shortcuts and the context menu. So do the sidebar toggles: the shape
- *   library one shows only when the host declared a library with something in
- *   it, the properties one and the switch for both only when the host asked
- *   for that item. The help modal and the panels themselves are rendered by
- *   Canvas from reducer state.
+ *   shortcuts and the context menu. So do the sidebar toggles and the switch
+ *   for both, wherever the host asked for those items. The help modal and the
+ *   panels themselves are rendered by Canvas from reducer state.
  *
  * Everything the bar draws from arrives as a prop except whether each command
  * can currently run, which comes through ToolbarCommandStateContext: the props
@@ -105,20 +101,19 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	openCategoryId,
 	zoom,
 	sections = DEFAULT_TOOLBAR_SECTIONS,
-	hasLibrary,
-	isLibraryOpen,
-	isPropertyPanelOpen,
-	isAnySidebarOpen,
+	isStencilLibraryPanelShown,
+	isPropertyPanelShown,
+	isChromeExpanded,
 }) => {
 	const messages = useCanvasMessages();
 	const { stencil, command } = useCanvasRegistries();
 
-	// Resolved once per (sections, registries, hasLibrary) tuple, not inline in
-	// the render map: the bar re-renders on every zoom step, and a per-render
-	// `presets` array would defeat StencilCategoryMenu's memo.
+	// Resolved once per (sections, registries) tuple, not inline in the render
+	// map: the bar re-renders on every zoom step, and a per-render `presets`
+	// array would defeat StencilCategoryMenu's memo.
 	const resolvedSections = useMemo(
-		() => resolveToolbarSections(sections, { stencil, command, hasLibrary }),
-		[sections, stencil, command, hasLibrary],
+		() => resolveToolbarSections(sections, { stencil, command }),
+		[sections, stencil, command],
 	);
 
 	const pills = useMemo(
@@ -164,9 +159,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						type="button"
 						aria-label={messages.toolbarStencilLibrary}
 						title={messages.toolbarStencilLibrary}
-						aria-expanded={isLibraryOpen}
+						aria-expanded={isStencilLibraryPanelShown}
 						data-action={commandAction("toggleStencilLibrary")}
-						isOpen={isLibraryOpen}
+						isOpen={isStencilLibraryPanelShown}
 					>
 						<SidebarIcon edge="left" />
 					</ToolbarToggleButton>
@@ -177,9 +172,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						type="button"
 						aria-label={messages.toolbarPropertyPanel}
 						title={messages.toolbarPropertyPanel}
-						aria-expanded={isPropertyPanelOpen}
+						aria-expanded={isPropertyPanelShown}
 						data-action={commandAction("togglePropertyPanel")}
-						isOpen={isPropertyPanelOpen}
+						isOpen={isPropertyPanelShown}
 					>
 						<SidebarIcon edge="right" />
 					</ToolbarToggleButton>
@@ -190,9 +185,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						type="button"
 						aria-label={messages.toolbarSidebars}
 						title={messages.toolbarSidebars}
-						aria-expanded={isAnySidebarOpen}
+						aria-expanded={isChromeExpanded}
 						data-action={commandAction(ToggleSidebarsCommand.id)}
-						isOpen={isAnySidebarOpen}
+						isOpen={isChromeExpanded}
 					>
 						<SidebarIcon edge="both" />
 					</ToolbarToggleButton>
@@ -229,7 +224,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	// closest(), and a press on the empty area arrives with no action (dismissing
 	// the open menus). Nested targets with a different id (stencil-category /
 	// stencil-library) keep their own [data-kind] and still win.
-	if (!isAnySidebarOpen) {
+	if (!isChromeExpanded) {
 		return (
 			<>
 				{pills.start.length > 0 && (
