@@ -416,3 +416,12 @@ export const MAX_SUMMARY_CHARS = 20_000;
  * capture_canvas is what a whole drawing is judged by.
  */
 export const MAX_SVG_CHARS = 20_000;
+
+/**
+ * The longest edge (px) of the image capture_canvas hands to the AI. It travels
+ * over IPC as base64 and then rides into the model's input, so it is held to
+ * what the model reads without scaling it down itself: 2576px for Claude Opus
+ * 4.7 and Sonnet 5 onward (Opus 4.6 and earlier scale past some 1568px).
+ * Declared here because the tool's description states the figure
+ */
+export const MAX_CAPTURE_PIXEL_SIZE = 2576;

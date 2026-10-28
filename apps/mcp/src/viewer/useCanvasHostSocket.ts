@@ -5,12 +5,15 @@
 // answered here, so the protocol stays inside this file; what the answer is comes
 // from the handlers the page passes in.
 
-import type { AiCanvasOpOutcome, AiHandleOp } from "@jiscribe/ai-tools";
+import type { AiCanvasOpOutcome } from "@jiscribe/ai-tools";
 import { useEffect, useRef, useState } from "react";
 
 import { fetchSession } from "./files";
 import type { DocIdentity } from "./ownEcho";
-import type { CanvasHostClientMessage } from "../shared/canvasHostProtocol";
+import type {
+	CanvasHostClientMessage,
+	ViewerOp,
+} from "../shared/canvasHostProtocol";
 import {
 	HEADLESS_VIEWER_QUERY,
 	isCanvasHostServerMessage,
@@ -36,6 +39,12 @@ const RECONNECT_MAX_DELAY_MS = 5_000;
  * runs, since there is no one to close it
  */
 const HEADLESS_GIVE_UP_MS = 15_000;
+
+/** What a handleOpRequest is answered with: an ai-tools outcome, or an export's */
+export type ViewerOpOutcome = AiCanvasOpOutcome & {
+	/** The exported file's bytes (base64), present only for a successful exportImage */
+	exportedImageBase64?: string;
+};
 
 export type CanvasHostSocketOptions = {
 	/**
@@ -72,9 +81,9 @@ export type CanvasHostSocketOptions = {
 	 * have drawn before the op runs
 	 */
 	onHandleOp: (
-		op: AiHandleOp,
+		op: ViewerOp,
 		expectedRevision: string | undefined,
-	) => Promise<AiCanvasOpOutcome>;
+	) => Promise<ViewerOpOutcome>;
 };
 
 export type CanvasHostSocketState = {
@@ -241,6 +250,9 @@ export function useCanvasHostSocket(
 								...(outcome.imagePngBase64 === undefined
 									? {}
 									: { imagePngBase64: outcome.imagePngBase64 }),
+								...(outcome.exportedImageBase64 === undefined
+									? {}
+									: { exportedImageBase64: outcome.exportedImageBase64 }),
 							});
 						});
 						break;

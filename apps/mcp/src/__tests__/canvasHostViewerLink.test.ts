@@ -1185,6 +1185,37 @@ describe("runHandleOp", () => {
 		});
 	});
 
+	it("carries an export's bytes through", async () => {
+		const host = await startTestHost();
+		await connectFakeViewer(host, (requestId, viewer) => {
+			viewer.send({
+				type: "handleOpResult",
+				requestId,
+				ok: true,
+				text: "exported",
+				exportedImageBase64: "PHN2Zy8+",
+			});
+		});
+
+		expect(
+			await host.runHandleOp({ kind: "exportImage", format: "svg" }),
+		).toEqual({
+			ok: true,
+			text: "exported",
+			exportedImageBase64: "PHN2Zy8+",
+		});
+	});
+
+	it("gives up after the timeout it is given rather than the default", async () => {
+		const host = await startTestHost();
+		await connectFakeViewer(host);
+
+		expect(await host.runHandleOp({ kind: "getView" }, 50)).toEqual({
+			ok: false,
+			text: "the canvas viewer did not answer in time",
+		});
+	});
+
 	it("ignores an answer to a requestId nobody is waiting on", async () => {
 		const host = await startTestHost();
 		await connectFakeViewer(host, (requestId, viewer) => {

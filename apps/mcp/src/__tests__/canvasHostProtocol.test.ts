@@ -30,6 +30,10 @@ describe("isCanvasHostClientMessage", () => {
 			{ ...handleOpResultFrame, imagePngBase64: "iVBORw0KGgo=" },
 		],
 		[
+			"a handleOpResult frame carrying an exported image",
+			{ ...handleOpResultFrame, exportedImageBase64: "PHN2Zy8+" },
+		],
+		[
 			"a frame carrying properties nobody asked for",
 			{ ...flushedFrame, unknownField: 1 },
 		],
@@ -86,6 +90,14 @@ describe("isCanvasHostClientMessage", () => {
 		[
 			"a handleOpResult frame whose PNG is null",
 			{ ...handleOpResultFrame, imagePngBase64: null },
+		],
+		[
+			"a handleOpResult frame whose exported image is not a string",
+			{ ...handleOpResultFrame, exportedImageBase64: 123 },
+		],
+		[
+			"a handleOpResult frame whose exported image is null",
+			{ ...handleOpResultFrame, exportedImageBase64: null },
 		],
 	])("rejects %s", (_label, frame) => {
 		expect(isCanvasHostClientMessage(frame)).toBe(false);

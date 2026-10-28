@@ -40,7 +40,7 @@ const createRecordingCapturePng = (): {
 	};
 };
 
-const BASE_OPTIONS = { includeSource: false, scale: 1, maxPixelSize: 1400 };
+const BASE_OPTIONS = { includeSource: false, scale: 1, maxPixelSize: 2576 };
 
 describe("captureCanvasImage", () => {
 	it("answers with no canvas before reading the region, so an empty selection is not blamed", async () => {

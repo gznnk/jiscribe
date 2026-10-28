@@ -6,9 +6,8 @@
 // them (headlessLauncher, viewerRegistry), and importing them back out of the
 // composition root would make a cycle of it.
 
-import type { AiHandleOp } from "@jiscribe/ai-tools";
-
 import type { BrowserOpenOptions } from "./openBrowser";
+import type { ViewerOp } from "../shared/canvasHostProtocol";
 import type { HostActionName } from "../shared/hostActionsRoute";
 
 /** The answer to a handleOpRequest, in the shape the AI is handed it */
@@ -18,6 +17,8 @@ export type HandleOpOutcome = {
 	text: string;
 	/** The PNG (base64), present only for capture_canvas */
 	imagePngBase64?: string;
+	/** The exported file's bytes (base64), present only for a successful exportImage */
+	exportedImageBase64?: string;
 };
 
 /** The result of openHeadlessViewer */
@@ -84,13 +85,17 @@ export type CanvasHost = {
 	 * so a write that has landed is what the answer sees. A write still being made
 	 * is the caller's to wait out.
 	 *
-	 * @param op The operation to run
+	 * @param op The operation to run: an ai-tools screen op, or export_image's
+	 *   own exportImage
+	 * @param timeoutMs How long to wait for a window's answer (milliseconds);
+	 *   omitted, HANDLE_OP_TIMEOUT_MS (15 s). The wait for the revision to be
+	 *   drawn is the window's and comes out of this
 	 * @returns A result that can be handed to the AI as it is. Even when no viewer
 	 *   is connected, none answers, or the file on display cannot be read, it
 	 *   returns ok=false rather than throwing (all the AI needs is a readable
 	 *   reason)
 	 */
-	runHandleOp: (op: AiHandleOp) => Promise<HandleOpOutcome>;
+	runHandleOp: (op: ViewerOp, timeoutMs?: number) => Promise<HandleOpOutcome>;
 	/**
 	 * Makes the open viewer windows close.
 	 *

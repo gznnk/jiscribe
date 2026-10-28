@@ -1,3 +1,6 @@
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { McpTestClient } from "./mcpTestClient";
@@ -144,8 +147,11 @@ describe("diagnose_canvas", () => {
 	});
 
 	it("returns a file it cannot read as error text, not as an exception", async () => {
+		// A directory named like a canvas: something is there, but it cannot be read
+		const directoryPath = join(workspace.dirPath, "directory.jis.json");
+		await mkdir(directoryPath);
 		const result = await client.callTool("diagnose_canvas", {
-			path: "/nonexistent/jiscribe-mcp/missing.jis.json",
+			path: directoryPath,
 		});
 		expect(result.isError).toBe(false);
 		expect(result.text).toContain("error: failed to read file:");

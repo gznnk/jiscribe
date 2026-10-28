@@ -109,7 +109,9 @@ export async function readCanvasFileText(path: string): Promise<string> {
 		return await readFile(filePath, "utf8");
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : String(error);
-		throw new CanvasFileError(`failed to read file: ${reason}`);
+		throw new CanvasFileError(`failed to read file: ${reason}`, {
+			cause: error,
+		});
 	}
 }
 
@@ -154,7 +156,9 @@ export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
 		identity = snapshot.identity;
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : String(error);
-		throw new CanvasFileError(`failed to read file: ${reason}`);
+		throw new CanvasFileError(`failed to read file: ${reason}`, {
+			cause: error,
+		});
 	}
 
 	const result = getStandardCanvasParser().parse(text);

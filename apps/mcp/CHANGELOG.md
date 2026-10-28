@@ -15,8 +15,24 @@ covers that.
 
 ## [Unreleased]
 
+### Added
+
+- **`export_image` writes the drawing to an image file for a person.** It has
+  the viewer draw the canvas on display — the whole drawing, or the extent of
+  `ids` (with `isolate`, those objects alone) — to a PNG at `scale` (default 2,
+  at most 8, the long edge capped at 8192 px) or an SVG, picked by the
+  `output` extension, without the `.jis` source embedded. The image is not
+  handed back to the AI: the result names the path and the size. `output` has
+  to be under the directory of the `.jis` on display (checked through links)
+  in a directory that exists; an image already there is replaced, but a name
+  ending in `.jis.png` / `.jis.svg` is refused. Like `capture_canvas`, it
+  needs a viewer.
+
 ### Changed
 
+- **`capture_canvas` keeps up to 2576 px on the long edge**, up from 1400. A
+  part named by `ids`, `rect` or the selection is drawn at full size (1 world
+  unit to 1 px) and shrinks only past that edge.
 - **The viewer's shape presets moved to a bar at the bottom of the canvas.**
   The canvas starts collapsed: the top bar splits into two pills at the
   canvas's top corners along the same sides — top-left, undo / redo;
@@ -34,6 +50,18 @@ covers that.
 
 - The floating menu's **…** button. Open the properties sidebar from the top
   bar instead.
+
+### Fixed
+
+- **`list_types` answers before the file exists.** It lists the shape set, not
+  the drawing, yet it read the file it was given and failed with `ENOENT` when
+  `open_canvas` had not created it yet. Now it answers without reading the file
+  (and still without creating it), so a file that does not parse no longer
+  stops it either; the `path` is checked as before.
+- **A document tool on a file that does not exist yet points at `open_canvas`.**
+  `get_object`, `add_rect`, `diagnose_canvas` and the rest of the tools that
+  take a `path` passed the raw `ENOENT` through; now the error says the file
+  does not exist yet and that `open_canvas` creates it as an empty canvas.
 
 ## [0.12.2] - 2026-10-25
 

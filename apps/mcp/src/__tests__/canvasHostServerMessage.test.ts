@@ -47,6 +47,14 @@ describe("isCanvasHostServerMessage", () => {
 				expectedRevision: "abc",
 			},
 		],
+		[
+			"handleOpRequest carrying export_image's own op",
+			{
+				type: "handleOpRequest",
+				requestId: "1",
+				op: { kind: "exportImage", format: "png", scale: 2 },
+			},
+		],
 		["flushEdits", { type: "flushEdits", requestId: "1" }],
 		["closeViewer", { type: "closeViewer" }],
 	])("accepts a complete %s frame", (_label, frame) => {

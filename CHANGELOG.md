@@ -76,6 +76,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **`capture_canvas` keeps up to 2576 px on the long edge**, up from 1400 —
+  what Claude Opus 4.7 and Sonnet 5 onward read without scaling it down. A part
+  named by `ids`, `rect` or the selection is still drawn at full size (1 world
+  unit to 1 px) and shrinks only past that edge; the tool's description now
+  says so.
 - **Migration: restored sidebars mount collapsed unless they say otherwise.**
   A host that passes `initialConfig.sidebars` saved before `isExpanded`
   existed, or builds one by hand, gets the collapsed chrome with those

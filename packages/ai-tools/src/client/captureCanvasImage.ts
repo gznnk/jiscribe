@@ -10,17 +10,15 @@ import type {
 	CanvasPngExportOptions,
 } from "@jiscribe/canvas";
 
-import type { AiCanvasOpOutcome, AiHandleOp } from "../canvasOps";
+import {
+	MAX_CAPTURE_PIXEL_SIZE,
+	type AiCanvasOpOutcome,
+	type AiHandleOp,
+} from "../canvasOps";
 import { formatNumber, formatRect, quoteIds } from "../resultText";
 import { resolveAiRegion } from "./resolveAiRegion";
+import { toBase64 } from "./toBase64";
 import type { AiHandleControl, CapturePng } from "./types";
-
-/**
- * The longest edge (px) of the image handed to the AI. It travels over IPC as
- * base64 and then rides into the model's input, so it is held down to what is
- * still readable (the API scales the long edge to some 1568px of its own)
- */
-const MAX_CAPTURE_PIXEL_SIZE = 1400;
 
 /**
  * The capture options. Size is held down by drawing at 1:1 with a cap on the
@@ -32,21 +30,6 @@ const CAPTURE_OPTIONS: CanvasPngExportOptions = {
 	includeSource: false,
 	scale: 1,
 	maxPixelSize: MAX_CAPTURE_PIXEL_SIZE,
-};
-
-/** How many bytes go to btoa at a time; small enough not to touch the argument limit on a spread */
-const BASE64_CHUNK_SIZE = 0x2000;
-
-const toBase64 = (bytes: Uint8Array): string => {
-	const chunks: string[] = [];
-	for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK_SIZE) {
-		chunks.push(
-			String.fromCharCode(
-				...bytes.subarray(offset, offset + BASE64_CHUNK_SIZE),
-			),
-		);
-	}
-	return btoa(chunks.join(""));
 };
 
 const NO_CANVAS_TEXT =

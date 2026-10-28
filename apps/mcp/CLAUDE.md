@@ -59,6 +59,12 @@ they hold.
   errors when they are missing rather than returning empty.
 - **`diagnose_canvas` is the only validation entry point.** Do not add a
   variant that takes the document text.
+- **`export_image` is ours but runs as a screen op**: its `exportImage` op
+  (`shared/canvasHostProtocol.ts`, not an `AiHandleOp`) goes through
+  `runHandleOp` with a 60 s timeout, and the bytes come back on
+  `handleOpResult`. Its `output` is held to the host's `workspaceRoot`
+  through links (`exportImageOutput.ts`) and never named `.jis.png` /
+  `.jis.svg`, since it writes over what is there.
 
 ## Files and concurrency
 

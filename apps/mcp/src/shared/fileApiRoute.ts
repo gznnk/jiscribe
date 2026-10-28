@@ -77,6 +77,8 @@ export const NOT_ON_DISPLAY_STATUS = 409;
 /**
  * The most a write may carry, and the most one WebSocket frame may weigh. A canvas
  * is text and a capture a base64 PNG; neither comes near this, and what the cap
- * stops is a request buffered in full before anyone looks at it
+ * stops is a request buffered in full before anyone looks at it. An export_image
+ * file can come near it, so the viewer refuses to send one that would not fit
+ * (see ../viewer/exportCanvasImage)
  */
 export const MAX_WRITE_BODY_BYTES = 16 * 1024 * 1024;

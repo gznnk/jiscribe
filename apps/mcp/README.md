@@ -59,12 +59,17 @@ and a link to a file of another kind is refused. The one exception is an
 and cannot climb out of it — so a drawing and the pictures it names travel
 together.
 
-Four families of tools, 85 in all:
+Four families of tools, 86 in all:
 
-- Seven of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
-  `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse`.
+- Eight of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
+  `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse` /
+  `export_image`.
   `open_canvas` takes `headless`, which gives the AI a canvas to look at without
-  putting a window on screen
+  putting a window on screen. `export_image` has the viewer draw the canvas on
+  display to a PNG (at a `scale`, default 2, the long edge capped at 8192 px) or
+  an SVG and writes it to a file for a person, without handing the picture
+  back to the AI; the file has to be under the directory of the `.jis` on
+  display, and is never named `.jis.png` / `.jis.svg`
 - 47 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
   align, group, style, name the document or a shape, read, undo — each given a `path` so it names a file
 - 16 more from the same declarations that only a mounted canvas can answer —
@@ -188,6 +193,6 @@ half the vitest suite cannot see: the file being drawn, a tool's write reaching
 the page, a person's edit reaching the file, a second file taking the page over,
 the edits buffered in the page being written out before another file goes up,
 an undo that stays with its own file across a switch to another directory,
-`capture_canvas` answered by the drawn canvas, and a write refused for a file
+`capture_canvas` and `export_image` answered by the drawn canvas, and a write refused for a file
 that moved on. The hosts take the usual port (5190 upwards), so nothing else may
 be serving a canvas while it runs.

@@ -18,6 +18,7 @@ import { createCallBarrier } from "./callBarrier";
 import { canvasToolSet, docOps } from "./canvasDefinitions";
 import { createCanvasFileLock, type CanvasFileLock } from "./canvasFileLock";
 import {
+	createEmptyCanvasDoc,
 	ensureCanvasFile,
 	loadCanvasFile,
 	saveCanvasFile,
@@ -117,7 +118,8 @@ export type JiscribeMcpRuntime = {
 	 *
 	 * @param path The file as the AI gave it, resolved by toCanvasFilePath
 	 * @param op The operation; a read-only one leaves the file and the undo
-	 *   history untouched
+	 *   history untouched. `listTypes` does not read the file at all, so it
+	 *   answers for a missing or unparseable one
 	 */
 	applyDocOpToFile: (path: string, op: AiDocOp) => Promise<AiCanvasOpOutcome>;
 	/** The gate every tool naming a canvas file goes through (see CanvasFileLock) */
@@ -234,6 +236,18 @@ export function createJiscribeMcpRuntime(
 		op: AiDocOp,
 	): Promise<AiCanvasOpOutcome> => {
 		return await withCanvasFileLock(path, async (filePath) => {
+			if (op.kind === "listTypes") {
+				// It answers from the shape set, not the drawing, so a file open_canvas
+				// has not created yet answers the same as an empty one
+				const emptyDoc = createEmptyCanvasDoc();
+				return applyCanvasOp(
+					op,
+					{ getDoc: () => emptyDoc, replaceDoc: () => {} },
+					createCanvasOpHistory(),
+					docOps,
+					canvasToolSet,
+				);
+			}
 			const loaded = await loadCanvasFile(filePath);
 			const loadedDoc = loaded.doc;
 			let nextDoc: CanvasDoc | null = null;
