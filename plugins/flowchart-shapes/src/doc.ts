@@ -130,7 +130,7 @@ export const diamondDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	textRegion: calcDiamondTextRegion,
 	defaults: DIAMOND_DOC_DEFAULTS,
 	description:
-		"Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond, with its four vertices at the midpoints of the box's edges — so a connector on topCenter / rightCenter / bottomCenter / leftCenter lands exactly on a point. Text is laid out within the full bounding box (not clipped to the diamond interior).",
+		"Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond, with its four vertices at the midpoints of the box's edges — so a connector on topCenter / rightCenter / bottomCenter / leftCenter lands exactly on a point. Text is laid out in the rhombus's inscribed rectangle, the middle half of the box on each axis.",
 	summary: "decision / branch node",
 });
 
@@ -226,7 +226,7 @@ export const stadiumDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	textRegion: calcStadiumTextRegion,
 	defaults: STADIUM_DOC_DEFAULTS,
 	description:
-		"Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a stadium. Text is laid out within the full bounding box.",
+		"Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a stadium. Text is laid out between the semicircular caps, which take the short side off the long one.",
 	summary: "start / end terminator",
 });
 

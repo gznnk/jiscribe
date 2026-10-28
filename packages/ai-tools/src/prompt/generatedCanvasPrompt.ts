@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+9f74aee8 -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+d92941b0 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -313,7 +313,8 @@ Every box shape draws its text somewhere inside its own box, but not always in
 the middle of it, and for some types not inside it at all. Size the shape for
 where its text actually goes.
 
-- For \`diamond\` and \`stadium\`, text is placed within the full bounding box (not clipped to the shape interior).
+- For \`diamond\`, text is placed in the rhombus's inscribed rectangle, the middle half of the box on each axis: a 200×100 diamond lays its text out in 100×50, before padding.
+- For \`stadium\`, text is placed between the semicircular caps, which take the short side off the long one: a 200×60 stadium lays its text out in 140×60, before padding, so widen it rather than heighten it for a long label.
 - For \`db\`, text is placed in the body region below the top cap ellipse.
 - For \`cloud\`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height.
 - For \`document\` and \`callout\`, text sits above the bottom wave/tail band.

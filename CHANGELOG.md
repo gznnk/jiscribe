@@ -153,6 +153,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   JP, so the MCP server's `measure_text`, `add_object` and `diagnose_canvas` and
   the CLI's `measure` / `diagnose` failed on any text holding one. fontkit cannot
   read these empty glyphs; their advance is now read from the font's `hmtx`.
+- **The drawing guide no longer says `diamond` and `stadium` lay text out over
+  the whole box.** They never did: a diamond uses its inscribed rectangle and a
+  stadium the band between its caps, so text sized to the box wrapped. The guide
+  and both shapes' schema descriptions now give the real region.
 
 ## [0.12.2] - 2026-10-25
 
