@@ -2,7 +2,13 @@
 // picture is for a person, not the AI, so unlike capture_canvas it is drawn at
 // the scale asked for and comes back as bytes for the host to write.
 
-import type { AiHandleControl } from "@jiscribe/ai-tools/client";
+import {
+	formatNumber,
+	formatRect,
+	quoteIds,
+	toBase64,
+	type AiHandleControl,
+} from "@jiscribe/ai-tools/client";
 import type {
 	CanvasExportHandle,
 	CanvasExportRegion,
@@ -26,28 +32,6 @@ const FRAME_ALLOWANCE_BYTES = 64 * 1024;
  */
 export const MAX_EXPORTED_BASE64_LENGTH =
 	MAX_WRITE_BODY_BYTES - FRAME_ALLOWANCE_BYTES;
-
-/** How many bytes go to btoa at a time; small enough not to touch the argument limit on a spread */
-const BASE64_CHUNK_SIZE = 0x2000;
-
-const toBase64 = (bytes: Uint8Array): string => {
-	const chunks: string[] = [];
-	for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK_SIZE) {
-		chunks.push(
-			String.fromCharCode(
-				...bytes.subarray(offset, offset + BASE64_CHUNK_SIZE),
-			),
-		);
-	}
-	return btoa(chunks.join(""));
-};
-
-/** The same rounding the ai-tools results use, so the numbers read alike */
-const formatNumber = (value: number): string =>
-	String(Math.round(value * 10) / 10);
-
-const quoteIds = (ids: readonly string[]): string =>
-	ids.map((id) => `"${id}"`).join(", ");
 
 const NOT_READY_TEXT = "the canvas is not ready to be exported yet";
 
@@ -118,7 +102,7 @@ const describePngExport = (
 	scale: number,
 ): string => {
 	const sentences = [
-		`${formatNumber(pixelWidth)} x ${formatNumber(pixelHeight)} px (scale ${formatNumber(scale)}) of ${subject}, covering world rect (${formatNumber(region.x)}, ${formatNumber(region.y)}) ${formatNumber(region.width)} x ${formatNumber(region.height)} px`,
+		`${formatNumber(pixelWidth)} x ${formatNumber(pixelHeight)} px (scale ${formatNumber(scale)}) of ${subject}, covering world rect ${formatRect(region)}`,
 	];
 	if (Math.max(region.width, region.height) * scale > MAX_EXPORT_PIXEL_SIZE) {
 		sentences.push(

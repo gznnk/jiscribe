@@ -3,7 +3,7 @@
 // one the .jis on display sits in), checked through symlinks as the file API's
 // own paths are, and to the two image extensions.
 
-import { stat } from "node:fs/promises";
+import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 import { CanvasFileError, realpathDeepestExisting } from "./canvasStore";
@@ -95,6 +95,13 @@ export async function resolveExportImageOutputPath(
 	if (targetStats?.isDirectory() === true) {
 		throw new CanvasFileError(
 			`${outputPath} is a directory; name a file inside it instead`,
+		);
+	}
+	// The name given need not be the file's own: a link, or a Windows 8.3 short
+	// name, can reach a .jis.png under a plain .png
+	if (targetStats !== null && isCanvasImageName(await realpath(targetPath))) {
+		throw new CanvasFileError(
+			`${outputPath} leads to an editable diagram (.jis.png / .jis.svg), which an export would overwrite without its source; name a file that is not one`,
 		);
 	}
 	return targetPath;

@@ -8,6 +8,7 @@ import {
 	mkdtemp,
 	readFile,
 	readdir,
+	rename,
 	rm,
 	symlink,
 	writeFile,
@@ -23,6 +24,7 @@ import {
 	describe,
 	expect,
 	it,
+	vi,
 } from "vitest";
 import WebSocket from "ws";
 
@@ -31,6 +33,7 @@ import { connectMcpTestClient, type McpTestClient } from "./mcpTestClient";
 import type { TempCanvasWorkspace } from "./tempCanvasWorkspace";
 import { createTempCanvasWorkspace } from "./tempCanvasWorkspace";
 import { VIEWER_STUB_HTML } from "./viewerStubHtml";
+import { createJiscribeMcpRuntime, type JiscribeMcpRuntime } from "../runtime";
 import type {
 	CanvasHostServerMessage,
 	ViewerOp,
@@ -42,6 +45,28 @@ const EXPORTED_BYTES = Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 /** The text it answers a PNG export with */
 const PNG_ANSWER_TEXT = "240 x 160 px (scale 2) of the whole drawing";
 
+/** A handleOpResult's fields past its type and requestId */
+type ViewerAnswer = {
+	ok: boolean;
+	text: string;
+	exportedImageBase64?: string;
+};
+
+/** What the stand-in window answers every export with, unless a test says otherwise */
+const DEFAULT_ANSWER: ViewerAnswer = {
+	ok: true,
+	text: PNG_ANSWER_TEXT,
+	exportedImageBase64: EXPORTED_BYTES.toString("base64"),
+};
+
+/**
+ * Builds the window's answer, run once the request has arrived and before the
+ * answer goes out (which is where a test changes the disk under the call)
+ */
+let calcAnswer: () => Promise<ViewerAnswer> = async () => DEFAULT_ANSWER;
+
+/** Held by the test so it can reach the host the server's tools act through */
+let runtime: JiscribeMcpRuntime;
 let client: McpTestClient;
 let viewerRoot: string;
 let workspace: TempCanvasWorkspace;
@@ -58,7 +83,8 @@ beforeAll(async () => {
 	}
 	process.env.JISCRIBE_MCP_VIEWER_ROOT = viewerRoot;
 	process.env.JISCRIBE_MCP_NO_OPEN = "1";
-	client = await connectMcpTestClient();
+	runtime = createJiscribeMcpRuntime();
+	client = await connectMcpTestClient({ runtime });
 });
 
 beforeEach(async () => {
@@ -67,6 +93,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+	calcAnswer = async () => DEFAULT_ANSWER;
+	vi.restoreAllMocks();
 	for (const socket of openSockets.splice(0)) {
 		socket.close();
 	}
@@ -77,6 +105,7 @@ afterEach(async () => {
 
 afterAll(async () => {
 	await client.close();
+	await runtime.close();
 	for (const [name, value] of Object.entries(previousEnv)) {
 		if (value === undefined) {
 			delete process.env[name];
@@ -87,7 +116,7 @@ afterAll(async () => {
 	await rm(viewerRoot, { recursive: true, force: true });
 });
 
-/** A ws client in place of the window, answering every export with EXPORTED_BYTES */
+/** A ws client in place of the window, answering every export with calcAnswer's answer */
 type FakeViewer = {
 	/** The ops of the requests it was sent, in the order they arrived */
 	requestedOps: ViewerOp[];
@@ -119,15 +148,15 @@ const openInFakeViewer = async (filePath: string): Promise<FakeViewer> => {
 			return;
 		}
 		viewer.requestedOps.push(frame.op);
-		socket.send(
-			JSON.stringify({
-				type: "handleOpResult",
-				requestId: frame.requestId,
-				ok: true,
-				text: PNG_ANSWER_TEXT,
-				exportedImageBase64: EXPORTED_BYTES.toString("base64"),
-			}),
-		);
+		void calcAnswer().then((answer) => {
+			socket.send(
+				JSON.stringify({
+					type: "handleOpResult",
+					requestId: frame.requestId,
+					...answer,
+				}),
+			);
+		});
 	});
 	await new Promise<void>((resolve, reject) => {
 		socket.once("open", resolve);
@@ -186,6 +215,71 @@ describe("export_image", () => {
 		expect(viewer.requestedOps).toEqual([
 			{ kind: "exportImage", format: "svg", ids: ["r1"], isolate: true },
 		]);
+	});
+
+	it("gives the viewer 60 s to answer, not the 15 s of a screen tool", async () => {
+		await openEmptyCanvas();
+		const host = runtime.getHost();
+		if (host === null) {
+			throw new Error("open_canvas left no host");
+		}
+		const runHandleOp = vi.spyOn(host, "runHandleOp");
+
+		await client.callTool("export_image", {
+			output: join(workspace.dirPath, "out.png"),
+		});
+
+		expect(runHandleOp).toHaveBeenCalledWith(
+			expect.objectContaining({ kind: "exportImage" }),
+			60_000,
+		);
+	});
+
+	it("writes nothing when the viewer answers without the image", async () => {
+		await openEmptyCanvas();
+		calcAnswer = async () => ({ ok: true, text: "answered" });
+
+		const result = await client.callTool("export_image", {
+			output: join(workspace.dirPath, "out.png"),
+		});
+
+		expect(result.text).toMatch(
+			/^error: the canvas viewer answered without an image/,
+		);
+		expect(await readdir(workspace.dirPath)).toEqual(["drawing.jis.json"]);
+	});
+
+	it("checks the output again once the viewer has drawn, refusing a directory turned into a link out meanwhile", async () => {
+		await openEmptyCanvas();
+		const subDir = join(workspace.dirPath, "sub");
+		await mkdir(subDir);
+		calcAnswer = async () => {
+			await rename(subDir, join(workspace.dirPath, "sub-moved"));
+			await symlink(outsideDir, subDir);
+			return DEFAULT_ANSWER;
+		};
+
+		const result = await client.callTool("export_image", {
+			output: join(subDir, "out.png"),
+		});
+
+		expect(result.text).toMatch(/^error: .* is not under /);
+		expect(await readdir(outsideDir)).toEqual([]);
+	});
+
+	it("refuses a plain .png name that leads to a .jis.png", async () => {
+		const viewer = await openEmptyCanvas();
+		const diagramPath = join(workspace.dirPath, "diagram.jis.png");
+		await writeFile(diagramPath, "an editable diagram");
+		await symlink(diagramPath, join(workspace.dirPath, "plain.png"));
+
+		const result = await client.callTool("export_image", {
+			output: join(workspace.dirPath, "plain.png"),
+		});
+
+		expect(result.text).toMatch(/^error: .* leads to an editable diagram/);
+		expect(viewer.requestedOps).toEqual([]);
+		expect(await readFile(diagramPath, "utf8")).toBe("an editable diagram");
 	});
 
 	it("replaces an image already at the output", async () => {

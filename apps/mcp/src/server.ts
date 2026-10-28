@@ -789,10 +789,9 @@ async function exportImageToFile(
 	if (host === null) {
 		return "error: no canvas is open, so there is nothing on screen to export; call open_canvas first (headless: true opens no window)";
 	}
-	const targetPath = await resolveExportImageOutputPath(
-		host.workspaceRoot,
-		output,
-	);
+	// Checked before the viewer is asked so a refusal costs no render, and again
+	// below, since the directories may have changed while it drew
+	await resolveExportImageOutputPath(host.workspaceRoot, output);
 	const region = {
 		...(ids === undefined ? {} : { ids }),
 		...(isolate === undefined ? {} : { isolate }),
@@ -814,6 +813,10 @@ async function exportImageToFile(
 		return "error: the canvas viewer answered without an image, which an outdated viewer tab does; reload the viewer and try again";
 	}
 	const bytes = Buffer.from(outcome.exportedImageBase64, "base64");
+	const targetPath = await resolveExportImageOutputPath(
+		host.workspaceRoot,
+		output,
+	);
 	try {
 		await writeFileAtomically(targetPath, bytes);
 	} catch (error) {
