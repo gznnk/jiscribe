@@ -145,6 +145,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   composing `DEFAULT_TOOLBAR_PROPERTIES_SECTION` keeps a properties toggle on the
   collapsed bar, and a canvas with no top bar has no way into the sidebars.
 
+### Fixed
+
+- **Measuring text in Node no longer throws on some space and zero-width characters.** `@jiscribe/doc-tools`
+  failed with `RangeError: Offset is outside the bounds of the DataView` on
+  U+2009, U+200B and U+FEFF under Source Sans 3 and on U+2002 under Noto Sans
+  JP, so the MCP server's `measure_text`, `add_object` and `diagnose_canvas` and
+  the CLI's `measure` / `diagnose` failed on any text holding one. fontkit cannot
+  read these empty glyphs; their advance is now read from the font's `hmtx`.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

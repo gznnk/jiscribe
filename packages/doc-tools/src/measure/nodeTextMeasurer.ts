@@ -61,13 +61,106 @@ const findFileForCodePoint = (
 	return null;
 };
 
+/** fontkit's parsed `hmtx`, which its type declarations leave out. */
+type HorizontalMetricsTable = {
+	metrics: {
+		length: number;
+		get: (index: number) => { advance: number } | undefined;
+	};
+};
+
+const isHorizontalMetricsTable = (
+	value: unknown,
+): value is HorizontalMetricsTable =>
+	typeof value === "object" &&
+	value !== null &&
+	"metrics" in value &&
+	typeof value.metrics === "object" &&
+	value.metrics !== null &&
+	"length" in value.metrics &&
+	typeof value.metrics.length === "number" &&
+	"get" in value.metrics &&
+	typeof value.metrics.get === "function";
+
+/**
+ * Advance of a glyph read straight off `hmtx`, in font units, or null if the
+ * table is not there to read. Glyphs past the last full entry share its advance.
+ */
+const readHmtxAdvance = (
+	font: fontkit.Font,
+	glyphId: number,
+): number | null => {
+	const hmtx: unknown = Reflect.get(font, "hmtx");
+	if (!isHorizontalMetricsTable(hmtx) || hmtx.metrics.length === 0) {
+		return null;
+	}
+	return (
+		hmtx.metrics.get(Math.min(glyphId, hmtx.metrics.length - 1))?.advance ??
+		null
+	);
+};
+
+/**
+ * Advance of a glyph fontkit cannot read, in ems. fontkit reads the glyph's
+ * `glyf` header for its vertical metrics even when only the advance is asked for,
+ * and runs off the end of the table for an empty glyph stored last — the
+ * fontsource subsets put U+2002 / U+2009 / U+200B / U+FEFF there. Throws when
+ * `hmtx` cannot be read either, which means fontkit's internals have moved.
+ */
+const calcUnreadableGlyphAdvanceEm = (
+	font: fontkit.Font,
+	codePoint: number,
+): number => {
+	const advance = readHmtxAdvance(font, font.glyphForCodePoint(codePoint).id);
+	if (advance === null) {
+		throw new Error(
+			`cannot read the advance of U+${codePoint.toString(16).toUpperCase().padStart(4, "0")} in ${font.familyName}: fontkit's hmtx is not in the shape this measurer reads`,
+		);
+	}
+	return advance / font.unitsPerEm;
+};
+
+const isGlyphReadable = (font: fontkit.Font, codePoint: number): boolean => {
+	try {
+		void font.glyphForCodePoint(codePoint).advanceWidth;
+		return true;
+	} catch {
+		return false;
+	}
+};
+
 /**
  * Advance of one run under one face, in ems. Measured through fontkit's layout,
  * so the kerning and the substitutions the browser applies are applied here too
  * — which is why a run is kept whole rather than summed character by character.
+ * A run fontkit fails on is split at the glyphs it cannot read
+ * ({@link calcUnreadableGlyphAdvanceEm}) and the stretches between them laid out
+ * whole.
  */
-const calcRunAdvanceEm = (font: fontkit.Font, run: string): number =>
-	font.layout(run).advanceWidth / font.unitsPerEm;
+const calcRunAdvanceEm = (font: fontkit.Font, run: string): number => {
+	try {
+		return font.layout(run).advanceWidth / font.unitsPerEm;
+	} catch {
+		let total = 0;
+		let segment = "";
+		for (const char of run) {
+			const codePoint = char.codePointAt(0) ?? 0;
+			if (isGlyphReadable(font, codePoint)) {
+				segment += char;
+				continue;
+			}
+			if (segment !== "") {
+				total += font.layout(segment).advanceWidth / font.unitsPerEm;
+				segment = "";
+			}
+			total += calcUnreadableGlyphAdvanceEm(font, codePoint);
+		}
+		if (segment !== "") {
+			total += font.layout(segment).advanceWidth / font.unitsPerEm;
+		}
+		return total;
+	}
+};
 
 /**
  * Splits the text into maximal stretches drawn from one file and adds up their

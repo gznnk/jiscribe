@@ -54,6 +54,41 @@ describe("nodeTextMeasurement", () => {
 		);
 	});
 
+	it.each([
+		// Source Sans 3 draws U+2002 itself, so Noto Sans JP's copy needs a stack
+		// that starts there.
+		["U+2002", "\u2002", '"Noto Sans JP", sans-serif'],
+		["U+2009", "\u2009", SANS_STACK],
+		["U+200B", "\u200B", SANS_STACK],
+		["U+FEFF", "\uFEFF", SANS_STACK],
+	])(
+		"measures %s, an empty glyph fontkit cannot read, without throwing",
+		(_label, space, fontFamily) => {
+			for (const fontWeight of ["normal", "bold"]) {
+				const spacedWidth = measureWidth(
+					`a${space}b`,
+					16,
+					fontFamily,
+					fontWeight,
+				);
+				expect(spacedWidth).toBeGreaterThanOrEqual(
+					measureWidth("ab", 16, fontFamily, fontWeight),
+				);
+				expect(spacedWidth).toBeLessThan(
+					measureWidth("ab", 16, fontFamily, fontWeight) + 16,
+				);
+			}
+		},
+	);
+
+	it("measures a thin space as Source Sans 3's hmtx advance", () => {
+		// 100 / 1000 em at 16px.
+		expect(measureWidth("a\u2009b", 16)).toBeCloseTo(
+			measureWidth("a", 16) + 1.6 + measureWidth("b", 16),
+			3,
+		);
+	});
+
 	it("leaves a family the canvas does not ship to the estimate", () => {
 		// 5 characters × 16px × 0.6 — the canvas's own fallback, which the factory
 		// defers to by declining the font.
