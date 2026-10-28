@@ -12,15 +12,15 @@
 // goes on its own, since there is nothing about it left to resolve.
 //
 // Its other job is answering the queries only the drawn result can answer (capture,
-// camera, selection, measurement). Reading the file does not tell the AI those, so
-// it comes here to ask, and is answered once the file it wrote has been drawn.
+// camera, selection, measurement, export_image's file). Reading the file does not
+// tell the AI those, so it comes here to ask, and is answered once the file it
+// wrote has been drawn.
 //
 // The same page is used for the window a person looks at and for the headless one
 // the AI looks through (?headless=1). The headless one has nobody to close it, so
 // it is the one page that closes itself when the host stays unreachable, or when
 // the canvas it exists to draw has thrown.
 
-import type { AiHandleOp } from "@jiscribe/ai-tools";
 import {
 	applyHandleOp,
 	captureCanvasImage,
@@ -38,15 +38,22 @@ import type { CSSProperties } from "react";
 
 import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
 import { CanvasSurface } from "./CanvasSurface";
+import { exportCanvasImage } from "./exportCanvasImage";
 import { requestHostAction } from "./files";
 import { noticeDurationsMs, type NoticeKind } from "./noticeDurations";
 import { calcDocLoadId } from "./ownEcho";
 import { createDocImageResolver } from "./resolveDocImage";
 import { useCanvasCommitWait } from "./useCanvasCommitWait";
-import { useCanvasHostSocket } from "./useCanvasHostSocket";
+import {
+	useCanvasHostSocket,
+	type ViewerOpOutcome,
+} from "./useCanvasHostSocket";
 import { useDocSync, type WorkInHand } from "./useDocSync";
 import { viewerTheme } from "./viewerTheme";
-import { isHeadlessViewerSearch } from "../shared/canvasHostProtocol";
+import {
+	isHeadlessViewerSearch,
+	type ViewerOp,
+} from "../shared/canvasHostProtocol";
 import type { HostActionName } from "../shared/hostActionsRoute";
 
 /**
@@ -218,6 +225,11 @@ export function App() {
 		isPersonInteracting,
 		readWorkInHand,
 	});
+	// Read by an export once the revision it names is drawn, so it is the doc on screen
+	const drawnDocRef = useRef(doc);
+	useEffect(() => {
+		drawnDocRef.current = doc;
+	});
 	const waitForCanvasCommit = useCanvasCommitWait();
 	// The hand-over count a query last waited out a render for; null before the first
 	const renderedHandOverCountRef = useRef<number | null>(null);
@@ -285,17 +297,28 @@ export function App() {
 	);
 
 	/**
-	 * Answers the queries about the drawn result. Capture alone carries an image
-	 * rather than text, so it has a path of its own
+	 * Answers the queries about the drawn result. Capture and export carry an
+	 * image rather than text, so each has a path of its own
 	 */
 	const runHandleOp = useCallback(
-		async (op: AiHandleOp, expectedRevision: string | undefined) => {
+		async (
+			op: ViewerOp,
+			expectedRevision: string | undefined,
+		): Promise<ViewerOpOutcome> => {
 			try {
 				if (expectedRevision !== undefined) {
 					const notDrawnReason = await waitForDrawnRevision(expectedRevision);
 					if (notDrawnReason !== null) {
 						return { ok: false, text: notDrawnReason };
 					}
+				}
+				if (op.kind === "exportImage") {
+					return await exportCanvasImage(
+						op,
+						canvasHandleRef.current?.export ?? null,
+						handleControl,
+						drawnDocRef.current.root.map(({ id }) => id),
+					);
 				}
 				return op.kind === "captureCanvas"
 					? await captureCanvasImage(op, capturePng, handleControl)

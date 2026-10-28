@@ -17,7 +17,9 @@ export {
 	CanvasFileError,
 	createEmptyCanvasDoc,
 	ensureCanvasFile,
+	realpathDeepestExisting,
 	toCanvasFilePath,
+	writeFileAtomically,
 } from "@jiscribe/doc-tools/file";
 
 /**

@@ -11,9 +11,10 @@
 // - headlessLauncher: the window-less browser the AI looks through
 //
 // The single source of truth is one .jis file in the workspace. Only the queries
-// the file has no answer for (capture, camera, selection, measurement) are put to
-// the windows under a requestId (runHandleOp), each one after the file on display
-// has been passed on and naming the revision to be drawn first; the one other
+// the file has no answer for (capture, camera, selection, measurement, an image
+// export) are put to the windows under a requestId (runHandleOp), each one after
+// the file on display has been passed on and naming the revision to be drawn
+// first; the one other
 // round trip is the flush the windows are asked for before the file on display
 // changes (flushViewers).
 //
@@ -238,6 +239,9 @@ export async function startCanvasHost(
 					...(frame.imagePngBase64 === undefined
 						? {}
 						: { imagePngBase64: frame.imagePngBase64 }),
+					...(frame.exportedImageBase64 === undefined
+						? {}
+						: { exportedImageBase64: frame.exportedImageBase64 }),
 				});
 				return;
 			}
@@ -283,7 +287,7 @@ export async function startCanvasHost(
 		openFile: fileMirror.openFile,
 		getOpenPath: fileMirror.getOpenPath,
 		flushViewers,
-		runHandleOp: async (op) => {
+		runHandleOp: async (op, timeoutMs = HANDLE_OP_TIMEOUT_MS) => {
 			// The watch would get a tool's write to the windows one poll later, and the
 			// op would be answered against the drawing from before it
 			const fileSync = await fileMirror.syncOpenFile();
@@ -317,7 +321,7 @@ export async function startCanvasHost(
 						? { expectedRevision: fileSync.revision }
 						: {}),
 				}),
-				timeoutMs: HANDLE_OP_TIMEOUT_MS,
+				timeoutMs,
 				calcTimeoutOutcome: () => ({
 					ok: false,
 					text: "the canvas viewer did not answer in time",

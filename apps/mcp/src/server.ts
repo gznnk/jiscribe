@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	isAiDocOp,
 	isCanvasHandleTool,
@@ -30,11 +32,21 @@ import { canvasToolSet } from "./canvasDefinitions";
 import {
 	CanvasFileError,
 	readCanvasFileText,
+	writeFileAtomically,
 	CANVAS_FILE_EXTENSIONS,
 } from "./canvasStore";
+import {
+	isCanvasImageName,
+	readExportImageFormat,
+	resolveExportImageOutputPath,
+} from "./exportImageOutput";
 import type { CanvasHost } from "./host/canvasHost";
 import { CanvasHostError } from "./host/canvasHostError";
 import { createJiscribeMcpRuntime, type JiscribeMcpRuntime } from "./runtime";
+import {
+	MAX_EXPORT_PIXEL_SIZE,
+	type ExportImageOp,
+} from "./shared/canvasHostProtocol";
 
 export {
 	createJiscribeMcpRuntime,
@@ -51,7 +63,7 @@ export type { BrowserOpenOptions } from "./host/openBrowser";
  * The tool definitions of the Jiscribe MCP server. Starting it over stdio is
  * `./index`'s job.
  *
- * The tools it exposes, 85 in all, come in four groups.
+ * The tools it exposes, 86 in all, come in four groups.
  *
  * 1. The ones this server has of its own (written out directly below)
  *    - `read_drawing_guide`: hands back one of the two guides `@jiscribe/doc-schema`
@@ -70,6 +82,10 @@ export type { BrowserOpenOptions } from "./host/openBrowser";
  *      a shape of a given size
  *    - `add_rect` / `add_ellipse`: entry points giving default sizes to the two
  *      most frequently used shapes
+ *    - `export_image`: has the viewer draw the canvas on display to a PNG or SVG
+ *      and writes it to a file under the workspace, for a person rather than the
+ *      AI (which looks through capture_canvas). Run as group 3's round trip,
+ *      under a longer timeout
  * 2. The ones `@jiscribe/ai-tools` declares that a document alone can answer
  *    (`registerDocTools`). Adding, moving, aligning, grouping, style, the colour
  *    of the canvas surface, declaring the view, naming the document or an object,
@@ -120,6 +136,16 @@ const DEFAULT_FONT_FAMILY = '"Source Sans 3", "Noto Sans JP", sans-serif';
 
 const pathArg = z.string().describe("Absolute path to the target .jis file.");
 
+/** export_image's PNG scale when none is given, and the most it takes */
+const DEFAULT_EXPORT_SCALE = 2;
+const MAX_EXPORT_SCALE = 8;
+
+/**
+ * How long export_image waits for the viewer. A PNG at a high scale takes far
+ * longer to draw and encode than a capture_canvas picture does
+ */
+const EXPORT_IMAGE_TIMEOUT_MS = 60_000;
+
 /**
  * What the server tells a client about itself at handshake time. It stays in the
  * model's context for the whole session, so it holds only what is true of this
@@ -131,7 +157,7 @@ const SERVER_INSTRUCTIONS = [
 	"Jiscribe draws diagrams as .jis files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
 	`Every document tool takes an absolute \`path\` naming the file it acts on, and the file has to be a canvas file: ${CANVAS_FILE_EXTENSIONS.join(", ")}. There is no concept of a currently open document, and a tool that only reads does not write the file back.`,
 	"An image shape is the one path that is not absolute: its `src` is read relative to the .jis file's own directory and cannot leave it, so the image file has to be somewhere under the diagram's own directory before you point at it.",
-	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The 16 tools for capture, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
+	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The tools for capture, image export, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
 	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports what would stop the file from opening, what the parser would drop from it on the next save, and text that does not fit; run it before telling the user a diagram is finished.",
 	"`undo` steps back through edits you made and keeps its history per file, so it cannot take back what a person changed in the viewer.",
 	"Call `read_drawing_guide` before you start drawing: `drawing` is what the canvas can hold and how to draw on it well, and `json-format` is for when you have decided to edit a .jis file directly instead of through these tools.",
@@ -404,6 +430,58 @@ export function createJiscribeMcpServer(
 			}),
 	);
 
+	server.registerTool(
+		registerName("export_image"),
+		{
+			description: [
+				"Write the canvas on display in the viewer to an image file for a person: a PNG at the scale asked for, or an SVG.",
+				"The image is not handed back to you, only its path and size; to look at the drawing yourself, use capture_canvas instead.",
+				"Given no ids it is the whole drawing fitted to its content; ids take the extent of those objects, with the document's margin around them.",
+				"The .jis source is not embedded, so the file does not reopen as an editable diagram.",
+				"Like the screen tools it acts on the canvas open in the viewer rather than on a path, so call open_canvas first (headless: true opens no window).",
+			].join(" "),
+			inputSchema: z
+				.object({
+					output: z
+						.string()
+						.describe(
+							"Absolute path of the image to write, ending in .png or .svg (either case), which decides the format. It has to be under the directory of the .jis on display, in a directory that already exists; a file already there is replaced, except a .jis.png / .jis.svg, which is an editable diagram and is refused.",
+						),
+					scale: z
+						.number()
+						.positive()
+						.max(MAX_EXPORT_SCALE)
+						.optional()
+						.describe(
+							`PNG only (an error with .svg): pixels per world unit, default ${DEFAULT_EXPORT_SCALE}. The long edge is capped at ${MAX_EXPORT_PIXEL_SIZE} px, past which the image is scaled down and the result says so.`,
+						),
+					ids: z
+						.array(z.string())
+						.min(1)
+						.optional()
+						.describe(
+							"ids of the objects to export, as the union of what they draw; omit for the whole drawing.",
+						),
+					isolate: z
+						.boolean()
+						.optional()
+						.describe(
+							"With ids only (an error without). true draws just the objects named, with their descendants and the connectors whose attached ends are all on them; the default false crops, keeping whatever else is drawn in that area.",
+						),
+				})
+				.strict(),
+		},
+		async (args) => {
+			// Called before the first await, as every screen tool does (see
+			// registerHandleTools)
+			const earlierCalls = runtime.waitForEarlierCalls();
+			return runTool(async () => {
+				await earlierCalls;
+				return await exportImageToFile(runtime.getHost(), args);
+			});
+		},
+	);
+
 	// The declarations are read twice, once for each group; applying resolves the
 	// plugin tools through the same set
 	registerDocTools(
@@ -671,6 +749,82 @@ function measureTextInShape(params: {
 		`content ${round(box.width)}x${height === undefined ? "-" : round(box.height)}`,
 		`fits ${fits ? "yes" : "no"}`,
 	].join("\n");
+}
+
+/**
+ * Runs export_image: checks the arguments and the output path, has the viewer
+ * draw the image, and writes it.
+ *
+ * @param host The host open_canvas started; null when there is none
+ * @param args The tool's arguments, as its schema let them through
+ * @returns The result text: what was written and its size, or `error: ...`
+ * @throws CanvasFileError when the output cannot be written
+ */
+async function exportImageToFile(
+	host: CanvasHost | null,
+	args: {
+		output: string;
+		scale?: number;
+		ids?: string[];
+		isolate?: boolean;
+	},
+): Promise<string> {
+	const { output, scale, ids, isolate } = args;
+	const format = readExportImageFormat(output);
+	if (format === null) {
+		return `error: ${output} has to end in .png or .svg, which decides the format`;
+	}
+	if (isCanvasImageName(output)) {
+		return `error: ${output} is named as an editable diagram (.jis.${format}), which an export would overwrite without its source; name it plain .${format} instead`;
+	}
+	if (format === "svg" && scale !== undefined) {
+		return "error: scale is for a PNG only; drop it for an .svg";
+	}
+	if (isolate === true && ids === undefined) {
+		return "error: isolate works with ids only, since it draws just the objects they name; drop isolate or give ids";
+	}
+	if (!path.isAbsolute(output)) {
+		return `error: output has to be an absolute path: ${output}`;
+	}
+	if (host === null) {
+		return "error: no canvas is open, so there is nothing on screen to export; call open_canvas first (headless: true opens no window)";
+	}
+	const targetPath = await resolveExportImageOutputPath(
+		host.workspaceRoot,
+		output,
+	);
+	const region = {
+		...(ids === undefined ? {} : { ids }),
+		...(isolate === undefined ? {} : { isolate }),
+	};
+	const op: ExportImageOp =
+		format === "png"
+			? {
+					kind: "exportImage",
+					format,
+					scale: scale ?? DEFAULT_EXPORT_SCALE,
+					...region,
+				}
+			: { kind: "exportImage", format, ...region };
+	const outcome = await host.runHandleOp(op, EXPORT_IMAGE_TIMEOUT_MS);
+	if (!outcome.ok) {
+		return toOutcomeText(outcome);
+	}
+	if (outcome.exportedImageBase64 === undefined) {
+		return "error: the canvas viewer answered without an image, which an outdated viewer tab does; reload the viewer and try again";
+	}
+	const bytes = Buffer.from(outcome.exportedImageBase64, "base64");
+	try {
+		await writeFileAtomically(targetPath, bytes);
+	} catch (error) {
+		throw new CanvasFileError(
+			`failed to write ${output}: ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
+	const writtenPath = path.resolve(output);
+	return format === "svg"
+		? `wrote ${writtenPath} (SVG, ${bytes.length} bytes)`
+		: `wrote ${writtenPath}: ${outcome.text}`;
 }
 
 /** What a tool can return: text, and the PNG a capture returns */

@@ -8,8 +8,9 @@
 //    and saves. A one-way notification is enough here, except for the flush before
 //    the host moves to another file, which has to be waited on.
 // 2. Operations that need a mounted canvas (capture, camera, selection,
-//    measurement). The file holds no answer, so there is nothing for it but to ask
-//    the viewer, which makes it a round trip under a requestId.
+//    measurement, and export_image's file export). The file holds no answer, so
+//    there is nothing for it but to ask the viewer, which makes it a round trip
+//    under a requestId.
 
 import type { AiHandleOp } from "@jiscribe/ai-tools";
 
@@ -29,6 +30,37 @@ export const HEADLESS_VIEWER_QUERY = "headless=1";
  */
 export const isHeadlessViewerSearch = (search: string): boolean =>
 	search.replace(/^\?/, "").split("&").includes(HEADLESS_VIEWER_QUERY);
+
+/**
+ * The longest edge (px) of a PNG export_image writes; the viewer scales a larger
+ * one down to it, and the tool's description names it
+ */
+export const MAX_EXPORT_PIXEL_SIZE = 8192;
+
+/**
+ * export_image's request: the canvas drawn to an image for a file. It is this
+ * server's own, so it rides the handleOp round trip without being an AiHandleOp
+ */
+export type ExportImageOp = {
+	kind: "exportImage";
+	/**
+	 * The objects whose extent is exported, with the document's margin around
+	 * what they draw; omitted exports the whole drawing
+	 */
+	ids?: readonly string[];
+	/** Whether only the objects ids names are drawn (capture_canvas's isolate); only with ids */
+	isolate?: boolean;
+} & (
+	| {
+			format: "png";
+			/** Pixels per world unit, before the cap on the long edge */
+			scale: number;
+	  }
+	| { format: "svg" }
+);
+
+/** What a handleOpRequest can ask the viewer to run */
+export type ViewerOp = AiHandleOp | ExportImageOp;
 
 /** Server to viewer */
 export type CanvasHostServerMessage =
@@ -54,7 +86,7 @@ export type CanvasHostServerMessage =
 	| {
 			type: "handleOpRequest";
 			requestId: string;
-			op: AiHandleOp;
+			op: ViewerOp;
 			/**
 			 * The revision of the last doc frame the host sent, which the window is to
 			 * have drawn before it runs the op. Left out when the host has no file text
@@ -88,6 +120,11 @@ export type CanvasHostClientMessage =
 			text: string;
 			/** The PNG (base64, no data-URL prefix), present only for capture_canvas */
 			imagePngBase64?: string;
+			/**
+			 * The exported file's bytes (base64), present only for a successful
+			 * exportImage; the format is the one the request named
+			 */
+			exportedImageBase64?: string;
 	  };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -116,7 +153,9 @@ export function isCanvasHostClientMessage(
 				typeof value.ok === "boolean" &&
 				typeof value.text === "string" &&
 				(value.imagePngBase64 === undefined ||
-					typeof value.imagePngBase64 === "string")
+					typeof value.imagePngBase64 === "string") &&
+				(value.exportedImageBase64 === undefined ||
+					typeof value.exportedImageBase64 === "string")
 			);
 		default:
 			return false;

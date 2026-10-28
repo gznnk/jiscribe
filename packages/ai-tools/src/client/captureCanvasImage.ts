@@ -17,10 +17,11 @@ import type { AiHandleControl, CapturePng } from "./types";
 
 /**
  * The longest edge (px) of the image handed to the AI. It travels over IPC as
- * base64 and then rides into the model's input, so it is held down to what is
- * still readable (the API scales the long edge to some 1568px of its own)
+ * base64 and then rides into the model's input, so it is held to what the model
+ * reads without scaling it down itself: 2576px for Claude Opus 4.7 and Sonnet 5
+ * onward (Opus 4.6 and earlier scale past some 1568px)
  */
-const MAX_CAPTURE_PIXEL_SIZE = 1400;
+const MAX_CAPTURE_PIXEL_SIZE = 2576;
 
 /**
  * The capture options. Size is held down by drawing at 1:1 with a cap on the

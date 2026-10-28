@@ -15,8 +15,24 @@ covers that.
 
 ## [Unreleased]
 
+### Added
+
+- **`export_image` writes the drawing to an image file for a person.** It has
+  the viewer draw the canvas on display — the whole drawing, or the extent of
+  `ids` (with `isolate`, those objects alone) — to a PNG at `scale` (default 2,
+  at most 8, the long edge capped at 8192 px) or an SVG, picked by the
+  `output` extension, without the `.jis` source embedded. The image is not
+  handed back to the AI: the result names the path and the size. `output` has
+  to be under the directory of the `.jis` on display (checked through links)
+  in a directory that exists; an image already there is replaced, but a name
+  ending in `.jis.png` / `.jis.svg` is refused. Like `capture_canvas`, it
+  needs a viewer.
+
 ### Changed
 
+- **`capture_canvas` keeps up to 2576 px on the long edge**, up from 1400. A
+  part named by `ids`, `rect` or the selection is drawn at full size (1 world
+  unit to 1 px) and shrinks only past that edge.
 - **The viewer's shape presets moved to a bar at the bottom of the canvas.**
   The canvas starts collapsed: the top bar splits into two pills at the
   canvas's top corners along the same sides — top-left, undo / redo;

@@ -1401,7 +1401,8 @@ export const createCanvasToolDescriptors = (
 		[
 			"See the canvas as a picture: renders it to a PNG and hands it back to you.",
 			"Use it to judge what only the eye catches — a line crossing a shape, overlapping objects, a label spilling out of its box, a lopsided layout — after finishing a drawing or a batch of edits, and fix what you see.",
-			'Given nothing, the picture is the whole drawing fitted to its content. A large drawing is scaled down past reading that way, so give ids or rect (or target "selection") to get one part of it at a legible resolution.',
+			'Given nothing, the picture is the whole drawing fitted to its content; give ids or rect (or target "selection") to get one part of it at full size, 1 world unit to 1 px.',
+			"Either way the picture is scaled down only when its long edge would pass 2576 px, so a large drawing taken whole can come out too small to read; take it a part at a time then.",
 			"By default the picture crops rather than filters: anything else drawn inside the area captured is in it too. With isolate it draws only what ids or the selection name.",
 			"A rect is taken exactly, with no margin, and needs extent on both axes; ids and the selection get the document's margin around what they draw.",
 			"The result says which world rect the image covers and its pixel size, so a spot in the image can be turned into a world point and handed to hit_test to name what is there.",
