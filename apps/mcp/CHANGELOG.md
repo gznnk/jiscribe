@@ -27,6 +27,10 @@ covers that.
   in a directory that exists; an image already there is replaced, but a name
   ending in `.jis.png` / `.jis.svg` is refused. Like `capture_canvas`, it
   needs a viewer.
+- **`connect` and `connect_many` place the label they draw.** They take
+  `labelPosition` and `labelOffset` as `update_connector` does, so a label
+  lands where it should without a second call. Either one needs `label` text
+  in the same call.
 
 ### Changed
 

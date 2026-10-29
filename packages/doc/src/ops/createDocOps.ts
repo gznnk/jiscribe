@@ -140,13 +140,15 @@ export type DocOps = {
 	addObjects(doc: CanvasDoc, entries: readonly AddObjectEntry[]): string[];
 	/**
 	 * Join two objects with a connector, mutating `doc` in place and returning the new id.
-	 * Throws `DocOperationError` when an endpoint is missing or not connectable.
+	 * Throws `DocOperationError` when an endpoint is missing or not connectable, or when a
+	 * label placement is given without label text.
 	 */
 	connect(doc: CanvasDoc, params: ConnectParams): string;
 	/**
 	 * Add several connectors at once and return their new ids positionally. Endpoints are
 	 * resolved against the doc as it already is, so objects to be wired up must be added first.
-	 * Throws `DocOperationError` naming the entry at fault, having added none of them.
+	 * Throws `DocOperationError` for anything `connect` rejects, a label placement without
+	 * label text included, naming the entry at fault, having added none of them.
 	 */
 	connectMany(doc: CanvasDoc, entries: readonly ConnectParams[]): string[];
 	/**

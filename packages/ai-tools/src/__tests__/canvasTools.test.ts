@@ -593,12 +593,39 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 			}).success,
 		).toBe(true);
 		expect(
+			parseArgs("connect_many", {
+				entries: [
+					{
+						sourceId: "a",
+						targetId: "b",
+						label: "yes",
+						labelPosition: 0.25,
+						labelOffset: -12,
+					},
+				],
+			}).success,
+		).toBe(true);
+		expect(
 			parseArgs("set_text_styles", {
 				entries: [
 					{ id: "a", match: "hello", occurrence: 1, fontWeight: "bold" },
 				],
 			}).success,
 		).toBe(true);
+	});
+
+	it("holds the connect labelPosition to 0..1", () => {
+		const result = parseArgs("connect", {
+			sourceId: "a",
+			targetId: "b",
+			label: "yes",
+			labelPosition: 2,
+		});
+
+		expect(result.success).toBe(false);
+		expect(result.error?.issues[0]).toMatchObject({
+			path: ["labelPosition"],
+		});
 	});
 
 	it("leaves extraProps open, the names being the type's own and checked downstream", () => {

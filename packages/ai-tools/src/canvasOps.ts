@@ -199,6 +199,10 @@ export type AiDocOp =
 			startArrow?: AiArrowType;
 			endArrow?: AiArrowType;
 			label?: string;
+			/** 0 at the source to 1 at the target. Needs label text */
+			labelPosition?: number;
+			/** Px off the line, the sign picking the side. Needs label text */
+			labelOffset?: number;
 			routing?: AiRouting;
 			points?: AiPoint[];
 	  }

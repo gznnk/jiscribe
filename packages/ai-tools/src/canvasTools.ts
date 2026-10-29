@@ -221,6 +221,24 @@ const textStretchSchema = {
 		),
 };
 
+/** Where a connector's label sits; drawing and changing a connector share it. */
+const labelPlacementSchema = {
+	labelPosition: z
+		.number()
+		.min(0)
+		.max(1)
+		.optional()
+		.describe(
+			"Where the label sits along the line: 0 at the source, 1 at the target, 0.5 the middle. Refused when the connector has no label text (when drawing one, give label as well).",
+		),
+	labelOffset: z
+		.number()
+		.optional()
+		.describe(
+			"How far the label sits off the line in px; the sign picks the side. Use it when the label overlaps the line or another shape. Refused when the connector has no label text (when drawing one, give label as well).",
+		),
+};
+
 /** The endpoints and options one connector is drawn with; connect and connect_many share them. */
 const connectorDrawSchema = {
 	sourceId: z
@@ -261,6 +279,7 @@ const connectorDrawSchema = {
 		.describe(
 			'Text drawn on the line, e.g. "yes" / "no". Sits on the line itself, so never place a separate text shape next to a connector.',
 		),
+	...labelPlacementSchema,
 	routing: z
 		.enum(ConnectorRoutings)
 		.optional()
@@ -321,20 +340,7 @@ const connectorChangeSchema = {
 				"[] gives the route back to the engine.",
 			].join(" "),
 		),
-	labelPosition: z
-		.number()
-		.min(0)
-		.max(1)
-		.optional()
-		.describe(
-			"Where the label sits along the line: 0 at the source, 1 at the target, 0.5 the middle.",
-		),
-	labelOffset: z
-		.number()
-		.optional()
-		.describe(
-			"How far the label sits off the line in px; the sign picks the side. Use it when the label overlaps the line or another shape.",
-		),
+	...labelPlacementSchema,
 };
 
 const rectSchema = z
@@ -769,7 +775,7 @@ export const createCanvasToolDescriptors = (
 	const connectManyTool = defineCanvasTool(
 		"connect_many",
 		[
-			"Draw many connectors in one call: the batch form of connect, each entry taking exactly what connect takes — the two ends, their anchors, arrowheads, label and route.",
+			"Draw many connectors in one call: the batch form of connect, each entry taking exactly what connect takes — the two ends, their anchors, arrowheads, label and its placement, and route.",
 			"This is the second half of building a diagram: add_objects for every node, then this for every edge between them, instead of calling connect once per line.",
 			"Endpoints are resolved against the canvas as it already stands, so an object created in the same turn has to be added before this call, never inside it.",
 			"All or nothing: if one entry is rejected nothing is drawn at all, and the error names the entry that failed — a guarantee a loop of connect calls cannot give you, since it would leave the lines it already drew behind.",

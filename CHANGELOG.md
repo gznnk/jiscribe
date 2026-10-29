@@ -73,6 +73,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   section's search reaches every registered preset, icon sets included. A host
   applying an icon set still declares its own sections to get them grouped. The library toggle and
   the switch work the same with or without a declared library.
+- **A connector's label is placed as it is drawn.** `ConnectParams` (`connect` /
+  `connectMany` in `@jiscribe/doc`) takes `labelPosition` and `labelOffset`,
+  and so do `jiscribe op <file> connect` / `connect_many`, so placing the label
+  no longer takes a second `update_connector`. Either one without non-empty
+  `label` text is refused.
 
 ### Changed
 

@@ -68,6 +68,16 @@ export type ConnectParams = {
 	/** Label drawn on the line; omitted or empty leaves the connector unlabelled. */
 	label?: string;
 	/**
+	 * Where the label sits along the line, 0 at the source to 1 at the target; needs `label`
+	 * text. Omitted leaves the property off the label.
+	 */
+	labelPosition?: number;
+	/**
+	 * How far the label sits off the line, in px; the sign picks the side. Needs `label`
+	 * text. Omitted leaves the property off the label.
+	 */
+	labelOffset?: number;
+	/**
 	 * Line shape; omitted derives it from the anchors, which is what makes a
 	 * centre-to-centre connector straight. A free end derives like an edge anchor, so
 	 * it stays right-angled unless the other end is a centre.
@@ -117,6 +127,15 @@ const buildConnector = (
 	definitions: DocDefinitions,
 	reservedIds?: ReadonlySet<string>,
 ): ObjectDoc => {
+	const hasLabelText = params.label !== undefined && params.label !== "";
+	if (
+		!hasLabelText &&
+		(params.labelPosition !== undefined || params.labelOffset !== undefined)
+	) {
+		throw new DocOperationError(
+			"labelPosition / labelOffset need label text; pass label as well",
+		);
+	}
 	const source = buildRequestedEndpoint(
 		doc,
 		"source",
@@ -151,8 +170,18 @@ const buildConnector = (
 			? { startArrow: params.startArrow }
 			: {}),
 		...(params.endArrow !== undefined ? { endArrow: params.endArrow } : {}),
-		...(params.label !== undefined && params.label !== ""
-			? { label: { text: params.label } }
+		...(hasLabelText
+			? {
+					label: {
+						text: params.label,
+						...(params.labelPosition !== undefined
+							? { position: params.labelPosition }
+							: {}),
+						...(params.labelOffset !== undefined
+							? { offset: params.labelOffset }
+							: {}),
+					},
+				}
 			: {}),
 	};
 	return connector as unknown as ObjectDoc;
@@ -166,15 +195,17 @@ const buildConnector = (
  * be attached: two loose ends make a polyline, which the doc model rejects as a connector.
  *
  * @param doc - Mutated in place: the created connector is pushed onto `doc.root`
- * @param params - Both endpoints, plus optional anchors, arrowheads, label and route; the
- *   anchor kinds decide the default routing, so a center endpoint yields a straight line
+ * @param params - Both endpoints, plus optional anchors, arrowheads, label, label placement
+ *   and route; the anchor kinds decide the default routing, so a center endpoint yields a
+ *   straight line
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
  * @returns The id assigned to the new connector, `connector-N` unique across the root tree
  * @throws {@link DocOperationError} with a user-facing message when an end names both an object
  *   and a point or neither, when an object is missing from the root tree, is not connectable,
  *   carries an unusable edge anchor (see {@link AnchorHandleId}) or is asked for a connect point
- *   it does not offer (the message lists the ones it does), when a point is not finite, or when
- *   both ends would be free
+ *   it does not offer (the message lists the ones it does), when a point is not finite, when
+ *   both ends would be free, or when `labelPosition` / `labelOffset` is given without
+ *   non-empty `label` text
  */
 export const connect = (
 	doc: CanvasDoc,
@@ -198,8 +229,8 @@ export const connect = (
  * @param doc - Mutated in place: the created connectors are pushed onto `doc.root`, in the
  *   order they appear in `entries`
  * @param entries - One endpoint pair per connector, with the same optional anchors,
- *   arrowheads, label and route `connect` takes; an empty array is a no-op returning an empty
- *   array. Several connectors may name the same object and anchor
+ *   arrowheads, label, label placement and route `connect` takes; an empty array is a no-op
+ *   returning an empty array. Several connectors may name the same object and anchor
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
  * @returns The assigned ids, positionally matching `entries`
  * @throws {@link DocOperationError} for anything {@link connect} rejects, prefixed with

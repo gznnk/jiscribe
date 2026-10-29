@@ -221,6 +221,71 @@ describe("connect", () => {
 			docOps.connect(doc, { sourceId: first, targetId: connectorId }),
 		).toThrow(DocOperationError);
 	});
+
+	it("places the label it draws", () => {
+		const doc = twoRects();
+
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetId: "rect-2",
+			label: "yes",
+			labelPosition: 0.3,
+			labelOffset: -12,
+		});
+
+		expect(readObject(doc, "connector-1").label).toEqual({
+			text: "yes",
+			position: 0.3,
+			offset: -12,
+		});
+		expectValid(doc);
+	});
+
+	it("writes only the placement it was given", () => {
+		const doc = twoRects();
+
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetId: "rect-2",
+			label: "yes",
+			labelPosition: 0.3,
+		});
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetId: "rect-2",
+			label: "no",
+			labelOffset: 8,
+		});
+
+		expect(readObject(doc, "connector-1").label).toEqual({
+			text: "yes",
+			position: 0.3,
+		});
+		expect(readObject(doc, "connector-2").label).toEqual({
+			text: "no",
+			offset: 8,
+		});
+	});
+
+	it.each([
+		["no label", {}],
+		["an empty label", { label: "" }],
+	])("refuses a label placement with %s", (_case, labelParams) => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connect(doc, {
+				sourceId: "rect-1",
+				targetId: "rect-2",
+				labelPosition: 0.3,
+				...labelParams,
+			}),
+		).toThrow(
+			"labelPosition / labelOffset need label text; pass label as well",
+		);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
 });
 
 describe("connect with a free end", () => {
@@ -426,6 +491,21 @@ describe("connectMany", () => {
 			]),
 		).toThrow(
 			"entries[1]: object not found: missing — the document was left unchanged",
+		);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("leaves the doc untouched when one entry places a label it does not have", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connectMany(doc, [
+				{ sourceId: "rect-1", targetId: "rect-2", label: "yes" },
+				{ sourceId: "rect-2", targetId: "rect-1", labelOffset: 8 },
+			]),
+		).toThrow(
+			"entries[1]: labelPosition / labelOffset need label text; pass label as well",
 		);
 		expect(JSON.stringify(doc)).toBe(before);
 	});

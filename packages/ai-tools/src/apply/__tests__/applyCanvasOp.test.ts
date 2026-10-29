@@ -294,6 +294,26 @@ describe("applyCanvasOp", () => {
 		});
 	});
 
+	it("places the label of a connector it draws", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
+		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
+
+		const result = apply({
+			kind: "connect",
+			sourceId: "rect-1",
+			targetId: "rect-2",
+			label: "yes",
+			labelPosition: 0.25,
+		});
+
+		expect(result.ok).toBe(true);
+		expect(rootObject(currentDoc(), "connector-1")).toMatchObject({
+			type: "connector",
+			label: { text: "yes", position: 0.25 },
+		});
+	});
+
 	it("returns ok:false on a type it does not know, and leaves the document alone", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
