@@ -13,8 +13,8 @@ describe("IconStencils", () => {
 		expect(registeredIds.size).toBe(IconStencils.length);
 	});
 
-	it("keeps the flyout to its 20 icons, all registered", () => {
-		expect(ICON_STENCIL_IDS).toHaveLength(20);
+	it("keeps the flyout to its 24 icons, all registered", () => {
+		expect(ICON_STENCIL_IDS).toHaveLength(24);
 		expect(ICON_STENCIL_IDS[0]).toBe("lucideIconUser");
 		expect(ICON_STENCIL_IDS).toContain("lucideIconFileText");
 		expect(lucideIconStencilCategory.presetIds).toEqual(ICON_STENCIL_IDS);

@@ -10,7 +10,9 @@ export type AwsTier1Icon = {
  * The icons the palette carries (tier 1): what an AWS diagram reaches for
  * without thinking, in service → resource → general order. All 781 would be too
  * many to lay out, so the rest are reached by search, in the picker or the
- * stencil library.
+ * stencil library. The length stays a multiple of the library grid's columns
+ * (`STENCIL_LIBRARY_PANEL_GRID_COLUMNS` in canvas), so the section ends on a
+ * full row.
  *
  * The labels are the names used on the ground rather than the official ones
  * (`S3`, not `Amazon Simple Storage Service`), because that is what a diagram
@@ -104,6 +106,7 @@ export const AWS_TIER1_ICONS = [
 	{ icon: "resource/amazon-aurora/amazon-rds-instance", label: "RDS Instance" },
 	{ icon: "resource/amazon-dynamodb/table", label: "Table" },
 	{ icon: "resource/amazon-simple-storage-service/bucket", label: "Bucket" },
+	{ icon: "resource/amazon-elastic-block-store/volume", label: "Volume" },
 	{
 		icon: "resource/elastic-load-balancing/application-load-balancer",
 		label: "ALB",
@@ -130,6 +133,7 @@ export const AWS_TIER1_ICONS = [
 		icon: "resource/amazon-elastic-container-service/service",
 		label: "Service",
 	},
+	{ icon: "resource/aws-identity-access-management/role", label: "IAM Role" },
 	{ icon: "resource/amazon-cloudwatch/alarm", label: "Alarm" },
 	{ icon: "resource/amazon-simple-queue-service/queue", label: "Queue" },
 	{ icon: "resource/amazon-simple-notification-service/topic", label: "Topic" },
