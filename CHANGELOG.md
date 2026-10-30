@@ -81,6 +81,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **The Icon and AWS sections of the shape library fill whole rows of six.**
+  The Lucide icon category's presets add `bot`, `smartphone`, `send` and `x`
+  (24 icons), and the AWS palette (tier 1) adds EBS `Volume` and `IAM Role`
+  (102 icons). The rest of each set is still a search away.
 - **`capture_canvas` keeps up to 2576 px on the long edge**, up from 1400 —
   what Claude Opus 4.7 and Sonnet 5 onward read without scaling it down. A part
   named by `ids`, `rect` or the selection is still drawn at full size (1 world
