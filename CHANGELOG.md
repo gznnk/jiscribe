@@ -152,6 +152,25 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **A `set:` style action that changes nothing is no longer committed.** The
+  ObjectMenu's and the properties sidebar's swatches wrote through it whether
+  or not the value was already in place, and every write was a commit: a
+  history entry holding the same document, the redo stack dropped, a save
+  request raised. The shape colour pickers worked around it in 0.10.0 by
+  skipping the swatch shown as picked where they could prove the pick idle;
+  the font colour pickers could not, a text colour landing on the slots or on
+  the run being edited rather than on the object. The proof now comes from
+  the style entries themselves: `runOrTextSlotEntry` returns the object it was
+  handed when every place the write would land is drawn with the value
+  already — the slot, read through its type's defaults, with no run overriding
+  the field, or every run the selected stretch covers, each read over the
+  slot's — which is the same-reference contract the other entries kept, and
+  `applyStyleAction` leaves `commitVersion` alone when `applyStyleIntent`
+  answered with the same state. So a slot leaving the field to its defaults
+  is no longer written for that default either, and a stretch inheriting the
+  slot's value is not given a run of its own. A pick that reaches a type's
+  own entry still commits where that entry rebuilds its object; the shipped
+  entries do not.
 - **Measuring text in Node no longer throws on some space and zero-width characters.** `@jiscribe/doc-tools`
   failed with `RangeError: Offset is outside the bounds of the DataView` on
   U+2009, U+200B and U+FEFF under Source Sans 3 and on U+2002 under Noto Sans

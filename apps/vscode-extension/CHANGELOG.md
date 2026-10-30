@@ -29,6 +29,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The floating menu's **…** button. Open the properties sidebar from the top
   bar instead.
 
+### Fixed
+
+- **Picking the text colour a shape already has no longer throws redo away.**
+  The shape and line colour pickers stopped doing this in 0.10.0; the font
+  colour pickers (the floating menu's, the connector label's and the
+  sidebar's) still wrote every time, marking the document dirty and emptying
+  the redo stack for a pick that changed nothing. A pick of the colour the
+  text is drawn with — on the whole shape, or on the stretch selected while
+  editing — now changes nothing and records nothing. Picking it for a shape
+  whose text has a word in another colour is still an edit, as before: the
+  word takes the shape's colour.
+
 ## [0.12.2] - 2026-10-25
 
 ### Security

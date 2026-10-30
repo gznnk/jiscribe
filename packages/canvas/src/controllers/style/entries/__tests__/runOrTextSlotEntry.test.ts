@@ -1,4 +1,5 @@
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import { describe, it, expect } from "vitest";
 
 import { createObjectPartKindRegistry } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
@@ -40,6 +41,53 @@ describe("runOrTextSlotEntry with a stretch of text selected", () => {
 			expect(readTextSlots(updated).body.text).toEqual([
 				[{ text: "a" }, { text: "b", fontColor: "#d33" }],
 				[{ text: "c", fontColor: "#d33" }, { text: "d" }],
+			]);
+		});
+
+		it("every covered run already carrying the color → the object itself", () => {
+			const a = textRectOf("a", {
+				body: {
+					text: [
+						{ text: "he", fontColor: "#d33" },
+						{ text: "l", fontColor: "#d33", fontWeight: "bold" },
+						{ text: "lo" },
+					],
+				},
+			});
+			expect(entry.apply(a, null, "#d33", editing(0, 3))).toBe(a);
+		});
+
+		it("an unstyled stretch of a slot stating the color → the object itself", () => {
+			// Drawn in that color already, inherited from the slot: a run pinning it
+			// to the characters would be one the next whole-slot write strips.
+			const a = textRectOf("a", {
+				body: { text: "hello", fontColor: "#d33" },
+			});
+			expect(entry.apply(a, null, "#d33", editing(0, 2))).toBe(a);
+		});
+
+		it("an unstyled stretch drawn in its type's default → the object itself", () => {
+			const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
+			textStyleDefaults.register("rect", {
+				byTextSlot: { body: { fontColor: "#222" } },
+			});
+			const a = textRectOf("a", { body: { text: "hello" } });
+			expect(
+				entry.apply(a, null, "#222", { ...editing(0, 2), textStyleDefaults }),
+			).toBe(a);
+		});
+
+		it("a stretch drawn in the color on some runs only → the rest are written", () => {
+			const a = textRectOf("a", {
+				body: {
+					text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
+				},
+			});
+			const updated = entry.apply(a, null, "#d33", editing(0, 3));
+			expect(updated).not.toBe(a);
+			expect(readTextSlots(updated).body.text).toEqual([
+				{ text: "hel", fontColor: "#d33" },
+				{ text: "lo" },
 			]);
 		});
 
@@ -137,6 +185,69 @@ describe("runOrTextSlotEntry with no stretch selected", () => {
 				text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }],
 				fontColor: "#00f",
 			});
+		});
+
+		it("the slot already stating the color with no run overriding it → the object itself", () => {
+			const a = textRectOf("a", {
+				body: { text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }] },
+				name: { text: ["id", "email"] },
+			});
+			const styled = entry.apply(a, null, "#00f", contextOf());
+			expect(styled).not.toBe(a);
+			// Styled once, the same pick lands on nothing: the runs carry other
+			// fields, but not this one.
+			expect(entry.apply(styled as typeof a, null, "#00f", contextOf())).toBe(
+				styled,
+			);
+		});
+
+		it("the slot already stating the color while a run overrides it → the run is stripped", () => {
+			const a = textRectOf("a", {
+				body: {
+					text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
+					fontColor: "#00f",
+				},
+			});
+			const updated = entry.apply(a, null, "#00f", contextOf());
+			expect(updated).not.toBe(a);
+			expect(readTextSlots(updated).body).toEqual({
+				text: "hello",
+				fontColor: "#00f",
+			});
+		});
+
+		it("a slot leaving the color to its type's default → the object itself for that default", () => {
+			const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
+			textStyleDefaults.register("rect", {
+				byTextSlot: { body: { fontColor: "#222" } },
+			});
+			const a = textRectOf("a", { body: { text: "hello" } });
+			expect(
+				entry.apply(a, null, "#222", contextOf({ textStyleDefaults })),
+			).toBe(a);
+			// Another color is written as it stands; the default stays unstored.
+			expect(
+				readTextSlots(
+					entry.apply(a, null, "#333", contextOf({ textStyleDefaults })),
+				).body,
+			).toEqual({ text: "hello", fontColor: "#333" });
+		});
+
+		it("a slot whose type states no color either → written even for the fallback it is drawn with", () => {
+			// Neither the slot nor its defaults set the field; the shared components'
+			// last resort draws it, which the entry does not know of. Stating that
+			// color on the slot is a change to what is stored, and is written as one.
+			const a = textRectOf("a", { body: { text: "hello" } });
+			const updated = entry.apply(
+				a,
+				null,
+				TEXT_STYLE_FALLBACK.fontColor,
+				contextOf(),
+			);
+			expect(updated).not.toBe(a);
+			expect(readTextSlots(updated).body.fontColor).toBe(
+				TEXT_STYLE_FALLBACK.fontColor,
+			);
 		});
 
 		it("drops it from the runs of a row too, each row being a body of its own", () => {

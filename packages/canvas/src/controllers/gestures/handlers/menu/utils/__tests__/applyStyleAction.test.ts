@@ -11,6 +11,7 @@ import {
 	connectorOf,
 	groupOf,
 	rectOf,
+	textRectOf,
 } from "../../../../../style/__tests__/support/styleFixtures";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { applyStyleAction } from "../applyStyleAction";
@@ -95,6 +96,49 @@ describe("applyStyleAction", () => {
 				expect(apply(state, type, "set:fill:#dc2626")).toBe(state);
 			},
 		);
+
+		it.each(["click", "doubleClick"] as const)(
+			"a %s picking the value already in place returns the state itself, nothing to commit",
+			(type) => {
+				const state = makeState();
+				// Not a new state with the old commitVersion: the same reference, which
+				// is what the reducer reads as "no commit" (recordHistoryIfNeeded).
+				expect(apply(state, type, "set:fill:#ffffff")).toBe(state);
+			},
+		);
+
+		it("a click whose value nothing can be made of commits nothing either", () => {
+			const state = makeState();
+			expect(apply(state, "click", "set:strokeWidth:abc")).toBe(state);
+		});
+
+		it("a click picking the color the slots already carry writes nothing and commits nothing", () => {
+			const a = textRectOf("a", { body: { text: "hi", fontColor: "#d33" } });
+			const state = {
+				...makeState(),
+				objects: { a },
+				rootIds: ["a"],
+				selection: selectionOf(["a"]),
+			} as CanvasControllerState;
+			expect(apply(state, "click", setAction("fontColor", "#d33"))).toBe(state);
+			// The same pick on a slot carrying a run of another color is a real
+			// write — the run is stripped — and is committed as one.
+			const b = textRectOf("b", {
+				body: {
+					text: [{ text: "h", fontColor: "#00f" }, { text: "i" }],
+					fontColor: "#d33",
+				},
+			});
+			const stateB = {
+				...state,
+				objects: { b },
+				rootIds: ["b"],
+				selection: selectionOf(["b"]),
+			} as CanvasControllerState;
+			const next = apply(stateB, "click", setAction("fontColor", "#d33"));
+			expect(next).not.toBe(stateB);
+			expect(next?.commitVersion).toBe(6);
+		});
 	});
 
 	describe("slider:", () => {
@@ -131,8 +175,9 @@ describe("applyStyleAction", () => {
 	// The `set:` action is the one route that still carries a property name and a
 	// string, so the cases that used to guard the boundary function live here: what
 	// the pair of toStyleIntent and applyStyleIntent reaches, and what it leaves
-	// alone. A `set:` click always returns a new state (commitVersion is bumped),
-	// so "nothing was written" is read off `objects` keeping its reference.
+	// alone. "Nothing was written" is read off `objects` keeping its reference,
+	// which holds whether the click returned a new state or, having nothing to
+	// commit, the state itself.
 	describe("what the intent an action states reaches", () => {
 		type MinState = Pick<
 			CanvasControllerState,

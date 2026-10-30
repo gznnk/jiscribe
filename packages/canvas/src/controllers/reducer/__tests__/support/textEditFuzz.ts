@@ -1,3 +1,4 @@
+import { isString } from "@jiscribe/basic-validators";
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
 import {
@@ -538,10 +539,22 @@ export const runTextEditFuzzSession = (
 					`the menu op states a value nothing reads: ${op.property}=${op.value}`,
 				);
 			}
-			dispatch({ type: "STYLE_INTENT", intent, commit: op.commit });
 			const coerced = op.property === "fontSize" ? Number(op.value) : op.value;
+			// A slot-wide write of the value the slot is drawn with already, with no
+			// run overriding the field, lands nowhere (runOrTextSlotEntry): the slot
+			// keeps stating what it did, a default it left unstated included. Read
+			// before the write, as the entry reads it.
+			const drawn = readSelectionStyle(state, op.property, registries);
+			const draftBeforeWrite = readDraft(state);
+			const isSlotWideNoop =
+				op.start === op.end &&
+				drawn.kind === "single" &&
+				Object.is(drawn.value, coerced) &&
+				(isString(draftBeforeWrite) ||
+					draftBeforeWrite.every((run) => run[op.property] === undefined));
+			dispatch({ type: "STYLE_INTENT", intent, commit: op.commit });
 			model.allowedRunValues[op.property].add(coerced);
-			if (op.start === op.end) {
+			if (op.start === op.end && !isSlotWideNoop) {
 				model.expectedSlotStyle = {
 					...model.expectedSlotStyle,
 					[op.property]: coerced,
