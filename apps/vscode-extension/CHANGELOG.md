@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The Icon and AWS sections of the shape library fill whole rows of six.**
+  The icon flyout and section add `bot`, `smartphone`, `send` and `x` (24
+  icons), and the AWS palette adds EBS `Volume` and `IAM Role` (102 icons).
 - **The editor's shape presets moved to a bar at the bottom of the canvas.**
   The canvas starts collapsed: the top bar splits into two pills at the
   canvas's top corners along the same sides — top-left, undo / redo;

@@ -19,7 +19,7 @@ describe("AwsIconStencils", () => {
 		expect(AWS_ICON_STENCIL_IDS).toEqual(
 			AWS_TIER1_ICONS.map(({ icon }) => toAwsIconStencilId(icon)),
 		);
-		expect(AWS_ICON_STENCIL_IDS).toHaveLength(100);
+		expect(AWS_ICON_STENCIL_IDS).toHaveLength(102);
 		expect(AWS_ICON_STENCIL_IDS[1]).toBe("awsIconServiceAwsLambda");
 		expect(awsStencilCategory.presetIds).toEqual(AWS_ICON_STENCIL_IDS);
 	});
