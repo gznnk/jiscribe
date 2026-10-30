@@ -4,7 +4,7 @@
  */
 
 /**
- * Tool name on the top toolbar or the bottom tool bar, matching the button's
+ * Tool name on the top toolbar or the stencil bar, matching the button's
  * title attribute. The listed ones are core's own presets, spelled out as known
  * values for completion; a plugin's tool name (its stencil label, "Sticky" say)
  * is equally accepted.
@@ -58,12 +58,12 @@ const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
  */
 const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
 
-/** Shared by the bottom-bar-scoped selectors below, scoped for the same reason. */
-const BOTTOM_TOOLBAR = '[data-kind="menu"][data-id="bottom-toolbar"]';
+/** Shared by the stencil-bar-scoped selectors below, scoped for the same reason. */
+const STENCIL_BAR = '[data-kind="menu"][data-id="stencil-bar"]';
 
 /**
  * Shared by the Other shapes popover selectors below. The popover is drawn
- * outside the bottom bar's element, so the bar-scoped selectors never match
+ * outside the stencil bar's element, so the bar-scoped selectors never match
  * inside it, nor the sidebar's inside it.
  */
 const OTHER_SHAPES_POPOVER =
@@ -72,19 +72,19 @@ const OTHER_SHAPES_POPOVER =
 export const selectors = {
 	/**
 	 * The canvas area (the viewport the sidebars and the full-width toolbar take
-	 * their space from), which holds the drawing, the bottom bar and the
+	 * their space from), which holds the drawing, the stencil bar and the
 	 * collapsed toolbar's pills. The multi-canvas page has two.
 	 */
 	canvasArea: '[data-kind="canvas"]',
 
 	/**
-	 * Tool button pinned on either bar, the top toolbar or the bottom tool bar,
+	 * Tool button pinned on either bar, the top toolbar or the stencil bar,
 	 * wherever the harness put it; scoped to the two bars so the sidebar's copy
 	 * cannot match. A harness pins each preset on one bar only, or this matches
-	 * twice. The bottom bar is not always shown: see `e2e/README.md`.
+	 * twice. The stencil bar is not always shown: see `e2e/README.md`.
 	 */
 	toolButton: (tool: ToolTitle) =>
-		`${TOOLBAR} button[title="${tool}"], ${BOTTOM_TOOLBAR} button[title="${tool}"]`,
+		`${TOOLBAR} button[title="${tool}"], ${STENCIL_BAR} button[title="${tool}"]`,
 
 	/**
 	 * The toolbar itself: the full-width bar while the chrome is expanded, the
@@ -103,16 +103,16 @@ export const selectors = {
 		`${TOOLBAR}[data-testid="toolbar-pill:${edge}"]`,
 
 	/**
-	 * The bottom tool bar itself. Its own element carries data-kind / data-id, as
+	 * The stencil bar itself. Its own element carries data-kind / data-id, as
 	 * do its presets (the `stencil-library` target); absent while the host hid it.
 	 */
-	bottomToolbar: BOTTOM_TOOLBAR,
+	stencilBar: STENCIL_BAR,
 
 	/**
-	 * The bottom bar's "Other shapes" button, which opens and closes the Other
+	 * The stencil bar's "Other shapes" button, which opens and closes the Other
 	 * shapes popover and carries whether it is open on aria-expanded.
 	 */
-	bottomToolbarOtherShapes: `${BOTTOM_TOOLBAR} [data-kind="menu"][data-id="other-shapes-button"]`,
+	stencilBarOtherShapes: `${STENCIL_BAR} [data-kind="menu"][data-id="other-shapes-button"]`,
 
 	/**
 	 * The Other shapes popover itself, the shape library's search box and
@@ -155,7 +155,7 @@ export const selectors = {
 	 * top one), which is what scopes the sidebar's copy out.
 	 */
 	shapeItem: (presetId: string) =>
-		`${TOOLBAR} [data-action="item:${presetId}"], ${BOTTOM_TOOLBAR} [data-action="item:${presetId}"]`,
+		`${TOOLBAR} [data-action="item:${presetId}"], ${STENCIL_BAR} [data-action="item:${presetId}"]`,
 
 	/**
 	 * Toolbar toggle that opens and closes the shape library sidebar, carrying

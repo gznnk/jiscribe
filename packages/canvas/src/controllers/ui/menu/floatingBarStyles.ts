@@ -10,7 +10,7 @@ export const FLOATING_BAR_BORDER_WIDTH = 1;
 
 /**
  * The look shared by every bar that floats over the canvas instead of taking
- * layout space beside it: the bottom tool bar and the two pills the top bar
+ * layout space beside it: the stencil bar and the two pills the top bar
  * collapses into. Only the surface and the row of items; where the bar sits,
  * and which way its items run, is each container's own.
  */

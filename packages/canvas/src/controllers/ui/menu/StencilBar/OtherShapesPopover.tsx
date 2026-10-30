@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { OtherShapesPopoverContainer } from "./BottomToolbarStyled";
+import { OtherShapesPopoverContainer } from "./StencilBarStyled";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { OTHER_SHAPES_POPOVER_TARGET_ID } from "../../../gestures/handlers/menu/utils/otherShapesTargetIds";
 import type { Stencil } from "../../objects/Stencil";
@@ -19,7 +19,7 @@ type OtherShapesPopoverProps = {
 };
 
 /**
- * The popover the bottom tool bar's "Other shapes" button opens: the shape
+ * The popover the stencil bar's "Other shapes" button opens: the shape
  * library sidebar's search box and sections without its header, over the
  * canvas beside the bar. Mounted only while open, so its search starts empty
  * each time.
@@ -40,7 +40,7 @@ const OtherShapesPopoverComponent: React.FC<OtherShapesPopoverProps> = ({
 	return (
 		<OtherShapesPopoverContainer
 			role="dialog"
-			aria-label={messages.bottomToolbarOtherShapes}
+			aria-label={messages.stencilBarOtherShapes}
 			data-kind="menu"
 			data-id={OTHER_SHAPES_POPOVER_TARGET_ID}
 			data-gesture="native-wheel-always"

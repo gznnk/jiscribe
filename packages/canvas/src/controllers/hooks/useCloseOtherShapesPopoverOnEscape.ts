@@ -3,7 +3,7 @@ import { type Dispatch, type RefObject, useEffect } from "react";
 import type { CanvasAction } from "../reducer/CanvasActions";
 
 /**
- * While the bottom tool bar's Other shapes popover is open, makes Escape close
+ * While the stencil bar's Other shapes popover is open, makes Escape close
  * it and do nothing else, from wherever focus is inside the canvas root. No
  * text editor is open beside the popover (starting an edit closes it through
  * closeStencilPopups, and opening it commits an edit), so the key is never an

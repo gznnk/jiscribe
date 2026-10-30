@@ -353,7 +353,7 @@ Two things that file has to get right:
   `stencilLibrarySections` is passed; without it they are dropped at resolution, so the
   example above shows no toggle. A plugin's presets and categories are absent from the
   canvas defaults, so without items the specs cannot reach them at all. The page shows no
-  bottom tool bar unless it passes `bottomToolbarPresetIds`, so a preset named in
+  stencil bar unless it passes `stencilBarPresetIds`, so a preset named in
   `toolbarItems` is never pinned twice; a page may put its presets there instead, which is
   where `selectors.toolButton` / `shapeItem` find them too.
 
@@ -408,7 +408,7 @@ The playbook for moving a built-in shape into a plugin.
    - the `ObjectTypes` union (`packages/doc/src/model/objects/types/ObjectType.ts`)
    - the headless `builtinObjectDocDefinitions` (`packages/doc/src/plugin/builtinObjectDocDefinitions.ts`)
    - the UI `BUILTIN_OBJECT_DEFINITIONS` (`packages/canvas/src/controllers/registries/applyObjectDefinition.ts`)
-   - the places naming its preset: `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS` (`packages/canvas/src/controllers/ui/menu/BottomToolbar/bottomToolbarPresets.ts`, which `DEFAULT_TOOLBAR_TOOLS_SECTION` is built from) and `basicStencilCategory`'s `presetIds` (`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`)
+   - the places naming its preset: `DEFAULT_STENCIL_BAR_PRESET_IDS` (`packages/canvas/src/controllers/ui/menu/StencilBar/stencilBarPresets.ts`, which `DEFAULT_TOOLBAR_TOOLS_SECTION` is built from) and `basicStencilCategory`'s `presetIds` (`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`)
 4. **Handle the fallout in the engine's own tests.** Engine tests that used the shape
    as a representative — "a shape with an outline", "a click-placed shape" — lose
    their subject. Declare a minimal type in the test instead of reaching for another
@@ -426,7 +426,7 @@ places — `stencilLibrary.sections`, where it becomes a section of the shape
 library sidebar, and optionally `toolbar.sections`, where wrapped as
 `{ type: "stencilCategory", category }` it becomes a category flyout on the bar. The standard set files every plugin category as a sidebar
 section in `standardStencilLibrarySections` (`packages/standard-shapes`) and pins
-only presets, on the bottom tool bar (`standardBottomToolbarPresetIds`). Plugin
+only presets, on the stencil bar (`standardStencilBarPresetIds`). Plugin
 categories are not part of `DEFAULT_TOOLBAR_SECTIONS`, so a host that uses the
 default bar unchanged and declares no library finds the shape only in the
 default library, among every other registered preset, until it adds the

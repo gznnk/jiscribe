@@ -37,8 +37,8 @@ export const ToolbarContainer = styled.div`
 
 /**
  * One of the two pills the toolbar collapses into while the chrome is
- * collapsed, floating over a top corner of the viewport with the bottom tool
- * bar's look. Positioned inside the viewport like the bottom tool bar, so it
+ * collapsed, floating over a top corner of the viewport with the stencil
+ * bar's look. Positioned inside the viewport like the stencil bar, so it
  * covers the canvas instead of shrinking it; a wheel over it reaches the
  * canvas.
  */

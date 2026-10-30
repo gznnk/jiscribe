@@ -7,8 +7,8 @@ export const STENCIL_BUTTON_SIZE = 32;
 
 /**
  * Individual item button in the stencil library.
- * Placed on the top toolbar (pinned or in a category flyout), on the bottom
- * tool bar and in the shape library sidebar (StencilLibraryPanel).
+ * Placed on the top toolbar (pinned or in a category flyout), on the stencil
+ * bar and in the shape library sidebar (StencilLibraryPanel).
  */
 export const StencilLibraryButton = styled.button<{ isActive?: boolean }>`
 	display: flex;

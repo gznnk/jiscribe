@@ -13,17 +13,17 @@ const PILL_CLEARANCE = 8;
 const OTHER_SHAPES_POPOVER_GAP = 8;
 
 /**
- * The band down the viewport's left edge that the bottom tool bar sits in,
+ * The band down the viewport's left edge that the stencil bar sits in,
  * centred top to bottom, with the Other shapes popover beside it while open.
  * The band starts below the start pill, whether or not the toolbar has one,
  * and stops short of the viewport's bottom and right edges by the inset.
  *
  * Positioned inside the viewport rather than laid out beside it, so the bar
  * covers the canvas instead of shrinking it (when it shows: see Canvas's
- * `bottomToolbar` prop). The band itself takes no pointer input; the bar and
+ * `stencilBar` prop). The band itself takes no pointer input; the bar and
  * the popover take their own back.
  */
-export const BottomToolbarDock = styled.div`
+export const StencilBarDock = styled.div`
 	position: absolute;
 	inset: ${TOOLBAR_PILL_BOTTOM + PILL_CLEARANCE}px ${FLOATING_BAR_INSET}px
 		${FLOATING_BAR_INSET}px;
@@ -35,12 +35,12 @@ export const BottomToolbarDock = styled.div`
 
 /**
  * The floating bar, its items in one column, centred top to bottom in
- * BottomToolbarDock. A band shorter than the bar keeps the bar at its top,
+ * StencilBarDock. A band shorter than the bar keeps the bar at its top,
  * clear of the start pill, and the bar scrolls inside. A wheel over it reaches
  * the canvas, as it does over the ObjectMenu, unless the bar is scrolling
  * (`data-gesture="native-wheel"` on the element).
  */
-export const BottomToolbarContainer = styled.div`
+export const StencilBarContainer = styled.div`
 	${floatingBarStyles}
 	flex: none;
 	margin-block: auto;
@@ -55,7 +55,7 @@ export const BottomToolbarContainer = styled.div`
 `;
 
 /** Horizontal divider between the presets and Other shapes. */
-export const BottomToolbarDivider = styled.div`
+export const StencilBarDivider = styled.div`
 	width: 20px;
 	height: 1px;
 	margin: 4px 0;

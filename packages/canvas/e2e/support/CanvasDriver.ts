@@ -59,7 +59,7 @@ export class CanvasDriver {
 	 * minus this origin. Chrome takes its layout space out of the canvas area —
 	 * the full-width toolbar above it while the chrome is expanded, the shape
 	 * library sidebar beside it — so the origin moves whenever the chrome changes
-	 * form or the library opens or closes; the bottom tool bar, and the two pills
+	 * form or the library opens or closes; the stencil bar, and the two pills
 	 * the toolbar collapses into, float over the canvas and take none. Pan and
 	 * zoom never move it: they only change the viewBox.
 	 *
@@ -88,7 +88,7 @@ export class CanvasDriver {
 	 */
 	async goto(search = "") {
 		await this.page.goto(`/${search}`, { waitUntil: "networkidle" });
-		// The canvas area rather than a preset: the bottom bar holding them is
+		// The canvas area rather than a preset: the stencil bar holding them is
 		// absent on a variant that mounts expanded.
 		await expect(this.page.locator(selectors.canvasArea).first()).toBeVisible();
 		await this.measureOrigin();
@@ -685,7 +685,7 @@ export class CanvasDriver {
 	/**
 	 * Collapse the chrome through the switch for both sidebars when it is
 	 * expanded, and do nothing when it is not: the way back to the corner pills,
-	 * the bottom bar and the ObjectMenu, which a panel's own close button does not
+	 * the stencil bar and the ObjectMenu, which a panel's own close button does not
 	 * take. Each panel's open flag is kept for the next expand.
 	 */
 	async collapseSidebars() {

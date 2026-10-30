@@ -11,7 +11,7 @@ export const TOOLBAR_BUTTON_SIZE = 32;
 
 /**
  * Inset in px of the floating bars from the viewport's edges: each top-bar
- * pill from the top and its side, the bottom tool bar's band from the left,
+ * pill from the top and its side, the stencil bar's band from the left,
  * bottom and right, so the bar lines up under the start pill.
  */
 export const FLOATING_BAR_INSET = 12;

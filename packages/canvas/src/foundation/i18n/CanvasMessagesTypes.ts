@@ -15,9 +15,9 @@ export type CanvasMessageStrings = {
 	/** title / aria-label of the switch collapsing and expanding the chrome (both sidebars) */
 	toolbarSidebars: string;
 
-	// Bottom tool bar
+	// Stencil bar
 	/** title / aria-label of the bar's button for the shapes it does not pin */
-	bottomToolbarOtherShapes: string;
+	stencilBarOtherShapes: string;
 
 	// Shape library sidebar
 	/** Heading of the sidebar */

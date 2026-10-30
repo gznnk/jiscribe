@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import {
-	standardBottomToolbarPresetIds,
+	standardStencilBarPresetIds,
 	standardPlugins,
 	standardToolbarSections,
 	standardToolbarToolsSection,
@@ -21,8 +21,8 @@ import {
  * button.
  */
 describe("the standard set's bars", () => {
-	it("pins the six presets on the bottom bar, all registered", () => {
-		expect(standardBottomToolbarPresetIds).toEqual([
+	it("pins the six presets on the stencil bar, all registered", () => {
+		expect(standardStencilBarPresetIds).toEqual([
 			"rect",
 			"ellipse",
 			"polygon",
@@ -32,7 +32,7 @@ describe("the standard set's bars", () => {
 		]);
 		const { stencil } = createCanvasRegistries({ plugins: standardPlugins });
 		expect(
-			standardBottomToolbarPresetIds.filter(
+			standardStencilBarPresetIds.filter(
 				(presetId) => stencil.get(presetId) === undefined,
 			),
 		).toEqual([]);
@@ -50,11 +50,11 @@ describe("the standard set's bars", () => {
 		expect(lastItems.at(-1)).toEqual({ type: "sidebarsToggle" });
 	});
 
-	it("keeps the former shape tools as the library toggle plus the bottom bar's presets", () => {
+	it("keeps the former shape tools as the library toggle plus the stencil bar's presets", () => {
 		expect(standardToolbarToolsSection.items).toEqual([
 			{ type: "stencilLibraryToggle" },
 			{ type: "divider" },
-			...standardBottomToolbarPresetIds.map((presetId) => ({
+			...standardStencilBarPresetIds.map((presetId) => ({
 				type: "stencilPreset",
 				presetId,
 			})),

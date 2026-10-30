@@ -1,10 +1,10 @@
 // The standard shape set as a host mounts it: the eleven plugins a `<Canvas>` is
 // configured with, plus the declarations that make their stencils reachable —
-// the toolbar sections, the bottom tool bar's presets and the shape library
+// the toolbar sections, the stencil bar's presets and the shape library
 // sidebar. The headless half lives behind ./doc and pulls in no react.
 //
 // e.g. `import { standardPlugins, standardToolbarSections,
-//        standardBottomToolbarPresetIds,
+//        standardStencilBarPresetIds,
 //        standardStencilLibrarySections } from "@jiscribe/standard-shapes";`
 import type {
 	CanvasPlugin,
@@ -71,17 +71,17 @@ export const standardPlugins: readonly CanvasPlugin[] = [
 ];
 
 /**
- * The presets the standard set pins on the bottom tool bar, in display order:
+ * The presets the standard set pins on the stencil bar, in display order:
  * the six a diagram is mostly built out of, ordered area → line → text.
  * Everything else the set ships — the `markdown` and `table` presets and the
  * nine plugin categories — is reached through the shape library sidebar
  * instead, so pass `standardStencilLibrarySections` alongside this or those
  * shapes become undrawable by hand.
  *
- * Pass as `Canvas`'s `bottomToolbar.presetIds`. Core's default bottom bar knows
+ * Pass as `Canvas`'s `stencilBar.presetIds`. Core's default stencil bar knows
  * nothing of `sticky`, so a host that passes none gets one short of the set.
  */
-export const standardBottomToolbarPresetIds: readonly string[] = [
+export const standardStencilBarPresetIds: readonly string[] = [
 	"rect",
 	"ellipse",
 	"polygon",
@@ -92,10 +92,10 @@ export const standardBottomToolbarPresetIds: readonly string[] = [
 
 /**
  * The shape tools the standard set's top bar used to open with: the shape
- * library toggle, then {@link standardBottomToolbarPresetIds} pinned on the
+ * library toggle, then {@link standardStencilBarPresetIds} pinned on the
  * bar. No longer part of {@link standardToolbarSections}, whose presets moved
- * to the bottom tool bar; kept for a host that wants them on top, which then
- * passes `bottomToolbar: { show: false }` so they do not show twice.
+ * to the stencil bar; kept for a host that wants them on top, which then
+ * passes `stencilBar: { show: false }` so they do not show twice.
  *
  * Typed mutable because that is what `Canvas`'s `toolbar.sections` takes; it is
  * one shared array, so a host wanting a different order copies it rather than
@@ -106,7 +106,7 @@ export const standardToolbarToolsSection: ToolbarSection = {
 	items: [
 		{ type: "stencilLibraryToggle" },
 		{ type: "divider" },
-		...standardBottomToolbarPresetIds.map((presetId) => ({
+		...standardStencilBarPresetIds.map((presetId) => ({
 			type: "stencilPreset" as const,
 			presetId,
 		})),
@@ -117,7 +117,7 @@ export const standardToolbarToolsSection: ToolbarSection = {
  * The whole top bar the standard set is drawn with: core's history, view and
  * help sections and the toggles for each sidebar, then the switch for both
  * sidebars at the far right. No shape tools: the presets are on
- * the bottom tool bar ({@link standardBottomToolbarPresetIds}) and the rest of
+ * the stencil bar ({@link standardStencilBarPresetIds}) and the rest of
  * the set in the shape library sidebar the switch opens.
  *
  * Typed mutable for the same reason as {@link standardToolbarToolsSection}.
@@ -135,7 +135,7 @@ export const standardToolbarSections: ToolbarSection[] = [
  * order: the primitives first, then one section per plugin category (aws-shapes
  * contributing two — its icons and the frames drawn around them). Pass to
  * `Canvas`'s `stencilLibrary.sections` beside {@link standardToolbarSections}
- * and {@link standardBottomToolbarPresetIds} — the bottom bar pins only the six
+ * and {@link standardStencilBarPresetIds} — the stencil bar pins only the six
  * most-used presets, and this is where the rest of the set lives.
  *
  * The `basic` section is composed here rather than taken from core: the

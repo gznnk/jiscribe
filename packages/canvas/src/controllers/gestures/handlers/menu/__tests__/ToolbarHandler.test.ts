@@ -38,10 +38,10 @@ const makeEvent = (
 
 describe("ToolbarHandler", () => {
 	describe("supports", () => {
-		it("accepts only (kind=menu, id=toolbar or bottom-toolbar)", () => {
-			expect(
-				ToolbarHandler.supports(makeEvent("click", "bottom-toolbar")),
-			).toBe(true);
+		it("accepts only (kind=menu, id=toolbar or stencil-bar)", () => {
+			expect(ToolbarHandler.supports(makeEvent("click", "stencil-bar"))).toBe(
+				true,
+			);
 			expect(
 				ToolbarHandler.supports(
 					makeEvent("click", "toolbar", "command:zoomIn"),
@@ -101,11 +101,11 @@ describe("ToolbarHandler", () => {
 		expect(next.viewport.zoom).toBe(1);
 	});
 
-	describe("on the bottom tool bar", () => {
+	describe("on the stencil bar", () => {
 		it("a pressed on its empty area closes the context menu, the category flyout and the Other shapes popover", () => {
 			const next = ToolbarHandler.handle(
 				{ ...makeState(), isOtherShapesPopoverOpen: true },
-				makeEvent("pressed", "bottom-toolbar"),
+				makeEvent("pressed", "stencil-bar"),
 				registries,
 			);
 			expect(next.contextMenuPosition).toBeNull();
@@ -119,7 +119,7 @@ describe("ToolbarHandler", () => {
 				const state = makeState();
 				const next = ToolbarHandler.handle(
 					state,
-					makeEvent(type, "bottom-toolbar"),
+					makeEvent(type, "stencil-bar"),
 					registries,
 				);
 				expect(next).toBe(state);

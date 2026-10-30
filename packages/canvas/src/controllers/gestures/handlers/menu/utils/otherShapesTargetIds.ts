@@ -1,6 +1,6 @@
 /**
- * `data-id` of the bottom tool bar's "Other shapes" button, the menu target
- * OtherShapesToggleHandler takes. Written by BottomToolbar.
+ * `data-id` of the stencil bar's "Other shapes" button, the menu target
+ * OtherShapesToggleHandler takes. Written by StencilBar.
  */
 export const OTHER_SHAPES_BUTTON_TARGET_ID = "other-shapes-button";
 

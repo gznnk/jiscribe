@@ -1,44 +1,45 @@
 import { describe, expect, it } from "vitest";
 
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
-import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../bottomToolbarPresets";
-import { resolveBottomToolbarPresets } from "../utils/resolveBottomToolbarPresets";
+import { DEFAULT_STENCIL_BAR_PRESET_IDS } from "../stencilBarPresets";
+import { resolveStencilBarPresets } from "../utils/resolveStencilBarPresets";
 
 const { stencil } = createCanvasRegistries();
 
 const presetIdsOf = (
-	resolved: ReturnType<typeof resolveBottomToolbarPresets>,
+	resolved: ReturnType<typeof resolveStencilBarPresets>,
 ): string[] | null => resolved?.map((preset) => preset.id) ?? null;
 
-describe("resolveBottomToolbarPresets", () => {
+describe("resolveStencilBarPresets", () => {
 	it("shows core's basic presets when the host passes nothing", () => {
-		expect(
-			presetIdsOf(resolveBottomToolbarPresets(undefined, stencil)),
-		).toEqual(["rect", "ellipse", "polygon", "polyline", "text"]);
+		expect(presetIdsOf(resolveStencilBarPresets(undefined, stencil))).toEqual([
+			"rect",
+			"ellipse",
+			"polygon",
+			"polyline",
+			"text",
+		]);
 	});
 
 	it("takes the defaults for whatever the host leaves out", () => {
-		expect(presetIdsOf(resolveBottomToolbarPresets({}, stencil))).toEqual([
-			...DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS,
+		expect(presetIdsOf(resolveStencilBarPresets({}, stencil))).toEqual([
+			...DEFAULT_STENCIL_BAR_PRESET_IDS,
 		]);
 		expect(
-			presetIdsOf(resolveBottomToolbarPresets({ show: true }, stencil)),
-		).toEqual([...DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS]);
+			presetIdsOf(resolveStencilBarPresets({ show: true }, stencil)),
+		).toEqual([...DEFAULT_STENCIL_BAR_PRESET_IDS]);
 	});
 
 	it("hides the bar with show: false, whatever presets are named", () => {
 		expect(
-			resolveBottomToolbarPresets(
-				{ show: false, presetIds: ["rect"] },
-				stencil,
-			),
+			resolveStencilBarPresets({ show: false, presetIds: ["rect"] }, stencil),
 		).toBeNull();
 	});
 
 	it("draws the named presets in the declared order", () => {
 		expect(
 			presetIdsOf(
-				resolveBottomToolbarPresets({ presetIds: ["text", "rect"] }, stencil),
+				resolveStencilBarPresets({ presetIds: ["text", "rect"] }, stencil),
 			),
 		).toEqual(["text", "rect"]);
 	});
@@ -46,7 +47,7 @@ describe("resolveBottomToolbarPresets", () => {
 	it("skips an id naming no registered preset", () => {
 		expect(
 			presetIdsOf(
-				resolveBottomToolbarPresets(
+				resolveStencilBarPresets(
 					{ presetIds: ["rect", "no-such-preset"] },
 					stencil,
 				),
@@ -57,16 +58,16 @@ describe("resolveBottomToolbarPresets", () => {
 	/** The bar still stands, holding the "Other shapes" button alone. */
 	it("resolves an empty list to no presets rather than to a hidden bar", () => {
 		expect(
-			presetIdsOf(resolveBottomToolbarPresets({ presetIds: [] }, stencil)),
+			presetIdsOf(resolveStencilBarPresets({ presetIds: [] }, stencil)),
 		).toEqual([]);
 	});
 
 	it("throws when an id is named twice, installed or not", () => {
 		expect(() =>
-			resolveBottomToolbarPresets({ presetIds: ["rect", "rect"] }, stencil),
+			resolveStencilBarPresets({ presetIds: ["rect", "rect"] }, stencil),
 		).toThrow(/"rect"/);
 		expect(() =>
-			resolveBottomToolbarPresets(
+			resolveStencilBarPresets(
 				{ presetIds: ["no-such-preset", "no-such-preset"] },
 				stencil,
 			),
@@ -75,7 +76,7 @@ describe("resolveBottomToolbarPresets", () => {
 
 	it("names only presets the default registries register", () => {
 		expect(
-			DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS.filter(
+			DEFAULT_STENCIL_BAR_PRESET_IDS.filter(
 				(presetId) => stencil.get(presetId) === undefined,
 			),
 		).toEqual([]);

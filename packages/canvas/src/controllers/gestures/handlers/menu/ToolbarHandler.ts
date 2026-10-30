@@ -8,13 +8,13 @@ import type {
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
- * GestureHandler that processes interactions on the top toolbar and the bottom
- * tool bar. Handles events with targetKind "menu" and targetId "toolbar" or
- * "bottom-toolbar". Only the bar element carries those attributes (each of the
+ * GestureHandler that processes interactions on the top toolbar and the stencil
+ * bar. Handles events with targetKind "menu" and targetId "toolbar" or
+ * "stencil-bar". Only the bar element carries those attributes (each of the
  * two pills, while the top bar is collapsed); its buttons carry just
  * data-action and resolve their kind/id through closest(), so a press on the
  * bar's empty area arrives here with no targetAction and only dismisses the
- * open menus, the Other shapes popover among them. The bottom bar's presets
+ * open menus, the Other shapes popover among them. The stencil bar's presets
  * carry their own `stencil-library` target and its "Other shapes" button its
  * own `other-shapes-button` (OtherShapesToggleHandler), so neither reaches here.
  *
@@ -34,7 +34,7 @@ export const ToolbarHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		return (
 			event.targetKind === "menu" &&
-			(event.targetId === "toolbar" || event.targetId === "bottom-toolbar") &&
+			(event.targetId === "toolbar" || event.targetId === "stencil-bar") &&
 			isPerTargetInteraction(event)
 		);
 	},

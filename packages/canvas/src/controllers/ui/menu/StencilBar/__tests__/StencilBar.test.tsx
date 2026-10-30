@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import type { Stencil } from "../../../objects/Stencil";
-import { BottomToolbar } from "../BottomToolbar";
+import { StencilBar } from "../StencilBar";
 
 const { stencil } = createCanvasRegistries();
 
@@ -34,7 +34,7 @@ const renderBar = (
 	const root = createRoot(container);
 	act(() =>
 		root.render(
-			<BottomToolbar
+			<StencilBar
 				presets={presets}
 				activePresetId={null}
 				isOtherShapesPopoverOpen={isOtherShapesPopoverOpen}
@@ -45,13 +45,13 @@ const renderBar = (
 	return container;
 };
 
-describe("BottomToolbar", () => {
+describe("StencilBar", () => {
 	/** The press on the bar's empty area routes through this element. */
-	it("is the bottom-toolbar menu target", () => {
+	it("is the stencil-bar menu target", () => {
 		const container = renderBar(presetsOf(["rect"]));
 		const bar = container.firstElementChild as HTMLElement;
 		expect(bar.dataset.kind).toBe("menu");
-		expect(bar.dataset.id).toBe("bottom-toolbar");
+		expect(bar.dataset.id).toBe("stencil-bar");
 	});
 
 	/** A bar too tall for its band scrolls under the wheel; one that fits leaves it to the canvas. */
@@ -93,7 +93,7 @@ describe("BottomToolbar", () => {
 	it("draws Other shapes as the other-shapes-button target, pressed while the popover is open", () => {
 		const container = renderBar(presetsOf(["rect"]));
 		const otherShapes = container.querySelector<HTMLButtonElement>(
-			'[data-testid="bottom-toolbar-other-shapes"]',
+			'[data-testid="stencil-bar-other-shapes"]',
 		);
 		expect(otherShapes).not.toBeNull();
 		expect(otherShapes!.title).toBe("Other shapes");
@@ -107,7 +107,7 @@ describe("BottomToolbar", () => {
 		const openContainer = renderBar(presetsOf(["rect"]), true);
 		expect(
 			openContainer
-				.querySelector('[data-testid="bottom-toolbar-other-shapes"]')!
+				.querySelector('[data-testid="stencil-bar-other-shapes"]')!
 				.getAttribute("aria-expanded"),
 		).toBe("true");
 	});

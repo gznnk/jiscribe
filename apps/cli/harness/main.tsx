@@ -1,6 +1,6 @@
 import { Canvas, lightCanvasTheme } from "@jiscribe/canvas";
 import type {
-	BottomToolbarOptions,
+	StencilBarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
@@ -26,7 +26,7 @@ import { waitForDocImages } from "./waitForDocImages";
 const initialConfig: CanvasConfig = { plugins: standardPlugins };
 
 // The page is photographed, not used: nothing is drawn from it.
-const bottomToolbar: BottomToolbarOptions = { show: false };
+const stencilBar: StencilBarOptions = { show: false };
 
 const EMPTY_DOC: CanvasDoc = { version: 1, root: [] };
 
@@ -54,7 +54,7 @@ const mountDoc = (doc: CanvasDoc): Promise<CanvasHandle> => {
 				doc={doc}
 				initialConfig={initialConfig}
 				theme={lightCanvasTheme}
-				bottomToolbar={bottomToolbar}
+				stencilBar={stencilBar}
 				resolveImage={resolveHarnessImage}
 				autoFocus={false}
 				ref={(handle: CanvasHandle | null) => {

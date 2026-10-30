@@ -117,7 +117,7 @@ export const CanvasBody = styled.div`
  * useContainerResize) and the screen position of the contained SVG
  * (getScreenCTM). Constraining it below the full-width toolbar makes the top
  * edge band align with the "visible top of the canvas"; the collapsed toolbar's
- * pills and the bottom tool bar are positioned inside it instead, over the
+ * pills and the stencil bar are positioned inside it instead, over the
  * canvas.
  */
 export const Viewport = styled.div<ViewportProps>`

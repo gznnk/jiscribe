@@ -13,7 +13,7 @@ import ReactDOM from "react-dom/client";
 import { MultiCanvasApp } from "./MultiCanvasApp";
 import { PageScrollApp } from "./PageScrollApp";
 import type {
-	BottomToolbarOptions,
+	StencilBarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
@@ -54,17 +54,17 @@ export type PluginHarnessParams = {
 	 * and help without naming them. Omit to take the canvas default bar, which
 	 * pins no preset at all; pass items whenever a spec drives a plugin's preset
 	 * or category flyout from the top bar. Add the `rect` preset (here or in
-	 * `bottomToolbarPresetIds`) only when a spec draws a core rectangle.
+	 * `stencilBarPresetIds`) only when a spec draws a core rectangle.
 	 */
 	toolbarItems?: ToolbarItem[];
 	/**
-	 * Presets of the bottom tool bar, in display order. Omit and the page shows
-	 * no bottom bar at all — not the canvas's default one — so a page pinning its
+	 * Presets of the stencil bar, in display order. Omit and the page shows
+	 * no stencil bar at all — not the canvas's default one — so a page pinning its
 	 * presets on the top bar does not show each of them twice (the specs'
 	 * `toolButton` would then match two buttons). A preset belongs in this list or
 	 * in `toolbarItems`, not both.
 	 */
-	bottomToolbarPresetIds?: string[];
+	stencilBarPresetIds?: string[];
 	/**
 	 * Sections of the shape library sidebar, mirroring how a host app declares one.
 	 * Omit and the sidebar shows the canvas's default library, one section
@@ -85,7 +85,7 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
 	toolbarItems: ToolbarItem[] | undefined;
-	bottomToolbar: BottomToolbarOptions;
+	stencilBar: StencilBarOptions;
 	stencilLibrarySections: StencilCategory[] | undefined;
 	resolveImage: ResolveImage | undefined;
 	parser: CanvasParser;
@@ -106,7 +106,7 @@ type HarnessAppProps = {
 function HarnessApp({
 	initialConfig,
 	toolbarItems,
-	bottomToolbar,
+	stencilBar,
 	stencilLibrarySections,
 	resolveImage,
 	parser,
@@ -239,7 +239,7 @@ function HarnessApp({
 				toolbar={
 					pageToolbarSections ? { sections: pageToolbarSections } : undefined
 				}
-				bottomToolbar={bottomToolbar}
+				stencilBar={stencilBar}
 				stencilLibrary={
 					pageStencilLibrarySections
 						? { sections: pageStencilLibrarySections }
@@ -268,8 +268,8 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 				sidebars: { isExpanded: true, left: { isOpen: true } },
 			}
 		: { plugins: params.plugins };
-	const bottomToolbar: BottomToolbarOptions = params.bottomToolbarPresetIds
-		? { presetIds: params.bottomToolbarPresetIds }
+	const stencilBar: StencilBarOptions = params.stencilBarPresetIds
+		? { presetIds: params.stencilBarPresetIds }
 		: { show: false };
 	const parser = createCanvasParser({ plugins: params.plugins });
 
@@ -283,7 +283,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 			<HarnessApp
 				initialConfig={initialConfig}
 				toolbarItems={params.toolbarItems}
-				bottomToolbar={bottomToolbar}
+				stencilBar={stencilBar}
 				stencilLibrarySections={params.stencilLibrarySections}
 				resolveImage={params.resolveImage}
 				parser={parser}

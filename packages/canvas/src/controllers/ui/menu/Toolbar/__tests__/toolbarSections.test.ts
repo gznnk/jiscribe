@@ -5,7 +5,7 @@ import {
 	basicStencilCategory,
 	type StencilCategory,
 } from "../../../objects/StencilCategory";
-import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../../BottomToolbar/bottomToolbarPresets";
+import { DEFAULT_STENCIL_BAR_PRESET_IDS } from "../../StencilBar/stencilBarPresets";
 import {
 	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
@@ -131,7 +131,7 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 		);
 	});
 
-	/** The presets are the bottom tool bar's, so none shows twice. */
+	/** The presets are the stencil bar's, so none shows twice. */
 	it("pins no preset and opens no category flyout", () => {
 		expect(
 			allItems(DEFAULT_TOOLBAR_SECTIONS).filter(
@@ -141,11 +141,11 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 		).toEqual([]);
 	});
 
-	it("keeps the former shape tools' presets those of the bottom bar's default", () => {
+	it("keeps the former shape tools' presets those of the stencil bar's default", () => {
 		const pinned = DEFAULT_TOOLBAR_TOOLS_SECTION.items.flatMap((item) =>
 			item.type === "stencilPreset" ? [item.presetId] : [],
 		);
-		expect(pinned).toEqual([...DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS]);
+		expect(pinned).toEqual([...DEFAULT_STENCIL_BAR_PRESET_IDS]);
 		expect(pinned).toEqual(["rect", "ellipse", "polygon", "polyline", "text"]);
 	});
 });

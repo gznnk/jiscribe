@@ -1,6 +1,6 @@
 import { Canvas } from "@jiscribe/canvas";
 import type {
-	BottomToolbarOptions,
+	StencilBarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	CanvasHandle,
@@ -10,7 +10,7 @@ import type {
 	ToolbarSection,
 } from "@jiscribe/canvas";
 import {
-	standardBottomToolbarPresetIds,
+	standardStencilBarPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -30,8 +30,8 @@ const initialConfig: CanvasConfig = { plugins };
 
 // The shape set owns how its stencils are arranged, over the bars and the sidebar
 // alike; core's defaults know none of them, so the host passes every piece.
-const bottomToolbar: BottomToolbarOptions = {
-	presetIds: standardBottomToolbarPresetIds,
+const stencilBar: StencilBarOptions = {
+	presetIds: standardStencilBarPresetIds,
 };
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
@@ -165,7 +165,7 @@ export function CanvasSurface({
 				initialConfig={initialConfig}
 				stencilLibrary={{ sections: stencilLibrarySections }}
 				toolbar={{ sections: toolbarSections }}
-				bottomToolbar={bottomToolbar}
+				stencilBar={stencilBar}
 			/>
 		</div>
 	);

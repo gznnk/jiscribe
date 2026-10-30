@@ -599,7 +599,7 @@ export type CanvasSidebarsState = {
 	/**
 	 * Which form the chrome is in. Expanded: the full-width top bar and the
 	 * edges whose `isOpen` is true. Collapsed: the top bar's two corner pills,
-	 * the bottom tool bar and the floating ObjectMenu, and no sidebar whatever
+	 * the stencil bar and the floating ObjectMenu, and no sidebar whatever
 	 * the edges say. Moved only by the switch for both sidebars
 	 * (`sidebarsToggle`), and by a per-edge toggle pressed while collapsed.
 	 */
@@ -744,7 +744,7 @@ export type CanvasControllerState = CanvasState & {
 	stencilLibraryOpenCategory: string | null;
 
 	/**
-	 * Whether the bottom tool bar's "Other shapes" popover is open. Closed
+	 * Whether the stencil bar's "Other shapes" popover is open. Closed
 	 * together with stencilLibraryOpenCategory through closeStencilPopups,
 	 * except where a press keeps it open (one on the Other shapes button,
 	 * OtherShapesToggleHandler; one inside the popover,
@@ -757,7 +757,7 @@ export type CanvasControllerState = CanvasState & {
 	/**
 	 * Which form the chrome is in (`CanvasSidebarsState.isExpanded`, as a host
 	 * sees it): true for the full-width top bar with the open sidebars beside
-	 * the viewport, false for the top bar's corner pills, the bottom tool bar
+	 * the viewport, false for the top bar's corner pills, the stencil bar
 	 * and the floating ObjectMenu. Everything that differs between the two
 	 * forms reads this alone; a sidebar is drawn while this and its own `isOpen`
 	 * are both true (see `isStencilLibraryPanelShown` /

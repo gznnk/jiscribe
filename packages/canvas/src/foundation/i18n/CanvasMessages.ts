@@ -14,7 +14,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarPropertyPanel: "Properties",
 	toolbarSidebars: "Sidebars",
 
-	bottomToolbarOtherShapes: "Other shapes",
+	stencilBarOtherShapes: "Other shapes",
 
 	stencilLibraryTitle: "Shape library",
 	stencilLibraryClose: "Close",

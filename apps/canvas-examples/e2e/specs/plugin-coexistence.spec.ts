@@ -7,7 +7,7 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
  *   throws while the registries are built, leaving nothing rendered)
- * - the bottom tool bar carrying every pinned preset, and the top bar the one
+ * - the stencil bar carrying every pinned preset, and the top bar the one
  *   category left on it
  * - the shape library sidebar holding one section per plugin category, each onto
  *   its own plugin's presets, with no preset id showing up in two sections
@@ -19,7 +19,7 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * owning plugin's suite covers it, and repeating it here would only double the cost.
  */
 
-/** Presets pinned on the harness's bottom tool bar, in layout order. */
+/** Presets pinned on the harness's stencil bar, in layout order. */
 const PINNED_PRESET_IDS = [
 	"rect",
 	"ellipse",
@@ -190,7 +190,7 @@ async function placeFromLibrary(
  *
  * Every shape comes out of the shape library sidebar, which is where the harness
  * (like the apps) files everything the plugins contribute. The chrome is left
- * collapsed again at the end, the way a user would leave it, so the bottom bar
+ * collapsed again at the end, the way a user would leave it, so the stencil bar
  * is back.
  *
  * The flowchart representative is multiDocument rather than a plain box because it
@@ -303,7 +303,7 @@ test.describe("plugin coexistence", () => {
 
 		// Exact equality, not containment: it pins the order and rules out both a
 		// missing entry and a second copy of one.
-		expect(await readPresetIds(canvas, selectors.bottomToolbar)).toEqual(
+		expect(await readPresetIds(canvas, selectors.stencilBar)).toEqual(
 			PINNED_PRESET_IDS,
 		);
 		// With the flyout closed the top bar holds no preset, so none shows twice.
