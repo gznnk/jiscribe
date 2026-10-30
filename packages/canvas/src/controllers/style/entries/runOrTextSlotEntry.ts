@@ -35,9 +35,8 @@ import { readRangeEdit } from "./utils/readRangeEdit";
  * handed (StyleEntry.apply's same-reference contract), so a pick of the color
  * shown commits nothing. "Drawn with" is what `read` reports — the slot's own
  * field over its type's defaults, a run's own field over the slot's — so a slot
- * leaving the field to its defaults is not written for that default, which
- * would only pin it into the document, and a stretch inheriting the slot's value
- * is not given a run of its own, which no later whole-slot write would keep. A
+ * leaving the field to its defaults is not written for that default, and a
+ * stretch inheriting the slot's value is not given a run of its own. A
  * whole-slot write still lands where a run overrides the field, however the slot
  * reads: the strip is the change.
  *

@@ -101,8 +101,9 @@ describe("applyStyleAction", () => {
 			"a %s picking the value already in place returns the state itself, nothing to commit",
 			(type) => {
 				const state = makeState();
-				// Not a new state with the old commitVersion: the same reference, which
-				// is what the reducer reads as "no commit" (recordHistoryIfNeeded).
+				// Not a new state with the old commitVersion but the same reference: the
+				// unmoved commitVersion is what recordHistoryIfNeeded reads as no commit,
+				// and the reference is the stronger property asserted here.
 				expect(apply(state, type, "set:fill:#ffffff")).toBe(state);
 			},
 		);

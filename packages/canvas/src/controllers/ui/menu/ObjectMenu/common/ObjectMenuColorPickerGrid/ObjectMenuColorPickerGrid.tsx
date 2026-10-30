@@ -62,8 +62,8 @@ type ObjectMenuColorPickerGridProps = {
  * gesture system, resolved to the menu or sidebar that contains it, unless
  * `writesThroughCallback` opts the picker out of gestures entirely.
  * The swatch showing `currentColor` writes nothing where the pick is provably
- * no change (`currentColorIsShared`), a commit of the color already in place
- * being recorded as a history entry that changes nothing.
+ * no change (`currentColorIsShared`), which the callback route needs: it
+ * commits whatever reaches it, as a history entry that changes nothing.
  * The text input previews in real time on onChange (commit: false), and
  * commits on onBlur / Enter (commit: true).
  */
