@@ -21,7 +21,7 @@ type OtherShapesPopoverProps = {
 /**
  * The popover the bottom tool bar's "Other shapes" button opens: the shape
  * library sidebar's search box and sections without its header, over the
- * canvas above the bar. Mounted only while open, so its search starts empty
+ * canvas beside the bar. Mounted only while open, so its search starts empty
  * each time.
  *
  * Its own menu target (`other-shapes-popover`), so a press on its padding is

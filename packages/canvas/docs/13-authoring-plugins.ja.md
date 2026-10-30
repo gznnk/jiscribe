@@ -340,8 +340,8 @@ mountPluginHarness({
   ただしトグルと区切りが残るのは `stencilLibrarySections` を渡したときだけで、渡さなければ
   解決時に落ちる（上の例は渡していないので、トグルは出ない）。プラグインのプリセットと
   カテゴリは canvas の既定に含まれないので、項目を渡さなければ spec からそもそも
-  触れない。下のツールバーは `bottomToolbarPresetIds` を渡したときだけ出るので、
-  `toolbarItems` に書いたプリセットが 2 つ並ぶことはない。プリセットを下のバーへ置く
+  触れない。道具バーは `bottomToolbarPresetIds` を渡したときだけ出るので、
+  `toolbarItems` に書いたプリセットが 2 つ並ぶことはない。プリセットを道具バーへ置く
   ページもあってよく、`selectors.toolButton` / `shapeItem` はどちらのバーでも見つける
 
 spec 側は spec 用エントリからすべて取る。
@@ -410,7 +410,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 カテゴリフライアウトになる（任意）。出荷図形
 セットは全プラグインのカテゴリを `standardStencilLibrarySections`
 （`packages/standard-shapes`）でサイドバーのセクションとして並べ、プリセットだけを
-下のツールバーにピン留めしている（`standardBottomToolbarPresetIds`）。プラグインの
+道具バーにピン留めしている（`standardBottomToolbarPresetIds`）。プラグインの
 カテゴリは `DEFAULT_TOOLBAR_SECTIONS` に含まれないので、既定のバーをそのまま使い
 library も宣言しないホストでは、カテゴリを足すまでその図形は既定のライブラリに
 登録済みの全プリセットと並んで出るだけになる。

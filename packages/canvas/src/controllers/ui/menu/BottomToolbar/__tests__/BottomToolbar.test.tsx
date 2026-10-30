@@ -54,6 +54,13 @@ describe("BottomToolbar", () => {
 		expect(bar.dataset.id).toBe("bottom-toolbar");
 	});
 
+	/** A bar too tall for its band scrolls under the wheel; one that fits leaves it to the canvas. */
+	it("leaves the wheel to native scrolling while it scrolls", () => {
+		const container = renderBar(presetsOf(["rect"]));
+		const bar = container.firstElementChild as HTMLElement;
+		expect(bar.dataset.gesture).toBe("native-wheel");
+	});
+
 	/** The same contract as the top bar's presets, so the same handler takes them. */
 	it("draws each preset with the stencil-library item contract, in order", () => {
 		const container = renderBar(presetsOf(["text", "rect"]));

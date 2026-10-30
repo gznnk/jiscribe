@@ -115,7 +115,7 @@ Presets are pinned on one of two bars: the top toolbar (`data-id="toolbar"`) or
 the bottom tool bar floating over the canvas (`data-id="bottom-toolbar"`), which
 holds the pinned presets, a divider and an "Other shapes" button
 (`data-id="other-shapes-button"`, `selectors.bottomToolbarOtherShapes`) that opens
-and closes the Other shapes popover (`selectors.otherShapesPopover`), drawn above
+and closes the Other shapes popover (`selectors.otherShapesPopover`), drawn beside
 the bar and outside it. A press on either bar's empty area only dismisses the
 open menus, the popover among them. A preset button can be identified by its `title`
 attribute, as in `[data-id="bottom-toolbar"] button[title="Rectangle"]`

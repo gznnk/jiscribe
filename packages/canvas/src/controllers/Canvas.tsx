@@ -274,10 +274,12 @@ type CanvasProps = {
 		sections?: ToolbarSection[];
 	};
 	/**
-	 * The bottom tool bar: a floating bar centred over the canvas at its bottom
-	 * edge, holding pinned presets (click to arm or place, drag to place, as on
-	 * the top bar) and an "Other shapes" button that opens a popover above the
-	 * bar listing every shape in the shape library (`stencilLibrary`), with the
+	 * The bottom tool bar: a floating column of buttons over the canvas's left
+	 * edge, centred top to bottom in the room below the top bar's corner pills
+	 * and scrolling when that room is shorter, holding pinned presets (click to
+	 * arm or place, drag to place, as on the top bar) and an "Other shapes"
+	 * button that opens a popover to the right of the bar, as tall as that room,
+	 * listing every shape in the shape library (`stencilLibrary`), with the
 	 * sidebar's search and sections. It covers the canvas rather than shrinking
 	 * it. It shows while the chrome is collapsed and is hidden while it is
 	 * expanded (see `CanvasSidebarsState.isExpanded`), open sidebars or not, the
@@ -780,9 +782,15 @@ const CanvasComponent = ({
 						{/* When it shows: see the `bottomToolbar` prop. Inside the
 						    viewport, so it covers the canvas rather than shrinking it;
 						    before the overlay, so the context menu and the toast draw over
-						    it. The popover is the bar's sibling, not its child */}
+						    it. The popover is the bar's sibling, not its child, and
+						    follows it */}
 						{bottomToolbarPresets !== null && !isChromeExpanded && (
 							<BottomToolbarDock>
+								<BottomToolbar
+									presets={bottomToolbarPresets}
+									activePresetId={drawingPresetId}
+									isOtherShapesPopoverOpen={state.isOtherShapesPopoverOpen}
+								/>
 								{state.isOtherShapesPopoverOpen && (
 									<OtherShapesPopover
 										sections={librarySections}
@@ -793,15 +801,10 @@ const CanvasComponent = ({
 										resolvePreset={resolveLibraryPreset}
 									/>
 								)}
-								<BottomToolbar
-									presets={bottomToolbarPresets}
-									activePresetId={drawingPresetId}
-									isOtherShapesPopoverOpen={state.isOtherShapesPopoverOpen}
-								/>
 							</BottomToolbarDock>
 						)}
 						{/* Collapsed, the bar's two pills float over the top corners,
-						    placed here for the same reasons as the bottom bar */}
+						    placed here for the same reasons as the bottom tool bar */}
 						{!isChromeExpanded && toolbarElement}
 						<ViewportOverlay>
 							<ErrorToast notification={errorNotification} />

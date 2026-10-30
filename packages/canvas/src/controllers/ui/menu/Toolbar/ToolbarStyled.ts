@@ -1,10 +1,8 @@
 import styled from "@emotion/styled";
 
 import { theme } from "../../../../foundation/theme/themeTokens";
+import { FLOATING_BAR_INSET, TOOLBAR_BUTTON_SIZE } from "../floatingBarLayout";
 import { floatingBarStyles } from "../floatingBarStyles";
-
-/** Inset in px of each collapsed-bar pill from the viewport's top and side. */
-const TOOLBAR_PILL_INSET = 12;
 
 /**
  * Container for the full-width integrated toolbar pinned to the top, the form
@@ -40,16 +38,17 @@ export const ToolbarContainer = styled.div`
 /**
  * One of the two pills the toolbar collapses into while the chrome is
  * collapsed, floating over a top corner of the viewport with the bottom tool
- * bar's look. Positioned inside the viewport like the bottom bar, so it covers
- * the canvas instead of shrinking it and a wheel over it reaches the canvas.
+ * bar's look. Positioned inside the viewport like the bottom tool bar, so it
+ * covers the canvas instead of shrinking it; a wheel over it reaches the
+ * canvas.
  */
 export const ToolbarPill = styled.div<{ edge: "start" | "end" }>`
 	position: absolute;
-	top: ${TOOLBAR_PILL_INSET}px;
+	top: ${FLOATING_BAR_INSET}px;
 	${(props) =>
 		props.edge === "start"
-			? `left: ${TOOLBAR_PILL_INSET}px;`
-			: `right: ${TOOLBAR_PILL_INSET}px;`}
+			? `left: ${FLOATING_BAR_INSET}px;`
+			: `right: ${FLOATING_BAR_INSET}px;`}
 	${floatingBarStyles}
 `;
 
@@ -98,8 +97,8 @@ export const ToolbarIconButton = styled.button`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
+	width: ${TOOLBAR_BUTTON_SIZE}px;
+	height: ${TOOLBAR_BUTTON_SIZE}px;
 	padding: 0;
 	border: 1px solid transparent;
 	border-radius: ${theme.radius};
@@ -150,8 +149,8 @@ export const ToolbarToggleButton = styled.button<{ isOpen: boolean }>`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
+	width: ${TOOLBAR_BUTTON_SIZE}px;
+	height: ${TOOLBAR_BUTTON_SIZE}px;
 	padding: 0;
 	border: 1px solid ${(props) => (props.isOpen ? theme.accent : "transparent")};
 	border-radius: ${theme.radius};
@@ -178,7 +177,7 @@ export const ZoomReadout = styled.button`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 32px;
+	height: ${TOOLBAR_BUTTON_SIZE}px;
 	min-width: 44px;
 	padding: 0 4px;
 	border: 1px solid transparent;

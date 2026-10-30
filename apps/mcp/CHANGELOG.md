@@ -37,18 +37,19 @@ covers that.
 - **`capture_canvas` keeps up to 2576 px on the long edge**, up from 1400. A
   part named by `ids`, `rect` or the selection is drawn at full size (1 world
   unit to 1 px) and shrinks only past that edge.
-- **The viewer's shape presets moved to a bar at the bottom of the canvas.**
+- **The viewer's shape presets moved to a bar down the canvas's left edge.**
   The canvas starts collapsed: the top bar splits into two pills at the
   canvas's top corners along the same sides — top-left, undo / redo;
   top-right, the zoom controls and, at the far right, one switch for both
-  sidebars — and the bottom bar and the floating menu show. There is no help
-  button then (`?` still opens the shortcut help). The switch expands it: the
+  sidebars — and the shape bar, centred top to bottom under the top-left pill,
+  and the floating menu show. There is no help button then (`?` still opens
+  the shortcut help). The switch expands it: the
   full bar is back with a toggle for each sidebar just before the switch, the
   sidebars that were open last time open again (both, the first time), and
-  the bottom bar and the floating menu are hidden, the sidebars holding the
+  the shape bar and the floating menu are hidden, the sidebars holding the
   shapes and the properties instead. Closing both sidebars keeps it expanded; only the switch collapses
-  it again. The bottom bar's "Other shapes" button opens every shape, with a
-  search, just above the bar.
+  it again. The shape bar's "Other shapes" button opens every shape, with a
+  search, in a panel beside the bar running down the canvas.
 
 ### Removed
 

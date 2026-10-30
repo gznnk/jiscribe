@@ -16,13 +16,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 ### Added
 
 - **A bottom tool bar floats over the canvas.** `<Canvas bottomToolbar>` draws a
-  bar centred at the bottom of the viewport, over the canvas rather than
-  shrinking it. It shows while the chrome is collapsed and hides while it is
-  expanded, the shape library then holding the shapes. It pins
+  column of buttons over the viewport's left edge, centred top to bottom below
+  the top-left pill and scrolling when the room there is shorter, over the
+  canvas rather than shrinking it. It shows while the chrome is collapsed and
+  hides while it is expanded, the shape library then holding the shapes. It pins
   presets (`presetIds`, default `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`, core's
   basic primitives) that click to draw and drag to place as the top bar's do,
-  then an "Other shapes" button that opens a popover above the bar listing
-  every shape in the shape library, with the sidebar's search and sections.
+  then an "Other shapes" button that opens a popover to the right of the bar,
+  as tall as the room below the pill, listing every shape in the shape library,
+  with the sidebar's search and sections.
   Choosing a shape, Escape, a press outside it and expanding the chrome close
   it. Its sections fold together with the sidebar's, so a fold there reaches
   `onSidebarsChange` too. `show: false` removes it. `@jiscribe/standard-shapes` exports

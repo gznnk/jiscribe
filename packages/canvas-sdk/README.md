@@ -86,7 +86,7 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
 - `mountPluginHarness({ plugins, toolbarItems, bottomToolbarPresetIds, stencilLibrarySections })`
   （`/testing/harness`）— spec が叩くハーネスページ。`toolbarItems` はバー全体ではなく
   図形ツールの分だけで、図形ライブラリのトグルとコアの view セクション
-  （undo / redo / ズーム・サイドバーの開閉など）はキットが足す。下のツールバーは
+  （undo / redo / ズーム・サイドバーの開閉など）はキットが足す。道具バーは
   `bottomToolbarPresetIds` を渡したときだけ出る（プリセットはどちらか一方のバーに置く）。自分の図形が要る分だけに絞る（単独ロードで
   動くこと自体が、他プラグインへの暗黙依存が無いことの検証になる）。`stencilLibrarySections` は図形ライブラリのサイドバーを spec で触る
   ときだけ渡す（省略すればサイドバーもツールバーのトグルも出ない）
