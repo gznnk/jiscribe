@@ -37,7 +37,7 @@ const applyActionValue = (
  * @param event - The gesture. `set:` acts on click / doubleClick only. `slider:` previews on pressed / dragStart / drag and commits on dragEnd / click / doubleClick, reading the value from `inputValue`; a slider event without one warns and changes nothing
  * @param action - `event.targetAction` already parsed (parseMenuAction); null and kinds other than `set` / `slider` are left to the caller
  * @param registries - Registries of the canvas; its style tables are what answer the intent the action states
- * @returns The next state, or null when the action is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller); a write leaves the part picked below the object alone, styling never renumbering what it writes to. A style action on an event it does not act on returns `state` itself
+ * @returns The next state, or null when the action is not a style write. A commit bumps `commitVersion` (history recording is left to handleGesture's caller), except a `set:` that changed nothing — the value already in place on every target, or a value nothing can be made of — which returns `state` itself, there being nothing to record and a recorded entry that changes nothing dropping the redo stack. A write leaves the part picked below the object alone, styling never renumbering what it writes to. A style action on an event it does not act on returns `state` itself
  */
 export const applyStyleAction = (
 	state: CanvasControllerState,
@@ -60,6 +60,13 @@ export const applyStyleAction = (
 			action.value,
 			registries,
 		);
+		// A pick is the whole edit — nothing was previewed before it — so the apply
+		// answering with the same state (applyStyleIntent's contract) is proof that
+		// there is nothing to commit. A slider's commit cannot be gated this way: its
+		// drag already applied the value, and the commit re-applies it unchanged.
+		if (newState === state) {
+			return state;
+		}
 		return {
 			...newState,
 			commitVersion: state.commitVersion + 1,

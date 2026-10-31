@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The Icon and AWS sections of the shape library fill whole rows of six.**
+  The icon flyout and section add `bot`, `smartphone`, `send` and `x` (24
+  icons), and the AWS palette adds EBS `Volume` and `IAM Role` (102 icons).
 - **The editor's shape presets moved to a bar down the canvas's left edge.**
   The canvas starts collapsed: the top bar splits into two pills at the
   canvas's top corners along the same sides — top-left, undo / redo;
@@ -29,6 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The floating menu's **…** button. Open the properties sidebar from the top
   bar instead.
+
+### Fixed
+
+- **Picking the text colour a shape already has no longer throws redo away.**
+  The shape and line colour pickers stopped doing this in 0.10.0; the font
+  colour pickers (the floating menu's, the connector label's and the
+  sidebar's) still wrote every time, marking the document dirty and emptying
+  the redo stack for a pick that changed nothing. A pick of the colour the
+  text is drawn with — on the whole shape, or on the stretch selected while
+  editing — now changes nothing and records nothing. Picking it for a shape
+  whose text has a word in another colour is still an edit, as before: the
+  word takes the shape's colour.
 
 ## [0.12.2] - 2026-10-25
 

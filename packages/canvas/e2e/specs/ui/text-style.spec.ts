@@ -176,6 +176,42 @@ test.describe("text styling through the ObjectMenu", () => {
 			.toBe("flex-end");
 	});
 
+	test("picking the text color already shown commits nothing, so redo survives it", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+		const redo = canvas.page.locator(selectors.toolbarCommand("redo"));
+
+		await canvas.pickColorSwatch("font-color", "fontColor", "#dc2626");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.color)
+			.toBe("rgb(220, 38, 38)");
+
+		// A second edit, undone, is what puts something on the redo stack.
+		await canvas.openObjectMenu("font-size");
+		await canvas.setNumberInput("fontSize", 40);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontSize)
+			.toBe("40px");
+		await canvas.undo();
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontSize)
+			.not.toBe("40px");
+		await expect(redo).toBeEnabled();
+
+		// The swatch shown as picked: the text is in that color already, on the
+		// slot with no run overriding it, so the pick is no edit and records no
+		// entry — which is what keeps the redo stack.
+		await canvas.pickColorSwatch("font-color", "fontColor", "#dc2626");
+		await expect(redo).toBeEnabled();
+		expect((await canvas.textStyleOf(id))?.color).toBe("rgb(220, 38, 38)");
+
+		await canvas.redo();
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontSize)
+			.toBe("40px");
+	});
+
 	test("reverts a font size change on undo and reapplies it on redo", async ({
 		canvas,
 	}) => {

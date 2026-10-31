@@ -11,13 +11,16 @@ import { ICON_NODES } from "../schema/icon/iconData.generated";
  *
  * A short list on purpose — the whole set is 1767 icons, and the flyout is for the handful
  * a diagram reaches for without thinking. Everything else is a search away, in the picker
- * or in the stencil library.
+ * or in the stencil library. Its length stays a multiple of the library grid's columns
+ * (`STENCIL_LIBRARY_PANEL_GRID_COLUMNS` in canvas), so the section ends on a full row.
  */
 const FLYOUT_ICON_NAMES = [
 	"user",
 	"users",
+	"bot",
 	"monitor",
 	"laptop",
+	"smartphone",
 	"server",
 	"database",
 	"cloud",
@@ -26,11 +29,13 @@ const FLYOUT_ICON_NAMES = [
 	"file-text",
 	"mail",
 	"message-square",
+	"send",
 	"bell",
 	"lock",
 	"shield-check",
 	"key",
 	"check",
+	"x",
 	"triangle-alert",
 	"clock",
 	"settings",

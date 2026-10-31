@@ -38,18 +38,18 @@ type ObjectMenuColorPickerGridProps = {
 	/**
 	 * Whether `currentColor` is the color every target of a pick already carries,
 	 * which is what makes picking it provably no change at all. Such a pick is
-	 * dropped, since both routes commit whatever reaches them and the entry that
-	 * changes nothing drops the redo stack with it.
+	 * dropped on the callback route, which commits whatever reaches it, and the
+	 * entry that changes nothing drops the redo stack with it.
 	 *
 	 * Defaults to false, where every pick writes: a picker showing the first of
 	 * several objects' color cannot tell, and dropping the pick there would take
 	 * away how a selection whose shapes disagree is brought onto one color.
 	 *
-	 * Counting targets is what settles this for a shape's own color, so it does
-	 * not settle it for text: a text style write lands on the slots, or on the
-	 * run being edited, not on the object. A single selected object is therefore
-	 * no proof, and the font color pickers pass nothing here on purpose — see
-	 * gznnk/jiscribe-private#288.
+	 * The gesture route needs no such proof: there the style entries decide what
+	 * a write changes — on the object, the slots or the run being edited — and a
+	 * `set:` that changes nothing is not committed (applyStyleAction). This flag
+	 * then only spares the swatch an idle gesture, which is why the font color
+	 * pickers leave it out.
 	 */
 	currentColorIsShared?: boolean;
 	onStyleIntent: StyleIntentUpdater;
@@ -62,8 +62,8 @@ type ObjectMenuColorPickerGridProps = {
  * gesture system, resolved to the menu or sidebar that contains it, unless
  * `writesThroughCallback` opts the picker out of gestures entirely.
  * The swatch showing `currentColor` writes nothing where the pick is provably
- * no change (`currentColorIsShared`), a commit of the color already in place
- * being recorded as a history entry that changes nothing.
+ * no change (`currentColorIsShared`), which the callback route needs: it
+ * commits whatever reaches it, as a history entry that changes nothing.
  * The text input previews in real time on onChange (commit: false), and
  * commits on onBlur / Enter (commit: true).
  */
@@ -155,11 +155,12 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 	// well, and still carries data-action, which is what names the swatch.
 	//
 	// The swatch already picked writes nothing on either route, where the picker
-	// is told the color stands for every target (currentColorIsShared): both
-	// routes commit unconditionally, and a commit of the color in place is
-	// recorded as a history entry that changes nothing, dropping the redo stack
-	// with it. The gesture route is stopped by opting the swatch out rather than
-	// by dropping its data-action, which e2e and the actions grammar still read.
+	// is told the color stands for every target (currentColorIsShared): the
+	// callback route commits unconditionally, and a commit of the color in place
+	// is recorded as a history entry that changes nothing, dropping the redo
+	// stack with it. The gesture route is stopped by opting the swatch out rather
+	// than by dropping its data-action, which e2e and the actions grammar still
+	// read.
 	const buildPickProps = (value: string) => {
 		const picked = currentColorIsShared && isCurrentColor(value);
 		return writesThroughCallback

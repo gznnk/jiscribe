@@ -42,9 +42,10 @@ type PropertyColorFieldProps = {
 	/**
 	 * Whether `value` is the color every target of a pick already carries, which
 	 * is what lets the picker drop a pick of the color already in place (see
-	 * ObjectMenuColorPickerGrid). Defaults to false, which writes always: a row
-	 * stating a color that a smaller target can override — a stretch of text
-	 * carrying its own — cannot tell.
+	 * ObjectMenuColorPickerGrid). Defaults to false, which writes always. Only
+	 * the callback route (`writesThroughCallback`) depends on it: a row writing
+	 * through the `set:` gesture is not committed where nothing changed, whoever
+	 * the target is.
 	 */
 	currentColorIsShared?: boolean;
 	/** title / aria-label of the trigger. */
