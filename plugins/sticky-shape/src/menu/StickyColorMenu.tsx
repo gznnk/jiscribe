@@ -4,22 +4,15 @@ import {
 	ObjectMenuButton,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
-	SHAPE_STYLE_FALLBACK,
-	selectionValueOr,
 	useCanvasMessages,
-	useSelectionStyle,
 	useSubmenuPosition,
-	setAction,
 	toggleAction,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
-import { STICKY_PRESET_COLORS } from "./StickyColorConstants";
-import {
-	ColorGrid,
-	ColorPickerContainer,
-	ColorSwatch,
-} from "./StickyColorMenuStyled";
+import { ColorPickerContainer } from "./StickyColorMenuStyled";
+import { StickyColorPalette } from "./StickyColorPalette";
+import { useSelectedStickyColor } from "../state/useSelectedStickyColor";
 
 const SECTION_ID = "sticky-color";
 
@@ -36,10 +29,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentColor = selectionValueOr(
-		useSelectionStyle("fill"),
-		SHAPE_STYLE_FALLBACK.fill,
-	);
+	const currentColor = useSelectedStickyColor();
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -64,19 +54,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 					offsetX={offsetX}
 				>
 					<ColorPickerContainer>
-						<ColorGrid>
-							{STICKY_PRESET_COLORS.map((preset) => (
-								<ColorSwatch
-									key={preset.value}
-									swatchColor={preset.value}
-									selected={
-										preset.value.toLowerCase() === currentColor.toLowerCase()
-									}
-									data-action={setAction("fill", preset.value)}
-									title={messages.colorNames[preset.name] ?? preset.name}
-								/>
-							))}
-						</ColorGrid>
+						<StickyColorPalette />
 					</ColorPickerContainer>
 				</ObjectMenuDropdownPanel>
 			)}

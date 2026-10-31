@@ -7,6 +7,7 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
  * Unlike other shapes, Sticky has a dedicated color menu with no CSS input
  * (StickyColorMenu, presets only), and it was the only one left uncovered. Pressing a
  * preset swatch changes the body fill, and it survives deselect -> reselect.
+ * The properties sidebar lays the same palette out inline (StickyColorProperty).
  *
  * The Sticky body is the one polygon inside the <g> (the shadow is rects), and the
  * fill is applied through CSS (so that an "auto" fill can resolve to a theme
@@ -56,5 +57,24 @@ test.describe("Sticky preset colors", () => {
 		expect(await stickyFill(canvas, id)).toBe(
 			await canvas.normalizeColor("#bfdbfe"),
 		);
+	});
+
+	test("lays the same palette out in the properties sidebar, without a dropdown", async ({
+		canvas,
+	}) => {
+		await canvas.openPropertyPanel();
+		const id = await canvas.placeShape("Sticky");
+
+		const panelSwatches = canvas.page.locator(
+			`${selectors.propertyPanel} [data-action^="set:fill:"]`,
+		);
+		await expect(panelSwatches).toHaveCount(10);
+
+		await canvas.page.click(selectors.propertyPanelSet("fill", "#bfdbfe"));
+		await expect
+			.poll(() => stickyFill(canvas, id), {
+				message: "pressing a sidebar swatch changes the body fill",
+			})
+			.toBe(await canvas.normalizeColor("#bfdbfe"));
 	});
 });

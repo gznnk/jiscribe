@@ -83,6 +83,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **The sticky note's properties sidebar offers its own pastel palette.** The
+  Fill section's color row lays out the same ten swatches as the sticky's
+  ObjectMenu, in the row itself, in place of the generic color dropdown.
 - **The Icon and AWS sections of the shape library fill whole rows of six.**
   The Lucide icon category's presets add `bot`, `smartphone`, `send` and `x`
   (24 icons), and the AWS palette (tier 1) adds EBS `Volume` and `IAM Role`
