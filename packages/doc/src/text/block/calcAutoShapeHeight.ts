@@ -1,7 +1,6 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { applyTextVerticalBasis } from "./applyTextVerticalBasis";
-import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "./autoHeightComfortPadding";
 import { calcTextContentBox } from "./calcTextContentBox";
 import type { RichText } from "../../model/objects/types/text/RichText";
 import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
@@ -30,9 +29,11 @@ const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
 /**
  * The shortest whole-pixel height at which a shape's text region holds the
  * wrapped text with room to breathe around it: the height a document that leaves
- * `height` out is drawn at (`supportsAutoHeight`). The room is
- * {@link AUTO_HEIGHT_COMFORT_PADDING_EM} of the body's size above and below,
- * which is what keeps a one-line label from coming out as a 7:1 slab.
+ * `height` out is drawn at (`supportsAutoHeight`). The room is `paddingEm` of
+ * the body's size above and below — the type's own
+ * `ObjectDocDefinition.autoHeightPaddingEm`, else
+ * `AUTO_HEIGHT_COMFORT_PADDING_EM` — which is what keeps a one-line label
+ * from coming out as a 7:1 slab.
  *
  * The region is the type's own declaration (`ObjectDocDefinition.textRegion`)
  * minus the text box's padding, so the width the text wraps at is whatever that
@@ -73,6 +74,7 @@ const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one moves where the lines break, and its `fontSize` is the em the comfort padding is charged in whatever the runs set
  * @param textRegion - The type's text-region calculator, called once per height the search tries
  * @param basis - The shape's `textVerticalBasis`; `undefined` — the field absent, which is every document written before it existed — derives against the declared region, and equals `"frame"`'s answer for a region that sits on the box's centre
+ * @param paddingEm - Room above and below the text, in multiples of `font.fontSize`; 0 asks for none. Pass the type's value through `resolveAutoHeightPaddingEm` rather than raw: `NaN` or `Infinity` here fits no height and answers null.
  * @returns The height in whole pixels, or null when no height up to 1,000,000px fits the text — a height at which the calculator answers `null` merely does not fit, so a region existing only above some minimum height is searched through rather than given up on
  */
 export const calcAutoShapeHeight = (
@@ -80,7 +82,8 @@ export const calcAutoShapeHeight = (
 	text: RichText,
 	font: TextMeasureFont,
 	textRegion: ObjectDocTextRegionCalculator,
-	basis?: TextVerticalBasis,
+	basis: TextVerticalBasis | undefined,
+	paddingEm: number,
 ): number | null => {
 	/**
 	 * Height the text takes when wrapped at a content width, one entry per width
@@ -147,8 +150,8 @@ export const calcAutoShapeHeight = (
 		return floor;
 	};
 
-	/** Room asked for above and below the text ({@link AUTO_HEIGHT_COMFORT_PADDING_EM}). */
-	const comfortPadding = font.fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM;
+	/** Room asked for above and below the text, in px. */
+	const comfortPadding = font.fontSize * paddingEm;
 
 	/**
 	 * The room a shape of this height leaves the text block and its comfort

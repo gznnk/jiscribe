@@ -48,6 +48,8 @@ const deriveHeight = (
 		text,
 		bodyFont(fontSize),
 		textRegion!,
+		undefined,
+		AUTO_HEIGHT_COMFORT_PADDING_EM,
 	);
 	expect(height).not.toBeNull();
 	return height!;

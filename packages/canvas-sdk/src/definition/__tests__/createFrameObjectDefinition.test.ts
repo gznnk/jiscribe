@@ -141,6 +141,21 @@ describe("createFrameObjectDefinition", () => {
 		expect(denied.autoHeight).toBe(false);
 	});
 
+	it("carries the auto-height padding from the doc to the canvas definition", () => {
+		const padded = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				textRegion: calcFullBoxTextRegion,
+				autoHeightPaddingEm: 0.25,
+			}),
+			component: DemoComponent,
+			textRegion: calcFullBoxTextRegion,
+		});
+
+		expect(padded.autoHeightPaddingEm).toBe(0.25);
+	});
+
 	it("builds the text slot part kind from textRegion, after the declared kinds", () => {
 		const captionRegion = ({ width, height }: Dimensions) => ({
 			x: -width / 2,

@@ -80,6 +80,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and so do `jiscribe op <file> connect` / `connect_many`, so placing the label
   no longer takes a second `update_connector`. Either one without non-empty
   `label` text is refused.
+- For plugin authors: `ObjectDocDefinition.autoHeightPaddingEm` (also taken by
+  `createFrameObjectDoc`) sets the room a type's derived height leaves above
+  and below its text, in multiples of the body's font size, where it was
+  0.75em for every type. Omitted, it stays 0.75em, so no shipped shape changes.
+  The canvas, the doc ops and `diagnoseDoc` all derive with it; documents do
+  not carry it.
 
 ### Changed
 

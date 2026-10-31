@@ -111,6 +111,7 @@ describe("the derived height is the smallest one the text fits in", () => {
 							font,
 							textRegion,
 							basis,
+							AUTO_HEIGHT_COMFORT_PADDING_EM,
 						);
 						if (height === null) {
 							// A region holding no text at all, and one whose height the box

@@ -21,7 +21,9 @@ whether to expose it as a doc field or derive it in the engine based on the
   height to what the wrapped text needs — again because the user decided to hand the
   height to the engine. Only types whose box holds one body of text offer it
   (`supportsAutoHeight` in `@jiscribe/doc`), and some, such as container, opt out in
-  their declaration
+  their declaration. The room the derived height leaves above and below the text
+  is the default padding (`AUTO_HEIGHT_COMFORT_PADDING_EM`) unless the type declares its own
+  (`ObjectDocDefinition.autoHeightPaddingEm`)
 - **Internal compartments that exist only to hold text** (e.g., the record's name
   band) are **derived**. What the user wants is not "a specific height" but
   "a readable title," and deriving from the font size and the like satisfies that

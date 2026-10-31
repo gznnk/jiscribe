@@ -60,6 +60,8 @@ describe("calcAutoShapeHeight", () => {
 			"aaaa bbbb cccc dddd",
 			FALLBACK_FONT,
 			calcFullBoxTextRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(height).toBe(LINE_HEIGHT * 2 + VERTICAL_PADDING + COMFORT_PADDING);
 	});
@@ -70,6 +72,8 @@ describe("calcAutoShapeHeight", () => {
 			"",
 			FALLBACK_FONT,
 			calcFullBoxTextRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(height).toBe(LINE_HEIGHT + VERTICAL_PADDING + COMFORT_PADDING);
 	});
@@ -81,12 +85,29 @@ describe("calcAutoShapeHeight", () => {
 				"one line",
 				{ ...FALLBACK_FONT, fontSize },
 				calcFullBoxTextRegion,
+				undefined,
+				AUTO_HEIGHT_COMFORT_PADDING_EM,
 			);
 		// The same line at twice the size leaves twice the room, so the difference
 		// between the two answers is a line box and a comfort band over again.
 		expect(heightAt(20)! - heightAt(10)!).toBe(
 			LINE_HEIGHT + comfortPaddingAt(10),
 		);
+	});
+
+	it("leaves the room it is asked for, none included", () => {
+		const heightWith = (paddingEm: number): number | null =>
+			calcAutoShapeHeight(
+				{ width: 400, height: 0 },
+				"one line",
+				FALLBACK_FONT,
+				calcFullBoxTextRegion,
+				undefined,
+				paddingEm,
+			);
+		// Each em of padding is charged above and below: 10px font × 0.5em × 2.
+		expect(heightWith(1.25)! - heightWith(0.75)!).toBe(10);
+		expect(heightWith(0)).toBe(LINE_HEIGHT + VERTICAL_PADDING);
 	});
 
 	it("ignores the height it is handed, that being the answer", () => {
@@ -96,12 +117,16 @@ describe("calcAutoShapeHeight", () => {
 			"aaaa bbbb",
 			FALLBACK_FONT,
 			calcFullBoxTextRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		const fromFlat = calcAutoShapeHeight(
 			{ ...shape, height: 0 },
 			"aaaa bbbb",
 			FALLBACK_FONT,
 			calcFullBoxTextRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(fromTall).toBe(fromFlat);
 	});
@@ -115,6 +140,8 @@ describe("calcAutoShapeHeight", () => {
 			"first line\nsecond line",
 			font,
 			calcFullBoxTextRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(height).toBe(
 			Math.ceil(11 * 1.5 * 2 + VERTICAL_PADDING + comfortPaddingAt(11)),
@@ -130,6 +157,8 @@ describe("calcAutoShapeHeight", () => {
 			text,
 			FALLBACK_FONT,
 			calcFullBoxTextRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(height).not.toBeNull();
 		const fits = (shapeHeight: number): boolean =>
@@ -146,6 +175,8 @@ describe("calcAutoShapeHeight", () => {
 				"anything",
 				FALLBACK_FONT,
 				calcOutsideBoxTextRegion,
+				undefined,
+				AUTO_HEIGHT_COMFORT_PADDING_EM,
 			),
 		).toBeNull();
 	});
@@ -165,6 +196,8 @@ describe("calcAutoShapeHeight", () => {
 				"anything",
 				FALLBACK_FONT,
 				headerBand,
+				undefined,
+				AUTO_HEIGHT_COMFORT_PADDING_EM,
 			),
 		).toBeNull();
 	});
@@ -185,6 +218,8 @@ describe("calcAutoShapeHeight", () => {
 			text,
 			FALLBACK_FONT,
 			cappedBox,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(height).not.toBeNull();
 		expect(heightOfTextAt(height!, text, cappedBox, width)).toBeLessThanOrEqual(
@@ -219,6 +254,8 @@ describe("calcAutoShapeHeight", () => {
 			text,
 			FALLBACK_FONT,
 			shrinkingBox,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 		expect(height).not.toBeNull();
@@ -245,6 +282,8 @@ describe("calcAutoShapeHeight", () => {
 				"abc",
 				FALLBACK_FONT,
 				aboveMinimumOnly,
+				undefined,
+				AUTO_HEIGHT_COMFORT_PADDING_EM,
 			),
 		).toBe(150);
 	});
@@ -267,12 +306,16 @@ describe("calcAutoShapeHeight", () => {
 			text,
 			FALLBACK_FONT,
 			insetRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		const pinched = calcAutoShapeHeight(
 			{ width: widthFor(20), height: 0, inset: FALLBACK_CHAR_WIDTH * 5 },
 			text,
 			FALLBACK_FONT,
 			insetRegion,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(roomy).not.toBeNull();
 		expect(pinched).toBeGreaterThan(roomy!);
@@ -307,6 +350,7 @@ describe("calcAutoShapeHeight on the frame basis", () => {
 			FALLBACK_FONT,
 			textRegion,
 			basis,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 	it("derives one height either way where the region sits on the box's centre", () => {
@@ -352,6 +396,7 @@ describe("calcAutoShapeHeight on the frame basis", () => {
 			FALLBACK_FONT,
 			bandedRegion,
 			"frame",
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(height).not.toBeNull();
 		// The block is centred on the whole height and must clear the declared
@@ -398,6 +443,8 @@ describe("calcAutoShapeHeight sharing one layout between heights", () => {
 			"aaaa bbbb cccc dddd eeee ffff gggg hhhh",
 			FALLBACK_FONT,
 			countedFullBox,
+			undefined,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 		expect(regionCalls).toBeGreaterThan(1);

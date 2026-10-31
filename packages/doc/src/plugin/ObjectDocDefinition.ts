@@ -130,6 +130,20 @@ export type ObjectDocDefinition = {
 	autoHeight?: false;
 
 	/**
+	 * Room a derived height leaves above the text and, again, below it, in
+	 * multiples of the body slot's font size — vertical only, charged outside the
+	 * text box's own `TEXT_BOX_PADDING_Y`. A finite number at or above 0; omitted
+	 * means `AUTO_HEIGHT_COMFORT_PADDING_EM`, and so does a value outside
+	 * that range. Read only where a height is derived, so it matters to a type whose
+	 * documents may leave `height` out
+	 * ({@link import("./supportsAutoHeight").supportsAutoHeight}) and, there, to
+	 * an object that does; a document never carries it.
+	 * The canvas reads it through the shared content resizer alone, so a type
+	 * declaring a `contentResizer` of its own has it ignored there.
+	 */
+	autoHeightPaddingEm?: number;
+
+	/**
 	 * AI-facing description of the shape (1–3 sentences, English): what it draws,
 	 * what it is typically used for, and where text is laid out. Verbatim source of
 	 * the type's JSON-schema `$def` description — the only field-level reference an

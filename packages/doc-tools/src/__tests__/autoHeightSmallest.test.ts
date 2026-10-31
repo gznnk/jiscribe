@@ -125,6 +125,8 @@ describe("the derived height of every shipped type that may leave it out", () =>
 							text,
 							font,
 							definition.textRegion!,
+							undefined,
+							AUTO_HEIGHT_COMFORT_PADDING_EM,
 						);
 						if (height === null) {
 							continue;
