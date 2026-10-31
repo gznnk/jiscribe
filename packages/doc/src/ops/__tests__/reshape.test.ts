@@ -82,6 +82,118 @@ describe("setRotation", () => {
 		).toThrow(DocOperationError);
 		expect(readObject(doc, "rect-1")).not.toHaveProperty("rotation");
 	});
+
+	it("keeps a rect's stored corner, which is its box before the turn", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 40, y: 60 });
+
+		docOps.setRotation(doc, ["rect-1"], 90);
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ x: 40, y: 60 });
+		expectValid(doc);
+	});
+
+	describe("on a point geometry, which stores its drawn top-left", () => {
+		const addText = (doc: CanvasDoc, fields: Record<string, unknown> = {}) =>
+			docOps.addObject(doc, "text", {
+				x: 100,
+				y: 200,
+				text: "hello world",
+				...fields,
+			});
+
+		const readCenter = (doc: CanvasDoc, id: string) => {
+			const bounds = docOps.getObjectBounds(doc, id)!;
+			return {
+				x: bounds.x + bounds.width / 2,
+				y: bounds.y + bounds.height / 2,
+			};
+		};
+
+		const expectCenterNear = (
+			actual: { x: number; y: number },
+			expected: { x: number; y: number },
+		) => {
+			expect(actual.x).toBeCloseTo(expected.x, 3);
+			expect(actual.y).toBeCloseTo(expected.y, 3);
+		};
+
+		it("turns a text about its centre rather than its stored corner", () => {
+			const doc = emptyDoc();
+			const id = addText(doc);
+			const centerBefore = readCenter(doc, id);
+
+			docOps.setRotation(doc, [id], 90);
+
+			expect(readObject(doc, id).rotation).toBe(90);
+			expect(readObject(doc, id)).not.toMatchObject({ x: 100, y: 200 });
+			expectCenterNear(readCenter(doc, id), centerBefore);
+			expectValid(doc);
+		});
+
+		it("keeps the centre when turning from one non-zero angle to another", () => {
+			const doc = emptyDoc();
+			const id = addText(doc, { rotation: 30 });
+			const centerBefore = readCenter(doc, id);
+
+			docOps.setRotation(doc, [id], 135);
+
+			expectCenterNear(readCenter(doc, id), centerBefore);
+			expectValid(doc);
+		});
+
+		it("keeps the centre of a flipped text", () => {
+			const doc = emptyDoc();
+			const id = addText(doc, { rotation: 30 });
+			// addObject takes no flip, so it is set on the stored doc directly.
+			readObject(doc, id).flipX = true;
+			const centerBefore = readCenter(doc, id);
+
+			docOps.setRotation(doc, [id], 60);
+
+			expect(readObject(doc, id).flipX).toBe(true);
+			expectCenterNear(readCenter(doc, id), centerBefore);
+			expectValid(doc);
+		});
+
+		it("restores the original corner when turned back to 0", () => {
+			const doc = emptyDoc();
+			const id = addText(doc);
+
+			docOps.setRotation(doc, [id], 90);
+			docOps.setRotation(doc, [id], 0);
+
+			const text = readObject(doc, id);
+			expect(text).not.toHaveProperty("rotation");
+			expect(text).toMatchObject({ x: 100, y: 200 });
+			expectValid(doc);
+		});
+
+		it("leaves the corner where it is when the angle is set again unchanged", () => {
+			const doc = emptyDoc();
+			const id = addText(doc, { rotation: 45 });
+			const { x, y } = readObject(doc, id);
+
+			docOps.setRotation(doc, [id], 45);
+
+			expect(readObject(doc, id)).toMatchObject({ x, y });
+			expectValid(doc);
+		});
+
+		it("ends up where a single mention would when the id is given twice", () => {
+			const once = emptyDoc();
+			const twice = emptyDoc();
+			const id = addText(once);
+			addText(twice);
+
+			docOps.setRotation(once, [id], 90);
+			docOps.setRotation(twice, [id, id], 90);
+
+			const { x, y } = readObject(once, id);
+			expect(readObject(twice, id)).toMatchObject({ x, y });
+			expectValid(twice);
+		});
+	});
 });
 
 describe("setPoints", () => {

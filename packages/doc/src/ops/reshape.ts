@@ -7,9 +7,13 @@ import {
 	requireObject,
 	requireObjects,
 } from "./utils/objectAccess";
-import { type DocDefinitions, isConnectorObject } from "./utils/objectGeometry";
+import {
+	type DocDefinitions,
+	isConnectorObject,
+	rotateObject,
+} from "./utils/objectGeometry";
 import { requirePolyPoints } from "./utils/polyFields";
-import { applyRotation, requireRotationDegrees } from "./utils/transformFields";
+import { requireRotationDegrees } from "./utils/transformFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 
 /** A poly shape cleared for reshaping, with the vertex list the doc is to own. */
@@ -112,9 +116,10 @@ export type SetRotationResult = {
  *
  * The shape turns about its own centre and keeps that centre, so a rotated object still
  * measures the same untransformed bounding box to `getCombinedBounds` and still moves by the
- * placement ops. A type that cannot be turned is skipped rather than written, the way
- * {@link import("./style").setStyle} skips a property a type has no place for, and every
- * such id is reported.
+ * placement ops. A `geometry: "point"` type (text, say) stores the corner its rotation draws
+ * on top-left, so its `x`/`y` are rewritten for that centre to stay. A type that cannot be
+ * turned is skipped rather than written, the way {@link import("./style").setStyle} skips a
+ * property a type has no place for, and every such id is reported.
  *
  * @param doc - Mutated in place
  * @param ids - Ids to turn; all must exist in the root tree, and a duplicate id is reported twice
@@ -136,12 +141,7 @@ export const setRotation = (
 	const result: SetRotationResult = { rotatedIds: [], ignoredIds: [] };
 
 	for (const { object } of locations) {
-		const applied = applyRotation(
-			object,
-			degrees,
-			definitions.get(object.type),
-		);
-		if (applied) {
+		if (rotateObject(object, degrees, definitions)) {
 			result.rotatedIds.push(object.id);
 		} else {
 			result.ignoredIds.push(object.id);

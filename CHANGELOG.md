@@ -190,6 +190,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the whole box.** They never did: a diamond uses its inscribed rectangle and a
   stadium the band between its caps, so text sized to the box wrapped. The guide
   and both shapes' schema descriptions now give the real region.
+- **`docOps.setRotation` turns a text, table or ER entity about its centre.**
+  These `geometry: "point"` types store the corner their rotation draws on
+  top-left, and the op wrote the angle without moving that corner, so the shape
+  swung about it: a text turned 90° by the MCP server's or the CLI's
+  `set_rotation` landed well off where it stood. The corner is now rewritten
+  for the centre to stay, as the op already promised; the box types, which
+  store their box before the turn, were never affected.
 
 ## [0.12.2] - 2026-10-25
 

@@ -1,6 +1,12 @@
-import { calcPolyBoundingBox, type Point, type Rect } from "@jiscribe/geometry";
+import {
+	calcPolyBoundingBox,
+	type Dimensions,
+	type Point,
+	type Rect,
+} from "@jiscribe/geometry";
 
 import { type ObjectRecord, readChildren } from "./objectAccess";
+import { applyRotation } from "./transformFields";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
@@ -323,6 +329,28 @@ export const requireResizableObject = (
 	);
 };
 
+const calcRectCenter = (rect: Rect): Point => ({
+	x: rect.x + rect.width / 2,
+	y: rect.y + rect.height / 2,
+});
+
+/**
+ * Rewrite a point geometry's stored corner so its box of `size` is drawn centred on
+ * `center` under the transform the object holds now (see calcPointDocDrawnTopLeft).
+ */
+const placePointObjectCenter = (
+	object: ObjectRecord,
+	center: Point,
+	size: Dimensions,
+): void => {
+	const drawnTopLeft = calcPointDocDrawnTopLeft(center, size, object);
+	// Rounded, unlike the corner scaleObject's rect case writes: that one comes off a
+	// multiply, this one off an affine transform, whose float tail the doc would
+	// otherwise keep (same rule as createPointObjectFactory).
+	object.x = roundDocCoordinate(drawnTopLeft.x);
+	object.y = roundDocCoordinate(drawnTopLeft.y);
+};
+
 /**
  * Shift an object by a delta, mutating it in place. A group moves with its children,
  * since the group itself stores no frame.
@@ -439,23 +467,13 @@ export const scaleObject = (
 			// the same. Scaling the corner instead would leave the label at the icon's
 			// old centre, half the icon's growth to its left.
 			const bounds = getObjectBounds(object, definitions);
-			if (bounds === null) {
-				break;
+			if (bounds !== null) {
+				placePointObjectCenter(
+					object,
+					scalePoint(calcRectCenter(bounds)),
+					bounds,
+				);
 			}
-			const size = { width: bounds.width, height: bounds.height };
-			const drawnTopLeft = calcPointDocDrawnTopLeft(
-				scalePoint({
-					x: bounds.x + size.width / 2,
-					y: bounds.y + size.height / 2,
-				}),
-				size,
-				object,
-			);
-			// Rounded, unlike the corner the rect case writes: that one comes off a
-			// multiply, this one off an affine transform, whose float tail the doc would
-			// otherwise keep (same rule as createPointObjectFactory).
-			object.x = roundDocCoordinate(drawnTopLeft.x);
-			object.y = roundDocCoordinate(drawnTopLeft.y);
 			break;
 		}
 		case "none":
@@ -466,4 +484,35 @@ export const scaleObject = (
 		default:
 			break;
 	}
+};
+
+/**
+ * Turn an object to an angle about its own centre, mutating it in place. A
+ * `geometry: "point"` doc stores the corner its transform draws on top-left (see
+ * GeometryType), so its `x`/`y` are rewritten for the centre to stay; every other
+ * geometry stores its box before the transform, which the angle does not move.
+ *
+ * @param object - Mutated in place
+ * @param rotation - Degrees within [0, 360), as requireRotationDegrees returns; 0 removes the property
+ * @param definitions - Type table `features.transform`, `features.geometry` and a declared box are read from
+ * @returns Whether the angle was written; false for a type without `features.transform`, left untouched
+ */
+export const rotateObject = (
+	object: ObjectRecord,
+	rotation: number,
+	definitions: DocDefinitions,
+): boolean => {
+	// Measured before the angle changes: the stored corner is only read back to the
+	// centre under the transform it was written with.
+	const pointBounds =
+		geometryOf(object, definitions) === "point"
+			? getObjectBounds(object, definitions)
+			: null;
+	if (!applyRotation(object, rotation, definitions.get(object.type))) {
+		return false;
+	}
+	if (pointBounds !== null) {
+		placePointObjectCenter(object, calcRectCenter(pointBounds), pointBounds);
+	}
+	return true;
 };
