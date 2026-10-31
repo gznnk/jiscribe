@@ -28,8 +28,7 @@ catalog:
   typescript: ~5.9.3
   vite: ^7.3.7
   vitest: ^4.1.12
-  # 版で書く。範囲だと private 側では remotion（apps/promo）が版で固定する 4.5.4 と
-  # 別の版に解決され、ロックファイルに zod が 2 つ入る。
+  # private ルートの overrides が remotion（apps/promo）の zod をこの版へ寄せている。
   zod: 4.6.7
 
 # @vscode/test-cli 0.0.15 が連れてくる mocha 11 は、脆弱性の残る diff 7 と
