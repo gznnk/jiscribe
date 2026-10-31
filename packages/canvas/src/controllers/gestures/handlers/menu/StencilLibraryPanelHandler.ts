@@ -8,7 +8,7 @@ import { OTHER_SHAPES_POPOVER_TARGET_ID } from "./utils/otherShapesTargetIds";
 
 /**
  * GestureHandler for the shape library's own chrome, in the sidebar and in the
- * bottom tool bar's "Other shapes" popover alike. Handles events with
+ * stencil bar's "Other shapes" popover alike. Handles events with
  * targetKind "menu" and targetId "stencil-library-panel" (the sidebar) or
  * "other-shapes-popover".
  *

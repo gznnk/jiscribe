@@ -1,6 +1,6 @@
 import {
 	Canvas,
-	type BottomToolbarOptions,
+	type StencilBarOptions,
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
@@ -11,7 +11,7 @@ import {
 	type ToolbarSection,
 } from "@jiscribe/canvas";
 import {
-	standardBottomToolbarPresetIds,
+	standardStencilBarPresetIds,
 	standardStencilLibrarySections,
 	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
@@ -48,8 +48,8 @@ const initialConfig: CanvasConfig = { plugins };
 // The shape set owns how its stencils are arranged, over the bars and the sidebar
 // alike; core's defaults know none of them, so the host passes every piece.
 const toolbarSections: ToolbarSection[] = standardToolbarSections;
-const bottomToolbar: BottomToolbarOptions = {
-	presetIds: standardBottomToolbarPresetIds,
+const stencilBar: StencilBarOptions = {
+	presetIds: standardStencilBarPresetIds,
 };
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
@@ -316,7 +316,7 @@ function App() {
 					doc={docView.doc}
 					initialConfig={mountConfig}
 					toolbar={{ sections: toolbarSections }}
-					bottomToolbar={bottomToolbar}
+					stencilBar={stencilBar}
 					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
 					onSidebarsChange={handleSidebarsChange}

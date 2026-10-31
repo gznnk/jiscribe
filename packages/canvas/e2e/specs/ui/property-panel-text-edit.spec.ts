@@ -18,7 +18,7 @@ const SELECTED = { start: 0, end: 7 };
 
 /**
  * Draws a rect, opens the sidebar, puts `text` in the rect and selects its
- * first `length` characters. Drawn first: the presets are on the bottom bar,
+ * first `length` characters. Drawn first: the presets are on the stencil bar,
  * which the open sidebar hides.
  */
 async function editAndSelect(

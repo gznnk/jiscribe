@@ -389,7 +389,7 @@ export type CloseModalAction = {
 };
 
 /**
- * Closes the bottom tool bar's "Other shapes" popover and changes nothing else.
+ * Closes the stencil bar's "Other shapes" popover and changes nothing else.
  * Dispatched by Escape (useCloseOtherShapesPopoverOnEscape), which must not
  * step the selection back the way EscapeSelectionCommand would.
  */

@@ -8,7 +8,7 @@ export type StencilPopupsClosed = Pick<
 
 /**
  * Closed values for both shape pickers that float over the canvas, the
- * toolbar's category flyout and the bottom tool bar's Other shapes popover.
+ * toolbar's category flyout and the stencil bar's Other shapes popover.
  * Spread over a state at every site that dismisses them (`{ ...state,
  * ...closeStencilPopups() }`), so the two always close together.
  *

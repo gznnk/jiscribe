@@ -9,7 +9,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarPropertyPanel: "プロパティ",
 	toolbarSidebars: "サイドバー",
 
-	bottomToolbarOtherShapes: "その他の図形",
+	stencilBarOtherShapes: "その他の図形",
 
 	stencilLibraryTitle: "図形ライブラリ",
 	stencilLibraryClose: "閉じる",

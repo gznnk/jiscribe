@@ -40,7 +40,7 @@ describe("OtherShapesToggleHandler", () => {
 	it("accepts only (kind=menu, id=other-shapes-button)", () => {
 		expect(OtherShapesToggleHandler.supports(makeEvent("click"))).toBe(true);
 		expect(
-			OtherShapesToggleHandler.supports(makeEvent("click", "bottom-toolbar")),
+			OtherShapesToggleHandler.supports(makeEvent("click", "stencil-bar")),
 		).toBe(false);
 		expect(
 			OtherShapesToggleHandler.supports(

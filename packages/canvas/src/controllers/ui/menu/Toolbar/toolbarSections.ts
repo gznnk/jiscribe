@@ -7,7 +7,7 @@ import { UndoIcon } from "../../icons/UndoIcon";
 import { ZoomToFitIcon } from "../../icons/ZoomToFitIcon";
 import type { StencilIconProps } from "../../objects/Stencil";
 import type { StencilCategory } from "../../objects/StencilCategory";
-import { DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS } from "../BottomToolbar/bottomToolbarPresets";
+import { DEFAULT_STENCIL_BAR_PRESET_IDS } from "../StencilBar/stencilBarPresets";
 
 /**
  * One control on the toolbar. The discriminant is `type`, matching
@@ -107,19 +107,19 @@ export type ToolbarSection = {
 //   2. The start side holds what changes the document (placing shapes, undo /
 //      redo); the end side what does not (zoom, help, and whatever view-side UI
 //      the host adds for itself).
-//   3. The shape presets live on the bottom tool bar (`bottomToolbar`), not
+//   3. The shape presets live on the stencil bar (`stencilBar`), not
 //      here. A host that still pins presets on this bar (DEFAULT_TOOLBAR_TOOLS_SECTION)
-//      pins only the basic ones, as shortcuts, and hides the bottom bar so no
+//      pins only the basic ones, as shortcuts, and hides the stencil bar so no
 //      preset shows twice.
 //   4. A host section that only matters while editing (a settings menu, say)
 //      sets `collapsedAlign: "hidden"`.
 
 /**
  * The shape tools as the top bar used to carry them: the shape library toggle at
- * the far left, then core's presets ({@link DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS})
+ * the far left, then core's presets ({@link DEFAULT_STENCIL_BAR_PRESET_IDS})
  * pinned directly. No longer part of {@link DEFAULT_TOOLBAR_SECTIONS}, which
- * leaves the presets to the bottom tool bar; kept for a host that wants them on
- * top, which then passes `bottomToolbar: { show: false }` so they do not show
+ * leaves the presets to the stencil bar; kept for a host that wants them on
+ * top, which then passes `stencilBar: { show: false }` so they do not show
  * twice.
  */
 export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
@@ -127,7 +127,7 @@ export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
 	items: [
 		{ type: "stencilLibraryToggle" },
 		{ type: "divider" },
-		...DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS.map((presetId): ToolbarItem => ({
+		...DEFAULT_STENCIL_BAR_PRESET_IDS.map((presetId): ToolbarItem => ({
 			type: "stencilPreset",
 			presetId,
 		})),
@@ -230,8 +230,8 @@ export const DEFAULT_TOOLBAR_SIDEBARS_SECTION: ToolbarSection = {
  * The default bar: history on the left; view, help, the toggles for each
  * sidebar and the switch for both on the right. Collapsed, the same two sides
  * as pills, with help and the per-sidebar toggles hidden.
- * The shape presets are not on it: they are the bottom tool bar's
- * (`bottomToolbar`).
+ * The shape presets are not on it: they are the stencil bar's
+ * (`stencilBar`).
  */
 export const DEFAULT_TOOLBAR_SECTIONS: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_HISTORY_SECTION,

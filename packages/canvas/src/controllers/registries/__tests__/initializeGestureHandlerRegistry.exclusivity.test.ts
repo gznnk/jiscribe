@@ -85,7 +85,7 @@ const TARGETS: Target[] = [
 		targetId: "property-panel",
 		targetAction: "command:togglePropertyPanel",
 	},
-	{ targetKind: "menu", targetId: "bottom-toolbar" },
+	{ targetKind: "menu", targetId: "stencil-bar" },
 	{ targetKind: "menu", targetId: "other-shapes-button" },
 	{
 		targetKind: "menu",

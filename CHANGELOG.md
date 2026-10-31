@@ -15,25 +15,27 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- **A bottom tool bar floats over the canvas.** `<Canvas bottomToolbar>` draws a
-  bar centred at the bottom of the viewport, over the canvas rather than
-  shrinking it. It shows while the chrome is collapsed and hides while it is
-  expanded, the shape library then holding the shapes. It pins
-  presets (`presetIds`, default `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`, core's
+- **A stencil bar floats over the canvas.** `<Canvas stencilBar>` draws a
+  column of buttons over the viewport's left edge, centred top to bottom below
+  the top-left pill and scrolling when the room there is shorter, over the
+  canvas rather than shrinking it. It shows while the chrome is collapsed and
+  hides while it is expanded, the shape library then holding the shapes. It pins
+  presets (`presetIds`, default `DEFAULT_STENCIL_BAR_PRESET_IDS`, core's
   basic primitives) that click to draw and drag to place as the top bar's do,
-  then an "Other shapes" button that opens a popover above the bar listing
-  every shape in the shape library, with the sidebar's search and sections.
+  then an "Other shapes" button that opens a popover to the right of the bar,
+  as tall as the room below the pill, listing every shape in the shape library,
+  with the sidebar's search and sections.
   Choosing a shape, Escape, a press outside it and expanding the chrome close
   it. Its sections fold together with the sidebar's, so a fold there reaches
   `onSidebarsChange` too. `show: false` removes it. `@jiscribe/standard-shapes` exports
-  `standardBottomToolbarPresetIds` for it.
+  `standardStencilBarPresetIds` for it.
 - **The canvas chrome has two forms, collapsed and expanded.** Collapsed, the
   full-width top bar gives its row back to the canvas and splits into two pills
-  floating over the canvas's top corners along the same sides, in the bottom
-  tool bar's look; shortcut help is hidden (`?` still opens it); the bottom
-  tool bar and the floating ObjectMenu show, and no sidebar does. Expanded, the
+  floating over the canvas's top corners along the same sides, in the stencil
+  bar's look; shortcut help is hidden (`?` still opens it); the stencil
+  bar and the floating ObjectMenu show, and no sidebar does. Expanded, the
   full-width bar is back with whichever sidebars are open, and neither the
-  bottom bar nor the ObjectMenu shows — with both sidebars closed too. The form
+  stencil bar nor the ObjectMenu shows — with both sidebars closed too. The form
   is state of its own, not read off the sidebars, so closing both sidebars
   does not collapse it. The drawing stays put on screen as the canvas area's
   top edge moves. The new `ToolbarSection.collapsedAlign` (`"start"` / `"end"` /
@@ -97,15 +99,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Code building a `CanvasSidebarsState` itself has to add `isExpanded`.
 - **The default top bar no longer carries the shape presets.**
   `DEFAULT_TOOLBAR_SECTIONS` is now history, view, help, the per-sidebar toggles
-  and the sidebars switch; the presets moved to the bottom tool bar.
+  and the sidebars switch; the presets moved to the stencil bar.
   `standardToolbarSections` changed the same way.
   `DEFAULT_TOOLBAR_TOOLS_SECTION`, `DEFAULT_TOOLBAR_PROPERTIES_SECTION` and
   `standardToolbarToolsSection` are still exported.
-- **Migration: the bottom tool bar is shown unless you hide it.**
-  `bottomToolbar.show` is independent of `toolbar.show`. A host that keeps
+- **Migration: the stencil bar is shown unless you hide it.**
+  `stencilBar.show` is independent of `toolbar.show`. A host that keeps
   presets on the top bar (composing `DEFAULT_TOOLBAR_TOOLS_SECTION` /
   `standardToolbarToolsSection`), or passes `toolbar={{ show: false }}`, must
-  also pass `bottomToolbar={{ show: false }}`; otherwise each preset shows
+  also pass `stencilBar={{ show: false }}`; otherwise each preset shows
   twice, or a canvas meant to have no bar keeps one.
 - **Shortcut help has a section of its own.** `DEFAULT_TOOLBAR_VIEW_SECTION`
   is now zoom and zoom to fit; the help button moved to the new
@@ -123,12 +125,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   inset, so the last column lines up with the search box instead of leaving a
   wider margin on the right.
 - **The e2e kit finds presets on either bar.** `selectors.toolButton` and
-  `shapeItem` match the top bar or the bottom one; `selectors.bottomToolbar`,
-  `bottomToolbarOtherShapes`, the Other shapes popover's `otherShapesPopover`
+  `shapeItem` match the top bar or the stencil bar; `selectors.stencilBar`,
+  `stencilBarOtherShapes`, the Other shapes popover's `otherShapesPopover`
   / `otherShapesPopoverSection` / `otherShapesPopoverItem` /
   `otherShapesPopoverSearch`, `sidebarsToggle` and `CanvasDriver.toggleSidebars()`
-  are new. `mountPluginHarness` takes `bottomToolbarPresetIds` and shows no
-  bottom bar without it. `selectors.toolbar` matches both pills while the bar
+  are new. `mountPluginHarness` takes `stencilBarPresetIds` and shows no
+  stencil bar without it. `selectors.toolbar` matches both pills while the bar
   is collapsed; `selectors.toolbarPill(edge)` scopes to one.
   `CanvasDriver.openPropertyPanel()` / `closePropertyPanel()` re-measure the
   canvas origin, which the full-width bar now moves; closing leaves the chrome
@@ -137,7 +139,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `CanvasDriver.openPropertyPanelWithContentShift()` also returns how content
   coordinates moved across the opening. `CanvasDriver.goto()` waits for the
   canvas area (the new `selectors.canvasArea`) rather than the Rectangle preset,
-  which the bottom bar no longer shows while the chrome is expanded. The harness's
+  which the stencil bar no longer shows while the chrome is expanded. The harness's
   `?defaultToolbar` switch gives the page the canvas default top bar;
   `?libraryOpen` mounts expanded; a page passing no `stencilLibrarySections`
   (or `?noStencilLibrary`) shows the canvas's default library, and the kit's

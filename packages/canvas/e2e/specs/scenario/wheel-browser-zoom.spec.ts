@@ -12,7 +12,7 @@ import { selectors } from "../../support/selectors";
  * as the same event — straight to the browser: the page zoomed while the drawing
  * stayed where it was. useBlockBrowserZoom cancels it at the canvas root instead.
  * The pills the toolbar collapses into float inside the drawing region, as the
- * bottom tool bar does, so a Ctrl+wheel over one zooms the drawing instead.
+ * stencil bar does, so a Ctrl+wheel over one zooms the drawing instead.
  *
  * Whether the browser actually zoomed is not observable from the page, so the
  * assertion is on the event: a listener on `window` runs after the root's capture

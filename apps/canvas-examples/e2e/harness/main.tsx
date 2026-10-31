@@ -38,7 +38,7 @@ import "katex/dist/katex.min.css";
 
 // Every shipped plugin at once, which is the whole point of this suite: each plugin's own
 // harness loads itself alone, so nothing else exercises the shipped set sharing one canvas.
-// The shapes are arranged as in examples/plugins.tsx — six presets pinned on the bottom tool
+// The shapes are arranged as in examples/plugins.tsx — six presets pinned on the stencil
 // bar, one category left on the top bar as a flyout so that mechanism stays covered, and the
 // shape library sidebar holding the whole set as sections; the sidebar controls are the
 // kit's (see mountPluginHarness). The shipped hosts leave no
@@ -62,7 +62,7 @@ mountPluginHarness({
 	toolbarItems: [
 		{ type: "stencilCategory", category: lucideIconStencilCategory },
 	],
-	bottomToolbarPresetIds: [
+	stencilBarPresetIds: [
 		"rect",
 		"ellipse",
 		"polyline",

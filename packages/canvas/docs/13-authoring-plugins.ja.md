@@ -340,8 +340,8 @@ mountPluginHarness({
   ただしトグルと区切りが残るのは `stencilLibrarySections` を渡したときだけで、渡さなければ
   解決時に落ちる（上の例は渡していないので、トグルは出ない）。プラグインのプリセットと
   カテゴリは canvas の既定に含まれないので、項目を渡さなければ spec からそもそも
-  触れない。下のツールバーは `bottomToolbarPresetIds` を渡したときだけ出るので、
-  `toolbarItems` に書いたプリセットが 2 つ並ぶことはない。プリセットを下のバーへ置く
+  触れない。ステンシルバーは `stencilBarPresetIds` を渡したときだけ出るので、
+  `toolbarItems` に書いたプリセットが 2 つ並ぶことはない。プリセットをステンシルバーへ置く
   ページもあってよく、`selectors.toolButton` / `shapeItem` はどちらのバーでも見つける
 
 spec 側は spec 用エントリからすべて取る。
@@ -391,7 +391,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
    - 型の union `ObjectTypes`（`packages/doc/src/model/objects/types/ObjectType.ts`）
    - headless 定義の `builtinObjectDocDefinitions`（`packages/doc/src/plugin/builtinObjectDocDefinitions.ts`）
    - UI 定義の `BUILTIN_OBJECT_DEFINITIONS`（`packages/canvas/src/controllers/registries/applyObjectDefinition.ts`）
-   - プリセットを名指ししている `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`（`packages/canvas/src/controllers/ui/menu/BottomToolbar/bottomToolbarPresets.ts`。`DEFAULT_TOOLBAR_TOOLS_SECTION` はここから作る）と `basicStencilCategory` の `presetIds`（`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`）
+   - プリセットを名指ししている `DEFAULT_STENCIL_BAR_PRESET_IDS`（`packages/canvas/src/controllers/ui/menu/StencilBar/stencilBarPresets.ts`。`DEFAULT_TOOLBAR_TOOLS_SECTION` はここから作る）と `basicStencilCategory` の `presetIds`（`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`）
 4. **エンジン側テストの副作用を処理する。**「輪郭を持つ図形」「クリック配置の図形」の
    代表としてその図形を使っていたテストが主語を失う。別の組み込みに乗り換えるのではなく、
    テスト側に最小の型を宣言する。前例は
@@ -410,7 +410,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 カテゴリフライアウトになる（任意）。出荷図形
 セットは全プラグインのカテゴリを `standardStencilLibrarySections`
 （`packages/standard-shapes`）でサイドバーのセクションとして並べ、プリセットだけを
-下のツールバーにピン留めしている（`standardBottomToolbarPresetIds`）。プラグインの
+ステンシルバーにピン留めしている（`standardStencilBarPresetIds`）。プラグインの
 カテゴリは `DEFAULT_TOOLBAR_SECTIONS` に含まれないので、既定のバーをそのまま使い
 library も宣言しないホストでは、カテゴリを足すまでその図形は既定のライブラリに
 登録済みの全プリセットと並んで出るだけになる。

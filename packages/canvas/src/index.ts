@@ -75,7 +75,7 @@ export type {
 // same object whether it becomes a flyout there or a section of the shape library
 // sidebar (`stencilLibrary.sections`); core exports `basicStencilCategory` and
 // plugins export their own (e.g. `containerStencilCategory`). The presets the
-// default places on the bottom tool bar (`bottomToolbar`) are exported too.
+// default places on the stencil bar (`stencilBar`) are exported too.
 export {
 	DEFAULT_TOOLBAR_HELP_SECTION,
 	DEFAULT_TOOLBAR_HISTORY_SECTION,
@@ -89,9 +89,9 @@ export {
 	type ToolbarSection,
 } from "./controllers/ui/menu/Toolbar";
 export {
-	DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS,
-	type BottomToolbarOptions,
-} from "./controllers/ui/menu/BottomToolbar";
+	DEFAULT_STENCIL_BAR_PRESET_IDS,
+	type StencilBarOptions,
+} from "./controllers/ui/menu/StencilBar";
 export {
 	basicStencilCategory,
 	type StencilCategory,

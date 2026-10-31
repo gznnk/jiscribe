@@ -7,7 +7,7 @@ type ShapesIconProps = {
 
 /**
  * Three shapes and a plus: more shapes than a bar pins, the icon of the
- * bottom tool bar's "Other shapes" button.
+ * stencil bar's "Other shapes" button.
  */
 const ShapesIconComponent: React.FC<ShapesIconProps> = ({
 	width = 24,

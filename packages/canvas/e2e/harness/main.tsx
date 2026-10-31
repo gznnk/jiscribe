@@ -18,7 +18,7 @@ import { mountPluginHarness } from "../testing-harness";
 // are enough, so the specs have both a section of shapes and a category living on the bar
 // and in the sidebar at once.
 //
-// The presets sit on the bottom tool bar, as the shipped hosts put them, and the category
+// The presets sit on the stencil bar, as the shipped hosts put them, and the category
 // flyout stays on the top bar, so both bars are under test.
 const librarySections: StencilCategory[] = [
 	basicStencilCategory,
@@ -47,7 +47,7 @@ mountPluginHarness({
 	toolbarItems: [
 		{ type: "stencilCategory", category: specShapesStencilCategory },
 	],
-	bottomToolbarPresetIds: [
+	stencilBarPresetIds: [
 		"rect",
 		"ellipse",
 		"polyline",

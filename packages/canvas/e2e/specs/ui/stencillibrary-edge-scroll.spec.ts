@@ -13,7 +13,7 @@ import { selectors } from "../../support/selectors";
  * fired edge scrolling right from dragStart and panned the canvas before the pointer had
  * even moved inside. Now it arms only after the pointer leaves the edge zone during the
  * drag, so only the spurious scroll right after grabbing disappears. (The top toolbar
- * touches the top edge the same way; this harness pins its presets on the bottom bar,
+ * touches the top edge the same way; this harness pins its presets on the stencil bar,
  * which floats clear of the bottom zone.)
  *
  * Observed through minX of the SVG viewBox (`minX minY w h`), which moves on leftward

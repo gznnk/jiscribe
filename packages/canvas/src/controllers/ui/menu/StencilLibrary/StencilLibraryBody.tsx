@@ -47,7 +47,7 @@ const SEARCH_ICON_SIZE = 14;
 /**
  * The shape library's search box and its collapsible sections (or, while
  * searching, the flat list of matches), drawn by both the sidebar
- * (StencilLibraryPanel) and the bottom tool bar's Other shapes popover. Its
+ * (StencilLibraryPanel) and the stencil bar's Other shapes popover. Its
  * container is the gesture target: the section headers carry only a
  * `section:` data-action, and StencilLibraryPanelHandler takes them for
  * either container.

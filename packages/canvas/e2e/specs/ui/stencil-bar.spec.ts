@@ -3,16 +3,18 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * The bottom tool bar (`bottomToolbar`): the floating bar centred over the
- * canvas at its bottom edge, where this harness pins its presets.
+ * The stencil bar (`stencilBar`): the floating column of buttons over
+ * the canvas's left edge, where this harness pins its presets.
  *
  * - Its presets are the same `item:<presetId>` contract as the top bar's: a
  *   click arms drawing and a drag onto the canvas places the shape.
- * - It floats over the canvas without shrinking it, and shows only while the
- *   chrome is collapsed: expanded, the shape library holds the shapes, whether
- *   or not a sidebar is open and whether the library is the page's or the
- *   default one.
- * - Its "Other shapes" button opens a popover above the bar holding the shape
+ * - It floats over the canvas without shrinking it, centred top to bottom in
+ *   the band below the start pill and scrolling when the band is shorter, and
+ *   shows only while the chrome is collapsed: expanded, the shape library
+ *   holds the shapes, whether or not a sidebar is open and whether the library
+ *   is the page's or the default one.
+ * - Its "Other shapes" button opens a popover beside the bar, the band's full
+ *   height, holding the shape
  *   library's search box and sections (the sidebar's, without its header),
  *   shown pressed while open. Using an item, Escape, a press outside it, the
  *   button again and expanding the chrome close it. Dragging off the button
@@ -33,33 +35,59 @@ async function boxOf(
 	return box;
 }
 
-/** Asserts the bar's centre line is the canvas area's, allowing 1px for rounding. */
-async function expectCentredOverCanvas(canvas: CanvasDriver, hint: string) {
-	const barBox = await boxOf(canvas, selectors.bottomToolbar);
+/** Inset in px of the bar from the canvas's left and bottom edges, and of the pills. */
+const FLOATING_BAR_INSET = 12;
+
+/** Gap in px between the start pill and the band the bar sits in. */
+const PILL_CLEARANCE = 8;
+
+/** Gap in px between the bar and the popover beside it. */
+const OTHER_SHAPES_POPOVER_GAP = 8;
+
+/** Screen y of the top and bottom of the band the bar sits in and the popover fills. */
+async function bandOf(
+	canvas: CanvasDriver,
+): Promise<{ top: number; bottom: number }> {
+	const pillBox = await boxOf(canvas, selectors.toolbarPill("start"));
 	const canvasBox = await boxOf(canvas, selectors.canvasArea);
-	const barCentreX = barBox.x + barBox.width / 2;
-	const canvasCentreX = canvasBox.x + canvasBox.width / 2;
-	expect(
-		Math.abs(barCentreX - canvasCentreX),
-		`${hint}: bar centre ${barCentreX} vs canvas centre ${canvasCentreX}`,
-	).toBeLessThanOrEqual(1);
-	expect(barBox.y + barBox.height).toBeLessThanOrEqual(
-		canvasBox.y + canvasBox.height,
-	);
+	return {
+		top: pillBox.y + pillBox.height + PILL_CLEARANCE,
+		bottom: canvasBox.y + canvasBox.height - FLOATING_BAR_INSET,
+	};
 }
 
-test.describe("bottom tool bar", () => {
+/**
+ * Asserts the bar stands upright on the canvas's left edge, centred top to
+ * bottom in the band, allowing 1px for rounding.
+ */
+async function expectOnLeftEdgeCentredInBand(canvas: CanvasDriver) {
+	const barBox = await boxOf(canvas, selectors.stencilBar);
+	const canvasBox = await boxOf(canvas, selectors.canvasArea);
+	const band = await bandOf(canvas);
+	expect(barBox.height).toBeGreaterThan(barBox.width);
+	expect(
+		Math.abs(barBox.x - (canvasBox.x + FLOATING_BAR_INSET)),
+	).toBeLessThanOrEqual(1);
+	const barCentreY = barBox.y + barBox.height / 2;
+	const bandCentreY = (band.top + band.bottom) / 2;
+	expect(
+		Math.abs(barCentreY - bandCentreY),
+		`bar centre ${barCentreY} vs band centre ${bandCentreY}`,
+	).toBeLessThanOrEqual(1);
+}
+
+test.describe("stencil bar", () => {
 	test("pins the presets with the stencil item contract, then Other shapes", async ({
 		canvas,
 	}) => {
-		const bar = canvas.page.locator(selectors.bottomToolbar);
+		const bar = canvas.page.locator(selectors.stencilBar);
 		await expect(bar).toBeVisible();
 		const rectItem = bar.locator('[data-action="item:rect"]');
 		await expect(rectItem).toHaveAttribute("data-kind", "menu");
 		await expect(rectItem).toHaveAttribute("data-id", "stencil-library");
 		await expect(rectItem).toHaveAttribute("title", "Rectangle");
 		await expect(
-			canvas.page.locator(selectors.bottomToolbarOtherShapes),
+			canvas.page.locator(selectors.stencilBarOtherShapes),
 		).toHaveAttribute("title", "Other shapes");
 		// The harness pins every preset here, so none is left on the top bar.
 		await expect(
@@ -69,9 +97,7 @@ test.describe("bottom tool bar", () => {
 
 	test("draws a shape from a preset clicked on the bar", async ({ canvas }) => {
 		await expect(
-			canvas.page.locator(
-				`${selectors.bottomToolbar} button[title="Rectangle"]`,
-			),
+			canvas.page.locator(`${selectors.stencilBar} button[title="Rectangle"]`),
 		).toBeVisible();
 		const id = await canvas.drawShape(
 			"Rectangle",
@@ -99,39 +125,66 @@ test.describe("bottom tool bar", () => {
 
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "a new shape is created by the D&D off the bottom bar",
+				message: "a new shape is created by the D&D off the stencil bar",
 			})
 			.toBe(before + 1);
 	});
 
-	test("floats over the canvas without taking its height", async ({
+	test("floats over the canvas's left edge, centred in the band below the start pill, without taking the canvas's height", async ({
 		canvas,
 	}) => {
 		const canvasBox = await boxOf(canvas, selectors.canvasArea);
 		const viewportHeight = canvas.page.viewportSize()?.height;
 		expect(canvasBox.y + canvasBox.height).toBe(viewportHeight);
-		await expectCentredOverCanvas(canvas, "no sidebar open");
+		await expectOnLeftEdgeCentredInBand(canvas);
+	});
+
+	test("leaves the wheel over it to the canvas while it fits its band", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Rectangle",
+			{ x: 500, y: 200 },
+			{ x: 600, y: 260 },
+		);
+		const shape = canvas.objectById(id);
+		const shapeBox = await shape.boundingBox();
+		const bar = canvas.page.locator(selectors.stencilBar);
+		expect(
+			await bar.evaluate(
+				(element) => element.scrollHeight > element.clientHeight,
+			),
+			"the bar fits its band",
+		).toBe(false);
+
+		const barBox = await boxOf(canvas, selectors.stencilBar);
+		await canvas.page.mouse.move(
+			barBox.x + barBox.width / 2,
+			barBox.y + barBox.height / 2,
+		);
+		await canvas.page.mouse.wheel(0, 120);
+		await expect.poll(() => shape.boundingBox()).not.toEqual(shapeBox);
 	});
 
 	test("hides while expanded, both panels closed included, and comes back once collapsed", async ({
 		canvas,
 	}) => {
-		const bottomToolbar = canvas.page.locator(selectors.bottomToolbar);
-		await expect(bottomToolbar).toBeVisible();
+		const stencilBar = canvas.page.locator(selectors.stencilBar);
+		await expect(stencilBar).toBeVisible();
 
 		await canvas.toggleSidebars();
-		await expect(bottomToolbar).toHaveCount(0);
+		await expect(stencilBar).toHaveCount(0);
 		await canvas.closeStencilLibrary();
 		await canvas.closePropertyPanel();
-		await expect(bottomToolbar).toHaveCount(0);
+		await expect(stencilBar).toHaveCount(0);
 
 		await canvas.toggleSidebars();
-		await expect(bottomToolbar).toBeVisible();
-		await expectCentredOverCanvas(canvas, "back once collapsed");
+		await expect(stencilBar).toBeVisible();
+		await expectOnLeftEdgeCentredInBand(canvas);
 
 		// One sidebar expanding the chrome alone hides it as well.
 		await canvas.openPropertyPanel();
-		await expect(bottomToolbar).toHaveCount(0);
+		await expect(stencilBar).toHaveCount(0);
 	});
 
 	/** The default library holds the shapes there, so no exception is made. */
@@ -139,18 +192,18 @@ test.describe("bottom tool bar", () => {
 		canvas,
 	}) => {
 		await canvas.goto("?noStencilLibrary");
-		const bottomToolbar = canvas.page.locator(selectors.bottomToolbar);
-		await expect(bottomToolbar).toBeVisible();
+		const stencilBar = canvas.page.locator(selectors.stencilBar);
+		await expect(stencilBar).toBeVisible();
 
 		await canvas.openPropertyPanel();
-		await expect(bottomToolbar).toHaveCount(0);
+		await expect(stencilBar).toHaveCount(0);
 	});
 
 	test("does nothing when dragged off Other shapes", async ({ canvas }) => {
 		const pageErrors: Error[] = [];
 		canvas.page.on("pageerror", (error) => pageErrors.push(error));
 		const before = await canvas.captureObjects();
-		const otherShapes = canvas.page.locator(selectors.bottomToolbarOtherShapes);
+		const otherShapes = canvas.page.locator(selectors.stencilBarOtherShapes);
 
 		// The open context menu is what makes the press observable: a press on the
 		// button dismisses it, so its closing proves the press was handled.
@@ -182,11 +235,11 @@ test.describe("bottom tool bar", () => {
 const BASIC_SECTION = "basic";
 const SPEC_SECTION = "spec";
 
-/** Short enough that the popover's 60% cap leaves its list overflowing. */
-const SHORT_VIEWPORT = { width: 1280, height: 300 };
+/** Short enough that the band is shorter than the bar, and the popover's list overflows. */
+const SHORT_VIEWPORT = { width: 1280, height: 260 };
 
 async function openOtherShapes(canvas: CanvasDriver) {
-	await canvas.page.click(selectors.bottomToolbarOtherShapes);
+	await canvas.page.click(selectors.stencilBarOtherShapes);
 	await expect(canvas.page.locator(selectors.otherShapesPopover)).toBeVisible();
 }
 
@@ -195,15 +248,16 @@ async function expectOtherShapesClosed(canvas: CanvasDriver) {
 		0,
 	);
 	await expect(
-		canvas.page.locator(selectors.bottomToolbarOtherShapes),
+		canvas.page.locator(selectors.stencilBarOtherShapes),
 	).toHaveAttribute("aria-expanded", "false");
 }
 
 test.describe("Other shapes popover", () => {
-	test("opens above the bar from Other shapes, which shows it pressed, leaving the chrome collapsed", async ({
+	test("opens beside the bar from Other shapes, which shows it pressed, leaving the chrome collapsed", async ({
 		canvas,
 	}) => {
-		const otherShapes = canvas.page.locator(selectors.bottomToolbarOtherShapes);
+		const closedBarBox = await boxOf(canvas, selectors.stencilBar);
+		const otherShapes = canvas.page.locator(selectors.stencilBarOtherShapes);
 		await expect(otherShapes).toHaveAttribute("aria-expanded", "false");
 		await expect(canvas.page.locator(selectors.otherShapesPopover)).toHaveCount(
 			0,
@@ -221,38 +275,43 @@ test.describe("Other shapes popover", () => {
 		// Outside the bar's element, so the bar-scoped selectors keep to the bar.
 		await expect(
 			canvas.page.locator(
-				`${selectors.bottomToolbar} ${selectors.otherShapesPopover}`,
+				`${selectors.stencilBar} ${selectors.otherShapesPopover}`,
 			),
 		).toHaveCount(0);
 
 		const popoverBox = await boxOf(canvas, selectors.otherShapesPopover);
-		const barBox = await boxOf(canvas, selectors.bottomToolbar);
-		const canvasBox = await boxOf(canvas, selectors.canvasArea);
-		expect(popoverBox.y + popoverBox.height).toBeLessThanOrEqual(barBox.y);
-		// The sidebar's width, centred over the canvas like the bar.
-		expect(Math.abs(popoverBox.width - 280)).toBeLessThanOrEqual(1);
+		const barBox = await boxOf(canvas, selectors.stencilBar);
+		const band = await bandOf(canvas);
+		// Opening it leaves the bar where it was.
+		expect(barBox).toEqual(closedBarBox);
 		expect(
 			Math.abs(
-				popoverBox.x +
-					popoverBox.width / 2 -
-					(canvasBox.x + canvasBox.width / 2),
+				popoverBox.x - (barBox.x + barBox.width + OTHER_SHAPES_POPOVER_GAP),
 			),
 		).toBeLessThanOrEqual(1);
-		expect(popoverBox.height).toBeLessThanOrEqual(canvasBox.height * 0.6);
+		// The band's full height and the sidebar's width.
+		expect(Math.abs(popoverBox.y - band.top)).toBeLessThanOrEqual(1);
+		expect(
+			Math.abs(popoverBox.y + popoverBox.height - band.bottom),
+		).toBeLessThanOrEqual(1);
+		expect(Math.abs(popoverBox.width - 280)).toBeLessThanOrEqual(1);
 	});
 
-	test("caps its width at the canvas less the bar's inset on each side", async ({
+	test("caps its width at what the band leaves beside the bar, short of the canvas's right edge", async ({
 		canvas,
 	}) => {
-		// Narrowed once open: at this width the bar itself runs off the page, and
-		// the button with it.
 		await openOtherShapes(canvas);
 		await canvas.page.setViewportSize({ width: 240, height: 600 });
 		const popoverBox = await boxOf(canvas, selectors.otherShapesPopover);
+		const barBox = await boxOf(canvas, selectors.stencilBar);
 		const canvasBox = await boxOf(canvas, selectors.canvasArea);
-		expect(
-			Math.abs(popoverBox.width - (canvasBox.width - 32)),
-		).toBeLessThanOrEqual(1);
+		const roomBesideBar =
+			canvasBox.x +
+			canvasBox.width -
+			FLOATING_BAR_INSET -
+			(barBox.x + barBox.width + OTHER_SHAPES_POPOVER_GAP);
+		expect(roomBesideBar).toBeLessThan(280);
+		expect(Math.abs(popoverBox.width - roomBesideBar)).toBeLessThanOrEqual(1);
 	});
 
 	test("lists the shape library, its search starting empty and unfocused on every open", async ({
@@ -286,7 +345,7 @@ test.describe("Other shapes popover", () => {
 		await expect(rectItem).toHaveCount(0);
 		await expect(tileItem).toHaveCount(0);
 
-		await canvas.page.click(selectors.bottomToolbarOtherShapes);
+		await canvas.page.click(selectors.stencilBarOtherShapes);
 		await expectOtherShapesClosed(canvas);
 		await openOtherShapes(canvas);
 		await expect(search).toHaveValue("");
@@ -326,7 +385,7 @@ test.describe("Other shapes popover", () => {
 	test("closes on Escape, the search box focused or not, keeping the selection", async ({
 		canvas,
 	}) => {
-		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 400, y: 220 });
+		await canvas.drawShape("Rectangle", { x: 500, y: 150 }, { x: 600, y: 220 });
 		await expect.poll(() => canvas.hasAnyControl()).toBe(true);
 
 		await openOtherShapes(canvas);
@@ -347,7 +406,7 @@ test.describe("Other shapes popover", () => {
 	test("closes when Enter opens the text editor, leaving Escape to the editor", async ({
 		canvas,
 	}) => {
-		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 400, y: 220 });
+		await canvas.drawShape("Rectangle", { x: 500, y: 150 }, { x: 600, y: 220 });
 		await expect.poll(() => canvas.hasAnyControl()).toBe(true);
 		await openOtherShapes(canvas);
 
@@ -363,12 +422,12 @@ test.describe("Other shapes popover", () => {
 	test("closes when a double click on the picked text opens the editor, leaving Escape to the editor", async ({
 		canvas,
 	}) => {
-		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 400, y: 220 });
+		await canvas.drawShape("Rectangle", { x: 500, y: 150 }, { x: 600, y: 220 });
 		// A second click on the selected rect picks its text slot.
-		await canvas.clickAt({ x: 350, y: 185 });
+		await canvas.clickAt({ x: 550, y: 185 });
 		await openOtherShapes(canvas);
 
-		const point = canvas.toScreen({ x: 350, y: 185 });
+		const point = canvas.toScreen({ x: 550, y: 185 });
 		await canvas.page.mouse.dblclick(point.x, point.y);
 		await canvas.waitForTextEditor();
 		await expectOtherShapesClosed(canvas);
@@ -379,7 +438,7 @@ test.describe("Other shapes popover", () => {
 	});
 
 	test("commits an open text edit when it opens", async ({ canvas }) => {
-		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 400, y: 220 });
+		await canvas.drawShape("Rectangle", { x: 500, y: 150 }, { x: 600, y: 220 });
 		await canvas.page.keyboard.press("Enter");
 		await canvas.waitForTextEditor();
 		await canvas.page.keyboard.type("Hi");
@@ -399,7 +458,7 @@ test.describe("Other shapes popover", () => {
 		await expectOtherShapesClosed(canvas);
 
 		await openOtherShapes(canvas);
-		await canvas.page.click(selectors.bottomToolbarOtherShapes);
+		await canvas.page.click(selectors.stencilBarOtherShapes);
 		await expectOtherShapesClosed(canvas);
 
 		await openOtherShapes(canvas);
@@ -426,19 +485,40 @@ test.describe("Other shapes popover", () => {
 		await expectOtherShapesClosed(canvas);
 	});
 
-	test("scrolls its list under the wheel without panning or zooming the canvas", async ({
+	test("scrolls the bar and its list under the wheel without panning or zooming the canvas", async ({
 		canvas,
 	}) => {
 		await canvas.page.setViewportSize(SHORT_VIEWPORT);
-		// Clear of the corner pills and of where the popover opens.
+		// Clear of the corner pills, the bar and where the popover opens.
 		const id = await canvas.drawShape(
 			"Rectangle",
-			{ x: 100, y: 100 },
-			{ x: 200, y: 160 },
+			{ x: 500, y: 100 },
+			{ x: 600, y: 160 },
 		);
 		const shape = canvas.objectById(id);
 		const shapeBox = await shape.boundingBox();
 
+		// Too tall for the band, the bar keeps to its top, clear of the start
+		// pill, and scrolls inside: Other shapes starts out of its view.
+		const bar = canvas.page.locator(selectors.stencilBar);
+		const barBox = await boxOf(canvas, selectors.stencilBar);
+		const band = await bandOf(canvas);
+		expect(Math.abs(barBox.y - band.top)).toBeLessThanOrEqual(1);
+		expect(
+			Math.abs(barBox.y + barBox.height - band.bottom),
+		).toBeLessThanOrEqual(1);
+		const otherShapesBox = await boxOf(canvas, selectors.stencilBarOtherShapes);
+		expect(otherShapesBox.y).toBeGreaterThan(barBox.y + barBox.height);
+		await canvas.page.mouse.move(
+			barBox.x + barBox.width / 2,
+			barBox.y + barBox.height / 2,
+		);
+		await canvas.page.mouse.wheel(0, 120);
+		await expect
+			.poll(() => bar.evaluate((element) => element.scrollTop))
+			.toBeGreaterThan(0);
+
+		// Scrolled into the bar's view, the button is pressable.
 		await openOtherShapes(canvas);
 		const list = canvas.page.locator(
 			`${selectors.otherShapesPopover} > :last-child`,
@@ -446,7 +526,7 @@ test.describe("Other shapes popover", () => {
 		const isOverflowing = await list.evaluate(
 			(element) => element.scrollHeight > element.clientHeight,
 		);
-		expect(isOverflowing, "the list overflows the capped popover").toBe(true);
+		expect(isOverflowing, "the list overflows the popover").toBe(true);
 
 		const listBox = await list.boundingBox();
 		if (!listBox) {

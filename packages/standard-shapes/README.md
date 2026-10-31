@@ -8,7 +8,7 @@ plugin imports. This is that list, once.
 ```ts
 // A canvas: the plugins, plus the declarations that reach their stencils
 import {
-	standardBottomToolbarPresetIds,
+	standardStencilBarPresetIds,
 	standardPlugins,
 	standardStencilLibrarySections,
 	standardToolbarSections,
@@ -22,7 +22,7 @@ import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 | -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                                     |
 | `standardToolbarSections`        | `.`      | The whole top bar — core's history, view and help sections and the sidebar toggles, then the switch for both sidebars — for `toolbar.sections` |
-| `standardBottomToolbarPresetIds` | `.`      | The six presets the bottom tool bar pins, for `bottomToolbar.presetIds`                                                                        |
+| `standardStencilBarPresetIds`    | `.`      | The six presets the stencil bar pins, for `stencilBar.presetIds`                                                                               |
 | `standardToolbarToolsSection`    | `.`      | The shape tools the top bar used to carry (the library toggle, then the six presets), for a host keeping presets on top                        |
 | `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                                               |
 | `standardDocPlugins`             | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                                              |
@@ -51,7 +51,7 @@ which is what makes the pair safe to use without checking.
 
 ## The bars and the library are one set
 
-`standardBottomToolbarPresetIds` pins six presets on the bottom tool bar and
+`standardStencilBarPresetIds` pins six presets on the stencil bar and
 nothing else; every other shape of the set — the `markdown` and `table` presets
 and the eight plugin categories — is filed in
 `standardStencilLibrarySections`, the sidebar the switch at the far right of
@@ -65,7 +65,7 @@ all three:
 ```tsx
 <Canvas
 	toolbar={{ sections: standardToolbarSections }}
-	bottomToolbar={{ presetIds: standardBottomToolbarPresetIds }}
+	stencilBar={{ presetIds: standardStencilBarPresetIds }}
 	stencilLibrary={{ sections: standardStencilLibrarySections }}
 />
 ```
@@ -83,8 +83,8 @@ and `DEFAULT_TOOLBAR_SIDEBARS_SECTION` are exported one by one for exactly that,
 and the sidebars switch is meant to stay at the far right. While the chrome is
 collapsed the bar is two corner pills; a host section that should not show
 there sets `collapsedAlign: "hidden"`. A host that wants the presets
-back on the top bar takes `standardToolbarToolsSection` and hides the bottom bar
-(`bottomToolbar={{ show: false }}`), or every preset shows twice. A host wanting
+back on the top bar takes `standardToolbarToolsSection` and hides the stencil bar
+(`stencilBar={{ show: false }}`), or every preset shows twice. A host wanting
 a different set of shapes copies them and rebuilds from the plugins' own
 `*StencilCategory` exports, which serve as a bar flyout and a sidebar section
 alike — `apps/canvas-examples`'s plugins example does exactly that, on purpose,

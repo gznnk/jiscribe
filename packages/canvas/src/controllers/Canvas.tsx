@@ -68,13 +68,6 @@ import { CanvasView } from "../rendering/CanvasView";
 import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
-import {
-	BottomToolbar,
-	BottomToolbarDock,
-	OtherShapesPopover,
-	resolveBottomToolbarPresets,
-	type BottomToolbarOptions,
-} from "./ui/menu/BottomToolbar";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type {
@@ -82,6 +75,13 @@ import type {
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
+import {
+	StencilBar,
+	StencilBarDock,
+	OtherShapesPopover,
+	resolveStencilBarPresets,
+	type StencilBarOptions,
+} from "./ui/menu/StencilBar";
 import { useResolvedStencilLibrary } from "./ui/menu/StencilLibrary/hooks/useResolvedStencilLibrary";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
 import {
@@ -150,8 +150,8 @@ type CanvasProps = {
 	/**
 	 * Called when the chrome expands or collapses, or either sidebar opens,
 	 * closes, or has a section collapsed, with the form, both edges and every
-	 * panel's state each time. The shape library's sections fold in the bottom
-	 * tool bar's Other shapes popover too, sharing the sidebar's state, so a
+	 * panel's state each time. The shape library's sections fold in the stencil
+	 * bar's Other shapes popover too, sharing the sidebar's state, so a
 	 * fold there is reported (and restored) as the `stencilLibrary` panel's.
 	 * Read-only on the same terms as `onViewportChange`: persist it and hand it
 	 * back through `initialConfig.sidebars` at the next mount, but do not drive
@@ -244,7 +244,7 @@ type CanvasProps = {
 		 * bar — zoom controls, the help button, the sidebar controls and any host
 		 * `slot` items — and the canvas area takes the full height. Keyboard
 		 * shortcuts still work (`?` opens the shortcut help, rendered outside the
-		 * bar). The bottom tool bar is separate (`bottomToolbar.show`); with both
+		 * bar). The stencil bar is separate (`stencilBar.show`); with both
 		 * hidden nothing is left to start drawing a new shape from, which suits
 		 * read-mostly hosts (previews, embedded viewers).
 		 */
@@ -255,14 +255,14 @@ type CanvasProps = {
 		 * UI slots (see {@link ToolbarSection}). Omit for
 		 * {@link DEFAULT_TOOLBAR_SECTIONS}: undo / redo, the view controls, shortcut help,
 		 * the toggles for each sidebar and the switch for both, and no preset — the
-		 * presets are the bottom bar's (`bottomToolbar`). A host can reuse those
+		 * presets are the stencil bar's (`stencilBar`). A host can reuse those
 		 * sections one by one (`DEFAULT_TOOLBAR_HISTORY_SECTION` /
 		 * `DEFAULT_TOOLBAR_VIEW_SECTION` / `DEFAULT_TOOLBAR_HELP_SECTION` /
 		 * `DEFAULT_TOOLBAR_PER_SIDEBAR_TOGGLES_SECTION` /
 		 * `DEFAULT_TOOLBAR_SIDEBARS_SECTION`) rather than restating them; host UI
 		 * packed against the end belongs before the sidebar controls, which are
 		 * meant to keep the far right. A host pinning presets here as well hides
-		 * the bottom bar, or each preset shows twice.
+		 * the stencil bar, or each preset shows twice.
 		 *
 		 * While the chrome is expanded (see `CanvasSidebarsState.isExpanded`) the
 		 * sections make one full-width bar above the canvas, whether or not a
@@ -274,18 +274,20 @@ type CanvasProps = {
 		sections?: ToolbarSection[];
 	};
 	/**
-	 * The bottom tool bar: a floating bar centred over the canvas at its bottom
-	 * edge, holding pinned presets (click to arm or place, drag to place, as on
-	 * the top bar) and an "Other shapes" button that opens a popover above the
-	 * bar listing every shape in the shape library (`stencilLibrary`), with the
+	 * The stencil bar: a floating column of buttons over the canvas's left
+	 * edge, centred top to bottom in the room below the top bar's corner pills
+	 * and scrolling when that room is shorter, holding pinned presets (click to
+	 * arm or place, drag to place, as on the top bar) and an "Other shapes"
+	 * button that opens a popover to the right of the bar, as tall as that room,
+	 * listing every shape in the shape library (`stencilLibrary`), with the
 	 * sidebar's search and sections. It covers the canvas rather than shrinking
 	 * it. It shows while the chrome is collapsed and is hidden while it is
 	 * expanded (see `CanvasSidebarsState.isExpanded`), open sidebars or not, the
 	 * shape library then holding the shapes. Omit for the default, shown with
-	 * `DEFAULT_BOTTOM_TOOLBAR_PRESET_IDS`; see {@link BottomToolbarOptions}. An
+	 * `DEFAULT_STENCIL_BAR_PRESET_IDS`; see {@link StencilBarOptions}. An
 	 * inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
 	 */
-	bottomToolbar?: BottomToolbarOptions;
+	stencilBar?: StencilBarOptions;
 	/**
 	 * The shape library sidebar. Omit for the default library: one section,
 	 * headed by `messages.stencilLibraryAllShapes`, listing the first few
@@ -369,7 +371,7 @@ const CanvasComponent = ({
 	locale = "en",
 	messages,
 	toolbar,
-	bottomToolbar,
+	stencilBar,
 	stencilLibrary,
 	autoFocus = true,
 	gestureHandling = "greedy",
@@ -504,7 +506,7 @@ const CanvasComponent = ({
 		locale,
 	);
 
-	// The chrome's form decides the toolbar's form, the bottom bar and the
+	// The chrome's form decides the toolbar's form, the stencil bar and the
 	// ObjectMenu; a sidebar is drawn only within the expanded form. The form and
 	// both panels are reducer state from the first render on (seeded from
 	// `initialConfig.sidebars`), so the first measurement already sees the bar
@@ -684,11 +686,11 @@ const CanvasComponent = ({
 			</ToolbarCommandStateContext>
 		) : null;
 
-	// null while the host hid the bar. Memoized so BottomToolbar keeps its memo:
+	// null while the host hid the bar. Memoized so StencilBar keeps its memo:
 	// the canvas re-renders on nearly every dispatch.
-	const bottomToolbarPresets = useMemo(
-		() => resolveBottomToolbarPresets(bottomToolbar, registries.stencil),
-		[bottomToolbar, registries],
+	const stencilBarPresets = useMemo(
+		() => resolveStencilBarPresets(stencilBar, registries.stencil),
+		[stencilBar, registries],
 	);
 
 	return (
@@ -777,12 +779,18 @@ const CanvasComponent = ({
 								/>
 							</ScrollSyncedOverlay>
 						</Container>
-						{/* When it shows: see the `bottomToolbar` prop. Inside the
+						{/* When it shows: see the `stencilBar` prop. Inside the
 						    viewport, so it covers the canvas rather than shrinking it;
 						    before the overlay, so the context menu and the toast draw over
-						    it. The popover is the bar's sibling, not its child */}
-						{bottomToolbarPresets !== null && !isChromeExpanded && (
-							<BottomToolbarDock>
+						    it. The popover is the bar's sibling, not its child, and
+						    follows it */}
+						{stencilBarPresets !== null && !isChromeExpanded && (
+							<StencilBarDock>
+								<StencilBar
+									presets={stencilBarPresets}
+									activePresetId={drawingPresetId}
+									isOtherShapesPopoverOpen={state.isOtherShapesPopoverOpen}
+								/>
 								{state.isOtherShapesPopoverOpen && (
 									<OtherShapesPopover
 										sections={librarySections}
@@ -793,15 +801,10 @@ const CanvasComponent = ({
 										resolvePreset={resolveLibraryPreset}
 									/>
 								)}
-								<BottomToolbar
-									presets={bottomToolbarPresets}
-									activePresetId={drawingPresetId}
-									isOtherShapesPopoverOpen={state.isOtherShapesPopoverOpen}
-								/>
-							</BottomToolbarDock>
+							</StencilBarDock>
 						)}
 						{/* Collapsed, the bar's two pills float over the top corners,
-						    placed here for the same reasons as the bottom bar */}
+						    placed here for the same reasons as the stencil bar */}
 						{!isChromeExpanded && toolbarElement}
 						<ViewportOverlay>
 							<ErrorToast notification={errorNotification} />

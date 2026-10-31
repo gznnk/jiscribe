@@ -7,7 +7,7 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { OTHER_SHAPES_BUTTON_TARGET_ID } from "./utils/otherShapesTargetIds";
 
 /**
- * GestureHandler for the bottom tool bar's "Other shapes" button.
+ * GestureHandler for the stencil bar's "Other shapes" button.
  * Handles events with targetKind "menu" and targetId "other-shapes-button".
  *
  * A click (or doubleClick, as on the toolbar) opens the popover, committing an

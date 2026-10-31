@@ -38,7 +38,7 @@ function parseViewBox(raw: string | null): ViewBox {
 
 /**
  * The drawing region of the embedded canvas: the main svg comes first under it,
- * and the bottom bar and the collapsed toolbar's pills after it.
+ * and the stencil bar and the collapsed toolbar's pills after it.
  */
 const viewportLocator = (page: Page) =>
 	page.locator(`[data-testid="embedded-canvas"] ${selectors.canvasArea}`);

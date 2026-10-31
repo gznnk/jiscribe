@@ -1,5 +1,5 @@
 import type {
-	BottomToolbarOptions,
+	StencilBarOptions,
 	CanvasConfig,
 	CanvasDoc,
 	StencilCategory,
@@ -84,7 +84,7 @@ const initialConfig: CanvasConfig = { plugins };
 const pluginParser = createCanvasParser({ plugins });
 
 // Core's defaults know nothing of plugin shapes, so the host arranges them, over
-// three surfaces: the bottom tool bar pins the handful of presets a diagram is mostly
+// three surfaces: the stencil bar pins the handful of presets a diagram is mostly
 // built out of, the top bar keeps one category as a flyout, and the shape library sidebar
 // (`stencilLibrary.sections`, opened by the switch at the top bar's far right) holds the
 // whole set grouped into sections. All are declared the same way — the categories come from
@@ -109,7 +109,7 @@ const toolbarSections: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_SIDEBARS_SECTION,
 ];
 
-const bottomToolbar: BottomToolbarOptions = {
+const stencilBar: StencilBarOptions = {
 	presetIds: ["rect", "ellipse", "polygon", "polyline", "text", "sticky"],
 };
 
@@ -363,7 +363,7 @@ export function PluginsExample() {
 			doc={pluginsDoc}
 			initialConfig={initialConfig}
 			toolbar={{ sections: toolbarSections }}
-			bottomToolbar={bottomToolbar}
+			stencilBar={stencilBar}
 			stencilLibrary={{ sections: stencilLibrarySections }}
 		/>
 	);

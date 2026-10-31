@@ -10,7 +10,7 @@ import { selectors } from "../../support/selectors";
  *   neither.
  * - A panel's own close button, or its per-sidebar toggle, moves that panel
  *   within the expanded form: closing both leaves the full-width bar with no
- *   panel, and no bottom bar or ObjectMenu.
+ *   panel, and no stencil bar or ObjectMenu.
  * - A per-sidebar toggle pressed while collapsed (the harness keeps one in each
  *   pill) expands with that panel alone open.
  * - The floating ObjectMenu shows while collapsed and hides while expanded,
@@ -45,7 +45,7 @@ test.describe("sidebars switch", () => {
 		await expect(propertyPanel).toHaveCount(0);
 	});
 
-	test("stays expanded with the full-width bar and no bottom bar or ObjectMenu once both panels are closed from their ×", async ({
+	test("stays expanded with the full-width bar and no stencil bar or ObjectMenu once both panels are closed from their ×", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 420, y: 280 });
@@ -63,7 +63,7 @@ test.describe("sidebars switch", () => {
 		await expect(
 			canvas.page.locator('[data-testid^="toolbar-pill:"]'),
 		).toHaveCount(0);
-		await expect(canvas.page.locator(selectors.bottomToolbar)).toHaveCount(0);
+		await expect(canvas.page.locator(selectors.stencilBar)).toHaveCount(0);
 		await expect(canvas.page.locator(selectors.objectMenu)).toHaveCount(0);
 	});
 
