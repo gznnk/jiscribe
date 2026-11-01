@@ -5,6 +5,7 @@ import {
 	calcAutoShapeHeight,
 	DEFAULT_FONT_FAMILY,
 	offerTextMeasurement,
+	resolveAutoHeightPaddingEm,
 	TEXT_STYLE_FALLBACK,
 	type TextMeasureFont,
 } from "@jiscribe/doc/unstable";
@@ -42,14 +43,14 @@ const deriveHeight = (
 	fontSize: number,
 ): number => {
 	offerTextMeasurement(nodeTextMeasurement());
-	const textRegion = standardObjectDocDefinitions.get(type)?.textRegion;
+	const definition = standardObjectDocDefinitions.get(type)!;
 	const height = calcAutoShapeHeight(
 		{ width, height: 0 },
 		text,
 		bodyFont(fontSize),
-		textRegion!,
+		definition.textRegion!,
 		undefined,
-		AUTO_HEIGHT_COMFORT_PADDING_EM,
+		resolveAutoHeightPaddingEm(definition),
 	);
 	expect(height).not.toBeNull();
 	return height!;
@@ -159,6 +160,18 @@ describe("the height a shape with none is drawn at", () => {
 		expect(height).toBe(Math.ceil(fontSize * 1.5 * 2 + 2 * 2 + comfortBand));
 		expect(height).toBe(76);
 	});
+
+	it.each([
+		["sticky", 14],
+		["note", 16],
+	])(
+		"holds a %s's top-left prose with no room past the box's own padding",
+		(type, fontSize) => {
+			expect(deriveHeight(type, 400, "一行目\n二行目", fontSize)).toBe(
+				Math.ceil(fontSize * 1.5 * 2 + 2 * 2),
+			);
+		},
+	);
 
 	it("is answered for every shipped type that may leave the field out", () => {
 		for (const [type, definition] of standardObjectDocDefinitions) {

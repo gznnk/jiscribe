@@ -113,6 +113,9 @@ export const calloutDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const noteDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: NoteFeatures,
 	textRegion: calcNoteTextRegion,
+	// Top-left prose: the line's own leading plus TEXT_BOX_PADDING_Y already
+	// matches the left inset, so extra room would only open the top.
+	autoHeightPaddingEm: 0,
 	defaults: NOTE_DOC_DEFAULTS,
 	description:
 		'Note shape: a box with its top-right corner folded back, holding a comment about the diagram — the UML note. It uses the same rect geometry (x/y/width/height) as RectDoc and only swaps the drawing, so it takes text inside the box, unlike the group markers in this package. Give it a landscape box (e.g. 180x110) and left-aligned text, and attach it to what it comments on with a connector. Two shapes are easily mistaken for it, and neither is the same thing: "document" (a wavy bottom edge) is a flowchart step that produces paperwork, and "file" is a portrait pictogram standing for a file on disk. Reach for "note" when the box holds prose *about* the diagram, and for those two when the shape *is* one of the things the diagram is about. Where the comment should point at one spot on one shape, CalloutDoc (a bubble with a tail) says so more directly.',
