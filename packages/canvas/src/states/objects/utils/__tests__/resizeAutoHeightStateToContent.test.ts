@@ -51,6 +51,7 @@ describe("resizeAutoHeightStateToContent", () => {
 		const resized = resizeAutoHeightStateToContent(
 			state,
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 		expect(heightOf(resized)).toBeGreaterThan(0);
@@ -67,6 +68,7 @@ describe("resizeAutoHeightStateToContent", () => {
 		const resized = resizeAutoHeightStateToContent(
 			state,
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 		const textHeight = calcVisualTextHeight(
@@ -85,34 +87,66 @@ describe("resizeAutoHeightStateToContent", () => {
 		);
 	});
 
+	it("leaves the room it is handed, the one-line seed box included", () => {
+		const heightWith = (
+			paddingEm: number,
+			region = calcFullBoxTextRegion,
+		): number =>
+			heightOf(
+				resizeAutoHeightStateToContent(
+					autoHeightState({
+						text: { body: { text: "one line", fontSize: 16 } },
+					}),
+					region,
+					paddingEm,
+				),
+			);
+		const thinBand = (): Rect => ({ x: -100, y: 0, width: 200, height: 1 });
+
+		// 16px body × 0.5em more above and below.
+		expect(heightWith(1.25) - heightWith(0.75)).toBe(16);
+		expect(heightWith(1.25, thinBand) - heightWith(0.75, thinBand)).toBe(16);
+	});
+
 	it("returns the state itself once the height is the derived one", () => {
 		const state = autoHeightState();
 		const resized = resizeAutoHeightStateToContent(
 			state,
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
-		expect(resizeAutoHeightStateToContent(resized, calcFullBoxTextRegion)).toBe(
-			resized,
-		);
+		expect(
+			resizeAutoHeightStateToContent(
+				resized,
+				calcFullBoxTextRegion,
+				AUTO_HEIGHT_COMFORT_PADDING_EM,
+			),
+		).toBe(resized);
 	});
 
 	it("leaves a shape that states its own height untouched", () => {
 		const state = autoHeightState({ autoHeight: undefined, height: 40 });
 
-		expect(resizeAutoHeightStateToContent(state, calcFullBoxTextRegion)).toBe(
-			state,
-		);
+		expect(
+			resizeAutoHeightStateToContent(
+				state,
+				calcFullBoxTextRegion,
+				AUTO_HEIGHT_COMFORT_PADDING_EM,
+			),
+		).toBe(state);
 	});
 
 	it("re-wraps at the width it is given, so a wider box comes out shorter", () => {
 		const narrow = resizeAutoHeightStateToContent(
 			autoHeightState({ width: 120 }),
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		const wide = resizeAutoHeightStateToContent(
 			autoHeightState({ width: 400 }),
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 		expect(heightOf(wide)).toBeLessThan(heightOf(narrow));
@@ -135,10 +169,12 @@ describe("resizeAutoHeightStateToContent", () => {
 		const full = resizeAutoHeightStateToContent(
 			autoHeightState(),
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		const halved = resizeAutoHeightStateToContent(
 			autoHeightState(),
 			halfBoxRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 		expect(heightOf(halved)).toBeGreaterThan(heightOf(full));
@@ -150,11 +186,13 @@ describe("resizeAutoHeightStateToContent", () => {
 		const small = resizeAutoHeightStateToContent(
 			unstyled,
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 			{ fontSize: 10 },
 		);
 		const large = resizeAutoHeightStateToContent(
 			unstyled,
 			calcFullBoxTextRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 			{ fontSize: 40 },
 		);
 
@@ -171,14 +209,19 @@ describe("resizeAutoHeightStateToContent", () => {
 		const fromSeed = resizeAutoHeightStateToContent(
 			autoHeightState({ height: 0 }),
 			thinBand,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(heightOf(fromSeed)).toBe(48);
 		expect(topOf(fromSeed)).toBe(20);
 
 		const measuredBefore = autoHeightState({ height: 80 });
-		expect(resizeAutoHeightStateToContent(measuredBefore, thinBand)).toBe(
-			measuredBefore,
-		);
+		expect(
+			resizeAutoHeightStateToContent(
+				measuredBefore,
+				thinBand,
+				AUTO_HEIGHT_COMFORT_PADDING_EM,
+			),
+		).toBe(measuredBefore);
 	});
 
 	it("grows the box for a body switched onto the whole height", () => {
@@ -198,10 +241,12 @@ describe("resizeAutoHeightStateToContent", () => {
 		const onRegion = resizeAutoHeightStateToContent(
 			autoHeightState(),
 			cappedRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		const onFrame = resizeAutoHeightStateToContent(
 			autoHeightState({ textVerticalBasis: "frame" }),
 			cappedRegion,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 
 		// Centred on the whole height, the block reaches the cap first, so the box
@@ -215,6 +260,7 @@ describe("resizeAutoHeightStateToContent", () => {
 				resizeAutoHeightStateToContent(
 					autoHeightState({ textVerticalBasis: "frame" }),
 					calcFullBoxTextRegion,
+					AUTO_HEIGHT_COMFORT_PADDING_EM,
 				),
 			),
 		).toBe(
@@ -222,6 +268,7 @@ describe("resizeAutoHeightStateToContent", () => {
 				resizeAutoHeightStateToContent(
 					autoHeightState(),
 					calcFullBoxTextRegion,
+					AUTO_HEIGHT_COMFORT_PADDING_EM,
 				),
 			),
 		);
@@ -230,8 +277,22 @@ describe("resizeAutoHeightStateToContent", () => {
 	it("measures against the whole box for a type declaring no region", () => {
 		const state = autoHeightState();
 
-		expect(heightOf(resizeAutoHeightStateToContent(state, undefined))).toBe(
-			heightOf(resizeAutoHeightStateToContent(state, calcFullBoxTextRegion)),
+		expect(
+			heightOf(
+				resizeAutoHeightStateToContent(
+					state,
+					undefined,
+					AUTO_HEIGHT_COMFORT_PADDING_EM,
+				),
+			),
+		).toBe(
+			heightOf(
+				resizeAutoHeightStateToContent(
+					state,
+					calcFullBoxTextRegion,
+					AUTO_HEIGHT_COMFORT_PADDING_EM,
+				),
+			),
 		);
 	});
 });

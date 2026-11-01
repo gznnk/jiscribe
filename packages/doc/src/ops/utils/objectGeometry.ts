@@ -20,6 +20,7 @@ import {
 	extractTextSlotStyleDefaults,
 	readTextSlotStyleDefaults,
 } from "../../registries/ObjectTextStyleDefaultsRegistry";
+import { resolveAutoHeightPaddingEm } from "../../text/block/autoHeightComfortPadding";
 import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import type { TextMeasurement } from "../../text/measure/TextMeasurement";
@@ -161,6 +162,7 @@ const readObjectHeight = (
 			isTextVerticalBasis(object.textVerticalBasis)
 				? object.textVerticalBasis
 				: undefined,
+			resolveAutoHeightPaddingEm(definition),
 		) ?? 0;
 	derivedHeightCache.set(object, {
 		definition,

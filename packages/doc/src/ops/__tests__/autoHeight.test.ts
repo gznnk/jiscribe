@@ -4,6 +4,8 @@ import { docOps, emptyDoc, readObject } from "./support/docFixtures";
 import { cappedDefinition } from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
+import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
+import { calcFullBoxTextRegion } from "../../plugin/ObjectDocTextRegion";
 import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "../../text/block/autoHeightComfortPadding";
 import {
 	TEXT_BOX_PADDING_X,
@@ -109,6 +111,36 @@ describe("bounds of a shape that states no height", () => {
 		).toBeGreaterThan(
 			cappedDocOps.getObjectBounds(onRegion.doc, onRegion.id)!.height,
 		);
+	});
+
+	it("leaves the room the type declares above and below the text", () => {
+		const fullBoxDefinition = (type: string): ObjectDocDefinition => ({
+			...cappedDefinition,
+			features: { ...cappedDefinition.features, type },
+			textRegion: calcFullBoxTextRegion,
+		});
+		const paddedDocOps = createDocOps({
+			plugins: [
+				{
+					id: "padded-plugin",
+					objects: {
+						unpadded: fullBoxDefinition("unpadded"),
+						padded: {
+							...fullBoxDefinition("padded"),
+							autoHeightPaddingEm: 2,
+						},
+					},
+				},
+			],
+		});
+		const unpadded = autoHeightDoc({ type: "unpadded" });
+		const padded = autoHeightDoc({ type: "padded" });
+
+		// 16px body × (2em − the 0.75em default) above and below.
+		expect(
+			paddedDocOps.getObjectBounds(padded.doc, padded.id)!.height -
+				paddedDocOps.getObjectBounds(unpadded.doc, unpadded.id)!.height,
+		).toBe(16 * (2 - AUTO_HEIGHT_COMFORT_PADDING_EM) * 2);
 	});
 
 	it("aligns against the derived box, not against a flat one", () => {

@@ -1,3 +1,5 @@
+import type { ObjectDocTextRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
+import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
 import { describe, expect, it } from "vitest";
 
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
@@ -7,7 +9,10 @@ import type {
 	ObjectContentResizeContext,
 	ObjectContentResizer,
 } from "../../../states/registry/ObjectContentResizerRegistry";
-import { applyObjectDefinition } from "../applyObjectDefinition";
+import {
+	applyObjectDefinition,
+	BUILTIN_OBJECT_DEFINITIONS,
+} from "../applyObjectDefinition";
 import { createTestRegistries } from "../createCanvasRegistries";
 
 // Minimal stand-in for an object type, mirroring buildFakeDefinition in
@@ -76,6 +81,62 @@ describe("applyObjectDefinition: contentResizer", () => {
 		);
 
 		expect(seen).toEqual({ textStyleDefaults: { textAlign: "left" } });
+	});
+
+	it("derives the height of an auto-height type with the room it declares", () => {
+		// The object arrives at height 0, the mapper's fresh seed.
+		const resizeWith = (
+			autoHeightPaddingEm: number | undefined,
+			textRegion?: ObjectDocTextRegionCalculator,
+		): number => {
+			const registries = createTestRegistries();
+			applyObjectDefinition(
+				registries,
+				"boxed",
+				defineObject({
+					...BUILTIN_OBJECT_DEFINITIONS.rect,
+					features: {
+						...BUILTIN_OBJECT_DEFINITIONS.rect.features,
+						type: "boxed",
+					},
+					...(textRegion === undefined ? {} : { textRegion }),
+					autoHeightPaddingEm,
+				}),
+			);
+			const resized = registries.objectContentResizer.get("boxed")?.(
+				{
+					id: "b1",
+					type: "boxed",
+					cx: 100,
+					cy: 0,
+					width: 200,
+					height: 0,
+					rotation: 0,
+					scaleX: 1,
+					scaleY: 1,
+					autoHeight: true,
+					text: { body: { text: "one line", fontSize: 16 } },
+				} as unknown as ObjectState,
+				{},
+			);
+			return (resized as unknown as { height: number }).height;
+		};
+
+		// 16px body × (2em − the 0.75em default) above and below.
+		expect(resizeWith(2) - resizeWith(undefined)).toBe(
+			16 * (2 - AUTO_HEIGHT_COMFORT_PADDING_EM) * 2,
+		);
+		// A region too thin for any text gives the fresh seed its one-line box,
+		// which carries the declared room as well.
+		const thinBand: ObjectDocTextRegionCalculator = ({ width }) => ({
+			x: -width / 2,
+			y: 0,
+			width,
+			height: 1,
+		});
+		expect(resizeWith(2, thinBand) - resizeWith(undefined, thinBand)).toBe(
+			16 * (2 - AUTO_HEIGHT_COMFORT_PADDING_EM) * 2,
+		);
 	});
 
 	it("leaves types that declare nothing unregistered", () => {

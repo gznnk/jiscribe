@@ -6,7 +6,6 @@ import {
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import type { ObjectDocTextRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
-import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
 import { calcAutoShapeHeight } from "@jiscribe/doc/text/block/calcAutoShapeHeight";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 import { isTransformedFrame, roundToDecimal } from "@jiscribe/geometry";
@@ -35,12 +34,14 @@ import { readRichTextSlot } from "../types/TextSlots";
  *
  * @param state - The shape to re-measure; one with no flag, no frame or no text is returned untouched
  * @param textRegion - The type's doc region calculator (`ObjectDocDefinition.textRegion`), which a type offered auto height declares as its text slot's region too, so it is where the overlay draws; undefined measures against the whole box
+ * @param paddingEm - Room above and below the text in multiples of the body's font size, already resolved (`resolveAutoHeightPaddingEm`); the one-line box a shape gets before its first measurement carries it too
  * @param textStyleDefaults - The type's own defaults for its body slot, resolved into the slot before measuring so the measured font is the drawn one; omitted measures with the slot alone
  * @returns `state` itself when the height it already has is the derived one, so callers can skip the rest of the pass by reference equality; a shape whose text no height holds keeps its measured height, or gets a one-line box where it has none yet (the mapper's 0 seed), so a reloaded document never draws it invisible
  */
 export const resizeAutoHeightStateToContent = (
 	state: ObjectState,
 	textRegion: ObjectDocTextRegionCalculator | undefined,
+	paddingEm: number,
 	textStyleDefaults?: TextSlotStyle,
 ): ObjectState => {
 	if (
@@ -59,6 +60,7 @@ export const resizeAutoHeightStateToContent = (
 		font,
 		textRegion ?? calcFullBoxTextRegion,
 		state.textVerticalBasis,
+		paddingEm,
 	);
 	// A height nothing derives (the region never holds this text — see
 	// calcAutoShapeHeight) leaves the box where the last measurement put it,
@@ -73,8 +75,7 @@ export const resizeAutoHeightStateToContent = (
 		return resizeKeepingTop(
 			state,
 			Math.ceil(
-				font.fontSize * TEXT_LINE_HEIGHT +
-					font.fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM * 2,
+				font.fontSize * TEXT_LINE_HEIGHT + font.fontSize * paddingEm * 2,
 			),
 		);
 	}

@@ -21,6 +21,7 @@ import {
 	calcAutoShapeHeight,
 	DEFAULT_FONT_FAMILY,
 	extractTextSlotStyleDefaults,
+	resolveAutoHeightPaddingEm,
 	TEXT_LINE_HEIGHT,
 	TEXT_STYLE_FALLBACK,
 } from "@jiscribe/doc/unstable";
@@ -220,6 +221,7 @@ const resolveDrawnHeight = (
 		isTextVerticalBasis(body.textVerticalBasis)
 			? body.textVerticalBasis
 			: undefined,
+		resolveAutoHeightPaddingEm(definition),
 	);
 	return derivedHeight === null
 		? null

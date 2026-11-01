@@ -80,9 +80,21 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   and so do `jiscribe op <file> connect` / `connect_many`, so placing the label
   no longer takes a second `update_connector`. Either one without non-empty
   `label` text is refused.
+- For plugin authors: `ObjectDocDefinition.autoHeightPaddingEm` (also taken by
+  `createFrameObjectDoc`) sets the room a type's derived height leaves above
+  and below its text, in multiples of the body's font size, where it was
+  0.75em for every type. Omitted, it stays 0.75em.
+  The canvas, the doc ops and `diagnoseDoc` all derive with it; documents do
+  not carry it.
 
 ### Changed
 
+- **A sticky or note whose height follows its text no longer leaves extra
+  room above and below it.** Both hold top-left prose, where the 0.75em every
+  other shape keeps opened the top alone while the text sat 6px off the left
+  edge; they now declare `autoHeightPaddingEm: 0`, so the text sits about as
+  far from the top and bottom as from the left. A document that leaves their
+  `height` out draws them shorter.
 - **The sticky note's properties sidebar offers its own pastel palette.** The
   Fill section's color row lays out the same ten swatches as the sticky's
   ObjectMenu, in the row itself, in place of the generic color dropdown.

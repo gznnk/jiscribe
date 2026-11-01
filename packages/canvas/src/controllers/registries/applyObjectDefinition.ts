@@ -4,6 +4,7 @@ import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
+import { resolveAutoHeightPaddingEm } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
@@ -504,6 +505,7 @@ export const applyObjectDefinition = (
 	if (mayLeaveHeightOut) {
 		registries.objectAutoHeight.register(type);
 	}
+	const autoHeightPaddingEm = resolveAutoHeightPaddingEm(definition);
 	// A type whose doc may leave `height` out gets the shared derivation, which is
 	// inert for every object of it that states one — the two are mutually
 	// exclusive anyway, a content-resized type storing no size at all
@@ -515,6 +517,7 @@ export const applyObjectDefinition = (
 					resizeAutoHeightStateToContent(
 						state,
 						definition.textRegion,
+						autoHeightPaddingEm,
 						context.textStyleDefaults,
 					)
 			: undefined);

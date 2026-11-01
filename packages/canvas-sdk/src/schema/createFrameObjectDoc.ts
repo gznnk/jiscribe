@@ -70,6 +70,13 @@ type FrameObjectDocCommonParams = {
 	 */
 	autoHeight?: false;
 
+	/**
+	 * Room a height derived from the text leaves above and below it (see
+	 * `ObjectDocDefinition.autoHeightPaddingEm`). Carried into the definition
+	 * as-is.
+	 */
+	autoHeightPaddingEm?: number;
+
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
 
@@ -144,6 +151,7 @@ export const createFrameObjectDoc = ({
 	textRegion,
 	diagnoseOverflow,
 	autoHeight,
+	autoHeightPaddingEm,
 	description,
 	summary,
 	validateExtra,
@@ -161,6 +169,7 @@ export const createFrameObjectDoc = ({
 	textRegion,
 	diagnoseOverflow,
 	autoHeight,
+	autoHeightPaddingEm,
 	description,
 	summary,
 	defaults,

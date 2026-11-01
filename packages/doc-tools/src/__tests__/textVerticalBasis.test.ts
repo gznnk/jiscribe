@@ -1,5 +1,6 @@
 import type { CanvasDoc, TextVerticalBasis } from "@jiscribe/doc";
 import {
+	AUTO_HEIGHT_COMFORT_PADDING_EM,
 	calcAutoShapeHeight,
 	DEFAULT_FONT_FAMILY,
 	offerTextMeasurement,
@@ -300,6 +301,7 @@ describe("a height derived on the frame basis", () => {
 			},
 			standardObjectDocDefinitions.get(type)!.textRegion!,
 			basis,
+			AUTO_HEIGHT_COMFORT_PADDING_EM,
 		);
 		expect(height, type).not.toBeNull();
 		return height!;
