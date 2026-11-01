@@ -3,6 +3,7 @@ import type { StencilCategory } from "@jiscribe/canvas";
 import { AWS_ICON_STENCIL_IDS } from "./AwsIconStencils";
 import { createAwsStencilIcon } from "./createAwsStencilIcon";
 import { toAwsIconStencilId } from "./toAwsIconStencilId";
+import { listAwsIconBrowseGroups } from "../schema/icon/awsIconBrowseGroups";
 import { searchAwsIcons } from "../schema/icon/searchAwsIcons";
 
 /**
@@ -11,7 +12,9 @@ import { searchAwsIcons } from "../schema/icon/searchAwsIcons";
  * `toolbar.sections` as `{ type: "stencilCategory", category }` (a flyout).
  *
  * A category rather than a single preset because the shape means nothing until
- * an icon is chosen: always placing an EC2 would add a step to every use.
+ * an icon is chosen, and a placed shape offers no menu to change it. The
+ * palette is listed up front; the shape library's "show all" view holds the
+ * whole set.
  */
 export const awsStencilCategory: StencilCategory = {
 	id: "aws",
@@ -22,4 +25,9 @@ export const awsStencilCategory: StencilCategory = {
 		const { names, total } = searchAwsIcons({ query });
 		return { presetIds: names.map(toAwsIconStencilId), matchCount: total };
 	},
+	browseGroups: listAwsIconBrowseGroups().map(({ id, label, names }) => ({
+		id,
+		label,
+		presetIds: names.map(toAwsIconStencilId),
+	})),
 };

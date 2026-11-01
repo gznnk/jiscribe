@@ -1,24 +1,17 @@
-import type {
-	ObjectTypeDefinition,
-	PropertyPanelSection,
-} from "@jiscribe/canvas";
+import type { ObjectTypeDefinition } from "@jiscribe/canvas";
 import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
-	createDefaultPropertyPanel,
 	createFrameObjectDefinition,
 } from "@jiscribe/canvas-sdk";
 
 import { awsGroupDocDefinition, awsIconDocDefinition } from "./doc";
-import { AwsIconPickerMenu } from "./menu/AwsIconPickerMenu";
-import { awsIconPropertySectionLabelByLocale } from "./messages/awsShapesMessages";
 import { AwsGroup } from "./presentation/AwsGroup";
 import { AwsIcon } from "./presentation/AwsIcon";
 import {
 	calcAwsGroupLabelTextRegion,
 	calcAwsGroupVisualBounds,
 } from "./presentation/calcAwsGroupLabelTextRegion";
-import { AwsIconProperty } from "./propertyPanel/AwsIconProperty";
 import type { AwsGroupDoc } from "./schema/AwsGroupDoc";
 import { isAwsGroupKind } from "./schema/AwsGroupDoc";
 import type { AwsIconDoc } from "./schema/AwsIconDoc";
@@ -27,33 +20,7 @@ import type { AwsGroupState } from "./state/AwsGroupState";
 import type { AwsIconState } from "./state/AwsIconState";
 import { AwsGroupStencils } from "./stencil/AwsGroupStencils";
 import { AwsIconStencils } from "./stencil/AwsIconStencils";
-import {
-	AWS_GROUP_STYLE_ENTRIES,
-	AWS_ICON_STYLE_ENTRIES,
-} from "./style/awsStyleEntries";
-
-/**
- * Id of the icon section of the sidebar and of the row it holds. Spelled for
- * AWS alone: the sidebar merges a multi-type selection's rows by id, so a row
- * another icon shape names the same would be drawn as one with this.
- */
-const AWS_ICON_PROPERTY_SECTION_ID = "awsIcon";
-
-/** An icon section, then the sections the features derive. */
-const AWS_ICON_PROPERTY_PANEL: PropertyPanelSection[] = [
-	{
-		id: AWS_ICON_PROPERTY_SECTION_ID,
-		label: awsIconPropertySectionLabelByLocale,
-		items: [
-			{
-				type: "custom",
-				id: AWS_ICON_PROPERTY_SECTION_ID,
-				component: AwsIconProperty,
-			},
-		],
-	},
-	...createDefaultPropertyPanel(awsIconDocDefinition.features),
-];
+import { AWS_GROUP_STYLE_ENTRIES } from "./style/awsStyleEntries";
 
 /**
  * The label hangs outside the box (below it), so without a declared
@@ -61,10 +28,8 @@ const AWS_ICON_PROPERTY_PANEL: PropertyPanelSection[] = [
  *
  * The menu offers no stroke and no fill (the features carry neither). AWS
  * forbids altering its icons, so that is a deliberate gap rather than an
- * omission.
- *
- * The sidebar leads with the icon section (AWS_ICON_PROPERTY_PANEL), so a host
- * that hides the ObjectMenu can still change the icon.
+ * omission. Nor does it offer the icon: which one a shape draws is chosen by
+ * the stencil it is placed from (awsStencilCategory).
  */
 export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 	createFrameObjectDefinition<AwsIconDoc, AwsIconState>({
@@ -77,16 +42,8 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 		isExtraStateValid: (state) =>
 			state.icon === undefined ||
 			(typeof state.icon === "string" && isKnownAwsIconName(state.icon)),
-		styleEntries: AWS_ICON_STYLE_ENTRIES,
 		stencils: AwsIconStencils,
-		propertyPanel: AWS_ICON_PROPERTY_PANEL,
-		menu: [
-			{
-				id: "aws-icon",
-				items: [{ type: "custom", id: "icon", component: AwsIconPickerMenu }],
-			},
-			{ id: "text", items: [{ type: "font" }, { type: "textFormat" }] },
-		],
+		menu: [{ id: "text", items: [{ type: "font" }, { type: "textFormat" }] }],
 	});
 
 /**

@@ -132,6 +132,17 @@ export const selectors = {
 	/** Search box of the popover, its own and not the sidebar's. */
 	otherShapesPopoverSearch: `${OTHER_SHAPES_POPOVER} input[type="text"]`,
 
+	/** "Show all" button under a popover section, as stencilLibraryShowAll is in the sidebar. */
+	otherShapesPopoverShowAll: (sectionId: string) =>
+		`${OTHER_SHAPES_POPOVER} [data-testid="stencil-library-show-all-${sectionId}"]`,
+
+	/** Back button of the popover's "show all" view, as stencilLibraryBack is in the sidebar. */
+	otherShapesPopoverBack: `${OTHER_SHAPES_POPOVER} [data-testid="stencil-library-back"]`,
+
+	/** Group header of the popover's "show all" view, as stencilLibraryBrowseGroup is in the sidebar. */
+	otherShapesPopoverBrowseGroup: (groupId: string) =>
+		`${OTHER_SHAPES_POPOVER} [data-testid="stencil-library-browse-group-${groupId}"]`,
+
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector
 	 * because the buttons carry only data-action: that mirrors how the gesture
@@ -190,6 +201,25 @@ export const selectors = {
 
 	/** Search box of the sidebar; filtering collapses the sections into one grid. */
 	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
+
+	/**
+	 * "Show all" button under a sidebar section whose category declares
+	 * `browseGroups`, keyed by the category id (several sections may offer one);
+	 * present only while that section is expanded.
+	 */
+	stencilLibraryShowAll: (sectionId: string) =>
+		`${STENCIL_LIBRARY_PANEL} [data-testid="stencil-library-show-all-${sectionId}"]`,
+
+	/** Back (‹) button leading the sidebar's "show all" view; absent outside it. */
+	stencilLibraryBack: `${STENCIL_LIBRARY_PANEL} [data-testid="stencil-library-back"]`,
+
+	/**
+	 * Group header of the sidebar's "show all" view, carrying aria-expanded,
+	 * keyed by the group id the category declared. It has no `section:` action:
+	 * stencilLibrarySection never matches it.
+	 */
+	stencilLibraryBrowseGroup: (groupId: string) =>
+		`${STENCIL_LIBRARY_PANEL} [data-testid="stencil-library-browse-group-${groupId}"]`,
 
 	/**
 	 * Toolbar switch between the chrome's two forms, carrying the form (expanded

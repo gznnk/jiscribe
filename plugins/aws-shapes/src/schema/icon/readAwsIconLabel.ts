@@ -8,8 +8,8 @@ const TIER1_LABEL_BY_ICON = new Map<string, string>(
 );
 
 /**
- * The label a shape drawing this icon starts out with: the one a stencil places
- * and the one the picker treats as "not yet renamed".
+ * The label a shape drawing this icon starts out with: the one a stencil places,
+ * which doubles as the stencil's tooltip.
  *
  * @param name - Any spelling resolveAwsIconName accepts; tier 1 is looked up by
  *   the canonical name it resolves to

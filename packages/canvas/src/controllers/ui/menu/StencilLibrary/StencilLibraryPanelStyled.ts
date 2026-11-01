@@ -207,12 +207,13 @@ export const StencilLibraryMoreMatchesMessage = styled.div`
 `;
 
 /**
- * Text button under a section holding more presets than it lists; it moves the
- * focus to the search box. Opts out of the gesture system (`data-gesture="none"`
- * on the element) so the press reaches React's onClick instead of the panel's
- * handler, and the focus it moves is not taken back.
+ * Text button under a section's grid: "find more shapes", which moves the focus
+ * to the search box, or "show all", which opens the section's "show all" view.
+ * Opts out of the gesture system (`data-gesture="none"` on the element) so the
+ * press reaches React's onClick instead of the panel's handler, and the focus
+ * it moves is not taken back.
  */
-export const StencilLibraryMoreViaSearchButton = styled.button`
+export const StencilLibrarySectionFooterButton = styled.button`
 	display: block;
 	margin: -4px ${SIDE_PANEL_INSET}px 8px;
 	padding: 0;
@@ -227,4 +228,54 @@ export const StencilLibraryMoreViaSearchButton = styled.button`
 		color: ${theme.foreground};
 		text-decoration: underline;
 	}
+`;
+
+/**
+ * Leading row of a "show all" view, above the search box: the back button,
+ * then the category's icon and label.
+ */
+export const StencilLibraryBrowseHeader = styled.div`
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	height: 28px;
+	margin-bottom: 8px;
+	padding: 0 ${SIDE_PANEL_INSET}px 0 4px;
+	color: ${theme.foreground};
+	font-size: 12px;
+	font-weight: 600;
+`;
+
+/**
+ * Back (‹) button of a "show all" view. Opts out of the gesture system like
+ * StencilLibrarySectionFooterButton, for the same reason.
+ */
+export const StencilLibraryBackButton = styled.button`
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: ${theme.radius};
+	background: transparent;
+	color: ${theme.iconForeground};
+	cursor: pointer;
+	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+	&:hover {
+		background-color: ${theme.surfaceHover};
+	}
+`;
+
+/**
+ * Marker after the presets a "show all" group has drawn so far; its nearing
+ * the list's visible area draws the next batch. One pixel tall so it has an
+ * area to intersect with.
+ */
+export const StencilLibraryBrowseSentinel = styled.div`
+	height: 1px;
 `;

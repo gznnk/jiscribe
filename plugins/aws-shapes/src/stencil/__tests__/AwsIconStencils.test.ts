@@ -68,3 +68,21 @@ describe("awsStencilCategory.search", () => {
 		expect(result.matchCount).toBeGreaterThanOrEqual(computeIds.length);
 	});
 });
+
+describe("awsStencilCategory.browseGroups", () => {
+	const browseGroups = awsStencilCategory.browseGroups ?? [];
+
+	it("lays every registered icon out in a section, each once, Compute first", () => {
+		expect(browseGroups[0]?.id).toBe("compute");
+		const presetIds = browseGroups.flatMap((group) => group.presetIds);
+
+		expect(new Set(presetIds)).toEqual(registeredIds);
+		expect(presetIds).toHaveLength(registeredIds.size);
+	});
+
+	it("leaves the section labels untranslated", () => {
+		expect(browseGroups.map((group) => typeof group.label)).not.toContain(
+			"object",
+		);
+	});
+});

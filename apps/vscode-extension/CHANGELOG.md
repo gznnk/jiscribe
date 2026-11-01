@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The Icon and AWS sections of the shape library can show every icon.**
+  **Show all ›** under either section opens all of it: the AWS icons in one
+  section per AWS category, Compute first, and the Lucide icons in one section
+  by name, with a search over that set alone and a back button to the library.
 - **The Icon and AWS sections of the shape library fill whole rows of six.**
   The icon flyout and section add `bot`, `smartphone`, `send` and `x` (24
   icons), and the AWS palette adds EBS `Volume` and `IAM Role` (102 icons).
@@ -30,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **A placed icon no longer offers to change its icon.** The floating menu's
+  icon picker and the properties sidebar's Icon section are gone for AWS and
+  Lucide icons; place the icon you want from the shape library instead. The
+  icon a file names can still be changed by editing the file.
 - The floating menu's **…** button. Open the properties sidebar from the top
   bar instead.
 

@@ -64,18 +64,12 @@ export { readAwsIconDrawing } from "./presentation/readAwsIconDrawing";
 export { resolveAwsGroupStroke } from "./presentation/resolveAwsGroupStroke";
 export type { AwsGroupStroke } from "./presentation/resolveAwsGroupStroke";
 
-export { AwsIconGlyph } from "./menu/AwsIconGlyph";
-export { AwsIconPickerMenu } from "./menu/AwsIconPickerMenu";
-export {
-	AWS_ICON_CATEGORIES,
-	searchAwsIcons,
-} from "./schema/icon/searchAwsIcons";
+export { AWS_ICON_CATEGORIES } from "./schema/icon/awsIconBrowseGroups";
+export { searchAwsIcons } from "./schema/icon/searchAwsIcons";
 export type {
 	AwsIconFilter,
 	AwsIconSearchResult,
 } from "./schema/icon/searchAwsIcons";
-
-export { awsShapesMessagesByLocale } from "./messages/awsShapesMessages";
 
 export { createAwsGroupFrameIcon } from "./stencil/createAwsGroupFrameIcon";
 export { createAwsStencilIcon } from "./stencil/createAwsStencilIcon";
@@ -90,10 +84,7 @@ export {
 export { awsStencilCategory } from "./stencil/AwsIconStencilCategory";
 export { awsGroupStencilCategory } from "./stencil/AwsGroupStencilCategory";
 
-export {
-	AWS_GROUP_STYLE_ENTRIES,
-	AWS_ICON_STYLE_ENTRIES,
-} from "./style/awsStyleEntries";
+export { AWS_GROUP_STYLE_ENTRIES } from "./style/awsStyleEntries";
 
 export { awsGroupDefinition, awsIconDefinition } from "./definition";
 export {

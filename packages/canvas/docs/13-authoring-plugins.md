@@ -441,6 +441,19 @@ matches of the listed presets, drops ids already shown or not registered, adds a
 line when anything was cut, and while not searching points to the search from under
 the section. The toolbar flyout ignores `search` and shows `presetIds` only.
 
+To let people browse the rest as well, declare `browseGroups`
+(`StencilCategoryBrowseGroup[]`): the whole category in sections, each an `id` unique
+within the category, a `label` and its `presetIds` in display order. The section
+then shows "Show all" under its grid instead of the pointer to the search, and it
+opens a view of that category alone: its groups as collapsible sections (the
+first non-empty one open, each drawn in batches as the list scrolls) and the
+search box narrowed to the category, answered by `search` when the category
+declares one and by a label match over the groups otherwise. Unregistered ids
+are dropped and a group left empty is not shown; a repeated group id, or a
+preset id repeated within a group, throws. The toolbar flyout ignores
+`browseGroups` too. `awsStencilCategory` and `lucideIconStencilCategory` declare
+both.
+
 ## Wiring checklist
 
 **The headless `./doc` side is the one that gets forgotten.** Work through every

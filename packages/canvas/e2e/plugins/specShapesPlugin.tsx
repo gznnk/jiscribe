@@ -548,3 +548,20 @@ export const specShapesStencilCategory: StencilCategory = {
 		return { presetIds, matchCount: presetIds.length };
 	},
 };
+
+/**
+ * Category whose "show all" view holds two groups, for the specs of that view:
+ * `places` with the click-placed `pin` and `memo`, then `draws` with the
+ * drag-drawn `tile` and `brick`. It lists `memo` alone up front and declares no
+ * `search`, so the view's search matches the groups' labels.
+ */
+export const specBrowseStencilCategory: StencilCategory = {
+	id: "spec-browse",
+	label: "Spec browse",
+	icon: SpecShapeIcon,
+	presetIds: ["memo"],
+	browseGroups: [
+		{ id: "places", label: "Places", presetIds: ["pin", "memo"] },
+		{ id: "draws", label: "Draws", presetIds: ["tile", "brick"] },
+	],
+};

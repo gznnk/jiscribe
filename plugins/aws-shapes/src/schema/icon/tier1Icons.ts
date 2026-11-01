@@ -9,8 +9,8 @@ export type AwsTier1Icon = {
 /**
  * The icons the palette carries (tier 1): what an AWS diagram reaches for
  * without thinking, in service → resource → general order. All 781 would be too
- * many to lay out, so the rest are reached by search, in the picker or the
- * stencil library. The length stays a multiple of the library grid's columns
+ * many to lay out up front, so the rest are reached by the stencil library's
+ * search or its "show all" view. The length stays a multiple of the library grid's columns
  * (`STENCIL_LIBRARY_PANEL_GRID_COLUMNS` in canvas), so the section ends on a
  * full row.
  *

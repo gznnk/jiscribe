@@ -32,7 +32,7 @@ type AwsIconArtProps = {
  *
  * A component rather than a plain call because the theme is read through a hook:
  * this way the same drawing follows the theme wherever it is placed — on the
- * canvas, in the icon picker, on a palette glyph — and each place re-renders on
+ * canvas or on a stencil glyph — and each place re-renders on
  * its own when the host swaps themes.
  */
 export const AwsIconArt: React.FC<AwsIconArtProps> = ({ entry }) => {

@@ -17,4 +17,6 @@ mountPluginHarness({
 		{ type: "stencilCategory", category: awsStencilCategory },
 		{ type: "stencilCategory", category: awsGroupStencilCategory },
 	],
+	// The same two as sidebar sections, for the icons' "show all" view.
+	stencilLibrarySections: [awsStencilCategory, awsGroupStencilCategory],
 });

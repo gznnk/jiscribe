@@ -10,8 +10,8 @@ import { ICON_NODES } from "../schema/icon/iconData.generated";
  * its own state.
  *
  * A short list on purpose — the whole set is 1767 icons, and the flyout is for the handful
- * a diagram reaches for without thinking. Everything else is a search away, in the picker
- * or in the stencil library. Its length stays a multiple of the library grid's columns
+ * a diagram reaches for without thinking. Everything else is in the stencil library, by
+ * its search or its "show all" view. Its length stays a multiple of the library grid's columns
  * (`STENCIL_LIBRARY_PANEL_GRID_COLUMNS` in canvas), so the section ends on a full row.
  */
 const FLYOUT_ICON_NAMES = [
@@ -42,10 +42,10 @@ const FLYOUT_ICON_NAMES = [
 ] as const;
 
 /**
- * One preset per icon in the set, so a library search can place any of them; only
- * {@link ICON_STENCIL_IDS} are laid out up front. Labelled with the icon's own name rather
- * than a translation: the name is what the document stores, what the picker searches and
- * what an AI writes, so it is the word worth learning from the tooltip.
+ * One preset per icon in the set, so the library's search and its "show all" view can
+ * place any of them; only {@link ICON_STENCIL_IDS} are laid out up front. Labelled with the
+ * icon's own name rather than a translation: the name is what the document stores, what
+ * the search matches and what an AI writes, so it is the word worth learning from the tooltip.
  */
 export const IconStencils: Stencil[] = Object.keys(ICON_NODES).map((name) => ({
 	id: toIconStencilId(name),

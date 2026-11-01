@@ -95,6 +95,7 @@ export {
 export {
 	basicStencilCategory,
 	type StencilCategory,
+	type StencilCategoryBrowseGroup,
 	type StencilCategorySearch,
 	type StencilCategorySearchResult,
 } from "./controllers/ui/objects/StencilCategory";

@@ -20,11 +20,12 @@ export const DEFAULT_STENCIL_LIBRARY_LISTED_COUNT =
 	6 * STENCIL_LIBRARY_PANEL_GRID_COLUMNS;
 
 /**
- * How many matches the default section's search answers with at most. The
- * results are drawn unvirtualised like the listed presets, and a short query
- * over an icon set matches thousands; a cut a few screens long keeps a
- * keystroke cheap while leaving room to scan, and the panel says when more
- * matched.
+ * How many matches the default section's search answers with at most, and
+ * the cut of a "show all" view's search over a category declaring no `search`
+ * (searchStencilLibraryCategory). The results are drawn unvirtualised like the
+ * listed presets, and a short query over an icon set matches thousands; a cut
+ * a few screens long keeps a keystroke cheap while leaving room to scan, and
+ * the panel says when more matched.
  */
 export const DEFAULT_STENCIL_LIBRARY_SEARCH_CAP = 96;
 

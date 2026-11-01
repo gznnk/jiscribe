@@ -30,8 +30,12 @@ export type CanvasMessageStrings = {
 	stencilLibraryNoMatch: string;
 	/** Line under the search results when a category cut its matches short. */
 	stencilLibraryMoreMatches: string;
-	/** Button under a section that declares `search`; it focuses the search box. */
+	/** Button under a section that declares `search` and no `browseGroups`; it focuses the search box. */
 	stencilLibraryMoreViaSearch: string;
+	/** Button under a section that declares `browseGroups`; it opens the section's "show all" view. */
+	stencilLibraryShowAll: string;
+	/** aria-label / title of the back button leading a "show all" view */
+	stencilLibraryBack: string;
 	/**
 	 * Heading of the one section the sidebar shows when the host declares no
 	 * `stencilLibrary.sections`, which searches every registered preset.

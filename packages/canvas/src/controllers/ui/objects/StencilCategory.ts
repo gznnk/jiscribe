@@ -16,7 +16,10 @@ export type StencilCategorySearchResult = {
  * Answers the sidebar search out of everything a category holds, listed in
  * `presetIds` or not. Every id it returns must be a registered preset (one the
  * type's `stencils` carries); an id the registry does not know is dropped
- * silently. Called only while the sidebar has a query.
+ * silently. Called while the shape library's search box holds a query: in the
+ * sections view for every category, and in a category's "show all" view
+ * (`browseGroups`) for that category alone, where its answer replaces the
+ * label match over the browsed presets.
  *
  * @param query Already trimmed and never empty. Case and separators are the
  *   category's own business: the sidebar does not fold them.
@@ -26,6 +29,19 @@ export type StencilCategorySearchResult = {
 export type StencilCategorySearch = (
 	query: string,
 ) => StencilCategorySearchResult;
+
+/** One collapsible section of a category's "show all" view. */
+export type StencilCategoryBrowseGroup = {
+	/** Unique within the category (a repeat throws on resolution); keys the section's fold state in the view. */
+	id: string;
+	/** A plain string (all locales) or a `LocaleMessages` dictionary; no host override applies to it. */
+	label: string | LocaleMessages<string>;
+	/**
+	 * Registered preset ids in display order; an id the registry does not know is
+	 * dropped, and a group left with none is not shown. A repeat within the group throws.
+	 */
+	presetIds: string[];
+};
 
 /**
  * A named, ordered group of stencils. Where it shows is the host's call: a
@@ -45,11 +61,21 @@ export type StencilCategory = {
 	presetIds: string[];
 	/**
 	 * Lets the sidebar search reach presets beyond `presetIds`; a section that
-	 * declares it also points to the search from under its listed presets.
-	 * Omitted = the category holds exactly `presetIds`, and the search sees only
-	 * their labels. The toolbar flyout ignores it.
+	 * declares it also points to the search from under its listed presets,
+	 * unless `browseGroups` puts its "show all" button there.
+	 * Omitted = the sections view's search sees only the labels of `presetIds`;
+	 * the rest of `browseGroups`, if any, is matched by label only inside the
+	 * "show all" view. The toolbar flyout ignores it.
 	 */
 	search?: StencilCategorySearch;
+	/**
+	 * Everything the category holds, in sections, for the shape library's "show
+	 * all" view, entered from a button under the section's listed presets (it
+	 * takes the place of the pointer to the search that `search` puts there).
+	 * Omitted, or every group left empty once resolved = the section offers no
+	 * such view. The toolbar flyout ignores it.
+	 */
+	browseGroups?: StencilCategoryBrowseGroup[];
 };
 
 /**

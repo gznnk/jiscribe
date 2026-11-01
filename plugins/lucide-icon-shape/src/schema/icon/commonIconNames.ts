@@ -2,10 +2,9 @@
  * The icons worth offering before anyone types anything: what a diagram reaches for most
  * often, grouped by what they stand for rather than listed alphabetically.
  *
- * It is a starting point, not a limit — the picker searches the whole set, and a document
- * may name any icon in it. One list serves two readers: the picker shows it before a
- * search narrows things down, and the generated JSON schema names the same icons so an AI
- * has somewhere to start. A test pins every name to an icon that exists.
+ * It is a starting point, not a limit — a document may name any icon in the set. The
+ * generated JSON schema names these icons so an AI has somewhere to start. A test pins
+ * every name to an icon that exists.
  */
 export const COMMON_ICON_GROUPS = [
 	{

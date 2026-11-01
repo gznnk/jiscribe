@@ -85,6 +85,94 @@ describe("resolveStencilCategory", () => {
 	});
 });
 
+describe("resolveStencilCategory browseGroups", () => {
+	const withGroups = (
+		groups: { id: string; presetIds: string[] }[],
+		presetIds = ["rect"],
+	): StencilCategory => ({
+		...makeCategory("aws", presetIds),
+		browseGroups: groups.map((group) => ({ ...group, label: group.id })),
+	});
+
+	it("resolves each group in the declared order, dropping unknown ids and empty groups", () => {
+		const resolved = resolveStencilCategory(
+			withGroups([
+				{ id: "compute", presetIds: ["ellipse", "process", "rect"] },
+				{ id: "storage", presetIds: ["process"] },
+				{ id: "general", presetIds: ["rect"] },
+			]),
+			registryWith("rect", "ellipse"),
+		);
+
+		expect(
+			resolved?.browseGroups.map(({ group, presets }) => [
+				group.id,
+				presets.map((preset) => preset.id),
+			]),
+		).toEqual([
+			["compute", ["ellipse", "rect"]],
+			["general", ["rect"]],
+		]);
+	});
+
+	it("has none when the category declares none or none resolves", () => {
+		expect(
+			resolveStencilCategory(
+				makeCategory("basic", ["rect"]),
+				registryWith("rect"),
+			)?.browseGroups,
+		).toEqual([]);
+		expect(
+			resolveStencilCategory(
+				withGroups([{ id: "compute", presetIds: ["process"] }]),
+				registryWith("rect"),
+			)?.browseGroups,
+		).toEqual([]);
+	});
+
+	it("still drops the category when its presetIds resolve nothing", () => {
+		expect(
+			resolveStencilCategory(
+				withGroups([{ id: "compute", presetIds: ["rect"] }], ["process"]),
+				registryWith("rect"),
+			),
+		).toBeNull();
+	});
+
+	it("throws naming the group id used twice", () => {
+		expect(() =>
+			resolveStencilCategory(
+				withGroups([
+					{ id: "compute", presetIds: ["rect"] },
+					{ id: "compute", presetIds: ["process"] },
+				]),
+				registryWith("rect"),
+			),
+		).toThrow(/browse group id "compute" twice/);
+	});
+
+	it("throws naming the preset id a group lists twice, even unregistered", () => {
+		expect(() =>
+			resolveStencilCategory(
+				withGroups([{ id: "compute", presetIds: ["process", "process"] }]),
+				registryWith("rect"),
+			),
+		).toThrow(/"process" twice/);
+	});
+
+	it("lets two groups list the same preset", () => {
+		const resolved = resolveStencilCategory(
+			withGroups([
+				{ id: "compute", presetIds: ["rect"] },
+				{ id: "general", presetIds: ["rect"] },
+			]),
+			registryWith("rect"),
+		);
+
+		expect(resolved?.browseGroups).toHaveLength(2);
+	});
+});
+
 describe("resolveStencilCategories", () => {
 	it("keeps the declared order and drops the groups left empty", () => {
 		const resolved = resolveStencilCategories(

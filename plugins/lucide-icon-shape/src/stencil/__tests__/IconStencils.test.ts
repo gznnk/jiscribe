@@ -39,3 +39,21 @@ describe("lucideIconStencilCategory.search", () => {
 		expect(search!("")).toEqual({ presetIds: [], matchCount: 0 });
 	});
 });
+
+describe("lucideIconStencilCategory.browseGroups", () => {
+	it("lays every registered icon out in one section, by name", () => {
+		const browseGroups = lucideIconStencilCategory.browseGroups ?? [];
+		expect(browseGroups.map((group) => group.id)).toEqual(["all"]);
+
+		const presetIds = browseGroups[0].presetIds;
+		expect(new Set(presetIds)).toEqual(registeredIds);
+		expect(presetIds).toHaveLength(registeredIds.size);
+		const labelsInOrder = presetIds.map(
+			(presetId) =>
+				IconStencils.find((stencil) => stencil.id === presetId)?.label,
+		);
+		expect(labelsInOrder).toEqual(
+			Object.keys(ICON_NODES).sort((left, right) => left.localeCompare(right)),
+		);
+	});
+});

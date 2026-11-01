@@ -2,6 +2,7 @@
 import type { StencilCategory } from "../../src";
 import { basicStencilCategory } from "../../src";
 import {
+	specBrowseStencilCategory,
 	specShapesPlugin,
 	specShapesStencilCategory,
 } from "../plugins/specShapesPlugin";
@@ -15,14 +16,16 @@ import { mountPluginHarness } from "../testing-harness";
 
 // The shape library sidebar is declared as a host would, rather than left to the default
 // one (which ?noStencilLibrary shows). Core's primitives and the same test-only category
-// are enough, so the specs have both a section of shapes and a category living on the bar
-// and in the sidebar at once.
+// give the specs both a section of shapes and a category living on the bar and in the
+// sidebar at once; a third test-only category, kept off the bar, offers the "show all"
+// view.
 //
 // The presets sit on the stencil bar, as the shipped hosts put them, and the category
 // flyout stays on the top bar, so both bars are under test.
 const librarySections: StencilCategory[] = [
 	basicStencilCategory,
 	specShapesStencilCategory,
+	specBrowseStencilCategory,
 ];
 
 // A 1x1 transparent PNG, the smallest file an <image> can actually draw. The

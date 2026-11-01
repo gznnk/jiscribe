@@ -136,7 +136,7 @@ describe("AWS_TIER1_ICONS", () => {
 		expect(missing).toEqual([]);
 	});
 
-	it("names them canonically, so the palette writes what the picker shows", () => {
+	it("names them canonically, so the palette writes the name a document stores", () => {
 		const notCanonical = TIER1.filter(
 			({ icon }) => resolveAwsIconName(icon) !== icon,
 		);

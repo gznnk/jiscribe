@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { AWS_ICON_ENTRIES } from "../iconData.generated";
-import { AWS_ICON_CATEGORIES, searchAwsIcons } from "../searchAwsIcons";
+import { searchAwsIcons } from "../searchAwsIcons";
 import { AWS_TIER1_ICON_NAMES } from "../tier1Icons";
 
-/** The cap the picker lays out at once; kept here because the module does not export it */
+/** The cap a search lays out at once; kept here because the module does not export it */
 const MAX_RESULTS = 105;
 
 /** Every icon name in the category, whatever layer it sits on. */
@@ -19,82 +19,6 @@ describe("searchAwsIcons with an empty term", () => {
 
 		expect(names).toEqual([...AWS_TIER1_ICON_NAMES]);
 		expect(total).toBe(AWS_TIER1_ICON_NAMES.length);
-	});
-
-	// A pressed chip is a choice of its own: answering it out of the palette
-	// would hand back less than the category holds, and nothing at all for the
-	// 13 categories and the whole `group/` layer the palette does not carry
-	it("reaches past the palette for a category once the chip is pressed", () => {
-		const { names, total } = searchAwsIcons({ query: "", category: "Compute" });
-
-		expect(total).toBe(namesInCategory("Compute").length);
-		expect(names.length).toBeGreaterThan(
-			AWS_TIER1_ICON_NAMES.filter(
-				(name) => AWS_ICON_ENTRIES[name]?.category === "Compute",
-			).length,
-		);
-		for (const name of names) {
-			expect(AWS_ICON_ENTRIES[name]?.category).toBe("Compute");
-		}
-	});
-
-	it("answers the group layer, which the palette holds none of", () => {
-		const { names, total } = searchAwsIcons({ query: "", tier: "group" });
-
-		expect(names.length).toBeGreaterThan(0);
-		expect(total).toBe(
-			Object.values(AWS_ICON_ENTRIES).filter((entry) => entry.tier === "group")
-				.length,
-		);
-		expect(names.every((name) => name.startsWith("group/"))).toBe(true);
-		expect(AWS_TIER1_ICON_NAMES.some((name) => name.startsWith("group/"))).toBe(
-			false,
-		);
-	});
-
-	it("leaves no category chip with an empty grid", () => {
-		for (const category of AWS_ICON_CATEGORIES) {
-			expect(searchAwsIcons({ query: "", category }).names.length).toBe(
-				Math.min(namesInCategory(category).length, MAX_RESULTS),
-			);
-		}
-	});
-
-	// The palette is still the shortlist worth seeing first, and with a layer
-	// running past MAX_RESULTS it is the part that survives the truncation
-	it("puts the palette's own icons ahead of the rest it reached for", () => {
-		const { names } = searchAwsIcons({ query: "", tier: "service" });
-
-		const fromPalette = AWS_TIER1_ICON_NAMES.filter(
-			(name) => AWS_ICON_ENTRIES[name]?.tier === "service",
-		);
-		expect(names.slice(0, fromPalette.length)).toEqual(fromPalette);
-	});
-
-	it("truncates a facet that runs long while counting all of it", () => {
-		const { names, total } = searchAwsIcons({ query: "", tier: "service" });
-
-		expect(names).toHaveLength(MAX_RESULTS);
-		expect(total).toBe(
-			Object.values(AWS_ICON_ENTRIES).filter(
-				(entry) => entry.tier === "service",
-			).length,
-		);
-	});
-
-	it("ANDs the facets rather than widening on either", () => {
-		const { names } = searchAwsIcons({
-			query: "",
-			tier: "resource",
-			category: "Compute",
-		});
-
-		expect(names.length).toBeGreaterThan(0);
-		for (const name of names) {
-			const entry = AWS_ICON_ENTRIES[name];
-			expect(entry?.tier).toBe("resource");
-			expect(entry?.category).toBe("Compute");
-		}
 	});
 
 	// The term is normalized before it is looked at, so one made of separators
@@ -171,37 +95,9 @@ describe("searchAwsIcons matching", () => {
 	});
 });
 
-describe("searchAwsIcons facets", () => {
-	it("keeps only the layer asked for", () => {
-		const { names } = searchAwsIcons({ query: "lambda", tier: "service" });
-
-		expect(names).toEqual(["service/aws-lambda"]);
-	});
-
-	it("keeps only the category asked for", () => {
-		const { names } = searchAwsIcons({ query: "lambda", category: "Storage" });
-
-		expect(names.length).toBeGreaterThan(0);
-		expect(
-			names.every((name) => AWS_ICON_ENTRIES[name]?.category === "Storage"),
-		).toBe(true);
-		expect(names).not.toContain("service/aws-lambda");
-	});
-
-	it("ANDs the two facets rather than widening on either", () => {
-		const both = searchAwsIcons({
-			query: "lambda",
-			tier: "resource",
-			category: "Compute",
-		});
-
-		expect(both.names).toEqual(["resource/aws-lambda/lambda-function"]);
-	});
-});
-
 describe("searchAwsIcons truncation", () => {
-	// "a" matches most of the set; the count the picker writes into its "m of n"
-	// line has to be the whole match, not the page that fits on screen
+	// "a" matches most of the set; the count the library weighs its "more
+	// matched" line on has to be the whole match, not the page that fits on screen
 	it("lays out at most MAX_RESULTS but counts every match in total", () => {
 		const { names, total } = searchAwsIcons({ query: "a" });
 
@@ -216,21 +112,6 @@ describe("searchAwsIcons truncation", () => {
 
 		expect(names).toHaveLength(total);
 		expect(total).toBeLessThan(MAX_RESULTS);
-	});
-});
-
-describe("AWS_ICON_CATEGORIES", () => {
-	it("lists every category that exists, once each and alphabetically", () => {
-		const fromEntries = [
-			...new Set(
-				Object.values(AWS_ICON_ENTRIES).map((entry) => entry.category),
-			),
-		];
-
-		expect(
-			[...AWS_ICON_CATEGORIES].sort((left, right) => left.localeCompare(right)),
-		).toEqual([...AWS_ICON_CATEGORIES]);
-		expect([...AWS_ICON_CATEGORIES].sort()).toEqual(fromEntries.sort());
 	});
 });
 

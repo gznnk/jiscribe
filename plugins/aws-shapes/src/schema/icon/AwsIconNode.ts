@@ -16,7 +16,7 @@ export type AwsIconNode = readonly [
 /** An icon's layer, matching the prefix of its name (`service/…`). */
 export type AwsIconTier = "service" | "resource" | "general" | "group";
 
-/** Every layer, in the order the picker's filter chips list them. */
+/** Every layer, from the services down to the group frames. */
 export const AWS_ICON_TIERS = [
 	"service",
 	"resource",

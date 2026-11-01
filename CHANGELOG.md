@@ -86,6 +86,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   0.75em for every type. Omitted, it stays 0.75em.
   The canvas, the doc ops and `diagnoseDoc` all derive with it; documents do
   not carry it.
+- **A shape library section can open its whole category.** The new
+  `StencilCategory.browseGroups` (`StencilCategoryBrowseGroup[]`: `id`, `label`,
+  `presetIds`) lists everything a category holds, in sections. A section
+  declaring it shows **Show all ›** under its grid, in place of **Find more
+  shapes**, in the sidebar and the Other shapes popover alike. It opens a view of
+  that category alone: a back button, the search box, now matching that category
+  only, and the groups as collapsible sections, the first one open. The groups
+  are drawn a batch at a time as the list scrolls. Using a shape there
+  works as anywhere in the library. The toolbar flyout ignores the field. Two
+  groups sharing an `id`, or one group naming a preset twice, throw on
+  resolution; unregistered ids are dropped, and a group left empty is not
+  shown. `CanvasMessages` gains `stencilLibraryShowAll` and
+  `stencilLibraryBack`. `awsStencilCategory` declares 25 groups, one per AWS
+  category ordered for architecture diagrams, holding all 781 icons;
+  `lucideIconStencilCategory` declares one group holding all 1767 icons by
+  name.
 
 ### Changed
 
@@ -161,6 +177,19 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   library toggle with it; `?emptyStencilLibrary` declares an empty one.
 
 ### Removed
+
+- **Breaking: a placed AWS or Lucide icon no longer offers to change its
+  icon.** The floating menu's icon picker and the properties sidebar's icon
+  section are gone from `awsIcon` and `lucideIcon`; the icon is chosen by the
+  shape library preset a shape is placed from, and a document edit (an AI's
+  included) still changes it. Gone from `@jiscribe/plugin-aws-shapes`:
+  `AwsIconPickerMenu`, `AwsIconGlyph`, `awsShapesMessagesByLocale` and
+  `AWS_ICON_STYLE_ENTRIES`; `searchAwsIcons` takes `{ query }` alone, the
+  `tier` and `category` fields of `AwsIconFilter` having gone with the picker's
+  filter chips. Gone from `@jiscribe/plugin-lucide-icon-shape`:
+  `IconPickerMenu`, `IconGlyph` and `ICON_STYLE_ENTRIES`. Neither type
+  declares an `icon` style entry any more, so a host writing `icon` through the
+  style system has nothing to write to.
 
 - **Breaking: the floating menu no longer opens the properties sidebar.** The
   **…** button at its end is gone, and with it the `menuPropertyPanel` key of

@@ -34,6 +34,10 @@ covers that.
 
 ### Changed
 
+- **The Icon and AWS sections of the shape library can show every icon.**
+  **Show all ›** under either section opens all of it: the AWS icons in one
+  section per AWS category, Compute first, and the Lucide icons in one section
+  by name, with a search over that set alone and a back button to the library.
 - **`capture_canvas` keeps up to 2576 px on the long edge**, up from 1400. A
   part named by `ids`, `rect` or the selection is drawn at full size (1 world
   unit to 1 px) and shrinks only past that edge.
@@ -53,6 +57,10 @@ covers that.
 
 ### Removed
 
+- **A placed icon no longer offers to change its icon.** The floating menu's
+  icon picker and the properties sidebar's Icon section are gone for AWS and
+  Lucide icons; place the icon you want from the shape library instead. The
+  icon a file names can still be changed by editing the file.
 - The floating menu's **…** button. Open the properties sidebar from the top
   bar instead.
 

@@ -7,8 +7,12 @@ import type {
 	StencilCategorySearch,
 } from "../../../../objects/StencilCategory";
 import { createStencilRegistry } from "../../../../objects/StencilRegistry";
+import { DEFAULT_STENCIL_LIBRARY_SEARCH_CAP } from "../createDefaultStencilLibraryCategory";
 import type { ResolvedStencilCategory } from "../resolveStencilCategory";
-import { searchStencilLibrary } from "../searchStencilLibrary";
+import {
+	searchStencilLibrary,
+	searchStencilLibraryCategory,
+} from "../searchStencilLibrary";
 
 const makeStencil = (id: string, label = id): Stencil => ({
 	id,
@@ -38,7 +42,7 @@ const makeSection = (
 		presetIds: listed.map((preset) => preset.id),
 		search,
 	};
-	return { category, presets: listed };
+	return { category, presets: listed, browseGroups: [] };
 };
 
 /** A search answering the same ids for any query, as cut from `matchCount` matches. */
@@ -167,6 +171,87 @@ describe("searchStencilLibrary", () => {
 
 		const result = searchStencilLibrary(
 			[makeSection("aws", [makeStencil("a")], find)],
+			"",
+			resolveLabel,
+			() => undefined,
+		);
+
+		expect(result).toEqual({ presets: [], hiddenMatchCount: 0 });
+		expect(find).not.toHaveBeenCalled();
+	});
+});
+
+describe("searchStencilLibraryCategory", () => {
+	/** A section listing nothing up front and holding `groups` for its "show all" view. */
+	const makeBrowseSection = (
+		groups: Stencil[][],
+		search?: StencilCategorySearch,
+	): ResolvedStencilCategory => ({
+		...makeSection("aws", [], search),
+		browseGroups: groups.map((presets, index) => ({
+			group: {
+				id: `group-${index}`,
+				label: `Group ${index}`,
+				presetIds: presets.map((preset) => preset.id),
+			},
+			presets,
+		})),
+	});
+
+	it("matches the browsed labels case-insensitively, in group order, each once", () => {
+		const lambda = makeStencil("lambda", "Lambda");
+		const result = searchStencilLibraryCategory(
+			makeBrowseSection([
+				[makeStencil("ec2", "EC2"), lambda],
+				[lambda, makeStencil("lambda-edge", "Lambda@Edge")],
+			]),
+			"LAMB",
+			resolveLabel,
+			() => undefined,
+		);
+
+		expect(idsOf(result.presets)).toEqual(["lambda", "lambda-edge"]);
+		expect(result.hiddenMatchCount).toBe(0);
+	});
+
+	it("cuts the label matches at the cap and counts the rest as hidden", () => {
+		const total = DEFAULT_STENCIL_LIBRARY_SEARCH_CAP + 7;
+		const presets = Array.from({ length: total }, (_, index) =>
+			makeStencil(`icon-${index}`),
+		);
+
+		const result = searchStencilLibraryCategory(
+			makeBrowseSection([presets]),
+			"icon",
+			resolveLabel,
+			() => undefined,
+		);
+
+		expect(result.presets).toHaveLength(DEFAULT_STENCIL_LIBRARY_SEARCH_CAP);
+		expect(result.hiddenMatchCount).toBe(7);
+	});
+
+	it("answers from the category's search alone, never matching the browsed labels", () => {
+		const registry = registryWith(makeStencil("found"));
+		const find = vi.fn(answering(["found", "unknown"], 12));
+
+		const result = searchStencilLibraryCategory(
+			makeBrowseSection([[makeStencil("browsed", "match me")]], find),
+			"match",
+			resolveLabel,
+			(id) => registry.get(id),
+		);
+
+		expect(find).toHaveBeenCalledWith("match");
+		expect(idsOf(result.presets)).toEqual(["found"]);
+		expect(result.hiddenMatchCount).toBe(12 - 2);
+	});
+
+	it("matches nothing and asks no search for an empty query", () => {
+		const find = vi.fn(answering(["a"]));
+
+		const result = searchStencilLibraryCategory(
+			makeBrowseSection([[makeStencil("a")]], find),
 			"",
 			resolveLabel,
 			() => undefined,

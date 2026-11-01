@@ -3,6 +3,7 @@ import type { StencilCategory } from "@jiscribe/canvas";
 import { createLucideStencilIcon } from "./createLucideStencilIcon";
 import { ICON_STENCIL_IDS } from "./IconStencils";
 import { toIconStencilId } from "./toIconStencilId";
+import { ICON_NODES } from "../schema/icon/iconData.generated";
 import { searchIconNames } from "../schema/icon/searchIconNames";
 
 /**
@@ -11,8 +12,8 @@ import { searchIconNames } from "../schema/icon/searchIconNames";
  * `{ type: "stencilCategory", category }` item, into its `toolbar.sections` (a flyout).
  *
  * A category rather than a single pinned preset: the shape is only useful once an icon is
- * chosen, and placing one that always says "star" would make choosing a second step every
- * single time.
+ * chosen, and a placed shape offers no menu to change it. The flyout's handful is listed up
+ * front; the shape library's "show all" view holds the whole set by name.
  */
 export const lucideIconStencilCategory: StencilCategory = {
 	id: "icon",
@@ -23,4 +24,13 @@ export const lucideIconStencilCategory: StencilCategory = {
 		const { names, total } = searchIconNames(query);
 		return { presetIds: names.map(toIconStencilId), matchCount: total };
 	},
+	browseGroups: [
+		{
+			id: "all",
+			label: { en: "All icons", ja: "すべてのアイコン" },
+			presetIds: Object.keys(ICON_NODES)
+				.sort((left, right) => left.localeCompare(right))
+				.map(toIconStencilId),
+		},
+	],
 };

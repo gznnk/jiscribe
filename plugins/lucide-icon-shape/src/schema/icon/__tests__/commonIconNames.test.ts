@@ -7,8 +7,8 @@ import { resolveIconName } from "../resolveIconName";
 describe("COMMON_ICON_NAMES", () => {
 	/**
 	 * The list is written by hand and the icon set moves under it, so a name that was
-	 * renamed away has to fail here rather than reach the picker as a blank cell and the
-	 * AI docs as a suggestion that resolves to nothing.
+	 * renamed away has to fail here rather than reach the AI docs as a suggestion that
+	 * resolves to nothing.
 	 */
 	it("names an icon that exists, by its current name", () => {
 		for (const name of COMMON_ICON_NAMES) {

@@ -15,4 +15,6 @@ mountPluginHarness({
 		{ type: "stencilPreset", presetId: "rect" },
 		{ type: "stencilCategory", category: lucideIconStencilCategory },
 	],
+	// The same category as a sidebar section, for its "show all" view.
+	stencilLibrarySections: [lucideIconStencilCategory],
 });
