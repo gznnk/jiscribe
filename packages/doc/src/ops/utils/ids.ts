@@ -2,28 +2,34 @@ import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 
 /**
- * Allocate a `${prefix}-N` id unique across the whole root tree.
- *
- * @param doc - Read-only here; only `doc.root` is scanned, so an object not yet pushed is
- *   invisible to the scan
- * @param prefix - Leading segment of the id, conventionally the object type name
- * @param reservedIds - Ids to avoid on top of the ones in the tree, for a batch that stages
- *   several objects before pushing any; omitted means the tree alone decides
+ * Hands out a `${prefix}-N` id, N being the lowest number free in the document and among
+ * the ids this allocator has already handed out.
  */
-export const generateUniqueId = (
-	doc: CanvasDoc,
-	prefix: string,
-	reservedIds?: ReadonlySet<string>,
-): string => {
+export type AllocateId = (prefix: string) => string;
+
+/**
+ * Start allocating ids for one op, the document's ids being collected once, here.
+ *
+ * Every id handed out counts as used from then on, so a batch staging several objects
+ * before pushing any never repeats one. The scan for each prefix resumes where the last
+ * one stopped, which finds the same id a scan from 1 would, as used ids only ever grow.
+ *
+ * @param doc - Read once, now; an object pushed to `doc.root` afterwards is invisible to
+ *   the allocator, so use a fresh one per op
+ */
+export const createIdAllocator = (doc: CanvasDoc): AllocateId => {
 	const usedIds = collectIds(doc.root);
-	let index = 1;
-	while (
-		usedIds.has(`${prefix}-${index}`) ||
-		reservedIds?.has(`${prefix}-${index}`) === true
-	) {
-		index += 1;
-	}
-	return `${prefix}-${index}`;
+	const nextIndexByPrefix = new Map<string, number>();
+	return (prefix) => {
+		let index = nextIndexByPrefix.get(prefix) ?? 1;
+		while (usedIds.has(`${prefix}-${index}`)) {
+			index += 1;
+		}
+		const allocatedId = `${prefix}-${index}`;
+		usedIds.add(allocatedId);
+		nextIndexByPrefix.set(prefix, index + 1);
+		return allocatedId;
+	};
 };
 
 /** Collect existing ids, recursing through group children. */

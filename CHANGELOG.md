@@ -259,6 +259,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   5000 shapes of a document with as many connectors takes about 3ms instead of
   230ms, and re-attaching those connectors about 5ms instead of 1.3s. Results and
   error messages are unchanged.
+- **Doc ops that create many objects no longer walk the document once per id.**
+  `connectMany` and `addObjects` collect the document's ids once per call and
+  hand out each new one from where the last of its type stopped, so drawing 5000
+  connectors into a document of 5000 shapes takes about 4ms instead of 3.1s,
+  and adding 5000 shapes to one about 40ms instead of 4.3s. The ids handed out
+  and error messages are unchanged.
 
 ## [0.12.2] - 2026-10-25
 

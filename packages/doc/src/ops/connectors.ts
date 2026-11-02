@@ -13,7 +13,7 @@ import {
 	requireOwnedEnd,
 	requireSingleEndpointTarget,
 } from "./utils/connectorEndpoints";
-import { generateUniqueId } from "./utils/ids";
+import { type AllocateId, createIdAllocator } from "./utils/ids";
 import {
 	locateObjects,
 	type ObjectLocation,
@@ -136,17 +136,17 @@ const buildRequestedEndpoint = (
 };
 
 /**
- * Build the connector `connect` would push, id included, without touching `doc`.
+ * Build the connector `connect` would push, id included, without touching the document.
  *
- * @param locatedObjects - What locateObjects found in `doc` for the ends' owners
- * @param reservedIds - Ids already handed out to connectors staged but not yet pushed
+ * @param locatedObjects - What locateObjects found in the document for the ends' owners
+ * @param allocateId - Shared by every connector of one op, so a staged one's id is never
+ *   handed out again
  */
 const buildConnector = (
-	doc: CanvasDoc,
 	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	params: ConnectParams,
 	definitions: DocDefinitions,
-	reservedIds?: ReadonlySet<string>,
+	allocateId: AllocateId,
 ): ObjectDoc => {
 	const hasLabelText = params.label !== undefined && params.label !== "";
 	if (
@@ -175,7 +175,7 @@ const buildConnector = (
 	);
 	requireOwnedEnd(source, target);
 
-	const id = generateUniqueId(doc, "connector", reservedIds);
+	const id = allocateId("connector");
 	// A center endpoint defaults to straight; anchors that carry a direction, and free ends,
 	// leave routing omitted.
 	const routing =
@@ -234,10 +234,10 @@ export const connect = (
 	definitions: DocDefinitions,
 ): string => {
 	const connector = buildConnector(
-		doc,
 		locateObjects(doc, collectRequestedOwnerIds([params])),
 		params,
 		definitions,
+		createIdAllocator(doc),
 	);
 	doc.root.push(connector);
 	return connector.id;
@@ -270,22 +270,20 @@ export const connectMany = (
 	// Nothing is pushed until every entry is built, so the owners located up front stay
 	// what each entry would find on its own.
 	const locatedObjects = locateObjects(doc, collectRequestedOwnerIds(entries));
-	const reservedIds = new Set<string>();
+	const allocateId = createIdAllocator(doc);
 	const staged: ObjectDoc[] = [];
 	entries.forEach((params, index) => {
 		let connector: ObjectDoc;
 		try {
 			connector = buildConnector(
-				doc,
 				locatedObjects,
 				params,
 				definitions,
-				reservedIds,
+				allocateId,
 			);
 		} catch (error) {
 			throw batchItemError("entries", index, undefined, error);
 		}
-		reservedIds.add(connector.id);
 		staged.push(connector);
 	});
 

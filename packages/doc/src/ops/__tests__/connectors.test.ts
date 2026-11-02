@@ -480,6 +480,25 @@ describe("connectMany", () => {
 		expectValid(doc);
 	});
 
+	it("fills the holes the doc's connector ids leave before carrying on past them", () => {
+		const doc = twoRects();
+		docOps.connectMany(doc, [
+			{ sourceId: "rect-1", targetId: "rect-2" },
+			{ sourceId: "rect-1", targetId: "rect-2" },
+			{ sourceId: "rect-1", targetId: "rect-2" },
+		]);
+		docOps.deleteObjects(doc, ["connector-2"]);
+
+		expect(
+			docOps.connectMany(doc, [
+				{ sourceId: "rect-2", targetId: "rect-1" },
+				{ sourceId: "rect-2", targetId: "rect-1" },
+				{ sourceId: "rect-2", targetId: "rect-1" },
+			]),
+		).toEqual(["connector-2", "connector-4", "connector-5"]);
+		expectValid(doc);
+	});
+
 	it("leaves the doc untouched when one entry is bad", () => {
 		const doc = twoRects();
 		const before = JSON.stringify(doc);

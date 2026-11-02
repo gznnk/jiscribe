@@ -8,7 +8,7 @@ import {
 	declaresExtraKey,
 	isBlockLayoutText,
 } from "./utils/extraFields";
-import { generateUniqueId } from "./utils/ids";
+import { type AllocateId, createIdAllocator } from "./utils/ids";
 import type { ObjectRecord } from "./utils/objectAccess";
 import type { DocDefinitions } from "./utils/objectGeometry";
 import { requireValidObjectDoc } from "./utils/objectValidation";
@@ -251,16 +251,16 @@ const requireAppliedStyle = (
 };
 
 /**
- * Build the object `addObject` would push, id included, without touching `doc`.
+ * Build the object `addObject` would push, id included, without touching the document.
  *
- * @param reservedIds - Ids already handed out to objects staged but not yet pushed
+ * @param allocateId - Shared by every object of one op, so a staged one's id is never
+ *   handed out again
  */
 const buildObject = (
-	doc: CanvasDoc,
 	type: string,
 	params: AddObjectParams,
 	definitions: DocDefinitions,
-	reservedIds?: ReadonlySet<string>,
+	allocateId: AllocateId,
 ): ObjectDoc => {
 	const definition = definitions.get(type);
 	if (definition === undefined) {
@@ -381,7 +381,7 @@ const buildObject = (
 		delete (created as ObjectRecord).height;
 	}
 
-	created.id = generateUniqueId(doc, type, reservedIds);
+	created.id = allocateId(type);
 	if (points !== undefined) {
 		(created as ObjectRecord).points = points;
 	}
@@ -453,7 +453,12 @@ export const addObject = (
 	params: AddObjectParams,
 	definitions: DocDefinitions,
 ): string => {
-	const created = buildObject(doc, type, params, definitions);
+	const created = buildObject(
+		type,
+		params,
+		definitions,
+		createIdAllocator(doc),
+	);
 	doc.root.push(created);
 	return created.id;
 };
@@ -482,16 +487,15 @@ export const addObjects = (
 	entries: readonly AddObjectEntry[],
 	definitions: DocDefinitions,
 ): string[] => {
-	const reservedIds = new Set<string>();
+	const allocateId = createIdAllocator(doc);
 	const staged: ObjectDoc[] = [];
 	entries.forEach(({ type, ...params }, index) => {
 		let created: ObjectDoc;
 		try {
-			created = buildObject(doc, type, params, definitions, reservedIds);
+			created = buildObject(type, params, definitions, allocateId);
 		} catch (error) {
 			throw batchItemError("entries", index, type, error);
 		}
-		reservedIds.add(created.id);
 		staged.push(created);
 	});
 

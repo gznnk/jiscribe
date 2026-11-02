@@ -7,6 +7,7 @@ import {
 } from "./support/buildConnectedDoc";
 import type { EndpointRef } from "../../model/objects/types/EndpointRef";
 import type { UpdateConnectorEntry } from "../connectors";
+import type { AddObjectEntry } from "../create";
 
 const docOps = createDocOps();
 
@@ -48,10 +49,9 @@ describe("getConnectors: one shape", () => {
 	}
 });
 
-// Every end is looked up before any connector is pushed. 5000 is left out: allocating
-// each connector's id walks the whole tree (generateUniqueId), which takes seconds there.
+// Every end is looked up before any connector is pushed.
 describe("connectMany: every connector at once", () => {
-	for (const shapeCount of SIZES.filter((size) => size <= 1000)) {
+	for (const shapeCount of SIZES) {
 		const { doc, shapeIds } = buildConnectedDoc({
 			shapeCount,
 			connectorCount: 0,
@@ -95,6 +95,26 @@ describe("updateConnectors: every connector re-attached at once", () => {
 			// Reversed and back, so the document stays where it was built.
 			docOps.updateConnectors(doc, entries);
 			entries = entries === reversed ? asBuilt : reversed;
+		});
+	}
+});
+
+// Every id is allocated against what the document and the batch already hold.
+describe("addObjects: every shape at once", () => {
+	for (const { shapeCount, doc } of docsBySize) {
+		const entries: AddObjectEntry[] = Array.from(
+			{ length: shapeCount },
+			(_, index) => ({
+				type: ["rect", "ellipse", "text"][index % 3],
+				x: index * 10,
+				y: -200,
+			}),
+		);
+		const rootLength = doc.root.length;
+		bench(`${shapeCount} shapes, ${shapeCount} connectors`, () => {
+			docOps.addObjects(doc, entries);
+			// Drop what was pushed, so every run starts from the same document.
+			doc.root.length = rootLength;
 		});
 	}
 });

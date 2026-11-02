@@ -169,9 +169,9 @@ offering that type's own tools can point at them.
 5. Cover it in the `__tests__/` file matching its `ops/` file, beside the counterpart it
    pairs with. For a batch op that means the happy path, atomicity on a mid-list failure,
    the empty list, a repeated id, and the error message
-6. Allocate ids with `generateUniqueId` from `utils/ids.ts`. A batch that stages objects
-   before pushing them must pass the ids it has already handed out as `reservedIds`, since
-   the allocator only scans `doc.root`
+6. Allocate ids with `createIdAllocator` from `utils/ids.ts`, one allocator per op. A batch
+   that stages objects before pushing them shares that one across its entries, since the
+   allocator reads `doc.root` only when it is created
 7. For a read, prefix it `get` / `list` / `find`, throw for an id the doc does not hold, and
    check first whether `getObject` already answers it — a getter per written property is
    what this layer does not do

@@ -780,8 +780,8 @@ describe("addObjects", () => {
 		expectValid(doc);
 	});
 
-	// Nothing is pushed until the whole batch is built, so the id scan cannot see the
-	// objects already staged; the reserved set is what keeps them apart.
+	// Nothing is pushed until the whole batch is built, so the document cannot show the
+	// objects already staged; the one allocator the batch shares is what keeps them apart.
 	it("hands out ids that do not collide within one batch", () => {
 		const doc = emptyDoc();
 
@@ -809,6 +809,29 @@ describe("addObjects", () => {
 				{ type: "rect", x: 200, y: 300 },
 			]),
 		).toEqual(["rect-3", "rect-4"]);
+		expectValid(doc);
+	});
+
+	it("numbers alternating types apart, filling the holes the doc leaves, groups included", () => {
+		const doc = emptyDoc();
+		docOps.addObjects(doc, [
+			{ type: "rect", x: 0, y: 0 },
+			{ type: "rect", x: 200, y: 0 },
+			{ type: "rect", x: 400, y: 0 },
+			{ type: "ellipse", x: 0, y: 200 },
+			{ type: "ellipse", x: 200, y: 200 },
+		]);
+		docOps.groupObjects(doc, ["rect-3", "ellipse-2"]);
+		docOps.deleteObjects(doc, ["rect-2"]);
+
+		expect(
+			docOps.addObjects(doc, [
+				{ type: "rect", x: 0, y: 400 },
+				{ type: "ellipse", x: 200, y: 400 },
+				{ type: "rect", x: 400, y: 400 },
+				{ type: "ellipse", x: 600, y: 400 },
+			]),
+		).toEqual(["rect-2", "ellipse-3", "rect-4", "ellipse-4"]);
 		expectValid(doc);
 	});
 

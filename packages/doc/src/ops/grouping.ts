@@ -1,6 +1,6 @@
 import { DocOperationError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
-import { generateUniqueId } from "./utils/ids";
+import { createIdAllocator } from "./utils/ids";
 import {
 	collectObjectIds,
 	dropEmptyGroups,
@@ -108,7 +108,7 @@ export const groupObjects = (
 	);
 	const children = orderedIndexes.map((index) => siblings[index]);
 	const group = {
-		id: generateUniqueId(doc, GroupFeatures.type),
+		id: createIdAllocator(doc)(GroupFeatures.type),
 		type: GroupFeatures.type,
 		children,
 	} as unknown as ObjectDoc;
