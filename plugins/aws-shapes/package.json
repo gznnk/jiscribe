@@ -18,7 +18,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
-		"icons": "The drawings in src/schema/icon/iconData.generated.ts are AWS Architecture Icons and are not covered by this repository's MIT license. See LICENSE-ICONS.md."
+		"icons": "The drawings in src/drawing/iconDrawings.generated.ts are AWS Architecture Icons and are not covered by this repository's MIT license. See LICENSE-ICONS.md."
 	},
 	"dependencies": {
 		"@jiscribe/geometry": "workspace:*"

@@ -10,6 +10,10 @@ import {
 	awsStencilCategory,
 } from "@jiscribe/plugin-aws-shapes";
 import {
+	azureShapesPlugin,
+	azureStencilCategory,
+} from "@jiscribe/plugin-azure-shapes";
+import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
@@ -43,7 +47,7 @@ import "katex/dist/katex.min.css";
 // shape library sidebar holding the whole set as sections; the sidebar controls are the
 // kit's (see mountPluginHarness). The shipped hosts leave no
 // flyout on the top bar (standardToolbarSections carries no shape tool at all). The
-// markdown / sticky presets and the nine categories are all plugin-supplied and absent from
+// markdown / sticky presets and the ten categories are all plugin-supplied and absent from
 // core's defaults.
 mountPluginHarness({
 	plugins: [
@@ -58,6 +62,7 @@ mountPluginHarness({
 		annotationPlugin,
 		lucideIconPlugin,
 		awsShapesPlugin,
+		azureShapesPlugin,
 	],
 	toolbarItems: [
 		{ type: "stencilCategory", category: lucideIconStencilCategory },
@@ -89,5 +94,6 @@ mountPluginHarness({
 		lucideIconStencilCategory,
 		awsStencilCategory,
 		awsGroupStencilCategory,
+		azureStencilCategory,
 	],
 });

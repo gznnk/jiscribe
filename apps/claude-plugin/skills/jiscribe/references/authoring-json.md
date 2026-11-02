@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+e611eab9 -->
+<!-- jiscribe guide 0.12.2+144194ae -->
 
 # The Jiscribe file format
 
@@ -115,6 +115,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `erEntity`              | `x`,`y` (no `width`/`height`: the size comes from the content) |
 | `awsIcon`               | `x`,`y`,`width`,`height`                                       |
 | `awsGroup`              | `x`,`y`,`width`,`height`                                       |
+| `azureIcon`             | `x`,`y`,`width`,`height`                                       |
 | `polyline`              | `points` (open line)                                           |
 | `polygon`               | `points` (auto-closed)                                         |
 | `group`                 | `children`                                                     |

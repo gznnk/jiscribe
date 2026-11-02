@@ -2,7 +2,7 @@ import { test, expect, selectors } from "@jiscribe/canvas/testing";
 import type { CanvasDriver } from "@jiscribe/canvas/testing";
 
 /**
- * All ten shipped plugins registered on one canvas. Each plugin's own e2e suite
+ * All twelve shipped plugins registered on one canvas. Each plugin's own e2e suite
  * loads a harness holding that plugin alone, so nothing there can see what only
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
@@ -37,10 +37,17 @@ const PINNED_PRESET_IDS = [
 const FLYOUT_CATEGORY = { id: "icon", ownPresetId: "lucideIconUser" };
 
 /**
- * The awsIcon preset the aws section is found by and both AWS icons are placed from.
+ * The awsIcon preset the aws section is found by and the AWS icon is placed from.
  * Any one would do; S3 is picked because it is a shape every AWS diagram carries.
  */
 const AWS_S3_PRESET_ID = "awsIconServiceAmazonSimpleStorageService";
+
+/**
+ * The azureIcon preset the azure section is found by and both Azure icons are
+ * placed from. Its drawing fills with gradients it defines by id, which is what
+ * the SVG id test needs two copies of.
+ */
+const AZURE_VM_PRESET_ID = "azureIconVirtualMachine";
 
 /**
  * Sections of the shape library sidebar, in declaration order. `ownPresetId` is a
@@ -58,6 +65,7 @@ const LIBRARY_SECTIONS = [
 	{ id: "icon", ownPresetId: "lucideIconUser" },
 	{ id: "aws", ownPresetId: AWS_S3_PRESET_ID },
 	{ id: "aws-group", ownPresetId: "awsGroupVpc" },
+	{ id: "azure", ownPresetId: AZURE_VM_PRESET_ID },
 ];
 
 /** Every toolbar category button, pinned presets excluded. */
@@ -282,12 +290,15 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	);
 	await canvas.deselect();
 
-	// Two of the same AWS icon, both center-placed: the icon drawing rewrites the
-	// SVG ids it carries per object, so a second copy of one icon is what tells a
-	// working rewrite from one document-wide set of ids shared by every instance.
 	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
 	await canvas.deselect();
-	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
+
+	// Two of the same Azure icon, center-placed too. Its drawing defines the ids
+	// its gradients are referred to by, so a second copy is what tells a working
+	// per-instance rewrite from one set of ids every instance shares.
+	ids.push(await placeFromLibrary(canvas, AZURE_VM_PRESET_ID));
+	await canvas.deselect();
+	ids.push(await placeFromLibrary(canvas, AZURE_VM_PRESET_ID));
 	await canvas.deselect();
 
 	await canvas.collapseSidebars();
@@ -372,7 +383,7 @@ test.describe("plugin coexistence", () => {
 	});
 
 	test("keeps every SVG id in the canvas unique", async ({ canvas }) => {
-		await drawOneShapePerPlugin(canvas);
+		const ids = await drawOneShapePerPlugin(canvas);
 		// A second sticky: `svgDefs` is registered per type, so its shared gradients
 		// have to stay one set however many instances reference them.
 		await canvas.placeShape("Sticky");
@@ -391,5 +402,38 @@ test.describe("plugin coexistence", () => {
 		// pin one id known to be down there.
 		expect(svgIds).toContain("sticky-shadow-bottom");
 		expect(findDuplicates(svgIds)).toEqual([]);
+
+		// Unique ids are not enough on their own: a reference has to land in the
+		// drawing that made it. The two Azure icons are the last two shapes drawn.
+		for (const azureId of ids.slice(-2)) {
+			const strayReferences = await canvas.page.evaluate((shapeId) => {
+				const shape = document.querySelector(`[data-id="${shapeId}"]`);
+				if (shape === null) {
+					throw new Error(`no shape ${shapeId}`);
+				}
+				const referencedIds = [...shape.querySelectorAll("*")].flatMap(
+					(element) =>
+						[...element.attributes].flatMap((attribute) =>
+							attribute.name === "href" && attribute.value.startsWith("#")
+								? [attribute.value.slice(1)]
+								: [...attribute.value.matchAll(/url\(#([^)]+)\)/g)].map(
+										(match) => match[1],
+									),
+						),
+				);
+				return {
+					count: referencedIds.length,
+					stray: referencedIds.filter(
+						(id) =>
+							document
+								.getElementById(id)
+								?.closest("[data-id]")
+								?.getAttribute("data-id") !== shapeId,
+					),
+				};
+			}, azureId);
+			expect(strayReferences.count).toBeGreaterThan(0);
+			expect(strayReferences.stray).toEqual([]);
+		}
 	});
 });

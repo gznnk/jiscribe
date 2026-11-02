@@ -19,7 +19,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
-		"@jiscribe/doc-schema": "A dependency for its two guides, which ./guides reads off disk at run time through node resolution (a bundling host stages them beside its bundle). The schema itself is read only as data, by __tests__/shippedPropertyNames.test.ts; validateDoc validates with the parser alone.",
+		"@jiscribe/doc-schema": "A dependency for its two guides, which ./guides reads off disk at run time through node resolution (a bundling host stages them beside its bundle). The schema itself is read only as data, by __tests__/shippedPropertyNames.test.ts and __tests__/shippedIconDefaults.test.ts; validateDoc validates with the parser alone.",
 		"@fontsource/*": "Not imported as modules: the Node measurer reads the .woff files and the unicode-range of the @font-face CSS off disk, resolved through Node's own resolution (measure/fontSourcePackages.ts). They are the very files @jiscribe/canvas ships to the browser, which is what keeps a headless measurement on the same faces as the drawing."
 	},
 	"dependencies": {

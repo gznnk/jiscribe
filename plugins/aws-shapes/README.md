@@ -19,12 +19,8 @@ import {
 } from "@jiscribe/plugin-aws-shapes";
 
 // Both are module-level constants: built anew each render they would remount the Canvas.
-const initialConfig = { plugins: [...standardPlugins, awsShapesPlugin] };
-const stencilLibrarySections = [
-  ...standardStencilLibrarySections,
-  awsStencilCategory,
-  awsGroupStencilCategory,
-];
+const initialConfig = { plugins: [awsShapesPlugin] };
+const stencilLibrarySections = [awsStencilCategory, awsGroupStencilCategory];
 
 <Canvas
   initialConfig={initialConfig}
@@ -32,13 +28,16 @@ const stencilLibrarySections = [
 />;
 ```
 
-Both are already in `@jiscribe/standard-shapes`, so a host taking the shipped set
-gets them without naming this package.
+That is for a host assembling its own set. The plugin and both categories are
+already in `@jiscribe/standard-shapes`, so a host taking the shipped set
+(`standardPlugins`, `standardStencilLibrarySections`) gets them without naming
+this package, and must not add them again: a type registered twice throws.
 
 A consumer that only takes part in parse-time validation (a server, a
 diagnostic, the MCP) hands `awsShapesDocPlugin` from
 `@jiscribe/plugin-aws-shapes/doc` to `createCanvasParser`; that entry pulls in no
-react.
+react, and none of the drawings either: it loads the icon catalog (names,
+labels, categories) alone.
 
 ## Icon names
 
@@ -55,7 +54,8 @@ The short names people say (`lambda`, `s3`, `alb`, `igw`) are resolved by the
 table in `src/schema/icon/iconAliases.ts`. A spelling with the `amazon-` /
 `aws-` prefix or the layer prefix dropped resolves too, wherever it is
 unambiguous. A name that resolves to nothing is a validation error carrying
-candidates.
+candidates. `awsIconCatalog` (`src/schema/icon/awsIconCatalog.ts`) is all of
+that lookup, built with canvas-sdk's `createIconSetCatalog`.
 
 ## Light and dark
 
@@ -66,11 +66,13 @@ separate Dark rendition, and this package keeps both: the drawing is chosen from
 
 ## Regenerating the drawings
 
-The drawings live in a data module generated from the asset zip, and it is
-committed. To move to a new release of the assets:
+The icons live in two modules generated from the asset zip, both committed: the
+catalog `src/schema/icon/iconCatalog.generated.ts` (names, labels, categories,
+viewBoxes — what the headless entry reads) and the drawings
+`src/drawing/iconDrawings.generated.ts`. To move to a new release of the assets:
 
 1. Download and unpack AWS's asset package (the URL is recorded in the header of
-   `src/schema/icon/iconData.generated.ts` and in LICENSE-ICONS.md)
+   both modules and in LICENSE-ICONS.md)
 2. Point `SOURCE_ZIP_URL` and `ASSET_RELEASE` in `scripts/generateIconData.mjs`
    at the new release
 3. Regenerate, from the repository root:
@@ -80,6 +82,11 @@ committed. To move to a new release of the assets:
    pnpm format   # the generator writes unformatted output
    pnpm --filter @jiscribe/plugin-aws-shapes test
    ```
+
+The script only collects the files and names the icons; the conversion is
+`@jiscribe/canvas-sdk/icon-set-generator`'s, which stops on any element,
+attribute or style it has not been told about, so a release carrying something
+new is looked at before it ships.
 
 If a tier-1 name (one the palette carries) changed on AWS's side, the tests say
 so.

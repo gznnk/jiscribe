@@ -229,6 +229,9 @@
 					"$ref": "#/$defs/AwsGroupDoc"
 				},
 				{
+					"$ref": "#/$defs/AzureIconDoc"
+				},
+				{
 					"$ref": "#/$defs/PolylineDoc"
 				},
 				{
@@ -407,6 +410,9 @@
 				},
 				{
 					"$ref": "#/$defs/AwsGroupDoc"
+				},
+				{
+					"$ref": "#/$defs/AzureIconDoc"
 				},
 				{
 					"$ref": "#/$defs/PolylineDoc"
@@ -3368,6 +3374,97 @@
 				}
 			}
 		},
+		"AzureIconDoc": {
+			"description": "One icon from Microsoft's official Azure Architecture Icons, or Microsoft Entra ID from the Microsoft Entra architecture icons, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. `icon` names the picture as a flat kebab-case name with no category prefix — \"virtual-machine\", \"azure-cosmos-db\", \"app-services\", \"key-vaults\". Common short names resolve too (\"vm\", \"aks\", \"vnet\", \"kv\", \"apim\", \"cosmos\"; \"entra\" and \"aad\" reach \"entra-id\"), as does a name with the \"azure-\"/\"microsoft-\" prefix dropped where that is unambiguous (\"cosmos-db\", \"service-bus\"); a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself: write the product's official name there (\"Azure Cosmos DB\", \"Azure Kubernetes Service\"), which Microsoft's terms ask to be placed near the icon. There is no stroke or fill: the icons may not be recoloured or altered. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Group them with a container frame to show which subscription, resource group or virtual network they live in.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"azureIcon\".",
+					"type": "string",
+					"const": "azureIcon"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"icon": {
+					"description": "Which icon to draw, as a flat kebab-case name, with no category prefix, from Microsoft's official Azure Architecture Icons and, for Microsoft Entra ID alone, the Microsoft Entra architecture icons: \"virtual-machine\", \"azure-cosmos-db\", \"app-services\", \"key-vaults\", \"virtual-networks\", \"entra-id\". The short names people say resolve too (\"vm\", \"vmss\", \"aks\", \"acr\", \"vnet\", \"nsg\", \"kv\", \"apim\", \"cosmos\"; \"entra\" and \"aad\" reach \"entra-id\"), as does a name with the \"azure-\" / \"microsoft-\" prefix dropped wherever that is unambiguous (\"cosmos-db\", \"service-bus\", \"openai\"). A name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set. Omitted = \"virtual-machine\".",
+					"type": "string",
+					"default": "virtual-machine",
+					"examples": [
+						"virtual-machine",
+						"azure-cosmos-db",
+						"app-services",
+						"kubernetes-services",
+						"key-vaults"
+					]
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"description": "Lock aspect ratio during resize. Default: true (overrides the shared default false).",
+					"type": "boolean",
+					"default": true
+				}
+			}
+		},
 		"PolylineDoc": {
 			"description": "Open polyline (non-closed path).",
 			"type": "object",
@@ -4190,7 +4287,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / erEntity / awsIcon / awsGroup / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / erEntity / awsIcon / awsGroup / azureIcon / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

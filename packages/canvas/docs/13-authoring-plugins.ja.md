@@ -137,6 +137,7 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 | `calcRoundedRectOutline` / `centeredPolygonOutline` / `formatPolygonPoints`                                              | 手書きの輪郭計算                                                |
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`） | 「箱いっぱいに描くので文字を下へ吊る」機構一式                  |
 | `createParseCheckSuite`（`/testing`）                                                                                    | 図形パッケージが毎回書く parse-check テスト                     |
+| `createIconSetCatalog`（`/doc`）/ `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator`        | アイコンセットの名前引き・図形・プリセット・生成スクリプト      |
 
 下ラベルの部材は 3 つで 1 組である。領域を `createFrameObjectDefinition` の
 `textRegion`（ラベルを置くテキストスロットの部分種別になる）に、bounds を
@@ -434,6 +435,8 @@ library も宣言しないホストでは、カテゴリを足すまでその図
 落とし、空になった節は出さない。節の id の重複と、1 つの節の中での preset id の
 重複は throw する。ツールバーのフライアウトは `browseGroups` も見ない。
 `awsStencilCategory` と `lucideIconStencilCategory` は両方を宣言している。
+canvas-sdk のアイコンセット用キットに載せたセットなら、`createIconSetStencilCategory`
+がセットの目録から両方を作る。
 
 ## 配線チェックリスト
 

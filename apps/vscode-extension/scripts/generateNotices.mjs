@@ -11,10 +11,12 @@
  *   @fontsource packages by the name esbuild kept in front of its hash
  * - the Lucide icon drawings generated into the shape plugin's source, whose
  *   version the generated file states in its header
- * - the AWS Architecture Icons generated into the AWS shape plugin's source,
- *   listed only when the source maps name that generated file. They are not
- *   open source, so their section reproduces the plugin's LICENSE-ICONS.md
- *   instead of a package's license file
+ * - the AWS and the Azure Architecture Icons generated into their shape
+ *   plugins' source (the Azure plugin's carrying Microsoft Entra ID from the
+ *   Entra icon package too), each listed only when the source maps name its
+ *   generated drawing module (the catalog of names alone ships no icon). They
+ *   are not open source, so each section reproduces its plugin's
+ *   LICENSE-ICONS.md instead of a package's license file
  *
  * Run `pnpm --filter jiscribe generate:notices` after a build; `--check` fails
  * instead of writing, which is what CI runs.
@@ -92,24 +94,59 @@ const ICON_DATA_PATH = join(
 	"iconData.generated.ts",
 );
 
-/** The generated AWS icon data, relative to the repository root. */
-const AWS_ICON_DATA_RELATIVE_PATH = [
+/** The generated AWS icon drawings, relative to the repository root. */
+const AWS_ICON_DRAWINGS_RELATIVE_PATH = [
+	"plugins",
+	"aws-shapes",
+	"src",
+	"drawing",
+	"iconDrawings.generated.ts",
+];
+
+/** Where the AWS release date is stated, as the header of the generated icon catalog. */
+const AWS_ICON_CATALOG_PATH = join(
+	repoRoot,
 	"plugins",
 	"aws-shapes",
 	"src",
 	"schema",
 	"icon",
-	"iconData.generated.ts",
-];
-
-/** Where the AWS release date is stated, as the header of the generated icon data. */
-const AWS_ICON_DATA_PATH = join(repoRoot, ...AWS_ICON_DATA_RELATIVE_PATH);
+	"iconCatalog.generated.ts",
+);
 
 /** The terms the AWS icons are redistributed under, kept next to the data. */
 const AWS_ICON_LICENSE_PATH = join(
 	repoRoot,
 	"plugins",
 	"aws-shapes",
+	"LICENSE-ICONS.md",
+);
+
+/** The generated Azure icon drawings, relative to the repository root. */
+const AZURE_ICON_DRAWINGS_RELATIVE_PATH = [
+	"plugins",
+	"azure-shapes",
+	"src",
+	"drawing",
+	"iconDrawings.generated.ts",
+];
+
+/** Where the Azure and Entra releases are stated, as the header of the generated icon catalog. */
+const AZURE_ICON_CATALOG_PATH = join(
+	repoRoot,
+	"plugins",
+	"azure-shapes",
+	"src",
+	"schema",
+	"icon",
+	"iconCatalog.generated.ts",
+);
+
+/** The terms the Azure icons are redistributed under, kept next to the data. */
+const AZURE_ICON_LICENSE_PATH = join(
+	repoRoot,
+	"plugins",
+	"azure-shapes",
 	"LICENSE-ICONS.md",
 );
 
@@ -208,14 +245,26 @@ function bundledFromSourceMaps(inputs) {
 }
 
 /**
- * Whether the AWS icon drawings are compiled into the extension. Source map
- * inputs are relative to dist/, so the generated file is matched by its path
- * under the repository, not by an absolute one.
+ * Whether the AWS icon drawings are compiled into the extension. Only the
+ * drawing module carries AWS's work; the catalog of names alone needs no
+ * attribution. Source map inputs are relative to dist/, so the generated file
+ * is matched by its path under the repository, not by an absolute one.
  *
  * @param inputs - Source map inputs, from {@link sourceMapInputs}
  */
 function shipsAwsIcons(inputs) {
-	const suffix = `/${AWS_ICON_DATA_RELATIVE_PATH.join("/")}`;
+	const suffix = `/${AWS_ICON_DRAWINGS_RELATIVE_PATH.join("/")}`;
+	return inputs.some((source) => source.endsWith(suffix));
+}
+
+/**
+ * Whether the Azure icon drawings are compiled into the extension, decided the
+ * way {@link shipsAwsIcons} decides it.
+ *
+ * @param inputs - Source map inputs, from {@link sourceMapInputs}
+ */
+function shipsAzureIcons(inputs) {
+	const suffix = `/${AZURE_ICON_DRAWINGS_RELATIVE_PATH.join("/")}`;
 	return inputs.some((source) => source.endsWith(suffix));
 }
 
@@ -263,15 +312,16 @@ function lucideVersion() {
 }
 
 /**
- * The AWS Architecture Icons release the icon data was generated from, as an
- * ISO date. The header states it the way AWS names the asset package, MMDDYYYY.
+ * The AWS Architecture Icons release the icons were generated from, as an ISO
+ * date. The catalog's header states it the way AWS names the asset package,
+ * MMDDYYYY.
  */
 function awsIconsRelease() {
-	const header = readFileSync(AWS_ICON_DATA_PATH, "utf8").slice(0, 200);
+	const header = readFileSync(AWS_ICON_CATALOG_PATH, "utf8").slice(0, 200);
 	const hit = header.match(/asset package \((\d{2})(\d{2})(\d{4})\)/);
 	if (!hit) {
 		throw new Error(
-			`${AWS_ICON_DATA_PATH} no longer states the asset package release`,
+			`${AWS_ICON_CATALOG_PATH} no longer states the asset package release`,
 		);
 	}
 	const [, month, day, year] = hit;
@@ -279,11 +329,33 @@ function awsIconsRelease() {
 }
 
 /**
- * The AWS icons' section: the plugin's LICENSE-ICONS.md reproduced whole, minus
- * its title, which the section heading replaces.
+ * The releases the Azure plugin's icons were generated from, as the catalog's
+ * header states them within its first 400 characters: the Azure package's
+ * version and month (`V24, 2026-07`), and the Entra package's month
+ * (`Oct 2023`).
  */
-function awsIconsSection() {
-	const text = readFileSync(AWS_ICON_LICENSE_PATH, "utf8");
+function azureIconsReleases() {
+	const header = readFileSync(AZURE_ICON_CATALOG_PATH, "utf8").slice(0, 400);
+	const azure = header.match(/asset package \((V\d+, \d{4}-\d{2})\)/);
+	const entra = header.match(
+		/Microsoft Entra architecture icons \(([A-Z][a-z]{2} \d{4})\)/,
+	);
+	if (!azure || !entra) {
+		throw new Error(
+			`${AZURE_ICON_CATALOG_PATH} no longer states the Azure and Entra releases`,
+		);
+	}
+	return { azure: azure[1], entra: entra[1] };
+}
+
+/**
+ * An icon set's section: its plugin's LICENSE-ICONS.md reproduced whole, minus
+ * its title, which the section heading replaces.
+ *
+ * @param licensePath - The plugin's LICENSE-ICONS.md
+ */
+function iconTermsSection(licensePath) {
+	const text = readFileSync(licensePath, "utf8");
 	return text.replace(/^# [^\n]*\n+/, "").replace(/\n+$/, "");
 }
 
@@ -334,6 +406,7 @@ function generate() {
 	const bundled = bundledFromSourceMaps(inputs);
 	bundled.set("lucide", lucideVersion());
 	const awsIcons = shipsAwsIcons(inputs);
+	const azureIcons = shipsAzureIcons(inputs);
 
 	const fontPackages = bundledFontPackages();
 	// One version for all of them, so the heading can name it once. packageDir
@@ -362,7 +435,16 @@ function generate() {
 				? {
 						sortKey: "aws architecture icons",
 						heading: `AWS Architecture Icons (release ${awsIconsRelease()}) — AWS terms, not open source`,
-						body: awsIconsSection(),
+						body: iconTermsSection(AWS_ICON_LICENSE_PATH),
+					}
+				: [],
+		)
+		.concat(
+			azureIcons
+				? {
+						sortKey: "azure architecture icons",
+						heading: `Microsoft Azure Architecture Icons (release ${azureIconsReleases().azure}) and Microsoft Entra architecture icons (release ${azureIconsReleases().entra}) — Microsoft terms, not open source`,
+						body: iconTermsSection(AZURE_ICON_LICENSE_PATH),
 					}
 				: [],
 		);
@@ -385,6 +467,14 @@ function generate() {
 						line: `AWS Architecture Icons ${awsIconsRelease()} (AWS terms, not open source)`,
 					}
 				: [],
+		)
+		.concat(
+			azureIcons
+				? {
+						sortKey: "azure architecture icons",
+						line: `Microsoft Azure Architecture Icons ${azureIconsReleases().azure} and Microsoft Entra architecture icons ${azureIconsReleases().entra} (Microsoft terms, not open source)`,
+					}
+				: [],
 		);
 
 	const byName = (a, b) =>
@@ -400,7 +490,9 @@ function generate() {
 		"assets — code compiled into the extension, the icon drawings generated into",
 		"it, and the font files shipped alongside it. Their license texts are",
 		"reproduced below. All of them are open source except the AWS Architecture",
-		"Icons, whose section states the terms they are redistributed under.",
+		"Icons, the Microsoft Azure Architecture Icons and the Microsoft Entra",
+		"architecture icons, whose sections state the terms they are redistributed",
+		"under.",
 		"",
 		"Package list:",
 		...listed.map((one) => `  - ${one.line}`),

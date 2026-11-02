@@ -1,45 +1,29 @@
 import type { Stencil } from "@jiscribe/canvas";
+import {
+	createIconSetStencils,
+	toIconSetStencilId,
+} from "@jiscribe/canvas-sdk";
 
-import { createAwsStencilIcon } from "./createAwsStencilIcon";
-import { toAwsIconStencilId } from "./toAwsIconStencilId";
-import { AWS_ICON_ENTRIES } from "../schema/icon/iconData.generated";
-import { readAwsIconLabel } from "../schema/icon/readAwsIconLabel";
-import { AWS_TIER1_ICONS } from "../schema/icon/tier1Icons";
+import { AWS_ICON_DRAWINGS } from "../drawing/iconDrawings.generated";
+import { awsIconCatalog } from "../schema/icon/awsIconCatalog";
 
-/** Every icon name, tier 1 first in palette order, then the rest of the set. */
-const ALL_ICON_NAMES: readonly string[] = [
-	...new Set([
-		...AWS_TIER1_ICONS.map(({ icon }) => icon),
-		...Object.keys(AWS_ICON_ENTRIES),
-	]),
-];
+/** Put before every awsIcon preset id (`awsIconServiceAwsLambda`). */
+export const AWS_ICON_STENCIL_ID_PREFIX = "awsIcon";
 
 /**
  * One awsIcon preset per icon in the set, so a library search can place any of
- * them; only {@link AWS_ICON_STENCIL_IDS} are laid out up front.
- *
- * The label rides in `defaultOverrides`, so a shape placed from the palette
- * comes with the short name already in it (`Lambda`, `S3`). It stays out of the
- * type's DOC_DEFAULTS, which are also the defaults a doc an AI writes falls back
- * to — every awsIcon would go by the same name.
+ * them; only {@link AWS_ICON_STENCIL_IDS} are laid out up front. A palette
+ * preset comes with tier 1's short name (`Lambda`, `S3`) already in its label.
  */
-export const AwsIconStencils: Stencil[] = ALL_ICON_NAMES.map((icon) => {
-	const label = readAwsIconLabel(icon);
-	if (label === null) {
-		throw new Error(
-			`AwsIconStencils: tier 1 names the icon "${icon}", which the icon set does not hold`,
-		);
-	}
-	return {
-		id: toAwsIconStencilId(icon),
-		objectType: "awsIcon",
-		label,
-		icon: createAwsStencilIcon(icon),
-		defaultOverrides: { icon, text: label },
-	};
+export const AwsIconStencils: Stencil[] = createIconSetStencils({
+	objectType: "awsIcon",
+	stencilIdPrefix: AWS_ICON_STENCIL_ID_PREFIX,
+	catalog: awsIconCatalog,
+	drawings: AWS_ICON_DRAWINGS,
 });
 
 /** The preset ids in palette order, for a host composing a toolbar of its own. */
-export const AWS_ICON_STENCIL_IDS: readonly string[] = AWS_TIER1_ICONS.map(
-	({ icon }) => toAwsIconStencilId(icon),
-);
+export const AWS_ICON_STENCIL_IDS: readonly string[] =
+	awsIconCatalog.paletteNames.map((icon) =>
+		toIconSetStencilId(AWS_ICON_STENCIL_ID_PREFIX, icon),
+	);

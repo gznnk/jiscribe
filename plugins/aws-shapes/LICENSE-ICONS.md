@@ -1,9 +1,10 @@
 # Third-party assets: AWS Architecture Icons
 
 The drawings this package ships in
-`plugins/aws-shapes/src/schema/icon/iconData.generated.ts` are
+`plugins/aws-shapes/src/drawing/iconDrawings.generated.ts` are
 generated from the **AWS Architecture Icons** asset package (release
-2026-07-31).
+2026-07-31), as are the icon names and labels in
+`plugins/aws-shapes/src/schema/icon/iconCatalog.generated.ts`.
 
 AWS Architecture Icons are © Amazon Web Services, Inc. or its affiliates, and
 are used under the AWS terms published at
@@ -16,10 +17,14 @@ made available under CC-BY-ND 2.0): unmodified, with attribution.
 data module changes what is drawn: no coordinate is rounded, no fill is
 substituted, and where AWS ships a light and a dark rendition of a drawing both
 are kept and the theme picks between them. Only the technical embedding is
-adjusted — `<title>` elements, `xmlns` attributes and clipPaths that clip the
-whole viewBox (no-ops) are dropped, the ids that survive are rewritten so that
-several icons can share one document, and attribute names carry React's
-spelling. `plugins/aws-shapes/scripts/generateIconData.mjs` is the whole of that
+adjusted — `<title>` elements, the root `<svg>`'s namespace, size and
+`version` attributes, ids nothing refers to, `clip-rule` where no clipPath can
+read it, and clipPaths that clip the whole viewBox (no-ops) are dropped; a
+`fill` on the root `<svg>` moves onto a `<g>` wrapping the drawing; the ids
+that are referred to are rewritten so that several icons can share one
+document; and attribute names carry React's spelling.
+`plugins/aws-shapes/scripts/generateIconData.mjs` and the converter it calls,
+`packages/canvas-sdk/icon-set-generator/index.mjs`, are the whole of that
 pipeline.
 
 The `awsIcon` shape offers no stroke and no fill for the same reason: an icon

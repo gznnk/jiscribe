@@ -17,8 +17,8 @@ import {
 	AwsIconExtraKeys,
 	AwsIconFeatures,
 } from "./schema/AwsIconDoc";
+import { awsIconCatalog } from "./schema/icon/awsIconCatalog";
 import { validateAwsGroupKind } from "./schema/validateAwsGroupKind";
-import { validateAwsIconName } from "./schema/validateAwsIconName";
 
 export const awsIconDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: AwsIconFeatures,
@@ -33,7 +33,7 @@ export const awsIconDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	// would only centre the drawing on the shorter side, so offering that way in
 	// would look like a bug.
 	supportsBounds: false,
-	validateExtra: validateAwsIconName,
+	validateExtra: awsIconCatalog.validateIconName,
 });
 
 export const awsGroupDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -65,25 +65,25 @@ export const awsShapesDocPlugin: CanvasDocPlugin = {
 
 // The name tables and the palette order are read by headless consumers too (the
 // AI documentation generator, diagnostics). Taking them through the UI entry
-// would pull react in, so they leave from here.
+// would pull react in, so they leave from here. The drawings do not: they are
+// AWS_ICON_DRAWINGS, from the UI entry alone.
+export { awsIconCatalog } from "./schema/icon/awsIconCatalog";
 export { AWS_ICON_ALIASES } from "./schema/icon/iconAliases";
 export {
+	AWS_ICON_CATALOG_ENTRIES,
 	AWS_ICON_RELEASE,
 	AWS_ICON_SOURCE_URL,
-	AWS_ICON_ENTRIES,
-} from "./schema/icon/iconData.generated";
+} from "./schema/icon/iconCatalog.generated";
+export { AWS_ICON_TIERS } from "./schema/icon/AwsIconCatalogEntry";
+export type {
+	AwsIconCatalogEntry,
+	AwsIconTier,
+} from "./schema/icon/AwsIconCatalogEntry";
 export {
 	AWS_TIER1_ICON_NAMES,
 	AWS_TIER1_ICONS,
 } from "./schema/icon/tier1Icons";
 export type { AwsTier1Icon } from "./schema/icon/tier1Icons";
-export {
-	isKnownAwsIconName,
-	readAwsIcon,
-	resolveAwsIconName,
-} from "./schema/icon/resolveAwsIconName";
-export { normalizeAwsIconName } from "./schema/icon/normalizeAwsIconName";
-export { suggestAwsIconNames } from "./schema/icon/suggestAwsIconNames";
 export {
 	AWS_GROUP_KIND_STYLES,
 	readAwsGroupKindStyle,

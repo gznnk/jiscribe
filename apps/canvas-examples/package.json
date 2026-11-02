@@ -17,6 +17,7 @@
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/plugin-annotation-shapes": "workspace:*",
 		"@jiscribe/plugin-aws-shapes": "workspace:*",
+		"@jiscribe/plugin-azure-shapes": "workspace:*",
 		"@jiscribe/plugin-container-shapes": "workspace:*",
 		"@jiscribe/plugin-er-shapes": "workspace:*",
 		"@jiscribe/plugin-flowchart-shapes": "workspace:*",

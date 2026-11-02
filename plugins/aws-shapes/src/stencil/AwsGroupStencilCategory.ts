@@ -1,7 +1,9 @@
 import type { StencilCategory } from "@jiscribe/canvas";
+import { createIconSetStencilIcon } from "@jiscribe/canvas-sdk";
 
 import { AWS_GROUP_STENCIL_IDS } from "./AwsGroupStencils";
-import { createAwsStencilIcon } from "./createAwsStencilIcon";
+import { AWS_ICON_DRAWINGS } from "../drawing/iconDrawings.generated";
+import { awsIconCatalog } from "../schema/icon/awsIconCatalog";
 
 /**
  * The awsGroup category, kept a section apart from the icons: the frames are a
@@ -12,6 +14,10 @@ import { createAwsStencilIcon } from "./createAwsStencilIcon";
 export const awsGroupStencilCategory: StencilCategory = {
 	id: "aws-group",
 	label: { en: "AWS Groups", ja: "AWS グループ" },
-	icon: createAwsStencilIcon("group/virtual-private-cloud-vpc"),
+	icon: createIconSetStencilIcon({
+		catalog: awsIconCatalog,
+		drawings: AWS_ICON_DRAWINGS,
+		icon: "group/virtual-private-cloud-vpc",
+	}),
 	presetIds: [...AWS_GROUP_STENCIL_IDS],
 };

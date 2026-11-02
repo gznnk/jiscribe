@@ -9,6 +9,10 @@
 		".": "./src/index.ts",
 		"./doc": "./src/doc.ts",
 		"./tools": "./src/tools.ts",
+		"./icon-set-generator": {
+			"types": "./icon-set-generator/index.d.mts",
+			"default": "./icon-set-generator/index.mjs"
+		},
 		"./testing": "./src/testing.ts",
 		"./testing/e2e": "./src/testing-e2e.ts",
 		"./testing/playwright-config": "./src/testing-playwright-config.ts",

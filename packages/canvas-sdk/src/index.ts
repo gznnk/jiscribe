@@ -66,3 +66,30 @@ export {
 // `stencils` array of a type whose single preset is named after the type.
 export { createStencilIcon } from "./stencil/createStencilIcon";
 export { createTypeStencils } from "./stencil/createTypeStencils";
+
+// ---------------------------------------------------------------------------
+// Icon sets shipped as generated data: the drawing side of what `./doc`'s
+// createIconSetCatalog looks names up for. A set hands its catalog and its
+// generated drawings to these and gets its shape's component, its presets and
+// its stencil category back.
+// ---------------------------------------------------------------------------
+export { createIconSetObject } from "./presentation/iconSet/createIconSetObject";
+export type {
+	IconSetObjectParams,
+	IconSetObjectState,
+} from "./presentation/iconSet/createIconSetObject";
+export { IconSetArt } from "./presentation/iconSet/IconSetArt";
+export {
+	calcIconSetArtPlacement,
+	readIconSetViewBoxSize,
+} from "./presentation/iconSet/calcIconSetArtPlacement";
+export type { IconSetArtPlacement } from "./presentation/iconSet/calcIconSetArtPlacement";
+export { IconSetArtGroup } from "./presentation/iconSet/IconSetStyled";
+export { readIconSetArt } from "./presentation/iconSet/readIconSetArt";
+export { createIconSetStencilIcon } from "./stencil/iconSet/createIconSetStencilIcon";
+export type { IconSetStencilIconParams } from "./stencil/iconSet/createIconSetStencilIcon";
+export { createIconSetStencils } from "./stencil/iconSet/createIconSetStencils";
+export type { IconSetStencilsParams } from "./stencil/iconSet/createIconSetStencils";
+export { createIconSetStencilCategory } from "./stencil/iconSet/createIconSetStencilCategory";
+export type { IconSetStencilCategoryParams } from "./stencil/iconSet/createIconSetStencilCategory";
+export { toIconSetStencilId } from "./stencil/iconSet/toIconSetStencilId";

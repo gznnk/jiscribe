@@ -234,7 +234,8 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
 - **`colorScheme`**: a theme field shapes read as a JS value (`CanvasColorScheme`). It names the ground
   the tokens paint (`"light"` / `"dark"`) for artwork that ships a rendition per ground and cannot be
   recoloured through tokens — the AWS icons pick their official Light or Dark drawing by it
-  (`plugins/aws-shapes/src/presentation/AwsIconArt.tsx`, read through `useCanvasTheme()`). It is required
+  (canvas-sdk's `IconSetArt`, `packages/canvas-sdk/src/presentation/iconSet/IconSetArt.tsx`, read
+  through `useCanvasTheme()`). It is required
   rather than inferred from `canvasBg`, because a token may be a `var(...)` string the canvas cannot
   read. A host that keeps its tokens fixed but follows the editor's ground (VSCode) therefore holds one
   theme per scheme and swaps them.

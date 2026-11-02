@@ -1,23 +1,28 @@
+import { toIconSetStencilId } from "@jiscribe/canvas-sdk";
 import { describe, expect, it } from "vitest";
 
-import { AWS_ICON_ENTRIES } from "../../schema/icon/iconData.generated";
+import { AWS_ICON_CATALOG_ENTRIES } from "../../schema/icon/iconCatalog.generated";
 import { AWS_TIER1_ICONS } from "../../schema/icon/tier1Icons";
 import { awsStencilCategory } from "../AwsIconStencilCategory";
 import { AWS_ICON_STENCIL_IDS, AwsIconStencils } from "../AwsIconStencils";
-import { toAwsIconStencilId } from "../toAwsIconStencilId";
+
+const toAwsPresetId = (icon: string): string =>
+	toIconSetStencilId("awsIcon", icon);
 
 const search = awsStencilCategory.search;
 const registeredIds = new Set(AwsIconStencils.map((stencil) => stencil.id));
 
 describe("AwsIconStencils", () => {
 	it("registers every icon in the set under its own id", () => {
-		expect(AwsIconStencils).toHaveLength(Object.keys(AWS_ICON_ENTRIES).length);
+		expect(AwsIconStencils).toHaveLength(
+			Object.keys(AWS_ICON_CATALOG_ENTRIES).length,
+		);
 		expect(registeredIds.size).toBe(AwsIconStencils.length);
 	});
 
 	it("keeps the palette to tier 1, in tier 1's order", () => {
 		expect(AWS_ICON_STENCIL_IDS).toEqual(
-			AWS_TIER1_ICONS.map(({ icon }) => toAwsIconStencilId(icon)),
+			AWS_TIER1_ICONS.map(({ icon }) => toAwsPresetId(icon)),
 		);
 		expect(AWS_ICON_STENCIL_IDS).toHaveLength(102);
 		expect(AWS_ICON_STENCIL_IDS[1]).toBe("awsIconServiceAwsLambda");
@@ -34,13 +39,13 @@ describe("AwsIconStencils", () => {
 			text: "Lambda",
 		});
 
-		const outsideTier1 = Object.keys(AWS_ICON_ENTRIES).find(
+		const outsideTier1 = Object.keys(AWS_ICON_CATALOG_ENTRIES).find(
 			(name) => !AWS_TIER1_ICONS.some(({ icon }) => icon === name),
 		)!;
 		const stencil = AwsIconStencils.find(
-			(candidate) => candidate.id === toAwsIconStencilId(outsideTier1),
+			(candidate) => candidate.id === toAwsPresetId(outsideTier1),
 		);
-		expect(stencil?.label).toBe(AWS_ICON_ENTRIES[outsideTier1]?.label);
+		expect(stencil?.label).toBe(AWS_ICON_CATALOG_ENTRIES[outsideTier1]?.label);
 	});
 });
 
@@ -57,9 +62,9 @@ describe("awsStencilCategory.search", () => {
 	// Two icons outside Compute carry "compute" in their own names, so the
 	// count is the category plus those
 	it("lists a whole AWS category for its name", () => {
-		const computeIds = Object.entries(AWS_ICON_ENTRIES)
+		const computeIds = Object.entries(AWS_ICON_CATALOG_ENTRIES)
 			.filter(([, entry]) => entry.category === "Compute")
-			.map(([name]) => toAwsIconStencilId(name));
+			.map(([name]) => toAwsPresetId(name));
 		const result = search!("compute");
 
 		expect(computeIds.length).toBeGreaterThan(0);

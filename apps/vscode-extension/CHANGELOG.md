@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Azure Architecture Icons.** The shape library gains an **Azure** section:
+  54 of the icons an Azure diagram reaches for, each labelled with the
+  product's official name when placed, and **Show all ›** for all 637 in one
+  section per Azure category — the Azure Architecture Icons and Microsoft Entra
+  ID from the Entra icon package. A `.jis` file names one with `azureIcon` and
+  its `icon` (`virtual-machine`, or a short name such as `vm`, `aks` or
+  `entra`). The icons are Microsoft's, shipped unmodified under Microsoft's icon terms
+  (THIRD-PARTY-NOTICES.txt).
+
 ### Changed
 
 - **The Icon and AWS sections of the shape library can show every icon.**

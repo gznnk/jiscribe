@@ -6,14 +6,14 @@ import {
 	isAwsGroupKind,
 } from "../AwsGroupDoc";
 import { AWS_GROUP_KIND_STYLES, readAwsGroupKindStyle } from "../awsGroupKinds";
-import { AWS_ICON_ENTRIES } from "../icon/iconData.generated";
+import { AWS_ICON_CATALOG_ENTRIES } from "../icon/iconCatalog.generated";
 
 describe("AWS_GROUP_KIND_STYLES", () => {
 	it("names a corner icon that exists wherever it names one", () => {
 		const dangling = Object.entries(AWS_GROUP_KIND_STYLES).filter(
 			([, style]) =>
 				style.cornerIcon !== undefined &&
-				AWS_ICON_ENTRIES[style.cornerIcon] === undefined,
+				AWS_ICON_CATALOG_ENTRIES[style.cornerIcon] === undefined,
 		);
 		expect(dangling).toEqual([]);
 	});

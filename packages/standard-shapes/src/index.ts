@@ -1,4 +1,4 @@
-// The standard shape set as a host mounts it: the eleven plugins a `<Canvas>` is
+// The standard shape set as a host mounts it: the twelve plugins a `<Canvas>` is
 // configured with, plus the declarations that make their stencils reachable —
 // the toolbar sections, the stencil bar's presets and the shape library
 // sidebar. The headless half lives behind ./doc and pulls in no react.
@@ -29,6 +29,10 @@ import {
 	awsStencilCategory,
 } from "@jiscribe/plugin-aws-shapes";
 import {
+	azureShapesPlugin,
+	azureStencilCategory,
+} from "@jiscribe/plugin-azure-shapes";
+import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
@@ -51,7 +55,7 @@ import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 /**
- * The eleven plugins of the standard shape set, in the same order as
+ * The twelve plugins of the standard shape set, in the same order as
  * `standardDocPlugins`. Pass to `CanvasConfig.plugins`; a shape whose plugin is
  * missing is simply not drawn, so this array and the one the parser is given
  * have to describe the same set.
@@ -68,13 +72,14 @@ export const standardPlugins: readonly CanvasPlugin[] = [
 	annotationPlugin,
 	lucideIconPlugin,
 	awsShapesPlugin,
+	azureShapesPlugin,
 ];
 
 /**
  * The presets the standard set pins on the stencil bar, in display order:
  * the six a diagram is mostly built out of, ordered area → line → text.
  * Everything else the set ships — the `markdown` and `table` presets and the
- * nine plugin categories — is reached through the shape library sidebar
+ * ten plugin categories — is reached through the shape library sidebar
  * instead, so pass `standardStencilLibrarySections` alongside this or those
  * shapes become undrawable by hand.
  *
@@ -163,4 +168,5 @@ export const standardStencilLibrarySections: StencilCategory[] = [
 	lucideIconStencilCategory,
 	awsStencilCategory,
 	awsGroupStencilCategory,
+	azureStencilCategory,
 ];

@@ -10,7 +10,7 @@ const S3_PRESET = "awsIconServiceAmazonSimpleStorageService";
 /**
  * The box's own size. `boundingBox()` takes the label's hit area in as well and
  * so cannot tell whether the box is square. The first rect is the box-filling
- * hit area (AwsIconHitArea).
+ * hit area (canvas-sdk's IconSetHitArea).
  */
 const readBoxSize = async (
 	canvas: CanvasDriver,

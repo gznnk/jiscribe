@@ -25,6 +25,10 @@ import {
 	awsStencilCategory,
 } from "@jiscribe/plugin-aws-shapes";
 import {
+	azureShapesPlugin,
+	azureStencilCategory,
+} from "@jiscribe/plugin-azure-shapes";
+import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
@@ -56,7 +60,7 @@ import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 //   sticky     sticky
 //   markdown   markdown
 //   lucide     lucideIcon
-// Only rect / ellipse / polyline / polygon / text / connector are core. The aws and er
+// Only rect / ellipse / polyline / polygon / text / connector are core. The aws, azure and er
 // plugins are registered alongside them; their shapes are reached through the shape
 // library below.
 const plugins = [
@@ -71,6 +75,7 @@ const plugins = [
 	annotationPlugin,
 	lucideIconPlugin,
 	awsShapesPlugin,
+	azureShapesPlugin,
 ];
 
 // The same array has to reach BOTH sides, and neither side complains when it does not:
@@ -134,6 +139,7 @@ const stencilLibrarySections: StencilCategory[] = [
 	lucideIconStencilCategory,
 	awsStencilCategory,
 	awsGroupStencilCategory,
+	azureStencilCategory,
 ];
 
 const legendMarkdown = [
@@ -353,7 +359,7 @@ const buildPluginsDoc = (): CanvasDoc => {
 const pluginsDoc = buildPluginsDoc();
 
 /**
- * Assembling a canvas out of shape plugins: the ten shipped plugins are registered at
+ * Assembling a canvas out of shape plugins: the twelve shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
  * the shape library (the switch at the toolbar's far right) to draw more of them.
  */

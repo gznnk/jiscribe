@@ -7,34 +7,29 @@
 // - awsGroup … a VPC / subnet / … frame whose colour, line style and corner
 //   badge all follow from `kind`
 //
-// The drawings live in a data module generated from an unpacked AWS asset
-// package (scripts/generateIconData.mjs). What may be done with them is in
-// LICENSE-ICONS.md. The headless way in (parse-time validation) is ./doc, with
-// awsShapesDocPlugin.
+// The icons are generated from an unpacked AWS asset package
+// (scripts/generateIconData.mjs) into two modules: the catalog (names, labels,
+// categories), which the headless side reads, and the drawings, which only this
+// entry loads. What may be done with the drawings is in LICENSE-ICONS.md. The
+// headless way in (parse-time validation) is ./doc, with awsShapesDocPlugin.
 export * from "./schema/AwsIconDoc";
 export * from "./schema/AwsGroupDoc";
 export * from "./state/AwsIconState";
 export * from "./state/AwsGroupState";
 
+export { awsIconCatalog } from "./schema/icon/awsIconCatalog";
 export type {
-	AwsIconEntry,
-	AwsIconNode,
+	AwsIconCatalogEntry,
 	AwsIconTier,
-} from "./schema/icon/AwsIconNode";
-export { AWS_ICON_TIERS } from "./schema/icon/AwsIconNode";
+} from "./schema/icon/AwsIconCatalogEntry";
+export { AWS_ICON_TIERS } from "./schema/icon/AwsIconCatalogEntry";
 export { AWS_ICON_ALIASES } from "./schema/icon/iconAliases";
 export {
-	AWS_ICON_ENTRIES,
+	AWS_ICON_CATALOG_ENTRIES,
 	AWS_ICON_RELEASE,
 	AWS_ICON_SOURCE_URL,
-} from "./schema/icon/iconData.generated";
-export { normalizeAwsIconName } from "./schema/icon/normalizeAwsIconName";
-export {
-	isKnownAwsIconName,
-	readAwsIcon,
-	resolveAwsIconName,
-} from "./schema/icon/resolveAwsIconName";
-export { suggestAwsIconNames } from "./schema/icon/suggestAwsIconNames";
+} from "./schema/icon/iconCatalog.generated";
+export { AWS_ICON_DRAWINGS } from "./drawing/iconDrawings.generated";
 export {
 	AWS_TIER1_ICON_NAMES,
 	AWS_TIER1_ICONS,
@@ -50,29 +45,13 @@ export {
 	calcAwsGroupVisualBounds,
 } from "./presentation/calcAwsGroupLabelTextRegion";
 export { validateAwsGroupKind } from "./schema/validateAwsGroupKind";
-export { validateAwsIconName } from "./schema/validateAwsIconName";
 
 export { AwsGroup } from "./presentation/AwsGroup";
 export { AwsIcon } from "./presentation/AwsIcon";
-export { AwsIconArt, renderAwsIconNodes } from "./presentation/AwsIconArt";
-export {
-	calcAwsIconArtPlacement,
-	readViewBoxSize,
-} from "./presentation/calcAwsIconArtPlacement";
-export type { AwsIconArtPlacement } from "./presentation/calcAwsIconArtPlacement";
-export { readAwsIconDrawing } from "./presentation/readAwsIconDrawing";
 export { resolveAwsGroupStroke } from "./presentation/resolveAwsGroupStroke";
 export type { AwsGroupStroke } from "./presentation/resolveAwsGroupStroke";
 
-export { AWS_ICON_CATEGORIES } from "./schema/icon/awsIconBrowseGroups";
-export { searchAwsIcons } from "./schema/icon/searchAwsIcons";
-export type {
-	AwsIconFilter,
-	AwsIconSearchResult,
-} from "./schema/icon/searchAwsIcons";
-
 export { createAwsGroupFrameIcon } from "./stencil/createAwsGroupFrameIcon";
-export { createAwsStencilIcon } from "./stencil/createAwsStencilIcon";
 export {
 	AWS_ICON_STENCIL_IDS,
 	AwsIconStencils,

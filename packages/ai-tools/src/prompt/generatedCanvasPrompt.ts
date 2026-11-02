@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+e611eab9 -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+144194ae -->
 
 # Drawing on a Jiscribe canvas
 
@@ -283,6 +283,7 @@ rather than a \`rect\` with a label on it.
 | \`erEntity\`              | entity with typed columns (ER diagram)                             |
 | \`awsIcon\`               | AWS service / resource icon (a labelled, connectable node)         |
 | \`awsGroup\`              | AWS boundary frame (VPC, subnet, region, account)                  |
+| \`azureIcon\`             | Azure service icon (a labelled, connectable node)                  |
 | \`polyline\`              | open line                                                          |
 | \`polygon\`               | closed shape from points                                           |
 | \`group\`                 | container of child objects                                         |

@@ -1,33 +1,24 @@
 import type { StencilCategory } from "@jiscribe/canvas";
+import { createIconSetStencilCategory } from "@jiscribe/canvas-sdk";
 
-import { AWS_ICON_STENCIL_IDS } from "./AwsIconStencils";
-import { createAwsStencilIcon } from "./createAwsStencilIcon";
-import { toAwsIconStencilId } from "./toAwsIconStencilId";
-import { listAwsIconBrowseGroups } from "../schema/icon/awsIconBrowseGroups";
-import { searchAwsIcons } from "../schema/icon/searchAwsIcons";
+import { AWS_ICON_STENCIL_ID_PREFIX } from "./AwsIconStencils";
+import { AWS_ICON_DRAWINGS } from "../drawing/iconDrawings.generated";
+import { awsIconCatalog } from "../schema/icon/awsIconCatalog";
 
 /**
  * The awsIcon category. Core's default bar does not carry it, so a host puts
  * it into `stencilLibrary.sections` (a sidebar section) or into
  * `toolbar.sections` as `{ type: "stencilCategory", category }` (a flyout).
- *
- * A category rather than a single preset because the shape means nothing until
- * an icon is chosen, and a placed shape offers no menu to change it. The
- * palette is listed up front; the shape library's "show all" view holds the
- * whole set.
+ * The palette is listed up front; the shape library's "show all" view holds
+ * the whole set.
  */
-export const awsStencilCategory: StencilCategory = {
-	id: "aws",
-	label: { en: "AWS", ja: "AWS" },
-	icon: createAwsStencilIcon("service/amazon-ec2"),
-	presetIds: [...AWS_ICON_STENCIL_IDS],
-	search: (query) => {
-		const { names, total } = searchAwsIcons({ query });
-		return { presetIds: names.map(toAwsIconStencilId), matchCount: total };
+export const awsStencilCategory: StencilCategory = createIconSetStencilCategory(
+	{
+		id: "aws",
+		label: { en: "AWS", ja: "AWS" },
+		icon: "service/amazon-ec2",
+		stencilIdPrefix: AWS_ICON_STENCIL_ID_PREFIX,
+		catalog: awsIconCatalog,
+		drawings: AWS_ICON_DRAWINGS,
 	},
-	browseGroups: listAwsIconBrowseGroups().map(({ id, label, names }) => ({
-		id,
-		label,
-		presetIds: names.map(toAwsIconStencilId),
-	})),
-};
+);

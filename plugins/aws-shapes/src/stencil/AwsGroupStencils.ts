@@ -1,11 +1,13 @@
 import type { Stencil } from "@jiscribe/canvas";
+import { createIconSetStencilIcon } from "@jiscribe/canvas-sdk";
 import type { LocaleMessages } from "@jiscribe/canvas-sdk";
 
 import { createAwsGroupFrameIcon } from "./createAwsGroupFrameIcon";
-import { createAwsStencilIcon } from "./createAwsStencilIcon";
+import { AWS_ICON_DRAWINGS } from "../drawing/iconDrawings.generated";
 import type { AwsGroupKind } from "../schema/AwsGroupDoc";
 import { AWS_GROUP_KINDS } from "../schema/AwsGroupDoc";
 import { AWS_GROUP_KIND_STYLES } from "../schema/awsGroupKinds";
+import { awsIconCatalog } from "../schema/icon/awsIconCatalog";
 
 /** Palette name per kind. The badge alone does not say which frame it is, so every kind has one. */
 const KIND_LABELS: Readonly<Record<AwsGroupKind, LocaleMessages<string>>> = {
@@ -86,7 +88,11 @@ export const AwsGroupStencils: Stencil[] = AWS_GROUP_KINDS.map((kind) => {
 		icon:
 			cornerIcon === undefined
 				? createAwsGroupFrameIcon({ strokeColor, strokeDashType })
-				: createAwsStencilIcon(cornerIcon),
+				: createIconSetStencilIcon({
+						catalog: awsIconCatalog,
+						drawings: AWS_ICON_DRAWINGS,
+						icon: cornerIcon,
+					}),
 		defaultOverrides: { kind },
 	};
 });

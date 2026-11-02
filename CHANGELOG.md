@@ -108,6 +108,34 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   still writes plain `<text>`, since a viewer such as GitHub strips
   foreignObject. The default `"text"` is what every box did before. The
   markdown card passes `"html"`.
+- **canvas-sdk carries a kit for icon sets shipped as generated data.**
+  `createIconSetCatalog` (`@jiscribe/canvas-sdk/doc`) closes one set's name
+  tables into its lookup: resolution through aliases, mechanical shorthands and
+  spelling variants, suggestions, the library search, the "show all" sections
+  and the `icon` validator. On the drawing side, `createIconSetObject`,
+  `createIconSetStencils` and `createIconSetStencilCategory` build the shape's
+  component, its presets and its stencil category from that lookup and the
+  generated drawings. `IconSetArt` suffixes the ids a drawing defines per
+  instance, so the same icon drawn twice never puts one id in the document
+  twice. `@jiscribe/canvas-sdk/icon-set-generator` is the set-independent half
+  of a generator: it converts an SVG on allow-lists and fails on anything not
+  on them, and writes the catalog and the drawings as two modules.
+- **Azure architecture diagrams: `@jiscribe/plugin-azure-shapes`.** The new
+  `azureIcon` draws any of the 636 Microsoft Azure Architecture Icons (V24),
+  and Microsoft Entra ID (`entra-id`, also `entra` / `aad`) from the Microsoft
+  Entra architecture icons (Oct 2023), which the Azure package does not carry,
+  all redistributed unmodified under Microsoft's icon terms (the plugin's
+  `LICENSE-ICONS.md`). It is built the way `awsIcon` is — a labelled,
+  connectable node whose label hangs under the box, with no stroke or fill — and
+  `icon` takes a flat kebab-case name (`virtual-machine`, `azure-cosmos-db`), the
+  short names diagrams use (`vm`, `aks`, `vnet`, `kv`) and the name with
+  `azure-` / `microsoft-` dropped (`cosmos-db`). `azureStencilCategory` lays out
+  a palette of 54 icons labelled with the products' official names, searches the
+  whole set and browses it in 25 sections. `@jiscribe/standard-shapes` now
+  carries twelve plugins: `standardPlugins`, `standardDocPlugins` and
+  `standardStencilLibrarySections` include it, so every host — the editors, the
+  VSCode extension, the MCP viewer, the CLI — draws Azure icons. There is no
+  Azure frame shape; the container plugin's frames serve.
 
 ### Changed
 
@@ -200,6 +228,23 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   through. A drawing without one still goes through a `blob:` URL. A page whose
   CSP allows `img-src blob:` alone fails to export a markdown card to PNG
   until `data:` is added.
+- **Breaking: `@jiscribe/plugin-aws-shapes` keeps its icon names and its
+  drawings in two modules.** `@jiscribe/plugin-aws-shapes/doc` loads the
+  catalog alone (names, labels, categories, viewBoxes) and no drawing, so a
+  headless host no longer reads the 2.4 MB of drawings. The per-function name
+  API is folded into `awsIconCatalog` (`resolveName`, `isKnownName`,
+  `readEntry`, `readLabel`, `suggestNames`, `search`, `listBrowseGroups`,
+  `categories`, `validateIconName`), and the drawings are `AWS_ICON_DRAWINGS`.
+  Gone: `AWS_ICON_ENTRIES` (now `AWS_ICON_CATALOG_ENTRIES`, without drawings),
+  `AwsIconEntry` / `AwsIconNode` (now `AwsIconCatalogEntry` / canvas-sdk's
+  `IconSetNode`), `resolveAwsIconName`, `isKnownAwsIconName`, `readAwsIcon`,
+  `normalizeAwsIconName`, `suggestAwsIconNames`, `searchAwsIcons` with
+  `AwsIconFilter` / `AwsIconSearchResult`, `AWS_ICON_CATEGORIES`,
+  `validateAwsIconName`, `AwsIconArt`, `renderAwsIconNodes`,
+  `calcAwsIconArtPlacement`, `readViewBoxSize`, `AwsIconArtPlacement`,
+  `readAwsIconDrawing` and `createAwsStencilIcon`; their counterparts are the
+  canvas-sdk icon-set kit's. Every name an `awsIcon`'s `icon` could hold
+  resolves to the same icon as before, and the diagnostics read the same.
 
 ### Removed
 

@@ -67,6 +67,9 @@ export const CANONICAL_TYPE_ORDER = [
 	// frame drawn around a group of them
 	"awsIcon",
 	"awsGroup",
+	// azure-shapes: one Azure Architecture Icon or Microsoft Entra ID (frames come
+	// from container)
+	"azureIcon",
 	"polyline",
 	"polygon",
 	"group",

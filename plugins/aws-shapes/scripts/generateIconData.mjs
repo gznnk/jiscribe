@@ -1,24 +1,30 @@
-// Generates src/schema/icon/iconData.generated.ts from an unpacked AWS
-// Architecture Icons asset package. The output is committed, so this script is
-// the only thing that ever reads the zip.
+// Generates the two icon modules from an unpacked AWS Architecture Icons asset
+// package: the catalog (src/schema/icon/iconCatalog.generated.ts — names,
+// labels, categories, viewBoxes) and the drawings
+// (src/drawing/iconDrawings.generated.ts). The output is committed, so this
+// script is the only thing that ever reads the zip.
 //
 //   pnpm --filter @jiscribe/plugin-aws-shapes generate:icons -- <unpacked directory>
 //
 // The output is unformatted (prettier is not pinned in this package). Run
-// `pnpm format` from the repository root afterwards.
+// prettier over the two files from the repository root afterwards.
 //
 // What is taken: every Group icon, every 48px Service icon, every Resource icon
 // (General included). Category-Icons are branding, not diagram parts.
 //
-// Nothing here changes what is drawn. The drawings are AWS's and are
-// redistributed unmodified (LICENSE-ICONS.md): no coordinate is rounded and no
-// fill is substituted. Only the embedding is adjusted — `<title>`, `xmlns` and
-// clipPaths that clip the whole viewBox (no-ops) are dropped, ids are rewritten
-// to ones that stay unique once several icons share a document, and attribute
-// names carry React's spelling.
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+// This script only collects the files and names the icons. Converting an asset
+// into a drawing, and what that conversion may and may not adjust, is
+// @jiscribe/canvas-sdk/icon-set-generator's.
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+	convertIconSetSvg,
+	formatIconSetCatalogModule,
+	formatIconSetDrawingsModule,
+	listSvgFiles,
+} from "@jiscribe/canvas-sdk/icon-set-generator";
 
 /** Where the assets came from, recorded in the generated header. Changes each quarter. */
 const SOURCE_ZIP_URL =
@@ -27,27 +33,8 @@ const SOURCE_ZIP_URL =
 /** Asset release, matching the MMDDYYYY suffix of the unpacked directory names. */
 const ASSET_RELEASE = "07312026";
 
-/**
- * Attributes dropped as embedding noise. `id` would collide once several icons
- * are drawn in one document, so the only ones that survive are rewritten by
- * {@link planClipPathIds}; `clip-rule` is inert here (no clipPath in the set
- * holds a path); `xmlns` belongs to the `<svg>` element that is not kept.
- */
-const DROPPED_ATTRIBUTES = new Set(["id", "clip-rule", "xmlns", "xmlns:xlink"]);
-
 /** The only character a kebab-case name segment joins words with. */
 const NAME_SEPARATOR = "-";
-
-const TAG_PATTERN =
-	/<(\/?)([A-Za-z][\w:-]*)((?:\s+[\w:.-]+\s*=\s*"[^"]*")*)\s*(\/?)>/g;
-const ATTRIBUTE_PATTERN = /([\w:.-]+)\s*=\s*"([^"]*)"/g;
-
-/** Walks a directory tree and returns the path of every file under it. */
-const listFiles = (dir) =>
-	readdirSync(dir).flatMap((entry) => {
-		const path = join(dir, entry);
-		return statSync(path).isDirectory() ? listFiles(path) : [path];
-	});
 
 /**
  * Lowercases one name segment into kebab-case. Punctuation (`.NET`) collapses
@@ -90,189 +77,20 @@ const toLabel = (stem) =>
 const toCategory = (directoryName) =>
 	directoryName.replace(/^(Arch|Res)_/, "").replaceAll(NAME_SEPARATOR, " ");
 
-/**
- * Reads an SVG into an element tree. The assets hold only `<rect>` / `<path>` /
- * `<polygon>` / `<g>` and a handful of `<defs><clipPath>`, and the sole text
- * node is inside `<title>`, so scanning tags alone rebuilds the tree.
- */
-const parseSvgTree = (source, filePath) => {
-	const root = { tag: "#root", attrs: {}, children: [] };
-	const stack = [root];
-	for (const match of source.matchAll(TAG_PATTERN)) {
-		const [, closing, tag, attributeSource, selfClosing] = match;
-		if (tag === "svg") {
-			continue;
-		}
-		if (closing === "/") {
-			const open = stack.pop();
-			if (open === undefined || open.tag !== tag) {
-				throw new Error(
-					`${filePath}: </${tag}> does not close its opening tag`,
-				);
-			}
-			continue;
-		}
-		const attrs = {};
-		for (const [, name, value] of attributeSource.matchAll(ATTRIBUTE_PATTERN)) {
-			attrs[name] = value;
-		}
-		const element = { tag, attrs, children: [] };
-		stack[stack.length - 1].children.push(element);
-		if (selfClosing !== "/") {
-			stack.push(element);
-		}
-	}
-	if (stack.length !== 1) {
-		throw new Error(`${filePath}: an element is left unclosed`);
-	}
-	return root;
-};
-
-/** Every element of a tree, parents before children. */
-const walkElements = function* (element) {
-	for (const child of element.children) {
-		yield child;
-		yield* walkElements(child);
-	}
-};
-
-/**
- * Whether a clipPath clips nothing at all: one untransformed rect over the whole
- * viewBox. Those are Figma's artboard bounds and can go; anything else clips for
- * real and is kept, or the picture would change. An empty clipPath is the
- * opposite of a no-op (it hides everything it is applied to), so it is kept too.
- */
-const isFullViewBoxClip = (element, viewBoxSize) =>
-	element.children.length > 0 &&
-	element.children.every((child) => {
-		const { x = "0", y = "0", width, height, transform } = child.attrs;
-		return (
-			child.tag === "rect" &&
-			transform === undefined &&
-			Number(x) === 0 &&
-			Number(y) === 0 &&
-			Number(width) === viewBoxSize.width &&
-			Number(height) === viewBoxSize.height
-		);
-	});
-
-/**
- * Decides what becomes of every clipPath in one file: absent from the map means
- * it clips nothing and is dropped, present means it is kept under the id given,
- * which carries the icon's own name so two icons in one document cannot collide.
- */
-const planClipPathIds = (root, viewBoxSize, name) => {
-	const idByOldId = new Map();
-	for (const element of walkElements(root)) {
-		if (element.tag !== "clipPath" || isFullViewBoxClip(element, viewBoxSize)) {
-			continue;
-		}
-		idByOldId.set(
-			element.attrs.id,
-			`aws-${name.replaceAll("/", "-")}-clip-${idByOldId.size}`,
-		);
-	}
-	return idByOldId;
-};
-
-/** Rewrites an attribute name into React's spelling (`fill-rule` → `fillRule`). */
-const toReactAttributeName = (name) =>
-	name.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
-
-/**
- * Rewrites a `clip-path` value onto the kept id, or answers undefined when it
- * names a clipPath that was dropped (the attribute goes with it).
- */
-const remapClipPathValue = (value, context) => {
-	const oldId = /^url\(#([^)]+)\)$/.exec(value)?.[1];
-	const newId =
-		oldId === undefined ? undefined : context.clipPathIds.get(oldId);
-	return newId === undefined ? undefined : `url(#${newId})`;
-};
-
-/**
- * Flattens an element tree into the output node list: drops what the header
- * lists, lifts a `<defs>`'s surviving clipPaths into its parent (a clipPath
- * draws nothing wherever it sits), and lifts the children of a `<g>` left with
- * no attributes (an empty group draws nothing either).
- */
-const buildNodes = (element, context) =>
-	element.children.flatMap((child) => {
-		if (child.tag === "title") {
-			return [];
-		}
-		if (child.tag === "defs") {
-			const foreign = child.children.find((node) => node.tag !== "clipPath");
-			if (foreign !== undefined) {
-				throw new Error(
-					`${context.filePath}: <defs> holds a <${foreign.tag}>, which lifting it out would strand`,
-				);
-			}
-			return buildNodes(child, context);
-		}
-		if (child.tag === "clipPath") {
-			const id = context.clipPathIds.get(child.attrs.id);
-			return id === undefined
-				? []
-				: [["clipPath", { id }, buildNodes(child, context)]];
-		}
-		const attrs = {};
-		for (const [name, value] of Object.entries(child.attrs)) {
-			if (DROPPED_ATTRIBUTES.has(name)) {
-				continue;
-			}
-			if (name === "clip-path") {
-				const remapped = remapClipPathValue(value, context);
-				if (remapped !== undefined) {
-					attrs.clipPath = remapped;
-				}
-				continue;
-			}
-			attrs[toReactAttributeName(name)] = value;
-		}
-		const children = buildNodes(child, context);
-		if (child.tag === "g" && Object.keys(attrs).length === 0) {
-			return children;
-		}
-		return [
-			children.length === 0 ? [child.tag, attrs] : [child.tag, attrs, children],
-		];
-	});
-
-/**
- * Reads one file into its viewBox and its drawing.
- *
- * @param filePath - the .svg to read
- * @param name - the entry's layer-prefixed name, which any surviving clipPath id
- *   is built from
- */
-const readDrawing = (filePath, name) => {
-	const source = readFileSync(filePath, "utf8");
-	const viewBox = /viewBox="([^"]+)"/.exec(source)?.[1];
-	if (viewBox === undefined) {
-		throw new Error(`${filePath}: no viewBox`);
-	}
-	const [, , width, height] = viewBox.split(/\s+/).map(Number);
-	const viewBoxSize = { width, height };
-	const root = parseSvgTree(source, filePath);
-	const nodes = buildNodes(root, {
-		filePath,
-		clipPathIds: planClipPathIds(root, viewBoxSize, name),
-	});
-	return { viewBox, nodes };
-};
+/** The file stem with its decorations stripped. */
+const readStem = (path) =>
+	stripFileDecorations(
+		path
+			.split("/")
+			.pop()
+			.replace(/\.svg$/, ""),
+	);
 
 /** Group icons (`group/<stem>`). */
 const collectGroupFiles = (root) =>
-	listFiles(join(root, `Architecture-Group-Icons_${ASSET_RELEASE}`))
-		.filter((path) => path.endsWith(".svg"))
-		.map((path) => {
-			const stem = stripFileDecorations(
-				path
-					.split("/")
-					.pop()
-					.replace(/\.svg$/, ""),
-			);
+	listSvgFiles(join(root, `Architecture-Group-Icons_${ASSET_RELEASE}`)).map(
+		(path) => {
+			const stem = readStem(path);
 			return {
 				path,
 				name: `group/${toKebab(stem)}`,
@@ -280,17 +98,16 @@ const collectGroupFiles = (root) =>
 				category: "Group",
 				tier: "group",
 			};
-		});
+		},
+	);
 
 /** Service icons (`service/<stem>`). Only the 48px size is taken. */
 const collectServiceFiles = (root) =>
-	listFiles(join(root, `Architecture-Service-Icons_${ASSET_RELEASE}`))
-		.filter((path) => path.endsWith(".svg") && path.includes("/48/"))
+	listSvgFiles(join(root, `Architecture-Service-Icons_${ASSET_RELEASE}`))
+		.filter((path) => path.includes("/48/"))
 		.map((path) => {
 			const segments = path.split("/");
-			const stem = stripFileDecorations(
-				segments[segments.length - 1].replace(/\.svg$/, ""),
-			);
+			const stem = readStem(path);
 			return {
 				path,
 				name: `service/${toKebab(stem)}`,
@@ -307,26 +124,32 @@ const collectServiceFiles = (root) =>
  * pairs lives.
  */
 const collectResourceFiles = (root) =>
-	listFiles(join(root, `Resource-Icons_${ASSET_RELEASE}`))
-		.filter((path) => path.endsWith(".svg"))
-		.map((path) => {
-			const segments = path.split("/");
-			const stem = stripFileDecorations(
-				segments[segments.length - 1].replace(/\.svg$/, ""),
-			);
-			const isGeneral = path.includes("Res_General-Icons");
-			return {
-				path,
-				name: isGeneral
-					? `general/${toKebab(stem)}`
-					: `resource/${stem.split("_").map(toKebab).join("/")}`,
-				label: toLabel(stem),
-				category: isGeneral
-					? "General"
-					: toCategory(segments[segments.length - 2]),
-				tier: isGeneral ? "general" : "resource",
-			};
-		});
+	listSvgFiles(join(root, `Resource-Icons_${ASSET_RELEASE}`)).map((path) => {
+		const segments = path.split("/");
+		const stem = readStem(path);
+		const isGeneral = path.includes("Res_General-Icons");
+		return {
+			path,
+			name: isGeneral
+				? `general/${toKebab(stem)}`
+				: `resource/${stem.split("_").map(toKebab).join("/")}`,
+			label: toLabel(stem),
+			category: isGeneral
+				? "General"
+				: toCategory(segments[segments.length - 2]),
+			tier: isGeneral ? "general" : "resource",
+		};
+	});
+
+/**
+ * Converts one file. The id prefix carries the icon's own name and rendition,
+ * so no two drawings of the set share a kept id.
+ */
+const readDrawing = (file, variant) =>
+	convertIconSetSvg(readFileSync(file.path, "utf8"), {
+		filePath: file.path,
+		idPrefix: `aws-${file.name.replaceAll("/", "-")}${variant === "dark" ? "-dark" : ""}`,
+	});
 
 /**
  * Folds the files into one entry per name, pairing a Light file with its Dark
@@ -347,7 +170,7 @@ const collectEntries = (files) => {
 				label: file.label,
 				category: file.category,
 				tier: file.tier,
-				[variant]: readDrawing(file.path, file.name),
+				[variant]: readDrawing(file, variant),
 			});
 			continue;
 		}
@@ -355,7 +178,7 @@ const collectEntries = (files) => {
 			dropped.push(file);
 			continue;
 		}
-		existing[variant] = readDrawing(file.path, file.name);
+		existing[variant] = readDrawing(file, variant);
 	}
 
 	for (const entry of entries.values()) {
@@ -374,78 +197,36 @@ const collectEntries = (files) => {
 	return { entries: [...entries.values()], dropped };
 };
 
-const formatNodes = (nodes, indent) => {
-	const pad = "\t".repeat(indent);
-	return nodes
-		.map((node) => {
-			const [tag, attrs, children] = node;
-			const entries = Object.entries(attrs)
-				.map(([name, value]) => `${name}: ${JSON.stringify(value)}`)
-				.join(", ");
-			const head = `${pad}[${JSON.stringify(tag)}, { ${entries} }`;
-			return children === undefined
-				? `${head}],`
-				: `${head}, [\n${formatNodes(children, indent + 1)}\n${pad}]],`;
-		})
-		.join("\n");
-};
+// The first 200 characters carry "asset package (MMDDYYYY)": the VSCode
+// extension's notices generator reads the release from there.
+const HEADER = `Generated by scripts/generateIconData.mjs from the AWS Architecture Icons
+asset package (${ASSET_RELEASE}). Do not edit by hand; re-run the script to bump the set.
 
-const formatEntry = (entry) =>
-	[
-		`\t${JSON.stringify(entry.name)}: {`,
-		`\t\tviewBox: ${JSON.stringify(entry.light.viewBox)},`,
-		`\t\tlabel: ${JSON.stringify(entry.label)},`,
-		`\t\tcategory: ${JSON.stringify(entry.category)},`,
-		`\t\ttier: ${JSON.stringify(entry.tier)},`,
-		`\t\tnodes: [`,
-		formatNodes(entry.light.nodes, 3),
-		`\t\t],`,
-		...(entry.dark === undefined
-			? []
-			: [`\t\tdarkNodes: [`, formatNodes(entry.dark.nodes, 3), `\t\t],`]),
-		`\t},`,
-	].join("\n");
+Source: ${SOURCE_ZIP_URL}
+The drawings are AWS Architecture Icons, (c) Amazon Web Services, Inc. or its
+affiliates, used under AWS's terms (https://aws.amazon.com/architecture/icons/)
+and redistributed unmodified — see LICENSE-ICONS.md. No coordinate is rounded
+and no fill is substituted; only the embedding is adjusted, as
+@jiscribe/canvas-sdk/icon-set-generator lists.`;
 
-const formatModule = (
-	entries,
-) => `// Generated by scripts/generateIconData.mjs from the AWS Architecture Icons
-// asset package (${ASSET_RELEASE}). Do not edit by hand; re-run the script to bump the set.
-//
-// Source: ${SOURCE_ZIP_URL}
-// The drawings are AWS Architecture Icons, (c) Amazon Web Services, Inc. or its
-// affiliates, used under AWS's terms (https://aws.amazon.com/architecture/icons/)
-// and redistributed unmodified — see LICENSE-ICONS.md. No coordinate is rounded
-// and no fill is substituted; only <title>, id, xmlns and full-viewBox clipPath
-// no-ops are dropped, and attribute names carry React's spelling.
-import type { AwsIconEntry } from "./AwsIconNode";
-
-/** Where the assets came from. The release changes each quarter, and so does this. */
+const CATALOG_PREAMBLE = `/** Where the assets came from. The release changes each quarter, and so does this. */
 export const AWS_ICON_SOURCE_URL = ${JSON.stringify(SOURCE_ZIP_URL)};
 
 /** Asset release (the MMDDYYYY the asset package's directory names carry). */
-export const AWS_ICON_RELEASE = ${JSON.stringify(ASSET_RELEASE)};
-
-/** Every icon, keyed by its layer-prefixed name. */
-export const AWS_ICON_ENTRIES: Readonly<Record<string, AwsIconEntry>> = {
-${entries.map(formatEntry).join("\n")}
-};
-`;
+export const AWS_ICON_RELEASE = ${JSON.stringify(ASSET_RELEASE)};`;
 
 const main = () => {
 	const root = process.argv[2];
 	if (root === undefined) {
 		throw new Error("pass the directory the asset package was unpacked into");
 	}
-	const outputPath =
+	const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+	const catalogPath =
 		process.argv[3] ??
-		join(
-			dirname(fileURLToPath(import.meta.url)),
-			"..",
-			"src",
-			"schema",
-			"icon",
-			"iconData.generated.ts",
-		);
+		join(packageRoot, "src", "schema", "icon", "iconCatalog.generated.ts");
+	const drawingsPath =
+		process.argv[4] ??
+		join(packageRoot, "src", "drawing", "iconDrawings.generated.ts");
 
 	const files = [
 		...collectGroupFiles(root),
@@ -458,10 +239,46 @@ const main = () => {
 	);
 	const { entries, dropped } = collectEntries(files);
 
-	writeFileSync(outputPath, formatModule(entries), "utf8");
+	writeFileSync(
+		catalogPath,
+		formatIconSetCatalogModule({
+			header: HEADER,
+			preamble: CATALOG_PREAMBLE,
+			entryType: {
+				name: "AwsIconCatalogEntry",
+				from: "./AwsIconCatalogEntry",
+			},
+			entriesName: "AWS_ICON_CATALOG_ENTRIES",
+			entries: entries.map((entry) => ({
+				name: entry.name,
+				fields: {
+					label: entry.label,
+					category: entry.category,
+					viewBox: entry.light.viewBox,
+					tier: entry.tier,
+				},
+			})),
+		}),
+		"utf8",
+	);
+	writeFileSync(
+		drawingsPath,
+		formatIconSetDrawingsModule({
+			header: HEADER,
+			drawingsName: "AWS_ICON_DRAWINGS",
+			drawings: entries.map((entry) => ({
+				name: entry.name,
+				nodes: entry.light.nodes,
+				darkNodes: entry.dark?.nodes,
+				idRefs: [...entry.light.idRefs, ...(entry.dark?.idRefs ?? [])],
+			})),
+		}),
+		"utf8",
+	);
+
 	const paired = entries.filter((entry) => entry.dark !== undefined).length;
 	console.log(
-		`${entries.length} icons (${paired} with a Dark rendition) → ${outputPath}`,
+		`${entries.length} icons (${paired} with a Dark rendition) → ${catalogPath}, ${drawingsPath}`,
 	);
 	for (const file of dropped) {
 		console.log(`  dropped a duplicate: ${file.name} (${file.category})`);

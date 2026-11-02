@@ -734,6 +734,13 @@ export default tseslint.config(
 							message:
 								"The headless (doc) layer cannot depend on the presentation / state / stencil / controls / menu / propertyPanel layers.",
 						},
+						{
+							// An icon set's drawings are megabytes of a vendor's work; the headless
+							// side reads the catalog of names alone.
+							group: ["**/drawing/**"],
+							message:
+								"The headless (doc) layer cannot load an icon set's drawings. Read the generated catalog instead.",
+						},
 						docCuratedEntriesOnly,
 					],
 				},

@@ -139,6 +139,7 @@ the full list):
 | `calcRoundedRectOutline` / `centeredPolygonOutline` / `formatPolygonPoints`                                             | hand-rolled outline maths                                                  |
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS` (`/doc`) | the "drawing fills the box, so the caption hangs underneath" trio          |
 | `createParseCheckSuite` (`/testing`)                                                                                    | the parse-check test every shape package writes                            |
+| `createIconSetCatalog` (`/doc`) / `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator`       | the name lookup, the shape, the presets and the generator of an icon set   |
 
 The below-label parts go together: pass the region as `createFrameObjectDefinition`'s
 `textRegion` (which builds the text slot part kind placing the label) and the bounds
@@ -452,7 +453,8 @@ declares one and by a label match over the groups otherwise. Unregistered ids
 are dropped and a group left empty is not shown; a repeated group id, or a
 preset id repeated within a group, throws. The toolbar flyout ignores
 `browseGroups` too. `awsStencilCategory` and `lucideIconStencilCategory` declare
-both.
+both; for a set built on canvas-sdk's icon-set kit, `createIconSetStencilCategory`
+derives both from the set's catalog.
 
 ## Wiring checklist
 

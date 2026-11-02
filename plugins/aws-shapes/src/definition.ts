@@ -15,7 +15,7 @@ import {
 import type { AwsGroupDoc } from "./schema/AwsGroupDoc";
 import { isAwsGroupKind } from "./schema/AwsGroupDoc";
 import type { AwsIconDoc } from "./schema/AwsIconDoc";
-import { isKnownAwsIconName } from "./schema/icon/resolveAwsIconName";
+import { awsIconCatalog } from "./schema/icon/awsIconCatalog";
 import type { AwsGroupState } from "./state/AwsGroupState";
 import type { AwsIconState } from "./state/AwsIconState";
 import { AwsGroupStencils } from "./stencil/AwsGroupStencils";
@@ -41,7 +41,8 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 		// carry does not reach the drawing through a state either.
 		isExtraStateValid: (state) =>
 			state.icon === undefined ||
-			(typeof state.icon === "string" && isKnownAwsIconName(state.icon)),
+			(typeof state.icon === "string" &&
+				awsIconCatalog.isKnownName(state.icon)),
 		stencils: AwsIconStencils,
 		menu: [{ id: "text", items: [{ type: "font" }, { type: "textFormat" }] }],
 	});

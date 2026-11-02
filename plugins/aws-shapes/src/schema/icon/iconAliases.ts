@@ -5,7 +5,7 @@
  * reaches them.
  *
  * The spellings that are mechanically derivable — the `amazon-` / `aws-` prefix
- * dropped, the layer prefix left off — are resolved by resolveAwsIconName
+ * dropped, the layer prefix left off — are resolved by awsIconCatalog
  * wherever they are unambiguous, and so are not listed here.
  *
  * A test holds every target against an icon that exists.

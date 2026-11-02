@@ -224,9 +224,10 @@ style」という 2 方式混在を解消）。
   `lightCanvasTheme` をパッケージから export する（`foundation/theme/themePresets.ts`）。
 - **`colorScheme`**: 図形が JS の値として読むテーマ項目（`CanvasColorScheme`）。トークンが塗る地の明暗
   （`"light"` / `"dark"`）を名指し、地ごとに図版を出荷していてトークンでは塗り替えられない絵が使う —
-  AWS アイコンはこれで公式の Light / Dark の図版を選ぶ（`plugins/aws-shapes/src/presentation/AwsIconArt.tsx`。
-  `useCanvasTheme()` から読む）。`canvasBg` から推定せず必須項目にしているのは、トークンが canvas には
-  読めない `var(...)` 文字列でありうるため。そのため、トークンは固定のままエディタの地に追従するホスト
+  AWS アイコンはこれで公式の Light / Dark の図版を選ぶ（canvas-sdk の `IconSetArt`、
+  `packages/canvas-sdk/src/presentation/iconSet/IconSetArt.tsx`。`useCanvasTheme()` から読む）。
+  `canvasBg` から推定せず必須項目にしているのは、トークンが canvas には読めない `var(...)`
+  文字列でありうるため。そのため、トークンは固定のままエディタの地に追従するホスト
   （VSCode）は配色ごとにテーマを持って差し替える。
 - **VSCode マッピング層**: VSCode ホスト側（このパッケージではない）が、トークン値として
   `var(--vscode-..., <ダークフォールバック>)` 文字列を渡すことで `--vscode-*` を中立トークンへ

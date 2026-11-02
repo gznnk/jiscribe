@@ -9,16 +9,17 @@ canvas プラグイン（図形パッケージ）作者向けの量産キット�
 
 ## エントリ
 
-| エントリ                                         | 用途                                                                                                           |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas-sdk`                           | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                                          |
-| `@jiscribe/canvas-sdk/doc`                       | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない                   |
-| `@jiscribe/canvas-sdk/tools`                     | 図形用の AI ツールを書く契約（`defineObjectAiTool` ほか）。`@jiscribe/ai-tools-sdk` の再エクスポート。headless |
-| `@jiscribe/canvas-sdk/testing`                   | ユニットテスト専用（vitest 前提）。ランタイム barrel には混ぜない                                              |
-| `@jiscribe/canvas-sdk/testing/e2e`               | e2e の spec ファイル用。fixtures・CanvasDriver・selectors                                                      |
-| `@jiscribe/canvas-sdk/testing/playwright-config` | `playwright.config.ts` 用                                                                                      |
-| `@jiscribe/canvas-sdk/testing/vite-config`       | ハーネスの `vite.config.ts` 用                                                                                 |
-| `@jiscribe/canvas-sdk/testing/harness`           | ハーネスのエントリモジュール用（ブラウザコード）                                                               |
+| エントリ                                         | 用途                                                                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas-sdk`                           | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                                               |
+| `@jiscribe/canvas-sdk/doc`                       | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない                        |
+| `@jiscribe/canvas-sdk/tools`                     | 図形用の AI ツールを書く契約（`defineObjectAiTool` ほか）。`@jiscribe/ai-tools-sdk` の再エクスポート。headless      |
+| `@jiscribe/canvas-sdk/icon-set-generator`        | アイコンセットの生成スクリプト用（Node の `.mjs`、型は手書きの `index.d.mts`）。SVG の変換と 2 モジュールの書き出し |
+| `@jiscribe/canvas-sdk/testing`                   | ユニットテスト専用（vitest 前提）。ランタイム barrel には混ぜない                                                   |
+| `@jiscribe/canvas-sdk/testing/e2e`               | e2e の spec ファイル用。fixtures・CanvasDriver・selectors                                                           |
+| `@jiscribe/canvas-sdk/testing/playwright-config` | `playwright.config.ts` 用                                                                                           |
+| `@jiscribe/canvas-sdk/testing/vite-config`       | ハーネスの `vite.config.ts` 用                                                                                      |
+| `@jiscribe/canvas-sdk/testing/harness`           | ハーネスのエントリモジュール用（ブラウザコード）                                                                    |
 
 e2e 用が 4 つに分かれているのは、spec / playwright config / vite config / ブラウザ
 コードがそれぞれ別のローダーに読まれ、互いの import を許さないためである
@@ -68,6 +69,24 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
 
 - `createStencilIcon(drawing)` — 24x24 viewBox の svg 外枠と memo を吸収する factory
 - `createTypeStencils(preset)` — 単一プリセット（id = objectType）の `Stencil[]` を生成
+
+### アイコンセット部材
+
+ベンダーのアイコン集を生成データとして同梱する図形（`awsIcon` ほか）の共通部分。
+生成データは目録（名前・表示名・カテゴリ・viewBox）と描画データ（SVG 要素ツリー）の
+2 モジュールに分け、headless 側は目録だけを読む。
+
+- `createIconSetCatalog(config)`（`/doc`）— 1 セット分の名前表（目録・別名・パレット・
+  「すべて表示」の節・機械的な略記の導き方）を閉じ込めた名前引きを返す。解決・候補の提示・
+  検索・節・`icon` のバリデータ（`validateIconName`）。略記と語集合の索引は初回使用時に作る
+- `createIconSetObject` / `createIconSetStencils` / `createIconSetStencilCategory` —
+  名前引きと描画データから、図形のコンポーネント・プリセット・ステンシルカテゴリを作る。
+  描けない名前（解決しない・描画データに無い）は図形では破線枠、ステンシルでは空の glyph
+- `IconSetArt` — 1 アイコンを描く。テーマの `colorScheme` で light / dark を選び、
+  描画データが定義する id にはインスタンスごとの接尾辞を付ける（同じアイコンを 2 箇所に
+  描いても文書中で id が重ならない）
+- `./icon-set-generator` — 生成スクリプトのセット非依存部分。許可リストに無い要素・属性・
+  style 宣言で失敗し、描画結果を変える処理（座標の丸め・色の置換）はしない
 
 ### テスト部材（`/testing`）
 

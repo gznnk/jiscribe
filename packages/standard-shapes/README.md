@@ -2,7 +2,7 @@
 
 The shipped shape set as one package. Registering "the standard shapes" is
 something every host does — the editors, the VSCode extension, the CLI's render
-harness, the schema generator — and each one used to spell out the same ten
+harness, the schema generator — and each one used to spell out the same twelve
 plugin imports. This is that list, once.
 
 ```ts
@@ -20,12 +20,12 @@ import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 
 | Export                           | Entry    | What it is                                                                                                                                     |
 | -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `standardPlugins`                | `.`      | The ten plugins for `CanvasConfig.plugins`                                                                                                     |
+| `standardPlugins`                | `.`      | The twelve plugins for `CanvasConfig.plugins`                                                                                                  |
 | `standardToolbarSections`        | `.`      | The whole top bar — core's history, view and help sections and the sidebar toggles, then the switch for both sidebars — for `toolbar.sections` |
 | `standardStencilBarPresetIds`    | `.`      | The six presets the stencil bar pins, for `stencilBar.presetIds`                                                                               |
 | `standardToolbarToolsSection`    | `.`      | The shape tools the top bar used to carry (the library toggle, then the six presets), for a host keeping presets on top                        |
 | `standardStencilLibrarySections` | `.`      | The whole set as sidebar sections, for `stencilLibrary.sections`                                                                               |
-| `standardDocPlugins`             | `/doc`   | The same ten, headless, for `createCanvasParser` / `createDocOps`                                                                              |
+| `standardDocPlugins`             | `/doc`   | The same twelve, headless, for `createCanvasParser` / `createDocOps`                                                                           |
 | `standardObjectDocDefinitions`   | `/doc`   | Every type of the set by name, canvas built-ins included                                                                                       |
 | `standardAiToolPlugins`          | `/tools` | The AI tools the set's plugins offer for their own shapes, for `createCanvasToolSet` (the table's and the record's, so far)                    |
 
@@ -46,14 +46,14 @@ with the parser and the canvas has no definition to draw them with, so it holds
 them unread. Either way the file keeps them, but in the second case the shapes
 go missing from the screen.
 
-`standardPlugins` and `standardDocPlugins` are the same ten in the same order,
+`standardPlugins` and `standardDocPlugins` are the same twelve in the same order,
 which is what makes the pair safe to use without checking.
 
 ## The bars and the library are one set
 
 `standardStencilBarPresetIds` pins six presets on the stencil bar and
 nothing else; every other shape of the set — the `markdown` and `table` presets
-and the eight plugin categories — is filed in
+and the ten plugin categories — is filed in
 `standardStencilLibrarySections`, the sidebar the switch at the far right of
 `standardToolbarSections` expands the chrome with (with whichever sidebars were
 open last, both the first time), or the library's own toggle beside it opens

@@ -1,5 +1,11 @@
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
-import { createFrameObject } from "@jiscribe/canvas-sdk";
+import {
+	createFrameObject,
+	IconSetArt,
+	IconSetArtGroup,
+	readIconSetArt,
+	readIconSetViewBoxSize,
+} from "@jiscribe/canvas-sdk";
 
 import {
 	AwsGroupBody,
@@ -7,17 +13,15 @@ import {
 	AwsGroupOutline,
 	AwsGroupOutlineHitArea,
 } from "./AwsGroupStyled";
-import { AwsIconArt } from "./AwsIconArt";
-import { AwsArtGroup } from "./AwsIconStyled";
 import { calcAwsGroupLabelTextRegion } from "./calcAwsGroupLabelTextRegion";
-import { readViewBoxSize } from "./calcAwsIconArtPlacement";
 import { resolveAwsGroupStroke } from "./resolveAwsGroupStroke";
+import { AWS_ICON_DRAWINGS } from "../drawing/iconDrawings.generated";
 import {
 	AWS_GROUP_CORNER_ICON_SIZE,
 	AWS_GROUP_PADDING,
 } from "../schema/AwsGroupDoc";
 import { readAwsGroupKindStyle } from "../schema/awsGroupKinds";
-import { readAwsIcon } from "../schema/icon/resolveAwsIconName";
+import { awsIconCatalog } from "../schema/icon/awsIconCatalog";
 import type { AwsGroupState } from "../state/AwsGroupState";
 
 /**
@@ -47,9 +51,13 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 	);
 	const cornerIconName = readAwsGroupKindStyle(state.kind).cornerIcon;
 	const cornerIcon =
-		cornerIconName === undefined ? null : readAwsIcon(cornerIconName);
+		cornerIconName === undefined
+			? null
+			: readIconSetArt(awsIconCatalog, AWS_ICON_DRAWINGS, cornerIconName);
 	const viewBox =
-		cornerIcon === null ? null : readViewBoxSize(cornerIcon.viewBox);
+		cornerIcon === null
+			? null
+			: readIconSetViewBoxSize(cornerIcon.entry.viewBox);
 	const cornerScale =
 		viewBox === null || viewBox.width === 0
 			? 0
@@ -78,11 +86,11 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 				height={headerBottom - headerTop}
 			/>
 			{cornerIcon !== null && cornerScale > 0 && (
-				<AwsArtGroup
+				<IconSetArtGroup
 					transform={`translate(${left + AWS_GROUP_PADDING} ${top + AWS_GROUP_PADDING}) scale(${cornerScale})`}
 				>
-					<AwsIconArt entry={cornerIcon} />
-				</AwsArtGroup>
+					<IconSetArt drawing={cornerIcon.drawing} />
+				</IconSetArtGroup>
 			)}
 			<AwsGroupOutlineHitArea x={left} y={top} width={width} height={height} />
 			<AwsGroupOutline

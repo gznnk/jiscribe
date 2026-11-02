@@ -21,3 +21,24 @@ export { createInsetTextRegion } from "./schema/createInsetTextRegion";
 // doc defaults: the layout measures the label with these, so a shape that draws
 // with different ones gets a box that does not fit its text.
 export { BELOW_LABEL_STYLE_DEFAULTS } from "./schema/belowLabelStyleDefaults";
+
+// Icon sets shipped as generated data (AWS Architecture Icons and the like): the
+// name lookup over one set's catalog, and the data types the generated catalog
+// and drawing modules are written against. The drawing side is `.`'s
+// createIconSetObject / createIconSetStencilCategory; the generator is
+// `./icon-set-generator`.
+export { createIconSetCatalog } from "./schema/iconSet/createIconSetCatalog";
+export type {
+	IconSetCatalog,
+	IconSetCatalogConfig,
+} from "./schema/iconSet/createIconSetCatalog";
+export { normalizeIconSetName } from "./schema/iconSet/normalizeIconSetName";
+export type {
+	IconSetBrowseGroup,
+	IconSetBrowseGroupDeclaration,
+	IconSetCatalogEntry,
+	IconSetDrawing,
+	IconSetNode,
+	IconSetPaletteEntry,
+	IconSetSearchResult,
+} from "./schema/iconSet/IconSetTypes";

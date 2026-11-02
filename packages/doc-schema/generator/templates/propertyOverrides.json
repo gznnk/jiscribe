@@ -113,6 +113,20 @@
 			]
 		}
 	},
+	"azureIcon": {
+		"icon": {
+			"description": "Which icon to draw, as a flat kebab-case name, with no category prefix, from Microsoft's official Azure Architecture Icons and, for Microsoft Entra ID alone, the Microsoft Entra architecture icons: \"virtual-machine\", \"azure-cosmos-db\", \"app-services\", \"key-vaults\", \"virtual-networks\", \"entra-id\". The short names people say resolve too (\"vm\", \"vmss\", \"aks\", \"acr\", \"vnet\", \"nsg\", \"kv\", \"apim\", \"cosmos\"; \"entra\" and \"aad\" reach \"entra-id\"), as does a name with the \"azure-\" / \"microsoft-\" prefix dropped wherever that is unambiguous (\"cosmos-db\", \"service-bus\", \"openai\"). A name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set. Omitted = \"virtual-machine\".",
+			"type": "string",
+			"default": "virtual-machine",
+			"examples": [
+				"virtual-machine",
+				"azure-cosmos-db",
+				"app-services",
+				"kubernetes-services",
+				"key-vaults"
+			]
+		}
+	},
 	"awsGroup": {
 		"kind": {
 			"description": "Which boundary this frame is. The border color, the line style and the corner badge all follow from it, and nesting them the way AWS does (aws-cloud > region > vpc > public-subnet / private-subnet) is what makes the diagram read. Setting `stroke` or `strokeDashType` overrides what the kind would have chosen. Omitted = \"generic\", a frame tied to no AWS service.",
