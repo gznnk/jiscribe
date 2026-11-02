@@ -56,6 +56,9 @@ covers that.
   shapes and the properties instead. Closing both sidebars keeps it expanded; only the switch collapses
   it again. The shape bar's "Other shapes" button opens every shape, with a
   search, in a panel beside the bar running down the canvas.
+- **A markdown card reads as rendered in `capture_canvas` and in
+  `export_image`'s PNG** — headings, lists, tables, code and math — rather
+  than as plain text. `export_image`'s SVG still holds plain text.
 
 ### Removed
 

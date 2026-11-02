@@ -25,18 +25,24 @@ describe("buildCanvasWebviewCsp", () => {
 		expect(directives.get("default-src")).toEqual(["'none'"]);
 	});
 
-	it("lets images come only from the Webview itself and blob: URLs (#28)", () => {
-		// A markdown image pointing at a remote host must not be fetchable, and
-		// neither must an inline data: image slip past the sanitizer.
-		expect(directives.get("img-src")).toEqual([CSP_SOURCE, "blob:"]);
+	it("lets images come only from the Webview itself, blob: and data: URLs (#28)", () => {
+		// A markdown image pointing at a remote host must not be fetchable. data:
+		// is for the PNG export's SVG of a markdown card, and reaches no network.
+		expect(directives.get("img-src")).toEqual([CSP_SOURCE, "blob:", "data:"]);
 	});
 
-	it("never opens a network or data: scheme in any directive", () => {
+	it("never opens a network scheme in any directive", () => {
 		for (const [name, sources] of directives) {
 			for (const source of sources) {
-				expect(source, `${name} allows ${source}`).not.toMatch(
-					/^(https?:|data:|\*)/,
-				);
+				expect(source, `${name} allows ${source}`).not.toMatch(/^(https?:|\*)/);
+			}
+		}
+	});
+
+	it("allows data: in img-src alone", () => {
+		for (const [name, sources] of directives) {
+			if (name !== "img-src") {
+				expect(sources, `${name} allows data:`).not.toContain("data:");
 			}
 		}
 	});

@@ -1,6 +1,10 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { Rect } from "@jiscribe/geometry";
 
+import {
+	bakeHtmlOverlayStyles,
+	type HtmlOverlayPair,
+} from "./bakeHtmlOverlayStyles";
 import { embedCanvasSource } from "./canvasSourceMetadata";
 import {
 	connectorLabelToSvgGroup,
@@ -11,6 +15,37 @@ import { readBlobAsDataUri } from "./readBlobAsDataUri";
 import { isTransparentColor } from "../../foundation/color/isTransparentColor";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** A foreignObject whose HTML the PNG export keeps (TextOverlayFrame's `exportAs`). */
+const HTML_OVERLAY_SELECTOR = 'foreignObject[data-canvas-export="html"]';
+
+/**
+ * What the export does with a foreignObject marked `data-canvas-export="html"`.
+ * Every other foreignObject becomes native `<text>` either way.
+ *
+ * - `"flatten"`: converts it to `<text>` like the rest (the SVG export, whose
+ *   file GitHub would strip a foreignObject from)
+ * - `"keep"`: keeps it as HTML with its computed styles baked in (the PNG export)
+ */
+export type HtmlOverlayExport = "flatten" | "keep";
+
+/** A marked foreignObject the export kept as HTML, with the `<text>` it would have become. */
+export type KeptHtmlOverlay = {
+	/** The kept foreignObject, inside the export clone. */
+	foreignObject: Element;
+	/**
+	 * What the SVG export draws in its place, built while the live tree was still
+	 * in the snapshot's render scope; null when the overlay holds no text.
+	 */
+	plainTextReplacement: SVGGElement | null;
+};
+
+/** An export clone and the HTML overlays it kept. */
+export type HtmlOverlayExportSvg = {
+	exportSvg: SVGSVGElement;
+	/** Empty for `"flatten"`, and for a `"keep"` clone with no marked overlay left in it. */
+	keptHtmlOverlays: KeptHtmlOverlay[];
+};
 
 /**
  * Reads the bytes of one image file, as the canvas resolved it
@@ -100,8 +135,9 @@ const BAKED_STYLE_PROPERTIES = [
  * Bakes the rendering-relevant computed styles of every SVG element into
  * inline styles on its cloned counterpart (paired by tree order), and drops
  * the class attributes that are meaningless outside the document.
- * HTML content inside foreignObject is skipped — it is converted to native
- * `<text>` (with its own computed-style reads) afterwards.
+ * foreignObject and its content are skipped — each is either converted to
+ * native `<text>` (with its own computed-style reads) or, when kept as HTML,
+ * baked by bakeHtmlOverlayStyles afterwards.
  */
 const bakeComputedStyles = (
 	liveSvg: SVGSVGElement,
@@ -203,8 +239,9 @@ export const inlineExportImages = async (
  *   — emotion classes and `var(--jiscribe-*)` do not survive standalone
  * - Removes control overlays (selection handles, ...) and the grid
  * - Converts foreignObject text to native `<text>` — connector labels also get
- *   their box as a `<rect>` (avoids canvas taint and works on GitHub, which
- *   sanitizes foreignObject away)
+ *   their box as a `<rect>` (works on GitHub, which sanitizes foreignObject
+ *   away). That includes the Markdown body, flattened to plain text; only the
+ *   PNG export keeps it as HTML, through a path this function does not offer
  * - Lays a solid background `<rect>`
  * - Writes `title` / `description` as the root's first children, `<title>` then `<desc>`
  * - When `source` is given, embeds the `.jis` in `<metadata>`
@@ -219,7 +256,19 @@ export const inlineExportImages = async (
 export const buildExportSvg = (
 	svg: SVGSVGElement,
 	options: BuildExportSvgOptions = {},
-): SVGSVGElement => {
+): SVGSVGElement =>
+	buildExportSvgWithHtmlOverlays(svg, options, "flatten").exportSvg;
+
+/**
+ * {@link buildExportSvg} with the handling of marked HTML overlays chosen. Kept
+ * out of the package index, so no caller can build an SVG file holding a
+ * foreignObject.
+ */
+export const buildExportSvgWithHtmlOverlays = (
+	svg: SVGSVGElement,
+	options: BuildExportSvgOptions,
+	htmlOverlays: HtmlOverlayExport,
+): HtmlOverlayExportSvg => {
 	const cloned = svg.cloneNode(true) as SVGSVGElement;
 
 	// Override the exported region before anything reads cloned.viewBox
@@ -237,9 +286,43 @@ export const buildExportSvg = (
 	const measureContext = createMeasureContext();
 	const liveForeignObjects = svg.querySelectorAll("foreignObject");
 	const clonedForeignObjects = cloned.querySelectorAll("foreignObject");
+
+	// Marked overlays are baked as one batch ahead of the conversion, so the
+	// probe host bakeHtmlOverlayStyles adds to the live page restyles it once.
+	const htmlOverlayPairs: HtmlOverlayPair[] = [];
+	if (htmlOverlays === "keep") {
+		for (let i = 0; i < clonedForeignObjects.length; i++) {
+			const liveForeignObject = liveForeignObjects[i];
+			const clonedForeignObject = clonedForeignObjects[i];
+			if (
+				liveForeignObject &&
+				clonedForeignObject.matches(HTML_OVERLAY_SELECTOR)
+			) {
+				htmlOverlayPairs.push({ liveForeignObject, clonedForeignObject });
+			}
+		}
+		bakeHtmlOverlayStyles(htmlOverlayPairs);
+	}
+	const keptHtmlOverlays: KeptHtmlOverlay[] = htmlOverlayPairs.map(
+		({ liveForeignObject, clonedForeignObject }) => ({
+			foreignObject: clonedForeignObject,
+			plainTextReplacement: foreignObjectToSvgText(
+				liveForeignObject,
+				clonedForeignObject,
+				measureContext,
+			),
+		}),
+	);
+	const keptForeignObjects = new Set(
+		htmlOverlayPairs.map(({ clonedForeignObject }) => clonedForeignObject),
+	);
+
 	for (let i = 0; i < clonedForeignObjects.length; i++) {
 		const clonedForeignObject = clonedForeignObjects[i];
 		const liveForeignObject = liveForeignObjects[i];
+		if (keptForeignObjects.has(clonedForeignObject)) {
+			continue;
+		}
 		// Connector labels have their own DOM shape (and paint a box), so they
 		// take a dedicated converter instead of the text overlay contract.
 		const convert = isConnectorLabelForeignObject(clonedForeignObject)
@@ -311,13 +394,61 @@ export const buildExportSvg = (
 		embedCanvasSource(cloned, options.source);
 	}
 
-	return cloned;
+	return {
+		exportSvg: cloned,
+		// One inside an excluded subtree went with it.
+		keptHtmlOverlays: keptHtmlOverlays.filter(({ foreignObject }) =>
+			cloned.contains(foreignObject),
+		),
+	};
+};
+
+/**
+ * Swaps every kept HTML overlay for the `<text>` it would have become, in place,
+ * which is the clone the SVG export would have built. The replacement takes the
+ * foreignObject's transform as it stands, since the flatten step rewrote it
+ * after the replacement was built.
+ *
+ * @param keptHtmlOverlays - From {@link buildExportSvgWithHtmlOverlays}; each foreignObject is removed from its clone, and one with no text leaves nothing behind
+ */
+export const replaceKeptHtmlOverlaysWithText = (
+	keptHtmlOverlays: readonly KeptHtmlOverlay[],
+): void => {
+	for (const { foreignObject, plainTextReplacement } of keptHtmlOverlays) {
+		if (plainTextReplacement === null) {
+			foreignObject.remove();
+			continue;
+		}
+		const transform = foreignObject.getAttribute("transform");
+		if (transform === null) {
+			plainTextReplacement.removeAttribute("transform");
+		} else {
+			plainTextReplacement.setAttribute("transform", transform);
+		}
+		foreignObject.replaceWith(plainTextReplacement);
+	}
 };
 
 /** Serializes an SVG element to an XML string (with the XML declaration). */
 export const serializeSvg = (svg: SVGSVGElement): string => {
 	const xml = new XMLSerializer().serializeToString(svg);
 	return `<?xml version="1.0" encoding="UTF-8"?>\n${xml}`;
+};
+
+/**
+ * {@link buildSizedExportSvgWithHtmlOverlays} with marked HTML overlays
+ * flattened to `<text>`, as the SVG file export writes them.
+ */
+export const buildSizedExportSvg = (
+	svg: SVGSVGElement,
+	options: BuildExportSvgOptions = {},
+): { exportSvg: SVGSVGElement; width: number; height: number } => {
+	const { exportSvg, width, height } = buildSizedExportSvgWithHtmlOverlays(
+		svg,
+		options,
+		"flatten",
+	);
+	return { exportSvg, width, height };
 };
 
 /**
@@ -332,17 +463,18 @@ export const serializeSvg = (svg: SVGSVGElement): string => {
  * first await — so each of them owes the tree its own
  * {@link inlineExportImages}.
  */
-export const buildSizedExportSvg = (
+export const buildSizedExportSvgWithHtmlOverlays = (
 	svg: SVGSVGElement,
-	options: BuildExportSvgOptions = {},
-): { exportSvg: SVGSVGElement; width: number; height: number } => {
+	options: BuildExportSvgOptions,
+	htmlOverlays: HtmlOverlayExport,
+): HtmlOverlayExportSvg & { width: number; height: number } => {
 	// With a fit-to-content viewBox the logical size is the region itself
 	// (1 world unit = 1 CSS px); otherwise export at the on-screen size.
 	const { width, height } = options.viewBox ?? getSvgSize(svg);
-	const exportSvg = buildExportSvg(svg, options);
-	exportSvg.setAttribute("width", String(width));
-	exportSvg.setAttribute("height", String(height));
-	return { exportSvg, width, height };
+	const built = buildExportSvgWithHtmlOverlays(svg, options, htmlOverlays);
+	built.exportSvg.setAttribute("width", String(width));
+	built.exportSvg.setAttribute("height", String(height));
+	return { ...built, width, height };
 };
 
 /**

@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   search, in a panel beside the bar running down the canvas.
   The editor remembers which of the two forms it was in, and which sidebars
   were open, across a tab hidden and shown again.
+- **An exported PNG draws a markdown card's body as rendered** — headings,
+  lists, tables, code and math — rather than as plain text; the exported SVG
+  still holds plain text. The editor's Content-Security-Policy adds `data:` to
+  `img-src` for it: the PNG export of a drawing with a markdown card loads
+  its image from a data URL, which reaches no network. The editor cannot embed its fonts in the PNG, so the
+  card's body is set in a fallback face there and may wrap at other places
+  than on the canvas.
 
 ### Removed
 

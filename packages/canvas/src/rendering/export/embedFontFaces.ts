@@ -314,8 +314,9 @@ const fetchFontDataUri = (
  * a close approximation of the ranges the drawing actually uses.
  *
  * Best effort throughout: a face that cannot be fetched or matched back to its
- * rule is left out rather than failing the export, and the `textLength` the
- * `<text>` carries keeps the geometry right either way.
+ * rule is left out rather than failing the export. The `textLength` a `<text>`
+ * carries keeps its geometry right either way; HTML kept as HTML (Markdown) has
+ * no such correction, and lays out in the fallback face, wrapping differently.
  *
  * @param exportSvg - The export SVG to prepend a `<style>` to; mutated in place and left untouched when nothing could be embedded
  * @returns The number of characters of CSS added, 0 when no face was embedded

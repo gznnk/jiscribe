@@ -254,7 +254,7 @@ export const createMarkdownRenderer = (
  * `<pre><code class="language-xxx">` with the source escaped. Syntax
  * highlighting is deliberately absent here: the shape's colors follow the theme
  * and the per-object font color via `currentColor`, which a highlighter's fixed
- * palette cannot follow, and image export flattens the body to plain text.
+ * palette cannot follow, and the SVG export flattens the body to plain text.
  * Document viewers under neither constraint pass a highlighter to
  * {@link createMarkdownRenderer}.
  *

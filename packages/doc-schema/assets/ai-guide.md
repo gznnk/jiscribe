@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+d92941b0 -->
+<!-- jiscribe guide 0.12.2+e611eab9 -->
 
 # Jiscribe AI Authoring Guide
 
@@ -155,7 +155,8 @@ labels. Its own typography is the ground the whole document is drawn on
 `fontWeight` / `fontStyle` / `textDecoration`, those being what the Markdown
 writes. Defaults suit a document: 300x200, `textAlign` `"left"`, `verticalAlign`
 `"top"`, `fill` `"auto"`. Content taller than the height is clipped, so leave
-headroom. Image export flattens it to plain text.
+headroom. A PNG export draws it rendered; an SVG export flattens it to plain
+text.
 
 ### `svg` — the escape hatch for complex visuals
 

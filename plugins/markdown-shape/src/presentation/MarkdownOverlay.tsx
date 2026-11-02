@@ -70,6 +70,7 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 			// own default applies to both.
 			maxFontSize={fontSize === undefined ? undefined : fontSize * maxFontScale}
 			fontFamily={fontFamily}
+			exportAs="html"
 		>
 			<MarkdownBody ref={bodyRef} />
 		</TextOverlayFrame>

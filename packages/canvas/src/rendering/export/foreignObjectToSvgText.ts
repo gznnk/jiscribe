@@ -1,14 +1,14 @@
 /**
  * Converts foreignObject (HTML text) into native SVG `<text>`.
  *
- * An SVG containing foreignObject taints the canvas when drawn via `<img>`,
- * which blocks PNG export, and Markdown renderers such as GitHub sanitize
- * foreignObject away. So at export time text is replaced with
- * `<text>`/`<tspan>`, producing an SVG that renders everywhere and can be
- * rasterized.
+ * Markdown renderers such as GitHub sanitize foreignObject away, so at export
+ * time text is replaced with `<text>`/`<tspan>`, producing an SVG that renders
+ * everywhere.
  *
- * Markdown is flattened to plain text (`innerText`); rich decorations such as
- * tables and lists are not reproduced in this phase.
+ * The SVG export converts every foreignObject. The PNG export converts all but
+ * those marked `data-canvas-export="html"` (Markdown), which it keeps as HTML
+ * (see bakeHtmlOverlayStyles). Where Markdown does come through here, it is
+ * flattened to plain text (`innerText`); tables, lists and the like are lost.
  *
  * Two DOM shapes are converted, each by its own entry point: text overlays
  * (`foreignObject > wrapper > content`, the TextOverlayFrame contract) and

@@ -56,8 +56,11 @@ const docText = JSON.stringify({
 /** The page globals the two sides share: the harness's own hook, and the recording below. */
 type CaptureWindow = Window & {
 	__setHarnessDoc?: (docText: string) => void;
-	/** Each captured SVG as the pending read of its Blob, in the order they were handed out. */
-	__capturedExportSvgs?: Promise<string>[];
+	/**
+	 * Each image source handed to an `<img>`, in order: the SVG text it holds, or
+	 * null for one that is not an SVG.
+	 */
+	__capturedExportSvgs?: Promise<string | null>[];
 };
 
 /** Load a document into the harness canvas through the hook mountPluginHarness installs. */
@@ -87,29 +90,52 @@ const loadedSubsetCount = (page: Page, family: string): Promise<number> =>
 		family,
 	);
 
+/** What the rasterizer prefixes the SVG it hands to an `<img>` with. */
+const SVG_DATA_URL_PREFIX = "data:image/svg+xml;charset=utf-8,";
+
 /**
- * Start recording every SVG string handed to `URL.createObjectURL`. The
- * rasterizer loads its throwaway copy through a Blob URL, so this is the only
- * place that copy is observable — it is never written to a file.
+ * Start recording every SVG assigned to an `<img>`'s `src`, whether as a data
+ * URL (a drawing with Markdown) or a blob URL (one without). The rasterizer
+ * loads its throwaway copy that way, so this is the only place that copy is
+ * observable — it is never written to a file. A blob URL is read back with
+ * `fetch` at once, before the rasterizer revokes it on load.
  */
 const captureRasterSvgs = async (page: Page): Promise<void> => {
-	await page.evaluate(() => {
-		const captured: Promise<string>[] = [];
+	await page.evaluate((prefix) => {
+		const captured: Promise<string | null>[] = [];
 		(window as CaptureWindow).__capturedExportSvgs = captured;
-		const original = URL.createObjectURL.bind(URL);
-		URL.createObjectURL = (blob: Blob | MediaSource): string => {
-			if (blob instanceof Blob && blob.type.startsWith("image/svg+xml")) {
-				captured.push(blob.text());
-			}
-			return original(blob);
-		};
-	});
+		const srcDescriptor = Object.getOwnPropertyDescriptor(
+			HTMLImageElement.prototype,
+			"src",
+		)!;
+		Object.defineProperty(HTMLImageElement.prototype, "src", {
+			...srcDescriptor,
+			set(this: HTMLImageElement, value: string) {
+				if (value.startsWith(prefix)) {
+					captured.push(
+						Promise.resolve(decodeURIComponent(value.slice(prefix.length))),
+					);
+				} else if (value.startsWith("blob:")) {
+					captured.push(
+						fetch(value).then(async (response) =>
+							response.headers.get("content-type")?.startsWith("image/svg+xml")
+								? response.text()
+								: null,
+						),
+					);
+				}
+				srcDescriptor.set!.call(this, value);
+			},
+		});
+	}, SVG_DATA_URL_PREFIX);
 };
 
-/** Everything {@link captureRasterSvgs} has recorded so far, oldest first. */
+/** Every SVG {@link captureRasterSvgs} has recorded so far, oldest first. */
 const readCapturedSvgs = (page: Page): Promise<string[]> =>
-	page.evaluate(() =>
-		Promise.all((window as CaptureWindow).__capturedExportSvgs ?? []),
+	page.evaluate(async () =>
+		(
+			await Promise.all((window as CaptureWindow).__capturedExportSvgs ?? [])
+		).filter((svgXml): svgXml is string => svgXml !== null),
 	);
 
 /** Export through the context menu and dialog, and return the downloaded file's text. */
@@ -162,10 +188,9 @@ test("embeds the loaded faces in the SVG the PNG export rasterizes", async ({
 	await downloadViaExportDialog(page, canvas, "png");
 
 	const captured = await readCapturedSvgs(page);
-	expect(
-		captured.length,
-		"the rasterizer loaded an SVG through a Blob URL",
-	).toBe(1);
+	expect(captured.length, "the rasterizer loaded one SVG into an <img>").toBe(
+		1,
+	);
 	const rasterSvg = captured[0];
 
 	// The bytes themselves, not a link to them: the isolated document cannot

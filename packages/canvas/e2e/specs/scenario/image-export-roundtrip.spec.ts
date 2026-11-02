@@ -16,7 +16,7 @@ import { selectors } from "../../support/selectors";
  *   the .jis.json in an iTXt chunk) is dropped onto the page and the shapes come
  *   back
  * - SVG: exported with the margin changed to 32, contains no <foreignObject>
- *   (for GitHub, and to avoid canvas taint), has a viewBox reflecting the given
+ *   (for GitHub), has a viewBox reflecting the given
  *   margin, and its <metadata> .jis.json parses cleanly
  * - Without embedded data: the name is a plain .svg with no .jis marker and the
  *   file has no <metadata>
@@ -780,7 +780,7 @@ test("writes connector labels as <text> plus a box <rect> rather than a foreignO
 	);
 	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
 
-	// No foreignObject survives; leaving one would taint the PNG and vanish on GitHub.
+	// No foreignObject survives; GitHub would strip one.
 	expect(svgText).not.toContain("<foreignObject");
 
 	// The box: a rect at the same position and size as the label foreignObject, with

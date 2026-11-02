@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+d92941b0 -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+e611eab9 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -158,7 +158,8 @@ labels. Its own typography is the ground the whole document is drawn on
 \`fontWeight\` / \`fontStyle\` / \`textDecoration\`, those being what the Markdown
 writes. Defaults suit a document: 300x200, \`textAlign\` \`"left"\`, \`verticalAlign\`
 \`"top"\`, \`fill\` \`"auto"\`. Content taller than the height is clipped, so leave
-headroom. Image export flattens it to plain text.
+headroom. A PNG export draws it rendered; an SVG export flattens it to plain
+text.
 
 ### \`svg\` — the escape hatch for complex visuals
 

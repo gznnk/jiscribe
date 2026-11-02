@@ -103,6 +103,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `lucideIconStencilCategory` declares 42 groups, one per Lucide category
   ordered for diagrams, holding all 1767 icons; an icon in several categories
   is listed in each.
+- **`TextOverlayFrame` takes `exportAs`.** `"html"` keeps the box's rendered
+  HTML in the PNG export instead of converting it to `<text>`; the SVG export
+  still writes plain `<text>`, since a viewer such as GitHub strips
+  foreignObject. The default `"text"` is what every box did before. The
+  markdown card passes `"html"`.
 
 ### Changed
 
@@ -176,6 +181,25 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `?libraryOpen` mounts expanded; a page passing no `stencilLibrarySections`
   (or `?noStencilLibrary`) shows the canvas's default library, and the kit's
   library toggle with it; `?emptyStencilLibrary` declares an empty one.
+- **The PNG export draws a markdown card's body as rendered.** Headings,
+  lists, tables, code and KaTeX math come out as on the canvas rather than as
+  plain text, in every PNG path (`exportCanvasToPng`, `rasterizeSvgToPng`,
+  `export.capturePng`, `jiscribe render -o x.png`). The SVG export is
+  unchanged: the body is still flattened to `<text>`. Not drawn: what KaTeX
+  draws with pseudo-elements (parts of its stretchy
+  constructs, `\tag` numbers). Rarely, a value that matches the browser's
+  default for a bare element but not the one for its context (`ul ul`
+  margins) reverts to the browser's. In Firefox, which has no Typed OM, every
+  `auto` width and height is pinned to its size on the canvas, so the spacing
+  between blocks can come out tighter. Should a browser taint the canvas over
+  the HTML (WebKit is untested), the PNG falls back to the plain text it
+  carried before, and a `console.warn` says how many cards were drawn so.
+- **A PNG export of a drawing with a markdown card needs `img-src data:` in
+  the host's CSP.** The rasterizer hands such an SVG to an `<img>` as a data
+  URL rather than a `blob:` URL, which a foreignObject would taint the canvas
+  through. A drawing without one still goes through a `blob:` URL. A page whose
+  CSP allows `img-src blob:` alone fails to export a markdown card to PNG
+  until `data:` is added.
 
 ### Removed
 

@@ -58,6 +58,15 @@ export type TextOverlayFrameProps = {
 	fontStyle?: string;
 	/** CSS text-decoration-line ("underline" / "line-through", space-separated). Default: TEXT_STYLE_FALLBACK ("none"). */
 	textDecoration?: string;
+	/**
+	 * How image export draws the box. `"text"` (the default) converts it to
+	 * native `<text>` on every export. `"html"` keeps the rendered HTML in the PNG
+	 * export (the export dialog's PNG, `export.capturePng`, and every host on top
+	 * of them); the SVG export still flattens it to plain `<text>`, since a viewer
+	 * such as GitHub strips foreignObject. Pass `"html"` for content whose markup
+	 * carries meaning plain text loses (tables, lists, math).
+	 */
+	exportAs?: "text" | "html";
 	/** Content drawn inside the box — a text node, or an element that renders its own markup. */
 	children: ReactNode;
 };
@@ -78,8 +87,9 @@ export type TextOverlayFrameProps = {
  *
  * The DOM shape is load-bearing: `foreignObject > wrapper > content`. Image
  * export walks exactly these two levels and reads the computed style off the
- * content element (see foreignObjectToSvgText), so children must nest *inside*
- * the content element, never between the levels.
+ * content element (see foreignObjectToSvgText) — for `exportAs="html"` too,
+ * since the SVG export flattens that box the same way — so children must nest
+ * *inside* the content element, never between the levels.
  *
  * Deliberately not memoized: `children` is a JSX element every caller builds
  * fresh per render, so a memo here could never bail out — the effective memo
@@ -100,6 +110,7 @@ export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 	fontWeight = TEXT_STYLE_FALLBACK.fontWeight,
 	fontStyle = TEXT_STYLE_FALLBACK.fontStyle,
 	textDecoration = TEXT_STYLE_FALLBACK.textDecoration,
+	exportAs = "text",
 	children,
 }) => {
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
@@ -129,6 +140,7 @@ export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 			}
 			pointerEvents="none"
 			display={isLegible ? undefined : "none"}
+			data-canvas-export={exportAs === "html" ? "html" : undefined}
 		>
 			<TextWrapper
 				style={{ alignItems: verticalAlignToAlignItems[verticalAlign] }}
