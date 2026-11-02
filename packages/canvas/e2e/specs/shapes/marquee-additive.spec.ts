@@ -84,4 +84,54 @@ test.describe("additive marquee (base selection plus the enclosed shapes)", () =
 			"matrix(1, 0, 0, 1, 320, 260)",
 		);
 	});
+
+	test("Shift+Escape mid-drag cancels an additive marquee back to the base selection", async ({
+		canvas,
+		page,
+	}) => {
+		const { a, b, c } = await drawRow(canvas);
+
+		await canvas.selectAt({ x: 320, y: 260 });
+
+		const marqueeRect = page.locator('[data-testid="marquee-rect"]');
+		const start = canvas.toScreen({ x: 440, y: 160 });
+		const enclosing = canvas.toScreen({ x: 820, y: 360 });
+		const stillEnclosing = canvas.toScreen({ x: 860, y: 400 });
+
+		// Marquee (440,160)-(820,360) encloses B and C, with Shift held from the press.
+		await page.keyboard.down("Shift");
+		await page.mouse.move(start.x, start.y);
+		await page.mouse.down();
+		await page.mouse.move(enclosing.x, enclosing.y, { steps: 12 });
+		await expect(marqueeRect).toBeVisible();
+		await expect
+			.poll(() => canvas.selectionOutlineKinds(), {
+				message:
+					"A, B and C are selected while the marquee is dragged, with the frame around them",
+			})
+			.toEqual(["object", "object", "object", "object"]);
+
+		await page.keyboard.press("Escape");
+		await expect(marqueeRect).toHaveCount(0);
+		await expect.poll(() => canvas.selectionOutlineKinds()).toEqual(["object"]);
+
+		// Still around B and C, and released there.
+		await page.mouse.move(stillEnclosing.x, stillEnclosing.y, { steps: 6 });
+		await page.mouse.up();
+		await page.keyboard.up("Shift");
+
+		// Only A is left selected: a 1px nudge moves it alone.
+		await canvas.nudge("right");
+		await expect
+			.poll(() => canvas.objectById(a).getAttribute("transform"), {
+				message: "the base selection A moves",
+			})
+			.toBe("matrix(1, 0, 0, 1, 321, 260)");
+		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 540, 260)",
+		);
+		expect(await canvas.objectById(c).getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 720, 260)",
+		);
+	});
 });

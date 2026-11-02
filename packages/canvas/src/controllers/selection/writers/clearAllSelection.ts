@@ -16,7 +16,8 @@ import { EMPTY_SELECTION } from "../CanvasSelection";
  *
  * @param state - The current canvas controller state
  * @returns True when something is selected or open. A drag under way is not
- *   asked about: handleCommand refuses both commands for its length
+ *   asked about: handleCommand refuses both commands for its length, and
+ *   Escape mid-marquee is taken as CANCEL_DRAG (useKeyboardShortcuts)
  */
 export const isSelectionClearable = (state: CanvasControllerState): boolean =>
 	state.selection.objectIds.length > 0 ||

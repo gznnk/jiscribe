@@ -239,6 +239,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `set_rotation` landed well off where it stood. The corner is now rewritten
   for the centre to stay, as the op already promised; the box types, which
   store their box before the turn, were never affected.
+- **Escape cancels an area selection while it is being dragged.** It did
+  nothing until the button was released, since a drag refuses every command
+  but the view ones. It now ends the marquee where it is: the rectangle goes,
+  the selection returns to what the drag started from — nothing for a plain
+  marquee, the selection being added to for an additive one — and the rest of
+  the drag selects nothing. Shift+Escape cancels an additive marquee dragged
+  with Shift held as well.
 
 ## [0.12.2] - 2026-10-25
 

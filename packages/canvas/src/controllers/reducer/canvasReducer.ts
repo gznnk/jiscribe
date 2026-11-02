@@ -39,6 +39,7 @@ import {
 import { closeStencilPopups } from "../utils/closeStencilPopups";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
+import { createInertDrag } from "../utils/createInertDrag";
 import { NORMAL_MODE } from "../utils/normalMode";
 import { readTextEditDraft } from "../utils/readTextEditDraft";
 import {
@@ -610,6 +611,51 @@ export const createCanvasReducer =
 					settleTransition(pasteResult, state, registries),
 					state,
 				);
+			}
+
+			case "CANCEL_DRAG": {
+				const { drag } = state;
+				if (drag === null) {
+					return state;
+				}
+				switch (drag.kind) {
+					case "marquee": {
+						// Back to the selection the marquee's dragStart claimed, not to
+						// startSnapshot.selectedIds: an additive marquee started over a
+						// selected connector drops the connector there, and Escape must not
+						// bring it back. A plain marquee lands on nothing because the
+						// `pressed` before its dragStart already cleared the selection
+						// (CanvasEventHandler); that press is a gesture of its own, so the
+						// selection from before it is not restored.
+						//
+						// Not settled or reconciled: these are the selection and group the
+						// state held at dragStart, which were consistent with the objects
+						// then, and a marquee moves no object.
+						//
+						// Dropped to "inert" rather than to null: the pointer is still down,
+						// and the recognizer keeps sending drag frames and a dragEnd. The
+						// marquee branch and MarqueeRect both look for kind "marquee", so the
+						// remaining frames select nothing and draw no rectangle, and
+						// handleGesture drops the drag on dragEnd whatever its kind. Until
+						// then the drag stays non-null, so commands stay refused
+						// (handleCommand). Not a commit, so nothing is recorded.
+						return {
+							...state,
+							selection: { objectIds: drag.baseIds, part: null },
+							multiSelectGroup:
+								drag.baseIds.length > 0
+									? drag.startSnapshot.multiSelectGroup
+									: null,
+							drag: createInertDrag(drag.startSnapshot),
+						};
+					}
+					default:
+						// The other kinds have their frames written straight into the
+						// objects by handlers that do not look at the kind, so a restore
+						// here would be re-applied by the next frame. One that becomes
+						// cancellable gets a case of its own above.
+						return state;
+				}
 			}
 
 			case "CLOSE_CONTEXT_MENU": {

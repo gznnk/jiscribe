@@ -130,7 +130,8 @@ before history and persistence see it.
 `"inert"`, so `drag !== null` always means "a drag is under way", and the handler the drag reaches names
 it in its own `dragStart` through `claimDrag` (`"move"` from `ObjectEventHandler`, `"marquee"` from
 `CanvasEventHandler`; the full list is `DragKind`, with what each kind holds in `CanvasDragDetail`);
-one no handler takes up stays `"inert"`. The control layers take one prop per axis, each layer taking
+one no handler takes up stays `"inert"`, and a marquee cancelled with Escape drops back to it
+(`CANCEL_DRAG`), so the rest of that drag selects nothing until release. The control layers take one prop per axis, each layer taking
 only the props it reads: `isTextEditing` from `mode`, and `selectionDragKind` from `drag`, narrowed to
 `"move"` / `"transform"` (`controllers/ui/utils/readSelectionDragKind.ts`). The transform frame, the
 connection anchors and a type's own selection controls hide while a text edit is open; the transform

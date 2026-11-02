@@ -398,6 +398,16 @@ export type CloseOtherShapesPopoverAction = {
 };
 
 /**
+ * Cancels the drag under way, as far as its kind can be undone: only a marquee
+ * today, whose selection goes back to what it started from (other kinds leave
+ * the state as it is). Dispatched by Escape (useKeyboardShortcuts). Not a
+ * commit, so nothing is recorded in the history.
+ */
+export type CancelDragAction = {
+	type: "CANCEL_DRAG";
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -422,4 +432,5 @@ export type CanvasAction =
 	| RemeasureTextAction
 	| CloseContextMenuAction
 	| CloseModalAction
-	| CloseOtherShapesPopoverAction;
+	| CloseOtherShapesPopoverAction
+	| CancelDragAction;

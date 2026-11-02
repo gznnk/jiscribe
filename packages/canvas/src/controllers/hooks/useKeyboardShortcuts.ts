@@ -27,6 +27,8 @@ export type UseKeyboardShortcutsParams = {
 	 * next frame (useGestureRecognizer's processPendingGestures). Run before a key the
 	 * canvas claims, so a key pressed in the frame that ended a drag is decided
 	 * against the state after that drag, not refused as if it were still under way.
+	 * Escape runs it every time, claimed or not: whether it cancels a marquee
+	 * (CANCEL_DRAG) depends on a dragStart that may still be pending.
 	 */
 	processPendingGestures: () => void;
 	/**
@@ -77,6 +79,28 @@ export const useKeyboardShortcuts = ({
 				return;
 			}
 
+			// Escape mid-marquee cancels the drag (CANCEL_DRAG) instead of reaching
+			// the commands, which a drag refuses. The modifiers are deliberately not
+			// matched the way a command binding is (CommandUtils): an additive
+			// marquee is dragged with Ctrl / Meta / Shift held, and Escape has to
+			// cancel it all the same. Any other drag falls through unchanged.
+			let hasProcessedPendingGestures = false;
+			if (event.key === "Escape" && !event.isComposing) {
+				// Drained first, as for a command (see processPendingGestures): an
+				// Escape in the frame that started or ended the marquee is decided
+				// against the state after it.
+				flushSync(() => {
+					processPendingGestures();
+				});
+				hasProcessedPendingGestures = true;
+				if (canvasStateRef.current.drag?.kind === "marquee") {
+					event.preventDefault();
+					event.stopPropagation();
+					dispatch({ type: "CANCEL_DRAG" });
+					return;
+				}
+			}
+
 			// A binding may be claimed by several commands that are available in
 			// different contexts, so the keystroke is offered to each in turn —
 			// plugin-contributed ones ahead of the built-ins
@@ -88,9 +112,11 @@ export const useKeyboardShortcuts = ({
 
 			// flushSync commits the drained gestures before canExecute below reads
 			// canvasStateRef, which only a render refreshes.
-			flushSync(() => {
-				processPendingGestures();
-			});
+			if (!hasProcessedPendingGestures) {
+				flushSync(() => {
+					processPendingGestures();
+				});
+			}
 
 			// The first command that takes the key wins: a callback-executed one
 			// (undo/redo when externally owned, paste) takes it without checking

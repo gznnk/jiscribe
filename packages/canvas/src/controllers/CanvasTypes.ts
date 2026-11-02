@@ -377,7 +377,7 @@ export type CanvasDragDetail =
 /**
  * What a drag is doing, as `interaction.getStatus().drag` reports it and as
  * `drag.kind` holds it:
- * - `"inert"`: no handler took the drag up; it holds the pointer until release and changes nothing
+ * - `"inert"`: no handler took the drag up; it holds the pointer until release and changes nothing; a cancelled marquee drag also drops to inert (CANCEL_DRAG)
  * - `"pan"`: moving the view (middle or right button, or one finger on the background)
  * - `"menu"`: working a control of a menu or sidebar, such as an ObjectMenu slider; leaves an open text edit open
  * - `"move"`: moving objects — a shape, a group or a multi-selection

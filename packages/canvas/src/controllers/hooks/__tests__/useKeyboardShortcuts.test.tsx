@@ -16,7 +16,8 @@ import { useKeyboardShortcuts } from "../useKeyboardShortcuts";
  * Which command a keystroke reaches when several share its binding: the matches
  * are walked in registry order (contributed ahead of built-ins), and the first
  * that has a callback or can execute takes the key. Also that the recognizer's
- * pending gestures are dispatched and committed before the key is decided.
+ * pending gestures are dispatched and committed before the key is decided, and
+ * that Escape mid-marquee cancels the drag rather than reaching the commands.
  */
 
 // Without this React treats every `act` below as unsupported and warns.
@@ -44,6 +45,26 @@ const selectionOnlyCommand: Command = {
 
 const initialCanvasState = createCommandState(twoRectsWithConnectorDoc);
 
+/** Stands in for a drag under way; only its kind is read before dispatch. */
+const withDrag = (
+	kind: "marquee" | "move",
+	canvasState: CanvasControllerState = initialCanvasState,
+): CanvasControllerState => ({
+	...canvasState,
+	drag: {
+		kind,
+		startSnapshot: {},
+		snapFeedback: null,
+		axisLockFeedback: null,
+		edgeScrollEnabled: true,
+	} as unknown as CanvasControllerState["drag"],
+});
+
+const selectedCanvasState: CanvasControllerState = {
+	...initialCanvasState,
+	selection: { ...initialCanvasState.selection, objectIds: ["rect-1"] },
+};
+
 const mountShortcuts = (
 	registries: CanvasRegistries,
 	callbacks: Partial<Record<string, () => void>>,
@@ -54,6 +75,8 @@ const mountShortcuts = (
 	onProcessPendingGestures: (
 		setCanvasState: (canvasState: CanvasControllerState) => void,
 	) => void = () => {},
+	/** The state the Probe starts from. */
+	startCanvasState: CanvasControllerState = initialCanvasState,
 ) => {
 	const containerElement = document.createElement("div");
 	document.body.appendChild(containerElement);
@@ -61,7 +84,7 @@ const mountShortcuts = (
 	const processPendingGestures = vi.fn();
 
 	const Probe = () => {
-		const [canvasState, setCanvasState] = useState(initialCanvasState);
+		const [canvasState, setCanvasState] = useState(startCanvasState);
 		useKeyboardShortcuts({
 			containerRef: { current: containerElement },
 			canvasState,
@@ -101,6 +124,18 @@ const mountShortcuts = (
 				containerElement.appendChild(targetElement);
 			}
 			(targetElement ?? containerElement).dispatchEvent(event);
+			return event.defaultPrevented;
+		},
+		/** Fires Escape, with Shift when `shiftKey`, and reports whether it was claimed. */
+		pressEscape: (shiftKey = false) => {
+			const event = new KeyboardEvent("keydown", {
+				key: "Escape",
+				code: "Escape",
+				shiftKey,
+				bubbles: true,
+				cancelable: true,
+			});
+			containerElement.dispatchEvent(event);
 			return event.defaultPrevented;
 		},
 	};
@@ -260,6 +295,79 @@ describe("useKeyboardShortcuts", () => {
 		expect(dispatch).toHaveBeenCalledWith({
 			type: "COMMAND",
 			commandId: "selectAll",
+		});
+	});
+
+	describe("Escape during a drag", () => {
+		it.each([
+			["Escape", false],
+			["Shift+Escape", true],
+		])(
+			"cancels a marquee on %s instead of running a command",
+			(_, shiftKey) => {
+				const { dispatch, processPendingGestures, pressEscape } =
+					mountShortcuts(
+						createTestRegistries(),
+						{},
+						undefined,
+						withDrag("marquee", selectedCanvasState),
+					);
+
+				expect(pressEscape(shiftKey)).toBe(true);
+				expect(dispatch).toHaveBeenCalledTimes(1);
+				expect(dispatch).toHaveBeenCalledWith({ type: "CANCEL_DRAG" });
+				expect(processPendingGestures).toHaveBeenCalledTimes(1);
+			},
+		);
+
+		it("cancels a marquee the pending gestures start in the same frame", () => {
+			const { dispatch, processPendingGestures, pressEscape } = mountShortcuts(
+				createTestRegistries(),
+				{},
+				(setCanvasState) => {
+					// Plays a marquee's dragStart, as the drain would dispatch it.
+					setCanvasState(withDrag("marquee"));
+				},
+			);
+
+			expect(pressEscape()).toBe(true);
+			expect(dispatch).toHaveBeenCalledTimes(1);
+			expect(dispatch).toHaveBeenCalledWith({ type: "CANCEL_DRAG" });
+			expect(processPendingGestures).toHaveBeenCalledTimes(1);
+		});
+
+		it("runs escapeSelection with no drag under way", () => {
+			const { dispatch, processPendingGestures, pressEscape } = mountShortcuts(
+				createTestRegistries(),
+				{},
+				undefined,
+				selectedCanvasState,
+			);
+
+			expect(pressEscape()).toBe(true);
+			expect(dispatch).toHaveBeenCalledTimes(1);
+			expect(dispatch).toHaveBeenCalledWith({
+				type: "COMMAND",
+				commandId: "escapeSelection",
+			});
+			expect(processPendingGestures).toHaveBeenCalledTimes(1);
+		});
+
+		it("leaves Escape to the commands during a drag other than a marquee", () => {
+			const { dispatch, processPendingGestures, pressEscape } = mountShortcuts(
+				createTestRegistries(),
+				{},
+				undefined,
+				withDrag("move", selectedCanvasState),
+			);
+
+			expect(pressEscape()).toBe(true);
+			expect(dispatch).toHaveBeenCalledTimes(1);
+			expect(dispatch).toHaveBeenCalledWith({
+				type: "COMMAND",
+				commandId: "escapeSelection",
+			});
+			expect(processPendingGestures).toHaveBeenCalledTimes(1);
 		});
 	});
 

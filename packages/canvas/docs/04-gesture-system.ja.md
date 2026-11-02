@@ -120,7 +120,8 @@ COW ビューは履歴と永続化に届く前に平坦化される。
 `"inert"` で開くので、`drag !== null` は常に「ドラッグ中」を意味する。ドラッグを受けたハンドラが自分の
 `dragStart` で `claimDrag` を通して名付ける（例: `ObjectEventHandler` の `"move"`、`CanvasEventHandler` の
 `"marquee"`。全種類は `DragKind`、種類ごとに持つものは `CanvasDragDetail`）。どのハンドラも
-受けないドラッグは `"inert"` のまま。コントロール層は軸ごとに 1 つの prop を、読むものだけ受け取る。
+受けないドラッグは `"inert"` のまま。Escape で取り消した範囲選択も `"inert"` に落ち
+（`CANCEL_DRAG`）、離すまでの残りのドラッグは何も選ばない。コントロール層は軸ごとに 1 つの prop を、読むものだけ受け取る。
 `mode` からの `isTextEditing` と、`drag` を `"move"` / `"transform"` に絞った `selectionDragKind`
 （`controllers/ui/utils/readSelectionDragKind.ts`）である。テキスト編集中は変形フレーム・接続アンカー・型固有のセレクションコントロールが隠れ、移動中は変形フレームを、
 移動中と変形中は接続アンカー・頂点ハンドル・型固有のセレクションコントロールを隠す。

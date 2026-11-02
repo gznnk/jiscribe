@@ -12,13 +12,14 @@ import type {
 	DragStartSnapshot,
 	KeyPointsCache,
 } from "../../CanvasTypes";
+import { limitViewScroll } from "./utils/limitViewScroll";
 import type { CanvasRegistries } from "../../registries/CanvasRegistries";
 import { buildObjectBBoxes } from "../../utils/buildObjectBBoxes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { materializeObjects } from "../../utils/cowObjects";
+import { createInertDrag } from "../../utils/createInertDrag";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
-import { limitViewScroll } from "./utils/limitViewScroll";
 import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
 import { ZOOM } from "../../utils/zoom";
 
@@ -184,16 +185,8 @@ export const handleGesture = (
 		nextState = {
 			...state,
 			dragStartCaches: { keyPoints: newCache, snapCandidates },
-			drag: {
-				// What every drag starts as. The handler it reaches names it in its own
-				// dragStart (claimDrag); one no handler takes up stays "inert", which
-				// keeps "a drag is under way" true for all of them.
-				kind: "inert",
-				startSnapshot,
-				snapFeedback: null,
-				axisLockFeedback: null,
-				edgeScrollEnabled: false,
-			},
+			// One no handler takes up stays inert (see createInertDrag).
+			drag: createInertDrag(startSnapshot),
 		};
 	}
 

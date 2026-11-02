@@ -28,7 +28,8 @@ const canRunDuringDrag = (command: { category?: string }): boolean =>
  * in `canExecute`, so every route that runs a command is covered — the COMMAND
  * action (keyboard, host handle) and the menu handlers alike — and a shortcut
  * the canvas claims is still swallowed rather than falling through to the
- * browser (same split as canNavigateHistory).
+ * browser (same split as canNavigateHistory). Escape mid-marquee does not
+ * come here: it is taken as CANCEL_DRAG instead (useKeyboardShortcuts).
  */
 export const handleCommand = (
 	state: CanvasControllerState,

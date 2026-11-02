@@ -69,4 +69,39 @@ test.describe("marquee enclosure rule (full containment only)", () => {
 			"matrix(1, 0, 0, 1, 631, 260)",
 		);
 	});
+
+	test("Escape mid-drag cancels the marquee and the rest of the drag selects nothing", async ({
+		canvas,
+		page,
+	}) => {
+		// A: bbox x300-440 / y200-320
+		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 440, y: 320 });
+		await canvas.deselect();
+
+		const marqueeRect = page.locator('[data-testid="marquee-rect"]');
+		const start = canvas.toScreen({ x: 260, y: 160 });
+		const enclosing = canvas.toScreen({ x: 480, y: 360 });
+		const stillEnclosing = canvas.toScreen({ x: 520, y: 400 });
+
+		await page.mouse.move(start.x, start.y);
+		await page.mouse.down();
+		await page.mouse.move(enclosing.x, enclosing.y, { steps: 12 });
+		await expect(marqueeRect).toBeVisible();
+		await expect
+			.poll(() => canvas.selectionOutlineKinds(), {
+				message: "the marquee selects A while it is dragged",
+			})
+			.toEqual(["object"]);
+
+		await page.keyboard.press("Escape");
+		await expect(marqueeRect).toHaveCount(0);
+		await expect.poll(() => canvas.selectionOutlineKinds()).toEqual([]);
+
+		// Still around A, and released there: nothing is selected.
+		await page.mouse.move(stillEnclosing.x, stillEnclosing.y, { steps: 6 });
+		await page.mouse.up();
+		await expect(marqueeRect).toHaveCount(0);
+		expect(await canvas.selectionOutlineKinds()).toEqual([]);
+		expect(await canvas.hasAnyControl()).toBe(false);
+	});
 });
