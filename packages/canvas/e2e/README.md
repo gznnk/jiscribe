@@ -29,7 +29,8 @@ packages/canvas/
 │   ├── fixtures.ts        # the canvas fixture (injects CanvasDriver)
 │   ├── support/
 │   │   ├── selectors.ts   # data-kind / data-id selector constants
-│   │   └── CanvasDriver.ts # operation API (drawing, selection, text, color, connectors)
+│   │   ├── CanvasDriver.ts # operation API (drawing, selection, text, color, connectors)
+│   │   └── pixelAlignment.ts # finds button icons drawn off whole pixels (blurred)
 │   └── specs/             # the tests themselves (run by test:e2e)
 ```
 

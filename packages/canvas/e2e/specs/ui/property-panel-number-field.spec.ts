@@ -1,4 +1,5 @@
 import { test, expect } from "../../fixtures";
+import { findIconsOffWholePixels } from "../../support/pixelAlignment";
 import { selectors } from "../../support/selectors";
 
 /**
@@ -51,6 +52,29 @@ const matrixAngleDeg = (transform: string | null): number => {
 };
 
 test.describe("Properties sidebar number fields", () => {
+	/**
+	 * Each half of the spinner is an odd height and each field of a pair is as
+	 * wide as the row leaves it, so the arrows land on whole pixels only as laid
+	 * out for it; off them, they blur.
+	 */
+	test("draws the spin buttons' arrows on whole pixels, in a pair of fields as well", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
+		await canvas.openPropertyPanel();
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("x")),
+		).toBeVisible();
+		const fields = canvas.page.locator(
+			`${selectors.propertyPanel} div:has(> [data-testid^="property-field:"])`,
+		);
+		await expect(
+			fields.locator('button[aria-label="Increase"]'),
+		).not.toHaveCount(0);
+
+		expect(await findIconsOffWholePixels(fields)).toEqual([]);
+	});
+
 	test("steps from the spin buttons, and one undo takes the whole burst back", async ({
 		canvas,
 	}) => {

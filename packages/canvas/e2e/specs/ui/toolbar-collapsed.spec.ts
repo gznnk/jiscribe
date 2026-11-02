@@ -2,6 +2,7 @@ import type { Locator } from "@playwright/test";
 
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { findIconsOffWholePixels } from "../../support/pixelAlignment";
 import { selectors } from "../../support/selectors";
 
 /**
@@ -139,6 +140,20 @@ test.describe("collapsed toolbar", () => {
 		await expect(toolbar).toHaveCount(2);
 		await expect(help).toHaveCount(0);
 		expect((await readCanvasBoxes(canvas)).viewport).toEqual(collapsedViewport);
+	});
+
+	/**
+	 * The full-width bar's height inside its bottom border is even, so the
+	 * buttons centred in it sit on whole pixels; off them, the icons blur.
+	 */
+	test("draws the full-width bar's icons on whole pixels", async ({
+		canvas,
+	}) => {
+		await canvas.toggleSidebars();
+		const toolbar = canvas.page.locator(selectors.toolbar);
+		await expect(toolbar).toHaveCount(1);
+
+		expect(await findIconsOffWholePixels(toolbar)).toEqual([]);
 	});
 
 	/**

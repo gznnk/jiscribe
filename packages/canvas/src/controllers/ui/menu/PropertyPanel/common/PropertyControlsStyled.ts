@@ -83,10 +83,14 @@ export const PropertyNumberFieldSpinButton = styled.button<{
 }>`
 	flex: 1;
 	display: flex;
-	align-items: center;
+	/* Each half is 13px tall (the field's 26px inside its border), where a
+	   centred 10px icon would land on a half pixel and blur. The two icons hug
+	   the middle line instead, 1px off it, mirroring each other. */
+	align-items: ${({ direction }) =>
+		direction === "up" ? "flex-end" : "flex-start"};
 	justify-content: center;
 	min-height: 0;
-	padding: 0;
+	padding: ${({ direction }) => (direction === "up" ? "0 0 1px" : "1px 0 0")};
 	border: none;
 	background: transparent;
 	color: ${theme.foregroundMuted};

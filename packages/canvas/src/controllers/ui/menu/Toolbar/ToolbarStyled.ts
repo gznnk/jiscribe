@@ -21,7 +21,9 @@ import { floatingBarStyles } from "../floatingBarStyles";
  */
 export const ToolbarContainer = styled.div`
 	position: relative;
-	flex: 0 0 40px;
+	/* Odd, so the bottom border leaves an even height inside and a button
+	   centred in it sits on a whole pixel, its icon sharp. */
+	flex: 0 0 41px;
 	width: 100%;
 	box-sizing: border-box;
 	display: flex;

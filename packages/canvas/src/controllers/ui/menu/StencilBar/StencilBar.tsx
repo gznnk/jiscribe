@@ -1,6 +1,7 @@
-import { memo } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 
 import { StencilBarContainer, StencilBarDivider } from "./StencilBarStyled";
+import { computeStencilBarTop } from "./utils/computeStencilBarTop";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
 import { OTHER_SHAPES_BUTTON_TARGET_ID } from "../../../gestures/handlers/menu/utils/otherShapesTargetIds";
 import { ShapesIcon } from "../../icons/ShapesIcon";
@@ -38,8 +39,32 @@ const StencilBarComponent: React.FC<StencilBarProps> = ({
 	isOtherShapesPopoverOpen,
 }) => {
 	const messages = useCanvasMessages();
+	const barRef = useRef<HTMLDivElement>(null);
+
+	// Centred by hand rather than by auto margins, which land on a half pixel
+	// whenever the band and the bar differ in height by an odd number and blur
+	// the icons. The band is StencilBarDock, the bar's parent. Written to the
+	// element straight from the observer, so a resize is placed in the frame it
+	// is laid out in.
+	useLayoutEffect(() => {
+		const bar = barRef.current;
+		const band = bar?.parentElement;
+		if (!bar || !band) {
+			return;
+		}
+		const placeBar = (): void => {
+			bar.style.marginTop = `${computeStencilBarTop(band.clientHeight, bar.offsetHeight)}px`;
+		};
+		placeBar();
+		const resizeObserver = new ResizeObserver(placeBar);
+		resizeObserver.observe(band);
+		resizeObserver.observe(bar);
+		return () => resizeObserver.disconnect();
+	}, []);
+
 	return (
 		<StencilBarContainer
+			ref={barRef}
 			data-kind="menu"
 			data-id="stencil-bar"
 			data-gesture="native-wheel"

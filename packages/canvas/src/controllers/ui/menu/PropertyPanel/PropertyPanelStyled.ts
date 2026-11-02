@@ -124,8 +124,12 @@ export const PropertyPanelSectionLabel = styled.span`
 	white-space: nowrap;
 `;
 
-/** Width of a row's label column. */
-const ROW_LABEL_WIDTH = 56;
+/**
+ * Width of a row's label column. Odd, so the control column left over is even
+ * and splits into two whole-pixel field columns (PropertyPanelFieldGrid);
+ * a field ending on a half pixel blurs its spin buttons' icons.
+ */
+const ROW_LABEL_WIDTH = 57;
 
 /** Gap between a row's label column and its control. */
 const ROW_GAP = 6;

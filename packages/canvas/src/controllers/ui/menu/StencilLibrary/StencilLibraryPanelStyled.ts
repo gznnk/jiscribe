@@ -172,10 +172,16 @@ export const StencilLibrarySectionLabel = styled.span`
 export const STENCIL_LIBRARY_PANEL_GRID_COLUMNS = 6;
 
 /**
+ * Gap in px between the columns of {@link StencilLibraryPanelGrid}. Fixed
+ * rather than spread from the free width, which would put the icons on
+ * fractional pixels and blur them.
+ */
+const STENCIL_LIBRARY_PANEL_GRID_COLUMN_GAP = 12;
+
+/**
  * Grid of stencil buttons under a section header (and of the flat search
  * results). A fixed number of button-wide columns rather than wrapping, so the
- * items of every section line up down the panel, spread across the inset with
- * the free space between them.
+ * items of every section line up down the panel, packed from the start inset.
  */
 export const StencilLibraryPanelGrid = styled.div`
 	display: grid;
@@ -183,12 +189,11 @@ export const StencilLibraryPanelGrid = styled.div`
 		${STENCIL_LIBRARY_PANEL_GRID_COLUMNS},
 		${STENCIL_BUTTON_SIZE}px
 	);
-	justify-content: space-between;
-	gap: 2px;
-	/* The list reserves the scrollbar's gutter on the right, so the end padding
-	   gives it back to line the last column up with the search box's edge. That
-	   holds where the webkit scrollbar styles apply (the gutter is
-	   SCROLLBAR_WIDTH wide there). */
+	justify-content: start;
+	gap: 2px ${STENCIL_LIBRARY_PANEL_GRID_COLUMN_GAP}px;
+	/* The list reserves the scrollbar's gutter on the right (SCROLLBAR_WIDTH
+	   wide where the webkit scrollbar styles apply), so the end padding leaves
+	   only what is left of the inset. */
 	padding: 4px ${SIDE_PANEL_INSET - SCROLLBAR_WIDTH}px 8px ${SIDE_PANEL_INSET}px;
 `;
 

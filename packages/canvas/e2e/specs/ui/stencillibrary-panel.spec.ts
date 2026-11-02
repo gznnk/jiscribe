@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { findIconsOffWholePixels } from "../../support/pixelAlignment";
 import { selectors } from "../../support/selectors";
 
 /**
@@ -360,36 +361,36 @@ test.describe("Shape library sidebar", () => {
 	});
 
 	/**
-	 * The grid's six columns span exactly the search box's width: its first
-	 * column starts at the box's left edge and its last ends at the box's right
-	 * one, though the list reserves the scrollbar's gutter on the right.
+	 * The grid's first column starts at the search box's left edge and the six
+	 * columns end inside its right one, every icon on a whole pixel.
 	 */
-	test("lines its grid up with the search box on both sides", async ({
+	test("starts its grid at the search box's left edge, its icons on whole pixels", async ({
 		canvas,
 	}) => {
 		await canvas.openStencilLibrary();
+		const panel = canvas.page.locator(selectors.stencilLibraryPanel);
 		const searchBox = await canvas.page
 			.locator(selectors.stencilLibrarySearch)
 			.boundingBox();
-		const itemBoxes = await canvas.page
-			.locator(`${selectors.stencilLibraryPanel} [data-action^="item:"]`)
+		const itemBoxes = await panel
+			.locator('[data-action^="item:"]')
 			.evaluateAll((elements) =>
-				elements.slice(0, 2).map((element) => {
+				elements.slice(0, 6).map((element) => {
 					const rect = element.getBoundingClientRect();
 					return { x: rect.left, width: rect.width };
 				}),
 			);
-		if (!searchBox || itemBoxes.length < 2) {
-			throw new Error("cannot measure the search box and the first two items");
+		if (!searchBox || itemBoxes.length < 6) {
+			throw new Error("cannot measure the search box and the first row");
 		}
-		const [first, second] = itemBoxes;
-		const columnPitch = second.x - first.x;
-		const lastColumnRight = first.x + 5 * columnPitch + first.width;
+		const first = itemBoxes[0];
+		const last = itemBoxes[5];
 
 		expect(Math.abs(first.x - searchBox.x)).toBeLessThanOrEqual(1);
-		expect(
-			Math.abs(lastColumnRight - (searchBox.x + searchBox.width)),
-		).toBeLessThanOrEqual(1);
+		expect(last.x + last.width).toBeLessThanOrEqual(
+			searchBox.x + searchBox.width,
+		);
+		expect(await findIconsOffWholePixels(panel)).toEqual([]);
 	});
 
 	test("closes from the panel's close button", async ({ canvas }) => {

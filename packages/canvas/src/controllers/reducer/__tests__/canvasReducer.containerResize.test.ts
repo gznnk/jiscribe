@@ -90,7 +90,7 @@ describe("canvasReducer / CONTAINER_RESIZE", () => {
 	});
 
 	it("moves minY by the top edge's shift in world units", () => {
-		// The full-width toolbar takes its 40px row above the viewport at zoom 2:
+		// A 40px row taken above the viewport at zoom 2:
 		// 20 world units come off the top, and minX is left alone.
 		const next = canvasReducer(
 			createState(2),

@@ -246,6 +246,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   marquee, the selection being added to for an additive one — and the rest of
   the drag selects nothing. Shift+Escape cancels an additive marquee dragged
   with Shift held as well.
+- **The chrome's icons are no longer blurred.** Some sat on half or
+  fractional pixels: the stencil bar's whenever the room it is centred in
+  differed from it by an odd height, the full-width top bar's, the shape
+  library grid's (its columns spread across the panel) and the spin buttons of
+  the properties sidebar's number fields. Each now lands on a whole pixel. The
+  full-width bar is 1px taller, the grid's columns are packed from the left
+  with a fixed gap, and the properties sidebar's label column is 1px wider.
 
 ## [0.12.2] - 2026-10-25
 

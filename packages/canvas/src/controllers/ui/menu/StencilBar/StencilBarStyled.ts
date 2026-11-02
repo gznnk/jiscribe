@@ -35,15 +35,16 @@ export const StencilBarDock = styled.div`
 
 /**
  * The floating bar, its items in one column, centred top to bottom in
- * StencilBarDock. A band shorter than the bar keeps the bar at its top,
- * clear of the start pill, and the bar scrolls inside. A wheel over it reaches
- * the canvas, as it does over the ObjectMenu, unless the bar is scrolling
- * (`data-gesture="native-wheel"` on the element).
+ * StencilBarDock on a whole pixel (the top margin StencilBar sets). A band
+ * shorter than the bar keeps the bar at its top, clear of the start pill, and
+ * the bar scrolls inside. A wheel over it reaches the canvas, as it does over
+ * the ObjectMenu, unless the bar is scrolling (`data-gesture="native-wheel"`
+ * on the element).
  */
 export const StencilBarContainer = styled.div`
 	${floatingBarStyles}
 	flex: none;
-	margin-block: auto;
+	align-self: flex-start;
 	flex-direction: column;
 	max-height: 100%;
 	overflow-y: auto;

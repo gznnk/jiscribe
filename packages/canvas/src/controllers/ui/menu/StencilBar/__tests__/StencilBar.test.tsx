@@ -2,7 +2,7 @@
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import type { Stencil } from "../../../objects/Stencil";
@@ -19,18 +19,51 @@ const presetsOf = (presetIds: string[]): Stencil[] =>
 		return preset;
 	});
 
+/** Callbacks of the ResizeObservers built while a test runs, newest last. */
+let observerCallbacks: (() => void)[] = [];
+
+class ResizeObserverStub {
+	constructor(callback: () => void) {
+		observerCallbacks.push(callback);
+	}
+	observe(): void {}
+	unobserve(): void {}
+	disconnect(): void {}
+}
+
 let unmount: (() => void) | null = null;
+
+beforeEach(() => {
+	vi.stubGlobal("ResizeObserver", ResizeObserverStub);
+});
 
 afterEach(() => {
 	unmount?.();
 	unmount = null;
+	observerCallbacks = [];
+	vi.unstubAllGlobals();
 });
 
+/** Reports `height` as the element's box height, which jsdom leaves at 0. */
+const setBoxHeight = (
+	element: HTMLElement,
+	property: "clientHeight" | "offsetHeight",
+	height: number,
+): void => {
+	Object.defineProperty(element, property, {
+		configurable: true,
+		get: () => height,
+	});
+};
+
+/** Renders the bar into a band (the container) that reports `bandHeight`. */
 const renderBar = (
 	presets: Stencil[],
 	isOtherShapesPopoverOpen = false,
+	bandHeight = 0,
 ): HTMLElement => {
 	const container = document.createElement("div");
+	setBoxHeight(container, "clientHeight", bandHeight);
 	const root = createRoot(container);
 	act(() =>
 		root.render(
@@ -59,6 +92,39 @@ describe("StencilBar", () => {
 		const container = renderBar(presetsOf(["rect"]));
 		const bar = container.firstElementChild as HTMLElement;
 		expect(bar.dataset.gesture).toBe("native-wheel");
+	});
+
+	/**
+	 * Centred in the band on a whole pixel, and placed again when the band or
+	 * the bar is resized.
+	 */
+	it("sets its top margin to centre it in the band, rounded down", () => {
+		const offsetHeightDescriptor = Object.getOwnPropertyDescriptor(
+			HTMLElement.prototype,
+			"offsetHeight",
+		);
+		// Set on the prototype, since the bar does not exist until the render.
+		Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+			configurable: true,
+			get: () => 200,
+		});
+		try {
+			const container = renderBar(presetsOf(["rect"]), false, 501);
+			const bar = container.firstElementChild as HTMLElement;
+			expect(bar.style.marginTop).toBe("150px");
+
+			setBoxHeight(container, "clientHeight", 603);
+			act(() => observerCallbacks.at(-1)!());
+			expect(bar.style.marginTop).toBe("201px");
+		} finally {
+			if (offsetHeightDescriptor) {
+				Object.defineProperty(
+					HTMLElement.prototype,
+					"offsetHeight",
+					offsetHeightDescriptor,
+				);
+			}
+		}
 	});
 
 	/** The same contract as the top bar's presets, so the same handler takes them. */
