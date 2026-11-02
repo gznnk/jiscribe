@@ -40,7 +40,8 @@
 		"test": "pnpm -r --if-present test",
 		"test:coverage": "pnpm -r --if-present test:coverage",
 		"test:e2e": "pnpm -r --if-present test:e2e",
-		"test:e2e:canvas": "pnpm --filter @jiscribe/canvas test:e2e"
+		"test:e2e:canvas": "pnpm --filter @jiscribe/canvas test:e2e",
+		"bench": "pnpm -r --if-present bench"
 	},
 	"packageManager": "pnpm@11.21.0",
 	"comments": {

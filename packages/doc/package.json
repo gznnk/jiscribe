@@ -20,6 +20,7 @@
 	"scripts": {
 		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"test": "vitest run",
+		"bench": "vitest bench --run",
 		"test:watch": "vitest --watch",
 		"typecheck": "tsc --noEmit",
 		"dep:check": "madge --extensions ts,tsx,js,jsx --circular src"

@@ -7,10 +7,9 @@ import {
 	collectStateImageSources,
 	holdsSameImageSources,
 } from "../collectStateImageSources";
-import { copyObjectsRecord, createCowObjects } from "../cowObjects";
+import { createCowObjects } from "../cowObjects";
 import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 import { updateAffectedGroupBounds } from "../updateAffectedGroupBounds";
-import { updateGroupBounds } from "../updateGroupBounds";
 
 const GROUP_CHILD_COUNT = 5;
 const MOVED_ID = "child-0";
@@ -52,24 +51,6 @@ contentResizer.register("text", (object) => object);
 const stateOf = (objects: Record<string, ObjectState>): CanvasControllerState =>
 	({ objects }) as unknown as CanvasControllerState;
 
-// What the pass did before it kept a view a view: copy every object into a
-// plain Record, which also leaves the passes after it nothing to narrow to.
-const updateAffectedGroupBoundsByCopy = (
-	state: CanvasControllerState,
-): CanvasControllerState => {
-	const updatedObjects = copyObjectsRecord(state.objects);
-	const updatedGroup = updateGroupBounds(updatedObjects, "g");
-	if (updatedGroup) {
-		updatedObjects.g = updatedGroup;
-	}
-	return { ...state, objects: updatedObjects };
-};
-
-type UpdateGroups = (state: CanvasControllerState) => CanvasControllerState;
-
-const keepingTheView: UpdateGroups = (state) =>
-	updateAffectedGroupBounds(state, [MOVED_ID]);
-
 // One frame of a grouped selection-control drag as the reducer and the canvas
 // run it: the control writes through a view rebased on the previous frame
 // (RegisteredSelectionControl), the group frame is recomputed, the content pass
@@ -78,12 +59,14 @@ const keepingTheView: UpdateGroups = (state) =>
 const runFrame = (
 	previousState: CanvasControllerState,
 	allIds: readonly string[],
-	updateGroups: UpdateGroups,
 	step: number,
 ): CanvasControllerState => {
 	const written = createCowObjects(previousState.objects);
 	written[MOVED_ID] = { ...written[MOVED_ID], cx: step } as ObjectState;
-	const grouped = updateGroups({ ...previousState, objects: written });
+	const grouped = updateAffectedGroupBounds(
+		{ ...previousState, objects: written },
+		[MOVED_ID],
+	);
 	const settled = reconcileObjectContentSizes(
 		grouped,
 		previousState,
@@ -102,28 +85,17 @@ const runFrame = (
 	return settled;
 };
 
-for (const objectCount of [1000, 5000, 20000]) {
-	describe(`grouped drag frame (${objectCount} objects)`, () => {
+describe("updateAffectedGroupBounds: one grouped drag frame, end to end", () => {
+	for (const objectCount of [1000, 5000, 20000]) {
 		const baseObjects = buildObjects(objectCount);
 		const allIds = Object.keys(baseObjects);
-
-		// Each variant runs from the state its own previous frame left, since the
-		// shape of that state (plain or view) is what the next frame inherits.
-		let copyingState = stateOf(copyObjectsRecord(baseObjects));
-		let viewState = stateOf(baseObjects);
+		// Each frame runs from the state the previous one left, since the shape
+		// of that state (plain or view) is what the next frame inherits.
+		let state = stateOf(baseObjects);
 		let step = 0;
 
-		bench("copy to a plain record (before)", () => {
-			copyingState = runFrame(
-				copyingState,
-				allIds,
-				updateAffectedGroupBoundsByCopy,
-				++step,
-			);
+		bench(`${objectCount} objects`, () => {
+			state = runFrame(state, allIds, ++step);
 		});
-
-		bench("keep the view (after)", () => {
-			viewState = runFrame(viewState, allIds, keepingTheView, ++step);
-		});
-	});
-}
+	}
+});

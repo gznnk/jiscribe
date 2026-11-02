@@ -90,7 +90,8 @@ vitest に拾わせないためで、`test:e2e` スクリプトから、その�
 効かせ、`pnpm test` には乗せない。パッケージのテストの入口はこの 2 つだけ
 （`test:watch` や `test:e2e:ui` のような派生はよいが、第 3 の層は作らない）。
 それによってリポジトリルートの `pnpm test` と `pnpm test:e2e` がそれぞれ 1 つの
-ことを意味する。
+ことを意味する。例外はベンチマークで、合否ではなく数字を出すものなので両層の外に
+置き、`bench` スクリプトから走らせる（[09-testing](packages/canvas/docs/09-testing.ja.md#ベンチマークvitest-bench) 参照）。
 
 e2e スイート全体は重い。`main` を対象とした Pull Request では CI が実行する。
 

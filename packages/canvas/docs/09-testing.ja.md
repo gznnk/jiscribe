@@ -3,6 +3,7 @@
 # テスト
 
 canvas のテストは **ユニット（vitest）→ E2E（Playwright）の 2 層** + 依存関係チェックで構成する。
+ベンチマークはどちらの層にも入らない。測るだけで合否を出さない（[ベンチマーク](#ベンチマークvitest-bench)）。
 純粋関数中心の設計（[設計思想](./01-design-philosophy.ja.md) 原則 2）がこの構成を可能にしている。
 
 ## ユニット/E2E の線引き（デトロイト派）
@@ -160,6 +161,22 @@ API は `createCanvasPlaywrightConfig` / `createPluginHarnessViteConfig` /
 取る（`./e2e/testing-playwright-config`）。SDK 経由にはしない — `canvas → canvas-sdk → canvas`
 の循環こそ、この分離で解消したものだからである。プラグインのスイートを立ち上げる手順は
 [プラグインの作り方](./13-authoring-plugins.ja.md) にある。
+
+## ベンチマーク（vitest bench）
+
+ベンチマークはホットパスの所要時間を測る。何も判定しないので、テストの第 3 の層ではない。
+`test` からは走らず、CI にも乗せない。
+
+- 置き場: `src/**/__benchmarks__/**/*.bench.ts`。`__tests__/` と同じく対象の隣に置き、
+  フィクスチャの組み立ては `__benchmarks__/support/` に置く。拾うファイルは各パッケージの
+  `vitest.config.ts` の `benchmark.include` が正本
+- 実行: `pnpm --filter @jiscribe/canvas bench`（`vitest bench --run`）。bench を持つ全パッケージは `pnpm bench`
+- 基準値はコミットせず、閾値で落とすこともしない。数字は同じ機械で測ったもの同士でしか
+  比べられないので、比べるたびに両側を測り直す（base で `vitest bench --run --outputJson <file>`、
+  head で `--compare <file>`）
+- 測るのは現行の実装だけ。`describe` には何を測るかを、`bench` には規模を名付け、どちらも
+  安易に変えない。`--compare` は bench と基準値をファイルと並び順だけで対応付けるので、
+  その対応が合っているかを示すのは名前になる
 
 ## 循環依存チェック（madge）
 

@@ -10,10 +10,7 @@ import {
 import type { ObjectOutlineCalculator } from "../../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
-import {
-	calcConnectorBoundingBox,
-	calcConnectorPathBoundingBox,
-} from "../calcConnectorBoundingBox";
+import { calcConnectorPathBoundingBox } from "../calcConnectorBoundingBox";
 
 const SPOKE_COUNT = 20;
 // OUTLINE_CURVE_SEGMENTS in @jiscribe/canvas-sdk
@@ -96,31 +93,12 @@ const spokes = Array.from({ length: SPOKE_COUNT }, (_, index) => {
 	return cloud(`spoke-${index}`, Math.cos(angle) * 600, Math.sin(angle) * 600);
 });
 
-const spokeObjects = Object.fromEntries(
-	spokes.map((spoke) => [spoke.id, spoke]),
-);
-
 // One frame of dragging the hub: it is a new object at a new place, so viewport
 // culling re-boxes every connector hanging off it and the renderer resolves
-// each of them again (useResolvedConnectorPoints misses).
-describe(`drag a hub with ${SPOKE_COUNT} connectors: culling + render (one frame)`, () => {
+// each of them again; both read the one cached resolve.
+describe("resolveConnectorPointsCached: drag a hub, culling + render", () => {
 	let step = 0;
-	bench("before: culling resolves on the boxes, the renderer again", () => {
-		const hub = cloud("hub", ++step % 50, 0);
-		const objects = { ...spokeObjects, hub };
-		for (let index = 0; index < SPOKE_COUNT; index++) {
-			calcConnectorBoundingBox(hubConnectors[index], objects);
-			resolveConnectorPoints(
-				hubConnectors[index],
-				hub,
-				spokes[index],
-				registries.outline,
-				registries.anchorRegion,
-				registries.extraConnectPoints,
-			);
-		}
-	});
-	bench("after: both read one cached resolve", () => {
+	bench(`${SPOKE_COUNT} orthogonal connectors to cloud outlines`, () => {
 		const hub = cloud("hub", ++step % 50, 0);
 		for (let index = 0; index < SPOKE_COUNT; index++) {
 			const resolved = resolveConnectorPointsCached(
@@ -151,8 +129,8 @@ describe(`drag a hub with ${SPOKE_COUNT} connectors: culling + render (one frame
 	});
 });
 
-// Where a resolve spends its time: the outline lookup is a small part of it.
-describe("breakdown: one connector resolve", () => {
+// The same resolve with and without an outline to clip against, per routing.
+describe("resolveConnectorPoints: one connector, uncached", () => {
 	const hub = cloud("hub", 0, 0);
 	const straight = {
 		...hubConnectors[3],

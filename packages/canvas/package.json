@@ -19,6 +19,7 @@
 		"generate:fonts": "node build/generateFontsCss.ts",
 		"check:fonts": "node build/generateFontsCss.ts --check",
 		"test": "vitest run",
+		"bench": "vitest bench --run",
 		"test:e2e": "playwright test",
 		"test:e2e:headed": "playwright test --headed",
 		"test:e2e:ui": "playwright test --ui",

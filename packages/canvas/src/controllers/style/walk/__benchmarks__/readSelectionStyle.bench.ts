@@ -5,10 +5,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
-import {
-	createSelectionStyleReader,
-	readSelectionStyle,
-} from "../readSelectionStyle";
+import { createSelectionStyleReader } from "../readSelectionStyle";
 import type { SelectionStyleRead } from "../readSelectionStyle";
 
 // The core kinds the ObjectMenu and the properties sidebar rows read, once each:
@@ -83,39 +80,34 @@ const groupSelectedState = (childCount: number): CanvasControllerState => {
 	};
 };
 
-const readAllBefore = (state: CanvasControllerState): void => {
-	for (const kind of KINDS) {
-		readSelectionStyle(state, kind, registries);
-	}
-};
-
 const readAllWithReader = (read: SelectionStyleRead): void => {
 	for (const kind of KINDS) {
 		read(kind);
 	}
 };
 
-for (const childCount of [1, 100, 1000]) {
-	const state = groupSelectedState(childCount);
-	// What useSelectionStyleReader keeps while objects, selection and the text
-	// edit hold still.
-	const keptReader = createSelectionStyleReader(state, registries);
+const GROUP_SIZES = [1, 100, 1000];
+const groupStates = GROUP_SIZES.map((childCount) => ({
+	childCount,
+	state: groupSelectedState(childCount),
+}));
 
-	describe(`pan frame: objects and selection unchanged (group of ${childCount})`, () => {
-		bench("before: every kind walks the selection", () => {
-			readAllBefore(state);
-		});
-		bench("after: the reader is kept", () => {
+// A pan frame leaves objects, selection and the text edit alone, so
+// useSelectionStyleReader keeps the reader it built.
+describe("createSelectionStyleReader: pan frame, reader kept", () => {
+	for (const { childCount, state } of groupStates) {
+		const keptReader = createSelectionStyleReader(state, registries);
+		bench(`${KINDS.length} kinds, group of ${childCount}`, () => {
 			readAllWithReader(keptReader);
 		});
-	});
+	}
+});
 
-	describe(`drag frame: objects rewritten (group of ${childCount})`, () => {
-		bench("before: every kind walks the selection", () => {
-			readAllBefore(state);
-		});
-		bench("after: a new reader walks once", () => {
+// A drag frame rewrites objects, so a new reader walks the selection once.
+describe("createSelectionStyleReader: drag frame, new reader", () => {
+	for (const { childCount, state } of groupStates) {
+		bench(`${KINDS.length} kinds, group of ${childCount}`, () => {
 			readAllWithReader(createSelectionStyleReader(state, registries));
 		});
-	});
-}
+	}
+});

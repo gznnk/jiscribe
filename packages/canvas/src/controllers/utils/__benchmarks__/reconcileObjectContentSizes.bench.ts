@@ -47,16 +47,16 @@ const plainState = stateOf({ ...baseObjects, "obj-0": cowView["obj-0"] });
 
 // The pass runs on every frame of every gesture, so what matters is the cost of
 // a frame that needs no re-measuring at all — the overwhelmingly common case.
-describe(`reconcileObjectContentSizes per frame (${OBJECT_COUNT} objects)`, () => {
-	bench("COW view — narrowed to the ids the frame wrote", () => {
+describe("reconcileObjectContentSizes: a drag frame with nothing to re-measure", () => {
+	bench(`${OBJECT_COUNT} objects, COW view (narrowed to written ids)`, () => {
 		reconcileObjectContentSizes(cowState, previousState, contentResizer);
 	});
 
-	bench("plain record — full scan", () => {
+	bench(`${OBJECT_COUNT} objects, plain record (full scan)`, () => {
 		reconcileObjectContentSizes(plainState, previousState, contentResizer);
 	});
 
-	bench("COW view, forced — full scan", () => {
+	bench(`${OBJECT_COUNT} objects, COW view forced (full scan)`, () => {
 		// A web font landing invalidates every measurement at once, so this frame
 		// cannot take the narrowed pass however little it wrote.
 		reconcileObjectContentSizes(cowState, previousState, contentResizer, true);

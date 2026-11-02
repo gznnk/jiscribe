@@ -2,86 +2,7 @@ import { bench, describe } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { getPathFromRoot } from "../getPathFromRoot";
 import { sortObjectIdsByZOrder } from "../sortObjectIdsByZOrder";
-
-// --- naive implementation (before Map optimization) ---
-function sortObjectIdsByZOrderNaive(
-	ids: string[],
-	objects: Record<string, ObjectState>,
-	rootIds: string[],
-): string[] {
-	return [...ids].sort((idA, idB) => {
-		const pathA = getPathFromRoot(idA, objects);
-		const pathB = getPathFromRoot(idB, objects);
-		const minPathLength = Math.min(pathA.length, pathB.length);
-
-		for (let depthIndex = 0; depthIndex < minPathLength; depthIndex++) {
-			const nodeIdA = pathA[depthIndex];
-			const nodeIdB = pathB[depthIndex];
-
-			if (nodeIdA !== nodeIdB) {
-				if (depthIndex === 0) {
-					return rootIds.indexOf(nodeIdA) - rootIds.indexOf(nodeIdB);
-				}
-				const commonParentId = pathA[depthIndex - 1];
-				const commonParentGroup = objects[commonParentId] as GroupState;
-				return (
-					commonParentGroup.childIds.indexOf(nodeIdA) -
-					commonParentGroup.childIds.indexOf(nodeIdB)
-				);
-			}
-		}
-		return pathA.length - pathB.length;
-	});
-}
-
-// --- Map indexOf optimization only (before path cache) ---
-function sortObjectIdsByZOrderMapOnly(
-	ids: string[],
-	objects: Record<string, ObjectState>,
-	rootIds: string[],
-): string[] {
-	const rootIndexMap = new Map(rootIds.map((id, i) => [id, i]));
-	const childIndexCache = new Map<string, Map<string, number>>();
-
-	const getChildIndex = (parentId: string, childId: string): number => {
-		let map = childIndexCache.get(parentId);
-		if (!map) {
-			const group = objects[parentId] as GroupState;
-			map = new Map(group.childIds.map((id, i) => [id, i]));
-			childIndexCache.set(parentId, map);
-		}
-		return map.get(childId) ?? -1;
-	};
-
-	return [...ids].sort((idA, idB) => {
-		// No path cache: recompute getPathFromRoot on every comparison
-		const pathA = getPathFromRoot(idA, objects);
-		const pathB = getPathFromRoot(idB, objects);
-		const minPathLength = Math.min(pathA.length, pathB.length);
-
-		for (let depthIndex = 0; depthIndex < minPathLength; depthIndex++) {
-			const nodeIdA = pathA[depthIndex];
-			const nodeIdB = pathB[depthIndex];
-
-			if (nodeIdA !== nodeIdB) {
-				if (depthIndex === 0) {
-					return (
-						(rootIndexMap.get(nodeIdA) ?? -1) -
-						(rootIndexMap.get(nodeIdB) ?? -1)
-					);
-				}
-				const commonParentId = pathA[depthIndex - 1];
-				return (
-					getChildIndex(commonParentId, nodeIdA) -
-					getChildIndex(commonParentId, nodeIdB)
-				);
-			}
-		}
-		return pathA.length - pathB.length;
-	});
-}
 
 // --- test data builders ---
 
@@ -170,84 +91,32 @@ function buildDeep(
 
 // --- benchmarks ---
 
-describe("sortObjectIdsByZOrder — flat structure", () => {
-	const small = buildFlat(50);
-	const medium = buildFlat(200);
-	const large = buildFlat(1000);
+const SIZES = [50, 200, 1000];
 
-	bench("naive  50 objects", () => {
-		sortObjectIdsByZOrderNaive(small.ids, small.objects, small.rootIds);
-	});
-	bench("Map    50 objects", () => {
-		sortObjectIdsByZOrder(small.ids, small.objects, small.rootIds);
-	});
-
-	bench("naive  200 objects", () => {
-		sortObjectIdsByZOrderNaive(medium.ids, medium.objects, medium.rootIds);
-	});
-	bench("Map    200 objects", () => {
-		sortObjectIdsByZOrder(medium.ids, medium.objects, medium.rootIds);
-	});
-
-	bench("naive  1000 objects", () => {
-		sortObjectIdsByZOrderNaive(large.ids, large.objects, large.rootIds);
-	});
-	bench("Map    1000 objects", () => {
-		sortObjectIdsByZOrder(large.ids, large.objects, large.rootIds);
-	});
+describe("sortObjectIdsByZOrder: flat root, ids reversed", () => {
+	for (const size of SIZES) {
+		const { ids, objects, rootIds } = buildFlat(size);
+		bench(`${size} objects`, () => {
+			sortObjectIdsByZOrder(ids, objects, rootIds);
+		});
+	}
 });
 
-describe("sortObjectIdsByZOrder — nested structure", () => {
-	const small = buildNested(50);
-	const medium = buildNested(200);
-	const large = buildNested(1000);
-
-	bench("naive  50 children", () => {
-		sortObjectIdsByZOrderNaive(small.ids, small.objects, small.rootIds);
-	});
-	bench("Map    50 children", () => {
-		sortObjectIdsByZOrder(small.ids, small.objects, small.rootIds);
-	});
-
-	bench("naive  200 children", () => {
-		sortObjectIdsByZOrderNaive(medium.ids, medium.objects, medium.rootIds);
-	});
-	bench("Map    200 children", () => {
-		sortObjectIdsByZOrder(medium.ids, medium.objects, medium.rootIds);
-	});
-
-	bench("naive  1000 children", () => {
-		sortObjectIdsByZOrderNaive(large.ids, large.objects, large.rootIds);
-	});
-	bench("Map    1000 children", () => {
-		sortObjectIdsByZOrder(large.ids, large.objects, large.rootIds);
-	});
+describe("sortObjectIdsByZOrder: one group, children reversed", () => {
+	for (const size of SIZES) {
+		const { ids, objects, rootIds } = buildNested(size);
+		bench(`${size} children`, () => {
+			sortObjectIdsByZOrder(ids, objects, rootIds);
+		});
+	}
 });
 
-describe("sortObjectIdsByZOrder — deep nesting (path cache effect)", () => {
-	// The deeper the depth, the more getPathFromRoot costs, so the path cache pays off
-	const small = buildDeep(50, 10);
-	const medium = buildDeep(200, 10);
-	const large = buildDeep(1000, 10);
-
-	bench("Map(path recomputed)  50 leaves / depth 10", () => {
-		sortObjectIdsByZOrderMapOnly(small.ids, small.objects, small.rootIds);
-	});
-	bench("Map(path cached) 50 leaves / depth 10", () => {
-		sortObjectIdsByZOrder(small.ids, small.objects, small.rootIds);
-	});
-
-	bench("Map(path recomputed)  200 leaves / depth 10", () => {
-		sortObjectIdsByZOrderMapOnly(medium.ids, medium.objects, medium.rootIds);
-	});
-	bench("Map(path cached) 200 leaves / depth 10", () => {
-		sortObjectIdsByZOrder(medium.ids, medium.objects, medium.rootIds);
-	});
-
-	bench("Map(path recomputed)  1000 leaves / depth 10", () => {
-		sortObjectIdsByZOrderMapOnly(large.ids, large.objects, large.rootIds);
-	});
-	bench("Map(path cached) 1000 leaves / depth 10", () => {
-		sortObjectIdsByZOrder(large.ids, large.objects, large.rootIds);
-	});
+// The deeper the leaves, the more each path from the root costs.
+describe("sortObjectIdsByZOrder: leaves 10 groups deep, reversed", () => {
+	for (const size of SIZES) {
+		const { ids, objects, rootIds } = buildDeep(size, 10);
+		bench(`${size} leaves`, () => {
+			sortObjectIdsByZOrder(ids, objects, rootIds);
+		});
+	}
 });

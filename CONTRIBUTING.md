@@ -96,7 +96,9 @@ list `e2e` in the package's `tsconfig.json` `include` so it is typechecked, and
 leave it out of `pnpm test`. These two are a package's only test entry points
 (variants such as `test:watch` or `test:e2e:ui` are fine, a third layer is not),
 which is what lets `pnpm test` and `pnpm test:e2e` each mean one thing at the
-repository root.
+repository root. Benchmarks are the one exception: they measure rather than
+pass or fail, so they sit outside both layers behind a `bench` script (see
+[09-testing](packages/canvas/docs/09-testing.md#benchmarks-vitest-bench)).
 
 The full e2e suite is heavy; CI runs it on pull requests targeting `main`.
 

@@ -63,6 +63,8 @@ pnpm lint
 Then, by impact:
 
 - **Unit tests for what you touched**: `pnpm --filter @jiscribe/canvas test`
+- **Benchmarks** (`pnpm --filter <package> bench`) measure and never fail, so `test`
+  and CI leave them out; see `packages/canvas/docs/09-testing.md`.
 - **Behaviour or rendering**: run e2e from the suite that owns what you touched, and
   only the related specs.
   - `packages/canvas/src/{controllers,rendering,states}` (gestures live under

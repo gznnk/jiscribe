@@ -322,7 +322,7 @@ export default tseslint.config(
 		],
 	].map(([files, climbOut]) => ({
 		files: [files],
-		ignores: ["**/__tests__/**"],
+		ignores: ["**/__tests__/**", "**/__benchmarks__/**"],
 		rules: {
 			"@typescript-eslint/no-restricted-imports": [
 				"error",

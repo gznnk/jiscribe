@@ -3,6 +3,7 @@
 # Testing
 
 Testing for canvas is structured as **two layers — unit (vitest) → E2E (Playwright)** — plus a dependency check.
+Benchmarks sit outside both layers: they measure and never pass or fail ([Benchmarks](#benchmarks-vitest-bench)).
 Its pure-function-centric design ([Design Philosophy](./01-design-philosophy.md), Principle 2) is what makes this structure possible.
 
 ## Drawing the line between unit and E2E (Detroit school)
@@ -157,6 +158,24 @@ the spec side (see each file under `e2e/kit/` for the parameters). canvas itself
 kit relatively (`./e2e/testing-playwright-config`), never through the SDK: the
 `canvas → canvas-sdk → canvas` cycle is what this split removed. Standing up a suite for a
 plugin is walked through in [Authoring Plugins](./13-authoring-plugins.md).
+
+## Benchmarks (vitest bench)
+
+A benchmark measures how long a hot path takes; it asserts nothing, so it is not a third
+test layer. `test` never runs one and CI does not either.
+
+- Placement: `src/**/__benchmarks__/**/*.bench.ts`, co-located like `__tests__/`, with
+  fixture builders under `__benchmarks__/support/`. `benchmark.include` in each package's
+  `vitest.config.ts` is what picks them up
+- Run: `pnpm --filter @jiscribe/canvas bench` (`vitest bench --run`), or `pnpm bench` for
+  every package that has one
+- No baseline is committed and no threshold fails a run: numbers are only comparable when
+  taken on the same machine, so a comparison measures both sides afresh —
+  `vitest bench --run --outputJson <file>` on the base, then `--compare <file>` on the head
+- A benchmark measures the current implementation only. Name the `describe` for what is
+  measured and the `bench` for the scale, and keep both stable: `--compare` pairs a
+  benchmark with its baseline by file and position alone, and the names are what shows
+  whether a pairing still holds
 
 ## Circular dependency check (madge)
 

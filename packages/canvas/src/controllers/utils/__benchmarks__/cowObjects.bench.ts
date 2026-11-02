@@ -25,91 +25,58 @@ const changedIds = Array.from(
 	(_, index) => `obj-${index * 100}`,
 );
 
-// Simulates one drag frame: clone the map and write the moved objects.
-describe(`clone + ${CHANGED_COUNT} writes (${OBJECT_COUNT} objects)`, () => {
-	bench("full spread (before #213)", () => {
-		const objects = { ...baseObjects };
-		for (const id of changedIds) {
-			objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
-		}
-	});
+const writeChangedObjects = (objects: Record<string, Item>): void => {
+	for (const id of changedIds) {
+		objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
+	}
+};
 
-	bench("createCowObjects (after #213)", () => {
-		const objects = createCowObjects(baseObjects);
-		for (const id of changedIds) {
-			objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
-		}
-	});
-});
+const buildCowView = (): Record<string, Item> => {
+	const objects = createCowObjects(baseObjects);
+	writeChangedObjects(objects);
+	return objects;
+};
 
-// Simulates the frame including the render pass that reads every object once
-// (ObjectsRenderer traverses all ids). This is where Proxy read overhead shows,
-// so the comparison must include it.
-describe(`clone + writes + full read pass (${OBJECT_COUNT} objects)`, () => {
+describe("createCowObjects: one drag frame", () => {
 	const allIds = Object.keys(baseObjects);
 
-	bench("full spread + plain reads (before #213)", () => {
-		const objects = { ...baseObjects };
-		for (const id of changedIds) {
-			objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
-		}
-		let sum = 0;
-		for (const id of allIds) {
-			sum += objects[id].cx;
-		}
-		if (sum < 0) {
-			throw new Error("unreachable");
-		}
+	bench(`${OBJECT_COUNT} objects, ${CHANGED_COUNT} writes`, () => {
+		writeChangedObjects(createCowObjects(baseObjects));
 	});
 
-	bench("createCowObjects + proxied reads (after #213)", () => {
-		const objects = createCowObjects(baseObjects);
-		for (const id of changedIds) {
-			objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
-		}
-		let sum = 0;
-		for (const id of allIds) {
-			sum += objects[id].cx;
-		}
-		if (sum < 0) {
-			throw new Error("unreachable");
-		}
-	});
+	// ObjectsRenderer reads every object once per frame, which is where the
+	// Proxy's read overhead shows.
+	bench(
+		`${OBJECT_COUNT} objects, ${CHANGED_COUNT} writes + read every object`,
+		() => {
+			const objects = createCowObjects(baseObjects);
+			writeChangedObjects(objects);
+			let sum = 0;
+			for (const id of allIds) {
+				sum += objects[id].cx;
+			}
+			if (sum < 0) {
+				throw new Error("unreachable");
+			}
+		},
+	);
 });
 
-// One-time cost paid at gesture end (was previously paid on every frame).
-describe(`materialize once per gesture (${OBJECT_COUNT} objects)`, () => {
-	const cowView = (() => {
-		const objects = createCowObjects(baseObjects);
-		for (const id of changedIds) {
-			objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
-		}
-		return objects;
-	})();
+// Paid once at gesture end.
+describe("materializeObjects: end of a gesture", () => {
+	const cowView = buildCowView();
 
-	bench("materializeObjects", () => {
+	bench(`${OBJECT_COUNT} objects, ${CHANGED_COUNT} written`, () => {
 		materializeObjects(cowView);
 	});
 });
 
 // A path that needs a fresh writable Record (the re-measure pass does) can be
-// handed a view. Spreading one pays a Proxy trap
-// per key for the identical result.
-describe(`copy a view into a writable record (${OBJECT_COUNT} objects)`, () => {
-	const cowView = (() => {
-		const objects = createCowObjects(baseObjects);
-		for (const id of changedIds) {
-			objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
-		}
-		return objects;
-	})();
+// handed a view.
+describe("copyObjectsRecord: a view into a writable record", () => {
+	const cowView = buildCowView();
 
-	bench("spread", () => {
-		const copied = { ...cowView };
-		copied[changedIds[0]] = baseObjects[changedIds[0]];
-	});
-
-	bench("copyObjectsRecord", () => {
+	bench(`${OBJECT_COUNT} objects, ${CHANGED_COUNT} written`, () => {
 		const copied = copyObjectsRecord(cowView);
 		copied[changedIds[0]] = baseObjects[changedIds[0]];
 	});
